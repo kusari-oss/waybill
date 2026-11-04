@@ -3841,6 +3841,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -4303,6 +4309,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -4537,6 +4549,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -4580,6 +4598,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4669,6 +4693,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -4712,6 +4742,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4796,6 +4832,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5125,6 +5167,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -5216,6 +5264,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5539,6 +5593,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -5623,6 +5683,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -5660,6 +5726,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5707,6 +5779,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -5744,6 +5822,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5834,6 +5918,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5971,6 +6061,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -6056,6 +6152,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6289,6 +6391,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -6332,6 +6440,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6661,6 +6775,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -6751,6 +6871,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -6788,6 +6914,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6872,6 +7004,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7063,6 +7201,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -7148,6 +7292,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7291,6 +7441,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -7375,6 +7531,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -7418,6 +7580,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7693,6 +7861,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -7825,6 +7999,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -7916,6 +8096,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8059,6 +8245,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -8096,6 +8288,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8329,6 +8527,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -8413,6 +8617,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -8456,6 +8666,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8641,6 +8857,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -8678,6 +8900,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8768,6 +8996,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8905,6 +9139,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -8995,6 +9235,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -9038,6 +9284,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9229,6 +9481,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -9272,6 +9530,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9368,6 +9632,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9500,6 +9770,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9950,6 +10226,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10465,6 +10747,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -10682,6 +10970,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -11677,6 +11971,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -11887,6 +12187,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -12020,6 +12326,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -12194,6 +12506,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -12463,6 +12781,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -12554,6 +12878,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -12973,6 +13303,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -13016,6 +13352,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -13201,6 +13543,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -13238,6 +13586,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -13286,6 +13640,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -13466,6 +13826,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -13687,6 +14053,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -13724,6 +14096,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -13813,6 +14191,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -13897,6 +14281,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -13934,6 +14324,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -13981,6 +14377,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -14018,6 +14420,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -14065,6 +14473,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -14102,6 +14516,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -14150,6 +14570,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -14239,6 +14665,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -14276,6 +14708,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -14323,6 +14761,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -14360,6 +14804,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -14407,6 +14857,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -14449,6 +14905,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -14486,6 +14948,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -14570,6 +15038,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -14749,6 +15223,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -14882,6 +15362,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -15164,6 +15650,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -15524,6 +16016,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -16321,6 +16819,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -16735,6 +17239,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -16964,6 +17474,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -17245,6 +17761,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -17521,6 +18043,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -17558,6 +18086,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -17642,6 +18176,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -17821,6 +18361,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -17864,6 +18410,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -18001,6 +18553,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -18044,6 +18602,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -18181,6 +18745,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -18277,6 +18847,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -18314,6 +18890,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -18826,6 +19408,11 @@
       "spdxElementId": "SPDXRef-Package-2DZPEDEW2BHIJLVB"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-2I3GH7IGQ25DPTDD"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6QLBIN4OMQGCVQVJ",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-2JXCEYWFYFW5KPN3"
@@ -18901,9 +19488,29 @@
       "spdxElementId": "SPDXRef-Package-2TBBZYHQHRGTVRL4"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-37UCPQGVZ5ONSB4Q"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-3B5K55ITZSB5IBDU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-3D5TQJROX6I2VPI2"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-3ODEA3XUSHLXRJMY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-3XE2WNCDOKWLBJJH"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-FUCWNA5MGLNAG2NW",
@@ -18956,6 +19563,21 @@
       "spdxElementId": "SPDXRef-Package-4AZ7HCK4ZDSW7VVA"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-4CRJFKMA3ETCNJLZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-4DNJCXHDJRO2ICDZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-4QV4NXVKXCKKOE4A"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6UHHA44VGVVLXE6J",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-4TL4DIUM7RAJVY6T"
@@ -18979,6 +19601,21 @@
       "relatedSpdxElement": "SPDXRef-Package-UYVEY7DDE5244QDF",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-4TL4DIUM7RAJVY6T"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-4XHSKWCJWW3SPODN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-4YEQ3YLTNFRL2G4U"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-52YX2DYM77IZEBR2"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-4KMKVQHNSZ5CVVGP",
@@ -19231,6 +19868,21 @@
       "spdxElementId": "SPDXRef-Package-5NYFPNETG2VZOEUC"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-5OQ62GSOOIQVSYR5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-5VD6UNUBWCUYPH65"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-5Y2U2JZ4RZGG6PDA"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6UHHA44VGVVLXE6J",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-66Y7Z3TF3ABW5U2J"
@@ -19239,6 +19891,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-66Y7Z3TF3ABW5U2J"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-6L64FJMTKZQUYC24"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
@@ -19386,6 +20043,16 @@
       "spdxElementId": "SPDXRef-Package-7BAL6JNJWXFDOVHU"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-7BUWLMC2MZKPMJKQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-7CU4GO3PWR3A6OLQ"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-7H3AC5C7P3DECEC6"
@@ -19404,6 +20071,21 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-7OE7WP4H5SCSJD4W"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-7T4VUZB25REKEK67"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-A3NJGLRNQ4IRPDJD"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-A4IS7PN46TDZI7JF"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",
@@ -19579,6 +20261,11 @@
       "relatedSpdxElement": "SPDXRef-Package-UYVEY7DDE5244QDF",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-AMN2JW2OFCZXD7U7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-AOXKV3FCNOIEHCPA"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-6QLBIN4OMQGCVQVJ",
@@ -19896,6 +20583,16 @@
       "spdxElementId": "SPDXRef-Package-C5RPJGCOQT5JA3OF"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-C7KWMY3O76UDQFJD"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-C7XSDY352PHCYMKW"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-CAYSLRF6H7WBWLJT"
@@ -19936,6 +20633,16 @@
       "spdxElementId": "SPDXRef-Package-CFNEHDB6PENSZUFG"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-CGL4E4NHKJ7QCUZR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-CJ6ERANMMDU5BNTI"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-CPRLJL7D5Q6JOP7D"
@@ -19969,6 +20676,26 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-CT6HFR4SM4VMKH65"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-CWMGOYDSB52KXMYU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-D2S3P3QD4QWBLVGI"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-D3H3NY6FFCFRBMCP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-D4IKEWPH3LS5CS3M"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-3K6ZS66S4D7YZH6Q",
@@ -20021,6 +20748,11 @@
       "spdxElementId": "SPDXRef-Package-DMVHZZ6N2B3ND3JM"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-DNRWM3DKVK3FM6S2"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-DW244S5IM3LMFMCL"
@@ -20036,6 +20768,11 @@
       "spdxElementId": "SPDXRef-Package-DW244S5IM3LMFMCL"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-EDI3L7HX6SDS4IVR"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-EMRONY5ATNNWZPM6"
@@ -20044,6 +20781,11 @@
       "relatedSpdxElement": "SPDXRef-Package-ZHZ3KQWZIU3V5WXQ",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-EMRONY5ATNNWZPM6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-F46JAXLMMMU34EPX"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-IYAUKBZ2DPRUFADS",
@@ -20141,6 +20883,16 @@
       "spdxElementId": "SPDXRef-Package-FGQQJZ65OQRKPY5P"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-FIFFPCXWJFVUDY73"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-FKC627RMQJMKHKHO"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6QWPEZAAEUBBUPY4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-FKZRJOFVIPYZIIAZ"
@@ -20176,6 +20928,21 @@
       "spdxElementId": "SPDXRef-Package-FQUMG4N27BUACPZK"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-FT5FMIRDAQLLSWKU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-FVZ7DDYAOZTJPXTE"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-GJIEQMMN23AG7PRN"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-NEXH2REID6E2NFFF",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-GKPRS6PUEMWAM2J6"
@@ -20204,6 +20971,21 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-GRVWZ3NVQHPQRWHT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-GUSCI76LQW46MY67"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-GVAED4ANPXAPE3ME"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-GZK47IT7IQ5XHAKJ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-QRYCASCWTQRNY2TY",
@@ -20244,6 +21026,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-HKOR5K4THZBHMQY6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-HOSAHGGHPSAK4RNR"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-6QWPEZAAEUBBUPY4",
@@ -20289,6 +21076,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-IBCS676FTSA3ACVD"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-IDYIRGZZLZZ6GJB7"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
@@ -20371,6 +21163,16 @@
       "spdxElementId": "SPDXRef-Package-IMNPTUMKS2FQBEQW"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-IQZRME6VQBSYM2FL"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-IRZ2FN4RHABSS5GN"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-AQOMUHWLUFUEUX3W",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-IRZJBA4SVTSXNCYQ"
@@ -20426,6 +21228,11 @@
       "spdxElementId": "SPDXRef-Package-IYAUKBZ2DPRUFADS"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-J4BRNDEFEUOCFPGF"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6UHHA44VGVVLXE6J",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-J6ESECMJW5XAIQD2"
@@ -20434,6 +21241,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-J6ESECMJW5XAIQD2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-JAQUTJ3U4F5EMH3I"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-4AZ7HCK4ZDSW7VVA",
@@ -20766,6 +21578,16 @@
       "spdxElementId": "SPDXRef-Package-K3FSUM5EFDIGD5Y2"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-K525NJCJ2DBECRI3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-KEAAFOKZA2QUDB27"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-4SHN7RVJVZLXAJLA",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-KEAAFOKZA2QUDB27"
@@ -20789,6 +21611,11 @@
       "relatedSpdxElement": "SPDXRef-Package-UYVEY7DDE5244QDF",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-KEAAFOKZA2QUDB27"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-KFRZEN3YKCCIWRHX"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-GKPRS6PUEMWAM2J6",
@@ -20824,6 +21651,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-KKYQLG5XH4LBWSZM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-KL4PDN32K3KADKZL"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-3K6ZS66S4D7YZH6Q",
@@ -20976,6 +21808,41 @@
       "spdxElementId": "SPDXRef-Package-KYFP3QBGHBVFFTWL"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-L3YJDJVV44FN27O4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-L53PR77Q5BKH73YC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-LEUNC5YMWUMGP25L"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-LGKRAFEEIR2IC4LI"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-LKVTOH3ZT5AUBNEU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-LLC67LMK2YCRSP7V"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-LZ4SQ3LPDCYASNJK"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-M2K6B2JONFIBSVZQ"
@@ -21091,6 +21958,21 @@
       "spdxElementId": "SPDXRef-Package-MMD5MIQRWVM52KI6"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-MOQ4WDVQY5FVTWBI"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-MQRBN2QYLZRSCAIY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-N2GXWIZXUAC4F3CM"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6QWPEZAAEUBBUPY4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-N4OP3YTIFODEU6JQ"
@@ -21179,6 +22061,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-NEXH2REID6E2NFFF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-NFIBY3L72CBD2DWO"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-2TBBZYHQHRGTVRL4",
@@ -21299,6 +22186,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-O4FLFVFP4UCXFKIK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-O4XE3KLP4XMOEF4X"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
@@ -21466,6 +22358,11 @@
       "spdxElementId": "SPDXRef-Package-ON5L5EKDDLXBA7ZZ"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-OPPBTPIGJC43IETG"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-3ODEA3XUSHLXRJMY",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-OQRCAHDID6YLQVHQ"
@@ -21631,6 +22528,16 @@
       "spdxElementId": "SPDXRef-Package-ORTSXC2OKMBKZT7J"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-OSWBWCPSREYFJY5B"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-P27MTOUNY4Y3SBTH"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-3DG5VCCDNI76BG6R",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-P2X7MOVTC2JGD4IG"
@@ -21666,6 +22573,11 @@
       "spdxElementId": "SPDXRef-Package-PFT3CEWP37M52HPV"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-PGLBQ5N64KS7Q3N7"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6QWPEZAAEUBBUPY4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-PISOWHJUMJ2VYZIA"
@@ -21686,6 +22598,26 @@
       "spdxElementId": "SPDXRef-Package-PISOWHJUMJ2VYZIA"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-PS4H6MJBLFMDSN3L"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-PTLB2OXLQTGW6XR7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-PX42YWEG3E3W4MHB"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-Q7OVM55WAFVT2OYJ"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-ON5L5EKDDLXBA7ZZ",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-QDEFSUU3MJFQR3M5"
@@ -21699,6 +22631,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-QG6R3VMSCSFWENBX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-QJ6TE4B25ZSPWQWO"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
@@ -21716,6 +22653,11 @@
       "spdxElementId": "SPDXRef-Package-QXWD2J2VQLERAENT"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-QZ4JT537BUA6NSAK"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-FUCWNA5MGLNAG2NW",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-R6B6UWQMN7P5LLZB"
@@ -21729,6 +22671,11 @@
       "relatedSpdxElement": "SPDXRef-Package-TI3DFPLS4EPKDAJM",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-R6B6UWQMN7P5LLZB"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-R7TL6XOE3OOTDBE4"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
@@ -21856,6 +22803,11 @@
       "spdxElementId": "SPDXRef-Package-RNOKPFYXSU2ACQFM"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-RT2IYL3TCOLRP3EO"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-24STU4SA4MZFQBTX",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-RWEFNKCATWYKAKVK"
@@ -21911,6 +22863,16 @@
       "spdxElementId": "SPDXRef-Package-RWEFNKCATWYKAKVK"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-SBFA4AAJQKPG64JU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-SKAY7JEXRB45TENU"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-SLQSQKG567THHJ4K"
@@ -21951,6 +22913,11 @@
       "spdxElementId": "SPDXRef-Package-SLQSQKG567THHJ4K"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-SO3Z7ZFQSUM2KL7Z"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-SQ5SAZU27HVX7SUX"
@@ -21959,6 +22926,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-SS4I4FRRZ5DKHFZV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-SSRR7OSVNYHBPIMV"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
@@ -22009,6 +22981,11 @@
       "relatedSpdxElement": "SPDXRef-Package-UYVEY7DDE5244QDF",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-SYME6EXQ24LSZR3V"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-T2DV7XS4SIO7EG7K"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-I6KMKSF2R7I3TODX",
@@ -22066,6 +23043,26 @@
       "spdxElementId": "SPDXRef-Package-UHEZ7RA7BWLUBBMP"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-ULKEDWRWJKN72VXR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-UNRWIRMEDOSBNJC5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-UOFZIIWIVXQIEULZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-UPXP2JLCXIKK2GZT"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6UHHA44VGVVLXE6J",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-URMETSJSVVNQK7RK"
@@ -22084,6 +23081,11 @@
       "relatedSpdxElement": "SPDXRef-Package-ON5L5EKDDLXBA7ZZ",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-UVMTY3GWQVUQUDBL"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-V3A7CQ2IWH4UNTFN"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-6QWPEZAAEUBBUPY4",
@@ -22109,6 +23111,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-VOYR53SJHK6XO2B7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-VQLDKPCDEGATMRUU"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-2DZPEDEW2BHIJLVB",
@@ -22271,6 +23278,11 @@
       "spdxElementId": "SPDXRef-Package-VVQKWLD4J2GQMM5A"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-WAMF5AB3L67Y2VAJ"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-4AZ7HCK4ZDSW7VVA",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-WANTPW35ERY5THXK"
@@ -22379,6 +23391,36 @@
       "relatedSpdxElement": "SPDXRef-Package-UYVEY7DDE5244QDF",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-WTASZGEB6LNGEHC5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-WVDVZ7HQWLRK5W6A"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-X5P2YY5XOCO5G3FE"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-XC5MIBHUSHFMQDAV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-XIXTRXYDK55CIJHN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-XK5L2AQSGYPYWBFY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-XLYPFUFR5MU2D52N"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-3K6ZS66S4D7YZH6Q",
@@ -22521,6 +23563,11 @@
       "spdxElementId": "SPDXRef-Package-YF67KOZGBPLAPJUF"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-YIY2ZZ7HNWTY3YUZ"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6UHHA44VGVVLXE6J",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-YV4EUBD72AQ2QV33"
@@ -22656,6 +23703,21 @@
       "spdxElementId": "SPDXRef-Package-YW2NJSG3ZSCB5TKE"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-YXFQW6CUPGHBWFYV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-ZA2BHYLV3XJLHHM7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-ZDKQODIQYDTPRZVK"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-ZHZ3KQWZIU3V5WXQ"
@@ -22674,6 +23736,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-ZHZ3KQWZIU3V5WXQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-ZRJCZOPL3KYFSTUB"
     }
   ],
   "spdxVersion": "SPDX-2.3"

@@ -82,33 +82,6 @@ issue = 1206
 # ---------------------------------------------------------------------
 
 [[declaration]]
-invariant = "I10"
-target = "nix-closure-moat"
-kind = "closure-tooling-without-non-runtime-marker"
-count_at_declaration = 97
-reason = """
-The committed goldens predate milestone 1277 and are the defect this row
-exists to catch: 97 of 362 closure members on this target are in a role that
-does not ship — 80 `build-tooling`, 17 `unreferenced` — and not one carries
-a marker saying so, measured. By the CycloneDX 1.6 default rule they
-therefore read as `required`.
-
-The fix is in the code. This row reads the golden, not a fresh scan, so it
-cannot pass until the goldens are refreshed through `public-corpus.yml`,
-which is never done locally.
-
-**This declaration is the refresh's to delete, not a defect's.** Expected
-after the refresh: 0, and this entry removed. `nix-closure-moat` is the only
-corpus target that carries closure roles at all — the other 16 report this
-row as n/a — so a declaration here covers the whole population.
-
-The 97 are enumerable from the goldens today with
-`specs/1277-closure-role-scope/measurements/roles-and-scopes.py`; the first
-three by name are `CUnit`, `asciidoc` and `attrs`.
-"""
-issue = 1342
-
-[[declaration]]
 invariant = "I2"
 target = "maven-guice"
 kind = "duplicate-file-identity"

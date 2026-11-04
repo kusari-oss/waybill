@@ -3212,6 +3212,10 @@
       "name": "CUnit",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -3225,6 +3229,7 @@
         }
       ],
       "purl": "pkg:generic/CUnit@2.1-3",
+      "scope": "excluded",
       "type": "library",
       "version": "2.1-3"
     },
@@ -3660,6 +3665,10 @@
       "name": "asciidoc",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -3673,6 +3682,7 @@
         }
       ],
       "purl": "pkg:generic/asciidoc@10.2.1",
+      "scope": "excluded",
       "type": "library",
       "version": "10.2.1"
     },
@@ -3891,6 +3901,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -3904,6 +3918,7 @@
         }
       ],
       "purl": "pkg:generic/attrs@26.1.0",
+      "scope": "excluded",
       "type": "library",
       "version": "26.1.0"
     },
@@ -3926,6 +3941,10 @@
       "name": "autoconf",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -3939,6 +3958,7 @@
         }
       ],
       "purl": "pkg:generic/autoconf@2.69",
+      "scope": "excluded",
       "type": "library",
       "version": "2.69"
     },
@@ -4009,6 +4029,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -4022,6 +4046,7 @@
         }
       ],
       "purl": "pkg:generic/autoconf-archive@2024.10.16",
+      "scope": "excluded",
       "type": "library",
       "version": "2024.10.16"
     },
@@ -4044,6 +4069,10 @@
       "name": "automake",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -4057,6 +4086,7 @@
         }
       ],
       "purl": "pkg:generic/automake@1.16.5",
+      "scope": "excluded",
       "type": "library",
       "version": "1.16.5"
     },
@@ -4114,6 +4144,10 @@
       "name": "autoreconf-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -4127,6 +4161,7 @@
         }
       ],
       "purl": "pkg:generic/autoreconf-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -4483,6 +4518,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -4496,6 +4535,7 @@
         }
       ],
       "purl": "pkg:generic/bash-interactive@5.3p9",
+      "scope": "excluded",
       "type": "library",
       "version": "5.3p9"
     },
@@ -4595,6 +4635,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -4608,6 +4652,7 @@
         }
       ],
       "purl": "pkg:generic/binutils@2.46",
+      "scope": "excluded",
       "type": "library",
       "version": "2.46"
     },
@@ -4882,6 +4927,10 @@
       "name": "bootstrap-stage-xgcc-gcc-wrapper",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -4895,6 +4944,7 @@
         }
       ],
       "purl": "pkg:generic/bootstrap-stage-xgcc-gcc-wrapper@15.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "15.2.0"
     },
@@ -4952,6 +5002,10 @@
       "name": "bootstrap-stage1-gcc-wrapper",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -4965,6 +5019,7 @@
         }
       ],
       "purl": "pkg:generic/bootstrap-stage1-gcc-wrapper@15.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "15.2.0"
     },
@@ -4987,6 +5042,10 @@
       "name": "bootstrap-stage2-gcc-wrapper",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5000,6 +5059,7 @@
         }
       ],
       "purl": "pkg:generic/bootstrap-stage2-gcc-wrapper@15.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "15.2.0"
     },
@@ -5022,6 +5082,10 @@
       "name": "bootstrap-stage3-gcc-wrapper",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5035,6 +5099,7 @@
         }
       ],
       "purl": "pkg:generic/bootstrap-stage3-gcc-wrapper@15.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "15.2.0"
     },
@@ -5057,6 +5122,10 @@
       "name": "bootstrap-stage4-gcc-wrapper",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5070,6 +5139,7 @@
         }
       ],
       "purl": "pkg:generic/bootstrap-stage4-gcc-wrapper@15.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "15.2.0"
     },
@@ -5134,6 +5204,10 @@
       "name": "buildcatrust",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5147,6 +5221,7 @@
         }
       ],
       "purl": "pkg:generic/buildcatrust@0.5.1",
+      "scope": "excluded",
       "type": "library",
       "version": "0.5.1"
     },
@@ -5246,6 +5321,10 @@
       "name": "calver",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5259,6 +5338,7 @@
         }
       ],
       "purl": "pkg:generic/calver@2025.10.20",
+      "scope": "excluded",
       "type": "library",
       "version": "2025.10.20"
     },
@@ -5323,6 +5403,10 @@
       "name": "cffi",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5336,6 +5420,7 @@
         }
       ],
       "purl": "pkg:generic/cffi@2.0.0",
+      "scope": "excluded",
       "type": "library",
       "version": "2.0.0"
     },
@@ -5553,6 +5638,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5566,6 +5655,7 @@
         }
       ],
       "purl": "pkg:generic/cmake@4.1.2",
+      "scope": "excluded",
       "type": "library",
       "version": "4.1.2"
     },
@@ -5601,6 +5691,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5614,6 +5708,7 @@
         }
       ],
       "purl": "pkg:generic/cmake-minimal@4.1.2",
+      "scope": "excluded",
       "type": "library",
       "version": "4.1.2"
     },
@@ -5902,6 +5997,10 @@
       "name": "cython",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5915,6 +6014,7 @@
         }
       ],
       "purl": "pkg:generic/cython@3.2.4",
+      "scope": "excluded",
       "type": "library",
       "version": "3.2.4"
     },
@@ -5986,6 +6086,10 @@
       "name": "defusedxml",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -5999,6 +6103,7 @@
         }
       ],
       "purl": "pkg:generic/defusedxml@0.8.0rc2",
+      "scope": "excluded",
       "type": "library",
       "version": "0.8.0rc2"
     },
@@ -6021,6 +6126,10 @@
       "name": "dejagnu",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -6034,6 +6143,7 @@
         }
       ],
       "purl": "pkg:generic/dejagnu@1.6.3",
+      "scope": "excluded",
       "type": "library",
       "version": "1.6.3"
     },
@@ -6101,6 +6211,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -6114,6 +6228,7 @@
         }
       ],
       "purl": "pkg:generic/diffutils@3.12",
+      "scope": "excluded",
       "type": "library",
       "version": "3.12"
     },
@@ -6269,6 +6384,10 @@
       "name": "docbook-xml",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -6282,6 +6401,7 @@
         }
       ],
       "purl": "pkg:generic/docbook-xml@4.5",
+      "scope": "excluded",
       "type": "library",
       "version": "4.5"
     },
@@ -6365,6 +6485,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -6378,6 +6502,7 @@
         }
       ],
       "purl": "pkg:generic/docbook-xsl-ns@1.79.2",
+      "scope": "excluded",
       "type": "library",
       "version": "1.79.2"
     },
@@ -6484,6 +6609,10 @@
       "name": "ed",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -6497,6 +6626,7 @@
         }
       ],
       "purl": "pkg:generic/ed@1.22.5",
+      "scope": "excluded",
       "type": "library",
       "version": "1.22.5"
     },
@@ -6579,6 +6709,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -6592,6 +6726,7 @@
         }
       ],
       "purl": "pkg:generic/elfutils@0.194",
+      "scope": "excluded",
       "type": "library",
       "version": "0.194"
     },
@@ -6614,6 +6749,10 @@
       "name": "ensure-newer-sources-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -6627,6 +6766,7 @@
         }
       ],
       "purl": "pkg:generic/ensure-newer-sources-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -6870,6 +7010,10 @@
       "name": "filelock",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -6883,6 +7027,7 @@
         }
       ],
       "purl": "pkg:generic/filelock@3.20.3",
+      "scope": "excluded",
       "type": "library",
       "version": "3.20.3"
     },
@@ -6999,6 +7144,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7012,6 +7161,7 @@
         }
       ],
       "purl": "pkg:generic/findutils@4.10.0",
+      "scope": "excluded",
       "type": "library",
       "version": "4.10.0"
     },
@@ -7093,6 +7243,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7106,6 +7260,7 @@
         }
       ],
       "purl": "pkg:generic/flex@2.6.4",
+      "scope": "excluded",
       "type": "library",
       "version": "2.6.4"
     },
@@ -7212,6 +7367,10 @@
       "name": "freezegun",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7225,6 +7384,7 @@
         }
       ],
       "purl": "pkg:generic/freezegun@1.5.5",
+      "scope": "excluded",
       "type": "library",
       "version": "1.5.5"
     },
@@ -7247,6 +7407,10 @@
       "name": "gcc-wrapper",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7260,6 +7424,7 @@
         }
       ],
       "purl": "pkg:generic/gcc-wrapper@15.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "15.2.0"
     },
@@ -7460,6 +7625,10 @@
       "name": "gevent",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7473,6 +7642,7 @@
         }
       ],
       "purl": "pkg:generic/gevent@25.9.1",
+      "scope": "excluded",
       "type": "library",
       "version": "25.9.1"
     },
@@ -7566,6 +7736,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7579,6 +7753,7 @@
         }
       ],
       "purl": "pkg:generic/ghc-9.10.3-source",
+      "scope": "excluded",
       "type": "library"
     },
     {
@@ -7600,6 +7775,10 @@
       "name": "ghc-binary",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7613,6 +7792,7 @@
         }
       ],
       "purl": "pkg:generic/ghc-binary@9.8.4",
+      "scope": "excluded",
       "type": "library",
       "version": "9.8.4"
     },
@@ -7761,6 +7941,10 @@
       "name": "git-minimal-2.54.0",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7774,6 +7958,7 @@
         }
       ],
       "purl": "pkg:generic/git-minimal-2.54.0",
+      "scope": "excluded",
       "type": "library"
     },
     {
@@ -7832,6 +8017,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7845,6 +8034,7 @@
         }
       ],
       "purl": "pkg:generic/glibc@2.42-61",
+      "scope": "excluded",
       "type": "library",
       "version": "2.42-61"
     },
@@ -7938,6 +8128,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -7951,6 +8145,7 @@
         }
       ],
       "purl": "pkg:generic/glibc-locales@2.42-61",
+      "scope": "excluded",
       "type": "library",
       "version": "2.42-61"
     },
@@ -8050,6 +8245,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -8063,6 +8262,7 @@
         }
       ],
       "purl": "pkg:generic/gnugrep@3.12",
+      "scope": "excluded",
       "type": "library",
       "version": "3.12"
     },
@@ -8139,6 +8339,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -8152,6 +8356,7 @@
         }
       ],
       "purl": "pkg:generic/gnumake@4.4.1",
+      "scope": "excluded",
       "type": "library",
       "version": "4.4.1"
     },
@@ -8181,6 +8386,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -8194,6 +8403,7 @@
         }
       ],
       "purl": "pkg:generic/gnutar@1.35",
+      "scope": "excluded",
       "type": "library",
       "version": "1.35"
     },
@@ -8342,6 +8552,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -8355,6 +8569,7 @@
         }
       ],
       "purl": "pkg:generic/gtk-doc@1.35.1",
+      "scope": "excluded",
       "type": "library",
       "version": "1.35.1"
     },
@@ -8391,6 +8606,10 @@
       "name": "happy",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -8404,6 +8623,7 @@
         }
       ],
       "purl": "pkg:hackage/happy@2.1.7",
+      "scope": "excluded",
       "type": "library",
       "version": "2.1.7"
     },
@@ -8475,6 +8695,10 @@
       "name": "hatch-vcs",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -8488,6 +8712,7 @@
         }
       ],
       "purl": "pkg:generic/hatch-vcs@0.5.0",
+      "scope": "excluded",
       "type": "library",
       "version": "0.5.0"
     },
@@ -8594,6 +8819,10 @@
       "name": "help2man",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -8607,6 +8836,7 @@
         }
       ],
       "purl": "pkg:generic/help2man@1.49.3",
+      "scope": "excluded",
       "type": "library",
       "version": "1.49.3"
     },
@@ -9014,6 +9244,10 @@
       "name": "install-shell-files",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -9027,6 +9261,7 @@
         }
       ],
       "purl": "pkg:generic/install-shell-files@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -9520,6 +9755,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -9533,6 +9772,7 @@
         }
       ],
       "purl": "pkg:generic/keyutils@1.6.3",
+      "scope": "excluded",
       "type": "library",
       "version": "1.6.3"
     },
@@ -9715,6 +9955,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -9728,6 +9972,7 @@
         }
       ],
       "purl": "pkg:generic/libedit@20251016-3.1",
+      "scope": "excluded",
       "type": "library",
       "version": "20251016-3.1"
     },
@@ -10575,6 +10820,10 @@
       "name": "lzip",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -10588,6 +10837,7 @@
         }
       ],
       "purl": "pkg:generic/lzip@1.26",
+      "scope": "excluded",
       "type": "library",
       "version": "1.26"
     },
@@ -10775,6 +11025,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -10788,6 +11042,7 @@
         }
       ],
       "purl": "pkg:generic/meson@1.10.2",
+      "scope": "excluded",
       "type": "library",
       "version": "1.10.2"
     },
@@ -10894,6 +11149,10 @@
       "name": "mypy",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -10907,6 +11166,7 @@
         }
       ],
       "purl": "pkg:generic/mypy@1.20.1",
+      "scope": "excluded",
       "type": "library",
       "version": "1.20.1"
     },
@@ -11061,6 +11321,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -11074,6 +11338,7 @@
         }
       ],
       "purl": "pkg:generic/net-tools@2.10",
+      "scope": "excluded",
       "type": "library",
       "version": "2.10"
     },
@@ -11292,6 +11557,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -11305,6 +11574,7 @@
         }
       ],
       "purl": "pkg:generic/ninja@1.13.2",
+      "scope": "excluded",
       "type": "library",
       "version": "1.13.2"
     },
@@ -11383,6 +11653,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -11396,6 +11670,7 @@
         }
       ],
       "purl": "pkg:generic/numactl@2.0.18",
+      "scope": "excluded",
       "type": "library",
       "version": "2.0.18"
     },
@@ -11777,6 +12052,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -11790,6 +12069,7 @@
         }
       ],
       "purl": "pkg:generic/patchutils@0.3.3",
+      "scope": "excluded",
       "type": "library",
       "version": "0.3.3"
     },
@@ -11822,6 +12102,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -11835,6 +12119,7 @@
         }
       ],
       "purl": "pkg:generic/patchutils@0.4.2",
+      "scope": "excluded",
       "type": "library",
       "version": "0.4.2"
     },
@@ -11969,6 +12254,10 @@
       "name": "pexpect",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -11982,6 +12271,7 @@
         }
       ],
       "purl": "pkg:generic/pexpect@4.9.0",
+      "scope": "excluded",
       "type": "library",
       "version": "4.9.0"
     },
@@ -12014,6 +12304,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12027,6 +12321,7 @@
         }
       ],
       "purl": "pkg:generic/pkg-config@0.29.2",
+      "scope": "excluded",
       "type": "library",
       "version": "0.29.2"
     },
@@ -12049,6 +12344,10 @@
       "name": "pkg-config-wrapper",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12062,6 +12361,7 @@
         }
       ],
       "purl": "pkg:generic/pkg-config-wrapper@0.29.2",
+      "scope": "excluded",
       "type": "library",
       "version": "0.29.2"
     },
@@ -12217,6 +12517,10 @@
       "name": "psutil",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12230,6 +12534,7 @@
         }
       ],
       "purl": "pkg:generic/psutil@7.2.2",
+      "scope": "excluded",
       "type": "library",
       "version": "7.2.2"
     },
@@ -12402,6 +12707,10 @@
       "name": "pypa-build-hook.sh",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12415,6 +12724,7 @@
         }
       ],
       "purl": "pkg:generic/pypa-build-hook.sh@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -12437,6 +12747,10 @@
       "name": "pypa-install-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12450,6 +12764,7 @@
         }
       ],
       "purl": "pkg:generic/pypa-install-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -12507,6 +12822,10 @@
       "name": "pysocks",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12520,6 +12839,7 @@
         }
       ],
       "purl": "pkg:generic/pysocks@1.7.1",
+      "scope": "excluded",
       "type": "library",
       "version": "1.7.1"
     },
@@ -12577,6 +12897,10 @@
       "name": "pytest-asyncio",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12590,6 +12914,7 @@
         }
       ],
       "purl": "pkg:generic/pytest-asyncio@1.3.0",
+      "scope": "excluded",
       "type": "library",
       "version": "1.3.0"
     },
@@ -12612,6 +12937,10 @@
       "name": "pytest-check-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12625,6 +12954,7 @@
         }
       ],
       "purl": "pkg:generic/pytest-check-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -12647,6 +12977,10 @@
       "name": "pytest-instafail",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12660,6 +12994,7 @@
         }
       ],
       "purl": "pkg:generic/pytest-instafail@0.5.0",
+      "scope": "excluded",
       "type": "library",
       "version": "0.5.0"
     },
@@ -12682,6 +13017,10 @@
       "name": "pytest-mock",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12695,6 +13034,7 @@
         }
       ],
       "purl": "pkg:generic/pytest-mock@3.15.1",
+      "scope": "excluded",
       "type": "library",
       "version": "3.15.1"
     },
@@ -12717,6 +13057,10 @@
       "name": "pytest-timeout",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12730,6 +13074,7 @@
         }
       ],
       "purl": "pkg:generic/pytest-timeout@2.4.0",
+      "scope": "excluded",
       "type": "library",
       "version": "2.4.0"
     },
@@ -12762,6 +13107,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12775,6 +13124,7 @@
         }
       ],
       "purl": "pkg:generic/pytest-xdist@3.8.0",
+      "scope": "excluded",
       "type": "library",
       "version": "3.8.0"
     },
@@ -12797,6 +13147,10 @@
       "name": "python-catch-conflicts-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12810,6 +13164,7 @@
         }
       ],
       "purl": "pkg:generic/python-catch-conflicts-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -12867,6 +13222,10 @@
       "name": "python-imports-check-hook.sh",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12880,6 +13239,7 @@
         }
       ],
       "purl": "pkg:generic/python-imports-check-hook.sh@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -12902,6 +13262,10 @@
       "name": "python-namespaces-hook.sh",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12915,6 +13279,7 @@
         }
       ],
       "purl": "pkg:generic/python-namespaces-hook.sh@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -12937,6 +13302,10 @@
       "name": "python-output-dist-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12950,6 +13319,7 @@
         }
       ],
       "purl": "pkg:generic/python-output-dist-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -12972,6 +13342,10 @@
       "name": "python-relax-deps-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12985,6 +13359,7 @@
         }
       ],
       "purl": "pkg:generic/python-relax-deps-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -13007,6 +13382,10 @@
       "name": "python-remove-bin-bytecode-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -13020,6 +13399,7 @@
         }
       ],
       "purl": "pkg:generic/python-remove-bin-bytecode-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -13042,6 +13422,10 @@
       "name": "python-remove-tests-dir-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -13055,6 +13439,7 @@
         }
       ],
       "purl": "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -13077,6 +13462,10 @@
       "name": "python-runtime-deps-check-hook.sh",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -13090,6 +13479,7 @@
         }
       ],
       "purl": "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -13146,6 +13536,10 @@
       "name": "python3-minimal-3.13.13",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -13159,6 +13553,7 @@
         }
       ],
       "purl": "pkg:generic/python3-minimal-3.13.13",
+      "scope": "excluded",
       "type": "library"
     },
     {
@@ -13291,6 +13686,10 @@
       "name": "pytz",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -13304,6 +13703,7 @@
         }
       ],
       "purl": "pkg:generic/pytz@2026.1.post1",
+      "scope": "excluded",
       "type": "library",
       "version": "2026.1.post1"
     },
@@ -13424,6 +13824,10 @@
       "name": "re2c",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -13437,6 +13841,7 @@
         }
       ],
       "purl": "pkg:generic/re2c@4.5.1",
+      "scope": "excluded",
       "type": "library",
       "version": "4.5.1"
     },
@@ -13709,6 +14114,10 @@
       "name": "remove-references-to",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -13722,6 +14131,7 @@
         }
       ],
       "purl": "pkg:generic/remove-references-to",
+      "scope": "excluded",
       "type": "library"
     },
     {
@@ -14037,6 +14447,10 @@
       "name": "setuptools-build-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -14050,6 +14464,7 @@
         }
       ],
       "purl": "pkg:generic/setuptools-build-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -14751,6 +15166,10 @@
       "name": "swig",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -14764,6 +15183,7 @@
         }
       ],
       "purl": "pkg:generic/swig@4.4.1",
+      "scope": "excluded",
       "type": "library",
       "version": "4.4.1"
     },
@@ -15150,6 +15570,10 @@
       "name": "tcl-requires-check-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -15163,6 +15587,7 @@
         }
       ],
       "purl": "pkg:generic/tcl-requires-check-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -15381,6 +15806,10 @@
       "name": "texinfo",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -15394,6 +15823,7 @@
         }
       ],
       "purl": "pkg:generic/texinfo@7.2",
+      "scope": "excluded",
       "type": "library",
       "version": "7.2"
     },
@@ -15647,6 +16077,10 @@
       "name": "tomli",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -15660,6 +16094,7 @@
         }
       ],
       "purl": "pkg:generic/tomli@2.4.0",
+      "scope": "excluded",
       "type": "library",
       "version": "2.4.0"
     },
@@ -15913,6 +16348,10 @@
       "name": "types-psutil",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -15926,6 +16365,7 @@
         }
       ],
       "purl": "pkg:generic/types-psutil@7.2.1.20260116",
+      "scope": "excluded",
       "type": "library",
       "version": "7.2.1.20260116"
     },
@@ -15948,6 +16388,10 @@
       "name": "types-setuptools",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -15961,6 +16405,7 @@
         }
       ],
       "purl": "pkg:generic/types-setuptools@80.9.0.20251223",
+      "scope": "excluded",
       "type": "library",
       "version": "80.9.0.20251223"
     },
@@ -16018,6 +16463,10 @@
       "name": "tzdata",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16031,6 +16480,7 @@
         }
       ],
       "purl": "pkg:generic/tzdata@2026b",
+      "scope": "excluded",
       "type": "library",
       "version": "2026b"
     },
@@ -16305,6 +16755,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16318,6 +16772,7 @@
         }
       ],
       "purl": "pkg:generic/unzip@6.0",
+      "scope": "excluded",
       "type": "library",
       "version": "6.0"
     },
@@ -16340,6 +16795,10 @@
       "name": "update-autotools-gnu-config-scripts-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16353,6 +16812,7 @@
         }
       ],
       "purl": "pkg:generic/update-autotools-gnu-config-scripts-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -16478,6 +16938,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16491,6 +16955,7 @@
         }
       ],
       "purl": "pkg:generic/util-linux-minimal@2.42",
+      "scope": "excluded",
       "type": "library",
       "version": "2.42"
     },
@@ -16513,6 +16978,10 @@
       "name": "version-check-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16526,6 +16995,7 @@
         }
       ],
       "purl": "pkg:generic/version-check-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -16639,6 +17109,10 @@
       },
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16652,6 +17126,7 @@
         }
       ],
       "purl": "pkg:generic/which@2.23",
+      "scope": "excluded",
       "type": "library",
       "version": "2.23"
     },
@@ -16723,6 +17198,10 @@
       "name": "wrap-python-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16736,6 +17215,7 @@
         }
       ],
       "purl": "pkg:generic/wrap-python-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
@@ -16758,6 +17238,10 @@
       "name": "writable-tmpdir-as-home-hook",
       "properties": [
         {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16771,6 +17255,7 @@
         }
       ],
       "purl": "pkg:generic/writable-tmpdir-as-home-hook@26.05pre-git",
+      "scope": "excluded",
       "type": "library",
       "version": "26.05pre-git"
     },
