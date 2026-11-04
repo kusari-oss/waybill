@@ -57,3 +57,38 @@ is needed:
 Should a future mechanism ever assert `required`, this table lapses and a
 precedence rule becomes necessary. That is recorded in the spec's
 Assumptions so the lapse is noticeable.
+
+## T040 — Principle V self-audit, row by row
+
+Principle V: a standards-native construct takes precedence over a
+`waybill:` property, and the parity-bridge carve-out applies only "when one
+format has the native field but another doesn't". Each row of the table
+above is audited against that, and against the refreshed
+`nix-closure-moat` goldens rather than against the emission code.
+
+| Row | Native construct used | Annotation used instead? | Verdict |
+|---|---|---|---|
+| `artifact-input`, either | none — nothing is asserted | no | **compliant.** The absence is the claim; FR-002 forbids asserting `required`, and no annotation substitutes for it. Measured: 231 components, 9 of them scoped by the propagation, all unchanged. |
+| `both`, either | none — nothing is asserted | no | **compliant**, same reasoning. Measured: 34 components, 1 propagation-scoped, all unchanged. |
+| `build-tooling`, not compiler-supplied | CDX `component.scope = "excluded"`; SPDX 2.3 `BUILD_TOOL_OF`; SPDX 3.0.1 `LifecycleScopedRelationship` + `usesTool`, scope `build` | no | **compliant.** All three formats carry it natively. Measured: 80. |
+| `build-tooling`, compiler-supplied | none — the exemption suppresses the claim | C203 `exempt-compiler-supplied` | **compliant, and the carve-out does not apply.** No format has a native way to say "a rule deliberately declined to classify this", so there is no native field in any format to prefer. The annotation records the *provenance of a non-claim*, which is why it is not a parity bridge around a missing field. Corpus population 0 (P9); covered by fixture `roletoolboot`. |
+| `unreferenced`, not compiler-supplied | as `build-tooling` above | no | **compliant.** Measured: 17. |
+| `unreferenced`, compiler-supplied | as `build-tooling` above | C203 | **compliant**, same reasoning. Corpus population 0. |
+| absent (no role) | none | no | **compliant.** FR-007's fail-closed arm classifies nothing and emits nothing, so there is no claim to carry. Measured: 25 components with no role — 24 unscoped and the `nixpkgs` component, which keeps the `excluded` it already had. |
+
+**The one annotation this milestone adds**, C203
+`waybill:scope-classification-source`, was audited against the vendored
+schemas in `research.md` R5 and recorded as **KEEP-NO-NATIVE** in
+`docs/reference/sbom-format-mapping.md`. The classification itself is
+native in all three formats and is deliberately *not* in that row; what has
+no native carrier is which analysis concluded it. CDX `component.scope`'s
+`meta:enum` defines its three values as claims about runtime reachability
+with no provenance slot, SPDX 2.3 `relationshipType` has no provenance
+member, and SPDX 3.0.1's `LifecycleScopeType` likewise carries the
+classification rather than its origin.
+
+**Measured parity across the three native carriers** (refreshed goldens):
+the CDX components carrying C203, the `BUILD_TOOL_OF` subjects, and the
+`usesTool` targets are the same set of 97, with exactly one root on each
+side (1 distinct `relatedSpdxElement`, 1 distinct `from`). So no format
+carries the classification for a component another format omits.

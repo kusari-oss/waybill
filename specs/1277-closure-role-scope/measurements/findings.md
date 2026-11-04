@@ -474,3 +474,66 @@ cargo test -p waybill --test X > log 2>&1; echo "exit=$?"; grep '^test result' l
 Every suite in this milestone's final verification was re-run that way, and
 all seven report `exit=0` individually rather than as one collapsed
 pipeline.
+
+## F19 — a prediction that contradicted something already measured
+
+The refresh prediction (`measurements/refresh-prediction.md`, committed in
+`7ac553f1` before the run was dispatched) scored **8 of 8 measured** and
+**3 of 4 inferred**. The miss is P10:
+
+> **P10 — some of the 97 carry `closure-role+lifecycle-propagation` rather
+> than `closure-role`.** The count is unknown. [...] Expected small.
+
+Measured after the refresh: **0 of 97**. All 97 carry plain `closure-role`.
+
+The mechanism, from the refreshed golden's role × lifecycle cross-tab:
+
+| closure role | `waybill:lifecycle-scope` | count |
+|---|---|---|
+| `artifact-input` | `development` | 9 |
+| `artifact-input` | none | 222 |
+| `both` | `development` | 1 |
+| `both` | none | 33 |
+| `build-tooling` | none | 80 |
+| `unreferenced` | none | 17 |
+| none | `build` | 1 |
+| none | none | 24 |
+
+The two populations are **disjoint on this target**. Every component the
+milestone-1269 propagation scoped sits in an `artifact-input` or `both`
+role — exactly the roles FR-002 forbids this pass from touching — and every
+component this pass classifies carries no propagation scope. The combined
+value cannot occur here, and no component configuration on this target
+could produce it.
+
+**Why this one is worth recording rather than shrugging off.** It is not a
+prediction that turned out wrong against new information. The doc comment
+on `m1277_the_both_analyses_value_is_reachable_and_not_dead_code`, written
+two commits earlier, already says it:
+
+> On the corpus the population is **zero** today — the ten already-scoped
+> components on `nix-closure-moat` are all in roles this feature skips — so
+> the corpus cannot stand in for this fixture.
+
+So the fact was measured, written down, and then contradicted by my own
+prediction a short time later. The measured/inferred split caught it, which
+is what the split is for — but the split is a net, not a substitute for
+re-reading what the branch already asserts. **Before predicting a count,
+grep the branch for a test that already states it.**
+
+No defect follows. The combined value is reachable and is covered by a
+positive test that had to engineer the configuration for it — the fixture
+`roletoolhask` is in a `build-tooling` role *and* declared only in a
+`buildable: False` stanza, so both analyses reach it independently. That
+test's own comment records that the first draft of the fixture produced the
+value nowhere, "which would have made the arm above dead code with a
+passing test over it". The arm is live; the corpus simply does not contain
+the shape.
+
+**P9, flagged in the prediction as the one I would most expect to be
+wrong, held.** It claimed no component would carry
+`exempt-compiler-supplied`, resting on `happy@2.1.7` appearing in the
+pinned compiler configurations only as an alias rather than as `= null`.
+Measured: 0 exempt, I9 green, no new declaration. Flagging the shakiest
+inference is not the same as being wrong about it, and the flag cost
+nothing.
