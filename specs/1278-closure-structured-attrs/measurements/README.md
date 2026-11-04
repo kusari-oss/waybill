@@ -126,3 +126,65 @@ one of them showed `hspec` referenced via `buildInputs` **from `env`**, a field
 the reader already sees, which is what exposed the error. The filter on
 `scope-classification-source = "closure-role"` is what makes the count
 defensible: it isolates exclusions resting on the role and nothing else.
+
+## FR-011 — the corrected census, and the mislabelled one
+
+### The control got stronger during implementation
+
+The spec quotes a control of **347 of 348** component roles agreeing between
+the probe's env-only arm and the committed golden. Implementation found a
+better one. The golden's own C184 `waybill:nix-closure` record carries the
+**derivation-level** census, and it reads:
+
+```json
+{"attribute":"default","components-emitted":362,"derivations":1749,
+ "distinct-cves":13,"patches":188,"patches-without-cve":173,
+ "roles":{"artifact-input":256,"both":39,"build-tooling":101,"unreferenced":1353}}
+```
+
+`1749 / 256 / 101 / 39 / 1353` is **byte-for-byte** what `role-census-probe.py`
+reports for its env-only arm on the x86_64-linux closure. Not 99% agreement
+over a derived per-component view — the exact figures, from the shipped
+classifier, in a committed artifact.
+
+That settles two things at once:
+
+1. **The probe faithfully reimplements the classifier.** Its env-only arm is
+   the shipped reader.
+2. **The blind spot is live in CI.** These goldens were produced by the corpus
+   lane. If CI's nix emitted the flat carrier for these derivations, CI's
+   census would match the probe's *widened* arm — 270 / 118 / 42 / 1319. It
+   matches the env-only arm.
+
+The spec's CI-liveness assumption, and the inference labelled as such in
+issue #1348, can be upgraded on this evidence.
+
+### The mislabelled census
+
+| source | derivations | artifact / tooling / both / unreferenced |
+|---|---|---|
+| committed **golden** (C184) | 1,749 | 256 / 101 / 39 / 1,353 |
+| probe, env-only, x86_64-linux | 1,749 | 256 / 101 / 39 / 1,353 |
+| probe, env-only, aarch64-darwin | 1,275 | 264 / 134 / 52 / 825 |
+| the prose in `manifest.rs` and `specs/1035-.../research.md` | **1,275** | **264 / 134 / 52 / 825** |
+
+So the artifact and the measurement agree, and only the **prose** disagrees:
+the committed comment describes the darwin closure while labelling itself
+x86_64-linux, "the closure the goldens pin". The goldens pin the linux one.
+Corrected under FR-011 (task T041).
+
+The lesson is the one FR-012 encodes: a document that records neither its
+system nor its output shape cannot be audited after the fact, and a prose
+comment is not a record.
+
+### Expected after the fix
+
+| role | golden today | expected |
+|---|---|---|
+| artifact-input | 256 | 270 |
+| build-tooling | 101 | 118 |
+| both | 39 | 42 |
+| unreferenced | 1,353 | 1,319 |
+
+To be confirmed against the refreshed goldens, not asserted from here — that
+is what T043's prediction and T045's scoring are for.

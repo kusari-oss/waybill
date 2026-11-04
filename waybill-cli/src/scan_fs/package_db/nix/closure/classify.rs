@@ -4,6 +4,16 @@
 //! `buildInputs` is what goes into the thing being built, `nativeBuildInputs`
 //! is what builds it. Reading those fields means no name heuristic, and no
 //! list of "things that look like compilers" to maintain.
+//!
+//! **Nothing in this file knows where those fields live.** It asks the
+//! derivation record for them, and that record resolves from either of nix's
+//! two attribute carriers. That is the design, not an accident of layering:
+//! milestone 1278 (#1348) fixed a defect in which one carrier was never read,
+//! and fixing it required no change here at all. Four consumers depend on
+//! that resolution — this classifier, component emission, patch collection
+//! and the nixpkgs declaration pass — and two of them resolving attributes
+//! differently would disagree about the same derivation. So the resolution
+//! belongs to the record and nowhere else (FR-007).
 
 use std::collections::{BTreeMap, BTreeSet};
 

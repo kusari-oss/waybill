@@ -589,6 +589,65 @@ mod tests {
     }
 
     #[test]
+    fn m1278_clearing_the_typed_carrier_reproduces_the_defect() {
+        // SC-010 / T039 -- the mutation, run as a mutation rather than
+        // asserted about.
+        //
+        // The pre-#1348 reader is exactly "this reader with the typed carrier
+        // absent", so remove the carrier from the parsed data and the old
+        // behaviour must come back: the member resolves to nothing. A test
+        // that only checks the fixed behaviour cannot distinguish a working
+        // fix from a fixture that would have passed anyway.
+        let mut c = fixture("matched_pair.json");
+        let key = "fff-waybill-fixture-typedconsumer-1.0.drv";
+
+        assert_eq!(
+            c.derivations[key].paths_in("buildInputs").count(),
+            1,
+            "CONTROL: with the carrier present the dependency resolves"
+        );
+
+        c.derivations.get_mut(key).unwrap().structured_attrs = None;
+
+        assert_eq!(
+            c.derivations[key].paths_in("buildInputs").count(),
+            0,
+            "with the typed carrier gone the dependency must vanish -- if it \
+             survives, the resolution is reading it from somewhere else and \
+             this feature is not what makes the test above pass"
+        );
+        assert_eq!(
+            c.derivations[key].pname(),
+            Some("waybill-fixture-typedconsumer-1.0"),
+            "and the identity falls back to the derivation's own name, which \
+             is the pre-fix behaviour that made 11 members unnameable"
+        );
+    }
+
+    #[test]
+    fn m1278_a_name_declared_in_neither_carrier_is_still_not_declared() {
+        // T027. This feature adds a SOURCE for the name; it does not invent
+        // one. A derivation declaring `pname` nowhere must still report none,
+        // or the nixpkgs declaration pass starts asking questions about
+        // patch files and fetched tarballs.
+        let c = fixture("awkward_shapes.json");
+        let d = &c.derivations["aaa-waybill-fixture-libalpha-1.0.drv"];
+        assert_eq!(d.declared_pname(), Some("waybill-fixture-libalpha"));
+
+        let mut stripped = c.clone();
+        let target = stripped
+            .derivations
+            .get_mut("aaa-waybill-fixture-libalpha-1.0.drv")
+            .unwrap();
+        target.env.remove("pname");
+        target.structured_attrs = None;
+        assert_eq!(
+            stripped.derivations["aaa-waybill-fixture-libalpha-1.0.drv"].declared_pname(),
+            None
+        );
+    }
+
+    #[test]
     fn a_derivation_without_the_field_yields_no_paths() {
         let c = RawClosure::parse(CLOSURE).unwrap();
         assert_eq!(c.derivations["aaa-lib-1.0.drv"].paths_in("buildInputs").count(), 0);

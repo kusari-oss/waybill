@@ -72,7 +72,7 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 ### Tests for User Story 1
 
 - [X] T012 [P] [US1] Create `waybill-cli/tests/closure_structured_attrs.rs` with the crate-level attributes its sibling `waybill-cli/tests/closure_role_scope.rs` carries — `#![allow(clippy::unwrap_used)]`, and `#![cfg(unix)]` only if the tests genuinely need it, gating the whole file rather than shimming a non-unix early return — then test contract property P2 in it: the typed-form derivation of T001's matched pair resolves to the **same role** as its flat twin. Assert on the role, never on the parsed field — the store-path basename join is a second, silent failure, and a field-level assertion passes while the feature is broken
-- [ ] T013 [P] [US1] Test contract property P1 in `waybill-cli/tests/closure_structured_attrs.rs`: every existing flat-form fixture classifies byte-identically to `main`, pinned as a regression
+- [X] T013 [P] [US1] Test contract property P1 in `waybill-cli/tests/closure_structured_attrs.rs`: every existing flat-form fixture classifies byte-identically to `main`, pinned as a regression
 - [X] T014 [P] [US1] Test contract property P3 in `waybill-cli/tests/closure_structured_attrs.rs`: an empty typed list credits no member. Load-bearing — `buildInputs: []` is on all 56 `source` derivations in the pinned closure, and crediting it would manufacture edges that read as an improvement
 - [X] T015 [P] [US1] Test contract property P4 in `waybill-cli/tests/closure_structured_attrs.rs`: each awkward shape in T002 yields no paths and does not panic
 - [X] T016 [P] [US1] Test contract property P6 in `waybill-cli/tests/closure_structured_attrs.rs`: T004's disagreement resolves from the flat map and is reported
@@ -81,8 +81,8 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Confirm `classify` in `waybill-cli/src/scan_fs/package_db/nix/closure/classify.rs` needs no change because it reads through the accessors, and record that in its module doc — the seam is the design (FR-007), not an accident
-- [ ] T020 [US1] Verify that `assign_role_scope` in `waybill-cli/src/resolve/closure_role_scope.rs` asserts no scope for a corrected `artifact-input` or `both` role, and add the assertion if it rests on an unexercised path — FR-008 follows from m1277's existing rule and must not become a new one
+- [X] T019 [US1] Confirm `classify` in `waybill-cli/src/scan_fs/package_db/nix/closure/classify.rs` needs no change because it reads through the accessors, and record that in its module doc — the seam is the design (FR-007), not an accident
+- [X] T020 [US1] Verify that `assign_role_scope` in `waybill-cli/src/resolve/closure_role_scope.rs` asserts no scope for a corrected `artifact-input` or `both` role, and add the assertion if it rests on an unexercised path — FR-008 follows from m1277's existing rule and must not become a new one
 - [ ] T021 [US1] Update the `nix-closure-moat` expectations in `waybill-cli/tests/corpus_harness_195/expectations.rs` for the corrected role census, the nine components of SC-003, and SC-005's transition table **per direction** (5 `build-tooling`→`both`, 4 `unreferenced`→`artifact-input`, 3 `unreferenced`→`build-tooling`, 2 `artifact-input`→`both`), plus the assertion that nothing moves toward `unreferenced` — a total that matches by the wrong transitions must fail
 
 **Checkpoint**: the nine false exclusions are retracted. US1 delivers value with nothing else landed.
@@ -102,7 +102,7 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Confirm `patches.rs` in `waybill-cli/src/scan_fs/package_db/nix/closure/` is corrected by T006 alone, and correct its module doc, which currently says it "reads `env.patches`"
+- [X] T024 [US2] Confirm `patches.rs` in `waybill-cli/src/scan_fs/package_db/nix/closure/` is corrected by T006 alone, and correct its module doc, which currently says it "reads `env.patches`"
 - [ ] T025 [US2] Update the patch and CVE expectations for `nix-closure-moat` in `waybill-cli/tests/corpus_harness_195/expectations.rs`
 
 **Checkpoint**: patch evidence complete; US1 unaffected.
@@ -118,7 +118,7 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 ### Tests for User Story 3
 
 - [X] T026 [P] [US3] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a derivation declaring `pname` and `version` only in the typed form is emitted under that name and version
-- [ ] T027 [P] [US3] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a derivation declaring a name in neither shape is still skipped — this story adds a source for the name, it does not invent one
+- [X] T027 [P] [US3] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a derivation declaring a name in neither shape is still skipped — this story adds a source for the name, it does not invent one
 
 ### Implementation for User Story 3
 
@@ -152,7 +152,7 @@ reads makes the guard fail.
 - [X] T036 [US4] Add the three parity extractors in `waybill-cli/src/parity/extractors/` **in the same change as T035** — a documented row with no extractor fails `every_catalog_row_has_an_extractor`, so the two are not separable
 - [X] T037 [US4] Implement the unconsulted-field detector feeding `ReadOutcome`, reporting every store-path-holding field classification does not consult, not only the seven it does (FR-014), in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs`
 - [X] T038 [US4] Test SC-014 in `waybill-cli/tests/closure_structured_attrs.rs`: every member's role is identical with and without the T037 diagnostic. This is what keeps SC-004's census attributable to the shape fix alone
-- [ ] T039 [US4] Test SC-010 in `waybill-cli/tests/closure_structured_attrs.rs` as a **mutation**: with the typed-form reads removed, the guard goes red. A guard that only passes after the fix is no evidence it can fail
+- [X] T039 [US4] Test SC-010 in `waybill-cli/tests/closure_structured_attrs.rs` as a **mutation**: with the typed-form reads removed, the guard goes red. A guard that only passes after the fix is no evidence it can fail
 - [X] T051 [P] [US4] Test SC-012 and FR-012 in `waybill-cli/tests/closure_structured_attrs.rs`: the disclosure records the format version the closure was read from, asserted on the emitted value and not inferred, covering US4's third acceptance scenario. Runs with T031; numbered last so no existing task ID moved
 
 **Checkpoint**: the disclosure is live and proven able to fail.
@@ -161,17 +161,17 @@ reads makes the guard fail.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T040 [P] Record the corrected census against the committed one per FR-011 in `specs/1278-closure-structured-attrs/measurements/README.md`, so the figures in the earlier closure milestones' research can be read as what they were measured through
+- [X] T040 [P] Record the corrected census against the committed one per FR-011 in `specs/1278-closure-structured-attrs/measurements/README.md`, so the figures in the earlier closure milestones' research can be read as what they were measured through
 - [ ] T041 [P] Correct the mislabelled census per FR-011: the `1,275 / 264 / 134 / 52 / 825` figure is an aarch64-darwin measurement, in `specs/1035-nix-closure-sbom/research.md` and in the `nix-closure-moat` comment in `waybill-cli/tests/corpus_harness_195/manifest.rs`
 - [ ] T042 Run the local gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with **no `+toolchain` argument** (#1189). Assert on `GATE_RESULT`, the expect line, and the per-target `test result: ok. N passed; 0 failed` lines — the absence of FAILED is not evidence
-- [ ] T043 Satisfy FR-016's first half: commit the refresh prediction **before** dispatching it, in `specs/1278-closure-structured-attrs/measurements/refresh-prediction.md` — which targets move, which do not, and the expected role, component, patch and disclosure deltas
+- [X] T043 Satisfy FR-016's first half: commit the refresh prediction **before** dispatching it, in `specs/1278-closure-structured-attrs/measurements/refresh-prediction.md` — which targets move, which do not, and the expected role, component, patch and disclosure deltas
 - [ ] T044 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch. **Never** set `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` locally
 - [ ] T045 Satisfy FR-016's second half: score the T043 prediction against the refresh diff in `specs/1278-closure-structured-attrs/measurements/refresh-prediction.md`, including any miss and what it corrected
 - [ ] T046 Check every target under `waybill-cli/tests/fixtures/public_corpus/` for movement outside `nix-closure-moat` beyond the disclosure appearing on closure-scanning targets — a non-closure target that moved means the widening leaked past the type it is confined to (research R6)
 - [ ] T047 Satisfy FR-017: reconcile `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` with the refreshed goldens — retire declarations the fix makes stale, and declare any new offender with its reason and count
 - [ ] T048 [P] Record the measured `fields-unconsulted` population as the first measurement of #1346's coverage gap in `specs/1278-closure-structured-attrs/measurements/README.md` — the output SC-013 deliberately did not predict
 - [ ] T049 Run the `quickstart.md` validation end to end, including the control that the env-only arm still reproduces the goldens and the five traps
-- [ ] T050 [P] Record anything the milestone corrected about its own research in `specs/1278-closure-structured-attrs/measurements/findings.md`, including the 16→9 false-exclusion count fixed during spec writing
+- [X] T050 [P] Record anything the milestone corrected about its own research in `specs/1278-closure-structured-attrs/measurements/findings.md`, including the 16→9 false-exclusion count fixed during spec writing
 
 ---
 
