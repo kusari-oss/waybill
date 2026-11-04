@@ -41,6 +41,14 @@ So m1277's defect class is already back, through a different door. It is not a
 regression in m1277 — the rule it encodes is right. The input to that rule is
 wrong.
 
+## Clarifications
+
+### Session 2026-11-04
+
+- Q: Where must the "a declaration was not interpretable" report be visible? → A: A new document-scope annotation. C190 `waybill:nix-closure-degraded` cannot carry it — it is emitted only when no closure was recorded at all, and this is a closure that *was* read with some declarations unread. Constitution XII.3 requires degraded enrichment be disclosed in the document, not only logged, and #1115 was that defect.
+- Q: What should an unrecognized `nix derivation show` format version do? → A: Nothing to the reads — resolution stays version-agnostic, driven by which attribute shape is present. The observed format version is recorded in the new annotation instead, so the output shape a document was built from is in the document rather than inferred later.
+- Q: How wide should the uninterpretable-declaration check look? → A: It reports **every** dependency-shaped field a derivation declares that classification does not consult, as a diagnostic. Classification stays on the seven fields, so this milestone's role census remains attributable to the shape fix alone, while the report measures #1346's field-coverage gap for free.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - the role reflects every way nix references a member (Priority: P1)
@@ -154,11 +162,16 @@ milestone fixes, asserted against the pre-fix behaviour, not merely pass after.
 **Acceptance Scenarios**:
 
 1. **Given** a closure in which some derivation declares a dependency field
-   that the reader does not consult, **When** the closure is read, **Then** the
-   run reports that it saw a declaration it could not interpret, naming the
-   field, rather than treating it as absent.
-2. **Given** a closure the reader fully understands, **When** the closure is
-   read, **Then** no such report is produced and the run is silent.
+   that classification does not consult, **When** the closure is read, **Then**
+   the emitted document discloses that a declaration went unconsulted, naming
+   the field, rather than the member being treated as unreferenced.
+2. **Given** a closure every declaration of which is consulted, **When** the
+   closure is read, **Then** no disclosure is emitted in any format.
+3. **Given** any closure, **When** it is read, **Then** the disclosure records
+   the output format version it was read from.
+4. **Given** a declaration in a field classification does not consult, **When**
+   the document is emitted, **Then** the member's role is identical to what it
+   would be without the disclosure — the report observes, it does not classify.
 
 ---
 
@@ -173,8 +186,10 @@ milestone fixes, asserted against the pre-fix behaviour, not merely pass after.
 - **A typed field holding a single string** rather than a list.
 - **An empty list.** `buildInputs: []` is present on all 56 `source`
   derivations and must not credit anything.
-- **Format versions beyond 4.** A version the reader has not seen must not be
-  read as "no attributes anywhere".
+- **Format versions beyond 4.** A version the reader has not seen is read
+  exactly as a known one, by whichever attribute shape is present, and is
+  recorded in the disclosure (FR-012, FR-013). It is never read as "no
+  attributes anywhere", and it never degrades the tier on its own.
 - **Existing hand-written fixtures are all flat-form.** Every one of them must
   keep producing the roles it produces today; this feature widens what is read
   and changes nothing about the flat form.
@@ -211,9 +226,29 @@ milestone fixes, asserted against the pre-fix behaviour, not merely pass after.
   is absent from the artifact when that member's corrected role is
   `artifact-input` or `both`, which follows from the existing rule rather than
   adding a new one.
-- **FR-009**: The run MUST report, once per scan, that it encountered a
-  dependency declaration in a shape it could not interpret, naming the field,
-  and MUST stay silent when there is none.
+- **FR-009**: The emitted document MUST carry a document-scope disclosure,
+  once per scan, when the closure was read but some declaration in it was not
+  consulted. The disclosure MUST name the fields involved and how many
+  declarations and derivations were affected, MUST be absent when there is
+  nothing to disclose, and MUST be present in all three output formats with
+  equal content. A log line alone does not satisfy this: a consumer cannot
+  otherwise tell a fully-read closure from a partially-read one, which is the
+  defect #1115 fixed for total closure degradation and this requirement
+  extends to partial.
+- **FR-012**: The disclosure of FR-009 MUST additionally record the
+  `nix derivation show` output format version the closure was read from, so
+  which attribute shapes a document was built from is a fact in the document
+  rather than something a later reader has to infer.
+- **FR-013**: Attribute resolution MUST NOT be gated on the format version. A
+  version the reader has not seen MUST be read exactly as a known one — by
+  whichever attribute shape is present — because a version list is an
+  allowlist that falls out of date, and the per-declaration check of FR-009
+  is what actually has teeth against a shape change.
+- **FR-014**: The disclosure of FR-009 MUST report every field a derivation
+  declares that holds store paths and that role classification does not
+  consult, not only the seven it does. This is diagnostic: it MUST NOT change
+  any member's role, so that this milestone's census remains attributable to
+  the attribute-shape fix alone.
 - **FR-010**: The committed corpus goldens MUST be refreshed in this milestone,
   through the existing workflow dispatch, never generated locally.
 - **FR-011**: The milestone MUST record the corrected role census against the
@@ -233,6 +268,12 @@ milestone fixes, asserted against the pre-fix behaviour, not merely pass after.
 - **Closure role**: how nix references a member — into the artifact, as
   tooling, both, or neither. Derived entirely from the dependency fields, so a
   field the reader cannot see moves a member toward "neither".
+- **Partial-read disclosure**: a new document-scope record, present only when
+  something went unconsulted, naming the fields, the number of affected
+  declarations and derivations, and the output format version the closure was
+  read from. It is the consumer's only way to distinguish a fully-read closure
+  from a partially-read one, which the existing total-failure disclosure
+  cannot express because it is emitted only when no closure was recorded.
 - **Scope classification source**: the existing published record of what a
   scope assertion rests on. The nine false exclusions all rest on the role
   alone, which is how they can be identified from emitted output without
@@ -275,8 +316,25 @@ are the invariants, and the rest are the figures observed on 2026-11-04.
 - **SC-008**: The 11 derivations whose name and version are declared only in
   the typed form are emitted as components.
 - **SC-009**: Every existing flat-form fixture produces byte-identical
-  classification output, and every corpus target other than `nix-closure-moat`
-  produces byte-identical goldens.
+  classification output. Every corpus target that does not scan a closure
+  produces byte-identical goldens; targets that do scan one change only by
+  gaining the FR-009 disclosure and, for `nix-closure-moat`, the corrections
+  of SC-003 through SC-008.
+- **SC-011**: The disclosure of FR-009 is absent from a document whose closure
+  was read completely, and present with equal content in all three formats
+  when it was not. Equal content across the three is checked, not assumed:
+  documenting the field without emitting it, or emitting it in one format
+  only, both fail.
+- **SC-012**: The disclosure records the format version observed. On the pinned
+  corpus target today that value is `4`.
+- **SC-013**: The disclosure names every store-path-holding field that
+  classification does not consult. Measured on the pinned closure, the
+  classifier consults 7 fields; the disclosure is expected to name the
+  remainder that are actually declared, which is the first measured figure for
+  #1346's coverage gap and is **not predicted here** — the gap's size is an
+  output of this milestone, not an input to it.
+- **SC-014**: Every member's role is identical whether or not the FR-014
+  diagnostic is enabled. The census figures in SC-004 hold either way.
 - **SC-010**: Removing the typed-form reads makes the US4 guard fail, asserted
   by a test that holds the pre-fix behaviour. A guard that only passes after
   the fix is not evidence that it can fail.
@@ -309,11 +367,20 @@ are the invariants, and the rest are the figures observed on 2026-11-04.
   work's premise is a question for it, not for this milestone.** The reason
   this feature is sequenced first is that it moves the population; quantifying
   the knock-on belongs to whatever spec consumes it.
-- **No new dependency fields are added.** The seven the classifier reads are
-  unchanged. That the classifier reads 7 of roughly 20 nixpkgs dependency
-  attributes is a separate, already-filed gap, and widening the field list here
-  would confound this milestone's measurement with that one's.
+- **No new dependency fields are *classified*.** The seven that decide a role
+  are unchanged, so the census in SC-004 is attributable to the attribute-shape
+  fix alone. That the classifier reads 7 of roughly 20 nixpkgs dependency
+  attributes is a separate, already-filed gap (#1346); widening the classified
+  list here would move the census for two independent reasons at once and make
+  SC-004 uncheckable. The fields beyond the seven are *reported* under FR-014,
+  which is why this milestone produces that gap's first measurement without
+  acting on it.
 - **Goldens are refreshed through workflow dispatch.** Local generation is
   never used.
+- **The disclosure's documentation and its emission land together.** The
+  format-mapping reference and the cross-format parity machinery are checked
+  against each other, so a documented field that nothing emits is a failure
+  rather than a to-do. The next free row number is C204; the plan confirms it
+  rather than this spec reserving it.
 - **Zero new dependencies.** Both attribute shapes are already present in the
   parsed document.

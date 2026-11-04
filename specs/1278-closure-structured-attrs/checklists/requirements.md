@@ -66,3 +66,38 @@ nixpkgs does. The one claim that could not be measured directly — that the
 defect is live in CI and not only locally — is carried by a control stated in
 Assumptions (347 of 348 roles agree with the committed golden) rather than
 asserted.
+
+## Clarify session 2026-11-04
+
+Three questions asked, three answered; `## Clarifications` holds one bullet per
+accepted answer. All 16 checklist items re-validated after integration and
+still pass. Sections touched: Clarifications (new), Functional Requirements
+(FR-009 rewritten, FR-012 to FR-014 added), User Story 4 acceptance scenarios,
+Edge Cases, Key Entities, Success Criteria (SC-009 amended, SC-011 to SC-014
+added), Assumptions.
+
+The scan found three Partial categories and nothing Missing. All three were
+asked and resolved:
+
+| Taxonomy category | Before | After |
+|---|---|---|
+| Edge cases & failure handling | Partial — FR-009 named no surface | Resolved — document-scope disclosure, not a log line |
+| Integration & external dependencies | Partial — a format version beyond 4 had no defined behaviour | Resolved — version-agnostic reads, version recorded |
+| Functional scope & behaviour | Partial — the guard's breadth was undefined | Resolved — reports every unconsulted store-path field, diagnostic only |
+
+Everything else scanned Clear: domain and data model, interaction flow,
+non-functional attributes, constraints and tradeoffs, terminology, completion
+signals, and placeholders.
+
+One wording fix during integration: SC-011 and an assumption initially named
+internal machinery (the parity extractor). Both were reworded to state the
+property being checked — a documented field that nothing emits is a failure —
+since a success criterion should describe the outcome, not the mechanism. This
+is a narrower standard than the one applied to field and annotation names,
+which stay because they are the published contract a consumer reads.
+
+**SC-013 is deliberately unpredicted.** It asks the disclosure to name every
+store-path field classification does not consult, and states no expected count.
+That number is #1346's coverage gap, and this milestone measures it rather than
+assuming it — quoting a figure here would be the derived-arithmetic-as-
+measurement error the repository's rules name explicitly.
