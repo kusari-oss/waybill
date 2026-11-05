@@ -40,9 +40,17 @@ the other tool do about boot libraries?
 
 **The edge figure is confirmed at the order #1282 claimed**: 8,497 against the
 inherited 8,230, on a different project and a different sbomnix version, which
-is as close as that comparison can get. 16× waybill's 527. The cause is the
-one the spec names: sbomnix treats a store reference as a dependency, waybill
-emits only what the package set *declares*.
+is as close as that comparison can get. 16× waybill's 527.
+
+> **The cause stated here was wrong, corrected 2026-11-05.** This paragraph
+> read: "sbomnix treats a store reference as a dependency, waybill emits only
+> what the package set *declares*." The second half is true; the first is not.
+> sbomnix is emitting the graph `nix derivation show` records in
+> **`inputs.drvs`** — the derivations whose outputs each build actually
+> consumed — and on the moat closure that graph has **8,230** edges, equal to
+> sbomnix's count to the edge. It is the build DAG, not a loose reading of
+> store references, and waybill does not read it at all. See the correction at
+> the end of this file; probe at `input-graph-probe.py`.
 
 ## The finding that reframes #1340
 
@@ -256,7 +264,15 @@ more of the packages.**
 
 The bucket that *is* an identity gap rather than a modelling choice is the
 **615 unnameable derivations**, and specifically the **106 named `source`**
-inside it. Measured separately (see
+inside it.
+
+> **"Unnameable" is wrong, corrected 2026-11-05.** All 615 carry a `name`;
+> what they lack is a `pname`. More to the point, the blocker was never
+> identity: `inputs.drvs` names a consumer for every one of them, and **556 of
+> the 615 have exactly one named consumer**, so each can be attached to the
+> package it was fetched for. Identity is available too — 106 carry
+> `owner`/`repo`/`rev`, 425 carry a url and an `outputHash`, 84 have only a
+> name and their owning derivation. See the correction at the end. Measured separately (see
 `specs/1278-closure-structured-attrs/measurements/source-identity-probe.py`):
 104 of 106 carry `owner`, `repo` and `rev` and key to
 `pkg:github/<owner>/<repo>@<ref>`; the content-hash fallback is needed for
@@ -356,8 +372,10 @@ moving to `build-tooling` adds a component and then marks it
 | *less* components only waybill has | −98 | −98 | unchanged |
 
 Two of the three buckets are untouched and should be: merging variants is the
-point of a package model, and 615 unnameable derivations is an identity
-problem this milestone does not address. The bucket that moved is the one
+point of a package model, and the 615 fetch derivations are a problem this
+milestone does not address. (Called "an identity problem" when first written;
+it is an *ownership* problem, and `inputs.drvs` solves it — see the correction
+at the end of this file.) The bucket that moved is the one
 this file called the role filter.
 
 **The probe's −2 and the documents' +4 are different measurements, and the
@@ -371,17 +389,21 @@ what makes the comparison legible — not because its delta is the answer.
 
 Yes, on this closure, and narrowly. 4 components, all of them real, all of
 them already in the other tool's output, one of them a runtime library that
-genuinely ships. The headline ratios do not move: sbomnix still reports 3×
-the components and 10× the edges, because it walks store references while
-waybill emits what a package set declares, and this file's original conclusion
-is unchanged — **sbomnix sees more of the build, waybill sees more of the
-packages.**
+genuinely ships. The headline ratios do not move: sbomnix still reports 3× the
+components and 10× the edges.
+
+> **The reason given here was wrong, corrected 2026-11-05.** This read
+> "because it walks store references while waybill emits what a package set
+> declares", and concluded that the file's original framing —
+> *sbomnix sees more of the build, waybill sees more of the packages* — was
+> unchanged. The first clause is false and the framing flatters us: sbomnix
+> emits the `inputs.drvs` graph, which is what the build actually consumed,
+> and waybill emits a manifest's opinion of it. See the correction at the end.
 
 What did *not* improve is worth stating too. Edges, licenses and hashes are
-identical; 1279 touches classification, not acquisition. The 615 unnameable
-derivations — the one bucket that is a genuine identity gap, with 106 named
-`source` fetches inside it that sbomnix emits with no identifier at all —
-is exactly where it was.
+identical; 1279 touches classification, not acquisition. The 615 fetch
+derivations are exactly where they were — and the correction below explains why
+that bucket is much cheaper to close than this file previously claimed.
 
 ## This system is not the one the goldens pin
 
@@ -413,3 +435,98 @@ md5 -q ~/.cache/waybill/corpus/53983fe1021353b3/d069055*/repo/flake.lock moat-pr
 SBOMNIX=$S PROJ=$PWD/moat-proj WAYBILL=./target/debug/waybill \
   ./specs/1276-boot-library-scope/measurements/compare-sbomnix.sh
 ```
+
+---
+
+# Correction, 2026-11-05: the edge deficit is a field we do not read
+
+Everything above explained waybill's edge deficit as a difference of
+philosophy — sbomnix walks store references, waybill emits what a package set
+declares, so the gap is a modelling choice and largely deliberate. **That is
+wrong, and it was wrong in the direction that flattered us.**
+
+`nix derivation show` gives every derivation an **`inputs.drvs`** map: the
+derivations whose outputs this build consumed. It is present on all 1,275
+derivations of this closure. waybill never reads it — the closure reader
+parses `buildInputs`-style attributes, which is the *declared* view, and
+`inputs.drvs` is what the build actually used.
+
+Probe: `input-graph-probe.py`, committed beside this file.
+
+## Measured
+
+| | declared attributes (what waybill reads) | `inputs.drvs` (what nix records) |
+|---|---|---|
+| edges, derivation level | 3,893 | **8,230** |
+| edges, collapsed to component identities | 2,926 | **6,479** |
+| derivations explained | 533 of 1,275 | **1,274 of 1,275** |
+| roots | many | **1** (`moat-0.1`) |
+| reachable from the roots | — | **1,275 of 1,275** |
+
+**8,230 is sbomnix's figure exactly.** That is what settles the question:
+sbomnix emits the `inputs.drvs` graph at derivation granularity. It is not
+treating store references loosely; it is reading the build DAG, and the
+inherited #1282 figure of 8,230 was right all along — the 2026-11-03 re-check
+that "confirmed it at the order" was measuring a different flake.
+
+Two consequences that have nothing to do with edge counts:
+
+- **`unreferenced` would fall from 742 to 1.** The role's residual population
+  is almost entirely derivations that `inputs.drvs` explains and the declared
+  attributes do not. Milestone 1279 moved 8 of them.
+- **The 615 fetch derivations get an owner.** 556 have exactly one named
+  consumer, 30 several, 29 none — so a source tarball can be emitted *as the
+  source of* the package it built, rather than as an orphan or not at all.
+
+Their identity was never the blocker either:
+
+| | count |
+|---|---|
+| `owner` + `repo` + `rev` → `pkg:github/<owner>/<repo>@<rev>` | 106 |
+| url + `outputHash` → `pkg:generic?download_url=…&checksum=…` | 425 |
+| only a name and an owning derivation | 84 |
+
+sbomnix emits all 615 with **no PURL at all**, so this is a place waybill
+could be ahead rather than catching up.
+
+## What this file should have said
+
+Not *sbomnix sees more of the build, waybill sees more of the packages*. That
+framing made a missing read sound like a considered position. Accurately:
+
+> sbomnix emits the build graph nix records. waybill emits a manifest's
+> opinion of that graph, and is missing the graph itself. Where waybill is
+> genuinely ahead is **identity** — PURLs on every component, hashes, Hackage
+> resolution, the GHC boot libraries no derivation walk can see — and that
+> advantage is independent of the graph, so there is no trade to defend.
+
+## Scale of the fix
+
+Reading `inputs.drvs` is one field. On this closure it would take waybill from
+413 components and 788 edges to roughly **825 components and ~6,500 edges**,
+against sbomnix's 1,274 and 8,230 — the residual being build variants merged
+on `(pname, version)`, which is deliberate and should be annotated rather than
+undone.
+
+**The 825 is the honest figure, not 1,274.** Three separate collapses sit
+between the derivation count and what waybill would emit, and conflating any
+of them with the others is how this file got its original conclusion wrong:
+1,275 derivations → 825 distinct identities (variant merging) → emitted
+components. Quoting sbomnix's derivation-granular 1,274 as the target would
+mean giving up variant merging, which is a feature.
+
+## What was wrong, and the shape of the error
+
+Three claims in this file were wrong, all in the same direction:
+
+1. "sbomnix treats a store reference as a dependency" — it reads the build DAG.
+2. "615 **unnameable** derivations" — all 615 carry a `name`; what they lacked
+   was an owner, which `inputs.drvs` supplies for every one of them.
+3. "the one bucket that is a genuine identity gap" — identity was available
+   for 531 of the 615 without any new work.
+
+Each made a gap look like a decision. The common cause is that the comparison
+measured **outputs** — two documents, counted and differenced — and never
+measured the **input** both tools were reading. One probe over the closure JSON
+answered in minutes what three re-checks of the SBOMs could not, because the
+answer was never in the SBOMs.
