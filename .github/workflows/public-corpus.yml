@@ -216,6 +216,17 @@ jobs:
           grep -oE 'skipping [a-z0-9-]+: WAYBILL_[A-Z_]+' "$log" \
             | sed -E 's/skipping ([a-z0-9-]+):.*/\1/' \
             | sort -u > corpus-artifacts/skipped.txt || true
+          # #1345 -- which goldens the regen actually changed, per format.
+          # Before this, regen mode could not report drift at all (the
+          # harness wrote without comparing), so the summary's "Drifted"
+          # heading listed FAILED TESTS instead: a different set, which
+          # missed a target whose golden changed by one property.
+          grep -oE 'corpus-regen-golden: [a-z0-9-]+: [a-z0-9.-]+ (CHANGED|CREATED)' "$log" \
+            | sed -E 's/corpus-regen-golden: ([a-z0-9-]+): ([a-z0-9.-]+) (CHANGED|CREATED)/\1 \2 \3/' \
+            | sort -u > corpus-artifacts/changed-goldens.txt || true
+          grep -oE 'corpus-regen-golden: [a-z0-9-]+: [a-z0-9.-]+ unchanged' "$log" \
+            | sed -E 's/corpus-regen-golden: ([a-z0-9-]+):.*/\1/' \
+            | sort -u > corpus-artifacts/unchanged-goldens.txt || true
           comm -23 corpus-artifacts/ran.txt corpus-artifacts/skipped.txt \
             > corpus-artifacts/expected.txt
           comm -23 corpus-artifacts/expected.txt corpus-artifacts/regenerated.txt \
@@ -291,11 +302,34 @@ jobs:
             echo "Date:                     $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo ""
             echo "See workflow log for per-target diagnostic blocks."
+            # #1345 -- in regen mode "Drifted" cannot mean what it means in
+            # compare mode. The harness overwrites each golden, so no drift
+            # assertion fires and `failing.txt` holds whatever tests failed
+            # for unrelated reasons. Report the per-format verdicts instead.
+            if [ -s corpus-artifacts/changed-goldens.txt ]; then
+              echo ""
+              echo "## Goldens changed by this regen"
+              echo ""
+              awk '{print "- " $1 " (" $2 "): " $3}' corpus-artifacts/changed-goldens.txt
+              echo ""
+              n_changed=$(wc -l < corpus-artifacts/changed-goldens.txt | tr -d ' ')
+              echo "${n_changed} golden file(s) differ from the committed tree."
+            elif [ -s corpus-artifacts/unchanged-goldens.txt ]; then
+              echo ""
+              echo "## Goldens changed by this regen"
+              echo ""
+              echo "None — every regenerated golden is byte-identical to the committed one."
+            fi
             if [ -s corpus-artifacts/failing.txt ]; then
               echo ""
               echo "## Drifted"
               echo ""
               cat corpus-artifacts/failing.txt
+              if [ -s corpus-artifacts/changed-goldens.txt ] || [ -s corpus-artifacts/unchanged-goldens.txt ]; then
+                echo ""
+                echo "_This is a regen run, so these are failing tests, not golden drift —"
+                echo "see **Goldens changed by this regen** above for what the artifact holds._"
+              fi
             fi
             # #1286 — on a regen dispatch, name the targets whose goldens
             # the artifact actually holds. Without this the artifact can
