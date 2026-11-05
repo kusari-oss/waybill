@@ -1,0 +1,207 @@
+---
+description: "Task list for 1280-nix-closure-edges"
+---
+
+# Tasks: the nix closure tier emits its dependency graph
+
+**Input**: Design documents in `/specs/1280-nix-closure-edges/`
+**Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`
+**Issue**: #1346 (follow-up to milestone 1279)
+
+**Tests are included.** SC-004 requires determinism asserted by a test rather
+than by inspection, SC-007 requires a cycle fixture nix could not produce,
+SC-009 requires a mutation proving the `inputs.drvs` read is load-bearing, and
+the repository's gate is the acceptance criterion for every change here.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: parallelizable — different file, no dependency on an incomplete task
+- **[Story]**: US1 … US3, on user-story tasks only
+
+## Path Conventions
+
+Single Rust workspace, three crates. Everything is in `waybill-cli`.
+
+- Reader: `waybill-cli/src/scan_fs/package_db/nix/closure/`
+- Pipeline: `waybill-cli/src/cli/scan_cmd.rs`
+- Orphan reasons: `waybill-cli/src/generate/orphan_reason.rs`
+- Tests: `waybill-cli/tests/`, corpus harness at `waybill-cli/tests/corpus_harness_195/`
+
+---
+
+## Phase 1: Setup (fixtures)
+
+**Purpose**: fixtures covering every row of the `StopRule` table in
+`data-model.md`, plus the two cases nix cannot produce. A fixture set covering
+only "package depends on package" would leave FR-010's whole point untested.
+
+**⚠️ No fixture may be evaluated by a real `nix`.** On 2026-11-04 that rewrote
+a committed `flake.lock` and broke 11 tests in an unrelated file. These are
+JSON documents handed to a stub, and the stub is the only `nix` on `PATH`
+while a test scan runs.
+
+- [ ] T001 [P] Add `waybill-cli/tests/fixtures/nix_closure_edges/through_fetch.json`: a root consuming package `A`, where `A` reaches package `B` **only** through a derivation declaring no `pname` (a source fetch). The P1 case — without the pass-through rule, `B` is orphaned
+- [ ] T002 [P] Add `waybill-cli/tests/fixtures/nix_closure_edges/stop_at_package.json`: a member reachable only through a derivation that declares a `pname` and is **not** emitted (no declared-attribute reference, no patches). The FR-011 residual-orphan case, which is the row every "is it connected" test misses
+- [ ] T003 [P] Add `waybill-cli/tests/fixtures/nix_closure_edges/anchor.json`: a root derivation that is **not** itself an emitted component, consuming two packages that are. Asserts FR-004 — without the anchor, measured, every component stays orphaned
+- [ ] T004 [P] Add `waybill-cli/tests/fixtures/nix_closure_edges/cycle.json`: two derivations whose `inputs.drvs` name each other. nix cannot emit this; FR-006's guard must not depend on that
+- [ ] T005 [P] Add `waybill-cli/tests/fixtures/nix_closure_edges/dangling_input.json`: an `inputs.drvs` entry naming a `.drv` absent from the closure's own map (FR-005), which nix does emit
+- [ ] T006 [P] Add `waybill-cli/tests/fixtures/nix_closure_edges/variants.json`: two derivations collapsing to one `(pname, version)` with overlapping dependencies, so the deduplication in FR-003 has something to deduplicate
+
+---
+
+## Phase 2: Foundational — parse the field and project it
+
+**Purpose**: the reader gains the graph; nothing observable changes. Keeping
+this phase free of emission is what lets US1's edge census be attributed to
+the projection rather than to the parse.
+
+- [ ] T007 Add `inputs.drvs` to the parsed derivation in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`: the **keys only**, as a set of `.drv` paths. Do **not** parse `inputs.srcs` — a `src` is a store path, not a derivation, so it names no node in this graph (`data-model.md`)
+- [ ] T008 [P] Unit-test the parse in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`'s test module against T005's fixture: an entry naming a `.drv` outside the closure is dropped, and a derivation with no `inputs` key yields an empty set rather than failing. Use the `#[cfg_attr(test, allow(clippy::unwrap_used))]` guard the crate requires
+- [ ] T009 Create `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs` with the projection per `contracts/projection.md`: one memoized post-order pass, keyed on `.drv` paths, memoizing per derivation the set of nearest stopping descendants. A walk restarted per component is 381 traversals of a 10,342-edge graph (research R2); the memoized pass is O(V+E)
+- [ ] T010 Implement the `StopRule` in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs` exactly as `data-model.md` tabulates it — stop on a derivation declaring a `pname` **whether or not it is emitted**, pass through one declaring none. The middle row is FR-011's entire population
+- [ ] T011 Implement the cycle guard in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`: mark before descending, treat an already-marked node as a leaf (FR-006). Bounded by the visited set, not by recursion depth
+- [ ] T012 Identify the root in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs` as the derivation no other derivation's `inputs.drvs` names, and return `None` when there is none rather than guessing (`data-model.md`'s `ProjectedGraph.root`)
+- [ ] T013 Carry the projected graph on `ClassifiedClosure` in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs`, alongside the roles and read outcome, with no emitter consuming it yet
+- [ ] T014 [P] Unit-test the projection in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs` against T001, T002, T004 and T006: the pass-through case connects, the stop-at-package case does not, the cycle terminates, and variant edges deduplicate. Assert on `.drv`-keyed edges here — the PURL-level assertions belong in the integration suite, and this layer must be provable without a scan
+- [ ] T015 [P] Unit-test determinism in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`: projecting the same closure twice yields an identical edge sequence (SC-004's unit half)
+
+**Checkpoint**: the projection exists and is proven in isolation. No document changes.
+
+---
+
+## Phase 3: User Story 1 — a consumer can see what the closure depends on (Priority: P1) 🎯 MVP
+
+**Goal**: the closure's components are connected to the root and to each other.
+
+**Independent test**: scan a flake with `--nix-closure` and assert the emitted
+document contains dependency relationships whose endpoints are closure
+components, in all three formats.
+
+### Tests for US1
+
+- [ ] T016 [P] [US1] Add the harness to `waybill-cli/tests/closure_edges.rs`, modelled on `closure_dep_fields.rs`: stub `nix` on a per-test `PATH`, per-test `tempfile` output dir, a seeded nixpkgs cache, and helpers reading CDX `dependencies[].dependsOn`, SPDX 2.3 `relationships[]` and SPDX 3 `Relationship` elements
+- [ ] T017 [US1] Add the control every assertion below needs, in `waybill-cli/tests/closure_edges.rs`: the fixture holds the derivations it claims **and** at least one closure component has an incoming edge. A projection producing nothing satisfies every "not wrongly connected" assertion vacuously, and a scan that emitted no closure components satisfies them twice over
+- [ ] T018 [P] [US1] Test contract property P1 in `waybill-cli/tests/closure_edges.rs` against T001: a member reachable only through a non-package derivation has a path from the root
+- [ ] T019 [P] [US1] Test contract property P4 in `waybill-cli/tests/closure_edges.rs` against T003: the root derivation's projected edges attach to the **document root component**, and no component is emitted for the root derivation itself (FR-004, FR-004a)
+- [ ] T020 [P] [US1] Test FR-003 in `waybill-cli/tests/closure_edges.rs` against T006: variant-merged components emit one edge per pair, not one per derivation
+- [ ] T021 [P] [US1] Test FR-007a in `waybill-cli/tests/closure_edges.rs`: an edge whose target is `build-tooling` carries the **same** relationship type as one whose target is `artifact-input`. The role must not select a type
+- [ ] T022 [P] [US1] Test FR-007 in `waybill-cli/tests/closure_edges.rs`: the same edge set appears in all three formats through each one's native vocabulary, and **no** `waybill:` annotation carries a dependency edge
+- [ ] T023 [P] [US1] Test FR-009 in `waybill-cli/tests/closure_edges.rs`: a scan **without** `--nix-closure` emits byte-identical output to one before this change
+
+### Implementation for US1
+
+- [ ] T024 [US1] Resolve `.drv`-keyed edges to PURL-keyed `Relationship` values in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`, against a `(name, version) -> purl` map built from the **final** component set. One conversion, one place
+- [ ] T025 [US1] Wire the edges into `relationships` in `waybill-cli/src/cli/scan_cmd.rs`, **after** the milestone-1275 identity pass (`closure_identity::reclassify`, around line 4790) and not at the `emit::components` call site around line 4728. Research R1: the identity pass rewrites 104 of 381 component PURLs, so edges built earlier dangle for 27% of the graph — and no fixture catches it, because the fixtures stub the package set out as empty
+- [ ] T026 [US1] Add the regression test that pins T025's placement, in `waybill-cli/tests/closure_edges.rs`: every emitted relationship's endpoints resolve to a component present in the document. This is the assertion that would have caught the hazard; a fixture alone cannot, so assert the **property** rather than the line
+- [ ] T027 [US1] Use `RelationshipType::DependsOn` for every edge in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`, and record in the module doc why the role does not select a type: SPDX 2.3 could express `BUILD_TOOL_OF` where CycloneDX cannot, so mapping role to type would make the three formats stop carrying one graph
+- [ ] T028 [US1] Verify `waybill-cli/src/generate/spdx/relationships.rs` needs no change for m1277's 103 `BUILD_TOOL_OF` edges (FR-007b). If this task edits that file, the confinement argument has broken and SC-010 needs re-checking
+- [ ] T029 [US1] Record the emitted edge count in the C184 document record in `waybill-cli/src/scan_fs/package_db/nix/closure/summary.rs` (FR-008), so a closure that contributed no edges is distinguishable from one never read — and extend the C184 catalogue row in `docs/reference/sbom-format-mapping.md` to document the new key
+- [ ] T030 [US1] Extend the C184 parity extractors in `waybill-cli/src/parity/extractors/` **in the same change as T029** — a documented row whose shape changed without its extractor following fails `holistic_parity`
+
+**Checkpoint**: US1 is independently shippable. The graph exists in all three formats.
+
+---
+
+## Phase 4: User Story 2 — the graph stops claiming an incompleteness it caused (Priority: P2)
+
+**Goal**: orphans fall to the genuine residue, and each residual one says why.
+
+**Independent test**: compare the orphan count and the completeness reason
+before and after, on one closure, with no other change.
+
+### Tests for US2
+
+- [ ] T031 [P] [US2] Test SC-002 in `waybill-cli/tests/closure_edges.rs` against T001: a component connected by the projection is **not** reported as an orphan
+- [ ] T032 [P] [US2] Test FR-011 in `waybill-cli/tests/closure_edges.rs` against T002: the residual orphan carries `waybill:orphan-reason = reachable-only-through-unemitted-package`, and a component nothing depends on at all does **not** carry that code — the two must stay distinguishable, which is the whole point
+- [ ] T033 [P] [US2] Test the FR-011 code's exclusions from `contracts/orphan-reason.md` in `waybill-cli/tests/closure_edges.rs`: it appears on no component lacking `waybill:closure-role`, and on no connected component
+
+### Implementation for US2
+
+- [ ] T034 [US2] Add the `OrphanReasonCode` variant in `waybill-cli/src/generate/orphan_reason.rs` with wire value `reachable-only-through-unemitted-package`, its `as_str` arm, and its `OrphanReasonCounts` field. The literal is frozen on landing — the enum's own comment says consumers key on these
+- [ ] T035 [US2] Classify the residual population in `waybill-cli/src/generate/orphan_reason.rs`: an orphan carrying `waybill:closure-role` whose every path runs through a `pname`-declaring derivation this scan did not emit. Measured uniform across all 21 such components on both systems (`contracts/orphan-reason.md`)
+- [ ] T036 [US2] Confirm `waybill-cli/src/generate/graph_completeness/` needs no change beyond consuming the new edges — the BFS already seeds from the document root, so connected components stop being orphans without a new mechanism. Record that in the module doc as the reason no edge-specific reachability pass exists
+
+**Checkpoint**: the orphan population is the genuine residue and explains itself.
+
+---
+
+## Phase 5: User Story 3 — the roles become a filter rather than a gate (Priority: P3)
+
+**Goal**: the C182 roles still annotate every endpoint, so a consumer can
+partition the graph by role. Needs no new mechanism; stating it keeps the
+roles from being mistaken for this feature's job.
+
+- [ ] T037 [P] [US3] Test SC-005 in `waybill-cli/tests/closure_edges.rs`: the C182 role census is **identical** before and after the edges exist. A move means `inputs.drvs` has leaked into classification, which FR-002 forbids
+- [ ] T038 [P] [US3] Test in `waybill-cli/tests/closure_edges.rs` that both endpoints of every emitted closure edge still carry their `waybill:closure-role` annotation, so the graph is partitionable by role without waybill having pre-partitioned it
+- [ ] T039 [US3] Record in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`'s module doc that the projection never reads a declared dependency attribute, and that this separation is what SC-005 asserts rather than assumes
+
+---
+
+## Phase 6: Polish & cross-cutting
+
+- [ ] T040 Test SC-007 in `waybill-cli/tests/closure_edges.rs` against T004: a closure containing a cycle terminates and emits a document. Assert on a **completed scan**, not on the absence of a hang — a test that hangs does not fail, it times out, and a CI timeout reads as infrastructure
+- [ ] T041 Test SC-009 in `waybill-cli/tests/closure_edges.rs` as a **mutation**: with the `inputs.drvs` read disabled, the US1 tests go red. A graph source no test is sensitive to is not evidence that it is being read
+- [ ] T042 [P] Test FR-012 in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`'s test module: the projection visits each derivation once. Assert on a visit counter rather than on wall-clock — both measured closures are small enough that 381 full traversals would pass a timing assertion (research R2)
+- [ ] T043 Update the `nix-closure-moat` expectations in `waybill-cli/tests/corpus_harness_195/expectations.rs`: closure components carry incoming edges where today none does; the five residual orphans carry the FR-011 code; m1277's `BUILD_TOOL_OF` count is still 103 (SC-010); and the role census is unchanged (SC-005)
+- [ ] T044 [P] Record the before/after edge and orphan census per system in `specs/1280-nix-closure-edges/measurements/README.md`, labelled by system — the two closures populate different attributes and an unlabelled figure is the defect #1348's research shipped
+- [ ] T045 Run the local gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with **no `+toolchain`** (#1189). Assert on `GATE_RESULT`, the expect line, and the per-target `test result: ok. N passed; 0 failed` lines
+- [ ] T046 Merge `origin/main` into the branch **before** dispatching the corpus refresh. A branch cut before `48a5115e` cannot print the `corpus-regen-golden: … CHANGED` verdicts, so the run reports `success` and cannot tell you which goldens moved (milestone 1279 finding F12)
+- [ ] T047 Commit the refresh prediction **before** dispatching it, in `specs/1280-nix-closure-edges/measurements/refresh-prediction.md`: edges 0 → 3,429, closure orphans 352 → 5, the five named, the role census unchanged, `BUILD_TOOL_OF` still 103, and which rows are least certain
+- [ ] T048 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch. **Never** set `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` locally
+- [ ] T049 Score the T047 prediction against the refresh diff in `specs/1280-nix-closure-edges/measurements/refresh-prediction.md`, including any miss and what it corrected
+- [ ] T050 Confirm the regen log reports `corpus-regen-golden: … CHANGED` for `nix-closure-moat` and **zero** for every other target (SC-006) — a directory upload contributes bytes for targets that never wrote
+- [ ] T051 Check every target under `waybill-cli/tests/fixtures/public_corpus/` for movement outside `nix-closure-moat`, enumerated **by file** rather than by target name. Note that `image-postgres16` is already stale on main for an unrelated reason (#1358) and will differ; that is not this feature's movement
+- [ ] T052 Reconcile `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` with the refreshed goldens: retire what the fix makes stale, declare any new offender with its reason and count
+- [ ] T053 [P] Dispatch a compare-mode corpus run (`regen_goldens=false`) and confirm the regen count is **0**, so the run is known to have compared rather than rewritten. This is the only execution of the expectations T043 adds — locally the target prints `skipping nix-closure-moat` and reports `ok` in 0.00s
+- [ ] T054 [P] Record anything this milestone corrected about its own reasoning in `specs/1280-nix-closure-edges/measurements/findings.md`
+- [ ] T055 Run the `quickstart.md` validation end to end, including the "see the defect" step as a **before** control and all eight traps
+
+---
+
+## Dependencies
+
+```
+Phase 1 (T001-T006, all [P])
+    ↓
+Phase 2 (T007 → T008; T009 → T010 → T011 → T012 → T013; T014, T015 [P])
+    ↓
+Phase 3 / US1  ← MVP boundary
+    T016 → T017 → {T018..T023 [P]}
+    T024 → T025 → T026
+    T027, T028, T029 → T030
+    ↓
+Phase 4 / US2 (needs US1's edges to exist)
+    T034 → T035 → {T031..T033 [P]}, T036
+    ↓
+Phase 5 / US3 (needs US1; asserts an absence, so it cannot run earlier)
+    T037, T038 [P] → T039
+    ↓
+Phase 6 (T040..T042 any order; then T043 → T045 → T046 → T047 → T048 → T049 → T050 → T051 → T052 → T053)
+```
+
+**US2 depends on US1** — there is no orphan reduction to assert until edges
+exist. **US3 depends on US1** for the same reason inverted: it asserts the role
+census did *not* move, which is only meaningful once something could have moved
+it.
+
+## Parallel opportunities
+
+- **Phase 1**: all six fixtures are independent files (T001–T006).
+- **Phase 2**: T014 and T015 once T013 lands; T008 alongside T009–T013.
+- **US1**: T018–T023 are six independent assertions over one harness.
+- **US2**: T031–T033 once T034–T035 land.
+- **Polish**: T042 and T044 are independent of the corpus sequence; T053 and
+  T054 run alongside each other.
+
+## Implementation strategy
+
+**MVP is US1 alone** — T001 through T030. That delivers the graph in all three
+formats, which is the whole of what a consumer asking "what does this depend
+on" needs. US2's orphan reasons and US3's filter assertions are both
+consequences worth having and neither blocks shipping the graph.
+
+**The one task to get right first is T025.** Everything else is recoverable by
+a follow-up; placing the edge construction before the identity pass produces a
+document that is wrong for 27% of its graph, passes every fixture, and is
+caught first by a nightly corpus run. T026 is the assertion that makes that
+mistake visible rather than latent.
