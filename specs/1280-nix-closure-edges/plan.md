@@ -105,13 +105,24 @@ waybill-cli/src/
 ├── cli/scan_cmd.rs         # place edge construction AFTER the m1275 identity pass
 ├── generate/
 │   └── orphan_reason.rs    # EXTEND: one new OrphanReasonCode (FR-011)
+├── parity/extractors/      # EXTEND: C184's three extractors, with T029
 └── ...
+
+docs/reference/
+└── sbom-format-mapping.md  # EXTEND: C184 gains the edge count (FR-008)
 
 waybill-cli/tests/
 ├── closure_edges.rs        # NEW: the integration suite, stub `nix`
 ├── fixtures/nix_closure_edges/   # NEW: projection, cycle, anchor, residual-orphan
 └── corpus_harness_195/expectations.rs   # EXTEND: nix-closure-moat
 ```
+
+**No new catalogue row.** A dependency edge is native in all three formats, so
+the edges themselves are not catalogued. What *is* touched is C184's existing
+row, which gains the FR-008 edge count — and its three parity extractors move
+in the same change, because a documented row whose shape changed without its
+extractor following fails `holistic_parity`. The analysis pass caught that this
+file's first draft listed neither path.
 
 **Structure Decision**: the projection gets its own module rather than growing
 `emit.rs`, because the two run at different times — `emit::components` before
@@ -126,3 +137,4 @@ because it is not visible from the requirements:
 | Constraint | Why it exists |
 |---|---|
 | Edge construction is sequenced after the m1275 identity pass and keyed on `.drv` paths until then | The identity pass rewrites 104 of 381 component PURLs. Edges keyed on PURLs at emit time dangle for 27% of the graph, and no fixture would catch it because fixtures do not run that pass. Research R1. |
+| The new edges are **not** subject to `--tier`, and that is inherited rather than chosen | `apply_tier_filter` runs at line 4121; closure contributions land at 4728 and 4789. Closure *components* already bypass it, so `--tier source-only --nix-closure` already emits build-tier components today. The edges inherit the same placement. T058 asserts the behaviour and records it; changing it would alter which components a `--tier` scan emits, which is a milestone-1035 behaviour change and has its own issue, #1360. Found by the analysis pass, not by the plan. |
