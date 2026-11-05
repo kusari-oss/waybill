@@ -57,8 +57,8 @@ Two consequences, and only the first is the one #1346 names:
 
 ### Session 2026-11-05
 
-- Q: How should nixpkgs' cross-compilation triples map onto the two-way artifact/tooling split? → A: [NEEDS CLARIFICATION: `depsTargetTarget` and `depsTargetTargetPropagated` name dependencies of the *target* platform — what a compiler being built will hand to things it later compiles. They are neither in the artifact nor tooling that built it. Options: (a) classify as tooling, on the grounds that anything not in the artifact is build-side; (b) classify as artifact-input, on the grounds that they ship inside a toolchain's output; (c) add a third role value for target-platform dependencies, which changes the C182 closed enum and every consumer of it.]
-- Q: Should stdenv's `defaultNativeBuildInputs` / `defaultBuildInputs` be classified at all? → A: [NEEDS CLARIFICATION: these two carry 323 of the 353 unread declarations, on 19 derivations, and they are stdenv's own machinery rather than a package's declared dependencies. Options: (a) classify them as tooling, which is what they are, and accept that the `build-tooling` population grows substantially; (b) leave them unclassified but make the distinction explicit so `unreferenced` stops meaning two things, which is #1346's actual ask; (c) classify them and additionally mark them as stdenv-supplied so a consumer can filter.]
+- Q: How should nixpkgs' cross-compilation triples map onto the two-way artifact/tooling split? → A: **Classified as `artifact-input`, which asserts no scope.** They name dependencies of the *target* platform — what a compiler being built hands to things it later compiles — so they are neither in the artifact nor tooling that built it. `build-tooling` was the initial lean and was rejected: milestone 1277 asserts CycloneDX `scope: "excluded"` for tooling roles, a positive claim that the member is not in the artifact, and a cross-compiler genuinely ships its target libc inside its own output. That claim can therefore be false, which is the defect class of #1342 and #1348. `artifact-input` already carries the meaning "nix references this in, and waybill cannot tell whether it ships", and m1277 deliberately asserts no scope for it. Imprecise, but it makes no false claim. A fifth role value was rejected on blast radius: it would change the C182 closed enum, every consumer of it, invariant I10's population and C203's vocabulary, for 22 store paths on this closure.
+- Q: Should stdenv's `defaultNativeBuildInputs` / `defaultBuildInputs` be classified at all? → A: **No — they stay unclassified, and the distinction is made explicit instead.** #1346 is a truthfulness defect rather than a coverage one: its ask is that `unreferenced` stop meaning two things. A member named only in an attribute waybill does not classify is marked as such, which satisfies that for all 323 declarations without moving the census at all. That also keeps SC-004's attribution clean — every role change then traces to a newly-consulted attribute rather than to stdenv's machinery arriving en masse — and avoids a large new population of `scope: "excluded"` assertions landing in one milestone.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -173,8 +173,10 @@ first three stories are correct without it.
   existing union rule covers this and must keep covering it as the field set
   widens.
 - **A member named only in an attribute left deliberately unclassified.** This
-  is the case the whole milestone turns on: it must be distinguishable from
-  `unreferenced`.
+  is the case the whole milestone turns on, and after the clarifications it is
+  concretely the stdenv pair: a member named only by
+  `defaultNativeBuildInputs` or `defaultBuildInputs` must be distinguishable
+  from a member nothing names, and must acquire no role.
 - **An attribute whose value is not a list of store paths.** Resolution
   already tolerates any JSON shape; widening the field set must not change
   that.
@@ -212,6 +214,25 @@ first three stories are correct without it.
 - **FR-009**: The role census MUST be recorded before and after, per
   attribute, so the change is attributable to this milestone rather than to a
   nixpkgs or nix movement.
+- **FR-010**: The classifier MUST consult `depsTargetTarget` and
+  `depsTargetTargetPropagated` and treat members reachable through them as
+  `artifact-input`, which asserts no scope. It MUST NOT classify them as
+  tooling: that would assert the member is absent from the artifact, and a
+  cross-compiler ships its target-platform dependencies inside its own
+  output, so the assertion can be false.
+- **FR-011**: The classifier MUST consult `depsBuildTarget` and treat members
+  reachable through it as build tooling — it names what runs on the build
+  machine to produce target-platform output, which is tooling by the same
+  reading as `depsBuildBuild`.
+- **FR-012**: `defaultNativeBuildInputs` and `defaultBuildInputs` MUST remain
+  unclassified. A member named only by them MUST carry the FR-002 marker, so
+  the 323 declarations they hold stop being reported as `unreferenced` without
+  their members acquiring a role. The role census MUST NOT move on their
+  account.
+- **FR-013**: The marker of FR-002 MUST name the attribute, or attributes,
+  through which the member was referenced. "Referenced by something waybill
+  does not classify" without saying what is a smaller version of the same
+  defect: it tells a consumer that a gap exists and not where.
 
 ### Key Entities
 
@@ -255,16 +276,30 @@ rather than eternal; the probe is committed under `measurements/`.
   byte-identical goldens.
 - **SC-009**: The consulted set and the disclosure's complement are proven to
   agree by a test, not by inspection.
+- **SC-010**: No member reachable through `depsTargetTarget` or
+  `depsTargetTargetPropagated` carries a native marker asserting it is absent
+  from the artifact. **Measured today: 22 store-path declarations across those
+  two attributes go unread, so no such member is classified at all.**
+- **SC-011**: The role census moves by exactly the members newly reachable
+  through the four attributes this milestone consults, and by no others.
+  `defaultNativeBuildInputs` and `defaultBuildInputs` contribute **zero**
+  census movement; a run in which they contribute any is a defect.
 
 ## Assumptions
 
-- **The two-way artifact/tooling split may not survive contact with the
-  cross-compilation triples.** Whether those get an existing role, or a new
-  one, is the first open question and it is scope-defining: a new role value
-  changes a published closed enum and every consumer of C182.
-- **`defaultNativeBuildInputs` is the largest single population and the least
-  package-like.** 311 of 353 declarations, on 19 derivations, and it is
-  stdenv's own machinery. Whether to classify it is the second open question.
+- **The role enum does not change.** The four C182 values stay as they are,
+  and the cross-compilation triples are folded into `artifact-input` rather
+  than earning a fifth. The cost of that decision is semantic imprecision —
+  `artifact-input` now covers two distinguishable things — and it was accepted
+  because the alternative asserts a scope that can be false. If a genuinely
+  cross closure later makes the imprecision expensive, a fifth value is the
+  follow-up, and it should be taken with its own milestone rather than
+  smuggled in here.
+- **The census does not move on stdenv's account.** `defaultNativeBuildInputs`
+  and `defaultBuildInputs` hold 323 of the 353 unread declarations and are
+  deliberately left unclassified, so this milestone's census movement is
+  attributable to the four attributes it does consult. The 323 are addressed
+  by being *disclosed*, not by being classified.
 - **The measured figures are from one closure on one system.** The corpus
   target is Haskell and non-cross; a cross-compilation closure would populate
   the target triples far more heavily. Nothing here should assume the light
