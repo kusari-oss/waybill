@@ -95,3 +95,19 @@ bears on the Assumptions section.
 So the fetch and auxiliary derivations can be attached to the package they were
 fetched for, which is what makes emitting them a different proposition from
 sbomnix's flat list.
+
+## One conflation to avoid
+
+An earlier draft of the probe printed "``unreferenced`` would fall from 1,315
+to 1". That is two different measurements stapled together, and the spec
+deliberately makes no such claim.
+
+- C182's `unreferenced` means **no declared dependency attribute names this
+  member** — a statement about what nixpkgs says about it.
+- `inputs.drvs` answers **did anything consume this** — reachability.
+
+Reading `inputs.drvs` reclassifies nothing. On x86_64-linux, 1,315 derivations
+are named by no declared attribute and exactly 1 is consumed by nothing; those
+are answers to different questions and the gap between them is not a defect.
+SC-005 asserts the role census is *unchanged*, which is the same point stated
+as a requirement.

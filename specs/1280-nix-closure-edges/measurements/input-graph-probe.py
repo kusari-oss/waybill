@@ -102,7 +102,16 @@ def main(path):
     print(f"  roots under inputs.drvs                         {len(roots)}"
           f"  {[drvs[r].get('name') for r in roots][:4]}")
     print(f"  reachable from those roots                      {len(seen)} of {len(drvs)}")
-    print(f"  -> `unreferenced` would fall from {len(drvs) - len(explained)} to {len(roots)}")
+    # Deliberately NOT phrased as "`unreferenced` would fall to N". An earlier
+    # version of this line said that, and it conflates two different things.
+    # C182's `unreferenced` means "no DECLARED dependency attribute names this
+    # member" -- a statement about what nixpkgs says. `inputs.drvs` answers
+    # "did anything consume this", which is reachability. Reading it does not
+    # reclassify a single component, and a probe implying otherwise would have
+    # sent an implementation looking for a role change that is not there.
+    print(f"  derivations NOTHING consumed (reachability, not role)  {len(roots)}")
+    print(f"  derivations no declared attribute names                "
+          f"{len(drvs) - len(explained)}")
 
     # --- the population the declared view cannot name, and what inputs.drvs
     #     says about it
