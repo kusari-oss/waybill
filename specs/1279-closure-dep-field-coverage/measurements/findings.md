@@ -186,3 +186,47 @@ the *first* half of the compound command visibly not applied.
 So: launch a long gate as a single command with no compound prefix, and
 confirm it has started by the existence of its log rather than by the absence
 of a failure.
+
+## F12 — The first refresh ran on a branch that could not report drift
+
+The first regen dispatch succeeded, regenerated all 17 targets, and was
+**useless for T038**. It printed `corpus-regen: <target>: goldens written for
+all 3 formats` and nothing else, because this branch was cut from `3c3398a7`
+and did not contain `48a5115e` — the #1345 fix that added the per-format
+`corpus-regen-golden: <target>: <format> CHANGED|unchanged|CREATED` verdicts.
+
+So the run that was supposed to tell me which goldens moved could not, and it
+reported `conclusion=success` while doing so. The #1345 defect was met on the
+first occasion it mattered, from the far side: not "the workflow cannot
+report drift" but "the branch predates the reporting".
+
+Fixed by merging `origin/main`, which also brought the #759 workspace fix, and
+re-dispatching. **Merge main before dispatching a corpus refresh**, not after:
+the refresh's value is entirely in what its log can say.
+
+## F13 — A second target moved, and the control said whose fault it was
+
+`image-postgres16` changed in all three formats alongside `nix-closure-moat`,
+which is an SC-008 failure on its face — the widening leaking past the two
+constants is exactly what that criterion exists to catch.
+
+It is not that. The diff is 263 components before and after, none added or
+removed, and the only difference is `waybill:layer-digest` on 13 components
+moving together. A compare-mode corpus run on `main` fails on exactly that one
+target — `131 passed; 1 failed` — with the same two digests, so the drift is
+pre-existing and environmental.
+
+Two things worth keeping:
+
+- **The control came before the explanation.** One dispatch separated "my
+  branch" from "the environment" without needing a hypothesis, which is the
+  procedure `feedback_control_run_at_a_known_green_commit` records and which
+  four wrong attributions on 2026-11-05 paid for.
+- **The narrow diff was what made it cheap.** 294 changed lines reading as one
+  field on 13 components is a different object from 294 changed lines spread
+  over a document; reading the diff's *shape* before dispatching anything
+  pointed at the answer the control then confirmed.
+
+Not bundled into this PR. A digest-pinned OCI target whose layer digests drift
+anyway is its own defect, and refreshing its goldens here would put two
+unrelated changes behind one review.

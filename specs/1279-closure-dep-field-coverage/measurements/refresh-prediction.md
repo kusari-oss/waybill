@@ -78,7 +78,81 @@ A miss on P17 is the serious one. Any movement outside `nix-closure-moat` means
 the widening leaked past the two constants in `closure/classify.rs`, and SC-008
 fails regardless of how well everything else scored.
 
-## Score
+## Score — 16 of 17
 
-To be filled in after the refresh, against the diff rather than against the
-summary — including any miss and what it corrected.
+Scored against the diff, not the run summary. Refresh run `42094294917`
+(regen) on this branch; control run `42095328076` (compare) on `main`.
+
+| # | row | predicted | observed | |
+|---|---|---|---|---|
+| P1 | C184 `roles` | 268 / 121 / 45 / 1,315 | 268 / 121 / 45 / 1,315 | ✅ |
+| P2 | `components-emitted` | 381 | 381 | ✅ |
+| P3 | total components | 406 | 406 | ✅ |
+| P4 | component roles | 237 / 92 / 41 / 11 | 237 / 92 / 41 / 11 | ✅ |
+| P5 | C204 fields | 2, the two stdenv attributes | exactly those two | ✅ |
+| P6 | declarations unread | 211 | 211 | ✅ |
+| P7 | derivations affected | 16 | 16 | ✅ |
+| P8 | `numactl` role | `artifact-input` | `artifact-input` | ✅ |
+| P9 | `numactl` scope | absent | absent | ✅ |
+| P10 | `numactl` C203 | absent | absent | ✅ |
+| P11 | components with C203 | 103 | 103 | ✅ |
+| P12 | `scope: "excluded"` | 114 | 114 | ✅ |
+| P13 | newly emitted | `patchelf`, `setup-debug-info-dirs-hook`, both `build-tooling` | both, both `build-tooling` | ✅ |
+| P14 | components with C205 | 9 | 9, the nine named | ✅ |
+| P15 | C202 exemptions | unchanged | `{"compiler-supplied":22}` | ✅ |
+| P16 | `graph-completeness` | unchanged | `partial` | ✅ |
+| P17 | goldens that change | `nix-closure-moat` only | **also `image-postgres16`** | ❌ |
+
+All three medium-confidence rows about the m1277 interaction (P10–P12) hit
+exactly, which settles T020's claim with evidence rather than by reading the
+code: `numactl` lost its scope **and** its C203 without that file being
+touched. P14 hit at 9 — the figure this milestone had already got wrong once
+— and the nine components are the nine `remainder-census.py` named.
+
+`patchelf` arrives carrying **both** a `build-tooling` role and the C205
+marker, which is the gating row the fixture tests as T044. It is worth noting
+that it appears in the real closure too: that row exists because every other
+marker test uses a member whose only reference is unclassified, so a rule that
+emitted the marker only for `unreferenced` members would have passed them all.
+
+### One consequence not predicted
+
+`waybill:graph-completeness-reason` moved `350 component(s) not reachable from
+root` → `352`. That is exactly the two newly emitted components, both of which
+are orphans. Coherent, and recorded as unpredicted rather than folded in as
+though it had been foreseen — the prediction listed the doc-scope rows it
+expected to move and this was not among them.
+
+### The miss — P17, and it is not this milestone's
+
+`image-postgres16` changed in all three formats. The diff is narrow enough to
+read directly: 263 components before and after, **none added or removed**, and
+the only difference is `waybill:layer-digest` on 13 components, all moving
+`sha256:3ce18cb3…` → `sha256:38b0c486…` together. Nothing in this milestone
+touches OCI layer attribution.
+
+**Established by control, not by inference.** A compare-mode run of the
+corpus on `main` — no code from this branch — fails on exactly one target:
+
+```
+test corpus_image_postgres16 ... FAILED
+test result: FAILED. 131 passed; 1 failed
+```
+
+with the same two digests. The drift is pre-existing on `main`, so P17's miss
+is environmental and the goldens for that target are **not** refreshed here;
+bundling an unrelated pre-existing drift into this PR would make neither
+change reviewable. Filed separately.
+
+It is a real defect and a surprising one: the target is pinned by **image
+digest**, so its layer digests ought to be immutable. The likely mechanism is
+the runner's Docker re-serializing layers when the image is saved, which would
+make a digest-pinned corpus target reproducible only against a fixed Docker
+version — the same class as the ubuntu-image `/bin/ls` finding of 2026-11-05.
+
+### Enumeration, by file rather than by name
+
+51 regenerated documents compared against the committed tree: **exactly 3
+differ**, all `image-postgres16`. Counting files rather than target names is
+deliberate — a directory upload contributes bytes for targets that never
+wrote, which is how #1286 shipped with one target's goldens stale.
