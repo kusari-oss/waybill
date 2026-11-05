@@ -1017,7 +1017,7 @@ pub(crate) fn finalize(
                 // hpack INFERS the license from a `LICENSE` file and writes
                 // it into the `*.cabal`; it is not a `license:` key in the
                 // manifest. Suppressing the generated file therefore lost
-                // it: `MercuryTechnologies/moat` went from `MIT` to no
+                // it: `nix-closure-moat` went from `MIT` to no
                 // license at all, found by the corpus refresh and not by any
                 // fixture here.
                 //

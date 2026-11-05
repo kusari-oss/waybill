@@ -1,6 +1,6 @@
 # Phase 0 research — nixpkgs security declarations as VEX
 
-Measured 2026-09-30 against `MercuryTechnologies/moat`, aarch64-darwin,
+Measured 2026-09-30 against the `nix-closure-moat` corpus target, aarch64-darwin,
 using the project's own pinned nixpkgs rather than a registry one. Probes in
 `measurements/`.
 

@@ -222,7 +222,7 @@ fn m1273_us1_hpack_only_emits_declared_dependencies() {
 /// `version: 0.1` unquoted is a YAML **float**. The first version of this
 /// reader declared `version: Option<String>`, so `serde_yaml` refused the
 /// whole manifest with `invalid type: floating point 0.1, expected a string`
-/// — and a real project (`MercuryTechnologies/moat`, a committed corpus
+/// — and a real project (the `nix-closure-moat` corpus target, a committed corpus
 /// target) was reported as having an unreadable manifest when hpack reads it
 /// fine.
 ///
@@ -263,7 +263,7 @@ fn m1273_us1_an_unquoted_numeric_version_is_accepted() {
 /// hpack **infers** the license from a `LICENSE` file and writes it into the
 /// generated `*.cabal`; it is never a `license:` key in the manifest. So
 /// suppressing the generated file under FR-002 lost the main module's
-/// license outright — `MercuryTechnologies/moat` went from `MIT` to nothing.
+/// license outright — `nix-closure-moat` went from `MIT` to nothing.
 ///
 /// Carrying it forward is not a second source of truth. FR-002 settles which
 /// file answers for the **dependency set**; a field the manifest never

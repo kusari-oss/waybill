@@ -2,9 +2,21 @@
 
 **Date**: 2026-11-03 | **sbomnix**: 1.9.0+g95480c2 | **waybill**: this branch
 (milestone 1275 + 1276 US1)
-**Subject**: the `waybill-fixture-ifd` flake, nixpkgs
+**Subject**: the **`nix-closure-moat`** corpus target at its pin, nixpkgs
 `a799d3e3886da994fa307f817a6bc705ae538eeb`, 1,290 derivations — the same
 closure every measurement in milestones 1275 and 1276 is taken against.
+
+> **Subject corrected 2026-11-04.** This line originally named the
+> `waybill-fixture-ifd` flake. It cannot have produced these figures: that
+> fixture exists to *require* import-from-derivation, which `--nix-closure`
+> refuses, so waybill emits **3** components against it and records
+> `waybill:nix-closure-degraded = {"reason":"import-from-derivation-required"}`.
+> Re-running the harness against moat reproduces the documented shape
+> (sbomnix ~1,274, waybill ~409 today), and m1275's and m1276's own
+> measurement files reference `nix-closure-moat` throughout. The findings
+> below are unaffected — they are about mechanisms, not about which flake —
+> but the *Reproducing* section did not work as written, which is the thing
+> a committed probe exists to prevent. See the re-check at the end.
 **Harness**: `compare-sbomnix.sh`, committed beside this file.
 
 Milestone 1275's spec carried an inherited figure — "sbomnix emits 8,230 edges
@@ -178,3 +190,88 @@ the build, waybill sees more of the packages.** The boot libraries are the
 sharpest instance — six packages genuinely in the artifact that a
 derivation-walk cannot reach, and 944 derivations that a package model
 deliberately does not keep.
+
+
+---
+
+# Re-check, 2026-11-04 (after milestones 1277 and 1278)
+
+Same harness, same sbomnix 1.9.0+g95480c2, same moat pin, same host. Run
+because milestone 1278 (#1348) taught the closure reader to read
+`structuredAttrs`, which moves two of the three buckets this file decomposed.
+
+## The comparison now
+
+| | sbomnix | waybill | (2026-11-03) |
+|---|---|---|---|
+| components | **1,274** | **409** | 1,289 / 345 |
+| `dependsOn` edges | **8,230** | **788** | 8,497 / 527 |
+| with a license | 301 | 137 | 183 / 106 |
+| with a hash | **0** | **136** | 0 / 106 |
+| components with **no PURL at all** | **106** | **0** | 107 / 0 |
+| distinct names | 819 | 403 (**305 shared**) | 751 / 339 (234 shared) |
+| GHC boot libraries | **0 of 6** | **6 of 6** | unchanged |
+
+**The gap is 865, from 944.**
+
+## What of that is milestone 1278's, measured rather than inferred
+
+The 2026-11-03 figures and today's differ by more than one milestone: m1276's
+back half and all of m1277 landed between them, **and the closure itself
+shrank from 1,290 derivations to 1,275 with nixpkgs pinned**, so a nix release
+moved the ground too. Attributing the whole delta to 1278 would be exactly the
+derived-arithmetic-as-measurement error this directory exists to avoid.
+
+So it was measured with one variable: the same closure, the same flags, the
+same host, only the binary differing — `67f1cb75` (the m1277 merge) against
+`c3b4ce50` (the m1278 merge).
+
+| | pre-1278 | post-1278 | 1278's share |
+|---|---|---|---|
+| components | 373 | 409 | **+36** |
+| edges | 779 | 788 | **+9** |
+| licensed | 135 | 137 | +2 |
+| hashed | 134 | 136 | +2 |
+| `pkg:hackage` | 158 | 160 | +2 |
+
+The remaining 345 → 373 spans three causes that are not separated here and are
+not claimed.
+
+## The 865, decomposed against the 1,275-derivation closure
+
+| bucket | count | what it is |
+|---|---|---|
+| no `pname` in **either** attribute carrier | **615** | waybill can name nothing, so emits nothing. sbomnix names them from the derivation — and this is where its **106 `source` components with no PURL at all** live |
+| build variants merged | **248** | 660 named derivations collapse to 412 distinct `(pname, version)` |
+| unreferenced, named, applying no patch | **~103** | dropped by role. 41 of the 144 unreferenced-and-named are *kept* because they patch |
+| *less* components only waybill has | **−98** | the 6 boot libraries, and package-set members a derivation-walk cannot reach |
+
+## What is actually left, as opposed to deliberate
+
+Two of the three buckets should not close. Merging variants is the point of a
+package model; dropping build machinery is what keeps a document matchable
+against a vulnerability feed. Both are documented choices, and this file's
+original conclusion stands: **sbomnix sees more of the build, waybill sees
+more of the packages.**
+
+The bucket that *is* an identity gap rather than a modelling choice is the
+**615 unnameable derivations**, and specifically the **106 named `source`**
+inside it. Measured separately (see
+`specs/1278-closure-structured-attrs/measurements/source-identity-probe.py`):
+104 of 106 carry `owner`, `repo` and `rev` and key to
+`pkg:github/<owner>/<repo>@<ref>`; the content-hash fallback is needed for
+none of them; and the 16 colliding identities are all the same bytes fetched
+twice, confirmed by output hash. sbomnix emits all 106 **with no identifier at
+all**, which is the form in which this stops being a matter of taste.
+
+So the honest answer to "what is left": one item, and it is identity rather
+than coverage.
+
+## One number this re-check cannot explain
+
+sbomnix's edge count reads **8,230** today — exactly the figure #1282
+asserted, and which this file replaced with a measured 8,497 while noting it
+was "confirmed at the order #1282 claimed". The inherited number now
+reproduces exactly. No explanation is offered; the possibility worth stating
+is that #1282's figure came from this same closure after all, in which case it
+was never the unsourced estimate it appeared to be.

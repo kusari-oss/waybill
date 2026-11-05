@@ -65,7 +65,7 @@ nothing, which is sharper than #1278 states and is why C8 asserts the
 diagnostic rather than only the component count.
 
 **The corpus has a live witness.** `nix-closure-moat`
-(`MercuryTechnologies/moat` @ `d0690555`) has a root `package.yaml` with no
+(the `nix-closure-moat` corpus target @ `d0690555`) has a root `package.yaml` with no
 sibling `*.cabal`, and its committed golden records 321 hackage components
 derived without reading it.
 

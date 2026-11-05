@@ -106,7 +106,7 @@ file:     /Users/mlieberman/.cache/waybill/nixpkgs/a799d3e3886da994fa307f817a6bc
 ──── Probe C — the four issues: PASS
 
 ════ Probe D — SC-003 public library ════
-subject:  https://github.com/MercuryTechnologies/slack-web.git @ 7b46273
+subject:  the slack-web Haskell library (a corpus subject) @ 7b46273
 waybill:  waybill 0.14.0
 nixpkgs:  5ae3b07d8d6527c42f17c876e404993199144b6a
 
