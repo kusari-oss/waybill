@@ -37,10 +37,33 @@ struct ScanResult {
 
 impl ScanResult {
     /// Document-scope `waybill:nix-eval-*` properties, as a name→value map.
+    /// The emitted document, or a failure that says the document is missing
+    /// and shows the scan's stderr.
+    ///
+    /// Without this, a scan that wrote **no document** and a document that
+    /// carries **no such property** both surface as `left: None`, and the two
+    /// have completely different causes. #1350 is an intermittent failure
+    /// whose single unresolved question is which of those two it is — the
+    /// evidence was unavailable because the assertion could not tell them
+    /// apart, and the helper printed stderr only on the assertion that
+    /// passed.
+    fn require_doc(&self) -> &Value {
+        self.doc.as_ref().unwrap_or_else(|| {
+            panic!(
+                "the scan exited {} but wrote no readable document, so every \
+                 property assertion below would report `None` for a reason \
+                 unrelated to the property. stderr:\n{}",
+                if self.ok { "0" } else { "non-zero" },
+                self.stderr
+            )
+        })
+    }
+
     fn tier_properties(&self) -> Vec<(String, String)> {
-        self.doc
-            .as_ref()
-            .and_then(|d| d.get("metadata")?.get("properties")?.as_array().cloned())
+        self.require_doc()
+            .get("metadata")
+            .and_then(|m| m.get("properties"))
+            .and_then(|p| p.as_array().cloned())
             .unwrap_or_default()
             .iter()
             .filter_map(|p| {
@@ -51,6 +74,9 @@ impl ScanResult {
             .collect()
     }
 
+    /// The degradation reason. `None` now means, unambiguously, that the
+    /// document exists and carries no such property — [`Self::require_doc`]
+    /// has already failed loudly if there is no document.
     fn degraded_reason(&self) -> Option<String> {
         self.tier_properties()
             .into_iter()
