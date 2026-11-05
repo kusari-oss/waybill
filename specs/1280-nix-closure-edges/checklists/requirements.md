@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,25 +31,41 @@
 
 ## Notes
 
-**One marker remains, FR-010, and it is deliberate.** It is the single decision
-that changes the output by an order of magnitude, it has three defensible
-answers, and all three were measured before the question was asked rather than
-after. Resolving it by guess would be the "shipping a guess into a requirement"
-failure this project records. See Question 1 in the report.
+**16 of 16 pass** after the 2026-11-05 clarification session. Three questions
+asked, three answered, zero markers remaining.
 
-Two figures were corrected during validation, both against the committed
-golden rather than from memory:
+Figures corrected during validation, all against the committed golden rather
+than from memory:
 
 - SC-005's role census read `269 / 118 / 42 / 1,315`; the golden says
-  `268 / 121 / 45 / 1,315`. Three of the four were wrong, and they are
+  `268 / 121 / 45 / 1,315`. Three of four numbers were wrong, and they are
   milestone 1279's own post-merge figures.
-- SC-003 asserted that `graph-completeness` stops being `partial`. It will not:
-  the reason carries two independent causes and this feature addresses one, so
+- SC-003 asserted `graph-completeness` stops being `partial`. It will not —
+  the reason carries two independent causes and this feature addresses one — so
   the criterion is now worded against the `orphaned-components-detected`
   clause. As first written it would have failed for the milestone working
   perfectly.
+- SC-002 read "orphans fall from 352 to **0**". Measured under the chosen
+  projection it is **352 to 5**, and the five are a deliberate residue with one
+  uniform cause. A criterion demanding zero would have pushed an implementer
+  toward the full-transitive projection, which asserts edges nix never stated.
+- The Context section claimed the closure contributes **zero** relationships.
+  It contributes 103 SPDX 2.3 `BUILD_TOOL_OF` edges from milestone 1277; the
+  zero is specifically *dependency* edges. SC-010 now pins the 103.
 
-**One judgement a reviewer should check.** FR-002 forbids deriving edges from
-the declared attributes, which is what makes SC-005's "census unchanged"
-meaningful. If a reviewer would rather have both sources feeding the graph,
-FR-002 and SC-005 both change.
+**Two judgements a reviewer should check**, since both were decisions rather
+than deductions:
+
+- FR-002 and FR-007a together forbid the declared attributes from influencing
+  either the graph or the relationship type. That is what makes SC-005's
+  "census unchanged" meaningful and keeps the three formats carrying one graph.
+  A reviewer who wants role-typed relationships changes FR-007a, SC-005 and the
+  parity expectations together.
+- FR-010 leaves 5 components orphaned on purpose. The alternative that reaches
+  zero (full transitive) was measured and rejected for asserting transitive
+  edges as though nix had stated them.
+
+**One requirement is stated against an unmeasured risk**, deliberately: FR-012
+asks that the projection stay linear in closure size. Both measured closures
+are small enough that 381 full traversals would not be noticed, which is why it
+is a requirement rather than a discovery waiting on a larger closure.
