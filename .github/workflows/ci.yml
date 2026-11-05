@@ -82,6 +82,28 @@ jobs:
     name: Lint + test (linux-x86_64)
     runs-on: ubuntu-latest
     steps:
+      # Record WHICH runner image ran, so a failure that appears with no
+      # code change is diffable instead of mysterious.
+      #
+      # A hosted image version cannot be pinned, only its label chosen (see
+      # the note on the eBPF lane below), so a change to it arrives silently
+      # and looks exactly like a regression. On 2026-11-05 the ubuntu image
+      # replaced `/bin/ls` with rust-coreutils, whose binary carries an ELF
+      # `.note.package` section; a test that copies `/bin/ls` as a fixture
+      # then began failing on every commit, main included, and four
+      # successive explanations were wrong before a control run at a
+      # known-green commit showed the code had not changed. `ImageVersion`
+      # in two logs would have said so immediately.
+      #
+      # `ls --version` is here because that is the specific thing that
+      # changed; keep it even if it looks over-fitted, since host coreutils
+      # flavour is exactly the kind of provenance no other field records.
+      - name: Record runner provenance
+        shell: bash
+        run: |
+          echo "runner.os=${RUNNER_OS:-?} ImageOS=${ImageOS:-?} ImageVersion=${ImageVersion:-?}"
+          uname -a || true
+          echo "coreutils: $(ls --version 2>/dev/null | head -1 || echo '<no --version; BSD or Mach-O ls>')"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Don't write the auto-provisioned GITHUB_TOKEN into the
@@ -397,6 +419,28 @@ jobs:
     name: Lint + test (macos-latest)
     runs-on: macos-latest
     steps:
+      # Record WHICH runner image ran, so a failure that appears with no
+      # code change is diffable instead of mysterious.
+      #
+      # A hosted image version cannot be pinned, only its label chosen (see
+      # the note on the eBPF lane below), so a change to it arrives silently
+      # and looks exactly like a regression. On 2026-11-05 the ubuntu image
+      # replaced `/bin/ls` with rust-coreutils, whose binary carries an ELF
+      # `.note.package` section; a test that copies `/bin/ls` as a fixture
+      # then began failing on every commit, main included, and four
+      # successive explanations were wrong before a control run at a
+      # known-green commit showed the code had not changed. `ImageVersion`
+      # in two logs would have said so immediately.
+      #
+      # `ls --version` is here because that is the specific thing that
+      # changed; keep it even if it looks over-fitted, since host coreutils
+      # flavour is exactly the kind of provenance no other field records.
+      - name: Record runner provenance
+        shell: bash
+        run: |
+          echo "runner.os=${RUNNER_OS:-?} ImageOS=${ImageOS:-?} ImageVersion=${ImageVersion:-?}"
+          uname -a || true
+          echo "coreutils: $(ls --version 2>/dev/null | head -1 || echo '<no --version; BSD or Mach-O ls>')"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false  # see lint-and-test job for rationale
@@ -469,6 +513,28 @@ jobs:
     name: Lint + test (windows-latest)
     runs-on: windows-latest
     steps:
+      # Record WHICH runner image ran, so a failure that appears with no
+      # code change is diffable instead of mysterious.
+      #
+      # A hosted image version cannot be pinned, only its label chosen (see
+      # the note on the eBPF lane below), so a change to it arrives silently
+      # and looks exactly like a regression. On 2026-11-05 the ubuntu image
+      # replaced `/bin/ls` with rust-coreutils, whose binary carries an ELF
+      # `.note.package` section; a test that copies `/bin/ls` as a fixture
+      # then began failing on every commit, main included, and four
+      # successive explanations were wrong before a control run at a
+      # known-green commit showed the code had not changed. `ImageVersion`
+      # in two logs would have said so immediately.
+      #
+      # `ls --version` is here because that is the specific thing that
+      # changed; keep it even if it looks over-fitted, since host coreutils
+      # flavour is exactly the kind of provenance no other field records.
+      - name: Record runner provenance
+        shell: bash
+        run: |
+          echo "runner.os=${RUNNER_OS:-?} ImageOS=${ImageOS:-?} ImageVersion=${ImageVersion:-?}"
+          uname -a || true
+          echo "coreutils: $(ls --version 2>/dev/null | head -1 || echo '<no --version; BSD or Mach-O ls>')"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false  # see lint-and-test job for rationale
@@ -718,6 +784,28 @@ jobs:
     permissions:
       contents: read
     steps:
+      # Record WHICH runner image ran, so a failure that appears with no
+      # code change is diffable instead of mysterious.
+      #
+      # A hosted image version cannot be pinned, only its label chosen (see
+      # the note on the eBPF lane below), so a change to it arrives silently
+      # and looks exactly like a regression. On 2026-11-05 the ubuntu image
+      # replaced `/bin/ls` with rust-coreutils, whose binary carries an ELF
+      # `.note.package` section; a test that copies `/bin/ls` as a fixture
+      # then began failing on every commit, main included, and four
+      # successive explanations were wrong before a control run at a
+      # known-green commit showed the code had not changed. `ImageVersion`
+      # in two logs would have said so immediately.
+      #
+      # `ls --version` is here because that is the specific thing that
+      # changed; keep it even if it looks over-fitted, since host coreutils
+      # flavour is exactly the kind of provenance no other field records.
+      - name: Record runner provenance
+        shell: bash
+        run: |
+          echo "runner.os=${RUNNER_OS:-?} ImageOS=${ImageOS:-?} ImageVersion=${ImageVersion:-?}"
+          uname -a || true
+          echo "coreutils: $(ls --version 2>/dev/null | head -1 || echo '<no --version; BSD or Mach-O ls>')"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
