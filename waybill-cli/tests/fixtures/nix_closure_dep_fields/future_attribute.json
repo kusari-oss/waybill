@@ -1,0 +1,31 @@
+{
+  "derivations": {
+    "m-future.drv": {
+      "name": "waybill-fixture-future-1.0",
+      "env": {
+        "pname": "waybill-fixture-future",
+        "version": "1.0",
+        "patches": "/nix/store/hp-waybill-fixture-tidy.patch"
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-waybill-fixture-future-1.0"
+        }
+      }
+    },
+    "c-future.drv": {
+      "name": "waybill-fixture-cfuture-1.0",
+      "env": {
+        "pname": "waybill-fixture-cfuture",
+        "version": "1.0",
+        "depsHostTarget": "/nix/store/h1-waybill-fixture-future-1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "h2-waybill-fixture-cfuture-1.0"
+        }
+      }
+    }
+  },
+  "version": 4
+}

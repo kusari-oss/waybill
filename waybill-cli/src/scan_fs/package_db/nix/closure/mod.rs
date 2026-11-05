@@ -204,10 +204,20 @@ pub(crate) struct ClassifiedClosure {
     pub(crate) attribute: String,
     pub(crate) raw: RawClosure,
     pub(crate) roles: std::collections::BTreeMap<String, DerivationRole>,
-    /// What the reader saw but did not consult (#1348, FR-009).
+    /// What the reader saw but did not consult (#1348, FR-009), and which
+    /// members those unconsulted attributes name (#1346, FR-002).
     ///
     /// Computed beside the roles and carried alongside them, never consulted
     /// while deciding one — the separation SC-014 asserts.
+    ///
+    /// The per-member index rides **inside** this struct rather than beside
+    /// it as a third field, and deliberately: it is built from the same walk
+    /// that produces `fields_unconsulted`, so a separate field could be
+    /// populated from a separate pass and the two could then disagree about
+    /// which attributes are unconsulted. That disagreement is exactly the
+    /// defect the index exists to prevent — a consumer told a member is
+    /// `unreferenced` while the disclosure says an attribute naming it went
+    /// unread. One struct, one walk, one answer.
     pub(crate) read_outcome: super::closure::derivation::ReadOutcome,
 }
 

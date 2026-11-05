@@ -33,9 +33,32 @@ Absence therefore means "no unclassified attribute names this member", never
 the classifier does not recognise is reported rather than ignored, so an
 unread attribute cannot masquerade as an absent one.
 
-**On the pinned x86_64-linux closure the marker appears on 3 components**
-(16 on aarch64-darwin — the population is not system-stable, which is why the
-criteria name linux).
+**On the pinned x86_64-linux closure the marker appears on 9 components.**
+Corrected during implementation; this contract was drafted saying 3, and the
+error was a category one rather than an arithmetic one. The chain, measured
+with `measurements/remainder-census.py` against the same closure the goldens
+pin:
+
+| | count |
+|---|---|
+| store-path declarations in unconsulted attributes | 211 |
+| **closure members** those declarations name | 16 |
+| of those, members emitted as components at all | 13 |
+| after build-variant merging on `(pname, version)` | **9** |
+
+Each step loses something for a different reason, and none of them is
+negligible. 211→16 because `defaultNativeBuildInputs` names the same few
+members from 13 derivations. 16→13 because an `unreferenced` member applying
+no patch is not emitted, so the marker has nowhere to land — the reach
+limitation stated above. 13→9 because a closure holds several derivations per
+identity.
+
+The nine: six `gcc-wrapper` variants (`bootstrap-stage{-xgcc,1,2,3,4}` and
+the final one), `patchelf`, `update-autotools-gnu-config-scripts-hook`, all
+through `defaultNativeBuildInputs`; and `glibc`, through
+`extraNativeBuildInputs`. `patchelf` is also one of the two components this
+milestone newly emits, so it carries both a role and the marker — the T044
+row, present in the real closure as well as the fixture.
 
 ## Principle V audit
 

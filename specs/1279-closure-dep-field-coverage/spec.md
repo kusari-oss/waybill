@@ -317,8 +317,12 @@ rather than eternal; the probe is committed under `measurements/`.
   as tooling and all five gained an exclusion.
 - **SC-011**: The role census moves by exactly the members newly reachable
   through the four attributes this milestone consults, and by no others.
-  `defaultNativeBuildInputs` and `defaultBuildInputs` contribute **zero**
-  census movement; a run in which they contribute any is a defect.
+  All **three** stdenv-injected attributes — `defaultNativeBuildInputs`,
+  `defaultBuildInputs` and `extraNativeBuildInputs` — contribute **zero**
+  census movement; a run in which any of them contributes is a defect. The
+  third is named here as well as in FR-012: this criterion was drafted naming
+  the darwin pair, and `extraNativeBuildInputs` is the one populated on the
+  closure the goldens pin.
 - **SC-012**: On the pinned corpus target (x86_64-linux), the census moves
   270 / 118 / 42 / 1,319 → **268 / 121 / 45 / 1,315** across
   artifact-input / build-tooling / both / unreferenced. Seven derivations
@@ -328,9 +332,19 @@ rather than eternal; the probe is committed under `measurements/`.
   `both` while only one arrives.
 - **SC-013**: `numactl` loses its `scope: "excluded"`. It is the one component
   in the committed golden whose exclusion rests on a role that an unread
-  attribute made wrong, and no component gains an exclusion. Named rather than
-  counted, because a criterion that says "the false exclusions are retracted"
-  is how milestone 1278 shipped a count of nine for a population of six.
+  attribute made wrong, and **no component already in the golden gains an
+  exclusion**. Named rather than counted, because a criterion that says "the
+  false exclusions are retracted" is how milestone 1278 shipped a count of
+  nine for a population of six.
+
+  The qualifier was added during implementation, and the measurement is why.
+  Two components this milestone **newly emits** — `patchelf 0.15.2` and
+  `setup-debug-info-dirs-hook 26.05pre-git` — arrive as `build-tooling` and
+  therefore arrive carrying an exclusion. That is not a component gaining a
+  claim: it is a component appearing, having previously been absent because an
+  unread attribute made it look like nothing depended on it. The two cases are
+  worth distinguishing because only the first would be a regression, and the
+  criterion as first drafted would have failed on the second.
 
 ## Assumptions
 

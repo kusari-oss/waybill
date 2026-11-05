@@ -1,0 +1,110 @@
+{
+  "derivations": {
+    "m-tt.drv": {
+      "name": "waybill-fixture-tt-1.0",
+      "outputs": {
+        "out": {
+          "path": "h1-waybill-fixture-tt-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-tt",
+        "version": "1.0"
+      }
+    },
+    "m-ttp.drv": {
+      "name": "waybill-fixture-ttp-1.0",
+      "outputs": {
+        "out": {
+          "path": "h2-waybill-fixture-ttp-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-ttp",
+        "version": "1.0"
+      }
+    },
+    "m-bt.drv": {
+      "name": "waybill-fixture-bt-1.0",
+      "outputs": {
+        "out": {
+          "path": "h3-waybill-fixture-bt-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-bt",
+        "version": "1.0"
+      }
+    },
+    "m-pnbi.drv": {
+      "name": "waybill-fixture-pnbi-1.0",
+      "outputs": {
+        "out": {
+          "path": "h4-waybill-fixture-pnbi-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-pnbi",
+        "version": "1.0"
+      }
+    },
+    "c-tt.drv": {
+      "name": "waybill-fixture-ctt-1.0",
+      "outputs": {
+        "out": {
+          "path": "h5-waybill-fixture-ctt-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-ctt",
+        "version": "1.0",
+        "depsTargetTarget": "/nix/store/h1-waybill-fixture-tt-1.0"
+      }
+    },
+    "c-ttp.drv": {
+      "name": "waybill-fixture-cttp-1.0",
+      "outputs": {
+        "out": {
+          "path": "h6-waybill-fixture-cttp-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-cttp",
+        "version": "1.0",
+        "depsTargetTargetPropagated": "/nix/store/h2-waybill-fixture-ttp-1.0"
+      }
+    },
+    "c-bt.drv": {
+      "name": "waybill-fixture-cbt-1.0",
+      "outputs": {
+        "out": {
+          "path": "h7-waybill-fixture-cbt-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-cbt",
+        "version": "1.0",
+        "depsBuildTarget": "/nix/store/h3-waybill-fixture-bt-1.0"
+      }
+    },
+    "c-pnbi.drv": {
+      "name": "waybill-fixture-cpnbi-1.0",
+      "outputs": {
+        "out": {
+          "path": "h8-waybill-fixture-cpnbi-1.0"
+        }
+      },
+      "env": {
+        "out": "/nix/store/h8-waybill-fixture-cpnbi-1.0"
+      },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-cpnbi",
+        "version": "1.0",
+        "propagatedNativeBuildInputs": [
+          "/nix/store/h4-waybill-fixture-pnbi-1.0"
+        ]
+      }
+    }
+  },
+  "version": 4
+}

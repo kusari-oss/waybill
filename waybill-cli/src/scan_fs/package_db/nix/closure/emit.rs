@@ -27,6 +27,38 @@ pub(crate) const ANN_CLOSURE_ROLE: &str = "waybill:closure-role";
 /// matching the m134 / m147 / m173 convention for array-valued annotations.
 pub(crate) const ANN_CLOSURE_PATCHES: &str = "waybill:closure-patches";
 
+/// C205 (m1279, #1346) — dependency attributes that name this member and that
+/// role classification does not read.
+///
+/// A sorted JSON array of attribute names, encoded as a string, matching the
+/// m134 / m147 / m173 convention this file already follows for C185.
+///
+/// It is what stops `unreferenced` meaning two things. Without it, "nothing
+/// in this closure depends on this member" and "the only thing that depends
+/// on it is an attribute waybill does not classify" are the same output — the
+/// first a fact about the closure, the second a fact about waybill — and a
+/// consumer has no way to tell which they are looking at.
+///
+/// **It names the attributes** (FR-013). "Referenced by something waybill does
+/// not classify" without saying what is a smaller version of the same defect:
+/// it tells a consumer a gap exists and not where.
+///
+/// Present whenever an unclassified attribute names the member, **whatever its
+/// role** — a reader comparing two `artifact-input` members should be able to
+/// tell that one of them also has an unread reference. Absence therefore means
+/// "no unclassified attribute names this member", never "not checked", and
+/// that is only trustworthy because the FR-007 guard reports an attribute the
+/// classifier does not recognise rather than ignoring it.
+///
+/// **Reach, stated rather than assumed.** This can only land on a component,
+/// and [`emits_as_component`] drops an `Unreferenced` member that applies no
+/// patch. So the gating table's "`unreferenced` + named" row materialises
+/// only for patch-appliers, which is also the only place `unreferenced` is
+/// observable in output at all. The other half of #1346's fix is the widening
+/// in `classify.rs`: a member the four newly-consulted attributes reach stops
+/// being `Unreferenced`, which is what makes it emitted in the first place.
+pub(crate) const ANN_CLOSURE_UNCLASSIFIED_REFS: &str = "waybill:closure-unclassified-refs";
+
 /// Roles that become components on the strength of the role alone.
 ///
 /// `Unreferenced` is excluded here, but that is not the whole rule — see
@@ -72,6 +104,14 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
     let mut merged: std::collections::BTreeMap<
         (String, String),
         (DerivationRole, ResolvedComponent),
+    > = std::collections::BTreeMap::new();
+    // C205 — unioned over build variants for the same reason the role is:
+    // the component a consumer sees is one identity, and a reference through
+    // any variant of it is a reference. Keyed by that identity rather than by
+    // `.drv` path, which is what the index carries.
+    let mut unclassified: std::collections::BTreeMap<
+        (String, String),
+        std::collections::BTreeSet<String>,
     > = std::collections::BTreeMap::new();
     for (key, drv) in &closure.raw.derivations {
         let Some(role) = closure.roles.get(key).copied() else {
@@ -140,6 +180,12 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
             extra_annotations: Default::default(),
             binary_role: None,
         };
+        if let Some(attributes) = closure.read_outcome.unclassified_refs.get(key) {
+            unclassified
+                .entry((name.to_string(), version.to_string()))
+                .or_default()
+                .extend(attributes.iter().cloned());
+        }
         merged
             .entry((name.to_string(), version.to_string()))
             // The variants are otherwise identical — same name, version and
@@ -166,6 +212,28 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                 ANN_CLOSURE_ROLE.to_string(),
                 serde_json::Value::String(role.wire().to_string()),
             );
+            if let Some(attributes) =
+                unclassified.get(&(component.name.clone(), component.version.clone()))
+            {
+                // Non-empty by construction: the index only records a member
+                // an attribute actually named. Guarded anyway, because an
+                // empty array would assert "checked, and nothing" in the one
+                // slot whose absence already says that.
+                if !attributes.is_empty() {
+                    component.extra_annotations.insert(
+                        ANN_CLOSURE_UNCLASSIFIED_REFS.to_string(),
+                        serde_json::Value::String(
+                            serde_json::Value::Array(
+                                attributes
+                                    .iter()
+                                    .map(|a| serde_json::Value::String(a.clone()))
+                                    .collect(),
+                            )
+                            .to_string(),
+                        ),
+                    );
+                }
+            }
             if let Some(record) =
                 index.get(&(component.name.as_str(), component.version.as_str()))
             {
