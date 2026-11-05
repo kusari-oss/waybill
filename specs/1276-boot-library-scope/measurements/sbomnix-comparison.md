@@ -275,3 +275,141 @@ was "confirmed at the order #1282 claimed". The inherited number now
 reproduces exactly. No explanation is offered; the possibility worth stating
 is that #1282's figure came from this same closure after all, in which case it
 was never the unsourced estimate it appeared to be.
+
+---
+
+# Re-check, 2026-11-05 (after milestone 1279)
+
+Same harness, same sbomnix `1.9.0+g95480c2` already in the store, same moat
+pin, same host, same flags. Run because milestone 1279 (#1346) taught the
+closure classifier to read four more nixpkgs dependency attributes, and the
+bucket it should move is the one this file identified as a real gap rather
+than a modelling choice.
+
+**Measured with one variable.** Two waybill binaries built from
+`48a5115e` (main's tip before 1279) and `4d43eae9` (the 1279 merge), run
+against the same project copy with the same sbomnix output. The 2026-11-04
+figures could not isolate this milestone — m1277 and m1278 both landed since,
+and the closure itself has moved once under a pinned nixpkgs.
+
+**The control holds**: the pre-1279 arm reproduces 2026-11-04's re-check
+exactly — sbomnix 1,274 / 8,230 edges / 301 licensed / 0 hashed / 106 with no
+PURL / 819 names, waybill 409 / 788 / 137 / 136 / 0 / 403, **305 shared**. So
+the deltas below are milestone 1279's and not the host's.
+
+## The comparison now
+
+| | sbomnix | pre-1279 | **post-1279** | 1279's share |
+|---|---|---|---|---|
+| components | 1,274 | 409 | **413** | **+4** |
+| `dependsOn` edges | 8,230 | 788 | 788 | 0 |
+| with a license | 301 | 137 | 137 | 0 |
+| with a hash | 0 | 136 | 136 | 0 |
+| with **no PURL at all** | 106 | 0 | 0 | 0 |
+| distinct names | 819 | 403 | **407** | +4 |
+| **shared with sbomnix** | — | 305 | **309** | **+4** |
+| **sbomnix-only (the gap)** | — | 514 | **510** | **−4** |
+| waybill-only | — | 98 | 98 | 0 |
+| GHC boot libraries | 0 of 6 | 6 of 6 | 6 of 6 | unchanged |
+
+**The gap is 861, from 865.** Small, and it is the *right four*: every one of
+the four components waybill newly emits is a name sbomnix already had —
+waybill-only stays at 98 while shared rises by exactly 4, so the closure is
+convergence and not two tools inventing different components.
+
+## The four, each attributed to the attribute that reaches it
+
+| component | before → after | reached through |
+|---|---|---|
+| `libcxx 21.1.6+apple-sdk-26.4` | `unreferenced` → `artifact-input` | `depsTargetTargetPropagated` |
+| `bootstrap-stage0-libcxx` | `unreferenced` → `artifact-input` | `depsTargetTargetPropagated` |
+| `bootstrap-stage0-compiler-rt` | `unreferenced` → `artifact-input` | `depsTargetTargetPropagated` |
+| `nss-cacert 3.123` | `unreferenced` → `build-tooling` | `propagatedNativeBuildInputs` |
+
+Eight derivations change role in all; the other four (`compiler-rt`,
+`compiler-rt-libc`, `xcbuild`, `find-xml-catalogs-hook`) were already emitted
+on the strength of a patch or another reference, so their role improves
+without changing the component count.
+
+**`libcxx` is the case #1346 was filed about, in its clearest form.** It is
+the C++ standard library; it genuinely ships inside the artifact. Before this
+milestone waybill called it `unreferenced` — and on this closure that meant it
+was **not emitted at all**, because an `unreferenced` member applying no patch
+becomes no component. A consumer asking "what is in this build" was not told
+about the C++ runtime it links against. sbomnix had it all along
+(`pkg:nix/libcxx@21.1.6%2Bapple-sdk-26.4`).
+
+That is a different kind of improvement from the other three. `nss-cacert`
+moving to `build-tooling` adds a component and then marks it
+`scope: "excluded"` — useful, but a claim about the build. `libcxx` arriving as
+`artifact-input` with no scope is a missing *artifact* dependency appearing.
+
+## The buckets, recomputed on the same closure
+
+| bucket | pre | post | |
+|---|---|---|---|
+| no `pname` in either carrier | 615 | 615 | unchanged — 1279 adds no names |
+| build variants merged | 248 | 248 | unchanged |
+| `unreferenced` **and** named | 144 | 139 | −5 |
+| …of which kept because they patch | 41 | 38 | |
+| …of which dropped by role | **103** | **101** | **−2** |
+| *less* components only waybill has | −98 | −98 | unchanged |
+
+Two of the three buckets are untouched and should be: merging variants is the
+point of a package model, and 615 unnameable derivations is an identity
+problem this milestone does not address. The bucket that moved is the one
+this file called the role filter.
+
+**The probe's −2 and the documents' +4 are different measurements, and the
+documents are the authoritative one.** This decomposition counts identities by
+`pname` alone; waybill falls back to the derivation's `name` when `pname` is
+absent, so its emitted set is larger than the probe's and moves differently.
+The probe is kept because it reproduces 2026-11-04's buckets exactly, which is
+what makes the comparison legible — not because its delta is the answer.
+
+## So: better results?
+
+Yes, on this closure, and narrowly. 4 components, all of them real, all of
+them already in the other tool's output, one of them a runtime library that
+genuinely ships. The headline ratios do not move: sbomnix still reports 3×
+the components and 10× the edges, because it walks store references while
+waybill emits what a package set declares, and this file's original conclusion
+is unchanged — **sbomnix sees more of the build, waybill sees more of the
+packages.**
+
+What did *not* improve is worth stating too. Edges, licenses and hashes are
+identical; 1279 touches classification, not acquisition. The 615 unnameable
+derivations — the one bucket that is a genuine identity gap, with 106 named
+`source` fetches inside it that sbomnix emits with no identifier at all —
+is exactly where it was.
+
+## This system is not the one the goldens pin
+
+Every figure above is **aarch64-darwin**, 1,275 derivations, matching the
+earlier runs in this file. The corpus goldens pin **x86_64-linux**, 1,749
+derivations, where the same milestone moves 7 derivations rather than 8 and
+emits 2 new components rather than 4.
+
+The two closures also populate *different attributes*, which this re-check
+confirms in live output rather than in a probe: after the widening, darwin's
+`fields-unconsulted` is `["defaultBuildInputs", "defaultNativeBuildInputs"]`
+while linux's is `["defaultNativeBuildInputs", "extraNativeBuildInputs"]`. The
+C205 marker lands on **3** components here and on **9** there. A figure from
+one system quoted against the other is wrong in membership, not in magnitude —
+the error milestone 1279's own spec made twice before measuring.
+
+## Reproducing
+
+```sh
+# sbomnix 1.9.0+g95480c2, already in the store from the 2026-11-03 run
+S=/nix/store/cbh4k59d3sa3w9axcwdbk6jzkg99ybvk-python3.14-sbomnix-1.9.0+g95480c2/bin/sbomnix
+
+# Copy the corpus clone first. Evaluating a flake in place can re-lock it:
+# on 2026-11-04 that rewrote a committed `flake.lock` and broke 11 tests in
+# an unrelated file. Verify the copy afterwards.
+cp -R ~/.cache/waybill/corpus/53983fe1021353b3/d069055*/repo moat-proj
+md5 -q ~/.cache/waybill/corpus/53983fe1021353b3/d069055*/repo/flake.lock moat-proj/flake.lock
+
+SBOMNIX=$S PROJ=$PWD/moat-proj WAYBILL=./target/debug/waybill \
+  ./specs/1276-boot-library-scope/measurements/compare-sbomnix.sh
+```
