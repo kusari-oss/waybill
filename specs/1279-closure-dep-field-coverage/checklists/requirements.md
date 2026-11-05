@@ -100,3 +100,36 @@ One deliberate debt is recorded in Assumptions rather than hidden:
 `artifact-input` now covers two distinguishable things, and if a genuinely
 cross closure makes that imprecision expensive, a fifth role value is the
 follow-up and should carry its own milestone.
+
+
+## Plan session 2026-11-05
+
+Phase 0 and Phase 1 complete. All 16 items still pass after the plan's edits
+to the spec. Sections touched in the spec: *Why this exists* (system labels),
+Success Criteria (SC-012, SC-013 added; SC-001 and SC-010 amended),
+Clarifications (one ratio labelled by system).
+
+Three Phase 0 findings changed the spec rather than confirming it:
+
+- **The role delta was measured, and `artifact-input` falls by two.** Three of
+  its members gain a tooling reference and become `both` while only one
+  arrives. SC-012 now states the direction explicitly, because a reviewer
+  checking the arithmetic would otherwise read a negative delta as an error.
+- **Exactly one component loses a false exclusion, and it is `numactl`.**
+  SC-013 names it. A criterion reading "the false exclusions are retracted" is
+  how milestone 1278 shipped a count of nine for a population of six, and the
+  fix is to name rather than to count.
+- **Every figure in the spec was darwin-measured and unlabelled.** The FR-002
+  population is **3 on linux against 16 on darwin** — five-fold — and the
+  goldens pin linux. Labels added throughout and the criteria restated against
+  linux. This is the same class of defect as #1348's own research, which
+  quoted a census without its system and had to be retracted.
+
+One design option was considered and rejected in Phase 1, recorded because it
+was tempting and nearly taken: emitting a real `dependsOn` edge for the
+unclassified references instead of a marker. Both CDX and SPDX can express it
+natively, and Principle V prefers native carriers — but an edge is a stronger
+claim than this milestone is entitled to make, and it would put stdenv's
+machinery into the dependency graph of every derivation stdenv touches. The
+native-first rule does not mean "use a native field for a claim you should not
+be making".

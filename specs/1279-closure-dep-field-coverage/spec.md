@@ -22,7 +22,8 @@ can an invariant — which is the same shape of defect as #1348, where a whole
 attribute *carrier* went unread and the symptom was a large `unreferenced`
 population that got written up as a finding about nix.
 
-**Measured on the corpus closure**, every dependency attribute any derivation
+**Measured on the corpus closure, aarch64-darwin** (the system label matters —
+see the note below the table), every dependency attribute any derivation
 declares, against the seven the classifier consults:
 
 | attribute | declared on | store paths | consulted |
@@ -44,6 +45,16 @@ So the gap is **six populated attributes carrying 353 store-path
 declarations**, and it is not evenly spread: `defaultNativeBuildInputs` alone
 carries 311 of them, on 19 derivations.
 
+**These are darwin figures, and the populations are not system-stable.** The
+x86_64-linux closure of the same project — the one the corpus goldens pin, and
+therefore the one any assertion is checked against — carries **230**
+unconsulted declarations across **23** derivations, and the stdenv pair
+accounts for a far smaller share of them: the population of members
+`unreferenced` *only* because of an unclassified attribute is **3** on linux
+against **16** on darwin, a five-fold difference. Success criteria below are
+therefore stated against linux. The ratio `323 of 353` quoted in the
+clarifications is a darwin fact and is labelled as such.
+
 Two consequences, and only the first is the one #1346 names:
 
 1. **`unreferenced` is not trustworthy as a reason.** Any member reachable
@@ -58,7 +69,7 @@ Two consequences, and only the first is the one #1346 names:
 ### Session 2026-11-05
 
 - Q: How should nixpkgs' cross-compilation triples map onto the two-way artifact/tooling split? → A: **Classified as `artifact-input`, which asserts no scope.** They name dependencies of the *target* platform — what a compiler being built hands to things it later compiles — so they are neither in the artifact nor tooling that built it. `build-tooling` was the initial lean and was rejected: milestone 1277 asserts CycloneDX `scope: "excluded"` for tooling roles, a positive claim that the member is not in the artifact, and a cross-compiler genuinely ships its target libc inside its own output. That claim can therefore be false, which is the defect class of #1342 and #1348. `artifact-input` already carries the meaning "nix references this in, and waybill cannot tell whether it ships", and m1277 deliberately asserts no scope for it. Imprecise, but it makes no false claim. A fifth role value was rejected on blast radius: it would change the C182 closed enum, every consumer of it, invariant I10's population and C203's vocabulary, for 22 store paths on this closure.
-- Q: Should stdenv's `defaultNativeBuildInputs` / `defaultBuildInputs` be classified at all? → A: **No — they stay unclassified, and the distinction is made explicit instead.** #1346 is a truthfulness defect rather than a coverage one: its ask is that `unreferenced` stop meaning two things. A member named only in an attribute waybill does not classify is marked as such, which satisfies that for all 323 declarations without moving the census at all. That also keeps SC-004's attribution clean — every role change then traces to a newly-consulted attribute rather than to stdenv's machinery arriving en masse — and avoids a large new population of `scope: "excluded"` assertions landing in one milestone.
+- Q: Should stdenv's `defaultNativeBuildInputs` / `defaultBuildInputs` be classified at all? → A: **No — they stay unclassified, and the distinction is made explicit instead.** #1346 is a truthfulness defect rather than a coverage one: its ask is that `unreferenced` stop meaning two things. A member named only in an attribute waybill does not classify is marked as such, which satisfies that for all 323 declarations (aarch64-darwin; the linux share is smaller) without moving the census at all. That also keeps SC-004's attribution clean — every role change then traces to a newly-consulted attribute rather than to stdenv's machinery arriving en masse — and avoids a large new population of `scope: "excluded"` assertions landing in one milestone.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -257,7 +268,8 @@ rather than eternal; the probe is committed under `measurements/`.
 
 - **SC-001**: No member carrying `unreferenced` is named by any derivation in
   any dependency attribute. **Measured today: violated** — six populated
-  attributes carrying 353 store-path declarations are unread.
+  attributes are unread, carrying 230 store-path declarations on
+  x86_64-linux (353 on aarch64-darwin).
 - **SC-002**: A member named only in an unconsulted attribute is
   distinguishable from a member nothing names, by reading the document alone.
 - **SC-003**: Every member reachable through `propagatedNativeBuildInputs`,
@@ -278,12 +290,23 @@ rather than eternal; the probe is committed under `measurements/`.
   agree by a test, not by inspection.
 - **SC-010**: No member reachable through `depsTargetTarget` or
   `depsTargetTargetPropagated` carries a native marker asserting it is absent
-  from the artifact. **Measured today: 22 store-path declarations across those
-  two attributes go unread, so no such member is classified at all.**
+  from the artifact.
 - **SC-011**: The role census moves by exactly the members newly reachable
   through the four attributes this milestone consults, and by no others.
   `defaultNativeBuildInputs` and `defaultBuildInputs` contribute **zero**
   census movement; a run in which they contribute any is a defect.
+- **SC-012**: On the pinned corpus target (x86_64-linux), the census moves
+  270 / 118 / 42 / 1,319 → **268 / 121 / 45 / 1,315** across
+  artifact-input / build-tooling / both / unreferenced. Seven derivations
+  change role: 3 `unreferenced`→`build-tooling`, 3 `artifact-input`→`both`,
+  1 `unreferenced`→`artifact-input`. **`artifact-input` falls by two**, which
+  is not a typo — three of its members gain a tooling reference and become
+  `both` while only one arrives.
+- **SC-013**: `numactl` loses its `scope: "excluded"`. It is the one component
+  in the committed golden whose exclusion rests on a role that an unread
+  attribute made wrong, and no component gains an exclusion. Named rather than
+  counted, because a criterion that says "the false exclusions are retracted"
+  is how milestone 1278 shipped a count of nine for a population of six.
 
 ## Assumptions
 
