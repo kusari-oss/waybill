@@ -289,6 +289,22 @@ pub(crate) struct ReadOutcome {
     /// Fields a derivation declared in both carriers with differing values
     /// (FR-006). Empty on every closure measured.
     pub(crate) carrier_disagreements: BTreeSet<String>,
+    /// Which unconsulted attributes name each closure member (#1346, FR-002).
+    ///
+    /// Keyed **per member**, not per declaring derivation: a consumer asks
+    /// "why is this component here", not "what did that derivation declare".
+    /// The value is sorted so the emitted annotation is byte-stable.
+    ///
+    /// This is what stops `unreferenced` meaning two things. Without it, a
+    /// member nothing depends on and a member whose only dependency edge runs
+    /// through an attribute waybill does not classify are reported
+    /// identically — the first is a fact about the closure, the second a fact
+    /// about waybill, and a consumer cannot tell them apart.
+    ///
+    /// Purely observational: it must never feed a role. That is what keeps
+    /// the census attributable to the four newly-consulted attributes alone
+    /// (SC-011), and it is asserted rather than assumed.
+    pub(crate) unclassified_refs: BTreeMap<String, BTreeSet<String>>,
 }
 
 impl ReadOutcome {
@@ -317,6 +333,9 @@ impl RawClosure {
             format_version: self.version,
             ..Default::default()
         };
+        // The same basename join classification uses. Comparing unstripped
+        // paths resolves nothing, silently — see `store_basename`.
+        let index = self.output_index();
         for drv in self.derivations.values() {
             let mut affected = false;
             for field in drv.store_path_fields() {
@@ -326,6 +345,19 @@ impl RawClosure {
                 outcome.fields_unconsulted.insert(field.to_string());
                 outcome.declarations_unconsulted += drv.paths_in(field).count();
                 affected = true;
+                // FR-002 / FR-013 — record WHICH members this unconsulted
+                // attribute names, and through which attribute. Built from
+                // this same walk rather than a second pass, so the index and
+                // the disclosure cannot disagree about what was unconsulted.
+                for path in drv.paths_in(field) {
+                    if let Some(key) = index.get(store_basename(path)) {
+                        outcome
+                            .unclassified_refs
+                            .entry((*key).to_string())
+                            .or_default()
+                            .insert(field.to_string());
+                    }
+                }
             }
             for field in drv.carrier_disagreements() {
                 outcome.carrier_disagreements.insert(field.to_string());
@@ -752,5 +784,143 @@ mod tests {
     fn a_derivation_without_the_field_yields_no_paths() {
         let c = RawClosure::parse(CLOSURE).unwrap();
         assert_eq!(c.derivations["aaa-lib-1.0.drv"].paths_in("buildInputs").count(), 0);
+    }
+
+    // ---- m1279 (#1346): the unclassified-reference index ----
+
+    fn dep_fixture(name: &str) -> RawClosure {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/nix_closure_dep_fields")
+            .join(name);
+        let json = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        RawClosure::parse(&json).unwrap_or_else(|e| panic!("parse {}: {e}", path.display()))
+    }
+
+    fn dep_outcome(name: &str) -> (RawClosure, ReadOutcome) {
+        let c = dep_fixture(name);
+        let outcome = c.read_outcome(&super::super::classify::consulted_fields());
+        (c, outcome)
+    }
+
+    #[test]
+    fn m1279_t008_the_index_names_the_attribute_that_reached_each_member() {
+        // T008 against T002's fixture. Each of the three stdenv-injected
+        // attributes names exactly one member, so the index's value set is
+        // separable per attribute rather than a union nobody can attribute.
+        let (c, outcome) = dep_outcome("stdenv_only.json");
+
+        // CONTROL, twice over. The fixture must really hold the derivations
+        // it claims, and something must really be referenced: an index built
+        // from a closure that parsed to nothing satisfies every "names the
+        // right attribute" assertion below vacuously, and so does one whose
+        // basename join resolved no path at all.
+        assert_eq!(c.derivations.len(), 5, "fixture shape changed");
+        assert_eq!(
+            outcome.unclassified_refs.len(),
+            4,
+            "four members are named by a stdenv default -- one per attribute, \
+             plus `m-two` named by two -- and all four must be indexed; got \
+             {:?}",
+            outcome.unclassified_refs
+        );
+        // The member named by TWO unclassified attributes carries both, sorted
+        // (FR-013). A marker that kept only the first would under-report, and
+        // nothing else in this module would notice.
+        assert_eq!(
+            outcome.unclassified_refs["m-two.drv"]
+                .iter()
+                .cloned()
+                .collect::<Vec<String>>(),
+            vec![
+                "defaultNativeBuildInputs".to_string(),
+                "extraNativeBuildInputs".to_string()
+            ]
+        );
+
+        for (member, attribute) in [
+            ("m-dnbi.drv", "defaultNativeBuildInputs"),
+            ("m-dbi.drv", "defaultBuildInputs"),
+            ("m-enbi.drv", "extraNativeBuildInputs"),
+        ] {
+            let got = outcome
+                .unclassified_refs
+                .get(member)
+                .unwrap_or_else(|| panic!("{member} missing from the index"));
+            assert_eq!(
+                got.iter().cloned().collect::<Vec<String>>(),
+                vec![attribute.to_string()],
+                "{member} must name {attribute} and nothing else"
+            );
+        }
+    }
+
+    #[test]
+    fn m1279_t008_a_member_reached_only_by_consulted_attributes_is_not_indexed() {
+        // T008 against T003's fixture. The index is the complement of what
+        // classification reads, so a member the classifier *can* explain must
+        // not appear in it -- otherwise every component would carry the
+        // marker and the marker would mean nothing.
+        let (c, outcome) = dep_outcome("attribute_states.json");
+
+        // CONTROL: the consulted side really did resolve. Were the basename
+        // join broken, `m-art` would be absent from the index for the wrong
+        // reason and this test would pass while the feature was inert.
+        let roles = super::super::classify::classify(&c);
+        assert!(
+            roles.contains_key("m-art.drv") && roles.contains_key("m-tool.drv"),
+            "the consulted attributes must resolve before their absence from \
+             the index means anything; roles={roles:?}"
+        );
+
+        for consulted_only in ["m-art.drv", "m-tool.drv"] {
+            assert!(
+                !outcome.unclassified_refs.contains_key(consulted_only),
+                "{consulted_only} is reached only through attributes \
+                 classification reads, so it must not be indexed"
+            );
+        }
+        assert_eq!(
+            outcome
+                .unclassified_refs
+                .get("m-unref.drv")
+                .map(|a| a.iter().cloned().collect::<Vec<String>>()),
+            Some(vec!["defaultNativeBuildInputs".to_string()]),
+            "the member reached ONLY by an unconsulted attribute is the one \
+             the index exists for"
+        );
+        // And the gating row T044 asserts at integration level: `m-both` is
+        // reached by two consulted attributes AND one unclassified one, so it
+        // is indexed despite having a role. An index that only recorded
+        // otherwise-unreferenced members would pass every other assertion
+        // here.
+        assert_eq!(
+            outcome
+                .unclassified_refs
+                .get("m-both.drv")
+                .map(|a| a.iter().cloned().collect::<Vec<String>>()),
+            Some(vec!["defaultNativeBuildInputs".to_string()])
+        );
+    }
+
+    #[test]
+    fn m1279_t008_an_empty_attribute_credits_nothing_to_the_index() {
+        // FR-005. `attribute_states.json` declares `depsHostHostPropagated`
+        // and `propagatedBuildInputs` as empty arrays. A declared-but-empty
+        // attribute is not a gap and names no member, so neither may reach
+        // either the index or the disclosure.
+        let (_, outcome) = dep_outcome("attribute_states.json");
+        for empty in ["depsHostHostPropagated", "propagatedBuildInputs", "depsHostHost"] {
+            assert!(
+                !outcome.fields_unconsulted.contains(empty),
+                "{empty} is declared empty and must not be reported as a gap"
+            );
+            for attributes in outcome.unclassified_refs.values() {
+                assert!(
+                    !attributes.contains(empty),
+                    "{empty} is empty and can have named no member"
+                );
+            }
+        }
     }
 }

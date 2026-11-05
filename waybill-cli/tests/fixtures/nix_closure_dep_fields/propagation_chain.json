@@ -1,0 +1,43 @@
+{
+  "derivations": {
+    "m-leaf.drv": {
+      "name": "waybill-fixture-leaf-1.0",
+      "outputs": {
+        "out": {
+          "path": "h1-waybill-fixture-leaf-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-leaf",
+        "version": "1.0"
+      }
+    },
+    "mid.drv": {
+      "name": "waybill-fixture-mid-1.0",
+      "outputs": {
+        "out": {
+          "path": "h2-waybill-fixture-mid-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-mid",
+        "version": "1.0",
+        "propagatedNativeBuildInputs": "/nix/store/h1-waybill-fixture-leaf-1.0"
+      }
+    },
+    "root.drv": {
+      "name": "waybill-fixture-root-1.0",
+      "outputs": {
+        "out": {
+          "path": "h3-waybill-fixture-root-1.0"
+        }
+      },
+      "env": {
+        "pname": "waybill-fixture-root",
+        "version": "1.0",
+        "propagatedNativeBuildInputs": "/nix/store/h2-waybill-fixture-mid-1.0"
+      }
+    }
+  },
+  "version": 4
+}

@@ -31,8 +31,18 @@ const REV: &str = "a799d3e3886da994fa307f817a6bc705ae538eeb";
 /// `flatdep` is referenced through the flat carrier and `typeddep` through the
 /// typed one, by the same fields, so the two are a matched pair: whatever the
 /// reader does for one it must do for the other. `unconsulted` declares its
-/// dependency in `depsBuildTarget`, which classification does not read — the
-/// FR-014 diagnostic must name that field without its member's role changing.
+/// dependency in `defaultNativeBuildInputs`, which classification does not
+/// read — the FR-014 diagnostic must name that field without its member's role
+/// changing.
+///
+/// **That field was `depsBuildTarget` until milestone 1279 (#1346), which
+/// consults it.** A test whose premise is "this attribute is unread" has to be
+/// re-pointed when the set of unread attributes shrinks, and the six failures
+/// it caused were the correct answer rather than a regression.
+/// `defaultNativeBuildInputs` is a deliberate long-term choice, not the next
+/// arbitrary name: FR-012 excludes stdenv's injected attributes on purpose, so
+/// it is unlikely to be consulted by a later milestone for the same reason it
+/// is not consulted now.
 /// `disagree` declares the same field in both carriers with different values.
 const CLOSURE_JSON: &str = r#"{
   "derivations": {
@@ -96,7 +106,7 @@ const CLOSURE_JSON: &str = r#"{
       "structuredAttrs": {
         "pname": "waybill-fixture-unconsulted",
         "version": "1.0",
-        "depsBuildTarget": ["/nix/store/h8-unreachable"]
+        "defaultNativeBuildInputs": ["/nix/store/h8-unreachable"]
       },
       "outputs": { "out": { "path": "h7-unconsulted" } }
     },
@@ -594,7 +604,7 @@ fn m1278_the_disclosure_names_the_field_it_could_not_consult() {
     let outcome = s.read_outcome().expect("C204 absent despite an unconsulted declaration");
     assert_eq!(
         outcome["fields-unconsulted"].as_array().unwrap(),
-        &vec![Value::String("depsBuildTarget".into())],
+        &vec![Value::String("defaultNativeBuildInputs".into())],
         "the field is named by shape, not by an allowlist: {outcome}"
     );
     assert_eq!(outcome["declarations-unconsulted"].as_u64(), Some(1), "{outcome}");
@@ -606,7 +616,7 @@ fn m1278_the_disclosure_names_the_field_it_could_not_consult() {
 #[test]
 fn m1278_an_unconsulted_field_does_not_change_a_members_role() {
     let s = scan_closure(CLOSURE_JSON);
-    // `unreachable` is named ONLY by `depsBuildTarget`, a field classification
+    // `unreachable` is named ONLY by `defaultNativeBuildInputs`, a field classification
     // does not read. Reporting it must not promote it.
     assert_eq!(
         s.role("waybill-fixture-unreachable"),

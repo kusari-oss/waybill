@@ -1,0 +1,85 @@
+{
+  "derivations": {
+    "m-art.drv": {
+      "name": "waybill-fixture-art-1.0",
+      "env": {
+        "pname": "waybill-fixture-art",
+        "version": "1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-waybill-fixture-art-1.0"
+        }
+      }
+    },
+    "m-tool.drv": {
+      "name": "waybill-fixture-tool-1.0",
+      "env": {
+        "pname": "waybill-fixture-tool",
+        "version": "1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "h2-waybill-fixture-tool-1.0"
+        }
+      }
+    },
+    "m-both.drv": {
+      "name": "waybill-fixture-both-1.0",
+      "env": {
+        "pname": "waybill-fixture-both",
+        "version": "1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "h3-waybill-fixture-both-1.0"
+        }
+      }
+    },
+    "m-unref.drv": {
+      "name": "waybill-fixture-unref-1.0",
+      "env": {
+        "pname": "waybill-fixture-unref",
+        "version": "1.0",
+        "patches": "/nix/store/hp-waybill-fixture-tidy.patch"
+      },
+      "outputs": {
+        "out": {
+          "path": "h4-waybill-fixture-unref-1.0"
+        }
+      }
+    },
+    "c-states.drv": {
+      "name": "waybill-fixture-cstates-1.0",
+      "env": {
+        "out": "/nix/store/h5-waybill-fixture-cstates-1.0"
+      },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-cstates",
+        "version": "1.0",
+        "buildInputs": [
+          "/nix/store/h1-waybill-fixture-art-1.0",
+          "/nix/store/h3-waybill-fixture-both-1.0"
+        ],
+        "nativeBuildInputs": [
+          "/nix/store/h2-waybill-fixture-tool-1.0",
+          "/nix/store/h3-waybill-fixture-both-1.0"
+        ],
+        "depsHostHost": [],
+        "depsHostHostPropagated": [],
+        "propagatedBuildInputs": [],
+        "defaultNativeBuildInputs": [
+          "/nix/store/h4-waybill-fixture-unref-1.0",
+          "/nix/store/h3-waybill-fixture-both-1.0"
+        ],
+        "doCheck": false
+      },
+      "outputs": {
+        "out": {
+          "path": "h5-waybill-fixture-cstates-1.0"
+        }
+      }
+    }
+  },
+  "version": 4
+}

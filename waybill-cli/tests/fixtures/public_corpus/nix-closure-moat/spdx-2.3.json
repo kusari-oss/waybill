@@ -53,7 +53,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 350 component(s) not reachable from root; transitive-edges-unresolvable: hackage\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 352 component(s) not reachable from root; transitive-edges-unresolvable: hackage\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -89,7 +89,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":379,\\\"derivations\\\":1749,\\\"distinct-cves\\\":13,\\\"patches\\\":212,\\\"patches-without-cve\\\":197,\\\"roles\\\":{\\\"artifact-input\\\":270,\\\"both\\\":42,\\\"build-tooling\\\":118,\\\"unreferenced\\\":1319}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":381,\\\"derivations\\\":1749,\\\"distinct-cves\\\":13,\\\"patches\\\":212,\\\"patches-without-cve\\\":197,\\\"roles\\\":{\\\"artifact-input\\\":268,\\\"both\\\":45,\\\"build-tooling\\\":121,\\\"unreferenced\\\":1315}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -101,7 +101,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure-read\",\"value\":\"{\\\"declarations-unconsulted\\\":230,\\\"derivations-affected\\\":23,\\\"fields-unconsulted\\\":[\\\"defaultNativeBuildInputs\\\",\\\"depsBuildTarget\\\",\\\"depsTargetTarget\\\",\\\"depsTargetTargetPropagated\\\",\\\"extraNativeBuildInputs\\\",\\\"propagatedNativeBuildInputs\\\"],\\\"format-version\\\":4}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure-read\",\"value\":\"{\\\"declarations-unconsulted\\\":211,\\\"derivations-affected\\\":16,\\\"fields-unconsulted\\\":[\\\"defaultNativeBuildInputs\\\",\\\"extraNativeBuildInputs\\\"],\\\"format-version\\\":4}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -5396,7 +5396,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -5715,6 +5715,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -5756,7 +5762,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -5805,6 +5811,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -5853,6 +5865,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -5901,6 +5919,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -5949,6 +5973,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -8114,7 +8144,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -8511,6 +8541,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -9225,6 +9261,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"extraNativeBuildInputs\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -13490,12 +13532,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -13514,7 +13550,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"unreferenced\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -13896,6 +13932,60 @@
       "licenseDeclared": "BSD-3-Clause",
       "name": "parsers",
       "versionInfo": "0.12.12"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-4ZNRFZHA2IYB6DSQ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"not-in-package-set\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/patchelf@0.15.2",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "patchelf",
+      "versionInfo": "0.15.2"
     },
     {
       "SPDXID": "SPDXRef-Package-A4IS7PN46TDZI7JF",
@@ -16580,6 +16670,54 @@
       "versionInfo": "6.0.2"
     },
     {
+      "SPDXID": "SPDXRef-Package-J5RHY5JRNVS5OCOW",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"not-in-package-set\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/setup-debug-info-dirs-hook@26.05pre-git",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "setup-debug-info-dirs-hook",
+      "versionInfo": "26.05pre-git"
+    },
+    {
       "SPDXID": "SPDXRef-Package-NN7FDF3IRJ4JNGM2",
       "annotations": [
         {
@@ -19143,6 +19281,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -20420,6 +20564,11 @@
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
       "relationshipType": "BUILD_TOOL_OF",
       "spdxElementId": "SPDXRef-Package-4YEQ3YLTNFRL2G4U"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-4ZNRFZHA2IYB6DSQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
@@ -22062,6 +22211,11 @@
       "spdxElementId": "SPDXRef-Package-J4BRNDEFEUOCFPGF"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-J5RHY5JRNVS5OCOW"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6UHHA44VGVVLXE6J",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-J6ESECMJW5XAIQD2"
@@ -23460,11 +23614,6 @@
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
       "relationshipType": "BUILD_TOOL_OF",
       "spdxElementId": "SPDXRef-Package-PS4H6MJBLFMDSN3L"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
-      "relationshipType": "BUILD_TOOL_OF",
-      "spdxElementId": "SPDXRef-Package-PTLB2OXLQTGW6XR7"
     },
     {
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
