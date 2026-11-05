@@ -40,6 +40,87 @@ mod entry;
 mod predicates;
 mod scan;
 
+/// Every `evidence_kind` a binary reader attaches to a component.
+///
+/// A component carrying one of these was produced by **reading an executable
+/// found by walking the tree**, not by reading a manifest a workspace
+/// declares. Milestone 176's workspace tagger (#759) needs that distinction
+/// and cannot get it from `sbom_tier`: most of these entries are `analyzed`,
+/// but `elf-note-package` is `source`, because a distro package identified
+/// from an ELF `.note.package` section is a real package rather than an
+/// inferred one.
+///
+/// That gap was live, and it reached CI. Ubuntu's runner image replaced
+/// `/bin/ls` with rust-coreutils, whose binary carries a `.note.package`
+/// section, so a `source`-tier component appeared for an executable sitting
+/// in a scanned directory — and the tagger, skipping only `analyzed`, took
+/// that executable's directory as a declared workspace. A virtualenv's `bin/`
+/// reported itself as a workspace, which is exactly the output #759 fixed.
+pub(crate) const BINARY_EVIDENCE_KINDS: &[&str] = &[
+    "cargo-auditable",
+    "dynamic-linkage",
+    "elf-note-package",
+    "embedded-version-string",
+    "jdk-runtime-collapsed",
+    "python-stdlib-collapsed",
+    "symbol-fingerprint",
+];
+
+/// Whether a component was produced by reading a binary found by walking.
+pub(crate) fn is_binary_derived(evidence_kind: Option<&str>) -> bool {
+    evidence_kind.is_some_and(|k| BINARY_EVIDENCE_KINDS.contains(&k))
+}
+
+#[cfg(test)]
+mod binary_evidence_kind_drift {
+    use super::BINARY_EVIDENCE_KINDS;
+
+    /// Every `evidence_kind` literal in this module must be listed above.
+    ///
+    /// A hand-maintained list of strings that other files produce is exactly
+    /// the shape that falls out of date — and when it does the symptom is a
+    /// workspace appearing where none exists, which is hard to trace back to
+    /// a missing array entry. So the list is checked against the source that
+    /// produces the values rather than trusted.
+    #[test]
+    fn every_evidence_kind_in_this_module_is_listed() {
+        const SOURCES: &[(&str, &str)] = &[
+            ("entry.rs", include_str!("entry.rs")),
+            ("linkage.rs", include_str!("linkage.rs")),
+            ("jdk_collapse.rs", include_str!("jdk_collapse.rs")),
+            ("python_collapse.rs", include_str!("python_collapse.rs")),
+        ];
+        let needle = "evidence_kind: Some(\"";
+        let mut missing: Vec<String> = Vec::new();
+        for (name, src) in SOURCES {
+            for (i, _) in src.match_indices(needle) {
+                let rest = &src[i + needle.len()..];
+                let Some(end) = rest.find('"') else { continue };
+                let kind = &rest[..end];
+                if !BINARY_EVIDENCE_KINDS.contains(&kind) {
+                    missing.push(format!("{name}: {kind}"));
+                }
+            }
+        }
+        assert!(
+            missing.is_empty(),
+            "evidence kinds produced but not listed in BINARY_EVIDENCE_KINDS, so \
+             the #759 workspace tagger would treat their components as \
+             manifest-declared: {missing:?}"
+        );
+    }
+
+    /// The control: the scan really does find literals, so an empty result
+    /// cannot pass for agreement.
+    #[test]
+    fn the_drift_scan_actually_finds_something() {
+        let n = include_str!("entry.rs")
+            .matches("evidence_kind: Some(\"")
+            .count();
+        assert!(n >= 3, "expected several evidence_kind literals in entry.rs, found {n}");
+    }
+}
+
 use discover::discover_binaries;
 use entry::{
     cargo_auditable_packages_to_entries, make_file_level_component, note_package_to_entry,
