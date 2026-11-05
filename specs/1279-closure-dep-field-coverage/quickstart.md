@@ -110,9 +110,17 @@ After this milestone it is `artifact-input` with no scope.
   become a `required` scope; m1277's rule already forbids it.
 - **An empty attribute is not a reference.** Four are declared on every
   derivation of the darwin closure and hold zero paths.
-- **Don't classify stdenv's defaults.** They carry most of the unread
-  declarations and FR-012 deliberately leaves them alone, so that the census
-  moves only for the four consulted attributes and SC-011 stays checkable.
-  Classifying them is a different milestone.
+- **Don't classify stdenv's injected attributes — all three of them.**
+  `defaultNativeBuildInputs`, `defaultBuildInputs` and
+  `extraNativeBuildInputs` carry most of the unread declarations, and FR-012
+  leaves them alone so the census moves only for the four consulted
+  attributes and SC-011 stays checkable. Classifying them is a different
+  milestone.
+  **And enumerate them from both systems, not one.** FR-012's first draft
+  named two, taken from the darwin census, where `extraNativeBuildInputs` is
+  unpopulated. On linux it carries 3 declarations and `defaultBuildInputs`
+  carries none — so the pair was incomplete on the exact closure the criteria
+  are stated against. Run the census on both captures before enumerating
+  anything.
 - **The counts are dated and system-labelled.** SC-001, SC-002 and SC-009 are
   the invariants; everything numbered is linux as of 2026-11-05.

@@ -41,7 +41,7 @@ rewrote a committed `flake.lock` and broke 11 tests in an unrelated file. These
 fixtures are closure JSON read from disk; nothing here evaluates a flake.
 
 - [ ] T001 [P] Add `waybill-cli/tests/fixtures/nix_closure_dep_fields/newly_consulted.json`: four members, each referenced **only** through one of `depsTargetTarget`, `depsTargetTargetPropagated`, `depsBuildTarget`, `propagatedNativeBuildInputs`, so each attribute's effect is separable
-- [ ] T002 [P] Add `waybill-cli/tests/fixtures/nix_closure_dep_fields/stdenv_only.json`: a member referenced only through `defaultNativeBuildInputs` and another only through `defaultBuildInputs` — the FR-012 population, which must gain the marker and no role
+- [ ] T002 [P] Add `waybill-cli/tests/fixtures/nix_closure_dep_fields/stdenv_only.json`: one member referenced only through each of the **three** stdenv-injected attributes — `defaultNativeBuildInputs`, `defaultBuildInputs`, `extraNativeBuildInputs` — the FR-012 population, each of which must gain the marker and no role. The third was missed in the spec's first draft because it is unpopulated on darwin and populated on linux, so the fixture covers all three rather than whichever the census of the day showed
 - [ ] T003 [P] Add `waybill-cli/tests/fixtures/nix_closure_dep_fields/attribute_states.json` covering the states `data-model.md` enumerates: an attribute declared-but-empty, one consulted-but-never-declared, one unconsulted-and-populated, and a member named by both an artifact-side and a tooling-side attribute (the union case)
 - [ ] T004 [P] Add `waybill-cli/tests/fixtures/nix_closure_dep_fields/propagation_chain.json`: a member reachable only through two hops of `propagatedNativeBuildInputs`, for US2's transitive case
 
@@ -74,11 +74,12 @@ no derivation names it in any dependency attribute; `numactl` carries
 ### Tests for User Story 1
 
 - [ ] T009 [P] [US1] Test contract property P1 in `waybill-cli/tests/closure_dep_fields.rs`: a member referenced only through each of the four newly-consulted attributes carries the expected role — `artifact-input` for the two target triples, `build-tooling` for `depsBuildTarget`. Assert on the **role**, never on a parsed field: the store-path basename join is a second silent failure, and a field-level assertion stays green while every member classifies as unreferenced
-- [ ] T010 [P] [US1] Test contract property P6 in `waybill-cli/tests/closure_dep_fields.rs`: a member referenced only through `defaultNativeBuildInputs` or `defaultBuildInputs` acquires **no role** and carries the marker naming that attribute
+- [ ] T010 [P] [US1] Test contract property P6 in `waybill-cli/tests/closure_dep_fields.rs`: a member referenced only through any of the three stdenv-injected attributes acquires **no role** and carries the marker naming that attribute
 - [ ] T011 [P] [US1] Test contract property P3 in `waybill-cli/tests/closure_dep_fields.rs`: a declared-but-empty attribute credits nothing and is not reported as a gap
 - [ ] T012 [P] [US1] Test contract property P4 in `waybill-cli/tests/closure_dep_fields.rs`: `depsBuildHost` and `nativeCheckInputs` are consulted but declared on no derivation, and must not surface as gaps — the third state research R4 found
 - [ ] T013 [P] [US1] Test contract property P2 in `waybill-cli/tests/closure_dep_fields.rs`: a member named by both an artifact-side and a tooling-side attribute unions to `both`, unchanged by the widening
 - [ ] T014 [P] [US1] Test FR-013 in `waybill-cli/tests/closure_dep_fields.rs`: the marker **names** the attributes, as a sorted array, and a member named by two carries both
+- [ ] T044 [P] [US1] Test the gating row the others miss, in `waybill-cli/tests/closure_dep_fields.rs`: a member referenced through **both** a consulted attribute and an unclassified one carries its role **and** the marker. `contracts/unclassified-marker.md` says the marker is present whatever the role, and every other marker test uses a member whose only reference is unclassified — so that row is untested and a gating rule that only emitted for `unreferenced` members would pass
 - [ ] T015 [US1] Add the control every classifier test needs, in `waybill-cli/tests/closure_dep_fields.rs`: assert the fixture holds the derivations it claims and that something is referenced — a parse producing nothing satisfies every "not wrongly classified" assertion vacuously
 
 ### Implementation for User Story 1
@@ -88,7 +89,7 @@ no derivation names it in any dependency attribute; `numactl` carries
 - [ ] T018 [US1] Add the marker's catalog row to `docs/reference/sbom-format-mapping.md` with its Principle V audit, including the rejected `dependsOn` option and why
 - [ ] T019 [US1] Add the marker's three extractors in `waybill-cli/src/parity/extractors/` **in the same change as T018** — a documented row with no extractor fails `every_catalog_row_has_an_extractor`
 - [ ] T020 [US1] Verify `waybill-cli/src/resolve/closure_role_scope.rs` needs no change: `numactl` loses its `scope: "excluded"` through m1277's existing rule, which asserts nothing for `artifact-input`. If this task edits that file, the plan's confinement argument has broken and SC-008 needs re-checking against every target
-- [ ] T021 [US1] Update the `nix-closure-moat` expectations in `waybill-cli/tests/corpus_harness_195/expectations.rs`: `numactl` carries `artifact-input` and **no** scope (SC-013), and no component carrying `unreferenced` is named by any dependency attribute (SC-001)
+- [ ] T021 [US1] Update the `nix-closure-moat` expectations in `waybill-cli/tests/corpus_harness_195/expectations.rs`: `numactl` carries `artifact-input` and **no** scope (SC-013); **all five** triple-reachable members — `numactl`, `gmp-with-cxx`, `libffi`, `elfutils`, `ncurses` — carry no absent-from-artifact marker (SC-010), not just the one that changes today, since the other four already carry no scope and would all gain one if the triples were later reclassified as tooling; and no component carrying `unreferenced` is named by any dependency attribute (SC-001)
 
 **Checkpoint**: `unreferenced` means one thing. US1 delivers value with nothing else landed.
 
@@ -118,7 +119,7 @@ unclassified, so the field keeps meaning "declared and not consulted".
 `fields-unconsulted`; both stdenv attributes still do.
 
 - [ ] T025 [P] [US3] Test SC-009 in `waybill-cli/tests/closure_dep_fields.rs`: the consulted set and the disclosure's complement agree, asserted over a fixture declaring attributes on both sides of the boundary. This is the property a passing role test does **not** cover — the classifier could read an attribute the disclosure still reports as unconsulted, and a consumer would be told a gap exists where it does not
-- [ ] T026 [P] [US3] Test in `waybill-cli/tests/closure_dep_fields.rs`: `defaultNativeBuildInputs` and `defaultBuildInputs` still appear in `fields-unconsulted`, so the remaining gap stays visible rather than being silently closed
+- [ ] T026 [P] [US3] Test in `waybill-cli/tests/closure_dep_fields.rs`: every stdenv-injected attribute that is **populated on the fixture** still appears in `fields-unconsulted`, so the remaining gap stays visible rather than being silently closed — and an unpopulated one does **not**, since an empty attribute is correctly not a gap (FR-005)
 - [ ] T027 [P] [US3] Test in `waybill-cli/tests/closure_dep_fields.rs`: a closure with nothing left unconsulted emits no disclosure at all
 - [ ] T028 [US3] Confirm no change is needed in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`'s `read_outcome`, because `consulted_fields()` derives from the two constants T016 widened — and record that in the function's doc as the reason the two cannot drift
 - [ ] T029 [US3] Update the C204 expectations for `nix-closure-moat` in `waybill-cli/tests/corpus_harness_195/expectations.rs`
@@ -150,11 +151,11 @@ the disclosure.
 - [ ] T034 Run the local gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with **no `+toolchain`** (#1189). Assert on `GATE_RESULT`, the expect line, and the per-target `test result: ok. N passed; 0 failed` lines
 - [ ] T035 Commit the refresh prediction **before** dispatching it, in `specs/1279-closure-dep-field-coverage/measurements/refresh-prediction.md`: the census `270/118/42/1319 → 268/121/45/1315`, 7 derivations moving in the three measured directions, `numactl` losing its scope, 2 newly emitted components, 3 components gaining the marker, and which rows are least certain
 - [ ] T036 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch. **Never** set `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` locally
-- [ ] T037 Score the T035 prediction against the refresh diff in `specs/1279-closure-dep-field-coverage/measurements/refresh-prediction.md`, including any miss and what it corrected
+- [ ] T037 Score the T035 prediction against the refresh diff in `specs/1279-closure-dep-field-coverage/measurements/refresh-prediction.md`, including any miss and what it corrected, and satisfy SC-004's accounting clause: **attribute every member whose role changed to the specific newly-consulted attribute that reaches it**. A member whose change is not traceable to one of the four is a defect in the measurement, not a finding about nix — recording a census without that attribution would leave SC-004 half-met
 - [ ] T038 Confirm the regen run's own log reports a non-zero `corpus-regen-golden: … CHANGED` count for `nix-closure-moat` and zero for every other target, using the per-format verdicts added to `waybill-cli/tests/corpus_harness_195/layer2_golden.rs` by #1345 — a directory upload contributes bytes for targets that never wrote
 - [ ] T039 Check every target under `waybill-cli/tests/fixtures/public_corpus/` for movement outside `nix-closure-moat` (SC-008) — a non-closure target that moved means the widening leaked past the two constants
 - [ ] T040 Reconcile `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` with the refreshed goldens: retire what the fix makes stale, declare any new offender with its reason and count
-- [ ] T041 [P] Dispatch a compare-mode corpus run of `.github/workflows/public-corpus.yml` (`regen_goldens=false`) and confirm the regen count in its log is **0**, so the run is known to have compared rather than rewritten. This is the only execution of the expectations T021/T029 add: locally the target prints `skipping nix-closure-moat: WAYBILL_RUN_PUBLIC_CORPUS not set` and reports `ok` in 0.00s
+- [ ] T041 [P] Satisfy FR-008's second half: dispatch a compare-mode corpus run of `.github/workflows/public-corpus.yml` (`regen_goldens=false`) and confirm the regen count in its log is **0**, so the run is known to have compared rather than rewritten. This is the only execution of the expectations T021/T029 add: locally the target prints `skipping nix-closure-moat: WAYBILL_RUN_PUBLIC_CORPUS not set` and reports `ok` in 0.00s
 - [ ] T042 [P] Record anything this milestone corrected about its own reasoning in `specs/1279-closure-dep-field-coverage/measurements/findings.md`
 - [ ] T043 Run the `quickstart.md` validation end to end, including the control that the probe's `before` arm equals the golden's own C184 census exactly, and the six traps
 
@@ -166,7 +167,7 @@ the disclosure.
 
 - **Setup (T001–T004)**: no dependencies, all parallel
 - **Foundational (T005–T008)**: T005 → T006 → T007 in order (same file, then threading); T008 needs Setup. **Blocks every user story**
-- **US1 (T009–T021)**: after Foundational
+- **US1 (T009–T021, plus T044)**: after Foundational. **T044 belongs to this phase despite its number** — it was added after the list was first written, and appending it was chosen over inserting it so no existing ID moved and no citation broke
 - **US2 (T022–T024)**, **US3 (T025–T029)**: after Foundational; independent of each other
 - **US4 (T030–T032)**: after US1 and US2 — T031 mutates what they assert
 - **Polish (T033–T043)**: after every story being delivered
@@ -187,7 +188,7 @@ pre-T016 constants and confirm red before relying on it.
 ### Parallel Opportunities
 
 - T001–T004 together
-- T009–T014 together (one file, independent cases)
+- T009–T014 and T044 together (one file, independent cases)
 - T022/T023, T025–T027, T030 pairwise
 - T033, T041, T042 together
 

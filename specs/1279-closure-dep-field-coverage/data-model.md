@@ -14,12 +14,23 @@ derivation mentions a store path and almost none declares a dependency).
 Fourteen are declared on the corpus closure. They fall into **four** states,
 not two, and the fourth is the one this milestone adds:
 
-| state | example | count (linux) | behaviour |
-|---|---|---|---|
-| consulted, populated | `buildInputs` | 5 | credits a role |
-| consulted, never declared | `depsBuildHost`, `nativeCheckInputs` | 2 | nothing; not a gap |
-| declared, empty | `depsHostHostPropagated` | 4 | nothing; not a gap (FR-005) |
-| **declared, populated, not consulted** | `defaultNativeBuildInputs` | 2 after this milestone | **marks its members (FR-002)** |
+Counts measured on the **x86_64-linux** closure — 15 attributes declared
+across 1,749 derivations — because that is the closure the goldens pin. The
+darwin closure differs in membership as well as count, so a figure without its
+system is unusable here.
+
+| state | example | before | after | behaviour |
+|---|---|---|---|---|
+| consulted, populated | `buildInputs` | 4 | **8** | credits a role |
+| consulted, never declared | `depsBuildHost`, `nativeCheckInputs` | 2 | 2 | nothing; not a gap |
+| declared, empty | `depsHostHost`, `depsHostHostPropagated` | 5 | 5 | nothing; not a gap (FR-005) |
+| **declared, populated, not consulted** | `defaultNativeBuildInputs` | 6 (230 decls) | **2 (211 decls)** | **marks its members (FR-002)** |
+
+The two that remain after this milestone are `defaultNativeBuildInputs` (208)
+and `extraNativeBuildInputs` (3). **Not** `defaultBuildInputs`, which FR-012
+also names but which holds zero paths on this closure — it is populated only
+on darwin. All three are named in FR-012 so the set is complete on either
+system; only two of them are populated here.
 
 **Validation rules**
 
@@ -48,10 +59,15 @@ widening the constants narrows C204's `fields-unconsulted` automatically. SC-009
 asserts the two agree; it is not left to inspection, because a hand-maintained
 second copy is exactly the drift that would make the disclosure lie.
 
-**Deliberately excluded**: `defaultNativeBuildInputs` and
-`defaultBuildInputs`. They are stdenv's own machinery, they carry most of the
+**Deliberately excluded**: `defaultNativeBuildInputs`, `defaultBuildInputs`
+and `extraNativeBuildInputs` — stdenv's own machinery. They carry most of the
 unread declarations, and FR-012 keeps them out so the census moves only for
 the four above. Their members get the marker instead.
+
+The third was missed in the first draft, which enumerated the pair visible in
+the darwin census. `extraNativeBuildInputs` is populated on linux and
+`defaultBuildInputs` is not, so the pair was incomplete on the very closure
+the criteria target.
 
 ## Unclassified reference
 

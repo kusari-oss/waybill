@@ -133,3 +133,33 @@ claim than this milestone is entitled to make, and it would put stdenv's
 machinery into the dependency graph of every derivation stdenv touches. The
 native-first rule does not mean "use a native field for a claim you should not
 be making".
+
+
+## Analyze session 2026-11-05
+
+Six findings, no CRITICAL, no constitution violations. All six remediated; all
+16 checklist items still pass. 14 FRs' worth of coverage is unchanged at
+26/26 requirements with at least one task, now with none partial.
+
+| ID | Severity | What it was | How it was closed |
+|---|---|---|---|
+| F1 | **HIGH** | FR-012 enumerated **two** stdenv-injected attributes; the pinned x86_64-linux closure has **three** populated-or-declared. `extraNativeBuildInputs` (3 declarations on linux) was in neither the consult list nor the deliberately-unclassified list — a scope hole on the exact closure every criterion is stated against. Found by re-running the census on linux instead of trusting the darwin table the spec was written from. | FR-012 names all three, with the reason recorded. Knock-ons in `data-model.md`, `contracts/consulted-set.md` P6, the quickstart trap, and tasks T002/T010/T026. |
+| F2 | MEDIUM | `data-model.md`'s "count (linux)" column was darwin-derived. Declared-empty was 5 not 4, and the surviving pair named `defaultBuildInputs` — **zero paths on linux** — while omitting `extraNativeBuildInputs`, which has 3. The count happened to be right; the membership did not. | Table re-derived from the linux closure and split into before/after columns: 4→8 consulted-populated, 2 never-declared, 5 declared-empty, 6 (230 decls) → 2 (211 decls) unconsulted-populated, with the two survivors named. |
+| F3 | MEDIUM | SC-010's population is **five** members and only `numactl` was asserted. Four already carry no scope, so a criterion checking only the changing one would pass unchanged if the triples were later reclassified as tooling and all five gained an exclusion. | SC-010 names all five; T021 asserts all five. |
+| F4 | MEDIUM | The marker's gating row "any other role + an unclassified reference → marker present" had no task. Every marker test used a member whose *only* reference is unclassified, so a gating rule that emitted only for `unreferenced` members would have passed. | New **T044**, appended rather than inserted so no existing ID moved. |
+| F5 | LOW | SC-004's second clause — the difference accounts for every member whose role changes — had no task. T033 recorded the census, T037 scored the prediction, neither did the attribution. | SC-004 states the attribution explicitly; T037 carries it. |
+| F6 | LOW | T041's compare-mode confirmation mapped to no requirement. | FR-008 extended to cover verification, with the reason: a regen run cannot verify its own output, and a local corpus run reports `ok` in 0.00s having skipped. |
+
+**Three claims were verified rather than assumed, and all three held.** Of the
+five triple-reachable members only `numactl` carries `scope: "excluded"`, so
+SC-013's named-not-counted figure is right. SC-001's "230 on x86_64-linux" is
+exact. And SC-012's census, including `artifact-input` *falling* by two,
+matches research R1.
+
+**F1 is the one worth remembering.** It is the same failure as the census
+mislabelling retracted in milestone 1278 — a figure taken from one system and
+used as though it described another — but one level up: not a wrong *number*,
+a wrong *membership*, which no amount of checking the arithmetic would have
+caught. The two closures do not merely differ in magnitude; they populate
+different attributes. Enumerating a closed set from a single capture is the
+error, and running the census on both captures is the fix.

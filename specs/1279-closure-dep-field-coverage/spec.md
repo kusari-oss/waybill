@@ -45,7 +45,12 @@ So the gap is **six populated attributes carrying 353 store-path
 declarations**, and it is not evenly spread: `defaultNativeBuildInputs` alone
 carries 311 of them, on 19 derivations.
 
-**These are darwin figures, and the populations are not system-stable.** The
+**These are darwin figures, the populations are not system-stable, and the
+*membership* differs as well as the counts.** `defaultBuildInputs` is
+populated on darwin (12 declarations) and empty on linux;
+`extraNativeBuildInputs` is the reverse (3 on linux, absent from the darwin
+table above). A requirement enumerated from one system's table is therefore
+incomplete on the other, which is what happened to FR-012's first draft. The
 x86_64-linux closure of the same project — the one the corpus goldens pin, and
 therefore the one any assertion is checked against — carries **230**
 unconsulted declarations across **23** derivations, and the stdenv pair
@@ -221,7 +226,11 @@ first three stories are correct without it.
 - **FR-007**: An attribute the classifier does not recognise MUST be reported,
   never silently ignored.
 - **FR-008**: The corpus goldens MUST be refreshed in this milestone through
-  the existing workflow dispatch, never generated locally.
+  the existing workflow dispatch, never generated locally; and the refreshed
+  goldens MUST then be verified by a **compare-mode** run whose own log is
+  checked to confirm it compared rather than rewrote. A regen run cannot
+  verify its own output, and a local run of the corpus target reports `ok` in
+  0.00s having skipped — so neither establishes anything on its own.
 - **FR-009**: The role census MUST be recorded before and after, per
   attribute, so the change is attributable to this milestone rather than to a
   nixpkgs or nix movement.
@@ -235,11 +244,20 @@ first three stories are correct without it.
   reachable through it as build tooling — it names what runs on the build
   machine to produce target-platform output, which is tooling by the same
   reading as `depsBuildBuild`.
-- **FR-012**: `defaultNativeBuildInputs` and `defaultBuildInputs` MUST remain
-  unclassified. A member named only by them MUST carry the FR-002 marker, so
-  the 323 declarations they hold stop being reported as `unreferenced` without
-  their members acquiring a role. The role census MUST NOT move on their
-  account.
+- **FR-012**: The **stdenv-injected** attributes MUST remain unclassified:
+  `defaultNativeBuildInputs`, `defaultBuildInputs` and
+  `extraNativeBuildInputs`. A member named only by them MUST carry the FR-002
+  marker, so the declarations they hold stop being reported as `unreferenced`
+  without their members acquiring a role. The role census MUST NOT move on
+  their account.
+  **The third was missed when this requirement was first written.** It
+  enumerated two, measured on the darwin closure, where
+  `extraNativeBuildInputs` is unpopulated. On the x86_64-linux closure — the
+  one the goldens pin and every criterion below is stated against — it carries
+  3 declarations while `defaultBuildInputs` carries **none**. The two systems
+  have different populated sets, so a requirement enumerated from one is
+  incomplete on the other; all three are named so the set is complete on
+  both.
 - **FR-013**: The marker of FR-002 MUST name the attribute, or attributes,
   through which the member was referenced. "Referenced by something waybill
   does not classify" without saying what is a smaller version of the same
@@ -275,9 +293,10 @@ rather than eternal; the probe is committed under `measurements/`.
 - **SC-003**: Every member reachable through `propagatedNativeBuildInputs`,
   directly or transitively, carries a tooling role.
 - **SC-004**: The role census is recorded per attribute before and after, and
-  the difference accounts for every member whose role changes. A member whose
-  role changes for a reason not traceable to a newly-consulted attribute is a
-  defect in the measurement.
+  the difference **accounts for every member whose role changes**: each such
+  member is attributed to the specific newly-consulted attribute that reaches
+  it. A member whose role changes for a reason not traceable to one of those
+  four is a defect in the measurement, not a finding about nix.
 - **SC-005**: C204's `fields-unconsulted` contains no attribute this milestone
   consults, and still contains every one it deliberately does not.
 - **SC-006**: An empty attribute credits nothing and is reported as no gap.
@@ -290,7 +309,12 @@ rather than eternal; the probe is committed under `measurements/`.
   agree by a test, not by inspection.
 - **SC-010**: No member reachable through `depsTargetTarget` or
   `depsTargetTargetPropagated` carries a native marker asserting it is absent
-  from the artifact.
+  from the artifact. **Measured population on the pinned x86_64-linux closure:
+  five — `numactl`, `gmp-with-cxx`, `libffi`, `elfutils`, `ncurses`.** All five
+  are asserted, not just the one that changes today: four already carry
+  `artifact-input` or `both` with no scope, so a criterion that checked only
+  the changing one would pass unchanged if the triples were later reclassified
+  as tooling and all five gained an exclusion.
 - **SC-011**: The role census moves by exactly the members newly reachable
   through the four attributes this milestone consults, and by no others.
   `defaultNativeBuildInputs` and `defaultBuildInputs` contribute **zero**

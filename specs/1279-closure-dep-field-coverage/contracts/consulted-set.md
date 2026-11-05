@@ -50,7 +50,7 @@ on the build machine.
 | P3 | An empty attribute credits nothing. | Four attributes are declared on every derivation of the darwin closure and hold zero paths. |
 | P4 | An attribute consulted but never declared is not a gap. | `depsBuildHost` and `nativeCheckInputs` are declared on zero derivations of either closure. |
 | P5 | The disclosure's `fields-unconsulted` is exactly the complement of this set, over what the closure declares. | Asserted by a test, not by inspection — a second hand-maintained copy is the drift that would make the disclosure lie. |
-| P6 | `defaultNativeBuildInputs` and `defaultBuildInputs` are **not** consulted, and contribute zero census movement. | FR-012. It is what keeps the census attributable. |
+| P6 | The three stdenv-injected attributes — `defaultNativeBuildInputs`, `defaultBuildInputs`, `extraNativeBuildInputs` — are **not** consulted, and contribute zero census movement. | FR-012. It is what keeps the census attributable. The third was missed in the first draft: it is populated on linux while `defaultBuildInputs` is not, so a pair enumerated from the darwin census was incomplete where it mattered. |
 
 ## The test that must exist
 
@@ -64,7 +64,10 @@ So two assertions are required, not one:
 1. a member referenced only through each newly-consulted attribute carries the
    expected role; and
 2. none of those attribute names appears in `fields-unconsulted` for the same
-   document, while the deliberately-excluded pair still does.
+   document, while every deliberately-excluded attribute that is **populated
+   on the closure under test** still does — two of the three on linux, since
+   `defaultBuildInputs` holds no paths there and an unpopulated attribute is
+   correctly not a gap (P3).
 
 Each carries the control the classifier tests already carry: that the fixture
 holds the derivations it claims and that something is referenced — a parse
