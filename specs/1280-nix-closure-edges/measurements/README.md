@@ -111,3 +111,55 @@ are named by no declared attribute and exactly 1 is consumed by nothing; those
 are answers to different questions and the gap between them is not a defect.
 SC-005 asserts the role census is *unchanged*, which is the same point stated
 as a requirement.
+
+## The projection decision (FR-010), as decided
+
+All four options measured before the question was put, on both systems:
+
+| projection | edges (linux) | orphans | edges (darwin) | orphans |
+|---|---|---|---|---|
+| (a) direct only | 3,088 | **381 of 381** | 3,091 | **388 of 388** |
+| (a2) direct + root anchor | 3,105 | 7 | 3,107 | 20 |
+| (b) transitive through anything unemitted | 16,187 | 0 | 21,237 | 0 |
+| **(c) through non-package derivations only** ← chosen | **3,429** | **5** | **3,429** | **16** |
+
+**(a) is disqualified by measurement, not by taste.** It emits 3,088 edges and
+leaves every component orphaned, because the closure's root is not itself an
+emitted component — so there is no anchor, and a graph that looks populated
+and is disconnected is harder to diagnose than one plainly absent.
+
+**(c) returning 3,429 on both systems looked like a harness bug.** It is not:
+the distinct source counts differ (378 against 388) and so does the maximum
+out-degree (41 against 47), so the walk is reading its input and the totals
+genuinely coincide. Checked because identical numbers across cases that should
+differ usually mean the probe rather than the system.
+
+### Why the residual orphans are a feature
+
+The 5 on linux and 16 on darwin have **one uniform cause**, measured per
+component: each is consumed only by a derivation that declares a `pname` and is
+not emitted. On linux they are `diffutils 3.12`, `ed 1.22.5`, `gnumake 4.4.1`,
+`gnutar 1.35` and `pyproject-hooks 1.2.0`, consumed by `stdenv-linux`,
+`patch 2.8` and `build 1.4.4`.
+
+So the right answer is not to connect them — it is to say why they are not
+connected, which FR-011 requires. Closing the remainder means emitting those
+intermediate packages, and `stdenv-linux` has no good reason to be absent.
+That is the milestone after next, and this measurement is its motivation.
+
+## What else the clarification pass found
+
+Two things that changed the spec and were not the question being asked:
+
+- **The closure is not entirely absent from the relationship arrays.**
+  Milestone 1277 emits **103** `BUILD_TOOL_OF` edges in SPDX 2.3, member → root.
+  They point the wrong way to make anything reachable from the root, and
+  CycloneDX carries none, so the "zero edges" claim is specifically about
+  *dependency* edges. SC-010 now pins the 103 so this feature cannot disturb
+  them.
+- **The closure root is already a component, spelled by a different reader.**
+  `moat-0.1` corresponds to `pkg:hackage/moat@0.1`, which the manifest reader
+  emits and the document root already depends on. The closure tier would spell
+  it `pkg:generic/moat@0.1`. FR-004 therefore anchors on the document root
+  rather than on an identity match, because matching would cross a PURL-type
+  boundary and a wrong match silently reparents the whole graph.
