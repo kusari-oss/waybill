@@ -661,12 +661,23 @@ fn t759_binary_tier_components_are_not_workspace_members() {
                         if member == "[\".\"]" {
                             return None;
                         }
+                        // Every provenance field, because the fix's shape
+                        // depends on which one distinguishes a component
+                        // derived from a walked binary from one declared by a
+                        // manifest. Tier does not: the #759 rule keys on
+                        // `analyzed` and the offender is `source`.
                         Some(format!(
-                            "  name={} tier={:?} member={} source-files={:?}",
+                            "  name={} purl={} tier={:?} member={}\n                                 source-files={:?}\n    evidence-kind={:?}                              component-kind={:?} source-mechanism={:?}                              cargo-auditable-source={:?} parent={:?}",
                             c["name"].as_str().unwrap_or("?"),
+                            c["purl"].as_str().unwrap_or("-"),
                             get("waybill:sbom-tier"),
                             member,
                             get("waybill:source-files"),
+                            get("waybill:evidence-kind"),
+                            get("waybill:component-kind"),
+                            get("waybill:source-mechanism"),
+                            get("waybill:cargo-auditable-source"),
+                            get("waybill:parent-purl"),
                         ))
                     })
                     .collect()
