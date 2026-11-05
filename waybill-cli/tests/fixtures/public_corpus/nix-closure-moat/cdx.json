@@ -4733,7 +4733,7 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "artifact-input"
+          "value": "both"
         }
       ],
       "purl": "pkg:generic/binutils-patchelfed-ld-wrapper@2.46",
@@ -5025,6 +5025,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:closure-unclassified-refs",
+          "value": "[\"defaultNativeBuildInputs\"]"
         }
       ],
       "purl": "pkg:generic/bootstrap-stage-xgcc-gcc-wrapper@15.2.0",
@@ -5060,7 +5064,7 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "artifact-input"
+          "value": "both"
         }
       ],
       "purl": "pkg:generic/bootstrap-stage0-binutils-wrapper@2.46.0",
@@ -5100,6 +5104,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:closure-unclassified-refs",
+          "value": "[\"defaultNativeBuildInputs\"]"
         }
       ],
       "purl": "pkg:generic/bootstrap-stage1-gcc-wrapper@15.2.0",
@@ -5140,6 +5148,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:closure-unclassified-refs",
+          "value": "[\"defaultNativeBuildInputs\"]"
         }
       ],
       "purl": "pkg:generic/bootstrap-stage2-gcc-wrapper@15.2.0",
@@ -5180,6 +5192,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:closure-unclassified-refs",
+          "value": "[\"defaultNativeBuildInputs\"]"
         }
       ],
       "purl": "pkg:generic/bootstrap-stage3-gcc-wrapper@15.2.0",
@@ -5220,6 +5236,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:closure-unclassified-refs",
+          "value": "[\"defaultNativeBuildInputs\"]"
         }
       ],
       "purl": "pkg:generic/bootstrap-stage4-gcc-wrapper@15.2.0",
@@ -7227,7 +7247,7 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "artifact-input"
+          "value": "both"
         }
       ],
       "purl": "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
@@ -7605,6 +7625,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:closure-unclassified-refs",
+          "value": "[\"defaultNativeBuildInputs\"]"
         }
       ],
       "purl": "pkg:generic/gcc-wrapper@15.2.0",
@@ -8311,6 +8335,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:closure-unclassified-refs",
+          "value": "[\"extraNativeBuildInputs\"]"
         }
       ],
       "purl": "pkg:generic/glibc@2.42-61",
@@ -12202,10 +12230,6 @@
       },
       "properties": [
         {
-          "name": "waybill:scope-classification-source",
-          "value": "closure-role"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -12215,11 +12239,10 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "unreferenced"
+          "value": "artifact-input"
         }
       ],
       "purl": "pkg:generic/numactl@2.0.18",
-      "scope": "excluded",
       "type": "library",
       "version": "2.0.18"
     },
@@ -12571,6 +12594,50 @@
       "purl": "pkg:hackage/parsers@0.12.12",
       "type": "library",
       "version": "0.12.12"
+    },
+    {
+      "bom-ref": "pkg:generic/patchelf@0.15.2",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "patchelf",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        },
+        {
+          "name": "waybill:closure-unclassified-refs",
+          "value": "[\"defaultNativeBuildInputs\"]"
+        }
+      ],
+      "purl": "pkg:generic/patchelf@0.15.2",
+      "scope": "excluded",
+      "type": "library",
+      "version": "0.15.2"
     },
     {
       "bom-ref": "pkg:generic/patchutils@0.3.3",
@@ -14960,6 +15027,46 @@
       "purl": "pkg:hackage/semigroupoids@6.0.2",
       "type": "library",
       "version": "6.0.2"
+    },
+    {
+      "bom-ref": "pkg:generic/setup-debug-info-dirs-hook@26.05pre-git",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "setup-debug-info-dirs-hook",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:generic/setup-debug-info-dirs-hook@26.05pre-git",
+      "scope": "excluded",
+      "type": "library",
+      "version": "26.05pre-git"
     },
     {
       "bom-ref": "pkg:generic/setuptools@80.10.1",
@@ -17458,6 +17565,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:closure-unclassified-refs",
+          "value": "[\"defaultNativeBuildInputs\"]"
         }
       ],
       "purl": "pkg:generic/update-autotools-gnu-config-scripts-hook@26.05pre-git",
@@ -18992,6 +19103,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/patchelf@0.15.2"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/patchutils@0.3.3"
     },
     {
@@ -19173,6 +19288,10 @@
     {
       "dependsOn": [],
       "ref": "pkg:generic/roman-numerals@4.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/setup-debug-info-dirs-hook@26.05pre-git"
     },
     {
       "dependsOn": [],
@@ -21018,7 +21137,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 350 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
+        "value": "orphaned-components-detected: 352 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -21042,7 +21161,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":379,\"derivations\":1749,\"distinct-cves\":13,\"patches\":212,\"patches-without-cve\":197,\"roles\":{\"artifact-input\":270,\"both\":42,\"build-tooling\":118,\"unreferenced\":1319}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":381,\"derivations\":1749,\"distinct-cves\":13,\"patches\":212,\"patches-without-cve\":197,\"roles\":{\"artifact-input\":268,\"both\":45,\"build-tooling\":121,\"unreferenced\":1315}}"
       },
       {
         "name": "waybill:patch-evidence-grade",
@@ -21050,7 +21169,7 @@
       },
       {
         "name": "waybill:nix-closure-read",
-        "value": "{\"declarations-unconsulted\":230,\"derivations-affected\":23,\"fields-unconsulted\":[\"defaultNativeBuildInputs\",\"depsBuildTarget\",\"depsTargetTarget\",\"depsTargetTargetPropagated\",\"extraNativeBuildInputs\",\"propagatedNativeBuildInputs\"],\"format-version\":4}"
+        "value": "{\"declarations-unconsulted\":211,\"derivations-affected\":16,\"fields-unconsulted\":[\"defaultNativeBuildInputs\",\"extraNativeBuildInputs\"],\"format-version\":4}"
       }
     ],
     "supplier": {

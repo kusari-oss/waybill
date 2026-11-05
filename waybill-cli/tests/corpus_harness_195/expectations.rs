@@ -551,6 +551,178 @@ pub fn nix_closure_moat_expectations(sboms: &EmittedSboms) -> Result<(), Asserti
         ));
     }
 
+    // ---------------------------------------------------------------
+    // Milestone 1279 (#1346) — `unreferenced` means "nothing depends on
+    // this", and the remainder says so.
+    //
+    // Here rather than only in the integration suite for milestone 1278's
+    // reason, which it learned the hard way: the synthetic fixtures are tidy,
+    // and this is the one place the real closure is read. The cross-platform
+    // trap is sharper for this milestone — the pinned x86_64-linux closure
+    // and an aarch64-darwin one populate *different* attributes, not merely
+    // different counts, so a figure measured on one and asserted on the other
+    // is wrong in membership rather than in magnitude. Everything below is
+    // therefore structural or named explicitly for the pinned closure.
+    // ---------------------------------------------------------------
+
+    let component = |name: &str| -> Option<&serde_json::Value> {
+        sboms.cdx["components"]
+            .as_array()?
+            .iter()
+            .find(|c| c["name"].as_str() == Some(name))
+    };
+    let role_of = |c: &serde_json::Value| -> Option<String> {
+        c["properties"].as_array()?.iter().find_map(|p| {
+            (p["name"] == "waybill:closure-role")
+                .then(|| p["value"].as_str().map(str::to_string))?
+        })
+    };
+
+    // SC-013. `numactl` is the one component whose scope this milestone
+    // removes: it is reachable only through `depsTargetTarget`, so before the
+    // widening it was `unreferenced` and carried CDX `scope: "excluded"` — a
+    // positive claim that it is absent from the artifact, made about a
+    // dependency of the *target* platform, which a cross-compiler ships
+    // inside its own output. `artifact-input` asserts no scope, which is the
+    // honest answer when waybill cannot tell.
+    let Some(numactl) = component("numactl") else {
+        return Err(nix_fail(
+            "m1279-numactl-present",
+            "component `numactl` is absent".to_string(),
+            "the component to exist, so its role and scope can be checked",
+            "a member reachable through depsTargetTarget vanished from the \
+             document — the widening in closure/classify.rs was reverted, or \
+             the pinned closure changed",
+        ));
+    };
+    if role_of(numactl).as_deref() != Some("artifact-input") {
+        return Err(nix_fail(
+            "m1279-numactl-artifact-input",
+            format!("numactl carries role {:?}", role_of(numactl)),
+            "artifact-input: it is reachable through depsTargetTarget, which \
+             this milestone classifies artifact-side on purpose",
+            "either ARTIFACT_FIELDS lost depsTargetTarget, or the triple was \
+             moved to TOOLING_FIELDS — which would re-assert the scope",
+        ));
+    }
+
+    // SC-010. **All five** triple-reachable members, not only the one whose
+    // role changes today. The other four already carried no scope, and all
+    // five would acquire one together if the triples were ever reclassified
+    // as tooling — so naming only `numactl` would leave the criterion
+    // passing for four of the five members it is about.
+    for name in ["numactl", "gmp-with-cxx", "libffi", "elfutils", "ncurses"] {
+        let Some(c) = component(name) else {
+            return Err(nix_fail(
+                "m1279-triple-member-present",
+                format!("component `{name}` is absent"),
+                "the component to exist, so its scope can be checked",
+                "a member reachable through a cross-compilation triple vanished",
+            ));
+        };
+        if c.get("scope").and_then(|v| v.as_str()) == Some("excluded") {
+            return Err(nix_fail(
+                "m1279-no-false-exclusion-via-triple",
+                format!("`{name}` carries scope=excluded"),
+                "no scope: it is reachable through a cross-compilation triple, \
+                 and a cross-compiler ships its target dependencies inside its \
+                 own output, so `excluded` can be false",
+                "the cross-compilation triples were reclassified as tooling, \
+                 which asserts an absence waybill cannot verify (#1346 FR-010)",
+            ));
+        }
+    }
+
+    // SC-009 on the real closure. The disclosure is the exact complement of
+    // what classification reads, and this is the half a passing role
+    // assertion does not cover: the classifier could read an attribute the
+    // disclosure still names, and a consumer would be told a gap exists where
+    // it does not. The four this milestone added are the ones at risk.
+    let unconsulted: Vec<&str> = read["fields-unconsulted"]
+        .as_array()
+        .map(|a| a.iter().filter_map(|f| f.as_str()).collect())
+        .unwrap_or_default();
+    for now_read in [
+        "depsTargetTarget",
+        "depsTargetTargetPropagated",
+        "depsBuildTarget",
+        "propagatedNativeBuildInputs",
+    ] {
+        if unconsulted.contains(&now_read) {
+            return Err(nix_fail(
+                "m1279-disclosure-is-the-complement",
+                format!("{now_read} is named in fields-unconsulted"),
+                "absent: classification reads it as of this milestone",
+                "`consulted_fields()` stopped deriving from the two classifier \
+                 constants, so the disclosure and the classifier have drifted",
+            ));
+        }
+    }
+
+    // C205. The marker exists on this target — nixpkgs' stdenv declares its
+    // own machinery in attributes this milestone deliberately does not
+    // classify, and that remainder is what the marker discloses.
+    let marked: Vec<(String, Vec<String>)> = sboms.cdx["components"]
+        .as_array()
+        .map(|cs| {
+            cs.iter()
+                .filter_map(|c| {
+                    let raw = c["properties"].as_array()?.iter().find_map(|p| {
+                        (p["name"] == "waybill:closure-unclassified-refs")
+                            .then(|| p["value"].as_str())?
+                    })?;
+                    let v: serde_json::Value = serde_json::from_str(raw).ok()?;
+                    Some((
+                        c["name"].as_str().unwrap_or_default().to_string(),
+                        v.as_array()?
+                            .iter()
+                            .filter_map(|a| a.as_str().map(str::to_string))
+                            .collect(),
+                    ))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    if marked.is_empty() {
+        return Err(nix_fail(
+            "m1279-unclassified-marker-present",
+            "no component carries waybill:closure-unclassified-refs".to_string(),
+            "at least one: this closure declares dependencies in stdenv's \
+             injected attributes, which stay unclassified on purpose",
+            "either the marker stopped being emitted, or classification \
+             silently absorbed the attributes FR-012 excludes — in which case \
+             the role census moved and is no longer attributable",
+        ));
+    }
+    // And every attribute it names is one the disclosure agrees went unread.
+    // This is the per-component half of SC-009, and the assertion that stops
+    // the marker and the disclosure telling a consumer different stories
+    // about the same attribute.
+    for (name, attributes) in &marked {
+        if attributes.is_empty() {
+            return Err(nix_fail(
+                "m1279-marker-says-something",
+                format!("`{name}` carries an empty marker"),
+                "a non-empty array: an empty one asserts \"checked, and \
+                 nothing\" in the one slot whose absence already says that",
+                "the gating in closure/emit.rs started emitting the marker for \
+                 members no unclassified attribute names",
+            ));
+        }
+        for attribute in attributes {
+            if !unconsulted.contains(&attribute.as_str()) {
+                return Err(nix_fail(
+                    "m1279-marker-agrees-with-the-disclosure",
+                    format!("`{name}` names {attribute}, which C204 does not report unconsulted"),
+                    "every attribute the marker names to appear in \
+                     fields-unconsulted — the two are built from one walk",
+                    "the index and the disclosure stopped sharing a pass, so \
+                     one of them is now wrong about what was read",
+                ));
+            }
+        }
+    }
+
     Ok(())
 }
 

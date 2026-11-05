@@ -20,14 +20,84 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::derivation::{store_basename, RawClosure};
 
 /// Fields naming dependencies that go *into* the artifact.
-const ARTIFACT_FIELDS: &[&str] = &["buildInputs", "propagatedBuildInputs", "depsHostHost"];
+///
+/// The two cross-compilation triples are here rather than on the tooling side
+/// (#1346, FR-010), and the reason is what the alternative **asserts**.
+/// `depsTargetTarget` names dependencies of the *target* platform: what a
+/// compiler being built hands to things it later compiles. Milestone 1277
+/// emits CycloneDX `scope: "excluded"` for tooling roles — a positive claim
+/// that the member is absent from the artifact — and a cross-compiler ships
+/// its target libc inside its own output, so that claim can be false. That is
+/// the defect class of #1342 and #1348. `artifact-input` asserts no scope at
+/// all, which is the honest answer when waybill cannot tell.
+///
+/// The cost is accepted and recorded: `artifact-input` now covers two
+/// distinguishable things. A fifth role value is the follow-up if a genuinely
+/// cross closure makes that expensive — it would change the C182 closed enum,
+/// every consumer of it, invariant I10's population and C203's vocabulary.
+const ARTIFACT_FIELDS: &[&str] = &[
+    "buildInputs",
+    "propagatedBuildInputs",
+    "depsHostHost",
+    "depsTargetTarget",
+    "depsTargetTargetPropagated",
+];
 
 /// Fields naming tooling that runs on the *build* machine.
+///
+/// `depsBuildTarget` is tooling by the same reading as `depsBuildBuild`: it
+/// runs on the build machine to produce target-platform output (FR-011).
+///
+/// `propagatedNativeBuildInputs` is the one whose absence was not local.
+/// It propagates to consumers of the declaring derivation, so leaving it
+/// unread understated reachability by more than its own declaration count —
+/// a member reachable only through a chain of them read as though nothing
+/// depended on it.
+///
+/// **Transitivity needs no extra pass, and the reason is worth stating
+/// precisely** (T024): `classify` below is not a walk from a root. It is a
+/// flat scan over *every* derivation in the closure, crediting whatever each
+/// one names. So a member reached only through two hops of propagation is
+/// credited by the second hop's own declaration, at whatever depth it sits,
+/// and adding these attributes to the constant is the whole of the fix. A
+/// root-anchored walk would have needed a propagation phase; this does not.
 const TOOLING_FIELDS: &[&str] = &[
     "nativeBuildInputs",
     "depsBuildBuild",
     "depsBuildHost",
     "nativeCheckInputs",
+    "depsBuildTarget",
+    "propagatedNativeBuildInputs",
+];
+
+/// nixpkgs attributes that inject **stdenv's own machinery**, deliberately
+/// left unclassified (#1346, FR-012).
+///
+/// They hold most of the unread declarations — 208 of 230 on the pinned
+/// x86_64-linux closure — and they are not a package declaring a dependency.
+/// Classifying them would move the role census substantially and make this
+/// milestone's effect unattributable; their members get the FR-002 marker
+/// instead, which is what #1346 actually asks for: that `unreferenced` stop
+/// meaning two things.
+///
+/// **All three are named even though only two are populated on any one
+/// system.** `extraNativeBuildInputs` is populated on linux and empty on
+/// darwin; `defaultBuildInputs` is the reverse. The first draft of FR-012
+/// enumerated the darwin pair and was therefore incomplete on the closure the
+/// goldens pin — the two systems do not merely differ in magnitude, they
+/// populate different attributes.
+/// **Test-only, and that is the point.** No production code path consults
+/// this list: FR-012's exclusion is an *absence* from the two constants
+/// above, not a rule applied on top of them. A production reference here
+/// would turn "we do not classify these" into a behaviour that could be
+/// wrong, and SC-011 — a stdenv-named member has the same role with and
+/// without the marker — is only trivially true while nothing branches on it.
+/// It exists so the exclusion is asserted rather than assumed.
+#[cfg(test)]
+const STDENV_INJECTED_FIELDS: &[&str] = &[
+    "defaultNativeBuildInputs",
+    "defaultBuildInputs",
+    "extraNativeBuildInputs",
 ];
 
 /// Every field the closure reader consults, for the FR-014 diagnostic.
@@ -442,5 +512,74 @@ mod tests {
         for w in wires {
             assert!(w.chars().all(|c| c.is_ascii_lowercase() || c == '-'));
         }
+    }
+
+    // ---- m1279 (#1346): the consulted set ----
+
+    #[test]
+    fn m1279_the_consulted_set_is_the_two_constants_and_patches() {
+        // T028's recorded property, asserted. `read_outcome` derives what
+        // counts as a gap from this function, and this function derives from
+        // the two constants the classifier reads -- so widening a constant
+        // narrows the disclosure in the same edit, and the two cannot drift.
+        // A second hand-maintained list is the drift that would make the
+        // disclosure claim a gap the classifier had already closed.
+        let consulted = consulted_fields();
+        for field in ARTIFACT_FIELDS.iter().chain(TOOLING_FIELDS) {
+            assert!(consulted.contains(field), "{field} must be consulted");
+        }
+        assert_eq!(
+            consulted.len(),
+            ARTIFACT_FIELDS.len() + TOOLING_FIELDS.len() + 1,
+            "`patches` is the one entry that is not a dependency attribute; \
+             anything else here is a field the classifier does not read"
+        );
+    }
+
+    #[test]
+    fn m1279_the_newly_consulted_attributes_are_on_the_side_the_contract_says() {
+        // FR-010 / FR-011. The two target triples are artifact-side on
+        // purpose: `build-tooling` would make m1277 emit `scope: "excluded"`,
+        // a positive claim that a cross-compiler's target libc is absent
+        // from the artifact -- which can be false. Asserted here because the
+        // cheapest way to undo that reasoning is to move one string.
+        for artifact_side in ["depsTargetTarget", "depsTargetTargetPropagated"] {
+            assert!(
+                ARTIFACT_FIELDS.contains(&artifact_side),
+                "{artifact_side} must stay artifact-side; moving it to tooling \
+                 asserts an absence waybill cannot verify"
+            );
+            assert!(!TOOLING_FIELDS.contains(&artifact_side));
+        }
+        for tooling_side in ["depsBuildTarget", "propagatedNativeBuildInputs"] {
+            assert!(TOOLING_FIELDS.contains(&tooling_side), "{tooling_side}");
+            assert!(!ARTIFACT_FIELDS.contains(&tooling_side));
+        }
+    }
+
+    #[test]
+    fn m1279_the_stdenv_defaults_stay_unclassified() {
+        // FR-012 / P6. All three are named, though only two are populated on
+        // any one system: `extraNativeBuildInputs` holds paths on linux and
+        // none on darwin, `defaultBuildInputs` the reverse. The first draft
+        // of this exclusion enumerated the darwin pair and was therefore
+        // incomplete on the closure the goldens pin -- the two systems do not
+        // merely differ in magnitude, they populate different attributes.
+        for excluded in STDENV_INJECTED_FIELDS {
+            assert!(
+                !ARTIFACT_FIELDS.contains(excluded) && !TOOLING_FIELDS.contains(excluded),
+                "{excluded} must not be classified: it is stdenv injecting its \
+                 own machinery, not a package declaring a dependency, and \
+                 classifying it would move the census this milestone has to \
+                 attribute to four specific attributes"
+            );
+            assert!(
+                !consulted_fields().contains(excluded),
+                "{excluded} must therefore still be reported as a gap when it \
+                 is populated -- disclosure instead of classification is the \
+                 whole of FR-012"
+            );
+        }
+        assert_eq!(STDENV_INJECTED_FIELDS.len(), 3);
     }
 }
