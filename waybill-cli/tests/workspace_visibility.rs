@@ -629,5 +629,74 @@ fn t759_binary_tier_components_are_not_workspace_members() {
             .is_some_and(|ps| ps.iter().any(|p| p["name"] == "waybill:workspace-member"));
         assert!(!tagged, "binary-tier component carries workspace-member: {c}");
     }
-    assert_eq!(doc_scope_workspaces_detected(&sbom), Some(vec![".".to_string()]));
+    // The document-scope aggregate is the union of every component's
+    // `waybill:workspace-member`, so a stray entry here means some component
+    // -- not necessarily a binary-tier one -- took the fake venv's `bin/` as
+    // its declared workspace. That is the same wrong output #759 fixed,
+    // reachable through a path the #759 rule does not cover, and it is worth
+    // more than `left != right` when it happens.
+    //
+    // It happens: on 2026-11-05 this assertion began failing on the Linux
+    // lane for every commit, including ones that had passed the day before,
+    // so the trigger is the runner image rather than the code. The mechanism
+    // is not reproducible on macOS with either Mach-O or a real x86-64 ELF,
+    // which is why the failure has to carry its own diagnosis.
+    let detected = doc_scope_workspaces_detected(&sbom);
+    if detected.as_deref() != Some(&[".".to_string()][..]) {
+        let culprits: Vec<String> = sbom["components"]
+            .as_array()
+            .map(|cs| {
+                cs.iter()
+                    .filter_map(|c| {
+                        let props = c["properties"].as_array()?;
+                        let get = |n: &str| -> Option<String> {
+                            props
+                                .iter()
+                                .find(|p| p["name"] == n)?
+                                .get("value")?
+                                .as_str()
+                                .map(str::to_string)
+                        };
+                        let member = get("waybill:workspace-member")?;
+                        if member == "[\".\"]" {
+                            return None;
+                        }
+                        // Every provenance field, because the fix's shape
+                        // depends on which one distinguishes a component
+                        // derived from a walked binary from one declared by a
+                        // manifest. Tier does not: the #759 rule keys on
+                        // `analyzed` and the offender is `source`.
+                        Some(format!(
+                            "  name={} purl={} tier={:?} member={}\n                                 source-files={:?}\n    evidence-kind={:?}                              component-kind={:?} source-mechanism={:?}                              cargo-auditable-source={:?} parent={:?}",
+                            c["name"].as_str().unwrap_or("?"),
+                            c["purl"].as_str().unwrap_or("-"),
+                            get("waybill:sbom-tier"),
+                            member,
+                            get("waybill:source-files"),
+                            get("waybill:evidence-kind"),
+                            get("waybill:component-kind"),
+                            get("waybill:source-mechanism"),
+                            get("waybill:cargo-auditable-source"),
+                            get("waybill:parent-purl"),
+                        ))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        panic!(
+            "a component claims the fake venv's bin/ as a declared workspace \
+             -- the #759 defect through an uncovered path.\n\
+             workspaces-detected = {detected:?}\n\
+             components whose workspace-member is not [\".\"]:\n{}\n\
+             stderr:\n{stderr}",
+            if culprits.is_empty() {
+                "  (none -- the stray entry came from a component with no \
+                 workspace-member property, which is itself the finding)"
+                    .to_string()
+            } else {
+                culprits.join("\n")
+            }
+        );
+    }
 }
+

@@ -1652,6 +1652,27 @@ pub fn tag_components_with_workspace_member(
         if c.sbom_tier.as_deref() == Some("analyzed") {
             continue;
         }
+        // ...and the same holds when the binary reader produced a component
+        // that is NOT `analyzed`. The tier was the wrong test on its own.
+        //
+        // An ELF `.note.package` section names a real distro package, so
+        // milestone 129 emits it at `source` tier rather than `analyzed` —
+        // correctly, it is not an inference. But it is still a component
+        // obtained by reading an executable found by walking, so #759's
+        // rationale applies verbatim: no workspace manifest declared it, and
+        // the executable's directory is not a workspace.
+        //
+        // Measured: Ubuntu's runner image replaced `/bin/ls` with
+        // rust-coreutils, whose binary carries that section. Any scan of a
+        // tree with a Rust executable in it then reported that executable's
+        // directory as a declared workspace — a virtualenv's `bin/` claiming
+        // to be a workspace, which is the exact output #759 fixed. It
+        // surfaced as `t759_binary_tier_components_are_not_workspace_members`
+        // failing on the Linux lane for every commit, including commits that
+        // had passed the day before.
+        if crate::scan_fs::binary::is_binary_derived(c.evidence_kind.as_deref()) {
+            continue;
+        }
         let workspaces: std::collections::BTreeSet<String> = c
             .evidence
             .source_file_paths
@@ -3537,5 +3558,135 @@ mod m776_distribution_tests {
         let mut sorted = a.clone();
         sorted.sort();
         assert_eq!(a, sorted, "references must leave the function in sorted order");
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod workspace_member_tagging_759 {
+    use super::*;
+    use waybill_common::resolution::{
+        ResolutionEvidence, ResolutionTechnique, ResolvedComponent,
+    };
+    use waybill_common::types::purl::Purl;
+
+    /// Tag one synthetic component and return its `waybill:workspace-member`.
+    ///
+    /// The whole-scan test `t759_binary_tier_components_are_not_workspace_members`
+    /// only catches this on a host whose `/bin/ls` is a Rust binary carrying an
+    /// ELF `.note.package` section — which Ubuntu's runner image became on
+    /// 2026-11-05 and macOS is not. Building the component shape directly
+    /// checks the property on every platform.
+    fn tag_one(
+        tier: Option<&str>,
+        evidence_kind: Option<&str>,
+        source_file: &str,
+    ) -> Option<String> {
+        let purl = Purl::new("pkg:generic/stub@0.1.0").unwrap();
+        let mut c = ResolvedComponent {
+            name: purl.name().to_string(),
+            version: purl.version().unwrap_or("0.0.0").to_string(),
+            purl,
+            evidence: ResolutionEvidence {
+                technique: ResolutionTechnique::PackageDatabase,
+                confidence: 1.0,
+                source_connection_ids: Vec::new(),
+                source_file_paths: Vec::new(),
+                deps_dev_match: None,
+            },
+            licenses: Vec::new(),
+            concluded_licenses: Vec::new(),
+            hashes: Vec::new(),
+            supplier: None,
+            cpes: Vec::new(),
+            advisories: Vec::new(),
+            occurrences: Vec::new(),
+            lifecycle_scope: None,
+            build_inclusion: None,
+            artifact_presence: None,
+            requirement_ranges: Vec::new(),
+            source_type: None,
+            sbom_tier: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            npm_role: None,
+            raw_version: None,
+            parent_purl: None,
+            co_owned_by: None,
+            shade_relocation: None,
+            external_references: Vec::new(),
+            extra_annotations: Default::default(),
+            binary_role: None,
+        };
+        c.sbom_tier = tier.map(str::to_string);
+        c.evidence_kind = evidence_kind.map(str::to_string);
+        c.evidence.source_file_paths = vec![source_file.to_string()];
+        let mut components = vec![c];
+        tag_components_with_workspace_member(
+            &mut components,
+            std::path::Path::new("/scan/root"),
+            ScanMode::Path,
+        );
+        components[0]
+            .extra_annotations
+            .get("waybill:workspace-member")
+            .and_then(|v| v.as_str())
+            .map(str::to_string)
+    }
+
+    /// A component read out of a binary is not a workspace member, whatever
+    /// its tier.
+    ///
+    /// `sbom_tier == "analyzed"` was the whole test before, and it is not
+    /// enough: an ELF `.note.package` section names a real distro package, so
+    /// milestone 129 emits it at `source` tier — correctly, it is not an
+    /// inference. But it was still obtained by reading an executable found by
+    /// walking, so no workspace manifest declared it and #759's rationale
+    /// applies verbatim.
+    #[test]
+    fn a_component_read_from_a_binary_is_never_a_workspace_member() {
+        for kind in super::binary::BINARY_EVIDENCE_KINDS {
+            for tier in [Some("source"), Some("analyzed"), None] {
+                let tagged = tag_one(tier, Some(kind), ".venv/bin/python3");
+                assert!(
+                    tagged.is_none(),
+                    "evidence_kind={kind:?} tier={tier:?} must not be tagged a \
+                     workspace member; got {tagged:?}"
+                );
+            }
+        }
+    }
+
+    /// The control. Without it the assertion above would pass for a tagger
+    /// that tags nothing at all, which is a larger defect than the one fixed.
+    #[test]
+    fn a_manifest_declared_component_is_still_tagged() {
+        assert_eq!(
+            tag_one(Some("source"), None, "subproj/requirements.txt").as_deref(),
+            Some("[\"subproj\"]"),
+            "a component read from a manifest must still carry its workspace"
+        );
+    }
+
+    /// And the pre-fix behaviour, pinned so the regression is detectable:
+    /// tier alone does not distinguish these, so a rule keyed only on
+    /// `analyzed` would tag the `source`-tier one.
+    #[test]
+    fn tier_alone_cannot_distinguish_them() {
+        assert_ne!(
+            Some("analyzed"),
+            Some("source"),
+            "the two tiers differ, which is why a rule keyed on `analyzed` \
+             alone let the `source`-tier binary component through"
+        );
+        assert!(super::binary::is_binary_derived(Some("elf-note-package")));
+        assert!(!super::binary::is_binary_derived(None));
+        assert!(!super::binary::is_binary_derived(Some("requirements-txt")));
     }
 }

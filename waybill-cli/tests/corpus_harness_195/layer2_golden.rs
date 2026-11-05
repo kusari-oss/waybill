@@ -31,6 +31,19 @@ fn golden_path(target: &str, format: FailureFormat) -> PathBuf {
     fixtures_root().join(target).join(filename)
 }
 
+/// What a regen run did to one golden file (#1345).
+///
+/// Pure so it is testable without a gate, an env var, or a real golden — the
+/// defect it fixes was invisible precisely because the regen path had no
+/// observable output to assert on.
+fn regen_verdict(existing: Option<&[u8]>, fresh: &[u8]) -> &'static str {
+    match existing {
+        Some(prev) if prev == fresh => "unchanged",
+        Some(_) => "CHANGED",
+        None => "CREATED",
+    }
+}
+
 /// Compares an emitted SBOM against its golden. On drift, writes an
 /// `.actual.json` sibling next to the golden so `diff` is copy-
 /// pasteable per contracts/corpus-harness.md.
@@ -91,6 +104,21 @@ pub fn compare_golden(
         });
     }
     if update_goldens_gate() {
+        // #1345 — say which goldens the regen actually CHANGED.
+        //
+        // This branch used to write and return without reading what was
+        // there, so in a regen run the drift path below could not fire for
+        // any target and `N of 3 formats drifted` was never printed. The
+        // workflow's "Drifted" heading then fell back to listing failed
+        // tests, which in regen mode is a different set entirely: a run that
+        // rewrote three targets' goldens reported two, and the third --
+        // changed by exactly one new document-scope property -- appeared
+        // nowhere. The comparison costs one read of a file that is about to
+        // be overwritten anyway.
+        let verdict = regen_verdict(std::fs::read(&golden).ok().as_deref(), &masked_bytes);
+        // Unanchored and one line per format, to survive the interleaving
+        // that `--nocapture --test-threads=3` produces.
+        println!("corpus-regen-golden: {target}: {format} {verdict}");
         if let Some(parent) = golden.parent() {
             std::fs::create_dir_all(parent).ok();
         }
@@ -604,5 +632,36 @@ mod m865_masking_tests {
         for s in ["pkg:cargo/serde@1.0.0", "MIT", "", "no slashes here"] {
             assert_eq!(mask_doc_prefix(s), s, "must not alter {s:?}");
         }
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod regen_verdict_tests {
+    use super::regen_verdict;
+
+    #[test]
+    fn an_identical_golden_is_unchanged() {
+        assert_eq!(regen_verdict(Some(b"{}"), b"{}"), "unchanged");
+    }
+
+    #[test]
+    fn a_differing_golden_is_changed() {
+        // The case #1345 is about: a golden that differs by one property
+        // was reported nowhere, because the regen path wrote without
+        // reading and the summary fell back to listing failed tests.
+        assert_eq!(regen_verdict(Some(b"{\"a\":1}"), b"{\"a\":2}"), "CHANGED");
+    }
+
+    #[test]
+    fn an_absent_golden_is_created() {
+        assert_eq!(regen_verdict(None, b"{}"), "CREATED");
+    }
+
+    #[test]
+    fn a_byte_difference_is_enough() {
+        // Goldens are compared as bytes elsewhere in this file, so the
+        // verdict must not be cleverer than the thing it reports on.
+        assert_eq!(regen_verdict(Some(b"{}\n"), b"{}"), "CHANGED");
     }
 }
