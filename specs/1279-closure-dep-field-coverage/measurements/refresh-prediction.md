@@ -156,3 +156,43 @@ version — the same class as the ubuntu-image `/bin/ls` finding of 2026-11-05.
 differ**, all `image-postgres16`. Counting files rather than target names is
 deliberate — a directory upload contributes bytes for targets that never
 wrote, which is how #1286 shipped with one target's goldens stale.
+
+## The compare run — the only execution of this milestone's corpus expectations
+
+Run `42096485505`, `regen_goldens=false` on this branch. Three things were
+checked, and the first is what makes the other two mean anything:
+
+| check | result |
+|---|---|
+| `corpus-regen-golden` lines in the log | **0** — the run compared, it did not rewrite |
+| `corpus_nix_closure_moat` | **ok** |
+| failing targets | `corpus_image_postgres16` only, `131 passed; 1 failed` |
+
+`131 passed; 1 failed` is identical to the `main` control, so the branch is at
+parity: the same single pre-existing failure and nothing new.
+
+This matters because **locally this target is not executed at all** — it
+prints `skipping nix-closure-moat: WAYBILL_RUN_PUBLIC_CORPUS not set` and
+reports `ok` in 0.00s, a pass that checked nothing. The compare run is the only
+place the expectations added for `numactl`'s retracted scope, the five
+triple-reachable members, the disclosure being the exact complement of the
+consulted set, and the marker agreeing with C204 are ever run.
+
+### Invariants
+
+`nix-closure-moat` passes every applicable invariant with **no declarations**,
+including I9 and I10 — the two that read the closure-role and scope vocabulary
+this milestone changes:
+
+```
+target                        I1  I2  I3  I4  I5  I6  I7  I8  I9 I10
+nix-closure-moat               -   .   .   .   -   .   .   .   .   .
+...
+no lane failures
+```
+
+So T040 reconciled nothing, and that is a result rather than an omission: the
+declarations file holds 11 rows across 9 targets and **none** names
+`nix-closure-moat`, so there was no stale declaration to retire; and "no lane
+failures" means no cell that was declared now passes, which is the other half
+of the reconciliation.
