@@ -542,6 +542,41 @@ same three CVEs. Borrowing a neighbouring distro's advisories gives a
 confidently wrong answer. `pkg:generic/unzip@6.0`, which is what waybill
 emits for a closure member, matches nothing in OSV at all.
 
+## Asking what the reader sees (`waybill debug closure-dump`)
+
+Questions of the form *"does waybill see this derivation, and what does it
+call it?"* are answered by the reader, not by reading a closure JSON by hand:
+
+```sh
+nix derivation show --recursive <flakeref> > closure.json
+waybill debug closure-dump --closure-json closure.json --summary-only
+waybill debug closure-dump --closure-json closure.json --filter cups-headers
+```
+
+Per derivation it reports the declared `pname` **and which carrier holds it**,
+the name with the `pname()` fallback applied, the C182 role, whether
+`emits_as_component` admits it, the milestone-1282 member role, edge
+eligibility and the identity hash. It calls the same functions the emitter
+does, so an answer here cannot disagree with what a scan emits.
+
+**Why it exists.** Four wrong findings in one session came from modelling the
+reader in a throwaway script instead of asking it. Two distinctions did the
+damage, and both are a column in this output:
+
+- **`pname` has two carriers.** It is read from the flat `env` map *and* from
+  the typed `structuredAttrs` object. On one real closure 66 of 1,275
+  derivations keep it in the typed carrier; a script reading `env` alone
+  called them nameless and reported ten as a coverage gap. They declare a
+  `pname` and are suppressed for a documented reason.
+- **A derivation's name is not its component's name.** nix names a derivation
+  `python3.13-urllib3`; the component is `urllib3`, from `pname`. Comparing
+  raw derivation names against another tool's component names counted 74
+  packages as missing that were present under a different spelling.
+
+Neither was a knowledge problem — both rules are documented above and were
+quoted while being violated. A diagnostic that shares the reader's code is a
+control that does not depend on remembering them.
+
 ## Security guidance
 
 **Prefer a sandbox.** Either flag starts an evaluator on a tree you are
