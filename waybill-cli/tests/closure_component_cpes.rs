@@ -474,3 +474,34 @@ fn m1367_no_cpe_value_is_repeated_on_a_component() {
     // CONTROL: at least one component carried candidates at all.
     assert!(!s.cpes().is_empty(), "no component carried a CPE");
 }
+
+/// FR-003 / SC-003 — read off the emitted document, not off the guard.
+///
+/// The unit test covers the predicate; this covers the **property of the
+/// document**, which is what SC-003 actually asserts. A guard that is correct
+/// and never called would satisfy the former and not the latter.
+#[test]
+fn m1367_every_emitted_cpe_carries_a_release_version() {
+    let s = scan_closure(CLOSURE_JSON);
+    let cpes = s.cpes();
+    // CONTROL: something carried a CPE, or this passes over an empty set.
+    assert!(!cpes.is_empty(), "no component carried a CPE");
+
+    for c in s.cdx["components"].as_array().unwrap() {
+        if c["cpe"].is_null() {
+            continue;
+        }
+        let version = c["version"].as_str().unwrap_or_default();
+        let first = version.chars().next();
+        assert!(
+            first.is_some_and(|ch| ch.is_ascii_digit()),
+            "{} carries a CPE with a non-release version {version:?}",
+            c["name"]
+        );
+        assert!(
+            !version.contains('+') && !version.contains("unstable") && !version.contains("pre-"),
+            "{} carries a CPE with a nix-shaped version {version:?}",
+            c["name"]
+        );
+    }
+}

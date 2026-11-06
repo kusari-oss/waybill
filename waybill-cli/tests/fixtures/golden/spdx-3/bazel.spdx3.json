@@ -186,6 +186,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-VZU7B3JX2ZYEOBC6PIG3PEUG/anno-5P4RIHJ63RQNJ3BZ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"eligible_unmapped\\\":3,\\\"schema\\\":\\\"waybill-cpe-coverage/v1\\\",\\\"with_candidates\\\":0}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-VZU7B3JX2ZYEOBC6PIG3PEUG",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VZU7B3JX2ZYEOBC6PIG3PEUG/anno-6IFCYYVI6E6MZVRB",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VZU7B3JX2ZYEOBC6PIG3PEUG/pkg-SFZ6ZH3BHKUFYZNC",

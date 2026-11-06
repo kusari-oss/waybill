@@ -280,6 +280,10 @@
         "value": "after-build"
       },
       {
+        "name": "waybill:cpe-coverage",
+        "value": "{\"eligible_unmapped\":3,\"schema\":\"waybill-cpe-coverage/v1\",\"with_candidates\":0}"
+      },
+      {
         "name": "waybill:os-release-missing-fields",
         "value": "[\"ID\",\"VERSION_ID\"]"
       },

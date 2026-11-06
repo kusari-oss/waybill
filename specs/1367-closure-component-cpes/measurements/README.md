@@ -160,11 +160,82 @@ defeated by the same structural fact that defeats the real closure.
 
 Only the unit tests, with constructed input, catch mutants 2–4.
 
+## T033, T034 — a scan with no closure
+
+```sh
+waybill sbom scan --path <a project with no flake> --no-deep-hash \
+  --format cyclonedx-json --output cyclonedx-json=out.cdx.json
+```
+
+| | |
+| --- | --- |
+| components | 5 |
+| carrying a CPE | **0** |
+| C209 | `{"with_candidates":0,"eligible_unmapped":1}` — **present** |
+| C208 (closure-only) | absent — correct |
+
+The document gains exactly one property against the pre-change binary, which
+is SC-005's shape. **C209 is present even though no closure ran**, which is
+the design: the pass it describes runs for every component from every reader,
+and gating the record on `--nix-closure` would leave non-closure scans with
+the blind spot this feature exists to close.
+
+T034 additionally asserts the release-shape property **on the emitted
+document** rather than on the predicate. The unit test proves the guard is
+correct; this proves it was called. A guard that is correct and never invoked
+satisfies the first and not the second — which is a fair description of the
+defect this whole milestone fixes.
+
+## T042 — the gate, and the cost the plan did not predict
+
+The first run **failed**: 35 local golden regressions across 24 tests.
+
+That is the direct consequence of a design decision made deliberately — C209
+is emitted on **every** scan, not only `--nix-closure` ones — and it was not
+in the plan's risk table. Milestone 1366's C208 is closure-gated and touched
+one corpus target; C209 touches every committed golden. The decision stands
+(gating the record would reintroduce the blind spot for non-closure scans),
+but the consequence should have been predicted rather than discovered.
+
+Six test files write goldens, not the three `*_regression` ones:
+`cdx_regression`, `spdx_regression`, `spdx3_regression`,
+`pkg_alias_binding_us1`, `oci_pull_backward_compat`,
+`optional_dep_classification`.
+
+```sh
+WAYBILL_UPDATE_CDX_GOLDENS=1 WAYBILL_UPDATE_SPDX_GOLDENS=1 \
+WAYBILL_UPDATE_SPDX3_GOLDENS=1 \
+  cargo test --test cdx_regression --test spdx_regression \
+             --test spdx3_regression --test pkg_alias_binding_us1 \
+             --test oci_pull_backward_compat --test optional_dep_classification
+```
+
+The churn was **verified, not trusted**:
+
+| | |
+| --- | --- |
+| golden files changed | 34 |
+| insertions | **202** |
+| deletions | **0** |
+| added lines that are not C209 or its structural braces | **0** |
+
+Second run:
+
+| | |
+| --- | --- |
+| `GATE_RESULT` | **pass** |
+| test targets | 371, all `ok.` |
+| totals | **7,445 passed, 0 failed** |
+| failure blocks | 0 |
+
++18 against main's 7,427 — the 8 unit and 10 integration tests this milestone
+adds.
+
 ---
 
 ## Open — not yet measured
 
 | item | task |
 | --- | --- |
-| byte-identity for a project with no closure | T033 |
 | golden impact | T039, T040, T041 |
+| the pre-PR gate | T042 |
