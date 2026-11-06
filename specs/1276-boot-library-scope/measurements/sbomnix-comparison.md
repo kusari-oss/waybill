@@ -558,7 +558,8 @@ members. The prediction was
 | with **no PURL at all** | **106** | 0 | **0** | — |
 | distinct names | 819 | 407 | **810** | — |
 | **shared with sbomnix** | — | 309 | **712** | — |
-| **sbomnix-only (the gap)** | — | 510 | **107** | — |
+| **sbomnix-only, raw names** | — | 510 | **107** | — |
+| **sbomnix-only, normalised** | — | — | **32** | — |
 | waybill-only | — | 98 | **98** | — |
 | GHC boot libraries | 0 of 6 | 6 of 6 | **6 of 6** | — |
 
@@ -569,8 +570,9 @@ different scopes and the difference is not explained here.
 
 **The name gap closed from 510 to 107 while waybill-only held at exactly 98**,
 so this is convergence on one closure rather than two tools inventing
-different components. Every one of the residual 107 is a deliberate
-exclusion; see below.
+different components. The 107 is a naming artifact — normalised, the true
+residual is **32**, and the gap that matters is identity rather than
+coverage. See below.
 
 ## Both predictions were wrong, in opposite directions
 
@@ -590,19 +592,62 @@ removes transitive edges a full `inputs.drvs` collapse would keep, and that is
 the obvious candidate — but it has not been measured, and this file's history
 is that the obvious candidate was wrong three times running.
 
-## The residual 107, attributed
+## The residual gap is 32, not 107 — and it is not the important one
 
-**All 107 are the same thing**: derivations that declare a `pname` and are
-`unreferenced`, which is milestone 1282's documented exclusion — "roughly 170
-`pname`-bearing `Unreferenced` members stay suppressed". It is the same bucket
-the 2026-11-04 re-check isolated as "unreferenced, named, applying no patch —
-~103, dropped by role". It has not moved, and 1282 deliberately did not move
-it.
+The 107 is a **name-convention artifact**, caught only by testing it. nix names
+a Python derivation `python3.13-urllib3`; waybill names the component by its
+`pname`, `urllib3`. Comparing raw name sets counts every such package as
+missing.
 
-Among them are `gawk`, `gzip`, `gnused`, `less` and `libSystem` — software
-that carries CVEs — alongside the `bootstrap-stage*-stdenv-darwin` chain,
-which is build scaffolding. That split is the one that matters for deciding
-whether to close this gap, and it is not a split by count.
+Normalising nix's language prefixes (`python3.N-`, `perl5.X.Y-`, …) before
+comparing:
+
+| | names |
+|---|---|
+| sbomnix-only, raw | 107 |
+| sbomnix-only, normalised | **32** |
+
+**74 of the 79 `python3.13-*` names are already in the document** under their
+bare `pname`. What remains is 32, and it is mostly build machinery — the six
+`bootstrap-stage*-stdenv-darwin` stages, `stdenv-darwin`, `pkg-config-role-hook`,
+`pkgs-config-setup-hook`, `cctools-binutils-darwin`, `llvm-binutils`,
+`macOS-SDK`, `cups-headers` — with a short tail of real tools: `gawk 5.4.0`,
+`gzip 1.14`, `gnused 4.9`, `less 692`, `patch 2.8`, `pkgconf`, `mailcap`,
+`libstemmer`, `jailbreak-cabal`, `libSystem`.
+
+All 32 are `pname`-bearing and `unreferenced` — milestone 1282's documented
+exclusion, unchanged.
+
+## The gap that matters is identity, not coverage
+
+The packages a vulnerability feed would care about are **already in the
+document** and still cannot be matched, because they carry no ecosystem:
+
+| package | version | PURL emitted |
+|---|---|---|
+| `urllib3` | 2.6.3 | `pkg:generic/urllib3@2.6.3` |
+| `requests` | 2.33.1 | `pkg:generic/requests@2.33.1` |
+| `lxml` | 6.0.2 | `pkg:generic/lxml@6.0.2` |
+| `jinja2` | 3.1.6 | `pkg:generic/jinja2@3.1.6` |
+| `certifi` | 2026.01.04 | `pkg:generic/certifi@2026.01.04` |
+| `openssl` | 3.6.2 | `pkg:generic/openssl@3.6.2` |
+| `curl` | 8.20.0 | `pkg:generic/curl@8.20.0` |
+| `zlib` | 1.3.2 | `pkg:generic/zlib@1.3.2` |
+
+**781 of 942 components carry `pkg:generic`.** OSV and the other feeds key on
+an ecosystem-qualified PURL; `pkg:generic` has none, so every one of these is
+invisible to a vulnerability query despite being present, correctly named and
+correctly versioned.
+
+sbomnix is not ahead here — its 1,168 `pkg:nix` PURLs use a type the purl spec
+does not define, and its remaining 106 carry no PURL at all. Neither document
+answers "is this build affected by CVE-X". That makes it open ground rather
+than a deficit.
+
+**This reorders the work.** Closing the 32-name coverage gap adds `gzip` and
+`gawk` as two more unmatchable `pkg:generic` components. Giving the 781 their
+real ecosystem types makes the packages already present answerable to a feed.
+The second is worth more, and the two are independent.
 
 ## Milestone 1282 emits every member it claims to, checked exactly
 
@@ -619,7 +664,7 @@ reduce to 539 distinct identities under content- and recipe-hash merging, and
 all 539 are in the document. FR-001 holds on this closure with nothing left
 over.
 
-## Three probe errors, recorded because each produced a figure that looked right
+## Four probe errors, recorded because each produced a figure that looked right
 
 1. **"The sbomnix-only names are the ones it cannot identify."** Plausible —
    sbomnix has 106 components with no PURL and the gap was 107. Measured: **0
@@ -640,8 +685,14 @@ over.
    carry their `pname` there, and counting them as nameless is what produced
    both the 681 (against the true 615) and the fictitious gap.
 
-**All three errors have one shape**: the probe modelled what waybill reads
-instead of reading it. That is the same failure the 2026-11-05 correction
+4. **"The gap is 107 names."** Taken from the harness's own `names:` line and
+   carried into a decomposition, an issue draft and a priority call before
+   being tested. nix names a Python derivation `python3.13-urllib3`; waybill
+   names it `urllib3`. **74 of the 79 `python3.13-*` names were already in the
+   document.** The true residual is 32.
+
+**All four errors have one shape**: the probe modelled what waybill reads or
+emits instead of reading it. That is the same failure the 2026-11-05 correction
 identified — it measured the two documents and never measured the input both
 tools were given — and it recurred three times in one afternoon against a
 file that opens by warning about it. The check that settled each was querying
