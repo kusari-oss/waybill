@@ -165,7 +165,7 @@ roles from being mistaken for this feature's job.
 ### Remediation added by `/speckit.analyze` (finding G1)
 
 - [X] T058 Record and assert the `--tier` interaction, in `waybill-cli/src/cli/scan_cmd.rs`'s closure block and in `waybill-cli/tests/closure_edges.rs`: `apply_tier_filter` runs at line 4121 and the closure contributions land at 4728 and 4789, so **closure components and these edges are both added after the filter and are not subject to it**. That is pre-existing for components — `--tier source-only --nix-closure` already emits build-tier closure components — and the edges inherit it exactly rather than introducing it. Assert the behaviour that exists (such a scan still carries closure components and their edges, with no dangling endpoint, since both ends arrive after the filter) and record in a comment that it is inherited rather than chosen. **Do not "fix" it here**: re-running the filter over closure contributions would change which components a `--tier` scan emits, which is a behaviour change to milestone 1035 and has its own issue, #1360
-- [ ] T055 Run the `quickstart.md` validation end to end, including the "see the defect" step as a **before** control and all eight traps
+- [X] T055 Run the `quickstart.md` validation end to end, including the "see the defect" step as a **before** control and all eight traps
 
 ---
 

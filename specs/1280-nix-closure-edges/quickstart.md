@@ -19,9 +19,26 @@ print(f"reason: {dp['waybill:graph-completeness-reason']}")
 EOF
 ```
 
-Expect zero and zero: **381 components that nothing points at and that point at
-nothing**, and a document that says `partial` with
-`orphaned-components-detected: 352`.
+**Corrected 2026-11-05: this expectation was written without running the
+step.** It said "expect zero and zero", and the pre-fix golden does not show
+zero — a closure component can also be the target of a *manifest* edge, since
+`pkg:hackage/QuickCheck` is both. Measured against `origin/main`'s golden and
+the refreshed one:
+
+| | pre-fix | post-fix |
+|---|---|---|
+| closure components | 381 | 381 |
+| …that any edge points at | **107** | **371** |
+| …with outgoing edges | **136** | **377** |
+| orphan clause | 352 | **10** |
+
+The defect is the gap between 107 and 381, not a zero: two thirds of the
+closure's components had nothing pointing at them, and the ones that did were
+reached by a manifest edge rather than by anything the closure knew. Run the
+block against both goldens — `git show
+origin/main:waybill-cli/tests/fixtures/public_corpus/nix-closure-moat/cdx.json`
+gives the pre-fix arm — because the single-arm version of this check is what
+produced the wrong expectation.
 
 ## Reproduce the baseline
 
@@ -106,6 +123,19 @@ quoted against the other is wrong in membership, not magnitude.
   the 352 orphans. Do not "fix" their direction here.
 - **Check for a cycle guard even though nix cannot make one.** FR-006 asks for
   a visited set, and the fixture that tests it has to be hand-written.
+- **Do not let the closure edges reach scope propagation.** They carry
+  `provenance.data_type = "nix-build-graph"` and
+  `resolve/scope_propagation.rs` declines to traverse that. Measured: without
+  the exclusion, 8 components change CycloneDX `scope` — seven test libraries
+  lose `excluded`, which for a test library was the correct claim, because
+  nixpkgs' Haskell builder passes test dependencies through `buildInputs`.
+- **Invariant I3 is declared for this target, and cannot be fixed by mirroring
+  a filter.** I3 reads the emitted document, and no format carries an edge's
+  provenance, so it cannot apply propagation's own rule. That is the
+  declaration's reason; do not "fix" it by deleting the entry.
+- **A closure component can be the target of a manifest edge.** Any
+  before/after count over closure components must be read against both arms,
+  or a partial pre-existing figure reads as zero.
 - **The counts are dated and system-labelled.** SC-001, SC-004, SC-005 and
   SC-009 are the invariants; everything numbered is x86_64-linux as of
   2026-11-05.

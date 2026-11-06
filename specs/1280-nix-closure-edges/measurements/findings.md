@@ -99,3 +99,20 @@ names the subject by **bom-ref** in `dependencies[].ref` and by **PURL** in
 Worth recording because the failure looked exactly like a product defect in a
 feature that emits edges, and the thing that distinguished them was running the
 same scan by hand. T026 had been passing with the same partly-wrong set.
+
+## F7 — The quickstart's own expectation was written without running it
+
+The "see the defect" block said *"Expect zero and zero: 381 components that
+nothing points at and that point at nothing"*. Run against the pre-fix golden
+it gives **107** pointed at and **136** with outgoing edges, not zero — because
+a closure component can also be the target of a *manifest* edge
+(`pkg:hackage/QuickCheck` is both a closure member and a declared dependency).
+
+The defect is the gap between 107 and 381, which is a weaker and truer
+statement than the one I wrote. Corrected with both arms measured, and the
+block now says to run it against `origin/main`'s golden as well, since the
+single-arm version is what produced the wrong expectation.
+
+Third instance in this milestone of a number entering a document without being
+executed — after F4's probe figure and F5's extrapolated band. All three were
+caught by running the thing; none was caught by re-reading it.
