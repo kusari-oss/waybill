@@ -142,9 +142,9 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 ### Goldens and the gate
 
-- [ ] T043 Refresh the `nix-closure-moat` goldens through the `public-corpus.yml` workflow dispatch — **never** locally; `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` is never set on this machine. Expect exactly one change: the added C208 record saying confirmation did not run
-- [ ] T044 Confirm SC-008 by enumerating the other 16 corpus targets' goldens under `waybill-cli/tests/fixtures/public_corpus/` as unchanged, reading each target's own result rather than the run's summary field
-- [ ] T045 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` argument (#1189). Assert on the positive signal and `GATE_RESULT=pass` in the log, never on a pipeline's exit status. Watch the bin/lib split: `scan_fs` is in the **bin** target, `parity` in the **lib**, and `cargo test --lib <filter>` over a bin test reports `0 tests; N filtered out`, which looks exactly like a pass
+- [X] T043 Refresh the `nix-closure-moat` goldens through the `public-corpus.yml` workflow dispatch — **never** locally; `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` is never set on this machine. Expect exactly one change: the added C208 record saying confirmation did not run
+- [X] T044 Confirm SC-008 by enumerating the other 16 corpus targets' goldens under `waybill-cli/tests/fixtures/public_corpus/` as unchanged, reading each target's own result rather than the run's summary field
+- [X] T045 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` argument (#1189). Assert on the positive signal and `GATE_RESULT=pass` in the log, never on a pipeline's exit status. Watch the bin/lib split: `scan_fs` is in the **bin** target, `parity` in the **lib**, and `cargo test --lib <filter>` over a bin test reports `0 tests; N filtered out`, which looks exactly like a pass
 - [X] T046 [P] Update `docs/ecosystems.md` and the nix closure section of the user-facing docs to state what a `pkg:pypi` identifier on a closure component means — existence confirmed, derivation identity not proven (research R9)
 
 ---
