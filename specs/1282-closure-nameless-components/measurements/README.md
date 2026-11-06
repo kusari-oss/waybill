@@ -71,11 +71,14 @@ needs must come from a darwin capture.
 
 The task asked for a prefix length chosen by measurement: re-run the probe
 over candidate prefixes and take the shortest with zero collisions. That
-measurement **could not be run here.** It needs the pinned closure JSON, which
-is produced by `nix derivation show --recursive` against the `nix-closure-moat`
-flake; no capture is committed (it is ~6 MB of store paths) and this
-environment has neither `nix` nor the flake. Only `results.txt` survives, and
-it reports distinct/collision counts, not the hashes a prefix scan would need.
+measurement **would not answer the question here.** It needs the pinned closure
+JSON, which is produced by `nix derivation show --recursive` against the
+`nix-closure-moat` flake; no capture is committed (it is ~6 MB of store paths),
+and this host evaluates to `aarch64-darwin` while the goldens pin the
+**x86_64-linux** closure. A local capture is a different closure, not a cheaper
+view of the pinned one. Only `results.txt` survives from the original probe,
+and it reports distinct/collision counts, not the hashes a prefix scan would
+need.
 
 **Decision: do not truncate.** The identity carries the full hash.
 
@@ -102,8 +105,9 @@ error three times.
 ## T039 / T041 / T042 — measured after implementation
 
 **On the pinned closure: not measured here, and not predicted.** The
-`nix-closure-moat` figures need `nix derivation show --recursive` against the
-flake; this environment has neither. The corpus lane
+`nix-closure-moat` figures are the **x86_64-linux** closure the goldens pin;
+this host is `aarch64-darwin`, so anything it evaluates is a different closure
+and cannot stand in for them. The corpus lane
 (`public-corpus.yml`) is where those numbers come from, and T045 refreshes the
 goldens through it. Research R3's **−35% is a derivation-level proxy** and is
 not the component-level result; reporting it as one is the error T039 exists
@@ -156,11 +160,33 @@ fixture is the true cause — the derivation consuming it was not emitted.
 Both were found by dumping the emitted record and reading it, not by reading
 the requirements. The suite was green before each.
 
-### SC-008 — the mutation check (T040)
+### SC-008 — the mutation check (T040), re-run
 
-Disabling the new emission (`|| drv.declared_pname().is_none()` → `false &&`)
-fails **14 of 19** integration tests. The 5 that still pass are correctly
-insensitive, and each is explainable rather than merely surviving:
+An earlier pass recorded "fails **14 of 19** integration tests". **That does
+not reproduce, and the figure is withdrawn.** Re-run at `7baebd40` with the
+tree otherwise clean, the single-site mutation
+(`emits_as_component`'s `|| drv.declared_pname().is_none()` → `|| (false && …)`)
+fails **7 of 19**, with the suite green before and after the revert
+(`19 passed; 0 failed`).
+
+The 7 that fail — the evidence SC-008 asks for:
+
+```
+m1282_control_the_pname_less_members_are_emitted_at_all
+m1282_t036_every_unreachable_added_component_carries_the_new_reason
+m1282_us1_same_name_different_content_yields_two_distinct_components
+m1282_us1_the_name_field_is_never_rewritten
+m1282_us2_every_added_component_carries_exactly_one_role
+m1282_us2_filtering_to_sources_and_packages_leaves_no_scaffolding
+m1282_us2_the_role_is_carried_in_all_three_formats
+```
+
+The control reports the fixture's added-component count falling from 8 to 3,
+and names the 3 survivors: `source`, `waybill-fixture-builder`,
+`waybill-fixture-tarball`.
+
+**Why 12 survive, which is the part worth reading.** Five are insensitive by
+design and were correctly identified before:
 
 | test | why it is insensitive |
 | --- | --- |
@@ -169,3 +195,126 @@ insensitive, and each is explainable rather than merely surviving:
 | `t033_the_edge_figure_is_carried` | the key is present either way |
 | `t049_two_scans_emit_identical_component_sets` | determinism holds over any set |
 | `us3_no_edge_names_a_component_that_is_absent` | a safety property, vacuously true over a smaller set |
+
+The other **seven are insensitive by accident**, and that is a weakness in the
+fixture rather than a property of the feature. Three fixture members survive
+the mutation because the C182 role gate already admits them, and those three
+happen to satisfy what those seven assert — so
+`us1_a_fixed_output_member_carries_its_content_hash_in_its_identity`,
+`us1_identical_content_yields_one_component`,
+`us1_a_source_url_is_carried_natively`,
+`us2_a_write_text_member_is_marked_scaffolding`,
+`us3_a_source_behind_scaffolding_is_the_endpoint`,
+`t055_the_component_count_reconciles_without_the_census` and
+`t056_the_orphan_count_is_a_lower_bound_not_an_equality` pass over a
+population the old gate already emitted. They are not wrong, but they are not
+evidence about this milestone's population either. Closing that needs the
+fixture's role-covering members moved off the C182-admitted path; it is
+recorded here rather than fixed, because SC-008 is met by the control and the
+six alongside it.
+
+**A second variant, and why its number is not evidence.** Mutating
+`is_1282_member` as well fails 18 of 19 — including
+`t035_the_c182_census_is_untouched`, which cannot be affected by emission at
+all. A census test failing means the scan itself broke, so that variant is a
+crash rather than a clean mutation and its count says nothing about test
+sensitivity. Only the single-site figure above is quoted.
+
+## The pinned closure, measured (T043 / T045 / T046)
+
+Source: `public-corpus.yml` run **42222424351**, dispatched against
+`1282-closure-nameless-components` at `7baebd40`. The workflow's own
+`Resolve the scanned commit` step reports the SHA it checked out, so this
+is the commit that was scanned and not the one `github.sha` would have
+named (#1287). Figures below were read out of the regenerated
+`nix-closure-moat` goldens, not predicted.
+
+### The C184 record, before and after
+
+| key | before | after |
+| --- | --- | --- |
+| `derivations` | 1,749 | 1,749 |
+| `components-emitted` | 381 | **1,463** |
+| `edges` | 3,459 | **4,533** |
+| `roles` (C182 census) | `{artifact-input: 268, both: 45, build-tooling: 121, unreferenced: 1315}` | **identical** |
+| `patches` | 212 | 212 |
+| `member-roles` | — | `{source: 502, scaffolding: 267, fragment: 245, package: 73}` |
+| `components-without-member-role` | — | 376 |
+| `edge-ineligible-components` | — | 512 |
+
+Whole-document figures (the closure tier plus the Haskell reader):
+**406 → 1,487 components, 3,748 → 4,644 edges.**
+
+### Criterion by criterion
+
+- **SC-001** — predicted "approximately 1,098"; measured **+1,081**
+  net: 1,086 identifiers added, 5 removed (the re-identified five below).
+  Every one of the 1,086 carries a member role, and 1,087 components carry
+  one in all — the extra is `pkg:hackage/time`, which already existed and
+  merely gained the annotation. The probe counted *derivations*;
+  what is emitted is *components*, and the content-addressed path merges
+  549 derivations into 502. `package` came in at 73 against a predicted 83
+  and `fragment` at 245 against 246: the probe classified derivations,
+  some of which merge.
+- **SC-002** — `376 + (502 + 267 + 245 + 73) = 1,463` = `components-emitted`. Reconciles.
+- **SC-003 / SC-014** — all 26 name-colliding groups have pairwise-distinct
+  PURLs; **0 groups repeat a PURL**. See the I2 declaration.
+- **SC-006** — 15 of 17 corpus targets regenerated **byte-identical**
+  goldens. `image-postgres16` also changed; its entire delta is three
+  upstream image/layer digests (`3ce18cb3…` → `38b0c486…` and two others),
+  with no `waybill:closure-member-role` on either side. That is #1358's
+  mutable-tag drift, so those goldens are deliberately **not** in this
+  change.
+- **SC-011** — edges re-measured: 3,748 → 4,644 whole-document. Not growth
+  but **rewiring**: 344 edges removed, 1,240 added. `curl@8.20.0` lost 306
+  in-edges and gained 355 — the walk now stops at the source that was
+  previously walked through. Every edge resolves (SC-009 passed; the
+  invariant lane reports no dangling reference).
+- **SC-012** — 512 components are edge-ineligible (`scaffolding` + `fragment`);
+  **510 carry the new reason** and the other **2 are reachable**, so they are
+  not orphans and need none. Both are reached only by *hackage* in-edges from
+  the Haskell reader, never by the closure projection, so FR-013 holds: no
+  scaffolding or fragment is an endpoint of an edge this feature emits. The
+  excess over the 513 the spec quoted is therefore −3 and fully accounted:
+  one fewer fragment than the probe predicted, and two members the Haskell
+  reader reaches by name.
+- **SC-013** — the census is **numerically identical**, key for key.
+
+### The five components whose identifier changed
+
+Five PURLs present before are absent after:
+`ghc-9.10.3-source`, `glibc-iconv-2.42`, `nuke-refs`, `remove-references-to`,
+`uname`. None was lost. Each declared no `pname` but passed the old C182 role
+gate, so it was emitted under a `(name, version)` key — and that key is R8c's
+collapse, observed on real data:
+
+| name | components before | after |
+| --- | --- | --- |
+| `nuke-refs` | 1 | **5** |
+| `uname` | 1 | **2** |
+| `glibc-iconv-2.42` | 1 | **2** |
+| `ghc-9.10.3-source` | 1 | 1 |
+| `remove-references-to` | 1 | 1 |
+
+So five identifiers were rewritten and five derivations stopped being
+merged into two components they were never the same artifact as. SC-007 is
+about components *another reader* emits and is unaffected: no such component
+was displaced or renamed, and 0 surviving components changed name or version.
+
+### What this refresh carries that is not milestone 1282
+
+The committed golden predates milestone 1281 (#1362), which landed without
+refreshing it. So the `licenses` key in C184 (`received: 219, wanted: 1065`)
+and the SPDX 3 growth in `simplelicensing_LicenseExpression` (8 → 32) are
+**1281's**, not this feature's: of the 234 components carrying a license,
+**233 carry no member role**. The one that does is
+`expand-response-params`, a `fragment` whose nixpkgs `meta.license` declares
+MIT — so the data model's "licenses: none for this population" was a
+prediction the measurement narrowed to "one of 1,087", not a requirement.
+
+### The one invariant cell that moved
+
+`I2 / nix-closure-moat` — `duplicate-library-identity` ×26, newly declared.
+`I3` stayed within its existing declaration and `I7` **passed**: every
+unreachable component is explained, which is what R8b's narrowing was for.
+`explained_pre_1156` was not touched.

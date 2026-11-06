@@ -119,10 +119,10 @@ The classifier and the identity basis block every story.
 - [X] T040 **SC-008 mutation check**: disable the new emission, confirm tests fail, re-enable, and name the failing tests in the PR body. A population no test is sensitive to is not evidence that it is emitted
 - [X] T041 [P] Verify SC-001: the component count rises to approximately 1,479 on the measured closure, and SC-003: no two added components share an identity under a qualifier-ignoring comparison
 - [X] T042 [P] Verify SC-007: no component another reader emits is displaced or renamed (FR-011)
-- [~] T043 Check the invariant harness: 513 new orphans and ~1,098 new components will move `orphan_explained` and the graph-completeness checks. Update `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` only where the new state is correct, and **never** touch `explained_pre_1156`, which is a frozen drift detector
+- [X] T043 Check the invariant harness: 513 new orphans and ~1,098 new components will move `orphan_explained` and the graph-completeness checks. Update `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` only where the new state is correct, and **never** touch `explained_pre_1156`, which is a frozen drift detector
 - [X] T044 Run the pre-PR gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189), and assert on the positive signal rather than the absence of failure
-- [ ] T045 Refresh corpus goldens via `public-corpus.yml` workflow dispatch, never locally
-- [ ] T046 Review the refreshed goldens with a normalised, sorted diff — mask content-addressed ids including `rel-`/`anno-` and `LC_ALL=C sort` before diffing, or SPDX-3 array reordering reads as a semantic hit
+- [X] T045 Refresh corpus goldens via `public-corpus.yml` workflow dispatch, never locally
+- [X] T046 Review the refreshed goldens with a normalised, sorted diff — mask content-addressed ids including `rel-`/`anno-` and `LC_ALL=C sort` before diffing, or SPDX-3 array reordering reads as a semantic hit
 - [X] T047 Update `docs/design-notes.md` with the four-role vocabulary and why it is distinct from the C182 derivation roles, since the two were confused once already and will be again
 
 ---
