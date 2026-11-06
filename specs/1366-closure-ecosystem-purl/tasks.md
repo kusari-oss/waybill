@@ -131,21 +131,21 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 ### Non-regression (FR-005, FR-006)
 
-- [ ] T038 [P] Assert the 539 closure members are byte-identical before and after, by diffing the C206-carrying components' `{name, version, purl}` against T004's baseline; record the diff in `specs/1366-closure-ecosystem-purl/measurements/README.md` (SC-003)
-- [ ] T039 [P] Assert components contributed by other readers are byte-identical before and after, against T004's baseline; record the diff in `specs/1366-closure-ecosystem-purl/measurements/README.md` (SC-004)
+- [X] T038 [P] Assert the 539 closure members are byte-identical before and after, by diffing the C206-carrying components' `{name, version, purl}` against T004's baseline; record the diff in `specs/1366-closure-ecosystem-purl/measurements/README.md` (SC-003)
+- [X] T039 [P] Assert components contributed by other readers are byte-identical before and after, against T004's baseline; record the diff in `specs/1366-closure-ecosystem-purl/measurements/README.md` (SC-004)
 
 ### The measured numbers
 
-- [ ] T040 **Produce SC-001's number.** Run the real scan from `quickstart.md` Control 2 with deps.dev enabled, on the pinned closure, and record candidates / confirmed / declined with the exact command in `measurements/README.md`. Quote this figure and no other; the spec forbids predicting it
-- [ ] T041 Demonstrate SC-005 end to end on the five names with known vulnerability histories — `urllib3`, `requests`, `lxml`, `jinja2`, `certifi` — by querying the emitted document by ecosystem-qualified identifier and recording the result in `specs/1366-closure-ecosystem-purl/measurements/README.md`
-- [ ] T042 Verify SC-006 by scanning with confirmation unavailable, confirming the document is byte-identical to today's apart from C208 — which states that confirmation did not run — and recording the comparison in `specs/1366-closure-ecosystem-purl/measurements/README.md`
+- [X] T040 **Produce SC-001's number.** Run the real scan from `quickstart.md` Control 2 with deps.dev enabled, on the pinned closure, and record candidates / confirmed / declined with the exact command in `measurements/README.md`. Quote this figure and no other; the spec forbids predicting it
+- [X] T041 Demonstrate SC-005 end to end on the five names with known vulnerability histories — `urllib3`, `requests`, `lxml`, `jinja2`, `certifi` — by querying the emitted document by ecosystem-qualified identifier and recording the result in `specs/1366-closure-ecosystem-purl/measurements/README.md`
+- [X] T042 Verify SC-006 by scanning with confirmation unavailable, confirming the document is byte-identical to today's apart from C208 — which states that confirmation did not run — and recording the comparison in `specs/1366-closure-ecosystem-purl/measurements/README.md`
 
 ### Goldens and the gate
 
 - [ ] T043 Refresh the `nix-closure-moat` goldens through the `public-corpus.yml` workflow dispatch — **never** locally; `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` is never set on this machine. Expect exactly one change: the added C208 record saying confirmation did not run
 - [ ] T044 Confirm SC-008 by enumerating the other 16 corpus targets' goldens under `waybill-cli/tests/fixtures/public_corpus/` as unchanged, reading each target's own result rather than the run's summary field
 - [ ] T045 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` argument (#1189). Assert on the positive signal and `GATE_RESULT=pass` in the log, never on a pipeline's exit status. Watch the bin/lib split: `scan_fs` is in the **bin** target, `parity` in the **lib**, and `cargo test --lib <filter>` over a bin test reports `0 tests; N filtered out`, which looks exactly like a pass
-- [ ] T046 [P] Update `docs/ecosystems.md` and the nix closure section of the user-facing docs to state what a `pkg:pypi` identifier on a closure component means — existence confirmed, derivation identity not proven (research R9)
+- [X] T046 [P] Update `docs/ecosystems.md` and the nix closure section of the user-facing docs to state what a `pkg:pypi` identifier on a closure component means — existence confirmed, derivation identity not proven (research R9)
 
 ---
 

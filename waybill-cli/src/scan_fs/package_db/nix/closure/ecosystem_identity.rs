@@ -340,6 +340,23 @@ pub(crate) fn candidates(
         };
         let version = drv.version().unwrap_or_default();
         let Some(&idx) = by_identity.get(&(pname, version)) else {
+            // The rule matched a derivation the closure emits no component
+            // for. Measured on the pinned closure: exactly one,
+            // `build 1.4.4`, whose C182 role is `unreferenced` — so it is
+            // part of the SEPARATE pname-bearing coverage gap (issue #1366),
+            // not of this feature's population. This pass can only change
+            // the identity of a component that exists; closing the coverage
+            // gap is what would give this one a component to re-identify.
+            //
+            // Logged rather than passed over, so the difference between the
+            // candidate-rule's 75 derivation identities and C208's 74
+            // components is recoverable from a scan instead of only from
+            // `waybill debug closure-dump`.
+            tracing::debug!(
+                pname,
+                version,
+                "nix-closure: ecosystem candidate has no emitted component"
+            );
             continue;
         };
         // V4 — appended only.
