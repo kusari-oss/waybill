@@ -709,6 +709,7 @@ mod tests {
             raw,
             roles,
             read_outcome: Default::default(),
+            graph: Default::default(),
         })
         .pop()
         .expect("the seed closure yields a component");

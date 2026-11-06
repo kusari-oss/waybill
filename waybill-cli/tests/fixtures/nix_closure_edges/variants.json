@@ -1,0 +1,98 @@
+{
+  "derivations": {
+    "root.drv": {
+      "name": "waybill-fixture-root-0.1",
+      "env": {
+        "pname": "waybill-fixture-root",
+        "version": "0.1",
+        "buildInputs": "/nix/store/h1-varA /nix/store/h2-varB"
+      },
+      "inputs": {
+        "drvs": {
+          "varA.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "varB.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h0-root"
+        }
+      }
+    },
+    "varA.drv": {
+      "name": "waybill-fixture-variant-1.0",
+      "env": {
+        "pname": "waybill-fixture-variant",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {
+          "pkgc.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-varA"
+        }
+      }
+    },
+    "varB.drv": {
+      "name": "waybill-fixture-variant-1.0",
+      "env": {
+        "pname": "waybill-fixture-variant",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {
+          "pkgc.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h2-varB"
+        }
+      }
+    },
+    "pkgc.drv": {
+      "name": "waybill-fixture-pkgc-4.0",
+      "env": {
+        "pname": "waybill-fixture-pkgc",
+        "version": "4.0",
+        "patches": "/nix/store/hp-waybill-fixture-tidy.patch"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h3-pkgc"
+        }
+      }
+    }
+  },
+  "version": 4
+}

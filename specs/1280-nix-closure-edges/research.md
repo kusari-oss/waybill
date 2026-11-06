@@ -6,9 +6,41 @@ named closure and a named system; `measurements/README.md` holds the runs.
 
 ---
 
-## R1 — The identity pass rewrites PURLs after the emitter returns. **Measured.**
+## R1 — ~~The identity pass rewrites PURLs after the emitter returns~~ **— RETRACTED 2026-11-05.**
 
-**This is the finding the plan is built around.**
+> **This finding was wrong, and the codebase already knew it.** It was written
+> as "the finding the plan is built around", and the hazard it describes is
+> already handled by an established convention this research did not check for.
+>
+> `closure_identity.rs:662` calls `apply_renames(&summary.renames,
+> relationships)` — endpoints are rewritten **in the same step** as the
+> identities. The comment above it states the reasoning this research presented
+> as a discovery: *"changing a PURL orphans every relationship holding the old
+> one, and the failure is SILENT in all three formats … So the endpoints move
+> in the same step the identities do"* (#980). Every `c.purl =` site in the nix
+> readers is paired with it, and `haskell_packages/mod.rs:530` makes it a
+> requirement on callers: *"The caller MUST apply these; `apply_renames` does
+> it."*
+>
+> So edges built **before** the identity pass would have been rewritten
+> correctly. The measurement below is accurate; the conclusion drawn from it
+> was not.
+>
+> **What the design keeps, and on what ground.** Edge construction still
+> happens after the pass, and the conversion is still keyed on `.drv` paths —
+> but because the identity→PURL join needs the **final** component set, which
+> only exists after that pass, not because an earlier placement would dangle.
+> That is a weaker and sufficient reason. The sequencing is no longer
+> load-bearing, and the plan no longer claims it is.
+>
+> **How it was caught**: by reading `reclassify`'s signature while wiring T025
+> and noticing it takes `&mut relationships` — which a finding about dangling
+> relationships should have asked about first. T026's property assertion, that
+> every emitted relationship's endpoints resolve to a present component, is
+> what actually guarantees this and is kept regardless of which convention
+> holds.
+
+**The measurement, which stands:**
 
 `emit::components` returns `Vec<ResolvedComponent>` with `pkg:generic/<name>@<version>`
 PURLs, because `pkg:nix` is not a purl-spec type. The milestone-1275 identity
@@ -33,15 +65,15 @@ inside `emit::components` would name `pkg:generic/QuickCheck@2.15.0.1` for a
 component that ends up as `pkg:hackage/QuickCheck@2.15.0.1` — a dangling
 endpoint for **27% of the graph**.
 
-**Decision**: build edges after the identity pass. Until then the projection is
-keyed on `.drv` paths, which nothing rewrites, and PURLs are resolved from the
-final component set in one step.
+**Decision**: build edges after the identity pass, because the identity→PURL
+join needs the final component set. The projection stays keyed on `.drv` paths,
+which nothing rewrites, so the conversion is a single step over a settled set.
 
-**Why it would have shipped broken**: no fixture runs the identity pass. It
-needs a pinned nixpkgs package set, which the integration suites deliberately
-stub out as empty. Every unit and integration test would have passed, and the
-corpus goldens would have been the first thing to notice — in CI, on a nightly,
-after the fact.
+**What remains true about fixtures**: no fixture runs the identity pass — it
+needs a pinned nixpkgs package set the integration suites stub out as empty —
+so no fixture would catch a dangling-endpoint defect of any origin. T026
+asserts the property instead of the placement, which is why it survives this
+retraction intact.
 
 **Alternatives considered**: rewriting edges inside the identity pass alongside
 the components (rejected — two passes that must agree about identity is the

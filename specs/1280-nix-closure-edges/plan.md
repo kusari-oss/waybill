@@ -16,12 +16,17 @@ pair (FR-007a).
 Measured on the pinned x86_64-linux closure: 0 → 3,429 edges, and closure
 orphans 352 → 5, with the five carrying a reason that names their cause.
 
-**The finding that shapes the whole plan**: the milestone-1275 identity pass
-rewrites **104 of 381** closure components' PURLs from `pkg:generic/…` to
-`pkg:hackage/…` *after* `emit::components` returns. Edges built inside the
-emitter would therefore reference endpoints that no longer exist for 27% of the
-graph — and would pass every fixture test, because no fixture runs that pass.
-Edge construction is placed after it, and keyed on derivation paths until then.
+**A note on sequencing, corrected during implementation.** Edge construction
+happens after the milestone-1275 identity pass, and the projection is keyed on
+`.drv` paths until then. The *reason* is that the identity→PURL join needs the
+final component set, which only exists after that pass.
+
+Research R1 originally gave a stronger reason — that an earlier placement would
+dangle for the 104 of 381 components whose PURLs that pass rewrites — and it
+was wrong: `closure_identity.rs:662` already rewrites relationship endpoints in
+the same step, by an established convention (#980/#981). R1 carries the
+retraction. The placement is unchanged and no longer claimed to be
+load-bearing.
 
 ## Technical Context
 
@@ -125,9 +130,9 @@ extractor following fails `holistic_parity`. The analysis pass caught that this
 file's first draft listed neither path.
 
 **Structure Decision**: the projection gets its own module rather than growing
-`emit.rs`, because the two run at different times — `emit::components` before
-the identity pass, the projection after it — and a single module whose halves
-must not be called together is how the PURL-rewrite hazard gets reintroduced.
+`emit.rs`. The two run at different times — `emit::components` before the
+identity pass, the conversion after it — and a module with two halves that run
+in different phases is clearer than one file that looks like a single step.
 
 ## Complexity Tracking
 
@@ -136,5 +141,5 @@ because it is not visible from the requirements:
 
 | Constraint | Why it exists |
 |---|---|
-| Edge construction is sequenced after the m1275 identity pass and keyed on `.drv` paths until then | The identity pass rewrites 104 of 381 component PURLs. Edges keyed on PURLs at emit time dangle for 27% of the graph, and no fixture would catch it because fixtures do not run that pass. Research R1. |
+| Edge construction is sequenced after the m1275 identity pass and keyed on `.drv` paths until then | The identity→PURL join needs the final component set, which exists only after that pass. **Not** because an earlier placement would dangle — `apply_renames` already covers that (#980/#981), and research R1's original claim to the contrary is retracted there. |
 | The new edges are **not** subject to `--tier`, and that is inherited rather than chosen | `apply_tier_filter` runs at line 4121; closure contributions land at 4728 and 4789. Closure *components* already bypass it, so `--tier source-only --nix-closure` already emits build-tier components today. The edges inherit the same placement. T058 asserts the behaviour and records it; changing it would alter which components a `--tier` scan emits, which is a milestone-1035 behaviour change and has its own issue, #1360. Found by the analysis pass, not by the plan. |

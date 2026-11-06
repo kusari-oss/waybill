@@ -1,0 +1,89 @@
+{
+  "derivations": {
+    "root.drv": {
+      "name": "waybill-fixture-root-0.1",
+      "env": {
+        "pname": "waybill-fixture-root",
+        "version": "0.1",
+        "buildInputs": "/nix/store/h1-pkga"
+      },
+      "inputs": {
+        "drvs": {
+          "pkga.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h0-root"
+        }
+      }
+    },
+    "pkga.drv": {
+      "name": "waybill-fixture-pkga-1.0",
+      "env": {
+        "pname": "waybill-fixture-pkga",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {
+          "fetch.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-pkga"
+        }
+      }
+    },
+    "fetch.drv": {
+      "name": "waybill-fixture-pkgb-1.0.tar.gz",
+      "env": {},
+      "inputs": {
+        "drvs": {
+          "pkgb.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h2-fetch"
+        }
+      }
+    },
+    "pkgb.drv": {
+      "name": "waybill-fixture-pkgb-1.0",
+      "env": {
+        "pname": "waybill-fixture-pkgb",
+        "version": "1.0",
+        "patches": "/nix/store/hp-waybill-fixture-tidy.patch"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h3-pkgb"
+        }
+      }
+    }
+  },
+  "version": 4
+}

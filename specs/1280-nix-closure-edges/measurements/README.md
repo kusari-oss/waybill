@@ -163,3 +163,46 @@ Two things that changed the spec and were not the question being asked:
   it `pkg:generic/moat@0.1`. FR-004 therefore anchors on the document root
   rather than on an identity match, because matching would cross a PURL-type
   boundary and a wrong match silently reparents the whole graph.
+
+## First end-to-end measurement — aarch64-darwin, 2026-11-05
+
+The implementation, not a probe. Same project copy, same stub-free real `nix`,
+`--nix-closure --no-deps-dev --no-clearly-defined`.
+
+| | sbomnix | pre-1280 | **post-1280** |
+|---|---|---|---|
+| components | 1,274 | 413 | 413 |
+| **edges** | 8,230 | 788 | **3,907** |
+| orphans reported | — | **359** | **25** |
+| closure components with an incoming edge | — | 107 of 388 | **369 of 388** |
+| dangling edge endpoints | — | 0 | **0** |
+| C182 role census | — | 235/93/43/17 | **235/93/43/17** |
+| licensed / hashed / no-PURL | 301 / 0 / 106 | 137 / 136 / 0 | unchanged |
+
+- **`visits = 1275` for 1,275 derivations.** FR-012's linearity holds on the
+  real closure, not only on fixtures: the memo is hit on every revisit.
+- **`unanchored_root_edges = 0`.** The closure root resolved to a component,
+  confirming research R5 — `moat-0.1` is already `pkg:hackage/moat@0.1` from
+  the Haskell manifest reader, which the document root already depends on. The
+  anchor works here with no emitter-side work.
+- **SC-005 holds exactly**: the role census is byte-identical, so `inputs.drvs`
+  did not leak into classification.
+- **`graph-completeness` stays `partial`**, as the corrected SC-003 expects —
+  the `transitive-edges-unresolvable: hackage` clause is independent of this
+  work. The criterion was reworded during analysis precisely so it would not
+  fail here.
+
+### Two probe figures the implementation did not match
+
+| | probe predicted | implementation |
+|---|---|---|
+| contributed edges (darwin) | 3,429 | **3,450** |
+| residual orphans (darwin) | 16 | **25** |
+
+Same cause for both: the probe's identity rule was `pname` alone, while waybill
+falls back to the derivation's `name`, so it emits a slightly larger set with a
+slightly different orphan residue. The probe reproduced the **pre**-change
+state exactly, which is what made it useful for choosing the projection — but
+it is not the implementation, and quoting its post-change figure as a target
+was a mistake. **SC-002's linux figure of 5 needs re-measuring against the
+binary before it is scored**, not before.

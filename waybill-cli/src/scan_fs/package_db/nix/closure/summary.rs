@@ -186,6 +186,7 @@ mod tests {
             raw,
             roles,
             read_outcome: Default::default(),
+            graph: Default::default(),
         };
         let patched = attribute(&closure.raw);
         NixClosureSummary::build(&closure, &patched)
@@ -229,6 +230,7 @@ mod tests {
             raw,
             roles,
             read_outcome: Default::default(),
+            graph: Default::default(),
         };
         let patched = attribute(&closure.raw);
         let s = NixClosureSummary::build(&closure, &patched);

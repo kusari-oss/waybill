@@ -80,11 +80,14 @@ quoted against the other is wrong in membership, not magnitude.
 
 ## Traps
 
-- **Build the edges AFTER the m1275 identity pass.** It rewrites 104 of 381
-  component PURLs from `pkg:generic/…` to `pkg:hackage/…`, and
-  `Relationship` is keyed on PURL strings. Edges built in the emitter dangle
-  for 27% of the graph — and **no fixture catches it**, because the fixtures
-  stub the package set out as empty. Research R1.
+- **Build the edges after the m1275 identity pass**, because the identity→PURL
+  join needs the final component set. It is **not** true that an earlier
+  placement dangles: `closure_identity.rs:662` already rewrites relationship
+  endpoints alongside identities (#980/#981), and research R1's claim to the
+  contrary is retracted there. What *is* true is that **no fixture runs that
+  pass**, so no fixture catches a dangling endpoint of any origin — which is
+  why the guarantee is T026's property assertion over every emitted edge's
+  endpoints rather than a test of where the call sits.
 - **Do not read `inputs.srcs`.** A `src` is a store path, not a derivation, so
   it names no node in this graph. Only `inputs.drvs` keys are edges.
 - **Anchor on the document root, not on the closure root's identity.**

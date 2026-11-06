@@ -86,6 +86,31 @@ fn emits_as_component(role: DerivationRole, drv: &RawDerivation) -> bool {
     role_alone_emits(role) || drv.paths_in("patches").next().is_some()
 }
 
+/// The `.drv` keys that will become components, for the milestone-1280
+/// projection.
+///
+/// Derived from [`emits_as_component`] rather than from a second copy of the
+/// rule: the projection must emit an edge to exactly the nodes the emitter
+/// emits, and two predicates that have to agree is the drift this project
+/// keeps paying for. A derivation yielding no name is excluded here for the
+/// same reason `components` skips it.
+pub(crate) fn emitted_drv_keys<'a>(
+    raw: &'a super::derivation::RawClosure,
+    roles: &std::collections::BTreeMap<String, DerivationRole>,
+) -> std::collections::HashSet<&'a str> {
+    raw.derivations
+        .iter()
+        .filter(|(key, drv)| {
+            roles
+                .get(*key)
+                .copied()
+                .is_some_and(|role| emits_as_component(role, drv))
+                && drv.pname().is_some()
+        })
+        .map(|(key, _)| key.as_str())
+        .collect()
+}
+
 /// Build the components a classified closure contributes.
 ///
 /// Returns them rather than mutating a caller's vector, so the supplementing
@@ -281,6 +306,7 @@ mod tests {
             raw,
             roles,
             read_outcome: Default::default(),
+            graph: Default::default(),
         })
     }
 
@@ -343,6 +369,7 @@ mod tests {
             raw,
             roles,
             read_outcome: Default::default(),
+            graph: Default::default(),
         });
         let dups: Vec<_> = c.iter().filter(|x| x.name == "dup").collect();
         assert_eq!(dups.len(), 1, "two variants, one component");
@@ -393,6 +420,7 @@ mod tests {
             raw,
             roles,
             read_outcome: Default::default(),
+            graph: Default::default(),
         })
         .iter()
         .map(|c| c.name.clone())

@@ -28,7 +28,13 @@ Entries naming a `.drv` absent from the closure's own map are dropped (FR-005):
 
 Keyed on `.drv` paths for the duration, converted to PURLs once, at the end,
 against the final component set. That conversion is the only place a PURL
-appears, and it happens after every pass that can rewrite one.
+appears.
+
+It happens after the identity pass because the join needs that set to be
+final — **not** because an earlier conversion would dangle. `apply_renames`
+rewrites relationship endpoints alongside identities (#980/#981), so an earlier
+placement would have survived; research R1 claimed otherwise and carries the
+retraction.
 
 ### `StopRule` — the FR-010 predicate, named because it is the feature
 
@@ -92,5 +98,7 @@ closure::graph::project     -> ProjectedGraph, keyed on .drv paths
   -> extend `relationships`
 ```
 
-Research R1 has the measurement. An implementation that builds edges one line
-earlier passes every fixture, because no fixture runs the identity pass.
+The `^^^` marker is a convenience rather than a hazard — see R1's retraction.
+What remains true is that **no fixture runs the identity pass**, so no fixture
+can catch a dangling endpoint of any origin; the guarantee comes from T026's
+property assertion instead.
