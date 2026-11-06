@@ -1,0 +1,52 @@
+{
+  "derivations": {
+    "root.drv": {
+      "name": "waybill-fixture-root-0.1",
+      "env": {
+        "pname": "waybill-fixture-root",
+        "version": "0.1",
+        "buildInputs": "/nix/store/h1-dangle"
+      },
+      "inputs": {
+        "drvs": {
+          "dangle.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h0-root"
+        }
+      }
+    },
+    "dangle.drv": {
+      "name": "waybill-fixture-dangle-1.0",
+      "env": {
+        "pname": "waybill-fixture-dangle",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {
+          "absent-from-this-closure.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-dangle"
+        }
+      }
+    }
+  },
+  "version": 4
+}

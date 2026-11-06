@@ -20,6 +20,7 @@
 pub(crate) mod classify;
 pub(crate) mod derivation;
 pub(crate) mod emit;
+pub(crate) mod graph;
 pub(crate) mod patches;
 pub(crate) mod summary;
 
@@ -219,6 +220,16 @@ pub(crate) struct ClassifiedClosure {
     /// `unreferenced` while the disclosure says an attribute naming it went
     /// unread. One struct, one walk, one answer.
     pub(crate) read_outcome: super::closure::derivation::ReadOutcome,
+    /// Milestone 1280 (#1346) — the dependency graph, projected onto the
+    /// components this closure will contribute.
+    ///
+    /// Computed here because it depends only on the closure and the roles,
+    /// and **keyed on `.drv` paths** because it must survive the
+    /// milestone-1275 identity pass, which rewrites 104 of 381 component
+    /// PURLs after emission (research R1). The conversion to PURL-keyed
+    /// relationships happens at the call site, after that pass; carrying the
+    /// graph is safe, carrying PURLs would not be.
+    pub(crate) graph: graph::ProjectedGraph,
 }
 
 impl ClassifiedClosure {
@@ -341,6 +352,7 @@ pub(crate) fn resolve(
     })?;
     let roles = classify::classify(&raw);
     let read_outcome = raw.read_outcome(&classify::consulted_fields());
+    let graph = graph::project(&raw, &emit::emitted_drv_keys(&raw, &roles));
     tracing::info!(
         attribute = %attribute,
         derivations = raw.derivations.len(),
@@ -363,11 +375,18 @@ pub(crate) fn resolve(
             "nix-closure: declarations were seen but not consulted"
         );
     }
+    tracing::info!(
+        edges = graph.edges.len(),
+        root = graph.root.as_deref().unwrap_or("<none>"),
+        visits = graph.visits,
+        "nix-closure: dependency graph projected"
+    );
     Ok(ClassifiedClosure {
         attribute,
         raw,
         roles,
         read_outcome,
+        graph,
     })
 }
 

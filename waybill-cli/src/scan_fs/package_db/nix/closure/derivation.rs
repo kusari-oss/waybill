@@ -6,7 +6,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 /// One derivation from the closure.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Default)]
 pub(crate) struct RawDerivation {
     #[serde(default)]
     pub(crate) name: Option<String>,
@@ -33,6 +33,37 @@ pub(crate) struct RawDerivation {
     pub(crate) structured_attrs: Option<Value>,
     #[serde(default)]
     pub(crate) outputs: BTreeMap<String, RawOutput>,
+    /// Milestone 1280 (#1346) — the derivations whose outputs this build
+    /// consumed, as nix records them.
+    ///
+    /// **This is the build graph, and not reading it is why the closure tier
+    /// contributed no dependency edges at all.** The declared attributes above
+    /// (`buildInputs` and the rest) are what a package *says* it needs, and
+    /// they feed the C182 role; this is what the build *used*. Measured on the
+    /// `nix-closure-moat` closure, `inputs.drvs` holds 10,342 edges against the
+    /// declared view's 3,386 and explains 1,748 of 1,749 derivations against
+    /// 434 — and its count on the darwin closure, 8,230, equals sbomnix's
+    /// `dependsOn` total to the edge, which is how we know the other tool
+    /// emits this graph and waybill did not.
+    ///
+    /// **Only the keys are read.** The value carries `outputs` and
+    /// `dynamicOutputs`, which say *which* output was consumed; the edge is
+    /// between derivations either way, and reading more would invite a second
+    /// notion of identity.
+    ///
+    /// **`inputs.srcs` is deliberately not parsed.** A `src` is a store path,
+    /// not a derivation, so it names no node in this graph. Including it would
+    /// produce edges to things that are not components.
+    #[serde(default)]
+    pub(crate) inputs: RawInputs,
+}
+
+/// The `inputs` object of a derivation (milestone 1280).
+#[derive(Debug, Clone, Default, Deserialize)]
+pub(crate) struct RawInputs {
+    /// `.drv` path → `{outputs, dynamicOutputs}`. Only the keys are used.
+    #[serde(default)]
+    pub(crate) drvs: BTreeMap<String, Value>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -259,6 +290,25 @@ fn is_dependency_attribute(name: &str) -> bool {
 /// classification in which every member is unreferenced. The first draft of
 /// the analysis script did exactly that and reported 1,275 of 1,275
 /// unreferenced, which looked like a finding rather than a bug.
+impl RawDerivation {
+    /// The `.drv` paths this derivation consumed, filtered to those the
+    /// closure's own map contains (FR-005).
+    ///
+    /// nix emits entries naming derivations outside the queried closure, and
+    /// an edge to a node that is not in the graph is not an edge. The filter
+    /// lives here rather than at the call site so every consumer gets it.
+    pub(crate) fn input_drvs<'a>(
+        &'a self,
+        closure: &'a BTreeMap<String, RawDerivation>,
+    ) -> impl Iterator<Item = &'a str> + 'a {
+        self.inputs
+            .drvs
+            .keys()
+            .map(String::as_str)
+            .filter(|k| closure.contains_key(*k))
+    }
+}
+
 pub(crate) fn store_basename(path: &str) -> &str {
     path.rsplit('/').next().unwrap_or(path)
 }
@@ -784,6 +834,68 @@ mod tests {
     fn a_derivation_without_the_field_yields_no_paths() {
         let c = RawClosure::parse(CLOSURE).unwrap();
         assert_eq!(c.derivations["aaa-lib-1.0.drv"].paths_in("buildInputs").count(), 0);
+    }
+
+    // ---- m1280 (#1346): the inputs.drvs parse ----
+
+    fn edge_fixture(name: &str) -> RawClosure {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/nix_closure_edges")
+            .join(name);
+        let json = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        RawClosure::parse(&json).unwrap_or_else(|e| panic!("parse {}: {e}", path.display()))
+    }
+
+    #[test]
+    fn m1280_t008_an_input_outside_the_closure_is_dropped() {
+        // FR-005. nix emits these, so the filter is not defensive padding.
+        let c = edge_fixture("dangling_input.json");
+
+        // CONTROL: the fixture really does name something absent, or the
+        // assertion below passes for a fixture that never tested the filter.
+        let raw = &c.derivations["dangle.drv"].inputs.drvs;
+        assert!(
+            raw.contains_key("absent-from-this-closure.drv"),
+            "the fixture must declare the dangling input it exists to test"
+        );
+        assert_eq!(raw.len(), 1);
+
+        let kept: Vec<&str> = c.derivations["dangle.drv"]
+            .input_drvs(&c.derivations)
+            .collect();
+        assert!(
+            kept.is_empty(),
+            "an edge to a node not in the graph is not an edge; got {kept:?}"
+        );
+    }
+
+    #[test]
+    fn m1280_t008_a_derivation_with_no_inputs_key_yields_nothing() {
+        // The field is `#[serde(default)]`, so a closure from a nix that does
+        // not emit it must parse to an empty set rather than failing. The
+        // reader deliberately does not gate on the format version (m1278), so
+        // this is the only handling such a closure gets.
+        let c = RawClosure::parse(CLOSURE).unwrap();
+        assert_eq!(c.derivations.len(), 2, "CLOSURE declares no `inputs` at all");
+        for (key, drv) in &c.derivations {
+            assert_eq!(
+                drv.input_drvs(&c.derivations).count(),
+                0,
+                "{key} has no inputs key and must contribute no edges"
+            );
+        }
+    }
+
+    #[test]
+    fn m1280_t008_only_the_keys_are_read_and_srcs_are_ignored() {
+        // `inputs.srcs` names store paths, not derivations. A src-derived edge
+        // would point at something that is not a node in this graph.
+        let c = edge_fixture("through_fetch.json");
+        let inputs: Vec<&str> = c.derivations["pkga.drv"]
+            .input_drvs(&c.derivations)
+            .collect();
+        assert_eq!(inputs, vec!["fetch.drv"]);
     }
 
     // ---- m1279 (#1346): the unclassified-reference index ----

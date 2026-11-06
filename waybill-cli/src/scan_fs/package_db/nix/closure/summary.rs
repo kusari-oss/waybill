@@ -47,6 +47,13 @@ pub struct NixClosureSummary {
     pub distinct_cves: usize,
     /// What the reader saw but did not consult (#1348).
     pub read_outcome: super::derivation::ReadOutcome,
+    /// Dependency edges the closure contributed (milestone 1280, FR-008).
+    ///
+    /// Recorded so a closure that contributed **no** edges is distinguishable
+    /// from one that was never read. Before milestone 1280 this was always
+    /// zero and the tier emitted no edges at all, which is why every closure
+    /// component was an orphan by construction.
+    pub edges: usize,
 }
 
 impl NixClosureSummary {
@@ -64,6 +71,12 @@ impl NixClosureSummary {
             patches_without_cve: totals.without_cve,
             distinct_cves: totals.distinct_cves,
             read_outcome: closure.read_outcome.clone(),
+            // The projected, `.drv`-keyed count. Deliberately not the
+            // post-join relationship count: that depends on the final
+            // component set, which does not exist when this summary is built,
+            // and a figure that changes depending on when you ask is worse
+            // than one that is explicit about what it counts.
+            edges: closure.graph.edges.len(),
         }
     }
 
@@ -87,6 +100,7 @@ impl NixClosureSummary {
             "patches": self.patches,
             "patches-without-cve": self.patches_without_cve,
             "distinct-cves": self.distinct_cves,
+            "edges": self.edges,
         })
     }
 
@@ -186,6 +200,7 @@ mod tests {
             raw,
             roles,
             read_outcome: Default::default(),
+            graph: Default::default(),
         };
         let patched = attribute(&closure.raw);
         NixClosureSummary::build(&closure, &patched)
@@ -229,6 +244,7 @@ mod tests {
             raw,
             roles,
             read_outcome: Default::default(),
+            graph: Default::default(),
         };
         let patched = attribute(&closure.raw);
         let s = NixClosureSummary::build(&closure, &patched);

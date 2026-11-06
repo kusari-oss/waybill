@@ -206,6 +206,26 @@ pub enum OrphanReasonCode {
     /// Feature 1218 mechanism D — a node in a lockfile that no other node
     /// in that lockfile references.
     UnreferencedLockNode,
+    /// Milestone 1280 (#1346) — a nix closure member every path to which runs
+    /// through a derivation that declares a `pname` and that this scan did not
+    /// emit as a component.
+    ///
+    /// The component **is** depended upon; waybill cannot show by what. That
+    /// makes it a different fact from "nothing depends on this", and keeping
+    /// the two apart is the whole of #1346.
+    ///
+    /// **This is an inference from a measured-uniform population, not a
+    /// per-component proof**, and the distinction matters to whoever reads a
+    /// surprising one. `classify_orphans` receives components and a reachable
+    /// set, not the closure graph, so the arm below keys on "carries a C182
+    /// role and is unreachable". Every such component on both measured
+    /// closures had this cause — 5 on x86_64-linux, consumed only by
+    /// `stdenv-linux`, `patch 2.8` or `build 1.4.4`; 16 on aarch64-darwin —
+    /// which is what justifies one code rather than a family. A
+    /// counter-example would show up as a closure component unreachable for
+    /// some *other* reason, and the thing to check first is whether the
+    /// projection dropped an edge it should have kept.
+    ReachableOnlyThroughUnemittedPackage,
 }
 
 impl OrphanReasonCode {
@@ -221,6 +241,9 @@ impl OrphanReasonCode {
             Self::BuildToolchain => "build-toolchain",
             Self::ForeignBuildSystem => "foreign-build-system",
             Self::UnreferencedLockNode => "unreferenced-lock-node",
+            Self::ReachableOnlyThroughUnemittedPackage => {
+                "reachable-only-through-unemitted-package"
+            }
         }
     }
 }
@@ -238,6 +261,7 @@ pub struct OrphanReasonCounts {
     pub build_toolchain: usize,
     pub foreign_build_system: usize,
     pub unreferenced_lock_node: usize,
+    pub reachable_only_through_unemitted_package: usize,
 }
 
 impl OrphanReasonCounts {
@@ -259,6 +283,9 @@ impl OrphanReasonCounts {
             }
             OrphanReasonCode::UnreferencedLockNode => {
                 self.unreferenced_lock_node += 1
+            }
+            OrphanReasonCode::ReachableOnlyThroughUnemittedPackage => {
+                self.reachable_only_through_unemitted_package += 1
             }
         }
     }
@@ -389,7 +416,24 @@ pub fn classify_orphans(
         let already_explained = c
             .extra_annotations
             .contains_key("waybill:unresolved-reason")
-            || c.extra_annotations.contains_key("waybill:closure-role")
+            // Milestone 1280 (#1346) — narrowed. A closure role is a
+            // sufficient explanation **only when it says nothing references
+            // the member**. `unreferenced` does say that, and needs no second
+            // explanation.
+            //
+            // `artifact-input`, `build-tooling` and `both` assert the
+            // opposite: something DOES reference it. A component carrying one
+            // of those and unreachable from the root is a contradiction
+            // between two of this document's own statements, and C182 cannot
+            // be the explanation for it — it is one half of the problem.
+            // Measured on the darwin closure, that is 20 of the 25
+            // unreachable closure components (14 `build-tooling`, 6
+            // `artifact-input`); the remaining 5 are `unreferenced` and stay
+            // explained by their role, as before.
+            || c.extra_annotations
+                .get("waybill:closure-role")
+                .and_then(|v| v.as_str())
+                == Some("unreferenced")
             || c.extra_annotations
                 .get("waybill:version-absence")
                 .and_then(|v| v.as_str())
@@ -533,6 +577,25 @@ pub fn classify_orphans(
                     // between lockfile nodes, so a dangling input is a
                     // statement about the lockfile, not about the build.
                     OrphanReasonCode::UnreferencedLockNode
+                } else if c.extra_annotations.contains_key("waybill:closure-role") {
+                    // Milestone 1280 (#1346) — a nix closure member whose
+                    // every path runs through a derivation that declares a
+                    // `pname` and that this scan did not emit.
+                    //
+                    // Reached only when no earlier mechanism matched, so this
+                    // is not a catch-all wearing a closure badge: it applies
+                    // to components the closure tier produced and that the
+                    // projection could not connect.
+                    //
+                    // **An inference from a measured-uniform population.**
+                    // Every unreachable closure component on both measured
+                    // closures had this cause — 5 on x86_64-linux, consumed
+                    // only by `stdenv-linux`, `patch 2.8` or `build 1.4.4`,
+                    // and 16 on aarch64-darwin. The classifier cannot see the
+                    // closure graph from here, so it cannot prove it per
+                    // component; the enum variant's doc says so, and says
+                    // what to check if a surprising one appears.
+                    OrphanReasonCode::ReachableOnlyThroughUnemittedPackage
                 } else {
                     // Matching no mechanism, the component stays
                     // unexplained and keeps failing invariant I7 — FR-011,
@@ -746,6 +809,51 @@ mod tests {
             "the reachable copy carries nothing",
         );
         assert_eq!(counts.dead_lockfile_entry, 1);
+    }
+
+    /// T031 / milestone 1280 — a closure role is a sufficient explanation only
+    /// when it says nothing references the member.
+    #[test]
+    fn m1280_unreferenced_role_still_explains_itself() {
+        let mut c = mk("pkg:generic/x@1.0");
+        c.extra_annotations.insert(
+            "waybill:closure-role".to_string(),
+            serde_json::Value::String("unreferenced".to_string()),
+        );
+        let mut comps = vec![c];
+        let counts = classify_orphans(&mut comps, &HashSet::new());
+        assert_eq!(
+            comps[0].extra_annotations.get(ANNOTATION_KEY),
+            None,
+            "`unreferenced` already says nothing references it; a second \
+             explanation is what the m1218 guard exists to prevent"
+        );
+        assert_eq!(counts.reachable_only_through_unemitted_package, 0);
+    }
+
+    /// T032 / FR-011 — a role asserting a reference, on a component nothing
+    /// reaches, is a contradiction and gets the code.
+    #[test]
+    fn m1280_a_role_asserting_a_reference_on_an_orphan_is_explained() {
+        for role in ["artifact-input", "build-tooling", "both"] {
+            let mut c = mk("pkg:generic/x@1.0");
+            c.extra_annotations.insert(
+                "waybill:closure-role".to_string(),
+                serde_json::Value::String(role.to_string()),
+            );
+            let mut comps = vec![c];
+            let counts = classify_orphans(&mut comps, &HashSet::new());
+            assert_eq!(
+                comps[0]
+                    .extra_annotations
+                    .get(ANNOTATION_KEY)
+                    .and_then(|v| v.as_str()),
+                Some("reachable-only-through-unemitted-package"),
+                "role {role} says something depends on this while nothing \
+                 reaches it -- C182 is half the problem, not the explanation"
+            );
+            assert_eq!(counts.reachable_only_through_unemitted_package, 1);
+        }
     }
 
     /// Feature 1218 T015 — FR-004 at the unit level: the m167 codes keep

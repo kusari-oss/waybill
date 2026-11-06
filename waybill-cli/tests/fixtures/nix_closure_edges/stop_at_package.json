@@ -1,0 +1,92 @@
+{
+  "derivations": {
+    "root.drv": {
+      "name": "waybill-fixture-root-0.1",
+      "env": {
+        "pname": "waybill-fixture-root",
+        "version": "0.1",
+        "buildInputs": "/nix/store/h1-pkga"
+      },
+      "inputs": {
+        "drvs": {
+          "pkga.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h0-root"
+        }
+      }
+    },
+    "pkga.drv": {
+      "name": "waybill-fixture-pkga-1.0",
+      "env": {
+        "pname": "waybill-fixture-pkga",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {
+          "pkgmid.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-pkga"
+        }
+      }
+    },
+    "pkgmid.drv": {
+      "name": "waybill-fixture-pkgmid-2.0",
+      "env": {
+        "pname": "waybill-fixture-pkgmid",
+        "version": "2.0"
+      },
+      "inputs": {
+        "drvs": {
+          "pkgleaf.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h2-pkgmid"
+        }
+      }
+    },
+    "pkgleaf.drv": {
+      "name": "waybill-fixture-pkgleaf-3.0",
+      "env": {
+        "pname": "waybill-fixture-pkgleaf",
+        "version": "3.0",
+        "patches": "/nix/store/hp-waybill-fixture-tidy.patch"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h3-pkgleaf"
+        }
+      }
+    }
+  },
+  "version": 4
+}

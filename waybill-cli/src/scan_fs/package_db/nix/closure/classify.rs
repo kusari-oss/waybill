@@ -474,6 +474,7 @@ mod tests {
             raw: closure,
             roles,
             read_outcome: Default::default(),
+            graph: Default::default(),
         });
         eprintln!("emitted components after variant merge: {}", emitted.len());
         assert!(

@@ -129,6 +129,37 @@ issue = 1208
 # is a consequence of #1272 and an argument for #1284.
 # ---------------------------------------------------------------------
 
+[[declaration]]
+invariant = "I3"
+target = "nix-closure-moat"
+kind = "unmarked-non-runtime-reachable"
+count_at_declaration = 1
+reason = """
+`hspec-meta` is reachable only through nix build-graph edges, which milestone
+1280 emits from `inputs.drvs` and which scope propagation deliberately does
+NOT traverse (`resolve/scope_propagation.rs`, `INFERRED_EDGE_DATA_TYPES`).
+Measured: traversing them reclassified 8 components, and seven test libraries
+lost CycloneDX `scope: "excluded"` -- a claim that was correct for a test
+library, because nixpkgs' Haskell builder passes test dependencies through
+`buildInputs`.
+
+So propagation is right not to mark it, and I3 is right to notice it is
+unmarked. **The gap is that the check cannot apply propagation's own rule**:
+I3 reads the emitted document's `dependsOn` array, and neither CycloneDX
+`dependencies[]` nor the SPDX relationship arrays carry an edge's provenance,
+so no invariant over emitted output can distinguish a build-graph edge from a
+declared one.
+
+Not declarable away by mirroring a filter, as I7's `is_explained` was. Closing
+it needs either an edge-kind carrier in the output or a decision that
+propagation should traverse these edges after all -- each a change with its own
+reasoning, and neither belonging to the milestone that emits the graph.
+
+C184's `edges` key is the consumer-visible disclosure that some of the
+document's edges came from the build graph, and the count that makes this
+declaration auditable.
+"""
+
 # ---------------------------------------------------------------------
 # I5 — a `complete` verdict over a document with unreachable
 # components. #1207.

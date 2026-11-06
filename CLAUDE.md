@@ -447,6 +447,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-05
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No + existing only — `serde`/`serde_json` (both attribute (1278-closure-structured-attrs)
 - N/A — all state in-process per scan, as every closure milestone (1278-closure-structured-attrs)
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). + existing only — `serde`/`serde_json` (annotation (1279-closure-dep-field-coverage)
+- Rust stable, workspace toolchain pinned by + existing only — `serde_json` (the `inputs.drvs` map (1280-nix-closure-edges)
+- N/A — the projection is an in-process transform over the closure (1280-nix-closure-edges)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -669,9 +671,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1280-nix-closure-edges: Added Rust stable, workspace toolchain pinned by + existing only — `serde_json` (the `inputs.drvs` map
 - 1279-closure-dep-field-coverage: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). + existing only — `serde`/`serde_json` (annotation
 - 1278-closure-structured-attrs: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No + existing only — `serde`/`serde_json` (both attribute
-- 1277-closure-role-scope: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values, document construction), `std::collections::{BTreeSet, HashSet}`, `tracing` (one INFO summary). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

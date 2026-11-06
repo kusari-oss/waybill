@@ -1,0 +1,76 @@
+{
+  "derivations": {
+    "root.drv": {
+      "name": "waybill-fixture-root-0.1",
+      "env": {
+        "pname": "waybill-fixture-root",
+        "version": "0.1",
+        "buildInputs": "/nix/store/h1-cyca"
+      },
+      "inputs": {
+        "drvs": {
+          "cyca.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h0-root"
+        }
+      }
+    },
+    "cyca.drv": {
+      "name": "waybill-fixture-cyca-1.0",
+      "env": {
+        "pname": "waybill-fixture-cyca",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {
+          "cycb.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-cyca"
+        }
+      }
+    },
+    "cycb.drv": {
+      "name": "waybill-fixture-cycb-2.0",
+      "env": {
+        "pname": "waybill-fixture-cycb",
+        "version": "2.0",
+        "nativeBuildInputs": "/nix/store/h1-cyca"
+      },
+      "inputs": {
+        "drvs": {
+          "cyca.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h2-cycb"
+        }
+      }
+    }
+  },
+  "version": 4
+}

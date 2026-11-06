@@ -4798,6 +4798,41 @@ pub async fn execute(
                 outcomes = %identity.to_document_value(),
                 "nix-closure: identity pass"
             );
+
+            // Milestone 1280 (#1346) — the closure's dependency edges.
+            //
+            // HERE, after the identity pass, because the identity -> PURL join
+            // reads whatever PURL the document finally gave each component and
+            // that pass rewrites 104 of 381 of them. It is NOT because an
+            // earlier placement would dangle: `apply_renames` moves
+            // relationship endpoints alongside identities (#980/#981), which
+            // this milestone's research R1 got wrong and has retracted.
+            //
+            // Before this, the tier emitted components and no dependency edges
+            // at all, so every closure component was an orphan by
+            // construction -- measured, 352 of 406 on the pinned golden.
+            let (edges, unanchored) = scan_fs::package_db::nix::closure::graph::relationships(
+                &classified.graph,
+                &classified.raw,
+                &components,
+            );
+            tracing::info!(
+                edges = edges.len(),
+                unanchored_root_edges = unanchored,
+                "nix-closure: contributing dependency edges"
+            );
+            if unanchored > 0 {
+                // The closure root resolved to no component, so its direct
+                // dependencies lost their anchor. Per-emitter anchoring onto
+                // `target_ref` is the proper fix and cannot be done from here
+                // -- see `closure::graph::relationships`.
+                tracing::warn!(
+                    unanchored,
+                    "nix-closure: the closure root is not a component, so its \
+                     direct dependencies are not anchored to the subject"
+                );
+            }
+            relationships.extend(edges);
         }
         None => {}
     }
