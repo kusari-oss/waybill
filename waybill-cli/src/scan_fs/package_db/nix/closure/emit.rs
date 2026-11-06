@@ -138,6 +138,14 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         (String, String),
         std::collections::BTreeSet<String>,
     > = std::collections::BTreeMap::new();
+    // Milestone 1281 — unioned over build variants for the same reason the
+    // role and C205 are: the component a consumer sees is one identity, while
+    // the license index is keyed by `.drv` path. Order is first-seen rather
+    // than sorted, because FR-005 carries nixpkgs' stated order.
+    let mut licenses_for: std::collections::BTreeMap<
+        (String, String),
+        Vec<waybill_common::types::license::SpdxExpression>,
+    > = std::collections::BTreeMap::new();
     for (key, drv) in &closure.raw.derivations {
         let Some(role) = closure.roles.get(key).copied() else {
             continue;
@@ -205,6 +213,16 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
             extra_annotations: Default::default(),
             binary_role: None,
         };
+        if let Some(found) = closure.licenses.get(key) {
+            let slot = licenses_for
+                .entry((name.to_string(), version.to_string()))
+                .or_default();
+            for expr in found {
+                if !slot.iter().any(|e| e.as_str() == expr.as_str()) {
+                    slot.push(expr.clone());
+                }
+            }
+        }
         if let Some(attributes) = closure.read_outcome.unclassified_refs.get(key) {
             unclassified
                 .entry((name.to_string(), version.to_string()))
@@ -231,8 +249,16 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
             .collect();
 
     merged
-        .into_values()
-        .map(|(role, mut component)| {
+        .into_iter()
+        .map(|(identity, (role, mut component))| {
+            // FR-001 / FR-009 — the licenses land in the component's own
+            // `licenses` field, which every emitter already carries to its
+            // format's native license construct. `concluded_licenses` stays
+            // empty: a nixpkgs `meta.license` is what the packager declares,
+            // not a conclusion drawn from inspecting the artifact.
+            if let Some(found) = licenses_for.remove(&identity) {
+                component.licenses = found;
+            }
             component.extra_annotations.insert(
                 ANN_CLOSURE_ROLE.to_string(),
                 serde_json::Value::String(role.wire().to_string()),
@@ -307,6 +333,9 @@ mod tests {
             roles,
             read_outcome: Default::default(),
             graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
         })
     }
 
@@ -370,6 +399,9 @@ mod tests {
             roles,
             read_outcome: Default::default(),
             graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
         });
         let dups: Vec<_> = c.iter().filter(|x| x.name == "dup").collect();
         assert_eq!(dups.len(), 1, "two variants, one component");
@@ -421,6 +453,9 @@ mod tests {
             roles,
             read_outcome: Default::default(),
             graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
         })
         .iter()
         .map(|c| c.name.clone())

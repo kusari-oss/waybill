@@ -475,6 +475,9 @@ mod tests {
             roles,
             read_outcome: Default::default(),
             graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
         });
         eprintln!("emitted components after variant merge: {}", emitted.len());
         assert!(

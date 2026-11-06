@@ -447,6 +447,9 @@ mod t009_agreement_probe {
             roles,
             read_outcome: Default::default(),
             graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
         };
         let emitted = crate::scan_fs::package_db::nix::closure::emit::components(&classified);
 

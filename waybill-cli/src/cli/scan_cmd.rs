@@ -4523,7 +4523,7 @@ pub async fn execute(
                     cfg.budget,
                 );
                 Some(match system {
-                    Ok(sys) => closure::resolve(&root_path, &sys, &cfg).inspect(|c| {
+                    Ok(sys) => closure::resolve(&root_path, &sys, &cfg).map(|mut c| {
                         tracing::info!(
                             attribute = %c.attribute,
                             derivations = c.raw.derivations.len(),
@@ -4531,6 +4531,25 @@ pub async fn execute(
                             elapsed_ms = started.elapsed().as_millis(),
                             "nix-closure: classified"
                         );
+                        // Milestone 1281 (#1346) — declared licenses for the
+                        // members just classified.
+                        //
+                        // Here rather than inside `resolve` because it needs
+                        // the revision `flake.lock` pins, which is a property
+                        // of the repository and not of the closure. A missing
+                        // or unparseable lockfile is not an error: the closure
+                        // is emitted unlicensed, exactly as before this
+                        // milestone (spec FR-006).
+                        match nixpkgs_revision_for_licenses(&root_path) {
+                            Some(rev) => {
+                                closure::attach_licenses(&mut c, &rev, &sys, cfg.budget);
+                            }
+                            None => tracing::info!(
+                                "nix-closure-licenses: no pinned nixpkgs revision in flake.lock; \
+                                 emitting the closure without declared licenses"
+                            ),
+                        }
+                        c
                     }),
                     Err(reason) => Err(reason),
                 })
@@ -6188,6 +6207,19 @@ fn merge_closure_components(
     for c in added {
         match index.get(&(c.name.clone(), c.version.clone())) {
             Some(&i) => {
+                // Milestone 1281 (#1346), FR-004 — reconcile declared
+                // licenses without replacing an existing declaration.
+                //
+                // Fill only where the existing component has none. A reader
+                // that knew the ecosystem and found a license is better
+                // evidence than nixpkgs' packaging metadata, so it wins; but
+                // where it found nothing, dropping the closure's declaration
+                // would silently discard the only license available. Before
+                // this, every merged member lost its license outright,
+                // because the merge carried annotations and nothing else.
+                if components[i].licenses.is_empty() && !c.licenses.is_empty() {
+                    components[i].licenses = c.licenses;
+                }
                 for (k, v) in c.extra_annotations {
                     // The existing component's own annotations win: it was
                     // produced by a reader that knew the ecosystem.
@@ -8085,6 +8117,45 @@ mod tests {
         LOCK.lock().unwrap_or_else(|e| e.into_inner())
     }
 
+    /// Milestone 1281 (#1346), FR-004 — a closure license fills a gap but
+    /// never replaces a reader's own declaration.
+    ///
+    /// Before this, the merge carried `extra_annotations` and nothing else,
+    /// so every member that matched a manifest component lost its license
+    /// silently — the closure contributed it and the merge dropped it.
+    #[test]
+    fn m1281_closure_licenses_fill_a_gap_but_never_replace_one() {
+        use waybill_common::types::license::SpdxExpression;
+        let mit = SpdxExpression::try_canonical("MIT").unwrap();
+        let apache = SpdxExpression::try_canonical("Apache-2.0").unwrap();
+
+        // The existing component already knows its license: it wins.
+        let mut existing = vec![make_component("pkg:generic/held@1.0")];
+        existing[0].licenses = vec![apache.clone()];
+        let mut from_closure = make_component("pkg:generic/held@1.0");
+        from_closure.licenses = vec![mit.clone()];
+        let (merged, appended) = merge_closure_components(&mut existing, vec![from_closure]);
+        assert_eq!((merged, appended), (1, 0));
+        assert_eq!(
+            existing[0].licenses.iter().map(|e| e.as_str()).collect::<Vec<_>>(),
+            vec!["Apache-2.0"],
+            "a reader that knew the ecosystem must not be overruled"
+        );
+
+        // The existing component has none: the closure's declaration is the
+        // only evidence there is, and must survive the merge.
+        let mut bare = vec![make_component("pkg:generic/bare@1.0")];
+        assert!(bare[0].licenses.is_empty());
+        let mut from_closure = make_component("pkg:generic/bare@1.0");
+        from_closure.licenses = vec![mit.clone()];
+        merge_closure_components(&mut bare, vec![from_closure]);
+        assert_eq!(
+            bare[0].licenses.iter().map(|e| e.as_str()).collect::<Vec<_>>(),
+            vec!["MIT"],
+            "dropping it here would discard the only license available"
+        );
+    }
+
     fn make_alias(lhs: &str, rhs: &str) -> PurlAlias {
         PurlAlias::try_new(lhs, rhs).unwrap()
     }
@@ -8851,4 +8922,24 @@ mod tests {
         );
         assert!(components.is_empty());
     }
+}
+
+/// The nixpkgs revision `flake.lock` pins, for the milestone-1281 license
+/// lookup.
+///
+/// Reads the lockfile and nothing else — deliberately not
+/// `load_package_set`, which also retrieves the Haskell package set and would
+/// turn a license lookup into a fetch. Every failure is `None`: a repository
+/// without a pinned nixpkgs is a repository whose closure is emitted
+/// unlicensed, which is the pre-milestone-1281 behaviour rather than an error.
+fn nixpkgs_revision_for_licenses(root: &std::path::Path) -> Option<String> {
+    use crate::scan_fs::package_db::nix;
+    let lock = root.join("flake.lock");
+    if !lock.exists() {
+        return None;
+    }
+    let doc = nix::lockfile::parse_flake_lock(&lock).ok()?;
+    nix::haskell_packages::pinned_nixpkgs(&doc)
+        .ok()
+        .map(|p| p.revision)
 }

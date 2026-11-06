@@ -106,3 +106,30 @@ Note the nix gotcha baked into the probe: an attrset containing a key named
 `outPath` is string-coerced by `nix eval --json`, so the probe names it `out`.
 The first version returned three bare store paths and no licenses, which looks
 exactly like "the data is not there".
+
+## Implementation-time: the real store-path join (task T045)
+
+Research R4's 70%/85% figures join by name+version parsed from the derivation
+basename. FR-002 mandates the **store path**, so those numbers bound the
+choice of shape and must not be quoted as the result. Re-measured against the
+same pinned closure with the exact join the implementation performs:
+
+| | x86_64-linux, name-scoped shape |
+| --- | --- |
+| named closure nodes | 604 |
+| joined by exact store path | **228** (37.7%) |
+| of those, carrying a license | **227** (37.6% of named) |
+| store paths where roots disagreed (FR-015) | **0** |
+
+The zero in the last row is the measurement FR-015 was written against. Roots
+agreeing is what makes withholding-on-disagreement a safety net rather than a
+routine path, and it is asserted rather than assumed — a disagreement, if one
+ever appears, costs that member its license instead of giving it an arbitrary
+one.
+
+**Not measured here**: SC-001 and SC-009 are stated for **aarch64-darwin**,
+where the 96-component gap was counted, and this closure is x86_64-linux —
+a different closure, not a scaling of the same one. Quoting this 227 against
+a darwin-measured 96 would be the cross-system extrapolation milestone 1280
+made three times. Closing SC-001/SC-009 needs a darwin closure capture and a
+re-count of the gap under the store-path join on that system.

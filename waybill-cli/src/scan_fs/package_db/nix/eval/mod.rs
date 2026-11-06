@@ -28,6 +28,7 @@ pub(crate) mod preflight;
 pub(crate) mod reason;
 pub(crate) mod stderr;
 pub(crate) mod result;
+pub(crate) mod licenses;
 
 use std::collections::BTreeMap;
 use std::time::Duration;

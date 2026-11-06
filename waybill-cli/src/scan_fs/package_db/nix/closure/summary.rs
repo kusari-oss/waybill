@@ -54,6 +54,11 @@ pub struct NixClosureSummary {
     /// zero and the tier emitted no edges at all, which is why every closure
     /// component was an orphan by construction.
     pub edges: usize,
+    /// Milestone 1281 (#1346) — how many members were offered a declared
+    /// license and how many received one.
+    pub license_coverage: super::licenses::LicenseCoverage,
+    /// Why the license lookup produced nothing, when it failed (FR-006).
+    pub licenses_degraded: Option<String>,
 }
 
 impl NixClosureSummary {
@@ -77,6 +82,8 @@ impl NixClosureSummary {
             // and a figure that changes depending on when you ask is worse
             // than one that is explicit about what it counts.
             edges: closure.graph.edges.len(),
+            license_coverage: closure.license_coverage.clone(),
+            licenses_degraded: closure.degraded_licenses.as_ref().map(|r| r.wire().to_string()),
         }
     }
 
@@ -101,6 +108,20 @@ impl NixClosureSummary {
             "patches-without-cve": self.patches_without_cve,
             "distinct-cves": self.distinct_cves,
             "edges": self.edges,
+            // Milestone 1281 (#1346) — FR-008. Carried even when zero, and
+            // deliberately: an absent key would make a closure whose members
+            // declare no licenses indistinguishable from a lookup that never
+            // ran, which is the one distinction this record exists to make.
+            // Coverage cannot reach 100% either -- a `.drv` hash encodes the
+            // whole transitive input closure, so the same package built in a
+            // different context is a different store path -- so the shortfall
+            // is permanent and has to be legible rather than inferred.
+            "licenses": {
+                "wanted": self.license_coverage.wanted,
+                "received": self.license_coverage.received,
+                "withheld-ambiguous": self.license_coverage.withheld_ambiguous,
+                "degraded": self.licenses_degraded,
+            },
         })
     }
 
@@ -201,6 +222,9 @@ mod tests {
             roles,
             read_outcome: Default::default(),
             graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
         };
         let patched = attribute(&closure.raw);
         NixClosureSummary::build(&closure, &patched)
@@ -245,6 +269,9 @@ mod tests {
             roles,
             read_outcome: Default::default(),
             graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
         };
         let patched = attribute(&closure.raw);
         let s = NixClosureSummary::build(&closure, &patched);
