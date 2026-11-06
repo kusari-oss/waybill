@@ -214,6 +214,83 @@ fn has_versioned_python_prefix(name: &str) -> bool {
     !digits.is_empty() && rest[digits.len()..].starts_with('-')
 }
 
+/// What the resolution path answered about one coordinate.
+///
+/// A deliberate mirror of `enrich::depsdev_source::LookupResult`, and the
+/// reason this module imports nothing from `enrich`: `scan_fs` depends on no
+/// enrichment type anywhere in the tree, and this feature is not the right
+/// place to be the first. The caller's translation is a four-arm exhaustive
+/// match, so a state added to `LookupResult` breaks the build rather than
+/// falling into a default that would quietly read as "could not check".
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum LookupAnswer {
+    /// The registry holds a package at this name and version.
+    Found,
+    /// The registry answered and holds no such package.
+    Absent,
+    /// A transport failure. Nothing was learnt about the package.
+    Failed,
+    /// Offline, and no cache held it.
+    Unqueried,
+}
+
+impl ConfirmationOutcome {
+    /// FR-003 lives here.
+    ///
+    /// "The published ecosystem has no such package at this version" is a
+    /// **decline**, not a failure. The distinction is the whole requirement:
+    /// a decline is a settled answer about the package and leaves today's
+    /// identifier in place deliberately, while a failure leaves it in place
+    /// because nothing was learnt. They produce the same identifier and must
+    /// not produce the same record, or a reader cannot tell a registry that
+    /// said "no" from one that never answered.
+    pub(crate) fn from_answer(answer: LookupAnswer) -> Self {
+        match answer {
+            LookupAnswer::Found => Self::Confirmed,
+            LookupAnswer::Absent => Self::Declined,
+            LookupAnswer::Failed => Self::Unchecked(UncheckedReason::Unreachable),
+            LookupAnswer::Unqueried => Self::Unchecked(UncheckedReason::Offline),
+        }
+    }
+}
+
+impl ConfirmationRecord {
+    /// Build the document-scope record from the settled outcomes.
+    ///
+    /// The dominant unchecked reason wins when several occur, because C208
+    /// carries one. Ordering is by how much it tells an operator: a disabled
+    /// pass is a configuration choice they made, a throttle is transient, and
+    /// the rest are degrees of "we could not ask".
+    pub(crate) fn tally(outcomes: &[ConfirmationOutcome]) -> Self {
+        let mut rec = Self {
+            candidates: outcomes.len(),
+            ..Self::default()
+        };
+        let mut reasons: Vec<UncheckedReason> = Vec::new();
+        for o in outcomes {
+            match o {
+                ConfirmationOutcome::Confirmed => rec.confirmed += 1,
+                ConfirmationOutcome::Declined => rec.declined += 1,
+                ConfirmationOutcome::Unchecked(r) => {
+                    rec.unchecked += 1;
+                    reasons.push(*r);
+                }
+            }
+        }
+        rec.reason = [
+            UncheckedReason::Disabled,
+            UncheckedReason::Offline,
+            UncheckedReason::Throttled,
+            UncheckedReason::Unreachable,
+            UncheckedReason::Collision,
+            UncheckedReason::Unkeyable,
+        ]
+        .into_iter()
+        .find(|r| reasons.contains(r));
+        rec
+    }
+}
+
 /// Is this derivation a PyPI candidate?
 ///
 /// The whole rule in one place, so that `waybill debug closure-dump` can

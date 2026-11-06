@@ -183,6 +183,39 @@ exercises the difference.
 
 ---
 
+## SC-007 — the mutation check
+
+*"A test that cannot fail proves nothing."* Two mutants, each run against the
+five tests in `scan_cmd::closure_ecosystem_identity_tests`:
+
+| mutant | what it breaks | result |
+| --- | --- | --- |
+| `LookupAnswer::Found => Declined` | confirmation never succeeds | **1 of 5 red** — the US1 test |
+| `declared_pname` reads `env` only | the `structuredAttrs` carrier | **4 of 5 red** |
+
+The first is correctly narrow: three of the five tests assert that nothing
+moves, and a mutant that confirms nothing cannot disturb them. The second is
+broad because the carrier is load-bearing everywhere — which is the point, and
+is why the fixture's `waybill-fixture-gamma` declares its `pname` only there.
+
+Reverted, all five pass; full bin suite 4,653 passed, 0 failed.
+
+### One test was wrong before the code was
+
+The FR-012 control first started a `MockServer`, mounted nothing and dropped
+it before the call, expecting a transport failure. It measured three
+**declines**, because the server was still answering and an unmounted path is
+a 404 — the test would have asserted the opposite of its own purpose. A port
+nothing listens on produces the failure it was after. A probe can lie about
+the system; uniform results across cases that should differ mean the harness.
+
+Likewise the ordering test's control fired on its first run: the edge set was
+empty, because the fixture's root is `unreferenced` and so never emitted,
+leaving its edges unanchored. The fixture gained an intermediate library that
+*is* emitted, rather than the assertion being relaxed.
+
+---
+
 ## Open — not yet measured
 
 | item | task | why not yet |
