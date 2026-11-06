@@ -234,15 +234,40 @@ components of which 781 are generic; this one has 1,487 of which 1,326 are.
 They are different closures of the same project on different systems, and a
 count from one is wrong in membership against the other.
 
-**Expected change: exactly one document-scope addition per format**, and no
-component change at all. The corpus harness passes `--no-deps-dev`
-(`harness.rs:218`), so the pass records `reason: "disabled"` and confirms
-nothing. The candidate count for *this* closure is not predicted here — it
-would require running the rule against the x86_64-linux closure, which has not
-been captured. The refresh run will report it.
+**Confirmed by the refresh run** (`public-corpus.yml`, run 42285491018): the
+moat goldens change by **18 insertions and 0 deletions** across the three
+formats, every one of them the added C208 record. No component changed, none
+was added or removed.
 
-The other 16 targets never run a closure, so C208 is absent from them and
-their goldens are untouched (SC-008).
+```json
+{"candidates":75,"confirmed":0,"declined":0,"unchecked":75,"reason":"disabled",
+ "ecosystem":"pypi","schema":"waybill-closure-ecosystem-identity/v1"}
+```
+
+**Note `candidates: 75` here against 74 on aarch64-darwin.** Same project,
+same pinned nixpkgs, different system and therefore a different closure —
+which is the hazard this file opens with, observed rather than argued.
+
+**A `regen_goldens=true` run proves nothing by passing.** It regenerates the
+goldens it then compares against, so its green is about the run, not about the
+committed files. The evidence is the artifact: 51 golden files enumerated, 45
+byte-identical, 6 differing.
+
+**SC-008, measured**: of the 51 committed golden files, **45 are
+byte-identical**. The 6 that differ are two targets:
+
+| target | files | change |
+| --- | --- | --- |
+| `nix-closure-moat` | 3 | the C208 record, 18 insertions, 0 deletions |
+| `image-postgres16` | 3 | **294 lines, and not this feature's** |
+
+`image-postgres16` drifts on layer digests — `sha256:3ce18cb3…` →
+`sha256:38b0c486…` — in a **digest-pinned** image whose golden has not been
+touched since 2026-10-27, well before any closure work. It was already failing
+the scheduled run on `main`. Its regenerated goldens are **deliberately not
+committed here**: absorbing them would hide an unrelated upstream change
+inside this feature's diff. It needs its own investigation, because a
+digest-pinned image's layers should not move at all.
 
 ---
 
