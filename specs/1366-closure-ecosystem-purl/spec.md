@@ -52,9 +52,23 @@ deficit.
   resolves coordinates in the target ecosystem, already normalises names to
   the ecosystem's own form, and already caches its results on disk.
 
-**What this buys.** `librt` has no published project of that name and
-`roman-numerals` is published under a different one; both fail to resolve and
-are declined, which is US2 made true by construction rather than hoped for.
+**What this buys — RETRACTED, see the measurement.** This section originally
+read: *"`librt` has no published project of that name and `roman-numerals` is
+published under a different one; both fail to resolve and are declined, which
+is US2 made true by construction rather than hoped for."* Measured against
+deps.dev on 2026-11-06, **both resolve**, and all 75 candidates confirm —
+`librt@0.9.0` is mypyc's runtime and `roman-numerals@4.1.0` is a real project,
+so both are correct matches rather than false positives. The claim was
+inferred, not measured; `librt@1.0.1`, a version this closure does not
+contain, does 404, which is how a version-shaped guess produces a confident
+wrong answer.
+
+What confirmation actually buys on the measured population is therefore
+**nothing**: it declines 0 of 75. It remains correct as a requirement — a
+different closure can hold a genuinely local name — but the benefit that
+priced the network dependency below is not present here, and US2's mechanism
+has no witness on this closure. See
+`measurements/README.md` and `measurements/depsdev-confirmation-probe.py`.
 
 **What it costs, stated plainly.** The closure tier has made no network call
 until now. Under this answer it inherits the enrichment path's: an offline
@@ -65,8 +79,10 @@ hermetic, and it is the reason this question was not defaulted.
 **What it does not establish.** Resolution confirms that a project of that
 name exists at that version — necessary, and not sufficient to prove *this
 derivation* is that project. For a name that is both a published project and a
-plausible local one (`build`, `toml`), existence-confirmation accepts it. The
-residual risk is recorded in Assumptions rather than claimed away.
+plausible local one (`build`, `toml`), existence-confirmation accepts it.
+Since the measurement above shows confirmation declining **nothing** on this
+closure, this residual risk is not a corner case but the whole of the risk:
+the feature's accuracy rests on the candidate rule, not on confirmation.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -107,11 +123,16 @@ other two stories.
 
 ### User Story 2 - An unconfirmed coordinate is never invented (Priority: P1)
 
-A name that looks like a published package is not necessarily one. The
-closure records `librt`, for which no Python project of that name exists, and
-`roman-numerals`, whose project is published under a different name. If the
-feature emits an ecosystem identifier for either, it has asserted a coordinate
-that belongs to someone else — or to nobody.
+A name that looks like a published package is not necessarily one. If the
+feature emits an ecosystem identifier for a name whose project does not exist,
+or exists as something else, it has asserted a coordinate that belongs to
+someone else — or to nobody.
+
+> **No candidate on the pinned closure demonstrates this.** `librt` and
+> `roman-numerals` were cited here as examples until they were measured; both
+> resolve, and confirmation declines 0 of 75 (`measurements/README.md`). The
+> story stays — it states the property the feature must not violate — but it is
+> verified against synthetic fixtures, not against this closure.
 
 **Why this priority**: Equal to US1, because a wrong-but-well-formed
 identifier is **worse than the generic one it replaced**. A generic identifier
@@ -231,9 +252,11 @@ component carries the disclosure, and that components left generic do not.
 
 - **SC-001**: On the pinned closure, the number of components carrying an
   ecosystem-qualified identifier rises from **0** to the number confirmed, and
-  that number is **measured and recorded**, not predicted. 75 candidates are
-  available; what fraction survives confirmation is unmeasured until FR-003 is
-  settled, and no criterion here asserts it.
+  that number is **measured and recorded from a waybill run**, not predicted.
+  A direct probe of deps.dev on 2026-11-06 confirmed **75 of 75** candidates
+  (`measurements/README.md`); that is the figure the implementation is
+  expected to reproduce, and a run that produces a different one is a finding
+  rather than a pass.
 - **SC-002**: **Zero** components carry an ecosystem identifier that
   confirmation did not support.
 - **SC-003**: The 539 closure members are **byte-identical** before and after.
@@ -283,9 +306,9 @@ component carries the disclosure, and that components left generic do not.
 - **Confirmation establishes existence, not derivation identity.** Resolving
   `<name>@<version>` in the target ecosystem proves a published package by
   that name and version exists. It does not prove the closure derivation is
-  that package. The two known bad candidates fail this check, so it is
-  effective on the measured population — but a name that is both a published
-  project and a plausible local one would pass. FR-007's disclosure exists so
+  that package. **Measured 2026-11-06: it declines 0 of 75 candidates**, so on
+  this closure it is a filter that filters nothing; the two candidates
+  previously named as failing it both resolve. FR-007's disclosure exists so
   a consumer can see the identity was derived on this basis rather than
   recorded, and no requirement here claims more than existence.
 - **Today's identifier is the floor.** Every path that does not produce a
@@ -307,3 +330,6 @@ Every count above was measured on 2026-11-06 and is reproducible:
   candidate rule and its counts.
 - `waybill debug closure-dump --closure-json <file>` — per-derivation reality
   from the reader's own functions, rather than a model of it.
+- `specs/1366-closure-ecosystem-purl/measurements/` — the confirmation probe,
+  its two negative controls, and the retraction of the `librt` /
+  `roman-numerals` claim this spec was originally written on.
