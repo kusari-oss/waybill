@@ -51,10 +51,6 @@ use super::ClassifiedClosure;
 /// The per-component disclosure that an identifier was derived (C207).
 pub(crate) const ANN_ECOSYSTEM_IDENTITY: &str = "waybill:closure-ecosystem-identity";
 
-/// The document-scope record of what the pass did (C208).
-pub(crate) const ANN_ECOSYSTEM_IDENTITY_OUTCOME: &str =
-    "waybill:closure-ecosystem-identity-outcome";
-
 /// The schema tag carried by [`ConfirmationRecord`].
 pub(crate) const RECORD_SCHEMA: &str = "waybill-closure-ecosystem-identity/v1";
 

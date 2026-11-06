@@ -5476,6 +5476,14 @@ pub async fn execute(
         _ => None,
     };
     let nix_closure_degraded: Option<&str> = nix_closure_degraded_json.as_deref();
+    // C208 (m1366, #1365) — rendered beside C190 because the two answer
+    // adjacent questions about the same tier: C190 says the closure was not
+    // taken, C208 says what the ecosystem identity pass did with the one that
+    // was.
+    let closure_ecosystem_identity_json: Option<String> =
+        closure_ecosystem_identity.as_ref().map(|r| r.wire());
+    let closure_ecosystem_identity_value: Option<&str> =
+        closure_ecosystem_identity_json.as_deref();
     let nix_eval_degraded: Option<&str> = nixpkgs_haskell_summary
         .as_ref()
         .and_then(|s| s.nix_eval.as_ref())
@@ -5491,6 +5499,7 @@ pub async fn execute(
         nix_eval_system,
         nix_eval_degraded,
         nix_closure_degraded,
+        closure_ecosystem_identity: closure_ecosystem_identity_value,
         // C192 (m1067): answers served from the disk cache count as online.
         deps_dev_online: enrich_cfg.deps_dev && !offline,
         nixpkgs_haskell_degraded,
@@ -6245,7 +6254,7 @@ impl AdvisoryContext {
 /// left all three green and every scan taking the wrong path.
 async fn run_closure_ecosystem_identity(
     classified: &scan_fs::package_db::nix::closure::ClassifiedClosure,
-    components: &mut Vec<waybill_common::resolution::ResolvedComponent>,
+    components: &mut [waybill_common::resolution::ResolvedComponent],
     appended_identities: &std::collections::HashSet<(String, String)>,
     confirmation: Option<&crate::enrich::depsdev_source::DepsDevSource>,
 ) -> scan_fs::package_db::nix::closure::ecosystem_identity::ConfirmationRecord {

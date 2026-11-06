@@ -558,6 +558,54 @@ versionless and carrying the same
 was read from another package's dependency list, so it genuinely exists;
 omitting it would leave a hole in the graph rather than an honest gap.
 
+#### Ecosystem identity for closure components (`pkg:pypi`)
+
+Since milestone 1366 (#1365), a closure component that is a **published PyPI
+package** can carry `pkg:pypi/<name>@<version>` instead of `pkg:generic/…`.
+The difference matters for exactly one reason: `pkg:generic` names no
+ecosystem, so no vulnerability feed can match it. Measured on a pinned
+closure, 781 of 942 components were generic and therefore unanswerable to a
+"is this build affected by CVE-X" query.
+
+A candidate is a derivation whose `name` carries a **versioned** interpreter
+prefix (`python3.13-urllib3`) while its `pname` carries the bare project name.
+The versioned part of that rule is load-bearing: a bare `python-` prefix
+matches nixpkgs setup hooks, which are build machinery rather than packages.
+
+**What the identifier claims, precisely.** waybill confirms through the same
+deps.dev resolution path the enrichment pass uses that a published package
+exists at that name and version, and emits the ecosystem identifier only if it
+does. That establishes **existence**, not that this derivation *is* that
+project. For a name that is both a published project and a plausible local
+one, existence-confirmation accepts it. Every re-identified component
+therefore discloses that its identity was derived and on what evidence —
+natively in CycloneDX `evidence.identity[]`, and as the
+`waybill:closure-ecosystem-identity` annotation in SPDX 2.3 and SPDX 3 — so a
+consumer can weigh the claim rather than having to infer it from the
+identifier's shape.
+
+**Three populations are deliberately left generic**, and changing them would
+be a regression:
+
+| population | measured | why generic is right |
+| --- | --- | --- |
+| closure members — patch files, source tarballs, build fragments | 539 | they are not published packages in any ecosystem |
+| C and system packages (`openssl`, `curl`, `zlib`) | ~150 | no PURL ecosystem exists for them; the right carrier is a CPE |
+| build hooks, compilers, interpreters | 16 | build machinery |
+
+**Confirmation needs the network, and declines to guess without it.** Under
+`--no-deps-dev`, `--no-deps-dev-license` or `--offline`, nothing is confirmed
+and every component keeps the identifier it has today. That is not a silent
+fallback: the document-scope `waybill:closure-ecosystem-identity-outcome`
+record names how many candidates were found, confirmed, declined and left
+unchecked, and why — so a closure with no Python packages is distinguishable
+from a confirmation step that never ran.
+
+```bash
+waybill sbom scan --path . --nix-closure                 # confirmation on
+waybill sbom scan --path . --nix-closure --no-deps-dev   # candidates recorded, none confirmed
+```
+
 ### 8. Contributor guidance (implementing design-tier in a new reader)
 
 Contributors implementing a new ecosystem reader should follow the

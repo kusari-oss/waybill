@@ -27,10 +27,10 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 > Per CLAUDE.md: *"any number in a spec, plan, contract or success criterion that describes external behaviour must be traceable to an observation."* Phase 1 produces those observations.
 
-- [ ] T001 Create `specs/1366-closure-ecosystem-purl/measurements/` and add a `README.md` recording the host (aarch64-darwin), the pinned nixpkgs revision (`a799d3e3`), the moat commit (`d069055`), and the explicit warning that these figures are **not** comparable to the x86_64-linux corpus goldens
-- [ ] T002 Capture the pinned closure once to the session scratchpad via `nix derivation show --recursive <moat>#default`, and record its derivation count in `measurements/README.md` (expected 1,275 — if it differs, stop and reconcile before continuing)
-- [ ] T003 [P] **Settle research R8 empirically.** Extend `specs/1276-boot-library-scope/measurements/pypi-identity-probe.py` to group candidate names by their PEP 503 normalised form and report any group of size > 1; run it against T002's closure and record the result in `measurements/README.md`. A non-empty result makes validation rule V5 load-bearing rather than defensive
-- [ ] T004 [P] Capture the pre-change baseline documents for the moat closure (all three formats) into the scratchpad, for the FR-005/FR-006 byte-identity diffs in T038–T039
+- [X] T001 Create `specs/1366-closure-ecosystem-purl/measurements/` and add a `README.md` recording the host (aarch64-darwin), the pinned nixpkgs revision (`a799d3e3`), the moat commit (`d069055`), and the explicit warning that these figures are **not** comparable to the x86_64-linux corpus goldens
+- [X] T002 Capture the pinned closure once to the session scratchpad via `nix derivation show --recursive <moat>#default`, and record its derivation count in `measurements/README.md` (expected 1,275 — if it differs, stop and reconcile before continuing)
+- [X] T003 [P] **Settle research R8 empirically.** Extend `specs/1276-boot-library-scope/measurements/pypi-identity-probe.py` to group candidate names by their PEP 503 normalised form and report any group of size > 1; run it against T002's closure and record the result in `measurements/README.md`. A non-empty result makes validation rule V5 load-bearing rather than defensive
+- [X] T004 [P] Capture the pre-change baseline documents for the moat closure (all three formats) into the scratchpad, for the FR-005/FR-006 byte-identity diffs in T038–T039
 
 **Checkpoint**: the candidate population, the collision answer, and the before-state are all recorded facts.
 
@@ -42,16 +42,16 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 **⚠️ CRITICAL**: blocks US1, US2 and US3.
 
-- [ ] T005 Create `waybill-cli/src/scan_fs/package_db/nix/closure/ecosystem_identity.rs` and register it in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs`
-- [ ] T006 Define `EcosystemCandidate` and `CandidateEvidence` (single variant `VersionedInterpreterPrefix`) in `ecosystem_identity.rs` per `data-model.md` §1
-- [ ] T007 Define `ConfirmationOutcome` and `UncheckedReason` in `ecosystem_identity.rs` per `data-model.md` §2, as a **total** mapping from `LookupResult` with no default arm — adding a `LookupResult` variant must break the build
-- [ ] T008 Define `ConfirmationRecord` in `ecosystem_identity.rs` per `data-model.md` §3, with the `confirmed + declined + unchecked == candidates` invariant asserted in code
-- [ ] T009 Implement `fn candidates(...)` in `ecosystem_identity.rs`: derivation `name` matches `^python3\.\d+-` **and** `pname` does not itself begin `python3`. Read `pname`/`version` through the reader's existing `attr_str`, which consults **both** the flat `env` map and top-level `structuredAttrs` (research R3 — 66 of 1,275 moat derivations use only the latter)
-- [ ] T010 Implement validation rules V1–V5 in `ecosystem_identity.rs`: V1 non-empty `pname`; V2 keyable version (else `Unchecked{Unkeyable}`, never a silent drop); V3 the component carries **no** `waybill:closure-member-role` (C206); V4 the component was **appended**, not merged; V5 normalised-coordinate uniqueness, declining **every** member of a colliding group
-- [ ] T011 [P] Reuse `pip::normalize_pypi_name_for_purl` (`waybill-cli/src/scan_fs/package_db/pip/mod.rs:99`) for PEP 503 normalisation in `ecosystem_identity.rs` — do **not** write a third implementation of this rule
-- [ ] T012 Add a `pub(crate)` confirmation entry point to `waybill-cli/src/enrich/depsdev_source.rs` that takes `&[EnrichmentKey]` and returns the per-key `LookupResult`s by routing through the existing private `fetch_results`, so the in-memory cache, the disk cache and the batch path are all inherited (FR-011)
-- [ ] T013 [P] Unit-test the candidate rule in `ecosystem_identity.rs` against a synthetic closure covering: a versioned-prefix package, a `python-*` setup hook (must be excluded), a `python3.13-bootstrap-*` variant (must be excluded), a `structuredAttrs`-only `pname`, and a member carrying a C206 role (must be excluded)
-- [ ] T014 Create the synthetic fixture `waybill-cli/tests/fixtures/nix_closure_ecosystem/closure.json` using `waybill-fixture-*` names only — never a real coordinate (`feedback_fixture_synthetic_package_names`; real names tripped the advisory scan in PR #285 and #640)
+- [X] T005 Create `waybill-cli/src/scan_fs/package_db/nix/closure/ecosystem_identity.rs` and register it in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs`
+- [X] T006 Define `EcosystemCandidate` and `CandidateEvidence` (single variant `VersionedInterpreterPrefix`) in `ecosystem_identity.rs` per `data-model.md` §1
+- [X] T007 Define `ConfirmationOutcome` and `UncheckedReason` in `ecosystem_identity.rs` per `data-model.md` §2, as a **total** mapping from `LookupResult` with no default arm — adding a `LookupResult` variant must break the build
+- [X] T008 Define `ConfirmationRecord` in `ecosystem_identity.rs` per `data-model.md` §3, with the `confirmed + declined + unchecked == candidates` invariant asserted in code
+- [X] T009 Implement `fn candidates(...)` in `ecosystem_identity.rs`: derivation `name` matches `^python3\.\d+-` **and** `pname` does not itself begin `python3`. Read `pname`/`version` through the reader's existing `attr_str`, which consults **both** the flat `env` map and top-level `structuredAttrs` (research R3 — 66 of 1,275 moat derivations use only the latter)
+- [X] T010 Implement validation rules V1–V5 in `ecosystem_identity.rs`: V1 non-empty `pname`; V2 keyable version (else `Unchecked{Unkeyable}`, never a silent drop); V3 the component carries **no** `waybill:closure-member-role` (C206); V4 the component was **appended**, not merged; V5 normalised-coordinate uniqueness, declining **every** member of a colliding group
+- [X] T011 [P] Reuse `pip::normalize_pypi_name_for_purl` (`waybill-cli/src/scan_fs/package_db/pip/mod.rs:99`) for PEP 503 normalisation in `ecosystem_identity.rs` — do **not** write a third implementation of this rule
+- [X] T012 Add a `pub(crate)` confirmation entry point to `waybill-cli/src/enrich/depsdev_source.rs` that takes `&[EnrichmentKey]` and returns the per-key `LookupResult`s by routing through the existing private `fetch_results`, so the in-memory cache, the disk cache and the batch path are all inherited (FR-011)
+- [X] T013 [P] Unit-test the candidate rule in `ecosystem_identity.rs` against a synthetic closure covering: a versioned-prefix package, a `python-*` setup hook (must be excluded), a `python3.13-bootstrap-*` variant (must be excluded), a `structuredAttrs`-only `pname`, and a member carrying a C206 role (must be excluded)
+- [X] T014 Create the synthetic fixture `waybill-cli/tests/fixtures/nix_closure_ecosystem/closure.json` using `waybill-fixture-*` names only — never a real coordinate (`feedback_fixture_synthetic_package_names`; real names tripped the advisory scan in PR #285 and #640)
 
 **Checkpoint**: candidates can be derived and validated offline, with no network and no identifier change yet.
 
@@ -65,11 +65,11 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 **Independent Test**: present the pass with candidates that cannot be confirmed and assert the emitted document is byte-identical to today's.
 
-- [ ] T015 [US2] Implement `fn apply(...)` in `ecosystem_identity.rs` so that it derives candidates, assigns **every** outcome as `Unchecked`, mutates nothing, and returns a populated `ConfirmationRecord` — the complete US2 behaviour, with confirmation not yet wired
-- [ ] T016 [US2] Invoke `apply` from `waybill-cli/src/cli/scan_cmd.rs` in the research-R11 window: after the milestone-1275 Hackage identity pass (~line 4760) and **strictly before** `closure::graph::relationships` (~line 4833)
-- [ ] T017 [US2] Gate the pass on the deps.dev flags in `scan_cmd.rs`: `--no-deps-dev` / `--no-deps-dev-license` yield `Unchecked{Disabled}` for every candidate (research R7 — this is the corpus path, and it must be the *documented* path, not an accident)
-- [ ] T018 [P] [US2] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: a closure of only unconfirmable candidates emits a document byte-identical to the pre-change baseline except for the C208 record (spec US2 acceptance scenario 2)
-- [ ] T019 [P] [US2] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: a component the pass declined carries exactly its prior identifier and **no** C207 (spec US2 acceptance scenario 1)
+- [X] T015 [US2] Implement `fn apply(...)` in `ecosystem_identity.rs` so that it derives candidates, assigns **every** outcome as `Unchecked`, mutates nothing, and returns a populated `ConfirmationRecord` — the complete US2 behaviour, with confirmation not yet wired
+- [X] T016 [US2] Invoke `apply` from `waybill-cli/src/cli/scan_cmd.rs` in the research-R11 window: after the milestone-1275 Hackage identity pass (~line 4760) and **strictly before** `closure::graph::relationships` (~line 4833)
+- [X] T017 [US2] Gate the pass on the deps.dev flags in `scan_cmd.rs`: `--no-deps-dev` / `--no-deps-dev-license` yield `Unchecked{Disabled}` for every candidate (research R7 — this is the corpus path, and it must be the *documented* path, not an accident)
+- [X] T018 [P] [US2] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: a closure of only unconfirmable candidates emits a document byte-identical to the pre-change baseline except for the C208 record (spec US2 acceptance scenario 2)
+- [X] T019 [P] [US2] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: a component the pass declined carries exactly its prior identifier and **no** C207 (spec US2 acceptance scenario 1)
 
 **Checkpoint**: the pass runs end to end, changes nothing, and records that it changed nothing. Safe to merge on its own.
 
@@ -85,18 +85,18 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 ### Tests for User Story 1 (write first; they must fail before T023)
 
-- [ ] T020 [US1] Stand up a wiremock deps.dev stub in `waybill-cli/tests/closure_ecosystem_identity.rs` using the existing `wiremock = "0.6"` dev-dependency and `DepsDevClient::with_base_url` (`deps_dev_client.rs:137`): one arm answers 200 with a `VersionInfo`, one answers **404**
-- [ ] T021 [P] [US1] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: the 200-arm candidate's identifier becomes `pkg:pypi/<pep503-name>@<version>` and the component's `name` and `version` fields are unchanged (spec US1 acceptance scenarios 1 and 2)
-- [ ] T022 [P] [US1] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: the **404**-arm candidate is `Declined` and keeps today's identifier — the only place FR-003's "a 404 is a decline, not a failure" distinction is exercised
+- [X] T020 [US1] Stand up a wiremock deps.dev stub in `waybill-cli/tests/closure_ecosystem_identity.rs` using the existing `wiremock = "0.6"` dev-dependency and `DepsDevClient::with_base_url` (`deps_dev_client.rs:137`): one arm answers 200 with a `VersionInfo`, one answers **404**
+- [X] T021 [P] [US1] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: the 200-arm candidate's identifier becomes `pkg:pypi/<pep503-name>@<version>` and the component's `name` and `version` fields are unchanged (spec US1 acceptance scenarios 1 and 2)
+- [X] T022 [P] [US1] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: the **404**-arm candidate is `Declined` and keeps today's identifier — the only place FR-003's "a 404 is a decline, not a failure" distinction is exercised
 
 ### Implementation for User Story 1
 
-- [ ] T023 [US1] Wire confirmation into `apply` in `ecosystem_identity.rs`: build `EnrichmentKey`s, call T012's entry point, map `LookupResult` → `ConfirmationOutcome` per `data-model.md` §2
-- [ ] T024 [US1] Rewrite the identifier on `Confirmed` only in `waybill-cli/src/scan_fs/package_db/nix/closure/ecosystem_identity.rs`, constructing it through `waybill_common::types::purl::Purl::new` so an unparseable coordinate declines the candidate rather than reaching output (Constitution Principle V)
-- [ ] T025 [US1] Map `Failed` → `Unchecked{Unreachable}` and `deps_dev_client::Throttled` → `Unchecked{Throttled}` in `ecosystem_identity.rs`, and confirm by inspection that `apply` returns a record rather than a `Result` the caller can `?` on (FR-012: confirmation cannot fail a scan)
-- [ ] T026 [P] [US1] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: PEP 503 normalisation — a candidate whose `pname` differs from its published name by case or separator is identified under the normalised form (spec US1 acceptance scenario 3)
-- [ ] T027 [P] [US1] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: a transport failure and a throttle each leave every identifier unchanged and the scan exits successfully (FR-009, FR-012)
-- [ ] T028 [US1] **Mutation check for SC-007.** Make confirmation unconditionally decline, run the suite, and record in `measurements/README.md` which tests went red and how many. A test that cannot fail is not evidence (`feedback_a_passing_test_may_exercise_nothing`)
+- [X] T023 [US1] Wire confirmation into `apply` in `ecosystem_identity.rs`: build `EnrichmentKey`s, call T012's entry point, map `LookupResult` → `ConfirmationOutcome` per `data-model.md` §2
+- [X] T024 [US1] Rewrite the identifier on `Confirmed` only in `waybill-cli/src/scan_fs/package_db/nix/closure/ecosystem_identity.rs`, constructing it through `waybill_common::types::purl::Purl::new` so an unparseable coordinate declines the candidate rather than reaching output (Constitution Principle V)
+- [X] T025 [US1] Map `Failed` → `Unchecked{Unreachable}` and `deps_dev_client::Throttled` → `Unchecked{Throttled}` in `ecosystem_identity.rs`, and confirm by inspection that `apply` returns a record rather than a `Result` the caller can `?` on (FR-012: confirmation cannot fail a scan)
+- [X] T026 [P] [US1] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: PEP 503 normalisation — a candidate whose `pname` differs from its published name by case or separator is identified under the normalised form (spec US1 acceptance scenario 3)
+- [X] T027 [P] [US1] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: a transport failure and a throttle each leave every identifier unchanged and the scan exits successfully (FR-009, FR-012)
+- [X] T028 [US1] **Mutation check for SC-007.** Make confirmation unconditionally decline, run the suite, and record in `measurements/README.md` which tests went red and how many. A test that cannot fail is not evidence (`feedback_a_passing_test_may_exercise_nothing`)
 
 **Checkpoint**: US1 and US2 both hold. This is the MVP — the document now answers a vulnerability query for confirmed Python packages.
 
@@ -108,14 +108,14 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 **Independent Test**: scan the pinned closure and confirm every re-identified component carries the disclosure and components left generic do not.
 
-- [ ] T029 [US3] Write the C207 value into `component.extra_annotations` from the pass in `waybill-cli/src/scan_fs/package_db/nix/closure/ecosystem_identity.rs`. **This alone gives both SPDX formats**: the bag is carried generically by `waybill-cli/src/generate/spdx/annotations.rs:414` and `waybill-cli/src/generate/spdx/v3_annotations.rs:437`, so neither SPDX emitter needs new code
-- [ ] T030 [US3] Suppress the generic property emission for the C207 key on the CDX path in `waybill-cli/src/generate/cyclonedx/builder.rs:1877`, so the signal has exactly one home per format. Emitting both the property and the native field would break SymmetricEqual byte-identity — the hazard `evidence.rs:57` already records for C56: *"Callers MUST NOT also emit a `waybill:also-detected-via` component property"*
-- [ ] T031 [US3] Emit C207 natively on the CDX path in `waybill-cli/src/generate/cyclonedx/evidence.rs`: an `evidence.identity[]` entry with `field: "purl"`, `confidence: 0.8`, `concludedValue`, and a `methods[]` entry carrying `technique: "manifest-analysis"` plus the extension key `waybill-closure-ecosystem-evidence`, following the milestone-105 `waybill-source-mechanism` precedent. Lands with T030 or parity breaks
-- [ ] T032 [US3] Emit C208 at document scope in all three formats — CDX `metadata.properties[]`, SPDX 2.3 and SPDX 3 document-scope annotation — per `contracts/annotations.md` §3, threading the value from `scan_cmd.rs` through the emitter arguments the way `nix_closure_degraded` (C190) already is. Present wherever C204 is present; absent otherwise
-- [ ] T033 [US3] Add the C207 and C208 rows to `docs/reference/sbom-format-mapping.md`, each carrying the Principle V justification clause from `research.md` R5 — including why this audit adopts `evidence.identity[]` where C201's audit rejected it
-- [ ] T034 [US3] Add the six extractor functions and the two `EXTRACTORS` rows (`Directionality::SymmetricEqual`, `order_sensitive: false`) in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs`. **Same change as T033** — a catalog row without an extractor fails `every_catalog_row_has_an_extractor` and `holistic_parity`
-- [ ] T035 [P] [US3] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: a confirmed component carries C207 in all three formats and a declined one carries none (spec US3 acceptance scenarios 1 and 2)
-- [ ] T036 [P] [US3] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: C208 distinguishes three documents — zero candidates (no `reason`), candidates all declined, candidates all unchecked with `reason: "disabled"` (FR-008; `feedback_zero_results_can_mean_broken`)
+- [X] T029 [US3] Write the C207 value into `component.extra_annotations` from the pass in `waybill-cli/src/scan_fs/package_db/nix/closure/ecosystem_identity.rs`. **This alone gives both SPDX formats**: the bag is carried generically by `waybill-cli/src/generate/spdx/annotations.rs:414` and `waybill-cli/src/generate/spdx/v3_annotations.rs:437`, so neither SPDX emitter needs new code
+- [X] T030 [US3] Suppress the generic property emission for the C207 key on the CDX path in `waybill-cli/src/generate/cyclonedx/builder.rs:1877`, so the signal has exactly one home per format. Emitting both the property and the native field would break SymmetricEqual byte-identity — the hazard `evidence.rs:57` already records for C56: *"Callers MUST NOT also emit a `waybill:also-detected-via` component property"*
+- [X] T031 [US3] Emit C207 natively on the CDX path in `waybill-cli/src/generate/cyclonedx/evidence.rs`: an `evidence.identity[]` entry with `field: "purl"`, `confidence: 0.8`, `concludedValue`, and a `methods[]` entry carrying `technique: "manifest-analysis"` plus the extension key `waybill-closure-ecosystem-evidence`, following the milestone-105 `waybill-source-mechanism` precedent. Lands with T030 or parity breaks
+- [X] T032 [US3] Emit C208 at document scope in all three formats — CDX `metadata.properties[]`, SPDX 2.3 and SPDX 3 document-scope annotation — per `contracts/annotations.md` §3, threading the value from `scan_cmd.rs` through the emitter arguments the way `nix_closure_degraded` (C190) already is. Present wherever C204 is present; absent otherwise
+- [X] T033 [US3] Add the C207 and C208 rows to `docs/reference/sbom-format-mapping.md`, each carrying the Principle V justification clause from `research.md` R5 — including why this audit adopts `evidence.identity[]` where C201's audit rejected it
+- [X] T034 [US3] Add the six extractor functions and the two `EXTRACTORS` rows (`Directionality::SymmetricEqual`, `order_sensitive: false`) in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs`. **Same change as T033** — a catalog row without an extractor fails `every_catalog_row_has_an_extractor` and `holistic_parity`
+- [X] T035 [P] [US3] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: a confirmed component carries C207 in all three formats and a declined one carries none (spec US3 acceptance scenarios 1 and 2)
+- [X] T036 [P] [US3] Test in `waybill-cli/tests/closure_ecosystem_identity.rs`: C208 distinguishes three documents — zero candidates (no `reason`), candidates all declined, candidates all unchecked with `reason: "disabled"` (FR-008; `feedback_zero_results_can_mean_broken`)
 
 **Checkpoint**: all three stories independently functional and visible in every format.
 
@@ -127,7 +127,7 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 ### Ordering and graph safety
 
-- [ ] T037 Test in `waybill-cli/tests/closure_ecosystem_identity.rs` that every `dependsOn` endpoint resolves to an emitted component after confirmation, and that the orphan count does not rise — the regression research R11 identifies, where a mis-ordered pass orphans every component the feature fixes
+- [X] T037 Test in `waybill-cli/tests/closure_ecosystem_identity.rs` that every `dependsOn` endpoint resolves to an emitted component after confirmation, and that the orphan count does not rise — the regression research R11 identifies, where a mis-ordered pass orphans every component the feature fixes
 
 ### Non-regression (FR-005, FR-006)
 

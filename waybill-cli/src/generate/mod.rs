@@ -151,6 +151,15 @@ pub struct ScanArtifacts<'a> {
     /// recorded. Constitution XII.3: degraded enrichment is disclosed in the
     /// document, not only logged.
     pub nix_closure_degraded: Option<&'a str>,
+    /// Milestone 1366 (#1365; C208) — what the closure's ecosystem identity
+    /// pass did: how many candidates it found, confirmed, declined and could
+    /// not check, and why if any went unchecked. `None` when no closure was
+    /// recorded, so its presence alone says the pass was reached.
+    ///
+    /// Its own slot rather than a flag inside C204, because a zero-candidate
+    /// closure and a confirmation step that did nothing must be
+    /// distinguishable, which is the whole of FR-008.
+    pub closure_ecosystem_identity: Option<&'a str>,
     /// Milestone 1067 (#1058; C192) — the deps.dev enrichment pass ran
     /// online. Gates the document-scope outcome counts, which are computed
     /// in each emitter from the components it emits so they always agree

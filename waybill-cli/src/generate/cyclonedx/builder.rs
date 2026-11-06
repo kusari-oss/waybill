@@ -199,6 +199,8 @@ pub struct CycloneDxBuilder {
     nix_eval_tier: Option<String>,
     nix_eval_degraded: Option<String>,
     nix_closure_degraded: Option<String>,
+    /// C208 (m1366) — the closure ecosystem identity record, pre-rendered.
+    closure_ecosystem_identity: Option<String>,
     /// C195/C196 (#1154) — the `go mod why` pass's outcome.
     go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     /// C192 (m1067) — the deps.dev pass ran online.
@@ -279,6 +281,7 @@ impl CycloneDxBuilder {
             nix_eval_tier: None,
             nix_eval_degraded: None,
             nix_closure_degraded: None,
+            closure_ecosystem_identity: None,
             go_mod_why: None,
             deps_dev_online: false,
             vex_statements: Vec::new(),
@@ -361,6 +364,11 @@ impl CycloneDxBuilder {
     }
 
     /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
+    pub fn with_closure_ecosystem_identity(mut self, value: Option<String>) -> Self {
+        self.closure_ecosystem_identity = value;
+        self
+    }
+
     pub fn with_nix_closure_degraded(mut self, value: Option<String>) -> Self {
         self.nix_closure_degraded = value;
         self
@@ -999,6 +1007,7 @@ impl CycloneDxBuilder {
                 nix_eval_tier: self.nix_eval_tier.as_deref(),
                 nix_eval_degraded: self.nix_eval_degraded.as_deref(),
                 nix_closure_degraded: self.nix_closure_degraded.as_deref(),
+                closure_ecosystem_identity: self.closure_ecosystem_identity.as_deref(),
                 go_mod_why: self.go_mod_why,
                 deps_dev_outcomes: deps_dev_outcomes.as_deref(),
                 vex_claims_omitted: vex_claims_omitted.as_deref(),
@@ -1346,7 +1355,7 @@ impl CycloneDxBuilder {
                     "name": component.name,
                     "version": component.version,
                     "bom-ref": bom_ref,
-                    "evidence": build_evidence(&component.evidence, &component.occurrences, None, &[])
+                    "evidence": build_evidence(&component.evidence, &component.occurrences, None, &[], None)
                 })
             } else {
                 // Milestone 105 phase 2E: extra (None, &[]) params are
@@ -1374,6 +1383,20 @@ impl CycloneDxBuilder {
                 }
                 base.insert("purl".to_string(), json!(component.purl.as_str()));
                 base.insert("bom-ref".to_string(), json!(bom_ref));
+                // Milestone 1366 (#1365) — C207 rides CycloneDX's own
+                // `evidence.identity[]`, per Constitution Principle V's
+                // native-field precedence. The generic property emission for
+                // this key is suppressed below, so the signal has exactly one
+                // home per format; emitting both would state the fact twice
+                // and break the SymmetricEqual parity assertion.
+                let derived_identity = component
+                    .extra_annotations
+                    .get(crate::scan_fs::package_db::nix::closure::ecosystem_identity::ANN_ECOSYSTEM_IDENTITY)
+                    .and_then(|v| v.as_str())
+                    .map(|evidence| super::evidence::DerivedIdentity {
+                        concluded_value: component.purl.as_str(),
+                        evidence,
+                    });
                 base.insert(
                     "evidence".to_string(),
                     build_evidence(
@@ -1381,6 +1404,7 @@ impl CycloneDxBuilder {
                         &component.occurrences,
                         None,
                         &[],
+                        derived_identity,
                     ),
                 );
                 serde_json::Value::Object(base)
@@ -1884,6 +1908,21 @@ impl CycloneDxBuilder {
                     // `c.evidence.source_file_paths` higher up in
                     // this function — re-emitting from the bag
                     // would double-stamp and produce value drift.
+                    continue;
+                }
+                if key
+                    == crate::scan_fs::package_db::nix::closure::ecosystem_identity::ANN_ECOSYSTEM_IDENTITY
+                {
+                    // Milestone 1366 (#1365): CycloneDX carries this natively
+                    // in `evidence.identity[]` just above, so re-emitting it
+                    // as a property would state the same fact twice in one
+                    // document and break C207's SymmetricEqual parity against
+                    // the SPDX annotation. SPDX 2.3 and SPDX 3 have no native
+                    // carrier and DO emit the annotation — the same split
+                    // `ANN_CLOSURE_PATCHES` has for `pedigree`, and the reason
+                    // this cannot use `is_field_owned_annotation_key`, which
+                    // both pass-throughs consult and which would drop it from
+                    // SPDX too.
                     continue;
                 }
                 if key == crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES {

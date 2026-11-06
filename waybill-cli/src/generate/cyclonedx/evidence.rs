@@ -2,6 +2,24 @@ use serde_json::json;
 
 use waybill_common::resolution::{FileOccurrence, ResolutionEvidence, ResolutionTechnique};
 
+/// Confidence in an identifier derived by the milestone-1366 closure
+/// ecosystem identity pass.
+///
+/// Measured context for the number: on the pinned closure, confirmation
+/// accepts 75 of 75 candidates and declines none, so it establishes existence
+/// rather than identity. 0.8 says "concluded, on evidence that bounds this
+/// short of proof"; 1.0 would say something the measurement does not support.
+const DERIVED_IDENTITY_CONFIDENCE: f64 = 0.8;
+
+/// A derived PURL and the evidence that supported deriving it (C207).
+#[derive(Debug, Clone, Copy)]
+pub struct DerivedIdentity<'a> {
+    /// The PURL the pass concluded, e.g. `pkg:pypi/urllib3@2.6.3`.
+    pub concluded_value: &'a str,
+    /// The wire form of the candidate evidence.
+    pub evidence: &'a str,
+}
+
 /// Confidence value used for the additional `methods[]` entries
 /// emitted on behalf of losing readers (milestone 105 hybrid
 /// emission). The winning reader's method uses `evidence.confidence`
@@ -65,6 +83,7 @@ pub fn build_evidence(
     occurrences: &[FileOccurrence],
     winning_source_mechanism: Option<&str>,
     losing_source_mechanisms: &[&str],
+    derived_identity: Option<DerivedIdentity<'_>>,
 ) -> serde_json::Value {
     let technique = match evidence.technique {
         ResolutionTechnique::UrlPattern => "instrumentation",
@@ -101,11 +120,45 @@ pub fn build_evidence(
         }));
     }
 
-    let identity_obj = json!({
-        "field": "purl",
-        "confidence": evidence.confidence,
-        "methods": methods,
-    });
+    // Milestone 1366 (#1365) — C207, natively.
+    //
+    // `component.evidence.identity[]` is CycloneDX 1.6's own construct for
+    // "an identifier was CONCLUDED, by this technique, with this confidence",
+    // which is precisely what the nix closure's ecosystem identity pass does.
+    // Constitution Principle V requires the native field where one exists, so
+    // this is the signal's only home on the CDX path and the generic
+    // `extra_annotations` property is suppressed in `builder.rs`.
+    //
+    // Note this reaches the OPPOSITE conclusion to C201's audit, which
+    // rejected the same construct — correctly, because C201 records why an
+    // identity was *rejected* and `identity[]` has no slot for that. Here a
+    // value was concluded.
+    let identity_obj = match derived_identity {
+        None => json!({
+            "field": "purl",
+            "confidence": evidence.confidence,
+            "methods": methods,
+        }),
+        Some(d) => {
+            methods.push(json!({
+                "technique": "manifest-analysis",
+                "confidence": DERIVED_IDENTITY_CONFIDENCE,
+                "waybill-closure-ecosystem-evidence": d.evidence,
+            }));
+            json!({
+                "field": "purl",
+                // Deliberate and documented, not tuned. It states what the
+                // check establishes and no more: a published package exists
+                // at this name and version. That is necessary and NOT
+                // sufficient to prove this derivation is that package, and
+                // 1.0 would assert the sufficiency the spec explicitly
+                // declines to claim.
+                "confidence": DERIVED_IDENTITY_CONFIDENCE,
+                "concludedValue": d.concluded_value,
+                "methods": methods,
+            })
+        }
+    };
 
     let mut out = json!({
         "identity": [identity_obj]
@@ -194,7 +247,7 @@ mod tests {
     #[test]
     fn url_pattern_maps_to_instrumentation() {
         let ev = make_evidence(ResolutionTechnique::UrlPattern, 0.95);
-        let result = build_evidence(&ev, &[], None, &[]);
+        let result = build_evidence(&ev, &[], None, &[], None);
         assert_eq!(
             result["identity"][0]["methods"][0]["technique"],
             "instrumentation"
@@ -204,7 +257,7 @@ mod tests {
     #[test]
     fn hash_match_maps_to_hash_comparison() {
         let ev = make_evidence(ResolutionTechnique::HashMatch, 0.99);
-        let result = build_evidence(&ev, &[], None, &[]);
+        let result = build_evidence(&ev, &[], None, &[], None);
         assert_eq!(
             result["identity"][0]["methods"][0]["technique"],
             "hash-comparison"
@@ -214,7 +267,7 @@ mod tests {
     #[test]
     fn file_path_maps_to_filename() {
         let ev = make_evidence(ResolutionTechnique::FilePathPattern, 0.7);
-        let result = build_evidence(&ev, &[], None, &[]);
+        let result = build_evidence(&ev, &[], None, &[], None);
         assert_eq!(
             result["identity"][0]["methods"][0]["technique"],
             "filename"
@@ -224,14 +277,14 @@ mod tests {
     #[test]
     fn hostname_maps_to_other() {
         let ev = make_evidence(ResolutionTechnique::HostnameHeuristic, 0.5);
-        let result = build_evidence(&ev, &[], None, &[]);
+        let result = build_evidence(&ev, &[], None, &[], None);
         assert_eq!(result["identity"][0]["methods"][0]["technique"], "other");
     }
 
     #[test]
     fn package_database_maps_to_manifest_analysis() {
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.85);
-        let result = build_evidence(&ev, &[], None, &[]);
+        let result = build_evidence(&ev, &[], None, &[], None);
         assert_eq!(
             result["identity"][0]["methods"][0]["technique"],
             "manifest-analysis"
@@ -241,7 +294,7 @@ mod tests {
     #[test]
     fn confidence_is_preserved() {
         let ev = make_evidence(ResolutionTechnique::UrlPattern, 0.87);
-        let result = build_evidence(&ev, &[], None, &[]);
+        let result = build_evidence(&ev, &[], None, &[], None);
         assert_eq!(result["identity"][0]["confidence"], 0.87);
         assert_eq!(result["identity"][0]["methods"][0]["confidence"], 0.87);
     }
@@ -250,7 +303,7 @@ mod tests {
     fn identity_is_emitted_as_array_not_object() {
         // CDX 1.6 requires evidence.identity to be an array.
         let ev = make_evidence(ResolutionTechnique::UrlPattern, 0.9);
-        let result = build_evidence(&ev, &[], None, &[]);
+        let result = build_evidence(&ev, &[], None, &[], None);
         assert!(
             result["identity"].is_array(),
             "evidence.identity must be an array per CDX 1.6"
@@ -275,7 +328,7 @@ mod tests {
                 version: "4.19.2".to_string(),
             }),
         };
-        let result = build_evidence(&ev_with_everything, &[], None, &[]);
+        let result = build_evidence(&ev_with_everything, &[], None, &[], None);
         assert!(
             result["identity"][0].get("tools").is_none(),
             "evidence.identity[].tools must not be emitted: got {:?}",
@@ -362,7 +415,7 @@ mod tests {
                 rpm_file_digest: None,
             },
         ];
-        let result = build_evidence(&ev, &occs, None, &[]);
+        let result = build_evidence(&ev, &occs, None, &[], None);
         let out_occs = result["occurrences"]
             .as_array()
             .expect("occurrences array");
@@ -383,7 +436,7 @@ mod tests {
     #[test]
     fn occurrences_omitted_when_empty() {
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.85);
-        let result = build_evidence(&ev, &[], None, &[]);
+        let result = build_evidence(&ev, &[], None, &[], None);
         assert!(result.get("occurrences").is_none());
     }
 
@@ -398,7 +451,7 @@ mod tests {
     #[test]
     fn winning_source_mechanism_attaches_to_first_method() {
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
-        let result = build_evidence(&ev, &[], Some("conan-recipe"), &[]);
+        let result = build_evidence(&ev, &[], Some("conan-recipe"), &[], None);
         let method = &result["identity"][0]["methods"][0];
         assert_eq!(method["technique"], "manifest-analysis");
         assert_eq!(method["confidence"], 0.95);
@@ -411,7 +464,7 @@ mod tests {
         // winner is supplied, the first method entry MUST NOT carry
         // a `waybill-source-mechanism` sub-field.
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
-        let result = build_evidence(&ev, &[], None, &[]);
+        let result = build_evidence(&ev, &[], None, &[], None);
         let method = &result["identity"][0]["methods"][0];
         assert!(
             method.get("waybill-source-mechanism").is_none(),
@@ -425,7 +478,7 @@ mod tests {
         // CmakeVendored are detected-via losers.
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
         let losers: [&str; 2] = ["git-submodule", "cmake-vendored"];
-        let result = build_evidence(&ev, &[], Some("conan-recipe"), &losers);
+        let result = build_evidence(&ev, &[], Some("conan-recipe"), &losers, None);
         let methods = result["identity"][0]["methods"].as_array().unwrap();
         assert_eq!(methods.len(), 3, "1 winner + 2 losers = 3 method entries");
         // Winner first
@@ -446,7 +499,7 @@ mod tests {
         // not panic. The first method is the C/C++-reader-neutral
         // form (no waybill-source-mechanism); losers follow normally.
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
-        let result = build_evidence(&ev, &[], None, &["git-submodule"]);
+        let result = build_evidence(&ev, &[], None, &["git-submodule"], None);
         let methods = result["identity"][0]["methods"].as_array().unwrap();
         assert_eq!(methods.len(), 2);
         assert!(methods[0].get("waybill-source-mechanism").is_none());
