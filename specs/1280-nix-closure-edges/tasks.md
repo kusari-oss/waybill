@@ -82,7 +82,7 @@ components, in all three formats.
 - [X] T016 [P] [US1] Add the harness to `waybill-cli/tests/closure_edges.rs`, modelled on `closure_dep_fields.rs`: stub `nix` on a per-test `PATH`, per-test `tempfile` output dir, a seeded nixpkgs cache, and helpers reading CDX `dependencies[].dependsOn`, SPDX 2.3 `relationships[]` and SPDX 3 `Relationship` elements
 - [X] T017 [US1] Add the control every assertion below needs, in `waybill-cli/tests/closure_edges.rs`, which is also **SC-001**'s assertion: the fixture holds the derivations it claims **and** at least one closure component has an incoming edge, where today none does. A projection producing nothing satisfies every "not wrongly connected" assertion vacuously, and a scan that emitted no closure components satisfies them twice over
 - [X] T018 [P] [US1] Test contract property P1 in `waybill-cli/tests/closure_edges.rs` against T001: a member reachable only through a non-package derivation has a path from the root
-- [ ] T019 [P] [US1] Test contract property P4 in `waybill-cli/tests/closure_edges.rs` against T003: the root derivation's projected edges attach to the **document root component**, and no component is emitted for the root derivation itself (FR-004, FR-004a)
+- [X] T019 [P] [US1] Test contract property P4 in `waybill-cli/tests/closure_edges.rs` against T003: the root derivation's projected edges attach to the **document root component**, and no component is emitted for the root derivation itself (FR-004, FR-004a)
 - [X] T020 [P] [US1] Test FR-003 in `waybill-cli/tests/closure_edges.rs` against T006: variant-merged components emit one edge per pair, not one per derivation
 - [X] T021 [P] [US1] Test FR-007a in `waybill-cli/tests/closure_edges.rs`: an edge whose target is `build-tooling` carries the **same** relationship type as one whose target is `artifact-input`. The role must not select a type
 - [X] T022 [P] [US1] Test FR-007 in `waybill-cli/tests/closure_edges.rs`: the same edge set appears in all three formats through each one's native vocabulary, and **no** `waybill:` annotation carries a dependency edge
@@ -94,9 +94,9 @@ components, in all three formats.
 - [X] T025 [US1] Wire the edges into `relationships` in `waybill-cli/src/cli/scan_cmd.rs` (**FR-001**), **after** the milestone-1275 identity pass (`closure_identity::reclassify`, around line 4790), because the identity→PURL join needs the final component set. **Research R1's stronger reason is retracted** — it claimed an earlier placement would dangle for 104 of 381 components, and `closure_identity.rs:662` already rewrites relationship endpoints in the same step by the #980/#981 convention. The placement stands on the join, not on a hazard
 - [X] T026 [US1] Assert the property, not the placement, in `waybill-cli/tests/closure_edges.rs`: every emitted relationship's endpoints resolve to a component present in the document. **This task survives R1's retraction unchanged, which is the point of having written it this way** — it holds whatever the sequencing and whatever the rename convention, where a test pinning the call site would have encoded a wrong reason
 - [X] T027 [US1] Use `RelationshipType::DependsOn` for every edge in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`, and record in the module doc why the role does not select a type: SPDX 2.3 could express `BUILD_TOOL_OF` where CycloneDX cannot, so mapping role to type would make the three formats stop carrying one graph
-- [ ] T028 [US1] Verify `waybill-cli/src/generate/spdx/relationships.rs` needs no change for m1277's 103 `BUILD_TOOL_OF` edges (FR-007b). If this task edits that file, the confinement argument has broken and SC-010 needs re-checking
-- [ ] T029 [US1] Record the emitted edge count in the C184 document record in `waybill-cli/src/scan_fs/package_db/nix/closure/summary.rs` (FR-008), so a closure that contributed no edges is distinguishable from one never read — and extend the C184 catalogue row in `docs/reference/sbom-format-mapping.md` to document the new key
-- [ ] T030 [US1] Extend the C184 parity extractors in `waybill-cli/src/parity/extractors/` **in the same change as T029** — a documented row whose shape changed without its extractor following fails `holistic_parity`
+- [X] T028 [US1] Verify `waybill-cli/src/generate/spdx/relationships.rs` needs no change for m1277's 103 `BUILD_TOOL_OF` edges (FR-007b). If this task edits that file, the confinement argument has broken and SC-010 needs re-checking
+- [X] T029 [US1] Record the emitted edge count in the C184 document record in `waybill-cli/src/scan_fs/package_db/nix/closure/summary.rs` (FR-008), so a closure that contributed no edges is distinguishable from one never read — and extend the C184 catalogue row in `docs/reference/sbom-format-mapping.md` to document the new key
+- [X] T030 [US1] Extend the C184 parity extractors in `waybill-cli/src/parity/extractors/` **in the same change as T029** — a documented row whose shape changed without its extractor following fails `holistic_parity`
 
 ### Remediation added by `/speckit.analyze` (finding E1)
 
@@ -115,15 +115,15 @@ before and after, on one closure, with no other change.
 
 ### Tests for US2
 
-- [ ] T031 [P] [US2] Test SC-002 in `waybill-cli/tests/closure_edges.rs` against T001: a component connected by the projection is **not** reported as an orphan
-- [ ] T032 [P] [US2] Test FR-011 in `waybill-cli/tests/closure_edges.rs` against T002: the residual orphan carries `waybill:orphan-reason = reachable-only-through-unemitted-package`, and a component nothing depends on at all does **not** carry that code — the two must stay distinguishable, which is the whole point
-- [ ] T033 [P] [US2] Test the FR-011 code's exclusions from `contracts/orphan-reason.md` in `waybill-cli/tests/closure_edges.rs`: it appears on no component lacking `waybill:closure-role`, and on no connected component
+- [X] T031 [P] [US2] Test SC-002 in `waybill-cli/tests/closure_edges.rs` against T001: a component connected by the projection is **not** reported as an orphan
+- [X] T032 [P] [US2] Test FR-011 in `waybill-cli/tests/closure_edges.rs` against T002: the residual orphan carries `waybill:orphan-reason = reachable-only-through-unemitted-package`, and a component nothing depends on at all does **not** carry that code — the two must stay distinguishable, which is the whole point
+- [X] T033 [P] [US2] Test the FR-011 code's exclusions from `contracts/orphan-reason.md` in `waybill-cli/tests/closure_edges.rs`: it appears on no component lacking `waybill:closure-role`, and on no connected component
 
 ### Implementation for US2
 
-- [ ] T034 [US2] Add the `OrphanReasonCode` variant in `waybill-cli/src/generate/orphan_reason.rs` with wire value `reachable-only-through-unemitted-package`, its `as_str` arm, and its `OrphanReasonCounts` field. The literal is frozen on landing — the enum's own comment says consumers key on these
-- [ ] T035 [US2] Classify the residual population in `waybill-cli/src/generate/orphan_reason.rs`: an orphan carrying `waybill:closure-role` whose every path runs through a `pname`-declaring derivation this scan did not emit. Measured uniform across all 21 such components on both systems (`contracts/orphan-reason.md`)
-- [ ] T036 [US2] Confirm `waybill-cli/src/generate/graph_completeness/` needs no change beyond consuming the new edges — the BFS already seeds from the document root, so connected components stop being orphans without a new mechanism. Record that in the module doc as the reason no edge-specific reachability pass exists
+- [X] T034 [US2] Add the `OrphanReasonCode` variant in `waybill-cli/src/generate/orphan_reason.rs` with wire value `reachable-only-through-unemitted-package`, its `as_str` arm, and its `OrphanReasonCounts` field. The literal is frozen on landing — the enum's own comment says consumers key on these
+- [X] T035 [US2] Classify the residual population in `waybill-cli/src/generate/orphan_reason.rs`: an orphan carrying `waybill:closure-role` whose every path runs through a `pname`-declaring derivation this scan did not emit. Measured uniform across all 21 such components on both systems (`contracts/orphan-reason.md`)
+- [X] T036 [US2] Confirm `waybill-cli/src/generate/graph_completeness/` needs no change beyond consuming the new edges — the BFS already seeds from the document root, so connected components stop being orphans without a new mechanism. Record that in the module doc as the reason no edge-specific reachability pass exists
 
 ### Remediation added by `/speckit.analyze` (finding D1)
 
@@ -139,16 +139,16 @@ before and after, on one closure, with no other change.
 partition the graph by role. Needs no new mechanism; stating it keeps the
 roles from being mistaken for this feature's job.
 
-- [ ] T037 [P] [US3] Test SC-005 in `waybill-cli/tests/closure_edges.rs`: the C182 role census is **identical** before and after the edges exist. A move means `inputs.drvs` has leaked into classification, which FR-002 forbids
-- [ ] T038 [P] [US3] Test in `waybill-cli/tests/closure_edges.rs` that both endpoints of every emitted closure edge still carry their `waybill:closure-role` annotation, so the graph is partitionable by role without waybill having pre-partitioned it
-- [ ] T039 [US3] Record in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`'s module doc that the projection never reads a declared dependency attribute, and that this separation is what SC-005 asserts rather than assumes
+- [X] T037 [P] [US3] Test SC-005 in `waybill-cli/tests/closure_edges.rs`: the C182 role census is **identical** before and after the edges exist. A move means `inputs.drvs` has leaked into classification, which FR-002 forbids
+- [X] T038 [P] [US3] Test in `waybill-cli/tests/closure_edges.rs` that both endpoints of every emitted closure edge still carry their `waybill:closure-role` annotation, so the graph is partitionable by role without waybill having pre-partitioned it
+- [X] T039 [US3] Record in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`'s module doc that the projection never reads a declared dependency attribute, and that this separation is what SC-005 asserts rather than assumes
 
 ---
 
 ## Phase 6: Polish & cross-cutting
 
-- [ ] T040 Test SC-007 in `waybill-cli/tests/closure_edges.rs` against T004: a closure containing a cycle terminates and emits a document. Assert on a **completed scan**, not on the absence of a hang — a test that hangs does not fail, it times out, and a CI timeout reads as infrastructure
-- [ ] T041 Test SC-009 in `waybill-cli/tests/closure_edges.rs` as a **mutation**: with the `inputs.drvs` read disabled, the US1 tests go red. A graph source no test is sensitive to is not evidence that it is being read
+- [X] T040 Test SC-007 in `waybill-cli/tests/closure_edges.rs` against T004: a closure containing a cycle terminates and emits a document. Assert on a **completed scan**, not on the absence of a hang — a test that hangs does not fail, it times out, and a CI timeout reads as infrastructure
+- [X] T041 Test SC-009 in `waybill-cli/tests/closure_edges.rs` as a **mutation**: with the `inputs.drvs` read disabled, the US1 tests go red. A graph source no test is sensitive to is not evidence that it is being read
 - [X] T042 [P] Test FR-012 in `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`'s test module: the projection visits each derivation once. Assert on a visit counter rather than on wall-clock — both measured closures are small enough that 381 full traversals would pass a timing assertion (research R2)
 - [ ] T043 Update the `nix-closure-moat` expectations in `waybill-cli/tests/corpus_harness_195/expectations.rs`: closure components carry incoming edges where today none does; the five residual orphans carry the FR-011 code; m1277's `BUILD_TOOL_OF` count is still 103 (SC-010); and the role census is unchanged (SC-005)
 - [ ] T044 [P] Record the before/after edge and orphan census per system in `specs/1280-nix-closure-edges/measurements/README.md`, labelled by system — the two closures populate different attributes and an unlabelled figure is the defect #1348's research shipped

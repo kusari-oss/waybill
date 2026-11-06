@@ -675,6 +675,20 @@ fn workspace_member_dirs(c: &ResolvedComponent) -> std::collections::HashSet<Str
 /// target, which is explicitly marked as a resolve rather than a package
 /// (FR-004 / contract A-3), which is why the edge itself carries no marker
 /// and stays an ordinary dependency edge that consumers traverse unmodified.
+/// Milestone 1280 (#1346) — **no edge-specific reachability pass exists, and
+/// that is the finding rather than an omission.**
+///
+/// The nix closure tier began contributing dependency edges in milestone 1280.
+/// Nothing here needed to change: the BFS already seeds from the document root
+/// and walks whatever is in `relationships`, so a closure component the
+/// projection connects simply stops being an orphan. Measured on the
+/// aarch64-darwin moat closure, orphans fell 359 → 25 with no change to this
+/// module.
+///
+/// What *did* need narrowing is the orphan *reason* rule, in
+/// `generate/orphan_reason.rs`: its milestone-1218 guard treated
+/// `waybill:closure-role` as a sufficient explanation for any orphan, which is
+/// true only of the `unreferenced` role.
 pub fn anchor_resolve_components(
     relationships: &[Relationship],
     components: &[ResolvedComponent],

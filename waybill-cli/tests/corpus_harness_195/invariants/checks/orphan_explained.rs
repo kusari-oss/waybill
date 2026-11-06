@@ -33,7 +33,14 @@ fn is_explained(component: &serde_json::Value) -> bool {
         || cdx_prop(component, "waybill:version-absence") == Some("by-construction")
         || cdx_prop(component, "waybill:component-tier") == Some("file")
         || cdx_prop(component, "waybill:unresolved-reason").is_some()
-        || cdx_prop(component, "waybill:closure-role").is_some()
+        // Milestone 1280 (#1346) — mirrors the narrowing in
+        // `generate/orphan_reason.rs`'s 2b-bis guard, and must keep mirroring
+        // it: a closure role explains an orphan only when it says nothing
+        // references the member. A role asserting a reference, on a component
+        // nothing reaches, is a contradiction rather than an explanation, and
+        // such a component is expected to carry
+        // `waybill:orphan-reason = reachable-only-through-unemitted-package`.
+        || cdx_prop(component, "waybill:closure-role") == Some("unreferenced")
         // C170, added by milestone 1275 — and it moves cells, unlike the
         // forward-looking arm above. The closure-identity pass emits a
         // versionless `compiler-supplied` component for a declared dependency

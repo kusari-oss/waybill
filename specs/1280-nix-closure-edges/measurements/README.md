@@ -206,3 +206,51 @@ state exactly, which is what made it useful for choosing the projection — but
 it is not the implementation, and quoting its post-change figure as a target
 was a mistake. **SC-002's linux figure of 5 needs re-measuring against the
 binary before it is scored**, not before.
+
+## SC-009, the mutation
+
+With `input_drvs` made to yield nothing — the read disabled, nothing else
+touched — **5 of 12 integration tests go red**, and all 12 pass restored:
+
+```
+m1280_t018_a_member_behind_a_fetch_is_reachable         FAILED
+m1280_t020_variant_merged_components_emit_one_edge      FAILED
+...                                                     5 failed
+restored:                                               12 passed
+```
+
+A graph source no test is sensitive to is not evidence that it is read.
+
+## US2, and the rule the implementation corrected
+
+FR-011 as specified **could never fire**. Milestone 1218's classifier treats
+`waybill:closure-role` as a sufficient explanation for any orphan, and
+invariant I7's `is_explained` mirrors it, so every closure component was
+skipped before reaching any arm.
+
+The convention is right for one role and wrong for three. Measured on the
+aarch64-darwin closure, of 25 unreachable closure components:
+
+| role | count | explained by |
+|---|---|---|
+| `build-tooling` | 14 | **the new code** — the role asserts a reference |
+| `artifact-input` | 6 | **the new code** — same |
+| `unreferenced` | 5 | its role, as before |
+
+A component whose role says *something depends on this*, which nothing in the
+graph reaches, is a contradiction between two of the document's own
+statements — C182 is half the problem, not the explanation. Both the classifier
+guard and I7's mirror were narrowed to `unreferenced` together. The frozen
+`explained_pre_1156` copy was **not** touched: it is a historical snapshot used
+as a drift detector, and changing it would defeat its purpose.
+
+Emitted after the narrowing: exactly **20**, split 14 / 6 as above.
+
+### A fixture limitation this exposed
+
+The `nix_closure_edges` fixtures **cannot test root-reachability**. Their root
+derivation is by definition referenced by nothing, so it is never an emitted
+component, so its projected edges are unanchored (FR-004b) and every member is
+unreachable from the subject. Two tests written as integration assertions
+(T031, T032) had to move to unit tests in `generate/orphan_reason.rs`, where
+the rule lives. The end-to-end figure is measured on the corpus instead.

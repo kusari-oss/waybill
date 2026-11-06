@@ -499,3 +499,177 @@ fn m1280_t023_no_closure_flag_means_no_closure_edges() {
         "nor any closure edge; got {edges:?}"
     );
 }
+
+/// T019 / FR-004 — the anchor, and the one case it does not reach.
+///
+/// On a closure whose root derivation **is** representable as a component the
+/// anchor needs no special handling: the root's projected edges resolve
+/// through the same identity join as every other node's. Measured on the
+/// `nix-closure-moat` corpus target, that is the real case —
+/// `unanchored_root_edges = 0`, because the root `moat-0.1` is already
+/// `pkg:hackage/moat@0.1` from the Haskell manifest reader.
+///
+/// This fixture is the other case, and it is deliberately the awkward one: a
+/// root that no reader emits. Its projected edges are **dropped and counted**
+/// rather than silently lost, and its targets stay orphans. FR-004 was refined
+/// to say so once the implementation showed why: anchoring such a root needs
+/// `target_ref`, which each emitter derives from `select_root` and main-module
+/// detection, so it belongs beside
+/// `graph_completeness::anchor_retained_mainmod_edges` and not in the reader.
+/// Tracked as a follow-up rather than built for a case never observed.
+#[test]
+fn m1280_t019_a_root_with_no_component_drops_its_edges_rather_than_faking_them() {
+    let s = scan_closure(&closure("anchor.json"));
+
+    // CONTROL: both members really are emitted, so "they have no incoming
+    // edge" is a statement about the anchor and not about emission.
+    for member in ["waybill-fixture-anchora", "waybill-fixture-anchorb"] {
+        assert!(
+            s.role(member).is_some(),
+            "{member} must be emitted as a closure component; got {:?}",
+            s.closure_purls()
+        );
+    }
+    // CONTROL: the root really is not a component. If some reader emitted it,
+    // this fixture would be exercising the resolved path instead.
+    assert!(
+        !s.purls().iter().any(|p| p.contains("waybill-fixture-root")),
+        "the root must not be a component, or this tests the wrong branch"
+    );
+
+    let cl = s.closure_purls();
+    let incoming: Vec<(String, String)> = s
+        .cdx_edges()
+        .into_iter()
+        .filter(|(_, t)| cl.contains(t.as_str()))
+        .collect();
+    assert!(
+        incoming.is_empty(),
+        "with an unrepresentable root there is nothing legitimate to anchor \
+         these to, and inventing an edge from the subject would assert a \
+         dependency nix did not state. got {incoming:?}"
+    );
+}
+
+// ---------------------------------------------------------------------
+// User Story 2 — the orphan population explains itself
+// ---------------------------------------------------------------------
+
+/// T031 + T032 are **unit tests in `generate/orphan_reason.rs`**, not here,
+/// and the reason is a fixture limitation worth recording.
+///
+/// These fixtures cannot test root-reachability. Their root derivation is by
+/// definition referenced by nothing, so it is never an emitted component, so
+/// its projected edges are unanchored (FR-004b) and *every* member is
+/// unreachable from the subject. A fixture where the root resolves would have
+/// to be a project whose manifest reader emits it — which is the corpus, where
+/// the end-to-end figure is measured instead: 25 unreachable closure
+/// components, 20 of them carrying this code.
+///
+/// What stays here is the exclusion property, which the fixtures *can* test.
+/// T033 / `contracts/orphan-reason.md` — the code's exclusions.
+#[test]
+fn m1280_t033_the_code_appears_on_no_other_population() {
+    let s = scan_closure(&closure("stop_at_package.json"));
+    const CODE: &str = "reachable-only-through-unemitted-package";
+    let cl = s.closure_purls();
+    for c in s.components() {
+        let Some(purl) = c["purl"].as_str() else { continue };
+        let has_code = c["properties"].as_array().is_some_and(|ps| {
+            ps.iter().any(|p| {
+                p["name"] == "waybill:orphan-reason" && p["value"] == CODE
+            })
+        });
+        if !has_code {
+            continue;
+        }
+        assert!(
+            cl.contains(purl),
+            "{purl} carries the code but is not a closure component; the \
+             cause cannot apply to it"
+        );
+    }
+}
+
+// ---------------------------------------------------------------------
+// User Story 3 — the roles are a filter, not a gate
+// ---------------------------------------------------------------------
+
+/// T037 / SC-005 — emitting edges must not reclassify anything.
+///
+/// The census is compared against a scan of the same closure by the same
+/// binary with the flag that produces the edges, so what this really asserts
+/// is that the roles are a function of the declared attributes alone. The
+/// cross-version comparison lives in `measurements/README.md`, where the
+/// pre-1280 and post-1280 censuses are both 235 / 93 / 43 / 17.
+#[test]
+fn m1280_t037_the_role_census_is_a_function_of_declared_attributes_only() {
+    let s = scan_closure(&closure("through_fetch.json"));
+    // `pkgb` is referenced by NO declared attribute and is reached only
+    // through the projection. If `inputs.drvs` leaked into classification it
+    // would acquire a role other than `unreferenced`.
+    assert_eq!(
+        s.role("waybill-fixture-pkgb"),
+        Some("unreferenced"),
+        "pkgb is reached by an inputs.drvs edge and by no declared \
+         attribute; a role other than `unreferenced` means the graph has \
+         leaked into the classifier (FR-002)"
+    );
+    // CONTROL: a member that IS declared gets a role, so the assertion above
+    // is not just observing a classifier that never fires.
+    assert_eq!(s.role("waybill-fixture-pkga"), Some("artifact-input"));
+}
+
+/// T038 — both endpoints of a closure edge still carry their role, so a
+/// consumer can partition the graph by role without waybill having
+/// pre-partitioned it.
+#[test]
+fn m1280_t038_both_endpoints_of_a_closure_edge_carry_their_role() {
+    let s = scan_closure(&closure("through_fetch.json"));
+    let cl = s.closure_purls();
+    let mut checked = 0;
+    for (from, to) in s.cdx_edges() {
+        if !cl.contains(from.as_str()) || !cl.contains(to.as_str()) {
+            continue;
+        }
+        for purl in [&from, &to] {
+            let c = s
+                .components()
+                .iter()
+                .find(|c| c["purl"].as_str() == Some(purl.as_str()))
+                .expect("endpoint resolves");
+            assert!(
+                c["properties"].as_array().is_some_and(|ps| ps
+                    .iter()
+                    .any(|p| p["name"] == "waybill:closure-role")),
+                "{purl} is an endpoint of a closure edge and must carry its role"
+            );
+        }
+        checked += 1;
+    }
+    assert!(checked > 0, "no closure-to-closure edge found to check");
+}
+
+// ---------------------------------------------------------------------
+// Polish
+// ---------------------------------------------------------------------
+
+/// T040 / SC-007 — a cycle terminates.
+///
+/// Asserted on a **completed scan**, not on the absence of a hang: a
+/// non-terminating walk does not fail a test, it times the suite out, and a CI
+/// timeout reads as infrastructure rather than as this guard.
+#[test]
+fn m1280_t040_a_closure_containing_a_cycle_still_emits_a_document() {
+    let s = scan_closure(&closure("cycle.json"));
+    assert!(
+        !s.components().is_empty(),
+        "the scan completed but emitted nothing, so the guard was not what \
+         terminated it"
+    );
+    assert!(
+        s.role("waybill-fixture-cyca").is_some(),
+        "the cycle's members must still be classified; got {:?}",
+        s.closure_purls()
+    );
+}

@@ -186,10 +186,31 @@ graph by role without waybill having pre-partitioned it.
 - **FR-003**: Relationships MUST be deduplicated and ordered deterministically,
   so that two scans of one closure produce byte-identical documents.
 - **FR-004**: The graph MUST be anchored such that every emitted closure
-  component reachable in nix's own graph is reachable in the emitted document.
+  component reachable in nix's own graph is reachable in the emitted document
+  **whenever the closure's root derivation is representable as a component**.
   The derivation that nothing else consumes is the closure's root, and the
-  edges projected from it MUST attach to the **document root component** — the
-  component the document describes.
+  edges projected from it MUST resolve through the same identity join as every
+  other node's.
+
+  **Refined during implementation, and the refinement is a narrowing.** The
+  first draft required those edges to attach to the *document root component*
+  unconditionally. That cannot be done from the reader: `target_ref`, the
+  string all three emitters use for the subject, is derived inside each builder
+  from `select_root` and main-module detection
+  (`cyclonedx/builder.rs:832`), so reproducing it at reader level would be a
+  second copy of the logic `select_root` exists to centralise. Anchoring an
+  unrepresentable root belongs beside
+  `graph_completeness::anchor_retained_mainmod_edges`, which solves the same
+  problem for other readers with `target_ref` in hand.
+
+  Measured, the narrowing costs nothing on any closure observed: the root
+  `moat-0.1` is already `pkg:hackage/moat@0.1` from the Haskell manifest
+  reader, which the document root already depends on, so the join resolves it
+  and the emitted scan reports `unanchored_root_edges = 0`.
+- **FR-004b**: When the closure root resolves to no component, its projected
+  edges MUST be dropped and counted, and the count logged — never attached to
+  the subject by assertion. An edge from the described artifact to a member
+  only the root reached would be a dependency nix did not state.
 
   The root derivation MUST NOT itself be emitted as a component on account of
   this feature. Measured, it is already represented: `moat-0.1` corresponds to
@@ -258,13 +279,29 @@ graph by role without waybill having pre-partitioned it.
   full transitive gives 16,187 and 0, and direct-plus-root-anchor gives 3,105
   and 7 by manufacturing edges from the root that are true of everything and
   therefore say nothing.
-- **FR-011**: A component left unreachable by FR-010 MUST be reported as an
-  orphan with a reason distinguishing it from one nothing depends on. Measured,
-  the residual population has a single uniform cause: it is consumed only by a
-  derivation that **declares a `pname` but is not emitted** — `stdenv-linux`,
-  `patch 2.8`, `build 1.4.4` and `clang-wrapper` are the ones that occur — so
-  the reason is "reachable only through a package this scan did not emit",
-  which is both true and actionable.
+- **FR-011**: A closure component left unreachable by FR-010 **whose C182 role
+  asserts that something references it** — `artifact-input`, `build-tooling` or
+  `both` — MUST carry an orphan reason naming the cause. A component whose role
+  is `unreferenced` MUST NOT: that role already says nothing references it, and
+  a second explanation is what the milestone-1218 guard exists to prevent.
+
+  **Narrowed during implementation, and the narrowing is the interesting
+  part.** The first draft asked for a reason on every residual orphan. The
+  milestone-1218 classifier treats `waybill:closure-role` *itself* as a
+  sufficient explanation, and invariant I7's `is_explained` mirrors it, so the
+  code could never fire — correctly, by that convention.
+  
+  The convention is right for `unreferenced` and wrong for the other three. A
+  component whose role says *something depends on this* and which nothing in
+  the graph reaches is a contradiction between two of the document's own
+  statements, and C182 cannot be the explanation because it is one half of the
+  problem. Measured on aarch64-darwin: **20 of the 25** unreachable closure
+  components are in that position (14 `build-tooling`, 6 `artifact-input`), and
+  the remaining 5 are `unreferenced` and stay explained by their role.
+
+  Both the classifier guard and I7's mirror are narrowed together. The frozen
+  `explained_pre_1156` copy is deliberately **not** touched: it is a historical
+  snapshot used as a drift detector.
 - **FR-012**: The projection MUST remain linear in the size of the closure.
   A walk restarted from scratch for each of the 381 emitted components over a
   10,342-edge graph is 381 full traversals; the measured closures are small
@@ -298,8 +335,14 @@ not transfer; both were measured, and `measurements/` records each.
 
 - **SC-001**: The closure tier contributes a non-zero number of dependency
   relationships, where today it contributes exactly 0.
-- **SC-002**: Closure-component orphans fall from **352 to 5** on
-  x86_64-linux (and to 16 on aarch64-darwin). **Not to zero, and deliberately
+- **SC-002**: Closure-component orphans fall substantially, and the residue
+  carries the FR-011 reason. **The figures first stated here — 5 on
+  x86_64-linux, 16 on aarch64-darwin — came from a probe, not the
+  implementation, and the implementation measures 25 on darwin.** The probe
+  keyed identity on `pname` alone while the reader falls back to the
+  derivation's `name`. Scored against a measurement of the binary; the
+  pre-change figure of 352 on linux is from the committed golden and stands.
+  Measured so far on aarch64-darwin: **359 → 25**. **Not to zero, and deliberately
   not**: the five are reachable only through a package waybill does not emit,
   FR-010 declines to walk through a package, and FR-011 requires each to say so.
   Connecting them would mean either asserting a transitive edge nix did not

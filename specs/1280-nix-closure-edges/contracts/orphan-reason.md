@@ -11,6 +11,24 @@ One new variant on `OrphanReasonCode`
 `waybill:orphan-reason` annotation. **The literal string is frozen on landing**
 — that enum's own comment says consumers key on these values.
 
+## When it is emitted — narrowed during implementation
+
+Only on a closure component that is unreachable **and** whose C182 role
+asserts a reference: `artifact-input`, `build-tooling` or `both`. Never on one
+whose role is `unreferenced`.
+
+The reason is that milestone 1218's classifier, and invariant I7's
+`is_explained`, both treat `waybill:closure-role` as a sufficient explanation
+for an orphan. That is right when the role says nothing references the member
+and wrong when it says something does — then the role is one half of a
+contradiction rather than an explanation. Both guards are narrowed to
+`unreferenced` together; the frozen `explained_pre_1156` copy is not, being a
+drift detector.
+
+Measured on aarch64-darwin: 20 of 25 unreachable closure components qualify
+(14 `build-tooling`, 6 `artifact-input`); 5 are `unreferenced` and stay
+explained by their role.
+
 ## What it claims
 
 Every path from the root to this component runs through a derivation that
@@ -34,6 +52,8 @@ distinction this whole line of work exists to make.
   so this cause cannot apply.
 - Any component reachable from the root. The code explains an orphan; emitting
   it on a connected component would make the annotation meaningless.
+- Any component whose C182 role is `unreferenced`. That role is already the
+  explanation, and milestone 1218's guard forbids a second one.
 - Any scan without `--nix-closure`.
 
 ## Measured population
