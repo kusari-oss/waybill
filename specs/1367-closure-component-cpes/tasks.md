@@ -80,7 +80,7 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 ### Implementation for User Story 1
 
 - [ ] T015 [US1] Call `fill_missing_cpes` from `waybill-cli/src/cli/scan_cmd.rs` **after** the milestone-1366 identity pass and the closure merge. Placement matters for a reason research R2 records: `synthesize_cpes` switches on `purl.ecosystem()`, so a component re-identified from `pkg:generic` to `pkg:pypi` takes a different arm depending on which side of that pass this runs
-- [ ] T016 [US1] Thread the returned `CpeSynthesisCoverage` out of the match block to the emitters, mirroring how `nix_closure_degraded` (C190) and `closure_ecosystem_identity` (C208) are threaded in `waybill-cli/src/cli/scan_cmd.rs`
+- [ ] T016 [US1] Hold the returned `CpeSynthesisCoverage` in a local in `waybill-cli/src/cli/scan_cmd.rs`, scoped so the emitters can later read it. It is **not** threaded into `ScanArtifacts` here — that field is created in T023, and a task that cannot complete until a later phase is a task that will be reported done before it is
 - [ ] T017 [P] [US1] Test in `waybill-cli/tests/closure_component_cpes.rs` that the component's PURL is **unchanged** — a CPE is emitted alongside `pkg:generic`, never instead of it, so a consumer matching on the PURL sees no difference (`contracts/annotations.md` §1)
 - [ ] T018 [US1] Verify against the real closure that the six named in T003 now carry CPEs, and record the per-component values in `measurements/README.md`
 
@@ -130,26 +130,27 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 ### Non-regression
 
 - [ ] T031 [P] Assert the 539 closure members are byte-identical before and after, against T002's baseline, and record the diff in `specs/1367-closure-component-cpes/measurements/README.md` (SC-002)
-- [ ] T032 [P] Assert that a scan of a project with **no** nix closure produces a byte-identical document apart from C209, against a baseline from the same pre-change binary, and record it in `specs/1367-closure-component-cpes/measurements/README.md` (SC-005)
-- [ ] T033 Assert every emitted CPE's version field is release-shaped in `waybill-cli/tests/closure_component_cpes.rs`, read out of the emitted document rather than from the guard's unit test (SC-003)
+- [ ] T032 [P] Assert that components contributed by readers **other than the closure** are byte-identical before and after — including their CPEs — by diffing them against T002's baseline and recording the result in `specs/1367-closure-component-cpes/measurements/README.md` (SC-004). Distinct from T031, which covers closure members, and from T033, which covers a project with no closure at all: neither of those touches the population SC-004 is about
+- [ ] T033 [P] Assert that a scan of a project with **no** nix closure produces a byte-identical document apart from C209, against a baseline from the same pre-change binary, and record it in `specs/1367-closure-component-cpes/measurements/README.md` (SC-005)
+- [ ] T034 Assert every emitted CPE's version field is release-shaped in `waybill-cli/tests/closure_component_cpes.rs`, read out of the emitted document rather than from the guard's unit test (SC-003)
 
 ### The measured numbers
 
-- [ ] T034 **Produce SC-001's number.** Record in `measurements/README.md` the measured count of components carrying a CPE after the change, with the command that produced it. Research R7 predicts it exceeds six because the 74 `pkg:pypi` components take the pypi arm; **that prediction is not data** and the recorded figure must come from the run
-- [ ] T035 Record in `measurements/README.md` the breakdown of the delivered total by PURL ecosystem, so the six from the curated table are distinguishable from whatever else the pass reached
-- [ ] T036 Demonstrate SC-006 by confirming `openssl`, `curl`, `zlib` and `sqlite` each carry at least one CPE candidate, and record the values in `specs/1367-closure-component-cpes/measurements/README.md`
+- [ ] T035 **Produce SC-001's number.** Record in `measurements/README.md` the measured count of components carrying a CPE after the change, with the command that produced it. Research R7 predicts it exceeds six because the 74 `pkg:pypi` components take the pypi arm; **that prediction is not data** and the recorded figure must come from the run
+- [ ] T036 Record in `measurements/README.md` the breakdown of the delivered total by PURL ecosystem, so the six from the curated table are distinguishable from whatever else the pass reached
+- [ ] T037 Demonstrate SC-006 by confirming `openssl`, `curl`, `zlib` and `sqlite` each carry at least one CPE candidate, and record the values in `specs/1367-closure-component-cpes/measurements/README.md`
 
 ### SC-007 — the mutation check
 
-- [ ] T037 **Mutation-check the suite.** Make the pass a no-op → the US1 tests must go red. Make it fill unconditionally instead of only-if-empty → the T020 supplement test must go red. Remove the release-shape guard → the T009 test must go red. Record which tests failed and how many in `measurements/README.md`; if the second mutation leaves everything green, FR-004 is not covered
+- [ ] T038 **Mutation-check the suite.** Make the pass a no-op → the US1 tests must go red. Make it fill unconditionally instead of only-if-empty → the T020 supplement test must go red. Remove the release-shape guard → the T009 test must go red. Record which tests failed and how many in `measurements/README.md`; if the second mutation leaves everything green, FR-004 is not covered
 
 ### Goldens and the gate
 
-- [ ] T038 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch — never locally. **This pass runs on every scan, not only closure scans**, so the expectation is not "only the closure target changes"; which targets change is a measurement
-- [ ] T039 Account for **every** differing golden file under `waybill-cli/tests/fixtures/public_corpus/` before committing any, enumerating them from the artifact rather than from the run's summary. `image-postgres16` drifts for an unrelated reason (issue #1372) and its regenerated goldens MUST NOT be committed in this feature
-- [ ] T040 Confirm SC-008 by enumerating the corpus targets under `waybill-cli/tests/fixtures/public_corpus/` that do not scan a closure and whose goldens are unchanged, reading each target's own result
-- [ ] T041 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and `GATE_RESULT=pass` in `target/gate/prepr.log`. Never pipe cargo through `head`: it closes the pipe mid-run and wedges the process at the filter's count
-- [ ] T042 [P] Update `docs/ecosystems.md` to state what a CPE on a closure component means — a candidate for a downstream matcher, derived from a name match in a curated table, not a proof that the closure's `llvm 21.1.8` is the product NVD calls `llvm:llvm`
+- [ ] T039 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch — never locally. **This pass runs on every scan, not only closure scans**, so the expectation is not "only the closure target changes"; which targets change is a measurement
+- [ ] T040 Account for **every** differing golden file under `waybill-cli/tests/fixtures/public_corpus/` before committing any, enumerating them from the artifact rather than from the run's summary. `image-postgres16` drifts for an unrelated reason (issue #1372) and its regenerated goldens MUST NOT be committed in this feature
+- [ ] T041 Confirm SC-008 by enumerating the corpus targets under `waybill-cli/tests/fixtures/public_corpus/` that do not scan a closure and whose goldens are unchanged, reading each target's own result
+- [ ] T042 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and `GATE_RESULT=pass` in `target/gate/prepr.log`. Never pipe cargo through `head`: it closes the pipe mid-run and wedges the process at the filter's count
+- [ ] T043 [P] Update `docs/ecosystems.md` to state what a CPE on a closure component means — a candidate for a downstream matcher, derived from a name match in a curated table, not a proof that the closure's `llvm 21.1.8` is the product NVD calls `llvm:llvm`
 
 ---
 
@@ -157,7 +158,7 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 ### Phase dependencies
 
-- **Phase 1 (Setup)**: no dependencies. T004's number is what T034 is compared against.
+- **Phase 1 (Setup)**: no dependencies. T004's number is what T035 is compared against.
 - **Phase 2 (Foundational)**: depends on Phase 1. **Blocks every user story.**
 - **Phase 3 (US2)**: depends on Phase 2. Independently mergeable as a no-op.
 - **Phase 4 (US1)**: depends on Phase 2 and on US2's guards (T009–T011).
@@ -185,7 +186,7 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 - T014, then T017 (Phase 4)
 - T021, T022 (Phase 5)
 - T024, T025, T026, then T029, T030 (Phase 6)
-- T031, T032 and T042 (Phase 7)
+- T031, T032, T033 and T043 (Phase 7)
 
 ---
 

@@ -174,7 +174,7 @@ This is **consistency, not scope creep**: a pypi component contributed by the
 pip reader already receives those candidates today. A closure-contributed one
 not receiving them is the same defect as the six, in a different arm.
 
-SC-001 is written as "at least the 6" and accommodates this. **Task T-measure
+SC-001 is written as "at least the 6" and accommodates this. **Task T035
 records the actual total**; no number here may be quoted as data.
 
 ---

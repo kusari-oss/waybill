@@ -317,6 +317,22 @@ CPE candidates, unchanged from today's.
   its name is already a curated row. Growing the table is a separate,
   ongoing effort that this feature makes effective for closures rather than
   undertakes.
+- **The six are a floor, not the total.** The synthesizer has an arm per
+  ecosystem, and this feature makes *every* arm reach closure components, not
+  only the generic one. The 74 components milestone 1366 re-identified to
+  `pkg:pypi` currently hold no CPEs — they were generic when the existing pass
+  ran, and the generic arm declined them as unmapped — so they will receive
+  candidates too, as will any other closure component whose ecosystem and name
+  reach an arm.
+
+  **This is consistency, not scope creep**: a `pkg:pypi` component contributed
+  by the pip reader already receives those candidates today, and a
+  closure-contributed one not receiving them is the same defect as the six in
+  a different arm. It is called out because a reader of this document alone
+  would otherwise be surprised by the size of the change, and because the
+  measured total is the figure SC-001 requires — the six are what the *curated
+  table* delivers, not what the feature delivers. The total is unmeasured
+  until the implementation records it.
 - **Figures are from one closure and one system.** All counts are
   aarch64-darwin at a pinned nixpkgs revision. The corpus goldens pin
   x86_64-linux, which is a different closure — a figure from one is wrong in
