@@ -129,6 +129,60 @@ how a version-shaped guess produces a confident wrong answer.
 
 ---
 
+## The production rule agrees with the probe
+
+The numbers above come from a Python probe. The reader is Rust. Two
+implementations of one rule can agree by coincidence or disagree silently, so
+`waybill debug closure-dump` was extended to report the candidate population by
+**calling the production predicate** (`ecosystem_identity::is_pypi_candidate`)
+rather than by retyping its regex:
+
+```sh
+cargo run -q --bin waybill -- debug closure-dump --closure-json closure.json --summary-only
+```
+
+| quantity | probe (Python) | reader (Rust) |
+| --- | --- | --- |
+| derivations | 1,275 | 1,275 |
+| `pname` in `env` only | 594 | 594 |
+| `pname` in `structuredAttrs` only | 66 | 66 |
+| no `pname` | 615 | 615 |
+| PyPI candidate derivations | 83 | **83** |
+| distinct candidate identities | 75 | **75** |
+| closure members (FR-005 protects) | — | 539 |
+
+Exact agreement on every shared quantity. The 539 member identities are the
+population SC-003 requires be byte-identical after the change.
+
+---
+
+## deps.dev normalises the name itself
+
+Measured, because the choice of normalisation would otherwise be an assumption
+in the lookup path:
+
+| asked as | result | name echoed back |
+| --- | --- | --- |
+| `zope.interface@8.2` | 200 | `zope-interface` |
+| `zope-interface@8.2` | 200 | `zope-interface` |
+| `zope_interface@8.2` | 200 | `zope-interface` |
+| `ruamel.yaml@0.18.6` | 200 | `ruamel-yaml` |
+
+All spellings resolve, and the registry echoes the PEP 503 form. **The
+normalisation choice therefore cannot affect confirmation**, which removes it
+as a risk on the lookup path entirely.
+
+It still affects the *emitted* PURL, and there the governing constraint is
+cross-reader consistency: milestone 674 FR-015 requires the pip reader and any
+other reader to spell one package one way. So the emitted identifier uses
+`pip::normalize_pypi_name_for_purl`, the same helper the pip reader uses —
+which implements the purl-spec rule (lowercase, `_` → `-`) and not full
+PEP 503 (which also folds `.` and collapses runs). No candidate on this
+closure contains a `.` or `_`, so the two agree on all 75 and nothing here
+exercises the difference.
+
+---
+
 ## Open — not yet measured
 
 | item | task | why not yet |

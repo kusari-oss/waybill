@@ -19,6 +19,7 @@
 
 pub(crate) mod classify;
 pub(crate) mod derivation;
+pub(crate) mod ecosystem_identity;
 pub(crate) mod emit;
 pub(crate) mod graph;
 /// Milestone 1282 — the four-role vocabulary for members declaring no
