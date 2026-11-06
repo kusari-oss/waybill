@@ -195,23 +195,41 @@ design and were correctly identified before:
 | `t033_the_edge_figure_is_carried` | the key is present either way |
 | `t049_two_scans_emit_identical_component_sets` | determinism holds over any set |
 | `us3_no_edge_names_a_component_that_is_absent` | a safety property, vacuously true over a smaller set |
+| `us3_a_source_behind_scaffolding_is_the_endpoint` | asserts a property of `graph::stops`, which the emission gate does not govern |
 
-The other **seven are insensitive by accident**, and that is a weakness in the
-fixture rather than a property of the feature. Three fixture members survive
-the mutation because the C182 role gate already admits them, and those three
-happen to satisfy what those seven assert — so
-`us1_a_fixed_output_member_carries_its_content_hash_in_its_identity`,
-`us1_identical_content_yields_one_component`,
-`us1_a_source_url_is_carried_natively`,
-`us2_a_write_text_member_is_marked_scaffolding`,
-`us3_a_source_behind_scaffolding_is_the_endpoint`,
-`t055_the_component_count_reconciles_without_the_census` and
-`t056_the_orphan_count_is_a_lower_bound_not_an_equality` pass over a
-population the old gate already emitted. They are not wrong, but they are not
-evidence about this milestone's population either. Closing that needs the
-fixture's role-covering members moved off the C182-admitted path; it is
-recorded here rather than fixed, because SC-008 is met by the control and the
-six alongside it.
+The other **six are insensitive by accident**, and that is a weakness in the
+fixture rather than a property of the feature.
+
+Exactly three of the nine `pname`-less fixture members are referenced by a
+*declared attribute* of another derivation — `source` (`cccccccc`) via
+`buildInputs`, `waybill-fixture-tarball` (`ffffffff`) via `buildInputs`, and
+`waybill-fixture-builder` (`dddddddd`) via `nativeBuildInputs`. The C182 role
+gate admits those three on its own, so they survive the mutation, and they
+happen to be the members these six assert on:
+
+| test | the survivor that satisfies it |
+| --- | --- |
+| `us1_a_fixed_output_member_carries_its_content_hash_in_its_identity` | `source` (`cccccccc`) — the assertion is `!is_empty()` |
+| `us1_identical_content_yields_one_component` | one tarball survives, so `len() == 1` holds over a set of one |
+| `us1_a_source_url_is_carried_natively` | the URL sits on `cccccccc`, the referenced source |
+| `us2_a_write_text_member_is_marked_scaffolding` | asserts on `waybill-fixture-builder`, the referenced one |
+| `t055_the_component_count_reconciles_without_the_census` | the reconciliation holds for any set |
+| `t056_the_orphan_count_is_a_lower_bound_not_an_equality` | a lower bound holds for any set |
+
+They are not wrong, but they are not evidence about this milestone's
+population either.
+
+**A seventh weakness, of a different kind.**
+`us3_a_source_behind_scaffolding_is_the_endpoint` does not assert its own
+headline: it asserts only that the scaffolding is **not** an edge target, never
+that the source behind it **is**. That is why it is listed as by-design
+insensitive above — but the missing half is the half that would be sensitive.
+
+The fixture already holds an unreferenced representative of every role
+(`source` `eeeeeeee`, `setup-hook.sh`, `waybill-fixture-mini-0.27.1`,
+`strncpy`, `memcpy`), so closing all seven is retargeting plus two small
+fixture moves, not new coverage. It is recorded here rather than done, because
+SC-008 is met by the control and the six alongside it.
 
 **A second variant, and why its number is not evidence.** Mutating
 `is_1282_member` as well fails 18 of 19 — including
