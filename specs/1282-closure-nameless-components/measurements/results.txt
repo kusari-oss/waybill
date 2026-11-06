@@ -1,0 +1,30 @@
+closure derivations : 1749
+  with pname        : 604
+  WITHOUT pname     : 1145 (65%)  <- Gap A
+
+  source         549
+  package         83
+  scaffolding    267
+  fragment       246
+
+carrying a source url : 138
+  forge-hosted        : 36  (3% of Gap A)
+
+distinct content-hashed names : 445
+  names covering >1 content   : 2
+      'source' -> 56 distinct hashes
+      'main.mk' -> 3 distinct hashes
+
+=== identity over all 1145 Gap A derivations ===
+  name alone          :   957 distinct, 188 collide
+  name + .drv hash    :  1145 distinct, 0 collide
+  name + content hash :   502 distinct over 549 content-hashed, 47 merge
+      (a 'merge' here is correct: the same content fetched by two
+       derivations is one component, not two)
+
+  worst name collisions, which is why a hash belongs in the identity:
+      'source'                           x56
+      'libgetopt.a-builder'              x8
+      'libtcc1.a'                        x8
+      'crt-builder'                      x8
+      'libgetopt.a'                      x8
