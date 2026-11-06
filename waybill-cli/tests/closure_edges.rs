@@ -178,17 +178,29 @@ impl Scan {
             .collect()
     }
 
-    fn doc_root_ref(&self) -> String {
-        self.cdx["dependencies"]
-            .as_array()
-            .and_then(|a| a.first())
-            .and_then(|e| e["ref"].as_str())
-            .unwrap_or_default()
-            .to_string()
+    /// Every ref that legitimately names the subject rather than a component.
+    ///
+    /// **Both the PURL and the bom-ref**, because the two differ: CycloneDX's
+    /// `dependencies[].ref` for the subject is the bom-ref (`name@version`)
+    /// while `metadata.component.purl` is a PURL. An earlier version of this
+    /// helper took `dependencies[0].ref` instead, which is whichever entry
+    /// sorts first and is usually a component — it reported two dangling
+    /// edges that a direct scan of the same fixture does not have.
+    fn doc_root_refs(&self) -> std::collections::HashSet<String> {
+        let c = &self.cdx["metadata"]["component"];
+        ["purl", "bom-ref"]
+            .iter()
+            .filter_map(|k| c[*k].as_str().map(str::to_string))
+            .collect()
     }
 }
 
 fn scan_closure(closure_json: &str) -> Scan {
+    scan_closure_with_args(closure_json, &[])
+}
+
+/// The same, with extra CLI arguments — for the `--tier` interaction (T058).
+fn scan_closure_with_args(closure_json: &str, extra: &[&str]) -> Scan {
     let dir = tempfile::tempdir().unwrap();
     let cache = seed_cache();
     let bin = dir.path().join("bin");
@@ -224,6 +236,7 @@ fn scan_closure(closure_json: &str) -> Scan {
         .arg(format!("spdx-2.3-json={}", spdx23_path.display()))
         .arg("--output")
         .arg(format!("spdx-3-json={}", spdx3_path.display()))
+        .args(extra)
         .env("PATH", format!("{}:{}", bin.display(), std::env::var("PATH").unwrap()))
         .env("WAYBILL_NIXPKGS_CACHE", cache.path())
         .output()
@@ -380,8 +393,8 @@ fn m1280_t018_a_member_behind_a_fetch_is_reachable() {
 fn m1280_t026_every_edge_endpoint_resolves_to_a_component() {
     let s = scan_closure(&closure("through_fetch.json"));
     let mut known = s.purls();
-    // The document root is a legitimate endpoint and is not a component.
-    known.insert(s.doc_root_ref());
+    // The subject is a legitimate endpoint and is not a component.
+    known.extend(s.doc_root_refs());
     let cl = s.closure_purls();
     let edges = s.cdx_edges();
 
@@ -672,4 +685,161 @@ fn m1280_t040_a_closure_containing_a_cycle_still_emits_a_document() {
         "the cycle's members must still be classified; got {:?}",
         s.closure_purls()
     );
+}
+
+/// T057 / SC-008 — a degraded closure records **no** edge count, not a zero.
+///
+/// C184's row makes this distinction for every other figure it carries: a zero
+/// would read as "the closure held nothing" rather than "no closure was read".
+/// The scan is given a `nix` that fails, so the tier degrades.
+#[test]
+fn m1280_t057_a_degraded_closure_records_no_edge_count() {
+    let dir = tempfile::tempdir().unwrap();
+    let cache = seed_cache();
+    let bin = dir.path().join("bin");
+    std::fs::create_dir_all(&bin).unwrap();
+    let nix = bin.join("nix");
+    // A `nix` that fails every invocation: the tier must degrade, not guess.
+    std::fs::write(&nix, "#!/bin/sh\nexit 1\n").unwrap();
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&nix, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let cdx_path = dir.path().join("out.cdx.json");
+    let out = Command::new(binary_path())
+        .args([
+            "sbom",
+            "scan",
+            "--path",
+            project().to_str().unwrap(),
+            "--no-deep-hash",
+            "--nix-closure",
+            "--format",
+            "cyclonedx-json",
+            "--output",
+        ])
+        .arg(format!("cyclonedx-json={}", cdx_path.display()))
+        .env("PATH", format!("{}:{}", bin.display(), std::env::var("PATH").unwrap()))
+        .env("WAYBILL_NIXPKGS_CACHE", cache.path())
+        .output()
+        .unwrap();
+    assert!(
+        cdx_path.exists(),
+        "a degraded closure must still emit a document.\nstderr:\n{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let cdx: Value = serde_json::from_slice(&std::fs::read(&cdx_path).unwrap()).unwrap();
+    let doc: std::collections::HashMap<&str, &str> = cdx["metadata"]["properties"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter_map(|p| Some((p["name"].as_str()?, p["value"].as_str()?)))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    // CONTROL: the tier really did degrade, so "no C184" is about the record
+    // and not about a scan that quietly succeeded.
+    assert!(
+        doc.contains_key("waybill:nix-closure-degraded"),
+        "the stub `nix` must have made the tier degrade; doc props: {:?}",
+        doc.keys().collect::<Vec<_>>()
+    );
+    assert!(
+        !doc.contains_key("waybill:nix-closure"),
+        "a degraded closure records no C184 at all -- so no `edges` key, and \
+         certainly not `edges: 0`, which would read as a closure that held \
+         nothing"
+    );
+}
+
+/// T058 / #1360 — `--tier` does not filter the closure tier, and these edges
+/// inherit that rather than introducing it.
+///
+/// `apply_tier_filter` runs at `scan_cmd.rs:4121`; the closure's components
+/// land at 4728 and its edges at 4814, both after it. That is pre-existing for
+/// components and is filed as #1360. What this asserts is the consequence for
+/// the edges: both endpoints also arrive after the filter, so no dangling
+/// endpoint is produced — which is the only way this could have been a defect
+/// of *this* milestone rather than an inherited one.
+#[test]
+fn m1280_t058_tier_filtering_leaves_no_dangling_closure_edge() {
+    let s = scan_closure_with_args(&closure("through_fetch.json"), &["--tier", "source-only"]);
+    let mut known = s.purls();
+    known.extend(s.doc_root_refs());
+    let dangling: Vec<(String, String)> = s
+        .cdx_edges()
+        .into_iter()
+        .filter(|(f, t)| !known.contains(f) || !known.contains(t))
+        .collect();
+    assert!(
+        dangling.is_empty(),
+        "a --tier scan must leave no edge pointing at a dropped component; \
+         got {dangling:?}"
+    );
+}
+
+/// T056 / SC-003 — the two native completeness carriers agree with each other.
+///
+/// CycloneDX `compositions[].aggregate` and SPDX 3 `Relationship.completeness`
+/// are rendered from one shared helper
+/// (`generate/cyclonedx/compositions.rs::dependency_claims`, shared since
+/// m1069), so a disagreement is a defect rather than a difference between
+/// formats. This is the half of SC-003 that an orphan-count assertion does not
+/// reach, and no other task covered it.
+///
+/// **The other half — that the `orphaned-components-detected` clause
+/// disappears — is corpus-measured, not asserted here.** These fixtures cannot
+/// connect anything to the subject: their root derivation is referenced by
+/// nothing, so it is never a component and its edges are unanchored (FR-004b).
+/// On the corpus the clause's count falls 352 → 10.
+#[test]
+fn m1280_t056_the_native_completeness_carriers_agree() {
+    let s = scan_closure(&closure("through_fetch.json"));
+
+    let cdx_incomplete = s.cdx["compositions"].as_array().is_some_and(|cs| {
+        cs.iter().any(|c| {
+            c.get("dependencies").is_some() && c["aggregate"].as_str() == Some("incomplete")
+        })
+    });
+    let cdx_complete = s.cdx["compositions"].as_array().is_some_and(|cs| {
+        cs.iter().any(|c| {
+            c.get("dependencies").is_some() && c["aggregate"].as_str() == Some("complete")
+        })
+    });
+    // CONTROL: CycloneDX made *some* dependency-completeness claim, or the
+    // comparison below holds between two absences.
+    assert!(
+        cdx_incomplete || cdx_complete,
+        "CycloneDX made no dependency-aggregate claim at all; compositions={:?}",
+        s.cdx["compositions"]
+    );
+
+    let spdx3_values: std::collections::BTreeSet<String> = s.spdx3["@graph"]
+        .as_array()
+        .map(|g| {
+            g.iter()
+                .filter(|e| e["type"].as_str() == Some("Relationship"))
+                .filter_map(|e| e["completeness"].as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    if spdx3_values.is_empty() {
+        // SPDX 3 asserts nothing, which is only consistent with CycloneDX
+        // also declining to claim completeness.
+        assert!(
+            !cdx_complete,
+            "CycloneDX claims `complete` while SPDX 3 asserts no completeness \
+             at all -- the two render from one helper, so this is a defect"
+        );
+    } else {
+        let expected = if cdx_complete { "complete" } else { "incomplete" };
+        assert!(
+            spdx3_values.contains(expected),
+            "CycloneDX says {expected} and SPDX 3 says {spdx3_values:?}; the \
+             two render from one shared helper, so a disagreement is a defect \
+             rather than a format difference"
+        );
+    }
 }

@@ -58,6 +58,72 @@ closure tier. A miss on P6 means the guard narrowing was wrong in the direction
 that adds a second explanation, which is what milestone 1218's guard exists to
 stop. Any of those three is a defect rather than a surprise.
 
-## Score
+## Score — 12 of 13, plus one unpredicted consequence that changed the code
 
-To be filled in after the refresh, against the diff rather than the summary.
+Scored against the diff of the committed golden (`origin/main`) and the
+refreshed one, on **x86_64-linux**. Refresh run `42146116599`; the earlier run
+`42142677053` was discarded because it was generated before the scope fix.
+
+| # | row | predicted | observed | |
+|---|---|---|---|---|
+| P1 | C184 `edges` key | present, non-zero | **3,459** | ✅ |
+| P2 | CDX `dependsOn` | +3,000 to +3,500 | 789 → 3,748, **+2,959** | ❌ **just outside the band** |
+| P3 | orphan count | large fall | 352 → **10** | ✅ |
+| P4 | components with an orphan reason | non-zero, right roles | **6**, all `build-tooling` / `artifact-input` | ✅ |
+| P5 | the wire value | only the new code | only it | ✅ |
+| P6 | reason on an `unreferenced` component | 0 | **0** | ✅ |
+| P7 | C182 role census | unchanged | **unchanged** | ✅ |
+| P8 | component count | unchanged | 406 → 406 | ✅ |
+| P9 | `graph-completeness` verdict | still `partial` | still `partial` | ✅ |
+| P10 | `BUILD_TOOL_OF` | 103 | **103** | ✅ |
+| P11 | `DEPENDS_ON` | large increase | 752 → **3,934** | ✅ |
+| P12 | goldens changed | moat only | moat only (+ `image-postgres16`, #1358) | ✅ |
+| P13 | invariant I7 | passes | **passes** | ✅ |
+
+**P2 is the miss**, and it is a real one rather than a rounding quibble: I
+predicted +3,000 to +3,500 from the darwin figure and got +2,959. The band was
+derived by scaling one system's result to another with a different derivation
+count and a different attribute population — the same reasoning error this
+milestone already made with a probe, committed in a narrower form. The lesson
+is not "widen the band"; it is that a cross-system extrapolation does not earn
+a numeric band at all, only a direction.
+
+## The unpredicted consequence, which changed the implementation
+
+Not a prediction row, and the most valuable thing the scoring produced.
+
+The first refresh showed **8 components changing CycloneDX `scope`**: seven test
+libraries lost `excluded` and `hspec-meta` gained it. Milestone 1269's
+transitive dev-scope propagation reads the dependency graph, and `inputs.drvs`
+records what the build *consumed* — including test dependencies, which nixpkgs'
+Haskell builder passes through `buildInputs`. So seven test libraries stopped
+asserting they are absent from the runtime artifact, which for a test library
+was the correct claim.
+
+Fixed by excluding these edges from that traversal
+(`INFERRED_EDGE_DATA_TYPES` gains `nix-build-graph`), and **SC-005a was added**:
+SC-005 required the C182 role census not to move, which it did not, and said
+nothing about the other classifier that reads the graph. Verified after the
+fix: **0 scope changes** on both systems.
+
+### And the tension that fix created, declared rather than hidden
+
+Excluding the edges from propagation made **invariant I3 fail** for this target:
+`hspec-meta` is reachable only through build-graph edges, so propagation
+correctly declines to mark it and I3 correctly notices it is unmarked.
+
+**I3 cannot apply propagation's rule**, because it reads the emitted document
+and neither CycloneDX `dependencies[]` nor the SPDX relationship arrays carry an
+edge's provenance. Unlike I7's `is_explained`, there is no filter to mirror. The
+cell is declared in `invariant-declarations.toml` with that reasoning, and
+closing it needs either an edge-kind carrier in the output or a decision that
+propagation should traverse these edges after all — each its own change.
+
+## One more observed consequence, explained rather than filed away
+
+`DEV_DEPENDENCY_OF` moves **36 → 144** while the dev-scoped component set is
+unchanged at 10 and no scope changes. SPDX 2.3's milestone-052 convention types
+an edge whose source is dev-scoped as `DEV_DEPENDENCY_OF`, and those same ten
+components now have 109 outgoing closure edges where before they had few. The
+existing rule applied uniformly to more edges — which is why FR-007a is now
+explicit that it governs the C182 role and not lifecycle scope.

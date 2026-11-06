@@ -238,7 +238,17 @@ graph by role without waybill having pre-partitioned it.
   Principle V: a dependency edge is the one thing all three formats model
   natively.
 - **FR-007a**: The relationship type MUST be the same whatever the endpoint's
-  C182 role. The role MUST NOT select a relationship type.
+  **C182 role**. The role MUST NOT select a relationship type.
+
+  **This is about the role, not about lifecycle scope, and the difference is
+  observable.** SPDX 2.3's existing milestone-052 convention types an edge
+  whose source is a `development`-scoped component as `DEV_DEPENDENCY_OF`
+  rather than `DEPENDS_ON`, and it applies that rule to every reader's edges.
+  Measured on the refreshed golden, `DEV_DEPENDENCY_OF` moves **36 → 144**
+  while the set of dev-scoped components is unchanged at 10 and no component's
+  scope changes: the same ten simply have 109 outgoing closure edges where
+  before they had few. That is the existing rule applied uniformly to more
+  edges, not this milestone selecting a type.
 
   This is what keeps the three documents carrying one graph. SPDX 2.3 could
   express `BUILD_TOOL_OF` where the target is `build-tooling` and CycloneDX
