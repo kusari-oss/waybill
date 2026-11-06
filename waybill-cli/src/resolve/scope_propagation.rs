@@ -58,21 +58,47 @@ pub(crate) const ANN_SCOPE_DERIVATION: &str = "waybill:lifecycle-scope-derivatio
 /// byte-identity this pass otherwise guarantees.
 pub(crate) const DERIVATION_TRANSITIVE: &str = "transitive";
 
-/// `provenance.data_type` values marking an edge waybill *inferred*
-/// by matching names across ecosystems rather than read from a
-/// manifest (milestone 218, `--experimental-cross-ecosystem-edges`).
+/// `provenance.data_type` values marking an edge this pass must not
+/// traverse.
 ///
-/// Excluded from both traversals (FR-002b). The two directions hold
-/// the same evidentiary standard on purpose: were propagation to
-/// travel edges that cannot confer immunity, a heuristic name match
-/// could demote a component with no declared relationship to the
-/// dependency whose scope it inherited.
+/// Two populations, for two different reasons.
+///
+/// **Inferred edges** (milestone 218,
+/// `--experimental-cross-ecosystem-edges`): waybill matched names
+/// across ecosystems rather than reading a manifest. Excluded from
+/// both traversals (FR-002b), and the two directions hold the same
+/// evidentiary standard on purpose — were propagation to travel edges
+/// that cannot confer immunity, a heuristic name match could demote a
+/// component with no declared relationship to the dependency whose
+/// scope it inherited.
+///
+/// **Nix build-graph edges** (milestone 1280, #1346): read from nix's
+/// own `inputs.drvs`, so *more* authoritative than a manifest rather
+/// than less — but they answer a different question. `inputs.drvs`
+/// records what the build **consumed**, and nixpkgs' Haskell builder
+/// passes test dependencies through `buildInputs`, which C182's own
+/// documentation names as the reason `artifact-input` does not mean
+/// "ships". Traversing them makes a test library runtime-reachable.
+///
+/// Measured: when milestone 1280 first emitted these edges without
+/// this exclusion, scope propagation reclassified **8** components on
+/// `nix-closure-moat` — `HUnit`, `QuickCheck`, `call-stack`,
+/// `haskell-lexer`, `hspec-core`, `hspec-expectations` and
+/// `quickcheck-io` lost CycloneDX `scope: "excluded"`, and
+/// `hspec-meta` gained it. Seven test libraries stopped asserting they
+/// are absent from the runtime artifact, which for a test library was
+/// the correct claim. Re-deciding scope for those eight is a separate
+/// decision with its own reasoning; emitting the graph is this
+/// milestone's.
 ///
 /// Note this is `data_type`, not `source` — `source` holds the
-/// manifest path for these edges, exactly as it does for a declared
-/// one, so it cannot discriminate.
-const INFERRED_EDGE_DATA_TYPES: &[&str] =
-    &["cross-ecosystem-bridge", "cross-ecosystem-bridge-ambiguous"];
+/// manifest path for the inferred edges, exactly as it does for a
+/// declared one, so it cannot discriminate.
+const INFERRED_EDGE_DATA_TYPES: &[&str] = &[
+    "cross-ecosystem-bridge",
+    "cross-ecosystem-bridge-ambiguous",
+    "nix-build-graph",
+];
 
 /// Provenance sources of edges waybill synthesizes from the subject so
 /// that an otherwise-unreachable component is connected.

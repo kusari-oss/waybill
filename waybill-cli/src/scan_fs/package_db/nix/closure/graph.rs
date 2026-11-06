@@ -271,7 +271,18 @@ pub(crate) fn relationships(
             relationship_type: RelationshipType::DependsOn,
             provenance: EnrichmentProvenance {
                 source: "nix-closure".to_string(),
-                data_type: "dependency".to_string(),
+                // `nix-build-graph`, not `dependency`, and the distinction is
+                // load-bearing: `resolve/scope_propagation.rs` declines to
+                // traverse this `data_type`.
+                //
+                // These edges are read from nix's own record, so they are more
+                // authoritative than a manifest — but they answer a different
+                // question. `inputs.drvs` records what the build *consumed*,
+                // and nixpkgs' Haskell builder passes test dependencies
+                // through `buildInputs`. Measured: traversing them made 7 test
+                // libraries stop asserting `scope: "excluded"`, which for a
+                // test library was the correct claim.
+                data_type: "nix-build-graph".to_string(),
             },
         })
         .collect();

@@ -362,6 +362,30 @@ not transfer; both were measured, and `measurements/` records each.
   complete" would fail for the milestone working perfectly.
 - **SC-004**: Two scans of the same closure emit byte-identical relationship
   sets, asserted by a test rather than by inspection.
+- **SC-005a**: **No component's lifecycle scope or CycloneDX `scope` changes.**
+  Added during implementation, because SC-005 was too narrow and the gap was
+  measurable: it required the C182 role census not to move, which it did not,
+  and said nothing about the scope classifier that also reads the graph.
+
+  Measured, with the edges emitted and nothing else changed, milestone 1269's
+  transitive dev-scope propagation reclassified **8** components on
+  `nix-closure-moat`: `HUnit`, `QuickCheck`, `call-stack`, `haskell-lexer`,
+  `hspec-core`, `hspec-expectations` and `quickcheck-io` lost CycloneDX
+  `scope: "excluded"`, and `hspec-meta` gained it. Seven test libraries stopped
+  asserting they are absent from the runtime artifact — which for a test
+  library was the correct claim.
+
+  The cause is not a defect in the propagation. `inputs.drvs` records what the
+  build **consumed**, and nixpkgs' Haskell builder passes test dependencies
+  through `buildInputs` — the reason C182's own documentation says
+  `artifact-input` does not mean "ships". So the closure edges are not
+  traversable for scope purposes, and they carry
+  `provenance.data_type = "nix-build-graph"`, which
+  `resolve/scope_propagation.rs` declines to walk.
+
+  Re-deciding scope for those eight is a separate decision with its own
+  reasoning; emitting the graph is this milestone's. Verified: 0 scope changes
+  against a pre-1280 scan of the same closure.
 - **SC-005**: The C182 role census is **unchanged** —
   268 / 121 / 45 / 1,315 across artifact-input / build-tooling / both /
   unreferenced, and 237 / 92 / 41 / 11 at component level. A run in which the
