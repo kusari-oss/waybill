@@ -530,3 +530,142 @@ measured **outputs** — two documents, counted and differenced — and never
 measured the **input** both tools were reading. One probe over the closure JSON
 answered in minutes what three re-checks of the SBOMs could not, because the
 answer was never in the SBOMs.
+
+---
+
+# Re-check, 2026-11-06 (after milestones 1280 and 1282)
+
+Same harness, same sbomnix `1.9.0+g95480c2` from the store, same moat pin,
+same aarch64-darwin host, same flags. waybill at `bf5fb15` — main's tip after
+#1364 merged.
+
+Run because the 2026-11-05 correction at the end of this file made a
+**falsifiable prediction**, and both halves of it have now shipped: milestone
+1280 reads `inputs.drvs` for edges, and milestone 1282 emits the `pname`-less
+members. The prediction was
+
+> On this closure it would take waybill from 413 components and 788 edges to
+> roughly **825 components and ~6,500 edges**.
+
+## The comparison now
+
+| | sbomnix | post-1279 | **post-1282** | predicted |
+|---|---|---|---|---|
+| components | 1,274 | 413 | **942** | ~825 |
+| `dependsOn` edges | 8,230 | 788 | **5,131** | ~6,479 |
+| with a license | 301 | 137 | **225** | — |
+| with a hash | **0** | 136 | **136** | — |
+| with **no PURL at all** | **106** | 0 | **0** | — |
+| distinct names | 819 | 407 | **810** | — |
+| **shared with sbomnix** | — | 309 | **712** | — |
+| **sbomnix-only (the gap)** | — | 510 | **107** | — |
+| waybill-only | — | 98 | **98** | — |
+| GHC boot libraries | 0 of 6 | 6 of 6 | **6 of 6** | — |
+
+waybill's own C184 record for the same run: 1,275 derivations, 917 components
+emitted by the tier, 5,658 edges, `member-roles` `{source: 455, package: 12,
+scaffolding: 7, fragment: 65}`. The tier's 5,658 and the document's 5,131 are
+different scopes and the difference is not explained here.
+
+**The name gap closed from 510 to 107 while waybill-only held at exactly 98**,
+so this is convergence on one closure rather than two tools inventing
+different components. Every one of the residual 107 is a deliberate
+exclusion; see below.
+
+## Both predictions were wrong, in opposite directions
+
+Components overshot by 117, edges undershot by ~1,350. Recorded because a
+prediction that is quietly dropped when it misses is worse than no prediction.
+
+The component overshoot has a measured cause: the ~825 came from "1,275
+derivations → 825 distinct identities (variant merging)", which assumed the
+new population merges on `(pname, version)` the way the named one does. It
+does not — milestone 1282 gives each member a content- or recipe-hash
+identity, so 681 `pname`-less derivations yield 603 distinct identities rather
+than collapsing toward the variant-merged figure.
+
+The edge undershoot is **not** explained here. FR-013 stops the walk at
+sources and packages and passes *through* scaffolding and fragments, which
+removes transitive edges a full `inputs.drvs` collapse would keep, and that is
+the obvious candidate — but it has not been measured, and this file's history
+is that the obvious candidate was wrong three times running.
+
+## The residual 107, attributed
+
+**All 107 are the same thing**: derivations that declare a `pname` and are
+`unreferenced`, which is milestone 1282's documented exclusion — "roughly 170
+`pname`-bearing `Unreferenced` members stay suppressed". It is the same bucket
+the 2026-11-04 re-check isolated as "unreferenced, named, applying no patch —
+~103, dropped by role". It has not moved, and 1282 deliberately did not move
+it.
+
+Among them are `gawk`, `gzip`, `gnused`, `less` and `libSystem` — software
+that carries CVEs — alongside the `bootstrap-stage*-stdenv-darwin` chain,
+which is build scaffolding. That split is the one that matters for deciding
+whether to close this gap, and it is not a split by count.
+
+## Milestone 1282 emits every member it claims to, checked exactly
+
+| role | distinct identities in the closure | emitted | delta |
+|---|---|---|---|
+| `source` | 455 | 455 | **0** |
+| `package` | 12 | 12 | **0** |
+| `scaffolding` | 7 | 7 | **0** |
+| `fragment` | 65 | 65 | **0** |
+| **total** | **539** | **539** | **0** |
+
+615 derivations of the 1,275 declare no `pname` in **either** carrier; they
+reduce to 539 distinct identities under content- and recipe-hash merging, and
+all 539 are in the document. FR-001 holds on this closure with nothing left
+over.
+
+## Three probe errors, recorded because each produced a figure that looked right
+
+1. **"The sbomnix-only names are the ones it cannot identify."** Plausible —
+   sbomnix has 106 components with no PURL and the gap was 107. Measured: **0
+   of 107**. Its 106 unidentified components share a single name, `source`,
+   which waybill emits. The near-equal counts were a coincidence.
+2. **"60 of the 72 `package`-role members are missing."** The probe assumed
+   every `pname`-less derivation becomes a member-role-bearing component.
+   Most do not: `pname()` falls back to the derivation's own name, so
+   `libxo-1.7.5` is emitted as `libxo` version `1.7.5` with no member role at
+   all.
+3. **"Ten derivations are a genuine gap in milestone 1282."** The sharpest of
+   the three, because it named a defect in code that had merged an hour
+   earlier, and it was wrong. `cups-headers`, `macOS-SDK`,
+   `python3.13-pystemmer` and `shell_cmds` all declare a `pname` — in the
+   **top-level `structuredAttrs` carrier**, which milestone 1278 taught
+   `attr_str` to read and which the probe never looked at. The probe read
+   `env.pname` and `env.__json` only. 66 of the closure's 1,275 derivations
+   carry their `pname` there, and counting them as nameless is what produced
+   both the 681 (against the true 615) and the fictitious gap.
+
+**All three errors have one shape**: the probe modelled what waybill reads
+instead of reading it. That is the same failure the 2026-11-05 correction
+identified — it measured the two documents and never measured the input both
+tools were given — and it recurred three times in one afternoon against a
+file that opens by warning about it. The check that settled each was querying
+the emitted document or the closure itself.
+
+## Where each tool stands now
+
+**waybill's identity advantage is unchanged and is the durable one**: every
+component carries a PURL against sbomnix's 106 with none, 136 carry a hash
+against 0, and the six GHC boot libraries no derivation walk can reach are
+still 6-of-6 against 0-of-6.
+
+**sbomnix still reports more of the build**: 1,274 components to 942 and 8,230
+edges to 5,131. The ratio was 3× and 10× at the last re-check; it is now
+**1.35× and 1.6×**.
+
+## Reproducing
+
+```sh
+S=/nix/store/cbh4k59d3sa3w9axcwdbk6jzkg99ybvk-python3.14-sbomnix-1.9.0+g95480c2/bin/sbomnix
+cp -R ~/.cache/waybill/corpus/53983fe1021353b3/d069055*/repo moat-proj
+md5 -q ~/.cache/waybill/corpus/53983fe1021353b3/d069055*/repo/flake.lock moat-proj/flake.lock
+SBOMNIX=$S PROJ=$PWD/moat-proj WAYBILL=./target/debug/waybill \
+  bash specs/1276-boot-library-scope/measurements/compare-sbomnix.sh
+```
+
+`flake.lock` was verified byte-identical on both sides after this run.
