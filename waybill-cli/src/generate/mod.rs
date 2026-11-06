@@ -160,6 +160,15 @@ pub struct ScanArtifacts<'a> {
     /// closure and a confirmation step that did nothing must be
     /// distinguishable, which is the whole of FR-008.
     pub closure_ecosystem_identity: Option<&'a str>,
+    /// Milestone 1367 (#1371; C209) — what CPE synthesis did: how many
+    /// components carry candidates, and how many were eligible and unmapped.
+    ///
+    /// Emitted on **every** scan, not only closure scans, because the pass it
+    /// describes runs for every component from every reader. Gating it would
+    /// reintroduce for non-closure scans the blind spot it exists to close:
+    /// without the second count, "this scan has no mapped software" and "the
+    /// synthesis pass never reached these components" are the same document.
+    pub cpe_coverage: Option<&'a str>,
     /// Milestone 1067 (#1058; C192) — the deps.dev enrichment pass ran
     /// online. Gates the document-scope outcome counts, which are computed
     /// in each emitter from the components it emits so they always agree

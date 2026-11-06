@@ -651,6 +651,13 @@ fn push_document_fields(
     }
 
     // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
+    // C209 (m1367, #1371) — the CPE synthesis coverage record.
+    if let Some(record) = scan.cpe_coverage {
+        push(out,
+            "waybill:cpe-coverage",
+            json!(record),
+        );
+    }
     // C208 (m1366, #1365) — the closure ecosystem identity pass's record.
     if let Some(record) = scan.closure_ecosystem_identity {
         push(out,

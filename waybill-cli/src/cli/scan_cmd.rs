@@ -4884,6 +4884,34 @@ pub async fn execute(
         None => {}
     }
 
+    // Milestone 1367 (#1371) — give every component the CPE candidates the
+    // synthesizer already knows how to produce for it.
+    //
+    // HERE, outside the `--nix-closure` match, and that placement is the fix.
+    // The existing pass runs inside `package_db::read_all`, over the component
+    // set as it stands there — which is before the closure's components are
+    // merged in above. Six components that match the curated table exactly by
+    // name carried nothing as a result.
+    //
+    // After the match rather than inside it, because the pass is not
+    // closure-specific: it runs for every component from every reader, and
+    // gating it on `--nix-closure` would leave non-closure scans with the same
+    // blind spot. After the milestone-1366 identity pass specifically, because
+    // `synthesize_cpes` switches on `purl.ecosystem()` — a component that pass
+    // re-identified from `pkg:generic` to `pkg:pypi` takes a different arm
+    // depending on which side of it this runs, and the pypi one is what the
+    // same package gets from the pip reader today.
+    //
+    // Unlike the identity pass there is no edge-ordering constraint: CPEs are
+    // per-component metadata and no relationship endpoint is derived from them.
+    let cpe_coverage = fill_missing_cpes(&mut components);
+    tracing::info!(
+        with_candidates = cpe_coverage.with_candidates,
+        eligible_unmapped = cpe_coverage.eligible_unmapped,
+        "cpe: synthesis coverage"
+    );
+    let cpe_coverage_json = cpe_coverage.wire();
+
     // Milestone 1276 — `None` means the exemption rule was not applicable:
     // no compiler configuration was read, which is every scan of a project
     // that is not Nix-built Haskell. Set by the propagation block below when
@@ -5500,6 +5528,7 @@ pub async fn execute(
         nix_eval_degraded,
         nix_closure_degraded,
         closure_ecosystem_identity: closure_ecosystem_identity_value,
+        cpe_coverage: Some(cpe_coverage_json.as_str()),
         // C192 (m1067): answers served from the disk cache count as online.
         deps_dev_online: enrich_cfg.deps_dev && !offline,
         nixpkgs_haskell_degraded,
@@ -6342,6 +6371,157 @@ async fn run_closure_ecosystem_identity(
         "nix-closure: ecosystem identity"
     );
     record
+}
+
+/// Milestone 1367 (#1371) — the document-scope record of what CPE synthesis
+/// did (C209).
+///
+/// Two counts rather than one, and that is the whole point. A document with
+/// `with_candidates: 0, eligible_unmapped: 0` says *"there was nothing to
+/// do"*. One with `with_candidates: 0, eligible_unmapped: 264` says **"the
+/// pass did not run"**. Those were the same document for a whole milestone —
+/// zero CPEs either way — which is how `synthesize_cpes` came to be invisible
+/// to every closure component without anything failing, warning or logging.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) struct CpeSynthesisCoverage {
+    /// Components carrying at least one CPE candidate after the pass.
+    pub(crate) with_candidates: usize,
+    /// Components that reached the pass eligible — empty CPEs, release-shaped
+    /// version — and for which the synthesizer had no opinion.
+    ///
+    /// Measured on the pinned closure: 138 of these are `pkg:hackage`, for
+    /// which there is no arm at all. That is correct (FR-007 silent-skip) and
+    /// makes this the larger count by a wide margin, which is worth knowing
+    /// before the shape is read as a problem.
+    pub(crate) eligible_unmapped: usize,
+}
+
+impl CpeSynthesisCoverage {
+    /// The C209 value: a JSON object encoded as a string, on the C192 / C204 /
+    /// C208 template.
+    pub(crate) fn wire(&self) -> String {
+        let mut obj = serde_json::Map::new();
+        obj.insert("schema".into(), "waybill-cpe-coverage/v1".into());
+        obj.insert("with_candidates".into(), self.with_candidates.into());
+        obj.insert("eligible_unmapped".into(), self.eligible_unmapped.into());
+        serde_json::Value::Object(obj).to_string()
+    }
+}
+
+/// Is this version string something NVD could match? (FR-003)
+///
+/// A CPE's version field is a **release identifier**. `format_cpe` escapes per
+/// CPE 2.3 §6.2, so a strange version does not produce a corrupt string — it
+/// produces a syntactically valid one that matches nothing, like
+/// `cpe:2.3:a:x:x:0-unstable-2018-06-17:*:*:*:*:*:*:*`. Emitting those would
+/// overstate what a scanner can do with the document, which is a worse failure
+/// than emitting nothing: a count of 40 CPEs of which 34 cannot match reads as
+/// coverage.
+///
+/// **This lives here rather than inside `generate::cpe::synthesize_cpes`** on
+/// purpose. That function is shared with every deb, apk and rpm component in
+/// every existing golden; adding a gate to it would change their output as a
+/// side effect of fixing a closure ordering bug.
+///
+/// The declining shapes are not hypothetical. All five exist on the pinned
+/// closure today: `21.1.6+apple-sdk-26.4` (libcxx), `20251016-3.1` (libedit),
+/// `0-unstable-2018-06-17` (CoreSymbolication), `26.05pre-git` (nixpkgs
+/// hooks), `boot` (bootstrap stages). None is currently mapped, so this gate
+/// changes nothing today and exists for the table's growth — which is why its
+/// test uses constructed input rather than the corpus.
+fn is_release_shaped(version: &str) -> bool {
+    if version.is_empty() {
+        return false;
+    }
+    let mut chars = version.chars().peekable();
+    // A leading digit is required: `boot` and `v1.2` are both out.
+    if !chars.peek().is_some_and(char::is_ascii_digit) {
+        return false;
+    }
+    let mut seen_alpha = false;
+    for ch in version.chars() {
+        if ch.is_ascii_digit() || ch == '.' {
+            // A letter suffix may not be followed by more separators:
+            // `1.0.2k` is a release, `20251016-3.1` is not.
+            if ch == '.' && seen_alpha {
+                return false;
+            }
+            continue;
+        }
+        if ch.is_ascii_lowercase() && !seen_alpha {
+            seen_alpha = true;
+            continue;
+        }
+        return false;
+    }
+    true
+}
+
+/// Milestone 1367 (#1371) — give the closure's components the CPE candidates
+/// every other reader's components already get.
+///
+/// # The defect this closes
+///
+/// `c.cpes = synthesize_cpes(c)` runs at `scan_fs/mod.rs:1346`, inside
+/// `read_all`, over the post-dedup component set. The closure's components are
+/// merged in later, in `execute`. The pass had therefore never seen a single
+/// closure component, and six that match the curated table exactly by name —
+/// `openssl 3.6.2`, `curl 8.20.0`, `zlib 1.3.2`, `sqlite 3.51.2`,
+/// `pcre2 10.46`, `llvm 21.1.8` — carried nothing.
+///
+/// # Why fill-only-if-empty, and not reassign
+///
+/// `supplement::merge` lands the operator's `--supplement-cdx` CPEs **before**
+/// this runs. An unconditional `c.cpes = synthesize_cpes(c)` would overwrite
+/// an operator's explicit identifiers with synthesized guesses — and nothing
+/// on the pinned closure would reveal it, because no component there both
+/// receives a supplement and matches the table. The guard is what makes FR-004
+/// and FR-005 true by construction rather than by care.
+///
+/// # Why not move the existing pass instead
+///
+/// `package_db::read_all` has two production callers — `scan_fs/mod.rs` and
+/// `report/mod.rs`. Moving the pass would strip CPEs from the report path,
+/// which has nothing to do with this defect.
+fn fill_missing_cpes(
+    components: &mut [waybill_common::resolution::ResolvedComponent],
+) -> CpeSynthesisCoverage {
+    let mut coverage = CpeSynthesisCoverage::default();
+    for c in components.iter_mut() {
+        if !c.cpes.is_empty() {
+            // An earlier pass, or the operator. Not ours to recompute.
+            coverage.with_candidates += 1;
+            continue;
+        }
+        if !is_release_shaped(&c.version) {
+            continue;
+        }
+        // FR-002 — a closure member is a patch file, a source tarball or a
+        // build fragment, not installed software. `bash-5.3.tar.gz` is named
+        // after bash and is not bash; a CPE on it would tell a scanner that
+        // bash 5.3 is present, and the component that really is bash is
+        // emitted separately.
+        //
+        // On the pinned closure this guard never fires — zero of the 539
+        // members reach here, because only one carries a version at all and
+        // its value is `boot`. It is kept because that is a property of one
+        // closure rather than of members, and because the unit test that
+        // covers it has to construct a version-bearing member for exactly
+        // that reason.
+        if c.extra_annotations.contains_key(
+            crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE,
+        ) {
+            continue;
+        }
+        let synthesized = crate::generate::cpe::synthesize_cpes(c);
+        if synthesized.is_empty() {
+            coverage.eligible_unmapped += 1;
+        } else {
+            coverage.with_candidates += 1;
+            c.cpes = synthesized;
+        }
+    }
+    coverage
 }
 
 /// Returns `(merged, appended, appended_identities)`.
@@ -9437,5 +9617,209 @@ mod closure_ecosystem_identity_tests {
         );
         // The graph did not change shape, only the names in it.
         assert_eq!(before.len(), after.len());
+    }
+}
+
+/// Milestone 1367 (#1371) — the CPE coverage pass.
+///
+/// These are unit tests over `fill_missing_cpes` and its version predicate.
+/// The integration behaviour is in `tests/closure_component_cpes.rs`; what
+/// cannot be tested there is the `--supplement-cdx` precedence case and the
+/// release-shape guard, because **the pinned closure cannot produce either**:
+/// no component on it both receives a supplement and matches the curated
+/// table, and no mapped component carries a non-release version. Both
+/// therefore need constructed input, which is what this module is for.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod cpe_coverage_tests {
+    use super::*;
+    use waybill_common::resolution::ResolvedComponent;
+
+    /// Every shape in the accept/decline table was read off the pinned
+    /// closure, not invented: the declining five are `libcxx`, `libedit`,
+    /// `CoreSymbolication`, the nixpkgs hooks and the bootstrap stages.
+    #[test]
+    fn release_shapes_are_accepted_and_nix_shapes_are_not() {
+        for v in ["3.6.2", "8.20.0", "10.46", "21.1.8", "1.3.2", "1.0.2k", "9"] {
+            assert!(is_release_shaped(v), "{v} must be accepted");
+        }
+        for v in [
+            "21.1.6+apple-sdk-26.4", // libcxx
+            "20251016-3.1",          // libedit
+            "0-unstable-2018-06-17", // CoreSymbolication
+            "26.05pre-git",          // nixpkgs hooks
+            "boot",                  // bootstrap stages
+            "",
+        ] {
+            assert!(!is_release_shaped(v), "{v} must be declined");
+        }
+    }
+
+    /// FR-003 — a curated name does not rescue a version NVD cannot match.
+    #[test]
+    fn a_mapped_name_with_a_nix_version_gets_nothing() {
+        let mut c = vec![component("openssl", "0-unstable-2018-06-17")];
+        let cov = fill_missing_cpes(&mut c);
+        assert!(c[0].cpes.is_empty());
+        assert_eq!(cov.with_candidates, 0);
+        // Not eligible, so not counted as unmapped either: the version, not
+        // the table, is what declined it.
+        assert_eq!(cov.eligible_unmapped, 0);
+    }
+
+    /// FR-002 — a closure member gets nothing.
+    ///
+    /// **This member carries a release version on purpose.** Measured on the
+    /// pinned closure, *zero* of the 539 members reach the pass eligible —
+    /// only one carries a version at all and its value is `boot`. So a test
+    /// written against the real closure would pass whether or not this guard
+    /// exists, which is no test at all.
+    #[test]
+    fn a_closure_member_gets_nothing_even_with_a_release_version() {
+        let mut c = vec![component("openssl", "3.6.2")];
+        c[0].extra_annotations.insert(
+            "waybill:closure-member-role".to_string(),
+            serde_json::Value::from("source"),
+        );
+        let cov = fill_missing_cpes(&mut c);
+        assert!(
+            c[0].cpes.is_empty(),
+            "a source tarball named like a library is not that library"
+        );
+        assert_eq!(cov.with_candidates, 0);
+    }
+
+    /// FR-007 — an unmapped name is silent, and counted.
+    #[test]
+    fn an_unmapped_name_is_counted_not_ignored() {
+        let mut c = vec![component("waybill-fixture-unmapped", "1.2.3")];
+        let cov = fill_missing_cpes(&mut c);
+        assert!(c[0].cpes.is_empty());
+        assert_eq!(cov.with_candidates, 0);
+        assert_eq!(
+            cov.eligible_unmapped, 1,
+            "an eligible component the table has no row for must be visible \
+             in C209, or 'no mapped software' and 'the pass did not run' stay \
+             the same document"
+        );
+    }
+
+    /// FR-001 — the six are what this feature is for.
+    #[test]
+    fn a_curated_name_with_a_release_version_gets_candidates() {
+        let mut c = vec![component("openssl", "3.6.2")];
+        let cov = fill_missing_cpes(&mut c);
+        assert!(
+            c[0].cpes.iter().any(|v| v.starts_with("cpe:2.3:a:openssl:openssl:3.6.2")),
+            "got {:?}",
+            c[0].cpes
+        );
+        assert_eq!(cov.with_candidates, 1);
+        assert_eq!(cov.eligible_unmapped, 0);
+    }
+
+    /// FR-004 / FR-005 — the operator wins.
+    ///
+    /// `supplement::merge` runs before this pass, so an unconditional
+    /// reassignment would silently replace an operator's explicit CPE with a
+    /// synthesized guess. Nothing on the pinned closure would reveal that.
+    #[test]
+    fn an_operator_supplied_cpe_is_never_recomputed() {
+        let supplied = "cpe:2.3:a:openssl_project:openssl:3.6.2:*:*:*:*:*:*:*";
+        let mut c = vec![component("openssl", "3.6.2")];
+        c[0].cpes = vec![supplied.to_string()];
+
+        let cov = fill_missing_cpes(&mut c);
+
+        assert_eq!(
+            c[0].cpes,
+            vec![supplied.to_string()],
+            "the operator's vendor slug must survive; the curated table would \
+             have said `openssl:openssl`"
+        );
+        assert_eq!(cov.with_candidates, 1);
+    }
+
+    /// FR-005 — no value appears twice.
+    #[test]
+    fn candidates_are_free_of_duplicates() {
+        let mut c = vec![component("openssl", "3.6.2")];
+        fill_missing_cpes(&mut c);
+        let mut seen = std::collections::HashSet::new();
+        for v in &c[0].cpes {
+            assert!(seen.insert(v), "duplicate CPE {v} in {:?}", c[0].cpes);
+        }
+    }
+
+    /// FR-008 — the two counts tell three states apart.
+    #[test]
+    fn the_record_distinguishes_nothing_to_do_from_did_not_run() {
+        let nothing = fill_missing_cpes(&mut []);
+        let mut unmapped = vec![component("waybill-fixture-unmapped", "1.0")];
+        let did_nothing = fill_missing_cpes(&mut unmapped);
+
+        assert_eq!(nothing.with_candidates, 0);
+        assert_eq!(nothing.eligible_unmapped, 0);
+        assert_eq!(did_nothing.with_candidates, 0);
+        assert_eq!(did_nothing.eligible_unmapped, 1);
+        assert_ne!(
+            nothing.wire(),
+            did_nothing.wire(),
+            "these two documents must not be identical — that they WERE is \
+             how this defect survived a milestone"
+        );
+        assert!(nothing.wire().contains("\"with_candidates\":0"));
+        assert!(did_nothing.wire().contains("\"eligible_unmapped\":1"));
+    }
+
+    fn component(name: &str, version: &str) -> ResolvedComponent {
+        use waybill_common::resolution::{ResolutionEvidence, ResolutionTechnique};
+        use waybill_common::types::purl::Purl;
+        let coordinate = if version.is_empty() {
+            format!("pkg:generic/{name}")
+        } else {
+            format!("pkg:generic/{name}@{version}")
+        };
+        ResolvedComponent {
+            purl: Purl::new(&coordinate).unwrap(),
+            name: name.to_string(),
+            version: version.to_string(),
+            evidence: ResolutionEvidence {
+                technique: ResolutionTechnique::UrlPattern,
+                confidence: 0.95,
+                source_connection_ids: vec![],
+                source_file_paths: vec![],
+                deps_dev_match: None,
+            },
+            licenses: vec![],
+            concluded_licenses: vec![],
+            hashes: vec![],
+            supplier: None,
+            cpes: vec![],
+            advisories: vec![],
+            occurrences: vec![],
+            lifecycle_scope: None,
+            build_inclusion: None,
+            artifact_presence: None,
+            requirement_ranges: vec![],
+            source_type: None,
+            sbom_tier: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            npm_role: None,
+            raw_version: None,
+            parent_purl: None,
+            co_owned_by: None,
+            shade_relocation: None,
+            external_references: vec![],
+            extra_annotations: Default::default(),
+            binary_role: None,
+        }
     }
 }
