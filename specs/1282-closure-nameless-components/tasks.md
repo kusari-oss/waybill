@@ -34,7 +34,7 @@ The classifier and the identity basis block every story.
 - [ ] T009 Implement `identity(drv, drv_key) -> IdentityBasis` in `member.rs` (FR-003, FR-004), taking the recipe hash from the closure map key's leading hash so a member with no content hash is still uniquely identified
 - [ ] T010 **Choose the hash-prefix length by measurement**, not convention: extend `measurements/classify-nameless.py` to report collisions at candidate prefix lengths, run it, and pick the shortest with zero collisions plus a margin. Record the chosen length and its evidence in `measurements/README.md`. The plan deliberately left this open because full-hash collision-freedom is a different claim from prefix collision-freedom
 - [ ] T011 [P] Unit-test in `member.rs` that `classify` is total and reproduces the measured distribution on the fixture, asserting the **four counts** and not merely the total — a classifier returning one role for everything still sums correctly
-- [ ] T012 [P] Unit-test in `member.rs` that a derivation carrying both a content hash and `env.text` classifies as `Source`, fixing the evidence order against regression
+- [ ] T012 [P] Unit-test in `member.rs` that the **whole** evidence order holds against regression: a derivation carrying both a content hash and `env.text` is `Source`, and one carrying both `env.text` and a version-shaped name is `Scaffolding`. The second case is the one the data-model table had backwards; only the probe and the contract were right
 - [ ] T013 [P] Unit-test in `member.rs` that `identity` returns `Content` where a hash exists under either spelling, and `Recipe` otherwise
 
 **Checkpoint**: members can be classified and identified. Nothing is emitted yet.
@@ -47,7 +47,7 @@ The classifier and the identity basis block every story.
 
 **Independent test**: scan a fixture closure containing fixed-output derivations and assert each becomes a component whose identity includes its content hash.
 
-- [ ] T014 [US1] Replace the `pname()`-is-`None` skip in `emit::components` (`closure/emit.rs`) with the classifier, so every member is emitted (FR-001)
+- [ ] T014 [US1] Relax the **C182 role gate** in `emit::components` (`closure/emit.rs`) so a member with no declared `pname` is emitted whatever its role (FR-001). The gate is `emits_as_component` → `role_alone_emits`, **not** the `pname()` test: `pname()` falls back to the derivation's own `name` and returns `Some` for all 1,145, so editing it changes nothing and compiles clean (research R8a). Leave `pname`-bearing members on the existing gate — the asymmetry is stated in the spec's Assumptions
 - [ ] T015 [US1] Build the identifier in `closure/emit.rs` as `pkg:generic/<name>-<hash-prefix>`, with the hash in the **name segment** — a qualifier does not satisfy FR-002 (contracts)
 - [ ] T016 [US1] Merge members sharing a name and content hash into one component in `closure/emit.rs` (FR-003); keep members differing in content distinct
 - [ ] T017 [US1] Keep the derivation's own `name` unmodified on the component's `name` field (FR-016)
@@ -57,8 +57,10 @@ The classifier and the identity basis block every story.
 - [ ] T021 [P] [US1] Integration test: two derivations sharing a `name` with **different** content emit **two** components whose identifiers differ **without reference to any qualifier** (US1 scenario 3, FR-002, SC-014)
 - [ ] T022 [P] [US1] Integration test: the component's `name` field is the derivation's name, not the hashed identifier (FR-016)
 
-- [ ] T048 [P] [US1] Integration test in `closure_members.rs`: the fixed-output population merges to the measured component count — 549 members yielding 502 components on the pinned proportions — and a member with no content hash is still uniquely identified (SC-010, FR-004)
+- [ ] T048 [P] [US1] Integration test in `closure_members.rs`: content-hash merging is exact on the fixture — members sharing a name and hash collapse, members sharing a name alone do not — and a member with no content hash is still uniquely identified (SC-010, FR-004). The pinned 549→502 figure is asserted at closure scale by T041, not against a synthetic fixture
 - [ ] T049 [P] [US1] Integration test: two scans of one closure emit identical component sets, asserted on the sorted identifier list (SC-004)
+
+- [ ] T053 [US1] **Re-key the merge map** in `emit::components` from `(name, version)` to the identity. These members declare no `version` and keep their `name` unmodified (FR-016), so the existing key collapses all 56 members named `source` into one component — the collision FR-002, SC-014 and US1 scenario 3 each forbid separately (research R8c). T016's merge is only correct once the key changes; milestone 1281 shipped this same bug class once
 
 **Checkpoint**: US1 is independently shippable — sources are visible.
 
@@ -75,8 +77,8 @@ The classifier and the identity basis block every story.
 - [ ] T025 [US2] Write the parity extractor for the new row in `waybill-cli/src/parity/extractors/`, reading the emitted value rather than re-deriving it
 - [ ] T026 [P] [US2] Integration test in `closure_members.rs`: a `writeText` member is marked scaffolding, not presented as a dependency (US2 scenario 1)
 - [ ] T027 [P] [US2] Integration test: every added component carries exactly one role, and the four counts sum to the number added (US2 scenario 2, SC-002)
-- [ ] T028 [P] [US2] Integration test: filtering to `source` and `package` yields 585 components on the fixture's proportions and leaves no scaffolding or fragments (US2 scenario 3, FR-007, SC-005)
-- [ ] T029 [P] [US2] Integration test: the role is emitted natively where a format has a carrier and as an annotation otherwise, consistently across CycloneDX, SPDX 2.3 and SPDX 3
+- [ ] T028 [P] [US2] Integration test: filtering the added population to `source` and `package` leaves no scaffolding and no fragments, and leaves the components carrying no member role **in** — a filter that drops those discards all 381 named packages (FR-007). Assert the fixture's own four counts, not the pinned 585; T041 carries the closure-scale figure (SC-005)
+- [ ] T029 [P] [US2] Integration test: the role is carried as a `waybill:` annotation consistently across CycloneDX, SPDX 2.3 and SPDX 3. No format has a native carrier for "this is a build scaffold" — the plan's Principle V verdict settles that, so this asserts cross-format consistency of one mechanism, not a native/annotation split
 
 - [ ] T050 [P] [US2] Unit-test in `member.rs` that classification touches no network, no subprocess and no name list — assert it against a derivation record alone, with the test holding no fixture beyond that record (FR-006)
 
@@ -103,6 +105,11 @@ The classifier and the identity basis block every story.
 
 - [ ] T051 [US3] Make graph-completeness and orphan accounting state which population they describe (FR-015), and emit a member whose name is absent or unusable rather than dropping it, identified by its derivation hash alone (FR-017). Measured: zero such derivations occur, so FR-017 is defensive — the test constructs one rather than waiting to meet it
 
+- [ ] T052 [US3] Relax the same C182 role gate in `emit::emitted_drv_keys` that T014 relaxes in `components` (FR-001). It is the **second caller** of `emits_as_component`, and it builds the set handed to `graph::project` as `emitted` — leave it and the new components exist while no edge can name them. Derive both from the one relaxed predicate, not from a second copy (research R1, R8a)
+- [ ] T054 [US3] **Make the new orphans reach the classifier unexplained.** `generate/orphan_reason.rs` computes `already_explained` before assigning any reason and `continue`s on a match, and one of its markers is `waybill:closure-role == "unreferenced"` — which every member this feature adds carries. Left alone, T034's variant is dead code and FR-014 is satisfied by exactly the blanket explanation research R5 forbids, invisibly: an explained component is not an I7 offender, so every count still passes (research R8b). Narrow that arm so it does not cover a component carrying a member role
+- [ ] T055 [P] [US3] Integration test for the FR-009 reconciliation: the tier's component count equals the count of components carrying **no** member role plus the four role counts. Assert that the milestone-1277 census is *not* an addend — it counts derivations, and summing it with a component record reconciles nothing (FR-009, FR-012)
+- [ ] T056 [US3] Measure the orphan excess over 513: assert every added component unreachable by an edge carries **the new reason**, count them, and record how many are `source` or `package` that nothing consumes. SC-012 is a lower bound, not an equality — nothing has measured that every source is reached, and asserting equality would assert something no measurement establishes (SC-012, FR-014)
+
 **Checkpoint**: all three stories complete and independently testable.
 
 ---
@@ -127,26 +134,32 @@ Phase 1 (T001–T004)
       ↓
 Phase 2 (T005–T013)   ← blocks everything; T010 blocks T015
       ↓
-Phase 3 US1 (T014–T022, T048–T049)   ← MVP
+Phase 3 US1 (T014–T022, T048–T049, T053)   ← MVP
       ↓
 Phase 4 US2 (T023–T029, T050)   depends on US1 emitting
       ↓
-Phase 5 US3 (T030–T039, T051)   depends on roles existing (T023)
+Phase 5 US3 (T030–T039, T051–T052, T054–T056)   depends on roles existing (T023)
       ↓
 Phase 6 (T040–T047)
 ```
 
 T024 and T025 must land in one commit. T045 precedes T046. T039 depends on
-T030 having landed. T048–T051 carry trailing IDs rather than being inserted:
-renumbering would silently break the range references above.
+T030 having landed. T053 must land with or before T016, which is otherwise
+correct over a key that merges what it must keep apart. T052 must land with
+T030: the endpoint set and the walk are relaxed together or the document holds
+components no edge can name. T054 must land before T036 and T056, which both
+assert a reason that the unnarrowed arm prevents from ever being assigned.
+
+T048–T056 carry trailing IDs rather than being inserted: renumbering would
+silently break the range references above.
 
 ## Parallel opportunities
 
 - **Phase 1**: T002, T003, T004 together.
 - **Phase 2**: T011, T012, T013 together once T005–T009 land.
-- **Phase 3**: T019–T022, T048 and T049 together once T014–T018 land.
+- **Phase 3**: T019–T022, T048 and T049 together once T014–T018 and T053 land.
 - **Phase 4**: T026–T029 and T050 together once T023–T025 land.
-- **Phase 5**: T035–T038 together once T030–T034 land.
+- **Phase 5**: T035–T038 and T055 together once T030–T034, T052 and T054 land.
 - **Phase 6**: T041, T042 together.
 
 ## Implementation strategy

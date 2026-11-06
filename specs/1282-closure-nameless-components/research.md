@@ -133,3 +133,81 @@ closure already parsed into memory — no new I/O, no new subprocess, no network
 to a closure already held in memory, and the one superlinear risk — the naive
 projection milestone 1280 avoided — is already solved by its memoised
 post-order pass, which this feature does not change.
+
+## R8 — three claims checked against the source after `/speckit-tasks`, two of them false
+
+R1–R7 were written from the spec and the probe. The analyze pass read the
+emitter, the projection and the orphan classifier instead, and three things
+came back differently. Each is recorded with the line that settles it.
+
+### R8a — the gap is not a `pname` test, and the task that edited one was a no-op
+
+`RawDerivation::pname()` is `attr_str("pname").or(self.name)` — it **falls
+back to the derivation's own name**. R6 measured every one of the 1,145 names
+non-empty, so `pname().is_some()` is true for all of them. The predicate that
+actually suppresses them is `emit::emits_as_component`:
+
+```rust
+fn emits_as_component(role: DerivationRole, drv: &RawDerivation) -> bool {
+    role_alone_emits(role) || drv.paths_in("patches").next().is_some()
+}
+```
+
+`role_alone_emits` admits `ArtifactInput | BuildTooling | Both`. Every one of
+the 1,145 is `Unreferenced` and applies no patch.
+
+**Read from the golden, not inferred**: the per-component `waybill:closure-role`
+values are `{artifact-input: 237, both: 41, build-tooling: 92, unreferenced: 11}`,
+summing to the 381 `components-emitted`. So 1,315 `unreferenced` derivations
+yield 11 components — the patch-appliers `emits_as_component` readmits.
+
+**Decision**: FR-001 relaxes the **C182 role gate** for members with no
+declared `pname`, at both `components()` and `emitted_drv_keys()`. A
+`pname`-keyed edit changes nothing, and would have passed every compile.
+
+**Consequence left alone, and now stated in the spec**: ~170 `pname`-bearing
+`Unreferenced` members stay suppressed. The asymmetry is deliberate; `Out of
+scope` already forbids changing how named members are classified.
+
+### R8b — the new orphans arrive pre-explained, which makes R5's new variant dead code
+
+`generate/orphan_reason.rs` computes `already_explained` **before** assigning
+any reason, and `if already_explained { continue; }` — no code is emitted.
+Among its markers:
+
+```rust
+|| c.extra_annotations.get("waybill:closure-role")
+     .and_then(|v| v.as_str()) == Some("unreferenced")
+```
+
+Every member this feature adds is `unreferenced`, and a closure component
+carries `waybill:closure-role` as a matter of course. So all 513 would be
+swallowed by that arm, the R5 variant would never fire, and FR-014 would be
+satisfied by **precisely the blanket explanation R5 says not to use** — with
+no test able to tell the difference, because an explained component is not an
+I7 offender and every count still passes.
+
+**Decision**: the new population must reach the classifier unexplained. Narrow
+that arm so it does not cover a component carrying a member role, and assert
+the new variant fires for the whole 513 rather than asserting only that the
+components are explained.
+
+**Why this is the same failure twice**: milestone 1280 narrowed this arm for
+exactly this reason — a role treated as a blanket explanation hides a genuine
+orphan behind it. R5 proposed not widening it, which was right, and missed
+that no widening was needed for it to swallow the population.
+
+### R8c — the merge key would collapse the 56 `source` members into one
+
+`emit::components` merges into a `BTreeMap<(String, String), …>` keyed by
+`(name, version)`. FR-016 keeps `name` unmodified, and these members declare
+no `version`, so the key for all 56 members named `source` is `("source", "")`
+— one component, which is what FR-002, SC-014 and US1 scenario 3 each forbid
+separately.
+
+**Decision**: the merge key becomes the identity (`IdentityBasis` plus name),
+not `(name, version)`. The component's `name` field is unaffected (FR-016);
+only what the map is keyed by changes.
+
+**Precedent**: milestone 1281 shipped this bug class once, where
+`merged.into_values()` had to become `merged.into_iter()` to re-key.

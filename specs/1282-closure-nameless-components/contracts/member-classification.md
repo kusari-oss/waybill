@@ -49,9 +49,27 @@ pub(crate) fn identity(drv: &RawDerivation, drv_key: &str) -> IdentityBasis;
 * The component's `name` field keeps the derivation's own name, unmodified
   (FR-016).
 
+**On emission**
+
+* The gate being relaxed is `emit::emits_as_component`'s C182 role filter, not
+  a `pname` test: `RawDerivation::pname()` falls back to the derivation's own
+  `name` and returns `Some` for all 1,145 (research R8a). Both callers of that
+  predicate must be relaxed — `components()` and `emitted_drv_keys()`.
+* The merge map must be keyed by the identity, not by `(name, version)`. These
+  members declare no version and keep their name unmodified, so the existing
+  key merges all 56 members named `source` into one (research R8c).
+* A member this feature adds must reach the orphan classifier **unexplained**,
+  so that the FR-014 reason is the one this feature emits. Carrying
+  `waybill:closure-role == "unreferenced"` makes it explained before any reason
+  is assigned (research R8b).
+
 **On the edge projection**
 
-* `graph::stops` widens to `pname`-bearing OR `is_edge_endpoint`.
+* `graph::stops` widens to `pname`-bearing OR `is_edge_endpoint`. Note that
+  `stops` reads `declared_pname()` while `emitted_drv_keys` reads `pname()` and
+  additionally applies the C182 role filter: these are already two rules, and
+  the subset assertion is what holds them together, not a claim that they are
+  one expression.
 * The set passed as `project`'s `emitted` argument must be exactly the set
   satisfying that predicate — derived from the one rule, not a second copy of
   it (research R1).

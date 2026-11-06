@@ -7,10 +7,18 @@
 
 ## Context
 
-The nix closure tier reads a derivation's `pname` to decide whether it becomes
-a component. Measured on the pinned `nix-closure-moat` closure: **1,145 of
-1,749 derivations carry no `pname`, and waybill emits nothing for any of
-them** — 65% of the closure is invisible in the document. Milestone 1280 gave
+Measured on the pinned `nix-closure-moat` closure: **1,145 of 1,749
+derivations carry no `pname`, and waybill emits nothing for any of them** —
+65% of the closure is invisible in the document.
+
+**What suppresses them is not a `pname` test.** `RawDerivation::pname()` falls
+back to the derivation's own `name`, and every one of the 1,145 names is
+non-empty, so that accessor returns `Some` for all of them. The gate is
+`emit::emits_as_component`, which admits a member on its milestone-1277 C182
+role — `artifact-input`, `build-tooling` or `both`, plus the `unreferenced`
+members that apply a patch. All 1,145 are `unreferenced` non-patch-appliers.
+Read from the golden: 1,315 `unreferenced` derivations yield **11**
+components. Any implementation that edits a `pname` test will change nothing. Milestone 1280 gave
 the tier its dependency graph and milestone 1281 gave it licenses; both
 operate on the 604 members that happen to be named.
 
@@ -131,7 +139,7 @@ every emitted component carries a role, and that the roles partition the set.
 
 ### User Story 3 - The document stays usable at triple the component count (Priority: P2)
 
-The feature adds roughly 1,098 components to a closure that emits about 388
+The feature adds roughly 1,098 components to a closure that emits 381
 today. Counts that describe the closure — the role census, graph completeness,
 orphan accounting — are read by people and by the invariant harness, and all
 of them move sharply for reasons that have nothing to do with the scanned
@@ -181,8 +189,12 @@ includes it.
 
 ### Functional Requirements
 
-- **FR-001**: Every closure derivation that carries no `pname` MUST be emitted
-  as a component.
+- **FR-001**: Every closure derivation that carries no **declared** `pname`
+  MUST be emitted as a component, regardless of its milestone-1277 C182 role.
+  The gate this relaxes is the C182 role filter, not a `pname` test, and it
+  must be relaxed at **both** sites that consult it — the component builder
+  and the edge-endpoint key set — because they are two callers of one
+  predicate.
 - **FR-002**: Each such component's identity MUST be unique within the
   document, and MUST remain unique under a comparison that ignores identifier
   qualifiers. A distinguishing value carried only as a qualifier does not
@@ -204,13 +216,20 @@ includes it.
 - **FR-006**: The role MUST be derivable from the closure alone, without
   network access and without a maintained list of names.
 - **FR-007**: A consumer MUST be able to filter the document to sources and
-  packages and obtain a set containing no scaffolding and no fragments.
+  packages and obtain a set containing no scaffolding and no fragments. The
+  filter is over the components **this feature adds**: a component carrying no
+  member role is one the closure tier already emitted and is not what this
+  requirement excludes. A filter expressed as "role is `source` or `package`"
+  alone would discard all 381 named packages, which is the opposite of what a
+  consumer asking for sources and packages wants.
 - **FR-008**: Where a derivation records a source URL, that URL MUST be
   carried on its component. Measured: 138 of 1,145 carry one.
 - **FR-009**: The document MUST record how many components each of the four
   roles contributed, in a record distinct from the milestone-1277 census. A
-  reader MUST be able to reconcile the document's component count by summing
-  the two records rather than inferring the difference.
+  reader MUST be able to reconcile the tier's component count as **the count
+  of components carrying no member role, plus the four role counts**. The
+  C182 census is *not* one of those addends: it counts derivations (FR-012),
+  so summing it with a component record reconciles nothing.
 - **FR-010**: A scan without `--nix-closure` MUST produce byte-identical
   output to today.
 - **FR-011**: Components this feature adds MUST NOT displace, rename or
@@ -276,8 +295,10 @@ rather than scaled — the error milestone 1280 made three times.
 - **SC-003**: No two added components share an identity, including under a
   comparison that ignores identifier qualifiers.
 - **SC-004**: Two scans of one closure emit identical component sets.
-- **SC-005**: Filtering to sources and packages yields 585 components on the
-  measured closure (502 + 83) and no scaffolding or fragments.
+- **SC-005**: Filtering the added population to sources and packages yields
+  585 components on the measured closure (502 + 83) and no scaffolding or
+  fragments. Applied to the whole document the same filter also keeps the 381
+  components carrying no member role (FR-007).
 - **SC-006**: Every corpus target that does not scan a closure produces
   byte-identical goldens.
 - **SC-007**: No component another reader emits is displaced or renamed.
@@ -293,8 +314,13 @@ rather than scaled — the error milestone 1280 made three times.
   unchanged: FR-013 stops the walk at sources and packages, which measurably
   reshapes the graph.
 - **SC-012**: Every added component unreachable by an edge carries a reason,
-  and the count of such components matches the number of `scaffolding` plus
-  `fragment` components emitted.
+  and that reason is the one this feature adds rather than an inherited
+  blanket explanation. The count is **at least** the number of `scaffolding`
+  plus `fragment` components emitted — 513 on the pinned closure, which are
+  orphans by construction — and any excess is a `source` or `package`
+  component nothing consumes. The excess MUST be measured rather than assumed
+  to be zero; an equality here would assert something no measurement
+  establishes.
 - **SC-013**: The milestone-1277 role census is numerically identical before
   and after this feature on the same closure — `{artifact-input: 268, both:
   45, build-tooling: 121, unreferenced: 1315}` on the pinned target, totalling
@@ -308,7 +334,13 @@ rather than scaled — the error milestone 1280 made three times.
   derivation records already fetched; this feature adds no network access, no
   second evaluation and no maintained name list.
 - **`pname`-bearing members are untouched.** Their identity, licensing and
-  role handling are milestones 1275, 1277 and 1281's concern.
+  role handling are milestones 1275, 1277 and 1281's concern. This is
+  deliberately asymmetric and worth stating plainly: after FR-001 an
+  `unreferenced` member with no declared `pname` is emitted, while an
+  `unreferenced` member that declares one is still suppressed unless it
+  applies a patch. Roughly 170 members sit on the suppressed side. Emitting
+  them is a different question about a population this feature did not
+  measure, and SC-001's figure assumes they stay as they are.
 - **Four roles are enough for the measured population.** The classifier
   assigns every one of the 1,145 to exactly one of them, with no residue.
 - **The derivation store-path hash is a stable identity within a document.**
