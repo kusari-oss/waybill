@@ -31,6 +31,13 @@
 
 ## Notes
 
+Re-validated 2026-11-06 after `/speckit.clarify` (3 questions, 4 clarification
+entries). The clarifications closed two requirements that had shipped as
+unresolved either/ors — the document-scope counts and the no-usable-name case
+— and replaced a third that was under-specified, the identifier shape. FR and
+SC blocks were re-sorted into numeric order and the FR-014 gap left by the
+removal was closed; no reference dangles.
+
 Validation performed 2026-11-06. Specific checks worth recording:
 
 - **Arithmetic is internally consistent.** SC-001's 1,098 = 502 (content-

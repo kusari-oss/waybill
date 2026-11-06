@@ -31,6 +31,28 @@ build, and a consumer asking "what source did this come from" gets silence.
 
 ### Session 2026-11-06
 
+- Q: Where should the distinguishing hash live in the emitted identifier? →
+  A: **In the name segment.** PURL equality is how downstream tooling matches
+  components, and some tools compare without qualifiers. A hash carried only
+  as a qualifier would let 56 distinct `source` artifacts compare equal in
+  such a tool — re-creating precisely the collision FR-002 exists to prevent.
+  The human-readable name is preserved in the component's own name field, so
+  nothing is lost to a reader.
+- Q: How should the existing document-scope counts treat the 1,145 new
+  components? → A: **Exclude them; count them separately.** The milestone-1277
+  C182 census keeps describing only `pname`-bearing members, so every
+  historical figure stays comparable, and the new population gets its own
+  record broken down by the four roles. The two vocabularies do not map onto
+  each other — a `fragment` is not `artifact-input`, `build-tooling`, `both`
+  or `unreferenced` — so folding them into one record would mean inventing a
+  value and silently changing what every prior census figure meant.
+- Q: Do the newly emitted scaffolding and fragment components participate in
+  dependency edges? → A: **No — only `source` and `package` do.** Milestone
+  1280's projection keeps its current stopping rule and walks *through*
+  scaffolding and fragments unchanged, so the measured graph shape is
+  preserved. The consequence is accepted and must be stated rather than
+  discovered: 513 components are then orphans by construction, and need an
+  orphan reason that says so.
 - Q: Which of the 1,145 should become components? → A: **All of them**, each
   carrying a role annotation so a consumer can filter. The operator's stated
   preference is more information by default, filtered down when irrelevant,
@@ -131,11 +153,14 @@ includes it.
   reached through a path this feature does not own.
 - **A closure of a system configuration** (milestone 1066), whose pname-less
   population has not been measured and may be differently shaped.
-- **Scaffolding that is also a dependency edge target.** Milestone 1280's
-  graph projects edges between emitted components; adding 596 nodes changes
-  what the projection stops at.
-- **A name that is a valid PURL segment by accident** — `libtcc1.a`, `crt` —
-  where the emitted identifier must still be unambiguous.
+- **A scaffolding member that another member genuinely depends on.** FR-013
+  keeps it out of the graph, so the dependency is expressed by the projection
+  walking through it — the same treatment a non-package derivation receives
+  today. The member is still emitted as a component; it is simply never an
+  endpoint.
+- **A derivation whose name is absent or unusable in an identifier.** Measured
+  as zero occurrences, so FR-017 is defensive; it must still not drop the
+  member, because the FR-009 counts would then fail to reconcile.
 
 ## Requirements *(mandatory)*
 
@@ -144,9 +169,12 @@ includes it.
 - **FR-001**: Every closure derivation that carries no `pname` MUST be emitted
   as a component.
 - **FR-002**: Each such component's identity MUST be unique within the
-  document. Measured: `name` alone collides for 188 of 1,145, and `source`
-  alone covers 56 distinct contents, so a name-keyed identity is not
-  permissible.
+  document, and MUST remain unique under a comparison that ignores identifier
+  qualifiers. A distinguishing value carried only as a qualifier does not
+  satisfy this: tooling that compares without qualifiers would see one
+  component where the closure holds many. Measured: `name` alone collides for
+  188 of 1,145, and `source` alone covers 56 distinct contents, so a
+  name-keyed identity is not permissible.
 - **FR-003**: Where a derivation records a content hash, that hash MUST
   participate in its identity, and two derivations recording the **same**
   content hash under the same name MUST produce **one** component. Measured:
@@ -164,23 +192,43 @@ includes it.
   packages and obtain a set containing no scaffolding and no fragments.
 - **FR-008**: Where a derivation records a source URL, that URL MUST be
   carried on its component. Measured: 138 of 1,145 carry one.
-- **FR-009**: The document MUST record how many components each role
-  contributed, so a reader can account for the component count rather than
-  inferring it.
+- **FR-009**: The document MUST record how many components each of the four
+  roles contributed, in a record distinct from the milestone-1277 census. A
+  reader MUST be able to reconcile the document's component count by summing
+  the two records rather than inferring the difference.
 - **FR-010**: A scan without `--nix-closure` MUST produce byte-identical
   output to today.
 - **FR-011**: Components this feature adds MUST NOT displace, rename or
   deduplicate against components another reader already emitted.
 - **FR-012**: The existing role census for named members (milestone 1277) MUST
-  remain comparable with scans taken before this feature — either by excluding
-  the new population or by stating that it includes it.
-- **FR-013**: Dependency-edge projection MUST remain well-defined when the
-  newly emitted members participate, and the document MUST NOT contain an edge
-  naming a component that is not present.
-- **FR-014**: A derivation carrying no usable name MUST still be emitted, or
-  be omitted with its omission counted — silently dropping it would make the
-  FR-009 counts fail to add up.
-
+  continue to count only `pname`-bearing members, so a census figure means the
+  same thing before and after this feature. The components this feature adds
+  MUST NOT appear in it, and MUST NOT be assigned a C182 role value — the two
+  vocabularies describe different things and neither maps onto the other.
+- **FR-013**: Only `source` and `package` components MAY be dependency-edge
+  endpoints. The existing projection MUST continue to walk *through*
+  `scaffolding` and `fragment` members rather than stopping at them, so the
+  emitted graph shape is unchanged by this feature. The document MUST NOT
+  contain an edge naming a component that is not present.
+- **FR-014**: A component this feature adds that no edge can reach MUST carry
+  a reason saying why. Measured consequence of FR-013: 513 of the added
+  components are unreachable by construction, and an unexplained orphan is
+  indistinguishable from a defect in the graph — which is the distinction
+  milestone 1218 exists to preserve.
+- **FR-015**: Graph-completeness and orphan accounting MUST state which
+  population they describe, so a reader can tell a closure whose graph is
+  incomplete from one that merely gained components this feature excluded from
+  edges by design (FR-013).
+- **FR-016**: The component's human-readable name MUST remain the derivation's
+  own name, unmodified, even where the identifier incorporates a hash. The
+  identifier carries uniqueness; the name carries legibility, and a reader
+  must not have to read a digest to learn what something is.
+- **FR-017**: A derivation whose name is absent, empty, or not usable in an
+  identifier MUST still be emitted, identified by its derivation hash alone,
+  and MUST NOT be silently dropped — an omission would make the FR-009 counts
+  fail to reconcile. Measured: zero such derivations occur in the closure
+  under test, so this is a defensive requirement rather than an observed
+  case.
 ### Key Entities
 
 - **Pname-less derivation**: a closure member that the tier reads today and
@@ -202,7 +250,8 @@ rather than scaled — the error milestone 1280 made three times.
   recipe-addressed one.
 - **SC-002**: Every added component carries exactly one role, and the four
   role counts sum to the number of components added.
-- **SC-003**: No two added components share an identity.
+- **SC-003**: No two added components share an identity, including under a
+  comparison that ignores identifier qualifiers.
 - **SC-004**: Two scans of one closure emit identical component sets.
 - **SC-005**: Filtering to sources and packages yields 585 components on the
   measured closure (502 + 83) and no scaffolding or fragments.
@@ -215,7 +264,16 @@ rather than scaled — the error milestone 1280 made three times.
   is absent from it.
 - **SC-010**: The 549 fixed-output derivations yield 502 components, and a
   fixture in which two derivations fetch identical content yields one.
-
+- **SC-011**: The emitted dependency-edge count on the measured closure is
+  unchanged from the pre-feature figure, confirming FR-013's projection
+  preserved the graph rather than reshaping it.
+- **SC-012**: Every added component unreachable by an edge carries a reason,
+  and the count of such components matches the number of `scaffolding` plus
+  `fragment` components emitted.
+- **SC-013**: The milestone-1277 role census is numerically identical before
+  and after this feature on the same closure.
+- **SC-014**: The 56 closure members named `source` yield 56 distinct
+  components whose identifiers differ without reference to any qualifier.
 ## Assumptions
 
 - **The closure is the only input.** Roles and identities are derived from the
