@@ -27,6 +27,8 @@ pub(crate) mod summary;
 use std::path::Path;
 use std::time::Duration;
 
+pub(crate) mod licenses;
+
 use super::eval::invoke::{argv_is_safe, is_safe_attribute_name, run_bounded, verify_ifd_refusal};
 use super::eval::preflight::IFD_SETTING;
 use super::eval::reason::DegradationReason;
@@ -230,6 +232,20 @@ pub(crate) struct ClassifiedClosure {
     /// relationships happens at the call site, after that pass; carrying the
     /// graph is safe, carrying PURLs would not be.
     pub(crate) graph: graph::ProjectedGraph,
+    /// Milestone 1281 (#1346) — declared licenses, keyed by `.drv` basename.
+    ///
+    /// Keyed on `.drv` paths for the same reason `graph` is: the
+    /// milestone-1275 identity pass rewrites component PURLs after emission,
+    /// so a PURL-keyed join would dangle where this one survives.
+    ///
+    /// Empty when the tier ran without a license lookup, which is why
+    /// `license_coverage` is carried beside it — an empty map alone cannot
+    /// say whether nothing was declared or nothing was asked.
+    pub(crate) licenses: licenses::LicenseIndex,
+    /// Why the license lookup produced nothing, when it failed (FR-006).
+    pub(crate) degraded_licenses: Option<DegradationReason>,
+    /// How many members were offered a license and how many received one.
+    pub(crate) license_coverage: licenses::LicenseCoverage,
 }
 
 impl ClassifiedClosure {
@@ -387,7 +403,91 @@ pub(crate) fn resolve(
         roles,
         read_outcome,
         graph,
+        licenses: Default::default(),
+        degraded_licenses: None,
+        license_coverage: Default::default(),
     })
+}
+
+/// Milestone 1281 (#1346) — attach declared licenses to a classified closure.
+///
+/// Separate from [`resolve`] and run after it, because it needs the pinned
+/// nixpkgs revision, which comes from `flake.lock` rather than from the
+/// closure. Degradation is deliberate and total: every failure leaves the
+/// closure exactly as it arrived, so the document is still emitted with its
+/// full component set and only the licenses are missing (spec FR-006).
+///
+/// The import-from-derivation refusal is **not** re-verified here. [`resolve`]
+/// verifies it once per closure run before anything the repository controls is
+/// evaluated, and this call inherits that; re-issuing it would be the second,
+/// parallel set of controls FR-012 forbids.
+pub(crate) fn attach_licenses(
+    closure: &mut ClassifiedClosure,
+    revision: &str,
+    system: &NixSystem,
+    budget: std::time::Duration,
+) {
+    // The names scope the evaluation; the store path is the join. A name that
+    // resolves to the wrong attribute costs a lookup, never a wrong license
+    // (spec FR-002, research R5).
+    let names: Vec<String> = closure
+        .raw
+        .derivations
+        .values()
+        .filter_map(|d| d.pname())
+        .map(str::to_string)
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect();
+
+    // FR-008 — eligibility is counted over the members that will be emitted,
+    // not over every derivation, so coverage is a fraction a reader can
+    // compare against the component count they actually receive.
+    let emitted = emit::emitted_drv_keys(&closure.raw, &closure.roles);
+    let wanted = emitted.len();
+
+    if names.is_empty() {
+        tracing::info!("nix-closure-licenses: no named members; nothing to look up");
+        return;
+    }
+
+    let rows = match super::eval::licenses::resolve_licenses(revision, system, &names, budget) {
+        Ok(rows) => rows,
+        Err(reason) => {
+            // Recorded on the closure, not only logged: an operator reading
+            // the document must be able to tell why the licenses are absent
+            // (FR-006, Constitution XII.3).
+            tracing::info!(
+                reason = reason.wire(),
+                detail = %reason,
+                "nix-closure-licenses: degrading; components are unaffected"
+            );
+            closure.license_coverage = licenses::LicenseCoverage {
+                wanted,
+                received: 0,
+                withheld_ambiguous: 0,
+            };
+            closure.degraded_licenses = Some(reason);
+            return;
+        }
+    };
+
+    let (index, withheld_ambiguous) = licenses::index(&rows);
+    let received = emitted.iter().filter(|k| index.contains_key(**k)).count();
+    tracing::info!(
+        wanted,
+        received,
+        withheld_ambiguous,
+        rows = rows.len(),
+        revision,
+        "nix-closure-licenses: joined by store path"
+    );
+    closure.licenses = index;
+    closure.license_coverage = licenses::LicenseCoverage {
+        wanted,
+        received,
+        withheld_ambiguous,
+    };
 }
 
 /// `(attribute, flakeref)` for a name under `packages.<system>`: today's

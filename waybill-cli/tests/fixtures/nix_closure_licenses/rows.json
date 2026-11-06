@@ -1,0 +1,12 @@
+[
+  {"drv":"aaaa-waybill-fixture-alpha-1.0.drv","out":"/nix/store/h1-alpha","attr":"waybill-fixture-alpha","root":"pkgs",
+   "licenses":[{"spdx":"MIT","name":"mit"}]},
+  {"drv":"bbbb-waybill-fixture-beta-2.0.drv","out":"/nix/store/h2-beta","attr":"waybill-fixture-beta","root":"pkgs",
+   "licenses":[{"spdx":"Apache-2.0","name":"asl20"},{"spdx":"MIT","name":"mit"}]},
+  {"drv":"cccc-waybill-fixture-gamma-3.0.drv","out":"/nix/store/h3-gamma","attr":"waybill-fixture-gamma","root":"pkgs",
+   "licenses":[{"spdx":null,"name":"Public Domain"}]},
+  {"drv":"dddd-waybill-fixture-twin-1.0.drv","out":"/nix/store/h4-twin","attr":"waybill-fixture-twin","root":"pkgs",
+   "licenses":[{"spdx":"BSD-3-Clause","name":"bsd3"}]},
+  {"drv":"eeee-waybill-fixture-twin-2.0.drv","out":"/nix/store/h5-twin","attr":"waybill-fixture-twin","root":"pkgs",
+   "licenses":[{"spdx":"GPL-3.0-only","name":"gpl3Only"}]}
+]

@@ -1,0 +1,155 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-root-0.1.drv": {
+      "name": "waybill-fixture-root-0.1",
+      "env": {
+        "pname": "waybill-fixture-root",
+        "version": "0.1",
+        "buildInputs": "/nix/store/h1-alpha /nix/store/h2-beta /nix/store/h3-gamma /nix/store/h4-twin /nix/store/h5-twin /nix/store/h6-delta"
+      },
+      "inputs": {
+        "drvs": {
+          "aaaa-waybill-fixture-alpha-1.0.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "bbbb-waybill-fixture-beta-2.0.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "cccc-waybill-fixture-gamma-3.0.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "dddd-waybill-fixture-twin-1.0.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "eeee-waybill-fixture-twin-2.0.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "ffff-waybill-fixture-delta-4.0.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h0-root"
+        }
+      }
+    },
+    "aaaa-waybill-fixture-alpha-1.0.drv": {
+      "name": "waybill-fixture-alpha-1.0",
+      "env": {
+        "pname": "waybill-fixture-alpha",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-alpha"
+        }
+      }
+    },
+    "bbbb-waybill-fixture-beta-2.0.drv": {
+      "name": "waybill-fixture-beta-2.0",
+      "env": {
+        "pname": "waybill-fixture-beta",
+        "version": "2.0"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h2-beta"
+        }
+      }
+    },
+    "cccc-waybill-fixture-gamma-3.0.drv": {
+      "name": "waybill-fixture-gamma-3.0",
+      "env": {
+        "pname": "waybill-fixture-gamma",
+        "version": "3.0"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h3-gamma"
+        }
+      }
+    },
+    "dddd-waybill-fixture-twin-1.0.drv": {
+      "name": "waybill-fixture-twin-1.0",
+      "env": {
+        "pname": "waybill-fixture-twin",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h4-twin"
+        }
+      }
+    },
+    "eeee-waybill-fixture-twin-2.0.drv": {
+      "name": "waybill-fixture-twin-2.0",
+      "env": {
+        "pname": "waybill-fixture-twin",
+        "version": "2.0"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h5-twin"
+        }
+      }
+    },
+    "ffff-waybill-fixture-delta-4.0.drv": {
+      "name": "waybill-fixture-delta-4.0",
+      "env": {
+        "pname": "waybill-fixture-delta",
+        "version": "4.0"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h6-delta"
+        }
+      }
+    }
+  },
+  "version": 4
+}
