@@ -146,9 +146,9 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 ### Goldens and the gate
 
-- [ ] T039 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch — never locally. **This pass runs on every scan, not only closure scans**, so the expectation is not "only the closure target changes"; which targets change is a measurement
-- [ ] T040 Account for **every** differing golden file under `waybill-cli/tests/fixtures/public_corpus/` before committing any, enumerating them from the artifact rather than from the run's summary. `image-postgres16` drifts for an unrelated reason (issue #1372) and its regenerated goldens MUST NOT be committed in this feature
-- [ ] T041 Confirm SC-008 by enumerating the corpus targets under `waybill-cli/tests/fixtures/public_corpus/` that do not scan a closure and whose goldens are unchanged, reading each target's own result
+- [X] T039 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch — never locally. **This pass runs on every scan, not only closure scans**, so the expectation is not "only the closure target changes"; which targets change is a measurement
+- [X] T040 Account for **every** differing golden file under `waybill-cli/tests/fixtures/public_corpus/` before committing any, enumerating them from the artifact rather than from the run's summary. `image-postgres16` drifts for an unrelated reason (issue #1372) and its regenerated goldens MUST NOT be committed in this feature
+- [X] T041 Confirm SC-008 by enumerating the corpus targets under `waybill-cli/tests/fixtures/public_corpus/` that do not scan a closure and whose goldens are unchanged, reading each target's own result
 - [X] T042 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and `GATE_RESULT=pass` in `target/gate/prepr.log`. Never pipe cargo through `head`: it closes the pipe mid-run and wedges the process at the filter's count
 - [X] T043 [P] Update `docs/ecosystems.md` to state what a CPE on a closure component means — a candidate for a downstream matcher, derived from a name match in a curated table, not a proof that the closure's `llvm 21.1.8` is the product NVD calls `llvm:llvm`
 

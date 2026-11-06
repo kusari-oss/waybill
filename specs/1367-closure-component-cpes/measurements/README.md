@@ -231,11 +231,42 @@ Second run:
 +18 against main's 7,427 — the 8 unit and 10 integration tests this milestone
 adds.
 
+## T039, T040, T041 — the corpus goldens
+
+Refreshed via `public-corpus.yml` dispatch (run 42312727773, 357s, success).
+
+**All 51 golden files differ**, which is the expected consequence of C209
+being unconditional — and the reason T040 requires each one be accounted for
+rather than assumed. Every added and removed line was classified:
+
+| target | + | − | content |
+| --- | --- | --- | --- |
+| 15 targets (go-cobra, python-flask, rust-ripgrep, the five pants ones, …) | 18 each | **0** | C209 and its structure, nothing else |
+| `nix-closure-moat` | 107 | **0** | C209 + CPE fields + C19 candidate lists |
+| `image-postgres16` | 459 | **441** | C209 **+ 441 removals that are not this feature's** |
+
+**Committed: 16 targets, 48 files, 377 insertions, 0 deletions.**
+
+**`image-postgres16` is deliberately excluded.** Its 441 removals are the
+layer-digest drift of issue #1372 — a digest-pinned image whose layers moved,
+unrelated to CPEs and already failing on `main`. Committing its regenerated
+goldens here would bury an unrelated upstream change inside a feature diff and
+answer "why did the digests move" with "they moved, so I wrote down the new
+ones".
+
+**A `regen_goldens=true` run proves nothing by passing**: it regenerates the
+goldens it then compares against. The evidence is the artifact, classified
+file by file.
+
+### Another per-system difference
+
+The x86_64-linux corpus closure gains a CPE for `gnutls 3.8.13`, which the
+aarch64-darwin closure does not contain at all. Same project, same pinned
+nixpkgs, different system — the hazard this file opens with, observed for the
+third time this milestone.
+
 ---
 
-## Open — not yet measured
+## Nothing open
 
-| item | task |
-| --- | --- |
-| golden impact | T039, T040, T041 |
-| the pre-PR gate | T042 |
+Every task is measured. The remaining work is review.
