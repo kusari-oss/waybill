@@ -27,6 +27,11 @@ What is missing is not uniform. The 1,145 fall into four classes
 The 549 sources are the clearest loss: these are the actual inputs to the
 build, and a consumer asking "what source did this come from" gets silence.
 
+Baselines, read from the committed golden for the pinned target rather than
+recalled: **381 components emitted**, **3,459 dependency edges**, and a role
+census of `{artifact-input: 268, both: 45, build-tooling: 121, unreferenced:
+1315}` totalling 1,749 — the census counts derivations, not components.
+
 ## Clarifications
 
 ### Session 2026-11-06
@@ -39,13 +44,13 @@ build, and a consumer asking "what source did this come from" gets silence.
   The human-readable name is preserved in the component's own name field, so
   nothing is lost to a reader.
 - Q: How should the existing document-scope counts treat the 1,145 new
-  components? → A: **Exclude them; count them separately.** The milestone-1277
-  C182 census keeps describing only `pname`-bearing members, so every
-  historical figure stays comparable, and the new population gets its own
-  record broken down by the four roles. The two vocabularies do not map onto
-  each other — a `fragment` is not `artifact-input`, `build-tooling`, `both`
-  or `unreferenced` — so folding them into one record would mean inventing a
-  value and silently changing what every prior census figure meant.
+  components? → A: **Leave them alone; add a separate record.** The question
+  was put on a false premise — that the milestone-1277 census describes only
+  `pname`-bearing members. It does not: it counts **derivations**, totals
+  1,749 on the pinned closure, and already covers the whole pname-less
+  population (1,315 of them `unreferenced`). So emitting them as components
+  cannot change it, and the answer costs no work: the census stays untouched
+  and the four-role component record is additive beside it.
 - Q: Do the newly emitted scaffolding and fragment components participate in
   dependency edges? → A: **`source` and `package` do; `scaffolding` and
   `fragment` do not.** The projection gains `source` and `package` as stopping
@@ -210,11 +215,14 @@ includes it.
   output to today.
 - **FR-011**: Components this feature adds MUST NOT displace, rename or
   deduplicate against components another reader already emitted.
-- **FR-012**: The existing role census for named members (milestone 1277) MUST
-  continue to count only `pname`-bearing members, so a census figure means the
-  same thing before and after this feature. The components this feature adds
-  MUST NOT appear in it, and MUST NOT be assigned a C182 role value — the two
-  vocabularies describe different things and neither maps onto the other.
+- **FR-012**: The existing milestone-1277 role census MUST be left exactly as
+  it is. It counts **derivations**, not components — measured on the pinned
+  closure it totals 1,749 and already covers the whole pname-less population,
+  most of them under `unreferenced` (1,315). Emitting those derivations as
+  components therefore cannot change it, and nothing in this feature may
+  reclassify them to make it appear to change. The new four-role record
+  (FR-009) counts components and is strictly additive beside it; the two
+  answer different questions and neither replaces the other.
 - **FR-013**: Only `source` and `package` components MAY be dependency-edge
   endpoints. The projection MUST stop at them, and MUST continue to walk
   *through* `scaffolding` and `fragment` members rather than stopping at them.
@@ -288,7 +296,10 @@ rather than scaled — the error milestone 1280 made three times.
   and the count of such components matches the number of `scaffolding` plus
   `fragment` components emitted.
 - **SC-013**: The milestone-1277 role census is numerically identical before
-  and after this feature on the same closure.
+  and after this feature on the same closure — `{artifact-input: 268, both:
+  45, build-tooling: 121, unreferenced: 1315}` on the pinned target, totalling
+  1,749. It counts derivations, so this holds by construction; the criterion
+  exists to catch a change that reclassifies them as a side effect.
 - **SC-014**: The 56 closure members named `source` yield 56 distinct
   components whose identifiers differ without reference to any qualifier.
 ## Assumptions

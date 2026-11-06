@@ -451,6 +451,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-05
 - N/A — the projection is an in-process transform over the closure (1280-nix-closure-edges)
 - Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (the eval's JSON (1281-closure-license-meta)
 - N/A — in-process per scan. The existing per-revision nixpkgs cache (1281-closure-license-meta)
+- N/A — in-process per scan, as with every closure milestone since (1282-closure-nameless-components)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -673,9 +674,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1282-closure-nameless-components: Added Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (annotation
 - 1281-closure-license-meta: Added Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (the eval's JSON
 - 1280-nix-closure-edges: Added Rust stable, workspace toolchain pinned by + existing only — `serde_json` (the `inputs.drvs` map
-- 1279-closure-dep-field-coverage: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). + existing only — `serde`/`serde_json` (annotation
 
 
 <!-- MANUAL ADDITIONS START -->
