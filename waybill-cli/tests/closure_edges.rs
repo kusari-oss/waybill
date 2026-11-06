@@ -366,9 +366,30 @@ fn m1280_t018_a_member_behind_a_fetch_is_reachable() {
          got {:?}",
         s.closure_purls()
     );
-    assert!(
-        edges.iter().any(|(f, t)| f == pkga && t == pkgb),
-        "pkga reaches pkgb only through a derivation with no pname. \
+
+    // **Milestone 1282 changed the shape of this answer, not the answer.**
+    // `fetch.drv` declares no `pname`, and until m1282 that meant it was
+    // neither emitted nor a stop, so the only possible edge was the
+    // pass-through `pkga -> pkgb`. FR-013 makes `source` and `package`
+    // members stopping points, and this one is named
+    // `waybill-fixture-pkgb-1.0.tar.gz` — version-shaped, no content hash —
+    // so the classifier calls it a `package` and the walk stops there.
+    //
+    // pkgb is still reachable; it is reached *through* the fetch rather than
+    // around it, which is the spec's "the graph changes, and that is
+    // accepted". What this test exists to catch — a member behind a
+    // pname-less derivation being stranded — is still caught, because a
+    // stranded pkgb has no inbound edge at all.
+    let fetch: Vec<&String> = edges
+        .iter()
+        .filter(|(f, _)| f == pkga)
+        .map(|(_, t)| t)
+        .filter(|t| t.contains("tar.gz"))
+        .collect();
+    assert_eq!(
+        fetch.len(),
+        1,
+        "pkga must reach the fetch directly now that it is an endpoint. \
          edges touching either: {:?}",
         edges
             .iter()
@@ -376,9 +397,19 @@ fn m1280_t018_a_member_behind_a_fetch_is_reachable() {
             .collect::<Vec<_>>()
     );
     assert!(
-        !edges.iter().any(|(_, t)| t.contains("tar.gz")),
-        "no edge may point at a derivation that is not a component"
+        edges.iter().any(|(f, t)| f == fetch[0] && t == pkgb),
+        "pkgb must still be reachable, through the fetch. got {edges:?}"
     );
+
+    // The invariant that did NOT change: an edge may only name a component
+    // the document contains. The fetch is now one, so the test is that it
+    // resolves rather than that it is absent.
+    let present = s.purls();
+    for (_, t) in &edges {
+        if t.contains("tar.gz") {
+            assert!(present.contains(t), "edge names an absent component: {t}");
+        }
+    }
 }
 
 /// T026 — the property, not the placement.

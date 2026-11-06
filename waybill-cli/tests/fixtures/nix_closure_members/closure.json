@@ -1,0 +1,98 @@
+{
+  "derivations": {
+    "/nix/store/aaaaaaaa-waybill-fixture-app-2.0.drv": {
+      "name": "waybill-fixture-app-2.0",
+      "env": { "pname": "waybill-fixture-app", "version": "2.0",
+                "buildInputs": "/nix/store/o-lib /nix/store/o-src-a",
+                "nativeBuildInputs": "/nix/store/o-builder" },
+      "outputs": { "out": { "path": "/nix/store/o-app" } },
+      "inputs": {
+        "drvs": {
+          "/nix/store/bbbbbbbb-waybill-fixture-lib-1.0.drv": { "outputs": ["out"] },
+          "/nix/store/cccccccc-source.drv": { "outputs": ["out"] },
+          "/nix/store/dddddddd-waybill-fixture-builder.drv": { "outputs": ["out"] }
+        }
+      }
+    },
+
+    "/nix/store/bbbbbbbb-waybill-fixture-lib-1.0.drv": {
+      "name": "waybill-fixture-lib-1.0",
+      "env": { "pname": "waybill-fixture-lib", "version": "1.0",
+                "buildInputs": "/nix/store/o-edge" },
+      "outputs": { "out": { "path": "/nix/store/o-lib" } },
+      "inputs": {
+        "drvs": {
+          "/nix/store/66666666-waybill-fixture-edge-input.drv": { "outputs": ["out"] },
+          "/nix/store/dddddddd-waybill-fixture-builder.drv": { "outputs": ["out"] },
+          "/nix/store/ffffffff-waybill-fixture-tarball.drv": { "outputs": ["out"] }
+        }
+      }
+    },
+
+    "/nix/store/66666666-waybill-fixture-edge-input.drv": {
+      "name": "waybill-fixture-edge-input",
+      "env": {},
+      "outputs": { "out": { "path": "/nix/store/o-edge", "hash": "sha256-DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD=" } }
+    },
+
+    "/nix/store/cccccccc-source.drv": {
+      "name": "source",
+      "env": {},
+      "outputs": { "out": { "path": "/nix/store/o-src-a", "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" } }
+    },
+
+    "/nix/store/eeeeeeee-source.drv": {
+      "name": "source",
+      "env": { "urls": "https://example.invalid/waybill-fixture-a.tar.gz" },
+      "outputs": { "out": { "path": "/nix/store/o-src-b", "hash": "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=" } }
+    },
+
+    "/nix/store/ffffffff-waybill-fixture-tarball.drv": {
+      "name": "waybill-fixture-tarball",
+      "env": { "urls": "https://example.invalid/waybill-fixture-t.tar.gz" },
+      "outputs": { "out": { "path": "/nix/store/o-tar-1", "hash": "sha256-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=" } }
+    },
+
+    "/nix/store/11111111-waybill-fixture-tarball.drv": {
+      "name": "waybill-fixture-tarball",
+      "env": { "outputHash": "sha256-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=" },
+      "outputs": { "out": { "path": "/nix/store/o-tar-2" } }
+    },
+
+    "/nix/store/dddddddd-waybill-fixture-builder.drv": {
+      "name": "waybill-fixture-builder",
+      "env": { "text": "#!/bin/sh\nexit 0\n" },
+      "outputs": { "out": { "path": "/nix/store/o-builder" } },
+      "inputs": {
+        "drvs": {
+          "/nix/store/eeeeeeee-source.drv": { "outputs": ["out"] }
+        }
+      }
+    },
+
+    "/nix/store/22222222-setup-hook.sh.drv": {
+      "name": "setup-hook.sh",
+      "env": { "text": "addToSearchPath\n" },
+      "outputs": { "out": { "path": "/nix/store/o-hook" } }
+    },
+
+    "/nix/store/33333333-waybill-fixture-mini-0.27.1.drv": {
+      "name": "waybill-fixture-mini-0.27.1",
+      "env": {},
+      "outputs": { "out": { "path": "/nix/store/o-mini" } }
+    },
+
+    "/nix/store/44444444-waybill-fixture-strncpy.drv": {
+      "name": "waybill-fixture-strncpy",
+      "env": {},
+      "outputs": { "out": { "path": "/nix/store/o-strncpy" } }
+    },
+
+    "/nix/store/55555555-waybill-fixture-memcpy.drv": {
+      "name": "waybill-fixture-memcpy",
+      "env": {},
+      "outputs": { "out": { "path": "/nix/store/o-memcpy" } }
+    }
+  },
+  "version": 4
+}

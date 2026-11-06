@@ -248,6 +248,70 @@ that apply a patch are. Measured, `jq` and `lua` are unreferenced in one
 project's closure and carry 6 of its 18 CVEs, so dropping them would leave
 those patches with no component to attach to.
 
+### Members that declare no `pname` (milestone 1282)
+
+The rule above held for every member until milestone 1282, and it hid most of
+the closure. Measured on the pinned target: **1,145 of 1,749 derivations
+declare no `pname`**, all of them `unreferenced`, none applying a patch — so
+65% of the closure was emitted as nothing at all.
+
+**It was never a `pname` test that hid them.** `RawDerivation::pname()` falls
+back to the derivation's own `name`, so it returns a value for all 1,145; the
+gate was the C182 role filter above. The evidence is in the golden: 1,315
+`unreferenced` derivations yielded **11** components. Anyone "fixing" the
+`pname` test will change nothing and the build will stay green.
+
+These members now become components, each carrying
+`waybill:closure-member-role` — a **second, independent vocabulary**:
+
+| Role | Count | What it is |
+|---|---|---|
+| `source` | 549 | a fixed-output fetch — a tarball or patch the build consumed |
+| `package` | 83 | a version-bearing bootstrap package (`mes-libc-mini-0.27.1`) |
+| `scaffolding` | 267 | `writeText` output — `itoa-builder`, `setup-hook.sh` |
+| `fragment` | 246 | a live-bootstrap C function — `strncpy`, `memcpy`, `malloc` |
+
+**Do not confuse this with `waybill:closure-role`.** The two have been
+confused once already, and it falsified a clarification before measurement
+caught it. The distinction:
+
+| | `waybill:closure-role` (C182) | `waybill:closure-member-role` (C206) |
+|---|---|---|
+| classifies | **derivations** | the things that become **components** |
+| covers | all 1,749, including every member below | only members declaring no `pname` |
+| answers | how nix *referenced* this | what this *is* |
+| census totals | 1,749 derivations | the components added |
+
+A component can carry both; neither is derived from the other, and summing
+one against the other reconciles nothing.
+
+Classification reads the closure alone — no network, no second evaluation, no
+maintained name list — in a **fixed evidence order**: a content hash makes it
+`source`, else `env.text` makes it `scaffolding`, else a version-shaped name
+makes it `package`, else `fragment`. The order is load-bearing; swapping the
+middle two describes a different classifier producing different counts. The
+content hash is read from **both** `outputs[<name>].hash` and the older
+`env.outputHash`, because the second alone carries 139 of the 549 and reading
+only it undercounts the population fourfold.
+
+Identity is the content hash where one exists — which correctly merges 549
+members into 502 components, the same content fetched twice being one
+artifact — and the derivation's own store-path hash otherwise. It lives in the
+PURL's **name segment**, not a qualifier: some tooling compares PURLs without
+qualifiers, and under such a comparison the 56 distinct artifacts named
+`source` would collapse into one. The component's `name` field keeps the
+derivation's own name unmodified, so no reader has to read a digest to learn
+what something is.
+
+Only `source` and `package` members are dependency-edge endpoints. The
+projection walks *through* scaffolding and fragments, so an edge names the
+source a package was built from rather than the build script between them.
+**This reshapes the graph rather than growing it** — stopping earlier replaces
+wide transitive fan-outs with direct edges — and leaves 513 components as
+orphans by construction, each carrying
+`waybill:orphan-reason = closure-member-not-an-edge-endpoint`. An orphan
+*without* a reason is the defect; this population is not one.
+
 ### Backported patches
 
 This is the part no other tier can reach. nixpkgs backports security fixes

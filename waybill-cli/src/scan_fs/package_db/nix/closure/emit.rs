@@ -13,6 +13,7 @@ use waybill_common::types::purl::Purl;
 
 use super::classify::DerivationRole;
 use super::derivation::RawDerivation;
+use super::member::{self, MemberRole};
 use super::ClassifiedClosure;
 
 /// C182 — how nix referenced this member.
@@ -83,7 +84,32 @@ fn role_alone_emits(role: DerivationRole) -> bool {
 /// The test is local to the derivation: applying a patch means a non-empty
 /// `patches` field, which needs no cross-reference to the attribution pass.
 fn emits_as_component(role: DerivationRole, drv: &RawDerivation) -> bool {
-    role_alone_emits(role) || drv.paths_in("patches").next().is_some()
+    role_alone_emits(role)
+        || drv.paths_in("patches").next().is_some()
+        // Milestone 1282 FR-001 — a member declaring no `pname` is emitted
+        // whatever its C182 role.
+        //
+        // **This is the line that closes Gap A, and it is not a `pname`
+        // test.** `pname()` falls back to the derivation's own `name`, so it
+        // returns `Some` for all 1,145 and gates nothing; the clause that
+        // hid them is `role_alone_emits`, because every one of them is
+        // `Unreferenced` and applies no patch. Read from the golden: 1,315
+        // `unreferenced` derivations yielded 11 components (research R8a).
+        //
+        // Deliberately asymmetric: a `pname`-**bearing** `Unreferenced`
+        // member is still suppressed unless it applies a patch. Roughly 170
+        // sit on that side, and emitting them is a question about a
+        // population this milestone did not measure (spec Assumptions).
+        || drv.declared_pname().is_none()
+}
+
+/// Is this a member milestone 1282 added, rather than one emitted before it?
+///
+/// The test is on the **declaration**, matching [`emits_as_component`]'s new
+/// clause, so the two cannot drift into disagreeing about which population
+/// they are talking about.
+fn is_1282_member(drv: &RawDerivation) -> bool {
+    drv.declared_pname().is_none()
 }
 
 /// The `.drv` keys that will become components, for the milestone-1280
@@ -106,9 +132,115 @@ pub(crate) fn emitted_drv_keys<'a>(
                 .copied()
                 .is_some_and(|role| emits_as_component(role, drv))
                 && drv.pname().is_some()
+                // Milestone 1282 FR-013 — of the members this feature adds,
+                // only `source` and `package` may be edge endpoints. The
+                // other two are emitted and walked *through*, so the edge
+                // names the source a package was built from rather than the
+                // build script that stood between them.
+                //
+                // Derived from the same classification the emitter uses, not
+                // from a second copy of the rule: emission is now a strict
+                // **superset** of edge participation, and
+                // [`edge_endpoint_keys_are_a_subset_of_emitted`] holds the
+                // two in that relation rather than trusting them to agree.
+                && (!is_1282_member(drv) || member::classify(drv).is_edge_endpoint())
         })
         .map(|(key, _)| key.as_str())
         .collect()
+}
+
+/// Every `.drv` key this scan emits as a component.
+///
+/// Test-only: production derives the same population by building the
+/// components themselves, and a second production caller would be the second
+/// copy of the rule `emitted_drv_keys`' comment warns about. The set form
+/// exists so the subset relation can be asserted.
+///
+/// Milestone 1282 — the superset of [`emitted_drv_keys`]. Before this feature
+/// the two sets were one set, and `emitted_drv_keys` carries a comment saying
+/// why that mattered: *two predicates that have to agree is the drift this
+/// project keeps paying for*. The divergence here is deliberate, so it is
+/// asserted rather than assumed.
+#[cfg(test)]
+pub(crate) fn component_drv_keys<'a>(
+    raw: &'a super::derivation::RawClosure,
+    roles: &std::collections::BTreeMap<String, DerivationRole>,
+) -> std::collections::HashSet<&'a str> {
+    raw.derivations
+        .iter()
+        .filter(|(key, drv)| {
+            roles
+                .get(*key)
+                .copied()
+                .is_some_and(|role| emits_as_component(role, drv))
+                && drv.pname().is_some()
+        })
+        .map(|(key, _)| key.as_str())
+        .collect()
+}
+
+/// What `components` merges on: `(name, version, identity-hash)`.
+///
+/// The third element is empty for every member emitted before milestone 1282,
+/// so those keys sort and behave exactly as the `(name, version)` pair they
+/// replaced.
+type MergeKey = (String, String, String);
+
+/// A content hash, made safe for a PURL name segment **without losing
+/// distinctness**.
+///
+/// nix writes `sha256-<base64>` or a bare base32 digest, so the characters to
+/// deal with are `+`, `/`, `=` and the algorithm separator `-`.
+/// `encode_purl_segment` normalises only `+`, which is not enough.
+///
+/// **The obvious encoding is wrong, and it was written here first.** Mapping
+/// `+`→`p`, `/`→`s`, `=`→`e` is not injective: `p`, `s` and `e` are
+/// themselves base64 characters, so the hashes `a+b` and `apb` both encode to
+/// `apb` and two distinct artifacts compare equal — the exact collision
+/// FR-002 exists to prevent, reintroduced by the function meant to preserve
+/// identity.
+///
+/// `.` is the escape introducer because it appears in **no** hash alphabet —
+/// not base64, not base32, not the algorithm prefix — and so is never passed
+/// through. Every escape is therefore unambiguous and the mapping is
+/// injective, which is what the identity requires.
+fn encode_hash_segment(hash: &str) -> String {
+    let mut out = String::with_capacity(hash.len() + 8);
+    for c in hash.chars() {
+        match c {
+            'A'..='Z' | 'a'..='z' | '0'..='9' => out.push(c),
+            '+' => out.push_str(".p"),
+            '/' => out.push_str(".s"),
+            '=' => out.push_str(".e"),
+            '-' => out.push_str(".h"),
+            '.' => out.push_str(".d"),
+            // Unreachable for every hash nix emits, and encoded rather than
+            // replaced anyway: a catch-all that collapsed unknown characters
+            // to one symbol would be the same defect as the mapping above.
+            other => out.push_str(&format!(".x{:04x}", other as u32)),
+        }
+    }
+    out
+}
+
+/// The URL a fixed-output derivation fetched from (FR-008).
+///
+/// `urls` is the plural form `fetchurl` sets and may hold several
+/// whitespace-separated mirrors; `url` is the singular older spelling. The
+/// first is taken — the mirrors are alternative routes to one artifact whose
+/// identity is already the content hash, so listing them all would suggest
+/// several sources where there is one.
+///
+/// Carried as a CycloneDX-native `externalReference` of type `distribution`
+/// rather than a `waybill:` property, per Constitution Principle V: a
+/// download location is a thing every format already has a slot for.
+/// Measured: 138 of 1,145 members record one.
+fn source_url(drv: &RawDerivation) -> Option<&str> {
+    drv.env
+        .get("urls")
+        .and_then(|v| v.split_whitespace().next())
+        .or_else(|| drv.env.get("url").map(String::as_str))
+        .filter(|u| !u.is_empty())
 }
 
 /// Build the components a classified closure contributes.
@@ -126,16 +258,24 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
     // The role travels beside the component rather than being read back out
     // of its own annotation: a round-trip through the wire string would make
     // merging depend on parsing what emission just wrote.
+    // Milestone 1282 — the key gained a third element, and that is the whole
+    // of research R8c. It was `(name, version)`; the members this feature
+    // adds declare no `version` and keep their `name` unmodified (FR-016), so
+    // all 56 members named `source` shared one key and merged into **one**
+    // component — the collision FR-002, SC-014 and User Story 1 scenario 3
+    // each forbid separately. The third element is the identity hash, and it
+    // is empty for every member emitted before this feature, so their keys,
+    // their ordering and their output are unchanged.
     let mut merged: std::collections::BTreeMap<
-        (String, String),
-        (DerivationRole, ResolvedComponent),
+        MergeKey,
+        (DerivationRole, Option<MemberRole>, ResolvedComponent),
     > = std::collections::BTreeMap::new();
     // C205 — unioned over build variants for the same reason the role is:
     // the component a consumer sees is one identity, and a reference through
     // any variant of it is a reference. Keyed by that identity rather than by
     // `.drv` path, which is what the index carries.
     let mut unclassified: std::collections::BTreeMap<
-        (String, String),
+        MergeKey,
         std::collections::BTreeSet<String>,
     > = std::collections::BTreeMap::new();
     // Milestone 1281 — unioned over build variants for the same reason the
@@ -143,7 +283,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
     // the license index is keyed by `.drv` path. Order is first-seen rather
     // than sorted, because FR-005 carries nixpkgs' stated order.
     let mut licenses_for: std::collections::BTreeMap<
-        (String, String),
+        MergeKey,
         Vec<waybill_common::types::license::SpdxExpression>,
     > = std::collections::BTreeMap::new();
     for (key, drv) in &closure.raw.derivations {
@@ -158,15 +298,31 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         };
         let version = drv.version().unwrap_or_default();
 
+        // Milestone 1282 — `None` for every member emitted before this
+        // feature, which is what keeps their identity and their key exactly
+        // as they were.
+        let member_role = is_1282_member(drv).then(|| member::classify(drv));
+        let basis = member_role
+            .is_some()
+            .then(|| member::identity(drv, key));
+
         // `pkg:nix` is not a purl-spec type, so these carry `pkg:generic`
         // with the name and version nix recorded. A wrong-but-well-formed
         // PURL would be worse than a generic one: it would collide with
         // whatever really owns that coordinate.
-        let coordinate = if version.is_empty() {
-            format!("pkg:generic/{name}")
-        } else {
-            format!("pkg:generic/{name}@{version}")
+        let coordinate = match &basis {
+            // FR-002 — the hash occupies the **name segment**. A qualifier
+            // does not satisfy the requirement: PURL equality is how
+            // downstream tooling matches components, some tools compare
+            // without qualifiers, and under such a comparison the 56 distinct
+            // artifacts named `source` would collapse to one. That is
+            // precisely the collision this identity exists to prevent.
+            Some(b) => format!("pkg:generic/{}-{}", name, encode_hash_segment(b.hash())),
+            None if version.is_empty() => format!("pkg:generic/{name}"),
+            None => format!("pkg:generic/{name}@{version}"),
         };
+        let identity_key = basis.as_ref().map(|b| b.hash().to_string()).unwrap_or_default();
+        let merge_key: MergeKey = (name.to_string(), version.to_string(), identity_key);
         let Ok(purl) = Purl::new(&coordinate) else {
             tracing::debug!(name, "nix-closure: skipping a name that yields no valid PURL");
             continue;
@@ -209,14 +365,18 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
             parent_purl: None,
             co_owned_by: None,
             shade_relocation: None,
-            external_references: vec![],
+            external_references: match member_role.and(source_url(drv)) {
+                Some(url) => vec![waybill_common::resolution::ExternalReference {
+                    ref_type: "distribution".to_string(),
+                    url: url.to_string(),
+                }],
+                None => vec![],
+            },
             extra_annotations: Default::default(),
             binary_role: None,
         };
         if let Some(found) = closure.licenses.get(key) {
-            let slot = licenses_for
-                .entry((name.to_string(), version.to_string()))
-                .or_default();
+            let slot = licenses_for.entry(merge_key.clone()).or_default();
             for expr in found {
                 if !slot.iter().any(|e| e.as_str() == expr.as_str()) {
                     slot.push(expr.clone());
@@ -225,17 +385,23 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         }
         if let Some(attributes) = closure.read_outcome.unclassified_refs.get(key) {
             unclassified
-                .entry((name.to_string(), version.to_string()))
+                .entry(merge_key.clone())
                 .or_default()
                 .extend(attributes.iter().cloned());
         }
         merged
-            .entry((name.to_string(), version.to_string()))
+            .entry(merge_key)
             // The variants are otherwise identical — same name, version and
             // PURL — so the role is the only thing that can differ, and it
             // does: measured, 13 of 97 duplicated identities disagree.
-            .and_modify(|(seen, _)| *seen = seen.union(role))
-            .or_insert((role, component));
+            //
+            // FR-003 — this is also where the content-hash merge happens for
+            // milestone 1282: two members sharing a name and a content hash
+            // share a key, so they land here as one component. Measured, 549
+            // fixed-output members become 502 components, and the merge is
+            // correct — the same content fetched twice is one artifact.
+            .and_modify(|(seen, _, _)| *seen = seen.union(role))
+            .or_insert((role, member_role, component));
     }
     // Attribution runs here so the patch facts ride on the component itself.
     // One source of truth: CycloneDX translates it to native `pedigree`, the
@@ -250,7 +416,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
 
     merged
         .into_iter()
-        .map(|(identity, (role, mut component))| {
+        .map(|(identity, (role, member_role, mut component))| {
             // FR-001 / FR-009 — the licenses land in the component's own
             // `licenses` field, which every emitter already carries to its
             // format's native license construct. `concluded_licenses` stays
@@ -263,9 +429,19 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                 ANN_CLOSURE_ROLE.to_string(),
                 serde_json::Value::String(role.wire().to_string()),
             );
-            if let Some(attributes) =
-                unclassified.get(&(component.name.clone(), component.version.clone()))
-            {
+            // FR-005 — exactly one role, on exactly the members this feature
+            // adds. A component emitted before milestone 1282 carries none,
+            // which is what lets a consumer tell the two populations apart
+            // and what FR-007's filter relies on (a filter keeping only
+            // `source` and `package` would otherwise discard all 381 named
+            // packages).
+            if let Some(m) = member_role {
+                component.extra_annotations.insert(
+                    member::ANN_MEMBER_ROLE.to_string(),
+                    serde_json::Value::String(m.wire().to_string()),
+                );
+            }
+            if let Some(attributes) = unclassified.get(&identity) {
                 // Non-empty by construction: the index only records a member
                 // an attribute actually named. Guarded anyway, because an
                 // empty array would assert "checked, and nothing" in the one
@@ -285,8 +461,13 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                     );
                 }
             }
-            if let Some(record) =
-                index.get(&(component.name.as_str(), component.version.as_str()))
+            // Only for members that predate milestone 1282. A new member
+            // has an empty `version`, so an unguarded lookup could attach a
+            // named component's patch record to an unrelated source that
+            // happens to share its name.
+            if let Some(record) = (member_role.is_none())
+                .then(|| index.get(&(component.name.as_str(), component.version.as_str())))
+                .flatten()
             {
                 if !record.patches.is_empty() {
                     component.extra_annotations.insert(
@@ -482,6 +663,131 @@ mod tests {
         for c in built() {
             assert!(!c.version.is_empty(), "{} has no version", c.name);
             assert!(c.purl.as_str().starts_with("pkg:generic/"));
+        }
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m1282_tests {
+    use super::super::classify::classify;
+    use super::super::derivation::RawClosure;
+    use super::*;
+
+    fn fixture() -> RawClosure {
+        RawClosure::parse(include_str!(
+            "../../../../../tests/fixtures/nix_closure_members/closure.json"
+        ))
+        .unwrap()
+    }
+
+    #[test]
+    fn m1282_t031_edge_endpoints_are_a_subset_of_emitted_components() {
+        // **The assertion this milestone exists to keep honest.**
+        //
+        // `emitted_drv_keys` carries a comment warning that *two predicates
+        // that have to agree is the drift this project keeps paying for*, and
+        // milestone 1282 breaks that identity deliberately: after FR-001 the
+        // emitted set is every member, and after FR-013 the endpoint set is
+        // only the `pname`-bearing members plus `source` and `package`.
+        //
+        // Emission is therefore a strict **superset** of edge participation.
+        // That relation is what keeps the divergence from becoming a
+        // disagreement, so it is asserted rather than trusted. An endpoint
+        // outside the emitted set is an edge naming a component the document
+        // does not contain — the thing FR-013's last sentence forbids.
+        let raw = fixture();
+        let roles = classify(&raw);
+        let endpoints = emitted_drv_keys(&raw, &roles);
+        let components = component_drv_keys(&raw, &roles);
+
+        for key in &endpoints {
+            assert!(
+                components.contains(key),
+                "edge endpoint {key} is not an emitted component"
+            );
+        }
+
+        // CONTROL: the two sets must actually DIFFER on this fixture, or the
+        // subset assertion above holds vacuously and would keep passing if
+        // the feature stopped emitting the 513.
+        assert!(
+            components.len() > endpoints.len(),
+            "emission must be a STRICT superset here; \
+             components={} endpoints={} — if they are equal this test proves nothing",
+            components.len(),
+            endpoints.len()
+        );
+    }
+
+    #[test]
+    fn m1282_t016_identical_content_merges_and_differing_content_does_not() {
+        let raw = fixture();
+        let roles = classify(&raw);
+        let keys = component_drv_keys(&raw, &roles);
+
+        // Both members named `source` carry different hashes: two components.
+        assert!(keys.contains("/nix/store/cccccccc-source.drv"));
+        assert!(keys.contains("/nix/store/eeeeeeee-source.drv"));
+        // Both `waybill-fixture-tarball` members carry the SAME hash, under
+        // the two different spellings: one component after the merge, which
+        // the component-level test in `closure_members.rs` asserts.
+        assert!(keys.contains("/nix/store/ffffffff-waybill-fixture-tarball.drv"));
+        assert!(keys.contains("/nix/store/11111111-waybill-fixture-tarball.drv"));
+    }
+
+    #[test]
+    fn m1282_the_hash_segment_encoding_is_injective() {
+        // The obvious encoding (`+`->`p`, `/`->`s`, `=`->`e`) is NOT, because
+        // those letters are themselves base64 characters: `a+b` and `apb`
+        // both become `apb`. That version was written here first and would
+        // have re-created the collision FR-002 exists to prevent, inside the
+        // function meant to preserve identity.
+        //
+        // Exhaustive over every string up to length 4 drawn from the full
+        // character set a nix hash can contain.
+        let alphabet = ['A', 'B', 'Z', 'a', 'z', '0', '9', '+', '/', '=', '-', '.'];
+        let mut seen: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        let mut count = 0usize;
+        for n in 1..=4 {
+            let mut idx = vec![0usize; n];
+            loop {
+                let s: String = idx.iter().map(|&i| alphabet[i]).collect();
+                let e = encode_hash_segment(&s);
+                if let Some(prev) = seen.insert(e.clone(), s.clone()) {
+                    assert_eq!(prev, s, "collision: {prev:?} and {s:?} both encode to {e:?}");
+                }
+                count += 1;
+                let mut k = n;
+                loop {
+                    if k == 0 {
+                        break;
+                    }
+                    k -= 1;
+                    idx[k] += 1;
+                    if idx[k] < alphabet.len() {
+                        break;
+                    }
+                    idx[k] = 0;
+                    if k == 0 {
+                        break;
+                    }
+                }
+                if idx.iter().all(|&i| i == 0) {
+                    break;
+                }
+            }
+        }
+        assert!(count > 20_000, "expected an exhaustive sweep, ran {count}");
+
+        // And the output is safe in a PURL name segment.
+        for encoded in seen.keys() {
+            assert!(
+                encoded
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '.'),
+                "unsafe character in {encoded:?}"
+            );
         }
     }
 }

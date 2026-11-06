@@ -40,7 +40,18 @@ fn is_explained(component: &serde_json::Value) -> bool {
         // nothing reaches, is a contradiction rather than an explanation, and
         // such a component is expected to carry
         // `waybill:orphan-reason = reachable-only-through-unemitted-package`.
-        || cdx_prop(component, "waybill:closure-role") == Some("unreferenced")
+        || (cdx_prop(component, "waybill:closure-role") == Some("unreferenced")
+            // Milestone 1282 — narrowed again, mirroring the second
+            // narrowing in `generate/orphan_reason.rs`.
+            //
+            // Every member milestone 1282 adds is `unreferenced`, so without
+            // this clause the arm above would accept all 513 as explained
+            // whether or not they carried a reason — and this invariant
+            // would keep passing if the reason stopped being emitted. The
+            // check is only sensitive to the thing it exists to catch
+            // because these components are held to the `orphan-reason` arm
+            // at the top instead.
+            && cdx_prop(component, "waybill:closure-member-role").is_none())
         // C170, added by milestone 1275 — and it moves cells, unlike the
         // forward-looking arm above. The closure-identity pass emits a
         // versionless `compiler-supplied` component for a declared dependency

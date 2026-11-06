@@ -70,6 +70,15 @@ pub(crate) struct RawInputs {
 pub(crate) struct RawOutput {
     #[serde(default)]
     pub(crate) path: Option<String>,
+    /// The content hash a fixed-output derivation records (milestone 1282).
+    ///
+    /// **The structured spelling, and the one that carries the population.**
+    /// `env.outputHash` is the older form and appears on 139 of the 549
+    /// fixed-output members; this field carries all 549. Reading only the
+    /// older spelling undercounts the content-addressed population fourfold,
+    /// which is how 549 was once measured as 139 (measurements README).
+    #[serde(default)]
+    pub(crate) hash: Option<String>,
 }
 
 /// The top-level shape: `{"derivations": {...}, "version": N}`.

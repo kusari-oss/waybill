@@ -21,6 +21,10 @@ pub(crate) mod classify;
 pub(crate) mod derivation;
 pub(crate) mod emit;
 pub(crate) mod graph;
+/// Milestone 1282 — the four-role vocabulary for members declaring no
+/// `pname`. Distinct from [`classify`], which assigns the C182 role to every
+/// derivation; see that module's own doc comment for why they are separate.
+pub(crate) mod member;
 pub(crate) mod patches;
 pub(crate) mod summary;
 

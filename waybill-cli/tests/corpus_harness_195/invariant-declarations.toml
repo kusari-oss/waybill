@@ -96,6 +96,37 @@ which.
 """
 issue = 1208
 
+[[declaration]]
+invariant = "I2"
+target = "nix-closure-moat"
+kind = "duplicate-library-identity"
+count_at_declaration = 26
+reason = """
+Milestone 1282 emits the 1,145 closure members that declare no `pname`. FR-016
+keeps each member's own `name` unmodified and these members declare no
+`version`, so `(name, version, type)` cannot tell two of them apart -- 26
+groups share a name, the largest being `crt` and `crt-builder` at eight
+members each.
+
+They are not duplicates. Measured on the regenerated golden: all 26 groups
+have members with pairwise-distinct `purl` values and 0 groups repeat a purl,
+because FR-002 puts the identity hash in the PURL's name segment
+(`pkg:generic/crt-6h3msgmh...`). The 164 components inside those groups all
+carry `waybill:closure-member-role`, so every one is a member this milestone
+added; no component another reader emits is involved.
+
+So the document distinguishes them, and a consumer comparing PURLs sees 164
+artifacts. I2 compares `(name, version, type)` -- the identity a consumer that
+aggregates by name and version uses -- and under that identity they do
+collide, which is what I2 exists to say and it is saying it correctly.
+
+Closing it would mean either rewriting the name (FR-016 forbids it, and the
+name is the only human-readable thing these members carry) or inventing a
+version they do not have. Both trade a true statement for a tidier one. The
+honest disclosure is this declaration plus the PURL that already separates
+them.
+"""
+
 # ---------------------------------------------------------------------
 # I3 — non-runtime scope is not propagated transitively.
 #

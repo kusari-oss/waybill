@@ -1,0 +1,37 @@
+# Pre-change baselines, READ FROM THE COMMITTED GOLDEN (T004)
+#
+# Not quoted from the spec and not recalled. Figures carried through
+# earlier sessions were wrong three times -- '3,748 edges' was repeated
+# across turns against a golden that says 3,459.
+#
+# source: waybill-cli/tests/fixtures/public_corpus/nix-closure-moat/cdx.json
+#         metadata.properties['waybill:nix-closure']
+
+derivations              1749
+components-emitted       381
+edges                    3459
+patches                  212
+patches-without-cve      197
+distinct-cves            13
+
+C182 role census (counts DERIVATIONS, not components):
+  artifact-input     268
+  both               45
+  build-tooling      121
+  unreferenced       1315
+  TOTAL              1749
+
+Per-component waybill:closure-role in the same golden:
+  artifact-input     237
+  both               41
+  build-tooling      92
+  unreferenced       11
+  TOTAL              381
+
+# The two tables above are the whole of research R8a in one place:
+# 1,315 `unreferenced` DERIVATIONS yield 11 COMPONENTS. The gate that
+# suppresses the 1,145 is the C182 role filter in emits_as_component,
+# not a pname test -- pname() falls back to the derivation's own name
+# and returns Some for every one of them.
+
+total components in the document : 406

@@ -83,7 +83,20 @@ pub(crate) struct ProjectedGraph {
 /// *declaration* and not on whether it was emitted, which is the distinction
 /// that produces FR-011's residual-orphan population rather than hiding it.
 fn stops(drv: &RawDerivation) -> bool {
-    drv.declared_pname().is_some()
+    match drv.declared_pname() {
+        // A derivation declaring a `pname` is a package, as before.
+        Some(_) => true,
+        // Milestone 1282 FR-013 — of the members declaring none, `source`
+        // and `package` are stopping points and the other two are not.
+        //
+        // The walk therefore passes *through* scaffolding and fragments, so
+        // an edge names the source a package was built from rather than the
+        // build script that stood between them. Consulting
+        // [`member::classify`] here rather than re-deriving the test is what
+        // keeps this in step with `emit::emitted_drv_keys`, which asks the
+        // same question of the same function.
+        None => super::member::classify(drv).is_edge_endpoint(),
+    }
 }
 
 /// Project `inputs.drvs` onto the derivations in `emitted`.
@@ -94,6 +107,15 @@ fn stops(drv: &RawDerivation) -> bool {
 /// measured closure — and FR-012 exists because both measured closures are
 /// small enough to hide the difference.
 pub(crate) fn project(closure: &RawClosure, emitted: &HashSet<&str>) -> ProjectedGraph {
+    debug_assert!(
+        emitted.iter().all(|k| {
+            closure
+                .derivations
+                .get(*k)
+                .is_some_and(stops)
+        }),
+        "every edge endpoint must be a derivation the walk stops at"
+    );
     let drvs = &closure.derivations;
     let mut memo: HashMap<&str, BTreeSet<&str>> = HashMap::new();
     let mut visits = 0usize;
@@ -314,32 +336,44 @@ mod tests {
     }
 
     #[test]
-    fn t014_a_member_behind_a_fetch_is_connected() {
-        // Contract P1, and the whole feature. `pkgb` is emitted only because
-        // it applies a patch and is referenced by NO declared attribute, so
-        // the pass-through is its only possible edge.
+    fn m1282_t030_a_version_shaped_fetch_became_a_stopping_point() {
+        // **This test asserted the opposite until milestone 1282, and the
+        // change is the feature.** Under milestone 1280 `fetch.drv` declared
+        // no `pname`, so it was neither emitted nor a stop, and the only
+        // possible edge was the pass-through `pkga -> pkgb`.
+        //
+        // FR-013 makes `source` and `package` members stopping points.
+        // `fetch.drv` is named `waybill-fixture-pkgb-1.0.tar.gz`, whose
+        // `-1.0` is version-shaped and which records no content hash, so the
+        // classifier calls it a `package` and the walk now stops there.
+        //
+        // That is the spec's "the graph changes, and that is accepted"
+        // (Clarifications): stopping earlier replaces a transitive
+        // fan-out with a direct edge, and `pkgb` behind it loses its only
+        // inbound edge. The pass-through itself is NOT abandoned -- it is
+        // still exercised, through a `scaffolding` member, which FR-013
+        // keeps out of the endpoint set. See
+        // `tests/closure_members.rs::m1282_us3_a_source_behind_scaffolding_is_the_endpoint`.
         let c = fixture("through_fetch.json");
 
-        // CONTROL, two parts. The fixture must hold the derivations it claims,
-        // and `pkgb` must really be emitted -- were it absent from the emitted
-        // set, "no edge to pkgb" would be true for the wrong reason.
+        // CONTROL: the fixture still holds what the assertions below read.
         assert_eq!(c.derivations.len(), 4, "fixture shape changed");
         let em = emitted(&c);
         assert!(em.contains("pkgb.drv"), "pkgb must be emitted; got {em:?}");
         assert!(
-            !em.contains("fetch.drv"),
-            "the fetch must NOT be emitted, or this tests nothing"
+            em.contains("fetch.drv"),
+            "m1282: a version-shaped pname-less member is now an endpoint; got {em:?}"
         );
 
         let edges = edges_of(&c);
         assert!(
-            edges.contains(&("pkga.drv".to_string(), "pkgb.drv".to_string())),
-            "pkga reaches pkgb only through a derivation with no pname; \
-             without the pass-through pkgb is orphaned. got {edges:?}"
+            edges.contains(&("pkga.drv".to_string(), "fetch.drv".to_string())),
+            "the walk must stop at the fetch rather than passing through it. got {edges:?}"
         );
         assert!(
-            !edges.iter().any(|(_, to)| to == "fetch.drv"),
-            "no edge may point at a derivation that is not a component"
+            !edges.contains(&("pkga.drv".to_string(), "pkgb.drv".to_string())),
+            "pkga must no longer reach pkgb transitively: the fetch stops the walk. \
+             got {edges:?}"
         );
     }
 
