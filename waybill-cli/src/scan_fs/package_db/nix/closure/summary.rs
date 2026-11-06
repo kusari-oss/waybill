@@ -59,6 +59,35 @@ pub struct NixClosureSummary {
     pub license_coverage: super::licenses::LicenseCoverage,
     /// Why the license lookup produced nothing, when it failed (FR-006).
     pub licenses_degraded: Option<String>,
+    /// Milestone 1282 FR-009 — how many components each of the four member
+    /// roles contributed.
+    ///
+    /// **Additive beside [`Self::role_counts`], not a replacement for it,
+    /// and the two are not addends of one another.** `role_counts` is the
+    /// milestone-1277 C182 census and counts **derivations** — 1,749 on the
+    /// pinned closure, covering this whole population already, most of it
+    /// under `unreferenced`. This counts **components**. Summing the two
+    /// reconciles nothing; the reconciliation FR-009 asks for is
+    /// `components-emitted` = components carrying no member role + these
+    /// four.
+    ///
+    /// Every variant is present even at zero. An absent key would make a
+    /// closure with no scaffolding indistinguishable from a classifier that
+    /// stopped producing that role.
+    pub member_role_counts: std::collections::BTreeMap<&'static str, usize>,
+    /// Components emitted that predate milestone 1282 — those carrying no
+    /// member role. The other addend of the FR-009 reconciliation.
+    pub components_without_member_role: usize,
+    /// Milestone 1282 FR-015 — components this scan emitted that **cannot**
+    /// be dependency-edge endpoints, by design.
+    ///
+    /// Without it a reader cannot tell a closure whose graph is *incomplete*
+    /// from one that merely gained components FR-013 excludes from the graph
+    /// on purpose. Both show up as a rise in the orphan count, and on the
+    /// pinned closure the second accounts for 513 of them — a population, not
+    /// an exception. Stating the figure is what makes the orphan accounting
+    /// readable rather than alarming.
+    pub edge_ineligible_components: usize,
 }
 
 impl NixClosureSummary {
@@ -67,11 +96,47 @@ impl NixClosureSummary {
         // total drift, and the drift would be invisible: both would still
         // produce a plausible number.
         let totals = super::patches::totals(patched);
+        // Built once and measured twice. Calling `emit::components` again for
+        // the member-role counts would be a second traversal that could
+        // disagree with the first, and the disagreement would be invisible:
+        // both numbers would look plausible.
+        let components = emit::components(closure);
+        let mut member_role_counts: std::collections::BTreeMap<&'static str, usize> =
+            super::member::MemberRole::ALL
+                .iter()
+                .map(|r| (r.wire(), 0usize))
+                .collect();
+        let mut without_member_role = 0usize;
+        let mut edge_ineligible = 0usize;
+        for c in &components {
+            match c
+                .extra_annotations
+                .get(super::member::ANN_MEMBER_ROLE)
+                .and_then(|v| v.as_str())
+            {
+                Some(role) => {
+                    if let Some(slot) = member_role_counts.get_mut(role) {
+                        *slot += 1;
+                    }
+                    // Read back from the emitted value rather than
+                    // re-deriving it from the derivation: the figure must
+                    // describe the document a consumer holds, and a second
+                    // derivation could disagree with it plausibly.
+                    if !super::member::MemberRole::ALL
+                        .iter()
+                        .any(|r| r.wire() == role && r.is_edge_endpoint())
+                    {
+                        edge_ineligible += 1;
+                    }
+                }
+                None => without_member_role += 1,
+            }
+        }
         Self {
             attribute: closure.attribute.clone(),
             derivations: closure.raw.derivations.len(),
             role_counts: closure.role_counts(),
-            components_emitted: emit::components(closure).len(),
+            components_emitted: components.len(),
             patches: totals.patches,
             patches_without_cve: totals.without_cve,
             distinct_cves: totals.distinct_cves,
@@ -84,6 +149,9 @@ impl NixClosureSummary {
             edges: closure.graph.edges.len(),
             license_coverage: closure.license_coverage.clone(),
             licenses_degraded: closure.degraded_licenses.as_ref().map(|r| r.wire().to_string()),
+            member_role_counts,
+            components_without_member_role: without_member_role,
+            edge_ineligible_components: edge_ineligible,
         }
     }
 
@@ -107,7 +175,26 @@ impl NixClosureSummary {
             "patches": self.patches,
             "patches-without-cve": self.patches_without_cve,
             "distinct-cves": self.distinct_cves,
+            // Milestone 1282 FR-018 — this is the figure that **changes**.
+            // FR-013 stops the walk at `source` and `package` members, which
+            // replaces wide transitive fan-outs with direct edges, so the
+            // count moves rather than merely growing. It is carried here
+            // already, which is what FR-018 requires: a graph that silently
+            // changes size is indistinguishable from one that broke, and a
+            // reader comparing two scans sees the new number rather than
+            // inferring it.
             "edges": self.edges,
+            // Milestone 1282 FR-009 — the four member-role counts, and the
+            // count of components carrying none. Those two sum to
+            // `components-emitted`; the C182 `roles` census above does NOT
+            // participate, because it counts derivations.
+            "member-roles": self.member_role_counts,
+            "components-without-member-role": self.components_without_member_role,
+            // Milestone 1282 FR-015 — the population the edge count does NOT
+            // describe. A rise in orphans that this number accounts for is a
+            // design consequence; a rise it does not account for is a defect,
+            // and without the figure the two are the same observation.
+            "edge-ineligible-components": self.edge_ineligible_components,
             // Milestone 1281 (#1346) — FR-008. Carried even when zero, and
             // deliberately: an absent key would make a closure whose members
             // declare no licenses indistinguishable from a lookup that never

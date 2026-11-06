@@ -704,6 +704,8 @@ spdx23_anno!(c180_spdx23, "waybill:nix-eval-degraded", document);
 spdx23_anno!(c177_spdx23, "waybill:nix-eval-superseded-version", component);
 spdx23_anno!(c181_spdx23, "waybill:nix-eval-origin", component);
 spdx23_anno!(c182_spdx23, "waybill:closure-role", component);
+// C206 (m1282) — which of four kinds a `pname`-less closure member is.
+spdx23_anno!(c206_spdx23, "waybill:closure-member-role", component);
 spdx23_anno!(c183_spdx23, "waybill:patch-evidence-grade", document);
 spdx23_anno!(c184_spdx23, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.

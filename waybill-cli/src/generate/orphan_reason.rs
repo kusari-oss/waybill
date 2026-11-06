@@ -226,6 +226,27 @@ pub enum OrphanReasonCode {
     /// some *other* reason, and the thing to check first is whether the
     /// projection dropped an edge it should have kept.
     ReachableOnlyThroughUnemittedPackage,
+    /// Milestone 1282 — a closure member this scan emitted that FR-013 keeps
+    /// out of the dependency graph by design: build scaffolding
+    /// (`writeText` output) and bootstrap fragments (`strncpy`, `memcpy`).
+    ///
+    /// **A population, not an exception.** 513 components on the pinned
+    /// closure carry this, against 5 and 16 for the variant above, so the
+    /// string has to read as a statement of design rather than an apology
+    /// for a gap. These members are in the closure — nix put them there and
+    /// each is identified by a hash nix itself computed — but only `source`
+    /// and `package` members may be edge endpoints, so nothing can reach
+    /// them and nothing should.
+    ///
+    /// **Why it is not covered by the `unreferenced` arm.** Every one of
+    /// these carries `waybill:closure-role == "unreferenced"`, which
+    /// `already_explained` treats as a sufficient explanation. Left alone
+    /// that arm would swallow the whole population before any reason was
+    /// assigned, this variant would be dead code, and FR-014 would be
+    /// satisfied by exactly the blanket explanation milestone 1280 narrowed
+    /// that arm to prevent — invisibly, because an explained component is
+    /// not an I7 offender and every count would still pass.
+    ClosureMemberNotAnEdgeEndpoint,
 }
 
 impl OrphanReasonCode {
@@ -244,6 +265,7 @@ impl OrphanReasonCode {
             Self::ReachableOnlyThroughUnemittedPackage => {
                 "reachable-only-through-unemitted-package"
             }
+            Self::ClosureMemberNotAnEdgeEndpoint => "closure-member-not-an-edge-endpoint",
         }
     }
 }
@@ -262,6 +284,7 @@ pub struct OrphanReasonCounts {
     pub foreign_build_system: usize,
     pub unreferenced_lock_node: usize,
     pub reachable_only_through_unemitted_package: usize,
+    pub closure_member_not_an_edge_endpoint: usize,
 }
 
 impl OrphanReasonCounts {
@@ -286,6 +309,9 @@ impl OrphanReasonCounts {
             }
             OrphanReasonCode::ReachableOnlyThroughUnemittedPackage => {
                 self.reachable_only_through_unemitted_package += 1
+            }
+            OrphanReasonCode::ClosureMemberNotAnEdgeEndpoint => {
+                self.closure_member_not_an_edge_endpoint += 1
             }
         }
     }
@@ -430,10 +456,28 @@ pub fn classify_orphans(
             // unreachable closure components (14 `build-tooling`, 6
             // `artifact-input`); the remaining 5 are `unreferenced` and stay
             // explained by their role, as before.
-            || c.extra_annotations
+            || (c.extra_annotations
                 .get("waybill:closure-role")
                 .and_then(|v| v.as_str())
                 == Some("unreferenced")
+                // Milestone 1282 — narrowed again, and for the same reason
+                // milestone 1280 narrowed it the first time: a role treated
+                // as a blanket explanation hides a genuine orphan behind it.
+                //
+                // Every member milestone 1282 adds is `unreferenced`, so
+                // without this clause the arm above swallows all 513 of them
+                // before any reason is assigned, and
+                // `ClosureMemberNotAnEdgeEndpoint` can never fire. They are
+                // explained — by FR-013, which keeps them out of the graph on
+                // purpose — but the explanation has to be the one that says
+                // so, not an inherited "nothing references this".
+                //
+                // Measured consequence of leaving it out: 513 components
+                // explained by the wrong code, zero test failures, and every
+                // success criterion still green.
+                && !c
+                    .extra_annotations
+                    .contains_key("waybill:closure-member-role"))
             || c.extra_annotations
                 .get("waybill:version-absence")
                 .and_then(|v| v.as_str())
@@ -577,6 +621,36 @@ pub fn classify_orphans(
                     // between lockfile nodes, so a dangling input is a
                     // statement about the lockfile, not about the build.
                     OrphanReasonCode::UnreferencedLockNode
+                } else if matches!(
+                    c.extra_annotations
+                        .get("waybill:closure-member-role")
+                        .and_then(|v| v.as_str()),
+                    Some("scaffolding") | Some("fragment")
+                ) {
+                    // Milestone 1282 FR-014 — scaffolding and fragments are
+                    // orphans by construction: FR-013 admits only `source`
+                    // and `package` members as edge endpoints. An orphan
+                    // *without* a reason is the defect; this population is
+                    // not one.
+                    //
+                    // Checked before the C182 arm below because these
+                    // components carry both annotations, and the more
+                    // specific statement is the true one: "excluded from the
+                    // graph by design" rather than "reachable only through a
+                    // package that was not emitted".
+                    //
+                    // **Deliberately NOT every member this feature adds.**
+                    // A `source` or `package` IS an eligible endpoint, so
+                    // one that nothing reaches is unreachable for some other
+                    // reason — on the fixture, because the derivation that
+                    // consumes it was itself not emitted — and that is what
+                    // the C182 arm below says. Claiming "not an edge
+                    // endpoint" for a component that is one would be a
+                    // false statement in the slot a reader trusts to explain
+                    // the orphan, which is worse than the silence FR-014
+                    // exists to remove. Found by measuring the emitted
+                    // document rather than by reading the requirement.
+                    OrphanReasonCode::ClosureMemberNotAnEdgeEndpoint
                 } else if c.extra_annotations.contains_key("waybill:closure-role") {
                     // Milestone 1280 (#1346) — a nix closure member whose
                     // every path runs through a derivation that declares a
