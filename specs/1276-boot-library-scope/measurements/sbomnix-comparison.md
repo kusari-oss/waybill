@@ -720,3 +720,75 @@ SBOMNIX=$S PROJ=$PWD/moat-proj WAYBILL=./target/debug/waybill \
 ```
 
 `flake.lock` was verified byte-identical on both sides after this run.
+
+---
+
+# Sizing the identity gap, 2026-11-06 (#1365)
+
+Probe: `pypi-identity-probe.py`, committed beside this file. Run against the
+same moat closure.
+
+## The 781 `pkg:generic` components, decomposed
+
+| bucket | count | what it should carry |
+|---|---|---|
+| milestone-1282 closure members — `source` 455, `fragment` 65, `package` 12, `scaffolding` 7 | **539** | `pkg:generic` is **correct**: patch files, source tarballs, build fragments. `CVE-2019-13232-1.patch` is not a package and no feed should match it |
+| derivation name prefixed `python3.N-` | **83 derivations / 75 names** | `pkg:pypi/<pname>@<version>` |
+| no language prefix — C and system packages | **150** | no PURL ecosystem exists; a CPE |
+| python setup hooks | 8 | generic — build machinery |
+| compilers and interpreters | 8 | generic |
+
+**So the actionable gap is ~226, not 781.** Quoting 781 as the gap would have
+been the same error as quoting 107 for the coverage gap: a true count of the
+wrong population.
+
+## The PyPI rule, and why both halves of it are load-bearing
+
+> derivation `name` matches `^python3\.\d+-` **and** `pname` does not start
+> with `python3`
+
+| | |
+|---|---|
+| derivations matched | 83 |
+| distinct names | **75** |
+| residual build hooks | **0** |
+| names needing PEP 503 normalisation | **0** on this closure |
+| nixpkgs bootstrap variants correctly excluded | 6 |
+
+A **bare** `python-` prefix was tried first and is wrong: it matches nixpkgs
+setup hooks — `python-relax-deps-hook`, `python-namespaces-hook.sh`,
+`python-imports-check-hook.sh` — which are build machinery, 20 of them here.
+The versioned prefix excludes them structurally rather than by a name
+blocklist.
+
+The second clause matters for a different reason: nixpkgs' bootstrap variants
+put the prefix in `pname` itself (`python3.13-bootstrap-tomli`), so without it
+the rule emits `pkg:pypi/python3.13-bootstrap-tomli`, which is not a project
+that exists.
+
+Among the 75: `urllib3`, `requests`, `lxml`, `jinja2`, `certifi`,
+`setuptools`, `pygments`, `idna`, `psutil` — the CVE-historied names, each a
+direct read with no inference.
+
+## Not established, and a spec should not assume it
+
+**That all 75 are real PyPI projects.** Two look doubtful on inspection —
+`librt`, which has no PyPI project under that name, and `roman-numerals`,
+where the project is published as `roman-numerals-py`. The rule reads nixpkgs'
+`pname`, and nixpkgs does not promise it equals the PyPI project name. A
+wrong-but-well-formed `pkg:pypi` PURL is worse than a `pkg:generic` one,
+because it collides with whatever really owns that coordinate — the same
+argument the closure emitter already makes for declining `pkg:nix`.
+
+So the open question is **how a candidate is confirmed**, and it is the
+question a spec has to answer before this ships:
+
+* a registry check is a network call the closure tier does not currently make;
+* the existing deps.dev enrichment already resolves PyPI coordinates and could
+  confirm rather than invent;
+* or the emission could be gated on a confirmation and fall back to
+  `pkg:generic`, which keeps today's behaviour as the floor.
+
+**No figure above depends on that choice.** The 75 is what a direct read of
+this closure yields; what fraction survives confirmation is unmeasured, and
+this file does not guess it.
