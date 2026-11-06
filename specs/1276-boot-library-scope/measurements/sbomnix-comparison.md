@@ -530,3 +530,265 @@ measured **outputs** — two documents, counted and differenced — and never
 measured the **input** both tools were reading. One probe over the closure JSON
 answered in minutes what three re-checks of the SBOMs could not, because the
 answer was never in the SBOMs.
+
+---
+
+# Re-check, 2026-11-06 (after milestones 1280 and 1282)
+
+Same harness, same sbomnix `1.9.0+g95480c2` from the store, same moat pin,
+same aarch64-darwin host, same flags. waybill at `bf5fb15` — main's tip after
+#1364 merged.
+
+Run because the 2026-11-05 correction at the end of this file made a
+**falsifiable prediction**, and both halves of it have now shipped: milestone
+1280 reads `inputs.drvs` for edges, and milestone 1282 emits the `pname`-less
+members. The prediction was
+
+> On this closure it would take waybill from 413 components and 788 edges to
+> roughly **825 components and ~6,500 edges**.
+
+## The comparison now
+
+| | sbomnix | post-1279 | **post-1282** | predicted |
+|---|---|---|---|---|
+| components | 1,274 | 413 | **942** | ~825 |
+| `dependsOn` edges | 8,230 | 788 | **5,131** | ~6,479 |
+| with a license | 301 | 137 | **225** | — |
+| with a hash | **0** | 136 | **136** | — |
+| with **no PURL at all** | **106** | 0 | **0** | — |
+| distinct names | 819 | 407 | **810** | — |
+| **shared with sbomnix** | — | 309 | **712** | — |
+| **sbomnix-only, raw names** | — | 510 | **107** | — |
+| **sbomnix-only, normalised** | — | — | **32** | — |
+| waybill-only | — | 98 | **98** | — |
+| GHC boot libraries | 0 of 6 | 6 of 6 | **6 of 6** | — |
+
+waybill's own C184 record for the same run: 1,275 derivations, 917 components
+emitted by the tier, 5,658 edges, `member-roles` `{source: 455, package: 12,
+scaffolding: 7, fragment: 65}`. The tier's 5,658 and the document's 5,131 are
+different scopes and the difference is not explained here.
+
+**The name gap closed from 510 to 107 while waybill-only held at exactly 98**,
+so this is convergence on one closure rather than two tools inventing
+different components. The 107 is a naming artifact — normalised, the true
+residual is **32**, and the gap that matters is identity rather than
+coverage. See below.
+
+## Both predictions were wrong, in opposite directions
+
+Components overshot by 117, edges undershot by ~1,350. Recorded because a
+prediction that is quietly dropped when it misses is worse than no prediction.
+
+The component overshoot has a measured cause: the ~825 came from "1,275
+derivations → 825 distinct identities (variant merging)", which assumed the
+new population merges on `(pname, version)` the way the named one does. It
+does not — milestone 1282 gives each member a content- or recipe-hash
+identity, so 681 `pname`-less derivations yield 603 distinct identities rather
+than collapsing toward the variant-merged figure.
+
+The edge undershoot is **not** explained here. FR-013 stops the walk at
+sources and packages and passes *through* scaffolding and fragments, which
+removes transitive edges a full `inputs.drvs` collapse would keep, and that is
+the obvious candidate — but it has not been measured, and this file's history
+is that the obvious candidate was wrong three times running.
+
+## The residual gap is 32, not 107 — and it is not the important one
+
+The 107 is a **name-convention artifact**, caught only by testing it. nix names
+a Python derivation `python3.13-urllib3`; waybill names the component by its
+`pname`, `urllib3`. Comparing raw name sets counts every such package as
+missing.
+
+Normalising nix's language prefixes (`python3.N-`, `perl5.X.Y-`, …) before
+comparing:
+
+| | names |
+|---|---|
+| sbomnix-only, raw | 107 |
+| sbomnix-only, normalised | **32** |
+
+**74 of the 79 `python3.13-*` names are already in the document** under their
+bare `pname`. What remains is 32, and it is mostly build machinery — the six
+`bootstrap-stage*-stdenv-darwin` stages, `stdenv-darwin`, `pkg-config-role-hook`,
+`pkgs-config-setup-hook`, `cctools-binutils-darwin`, `llvm-binutils`,
+`macOS-SDK`, `cups-headers` — with a short tail of real tools: `gawk 5.4.0`,
+`gzip 1.14`, `gnused 4.9`, `less 692`, `patch 2.8`, `pkgconf`, `mailcap`,
+`libstemmer`, `jailbreak-cabal`, `libSystem`.
+
+All 32 are `pname`-bearing and `unreferenced` — milestone 1282's documented
+exclusion, unchanged.
+
+## The gap that matters is identity, not coverage
+
+The packages a vulnerability feed would care about are **already in the
+document** and still cannot be matched, because they carry no ecosystem:
+
+| package | version | PURL emitted |
+|---|---|---|
+| `urllib3` | 2.6.3 | `pkg:generic/urllib3@2.6.3` |
+| `requests` | 2.33.1 | `pkg:generic/requests@2.33.1` |
+| `lxml` | 6.0.2 | `pkg:generic/lxml@6.0.2` |
+| `jinja2` | 3.1.6 | `pkg:generic/jinja2@3.1.6` |
+| `certifi` | 2026.01.04 | `pkg:generic/certifi@2026.01.04` |
+| `openssl` | 3.6.2 | `pkg:generic/openssl@3.6.2` |
+| `curl` | 8.20.0 | `pkg:generic/curl@8.20.0` |
+| `zlib` | 1.3.2 | `pkg:generic/zlib@1.3.2` |
+
+**781 of 942 components carry `pkg:generic`.** OSV and the other feeds key on
+an ecosystem-qualified PURL; `pkg:generic` has none, so every one of these is
+invisible to a vulnerability query despite being present, correctly named and
+correctly versioned.
+
+sbomnix is not ahead here — its 1,168 `pkg:nix` PURLs use a type the purl spec
+does not define, and its remaining 106 carry no PURL at all. Neither document
+answers "is this build affected by CVE-X". That makes it open ground rather
+than a deficit.
+
+**This reorders the work.** Closing the 32-name coverage gap adds `gzip` and
+`gawk` as two more unmatchable `pkg:generic` components. Giving the 781 their
+real ecosystem types makes the packages already present answerable to a feed.
+The second is worth more, and the two are independent.
+
+## Milestone 1282 emits every member it claims to, checked exactly
+
+| role | distinct identities in the closure | emitted | delta |
+|---|---|---|---|
+| `source` | 455 | 455 | **0** |
+| `package` | 12 | 12 | **0** |
+| `scaffolding` | 7 | 7 | **0** |
+| `fragment` | 65 | 65 | **0** |
+| **total** | **539** | **539** | **0** |
+
+615 derivations of the 1,275 declare no `pname` in **either** carrier; they
+reduce to 539 distinct identities under content- and recipe-hash merging, and
+all 539 are in the document. FR-001 holds on this closure with nothing left
+over.
+
+## Four probe errors, recorded because each produced a figure that looked right
+
+1. **"The sbomnix-only names are the ones it cannot identify."** Plausible —
+   sbomnix has 106 components with no PURL and the gap was 107. Measured: **0
+   of 107**. Its 106 unidentified components share a single name, `source`,
+   which waybill emits. The near-equal counts were a coincidence.
+2. **"60 of the 72 `package`-role members are missing."** The probe assumed
+   every `pname`-less derivation becomes a member-role-bearing component.
+   Most do not: `pname()` falls back to the derivation's own name, so
+   `libxo-1.7.5` is emitted as `libxo` version `1.7.5` with no member role at
+   all.
+3. **"Ten derivations are a genuine gap in milestone 1282."** The sharpest of
+   the three, because it named a defect in code that had merged an hour
+   earlier, and it was wrong. `cups-headers`, `macOS-SDK`,
+   `python3.13-pystemmer` and `shell_cmds` all declare a `pname` — in the
+   **top-level `structuredAttrs` carrier**, which milestone 1278 taught
+   `attr_str` to read and which the probe never looked at. The probe read
+   `env.pname` and `env.__json` only. 66 of the closure's 1,275 derivations
+   carry their `pname` there, and counting them as nameless is what produced
+   both the 681 (against the true 615) and the fictitious gap.
+
+4. **"The gap is 107 names."** Taken from the harness's own `names:` line and
+   carried into a decomposition, an issue draft and a priority call before
+   being tested. nix names a Python derivation `python3.13-urllib3`; waybill
+   names it `urllib3`. **74 of the 79 `python3.13-*` names were already in the
+   document.** The true residual is 32.
+
+**All four errors have one shape**: the probe modelled what waybill reads or
+emits instead of reading it. That is the same failure the 2026-11-05 correction
+identified — it measured the two documents and never measured the input both
+tools were given — and it recurred three times in one afternoon against a
+file that opens by warning about it. The check that settled each was querying
+the emitted document or the closure itself.
+
+## Where each tool stands now
+
+**waybill's identity advantage is unchanged and is the durable one**: every
+component carries a PURL against sbomnix's 106 with none, 136 carry a hash
+against 0, and the six GHC boot libraries no derivation walk can reach are
+still 6-of-6 against 0-of-6.
+
+**sbomnix still reports more of the build**: 1,274 components to 942 and 8,230
+edges to 5,131. The ratio was 3× and 10× at the last re-check; it is now
+**1.35× and 1.6×**.
+
+## Reproducing
+
+```sh
+S=/nix/store/cbh4k59d3sa3w9axcwdbk6jzkg99ybvk-python3.14-sbomnix-1.9.0+g95480c2/bin/sbomnix
+cp -R ~/.cache/waybill/corpus/53983fe1021353b3/d069055*/repo moat-proj
+md5 -q ~/.cache/waybill/corpus/53983fe1021353b3/d069055*/repo/flake.lock moat-proj/flake.lock
+SBOMNIX=$S PROJ=$PWD/moat-proj WAYBILL=./target/debug/waybill \
+  bash specs/1276-boot-library-scope/measurements/compare-sbomnix.sh
+```
+
+`flake.lock` was verified byte-identical on both sides after this run.
+
+---
+
+# Sizing the identity gap, 2026-11-06 (#1365)
+
+Probe: `pypi-identity-probe.py`, committed beside this file. Run against the
+same moat closure.
+
+## The 781 `pkg:generic` components, decomposed
+
+| bucket | count | what it should carry |
+|---|---|---|
+| milestone-1282 closure members — `source` 455, `fragment` 65, `package` 12, `scaffolding` 7 | **539** | `pkg:generic` is **correct**: patch files, source tarballs, build fragments. `CVE-2019-13232-1.patch` is not a package and no feed should match it |
+| derivation name prefixed `python3.N-` | **83 derivations / 75 names** | `pkg:pypi/<pname>@<version>` |
+| no language prefix — C and system packages | **150** | no PURL ecosystem exists; a CPE |
+| python setup hooks | 8 | generic — build machinery |
+| compilers and interpreters | 8 | generic |
+
+**So the actionable gap is ~226, not 781.** Quoting 781 as the gap would have
+been the same error as quoting 107 for the coverage gap: a true count of the
+wrong population.
+
+## The PyPI rule, and why both halves of it are load-bearing
+
+> derivation `name` matches `^python3\.\d+-` **and** `pname` does not start
+> with `python3`
+
+| | |
+|---|---|
+| derivations matched | 83 |
+| distinct names | **75** |
+| residual build hooks | **0** |
+| names needing PEP 503 normalisation | **0** on this closure |
+| nixpkgs bootstrap variants correctly excluded | 6 |
+
+A **bare** `python-` prefix was tried first and is wrong: it matches nixpkgs
+setup hooks — `python-relax-deps-hook`, `python-namespaces-hook.sh`,
+`python-imports-check-hook.sh` — which are build machinery, 20 of them here.
+The versioned prefix excludes them structurally rather than by a name
+blocklist.
+
+The second clause matters for a different reason: nixpkgs' bootstrap variants
+put the prefix in `pname` itself (`python3.13-bootstrap-tomli`), so without it
+the rule emits `pkg:pypi/python3.13-bootstrap-tomli`, which is not a project
+that exists.
+
+Among the 75: `urllib3`, `requests`, `lxml`, `jinja2`, `certifi`,
+`setuptools`, `pygments`, `idna`, `psutil` — the CVE-historied names, each a
+direct read with no inference.
+
+## Not established, and a spec should not assume it
+
+**That all 75 are real PyPI projects.** Two look doubtful on inspection —
+`librt`, which has no PyPI project under that name, and `roman-numerals`,
+where the project is published as `roman-numerals-py`. The rule reads nixpkgs'
+`pname`, and nixpkgs does not promise it equals the PyPI project name. A
+wrong-but-well-formed `pkg:pypi` PURL is worse than a `pkg:generic` one,
+because it collides with whatever really owns that coordinate — the same
+argument the closure emitter already makes for declining `pkg:nix`.
+
+So the open question is **how a candidate is confirmed**, and it is the
+question a spec has to answer before this ships:
+
+* a registry check is a network call the closure tier does not currently make;
+* the existing deps.dev enrichment already resolves PyPI coordinates and could
+  confirm rather than invent;
+* or the emission could be gated on a confirmation and fall back to
+  `pkg:generic`, which keeps today's behaviour as the floor.
+
+**No figure above depends on that choice.** The 75 is what a direct read of
+this closure yields; what fraction survives confirmation is unmeasured, and
+this file does not guess it.
