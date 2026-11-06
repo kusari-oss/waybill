@@ -34,7 +34,7 @@ Nothing in Phase 3+ can be tested without them.
 - [ ] T008 [P] Unit-test in `licenses.rs` that `licenses_expr` interpolates the system literally and the revision only after `is_valid_revision`, mirroring the existing `expression_is_pure_pinned_and_literal_in_the_system` test
 - [ ] T009 [P] Unit-test in `licenses.rs` that the generated argv contains neither `--impure` nor `--accept-flake-config` and passes `argv_is_safe` (FR-011, FR-012)
 - [ ] T010 Add `evaluate_licenses` to the `Evaluator` trait in `waybill-cli/src/scan_fs/package_db/nix/eval/mod.rs` with the signature in `contracts/license-lookup.md`
-- [ ] T011 Implement `evaluate_licenses` for `NixEvaluator` in `invoke.rs`, reusing the `evaluate_versions` scaffolding verbatim — name filter with refused-count warning, revision validation, `resolving_argv`, `argv_is_safe`, `run_bounded` — and adding no second set of controls (FR-012)
+- [ ] T011 Implement `evaluate_licenses` for `NixEvaluator` in `invoke.rs`, reusing the `evaluate_versions` scaffolding verbatim — name filter with refused-count warning, revision validation, `resolving_argv`, `argv_is_safe`, `run_bounded` — and adding no second set of controls (FR-012). The import-from-derivation refusal is **already verified once per tier run** at `eval/mod.rs:86`; this path inherits it and MUST NOT re-issue its own
 - [ ] T012 Implement `evaluate_licenses` for the test double alongside the existing one in `eval/mod.rs`, returning fixture rows so Phase 3+ is testable without a host `nix`
 - [ ] T013 Parse the evaluation's JSON into `Vec<LicenseRow>` in `licenses.rs`, dropping malformed rows with a `tracing::warn!` rather than failing the pass (FR-013)
 - [ ] T014 [P] Unit-test that a row whose attribute throws, a `null` alias, and a missing attribute each yield no row and do not abort the pass (FR-013, R2) in `licenses.rs`
@@ -61,7 +61,9 @@ stub evaluator and assert closure components carry `licenses[]` entries.
 - [ ] T022 [P] [US1] Integration test: two scans of one closure emit byte-identical license sets (US1 scenario 3, FR-010, SC-004)
 - [ ] T023 [P] [US1] Integration test: the join is by store path — a fixture with two derivations sharing a `pname` at different versions licenses each from its own store path, and swapping to a name join fails the test (FR-002, R5)
 - [ ] T024 [US1] Reconcile with licenses an earlier reader already attached: do not overwrite, duplicate or contradict (FR-004), with a test over a member milestone 1273 already licenses
-- [ ] T025 [US1] Handle the ambiguous case where one store path matches rows from more than one root — rows carried identical licenses in every measured case (R4), so assert that and degrade the component to no license rather than guessing if it ever does not
+- [ ] T025 [US1] Implement FR-015 in `closure/mod.rs`: where one store path matches rows from more than one root, require the licenses to agree, and emit none for that component if they do not. Rows carried identical licenses in every measured case (R4), so assert agreement rather than assuming it
+
+- [ ] T049 [P] [US1] Integration test in `waybill-cli/tests/closure_licenses.rs`: a licensed closure component carries its license in the **native** construct of all three formats — CycloneDX `licenses[]`, SPDX 2.3 and SPDX 3 — and in no `waybill:` property (FR-009, Constitution Principle V)
 
 **Checkpoint**: US1 is independently deliverable. Components carry licenses.
 
@@ -76,12 +78,12 @@ rewritten into a plausible-looking identifier.
 in a form marked uncanonicalised, and no component carries an SPDX identifier
 the mapping table does not hold.
 
-- [ ] T026 [US2] Reuse milestone 1273's `DeclaredLicense` two-state type at `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/package_set.rs:36` rather than defining a second one; move or re-export it if the module boundary requires
+- [ ] T026 [US2] Reuse milestone 1273's `DeclaredLicense` two-state type at `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/package_set.rs:36` rather than defining a second one. **Re-export it; do not move it** — relocating a shipped type to serve a new caller churns m1273's code for no behavioural gain
 - [ ] T027 [US2] Use nixpkgs' own `spdxId` from the license attrset directly where it is present, rather than re-deriving it from the attribute name (FR-014) — the expression already returns it per research R1
 - [ ] T028 [US2] Where `spdxId` is absent, preserve the attribute as stated and mark it uncanonicalised; never synthesise an SPDX identifier (FR-003)
 - [ ] T029 [P] [US2] Integration test: a member declared `publicDomain` is preserved and is not presented as a canonical SPDX expression (US2 scenario 1)
 - [ ] T030 [P] [US2] Integration test: a member declared `mit` carries SPDX `MIT` (US2 scenario 2)
-- [ ] T031 [P] [US2] Test that no emitted component carries an SPDX identifier absent from the milestone-1273 mapping table (SC-003)
+- [ ] T031 [P] [US2] Test that every emitted SPDX identifier is traceable to nixpkgs' own `spdxId` or the milestone-1273 mapping table — an identifier nixpkgs states that the table does not hold MUST pass, since FR-014 makes nixpkgs the authority (SC-003)
 - [ ] T032 [US2] Handle the composite form `with lib.licenses; [ asl20 mit ]` as several entries rather than one string to split (spec Edge Cases)
 
 **Checkpoint**: US2 independently testable on top of US1.
@@ -103,6 +105,8 @@ emitted, carries its components, and records why.
 - [ ] T037 [P] [US3] Integration test: a scan without `--nix-closure` is byte-identical to today (US3 scenario 2, FR-007)
 - [ ] T038 [P] [US3] Integration test: an evaluation that succeeds and returns zero rows reports zero coverage explicitly, not silence (spec Edge Cases, FR-008)
 - [ ] T039 [US3] Confirm a closure member nixpkgs does not describe at all — a bootstrap or fetch derivation — is distinguishable from one never looked up (spec Edge Cases)
+
+- [ ] T050 [US3] Cover the system-configuration closure shape (milestone 1066), where the nixpkgs input may not be reachable as it is for a package flake: confirm the lookup degrades per FR-006 rather than failing, and record the outcome in `specs/1281-closure-license-meta/measurements/` (spec Edge Cases)
 
 **Checkpoint**: all three stories complete and independently testable.
 
@@ -129,25 +133,27 @@ Phase 1 (T001–T004)
       ↓
 Phase 2 (T005–T014)  ← blocks everything
       ↓
-Phase 3 US1 (T015–T025)  ← MVP
+Phase 3 US1 (T015–T025, T049)  ← MVP
       ↓
 Phase 4 US2 (T026–T032)   depends on US1's join and emission
       ↓
-Phase 5 US3 (T033–T039)   depends on the acquisition existing
+Phase 5 US3 (T033–T039, T050)   depends on the acquisition existing
       ↓
 Phase 6 (T040–T048)
 ```
 
 US2 and US3 both build on US1's join; US1 alone is a shippable increment.
-T040 must be one commit with T041. T047 precedes T048.
+T040 must be one commit with T041. T047 precedes T048. T049 and T050 were
+added after the analysis pass and carry trailing IDs rather than being
+inserted — renumbering would have silently broken the range references above.
 
 ## Parallel opportunities
 
 - **Phase 1**: T002, T003, T004 together.
 - **Phase 2**: T008, T009 together once T007 lands; T014 with them.
-- **Phase 3**: T020–T023 together once T015–T019 land.
+- **Phase 3**: T020–T023 and T049 together once T015–T019 land.
 - **Phase 4**: T029, T030, T031 together once T026–T028 land.
-- **Phase 5**: T036, T037, T038 together once T033–T035 land.
+- **Phase 5**: T036, T037, T038 together once T033–T035 land; T050 after them.
 - **Phase 6**: T041, T043, T044 together.
 
 ## Implementation strategy

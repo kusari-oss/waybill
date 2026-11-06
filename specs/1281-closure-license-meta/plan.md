@@ -13,7 +13,7 @@ and joins the result back to closure components by **exact store path**. The
 name scopes the evaluation; the store path is the join, which is what keeps the
 accuracy bar in Principle IX intact. Measured: 1.05 s and 70% of the gap for
 the default shape, against 165.6 s and 85% for exhaustive enumeration — so
-enumeration becomes an opt-in rather than the default scan path.
+enumeration is therefore rejected, not deferred behind a flag.
 
 ## Technical Context
 
@@ -22,8 +22,9 @@ enumeration becomes an opt-in rather than the default scan path.
 
 **Primary Dependencies**: Existing only — `serde`/`serde_json` (the eval's JSON
 rows), `spdx` via `SpdxExpression::try_canonical` (license canonicalisation,
-already used by the rpm and ipk readers), `tracing`, `anyhow`, `clap` (the
-opt-in flag). **Zero new Cargo dependencies.**
+already used by the rpm and ipk readers), `tracing`, `anyhow`. **Zero new
+Cargo dependencies.** No new CLI flag — see the note under Performance
+Goals.
 
 **External tools**: the host's `nix`, already a hard requirement of this tier
 since milestone 1034. The evaluation is pure — no `--impure`, so it passes the
@@ -44,9 +45,15 @@ hosts with `nix` present.
 
 **Project Type**: single Rust workspace.
 
-**Performance Goals**: the default (name-scoped) shape adds ~1 s to a scan of
-the measured target. The opt-in enumeration shape is expected in the
-2–3 minute range and must therefore never be the default.
+**Performance Goals**: the name-scoped shape adds ~1 s to a scan of the
+measured target.
+
+An earlier draft of this plan exposed the 165.6 s enumeration shape behind an
+opt-in flag. That is **out of scope**: no requirement in the spec authorises a
+new flag, and a plan that promises a deliverable no task builds is how scope
+arrives uncosted. The enumeration shape stays where it belongs — a measured
+alternative in research R4, available to a future milestone that specifies
+it.
 
 **Constraints**: the join must be by exact store path (FR-002); a scan whose
 license lookup fails must still emit its document (FR-006); the Nix expression

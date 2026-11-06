@@ -194,12 +194,19 @@ are absent.
   closure tier already uses — the import-from-derivation refusal verified
   rather than merely requested, the argv guard, and a budget — and MUST NOT
   introduce a second, parallel set of controls.
-- **FR-013**: The enumeration MUST survive a package whose evaluation throws.
+- **FR-013**: The evaluation MUST survive a package whose evaluation throws,
+  whichever shape it takes.
   Measured: enumerating `legacyPackages` fails after 7.5s on an
   unsupported-system throw that a `tryEval` around the attribute access does
   **not** contain. This is one of the two `tryEval` traps milestone 1050
   recorded; a package that cannot be evaluated contributes no license and MUST
   NOT abort the pass.
+- **FR-015**: Where one store path matches rows from more than one package
+  root, the licenses MUST agree or the component MUST receive none. Measured:
+  rows carried identical licenses for every joined store path in both probed
+  shapes (research R4). Guessing between disagreeing roots is how a wrong
+  license reaches a reviewer with no signal that it is wrong — the same
+  failure FR-002 refuses for name matching.
 - **FR-014**: Where nixpkgs states an `spdxId` for a license, that identifier
   MUST be used directly rather than re-derived from the attribute name.
   nixpkgs' own `lib.licenses.<attr>.spdxId` is the authority, and a second
@@ -224,12 +231,22 @@ different closure, so figures are stated per system and the linux figures are
 to be measured rather than scaled. (Scaling one system's result to the other is
 an error milestone 1280 made three times.)
 
-- **SC-001**: Closure components carrying a license rise from **137** on
-  aarch64-darwin. The target is the 96 that another tool already licenses from
-  the same flake; a run that gains none of them has not worked.
+- **SC-001**: Closure components carrying a license rise from the measured
+  closure-tier baseline of **136** on aarch64-darwin (the 137 in the table
+  above counts all components, not closure-tier ones). The threshold is a
+  ratio, not an absolute: the run MUST license **at least half** of the 96
+  that another tool already licenses from the same flake, where the 96 is
+  re-counted by the FR-002 store-path join in T045 rather than quoted from
+  research R4's name+version approximation. A run that gains none has
+  certainly not worked; a run that gains a handful has not either.
 - **SC-002**: No component loses a license it carries today.
-- **SC-003**: No component carries an SPDX identifier absent from the
-  milestone-1273 mapping table.
+- **SC-003**: No component carries an SPDX identifier waybill synthesised.
+  Every emitted identifier MUST be traceable to one of two authorities —
+  nixpkgs' own `spdxId` (FR-014) or the milestone-1273 mapping table. An
+  identifier nixpkgs states but the table does not hold is **correct** and
+  MUST pass; gating on table membership alone would fail a correct
+  implementation, because FR-014 makes nixpkgs the authority precisely so a
+  second table is not maintained beside it.
 - **SC-004**: Two scans of one closure emit byte-identical license sets,
   asserted by a test.
 - **SC-005**: A scan whose license acquisition fails still emits a document with
@@ -243,6 +260,8 @@ an error milestone 1280 made three times.)
 - **SC-009**: After this feature, waybill's licensed-component count on the
   measured closure is **at least** what another tool obtains from the same
   flake for the components both emit — the 96 is the floor, not the ceiling.
+  The comparator's version MUST be recorded beside the measurement, so the
+  comparison is reproducible after either tool moves.
 
 ## Assumptions
 
