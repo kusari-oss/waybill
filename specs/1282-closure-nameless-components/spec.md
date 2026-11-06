@@ -47,12 +47,19 @@ build, and a consumer asking "what source did this come from" gets silence.
   or `unreferenced` — so folding them into one record would mean inventing a
   value and silently changing what every prior census figure meant.
 - Q: Do the newly emitted scaffolding and fragment components participate in
-  dependency edges? → A: **No — only `source` and `package` do.** Milestone
-  1280's projection keeps its current stopping rule and walks *through*
-  scaffolding and fragments unchanged, so the measured graph shape is
-  preserved. The consequence is accepted and must be stated rather than
-  discovered: 513 components are then orphans by construction, and need an
-  orphan reason that says so.
+  dependency edges? → A: **`source` and `package` do; `scaffolding` and
+  `fragment` do not.** The projection gains `source` and `package` as stopping
+  points, so the emitted graph shows which source a package was built from.
+  513 components — scaffolding and fragments — are then orphans by
+  construction and need a reason that says so.
+
+  **The graph changes, and that is accepted.** An earlier wording of this
+  answer also claimed the measured shape was preserved; measurement shows the
+  two cannot both hold. Stopping earlier replaces wide transitive fan-outs
+  with direct edges: a derivation-level proxy over the pinned closure moves
+  from 12,013 edges to 7,755, −35%. The milestone-1280 component-level figure
+  will move too, in the same direction, and must be re-measured rather than
+  predicted from the proxy.
 - Q: Which of the 1,145 should become components? → A: **All of them**, each
   carrying a role annotation so a consumer can filter. The operator's stated
   preference is more information by default, filtered down when irrelevant,
@@ -158,6 +165,9 @@ includes it.
   walking through it — the same treatment a non-package derivation receives
   today. The member is still emitted as a component; it is simply never an
   endpoint.
+- **A source reached only through scaffolding.** The walk passes through the
+  scaffolding and stops at the source, so the edge names the source. This is
+  the case that makes the graph change shape rather than merely grow.
 - **A derivation whose name is absent or unusable in an identifier.** Measured
   as zero occurrences, so FR-017 is defensive; it must still not drop the
   member, because the FR-009 counts would then fail to reconcile.
@@ -206,10 +216,11 @@ includes it.
   MUST NOT appear in it, and MUST NOT be assigned a C182 role value — the two
   vocabularies describe different things and neither maps onto the other.
 - **FR-013**: Only `source` and `package` components MAY be dependency-edge
-  endpoints. The existing projection MUST continue to walk *through*
-  `scaffolding` and `fragment` members rather than stopping at them, so the
-  emitted graph shape is unchanged by this feature. The document MUST NOT
-  contain an edge naming a component that is not present.
+  endpoints. The projection MUST stop at them, and MUST continue to walk
+  *through* `scaffolding` and `fragment` members rather than stopping at them.
+  The document MUST NOT contain an edge naming a component that is not
+  present. The emitted edge set changes as a result; that is intended, and
+  FR-018 governs how the change is reported.
 - **FR-014**: A component this feature adds that no edge can reach MUST carry
   a reason saying why. Measured consequence of FR-013: 513 of the added
   components are unreachable by construction, and an unexplained orphan is
@@ -229,6 +240,10 @@ includes it.
   fail to reconcile. Measured: zero such derivations occur in the closure
   under test, so this is a defensive requirement rather than an observed
   case.
+- **FR-018**: Where the emitted edge set differs from what the same closure
+  produced before this feature, the document MUST carry the new figure rather
+  than leaving a reader to infer it from an unexplained change. A graph that
+  silently changes size is indistinguishable from one that broke.
 ### Key Entities
 
 - **Pname-less derivation**: a closure member that the tier reads today and
@@ -265,8 +280,10 @@ rather than scaled — the error milestone 1280 made three times.
 - **SC-010**: The 549 fixed-output derivations yield 502 components, and a
   fixture in which two derivations fetch identical content yields one.
 - **SC-011**: The emitted dependency-edge count on the measured closure is
-  unchanged from the pre-feature figure, confirming FR-013's projection
-  preserved the graph rather than reshaping it.
+  re-measured and recorded after the change, and every edge resolves to a
+  component present in the document. No criterion asserts the count is
+  unchanged: FR-013 stops the walk at sources and packages, which measurably
+  reshapes the graph.
 - **SC-012**: Every added component unreachable by an edge carries a reason,
   and the count of such components matches the number of `scaffolding` plus
   `fragment` components emitted.
