@@ -1290,6 +1290,7 @@ mod tests {
             nix_eval_tier: None,
             nix_eval_degraded: None,
             nix_closure_degraded: None,
+            closure_ecosystem_identity: None,
             deps_dev_online: false,
             nix_eval_system: None,
             nixpkgs_haskell_resolution: None,

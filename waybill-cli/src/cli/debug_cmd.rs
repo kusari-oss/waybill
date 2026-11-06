@@ -38,7 +38,7 @@ use serde_json::{json, Value};
 
 use crate::scan_fs::package_db::nix::closure::classify::classify;
 use crate::scan_fs::package_db::nix::closure::derivation::RawClosure;
-use crate::scan_fs::package_db::nix::closure::{emit, member};
+use crate::scan_fs::package_db::nix::closure::{ecosystem_identity, emit, member};
 
 #[derive(Debug, Parser)]
 pub struct DebugCommand {
@@ -95,6 +95,8 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
     let mut by_c182: std::collections::BTreeMap<&'static str, usize> = Default::default();
     let mut by_member: std::collections::BTreeMap<&'static str, usize> = Default::default();
     let mut identities: std::collections::BTreeSet<String> = Default::default();
+    let mut n_pypi_candidates = 0usize;
+    let mut pypi_identities: std::collections::BTreeSet<String> = Default::default();
 
     for (key, drv) in &closure.derivations {
         let Some(role) = roles.get(key).copied() else {
@@ -113,6 +115,19 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
         let carrier = drv.attr_carrier("pname");
         *by_carrier.entry(carrier).or_default() += 1;
         *by_c182.entry(role.wire()).or_default() += 1;
+
+        // Milestone 1366 — is this derivation a PyPI candidate, by the
+        // production rule rather than by a regex retyped here? The candidate
+        // population is the one number this feature's success criterion turns
+        // on, and a reporter that drifted from the reader would be worse than
+        // none.
+        let py_candidate = ecosystem_identity::is_pypi_candidate(drv);
+        if py_candidate {
+            n_pypi_candidates += 1;
+            if let (Some(n), Some(v)) = (declared, drv.version()) {
+                pypi_identities.insert(format!("{n}@{v}"));
+            }
+        }
 
         let member_role = declared.is_none().then(|| member::classify(drv));
         let basis = member_role.is_some().then(|| member::identity(drv, key));
@@ -144,6 +159,7 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
             "member_role": member_role.map(|r| r.wire()),
             "edge_endpoint": member_role.map(|r| r.is_edge_endpoint()),
             "identity_hash": basis.as_ref().map(|b| b.hash()),
+            "pypi_candidate": py_candidate,
         }));
     }
 
@@ -154,6 +170,8 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
         "emitted_as_component": n_emitted,
         "members_1282": n_members,
         "distinct_member_identities": identities.len(),
+        "pypi_candidates": n_pypi_candidates,
+        "distinct_pypi_identities": pypi_identities.len(),
         "pname_carrier": by_carrier,
         "c182_roles": by_c182,
         "member_roles": by_member,

@@ -80791,6 +80791,10 @@
         "value": "after-build"
       },
       {
+        "name": "waybill:closure-ecosystem-identity-outcome",
+        "value": "{\"candidates\":75,\"confirmed\":0,\"declined\":0,\"ecosystem\":\"pypi\",\"reason\":\"disabled\",\"schema\":\"waybill-closure-ecosystem-identity/v1\",\"unchecked\":75}"
+      },
+      {
         "name": "waybill:nixpkgs-haskell-resolution",
         "value": "{\"disagreements\":0,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":12,\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"unresolved\":{\"compiler-supplied\":7}}"
       },

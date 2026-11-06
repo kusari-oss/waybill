@@ -1,0 +1,148 @@
+{
+  "derivations": {
+    "/nix/store/aaaaaaaa-waybill-fixture-app-2.0.drv": {
+      "name": "waybill-fixture-app-2.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "2.0",
+        "buildInputs": "/nix/store/o-lib /nix/store/o-src"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-app"
+        }
+      },
+      "inputs": {
+        "drvs": {
+          "/nix/store/22222222-waybill-fixture-lib-1.0.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/11111111-source.drv": {
+            "outputs": [
+              "out"
+            ]
+          }
+        }
+      }
+    },
+    "/nix/store/bbbbbbbb-python3.13-waybill-fixture-alpha-1.2.3.drv": {
+      "name": "python3.13-waybill-fixture-alpha-1.2.3",
+      "env": {
+        "pname": "waybill-fixture-alpha",
+        "version": "1.2.3"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-alpha"
+        }
+      }
+    },
+    "/nix/store/cccccccc-python3.13-waybill-fixture-nonesuch-9.9.9.drv": {
+      "name": "python3.13-waybill-fixture-nonesuch-9.9.9",
+      "env": {
+        "pname": "waybill-fixture-nonesuch",
+        "version": "9.9.9"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-nonesuch"
+        }
+      }
+    },
+    "/nix/store/dddddddd-python3.13-waybill-fixture-gamma-0.4.drv": {
+      "name": "python3.13-waybill-fixture-gamma-0.4",
+      "env": {},
+      "structuredAttrs": {
+        "pname": "waybill-fixture-gamma",
+        "version": "0.4"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-gamma"
+        }
+      }
+    },
+    "/nix/store/eeeeeeee-python-waybill-fixture-hook.drv": {
+      "name": "python-waybill-fixture-hook",
+      "env": {
+        "pname": "waybill-fixture-hook",
+        "version": "1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-hook"
+        }
+      }
+    },
+    "/nix/store/ffffffff-python3.13-bootstrap-waybill-fixture-delta-1.0.drv": {
+      "name": "python3.13-bootstrap-waybill-fixture-delta-1.0",
+      "env": {
+        "pname": "python3.13-bootstrap-waybill-fixture-delta",
+        "version": "1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-delta"
+        }
+      }
+    },
+    "/nix/store/11111111-source.drv": {
+      "name": "source",
+      "env": {
+        "urls": "https://example.invalid/waybill-fixture-app.tar.gz"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-src",
+          "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        }
+      }
+    },
+    "/nix/store/22222222-waybill-fixture-lib-1.0.drv": {
+      "name": "waybill-fixture-lib-1.0",
+      "env": {
+        "pname": "waybill-fixture-lib",
+        "version": "1.0",
+        "buildInputs": "/nix/store/o-alpha /nix/store/o-nonesuch /nix/store/o-gamma",
+        "nativeBuildInputs": "/nix/store/o-hook /nix/store/o-delta"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-lib"
+        }
+      },
+      "inputs": {
+        "drvs": {
+          "/nix/store/bbbbbbbb-python3.13-waybill-fixture-alpha-1.2.3.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/cccccccc-python3.13-waybill-fixture-nonesuch-9.9.9.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/dddddddd-python3.13-waybill-fixture-gamma-0.4.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/eeeeeeee-python-waybill-fixture-hook.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/ffffffff-python3.13-bootstrap-waybill-fixture-delta-1.0.drv": {
+            "outputs": [
+              "out"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "version": 4
+}

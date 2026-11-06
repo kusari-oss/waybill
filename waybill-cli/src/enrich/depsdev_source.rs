@@ -233,6 +233,37 @@ impl DepsDevSource {
     /// cache. `enabled = false` is `--enrich-no-cache`: every read
     /// misses and every write is dropped, with no call site needing to
     /// know.
+    /// Milestone 1366 (#1365) — confirm that published packages exist at
+    /// these coordinates.
+    ///
+    /// The nix closure tier names a component `urllib3 2.6.3` but cannot say
+    /// which ecosystem that is, so it emits `pkg:generic` and no vulnerability
+    /// feed can match it. Before claiming `pkg:pypi`, the closure asks here
+    /// whether such a package is actually published — because a
+    /// wrong-but-well-formed coordinate is worse than the generic one it would
+    /// replace: generic is merely unmatchable, wrong matches the wrong thing.
+    ///
+    /// This is deliberately the **existing** resolution path and not a second
+    /// client. Entering through [`Self::fetch_results`] inherits the in-memory
+    /// cache, the disk cache at `~/.cache/waybill/deps-dev/`, the batch
+    /// endpoint, the offline rule and the circuit breaker — so a confirmation
+    /// and a later enrichment of the same coordinate share one cache entry,
+    /// and nothing here can be configured to disagree with enrichment about
+    /// how to reach the registry.
+    ///
+    /// The four [`LookupResult`] states are returned verbatim rather than
+    /// collapsed to a boolean. `Absent` is an **answer** — the registry holds
+    /// no such package — while `Failed` and `Unqueried` mean nothing was
+    /// learnt, and the caller must treat those differently: the first declines
+    /// a candidate, the second leaves it exactly as it was.
+    pub(crate) async fn confirm(&self, keys: &[EnrichmentKey]) -> Vec<LookupResult> {
+        if keys.is_empty() {
+            return Vec::new();
+        }
+        let mut progress = super::progress::ProgressReporter::new(keys.len());
+        self.fetch_results(keys, &mut progress).await
+    }
+
     pub fn with_disk_cache(mut self, enabled: bool, override_max_age: Option<u64>) -> Self {
         self.disk = super::deps_dev_disk_cache::DepsDevDiskCache::open(enabled, override_max_age);
         self

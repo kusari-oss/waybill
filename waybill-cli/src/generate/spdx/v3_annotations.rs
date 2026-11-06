@@ -651,6 +651,13 @@ fn push_document_fields(
     }
 
     // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
+    // C208 (m1366, #1365) — the closure ecosystem identity pass's record.
+    if let Some(record) = scan.closure_ecosystem_identity {
+        push(out,
+            "waybill:closure-ecosystem-identity-outcome",
+            json!(record),
+        );
+    }
     if let Some(reason) = scan.nix_closure_degraded {
         push(out,
             "waybill:nix-closure-degraded",

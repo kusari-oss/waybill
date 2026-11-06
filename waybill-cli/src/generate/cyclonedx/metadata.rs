@@ -224,6 +224,8 @@ pub struct MetadataExtras<'a> {
     pub nix_eval_degraded: Option<&'a str>,
     /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
     pub nix_closure_degraded: Option<&'a str>,
+    /// C208 (m1366, #1365) — the closure ecosystem identity pass's record.
+    pub closure_ecosystem_identity: Option<&'a str>,
     /// C195/C196 (#1154) — the `go mod why` pass's outcome.
     pub go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     /// C192 (m1067) — deps.dev outcome counts, pre-rendered JSON.
@@ -303,6 +305,7 @@ pub fn build_metadata(
         nix_eval_tier,
         nix_eval_degraded,
         nix_closure_degraded,
+        closure_ecosystem_identity,
         go_mod_why,
         deps_dev_outcomes,
         vex_claims_omitted,
@@ -446,6 +449,18 @@ pub fn build_metadata(
 
     // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
     // Constitution XII.3: degraded enrichment is disclosed in the document.
+    // C208 (m1366, #1365) — what the ecosystem identity pass did. Emitted
+    // wherever a closure was recorded, including when it confirmed nothing:
+    // "75 candidates, all unchecked, reason disabled" and "no candidates" are
+    // different documents, and a reader who cannot tell them apart cannot
+    // tell a closure with no Python packages from a step that silently did
+    // nothing.
+    if let Some(record) = closure_ecosystem_identity {
+        properties.push(json!({
+            "name": "waybill:closure-ecosystem-identity-outcome",
+            "value": record,
+        }));
+    }
     if let Some(reason) = nix_closure_degraded {
         properties.push(json!({
             "name": "waybill:nix-closure-degraded",
@@ -1623,6 +1638,8 @@ pub fn build_metadata(
                 &c.occurrences,
                 None,
                 &[],
+                // The BOM subject is never a closure component.
+                None,
             );
             metadata["component"]["evidence"] = evidence_value;
         }

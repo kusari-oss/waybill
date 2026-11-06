@@ -95099,6 +95099,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NINAQBFG75AQKJYY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-ecosystem-identity-outcome\",\"value\":\"{\\\"candidates\\\":75,\\\"confirmed\\\":0,\\\"declined\\\":0,\\\"ecosystem\\\":\\\"pypi\\\",\\\"reason\\\":\\\"disabled\\\",\\\"schema\\\":\\\"waybill-closure-ecosystem-identity/v1\\\",\\\"unchecked\\\":75}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NIRRESR7SQZM7KK3",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FKPDDCG36QEBT4YX",

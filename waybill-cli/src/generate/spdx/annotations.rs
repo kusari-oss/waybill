@@ -639,6 +639,13 @@ pub fn annotate_document(
     }
 
     // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
+    // C208 (m1366, #1365) — the closure ecosystem identity pass's record.
+    if let Some(record) = artifacts.closure_ecosystem_identity {
+        push(&mut out,
+            "waybill:closure-ecosystem-identity-outcome",
+            json!(record),
+        );
+    }
     if let Some(reason) = artifacts.nix_closure_degraded {
         push(&mut out,
             "waybill:nix-closure-degraded",

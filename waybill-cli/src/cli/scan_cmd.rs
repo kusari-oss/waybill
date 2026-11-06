@@ -4737,6 +4737,12 @@ pub async fn execute(
     // precise PURLs to the generic fallback the closure uses because
     // `pkg:nix` is not a purl-spec type. More information, emphatically not
     // less, is the whole point of the tier.
+    // Milestone 1366 (#1365) — C208, the document-scope record of what the
+    // ecosystem identity pass did. `None` when no closure was produced, which
+    // is what makes its presence alone say the pass was reached.
+    let mut closure_ecosystem_identity: Option<
+        scan_fs::package_db::nix::closure::ecosystem_identity::ConfirmationRecord,
+    > = None;
     match &nix_closure {
         Some(Err(reason)) => tracing::info!(
             reason = reason.wire(),
@@ -4745,7 +4751,8 @@ pub async fn execute(
         ),
         Some(Ok(classified)) => {
             let added = scan_fs::package_db::nix::closure::emit::components(classified);
-            let (merged, appended) = merge_closure_components(&mut components, added);
+            let (merged, appended, appended_identities) =
+                merge_closure_components(&mut components, added);
             tracing::info!(
                 appended,
                 merged,
@@ -4817,6 +4824,27 @@ pub async fn execute(
                 outcomes = %identity.to_document_value(),
                 "nix-closure: identity pass"
             );
+
+            // Milestone 1366 (#1365) — an ecosystem identity for the
+            // closure's PyPI components.
+            //
+            // HERE: after the m1275 identity pass, and strictly BEFORE the
+            // edge build below. The edge join reads `c.purl` from the live
+            // component slice at call time, so a correction made here flows
+            // into the edges for free; made after, it would orphan every
+            // component this pass fixes, because relationship endpoints are
+            // PURL strings.
+            //
+            // `--no-deps-dev` means no deps.dev. The one corpus target that
+            // runs a closure passes it, so a corpus run never confirms
+            // anything and always records why — see the spec's R7.
+            closure_ecosystem_identity = Some(run_closure_ecosystem_identity(
+                classified,
+                &mut components,
+                &appended_identities,
+                (enrich_cfg.deps_dev && !offline).then_some(&deps_dev_source),
+            )
+            .await);
 
             // Milestone 1280 (#1346) — the closure's dependency edges.
             //
@@ -5448,6 +5476,14 @@ pub async fn execute(
         _ => None,
     };
     let nix_closure_degraded: Option<&str> = nix_closure_degraded_json.as_deref();
+    // C208 (m1366, #1365) — rendered beside C190 because the two answer
+    // adjacent questions about the same tier: C190 says the closure was not
+    // taken, C208 says what the ecosystem identity pass did with the one that
+    // was.
+    let closure_ecosystem_identity_json: Option<String> =
+        closure_ecosystem_identity.as_ref().map(|r| r.wire());
+    let closure_ecosystem_identity_value: Option<&str> =
+        closure_ecosystem_identity_json.as_deref();
     let nix_eval_degraded: Option<&str> = nixpkgs_haskell_summary
         .as_ref()
         .and_then(|s| s.nix_eval.as_ref())
@@ -5463,6 +5499,7 @@ pub async fn execute(
         nix_eval_system,
         nix_eval_degraded,
         nix_closure_degraded,
+        closure_ecosystem_identity: closure_ecosystem_identity_value,
         // C192 (m1067): answers served from the disk cache count as online.
         deps_dev_online: enrich_cfg.deps_dev && !offline,
         nixpkgs_haskell_degraded,
@@ -6194,16 +6231,140 @@ impl AdvisoryContext {
 /// deliberately leaves build alone.
 ///
 /// Returns `(merged, appended)`.
+/// Milestone 1366 (#1365) — give the closure's PyPI components an identifier a
+/// vulnerability feed can match.
+///
+/// # Where this runs
+///
+/// Between the closure merge and `closure::graph::relationships`, and that
+/// window is the mechanism rather than a convenience. `Relationship.from` and
+/// `.to` are PURL **strings**, so an identifier changed after the edges are
+/// built orphans every edge pointing at it — which would turn each correctly
+/// identified package into an orphan and make this feature a net regression.
+/// It does not happen because `relationships` builds its join table from the
+/// live component slice, reading `c.purl` when it is called. Move this call
+/// below that one and `closure_ecosystem_identity_runs_before_the_edges` goes
+/// red.
+///
+/// # Why a named function
+///
+/// The same reason `build_deps_dev_source` is one (#927): wiring expressed
+/// inline at the call site is wiring no test can reach. The m923 CLI tests
+/// asserted on clap's parse of a flag while a mutation of the inline wiring
+/// left all three green and every scan taking the wrong path.
+async fn run_closure_ecosystem_identity(
+    classified: &scan_fs::package_db::nix::closure::ClassifiedClosure,
+    components: &mut [waybill_common::resolution::ResolvedComponent],
+    appended_identities: &std::collections::HashSet<(String, String)>,
+    confirmation: Option<&crate::enrich::depsdev_source::DepsDevSource>,
+) -> scan_fs::package_db::nix::closure::ecosystem_identity::ConfirmationRecord {
+    use crate::enrich::depsdev_source::LookupResult;
+    use crate::enrich::request_key::EnrichmentKey;
+    use scan_fs::package_db::nix::closure::ecosystem_identity as eco;
+
+    let found = eco::candidates(classified, components, appended_identities);
+    let (eligible, settled) = eco::screen(found);
+
+    let mut outcomes: Vec<(eco::EcosystemCandidate, eco::ConfirmationOutcome)> = settled;
+
+    match confirmation {
+        // FR-009 / the corpus path. `--no-deps-dev` is an instruction, not a
+        // hint: the one corpus target that runs a closure passes it, so a
+        // corpus run always lands here and never confirms anything. That
+        // blindness is recorded in the spec and compensated by the stubbed
+        // test, not papered over by querying anyway.
+        None => outcomes.extend(
+            eligible
+                .into_iter()
+                .map(|c| (c, eco::ConfirmationOutcome::Unchecked(eco::UncheckedReason::Disabled))),
+        ),
+        Some(source) => {
+            let keys: Vec<Option<EnrichmentKey>> = eligible
+                .iter()
+                .map(|c| {
+                    EnrichmentKey::from_purl_parts(c.ecosystem, None, &c.normalised_name, &c.version)
+                })
+                .collect();
+            // A candidate that yields no key is settled without asking, and
+            // recorded rather than dropped: an unusable entry in a batch
+            // consumes a slot and comes back empty, which is
+            // indistinguishable from a package the registry does not carry.
+            let askable: Vec<EnrichmentKey> = keys.iter().flatten().cloned().collect();
+            let answers = source.confirm(&askable).await;
+
+            let mut next = answers.into_iter();
+            for (candidate, key) in eligible.into_iter().zip(keys) {
+                let outcome = match key {
+                    None => eco::ConfirmationOutcome::Unchecked(eco::UncheckedReason::Unkeyable),
+                    Some(_) => match next.next() {
+                        // Exhaustive on purpose: a state added to
+                        // `LookupResult` must break this build rather than
+                        // fall into a default that reads as "could not ask".
+                        Some(LookupResult::Found(_)) => {
+                            eco::ConfirmationOutcome::from_answer(eco::LookupAnswer::Found)
+                        }
+                        Some(LookupResult::Absent) => {
+                            eco::ConfirmationOutcome::from_answer(eco::LookupAnswer::Absent)
+                        }
+                        Some(LookupResult::Failed) => {
+                            eco::ConfirmationOutcome::from_answer(eco::LookupAnswer::Failed)
+                        }
+                        Some(LookupResult::Unqueried) => {
+                            eco::ConfirmationOutcome::from_answer(eco::LookupAnswer::Unqueried)
+                        }
+                        // Fewer answers than keys cannot happen — `confirm`
+                        // returns one per key — and if it ever did, the
+                        // honest reading is that we did not learn.
+                        None => eco::ConfirmationOutcome::Unchecked(
+                            eco::UncheckedReason::Unreachable,
+                        ),
+                    },
+                };
+                outcomes.push((candidate, outcome));
+            }
+        }
+    }
+
+    for (candidate, outcome) in &outcomes {
+        eco::apply_outcome(components, candidate, *outcome);
+    }
+
+    let record = eco::ConfirmationRecord::tally(
+        &outcomes.iter().map(|(_, o)| *o).collect::<Vec<_>>(),
+    );
+    debug_assert!(record.is_consistent(), "C208 counts must add up");
+    tracing::info!(
+        candidates = record.candidates,
+        confirmed = record.confirmed,
+        declined = record.declined,
+        unchecked = record.unchecked,
+        reason = record.reason.map(|r| r.wire()).unwrap_or("-"),
+        "nix-closure: ecosystem identity"
+    );
+    record
+}
+
+/// Returns `(merged, appended, appended_identities)`.
+///
+/// The third element exists for milestone 1366 (#1365). Its pass may only
+/// touch components the closure **appended**: one that merged belongs to a
+/// reader that knew the ecosystem and already carries its identifier, and
+/// changing it would violate FR-006. "Appended" is not recoverable after the
+/// fact — a merged component carries the closure's annotations too, because
+/// the merge folds them in — so the merge is the only place that knows, and
+/// it says so rather than leaving the caller to infer it.
 fn merge_closure_components(
     components: &mut Vec<waybill_common::resolution::ResolvedComponent>,
     added: Vec<waybill_common::resolution::ResolvedComponent>,
-) -> (usize, usize) {
+) -> (usize, usize, std::collections::HashSet<(String, String)>) {
     let index: std::collections::HashMap<(String, String), usize> = components
         .iter()
         .enumerate()
         .map(|(i, c)| ((c.name.clone(), c.version.clone()), i))
         .collect();
     let (mut merged, mut appended) = (0usize, 0usize);
+    let mut appended_identities: std::collections::HashSet<(String, String)> =
+        std::collections::HashSet::new();
     for c in added {
         match index.get(&(c.name.clone(), c.version.clone())) {
             Some(&i) => {
@@ -6228,12 +6389,13 @@ fn merge_closure_components(
                 merged += 1;
             }
             None => {
+                appended_identities.insert((c.name.clone(), c.version.clone()));
                 components.push(c);
                 appended += 1;
             }
         }
     }
-    (merged, appended)
+    (merged, appended, appended_identities)
 }
 
 #[cfg(test)]
@@ -8134,7 +8296,8 @@ mod tests {
         existing[0].licenses = vec![apache.clone()];
         let mut from_closure = make_component("pkg:generic/held@1.0");
         from_closure.licenses = vec![mit.clone()];
-        let (merged, appended) = merge_closure_components(&mut existing, vec![from_closure]);
+        let (merged, appended, _) =
+            merge_closure_components(&mut existing, vec![from_closure]);
         assert_eq!((merged, appended), (1, 0));
         assert_eq!(
             existing[0].licenses.iter().map(|e| e.as_str()).collect::<Vec<_>>(),
@@ -8942,4 +9105,337 @@ fn nixpkgs_revision_for_licenses(root: &std::path::Path) -> Option<String> {
     nix::haskell_packages::pinned_nixpkgs(&doc)
         .ok()
         .map(|p| p.revision)
+}
+
+/// Milestone 1366 (#1365) — the ecosystem identity pass.
+///
+/// These drive [`run_closure_ecosystem_identity`] directly rather than the
+/// binary, because the behaviour under test is reached only when deps.dev is
+/// enabled and **the corpus can never reach it**: the one corpus target that
+/// runs a closure passes `--no-deps-dev`. A green corpus lane says nothing
+/// about confirmation, so the confirming path needs a stub of its own.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod closure_ecosystem_identity_tests {
+    use super::*;
+    use crate::enrich::deps_dev_client::DepsDevClient;
+    use crate::enrich::depsdev_source::DepsDevSource;
+    use scan_fs::package_db::nix::closure::ecosystem_identity as eco;
+    use scan_fs::package_db::nix::closure::{classify::classify, derivation::RawClosure};
+    use waybill_common::resolution::ResolvedComponent;
+
+    fn fixture() -> String {
+        std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures/nix_closure_ecosystem/closure.json"),
+        )
+        .unwrap()
+    }
+
+    /// The fixture, classified and merged exactly as a scan would merge it.
+    fn merged() -> (
+        scan_fs::package_db::nix::closure::ClassifiedClosure,
+        Vec<ResolvedComponent>,
+        std::collections::HashSet<(String, String)>,
+    ) {
+        let raw = RawClosure::parse(&fixture()).unwrap();
+        let roles = classify(&raw);
+        let classified = scan_fs::package_db::nix::closure::ClassifiedClosure {
+            attribute: "default".into(),
+            raw,
+            roles,
+            read_outcome: Default::default(),
+            graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
+        };
+        // The real projected graph, so the ordering test below has edges to
+        // assert on. Built exactly as `closure::resolve` builds it.
+        let classified = scan_fs::package_db::nix::closure::ClassifiedClosure {
+            graph: scan_fs::package_db::nix::closure::graph::project(
+                &classified.raw,
+                &scan_fs::package_db::nix::closure::emit::emitted_drv_keys(
+                    &classified.raw,
+                    &classified.roles,
+                ),
+            ),
+            ..classified
+        };
+        let added = scan_fs::package_db::nix::closure::emit::components(&classified);
+        let mut components: Vec<ResolvedComponent> = Vec::new();
+        let (_, _, appended) = merge_closure_components(&mut components, added);
+        (classified, components, appended)
+    }
+
+    fn purl_of<'a>(components: &'a [ResolvedComponent], name: &str) -> &'a str {
+        components
+            .iter()
+            .find(|c| c.name == name)
+            .map(|c| c.purl.as_str())
+            .unwrap_or("<absent>")
+    }
+
+    /// CONTROL. Every assertion below is about three candidates; if the
+    /// fixture stopped producing them these tests would pass over an empty
+    /// set and say nothing.
+    #[test]
+    fn the_fixture_yields_the_three_candidates_the_rule_admits() {
+        let (classified, components, appended) = merged();
+        let found = eco::candidates(&classified, &components, &appended);
+        let mut names: Vec<&str> = found.iter().map(|c| c.declared_name.as_str()).collect();
+        names.sort_unstable();
+        assert_eq!(
+            names,
+            vec![
+                "waybill-fixture-alpha",
+                "waybill-fixture-gamma",
+                "waybill-fixture-nonesuch"
+            ],
+            "the setup hook, the bootstrap variant and the pname-less source \
+             member must all be excluded"
+        );
+        // `gamma` declares its pname ONLY in `structuredAttrs`. Reading the
+        // flat `env` map alone would drop it, which is the carrier mistake
+        // that produced a reported defect in correct code.
+        assert!(found.iter().any(|c| c.declared_name == "waybill-fixture-gamma"));
+    }
+
+    /// US2 scenario 2 — a closure of unconfirmable candidates emits today's
+    /// document.
+    #[tokio::test]
+    async fn with_confirmation_disabled_nothing_moves() {
+        let (classified, mut components, appended) = merged();
+        let before: Vec<String> = components.iter().map(|c| c.purl.as_str().to_string()).collect();
+
+        let record =
+            run_closure_ecosystem_identity(&classified, &mut components, &appended, None).await;
+
+        let after: Vec<String> = components.iter().map(|c| c.purl.as_str().to_string()).collect();
+        assert_eq!(before, after, "no identifier may move when nothing confirmed");
+        assert!(components
+            .iter()
+            .all(|c| !c.extra_annotations.contains_key(eco::ANN_ECOSYSTEM_IDENTITY)));
+
+        // FR-008: the record still says what WOULD have been done.
+        assert_eq!(record.candidates, 3);
+        assert_eq!(record.confirmed, 0);
+        assert_eq!(record.unchecked, 3);
+        assert_eq!(record.reason, Some(eco::UncheckedReason::Disabled));
+        assert!(record.is_consistent());
+    }
+
+    /// US2 scenario 1 + US1 scenarios 1-3, against a stub registry.
+    ///
+    /// The 404 arm is the load-bearing half: FR-003 turns on "the ecosystem
+    /// has no such package" being a **decline** rather than a failure, and
+    /// this is the only place that distinction is exercised.
+    #[tokio::test]
+    async fn a_confirmed_candidate_moves_and_a_declined_one_does_not() {
+        let server = wiremock::MockServer::start().await;
+        for (name, version) in [("waybill-fixture-alpha", "1.2.3"), ("waybill-fixture-gamma", "0.4")]
+        {
+            wiremock::Mock::given(wiremock::matchers::method("GET"))
+                .and(wiremock::matchers::path(format!(
+                    "/systems/pypi/packages/{name}/versions/{version}"
+                )))
+                .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(
+                    serde_json::json!({
+                        "versionKey": {"system": "PYPI", "name": name, "version": version},
+                        "licenses": [],
+                        "links": []
+                    }),
+                ))
+                .mount(&server)
+                .await;
+        }
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path(
+                "/systems/pypi/packages/waybill-fixture-nonesuch/versions/9.9.9",
+            ))
+            .respond_with(wiremock::ResponseTemplate::new(404))
+            .mount(&server)
+            .await;
+
+        let source = DepsDevSource::new(
+            DepsDevClient::new(std::time::Duration::from_secs(5)).with_base_url(server.uri()),
+            false,
+        )
+        .with_batch(false)
+        .with_disk_cache(false, None);
+
+        let (classified, mut components, appended) = merged();
+        let record =
+            run_closure_ecosystem_identity(&classified, &mut components, &appended, Some(&source))
+                .await;
+
+        assert_eq!(
+            purl_of(&components, "waybill-fixture-alpha"),
+            "pkg:pypi/waybill-fixture-alpha@1.2.3"
+        );
+        // Declared only in `structuredAttrs`, and confirmed all the same.
+        assert_eq!(
+            purl_of(&components, "waybill-fixture-gamma"),
+            "pkg:pypi/waybill-fixture-gamma@0.4"
+        );
+        // A 404 is an answer, and the answer is no. Today's identifier stays.
+        assert_eq!(
+            purl_of(&components, "waybill-fixture-nonesuch"),
+            "pkg:generic/waybill-fixture-nonesuch@9.9.9"
+        );
+        // FR-005: the source member keeps `pkg:generic`, which is CORRECT
+        // for it. 539 of the pinned closure's 781 generic components are
+        // members like this one, and moving any of them is the regression
+        // SC-003 exists to catch.
+        let members: Vec<&ResolvedComponent> = components
+            .iter()
+            .filter(|c| {
+                c.extra_annotations
+                    .contains_key("waybill:closure-member-role")
+            })
+            .collect();
+        assert!(!members.is_empty(), "the fixture must contain a member");
+        assert!(members
+            .iter()
+            .all(|c| c.purl.as_str().starts_with("pkg:generic/")));
+
+        assert_eq!(record.candidates, 3);
+        assert_eq!(record.confirmed, 2);
+        assert_eq!(record.declined, 1);
+        assert_eq!(record.unchecked, 0);
+        assert_eq!(record.reason, None);
+        assert!(record.is_consistent());
+
+        // US3 scenario 2 — the disclosure is present exactly where an
+        // identity was derived, and absent where it was not.
+        let disclosed = |n: &str| {
+            components
+                .iter()
+                .find(|c| c.name == n)
+                .map(|c| c.extra_annotations.contains_key(eco::ANN_ECOSYSTEM_IDENTITY))
+                .unwrap_or(false)
+        };
+        assert!(disclosed("waybill-fixture-alpha"));
+        assert!(disclosed("waybill-fixture-gamma"));
+        assert!(!disclosed("waybill-fixture-nonesuch"));
+        assert!(members
+            .iter()
+            .all(|c| !c.extra_annotations.contains_key(eco::ANN_ECOSYSTEM_IDENTITY)));
+    }
+
+    /// FR-012 — an unreachable registry cannot fail a scan, and must be
+    /// distinguishable in the record from one that answered "no".
+    #[tokio::test]
+    async fn an_unreachable_registry_leaves_every_identifier_alone() {
+        // A port nothing listens on, so every request fails at the transport.
+        //
+        // The first attempt at this control started a `MockServer`, mounted
+        // nothing and dropped it before the call — and measured three
+        // DECLINES, because the server was still answering and an unmounted
+        // path is a 404. That would have asserted the opposite of what this
+        // test is for: a 404 is an answer, and the point here is that a
+        // connection failure is not one.
+        let uri = "http://127.0.0.1:1".to_string();
+        let source = DepsDevSource::new(
+            DepsDevClient::new(std::time::Duration::from_millis(250)).with_base_url(uri),
+            false,
+        )
+        .with_batch(false)
+        .with_disk_cache(false, None);
+
+        let (classified, mut components, appended) = merged();
+        let before: Vec<String> = components.iter().map(|c| c.purl.as_str().to_string()).collect();
+        let record =
+            run_closure_ecosystem_identity(&classified, &mut components, &appended, Some(&source))
+                .await;
+        let after: Vec<String> = components.iter().map(|c| c.purl.as_str().to_string()).collect();
+
+        assert_eq!(before, after);
+        assert_eq!(record.confirmed, 0);
+        assert_eq!(record.declined, 0, "a transport failure is NOT a decline");
+        assert_eq!(record.unchecked, 3);
+        assert_eq!(record.reason, Some(eco::UncheckedReason::Unreachable));
+    }
+
+    /// Research R11 — **the ordering is the mechanism, not a convenience.**
+    ///
+    /// `Relationship.from` and `.to` are PURL strings, and
+    /// `closure::graph::relationships` resolves them by reading `c.purl` from
+    /// the live component slice when it is called. The identity pass therefore
+    /// has exactly one correct window: after the merge, before the edge build.
+    ///
+    /// Move the `run_closure_ecosystem_identity` call below
+    /// `graph::relationships` in `execute` and this goes red — every edge that
+    /// pointed at a corrected component would name a `pkg:generic` coordinate
+    /// no component carries any more, and each of those components would be
+    /// an orphan. That failure mode would make this feature a net regression
+    /// against milestone 158's graph-completeness record, so it is asserted
+    /// rather than trusted to a comment.
+    #[tokio::test]
+    async fn the_edges_are_built_from_the_corrected_identifiers() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path(
+                "/systems/pypi/packages/waybill-fixture-alpha/versions/1.2.3",
+            ))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(
+                serde_json::json!({
+                    "versionKey": {"system":"PYPI","name":"waybill-fixture-alpha","version":"1.2.3"},
+                    "licenses": [], "links": []
+                }),
+            ))
+            .mount(&server)
+            .await;
+        wiremock::Mock::given(wiremock::matchers::any())
+            .respond_with(wiremock::ResponseTemplate::new(404))
+            .mount(&server)
+            .await;
+
+        let source = DepsDevSource::new(
+            DepsDevClient::new(std::time::Duration::from_secs(5)).with_base_url(server.uri()),
+            false,
+        )
+        .with_batch(false)
+        .with_disk_cache(false, None);
+
+        let (classified, mut components, appended) = merged();
+
+        // CONTROL: before the pass, the edges name the generic coordinate.
+        let (before, _) = scan_fs::package_db::nix::closure::graph::relationships(
+            &classified.graph,
+            &classified.raw,
+            &components,
+        );
+        assert!(
+            before
+                .iter()
+                .any(|r| r.to == "pkg:generic/waybill-fixture-alpha@1.2.3"),
+            "the fixture must produce an edge onto alpha, or this test asserts              nothing; got {:?}",
+            before.iter().map(|r| &r.to).collect::<Vec<_>>()
+        );
+
+        run_closure_ecosystem_identity(&classified, &mut components, &appended, Some(&source))
+            .await;
+
+        let (after, _) = scan_fs::package_db::nix::closure::graph::relationships(
+            &classified.graph,
+            &classified.raw,
+            &components,
+        );
+        assert!(
+            after
+                .iter()
+                .any(|r| r.to == "pkg:pypi/waybill-fixture-alpha@1.2.3"),
+            "the edge must follow the corrected identifier; got {:?}",
+            after.iter().map(|r| &r.to).collect::<Vec<_>>()
+        );
+        assert!(
+            !after
+                .iter()
+                .any(|r| r.to == "pkg:generic/waybill-fixture-alpha@1.2.3"),
+            "no edge may still name the superseded coordinate"
+        );
+        // The graph did not change shape, only the names in it.
+        assert_eq!(before.len(), after.len());
+    }
 }
