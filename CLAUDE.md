@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-05
+Auto-generated from all feature plans. Last updated: 2026-11-06
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -452,6 +452,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-05
 - Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (the eval's JSON (1281-closure-license-meta)
 - N/A — in-process per scan. The existing per-revision nixpkgs cache (1281-closure-license-meta)
 - N/A — in-process per scan, as with every closure milestone since (1282-closure-nameless-components)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values), `reqwest` via the existing `DepsDevClient`, `tracing`, `anyhow`. Reuses `pip::normalize_pypi_name_for_purl` (`pip/mod.rs:99`), `EnrichmentKey` (`request_key.rs:41`), `DepsDevSource` + its disk cache, `waybill_common::types::purl::Purl`. Dev: existing `wiremock = "0.6"` (`waybill-cli/Cargo.toml:236`). **Zero new Cargo dependencies.** (1366-closure-ecosystem-purl)
+- N/A for new state. Confirmation shares the existing deps.dev disk cache at `~/.cache/waybill/deps-dev/` (FR-011); nothing else persists. (1366-closure-ecosystem-purl)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -674,9 +676,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1366-closure-ecosystem-purl: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values), `reqwest` via the existing `DepsDevClient`, `tracing`, `anyhow`. Reuses `pip::normalize_pypi_name_for_purl` (`pip/mod.rs:99`), `EnrichmentKey` (`request_key.rs:41`), `DepsDevSource` + its disk cache, `waybill_common::types::purl::Purl`. Dev: existing `wiremock = "0.6"` (`waybill-cli/Cargo.toml:236`). **Zero new Cargo dependencies.**
 - 1282-closure-nameless-components: Added Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (annotation
 - 1281-closure-license-meta: Added Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (the eval's JSON
-- 1280-nix-closure-edges: Added Rust stable, workspace toolchain pinned by + existing only — `serde_json` (the `inputs.drvs` map
 
 
 <!-- MANUAL ADDITIONS START -->
