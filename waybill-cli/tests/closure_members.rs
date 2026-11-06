@@ -335,14 +335,14 @@ fn scan() -> Scan {
 fn m1282_control_the_pname_less_members_are_emitted_at_all() {
     // Before this milestone the answer was zero, and zero makes every
     // "each added component carries X" assertion below true for the wrong
-    // reason. The fixture holds 9 pname-less members merging to 8 components
-    // (two share a name and a content hash).
+    // reason. The fixture holds 10 pname-less members merging to 9
+    // components (two share a name and a content hash).
     let s = scan();
     let added = s.added();
     assert_eq!(
         added.len(),
-        8,
-        "expected 8 added components, got {}: {:?}",
+        9,
+        "expected 9 added components, got {}: {:?}",
         added.len(),
         added.iter().map(|c| &c["name"]).collect::<Vec<_>>()
     );
@@ -361,7 +361,17 @@ fn m1282_us1_a_fixed_output_member_carries_its_content_hash_in_its_identity() {
         .into_iter()
         .filter(|c| s.member_role_of(c).as_deref() == Some("source"))
         .collect();
-    assert!(!srcs.is_empty(), "no source components emitted");
+    // **An exact count, not `!is_empty()`.** Three of the fixture's
+    // `pname`-less members are referenced by a declared attribute of another
+    // derivation, so the C182 role gate admits them with or without this
+    // milestone. `!is_empty()` was satisfied by one of those three, and this
+    // test passed with the emission disabled.
+    assert_eq!(
+        srcs.len(),
+        4,
+        "expected 4 source components, got {:?}",
+        srcs.iter().map(|c| &c["purl"]).collect::<Vec<_>>()
+    );
     for c in srcs {
         let purl = c["purl"].as_str().unwrap();
         assert!(
@@ -377,6 +387,13 @@ fn m1282_us1_identical_content_yields_one_component() {
     // members record the SAME hash under the two different spellings —
     // `outputs[].hash` and the older `env.outputHash`. Reading only the
     // latter undercounts the population fourfold, so this also guards T008.
+    //
+    // **Both tarballs are unreferenced.** One of them used to be named in
+    // `lib`'s `buildInputs`, so the C182 role gate emitted it on its own and
+    // `len() == 1` held over a set of one with the emission disabled. The
+    // declared attribute moved to `waybill-fixture-edge-input`, which exists
+    // to keep a C182-admitted member in the fixture without being the thing
+    // any assertion rests on.
     let s = scan();
     let tarballs: Vec<_> = s
         .added()
@@ -451,6 +468,11 @@ fn m1282_us1_the_name_field_is_never_rewritten() {
 fn m1282_us1_a_source_url_is_carried_natively() {
     // FR-008 — as a CycloneDX `externalReference` of type `distribution`,
     // not a `waybill:` property: Principle V, standards-native fields first.
+    //
+    // **The URL sits on the `pname`-less source that no declared attribute
+    // references.** It used to sit on `source`(A), which `app`'s
+    // `buildInputs` names — so the C182 role gate emitted it regardless and
+    // this test passed with the emission disabled.
     let s = scan();
     let src = s
         .added()
@@ -494,13 +516,30 @@ fn m1282_t049_two_scans_of_one_closure_emit_identical_component_sets() {
 #[test]
 fn m1282_us2_a_write_text_member_is_marked_scaffolding() {
     // US2 scenario 1.
+    //
+    // **Asserted on `setup-hook.sh`, not on `waybill-fixture-builder`.** The
+    // builder is named in `app`'s `nativeBuildInputs`, so the C182 role gate
+    // admits it as `build-tooling` whether or not this milestone emits
+    // anything — and this test passed with the emission disabled for exactly
+    // that reason. `setup-hook.sh` is referenced by no declared attribute, so
+    // only this milestone can put it in the document.
     let s = scan();
     let b = s
         .added()
         .into_iter()
+        .find(|c| c["name"].as_str() == Some("setup-hook.sh"))
+        .expect("the setup-hook.sh component");
+    assert_eq!(s.member_role_of(b).as_deref(), Some("scaffolding"));
+
+    // The builder is still scaffolding; asserting it here keeps the
+    // C182-admitted case covered rather than trading one blind spot for
+    // another.
+    let builder = s
+        .added()
+        .into_iter()
         .find(|c| c["name"].as_str() == Some("waybill-fixture-builder"))
         .expect("the builder component");
-    assert_eq!(s.member_role_of(b).as_deref(), Some("scaffolding"));
+    assert_eq!(s.member_role_of(builder).as_deref(), Some("scaffolding"));
 }
 
 #[test]
@@ -521,7 +560,7 @@ fn m1282_us2_every_added_component_carries_exactly_one_role() {
     // on the total: a classifier returning one role for everything still
     // sums correctly.
     let counts = s.role_counts();
-    assert_eq!(counts.get("source"), Some(&3), "{counts:?}");
+    assert_eq!(counts.get("source"), Some(&4), "{counts:?}");
     assert_eq!(counts.get("package"), Some(&1), "{counts:?}");
     assert_eq!(counts.get("scaffolding"), Some(&2), "{counts:?}");
     assert_eq!(counts.get("fragment"), Some(&2), "{counts:?}");
@@ -542,7 +581,7 @@ fn m1282_us2_filtering_to_sources_and_packages_leaves_no_scaffolding() {
             )
         })
         .collect();
-    assert_eq!(kept.len(), 4, "3 sources + 1 package");
+    assert_eq!(kept.len(), 5, "4 sources + 1 package");
     for c in &kept {
         let r = s.member_role_of(c);
         assert!(r.as_deref() != Some("scaffolding") && r.as_deref() != Some("fragment"));
@@ -584,7 +623,7 @@ fn m1282_us2_the_role_is_carried_in_all_three_formats() {
     // native/annotation split.
     let s = scan();
     let cdx = s.role_counts().values().sum::<usize>();
-    assert_eq!(cdx, 8);
+    assert_eq!(cdx, 9);
 
     let spdx23 = s.spdx23["packages"]
         .as_array()
@@ -618,13 +657,21 @@ fn m1282_us2_the_role_is_carried_in_all_three_formats() {
 #[test]
 fn m1282_us3_a_source_behind_scaffolding_is_the_endpoint() {
     // FR-013's pass-through, and the edge case that makes the graph change
-    // SHAPE rather than merely grow. `app` reaches `source`(B) only through
+    // SHAPE rather than merely grow. `lib` reaches `source`(B) only through
     // `waybill-fixture-builder`, which is scaffolding and therefore never an
     // endpoint: the walk passes through it and the edge names the source.
     //
     // This is the coverage the milestone-1280 graph test gave up when
     // `fetch.drv` became a stopping point; it is preserved here rather than
     // lost.
+    //
+    // **The pass-through used to be hung off `app`, which is not emitted.**
+    // `app` declares a `pname` and nothing references it, so the C182 role
+    // gate suppresses it — the closure contributed exactly one edge, `lib` to
+    // a tarball it names directly, and no scaffolding stood between any
+    // emitted pair. The scenario this test is named for did not exist in the
+    // fixture. `builder` is now an input of `lib`, which IS emitted, so the
+    // walk has something to pass through.
     let s = scan();
     let builder = s
         .added()
@@ -632,6 +679,21 @@ fn m1282_us3_a_source_behind_scaffolding_is_the_endpoint() {
         .find(|c| c["name"].as_str() == Some("waybill-fixture-builder"))
         .unwrap();
     let builder_purl = builder["purl"].as_str().unwrap().to_string();
+
+    // `source`(B) — the member behind the scaffolding. Identified by its
+    // content hash rather than by name, because the fixture holds two
+    // components named `source`.
+    let behind = s
+        .added()
+        .into_iter()
+        .find(|c| {
+            c["purl"]
+                .as_str()
+                .is_some_and(|p| p.contains("hBBBBBBBB"))
+        })
+        .expect("the source behind the scaffolding");
+    let behind_purl = behind["purl"].as_str().unwrap().to_string();
+
     let edges = s.cdx_edges();
 
     // **CONTROL, and it caught a vacuous pass.** The first version of this
@@ -649,6 +711,14 @@ fn m1282_us3_a_source_behind_scaffolding_is_the_endpoint() {
     assert!(
         !closure_edges.is_empty(),
         "the closure must contribute at least one edge, or this proves nothing"
+    );
+
+    // The half this test never asserted: the walk must REACH the source
+    // behind the scaffolding. Asserting only that the scaffolding is absent
+    // is satisfied by a graph that dropped the whole branch.
+    assert!(
+        edges.iter().any(|(_, to)| *to == behind_purl),
+        "the source behind the scaffolding must be an edge target; got {edges:?}"
     );
 
     assert!(
@@ -769,6 +839,14 @@ fn m1282_t056_the_orphan_count_is_a_lower_bound_not_an_equality() {
         "this fixture holds an unconsumed `package`, so the excess must be \
          non-zero — an equality here would be the claim SC-012 used to make"
     );
+    // **Both relations above hold over any subset**, so with the emission
+    // disabled they held over the three members the C182 role gate admits by
+    // itself. The by-construction population is pinned: four scaffolding and
+    // fragment members, of which the role gate admits exactly one.
+    assert_eq!(
+        by_construction, 4,
+        "expected 4 edge-ineligible members (2 scaffolding + 2 fragment)"
+    );
 }
 
 #[test]
@@ -778,11 +856,11 @@ fn m1282_t035_the_c182_census_is_untouched() {
     // side effect.
     let s = scan();
     let rec = s.closure_record();
-    assert_eq!(rec["derivations"], 11, "{rec}");
+    assert_eq!(rec["derivations"], 12, "{rec}");
     let roles = rec["roles"].as_object().unwrap();
     let total: u64 = roles.values().map(|v| v.as_u64().unwrap()).sum();
     assert_eq!(
-        total, 11,
+        total, 12,
         "the census must still total every derivation: {roles:?}"
     );
 }
@@ -808,7 +886,14 @@ fn m1282_t055_the_component_count_reconciles_without_the_census() {
         without + by_role,
         "components-emitted must be the sum of the two component records: {rec}"
     );
-    assert!(by_role > 0, "no members were added: {rec}");
+    // **Exact, not `> 0`.** The reconciliation above is an identity that
+    // holds over any set, including the three members the C182 role gate
+    // admits on its own — so with the emission disabled it still balanced and
+    // `by_role > 0` still held. Pinning the figures is what makes this
+    // sensitive to the population actually being emitted.
+    assert_eq!(emitted, 10, "{rec}");
+    assert_eq!(without, 1, "{rec}");
+    assert_eq!(by_role, 9, "{rec}");
 
     // Every role present even at zero: an absent key would make a closure
     // with no scaffolding indistinguishable from a classifier that stopped

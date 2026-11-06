@@ -261,7 +261,7 @@ mod tests {
         // role for everything still sums correctly, and would pass a
         // total-only assertion while emitting a document in which `strncpy`
         // and a tarball are indistinguishable.
-        assert_eq!(counts.get("source").copied().unwrap_or(0), 4, "source");
+        assert_eq!(counts.get("source").copied().unwrap_or(0), 5, "source");
         assert_eq!(counts.get("package").copied().unwrap_or(0), 1, "package");
         assert_eq!(
             counts.get("scaffolding").copied().unwrap_or(0),

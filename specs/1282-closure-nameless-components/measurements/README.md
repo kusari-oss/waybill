@@ -160,83 +160,112 @@ fixture is the true cause — the derivation consuming it was not emitted.
 Both were found by dumping the emitted record and reading it, not by reading
 the requirements. The suite was green before each.
 
-### SC-008 — the mutation check (T040), re-run
+### SC-008 — the mutation check (T040), re-run and then repaired
 
-An earlier pass recorded "fails **14 of 19** integration tests". **That does
-not reproduce, and the figure is withdrawn.** Re-run at `7baebd40` with the
-tree otherwise clean, the single-site mutation
-(`emits_as_component`'s `|| drv.declared_pname().is_none()` → `|| (false && …)`)
-fails **7 of 19**, with the suite green before and after the revert
-(`19 passed; 0 failed`).
+An earlier pass recorded "fails **14 of 19** integration tests". That did not
+reproduce. Re-run at `7baebd40` with the tree otherwise clean, the single-site
+mutation (`emits_as_component`'s `|| drv.declared_pname().is_none()` →
+`|| (false && …)`) failed **7 of 19**.
 
-The 7 that fail — the evidence SC-008 asks for:
+**Why twelve survived.** Five are insensitive by design. One
+(`us3_a_source_behind_scaffolding_is_the_endpoint`) asserts a property of
+`graph::stops`, which the emission gate does not govern. The other **six were
+insensitive by accident**: exactly three of the nine `pname`-less fixture
+members were referenced by a *declared attribute* of another derivation —
+`source` (`cccccccc`) and `waybill-fixture-tarball` (`ffffffff`) via
+`buildInputs`, `waybill-fixture-builder` (`dddddddd`) via `nativeBuildInputs`
+— so the C182 role gate admitted them with or without this milestone, and
+those three were the members the six asserted on.
+
+**A seventh defect, found while checking the sixth.** `us3`'s comment said
+"`app` reaches `source`(B) only through `waybill-fixture-builder`". `app`
+declares a `pname` and nothing references it, so the C182 gate **suppresses
+it** — the closure contributed exactly one edge, `lib` to a tarball it names
+directly, and no scaffolding stood between any emitted pair. The pass-through
+scenario FR-013 exists for was not in the fixture at all, and the test did not
+assert its own headline either: it checked only that the scaffolding was *not*
+an edge target, never that the source behind it *was*.
+
+#### What was changed
+
+Fixture (`tests/fixtures/nix_closure_members/closure.json`), 11 → 12
+derivations:
+
+* **`waybill-fixture-edge-input` added** — a fixed-output member that exists
+  to be the one `lib` names in `buildInputs`. That frees **both** tarballs to
+  be unreferenced, which is the only way `identical_content_yields_one_component`
+  can fail when the emission is off.
+* **The source URL moved** from `source`(A), which `app` references, to
+  `source`(B), which nothing declares.
+* **`waybill-fixture-builder` became an input of `lib`**, which *is* emitted,
+  so the walk finally has scaffolding to pass through:
+  `lib → builder → source(B)` now projects to the edge `lib → source(B)`.
+* `source`(A) and the builder stay attribute-referenced on purpose, as the
+  "admitted by both paths" case.
+
+Tests: four assertions retargeted onto unreferenced members, `us3` given the
+half it never asserted, and `t055`/`t056` tightened from relations that hold
+over any subset (`by_role > 0`, `unreachable > by_construction`) to pinned
+figures. One unit-test count moved with the fixture (`source` derivations
+4 → 5).
+
+#### Measured after the repair
+
+The mutation now fails **14 of 19**, and all seven targets are in the list by
+name:
 
 ```
 m1282_control_the_pname_less_members_are_emitted_at_all
 m1282_t036_every_unreachable_added_component_carries_the_new_reason
+m1282_t055_the_component_count_reconciles_without_the_census
+m1282_t056_the_orphan_count_is_a_lower_bound_not_an_equality
+m1282_us1_a_fixed_output_member_carries_its_content_hash_in_its_identity
+m1282_us1_a_source_url_is_carried_natively
+m1282_us1_identical_content_yields_one_component
 m1282_us1_same_name_different_content_yields_two_distinct_components
 m1282_us1_the_name_field_is_never_rewritten
+m1282_us2_a_write_text_member_is_marked_scaffolding
 m1282_us2_every_added_component_carries_exactly_one_role
 m1282_us2_filtering_to_sources_and_packages_leaves_no_scaffolding
 m1282_us2_the_role_is_carried_in_all_three_formats
+m1282_us3_a_source_behind_scaffolding_is_the_endpoint
 ```
 
-The control reports the fixture's added-component count falling from 8 to 3,
-and names the 3 survivors: `source`, `waybill-fixture-builder`,
-`waybill-fixture-tarball`.
+The five survivors are exactly the five insensitive by design:
 
-**Why 12 survive, which is the part worth reading.** Five are insensitive by
-design and were correctly identified before:
-
-| test | why it is insensitive |
+| test | why it cannot be sensitive |
 | --- | --- |
 | `t038_a_scan_without_the_closure_flag_contributes_nothing` | asserts the tier does *not* run; must pass either way |
 | `t035_the_c182_census_is_untouched` | counts derivations, which the emission cannot change (FR-012) |
 | `t033_the_edge_figure_is_carried` | the key is present either way |
 | `t049_two_scans_emit_identical_component_sets` | determinism holds over any set |
 | `us3_no_edge_names_a_component_that_is_absent` | a safety property, vacuously true over a smaller set |
-| `us3_a_source_behind_scaffolding_is_the_endpoint` | asserts a property of `graph::stops`, which the emission gate does not govern |
 
-The other **six are insensitive by accident**, and that is a weakness in the
-fixture rather than a property of the feature.
+#### The edge control, proved rather than assumed
 
-Exactly three of the nine `pname`-less fixture members are referenced by a
-*declared attribute* of another derivation — `source` (`cccccccc`) via
-`buildInputs`, `waybill-fixture-tarball` (`ffffffff`) via `buildInputs`, and
-`waybill-fixture-builder` (`dddddddd`) via `nativeBuildInputs`. The C182 role
-gate admits those three on its own, so they survive the mutation, and they
-happen to be the members these six assert on:
+Changing which derivations are attribute-referenced is what made the edge set
+empty once before, so the control was re-verified by a **second, independent**
+mutation: deleting `app`'s `buildInputs` makes `lib` unreferenced and
+therefore unemitted, and
+`us3_a_source_behind_scaffolding_is_the_endpoint` fails with *"the closure
+must contribute at least one edge, or this proves nothing"*. The control has
+teeth.
 
-| test | the survivor that satisfies it |
-| --- | --- |
-| `us1_a_fixed_output_member_carries_its_content_hash_in_its_identity` | `source` (`cccccccc`) — the assertion is `!is_empty()` |
-| `us1_identical_content_yields_one_component` | one tarball survives, so `len() == 1` holds over a set of one |
-| `us1_a_source_url_is_carried_natively` | the URL sits on `cccccccc`, the referenced source |
-| `us2_a_write_text_member_is_marked_scaffolding` | asserts on `waybill-fixture-builder`, the referenced one |
-| `t055_the_component_count_reconciles_without_the_census` | the reconciliation holds for any set |
-| `t056_the_orphan_count_is_a_lower_bound_not_an_equality` | a lower bound holds for any set |
+#### A note on where these tests live
 
-They are not wrong, but they are not evidence about this milestone's
-population either.
+`cargo test -p waybill --lib m1282` reports **"0 tests; 218 filtered out"**.
+The `scan_fs` tree is in the **bin** target, so the `member.rs` count that
+moved with the fixture was invisible to `--lib` — a result indistinguishable
+from a pass. `--bins` found it. This is the project's documented trap in its
+other direction: `parity` lives in the lib, `scan_fs` in the bin.
 
-**A seventh weakness, of a different kind.**
-`us3_a_source_behind_scaffolding_is_the_endpoint` does not assert its own
-headline: it asserts only that the scaffolding is **not** an edge target, never
-that the source behind it **is**. That is why it is listed as by-design
-insensitive above — but the missing half is the half that would be sensitive.
+#### A second variant, and why its number is not evidence
 
-The fixture already holds an unreferenced representative of every role
-(`source` `eeeeeeee`, `setup-hook.sh`, `waybill-fixture-mini-0.27.1`,
-`strncpy`, `memcpy`), so closing all seven is retargeting plus two small
-fixture moves, not new coverage. It is recorded here rather than done, because
-SC-008 is met by the control and the six alongside it.
-
-**A second variant, and why its number is not evidence.** Mutating
-`is_1282_member` as well fails 18 of 19 — including
-`t035_the_c182_census_is_untouched`, which cannot be affected by emission at
-all. A census test failing means the scan itself broke, so that variant is a
-crash rather than a clean mutation and its count says nothing about test
-sensitivity. Only the single-site figure above is quoted.
+Mutating `is_1282_member` as well fails 18 of 19 — including
+`t035_the_c182_census_is_untouched`, which emission cannot affect. A census
+test failing means the scan itself broke, so that variant is a crash rather
+than a clean mutation and its count says nothing about sensitivity. Only the
+single-site figure is quoted.
 
 ## The pinned closure, measured (T043 / T045 / T046)
 
