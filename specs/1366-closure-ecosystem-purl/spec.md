@@ -253,10 +253,16 @@ component carries the disclosure, and that components left generic do not.
 - **SC-001**: On the pinned closure, the number of components carrying an
   ecosystem-qualified identifier rises from **0** to the number confirmed, and
   that number is **measured and recorded from a waybill run**, not predicted.
-  A direct probe of deps.dev on 2026-11-06 confirmed **75 of 75** candidates
-  (`measurements/README.md`); that is the figure the implementation is
-  expected to reproduce, and a run that produces a different one is a finding
-  rather than a pass.
+  **Measured 2026-11-06 from a waybill run**: 74 candidates, **74 confirmed**,
+  0 declined, 0 unchecked. `pkg:pypi` rises from 0 to 74 and `pkg:generic`
+  falls 781 → 707, with the component count unchanged at 942.
+
+  The direct deps.dev probe counted **75** candidate identities, and the
+  one-component difference was investigated rather than rounded off:
+  `python3.13-build-1.4.4` is `unreferenced`, so the closure emits no
+  component for it at all. It belongs to the coverage gap under *Out of
+  scope*, not to this feature's population — incidental confirmation that the
+  two are independent. See `measurements/README.md`.
 - **SC-002**: **Zero** components carry an ecosystem identifier that
   confirmation did not support.
 - **SC-003**: The 539 closure members are **byte-identical** before and after.
