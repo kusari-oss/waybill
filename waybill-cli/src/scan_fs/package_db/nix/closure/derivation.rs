@@ -115,6 +115,30 @@ impl RawDerivation {
             .and_then(Value::as_str)
     }
 
+    /// Which carrier holds `field`, for diagnostics.
+    ///
+    /// Defined immediately beside [`Self::attr_str`] and matching its order
+    /// deliberately: this exists so `waybill debug closure-dump` can report
+    /// where a value came from, and a reporter that drifted from the reader
+    /// would be worse than none. A probe that read only the flat `env` map
+    /// called 66 of one closure's 1,275 derivations nameless and reported a
+    /// milestone-1282 defect that did not exist.
+    pub(crate) fn attr_carrier(&self, field: &str) -> &'static str {
+        if self.env.contains_key(field) {
+            return "env";
+        }
+        if self
+            .structured_attrs
+            .as_ref()
+            .and_then(|sa| sa.get(field))
+            .and_then(Value::as_str)
+            .is_some()
+        {
+            return "structuredAttrs";
+        }
+        "none"
+    }
+
     /// The package name, preferring `pname` over the derivation's own name.
     pub(crate) fn pname(&self) -> Option<&str> {
         self.attr_str("pname").or(self.name.as_deref())

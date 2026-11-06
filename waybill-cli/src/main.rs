@@ -333,6 +333,10 @@ enum Commands {
     /// docs/reference/identifiers.md §11 for the consumer-side
     /// verification recipe. (Milestone 108 US4.)
     Fingerprints(cli::fingerprints_cmd::FingerprintsCommand),
+    /// Diagnostics that report what waybill's readers actually see.
+    /// Calls the same functions the emitters do, so an answer here cannot
+    /// disagree with what a scan emits.
+    Debug(cli::debug_cmd::DebugCommand),
     /// Repository observation — what waybill understood, ignored, and could
     /// not determine (milestone 924, issue #932).
     Repo(cli::report_cmd::RepoCommand),
@@ -463,6 +467,7 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
             Ok(std::process::ExitCode::from(0))
         }
         Commands::Fingerprints(cmd) => cli::fingerprints_cmd::execute(cmd).await,
+        Commands::Debug(cmd) => cli::debug_cmd::execute(cmd),
         Commands::Repo(cmd) => cli::report_cmd::execute(cmd),
     }
 }

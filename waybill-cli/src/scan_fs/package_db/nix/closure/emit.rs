@@ -83,7 +83,12 @@ fn role_alone_emits(role: DerivationRole) -> bool {
 ///
 /// The test is local to the derivation: applying a patch means a non-empty
 /// `patches` field, which needs no cross-reference to the attribution pass.
-fn emits_as_component(role: DerivationRole, drv: &RawDerivation) -> bool {
+/// Visible to the crate so `waybill debug closure-dump` can report the real
+/// answer rather than a second implementation of this rule. Four probe
+/// errors in one session came from modelling this logic in Python instead of
+/// asking the binary; a debug surface that calls the same function cannot
+/// drift from it.
+pub(crate) fn emits_as_component(role: DerivationRole, drv: &RawDerivation) -> bool {
     role_alone_emits(role)
         || drv.paths_in("patches").next().is_some()
         // Milestone 1282 FR-001 — a member declaring no `pname` is emitted

@@ -1,0 +1,86 @@
+{
+  "derivations": {
+    "/nix/store/aaaaaaaa-waybill-fixture-app-1.0.drv": {
+      "name": "waybill-fixture-app-1.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "1.0",
+        "buildInputs": "/nix/store/o-flat /nix/store/o-typed"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-app"
+        }
+      },
+      "inputs": {
+        "drvs": {
+          "/nix/store/bbbbbbbb-waybill-fixture-flat-2.0.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/cccccccc-waybill-fixture-typed-3.0.drv": {
+            "outputs": [
+              "out"
+            ]
+          }
+        }
+      }
+    },
+    "/nix/store/bbbbbbbb-waybill-fixture-flat-2.0.drv": {
+      "name": "waybill-fixture-flat-2.0",
+      "env": {
+        "pname": "waybill-fixture-flat",
+        "version": "2.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-flat"
+        }
+      }
+    },
+    "/nix/store/cccccccc-waybill-fixture-typed-3.0.drv": {
+      "name": "waybill-fixture-typed-3.0",
+      "env": {
+        "out": "/nix/store/o-typed"
+      },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-typed",
+        "version": "3.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-typed"
+        }
+      }
+    },
+    "/nix/store/dddddddd-source.drv": {
+      "name": "source",
+      "env": {
+        "urls": "https://example.invalid/waybill-fixture.tar.gz"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-src",
+          "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        }
+      }
+    },
+    "/nix/store/eeeeeeee-waybill-fixture-orphan-4.0.drv": {
+      "name": "waybill-fixture-orphan-4.0",
+      "env": {
+        "out": "/nix/store/o-orphan"
+      },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-orphan",
+        "version": "4.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-orphan"
+        }
+      }
+    }
+  },
+  "version": 4
+}

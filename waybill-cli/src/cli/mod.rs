@@ -17,4 +17,5 @@ pub mod trace_binding_cmd;
 pub mod verify;
 pub mod verify_binding_cmd;
 pub mod verify_chain;
+pub mod debug_cmd;
 pub mod report_cmd;
