@@ -119,5 +119,10 @@ texinfo	ERR	timeout
     tukaani                      tukaani xz 4.999.9 beta
     xz_project                   xz Project xz 0.5.8
 
-(texinfo timed out in the batch run and was re-probed individually;
-its result is appended above by that run.)
+=== texinfo (2 entries) ===
+    gnu                          GNU texinfo
+
+(texinfo timed out in the batch run above and is re-probed here. The note
+that previously stood in this place claimed the result had been appended
+when it had not; `m1375_every_product_has_a_committed_title_query` caught
+that on its first run, which is what the check is for.)

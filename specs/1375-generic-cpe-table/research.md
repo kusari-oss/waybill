@@ -137,13 +137,19 @@ Other: `expat`→`libexpat`, `libxml2`/`libxslt`→`xmlsoft`,
 | | |
 | --- | --- |
 | unaddressable now | **194** |
-| components covered by the 48 accepted names | **49** ← N |
+| components on accepted names | 49 |
+| …of which **release-shaped**, so reaching the table | **48** ← N |
 | components on rejected names | 3 |
-| unaddressable after | **145** |
+| unaddressable after | **146** |
 
-N is 49 rather than 48 because `gettext` appears as two components.
+**N is 48, not 49, and the difference was a prediction error.** `gettext` does
+appear as two components and both gain a CPE. But `libedit` is in the
+population at version `20251016-3.1`, which `is_release_shaped` declines
+*upstream of the table* — and milestone 1367's own comment names that exact
+string as one of its five declining shapes. The prediction counted the
+population without applying a gate that was already documented.
 
-So C209 moves `with_candidates` 78 → **127** and `unaddressable` 194 → **145**
+So C209 moves `with_candidates` 78 → **126** and `unaddressable` 194 → **146**
 on aarch64-darwin. The five counts still sum to 977.
 
 **This is a 25% reduction in the unaddressable population from 48 table
@@ -184,7 +190,7 @@ worth having *as well*, but a test says what, not why.
 | **I. Pure Rust, statically linked** | No dependency change; the table is `const` data. |
 | **IV. Type-driven correctness** | No new types. The existing offline test is what makes a wrong row a build failure rather than a silent zero. |
 | **V. Specification compliance** | CPE 2.3 strings in the existing native `cpe`/`cpes` slots; no `waybill:*` row added. |
-| **VIII. Completeness** | 49 components become matchable that were reachable by nothing. |
+| **VIII. Completeness** | 48 components become matchable that were reachable by nothing. |
 | **IX. Accuracy** | The feature is this principle twice over: the right vendor, and **no** vendor where NVD's entries are a different product. |
 | **X. Transparency** | Every disposition recorded, including the 3 rejections and the one thin call. |
 | **XII. External data source enrichment** | No scan-time lookup. The dictionary observations are dated, committed facts. |

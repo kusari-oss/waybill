@@ -67,21 +67,92 @@ use waybill_common::resolution::ResolvedComponent;
 /// key a CPE" on the wire needs a carrier that applies to a resolved
 /// component, which is a separate question from this row's rationale.
 const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
+    // Sorted by slug; `mappings_alphabetically_sorted` enforces it.
+    //
+    // Milestone 1375 (#1381) added 48 rows for the nix-closure C surface.
+    // Every pair was found by querying NVD with the **vendor wildcarded**
+    // and reading what came back, never by assuming the vendor equals the
+    // package name. It usually does not: `bash` is `gnu`, `libxml2` is
+    // `xmlsoft`, `expat` is `libexpat` — the last being exactly the defect
+    // NVD_DICTIONARY_OBSERVED's header cites (anchore/syft#4788).
+    //
+    // Entry counts did not decide these rows; titles did. See the
+    // rejections recorded after this table, and
+    // `specs/1375-generic-cpe-table/research.md` R4 for all 51 dispositions.
+    //
+    //
+    // Every pair below was found by querying NVD with the **vendor
+    //
+    ("automake", &[("gnu", "automake")]),
+    ("bash", &[("gnu", "bash")]),
+    ("bc", &[("gnu", "bc")]),
+    ("bison", &[("gnu", "bison")]),
+    // `andybalholm` also files `brotli` — a Go port. Deliberately not
+    // emitted; this row is Google's implementation.
+    ("brotli", &[("google", "brotli")]),
+    // `bzip2_project` also files `bzip2` — "bzip2 0.4.3 for Rust", a
+    // crate. Deliberately not emitted; this row is the C program.
+    ("bzip2", &[("bzip", "bzip2")]),
+    ("c-ares", &[("c-ares", "c-ares"), ("c-ares_project", "c-ares")]),
+    // `arm` also files a `clang` product (ARM Clang) — a different
+    // compiler, deliberately not emitted.
+    ("clang", &[("llvm", "clang")]),
+    ("compiler-rt", &[("llvm", "compiler-rt")]),
+    ("coreutils", &[("gnu", "coreutils")]),
+    ("cpio", &[("gnu", "cpio")]),
     // libcurl: historical `haxx:curl` dominates pre-2023 NVD records;
     // modern `curl:curl` also appears. Both emitted — primary goes to
     // `component.cpe`, secondary to `waybill:cpe-candidates` property.
     ("curl", &[("haxx", "curl"), ("curl", "curl")]),
+    ("diffutils", &[("gnu", "diffutils")]),
+    ("ed", &[("gnu", "ed")]),
+    ("expat", &[("libexpat", "expat")]),
+    // Three legitimate vendors: the project, Christos Zoulas (the
+    // maintainer), and Gentoo's packaging.
+    ("file", &[("file_project", "file"), ("christos_zoulas", "file"), ("gentoo", "file")]),
+    ("findutils", &[("gnu", "findutils")]),
+    // `apache` also files `flex` — Apache Flex, the Flash framework.
+    // Deliberately not emitted; this row is the lexical analyzer.
+    ("flex", &[("flex_project", "flex"), ("westes", "flex")]),
+    // `fossies` is a source-archive site, not GNU — and it is the only
+    // vendor NVD has for gawk. The attribution is upstream's to explain;
+    // a scanner keyed on CPEs would use it.
+    ("gawk", &[("fossies", "gawk")]),
+    ("gettext", &[("gnu", "gettext")]),
     // GnuTLS — NVD canonical.
     ("gnutls", &[("gnu", "gnutls")]),
+    ("gzip", &[("gnu", "gzip")]),
+    ("jq", &[("jqlang", "jq"), ("jq_project", "jq")]),
+    // Two legitimate vendors: Greenwood Software is upstream, and GNU
+    // ships it too.
+    ("less", &[("greenwoodsoftware", "less"), ("gnu", "less")]),
+    ("libarchive", &[("libarchive", "libarchive"), ("freebsd", "libarchive")]),
+    ("libedit", &[("libedit_project", "libedit")]),
+    ("libffi", &[("libffi_project", "libffi")]),
+    // `gnu` also files a `libidn2` product, but its title reads
+    // "GNU libidn 0.3" — that is libidn v1, a different library.
+    // Deliberately not emitted.
+    ("libidn2", &[("libidn2_project", "libidn2")]),
     // LibreSSL — `openbsd:libressl` (LibreSSL is an OpenBSD project).
     // A second `libressl:libressl` candidate was emitted here until
     // #1246: the vendor does not exist. All 110 libressl entries in
     // NVD's dictionary are `openbsd:libressl` and none use a `libressl`
     // vendor, so the candidate could only ever return zero.
     ("libressl", &[("openbsd", "libressl")]),
+    ("libssh2", &[("libssh2", "libssh2")]),
+    ("libtool", &[("gnu", "libtool")]),
+    ("libunistring", &[("gnu", "libunistring")]),
+    ("libuv", &[("libuv", "libuv"), ("libuv_project", "libuv")]),
+    ("libxml2", &[("xmlsoft", "libxml2")]),
+    ("libxslt", &[("xmlsoft", "libxslt")]),
     // LLVM umbrella project. Sub-projects (clang, lld) are out of scope
     // for v1 — the version-string scanner doesn't distinguish them.
     ("llvm", &[("llvm", "llvm")]),
+    ("lua", &[("lua", "lua")]),
+    ("lzo", &[("lzo_project", "lzo")]),
+    ("ncurses", &[("ncurses_project", "ncurses"), ("gnu", "ncurses")]),
+    ("nghttp2", &[("nghttp2", "nghttp2")]),
+    ("ngtcp2", &[("tatsuhiro-t", "ngtcp2")]),
     // Node.js (issue #1244) — the product segment is `node.js`, not
     // `nodejs`. This is corroborated in-repo: the milestone-128 Yocto
     // recipe-to-CPE map, sourced from openembedded-core's own CVE
@@ -92,26 +163,66 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // separate CPEs; OpenSSL already has its own row below and is
     // matched independently by the version-string scanner.
     ("node", &[("nodejs", "node.js")]),
+    ("oniguruma", &[("oniguruma_project", "oniguruma")]),
     // OpenJDK — `oracle:openjdk` dominates Java vuln records. Build
     // suffix (e.g. `+12`) is stripped before CPE emission per NVD-shape
     // inconsistency; the PURL preserves the full version verbatim.
     ("openjdk", &[("oracle", "openjdk")]),
     // OpenSSL — every CVE since 2014 uses `openssl:openssl`.
     ("openssl", &[("openssl", "openssl")]),
+    // `tanium` also files `patch` (Tanium Patch, endpoint management) —
+    // a different product, deliberately not emitted.
+    ("patch", &[("gnu", "patch")]),
     // PCRE 8.x — `pcre:pcre`.
     ("pcre", &[("pcre", "pcre")]),
     // PCRE 10.x — same vendor, different product.
     ("pcre2", &[("pcre", "pcre2")]),
+    ("perl", &[("perl", "perl")]),
     // PHP — NVD files every interpreter CVE under `php:php`; verified
     // against the configurations on CVE-2026-109618, whose cpeMatch
     // criteria are `cpe:2.3:a:php:php:*`. #1258.
     ("php", &[("php", "php")]),
+    ("pkgconf", &[("pkgconf", "pkgconf")]),
+    ("re2c", &[("re2c", "re2c")]),
+    ("readline", &[("gnu", "readline")]),
+    ("rhash", &[("rhash_project", "rhash")]),
     // SQLite — NVD canonical.
     ("sqlite", &[("sqlite", "sqlite")]),
+    ("tcl", &[("tcl", "tcl")]),
+    ("texinfo", &[("gnu", "texinfo")]),
+    ("unzip", &[("info-zip", "unzip"), ("unzip_project", "unzip")]),
+    ("xz", &[("tukaani", "xz"), ("xz_project", "xz")]),
     // zlib — NVD canonical.
     ("zlib", &[("zlib", "zlib")]),
 ];
 
+/// Names deliberately **absent** from `GENERIC_LIBRARY_CPES`
+/// (milestone 1375, #1381).
+///
+/// Each is in NVD's dictionary and each would be wrong. They are recorded
+/// here rather than only in a spec directory because a contributor adding
+/// one will be editing *this file*, and all three are attractive: the name
+/// matches and the entry counts look convincing.
+///
+/// - **`ninja`** — 126 entries across three vendors, and all three are other
+///   products: "Ninja Framework Ninja 7.0.0" (a Java web framework), "ITRS
+///   Group Ninja", "Visualshortcodes Ninja 1.4 for WordPress". The build
+///   tool is not in NVD at all.
+///
+/// - **`cmake`** — one vendor, `cmake_project`, whose title is "cmake
+///   Project cmake 0.0.1 **for Node.js**": an npm package.
+///   `cpe:2.3:a:kitware:cmake` returns **0**. This one matters most, because
+///   a "single vendor is safe" rule would have accepted it.
+///
+/// - **`libxcrypt`** — a single entry under `elektrobit`, an automotive
+///   software vendor. The version in the title is a real upstream release,
+///   so the entry may be upstream coverage filed under a downstream vendor,
+///   or a vendored copy. The dictionary cannot say which, and a wrong vendor
+///   matches nothing. Rejected in the conservative direction: a missing CPE
+///   understates, a wrong one asserts.
+///
+/// `m1375_the_rejected_names_emit_no_cpe` enforces this. The test says what;
+/// this comment says why; neither substitutes for the other.
 /// What NVD's CPE dictionary held for every pair in
 /// `GENERIC_LIBRARY_CPES`, as `(vendor, product, entries)`.
 ///
@@ -137,18 +248,77 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
 /// recorded in #1245. `probe-cpe-dictionary.sh --cves` asks that one.
 #[cfg(test)]
 const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
+    ("bzip", "bzip2", 11),
+    ("c-ares", "c-ares", 67),
+    ("c-ares_project", "c-ares", 39),
+    ("christos_zoulas", "file", 20),
     ("curl", "curl", 2),
+    ("file_project", "file", 85),
+    ("flex_project", "flex", 35),
+    ("fossies", "gawk", 15),
+    ("freebsd", "libarchive", 2),
+    ("gentoo", "file", 1),
+    ("gnu", "automake", 51),
+    ("gnu", "bash", 92),
+    ("gnu", "bc", 8),
+    ("gnu", "bison", 70),
+    ("gnu", "coreutils", 71),
+    ("gnu", "cpio", 16),
+    ("gnu", "diffutils", 12),
+    ("gnu", "ed", 3),
+    ("gnu", "findutils", 6),
+    ("gnu", "gettext", 47),
     ("gnu", "gnutls", 366),
+    ("gnu", "gzip", 26),
+    ("gnu", "less", 5),
+    ("gnu", "libtool", 14),
+    ("gnu", "libunistring", 13),
+    ("gnu", "ncurses", 21),
+    ("gnu", "patch", 12),
+    ("gnu", "readline", 17),
+    ("gnu", "texinfo", 2),
+    ("google", "brotli", 40),
+    ("greenwoodsoftware", "less", 416),
     ("haxx", "curl", 228),
+    ("info-zip", "unzip", 5),
+    ("jq_project", "jq", 1),
+    ("jqlang", "jq", 25),
+    ("libarchive", "libarchive", 53),
+    ("libedit_project", "libedit", 2),
+    ("libexpat", "expat", 25),
+    ("libffi_project", "libffi", 9),
+    ("libidn2_project", "libidn2", 23),
+    ("libssh2", "libssh2", 41),
+    ("libuv", "libuv", 152),
+    ("libuv_project", "libuv", 1),
+    ("llvm", "clang", 1),
+    ("llvm", "compiler-rt", 52),
     ("llvm", "llvm", 55),
+    ("lua", "lua", 54),
+    ("lzo_project", "lzo", 11),
+    ("ncurses_project", "ncurses", 49),
+    ("nghttp2", "nghttp2", 134),
     ("nodejs", "node.js", 1714),
+    ("oniguruma_project", "oniguruma", 38),
     ("openbsd", "libressl", 110),
     ("openssl", "openssl", 368),
     ("oracle", "openjdk", 241),
     ("pcre", "pcre", 91),
     ("pcre", "pcre2", 25),
+    ("perl", "perl", 614),
     ("php", "php", 1641),
+    ("pkgconf", "pkgconf", 64),
+    ("re2c", "re2c", 3),
+    ("rhash_project", "rhash", 55),
     ("sqlite", "sqlite", 372),
+    ("tatsuhiro-t", "ngtcp2", 54),
+    ("tcl", "tcl", 81),
+    ("tukaani", "xz", 62),
+    ("unzip_project", "unzip", 5),
+    ("westes", "flex", 35),
+    ("xmlsoft", "libxml2", 221),
+    ("xmlsoft", "libxslt", 97),
+    ("xz_project", "xz", 32),
     ("zlib", "zlib", 84),
 ];
 
@@ -753,6 +923,115 @@ mod tests {
             !version.contains('.'),
             "BoringSSL's extracted version {version:?} looks release-shaped; see above (#1268)"
         );
+    }
+
+    /// T008 (FR-006) — the vendor is NVD's, not the component name.
+    ///
+    /// These are the rows a future edit is most likely to "correct" to
+    /// `(name, name)`. Each such correction would match nothing, silently.
+    #[test]
+    fn m1375_the_vendor_is_nvds_not_the_component_name() {
+        for (slug, want_vendor) in [
+            ("bash", "gnu"),
+            ("expat", "libexpat"),
+            ("libxml2", "xmlsoft"),
+            ("brotli", "google"),
+            ("gawk", "fossies"),
+            ("compiler-rt", "llvm"),
+        ] {
+            let row = GENERIC_LIBRARY_CPES
+                .iter()
+                .find(|(s, _)| *s == slug)
+                .unwrap_or_else(|| panic!("no table row for {slug}"));
+            let vendors: Vec<&str> = row.1.iter().map(|(v, _)| *v).collect();
+            assert!(
+                vendors.contains(&want_vendor),
+                "{slug} must emit vendor {want_vendor}, got {vendors:?} — \
+                 NVD does not file it under its own name"
+            );
+            assert!(
+                !vendors.contains(&slug),
+                "{slug} emits vendor {slug}, which NVD does not have. A pair \
+                 NVD lacks matches nothing, silently."
+            );
+        }
+    }
+
+    /// T009 — no duplicate slug, so a second row cannot shadow the first.
+    #[test]
+    fn m1375_no_duplicate_slug() {
+        let mut seen = std::collections::HashSet::new();
+        for (slug, _) in GENERIC_LIBRARY_CPES {
+            assert!(seen.insert(*slug), "duplicate slug {slug} in the table");
+        }
+    }
+
+    /// T009a (FR-002, SC-002) — every row's **product** has a committed title
+    /// query behind it.
+    ///
+    /// The dictionary guard proves a pair is *in* NVD; it cannot prove the
+    /// pair is the right *product* — `ninja` would satisfy it three times
+    /// over. That judgement is in `research.md` R4; this asserts its
+    /// traceability, which is the machine-checkable half.
+    ///
+    /// **Keyed on the product, not the slug.** `node`'s slug is `node` while
+    /// its product is `node.js`; a slug-keyed check reports zero entries for
+    /// a correct row.
+    #[test]
+    fn m1375_every_product_has_a_committed_title_query() {
+        let titles = concat!(
+            include_str!("../../../specs/1375-generic-cpe-table/measurements/nvd-titles.txt"),
+            include_str!(
+                "../../../specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt"
+            ),
+        );
+
+        // CONTROL: the files parsed to something. Without this every
+        // assertion below passes over an empty haystack.
+        assert!(
+            titles.contains("=== bash ("),
+            "the committed title files did not parse; every check below would \
+             pass vacuously"
+        );
+
+        for (slug, pairs) in GENERIC_LIBRARY_CPES {
+            for (_, product) in *pairs {
+                assert!(
+                    titles.contains(&format!("=== {product} (")),
+                    "table row {slug:?} emits product {product:?}, which has no \
+                     committed title query. Run `cpe-titles.py {product}` and \
+                     record it — an entry count says a pair exists, not that \
+                     it is the same software."
+                );
+            }
+        }
+    }
+
+    /// T016 (SC-003) — the three rejected names emit nothing.
+    #[test]
+    fn m1375_the_rejected_names_emit_no_cpe() {
+        // CONTROL: the synthesizer produces candidates at all, or the
+        // assertions below pass just as well when it is broken outright.
+        let control = make_component("pkg:generic/bash@5.3");
+        assert!(
+            !synthesize_cpes(&control).is_empty(),
+            "the control must produce candidates, or the rejections below are \
+             vacuous"
+        );
+
+        for name in ["ninja", "cmake", "libxcrypt"] {
+            let c = make_component(&format!("pkg:generic/{name}@1.0.0"));
+            assert!(
+                synthesize_cpes(&c).is_empty(),
+                "{name} gained a CPE. See the rejections recorded above the \
+                 table: NVD's entries for it are a different product, and a \
+                 row here would assert software is present that is not."
+            );
+            assert!(
+                !GENERIC_LIBRARY_CPES.iter().any(|(s, _)| *s == name),
+                "{name} was added to the table; #1381 rejected it"
+            );
+        }
     }
 
     /// #1246: every `(vendor, product)` the table emits must be one NVD

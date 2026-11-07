@@ -148,3 +148,51 @@ T009a now keys on the product, and `data-model.md` gains V4: slug and product
 coincide for 59 of the 60 rows and must not be assumed equal. The one
 exception was found by doing the work the analysis asked for, not by reading
 the code.
+
+## T013 / T014 — delivered, and a prediction corrected
+
+```
+with_candidates   78 → 126   +48
+unaddressable    194 → 146   −48
+addressable_without_cpe, excluded_members, excluded_files   unchanged
+sum 977 == .components | length
+```
+
+Every one of the 48 carries the vendor `research.md` R4 assigned; **zero
+vendor mismatches**.
+
+### N is 48, not the 49 predicted
+
+49 components carry an accepted name. One does not gain a CPE:
+
+```
+NO CPE: name='libedit' version='20251016-3.1'
+```
+
+`is_release_shaped` declines that version **upstream of the table** — and
+milestone 1367's own comment names `20251016-3.1 (libedit)` as one of its
+five declining shapes. The prediction counted the population without applying
+a gate that was already documented in the file being edited.
+
+`gettext` does appear twice and both gain a CPE, so that part of the
+prediction held; it was simply offset by a component nobody had subtracted.
+
+Corrected in `research.md`, `plan.md`, `data-model.md`, `contracts/table.md`
+and `quickstart.md`.
+
+## T007 — the guard was seen to fail before being trusted
+
+| mutation | result |
+| --- | --- |
+| a row whose pair has no observation | **failed**, naming the pair and the script to run |
+| an observation with a zero count | **failed** |
+
+## T009a caught its own evidence file being wrong on the first run
+
+`texinfo` timed out in the batch title sweep and was re-probed individually.
+The committed file carried a note saying *"its result is appended above by
+that run"* — **and it was not**. The note was written and the append was not.
+
+`m1375_every_product_has_a_committed_title_query` failed on `texinfo` the
+first time it ran, which is exactly what a traceability check is for: the
+prose claimed evidence that was not there.

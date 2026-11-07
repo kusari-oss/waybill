@@ -111,8 +111,8 @@ ResolvedComponent.name ──► GENERIC_LIBRARY_CPES lookup (exact, lowercase)
           classify_addressability  ──►  WithCandidates (was Unaddressable)
                     │
                     ▼
-               C209 counts: with_candidates 78 → 127
-                            unaddressable  194 → 145
+               C209 counts: with_candidates 78 → 126
+                            unaddressable  194 → 146
 ```
 
 **Not touched**: `is_release_shaped`, `OSV_INDEXED_PURL_TYPES`, the C209

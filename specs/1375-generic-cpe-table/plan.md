@@ -17,8 +17,8 @@ components / 186 names, of which **51 have NVD dictionary entries** and none
 is in the table.
 
 **Approach**: add **48** dictionary-verified, title-confirmed rows and record
-the **3** rejections in source. 49 components gain a CPE; `unaddressable`
-falls 194 → 145 on the pinned closure.
+the **3** rejections in source. 48 components gain a CPE; `unaddressable`
+falls 194 → 146 on the pinned closure.
 
 Four findings shaped the plan:
 
@@ -44,7 +44,7 @@ Four findings shaped the plan:
 **Target Platform**: every scan emitting `pkg:generic` components.
 **Performance Goals**: a linear scan of a 60-row `const` table per component; unmeasurable.
 **Constraints**: no existing CPE may change (SC-005); the C209 delta must be exactly ±N (SC-004, FR-008); every row needs both a dictionary observation and a title confirmation (FR-001, FR-002).
-**Scale/Scope**: 48 new rows, 60 total; 49 components affected on the pinned closure.
+**Scale/Scope**: 48 new rows, 60 total; 48 components affected on the pinned closure (49 carry an accepted name; `libedit`'s version is not release-shaped).
 
 ## Constitution Check
 
@@ -55,7 +55,7 @@ Four findings shaped the plan:
 | **I. Pure Rust, statically linked** | ✅ PASS | No dependency change; `const` data only. |
 | **IV. Type-driven correctness** | ✅ PASS | No new types. The offline test makes a row without an observation a build failure rather than a silent zero. |
 | **V. Specification compliance** | ✅ PASS | CPE 2.3 strings in the native `cpe`/`cpes` slots; no `waybill:*` row added. |
-| **VIII. Completeness** | ✅ PASS | 49 components become matchable that nothing could reach. |
+| **VIII. Completeness** | ✅ PASS | 48 components become matchable that nothing could reach. |
 | **IX. Accuracy** | ✅ PASS | Both directions: the right vendor where NVD has one, and **no** row where its entries are a different product. |
 | **X. Transparency** | ✅ PASS | Every one of the 51 dispositions recorded, including the thin call on `libxcrypt`. |
 | **XII. External data source enrichment** | ✅ PASS | No scan-time lookup; the observations are dated, committed facts. |

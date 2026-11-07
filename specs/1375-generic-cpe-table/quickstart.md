@@ -40,7 +40,11 @@ jq -r '.metadata.properties[]|select(.name=="waybill:cpe-coverage").value' out.c
 
 `with_candidates` up by N, `unaddressable` down by N, same N, everything else
 unchanged, sum still equal to `.components | length`. On aarch64-darwin that
-is `78 → 127` and `194 → 145`, N = 49.
+is `78 → 126` and `194 → 146`, **N = 48**.
+
+> N is 48 and not 49 although 49 components carry an accepted name:
+> `libedit`'s version `20251016-3.1` is not release-shaped and is declined
+> before the table is reached.
 
 **If any other count moves**, the change leaked out of the generic arm.
 

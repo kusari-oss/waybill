@@ -60,8 +60,8 @@ verified row carry a CPE with the discovered vendor.
 - [ ] T010 [US1] Add the **33 single-vendor rows** to `GENERIC_LIBRARY_CPES` per `research.md` R4, in the order R4 lists them so a reviewer can follow the dispositions: the 15 `gnu` tools, the 7 own-name vendors, the 5 `*_project` vendors, and `expat`, `libxml2`, `libxslt`, `compiler-rt`, `ngtcp2`, `gawk`
 - [ ] T011 [US1] (FR-004) Add the **9 multi-vendor rows**, each emitting a candidate per legitimate vendor: `c-ares`, `file` (3 vendors), `jq`, `less`, `libarchive`, `libuv`, `ncurses`, `unzip`, `xz`
 - [ ] T012 [US1] Add the **6 partial rows**, each dropping exactly one vendor, with the dropped vendor named in a comment: `clang` (−`arm`), `patch` (−`tanium`), `flex` (−`apache`), `brotli` (−`andybalholm`), `bzip2` (−`bzip2_project`), `libidn2` (−`gnu`). **The dropped vendor is the point of each row**; without the comment the next reader sees an incomplete row rather than a decided one
-- [ ] T013 [US1] Verify against the pinned closure that **49 components** gain a CPE and that each carries the vendor R4 assigned — not a count alone, the actual vendor per component
-- [ ] T014 [US1] Verify the C209 delta is exactly `with_candidates 78 → 127` and `unaddressable 194 → 145`, with `addressable_without_cpe`, `excluded_members` and `excluded_files` **unchanged** and the five still summing to 977 (FR-008, SC-004) — quickstart Control 3
+- [X] T013 [US1] Verify against the pinned closure that **48 components** gain a CPE and that each carries the vendor R4 assigned — not a count alone, the actual vendor per component
+- [X] T014 [US1] Verify the C209 delta is exactly `with_candidates 78 → 126` and `unaddressable 194 → 146`, with `addressable_without_cpe`, `excluded_members` and `excluded_files` **unchanged** and the five still summing to 977 (FR-008, SC-004) — quickstart Control 3
 
 ---
 

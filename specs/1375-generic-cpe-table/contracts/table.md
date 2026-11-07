@@ -2,15 +2,17 @@
 
 **Feature**: `1375-generic-cpe-table` | **Issue**: #1381
 
-No new annotation rows, no schema change, no CLI flags. 49 components gain a
+No new annotation rows, no schema change, no CLI flags. 48 components gain a
 CPE; the C209 counts move by exactly that number.
 
 ---
 
 ## 1. Components that gain a CPE
 
-48 names, 49 components (`gettext` appears twice). Examples of the emitted
-form:
+48 names, **48 components**. `gettext` appears twice and both gain a CPE;
+`libedit` is in the population but its version `20251016-3.1` is not
+release-shaped, so `is_release_shaped` declines it before the table is
+consulted. Examples of the emitted form:
 
 | component | CPE |
 | --- | --- |
@@ -46,12 +48,12 @@ a CPE is a regression, and a test says so.
 **After**
 
 ```json
-{"schema":"waybill-cpe-coverage/v3","with_candidates":127,
- "addressable_without_cpe":166,"unaddressable":145,
+{"schema":"waybill-cpe-coverage/v3","with_candidates":126,
+ "addressable_without_cpe":166,"unaddressable":146,
  "excluded_members":539,"excluded_files":0}
 ```
 
-`+49 / −49`, everything else identical, sum still **977**. The schema stays
+`+48 / −48`, everything else identical, sum still **977**. The schema stays
 `/v3`: the shape is unchanged, only the population inside it moves.
 
 > **x86_64-linux is a different closure** and its delta will differ. The
