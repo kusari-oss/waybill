@@ -591,6 +591,76 @@ mod tests {
     }
 
     #[test]
+    fn m1372_t034_one_name_at_two_versions_survives_as_two_components() {
+        // The merge key is (name, version, identity), so a name admitted by
+        // the build graph at two versions must stay two components. The real
+        // closure contains the case and the document gets it right -- both
+        // `cctools-binutils-darwin` at `1010.6` and `boot` and `macOS-SDK` at
+        // `14.4` and `26.4` survive as pairs -- but a merge keyed on the name
+        // alone would collapse each pair into one, and no other test here
+        // would notice: every other fixture uses a single version per name.
+        //
+        // Both derivations below are reachable only through `inputs.drvs`,
+        // which is exactly the population milestone 1372 admits, so this
+        // covers the merge on the *new* path rather than the declared one.
+        const TWO_VERSIONS: &str = r#"{
+          "derivations": {
+            "d-sdk-a.drv": { "env": {"pname":"sdk","version":"14.4"},
+                             "outputs":{"out":{"path":"h1-sdk-a"}} },
+            "d-sdk-b.drv": { "env": {"pname":"sdk","version":"26.4"},
+                             "outputs":{"out":{"path":"h2-sdk-b"}} },
+            "d-app.drv": {
+              "env": {"pname":"app","version":"1.0"},
+              "inputs": {"drvs": {"d-sdk-a.drv": {}, "d-sdk-b.drv": {}}},
+              "outputs":{"out":{"path":"h3-app"}}
+            }
+          },
+          "version": 3
+        }"#;
+
+        let raw = RawClosure::parse(TWO_VERSIONS).unwrap();
+        let roles = classify(&raw);
+        let graph_admitted = super::super::classify::graph_admitted(&raw);
+
+        // CONTROL: both versions must actually be graph-admitted, or the
+        // assertion below passes over a population this test never created.
+        assert_eq!(
+            graph_admitted.len(),
+            2,
+            "expected both sdk derivations admitted by the graph, got {graph_admitted:?}"
+        );
+
+        let built = components(&ClassifiedClosure {
+            attribute: "default".into(),
+            raw,
+            roles,
+            graph_admitted,
+            graph_admission: Default::default(),
+            read_outcome: Default::default(),
+            graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
+        });
+
+        let mut versions: Vec<&str> = built
+            .iter()
+            .filter(|c| c.name == "sdk")
+            .map(|c| c.version.as_str())
+            .collect();
+        versions.sort_unstable();
+        assert_eq!(
+            versions,
+            vec!["14.4", "26.4"],
+            "one name at two versions collapsed; got {:?}",
+            built
+                .iter()
+                .map(|c| (&c.name, &c.version))
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
     fn build_variants_merge_into_one_component_and_union_their_roles() {
         // A closure holds several derivations per (pname, version).
         // Measured on a real closure: 497 derivations, 348 distinct

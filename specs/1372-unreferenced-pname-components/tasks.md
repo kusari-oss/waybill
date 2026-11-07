@@ -25,11 +25,11 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 **Purpose**: this feature's diff is 641 relabellings wide, and a wrong implementation produces a plausible one. The only defence is numbers measured **before** the change.
 
-- [ ] T001 Create `specs/1372-unreferenced-pname-components/measurements/README.md` recording the host (aarch64-darwin), the pinned nixpkgs revision (`a799d3e3`), the moat commit (`d069055`), and the warning that these figures are **not** comparable to the x86_64-linux corpus goldens
-- [ ] T002 Capture the pre-change document by scanning the pinned moat clone with `--nix-closure`, and record in `measurements/README.md` the role histogram, the component count and the member count
-- [ ] T003 [P] Record in `measurements/README.md` the four counts every later assertion is checked against: **742** `unreferenced`, **741** of them named by `inputs.drvs`, **641** already emitting, **100** newly emitting — each read from the capture rather than quoted from the spec
-- [ ] T004 [P] Record in `measurements/README.md` the pre-change **edge count** and **lifecycle-scope histogram**, so the two deltas research R5 and R7 predict are measurable rather than inferred
-- [ ] T005 [P] Record in `measurements/README.md` the pre-change residual sbomnix name gap by re-running `specs/1276-boot-library-scope/measurements/compare-sbomnix.sh`; it is 32 today
+- [X] T001 Create `specs/1372-unreferenced-pname-components/measurements/README.md` recording the host (aarch64-darwin), the pinned nixpkgs revision (`a799d3e3`), the moat commit (`d069055`), and the warning that these figures are **not** comparable to the x86_64-linux corpus goldens
+- [X] T002 Capture the pre-change document by scanning the pinned moat clone with `--nix-closure`, and record in `measurements/README.md` the role histogram, the component count and the member count
+- [X] T003 [P] Record in `measurements/README.md` the four counts every later assertion is checked against: **742** `unreferenced`, **741** of them named by `inputs.drvs`, **641** already emitting, **100** newly emitting — each read from the capture rather than quoted from the spec
+- [X] T004 [P] Record in `measurements/README.md` the pre-change **edge count** and **lifecycle-scope histogram**, so the two deltas research R5 and R7 predict are measurable rather than inferred
+- [X] T005 [P] Record in `measurements/README.md` the pre-change residual sbomnix name gap by re-running `specs/1276-boot-library-scope/measurements/compare-sbomnix.sh`; it is 32 today
 
 **Checkpoint**: every number the implementation will be judged against exists as a recorded observation.
 
@@ -41,11 +41,11 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 **⚠️ CRITICAL**: blocks US1, US2 and US3.
 
-- [ ] T006 Add a `fn graph_referrers(closure: &RawClosure) -> BTreeSet<&str>` in `waybill-cli/src/scan_fs/package_db/nix/closure/classify.rs`, built from each derivation's `inputs.drvs` (already parsed at `derivation.rs:58`) — the signal FR-001 requires
-- [ ] T007 Implement validation rule **V1** in `classify.rs`: a derivation naming itself in its own `inputs.drvs` does not count as referenced. Not observed on the pinned closure, so it needs a constructed test, not the corpus
-- [ ] T008 Implement **V2** in `classify.rs`: a referrer that is itself not emitted still counts. The alternative would make the signal depend on its own output
-- [ ] T009 Implement **V3** in `classify.rs`: an `inputs.drvs` key that resolves to no derivation is ignored rather than counted; milestone 1280 already has a dangling-key fixture
-- [ ] T010 [P] Unit-test `graph_referrers` in `classify.rs` for V1, V2 and V3 against constructed closures, each asserting the referrer set's membership directly rather than a downstream role
+- [X] T006 Add a `fn graph_referrers(closure: &RawClosure) -> BTreeSet<&str>` in `waybill-cli/src/scan_fs/package_db/nix/closure/classify.rs`, built from each derivation's `inputs.drvs` (already parsed at `derivation.rs:58`) — the signal FR-001 requires
+- [X] T007 Implement validation rule **V1** in `classify.rs`: a derivation naming itself in its own `inputs.drvs` does not count as referenced. Not observed on the pinned closure, so it needs a constructed test, not the corpus
+- [X] T008 Implement **V2** in `classify.rs`: a referrer that is itself not emitted still counts. The alternative would make the signal depend on its own output
+- [X] T009 Implement **V3** in `classify.rs`: an `inputs.drvs` key that resolves to no derivation is ignored rather than counted; milestone 1280 already has a dangling-key fixture
+- [X] T010 [P] Unit-test `graph_referrers` in `classify.rs` for V1, V2 and V3 against constructed closures, each asserting the referrer set's membership directly rather than a downstream role
 
 **Checkpoint**: the signal is computable and its rules hold, with no role changed yet.
 
@@ -59,10 +59,10 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 **Independent Test**: scan the pinned closure and assert no component the build graph references carries `unreferenced`.
 
-- [ ] T011 [US2] Change the `(false, false)` arm in `classify.rs` to yield `BuildTooling` when `graph_referrers` names the key and `Unreferenced` otherwise. **Only that arm** — FR-003 requires the relabelling and FR-003a requires a declared attribute always win
-- [ ] T012 [US2] Unit-test in `classify.rs` that a derivation named by **both** a declared attribute and `inputs.drvs` keeps the declared role (SC-004a). The pinned closure cannot produce this case, so it must be constructed — and this is the mutation most likely to leave the corpus green
-- [ ] T013 [P] [US2] Unit-test in `classify.rs` that a derivation nothing names stays `Unreferenced` — the closure-root case, and the control that detects admission on no evidence (FR-004, SC-004)
-- [ ] T014 [P] [US2] Integration test in `waybill-cli/tests/closure_graph_admission.rs` on the stub-`nix` pattern from `tests/closure_component_cpes.rs`: after a scan, exactly one component carries `unreferenced` and it is the closure root (SC-003, SC-004)
+- [X] T011 [US2] Change the `(false, false)` arm in `classify.rs` to yield `BuildTooling` when `graph_referrers` names the key and `Unreferenced` otherwise. **Only that arm** — FR-003 requires the relabelling and FR-003a requires a declared attribute always win
+- [X] T012 [US2] Unit-test in `classify.rs` that a derivation named by **both** a declared attribute and `inputs.drvs` keeps the declared role (SC-004a). The pinned closure cannot produce this case, so it must be constructed — and this is the mutation most likely to leave the corpus green
+- [X] T013 [P] [US2] Unit-test in `classify.rs` that a derivation nothing names stays `Unreferenced` — the closure-root case, and the control that detects admission on no evidence (FR-004, SC-004)
+- [X] T014 [P] [US2] Integration test in `waybill-cli/tests/closure_edges.rs` on the stub-`nix` pattern from `tests/closure_component_cpes.rs`: after a scan, exactly one component carries `unreferenced` and it is the closure root (SC-003, SC-004)
 
 **Checkpoint**: the label is true. Components may now begin to appear — which is US1.
 
@@ -78,10 +78,10 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 > `role_alone_emits` as a consequence of T011, and `emits_as_component` is
 > **not** edited. If a change is needed here, the Phase 3 arm is wrong.
 
-- [ ] T015 [US1] **Write the control first** in `waybill-cli/tests/closure_graph_admission.rs`: assert the fixture closure yields components at all before asserting any named one exists
-- [ ] T016 [P] [US1] Test in `waybill-cli/tests/closure_graph_admission.rs` that a derivation named only by another's `inputs.drvs` is emitted as a component (FR-002, US1 scenario 1)
-- [ ] T017 [US1] Verify against the real closure that all six named tools now appear, and record their versions in `specs/1372-unreferenced-pname-components/measurements/README.md` (SC-002)
-- [ ] T018 [US1] Record the measured newly-emitted count in `measurements/README.md` and compare it to T003's **100**; a different number is a finding, not a pass (SC-001)
+- [X] T015 [US1] **Write the control first** in `waybill-cli/tests/closure_edges.rs`: assert the fixture closure yields components at all before asserting any named one exists
+- [X] T016 [P] [US1] Test in `waybill-cli/tests/closure_edges.rs` that a derivation named only by another's `inputs.drvs` is emitted as a component (FR-002, US1 scenario 1)
+- [X] T017 [US1] Verify against the real closure that all six named tools now appear, and record their versions in `specs/1372-unreferenced-pname-components/measurements/README.md` (SC-002)
+- [X] T018 [US1] Record the measured newly-emitted count in `measurements/README.md` and compare it to T003's **100**; a different number is a finding, not a pass (SC-001)
 
 **Checkpoint**: US1 and US2 hold. This is the MVP — six CVE-bearing tools that no consumer could see now exist.
 
@@ -91,9 +91,9 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 **Goal**: a graph-admitted component says so; a declared one is untouched.
 
-- [ ] T019 [US3] Write the C211 value into `component.extra_annotations` from the closure emitter in `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs`, only for components the graph admitted. **This alone gives all three formats** — the bag is carried generically by `generate/cyclonedx/builder.rs`, `generate/spdx/annotations.rs` and `generate/spdx/v3_annotations.rs`
-- [ ] T020 [P] [US3] Test in `waybill-cli/tests/closure_graph_admission.rs` that a graph-admitted component carries C211 and a declared-attribute component carries none — presence is the signal (FR-005)
-- [ ] T021 [P] [US3] Test in `waybill-cli/tests/closure_graph_admission.rs` that C211's value is identical in all three formats
+- [X] T019 [US3] Write the C211 value into `component.extra_annotations` from the closure emitter in `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs`, only for components the graph admitted. **This alone gives all three formats** — the bag is carried generically by `generate/cyclonedx/builder.rs`, `generate/spdx/annotations.rs` and `generate/spdx/v3_annotations.rs`
+- [X] T020 [P] [US3] Test in `waybill-cli/tests/closure_edges.rs` that a graph-admitted component carries C211 and a declared-attribute component carries none — presence is the signal (FR-005)
+- [X] T021 [P] [US3] Test in `waybill-cli/tests/closure_edges.rs` that C211's value is identical in all three formats
 
 **Checkpoint**: all three stories hold independently.
 
@@ -101,15 +101,15 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 ## Phase 6: FR-008 — the document-scope record
 
-- [ ] T022 Define `GraphAdmissionRecord` with `admitted` and `relabelled` per `data-model.md` §4, in `waybill-cli/src/scan_fs/package_db/nix/closure/classify.rs`, asserting `admitted + relabelled` equals the number of roles changed
-- [ ] T023 Thread the record from `waybill-cli/src/cli/scan_cmd.rs` to the emitters, mirroring how `nix_closure_degraded` (C190) and `closure_ecosystem_identity` (C208) are threaded. **Gate it on a closure having been recorded**, like C204/C208 and unlike C209 — this is what keeps every local golden still
-- [ ] T024 [P] Emit C210 as a document property in `waybill-cli/src/generate/cyclonedx/metadata.rs`
-- [ ] T025 [P] Emit C210 as a document-scope annotation in `waybill-cli/src/generate/spdx/annotations.rs`
-- [ ] T026 [P] Emit C210 as a document-scope annotation in `waybill-cli/src/generate/spdx/v3_annotations.rs`
-- [ ] T027 Add the C210 and C211 rows to `docs/reference/sbom-format-mapping.md` with the Principle V native-field audit from `contracts/annotations.md`
-- [ ] T028 Add the six extractors and the two `EXTRACTORS` rows in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs`. **Same change as T027** — a catalog row without an extractor fails `every_catalog_row_has_an_extractor`, and that gate lives in the **lib** target
-- [ ] T029 [P] Test in `waybill-cli/tests/closure_graph_admission.rs` that C210 distinguishes a closure with nothing to do (`admitted: 0, relabelled: 0`) from a scan with no closure at all (C210 absent) — FR-008
-- [ ] T030 [P] Test in `waybill-cli/tests/closure_graph_admission.rs` that C210's payload is identical in all three formats
+- [X] T022 Define `GraphAdmissionRecord` with `admitted` and `relabelled` per `data-model.md` §4, in `waybill-cli/src/scan_fs/package_db/nix/closure/classify.rs`, asserting `admitted + relabelled` equals the number of roles changed
+- [X] T023 Thread the record from `waybill-cli/src/cli/scan_cmd.rs` to the emitters, mirroring how `nix_closure_degraded` (C190) and `closure_ecosystem_identity` (C208) are threaded. **Gate it on a closure having been recorded**, like C204/C208 and unlike C209 — this is what keeps every local golden still
+- [X] T024 [P] Emit C210 as a document property in `waybill-cli/src/generate/cyclonedx/metadata.rs`
+- [X] T025 [P] Emit C210 as a document-scope annotation in `waybill-cli/src/generate/spdx/annotations.rs`
+- [X] T026 [P] Emit C210 as a document-scope annotation in `waybill-cli/src/generate/spdx/v3_annotations.rs`
+- [X] T027 Add the C210 and C211 rows to `docs/reference/sbom-format-mapping.md` with the Principle V native-field audit from `contracts/annotations.md`
+- [X] T028 Add the six extractors and the two `EXTRACTORS` rows in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs`. **Same change as T027** — a catalog row without an extractor fails `every_catalog_row_has_an_extractor`, and that gate lives in the **lib** target
+- [X] T029 [P] Test in `waybill-cli/tests/closure_edges.rs` that C210 distinguishes a closure with nothing to do (`admitted: 0, relabelled: 0`) from a scan with no closure at all (C210 absent) — FR-008
+- [X] T030 [P] Test in `waybill-cli/tests/closure_edges.rs` that C210's payload is identical in all three formats
 
 ---
 
@@ -117,10 +117,10 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 ### The controls a 641-row diff would otherwise hide
 
-- [ ] T031 Assert in `waybill-cli/tests/closure_graph_admission.rs` that the **member count is identical** before and after — the 603 milestone-1282 members emit via `declared_pname().is_none()`, and emission must not become role-dependent (research R4, quickstart Control 3)
-- [ ] T032 [P] Assert against the real closure that exactly **one** component carries `unreferenced` and it is the closure root, recording the result in `specs/1372-unreferenced-pname-components/measurements/README.md` (SC-003, SC-004)
-- [ ] T033 [P] Assert against the real closure that **zero** derivations named by a declared dependency attribute had their role changed, recording it in `measurements/README.md` (SC-004a)
-- [ ] T034 [P] Assert in `waybill-cli/tests/closure_graph_admission.rs` that a name appearing at two versions among the newly admitted — `cctools-binutils-darwin` at `1010.6` and `boot`, `macOS-SDK` at `14.4` and `26.4` — survives as **two** components. The merge key is `(name, version)`, so a regression here collapses distinct artifacts into one (spec Edge Cases)
+- [X] T031 Assert in `waybill-cli/tests/closure_edges.rs` that the **member count is identical** before and after — the 603 milestone-1282 members emit via `declared_pname().is_none()`, and emission must not become role-dependent (research R4, quickstart Control 3)
+- [X] T032 [P] Assert against the real closure that exactly **one** *derivation* stays `unreferenced` and it is the closure root, recording the result in `specs/1372-unreferenced-pname-components/measurements/README.md` (SC-003, SC-004). **Corrected during implementation**: this task said *component*, and as written it is false — the root becomes the document's `metadata.component`, which carries no `waybill:closure-role` at all, so both hosts emit **zero** `unreferenced` components. The control is a derivation-level fact and is asserted where it lives, in `classify` and in `m1372_the_root_stays_unreferenced`
+- [X] T033 [P] Assert against the real closure that **zero** derivations named by a declared dependency attribute had their role changed, recording it in `measurements/README.md` (SC-004a)
+- [X] T034 [P] Assert in `waybill-cli/tests/closure_edges.rs` that a name appearing at two versions among the newly admitted — `cctools-binutils-darwin` at `1010.6` and `boot`, `macOS-SDK` at `14.4` and `26.4` — survives as **two** components. The merge key is `(name, version)`, so a regression here collapses distinct artifacts into one (spec Edge Cases)
 - [X] T035 Assert that every component emitted before the change is identical after it **except for its C182 role**, diffing against T002's capture and recording the count in `measurements/README.md`; expected **641** (FR-006, SC-005)
 
 ### The three numbers later work will be diagnosed against

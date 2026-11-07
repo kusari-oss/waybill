@@ -332,6 +332,31 @@ what an override would not.
 
 ---
 
+## Two corrections made while closing out the task list
+
+**T034 was unimplemented, not merely unticked.** It is the build-variants
+edge case `/speckit.analyze` added as finding C1, and the only test for it was
+the real closure getting the answer right — which is not a test. The document
+does carry `cctools-binutils-darwin` at `1010.6` and `boot` and `macOS-SDK` at
+`14.4` and `26.4`, but every fixture in `emit.rs` uses one version per name, so
+a merge keyed on the name alone would have collapsed them and nothing would
+have failed. `m1372_t034_one_name_at_two_versions_survives_as_two_components`
+now covers it, on the graph-admitted path rather than the declared one, and
+dropping the version from `MergeKey` turns it red: `got [("sdk", "14.4")]`.
+Its control — that both derivations really are graph-admitted — fired on the
+first run and caught a wrong field name in the fixture, which is what the
+control is for.
+
+**The planned test file was never created.** `plan.md` and eleven tasks name
+`waybill-cli/tests/closure_graph_admission.rs`. It does not exist; the
+coverage landed in `classify.rs` (the unit tests), `closure_edges.rs` (the
+integration assertions) and the four emitter modules. The task text now names
+where the tests are, because a task list pointing at a file that was never
+written is worse than no task list.
+
+---
+
 ## Open
+
 
 Nothing. Every task in Phase 7 is measured.
