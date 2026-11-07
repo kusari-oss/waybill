@@ -66,6 +66,8 @@ mod tests {
             attribute: "default".into(),
             raw,
             roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
             read_outcome: Default::default(),
             graph: Default::default(),
             licenses: Default::default(),

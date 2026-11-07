@@ -1034,6 +1034,8 @@ cdx_anno!(
     document
 );
 cdx_anno!(c209_cdx, "waybill:cpe-coverage", document);
+cdx_anno!(c210_cdx, "waybill:closure-graph-admission", document);
+cdx_anno!(c211_cdx, "waybill:closure-admission", component);
 cdx_anno!(c183_cdx, "waybill:patch-evidence-grade", document);
 cdx_anno!(c184_cdx, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.

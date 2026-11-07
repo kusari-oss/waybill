@@ -1292,6 +1292,7 @@ mod tests {
             nix_closure_degraded: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
+            closure_graph_admission: None,
             deps_dev_online: false,
             nix_eval_system: None,
             nixpkgs_haskell_resolution: None,

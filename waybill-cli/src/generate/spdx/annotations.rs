@@ -639,6 +639,10 @@ pub fn annotate_document(
     }
 
     // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
+    // C210 (m1372, #1366) — the build-graph admission record.
+    if let Some(record) = artifacts.closure_graph_admission {
+        push(&mut out, "waybill:closure-graph-admission", json!(record));
+    }
     // C209 (m1367, #1371) — the CPE synthesis coverage record.
     if let Some(record) = artifacts.cpe_coverage {
         push(&mut out,

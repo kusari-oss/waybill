@@ -230,6 +230,45 @@ component records which signal admitted it.
 - **A closure where every derivation is declared properly.** The document must
   be unchanged.
 
+## This supersedes half of milestone 1280's FR-002
+
+**Found during implementation, not during specification.** Milestone 1280
+(#1346) specified a deliberate two-way separation and wrote a test to enforce
+it:
+
+> **FR-002**: The reader MUST NOT derive relationships from the declared
+> dependency attributes. **Those stay the sole input to the C182 role**, and
+> this separation is what keeps the role census unchanged by this feature
+> (SC-005).
+
+Its test `m1280_t037_the_role_census_is_a_function_of_declared_attributes_only`
+asserted that a derivation reached only through `inputs.drvs` stays
+`unreferenced`, with the message *"a role other than `unreferenced` means the
+graph has leaked into the classifier"*.
+
+**This spec was written without knowing that.** It framed `unreferenced` as an
+oversight; it was a decision, made once and defended.
+
+**The first half of FR-002 stands unchanged**: relationships still come from
+`inputs.drvs` and never from the declared attributes. **The second half is
+retired**, because it made 741 of 1,275 derivations carry a label that says
+nothing depends on them while the build graph names them. m1280's test is
+rewritten to assert the replacement and its bound — the graph fills only the
+gap the attributes leave — rather than deleted.
+
+### A consequence neither spec nor plan predicted
+
+With every graph-named derivation emitting, **"a package in the middle of a
+walk that was not emitted" can no longer arise from a real closure**: 1,274 of
+1,275 derivations emit afterwards, against 1,174 before. The projection's
+pass-through refusal (m1280 contract P2, the population behind FR-011's orphan
+reason) remains correct and remains reachable by any caller that restricts the
+emitted set — but no real closure now produces it.
+
+Its unit test was therefore changed to **state** the emitted set rather than
+derive it from the classifier. Left as it was, it would have quietly stopped
+exercising P2 while still passing.
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
@@ -289,9 +328,12 @@ component records which signal admitted it.
 
 ### Measurable Outcomes
 
-- **SC-001**: On the pinned closure, the number of emitted components rises
-  from **1,174 derivations' worth** by the number of newly admitted
-  derivations, and that number is **measured and recorded**, not predicted.
+- **SC-001**: On the pinned closure, two figures are **measured and recorded**,
+  not predicted: the count of **derivations** that newly emit (expected 100)
+  and the count of distinct **components** in the document before and after
+  (expected to rise by roughly 45, since build variants merge). Mixing the two
+  units is the error this criterion was rewritten to avoid — a derivation
+  count and a component count are not the same number and never were.
 - **SC-002**: `gzip`, `gawk`, `gnused`, `less`, `patch` and `coreutils` each
   appear as a component with the version the closure records.
 - **SC-003**: **Zero** components carrying the `unreferenced` role are named

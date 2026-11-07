@@ -445,6 +445,8 @@ mod t009_agreement_probe {
             attribute: "probe".to_string(),
             raw: closure,
             roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
             read_outcome: Default::default(),
             graph: Default::default(),
             licenses: Default::default(),

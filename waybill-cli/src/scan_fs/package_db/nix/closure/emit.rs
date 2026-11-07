@@ -18,6 +18,10 @@ use super::ClassifiedClosure;
 
 /// C182 — how nix referenced this member.
 pub(crate) const ANN_CLOSURE_ROLE: &str = "waybill:closure-role";
+/// Milestone 1372 (#1366) — C211. Present only where the build graph alone
+/// put a derivation in its role, so presence is the signal and a component
+/// admitted the old way gains no annotation it did not have.
+pub(crate) const ANN_CLOSURE_ADMISSION: &str = "waybill:closure-admission";
 
 /// C185 — the patches this member applies.
 ///
@@ -88,6 +92,17 @@ fn role_alone_emits(role: DerivationRole) -> bool {
 /// errors in one session came from modelling this logic in Python instead of
 /// asking the binary; a debug surface that calls the same function cannot
 /// drift from it.
+/// Would this derivation emit even if its role admitted nothing?
+///
+/// Milestone 1372 (#1366) uses this to split C210's two counts: a derivation
+/// the role alone admits is **newly emitted**, one that emits anyway is merely
+/// **relabelled**. The two clauses here are exactly the non-role arms of
+/// [`emits_as_component`], named once so the split cannot drift from the gate
+/// it is splitting.
+pub(crate) fn emits_without_role(drv: &RawDerivation) -> bool {
+    drv.paths_in("patches").next().is_some() || drv.declared_pname().is_none()
+}
+
 pub(crate) fn emits_as_component(role: DerivationRole, drv: &RawDerivation) -> bool {
     role_alone_emits(role)
         || drv.paths_in("patches").next().is_some()
@@ -291,6 +306,11 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         MergeKey,
         Vec<waybill_common::types::license::SpdxExpression>,
     > = std::collections::BTreeMap::new();
+    // Milestone 1372 (#1366) — C211, keyed by identity because that is what a
+    // consumer reads. `true` if any derivation behind the identity was put in
+    // its role by the build graph alone.
+    let mut admitted_for: std::collections::BTreeMap<MergeKey, bool> =
+        std::collections::BTreeMap::new();
     for (key, drv) in &closure.raw.derivations {
         let Some(role) = closure.roles.get(key).copied() else {
             continue;
@@ -328,6 +348,9 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         };
         let identity_key = basis.as_ref().map(|b| b.hash().to_string()).unwrap_or_default();
         let merge_key: MergeKey = (name.to_string(), version.to_string(), identity_key);
+        if closure.graph_admitted.contains(key) {
+            admitted_for.insert(merge_key.clone(), true);
+        }
         let Ok(purl) = Purl::new(&coordinate) else {
             tracing::debug!(name, "nix-closure: skipping a name that yields no valid PURL");
             continue;
@@ -434,6 +457,19 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                 ANN_CLOSURE_ROLE.to_string(),
                 serde_json::Value::String(role.wire().to_string()),
             );
+            // C211 — how this identity earned that role. Only `build-graph`
+            // is disclosed: a declared dependency attribute is the ordinary
+            // case and says nothing a reader needs told.
+            //
+            // Unioned over build variants for the same reason the role is: a
+            // component is one identity, and if ANY derivation behind it was
+            // admitted by the graph alone, the identity owes the disclosure.
+            if admitted_for.remove(&identity).unwrap_or(false) {
+                component.extra_annotations.insert(
+                    ANN_CLOSURE_ADMISSION.to_string(),
+                    serde_json::Value::String("build-graph".to_string()),
+                );
+            }
             // FR-005 — exactly one role, on exactly the members this feature
             // adds. A component emitted before milestone 1282 carries none,
             // which is what lets a consumer tell the two populations apart
@@ -517,6 +553,8 @@ mod tests {
             attribute: "default".into(),
             raw,
             roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
             read_outcome: Default::default(),
             graph: Default::default(),
             licenses: Default::default(),
@@ -583,6 +621,8 @@ mod tests {
             attribute: "default".into(),
             raw,
             roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
             read_outcome: Default::default(),
             graph: Default::default(),
             licenses: Default::default(),
@@ -637,6 +677,8 @@ mod tests {
             attribute: "default".into(),
             raw,
             roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
             read_outcome: Default::default(),
             graph: Default::default(),
             licenses: Default::default(),

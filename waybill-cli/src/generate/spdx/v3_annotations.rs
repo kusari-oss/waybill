@@ -651,6 +651,10 @@ fn push_document_fields(
     }
 
     // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
+    // C210 (m1372, #1366) — the build-graph admission record.
+    if let Some(record) = scan.closure_graph_admission {
+        push(out, "waybill:closure-graph-admission", json!(record));
+    }
     // C209 (m1367, #1371) — the CPE synthesis coverage record.
     if let Some(record) = scan.cpe_coverage {
         push(out,

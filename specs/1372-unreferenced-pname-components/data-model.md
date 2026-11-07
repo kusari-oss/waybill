@@ -94,8 +94,16 @@ presence the signal.
 | field | type | notes |
 | --- | --- | --- |
 | `schema` | `&'static str` | `"waybill-closure-graph-admission/v1"` |
-| `admitted` | `usize` | components emitted **because of** this signal — expected 100 |
-| `relabelled` | `usize` | already emitting, role corrected — expected **641** |
+| `admitted` | `usize` | **derivations** that begin emitting because of this signal — expected **100** |
+| `relabelled` | `usize` | **derivations** already emitting whose role was corrected — expected **641** |
+
+> **The unit is derivations, not components, and both counts use it.** The two
+> differ by a lot: 100 newly admitted derivations merge into roughly **45**
+> distinct components, because build variants share a `(name, version)`. The
+> classifier works in derivations and the role is a per-derivation fact, so a
+> record about classification counts derivations. A reader comparing
+> `admitted` against the document's component count will find they disagree —
+> that is expected, and the catalog row says so.
 
 **Invariant**: `admitted + relabelled` equals the number of derivations whose
 role changed. Asserted, not commented.

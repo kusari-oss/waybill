@@ -639,28 +639,40 @@ fn m1280_t033_the_code_appears_on_no_other_population() {
 // User Story 3 — the roles are a filter, not a gate
 // ---------------------------------------------------------------------
 
-/// T037 / SC-005 — emitting edges must not reclassify anything.
+/// T037 — **milestone 1372 (#1366) supersedes half of milestone 1280's
+/// FR-002, and this test now asserts the replacement.**
 ///
-/// The census is compared against a scan of the same closure by the same
-/// binary with the flag that produces the edges, so what this really asserts
-/// is that the roles are a function of the declared attributes alone. The
-/// cross-version comparison lives in `measurements/README.md`, where the
-/// pre-1280 and post-1280 censuses are both 235 / 93 / 43 / 17.
+/// m1280's FR-002 has two halves. The first — *relationships must not be
+/// derived from the declared dependency attributes* — is unchanged and is
+/// asserted by the edge tests above. The second said the declared attributes
+/// *"stay the sole input to the C182 role"*, and this test enforced it by
+/// requiring `pkgb` to be `unreferenced`.
+///
+/// That half is retired. Measured on the pinned closure, it made 741 of
+/// 1,275 derivations carry `unreferenced` while another derivation's
+/// `inputs.drvs` named them — a label telling a consumer that nothing in the
+/// build depends on `gzip 1.14` when three derivations do. The role is now a
+/// function of the declared attributes **and** the build graph, with the
+/// declared attributes still winning wherever they speak (FR-003a).
+///
+/// What this test protects now is the *bound* on that change: the graph may
+/// only fill the gap the attributes leave.
 #[test]
-fn m1280_t037_the_role_census_is_a_function_of_declared_attributes_only() {
+fn m1280_t037_the_graph_fills_only_the_gap_the_attributes_leave() {
     let s = scan_closure(&closure("through_fetch.json"));
-    // `pkgb` is referenced by NO declared attribute and is reached only
-    // through the projection. If `inputs.drvs` leaked into classification it
-    // would acquire a role other than `unreferenced`.
+    // `pkgb` is named by NO declared attribute and by `fetch.drv`'s
+    // `inputs.drvs`. Before milestone 1372 it was `unreferenced`; it is now
+    // tooling, because the build consumed it.
     assert_eq!(
         s.role("waybill-fixture-pkgb"),
-        Some("unreferenced"),
+        Some("build-tooling"),
         "pkgb is reached by an inputs.drvs edge and by no declared \
-         attribute; a role other than `unreferenced` means the graph has \
-         leaked into the classifier (FR-002)"
+         attribute, so the graph is what gives it a role (m1372 FR-003)"
     );
-    // CONTROL: a member that IS declared gets a role, so the assertion above
-    // is not just observing a classifier that never fires.
+    // CONTROL, and the bound: a derivation a declared attribute names keeps
+    // exactly the role that attribute gives it. If this drifts to
+    // `build-tooling` or `both`, the graph has started overriding declared
+    // evidence rather than filling its gaps (m1372 FR-003a / SC-004a).
     assert_eq!(s.role("waybill-fixture-pkga"), Some("artifact-input"));
 }
 

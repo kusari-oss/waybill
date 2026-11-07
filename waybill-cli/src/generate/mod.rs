@@ -169,6 +169,10 @@ pub struct ScanArtifacts<'a> {
     /// without the second count, "this scan has no mapped software" and "the
     /// synthesis pass never reached these components" are the same document.
     pub cpe_coverage: Option<&'a str>,
+    /// Milestone 1372 (#1366; C210) — what the closure's build-graph
+    /// admission signal did. Both counts are **derivations**. Emitted only
+    /// where a closure was recorded, like C204 and C208.
+    pub closure_graph_admission: Option<&'a str>,
     /// Milestone 1067 (#1058; C192) — the deps.dev enrichment pass ran
     /// online. Gates the document-scope outcome counts, which are computed
     /// in each emitter from the components it emits so they always agree

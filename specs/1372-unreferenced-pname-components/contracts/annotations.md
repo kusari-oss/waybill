@@ -81,6 +81,9 @@ milestone 1367, **no emitter code is needed**.
 }
 ```
 
+- **Both counts are derivations.** 100 newly admitted derivations become ~45
+  distinct components; a reader comparing `admitted` against the component
+  count will find they disagree, and that is expected rather than a defect.
 - Emitted wherever C204 and C208 are — i.e. a closure was recorded — and
   absent otherwise. This is what keeps all 16 non-closure corpus targets and
   every local golden untouched.

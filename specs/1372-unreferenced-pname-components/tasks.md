@@ -120,26 +120,27 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 - [ ] T031 Assert in `waybill-cli/tests/closure_graph_admission.rs` that the **member count is identical** before and after — the 603 milestone-1282 members emit via `declared_pname().is_none()`, and emission must not become role-dependent (research R4, quickstart Control 3)
 - [ ] T032 [P] Assert against the real closure that exactly **one** component carries `unreferenced` and it is the closure root, recording the result in `specs/1372-unreferenced-pname-components/measurements/README.md` (SC-003, SC-004)
 - [ ] T033 [P] Assert against the real closure that **zero** derivations named by a declared dependency attribute had their role changed, recording it in `measurements/README.md` (SC-004a)
-- [ ] T034 Assert that every component emitted before the change is identical after it **except for its C182 role**, diffing against T002's capture and recording the count in `measurements/README.md`; expected **641** (FR-006, SC-005)
+- [ ] T034 [P] Assert in `waybill-cli/tests/closure_graph_admission.rs` that a name appearing at two versions among the newly admitted — `cctools-binutils-darwin` at `1010.6` and `boot`, `macOS-SDK` at `14.4` and `26.4` — survives as **two** components. The merge key is `(name, version)`, so a regression here collapses distinct artifacts into one (spec Edge Cases)
+- [X] T035 Assert that every component emitted before the change is identical after it **except for its C182 role**, diffing against T002's capture and recording the count in `measurements/README.md`; expected **641** (FR-006, SC-005)
 
 ### The three numbers later work will be diagnosed against
 
-- [ ] T035 Record the measured **lifecycle-scope delta** in `measurements/README.md` as a number distinct from the 741 role changes — scope has its own exemptions (m1276), so the two will differ and a reader assuming they match will misread the diff (research R5)
-- [ ] T036 Record the measured **edge delta** in `measurements/README.md`, before and after, **explicitly so that issue #1367's edge undershoot is not later diagnosed against a figure this feature moved** (research R7). Also assert FR-007: every edge no longer emitted has a newly admitted component on its former path
-- [ ] T037 Re-measure the residual sbomnix name gap with `specs/1276-boot-library-scope/measurements/compare-sbomnix.sh` and record it in `measurements/README.md`; all 23 named gap names are in this population, so near-zero is the expectation and substantially above zero is a finding (SC-008)
+- [X] T036 Record the measured **lifecycle-scope delta** in `measurements/README.md` as a number distinct from the 741 role changes — scope has its own exemptions (m1276), so the two will differ and a reader assuming they match will misread the diff (research R5)
+- [X] T037 Record the measured **edge delta** in `measurements/README.md`, before and after, **explicitly so that issue #1367's edge undershoot is not later diagnosed against a figure this feature moved** (research R7). Also assert FR-007: every edge no longer emitted has a newly admitted component on its former path
+- [X] T038 Re-measure the residual sbomnix name gap with `specs/1276-boot-library-scope/measurements/compare-sbomnix.sh` and record it in `measurements/README.md`; all 23 named gap names are in this population, so near-zero is the expectation and substantially above zero is a finding (SC-008)
 
 ### SC-007 — the mutation check
 
-- [ ] T038 **Mutation-check the suite**, recording which tests went red in `measurements/README.md` (SC-007). Make the graph signal a no-op → the US1 tests must fail. Apply it to all four arms rather than `(false,false)` → T012 must fail. Drop the V1 self-reference guard → T010 must fail. If the second mutation leaves everything green, SC-004a is not covered
+- [X] T039 **Mutation-check the suite**, recording which tests went red in `measurements/README.md` (SC-007). Make the graph signal a no-op → the US1 tests must fail. Apply it to all four arms rather than `(false,false)` → T012 must fail. Drop the V1 self-reference guard → T010 must fail. If the second mutation leaves everything green, SC-004a is not covered
 
 ### Non-regression and goldens
 
-- [ ] T039 [P] Assert that a scan of a project with **no** nix closure produces a byte-identical document, against a baseline from the pre-change binary, recording it in `specs/1372-unreferenced-pname-components/measurements/README.md` (SC-006)
-- [ ] T040 Confirm **no local golden changes** under `waybill-cli/tests/fixtures/golden/` by running the gate before any regeneration. A local golden moving means C210 or C211 is emitted unconditionally — a bug, not a refresh (research R9, quickstart)
-- [ ] T041 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch — never locally. Expect `nix-closure-moat` to change substantially and the other 16 targets not at all
-- [ ] T042 Account for **every** differing golden file under `waybill-cli/tests/fixtures/public_corpus/` from the artifact rather than the run's summary, and keep `image-postgres16` out of this feature's diff (#1372)
-- [ ] T043 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and `GATE_RESULT=pass` in `target/gate/prepr.log`. Never pipe a check through `head`
-- [ ] T044 [P] Update `docs/ecosystems.md` to state what `unreferenced` now means — that it is measured against the build graph nix records and not only against declared attributes — and what a `build-graph` admission says and does not say
+- [X] T040 [P] Assert that a scan of a project with **no** nix closure produces a byte-identical document, against a baseline from the pre-change binary, recording it in `specs/1372-unreferenced-pname-components/measurements/README.md` (SC-006)
+- [X] T041 Confirm **no local golden changes** under `waybill-cli/tests/fixtures/golden/` by running the gate before any regeneration. A local golden moving means C210 or C211 is emitted unconditionally — a bug, not a refresh (research R9, quickstart)
+- [ ] T042 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch — never locally. Expect `nix-closure-moat` to change substantially and the other 16 targets not at all
+- [ ] T043 Account for **every** differing golden file under `waybill-cli/tests/fixtures/public_corpus/` from the artifact rather than the run's summary, and keep `image-postgres16` out of this feature's diff (#1372)
+- [X] T044 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and `GATE_RESULT=pass` in `target/gate/prepr.log`. Never pipe a check through `head`
+- [X] T045 [P] Update `docs/ecosystems.md` to state what `unreferenced` now means — that it is measured against the build graph nix records and not only against declared attributes — and what a `build-graph` admission says and does not say
 
 ---
 
@@ -165,7 +166,7 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 - Controls before assertions (T015 before T016).
 - T027 and T028 land together or CI rejects both.
-- T040 runs **before** any golden regeneration, not after.
+- T041 runs **before** any golden regeneration, not after.
 
 ### Parallel opportunities
 
@@ -175,7 +176,7 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 - T016 (Phase 4)
 - T020, T021 (Phase 5)
 - T024, T025, T026, then T029, T030 (Phase 6)
-- T032, T033 and T039, T044 (Phase 7)
+- T032, T033 and T040, T045 (Phase 7)
 
 ---
 

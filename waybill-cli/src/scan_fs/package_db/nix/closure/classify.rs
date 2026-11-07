@@ -179,11 +179,80 @@ impl DerivationRole {
 }
 
 /// Role for every member of a closure, keyed by `.drv` path.
-pub(crate) fn classify(closure: &RawClosure) -> BTreeMap<String, DerivationRole> {
+/// Milestone 1372 (#1366) — the derivations some other derivation's build
+/// actually consumed.
+///
+/// **This is not the same question the two field lists above ask.** They ask
+/// which derivations a *declared dependency attribute* names;
+/// `inputs.drvs` is nix's own record of what each build consumed, and the two
+/// disagree on 741 of the pinned closure's 1,275 derivations.
+///
+/// Measured: `gzip 1.14` is named by three derivations' `inputs.drvs` and by
+/// no dependency attribute of any of them — it appears in `postInstall`,
+/// `initialPath` and `allowedRequisites`, which are a script body and two
+/// pieces of stdenv bookkeeping. Before this, `gzip` was `Unreferenced`, which
+/// told a reader that nothing in the build depended on it.
+///
+/// **V1 — a derivation naming itself does not count.** Self-reference is not
+/// evidence that something else consumed it. Not observed on the pinned
+/// closure, so it is excluded here rather than left to be discovered as a
+/// silent self-admission.
+///
+/// **V2 — the referrer need not itself be emitted.** A derivation consumed
+/// only by something that is not emitted was still consumed. Requiring an
+/// emitted referrer would make the signal depend on its own output.
+///
+/// **V3 — a key that resolves to nothing is ignored.** `inputs.drvs` keys are
+/// `.drv` paths that are keys of `derivations`; milestone 1280 measured
+/// dangling ones and has a fixture for them.
+fn graph_referrers(closure: &RawClosure) -> BTreeSet<&str> {
+    let mut referred: BTreeSet<&str> = BTreeSet::new();
+    for (key, drv) in &closure.derivations {
+        for dep in drv.inputs.drvs.keys() {
+            // V1
+            if dep == key {
+                continue;
+            }
+            // V3 — `get_key_value` so the borrow is the map's key, not `dep`.
+            if let Some((k, _)) = closure.derivations.get_key_value(dep) {
+                referred.insert(k.as_str());
+            }
+        }
+    }
+    referred
+}
+
+/// Milestone 1372 (#1366) — the derivations the **build graph alone** put in
+/// a role, i.e. those no declared dependency attribute names.
+///
+/// This is what C211 discloses and what C210 counts. It is a separate
+/// function rather than a second return value from [`classify`] because
+/// `classify` has ten call sites and none of the other nine wants this; the
+/// shared work is in [`declared_sets`], so neither duplicates the field scan.
+pub(crate) fn graph_admitted(closure: &RawClosure) -> BTreeSet<String> {
+    let (artifact, tooling) = declared_sets(closure);
+    let graph = graph_referrers(closure);
+    closure
+        .derivations
+        .keys()
+        .filter(|k| {
+            let k = k.as_str();
+            !artifact.contains(k) && !tooling.contains(k) && graph.contains(k)
+        })
+        .cloned()
+        .collect()
+}
+
+/// The two sets the declared dependency attributes produce.
+///
+/// Extracted so [`classify`] and [`graph_admitted`] share one scan of the
+/// field lists; a second copy would be free to drift from the first, and the
+/// drift would show up as a component disclosing an admission signal that
+/// contradicts its own role.
+fn declared_sets(closure: &RawClosure) -> (BTreeSet<&str>, BTreeSet<&str>) {
     let index = closure.output_index();
     let mut artifact: BTreeSet<&str> = BTreeSet::new();
     let mut tooling: BTreeSet<&str> = BTreeSet::new();
-
     for drv in closure.derivations.values() {
         for (fields, sink) in [(ARTIFACT_FIELDS, &mut artifact), (TOOLING_FIELDS, &mut tooling)] {
             for field in fields {
@@ -195,6 +264,12 @@ pub(crate) fn classify(closure: &RawClosure) -> BTreeMap<String, DerivationRole>
             }
         }
     }
+    (artifact, tooling)
+}
+
+pub(crate) fn classify(closure: &RawClosure) -> BTreeMap<String, DerivationRole> {
+    let graph = graph_referrers(closure);
+    let (artifact, tooling) = declared_sets(closure);
 
     closure
         .derivations
@@ -205,6 +280,24 @@ pub(crate) fn classify(closure: &RawClosure) -> BTreeMap<String, DerivationRole>
                 (true, true) => DerivationRole::Both,
                 (true, false) => DerivationRole::ArtifactInput,
                 (false, true) => DerivationRole::BuildTooling,
+                // Milestone 1372 (#1366) — only this arm consults the build
+                // graph, and that bound is FR-003a: a declared attribute
+                // always wins, so a derivation any dependency field names
+                // keeps exactly the role it had. The graph answers only where
+                // nothing else does.
+                //
+                // `BuildTooling` rather than `Both`: every attribute measured
+                // as naming these derivations is build-time — `postInstall`,
+                // `installPhase`, `buildPhase`, `initialPath`,
+                // `allowedRequisites`, `stdenv`. That supports one claim;
+                // `Both` would assert a second nothing supports.
+                //
+                // The limit, recorded because it is real: `allowedRequisites`
+                // is nixpkgs' assertion about the RUNTIME closure, so a
+                // derivation named only there is arguably a runtime requisite
+                // rather than tooling. An undifferentiated signal cannot
+                // separate the two.
+                (false, false) if graph.contains(k) => DerivationRole::BuildTooling,
                 (false, false) => DerivationRole::Unreferenced,
             };
             (key.clone(), role)
@@ -216,6 +309,151 @@ pub(crate) fn classify(closure: &RawClosure) -> BTreeMap<String, DerivationRole>
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    // ---- m1372 (#1366): the build-graph admission signal ----
+
+    /// V1 — a derivation naming itself proves nothing about who consumed it.
+    ///
+    /// Constructed, because the pinned closure contains no self-reference: a
+    /// test written against it would pass with or without the guard.
+    #[test]
+    fn m1372_self_reference_is_not_a_referrer() {
+        const SELF: &str = r#"{
+          "derivations": {
+            "d-self.drv": {
+              "env": {"pname":"selfref"},
+              "outputs": {"out":{"path":"h-self"}},
+              "inputs": {"drvs": {"d-self.drv": {"outputs":["out"]}}}
+            }
+          }
+        }"#;
+        let raw = RawClosure::parse(SELF).unwrap();
+        assert!(
+            graph_referrers(&raw).is_empty(),
+            "a derivation that names only itself has no referrer"
+        );
+        assert_eq!(
+            classify(&raw)["d-self.drv"],
+            DerivationRole::Unreferenced,
+            "and so it stays unreferenced"
+        );
+    }
+
+    /// V2 — a referrer that is not itself emitted still counts.
+    ///
+    /// Requiring an emitted referrer would make the signal depend on its own
+    /// output, which is circular and is not what `inputs.drvs` records.
+    #[test]
+    fn m1372_a_referrer_need_not_be_emitted_itself() {
+        const C: &str = r#"{
+          "derivations": {
+            "d-mid.drv": {
+              "env": {},
+              "outputs": {"out":{"path":"h-mid"}},
+              "inputs": {"drvs": {"d-leaf.drv": {"outputs":["out"]}}}
+            },
+            "d-leaf.drv": { "env": {"pname":"leaf"}, "outputs": {"out":{"path":"h-leaf"}} }
+          }
+        }"#;
+        let raw = RawClosure::parse(C).unwrap();
+        assert!(graph_referrers(&raw).contains("d-leaf.drv"));
+        assert_eq!(classify(&raw)["d-leaf.drv"], DerivationRole::BuildTooling);
+    }
+
+    /// V3 — an `inputs.drvs` key naming no derivation is ignored.
+    #[test]
+    fn m1372_a_dangling_input_key_is_ignored() {
+        const C: &str = r#"{
+          "derivations": {
+            "d-app.drv": {
+              "env": {"pname":"app"},
+              "outputs": {"out":{"path":"h-app"}},
+              "inputs": {"drvs": {"d-gone.drv": {"outputs":["out"]}}}
+            }
+          }
+        }"#;
+        let raw = RawClosure::parse(C).unwrap();
+        assert!(
+            graph_referrers(&raw).is_empty(),
+            "a key resolving to no derivation must not enter the set"
+        );
+    }
+
+    /// **FR-003a / SC-004a — the precedence rule, and the one the corpus
+    /// cannot test.**
+    ///
+    /// Every derivation a declared attribute names already has a
+    /// non-`Unreferenced` role on the pinned closure, so a mutation that
+    /// applied the graph signal to all four arms would leave the corpus
+    /// entirely green. Only a constructed closure catches it.
+    #[test]
+    fn m1372_a_declared_attribute_always_wins() {
+        const C: &str = r#"{
+          "derivations": {
+            "d-lib.drv": { "env": {"pname":"lib"}, "outputs": {"out":{"path":"h-lib"}} },
+            "d-app.drv": {
+              "env": {"pname":"app", "buildInputs":"/nix/store/h-lib"},
+              "outputs": {"out":{"path":"h-app"}},
+              "inputs": {"drvs": {"d-lib.drv": {"outputs":["out"]}}}
+            }
+          }
+        }"#;
+        let raw = RawClosure::parse(C).unwrap();
+        // The graph names it AND `buildInputs` names it.
+        assert!(graph_referrers(&raw).contains("d-lib.drv"));
+        assert_eq!(
+            classify(&raw)["d-lib.drv"],
+            DerivationRole::ArtifactInput,
+            "a declared attribute must win; the graph answers only where \
+             nothing else does"
+        );
+    }
+
+    /// US2 — the signal admits where no attribute does.
+    #[test]
+    fn m1372_a_script_body_reference_earns_build_tooling() {
+        const C: &str = r#"{
+          "derivations": {
+            "d-gzip.drv": { "env": {"pname":"gzip","version":"1.14"},
+                            "outputs": {"out":{"path":"h-gzip"}} },
+            "d-app.drv": {
+              "env": {"pname":"app",
+                      "postInstall":"${/nix/store/h-gzip}/bin/gzip -9 $out/thing"},
+              "outputs": {"out":{"path":"h-app"}},
+              "inputs": {"drvs": {"d-gzip.drv": {"outputs":["out"]}}}
+            }
+          }
+        }"#;
+        let raw = RawClosure::parse(C).unwrap();
+        assert_eq!(
+            classify(&raw)["d-gzip.drv"],
+            DerivationRole::BuildTooling,
+            "named only in a script body, but the build consumed it"
+        );
+    }
+
+    /// SC-004 — the closure root, which nothing consumes, stays honest.
+    #[test]
+    fn m1372_the_root_stays_unreferenced() {
+        const C: &str = r#"{
+          "derivations": {
+            "d-root.drv": {
+              "env": {"pname":"root"},
+              "outputs": {"out":{"path":"h-root"}},
+              "inputs": {"drvs": {"d-dep.drv": {"outputs":["out"]}}}
+            },
+            "d-dep.drv": { "env": {"pname":"dep"}, "outputs": {"out":{"path":"h-dep"}} }
+          }
+        }"#;
+        let raw = RawClosure::parse(C).unwrap();
+        let roles = classify(&raw);
+        assert_eq!(roles["d-dep.drv"], DerivationRole::BuildTooling);
+        assert_eq!(
+            roles["d-root.drv"],
+            DerivationRole::Unreferenced,
+            "nothing consumes the root, and the label must keep saying so"
+        );
+    }
 
     /// `app` takes `lib` as a build input and `cc` as native tooling; `both`
     /// is referenced each way; `orphan` by neither.
@@ -473,6 +711,8 @@ mod tests {
             attribute: "default".to_string(),
             raw: closure,
             roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
             read_outcome: Default::default(),
             graph: Default::default(),
             licenses: Default::default(),

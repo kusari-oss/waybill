@@ -5508,6 +5508,10 @@ pub async fn execute(
     // adjacent questions about the same tier: C190 says the closure was not
     // taken, C208 says what the ecosystem identity pass did with the one that
     // was.
+    let closure_graph_admission_json: Option<String> = match &nix_closure {
+        Some(Ok(c)) => Some(c.graph_admission.wire()),
+        _ => None,
+    };
     let closure_ecosystem_identity_json: Option<String> =
         closure_ecosystem_identity.as_ref().map(|r| r.wire());
     let closure_ecosystem_identity_value: Option<&str> =
@@ -5529,6 +5533,7 @@ pub async fn execute(
         nix_closure_degraded,
         closure_ecosystem_identity: closure_ecosystem_identity_value,
         cpe_coverage: Some(cpe_coverage_json.as_str()),
+        closure_graph_admission: closure_graph_admission_json.as_deref(),
         // C192 (m1067): answers served from the disk cache count as online.
         deps_dev_online: enrich_cfg.deps_dev && !offline,
         nixpkgs_haskell_degraded,
@@ -9324,6 +9329,8 @@ mod closure_ecosystem_identity_tests {
             attribute: "default".into(),
             raw,
             roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
             read_outcome: Default::default(),
             graph: Default::default(),
             licenses: Default::default(),
