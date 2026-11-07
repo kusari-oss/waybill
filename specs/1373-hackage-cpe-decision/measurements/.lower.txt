@@ -1,0 +1,8 @@
+haskell:cabal
+haskell:cabal-syntax
+haskell:chasingbottoms
+haskell:diff
+haskell:hunit
+haskell:onetuple
+haskell:quickcheck
+haskell:statevar
