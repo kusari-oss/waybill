@@ -460,6 +460,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-07
 - N/A. `GraphReferrers` is a per-`classify` in-memory set; nothing persists beyond the emitted document. (1372-unreferenced-pname-components)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (the row's payload), `tracing`. **Zero new Cargo dependencies.** No scan-time network access is added; the ecosystem list is a committed, dated observation. (1373-hackage-cpe-decision)
 - N/A. The classification is computed once per scan and emitted. (1373-hackage-cpe-decision)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + none new. The table is `const` data; the enforcement test already exists (#1246). (1375-generic-cpe-table)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -692,9 +693,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1375-generic-cpe-table: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + none new. The table is `const` data; the enforcement test already exists (#1246).
 - 1374-exclude-members-from-coverage: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 1373-hackage-cpe-decision: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (the row's payload), `tracing`. **Zero new Cargo dependencies.** No scan-time network access is added; the ecosystem list is a committed, dated observation.
-- 1372-unreferenced-pname-components: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `RawInputs.drvs` (already parsed, `derivation.rs:58`), `serde`/`serde_json` (annotation values), `tracing`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
