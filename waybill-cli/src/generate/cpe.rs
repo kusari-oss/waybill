@@ -210,6 +210,37 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<String> {
             // NVD commonly namespaces Python packages as `python-<name>`.
             push_unique(&mut vendors, &format!("python-{name}"));
         }
+        // There is deliberately **no `hackage` arm** (milestone 1373, #1375).
+        //
+        // It looks like an omission: 163 `pkg:hackage` components on the
+        // pinned closure reach this dispatch and get nothing. It is a
+        // measured decision, and the measurement is committed under
+        // `specs/1373-hackage-cpe-decision/measurements/`.
+        //
+        // NVD's CPE dictionary was probed for every one of those names, plus
+        // the capitalised ones re-probed lowercased — 171 pairs, **zero
+        // unanswered**, controls at `openssl:openssl` = 385 and a fixture
+        // negative = 0. **One pair has an entry**: `haskell:aeson`, 95. Case
+        // makes no difference.
+        //
+        // The ratio is the weak argument. The strong one is which names are
+        // missing: `base`, `Cabal` and `process` carry live HSEC advisories
+        // *and* have no dictionary entry at all. A blanket arm would emit
+        // `cpe:2.3:a:haskell:base:<v>:*:*:*:*:*:*:*` for precisely the
+        // packages in this closure that have known vulnerabilities, and it
+        // would match nothing — a silent zero, indistinguishable from a clean
+        // component. That is the failure `scripts/probe-cpe-dictionary.sh`
+        // exists to prevent, and whose header records upstream shipping it
+        // twice.
+        //
+        // These components are not unreachable. OSV indexes Hackage and
+        // answers the PURL this document already carries: six of the 163
+        // return advisories, with the affected-version range applied. C209
+        // counts them `addressable_without_cpe` rather than as a gap.
+        //
+        // A single-entry `aeson` table was considered and rejected: one row,
+        // for one package, that OSV already reaches, against a standing
+        // obligation to re-probe as NVD changes.
         "golang" | "go" => {
             // Issue #364 — the synthetic `pkg:golang/stdlib` component
             // emitted for every Go-source scan carries the Go toolchain
@@ -824,5 +855,34 @@ mod tests {
             cpes.is_empty(),
             "FR-004: versionless generic component must not emit a CPE; got {cpes:?}"
         );
+    }
+
+    /// Milestone 1373 (#1375) — `pkg:hackage` gets nothing, on purpose.
+    ///
+    /// Enforced rather than described. NVD's dictionary has 1 of the 163
+    /// Haskell names in the measured closure, and the three with live HSEC
+    /// advisories — `base`, `Cabal`, `process` — have no entry at all, so an
+    /// arm here would emit CPEs matching nothing for exactly the packages
+    /// that matter. A future arm cannot be added without confronting this.
+    #[test]
+    fn m1373_t023_hackage_components_get_no_cpe_candidates() {
+        // CONTROL: the synthesizer produces candidates at all. Without this
+        // the assertions below pass just as well when `synthesize_cpes` is
+        // broken outright, which is the shape of an empty-result test that
+        // proves nothing.
+        let control = make_component("pkg:pypi/urllib3@2.2.1");
+        assert!(
+            !synthesize_cpes(&control).is_empty(),
+            "the control must produce candidates, or the hackage assertions \
+             below are vacuous"
+        );
+
+        for purl in ["pkg:hackage/aeson@2.2.4.1", "pkg:hackage/base@4.19.2.0"] {
+            let c = make_component(purl);
+            assert!(
+                synthesize_cpes(&c).is_empty(),
+                "a `hackage` arm was added without revisiting #1375: {purl}"
+            );
+        }
     }
 }

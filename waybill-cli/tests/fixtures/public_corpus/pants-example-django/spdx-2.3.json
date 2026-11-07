@@ -17,7 +17,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"eligible_unmapped\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v1\\\",\\\"with_candidates\\\":33}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":12,\\\"schema\\\":\\\"waybill-cpe-coverage/v2\\\",\\\"unaddressable\\\":1,\\\"with_candidates\\\":33}\"}"
     },
     {
       "annotationDate": "<masked>",

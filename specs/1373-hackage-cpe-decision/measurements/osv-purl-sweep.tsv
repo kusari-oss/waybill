@@ -1,0 +1,6 @@
+pkg:hackage/Cabal	1	HSEC-2026-0006
+pkg:hackage/aeson@2.2.4.1	1	HSEC-2026-0007
+pkg:hackage/base	2	HSEC-2023-0007,HSEC-2024-0006
+pkg:hackage/process	1	HSEC-2024-0003
+pkg:hackage/scientific@0.3.8.1	1	HSEC-2026-0011
+pkg:hackage/text-iso8601@0.1.1.1	1	HSEC-2026-0007

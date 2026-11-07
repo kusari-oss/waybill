@@ -408,7 +408,12 @@ fn m1367_mapped_and_nothing_eligible_are_different_documents() {
     let b: Value = serde_json::from_str(&bare.doc_prop(C209).expect("C209 absent")).unwrap();
 
     assert!(a["with_candidates"].as_u64().unwrap() >= 1, "{a}");
-    assert!(a["eligible_unmapped"].as_u64().unwrap() >= 1, "{a}");
+    // Milestone 1373 (#1375): `eligible_unmapped` is gone. It was wrong in
+    // both directions -- it counted `pkg:hackage` components OSV already
+    // addresses, and its release-shape gate excluded most `pkg:generic`
+    // components, which are the ones no feed can reach.
+    assert!(a["unaddressable"].as_u64().unwrap() >= 1, "{a}");
+    assert!(a["eligible_unmapped"].is_null(), "the v1 field must be gone: {a}");
 
     // The distinguishing fact is `with_candidates`, not `eligible_unmapped`.
     //
@@ -436,7 +441,7 @@ fn m1367_mapped_and_nothing_eligible_are_different_documents() {
 fn m1367_the_record_is_present_even_when_nothing_was_mapped() {
     let s = scan_closure(CLOSURE_NOTHING_ELIGIBLE);
     let v = s.doc_prop(C209).expect("C209 must be present on every scan");
-    assert!(v.contains("waybill-cpe-coverage/v1"), "{v}");
+    assert!(v.contains("waybill-cpe-coverage/v2"), "{v}");
 }
 
 /// Cross-format parity for the record.

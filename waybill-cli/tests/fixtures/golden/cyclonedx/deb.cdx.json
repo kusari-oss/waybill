@@ -175,7 +175,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"eligible_unmapped\":0,\"schema\":\"waybill-cpe-coverage/v1\",\"with_candidates\":2}"
+        "value": "{\"addressable_without_cpe\":0,\"schema\":\"waybill-cpe-coverage/v2\",\"unaddressable\":0,\"with_candidates\":2}"
       },
       {
         "name": "waybill:trace-integrity-ring-buffer-overflows",
