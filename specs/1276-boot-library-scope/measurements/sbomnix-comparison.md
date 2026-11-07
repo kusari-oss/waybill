@@ -875,6 +875,16 @@ will conclude milestone 1366 did nothing.
 
 ## Where each tool stands now
 
+> **Superseded in one respect, 2026-11-06.** Milestone 1367 (#1371) landed
+> after this re-check was taken and gives 77 components a CPE where the
+> document below records 0 — the six C libraries from the curated table
+> (`openssl`, `curl`, `zlib`, `sqlite`, `pcre2`, `llvm`) plus the 71
+> `pkg:pypi` components. The PURL figures here are unaffected; the
+> "answerable to a feed" count is a floor rather than a total, because an
+> NVD-keyed scanner can now match components this document counts as
+> unmatchable. The figures below are left as measured rather than restated —
+> they are a dated record of what the comparison showed on the day.
+
 **waybill identifies; sbomnix enumerates.** Every waybill component carries a
 PURL against sbomnix's 106 with none; 136 carry a hash against 0; 234 are
 answerable to a vulnerability feed against 0; and the six GHC boot libraries
