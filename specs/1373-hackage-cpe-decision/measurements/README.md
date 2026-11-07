@@ -326,3 +326,38 @@ Which is the 16-of-17 prediction, and the one exception is the target whose
 golden predates milestone 1367. They become `AGREES` after T032's refresh;
 this run establishes that the check can say `DISAGREES`, without which an
 `AGREES` after the refresh would prove nothing.
+
+## T022 / T023 were destroyed by the mutation check, and the gate passed anyway
+
+The fourth mutation added a `hackage` arm to `generate/cpe.rs` to prove T023
+would catch one. It did. The cleanup was `git checkout
+waybill-cli/src/generate/cpe.rs` — and **that file was not committed yet**, so
+the checkout reverted the mutation *and* T022's recorded decision and T023's
+test along with it.
+
+**The gate then passed: 371 targets, 7,459 passed, 0 failed.** It could not
+have failed. A test that no longer exists is indistinguishable from a test
+that was never required, and the only trace was `m1373_t023` missing from the
+list of m1373 tests the run had executed — which is visible only if that list
+is enumerated and compared against what was supposed to be there.
+
+Every other mutation in this milestone used `cp` to a backup and `cp` back.
+The one that used `git checkout` was the one that lost work, because the other
+file had been committed and this one had not.
+
+### And the restoration broke a neighbouring doc comment
+
+Re-inserting T023 by anchoring on a nearby string spliced it into the **middle
+of another test's doc comment**: T015's comment ended `…ahead of the` and then
+continued into the milestone-1373 text, leaving `generic_symbol_fingerprint_
+only_emits_no_cpe` with no header and a dangling fragment above it. This is
+the displacement hazard `CLAUDE.md` records from PR #1321, where an insertion
+above a function displaced its `#[cfg]` attribute and broke the build in the
+one configuration that had not been tested.
+
+It compiled and the tests passed in both the broken and the fixed state, so
+nothing in the suite would have reported it. The fix was to move the test to
+the end of the module rather than anchor it between existing items, and the
+check was `git diff -U0 … | grep '^-'`: **one deleted line, the closing
+brace.** A diff that deletes nothing but what it meant to move is the evidence
+that an insertion did not displace anything.
