@@ -516,7 +516,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":0,\"schema\":\"waybill-cpe-coverage/v2\",\"unaddressable\":0,\"with_candidates\":7}"
+        "value": "{\"addressable_without_cpe\":0,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":0,\"with_candidates\":7}"
       },
       {
         "name": "waybill:file-inventory-skipped-build-dirs",

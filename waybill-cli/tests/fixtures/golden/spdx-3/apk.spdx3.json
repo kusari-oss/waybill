@@ -156,7 +156,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-6UI2IGVQL4QRTUZCIYXL3RR3/anno-5P4RIHJ63RQNJ3BZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v2\\\",\\\"unaddressable\\\":0,\\\"with_candidates\\\":2}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"excluded_files\\\":0,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":0,\\\"with_candidates\\\":2}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-6UI2IGVQL4QRTUZCIYXL3RR3",
       "type": "Annotation"
     },
