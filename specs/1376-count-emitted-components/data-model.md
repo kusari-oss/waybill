@@ -42,8 +42,25 @@ Not a Rust type; a distinction readable from the document.
 | **promoted** | a real PURL, carries `waybill:component-role` etc. | yes | no |
 | **duplicated** | same, and its `bom-ref` is also in `components[]` | yes | yes |
 
-Produced by `root_selector::select_root`: one main-module → promoted;
-several → synthetic placeholder with all N left as siblings; none → synthetic.
+Produced by `root_selector::select_root`:
+
+| main modules found | result |
+| --- | --- |
+| none | **synthetic** placeholder |
+| exactly one | that module, **promoted** out of `components[]` |
+| several | the **milestone-127 ladder** elects one — it is real and **stays** in `components[]` alongside its siblings |
+
+> **The third row is not what `metadata.rs:716`'s comment says.** That comment
+> describes the pre-milestone-127 behaviour — "fall through to the
+> synthetic-placeholder path" — and milestone 127 replaced it with the ladder
+> a few lines below, as the comment itself notes. Measured: live `moat` has
+> two main modules and elects `pkg:hackage/moat@0.1`, a **real** root
+> carrying `waybill:*` properties and present in `components[]`, with
+> `waybill:root-selection-heuristic` reading `repo-root-main-module`.
+>
+> This document said "synthetic" until `/speckit.analyze` caught it. Writing
+> a spec about a stale comment misleading its readers, from a stale comment
+> in the same file, is the error worth noticing here.
 
 **The `waybill:*` properties are the discriminator**, and they are already
 emitted. A synthetic root is a label, not a component, so it carries none.

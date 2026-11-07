@@ -18,7 +18,7 @@ can be shown wrong.
 
 - [ ] T001 Capture a pre-change document from `waybill-cli/tests/fixtures/pnpm_v9_scope` in all three formats, scanned **without** `--root-name`, as the byte-identity baseline SC-004 compares against
 - [ ] T002 [P] Record in `measurements/README.md` the pre-change figures that demonstrate the defect: `row=10` against `.components | length = 9` on `pnpm_v9_scope`, and `row=6` against `5` on `closure_role_scope`
-- [ ] T003 [P] Record the three root shapes and the fixture that produces each — synthetic (`cargo`, `pip`, `pants_go`), promoted (`pnpm_v9_scope`, `sbom_edit`, `closure_role_scope`, `nix_eval`), duplicated (live `moat`) — so the test's coverage and its gaps are both stated
+- [ ] T003 [P] Record the three root shapes and how each is produced — **synthetic** (`cargo`, `pip`, `pants_go`, or any `--root-name` scan), **promoted** (`pnpm_v9_scope`, `sbom_edit`, `closure_role_scope`, `nix_eval`), **duplicated** (see T007's recipe). Note that live `moat` is the only *observed* duplicated case but is a nix-closure corpus clone, **not usable as a test input**
 
 ---
 
@@ -34,10 +34,10 @@ reachable.
 **Independent test**: the test fails when run against the old claim's
 expression and passes against the corrected one.
 
-- [ ] T004 [US2] Add an integration test in `waybill-cli/tests/root_selection_integration.rs` — the existing home for root-selection behaviour, whose fixtures are already hermetic tempdirs — scanning a single-main-module project **without** `--root-name` and asserting the CDX expression from `data-model.md` §3 agrees with the C209 row
+- [ ] T004 [US2] Add an integration test in `waybill-cli/tests/root_selection_integration.rs` — the existing home for root-selection behaviour — scanning a single-main-module project **without** `--root-name` and asserting the CDX expression from `data-model.md` §3 agrees with the C209 row. **Synthesize the fixture inline into a `tempfile::tempdir()`**, matching that file's stated convention; do not read `waybill-cli/tests/fixtures/`, which would diverge from it. A single `go.mod` + `main.go` at the scan root produces the promoted shape
 - [ ] T005 [US2] (SC-005) **Run it against the old expression first and confirm it fails.** `.components | length` returns 9 where the row says 10. A test written green and never seen red is a test of nothing (quickstart Control 4)
 - [ ] T006 [P] [US2] Extend the test to the **synthetic** shape (`--root-name` passed) and assert the adjustment is **+0**. An unconditional `+1` would break every `--root-name` scan, including all 17 corpus targets
-- [ ] T007 [P] [US2] Extend the test to the **duplicated** shape — a project with several main modules, where the elected root is also in `components[]` — and assert **+0**. This is the clause a naive fix omits
+- [ ] T007 [P] [US2] Extend the test to the **duplicated** shape and assert **+0** — the clause a naive fix omits. **The recipe matters and is not obvious**: several main modules is *not* sufficient, because a `go.work` using `./a` and `./b` yields a **synthetic** root. One of the modules must be at the **scan root**. A `go.work` using `.` and `./sub`, with a `go.mod` + `main.go` in each, produces `heuristic=repo-root-main-module` and a real root present in `components[]` — verified during analysis
 - [ ] T008 [US2] (FR-001) Assert the SPDX 2.3 and SPDX 3 expressions on the same scan: `len(packages[])` and `Package + File` nodes. SPDX 3's file-tier entries are the second, independent reason the naive check fails (FR-004, SC-003)
 
 ---
