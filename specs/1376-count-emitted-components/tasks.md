@@ -62,7 +62,7 @@ every format and every project shape.
 - [X] T016 (SC-005) **Mutation-check**, recording results in `measurements/README.md`. Drop the `waybill:*` test from the expression → T006 must fail. Drop the `bom-ref` test → T007 must fail. Make the adjustment unconditional → T006 must fail. Revert each with `cp` from a backup, **never `git checkout`**: on an uncommitted file that deletes the work under test while the gate still passes
 - [X] T017 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and the per-target `test result: ok. N passed; 0 failed` lines, and **enumerate the new tests the run executed** rather than reading the total
 - [X] T018 [P] Confirm **no golden regenerated**, local or corpus. Nothing emitted changes, so a moved golden is a finding and not a refresh — the inverse of the usual expectation
-- [ ] T019 [P] Update issue #1385 with the delivered wording and the test, and confirm its title and body reflect that the counts were always correct
+- [X] T019 [P] Update issue #1385 with the delivered wording and the test, and confirm its title and body reflect that the counts were always correct
 
 ---
 
