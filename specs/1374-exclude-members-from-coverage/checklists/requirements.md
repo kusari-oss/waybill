@@ -53,3 +53,10 @@ already recorded one count differing between the two hosts (74 against 75).
 The spec's numbers are correct for the host they name and must not be quoted
 against the corpus goldens. A task in planning should restate the expectation
 per host rather than carry one set of figures into both.
+
+**Clarification has already produced one cross-host figure to anchor this.**
+The committed linux `nix-closure-moat` golden carries **1,087** members
+against darwin's 539 — the member exclusion is twice as large on the corpus
+as this spec's headline suggests, and `unaddressable` there will fall much
+further than 733 → 194. Planning must measure the linux figures rather than
+scaling the darwin ones.
