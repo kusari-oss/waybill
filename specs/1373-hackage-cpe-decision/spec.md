@@ -110,8 +110,9 @@ whose PURL type no feed indexes and which carry no CPE.
 1. **Given** a closure with both `pkg:generic` and `pkg:hackage` components,
    **When** C209 is read, **Then** the components already addressable by a
    feed are distinguishable from those that are not.
-2. **Given** a document with no closure, **When** C209 is read, **Then** it is
-   absent exactly as today.
+2. **Given** a document with no closure, **When** C209 is read, **Then** it
+   carries the same three counts, because the row has never been
+   closure-gated — 66 local goldens and 48 corpus goldens carry it today.
 
 ### User Story 2 — a reader can tell which ecosystems are carrying the gap (P2)
 
@@ -132,9 +133,10 @@ probe output, of why no `hackage` arm exists.
 
 ### Edge cases
 
-- **A closure with no `pkg:generic` components at all** — the unreachable
-  count is 0 and must be emitted as 0, not omitted. Absence already means "no
-  closure ran" (C204/C208 convention) and must keep meaning only that.
+- **A document with no unaddressable components at all** — the count is 0 and
+  must be emitted as 0, not omitted. `go-cobra`, `pants-example-javascript`
+  and `python-flask` are all in this state today, so it is the common case
+  rather than a hypothetical.
 - **A component with both an ecosystem PURL and an operator-supplied CPE** —
   counted once, and not double-counted across categories.
 - **An ecosystem waybill emits but no probe covered** — must fall to the
@@ -170,8 +172,16 @@ probe output, of why no `hackage` arm exists.
   `RubyGems` and `NuGet` all present; no `generic` and no `Generic`.
 - **FR-004**: No component's identifiers change. This feature alters a
   document-scope metric and MUST NOT add, remove or modify any `cpes` entry.
-- **FR-005**: A scan with no nix closure MUST produce a byte-identical
-  document, as C209 is already gated on a closure having been recorded.
+- **FR-005**: Every document's C209 changes, and this MUST be planned for
+  rather than discovered. The row is **not** closure-gated: it is emitted on
+  every scan, and 66 local goldens plus 48 corpus goldens carry it. Replacing
+  `eligible_unmapped` therefore churns all of them.
+
+  **This requirement originally said the opposite** — that a non-closure scan
+  stays byte-identical — which was false and would have been found only when
+  the gate failed. Milestone 1367 added this row and churned 34 goldens for
+  the same reason; the blast radius here is larger and is the inverse of
+  milestone 1372's.
 - **FR-006**: The existing `with_candidates` meaning MUST be preserved, since
   it is already in committed goldens and is not in question.
 - **FR-007**: No `hackage` arm is added. The reason MUST be recorded in
@@ -191,8 +201,10 @@ probe output, of why no `hackage` arm exists.
   derived without reference to the implementation.
 - **SC-002**: The counts sum to the eligible population; asserted, not
   commented.
-- **SC-003**: A scan with no closure is byte-identical pre and post, compared
-  structurally in all three formats.
+- **SC-003**: Every document difference is confined to the C209 value.
+  Compared structurally in all three formats against the pre-change binary,
+  the only differing JSON path is the `waybill:cpe-coverage` record — no
+  component, relationship, licence or other annotation moves.
 - **SC-004**: No component's `cpes` array changes on the pinned closure —
   measured before and after, not argued.
 - **SC-005**: Every PURL type the implementation calls addressable satisfies

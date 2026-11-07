@@ -1,0 +1,67 @@
+#!/usr/bin/env python3 -I
+"""Recompute C209's three counts from an emitted document, independently.
+
+SC-001 requires the implementation's figures be checkable without reference to
+the implementation. This reads the document a consumer reads and the published
+ecosystem list a consumer could fetch, and applies FR-003's rule.
+
+  python3 -I partition.py <document.cdx.json> <osv-ecosystems.txt>
+"""
+import collections
+import json
+import sys
+
+# PURL type -> the OSV ecosystem that indexes it. Every value must appear in
+# the committed ecosystem list; `generic` deliberately has no row.
+PURL_TO_OSV = {
+    "hackage": "hackage", "pypi": "pypi", "npm": "npm", "golang": "go",
+    "cargo": "crates.io", "maven": "maven", "gem": "rubygems",
+    "nuget": "nuget", "composer": "packagist", "deb": "debian",
+    "apk": "alpine", "hex": "hex", "pub": "pub", "cran": "cran",
+    "swift": "swifturl", "opam": "opam",
+}
+
+
+def main() -> None:
+    doc = json.load(open(sys.argv[1]))
+    declared = {l.split(":")[0].strip().lower() for l in open(sys.argv[2]) if l.strip()}
+
+    unknown = {v for v in PURL_TO_OSV.values() if v not in declared}
+    if unknown:
+        sys.exit(f"FR-003 violated: not in OSV's declared list: {sorted(unknown)}")
+
+    buckets = collections.Counter()
+    detail = collections.defaultdict(collections.Counter)
+    for c in doc.get("components", []):
+        purl = c.get("purl") or ""
+        t = purl.split(":")[1].split("/")[0] if purl.startswith("pkg:") else "(none)"
+        if c.get("cpe") or c.get("cpes"):
+            b = "with_candidates"
+        elif PURL_TO_OSV.get(t, "") in declared:
+            b = "addressable_without_cpe"
+        else:
+            b = "unaddressable"
+        buckets[b] += 1
+        detail[b][t] += 1
+
+    total = len(doc.get("components", []))
+    for b in ("with_candidates", "addressable_without_cpe", "unaddressable"):
+        print(f"{b:26}{buckets[b]:>6}   {dict(detail[b])}")
+    print(f"{'sum':26}{sum(buckets.values()):>6}   components={total}")
+    if sum(buckets.values()) != total:
+        sys.exit("counts do not partition the component set")
+
+    emitted = next((p["value"] for p in doc.get("metadata", {}).get("properties", [])
+                    if p["name"] == "waybill:cpe-coverage"), None)
+    if emitted:
+        e = json.loads(emitted)
+        agree = all(e.get(k) == buckets[k] for k in
+                    ("with_candidates", "addressable_without_cpe", "unaddressable"))
+        print(f"\nemitted row: {emitted}")
+        print("AGREES" if agree else "DISAGREES — the row and the document do not match")
+        if not agree:
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
