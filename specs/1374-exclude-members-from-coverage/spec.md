@@ -62,10 +62,14 @@ components *were*.
 | `unaddressable` | 733 | **194** | **−539** |
 | total in the partition | 977 | **438** | −539 |
 
-**Only `unaddressable` moves**, and that is a property worth asserting rather
-than observing: no member carries a CPE (the synthesizer's guard), and every
-member is `pkg:generic`, which no feed indexes. A member landing in either
-other bucket would mean one of those two facts had changed.
+On **darwin** only `unaddressable` moves. That is not a general rule, and
+planning measured the difference: on the **linux** corpus closure
+`addressable_without_cpe` also falls, 163 → 162, because one member there
+(`pkg:hackage/time`, role `fragment`) carries an OSV-addressable PURL.
+
+What **is** structural is `with_candidates`: the synthesizer refuses members,
+so no member can carry a CPE — 0 of 539 on darwin and 0 of 1,087 on linux. A
+member appearing in that bucket would mean the guard had changed.
 
 Excluded by role: `source` 455, `fragment` 65, `package` 12, `scaffolding` 7.
 Even the twelve with role `package` are a patch file, four LLVM source trees
@@ -201,8 +205,18 @@ closure record at all.
 - **FR-003**: The exclusion MUST be by membership, not by proxy. A member is
   excluded whether or not it carries a CPE, a version, or an addressable PURL
   type, because the reason is what it is rather than what was done to it.
-- **FR-004**: `with_candidates` and `addressable_without_cpe` MUST NOT change
-  on the pinned closure. Only `unaddressable` moves.
+- **FR-004**: `with_candidates` MUST NOT change on any document. This is
+  structural rather than incidental: the synthesizer refuses members, so no
+  member can carry a CPE, and **zero do on either host** (0 of 539 on darwin,
+  0 of 1,087 on linux).
+
+  **`addressable_without_cpe` MAY change**, and this requirement said it must
+  not until planning measured the linux golden. One member there —
+  `pkg:hackage/time`, role `fragment` — carries an OSV-addressable PURL, so
+  the count moves 163 → 162. None does on darwin, which is why the darwin-only
+  figures in this spec suggested a rule that does not hold. Whether a Haskell
+  boot library should be a `fragment` at all is #1374; it does not change what
+  this feature must do with it.
 - **FR-005**: A scan with no closure MUST produce a byte-identical document.
 - **FR-006**: No component's identifiers change. No `cpes` entry is added,
   removed or modified.
@@ -226,8 +240,10 @@ closure record at all.
   corpus target — `78 + 166 + 194 + 539 + 0 = 977` on the pinned closure,
   `61 + 0 + 7 + 0 + 7 = 68` on `rust-ripgrep`; asserted, not commented. On any
   document carrying C204, `excluded_members` equals its `member-roles` total.
-- **SC-003**: `with_candidates` and `addressable_without_cpe` are unchanged;
-  measured before and after, not argued.
+- **SC-003**: `with_candidates` is unchanged on every corpus target, and no
+  member carries a CPE on any of them. `addressable_without_cpe` is unchanged
+  **except** on `nix-closure-moat`, where it falls by exactly 1
+  (`pkg:hackage/time`); any other movement is a finding.
 - **SC-004**: Zero components change `{purl, cpe, cpes}`, compared as a set.
 - **SC-005**: A scan with no closure differs in no JSON path at all.
 - **SC-006**: Every corpus target's row agrees with an independent recompute
