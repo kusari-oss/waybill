@@ -693,9 +693,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1376-count-emitted-components: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 1375-generic-cpe-table: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + none new. The table is `const` data; the enforcement test already exists (#1246).
 - 1374-exclude-members-from-coverage: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 1373-hackage-cpe-decision: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (the row's payload), `tracing`. **Zero new Cargo dependencies.** No scan-time network access is added; the ecosystem list is a committed, dated observation.
 
 
 <!-- MANUAL ADDITIONS START -->
