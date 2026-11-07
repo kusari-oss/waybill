@@ -4171,6 +4171,10 @@
         "value": "after-build"
       },
       {
+        "name": "waybill:cpe-coverage",
+        "value": "{\"eligible_unmapped\":6,\"schema\":\"waybill-cpe-coverage/v1\",\"with_candidates\":0}"
+      },
+      {
         "name": "waybill:file-inventory-skipped-build-dirs",
         "value": "1"
       },

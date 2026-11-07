@@ -185,6 +185,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_closure_ecosystem_identity(
                 scan.closure_ecosystem_identity.map(str::to_string),
             )
+            .with_cpe_coverage(scan.cpe_coverage.map(str::to_string))
             .with_go_mod_why(scan.go_mod_why)
             .with_deps_dev_online(scan.deps_dev_online)
             .with_vex_statements(crate::generate::openvex::vex_statements(scan))
