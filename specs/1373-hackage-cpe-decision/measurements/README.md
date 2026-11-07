@@ -154,3 +154,48 @@ repository waybill **scans** as a Haskell project, not an advisory feed
 waybill **consumes**. The two are unrelated, and the sentence reads as though
 tracking the corpus target gives waybill advisory coverage. It does not; OSV
 does, as §4 shows.
+
+---
+
+## 6. Which PURL types any feed can address — the basis for the new metric
+
+OSV's declared ecosystem list, fetched 2026-11-07 from
+`osv-vulnerabilities.storage.googleapis.com/ecosystems.txt` and committed as
+`osv-ecosystems-2026-11-07.txt`: **47 entries**. `Hackage`, `PyPI`, `npm`,
+`Go`, `crates.io`, `Maven`, `Debian`, `Alpine`, `RubyGems` and `NuGet` are all
+present. **There is no `generic` and no `Generic`.**
+
+Probed with known-vulnerable versions:
+
+| PURL | advisories |
+| --- | --- |
+| `pkg:pypi/urllib3@1.26.4` | 22 |
+| `pkg:npm/lodash@4.17.11` | 6 |
+| `pkg:hackage/aeson@2.0.0.0` | 2 |
+| `pkg:generic/openssl@3.0.0` | **0** |
+| `pkg:generic/zlib@1.2.11` | **0** |
+| `pkg:generic/curl@7.60.0` | **1** — `OSV-2017-79`, an OSS-Fuzz finding |
+
+`openssl 3.0.0` and `zlib 1.2.11` both carry well-known CVEs and return
+nothing, because `pkg:generic` names no registry to index against.
+
+**The curl row is why the rule needs both halves.** A "non-zero probe means
+addressable" rule would classify `generic` as addressable on the strength of
+one OSS-Fuzz record keyed by project name. OSV's declared list excludes
+`generic`, so requiring list membership *and* a successful probe rejects it.
+FR-003 states both.
+
+## 7. The partition, measured
+
+| bucket | components | composition |
+| --- | --- | --- |
+| `with_candidates` | **78** | 72 `pypi`, 6 curated `generic` |
+| `addressable_without_cpe` | **166** | 163 `hackage`, 3 `pypi` |
+| `unaddressable` | **733** | 732 `generic`, 1 `github` |
+| | **977** | equals the component count |
+
+**`eligible_unmapped: 284` understated the real gap.** Its release-shape gate
+excluded most `pkg:generic` components, so the number of components no feed
+can address is **733**. The original issue asked whether 284 overstated a gap;
+it overstated the Haskell share *and* understated the total, by a factor of
+2.6 in the direction that matters.

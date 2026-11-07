@@ -58,6 +58,39 @@ For `pkg:hackage` the opposite holds, and the numbers are not close:
 - The three with live advisories that NVD has **no dictionary entry for** —
   `base`, `Cabal`, `process` — are reachable only through OSV.
 
+## Clarifications
+
+### Session 2026-11-07
+
+- Q: What shape should C209 take, given `eligible_unmapped` mixes a real gap with a non-gap? → A: Split into reachable vs not — `with_candidates`, `addressable_without_cpe`, `unaddressable`
+- Q: Should waybill emit a CPE for `aeson`, the one Haskell name of 163 NVD's dictionary has? → A: No `hackage` arm at all; record the measurement and the refusal
+
+### The approved shape, with the measured figures rather than the illustrative ones
+
+The numbers shown while choosing were illustrative. The real partition over
+the pinned closure, computed from the emitted document:
+
+| bucket | components | composition |
+| --- | --- | --- |
+| `with_candidates` | **78** | 72 `pypi`, 6 curated `generic` |
+| `addressable_without_cpe` | **166** | 163 `hackage`, 3 `pypi` |
+| `unaddressable` | **733** | 732 `generic`, 1 `github` |
+| | **977** | sums to the component count |
+
+**This inverts half the original story and is the reason the figures are here
+rather than left as approved.** `eligible_unmapped: 284` was not only
+overstating the Haskell part — it was **understating the real gap**. Its
+release-shape gate excluded most `pkg:generic` components, so the count of
+things no feed can address is **733**, not 284. A reader acting on 284 was
+under-informed by a factor of 2.6, in the direction that matters.
+
+The three buckets **partition every component**, rather than only the subset
+that passed the synthesizer's eligibility gate. That is what makes FR-002
+checkable against the component count, and it is also what accounts for the
+24 versionless `pkg:hackage` components (FR-008): they land in
+`addressable_without_cpe`, which is true of them — three of the six OSV hits
+are versionless.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — an operator reads the coverage row and acts on it (P1)
@@ -108,27 +141,46 @@ probe output, of why no `hackage` arm exists.
   conservative side rather than being claimed addressable on no evidence.
 - **The 24 versionless `pkg:hackage` PURLs** — they never reach the
   synthesizer (`is_release_shaped("")` is false) and so are in neither count
-  today. Whatever replaces the counts must still account for them somewhere,
-  or 24 components vanish from a coverage metric.
+  today. **Resolved by the partition**: they land in
+  `addressable_without_cpe`, which is true of them — three of the six OSV hits
+  on this closure are versionless. The edge case stays recorded because it is
+  what rules out keeping the eligibility gate as the metric's denominator.
 
 ## Requirements *(mandatory)*
 
 - **FR-001**: C209 MUST distinguish components no feed can address from
   components the synthesizer simply had no arm for.
-- **FR-002**: The counts MUST sum to the eligible population, so a reader can
-  verify the row against the component count rather than trusting it.
-- **FR-003**: The classification of a PURL type as feed-addressable MUST be
-  traceable to a recorded probe, not asserted. A type with no probe is treated
-  as not addressable.
+- **FR-002**: The three counts MUST **partition every component** in the
+  document — not only the subset passing the synthesizer's eligibility gate —
+  so a reader can verify the row against the component count rather than
+  trusting it. Partitioning the whole population is also what stops the 24
+  versionless components falling outside every count, as they do today.
+- **FR-003**: A PURL type counts as feed-addressable only when **both** hold,
+  and both MUST be traceable to recorded output: (a) it maps to an ecosystem
+  OSV declares in its published list, and (b) a probe with a known-vulnerable
+  version returns that ecosystem's advisories. A type satisfying neither, or
+  only one, is treated as not addressable.
+
+  **Both halves are load-bearing.** `pkg:generic/curl@7.60.0` returns exactly
+  one advisory, so condition (b) alone would classify `generic` as addressable
+  — and the hit is `OSV-2017-79`, an OSS-Fuzz finding keyed on a project name,
+  not curl's CVEs. OSV's published list contains no `generic` ecosystem, so
+  condition (a) excludes it. Measured 2026-11-07: 47 declared ecosystems,
+  `Hackage`, `PyPI`, `npm`, `Go`, `crates.io`, `Maven`, `Debian`, `Alpine`,
+  `RubyGems` and `NuGet` all present; no `generic` and no `Generic`.
 - **FR-004**: No component's identifiers change. This feature alters a
   document-scope metric and MUST NOT add, remove or modify any `cpes` entry.
 - **FR-005**: A scan with no nix closure MUST produce a byte-identical
   document, as C209 is already gated on a closure having been recorded.
 - **FR-006**: The existing `with_candidates` meaning MUST be preserved, since
   it is already in committed goldens and is not in question.
-- **FR-007**: The reason no `hackage` CPE arm exists MUST be recorded in the
-  source alongside the measured figures, so the next reader finds the answer
-  where they would look for the arm.
+- **FR-007**: No `hackage` arm is added. The reason MUST be recorded in
+  `generate/cpe.rs` beside the `match ecosystem` dispatch, with the measured
+  figures, so the next reader finds the answer where they would look for the
+  arm: 171 pairs probed and 1 hit (`aeson`, 95), while `base`, `Cabal` and
+  `process` carry live HSEC advisories and have **no** dictionary entry — so a
+  blanket arm would emit CPEs matching nothing for precisely the packages in
+  this closure that have known vulnerabilities.
 - **FR-008**: The 24 versionless components MUST be accounted for rather than
   silently absent from every count.
 
@@ -143,8 +195,10 @@ probe output, of why no `hackage` arm exists.
   structurally in all three formats.
 - **SC-004**: No component's `cpes` array changes on the pinned closure —
   measured before and after, not argued.
-- **SC-005**: Every PURL type the implementation calls addressable appears in
-  the committed probe output with a non-zero result.
+- **SC-005**: Every PURL type the implementation calls addressable satisfies
+  both halves of FR-003 against committed output — present in OSV's declared
+  ecosystem list **and** returning that ecosystem's advisories for a
+  known-vulnerable version. A non-zero probe alone does not satisfy this.
 - **SC-006**: The 24 versionless components appear in exactly one count.
 
 ## Assumptions
