@@ -6474,12 +6474,20 @@ impl CpeSynthesisCoverage {
         serde_json::Value::Object(obj).to_string()
     }
 
-    /// The five counts partition the emitted component set (FR-002, SC-002).
+    /// The five counts partition the resolved component set (FR-002, SC-002).
     ///
-    /// **Against the document as it stands**, not a subset the reader has to
-    /// derive. Under `/v2` the sum matched only components that carried a
-    /// PURL and were not `type: "file"`, which left 11 of 17 corpus targets
+    /// **Every resolved component**, not a subset the reader has to derive.
+    /// Under `/v2` the sum matched only components that carried a PURL and
+    /// were not `type: "file"`, which left 11 of 17 corpus targets
     /// uncheckable without knowing that rule.
+    ///
+    /// Milestone 1376 (#1385) corrected an overreach in this sentence. The
+    /// resolved set is not the same thing as "the document's components",
+    /// because each emitter projects it differently: CycloneDX may promote
+    /// the root out of `.components`, and SPDX 3 splits it across `Package`
+    /// and `File` nodes. The row is right in all three formats; the
+    /// expression that recovers it is per-format, and
+    /// `docs/reference/sbom-format-mapping.md` states all three.
     pub(crate) fn total(&self) -> usize {
         self.with_candidates
             + self.addressable_without_cpe
@@ -6751,9 +6759,19 @@ pub(crate) fn cpe_coverage(
         }
     }
 
-    // FR-002 / SC-002 — the five partition the component set. An assertion
-    // rather than a comment: it is the property the row exists to offer, and
+    // FR-002 / SC-002 — the five partition the slice this function was
+    // handed, and nothing more. An assertion rather than a comment: it is
     // the cheapest check that nothing was classified twice or not at all.
+    //
+    // Milestone 1376 (#1385): note what this does NOT establish. The slice
+    // is the resolved component set; the *document* is what each emitter
+    // makes of it, and the two differ. CycloneDX promotes a lone main
+    // module into `metadata.component`, leaving `.components` one short. A
+    // reader checking the row against the document needs the per-format
+    // expression in `docs/reference/sbom-format-mapping.md`, not
+    // `.components | length`. The integration tests in
+    // `waybill-cli/tests/root_selection_integration.rs` (`m1376_*`) cover
+    // all three root shapes, which is the part this assertion cannot see.
     debug_assert_eq!(
         coverage.total(),
         components.len(),
