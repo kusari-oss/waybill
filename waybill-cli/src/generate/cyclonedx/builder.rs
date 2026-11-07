@@ -201,6 +201,8 @@ pub struct CycloneDxBuilder {
     nix_closure_degraded: Option<String>,
     /// C208 (m1366) — the closure ecosystem identity record, pre-rendered.
     closure_ecosystem_identity: Option<String>,
+    /// C209 (m1367) — the CPE synthesis coverage record, pre-rendered.
+    cpe_coverage: Option<String>,
     /// C195/C196 (#1154) — the `go mod why` pass's outcome.
     go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     /// C192 (m1067) — the deps.dev pass ran online.
@@ -282,6 +284,7 @@ impl CycloneDxBuilder {
             nix_eval_degraded: None,
             nix_closure_degraded: None,
             closure_ecosystem_identity: None,
+            cpe_coverage: None,
             go_mod_why: None,
             deps_dev_online: false,
             vex_statements: Vec::new(),
@@ -364,6 +367,11 @@ impl CycloneDxBuilder {
     }
 
     /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
+    pub fn with_cpe_coverage(mut self, value: Option<String>) -> Self {
+        self.cpe_coverage = value;
+        self
+    }
+
     pub fn with_closure_ecosystem_identity(mut self, value: Option<String>) -> Self {
         self.closure_ecosystem_identity = value;
         self
@@ -1008,6 +1016,7 @@ impl CycloneDxBuilder {
                 nix_eval_degraded: self.nix_eval_degraded.as_deref(),
                 nix_closure_degraded: self.nix_closure_degraded.as_deref(),
                 closure_ecosystem_identity: self.closure_ecosystem_identity.as_deref(),
+                cpe_coverage: self.cpe_coverage.as_deref(),
                 go_mod_why: self.go_mod_why,
                 deps_dev_outcomes: deps_dev_outcomes.as_deref(),
                 vex_claims_omitted: vex_claims_omitted.as_deref(),

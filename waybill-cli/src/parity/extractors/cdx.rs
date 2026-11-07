@@ -1033,6 +1033,7 @@ cdx_anno!(
     "waybill:closure-ecosystem-identity-outcome",
     document
 );
+cdx_anno!(c209_cdx, "waybill:cpe-coverage", document);
 cdx_anno!(c183_cdx, "waybill:patch-evidence-grade", document);
 cdx_anno!(c184_cdx, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.

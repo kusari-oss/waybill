@@ -17,6 +17,12 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"eligible_unmapped\\\":327,\\\"schema\\\":\\\"waybill-cpe-coverage/v1\\\",\\\"with_candidates\\\":0}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":5,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":97,\\\"revision\\\":\\\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\\\",\\\"unresolved\\\":{\\\"absent-from-package-set\\\":1,\\\"compiler-supplied\\\":24}}\"}"
     },
     {

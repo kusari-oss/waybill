@@ -226,6 +226,8 @@ pub struct MetadataExtras<'a> {
     pub nix_closure_degraded: Option<&'a str>,
     /// C208 (m1366, #1365) — the closure ecosystem identity pass's record.
     pub closure_ecosystem_identity: Option<&'a str>,
+    /// C209 (m1367, #1371) — the CPE synthesis coverage record.
+    pub cpe_coverage: Option<&'a str>,
     /// C195/C196 (#1154) — the `go mod why` pass's outcome.
     pub go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     /// C192 (m1067) — deps.dev outcome counts, pre-rendered JSON.
@@ -306,6 +308,7 @@ pub fn build_metadata(
         nix_eval_degraded,
         nix_closure_degraded,
         closure_ecosystem_identity,
+        cpe_coverage,
         go_mod_why,
         deps_dev_outcomes,
         vex_claims_omitted,
@@ -449,6 +452,15 @@ pub fn build_metadata(
 
     // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
     // Constitution XII.3: degraded enrichment is disclosed in the document.
+    // C209 (m1367, #1371) — what CPE synthesis did. Unconditional: the pass
+    // runs for every component from every reader, so a scan that produced no
+    // candidates still says whether it had anything to work with.
+    if let Some(record) = cpe_coverage {
+        properties.push(json!({
+            "name": "waybill:cpe-coverage",
+            "value": record,
+        }));
+    }
     // C208 (m1366, #1365) — what the ecosystem identity pass did. Emitted
     // wherever a closure was recorded, including when it confirmed nothing:
     // "75 candidates, all unchecked, reason disabled" and "no candidates" are

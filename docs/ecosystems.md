@@ -606,6 +606,49 @@ waybill sbom scan --path . --nix-closure                 # confirmation on
 waybill sbom scan --path . --nix-closure --no-deps-dev   # candidates recorded, none confirmed
 ```
 
+#### CPE candidates for closure components
+
+Since milestone 1367 (#1371), a nix-closure component whose name matches
+waybill's curated CPE mapping table and whose version is a **release
+identifier** carries CPE 2.3 candidates alongside its PURL. Before that, a
+`--nix-closure` scan emitted **zero** CPEs for every component: the synthesis
+pass ran before the closure's components joined the set, so it never saw one.
+
+Measured on a pinned closure, this gives CPEs to the C libraries an
+NVD-backed scanner most wants to find — `openssl`, `curl`, `zlib`, `sqlite`,
+`pcre2`, `llvm` — and, because the pass is not closure-specific, to every
+other component that reaches it with no CPEs and a usable version.
+
+**What a CPE here claims.** It is a *candidate*, not an assertion. No
+authoritative CPE source exists, vendor slugs vary across NVD records (`curl`
+lives under both `haxx:curl` and `curl:curl`), so waybill emits several per
+component and a downstream matcher takes the union. A candidate derives from
+a **name match** in a curated table; it is not proof that the closure's
+`llvm 21.1.8` is the product NVD calls `llvm:llvm`.
+
+**What never gets one:**
+
+| population | why |
+| --- | --- |
+| closure members — patch files, source tarballs, build fragments | `zlib-1.3.2.tar.gz` is named after zlib and is not zlib; the component that *is* zlib is emitted separately |
+| non-release versions — `0-unstable-2018-06-17`, `21.1.6+apple-sdk-26.4`, `26.05pre-git` | a CPE's version field is a release identifier, and a candidate built from these matches nothing |
+| names with no mapping row | silent by design; adding a row is a one-line change |
+| components that already carry CPEs | including everything supplied via `--supplement-cdx`, which always wins |
+
+**Reading the coverage record.** Every document carries
+`waybill:cpe-coverage` at document scope with two counts:
+
+```json
+{"schema":"waybill-cpe-coverage/v1","with_candidates":77,"eligible_unmapped":264}
+```
+
+The second count is usually the larger, and that is expected rather than a
+problem — on a Haskell closure most eligible components are `pkg:hackage`, for
+which the synthesizer has no mapping at all. The two counts exist so that
+*"this scan had nothing to work with"* and *"the synthesis pass never ran"*
+are different documents. They were the same one, zero CPEs either way, from
+milestone 097 until milestone 1367 — which is how the defect survived.
+
 ### 8. Contributor guidance (implementing design-tier in a new reader)
 
 Contributors implementing a new ecosystem reader should follow the

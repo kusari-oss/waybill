@@ -17213,6 +17213,10 @@
         "value": "after-build"
       },
       {
+        "name": "waybill:cpe-coverage",
+        "value": "{\"eligible_unmapped\":221,\"schema\":\"waybill-cpe-coverage/v1\",\"with_candidates\":0}"
+      },
+      {
         "name": "waybill:nixpkgs-haskell-resolution",
         "value": "{\"disagreements\":4,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":39,\"revision\":\"567a49d1913ce81ac6e9582e3553dd90a955875f\",\"unresolved\":{\"compiler-supplied\":14}}"
       },
