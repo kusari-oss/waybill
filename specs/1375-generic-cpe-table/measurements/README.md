@@ -446,3 +446,19 @@ rejections block.
 
 **Nothing was added.** Inventing a doc section to satisfy a task is worse than
 the task turning out to be unnecessary.
+
+## T022 / T023 — the gate, and the goldens that correctly did not move
+
+```
+GATE_RESULT=pass   371 targets   7,469 passed   0 failed   0 failure blocks
+m1375 tests executed: 4 of 4
+```
+
+7,469 is four more than milestone 1374's 7,465, matching the four tests this
+milestone adds — checked by enumerating which `m1375_*` tests the run
+executed, not by reading the total.
+
+**Zero local goldens moved**, which is the predicted outcome and the inverse
+of the last two milestones. T004 established that no local fixture contains
+any of the 48 names, so here a local golden moving would have been a
+**finding** rather than a refresh. None did.
