@@ -193,6 +193,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:xmlsoft:libxslt:1.1.45:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libxslt@1.1.45",
           "type": "ExternalIdentifier"
@@ -473,6 +478,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:re2c:re2c:4.5.1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/re2c@4.5.1",
           "type": "ExternalIdentifier"
@@ -501,6 +511,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:gettext:1.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gettext@1.0",
@@ -924,6 +939,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:bzip:bzip2:1.0.8:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/bzip2@1.0.8",
@@ -1423,6 +1443,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:libtool:2.5.4:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libtool@2.5.4",
           "type": "ExternalIdentifier"
@@ -1723,6 +1748,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:gzip:1.2.4:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gzip@1.2.4",
           "type": "ExternalIdentifier"
@@ -1930,6 +1960,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:diffutils:3.12:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/diffutils@3.12",
           "type": "ExternalIdentifier"
@@ -2009,6 +2044,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/bash@5.3p9",
@@ -2488,6 +2528,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libidn2@2.3.8",
@@ -3128,6 +3173,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:gzip:1.14:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gzip@1.14",
           "type": "ExternalIdentifier"
@@ -3677,6 +3727,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:perl:perl:5.42.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/perl@5.42.0",
           "type": "ExternalIdentifier"
@@ -3720,6 +3775,16 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/flex@2.6.4",
@@ -4283,6 +4348,16 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:freebsd:libarchive:3.8.7:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libarchive@3.8.7",
           "type": "ExternalIdentifier"
@@ -4404,6 +4479,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:ed:1.22.5:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/ed@1.22.5",
@@ -4952,6 +5032,16 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/ncurses@6.6",
           "type": "ExternalIdentifier"
@@ -5068,6 +5158,16 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/c-ares@1.34.6",
@@ -6093,6 +6193,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:automake:1.18.1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/automake@1.18.1",
           "type": "ExternalIdentifier"
@@ -6163,6 +6268,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:coreutils:9.11:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/coreutils@9.11",
@@ -6258,6 +6368,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:lzo_project:lzo:2.10:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/lzo@2.10",
           "type": "ExternalIdentifier"
@@ -6352,6 +6467,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:texinfo:7.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/texinfo@7.2",
@@ -6781,6 +6901,21 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:christos_zoulas:file:5.47:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gentoo:file:5.47:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/file@5.47",
@@ -7928,6 +8063,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:bison:3.8.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/bison@3.8.2",
@@ -9337,6 +9477,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:tcl:tcl:8.6.16:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/tcl@8.6.16",
           "type": "ExternalIdentifier"
@@ -9525,6 +9670,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:libunistring:1.4.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libunistring@1.4.2",
@@ -10295,6 +10445,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:rhash_project:rhash:1.4.6:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/rhash@1.4.6",
@@ -11780,6 +11935,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:libexpat:expat:2.8.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/expat@2.8.0",
           "type": "ExternalIdentifier"
@@ -12618,6 +12778,16 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:libuv_project:libuv:1.52.1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libuv@1.52.1",
           "type": "ExternalIdentifier"
@@ -12790,6 +12960,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:gettext:1.07:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gettext@1.07",
           "type": "ExternalIdentifier"
@@ -12804,6 +12979,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:automake:1.16.5:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/automake@1.16.5",
@@ -13448,6 +13628,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:diffutils:3.8:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/diffutils@3.8",
           "type": "ExternalIdentifier"
@@ -13491,6 +13676,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:findutils:4.10.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/findutils@4.10.0",
@@ -13719,6 +13909,16 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/unzip@6.0",
@@ -14211,6 +14411,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:fossies:gawk:5.4.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gawk@5.4.0",
           "type": "ExternalIdentifier"
@@ -14536,6 +14741,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:readline:8.3p3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/readline@8.3p3",
@@ -15198,6 +15408,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:patch:2.8:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/patch@2.8",
           "type": "ExternalIdentifier"
@@ -15314,6 +15529,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:tatsuhiro-t:ngtcp2:1.22.1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/ngtcp2@1.22.1",
           "type": "ExternalIdentifier"
@@ -15356,6 +15576,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:libffi_project:libffi:3.5.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libffi@3.5.2",
@@ -16541,6 +16766,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:xmlsoft:libxml2:2.15.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libxml2@2.15.2",
           "type": "ExternalIdentifier"
@@ -17073,6 +17303,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:bash:2.05b:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/bash@2.05b",
@@ -19753,6 +19988,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:fossies:gawk:5.3.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gawk@5.3.2",
           "type": "ExternalIdentifier"
@@ -21009,6 +21249,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:google:brotli:1.2.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/brotli@1.2.0",
           "type": "ExternalIdentifier"
@@ -21493,6 +21738,16 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:xz_project:xz:5.8.3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/xz@5.8.3",
@@ -22436,6 +22691,11 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:bash:5.3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/bash@5.3",
           "type": "ExternalIdentifier"
@@ -22619,6 +22879,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:libssh2:libssh2:1.11.1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libssh2@1.11.1",
@@ -23073,6 +23338,11 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:nghttp2:nghttp2:1.69.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/nghttp2@1.69.0",
@@ -59429,6 +59699,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2PJIPUFTP2SMEROV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6L64FJMTKZQUYC24",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2PLZWKBZDCUXKCE5",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"scaffolding\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TVRUO65GVPYH6JXY",
@@ -63765,6 +64043,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4CPPHUGMEH5WZSOB",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LKVTOH3ZT5AUBNEU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4CSNMQHDNE6YJVHC",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6MYFALKBJG6E5RJ6",
@@ -65152,6 +65438,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4RH4PFX5DOPGFBVW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-432S56AW35URL4YS",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4RJS5VCKEGEMDJ3Z",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ADV66E44VY5S4BKY",
       "type": "Annotation"
     },
     {
@@ -67550,7 +67844,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5P4RIHJ63RQNJ3BZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":360,\\\"with_candidates\\\":6}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":315,\\\"with_candidates\\\":51}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -84685,6 +84979,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DV3562B3W5X7XETS",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:xz_project:xz:5.8.3:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W3IZSU6H7FUH4Y4Y",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DV3WUAHW4U2RGSPL",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H7VWNR4FVJKY5OMT",
@@ -94160,6 +94462,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HCUTXXGOC42CJOVZ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HDJSHOWDMMRYZPDF",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HD6AGHOJBO74WEZ5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*\",\"cpe:2.3:a:christos_zoulas:file:5.47:*:*:*:*:*:*:*\",\"cpe:2.3:a:gentoo:file:5.47:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CMCWJU3WAMXYYTWN",
       "type": "Annotation"
     },
     {
@@ -117949,6 +118259,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Q3XQP545NGJTLZAP",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:libuv_project:libuv:1.52.1:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JWPSOIDR5JXP7N7B",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Q4267LSAJ7RNUV7N",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DI6YUDUNIW5GRT3A",
@@ -127285,6 +127603,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TL565FZ62QKDEE7D",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:freebsd:libarchive:3.8.7:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-76FQ3WGVIMJFWFIM",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TL7NFPIKVQO4ASKW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OD6JVQDZRYPBWLBG",
@@ -127544,6 +127870,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TOE6BX5NMBGAQ3DG",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RGBWQ5XBG7JNODLJ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TOFRSDDWEIFYWJCP",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-A65I77WXF63XW3UB",
       "type": "Annotation"
     },
     {

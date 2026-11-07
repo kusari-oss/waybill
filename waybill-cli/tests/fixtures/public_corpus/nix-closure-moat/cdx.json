@@ -8606,6 +8606,7 @@
     },
     {
       "bom-ref": "pkg:generic/automake@1.16.5",
+      "cpe": "cpe:2.3:a:gnu:automake:1.16.5:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -8646,6 +8647,7 @@
     },
     {
       "bom-ref": "pkg:generic/automake@1.18.1",
+      "cpe": "cpe:2.3:a:gnu:automake:1.18.1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -9389,6 +9391,7 @@
     },
     {
       "bom-ref": "pkg:generic/bash@2.05b",
+      "cpe": "cpe:2.3:a:gnu:bash:2.05b:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -9433,6 +9436,7 @@
     },
     {
       "bom-ref": "pkg:generic/bash@5.3",
+      "cpe": "cpe:2.3:a:gnu:bash:5.3:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -9477,6 +9481,7 @@
     },
     {
       "bom-ref": "pkg:generic/bash@5.3p9",
+      "cpe": "cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -11098,6 +11103,7 @@
     },
     {
       "bom-ref": "pkg:generic/bison@3.8.2",
+      "cpe": "cpe:2.3:a:gnu:bison:3.8.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -12904,6 +12910,7 @@
     },
     {
       "bom-ref": "pkg:generic/brotli@1.2.0",
+      "cpe": "cpe:2.3:a:google:brotli:1.2.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -13455,6 +13462,7 @@
     },
     {
       "bom-ref": "pkg:generic/bzip2@1.0.8",
+      "cpe": "cpe:2.3:a:bzip:bzip2:1.0.8:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -13700,6 +13708,7 @@
     },
     {
       "bom-ref": "pkg:generic/c-ares@1.34.6",
+      "cpe": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -13724,6 +13733,10 @@
       ],
       "name": "c-ares",
       "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*\"]"
+        },
         {
           "name": "waybill:sbom-tier",
           "value": "build"
@@ -16517,6 +16530,7 @@
     },
     {
       "bom-ref": "pkg:generic/coreutils@9.11",
+      "cpe": "cpe:2.3:a:gnu:coreutils:9.11:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -18382,6 +18396,7 @@
     },
     {
       "bom-ref": "pkg:generic/diffutils@3.12",
+      "cpe": "cpe:2.3:a:gnu:diffutils:3.12:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -18444,6 +18459,7 @@
     },
     {
       "bom-ref": "pkg:generic/diffutils@3.8",
+      "cpe": "cpe:2.3:a:gnu:diffutils:3.8:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -20113,6 +20129,7 @@
     },
     {
       "bom-ref": "pkg:generic/ed@1.22.5",
+      "cpe": "cpe:2.3:a:gnu:ed:1.22.5:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -21663,6 +21680,7 @@
     },
     {
       "bom-ref": "pkg:generic/expat@2.8.0",
+      "cpe": "cpe:2.3:a:libexpat:expat:2.8.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -23175,6 +23193,7 @@
     },
     {
       "bom-ref": "pkg:generic/file@5.47",
+      "cpe": "cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -23209,6 +23228,10 @@
         ]
       },
       "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*\",\"cpe:2.3:a:christos_zoulas:file:5.47:*:*:*:*:*:*:*\",\"cpe:2.3:a:gentoo:file:5.47:*:*:*:*:*:*:*\"]"
+        },
         {
           "name": "waybill:sbom-tier",
           "value": "build"
@@ -23493,6 +23516,7 @@
     },
     {
       "bom-ref": "pkg:generic/findutils@4.10.0",
+      "cpe": "cpe:2.3:a:gnu:findutils:4.10.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -24040,6 +24064,7 @@
     },
     {
       "bom-ref": "pkg:generic/flex@2.6.4",
+      "cpe": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -24074,6 +24099,10 @@
         ]
       },
       "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\"]"
+        },
         {
           "name": "waybill:scope-classification-source",
           "value": "closure-role"
@@ -25634,6 +25663,7 @@
     },
     {
       "bom-ref": "pkg:generic/gawk@5.3.2",
+      "cpe": "cpe:2.3:a:fossies:gawk:5.3.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -25678,6 +25708,7 @@
     },
     {
       "bom-ref": "pkg:generic/gawk@5.4.0",
+      "cpe": "cpe:2.3:a:fossies:gawk:5.4.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -28003,6 +28034,7 @@
     },
     {
       "bom-ref": "pkg:generic/gettext@1.0",
+      "cpe": "cpe:2.3:a:gnu:gettext:1.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -28056,6 +28088,7 @@
     },
     {
       "bom-ref": "pkg:generic/gettext@1.07",
+      "cpe": "cpe:2.3:a:gnu:gettext:1.07:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -32133,6 +32166,7 @@
     },
     {
       "bom-ref": "pkg:generic/gzip@1.14",
+      "cpe": "cpe:2.3:a:gnu:gzip:1.14:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -32185,6 +32219,7 @@
     },
     {
       "bom-ref": "pkg:generic/gzip@1.2.4",
+      "cpe": "cpe:2.3:a:gnu:gzip:1.2.4:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -38486,6 +38521,7 @@
     },
     {
       "bom-ref": "pkg:generic/libarchive@3.8.7",
+      "cpe": "cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -38510,6 +38546,10 @@
       ],
       "name": "libarchive",
       "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:freebsd:libarchive:3.8.7:*:*:*:*:*:*:*\"]"
+        },
         {
           "name": "waybill:sbom-tier",
           "value": "build"
@@ -39671,6 +39711,7 @@
     },
     {
       "bom-ref": "pkg:generic/libffi@3.5.2",
+      "cpe": "cpe:2.3:a:libffi_project:libffi:3.5.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -40764,6 +40805,7 @@
     },
     {
       "bom-ref": "pkg:generic/libidn2@2.3.8",
+      "cpe": "cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -41133,6 +41175,7 @@
     },
     {
       "bom-ref": "pkg:generic/libssh2@1.11.1",
+      "cpe": "cpe:2.3:a:libssh2:libssh2:1.11.1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -42194,6 +42237,7 @@
     },
     {
       "bom-ref": "pkg:generic/libtool@2.5.4",
+      "cpe": "cpe:2.3:a:gnu:libtool:2.5.4:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -42290,6 +42334,7 @@
     },
     {
       "bom-ref": "pkg:generic/libunistring@1.4.2",
+      "cpe": "cpe:2.3:a:gnu:libunistring:1.4.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -42386,6 +42431,7 @@
     },
     {
       "bom-ref": "pkg:generic/libuv@1.52.1",
+      "cpe": "cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -42434,6 +42480,10 @@
       ],
       "name": "libuv",
       "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:libuv_project:libuv:1.52.1:*:*:*:*:*:*:*\"]"
+        },
         {
           "name": "waybill:sbom-tier",
           "value": "build"
@@ -42556,6 +42606,7 @@
     },
     {
       "bom-ref": "pkg:generic/libxml2@2.15.2",
+      "cpe": "cpe:2.3:a:xmlsoft:libxml2:2.15.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -42599,6 +42650,7 @@
     },
     {
       "bom-ref": "pkg:generic/libxslt@1.1.45",
+      "cpe": "cpe:2.3:a:xmlsoft:libxslt:1.1.45:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -44131,6 +44183,7 @@
     },
     {
       "bom-ref": "pkg:generic/lzo@2.10",
+      "cpe": "cpe:2.3:a:lzo_project:lzo:2.10:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -48754,6 +48807,7 @@
     },
     {
       "bom-ref": "pkg:generic/ncurses@6.6",
+      "cpe": "cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -48778,6 +48832,10 @@
       ],
       "name": "ncurses",
       "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*\"]"
+        },
         {
           "name": "waybill:sbom-tier",
           "value": "build"
@@ -49185,6 +49243,7 @@
     },
     {
       "bom-ref": "pkg:generic/nghttp2@1.69.0",
+      "cpe": "cpe:2.3:a:nghttp2:nghttp2:1.69.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -49365,6 +49424,7 @@
     },
     {
       "bom-ref": "pkg:generic/ngtcp2@1.22.1",
+      "cpe": "cpe:2.3:a:tatsuhiro-t:ngtcp2:1.22.1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -51633,6 +51693,7 @@
     },
     {
       "bom-ref": "pkg:generic/patch@2.8",
+      "cpe": "cpe:2.3:a:gnu:patch:2.8:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -52464,6 +52525,7 @@
     },
     {
       "bom-ref": "pkg:generic/perl@5.42.0",
+      "cpe": "cpe:2.3:a:perl:perl:5.42.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -56826,6 +56888,7 @@
     },
     {
       "bom-ref": "pkg:generic/re2c@4.5.1",
+      "cpe": "cpe:2.3:a:re2c:re2c:4.5.1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -57078,6 +57141,7 @@
     },
     {
       "bom-ref": "pkg:generic/readline@8.3p3",
+      "cpe": "cpe:2.3:a:gnu:readline:8.3p3:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -58347,6 +58411,7 @@
     },
     {
       "bom-ref": "pkg:generic/rhash@1.4.6",
+      "cpe": "cpe:2.3:a:rhash_project:rhash:1.4.6:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -68805,6 +68870,7 @@
     },
     {
       "bom-ref": "pkg:generic/tcl@8.6.16",
+      "cpe": "cpe:2.3:a:tcl:tcl:8.6.16:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -69354,6 +69420,7 @@
     },
     {
       "bom-ref": "pkg:generic/texinfo@7.2",
+      "cpe": "cpe:2.3:a:gnu:texinfo:7.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -75071,6 +75138,7 @@
     },
     {
       "bom-ref": "pkg:generic/unzip@6.0",
+      "cpe": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -75228,6 +75296,10 @@
         ]
       },
       "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\"]"
+        },
         {
           "name": "waybill:scope-classification-source",
           "value": "closure-role"
@@ -78154,6 +78226,7 @@
     },
     {
       "bom-ref": "pkg:generic/xz@5.8.3",
+      "cpe": "cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -78184,6 +78257,10 @@
       ],
       "name": "xz",
       "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:xz_project:xz:5.8.3:*:*:*:*:*:*:*\"]"
+        },
         {
           "name": "waybill:sbom-tier",
           "value": "build"
@@ -93554,7 +93631,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":162,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":360,\"with_candidates\":6}"
+        "value": "{\"addressable_without_cpe\":162,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":315,\"with_candidates\":51}"
       },
       {
         "name": "waybill:closure-graph-admission",
