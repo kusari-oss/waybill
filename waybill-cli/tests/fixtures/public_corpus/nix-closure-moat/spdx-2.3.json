@@ -23,7 +23,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":360,\\\"with_candidates\\\":6}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":315,\\\"with_candidates\\\":51}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -10551,6 +10551,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/automake@1.16.5",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:automake:1.16.5:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -10593,6 +10598,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/automake@1.18.1",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:automake:1.18.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -11474,6 +11484,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bash@2.05b",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:bash:2.05b:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -11528,6 +11543,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bash@5.3",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:bash:5.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -11582,6 +11602,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bash@5.3p9",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -13463,6 +13488,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bison@3.8.2",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:bison:3.8.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -15634,6 +15664,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/brotli@1.2.0",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:google:brotli:1.2.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -16298,6 +16333,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bzip2@1.0.8",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:bzip:bzip2:1.0.8:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -16558,6 +16598,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -16579,6 +16625,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/c-ares@1.34.6",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -20032,6 +20083,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/coreutils@9.11",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:coreutils:9.11:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -22354,6 +22410,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/diffutils@3.12",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:diffutils:3.12:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -22408,6 +22469,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/diffutils@3.8",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:diffutils:3.8:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -24386,6 +24452,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ed@1.22.5",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:ed:1.22.5:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -26299,6 +26370,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/expat@2.8.0",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:libexpat:expat:2.8.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -28161,6 +28237,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*\",\"cpe:2.3:a:christos_zoulas:file:5.47:*:*:*:*:*:*:*\",\"cpe:2.3:a:gentoo:file:5.47:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -28188,6 +28270,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/file@5.47",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -28566,6 +28653,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/findutils@4.10.0",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:findutils:4.10.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -29191,6 +29283,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -29218,6 +29316,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/flex@2.6.4",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -31234,6 +31337,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gawk@5.3.2",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:fossies:gawk:5.3.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -31288,6 +31396,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gawk@5.4.0",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:fossies:gawk:5.4.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -34137,6 +34250,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gettext@1.0",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:gettext:1.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -34179,6 +34297,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gettext@1.07",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:gettext:1.07:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -39044,6 +39167,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gzip@1.14",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:gzip:1.14:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -39098,6 +39226,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gzip@1.2.4",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:gzip:1.2.4:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -46719,6 +46852,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:freebsd:libarchive:3.8.7:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -46740,6 +46879,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libarchive@3.8.7",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -48210,6 +48354,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libffi@3.5.2",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:libffi_project:libffi:3.5.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -49578,6 +49727,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libidn2@2.3.8",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -49985,6 +50139,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libssh2@1.11.1",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:libssh2:libssh2:1.11.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -51299,6 +51458,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libtool@2.5.4",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:libtool:2.5.4:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -51406,6 +51570,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libunistring@1.4.2",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:libunistring:1.4.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -51492,6 +51661,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:libuv_project:libuv:1.52.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -51513,6 +51688,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libuv@1.52.1",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -51668,6 +51848,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libxml2@2.15.2",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:xmlsoft:libxml2:2.15.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -51716,6 +51901,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libxslt@1.1.45",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:xmlsoft:libxslt:1.1.45:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -53595,6 +53785,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/lzo@2.10",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:lzo_project:lzo:2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -59318,6 +59513,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -59339,6 +59540,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ncurses@6.6",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -59825,6 +60031,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/nghttp2@1.69.0",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:nghttp2:nghttp2:1.69.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -60029,6 +60240,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ngtcp2@1.22.1",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:tatsuhiro-t:ngtcp2:1.22.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -62774,6 +62990,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/patch@2.8",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:patch:2.8:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -63764,6 +63985,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/perl@5.42.0",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:perl:perl:5.42.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -69076,6 +69302,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/re2c@4.5.1",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:re2c:re2c:4.5.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -69388,6 +69619,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/readline@8.3p3",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:readline:8.3p3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -70918,6 +71154,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/rhash@1.4.6",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:rhash_project:rhash:1.4.6:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -84047,6 +84288,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tcl@8.6.16",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:tcl:tcl:8.6.16:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -84677,6 +84923,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/texinfo@7.2",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:texinfo:7.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -91760,6 +92011,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -91787,6 +92044,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/unzip@6.0",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -95394,6 +95656,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:xz_project:xz:5.8.3:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -95427,6 +95695,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/xz@5.8.3",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,

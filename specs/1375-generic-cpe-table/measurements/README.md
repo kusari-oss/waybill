@@ -462,3 +462,51 @@ executed, not by reading the total.
 of the last two milestones. T004 established that no local fixture contains
 any of the 48 names, so here a local golden moving would have been a
 **finding** rather than a refresh. None did.
+
+## T024 / T025 — the corpus refresh
+
+Run `42395026732`. **Scanned commit `159a959a` is this branch's tip** — checked,
+not assumed.
+
+51 committed files, 51 in the artifact, none new, none missing. **Two targets
+differ, which is the prediction**: `nix-closure-moat` (contains the names) and
+`image-postgres16` (896 unrelated lines, #1372's drift, excluded). The other
+15 are untouched — T004 said no other target carries these names.
+
+### Every changed line in `nix-closure-moat` is attributable
+
+| lines | what |
+| --- | --- |
+| 281 | CPE strings, C19 `waybill:cpe-candidates`, the C209 value |
+| 246 | JSON structure — braces from the added objects |
+| 45 | SPDX `externalRef` scaffolding (`referenceCategory: SECURITY`) |
+| 118 | SPDX annotation fields for **8 new C19 annotations** |
+
+The 8 are `c-ares`, `file`, `flex`, `libarchive`, `libuv`, `ncurses`, `unzip`,
+`xz` — exactly the multi-candidate rows that exist on this closure. C19 is
+emitted only when more than one candidate was synthesized, so 8 new ones is
+the expected consequence of 10 multi-vendor rows, 8 of whose names are here.
+
+### The x86_64-linux delta
+
+```
+with_candidates    6 →  51   +45
+unaddressable    360 → 315   −45
+addressable_without_cpe, excluded_members, excluded_files   unchanged
+sum 1615 == .components | length
+```
+
+Larger than darwin's +48/−48 in proportion but smaller in absolute terms,
+because the linux closure's unaddressable population is differently composed.
+**Measured, not scaled.**
+
+### A seven-component gap that was my arithmetic, not the product
+
+An intermediate check reported 38 components gaining a `cpe` field against a
+`with_candidates` delta of 45. The seven are not missing: I counted a **set of
+names**, which collapses duplicates, and `bash` appears 3× on this closure
+with `automake`, `diffutils`, `gawk`, `gettext` and `gzip` 2× each —
+3−1 + 5×(2−1) = 7. Counting `(name, version)` gives 45 and reconciles.
+
+Recorded because the first reading looked like components silently missing a
+CPE, which would have been a real defect; it was a de-duplicating count.
