@@ -167,9 +167,11 @@ carry no CPE, and whose PURL type no feed indexes.
 
 **Acceptance**
 1. **Given** a closure with members, **When** C209 is read, **Then** no
-   component carrying a member role is in any of the three counts.
-2. **Given** the same scan, **When** C204's `member-roles` is read, **Then**
-   its total plus C209's total equals the resolved component count.
+   component carrying a member role is in any of the three software counts,
+   and all of them are in `excluded_members`.
+2. **Given** the same scan, **When** the five counts are summed, **Then** the
+   total equals the document's own component count — with no reference to
+   C204 and no filtering rule.
 
 ### User Story 2 — the row still adds up on its own (P2)
 
@@ -177,7 +179,7 @@ carry no CPE, and whose PURL type no feed indexes.
 reader can verify without leaving it. `excluded_members` is what preserves
 that across this change.
 
-**Independent test**: the four counts sum to the resolved component count,
+**Independent test**: the five counts sum to the emitted component count,
 and the check needs no other record — including on a document that has no
 closure record at all.
 

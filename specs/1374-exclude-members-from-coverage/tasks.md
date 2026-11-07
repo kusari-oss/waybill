@@ -26,7 +26,7 @@ made to fail before they are made to pass.
 - [ ] T006 (FR-001) Extend `classify_addressability` with the exclusion tests **ahead of** the CPE test, per `data-model.md` §1: membership first, then file-tier, then the existing three arms
 - [ ] T007 [P] Unit-test in `scan_cmd.rs` that a component carrying `waybill:closure-member-role` classifies `ExcludedMember` **even when it carries a CPE** (FR-003). No member carries one today — 0 of 539 on darwin, 0 of 1,087 on linux — so this test must construct one; the guard it protects is the synthesizer's, which could change
 - [ ] T008 [P] Unit-test in `scan_cmd.rs` that a member carrying an **OSV-addressable** PURL classifies `ExcludedMember`, not `AddressableWithoutCpe`. This case is real: `pkg:hackage/time` with role `fragment` on the linux closure
-- [ ] T009 [P] Unit-test in `scan_cmd.rs` that a `type: "file"` / file-tier component classifies `ExcludedFile`, using the real placeholder PURL shape `pkg:generic/file-tier?content-sha256=…` — which would otherwise classify `Unaddressable`, since its type is `generic`
+- [ ] T009 [P] Unit-test in `scan_cmd.rs` that a file-tier component classifies `ExcludedFile`. **The in-memory signal is `extra_annotations[COMPONENT_TIER_KEY] == "file"`** — not `type`, which `ResolvedComponent` does not have, and not "no PURL", because a file-tier component carries `pkg:generic/file-tier?content-sha256=…` in memory and would otherwise classify `Unaddressable`. The emitter drops that PURL; `partition.py` correctly uses the document signal instead, and the two must not be "aligned"
 - [ ] T010 [P] Unit-test in `scan_cmd.rs` that an ordinary component is unaffected: `pkg:generic/openssl@3.0.0` still `Unaddressable`, `pkg:hackage/aeson@2.2.4.1` still `AddressableWithoutCpe`, a CPE-bearing component still `WithCandidates`
 
 ---
@@ -41,7 +41,8 @@ PURL type no feed indexes.
 
 - [ ] T011 [US1] **Make the existing tests fail first.** `waybill-cli/tests/closure_component_cpes.rs` asserts the literal `waybill-cpe-coverage/v2`, and `scan_cmd.rs`'s unit tests assert the three-count sum. Update both to the `/v3` shape **before** changing the struct, and confirm they fail; a test that survives this edit unchanged was not asserting the shape
 - [ ] T012 [US1] Add `excluded_members` and `excluded_files` to `CpeSynthesisCoverage` in `waybill-cli/src/cli/scan_cmd.rs`, bump `wire()` to `waybill-cpe-coverage/v3`, and extend `total()` to five (FR-008)
-- [ ] T013 [US1] **Move the counting** out of `fill_missing_cpes` to after `scan_cmd.rs:5315`, where file-tier components have joined the vector (FR-009). **Synthesis stays at 4907** — it mutates `c.cpes` and later passes read them — so only the counting moves, which is what keeps `with_candidates` meaning the same thing
+- [ ] T013 [US1] **Split the function** per `data-model.md` §3: `fill_missing_cpes(&mut [..])` synthesizes and returns `()`; a new `cpe_coverage(&[..]) -> CpeSynthesisCoverage` counts. Then **move the counting call** to after `scan_cmd.rs:5315`, where file-tier components have joined the vector (FR-009). **Synthesis stays at 4907** — it mutates `c.cpes` and later passes read them — so only the counting moves, which is what keeps `with_candidates` meaning the same thing
+- [ ] T013a [US1] Update the **10 unit-test call sites** in `scan_cmd.rs` that do `let cov = fill_missing_cpes(..)` to synthesize and then count as two lines, **keeping each original assertion unchanged**. A signature break invites the quickest repair rather than the one that preserves what each test meant
 - [ ] T014 [US1] Assert that the five counts **sum to the emitted component count** (FR-002, SC-002) — an assertion, not a comment, and over the vector as it stands after the file-tier extend rather than over a filtered subset
 - [ ] T015 [US1] Update the `tracing::info!` that currently names three fields so it names five; it would otherwise log a shape that no longer exists
 - [ ] T016 [US1] Verify against the real closure that the row reads **78 / 166 / 194 / 539 / 0 = 977** on aarch64-darwin, recording it in `measurements/README.md`. A different split is a finding, not a refresh — these figures were computed from the document before any code changed
@@ -116,7 +117,7 @@ US2 makes the row self-checking; it changes no figure.
 | --- | --- |
 | Setup / baseline | 4 |
 | Foundational | 6 |
-| US1 (P1) | 6 |
+| US1 (P1) | 7 |
 | US2 (P2) | 3 |
 | Polish | 13 |
-| **total** | **32** |
+| **total** | **33** |

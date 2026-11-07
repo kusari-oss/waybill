@@ -29,6 +29,27 @@ describes every component rather than only the ones it had an opinion about.
 | **`ExcludedMember`** | a closure member — a patch, tarball or build fragment |
 | **`ExcludedFile`** | a file-tier entry |
 
+### The in-memory signals, which differ from the document's
+
+| variant | test **in code** | how the *document* shows it |
+| --- | --- | --- |
+| `ExcludedMember` | `extra_annotations` contains `waybill:closure-member-role` | same property |
+| `ExcludedFile` | `extra_annotations[COMPONENT_TIER_KEY] == "file"` | `type: "file"` **and** no `purl` |
+
+**Do not test `type` or the absence of a PURL in code.** `ResolvedComponent`
+has no `type` field at all — CDX's `type: "file"` is derived at
+`cyclonedx/builder.rs:1367` from the same annotation — and a file-tier
+component **does** carry a PURL in memory,
+`pkg:generic/file-tier?content-sha256=…`, which the emitter drops. Testing
+"no purl" would therefore match nothing, and testing `type` would not
+compile.
+
+`measurements/partition.py` correctly uses the **document** signals, because
+that is all a consumer has. The two are deliberately different and must not
+be "aligned"; they select the same set, verified on `rust-ripgrep` where the
+annotation, `type == "file"` and "no purl" pick out the identical 7
+components.
+
 **Variants rather than a filter**, and the distinction is load-bearing. A
 filter applied before classification leaves the enum describing a population
 it no longer covers, so the exhaustive match stops being a guarantee that
@@ -100,6 +121,36 @@ Synthesis stays at 4907 — it must, because it mutates `c.cpes` and later
 passes read them. Only the **counting** moves, which is why `with_candidates`
 can keep its meaning: the set of components carrying a CPE is identical at
 both points.
+
+### The split, and its 10 callers
+
+`fill_missing_cpes` currently does both jobs and returns the coverage. The
+two are separated:
+
+```rust
+fn fill_missing_cpes(components: &mut [ResolvedComponent])            // synthesizes; returns ()
+fn cpe_coverage(components: &[ResolvedComponent]) -> CpeSynthesisCoverage  // counts
+```
+
+**This matters more than it looks**, which is why it is written down rather
+than left to the implementation: **10 call sites read a coverage value back
+from `fill_missing_cpes`**, all of them unit tests in `scan_cmd.rs`. Changing
+the signature breaks every one, and a compile error invites whatever repair
+is quickest rather than the one that keeps the tests meaning what they meant.
+
+Each becomes two lines — synthesize, then count — and keeps its original
+assertion:
+
+```rust
+let mut v = vec![component("openssl", "3.6.2")];
+fill_missing_cpes(&mut v);
+let cov = cpe_coverage(&v);
+assert_eq!(cov.with_candidates, 1);
+```
+
+The separation is also the honest shape: one function mutates and the other
+observes, and a counting function that takes `&[..]` cannot accidentally
+change what it is counting.
 
 ---
 
