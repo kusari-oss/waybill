@@ -595,6 +595,16 @@ FAILED is not evidence — a build that never compiled also contains no
 failures, and its summary (`targets= passed= failed=`) reads like a
 formatting quirk rather than the alarm it is.
 
+**And never pipe a check through `head`.** It truncates the evidence the
+conclusion rests on, and it can wedge the producer. Both happened in one
+session: `grep -rn <symbol> | head` showed only test-module hits and became
+the claim "this function has no production caller" — the caller sorted
+eleventh — and `cargo test --workspace | grep ... | head -30` closed the pipe
+mid-run, stalling cargo at exactly 30 results in a way that reads as a hung
+suite. A conclusion of the form "X does not exist" or "N of these" is a
+statement about the *whole* output; `head` makes the output a sample. Pipe to
+`wc -l`, `sort -u`, or a file and read the count.
+
 The general form: **a check that did not run looks identical to a
 check that passed.** Verify what is claimed, not a proxy for it —
 counts and content, not exit codes and "it compiled". Checking the
