@@ -33,7 +33,8 @@ a wrong implementation unless the expectation is pinned first.
 - [ ] T010 [P] Unit-test in `scan_cmd.rs` that a **versionless** `pkg:hackage` PURL still classifies `AddressableWithoutCpe` (FR-008). The 24 such components are in no count today, and FR-008 exists because partitioning only the release-shaped subset is what loses them
 - [ ] T011 [P] Unit-test in `scan_cmd.rs` that a PURL type absent from `OSV_INDEXED_PURL_TYPES` classifies `Unaddressable` rather than panicking or being skipped — `pkg:github` is the real instance, 1 component on the pinned closure
 - [ ] T012 Add a test asserting **every value** in `OSV_INDEXED_PURL_TYPES` appears in the committed `measurements/osv-ecosystems-2026-11-07.txt` (FR-003 half a, SC-005). This is the half that stops a row being added from memory
-- [ ] T012a Record in `measurements/README.md` a probe result for **every** type in `OSV_INDEXED_PURL_TYPES` — FR-003 half b, SC-005 — showing that ecosystem's advisories returned for a known-vulnerable version. Only `hackage`, `pypi` and `npm` are probed today; `golang`, `cargo`, `maven`, `gem`, `nuget`, `composer`, `deb`, `apk`, `hex`, `pub`, `cran`, `swift` and `opam` are **not**. Per FR-003, a type satisfying only half a is **not** addressable, so either probe it or remove its row — list membership alone is the failure mode `pkg:generic`'s OSS-Fuzz hit illustrates from the other direction
+- [ ] T012a Record in `measurements/README.md` the probe result backing **every** row of `OSV_INDEXED_PURL_TYPES` — FR-003 half b, SC-005 — showing that ecosystem's advisories returned for a known-vulnerable version. **The table holds exactly three rows**: `hackage`, `pypi`, `npm`. `/speckit.analyze` found a sixteen-row draft of which thirteen satisfied list membership alone; they are cut rather than probed, because measurement showed **zero** components across all 17 corpus targets are classified addressable on an unprobed type — `cargo`, `golang`, `maven` and the rest already carry CPEs and never reach that branch. Cutting them costs no emitted figure
+- [ ] T012b Keep `measurements/partition.py`'s `PURL_TO_OSV` and `OSV_INDEXED_PURL_TYPES` in step, and assert it. `partition.py` is the instrument for SC-001 (T019, T021) and quickstart Control 2; if the two tables drift, the check and the thing it checks agree by construction and the check is worthless. Trim `partition.py` to the same three rows and add a test comparing the two
 
 ---
 
@@ -86,7 +87,7 @@ rather than re-running two NVD sweeps to reach it.
 - [ ] T030 Verify the local golden diff contains **only** C209 lines: 66 files changed, every changed line part of a `waybill:cpe-coverage` value, and **zero deletions outside it**. Use a normalized, sorted diff so array reordering cannot masquerade as a hit. **If a local golden did not move, the row is not being emitted where it was** — the inverse alarm to milestone 1372's
 - [ ] T031 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and on the per-target `test result: ok. N passed; 0 failed` lines, never on the absence of the word FAILED
 - [ ] T032 Refresh the corpus goldens through `public-corpus.yml` workflow dispatch with `regen_goldens=true` — never locally. Expect **16 of 17** targets to change
-- [ ] T033 Account for **every** differing corpus file from the artifact rather than from the run summary (#1286: a clean summary once hid one target's stale goldens), and keep `image-postgres16` out of this feature's diff. It carries no C209 at all because its golden predates milestone 1367, verified against the milestone-1372 regeneration artifact; its drift is #1372
+- [ ] T033 Account for **every** differing corpus file from the artifact rather than from the run summary (#1286: a clean summary once hid one target's stale goldens), and keep `image-postgres16` out of this feature's diff. **State the resulting divergence rather than leaving it silent**: after this feature every document carries `waybill-cpe-coverage/v2` except that one, whose committed golden carries no C209 at all. It carries no C209 at all because its golden predates milestone 1367, verified against the milestone-1372 regeneration artifact; its drift is #1372
 - [ ] T034 [P] Update the issue #1375 thread with the delivered figures if they differ from the predicted 78 / 166 / 733, so the issue does not become stale a second time
 
 ---
@@ -131,9 +132,9 @@ changes what the row says.
 | phase | tasks |
 | --- | --- |
 | Setup / baseline | 5 |
-| Foundational | 8 |
+| Foundational | 9 |
 | US1 (P1) | 6 |
 | US2 (P2) | 3 |
 | US3 (P3) | 3 |
 | Polish | 10 |
-| **total** | **35** |
+| **total** | **36** |

@@ -47,8 +47,21 @@ A table mapping a PURL type to the OSV ecosystem that indexes it.
 
 | field | notes |
 | --- | --- |
-| purl type | as `Purl::ecosystem()` returns it — `hackage`, `pypi`, `golang` |
-| OSV ecosystem | as OSV's published list spells it — `Hackage`, `PyPI`, `Go` |
+| purl type | as `Purl::ecosystem()` returns it — `hackage`, `pypi`, `npm` |
+| OSV ecosystem | as OSV's published list spells it — `Hackage`, `PyPI`, `npm` |
+
+**The table holds exactly three rows**: `hackage`, `pypi` and `npm`. Those are
+the three for which **both** halves of FR-003 are satisfied against committed
+output. A sixteen-row draft was written first, covering every type waybill
+emits, and cut after `/speckit.analyze` found that thirteen of them satisfied
+list membership alone — the half that asserts coverage rather than measuring
+it.
+
+**Cutting them changes no emitted figure.** Measured across all 17 corpus
+targets: zero components are classified addressable on an unprobed type,
+because `cargo`, `golang`, `maven` and the rest already carry CPEs from
+existing arms and never reach that branch. The table is therefore smaller and
+every row in it is measured, at no cost to any count.
 
 **Both halves of FR-003 are enforced against this table**, not assumed:
 
@@ -60,6 +73,12 @@ A table mapping a PURL type to the OSV ecosystem that indexes it.
 `generic` has no row. It is in neither the list nor a successful probe — its
 single `OSV-2017-79` hit is an OSS-Fuzz finding keyed on a project name, which
 is why the rule needs both halves and not either.
+
+A type with no row is `Unaddressable`. For the thirteen cut types this is
+**conservative and currently invisible**: it understates nothing today because
+none of their components reaches the branch, and the moment one does, the
+honest answer is "nobody measured whether a feed indexes this" rather than a
+claim made from the ecosystem list alone.
 
 > **This table is a dated observation, not a truth.** OSV adds ecosystems. A
 > row added without re-probing is the defect `probe-cpe-dictionary.sh` was

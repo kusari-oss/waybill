@@ -157,7 +157,7 @@ probe output, of why no `hackage` arm exists.
   so a reader can verify the row against the component count rather than
   trusting it. Partitioning the whole population is also what stops the 24
   versionless components falling outside every count, as they do today.
-- **FR-003**: A PURL type counts as feed-addressable only when **both** hold,
+- **FR-003**: A PURL type is classified `AddressableWithoutCpe` only when **both** hold,
   and both MUST be traceable to recorded output: (a) it maps to an ecosystem
   OSV declares in its published list, and (b) a probe with a known-vulnerable
   version returns that ecosystem's advisories. A type satisfying neither, or
@@ -199,8 +199,14 @@ probe output, of why no `hackage` arm exists.
 - **SC-001**: On the pinned closure, the count of components no feed can
   address equals an independently computed figure from the emitted document,
   derived without reference to the implementation.
-- **SC-002**: The counts sum to the eligible population; asserted, not
-  commented.
+- **SC-002**: The three counts **partition every component in the document** —
+  they sum to the component count, asserted and not commented.
+
+  **This criterion originally said "the eligible population"**, contradicting
+  FR-002 after that requirement was corrected. The two readings differ by more
+  than half (977 against roughly 400), and T016 implements an assertion from
+  one of them, so the contradiction would have been resolved by whichever text
+  the implementer happened to read.
 - **SC-003**: Every document difference is confined to the C209 value.
   Compared structurally in all three formats against the pre-change binary,
   the only differing JSON path is the `waybill:cpe-coverage` record — no

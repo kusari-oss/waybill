@@ -11,14 +11,30 @@ import collections
 import json
 import sys
 
-# PURL type -> the OSV ecosystem that indexes it. Every value must appear in
-# the committed ecosystem list; `generic` deliberately has no row.
+# PURL type -> the OSV ecosystem that indexes it.
+#
+# Exactly the three types for which BOTH halves of FR-003 are satisfied
+# against committed output: present in OSV's published ecosystem list, AND
+# probed to return that ecosystem's advisories for a known-vulnerable version.
+#
+# A sixteen-row version of this table was written first and cut: thirteen
+# types satisfied list membership alone, which asserts coverage rather than
+# measuring it. Cutting them changed no figure -- across all 17 corpus targets
+# zero components are classified addressable on an unprobed type, because
+# `cargo`, `golang`, `maven` and the rest already carry CPEs from existing
+# arms and never reach that branch.
+#
+# `generic` deliberately has no row: it is in neither the list nor a
+# successful probe. Its single `OSV-2017-79` hit is an OSS-Fuzz finding keyed
+# on a project name, which is why the rule needs both halves and not either.
+#
+# This table MUST stay in step with `OSV_INDEXED_PURL_TYPES` in
+# `waybill-cli/src/cli/scan_cmd.rs`. If they drift, this probe and the code it
+# checks agree by construction and the check is worthless.
 PURL_TO_OSV = {
-    "hackage": "hackage", "pypi": "pypi", "npm": "npm", "golang": "go",
-    "cargo": "crates.io", "maven": "maven", "gem": "rubygems",
-    "nuget": "nuget", "composer": "packagist", "deb": "debian",
-    "apk": "alpine", "hex": "hex", "pub": "pub", "cran": "cran",
-    "swift": "swifturl", "opam": "opam",
+    "hackage": "hackage",
+    "pypi": "pypi",
+    "npm": "npm",
 }
 
 
