@@ -692,9 +692,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1374-exclude-members-from-coverage: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 1373-hackage-cpe-decision: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (the row's payload), `tracing`. **Zero new Cargo dependencies.** No scan-time network access is added; the ecosystem list is a committed, dated observation.
 - 1372-unreferenced-pname-components: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `RawInputs.drvs` (already parsed, `derivation.rs:58`), `serde`/`serde_json` (annotation values), `tracing`. **Zero new Cargo dependencies.**
-- 1367-closure-component-cpes: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `generate::cpe::synthesize_cpes` and its curated table (unchanged), `serde`/`serde_json` (the C209 value), `tracing`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

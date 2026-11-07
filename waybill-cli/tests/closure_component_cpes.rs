@@ -441,7 +441,7 @@ fn m1367_mapped_and_nothing_eligible_are_different_documents() {
 fn m1367_the_record_is_present_even_when_nothing_was_mapped() {
     let s = scan_closure(CLOSURE_NOTHING_ELIGIBLE);
     let v = s.doc_prop(C209).expect("C209 must be present on every scan");
-    assert!(v.contains("waybill-cpe-coverage/v2"), "{v}");
+    assert!(v.contains("waybill-cpe-coverage/v3"), "{v}");
 }
 
 /// Cross-format parity for the record.

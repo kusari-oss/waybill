@@ -4904,14 +4904,12 @@ pub async fn execute(
     //
     // Unlike the identity pass there is no edge-ordering constraint: CPEs are
     // per-component metadata and no relationship endpoint is derived from them.
-    let cpe_coverage = fill_missing_cpes(&mut components);
-    tracing::info!(
-        with_candidates = cpe_coverage.with_candidates,
-        addressable_without_cpe = cpe_coverage.addressable_without_cpe,
-        unaddressable = cpe_coverage.unaddressable,
-        "cpe: synthesis coverage"
-    );
-    let cpe_coverage_json = cpe_coverage.wire();
+    fill_missing_cpes(&mut components);
+    // The counts are NOT taken here (milestone 1374, #1380). File-tier
+    // components join `components` at the file-inventory step below, and
+    // they belong in `excluded_files`; counting now would miss them, which
+    // is how milestone 1373 came to omit a population present on 11 of 17
+    // corpus targets. See `cpe_coverage`, called after that extend.
 
     // Milestone 1276 — `None` means the exemption rule was not applicable:
     // no compiler configuration was read, which is every scan of a project
@@ -5313,6 +5311,8 @@ pub async fn execute(
             "file-tier walker complete"
         );
         components.extend(entries.into_iter().map(|e| e.into_resolved_component()));
+        // (milestone 1374, #1380) — the C209 counts are taken after this
+        // point; see the `cpe_coverage` call below.
         file_inventory_stats = Some(stats);
         } // end `else` branch for !root_excluded
     }
@@ -5526,6 +5526,22 @@ pub async fn execute(
         .as_ref()
         .and_then(|s| s.nix_eval.as_ref())
         .and_then(|n| n.system.as_deref());
+
+    // Milestone 1374 (#1380) — count here, over the final vector.
+    //
+    // This is the only point at which both excluded populations exist:
+    // closure members arrived with the closure merge, file-tier entries with
+    // the file-inventory extend above.
+    let cpe_coverage = cpe_coverage(&components);
+    tracing::info!(
+        with_candidates = cpe_coverage.with_candidates,
+        addressable_without_cpe = cpe_coverage.addressable_without_cpe,
+        unaddressable = cpe_coverage.unaddressable,
+        excluded_members = cpe_coverage.excluded_members,
+        excluded_files = cpe_coverage.excluded_files,
+        "cpe: synthesis coverage"
+    );
+    let cpe_coverage_json = cpe_coverage.wire();
 
     let artifacts = ScanArtifacts {
         nix_eval_tier: nix_eval_tier_json.as_deref(),
@@ -6418,6 +6434,23 @@ pub(crate) struct CpeSynthesisCoverage {
     /// release-shape gate excluded most `pkg:generic` components while
     /// counting `pkg:hackage` ones that were never unreachable.
     pub(crate) unaddressable: usize,
+    /// Closure members — patches, source tarballs, build fragments
+    /// (milestone 1374, #1380).
+    ///
+    /// **Not software**, and therefore in none of the three counts above.
+    /// Milestone 1373 counted them `unaddressable`, which made that word
+    /// answer two questions at once: 539 of its 733 on the pinned closure
+    /// were `aeson-2.2.4.1.tar.gz` and `CVE-2019-13232-1.patch`.
+    ///
+    /// C204 `waybill:nix-closure` carries the per-role breakdown; this is
+    /// only the total, so the row balances its own books.
+    pub(crate) excluded_members: usize,
+    /// File-tier entries (milestone 1374, #1380).
+    ///
+    /// Also not software. Counted separately from members rather than folded
+    /// in: "is a source tarball" and "is a file" are different facts, and
+    /// collapsing them would repeat this row's own defect one level down.
+    pub(crate) excluded_files: usize,
 }
 
 impl CpeSynthesisCoverage {
@@ -6429,19 +6462,30 @@ impl CpeSynthesisCoverage {
     /// learns that rather than reading an absent key as zero.
     pub(crate) fn wire(&self) -> String {
         let mut obj = serde_json::Map::new();
-        obj.insert("schema".into(), "waybill-cpe-coverage/v2".into());
+        obj.insert("schema".into(), "waybill-cpe-coverage/v3".into());
         obj.insert("with_candidates".into(), self.with_candidates.into());
         obj.insert(
             "addressable_without_cpe".into(),
             self.addressable_without_cpe.into(),
         );
         obj.insert("unaddressable".into(), self.unaddressable.into());
+        obj.insert("excluded_members".into(), self.excluded_members.into());
+        obj.insert("excluded_files".into(), self.excluded_files.into());
         serde_json::Value::Object(obj).to_string()
     }
 
-    /// The three counts partition the component set (FR-002, SC-002).
+    /// The five counts partition the emitted component set (FR-002, SC-002).
+    ///
+    /// **Against the document as it stands**, not a subset the reader has to
+    /// derive. Under `/v2` the sum matched only components that carried a
+    /// PURL and were not `type: "file"`, which left 11 of 17 corpus targets
+    /// uncheckable without knowing that rule.
     pub(crate) fn total(&self) -> usize {
-        self.with_candidates + self.addressable_without_cpe + self.unaddressable
+        self.with_candidates
+            + self.addressable_without_cpe
+            + self.unaddressable
+            + self.excluded_members
+            + self.excluded_files
     }
 }
 
@@ -6501,6 +6545,18 @@ pub(crate) enum FeedAddressability {
     AddressableWithoutCpe,
     /// No CPE, and no feed indexes this PURL type.
     Unaddressable,
+    /// A closure member — a patch, a source tarball, a build fragment
+    /// (milestone 1374, #1380).
+    ///
+    /// Not software, so not a candidate for any of the three counts above.
+    /// `bash-5.3.tar.gz` is named after bash and is not bash; the component
+    /// that really is bash is emitted separately.
+    ExcludedMember,
+    /// A file-tier entry (milestone 1374, #1380).
+    ///
+    /// `utils.sh` is a file. Counting one `Unaddressable` would make that
+    /// word mean two different things in one row.
+    ExcludedFile,
 }
 
 /// Classify one component.
@@ -6513,6 +6569,38 @@ pub(crate) enum FeedAddressability {
 pub(crate) fn classify_addressability(
     component: &waybill_common::resolution::ResolvedComponent,
 ) -> FeedAddressability {
+    // Milestone 1374 (#1380) — the exclusions come **first**, and the order
+    // is load-bearing.
+    //
+    // FR-003: a member is excluded because of what it *is*, not because of
+    // what was or was not synthesized for it. The synthesizer's guard means
+    // no member carries a CPE today — 0 of 539 on darwin, 0 of 1,087 on
+    // linux — but if that guard changed, testing `cpes` first would let a
+    // member re-enter the partition through `with_candidates`.
+    //
+    // Membership also wins over addressability, and that is not
+    // hypothetical: `pkg:hackage/time` on the linux closure is a member with
+    // role `fragment` *and* carries an OSV-addressable PURL.
+    if component
+        .extra_annotations
+        .contains_key(crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE)
+    {
+        return FeedAddressability::ExcludedMember;
+    }
+    // The in-memory signal is the annotation, NOT `type` and NOT the absence
+    // of a PURL. `ResolvedComponent` has no `type` field — CDX derives
+    // `type: "file"` at `cyclonedx/builder.rs` from this same annotation —
+    // and a file-tier component carries
+    // `pkg:generic/file-tier?content-sha256=…` in memory, which the emitter
+    // drops. Testing "no PURL" here would match nothing.
+    if component
+        .extra_annotations
+        .get(crate::scan_fs::file_tier::COMPONENT_TIER_KEY)
+        .and_then(|v| v.as_str())
+        == Some(crate::scan_fs::file_tier::COMPONENT_TIER_FILE_VALUE)
+    {
+        return FeedAddressability::ExcludedFile;
+    }
     if !component.cpes.is_empty() {
         return FeedAddressability::WithCandidates;
     }
@@ -6602,9 +6690,7 @@ fn is_release_shaped(version: &str) -> bool {
 /// `package_db::read_all` has two production callers — `scan_fs/mod.rs` and
 /// `report/mod.rs`. Moving the pass would strip CPEs from the report path,
 /// which has nothing to do with this defect.
-fn fill_missing_cpes(
-    components: &mut [waybill_common::resolution::ResolvedComponent],
-) -> CpeSynthesisCoverage {
+fn fill_missing_cpes(components: &mut [waybill_common::resolution::ResolvedComponent]) {
     for c in components.iter_mut() {
         if !c.cpes.is_empty() {
             // An earlier pass, or the operator. Not ours to recompute.
@@ -6635,39 +6721,39 @@ fn fill_missing_cpes(
             c.cpes = synthesized;
         }
     }
+}
 
-    // Milestone 1373 (#1375) — classify in a second pass over **every**
-    // component, not inside the synthesis loop.
-    //
-    // The loop above `continue`s past components that are ineligible for
-    // synthesis: an empty or non-release-shaped version, or a closure member.
-    // Counting inside it is what left those components in no bucket at all —
-    // 24 versionless `pkg:hackage` PURLs among them — and what made the v1
-    // `eligible_unmapped` describe the synthesizer's input rather than the
-    // document. `is_release_shaped` still gates synthesis; it no longer gates
-    // the metric.
+/// Count the five C209 buckets over the final component vector (milestone
+/// 1374, #1380).
+///
+/// # Why this is separate from `fill_missing_cpes`
+///
+/// It must run **later**. File-tier components join the vector at the
+/// file-inventory step, some 400 lines after synthesis, and they belong in
+/// `excluded_files` — so counting at synthesis time would miss a population
+/// the document contains. Milestone 1373 counted inside the synthesis
+/// function and so could not see them at all.
+///
+/// Separating also makes the shapes honest: `fill_missing_cpes` mutates and
+/// returns nothing, this observes and cannot mutate. A counting function
+/// taking `&[..]` cannot accidentally change what it counts.
+pub(crate) fn cpe_coverage(
+    components: &[waybill_common::resolution::ResolvedComponent],
+) -> CpeSynthesisCoverage {
     let mut coverage = CpeSynthesisCoverage::default();
     for c in components.iter() {
         match classify_addressability(c) {
             FeedAddressability::WithCandidates => coverage.with_candidates += 1,
             FeedAddressability::AddressableWithoutCpe => coverage.addressable_without_cpe += 1,
             FeedAddressability::Unaddressable => coverage.unaddressable += 1,
+            FeedAddressability::ExcludedMember => coverage.excluded_members += 1,
+            FeedAddressability::ExcludedFile => coverage.excluded_files += 1,
         }
     }
 
-    // FR-002 / SC-002 — the three partition the **resolved** component set.
-    // An assertion rather than a comment: it is the property the v1 row never
-    // had, and the cheapest check that no component was classified twice or
-    // not at all.
-    //
-    // "Resolved" is narrower than the emitted document, and the difference is
-    // measured rather than assumed. The file-tier emitter appends
-    // `type: "file"` components with no PURL *after* this runs, so
-    // `components.len()` here is smaller than the document's `components[]` —
-    // by 7 on `rust-ripgrep`, 1 on `npm-express`. They are correctly outside
-    // the partition: `utils.sh` is a file, not software a vulnerability feed
-    // could address, and counting one `unaddressable` would make that word
-    // mean two different things in one row.
+    // FR-002 / SC-002 — the five partition the component set. An assertion
+    // rather than a comment: it is the property the row exists to offer, and
+    // the cheapest check that nothing was classified twice or not at all.
     debug_assert_eq!(
         coverage.total(),
         components.len(),
@@ -9814,7 +9900,8 @@ mod cpe_coverage_tests {
     #[test]
     fn a_mapped_name_with_a_nix_version_gets_nothing() {
         let mut c = vec![component("openssl", "0-unstable-2018-06-17")];
-        let cov = fill_missing_cpes(&mut c);
+        fill_missing_cpes(&mut c);
+        let cov = cpe_coverage(&c);
         assert!(c[0].cpes.is_empty());
         assert_eq!(cov.with_candidates, 0);
         // Milestone 1373 (#1375) — this component used to be in **no**
@@ -9844,7 +9931,8 @@ mod cpe_coverage_tests {
             "waybill:closure-member-role".to_string(),
             serde_json::Value::from("source"),
         );
-        let cov = fill_missing_cpes(&mut c);
+        fill_missing_cpes(&mut c);
+        let cov = cpe_coverage(&c);
         assert!(
             c[0].cpes.is_empty(),
             "a source tarball named like a library is not that library"
@@ -9856,7 +9944,8 @@ mod cpe_coverage_tests {
     #[test]
     fn an_unmapped_name_is_counted_not_ignored() {
         let mut c = vec![component("waybill-fixture-unmapped", "1.2.3")];
-        let cov = fill_missing_cpes(&mut c);
+        fill_missing_cpes(&mut c);
+        let cov = cpe_coverage(&c);
         assert!(c[0].cpes.is_empty());
         assert_eq!(cov.with_candidates, 0);
         assert_eq!(
@@ -9871,7 +9960,8 @@ mod cpe_coverage_tests {
     #[test]
     fn a_curated_name_with_a_release_version_gets_candidates() {
         let mut c = vec![component("openssl", "3.6.2")];
-        let cov = fill_missing_cpes(&mut c);
+        fill_missing_cpes(&mut c);
+        let cov = cpe_coverage(&c);
         assert!(
             c[0].cpes.iter().any(|v| v.starts_with("cpe:2.3:a:openssl:openssl:3.6.2")),
             "got {:?}",
@@ -9892,7 +9982,8 @@ mod cpe_coverage_tests {
         let mut c = vec![component("openssl", "3.6.2")];
         c[0].cpes = vec![supplied.to_string()];
 
-        let cov = fill_missing_cpes(&mut c);
+        fill_missing_cpes(&mut c);
+        let cov = cpe_coverage(&c);
 
         assert_eq!(
             c[0].cpes,
@@ -9920,9 +10011,10 @@ mod cpe_coverage_tests {
     /// this test exists for is unchanged, and `unaddressable` carries it.
     #[test]
     fn the_record_distinguishes_nothing_to_do_from_did_not_run() {
-        let nothing = fill_missing_cpes(&mut []);
+        let nothing = cpe_coverage(&[]);
         let mut unmapped = vec![component("waybill-fixture-unmapped", "1.0")];
-        let did_nothing = fill_missing_cpes(&mut unmapped);
+        fill_missing_cpes(&mut unmapped);
+        let did_nothing = cpe_coverage(&unmapped);
 
         assert_eq!(nothing.with_candidates, 0);
         assert_eq!(nothing.unaddressable, 0);
@@ -9964,7 +10056,8 @@ mod cpe_coverage_tests {
         );
 
         let mut v = vec![c];
-        let cov = fill_missing_cpes(&mut v);
+        fill_missing_cpes(&mut v);
+        let cov = cpe_coverage(&v);
         assert_eq!(cov.with_candidates, 1);
         assert_eq!(cov.addressable_without_cpe, 0);
         assert_eq!(cov.total(), 1, "counted twice or not at all");
@@ -10000,7 +10093,8 @@ mod cpe_coverage_tests {
         );
 
         let mut v = vec![c];
-        let cov = fill_missing_cpes(&mut v);
+        fill_missing_cpes(&mut v);
+        let cov = cpe_coverage(&v);
         assert_eq!(
             cov.addressable_without_cpe, 1,
             "a component with no version must still land in exactly one bucket"
@@ -10086,7 +10180,8 @@ mod cpe_coverage_tests {
             typed("pkg:github/kusari-oss/waybill@1.0.0", "waybill", "1.0.0"),
         ];
         let n = v.len();
-        let cov = fill_missing_cpes(&mut v);
+        fill_missing_cpes(&mut v);
+        let cov = cpe_coverage(&v);
 
         assert_eq!(
             cov.total(),
@@ -10099,6 +10194,140 @@ mod cpe_coverage_tests {
         assert_eq!(cov.with_candidates, 2, "urllib3 plus synthesized openssl: {cov:?}");
         assert_eq!(cov.addressable_without_cpe, 2, "aeson and base: {cov:?}");
         assert_eq!(cov.unaddressable, 2, "libcxx and the github PURL: {cov:?}");
+    }
+
+    // ---- milestone 1374 (#1380): the two exclusions ----
+
+    /// T007 (FR-003) — a member is excluded even when it carries a CPE.
+    ///
+    /// **No member carries one today** — 0 of 539 on darwin, 0 of 1,087 on
+    /// linux — because the synthesizer refuses them. So this test has to
+    /// construct the case: the guard it protects is someone else's, and if
+    /// it changed, testing `cpes` before membership would let a member back
+    /// into `with_candidates`.
+    #[test]
+    fn m1374_t007_a_member_is_excluded_even_carrying_a_cpe() {
+        let mut c = typed("pkg:generic/bash@5.3", "bash", "5.3");
+        c.cpes = vec!["cpe:2.3:a:gnu:bash:5.3:*:*:*:*:*:*:*".into()];
+        c.extra_annotations.insert(
+            crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE.to_string(),
+            serde_json::json!("source"),
+        );
+        assert_eq!(
+            classify_addressability(&c),
+            FeedAddressability::ExcludedMember,
+            "membership must win over a CPE, or the ordering is wrong"
+        );
+    }
+
+    /// T008 — a member carrying an OSV-addressable PURL is still excluded.
+    ///
+    /// Real: `pkg:hackage/time` with role `fragment` on the linux closure.
+    /// It is why `addressable_without_cpe` moves 163 → 162 there, and why
+    /// the spec's original claim that only `unaddressable` could move was
+    /// wrong.
+    #[test]
+    fn m1374_t008_a_member_with_an_addressable_purl_is_still_excluded() {
+        let mut c = typed("pkg:hackage/time", "time", "");
+        c.extra_annotations.insert(
+            crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE.to_string(),
+            serde_json::json!("fragment"),
+        );
+        assert_eq!(
+            classify_addressability(&c),
+            FeedAddressability::ExcludedMember
+        );
+
+        // CONTROL: without the member role the same component IS addressable,
+        // so the assertion above is about membership and not about the PURL.
+        let bare = typed("pkg:hackage/time", "time", "");
+        assert_eq!(
+            classify_addressability(&bare),
+            FeedAddressability::AddressableWithoutCpe
+        );
+    }
+
+    /// T009 — file-tier is recognised by its annotation, not by `type` or a
+    /// missing PURL.
+    ///
+    /// `ResolvedComponent` has no `type` field, and a file-tier component
+    /// carries `pkg:generic/file-tier?content-sha256=…` in memory — which
+    /// the emitter drops, and which would otherwise classify `Unaddressable`
+    /// because its type is `generic`. The control below proves that.
+    #[test]
+    fn m1374_t009_a_file_tier_component_is_excluded_by_its_annotation() {
+        let purl = "pkg:generic/file-tier?content-sha256=\
+                    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+        let mut c = typed(purl, "utils.sh", "");
+        c.extra_annotations.insert(
+            crate::scan_fs::file_tier::COMPONENT_TIER_KEY.to_string(),
+            serde_json::json!(crate::scan_fs::file_tier::COMPONENT_TIER_FILE_VALUE),
+        );
+        assert_eq!(
+            classify_addressability(&c),
+            FeedAddressability::ExcludedFile
+        );
+
+        // CONTROL: the identical PURL without the annotation is ordinary
+        // `pkg:generic`, so this test turns on the annotation alone.
+        let bare = typed(purl, "utils.sh", "");
+        assert_eq!(
+            classify_addressability(&bare),
+            FeedAddressability::Unaddressable,
+            "a file-tier PURL is otherwise indistinguishable from pkg:generic"
+        );
+    }
+
+    /// T010 — ordinary components are untouched by the new arms.
+    #[test]
+    fn m1374_t010_ordinary_components_classify_as_before() {
+        assert_eq!(
+            classify_addressability(&typed("pkg:generic/openssl@3.0.0", "openssl", "3.0.0")),
+            FeedAddressability::Unaddressable
+        );
+        assert_eq!(
+            classify_addressability(&typed("pkg:hackage/aeson@2.2.4.1", "aeson", "2.2.4.1")),
+            FeedAddressability::AddressableWithoutCpe
+        );
+        let mut withcpe = typed("pkg:pypi/urllib3@2.2.1", "urllib3", "2.2.1");
+        withcpe.cpes = vec!["cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*".into()];
+        assert_eq!(
+            classify_addressability(&withcpe),
+            FeedAddressability::WithCandidates
+        );
+    }
+
+    /// T014 (FR-002, SC-002) — the five counts partition the component set.
+    #[test]
+    fn m1374_t014_the_five_counts_partition_the_component_set() {
+        let mut cpe_bearing = typed("pkg:pypi/urllib3@2.2.1", "urllib3", "2.2.1");
+        cpe_bearing.cpes = vec!["cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*".into()];
+        let mut member = typed("pkg:generic/aeson-2.2.4.1.tar.gz", "aeson-2.2.4.1.tar.gz", "");
+        member.extra_annotations.insert(
+            crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE.to_string(),
+            serde_json::json!("source"),
+        );
+        let mut file = typed("pkg:generic/file-tier?content-sha256=abc", "utils.sh", "");
+        file.extra_annotations.insert(
+            crate::scan_fs::file_tier::COMPONENT_TIER_KEY.to_string(),
+            serde_json::json!(crate::scan_fs::file_tier::COMPONENT_TIER_FILE_VALUE),
+        );
+
+        let v = vec![
+            cpe_bearing,
+            typed("pkg:hackage/aeson@2.2.4.1", "aeson", "2.2.4.1"),
+            typed("pkg:generic/openssl@3.0.0", "openssl", "3.0.0"),
+            member,
+            file,
+        ];
+        let cov = cpe_coverage(&v);
+
+        assert_eq!(cov.total(), v.len(), "the five must partition: {cov:?}");
+        assert_eq!(cov.with_candidates, 1, "{cov:?}");
+        assert_eq!(cov.addressable_without_cpe, 1, "{cov:?}");
+        assert_eq!(cov.unaddressable, 1, "{cov:?}");
+        assert_eq!(cov.excluded_members, 1, "{cov:?}");
+        assert_eq!(cov.excluded_files, 1, "{cov:?}");
     }
 
     /// T012b (F4) — `partition.py` holds the same table and is the
