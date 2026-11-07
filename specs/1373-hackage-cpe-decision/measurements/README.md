@@ -199,3 +199,91 @@ excluded most `pkg:generic` components, so the number of components no feed
 can address is **733**. The original issue asked whether 284 overstated a gap;
 it overstated the Haskell share *and* understated the total, by a factor of
 2.6 in the direction that matters.
+
+---
+
+# Implementation (milestone 1373)
+
+**Pre-change binary**: `157631c1`, built in a worktree at the merge base.
+**Host**: aarch64-darwin. **Closure**: `nix-closure-moat` at `d069055`.
+
+## The delivered row
+
+```json
+{"schema":"waybill-cpe-coverage/v2","with_candidates":78,
+ "addressable_without_cpe":166,"unaddressable":733}
+```
+
+**78 / 166 / 733 = 977**, equal to the component count — the partition holds,
+and the figures are exactly those computed from the document before any code
+was written. `partition.py` now prints **AGREES** where it printed
+`DISAGREES`.
+
+| | pre | post |
+| --- | --- | --- |
+| `with_candidates` | 78 | **78** — unchanged, as FR-006 requires |
+| `eligible_unmapped` | 284 | **removed** |
+| `addressable_without_cpe` | — | **166** |
+| `unaddressable` | — | **733** |
+
+## SC-003 / SC-004 — the change did not leak
+
+| check | result |
+| --- | --- |
+| components whose `{purl, cpe, cpes}` changed | **0** of 977, compared as a set |
+| differing JSON paths, whole document | **1** — the C209 value |
+
+### The baseline was wrong the first time, and the control caught it
+
+The first SC-003 run reported **42** differing paths. Almost all were
+index-shift noise: `metadata.properties` differed by one entry because the
+"before" document was a scan kept from milestone 1372's development and
+predates C210 `waybill:closure-graph-admission`. A stale baseline, not a leak.
+
+It would have been easy to read 42 differences as a problem with this change
+and go looking in the wrong place. The tell was that the *first* differing
+entry was a property this feature does not touch. Rebuilt at the merge base,
+the count is **1**.
+
+## T028 — the mutation check, and the invariant it found uncovered
+
+| mutation | `--bins m1373` | `closure_component_cpes` |
+| --- | --- | --- |
+| every component classified `Unaddressable` | **2 failed** | ok |
+| addressable components reported `WithCandidates` | **2 failed** | **1 failed** |
+| **the partition assertion deleted** | **ok — survived** | **ok — survived** |
+| a `hackage` arm added | **T023 failed** | — |
+
+**The third mutation survived, and that was the point of running it.**
+`fill_missing_cpes` carries a `debug_assert_eq!` comparing the sum to the
+component count, and deleting it left the entire suite green: nothing else
+compared the two. FR-002 and SC-002 both require the partition to be
+*asserted*, and an assertion no test can distinguish from its own absence is a
+comment with punctuation.
+
+`m1373_t016_the_counts_partition_the_component_set` closes it, over a mixed
+population including the two shapes the synthesis loop skips — an empty
+version and a non-release-shaped one — because those are exactly the
+components the v1 metric lost. Re-mutated to prove it has teeth:
+
+| mutation | result |
+| --- | --- |
+| the counting loop drops a bucket (a component lands nowhere) | **failed** |
+| two buckets collapsed into one (**the sum still holds**) | **failed** |
+
+The second matters more than the first: a test that only checks the sum would
+pass a classifier that put everything in one bucket.
+
+## T027 — the parity extractors need no change
+
+22 tests in `cargo test --lib parity::` pass untouched. The `cdx_anno!` /
+`spdx23_anno!` / `spdx3_anno!` macros key on the row **label**, not the
+payload, so C209's three rows carry the new value without an extractor edit.
+
+**This task's text named a test that does not exist.** It said to run
+`holistic_parity`; `cargo test --lib holistic_parity` reports
+`0 passed; N filtered out`, which is indistinguishable from a pass. The real
+gates are `every_catalog_row_has_an_extractor`,
+`the_closure_rows_extract_equal_sets_from_all_three_formats`,
+`extractors_table_is_sorted_by_row_id` and `extractors_have_unique_labels`.
+Corrected in `tasks.md`.

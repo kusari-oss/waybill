@@ -4907,7 +4907,8 @@ pub async fn execute(
     let cpe_coverage = fill_missing_cpes(&mut components);
     tracing::info!(
         with_candidates = cpe_coverage.with_candidates,
-        eligible_unmapped = cpe_coverage.eligible_unmapped,
+        addressable_without_cpe = cpe_coverage.addressable_without_cpe,
+        unaddressable = cpe_coverage.unaddressable,
         "cpe: synthesis coverage"
     );
     let cpe_coverage_json = cpe_coverage.wire();
@@ -6390,26 +6391,139 @@ async fn run_closure_ecosystem_identity(
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(crate) struct CpeSynthesisCoverage {
     /// Components carrying at least one CPE candidate after the pass.
-    pub(crate) with_candidates: usize,
-    /// Components that reached the pass eligible — empty CPEs, release-shaped
-    /// version — and for which the synthesizer had no opinion.
     ///
-    /// Measured on the pinned closure: 138 of these are `pkg:hackage`, for
-    /// which there is no arm at all. That is correct (FR-007 silent-skip) and
-    /// makes this the larger count by a wide margin, which is worth knowing
-    /// before the shape is read as a problem.
-    pub(crate) eligible_unmapped: usize,
+    /// Unchanged in meaning by milestone 1373 (FR-006), and the sameness was
+    /// measured rather than argued: the post-pass "has CPEs" set is exactly
+    /// (components that already had CPEs) ∪ (components the synthesizer
+    /// served), which is what the v1 field counted. 78 either way on the
+    /// pinned closure.
+    pub(crate) with_candidates: usize,
+    /// Components with no CPE whose PURL type a vulnerability feed indexes.
+    ///
+    /// **Not a gap.** A `pkg:hackage` component is answerable through OSV
+    /// using the PURL this document already carries; measured end to end,
+    /// six of the closure's 163 return advisories, with the affected-version
+    /// range applied.
+    pub(crate) addressable_without_cpe: usize,
+    /// Components with no CPE whose PURL type no feed indexes.
+    ///
+    /// **This is the gap.** `pkg:generic` names no registry, so a CPE is the
+    /// only route to a feed at all: `pkg:generic/openssl@3.0.0` and
+    /// `pkg:generic/zlib@1.2.11` return nothing from OSV despite well-known
+    /// CVEs.
+    ///
+    /// Expect this to be the largest count on a closure document — 733 of 977
+    /// on the pinned one — and that is the honest figure rather than a
+    /// regression. The v1 field it replaces read 284, because its
+    /// release-shape gate excluded most `pkg:generic` components while
+    /// counting `pkg:hackage` ones that were never unreachable.
+    pub(crate) unaddressable: usize,
 }
 
 impl CpeSynthesisCoverage {
     /// The C209 value: a JSON object encoded as a string, on the C192 / C204 /
     /// C208 template.
+    ///
+    /// `/v2` because the shape changed incompatibly. A consumer reading
+    /// `eligible_unmapped` now gets nothing, and the schema string is how it
+    /// learns that rather than reading an absent key as zero.
     pub(crate) fn wire(&self) -> String {
         let mut obj = serde_json::Map::new();
-        obj.insert("schema".into(), "waybill-cpe-coverage/v1".into());
+        obj.insert("schema".into(), "waybill-cpe-coverage/v2".into());
         obj.insert("with_candidates".into(), self.with_candidates.into());
-        obj.insert("eligible_unmapped".into(), self.eligible_unmapped.into());
+        obj.insert(
+            "addressable_without_cpe".into(),
+            self.addressable_without_cpe.into(),
+        );
+        obj.insert("unaddressable".into(), self.unaddressable.into());
         serde_json::Value::Object(obj).to_string()
+    }
+
+    /// The three counts partition the component set (FR-002, SC-002).
+    pub(crate) fn total(&self) -> usize {
+        self.with_candidates + self.addressable_without_cpe + self.unaddressable
+    }
+}
+
+/// PURL type → the OSV ecosystem that indexes it (milestone 1373, FR-003).
+///
+/// # Both halves, and why neither alone will do
+///
+/// A row may exist only when **both** hold against committed output in
+/// `specs/1373-hackage-cpe-decision/measurements/`:
+///
+/// 1. the ecosystem appears in OSV's published list
+///    (`osv-ecosystems-2026-11-07.txt`, 47 entries), and
+/// 2. a probe returned that ecosystem's advisories for a known-vulnerable
+///    version.
+///
+/// Membership alone asserts coverage nobody measured. A probe alone admits
+/// `generic`: `pkg:generic/curl@7.60.0` returns exactly one advisory, and it
+/// is `OSV-2017-79`, an OSS-Fuzz finding keyed on a project name rather than
+/// any curl CVE — while `openssl@3.0.0` and `zlib@1.2.11` return zero despite
+/// well-known CVEs. OSV's list has no `generic`, so (1) excludes it.
+///
+/// # Why only three rows
+///
+/// A sixteen-row draft covering every type waybill emits was cut: thirteen
+/// satisfied (1) alone. The cut changed no emitted figure — across all 17
+/// corpus targets, **zero** components are classified addressable on an
+/// unprobed type, because `cargo`, `golang`, `maven` and the rest already
+/// carry CPEs from existing arms and never reach that branch.
+///
+/// A type absent from this table is [`FeedAddressability::Unaddressable`].
+/// That is conservative on purpose: the honest answer for an unprobed type is
+/// "nobody measured whether a feed indexes this".
+///
+/// # Maintenance
+///
+/// **This is a dated observation, not a truth.** OSV adds ecosystems. Adding
+/// a row without re-probing is the defect `scripts/probe-cpe-dictionary.sh`
+/// exists to prevent, one feed over. `measurements/partition.py` holds the
+/// same table and a test asserts they stay in step.
+pub(crate) const OSV_INDEXED_PURL_TYPES: &[(&str, &str)] = &[
+    ("hackage", "Hackage"),
+    ("npm", "npm"),
+    ("pypi", "PyPI"),
+];
+
+/// Can any vulnerability feed address this component? (milestone 1373)
+///
+/// A **closed enum with an exhaustive match**, not an allowlist consulted
+/// with a default arm. Issue #892 survived roughly two years behind an
+/// allowlist that fell out of date silently; the same shape here would let a
+/// new PURL type be counted without anyone noticing it was never considered.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum FeedAddressability {
+    /// Carries at least one CPE, from any source.
+    WithCandidates,
+    /// No CPE, but a feed indexes this PURL type.
+    AddressableWithoutCpe,
+    /// No CPE, and no feed indexes this PURL type.
+    Unaddressable,
+}
+
+/// Classify one component.
+///
+/// `WithCandidates` wins over addressability, and the precedence is
+/// load-bearing: 72 `pkg:pypi` components on the pinned closure both carry a
+/// CPE and belong to an OSV-indexed ecosystem. Counting them in two buckets
+/// would break the partition; counting them as merely addressable would hide
+/// that the synthesizer served them.
+pub(crate) fn classify_addressability(
+    component: &waybill_common::resolution::ResolvedComponent,
+) -> FeedAddressability {
+    if !component.cpes.is_empty() {
+        return FeedAddressability::WithCandidates;
+    }
+    let ecosystem = component.purl.ecosystem();
+    if OSV_INDEXED_PURL_TYPES
+        .iter()
+        .any(|(purl_type, _)| *purl_type == ecosystem)
+    {
+        FeedAddressability::AddressableWithoutCpe
+    } else {
+        FeedAddressability::Unaddressable
     }
 }
 
@@ -6491,11 +6605,9 @@ fn is_release_shaped(version: &str) -> bool {
 fn fill_missing_cpes(
     components: &mut [waybill_common::resolution::ResolvedComponent],
 ) -> CpeSynthesisCoverage {
-    let mut coverage = CpeSynthesisCoverage::default();
     for c in components.iter_mut() {
         if !c.cpes.is_empty() {
             // An earlier pass, or the operator. Not ours to recompute.
-            coverage.with_candidates += 1;
             continue;
         }
         if !is_release_shaped(&c.version) {
@@ -6519,13 +6631,39 @@ fn fill_missing_cpes(
             continue;
         }
         let synthesized = crate::generate::cpe::synthesize_cpes(c);
-        if synthesized.is_empty() {
-            coverage.eligible_unmapped += 1;
-        } else {
-            coverage.with_candidates += 1;
+        if !synthesized.is_empty() {
             c.cpes = synthesized;
         }
     }
+
+    // Milestone 1373 (#1375) — classify in a second pass over **every**
+    // component, not inside the synthesis loop.
+    //
+    // The loop above `continue`s past components that are ineligible for
+    // synthesis: an empty or non-release-shaped version, or a closure member.
+    // Counting inside it is what left those components in no bucket at all —
+    // 24 versionless `pkg:hackage` PURLs among them — and what made the v1
+    // `eligible_unmapped` describe the synthesizer's input rather than the
+    // document. `is_release_shaped` still gates synthesis; it no longer gates
+    // the metric.
+    let mut coverage = CpeSynthesisCoverage::default();
+    for c in components.iter() {
+        match classify_addressability(c) {
+            FeedAddressability::WithCandidates => coverage.with_candidates += 1,
+            FeedAddressability::AddressableWithoutCpe => coverage.addressable_without_cpe += 1,
+            FeedAddressability::Unaddressable => coverage.unaddressable += 1,
+        }
+    }
+
+    // FR-002 / SC-002 — the three partition the component set. An assertion
+    // rather than a comment: it is the property the v1 row never had, and the
+    // cheapest check that no component was classified twice or not at all.
+    debug_assert_eq!(
+        coverage.total(),
+        components.len(),
+        "cpe coverage must partition the component set"
+    );
+
     coverage
 }
 
@@ -9669,9 +9807,17 @@ mod cpe_coverage_tests {
         let cov = fill_missing_cpes(&mut c);
         assert!(c[0].cpes.is_empty());
         assert_eq!(cov.with_candidates, 0);
-        // Not eligible, so not counted as unmapped either: the version, not
-        // the table, is what declined it.
-        assert_eq!(cov.eligible_unmapped, 0);
+        // Milestone 1373 (#1375) — this component used to be in **no**
+        // bucket: the v1 metric counted inside the synthesis loop, and that
+        // loop skips a non-release-shaped version before counting anything.
+        //
+        // It is now `unaddressable`, which is the truthful answer. It is
+        // `pkg:generic`, so no feed indexes it, and its version means no CPE
+        // can be synthesized either — it is reachable by nothing, and that is
+        // precisely what the count is for. Components like this are why the
+        // v1 figure read 284 where the real number is 733.
+        assert_eq!(cov.unaddressable, 1);
+        assert_eq!(cov.total(), 1, "every component lands in exactly one bucket");
     }
 
     /// FR-002 — a closure member gets nothing.
@@ -9704,10 +9850,10 @@ mod cpe_coverage_tests {
         assert!(c[0].cpes.is_empty());
         assert_eq!(cov.with_candidates, 0);
         assert_eq!(
-            cov.eligible_unmapped, 1,
-            "an eligible component the table has no row for must be visible \
-             in C209, or 'no mapped software' and 'the pass did not run' stay \
-             the same document"
+            cov.unaddressable, 1,
+            "a component the table has no row for must be visible in C209, or \
+             'no mapped software' and 'the pass did not run' stay the same \
+             document"
         );
     }
 
@@ -9722,7 +9868,7 @@ mod cpe_coverage_tests {
             c[0].cpes
         );
         assert_eq!(cov.with_candidates, 1);
-        assert_eq!(cov.eligible_unmapped, 0);
+        assert_eq!(cov.unaddressable, 0);
     }
 
     /// FR-004 / FR-005 — the operator wins.
@@ -9758,7 +9904,10 @@ mod cpe_coverage_tests {
         }
     }
 
-    /// FR-008 — the two counts tell three states apart.
+    /// Milestone 1367's FR-008 — the counts tell three states apart.
+    ///
+    /// Milestone 1373 (#1375) replaced `eligible_unmapped`; the distinction
+    /// this test exists for is unchanged, and `unaddressable` carries it.
     #[test]
     fn the_record_distinguishes_nothing_to_do_from_did_not_run() {
         let nothing = fill_missing_cpes(&mut []);
@@ -9766,9 +9915,9 @@ mod cpe_coverage_tests {
         let did_nothing = fill_missing_cpes(&mut unmapped);
 
         assert_eq!(nothing.with_candidates, 0);
-        assert_eq!(nothing.eligible_unmapped, 0);
+        assert_eq!(nothing.unaddressable, 0);
         assert_eq!(did_nothing.with_candidates, 0);
-        assert_eq!(did_nothing.eligible_unmapped, 1);
+        assert_eq!(did_nothing.unaddressable, 1);
         assert_ne!(
             nothing.wire(),
             did_nothing.wire(),
@@ -9776,7 +9925,212 @@ mod cpe_coverage_tests {
              how this defect survived a milestone"
         );
         assert!(nothing.wire().contains("\"with_candidates\":0"));
-        assert!(did_nothing.wire().contains("\"eligible_unmapped\":1"));
+        assert!(did_nothing.wire().contains("\"unaddressable\":1"));
+    }
+
+    // ---- milestone 1373 (#1375): feed addressability ----
+
+    /// Build a component with an arbitrary PURL type, which `component`
+    /// cannot: it hardcodes `pkg:generic`, and every case below turns on the
+    /// type.
+    fn typed(purl: &str, name: &str, version: &str) -> ResolvedComponent {
+        let mut c = component(name, version);
+        c.purl = waybill_common::types::purl::Purl::new(purl).unwrap();
+        c
+    }
+
+    /// T008 — `WithCandidates` wins over addressability.
+    ///
+    /// 72 `pkg:pypi` components on the pinned closure are in exactly this
+    /// position: they carry a CPE *and* belong to an OSV-indexed ecosystem.
+    /// Counting them in two buckets breaks the partition.
+    #[test]
+    fn m1373_t008_a_cpe_bearing_addressable_component_is_counted_once() {
+        let mut c = typed("pkg:pypi/urllib3@2.2.1", "urllib3", "2.2.1");
+        c.cpes = vec!["cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*".into()];
+        assert_eq!(
+            classify_addressability(&c),
+            FeedAddressability::WithCandidates
+        );
+
+        let mut v = vec![c];
+        let cov = fill_missing_cpes(&mut v);
+        assert_eq!(cov.with_candidates, 1);
+        assert_eq!(cov.addressable_without_cpe, 0);
+        assert_eq!(cov.total(), 1, "counted twice or not at all");
+    }
+
+    /// T009 — the two populations the whole feature exists to separate.
+    #[test]
+    fn m1373_t009_generic_is_unaddressable_and_hackage_is_not() {
+        assert_eq!(
+            classify_addressability(&typed("pkg:generic/openssl@3.0.0", "openssl", "3.0.0")),
+            FeedAddressability::Unaddressable,
+            "pkg:generic names no registry: OSV returns nothing for openssl 3.0.0 \
+             despite its CVEs"
+        );
+        assert_eq!(
+            classify_addressability(&typed("pkg:hackage/aeson@2.2.4.1", "aeson", "2.2.4.1")),
+            FeedAddressability::AddressableWithoutCpe,
+            "OSV indexes Hackage and reaches this exact PURL"
+        );
+    }
+
+    /// T010 (FR-008) — a versionless PURL is still addressable.
+    ///
+    /// The 24 such `pkg:hackage` components on the pinned closure are in no
+    /// count at all before this milestone, because the v1 metric counted
+    /// inside the synthesis loop and that loop skips them.
+    #[test]
+    fn m1373_t010_a_versionless_purl_is_still_addressable() {
+        let c = typed("pkg:hackage/base", "base", "");
+        assert_eq!(
+            classify_addressability(&c),
+            FeedAddressability::AddressableWithoutCpe
+        );
+
+        let mut v = vec![c];
+        let cov = fill_missing_cpes(&mut v);
+        assert_eq!(
+            cov.addressable_without_cpe, 1,
+            "a component with no version must still land in exactly one bucket"
+        );
+        assert_eq!(cov.total(), 1);
+    }
+
+    /// T011 — an unknown PURL type falls to `Unaddressable`, not through a
+    /// crack. `pkg:github` is the real instance: 1 component on the pinned
+    /// closure.
+    #[test]
+    fn m1373_t011_an_unmapped_purl_type_is_unaddressable() {
+        assert_eq!(
+            classify_addressability(&typed(
+                "pkg:github/kusari-oss/waybill@1.0.0",
+                "waybill",
+                "1.0.0"
+            )),
+            FeedAddressability::Unaddressable
+        );
+    }
+
+    /// T012 (FR-003 half a, SC-005) — every row's ecosystem is one OSV
+    /// publishes. This is the half that stops a row being added from memory.
+    #[test]
+    fn m1373_t012_every_row_is_in_osvs_declared_ecosystem_list() {
+        let declared = include_str!(
+            "../../../specs/1373-hackage-cpe-decision/measurements/osv-ecosystems-2026-11-07.txt"
+        );
+        let names: std::collections::HashSet<String> = declared
+            .lines()
+            .filter(|l| !l.trim().is_empty())
+            .map(|l| {
+                l.split(':').next().unwrap_or(l).trim().to_ascii_lowercase()
+            })
+            .collect();
+
+        // CONTROL: the list parsed to something, or every assertion below
+        // passes over an empty set.
+        assert!(
+            names.len() > 40,
+            "the committed ecosystem list parsed to {} names; it should hold 47",
+            names.len()
+        );
+        assert!(
+            !names.contains("generic"),
+            "OSV publishes no `generic` ecosystem; if it now does, FR-003's \
+             reasoning needs re-measuring rather than this test relaxing"
+        );
+
+        for (purl_type, osv) in OSV_INDEXED_PURL_TYPES {
+            assert!(
+                names.contains(&osv.to_ascii_lowercase()),
+                "`{purl_type}` claims OSV ecosystem `{osv}`, which is not in \
+                 the committed list. Re-probe before adding a row."
+            );
+        }
+    }
+
+    /// T016 (FR-002, SC-002) — the three counts partition the component set.
+    ///
+    /// **Added because the mutation check found the invariant uncovered.**
+    /// `fill_missing_cpes` carries a `debug_assert_eq!` for this, and
+    /// deleting that assertion left the whole suite green: nothing else
+    /// compared the sum to the component count. An assertion no test can
+    /// distinguish from its own absence is a comment with punctuation.
+    ///
+    /// The population is deliberately mixed — one of each bucket, plus the
+    /// two shapes the synthesis loop `continue`s past (an empty version and a
+    /// non-release-shaped one), because those are exactly the components the
+    /// v1 metric lost.
+    #[test]
+    fn m1373_t016_the_counts_partition_the_component_set() {
+        let mut cpe_bearing = typed("pkg:pypi/urllib3@2.2.1", "urllib3", "2.2.1");
+        cpe_bearing.cpes = vec!["cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*".into()];
+
+        let mut v = vec![
+            cpe_bearing,
+            typed("pkg:hackage/aeson@2.2.4.1", "aeson", "2.2.4.1"),
+            typed("pkg:hackage/base", "base", ""),
+            typed("pkg:generic/openssl@3.0.0", "openssl", "3.0.0"),
+            typed("pkg:generic/libcxx@0-unstable-2018-06-17", "libcxx", "0-unstable-2018-06-17"),
+            typed("pkg:github/kusari-oss/waybill@1.0.0", "waybill", "1.0.0"),
+        ];
+        let n = v.len();
+        let cov = fill_missing_cpes(&mut v);
+
+        assert_eq!(
+            cov.total(),
+            n,
+            "the three counts must sum to the component count: {cov:?}"
+        );
+
+        // And the split itself, so a classifier that put everything in one
+        // bucket would still fail even though the sum held.
+        assert_eq!(cov.with_candidates, 2, "urllib3 plus synthesized openssl: {cov:?}");
+        assert_eq!(cov.addressable_without_cpe, 2, "aeson and base: {cov:?}");
+        assert_eq!(cov.unaddressable, 2, "libcxx and the github PURL: {cov:?}");
+    }
+
+    /// T012b (F4) — `partition.py` holds the same table and is the
+    /// instrument for SC-001. If the two drift, the check and the code it
+    /// checks agree by construction and the check is worthless.
+    #[test]
+    fn m1373_t012b_the_probe_and_the_code_hold_the_same_table() {
+        let probe = include_str!(
+            "../../../specs/1373-hackage-cpe-decision/measurements/partition.py"
+        );
+        let table = probe
+            .split("PURL_TO_OSV = {")
+            .nth(1)
+            .expect("partition.py must define PURL_TO_OSV")
+            .split('}')
+            .next()
+            .expect("unterminated PURL_TO_OSV");
+
+        let rows: std::collections::HashSet<String> = table
+            .split(',')
+            .filter_map(|entry| {
+                let mut parts = entry.split(':');
+                let k = parts.next()?.trim().trim_matches('"').to_string();
+                let v = parts.next()?.trim().trim_matches('"').to_string();
+                if k.is_empty() || v.is_empty() {
+                    None
+                } else {
+                    Some(format!("{k}={}", v.to_ascii_lowercase()))
+                }
+            })
+            .collect();
+
+        let ours: std::collections::HashSet<String> = OSV_INDEXED_PURL_TYPES
+            .iter()
+            .map(|(t, e)| format!("{t}={}", e.to_ascii_lowercase()))
+            .collect();
+
+        assert_eq!(
+            rows, ours,
+            "partition.py and OSV_INDEXED_PURL_TYPES have drifted; SC-001's \
+             check would then agree with the code by construction"
+        );
     }
 
     fn component(name: &str, version: &str) -> ResolvedComponent {
