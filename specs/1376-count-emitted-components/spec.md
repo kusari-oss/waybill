@@ -60,6 +60,69 @@ with    --root-name   root=pkg:generic/slack-web-harness@0.0.0 row=200  componen
 **The configuration CI always runs is the one in which the promise is true.**
 A user scanning their own single-module project gets the other one.
 
+## Clarifications
+
+### Session 2026-11-07
+
+- Q: The documented check fails on CDX-with-real-root and on SPDX 3. How should the property be stated? → A: A per-format expression, documented, including CDX's three-case rule
+- Q: Where should the test exercising a **real** root live, given the corpus cannot produce one? → A: An integration test that scans without `--root-name`, exercising the real `select_root` ladder
+
+### The expressions, verified before being written down
+
+| format | expression |
+| --- | --- |
+| CycloneDX | `len(components[])` **+ 1** if `metadata.component` is a *real* component and its `bom-ref` is not already in `components[]` |
+| SPDX 2.3 | `len(packages[])` |
+| SPDX 3 | `Package` nodes **+** `File` nodes |
+
+A consumer can tell a real root from a synthetic placeholder without inside
+knowledge: a **real** root carries `waybill:*` properties
+(`waybill:component-role`, `waybill:sbom-tier`, …); a synthetic one carries
+**none**.
+
+**The CDX rule needs all three clauses**, which is why it is not a one-liner:
+
+| root | real? | in `components[]`? | adjustment |
+| --- | --- | --- | --- |
+| synthetic (`--root-name`, or no main module) | no | no | **+0** |
+| one main-module, promoted | yes | no | **+1** |
+| several main-modules, one elected | yes | yes | **+0** |
+
+Dropping any clause breaks one of the three. Verified against every shape
+available: `slack-web` promoted (200 = 200), `slack-web --root-name`
+synthetic (200 = 200), live `moat` duplicated (977 = 977), and **15 of the 16
+corpus targets carrying the row**.
+
+The sixteenth, `pants-example-javascript`, disagrees by 1 — and that is the
+**filtered golden**, already recorded as a structural exception in #1380's
+spec: `corpus_harness_195/js_filter.rs` removes a file-tier entry the row
+counts. The expression is right; that artifact is not a whole document.
+
+### The fixture already exists — four of them
+
+The integration test needs a project with exactly one main module scanned
+without `--root-name`. **No new fixture is required.** Four in-tree fixtures
+already produce a promoted real root:
+
+| fixture | elected root |
+| --- | --- |
+| `pnpm_v9_scope` | `pkg:npm/waybill-fixture-pnpm-v9-scope@1.0.0` |
+| `sbom_edit` | `pkg:npm/acme-shop@1.4.0` |
+| `closure_role_scope` | `pkg:hackage/waybill-fixture-roleproj@0.1.0` |
+| `nix_eval` | `pkg:hackage/waybill-fixture-ifd@0.1.0.0` |
+
+And both checked exhibit the failure the naive expression produces:
+
+```
+pnpm_v9_scope       row=10  .components|length=9   naive check FAILS   expression agrees
+closure_role_scope  row= 6  .components|length=5   naive check FAILS   expression agrees
+```
+
+**The shape was in the tree the whole time and nothing asserted against it.**
+That removes the cost this option appeared to carry — a fixture to build and
+maintain — and it sharpens what went wrong: not that the case was unreachable
+in testing, but that no test ever looked at it.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — a consumer checks the row and believes the answer (P1)
@@ -109,7 +172,10 @@ fails if the root is dropped from the accounting.
 ## Requirements *(mandatory)*
 
 - **FR-001**: The documented property MUST be true for every emitted format
-  and every project shape, or it MUST state its own preconditions.
+  and every project shape. It is stated as **one expression per format**, not
+  one expression that happens to hold for a subset. Preconditions are not an
+  acceptable substitute: a check qualified by conditions a reader must first
+  evaluate is the shape that produced this defect.
 - **FR-002**: The counts themselves MUST NOT change. They are correct, and
   this feature exists because the description of them is not.
 - **FR-003**: A consumer MUST be able to verify the row from the document
@@ -118,9 +184,11 @@ fails if the root is dropped from the accounting.
 - **FR-004**: The verification expression MUST be given per format where the
   formats genuinely differ, rather than one expression that is true for one
   of them and quietly wrong for the others.
-- **FR-005**: The corpus or the test suite MUST exercise a **real** root —
-  the shape `--root-name` currently prevents — so this class of claim is
-  guarded rather than assumed.
+- **FR-005**: An **integration test** MUST exercise a real root by scanning a
+  fixture with exactly one main module **without** `--root-name`, so the real
+  `select_root` ladder runs rather than a constructed document standing in
+  for it. An existing fixture MUST be used — four already produce this shape
+  — rather than a new one added.
 - **FR-006**: No document's content changes. No component is added, removed
   or relocated to make a check easier.
 

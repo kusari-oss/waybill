@@ -44,10 +44,19 @@ thinks that is the obvious answer should read the Out of scope section first.
 
 ### A risk this checklist cannot catch
 
-FR-005 asks for a test exercising a **real** root, which the corpus cannot
-produce while `--root-name` is passed everywhere. Whether that belongs in the
-corpus harness, a unit test, or a new fixture is a design question for
-planning. If it lands as a unit test over constructed components, it will not
-exercise the real `select_root` ladder — and the ladder is where the
-behaviour lives. Planning should say which it is and what that choice does
-not cover.
+FR-005 asked where a real-root test should live. **Resolved during
+clarification**: an integration test scanning an existing fixture without
+`--root-name`, so the real `select_root` ladder runs.
+
+The risk this item was raised against has partly evaporated on measurement —
+four in-tree fixtures already produce a promoted real root, and two were
+checked to exhibit the exact failure (`row=10` against
+`.components|length=9`). So the shape was never unreachable; it was simply
+never asserted against.
+
+**The residual risk is narrower and worth stating.** The four fixtures are
+`npm` and `hackage` roots. A promoted root arising from a different ecosystem
+— a single Cargo crate, a single Go module — is not covered by any of them,
+and the `cargo` and `pants_go` fixtures were measured to produce *synthetic*
+roots instead. Planning should decide whether one ecosystem's promoted root
+is enough evidence for the rule, or whether a second is wanted.
