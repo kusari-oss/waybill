@@ -792,3 +792,122 @@ question a spec has to answer before this ships:
 **No figure above depends on that choice.** The 75 is what a direct read of
 this closure yields; what fraction survives confirmation is unmeasured, and
 this file does not guess it.
+
+---
+
+# Re-check, 2026-11-06 (after milestone 1366)
+
+Same project, same pinned revision, same committed script
+(`compare-sbomnix.sh`), same sbomnix build. `flake.lock` verified
+byte-identical on both sides before and after.
+
+## The coverage comparison did not move, and should not have
+
+|  | sbomnix | waybill | ratio |
+| --- | --- | --- | --- |
+| components | 1,274 | 942 | 1.35× |
+| edges | 8,230 | 5,131 | 1.60× |
+| licensed | 301 | 225 | |
+| hashed | 0 | **136** | |
+| no identifier at all | 106 | **0** | |
+| names | 819 | 810 | shared 712 |
+| GHC boot libraries | 0 of 6 | **6 of 6** | |
+
+Identical to the previous re-check in every cell. Milestone 1366 changes what
+components are *called*, not how many there are, and this table is the
+evidence for that rather than an assurance about it.
+
+## The identity comparison did move, and that was the point
+
+The previous re-check ended: *"coverage is nearly closed but identity is
+not."* That is the half that changed.
+
+**A vulnerability feed keys on an ecosystem-qualified PURL.** Counting how
+many components in each document carry a PURL type a feed actually indexes:
+
+|  | sbomnix | waybill (before 1366) | waybill (now) |
+| --- | --- | --- | --- |
+| `pkg:nix` | 1,168 | — | — |
+| no identifier | 106 | 0 | 0 |
+| `pkg:generic` | — | 781 | **707** |
+| `pkg:hackage` | — | 160 | 160 |
+| `pkg:pypi` | — | **0** | **74** |
+| **feed-matchable** | **0 of 1,274** | 160 of 942 | **234 of 942** |
+
+`nix` is not a purl-spec type — waybill's own emitter says so at the point it
+declines to use one — so **none of sbomnix's 1,274 components is answerable to
+a vulnerability query**, and neither were 781 of waybill's. 74 of those now
+are.
+
+The five names with known CVE histories, queried against the emitted document
+by ecosystem-qualified identifier:
+
+| name | before | now |
+| --- | --- | --- |
+| urllib3 | nothing | `pkg:pypi/urllib3@2.6.3` |
+| requests | nothing | `pkg:pypi/requests@2.33.1` |
+| lxml | nothing | `pkg:pypi/lxml@6.0.2` |
+| jinja2 | nothing | `pkg:pypi/jinja2@3.1.6` |
+| certifi | nothing | `pkg:pypi/certifi@2026.01.04` |
+
+## What "feed-matchable" claims, and what it does not
+
+It counts components whose PURL **type** is one the public feeds index. It is
+not a claim that a feed holds an advisory for that coordinate, and it is not a
+claim that the derivation is the published project — milestone 1366 confirms
+that a package exists at that name and version, which is necessary and not
+sufficient. See `specs/1366-closure-ecosystem-purl/`.
+
+`pkg:github` (1 component) is excluded: it identifies a flake input's source
+repository, not a package in an ecosystem a feed keys on.
+
+## The comparison script hides this by default
+
+`compare-sbomnix.sh` runs waybill with `--no-deps-dev`, which keeps it
+hermetic and fast — and **suppresses confirmation entirely**, so the table it
+prints shows `pkg:generic 781` and no `pkg:pypi` at all. The identity figures
+above come from a second run of the same binary on the same project with
+confirmation enabled.
+
+That is worth stating plainly because it is the same blindness the corpus has,
+for the same reason, and a future re-check that reads only the script's output
+will conclude milestone 1366 did nothing.
+
+## Where each tool stands now
+
+> **Superseded in one respect, 2026-11-06.** Milestone 1367 (#1371) landed
+> after this re-check was taken and gives 77 components a CPE where the
+> document below records 0 — the six C libraries from the curated table
+> (`openssl`, `curl`, `zlib`, `sqlite`, `pcre2`, `llvm`) plus the 71
+> `pkg:pypi` components. The PURL figures here are unaffected; the
+> "answerable to a feed" count is a floor rather than a total, because an
+> NVD-keyed scanner can now match components this document counts as
+> unmatchable. The figures below are left as measured rather than restated —
+> they are a dated record of what the comparison showed on the day.
+
+**waybill identifies; sbomnix enumerates.** Every waybill component carries a
+PURL against sbomnix's 106 with none; 136 carry a hash against 0; 234 are
+answerable to a vulnerability feed against 0; and the six GHC boot libraries
+no derivation walk can reach are still 6-of-6 against 0-of-6.
+
+**sbomnix still reports more of the build**: 1,274 components to 942 and 8,230
+edges to 5,131, unchanged at 1.35× and 1.60×. The residual coverage gap is 32
+names and the edge undershoot is #1367; neither is this milestone's.
+
+## Reproducing
+
+```sh
+S=/nix/store/cbh4k59d3sa3w9axcwdbk6jzkg99ybvk-python3.14-sbomnix-1.9.0+g95480c2/bin/sbomnix
+# Copy the clone first; evaluating a flake in place can re-lock it.
+cp -R <moat clone at d069055> moat-proj
+md5 -q <moat clone>/flake.lock moat-proj/flake.lock
+
+# the comparable table (confirmation OFF, as the script has always run it)
+SBOMNIX=$S PROJ=$PWD/moat-proj WAYBILL=./target/debug/waybill \
+  bash specs/1276-boot-library-scope/measurements/compare-sbomnix.sh
+
+# the identity figures (confirmation ON)
+( cd moat-proj && waybill sbom scan --no-deep-hash --nix-closure \
+    --no-clearly-defined --path . --format cyclonedx-json \
+    --output cyclonedx-json=/tmp/confirmed.cdx.json )
+```
