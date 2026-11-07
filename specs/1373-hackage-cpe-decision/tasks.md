@@ -30,9 +30,10 @@ a wrong implementation unless the expectation is pinned first.
 - [ ] T007 Add the `FeedAddressability` enum and its classifier function in `waybill-cli/src/cli/scan_cmd.rs`, as a **closed enum with an exhaustive match** rather than an allowlist with a default arm (#892 survived ~2 years behind an allowlist that fell out of date)
 - [ ] T008 [P] Unit-test in `scan_cmd.rs` that a component carrying CPEs classifies `WithCandidates` **even when its PURL type is also addressable** — 72 `pkg:pypi` components on the pinned closure are in exactly that position, and counting them twice breaks FR-002's sum
 - [ ] T009 [P] Unit-test in `scan_cmd.rs` that `pkg:generic` with no CPE classifies `Unaddressable`, and `pkg:hackage` with no CPE classifies `AddressableWithoutCpe`
-- [ ] T010 [P] Unit-test in `scan_cmd.rs` that a **versionless** `pkg:hackage` PURL still classifies `AddressableWithoutCpe`. The 24 such components are in no count today, and FR-008 exists because partitioning only the release-shaped subset is what loses them
+- [ ] T010 [P] Unit-test in `scan_cmd.rs` that a **versionless** `pkg:hackage` PURL still classifies `AddressableWithoutCpe` (FR-008). The 24 such components are in no count today, and FR-008 exists because partitioning only the release-shaped subset is what loses them
 - [ ] T011 [P] Unit-test in `scan_cmd.rs` that a PURL type absent from `OSV_INDEXED_PURL_TYPES` classifies `Unaddressable` rather than panicking or being skipped — `pkg:github` is the real instance, 1 component on the pinned closure
-- [ ] T012 Add a test asserting **every value** in `OSV_INDEXED_PURL_TYPES` appears in the committed `measurements/osv-ecosystems-2026-11-07.txt` (FR-003 half a). This is the half that stops a row being added from memory
+- [ ] T012 Add a test asserting **every value** in `OSV_INDEXED_PURL_TYPES` appears in the committed `measurements/osv-ecosystems-2026-11-07.txt` (FR-003 half a, SC-005). This is the half that stops a row being added from memory
+- [ ] T012a Record in `measurements/README.md` a probe result for **every** type in `OSV_INDEXED_PURL_TYPES` — FR-003 half b, SC-005 — showing that ecosystem's advisories returned for a known-vulnerable version. Only `hackage`, `pypi` and `npm` are probed today; `golang`, `cargo`, `maven`, `gem`, `nuget`, `composer`, `deb`, `apk`, `hex`, `pub`, `cran`, `swift` and `opam` are **not**. Per FR-003, a type satisfying only half a is **not** addressable, so either probe it or remove its row — list membership alone is the failure mode `pkg:generic`'s OSS-Fuzz hit illustrates from the other direction
 
 ---
 
@@ -45,11 +46,11 @@ the synthesizer had no arm for.
 unreachable count against a hand count from the document.
 
 - [ ] T013 [US1] **Make the existing tests fail first.** `waybill-cli/tests/closure_component_cpes.rs:411` asserts `eligible_unmapped >= 1` and line 439 asserts the literal `waybill-cpe-coverage/v1`. Update both to the v2 shape **before** changing the struct, and confirm they fail; a test that passes unchanged across this edit was not asserting the shape
-- [ ] T014 [US1] Replace `eligible_unmapped` with `addressable_without_cpe` and `unaddressable` on `CpeSynthesisCoverage` in `waybill-cli/src/cli/scan_cmd.rs`, and bump `wire()`'s schema to `waybill-cpe-coverage/v2`
+- [ ] T014 [US1] Replace `eligible_unmapped` with `addressable_without_cpe` and `unaddressable` on `CpeSynthesisCoverage` in `waybill-cli/src/cli/scan_cmd.rs`, and bump `wire()`'s schema to `waybill-cpe-coverage/v2` (FR-001)
 - [ ] T015 [US1] Compute the three counts from the classifier over **every** component rather than only those passing `is_release_shaped`, keeping `is_release_shaped` as the gate on *synthesis* exactly as it is (FR-006 — `with_candidates` must not change meaning)
-- [ ] T016 [US1] Assert in `scan_cmd.rs` that the three counts **sum to the component count** — an assertion, not a comment. This is the invariant `eligible_unmapped` never had and the cheapest check that no component was classified twice or not at all
+- [ ] T016 [US1] Assert in `scan_cmd.rs` that the three counts **sum to the component count** (FR-002, SC-002) — an assertion, not a comment. This is the invariant `eligible_unmapped` never had and the cheapest check that no component was classified twice or not at all
 - [ ] T017 [US1] Update the `tracing::info!` at `scan_cmd.rs:4908` to log the three new fields; it currently names `eligible_unmapped` and would otherwise log a field that no longer exists
-- [ ] T018 [US1] Verify against the real closure that the emitted row reads **78 / 166 / 733** summing to 977, recording it in `measurements/README.md`. A different split is a finding, not a refresh — the figures were computed from the document before any code changed
+- [ ] T018 [US1] Verify against the real closure that the emitted row reads **78 / 166 / 733** summing to 977, recording it in `measurements/README.md`, and that the 24 versionless `pkg:hackage` components fall in `addressable_without_cpe` and in no other count (SC-006). A different split is a finding, not a refresh — the figures were computed from the document before any code changed
 
 ---
 
@@ -81,7 +82,7 @@ rather than re-running two NVD sweeps to reach it.
 - [ ] T026 Verify the **only** differing JSON path between pre- and post-change documents is the `waybill:cpe-coverage` record, compared structurally in all three formats (SC-003). Anything else means the change leaked out of the metric
 - [ ] T027 **Confirm the parity extractors need no change** rather than assuming it. The `cdx_anno!` / `spdx23_anno!` / `spdx3_anno!` macros key on the row label and not the payload, so C209's three rows should pass untouched — but milestone 1372 recorded that an extractor can compensate for a wire shape, so this is verified by running `holistic_parity` and `every_catalog_row_has_an_extractor` in the **lib** target, where that gate lives
 - [ ] T028 **Mutation-check the suite**, recording which tests go red in `measurements/README.md`. Classify every component `Unaddressable` → T018/T019 must fail. Drop the sum assertion → T016's test must fail. Return `WithCandidates` for an addressable-without-CPE component → T008 must fail. If the last leaves everything green, the double-count case is not covered
-- [ ] T029 Regenerate the **66 local goldens** with `WAYBILL_UPDATE_{CDX,SPDX,SPDX3}_GOLDENS=1`, remembering that **six** test files write them — `cdx_regression`, `spdx_regression`, `spdx3_regression`, `pkg_alias_binding_us1`, `oci_pull_backward_compat`, `optional_dep_classification` — and that regenerating only the three `*_regression` ones leaves the rest stale
+- [ ] T029 (FR-005) Regenerate the **66 local goldens** with `WAYBILL_UPDATE_{CDX,SPDX,SPDX3}_GOLDENS=1`, remembering that **six** test files write them — `cdx_regression`, `spdx_regression`, `spdx3_regression`, `pkg_alias_binding_us1`, `oci_pull_backward_compat`, `optional_dep_classification` — and that regenerating only the three `*_regression` ones leaves the rest stale
 - [ ] T030 Verify the local golden diff contains **only** C209 lines: 66 files changed, every changed line part of a `waybill:cpe-coverage` value, and **zero deletions outside it**. Use a normalized, sorted diff so array reordering cannot masquerade as a hit. **If a local golden did not move, the row is not being emitted where it was** — the inverse alarm to milestone 1372's
 - [ ] T031 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and on the per-target `test result: ok. N passed; 0 failed` lines, never on the absence of the word FAILED
 - [ ] T032 Refresh the corpus goldens through `public-corpus.yml` workflow dispatch with `regen_goldens=true` — never locally. Expect **16 of 17** targets to change
@@ -130,9 +131,9 @@ changes what the row says.
 | phase | tasks |
 | --- | --- |
 | Setup / baseline | 5 |
-| Foundational | 7 |
+| Foundational | 8 |
 | US1 (P1) | 6 |
 | US2 (P2) | 3 |
 | US3 (P3) | 3 |
 | Polish | 10 |
-| **total** | **34** |
+| **total** | **35** |
