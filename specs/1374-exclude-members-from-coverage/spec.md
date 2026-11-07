@@ -87,6 +87,7 @@ look at C204 to explain it.
 ### Session 2026-11-07
 
 - Q: Removing 539 members leaves C209's total short of the resolved component count. How should the gap be closed? → A: C209 carries an `excluded_members` count of its own, so the record stays verifiable without a cross-reference
+- Q: File-tier components are excluded too and get no count — 117 on `image-postgres16`, present on 11 of 17 corpus targets. Should they be counted? → A: Yes, a separate `excluded_files`, so the sum holds against the raw document on every target
 
 ### The resulting shape
 
@@ -96,25 +97,54 @@ look at C204 to explain it.
   "with_candidates": 78,
   "addressable_without_cpe": 166,
   "unaddressable": 194,
-  "excluded_members": 539
+  "excluded_members": 539,
+  "excluded_files": 0
 }
 ```
 
-`78 + 166 + 194 + 539 = 977`, the resolved component count. **Four counts, and
-they partition again** — the self-verifiability milestone 1373 was built for
-survives the exclusion rather than being traded away for it.
+**Five counts, summing to the document's own component count** — not to a
+filtered subset a reader has to derive. On the pinned closure
+`78 + 166 + 194 + 539 + 0 = 977`; on `rust-ripgrep` `61 + 0 + 7 + 0 + 7 = 68`.
+The property milestone 1373 was built for — a row whose sum a reader can
+check — survives this exclusion instead of being traded away for it.
 
 `excluded_members` duplicates a total C204 already implies, and that is
 accepted deliberately: C204 carries the *per-role* breakdown (`source` 455,
-`fragment` 65, `package` 12, `scaffolding` 7) and C209 carries only the total
-it needs to balance its own books. A reader wanting to know *what* was
-excluded still goes to C204; a reader wanting to know the row adds up does
-not have to.
+`fragment` 65, `package` 12, `scaffolding` 7) while C209 carries only the
+total it needs to balance its own books. A reader wanting to know *what* was
+excluded goes to C204; a reader wanting to know the row adds up does not
+have to. It also keeps the property true where C204 does not exist at all: a
+non-closure scan has no closure record, and `excluded_members: 0` states
+"nothing was excluded" where a missing field leaves it to inference.
 
-It also keeps the property true on documents where C204 does not exist. A
-non-closure scan has no closure record at all, and `excluded_members: 0`
-states "nothing was excluded" where a missing field would leave it to
-inference.
+**Two exclusions, two counts, deliberately not one.** A single `excluded`
+field would sum identically and collapse "this is a source tarball" into
+"this is a file" — the same conflation this milestone exists to undo, one
+level down.
+
+### Measured: file-tier is not a hypothetical population
+
+| target | components | file-tier |
+| --- | --- | --- |
+| `image-postgres16` | 263 | **117** |
+| `haskell-language-server` | 399 | **29** |
+| `maven-guice` | 61 | 13 |
+| `rust-ripgrep` | 68 | 7 |
+
+Present on **11 of 17** corpus targets. The current row already excludes them
+— verified: `row-sum + file-tier = total components` holds exactly on
+`rust-ripgrep` (61 + 7 = 68) and `haskell-language-server` (370 + 29 = 399) —
+so the count is well defined today and merely unreported.
+
+### The schema goes to v3, not an amended v2
+
+`waybill-cpe-coverage/v2` shipped in **no release**: the newest tag
+(`v0.14.1-nightly.20261107`) was built at 2026-11-06T23:12 and milestone 1373
+merged at 2026-11-07T07:35. Amending v2 in place was therefore available and
+is **rejected**: v2 is already in 33 local and 48 corpus goldens in git
+history, and reusing one version string for two different shapes is the exact
+failure a version string exists to prevent. A version that lived for one day
+is a cheaper thing to spend than a version number that means two things.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -162,10 +192,12 @@ closure record at all.
 
 - **FR-001**: Components carrying a closure member role MUST be excluded from
   all three C209 counts.
-- **FR-002**: The **four** counts MUST partition every resolved component —
+- **FR-002**: The **five** counts MUST partition the document's components —
   `with_candidates`, `addressable_without_cpe` and `unaddressable` over
-  non-members, and `excluded_members` over the rest — summing to the resolved
-  component count and to nothing else.
+  software, `excluded_members` over closure members, `excluded_files` over
+  file-tier entries — summing to the emitted component count and to nothing
+  else. The sum MUST be checkable against the document as it stands, with no
+  filtering rule the reader has to know.
 - **FR-003**: The exclusion MUST be by membership, not by proxy. A member is
   excluded whether or not it carries a CPE, a version, or an addressable PURL
   type, because the reason is what it is rather than what was done to it.
@@ -177,17 +209,23 @@ closure record at all.
 - **FR-007**: `excluded_members` MUST equal the total of C204's
   `member-roles` on any document carrying both, and the relationship MUST be
   documented so a reader knows where the per-role breakdown lives.
-- **FR-008**: The schema version MUST reflect that the counts' denominator
-  changed, so a consumer comparing two documents is not left to infer it from
-  the numbers.
+- **FR-008**: The schema version MUST become `waybill-cpe-coverage/v3`. v2
+  MUST NOT be amended in place even though it has shipped in no release,
+  because it is already in 81 committed goldens and one version string must
+  never describe two shapes.
+- **FR-009**: `excluded_files` MUST be counted where the file-tier set is
+  known. It is **not** available where the other counts are computed —
+  file-inventory mode is parsed well after that point — so the record is
+  finalised later rather than the count being guessed or omitted.
 
 ## Success Criteria *(mandatory)*
 
 - **SC-001**: On the pinned closure the row reads `78 / 166 / 194`, and the
   194 is reproduced by an independent recompute from the emitted document.
-- **SC-002**: The four counts sum to the resolved component count —
-  `78 + 166 + 194 + 539 = 977`; asserted, not commented. On any document
-  carrying C204, `excluded_members` equals its `member-roles` total.
+- **SC-002**: The five counts sum to the emitted component count on **every**
+  corpus target — `78 + 166 + 194 + 539 + 0 = 977` on the pinned closure,
+  `61 + 0 + 7 + 0 + 7 = 68` on `rust-ripgrep`; asserted, not commented. On any
+  document carrying C204, `excluded_members` equals its `member-roles` total.
 - **SC-003**: `with_candidates` and `addressable_without_cpe` are unchanged;
   measured before and after, not argued.
 - **SC-004**: Zero components change `{purl, cpe, cpes}`, compared as a set.
