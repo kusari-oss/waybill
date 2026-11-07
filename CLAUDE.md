@@ -456,6 +456,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-06
 - N/A for new state. Confirmation shares the existing deps.dev disk cache at `~/.cache/waybill/deps-dev/` (FR-011); nothing else persists. (1366-closure-ecosystem-purl)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `generate::cpe::synthesize_cpes` and its curated table (unchanged), `serde`/`serde_json` (the C209 value), `tracing`. **Zero new Cargo dependencies.** (1367-closure-component-cpes)
 - N/A. The pass is a pure in-memory transform; nothing persists beyond the emitted document. (1367-closure-component-cpes)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `RawInputs.drvs` (already parsed, `derivation.rs:58`), `serde`/`serde_json` (annotation values), `tracing`. **Zero new Cargo dependencies.** (1372-unreferenced-pname-components)
+- N/A. `GraphReferrers` is a per-`classify` in-memory set; nothing persists beyond the emitted document. (1372-unreferenced-pname-components)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -688,9 +690,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1372-unreferenced-pname-components: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `RawInputs.drvs` (already parsed, `derivation.rs:58`), `serde`/`serde_json` (annotation values), `tracing`. **Zero new Cargo dependencies.**
 - 1367-closure-component-cpes: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `generate::cpe::synthesize_cpes` and its curated table (unchanged), `serde`/`serde_json` (the C209 value), `tracing`. **Zero new Cargo dependencies.**
 - 1366-closure-ecosystem-purl: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values), `reqwest` via the existing `DepsDevClient`, `tracing`, `anyhow`. Reuses `pip::normalize_pypi_name_for_purl` (`pip/mod.rs:99`), `EnrichmentKey` (`request_key.rs:41`), `DepsDevSource` + its disk cache, `waybill_common::types::purl::Purl`. Dev: existing `wiremock = "0.6"` (`waybill-cli/Cargo.toml:236`). **Zero new Cargo dependencies.**
-- 1282-closure-nameless-components: Added Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (annotation
 
 
 <!-- MANUAL ADDITIONS START -->

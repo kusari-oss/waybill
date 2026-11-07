@@ -207,11 +207,44 @@ impl ClosureConfig {
 }
 
 /// A classified closure, ready for emission.
+/// Milestone 1372 (#1366) — C210, what the build-graph signal did.
+///
+/// **Both counts are DERIVATIONS, not components.** The classifier works in
+/// derivations and the role is a per-derivation fact; 100 newly admitted
+/// derivations merge into roughly 45 components, so a reader comparing
+/// `admitted` against the document's component count will find they disagree.
+/// That gap is why the unit is stated here and in the catalog row rather than
+/// left to be inferred.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) struct GraphAdmissionRecord {
+    /// Derivations that begin emitting because of this signal.
+    pub(crate) admitted: usize,
+    /// Derivations already emitting whose role the signal corrected.
+    pub(crate) relabelled: usize,
+}
+
+impl GraphAdmissionRecord {
+    pub(crate) fn wire(&self) -> String {
+        let mut o = serde_json::Map::new();
+        o.insert("schema".into(), "waybill-closure-graph-admission/v1".into());
+        o.insert("admitted".into(), self.admitted.into());
+        o.insert("relabelled".into(), self.relabelled.into());
+        serde_json::Value::Object(o).to_string()
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct ClassifiedClosure {
     pub(crate) attribute: String,
     pub(crate) raw: RawClosure,
     pub(crate) roles: std::collections::BTreeMap<String, DerivationRole>,
+    /// Milestone 1372 (#1366) — the derivations the build graph alone put in
+    /// a role. Carried beside `roles` rather than derived from them, because
+    /// a `BuildTooling` role does not say which signal produced it.
+    pub(crate) graph_admitted: std::collections::BTreeSet<String>,
+    /// C210 — the counts over `graph_admitted`, split by whether the
+    /// derivation already emitted.
+    pub(crate) graph_admission: GraphAdmissionRecord,
     /// What the reader saw but did not consult (#1348, FR-009), and which
     /// members those unconsulted attributes name (#1346, FR-002).
     ///
@@ -372,6 +405,22 @@ pub(crate) fn resolve(
         DegradationReason::EvaluationFailed(format!("closure json unparseable: {e}"))
     })?;
     let roles = classify::classify(&raw);
+    let graph_admitted = classify::graph_admitted(&raw);
+    let graph_admission = {
+        // Split by what `emits_as_component` said BEFORE the signal existed:
+        // a derivation whose role is the only reason it emits is admitted;
+        // one that emitted anyway is relabelled.
+        let mut rec = GraphAdmissionRecord::default();
+        for key in &graph_admitted {
+            let Some(drv) = raw.derivations.get(key) else { continue };
+            if emit::emits_without_role(drv) {
+                rec.relabelled += 1;
+            } else {
+                rec.admitted += 1;
+            }
+        }
+        rec
+    };
     let read_outcome = raw.read_outcome(&classify::consulted_fields());
     let graph = graph::project(&raw, &emit::emitted_drv_keys(&raw, &roles));
     tracing::info!(
@@ -403,6 +452,8 @@ pub(crate) fn resolve(
         "nix-closure: dependency graph projected"
     );
     Ok(ClassifiedClosure {
+        graph_admitted,
+        graph_admission,
         attribute,
         raw,
         roles,

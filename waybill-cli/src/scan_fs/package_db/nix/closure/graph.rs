@@ -381,19 +381,43 @@ mod tests {
     fn t014_the_walk_stops_at_a_package_that_was_not_emitted() {
         // Contract P2. This is the row every "is it connected" test misses,
         // and the entire population of FR-011's orphan reason.
+        //
+        // **The emitted set is constructed here rather than derived from
+        // `classify`, and milestone 1372 (#1366) is why.** That milestone
+        // gives a role to every derivation the build graph names, so a
+        // derivation reachable through `inputs.drvs` now emits — which means
+        // "a package in the middle of a walk that was not emitted" can no
+        // longer arise from a real closure. Measured: 1,274 of the pinned
+        // closure's 1,275 derivations emit afterwards, against 1,174 before.
+        //
+        // The pass-through refusal this test protects is still correct, still
+        // reachable by any caller that restricts the emitted set, and still
+        // the thing FR-011's orphan reason depends on. Deriving the set from
+        // `classify` would have made the test assert the classifier's
+        // behaviour instead of the projection's, and it would have silently
+        // stopped exercising P2 at all.
         let c = fixture("stop_at_package.json");
-        let em = emitted(&c);
 
-        // CONTROL: pkgmid really is a package AND really is not emitted. If
-        // either were false the assertion below would hold vacuously.
+        // CONTROL: pkgmid really is a package. If it were not, the walk would
+        // pass through it for an unrelated reason and the assertion below
+        // would hold vacuously.
         assert!(
             c.derivations["pkgmid.drv"].declared_pname().is_some(),
             "pkgmid must declare a pname -- it is what makes the walk stop"
         );
-        assert!(!em.contains("pkgmid.drv"), "pkgmid must not be emitted");
+
+        // The emitted set, stated rather than inferred: everything but the
+        // package in the middle.
+        let em: HashSet<&str> = c
+            .derivations
+            .keys()
+            .map(String::as_str)
+            .filter(|k| *k != "pkgmid.drv")
+            .collect();
         assert!(em.contains("pkgleaf.drv"), "pkgleaf must be emitted");
 
-        let edges = edges_of(&c);
+        let edges: Vec<(String, String)> =
+            project(&c, &em).edges.into_iter().collect();
         assert!(
             !edges.iter().any(|(_, to)| to == "pkgleaf.drv"),
             "pkgleaf is reachable only through a PACKAGE that was not emitted; \

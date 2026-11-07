@@ -2398,6 +2398,47 @@ first runs by default.
    build-tooling, both, unreferenced) rather than `dependsOn` edges,
    because a store reference is not a declared dependency.
 
+### What `unreferenced` means, and what admitted it
+
+A component's role comes first from the derivation's **declared dependency
+attributes** — `buildInputs` and its relatives for an artifact input,
+`nativeBuildInputs` and its relatives for build tooling. When neither names a
+derivation, waybill consults nix's own build graph, the `inputs.drvs` map that
+records what each build actually consumed, and calls the derivation
+`build-tooling` if anything in the closure named it.
+
+So `unreferenced` now means **nothing in the closure consumed this, by either
+measure** — not merely "no declared attribute mentions it". Before milestone
+1372 (#1366) it meant the weaker thing, and on the project waybill measures it
+was wrong on 741 components: nix recorded a consumer for every one of them.
+Only the closure root is left, which is the control — it is the one derivation
+nothing consumes, and if it ever stops being `unreferenced` the signal is
+admitting components on no evidence.
+
+The practical consequence is that `gzip`, `gawk`, `gnused`, `less`, `patch` and
+`coreutils` are now in the document. They were absent, not merely unidentified.
+
+**A declared attribute always wins.** The build graph is consulted only where
+the attributes are silent, so it can add a role but never override one. The
+distinction is visible rather than implied: `waybill:closure-admission` with
+the value `build-graph` is emitted on exactly those components the graph
+admitted and no attribute named, and on no others.
+
+What a `build-graph` admission does **not** say is which kind of input it was.
+The attributes distinguish an artifact input from build tooling; `inputs.drvs`
+is undifferentiated, so everything it admits is called `build-tooling`. That
+is right for most of the population and not for all of it — `allowedRequisites`
+is nixpkgs' assertion about the *runtime* closure, and a derivation named only
+there is being called tooling when it is a runtime requisite. Resolving that
+needs a differentiated signal the closure JSON does not currently carry.
+
+Document scope, `waybill:closure-graph-admission`, carries the two counts —
+`admitted`, derivations that begin emitting, and `relabelled`, derivations
+already emitting whose role was corrected. **Both count derivations, not
+components**, because the classifier works in derivations; build variants share
+a `(name, version)` and merge, so the component figure is smaller and a reader
+comparing the two will find they disagree.
+
 ### When the closure tier degrades, it says why
 
 `waybill:nix-closure-degraded` carries a JSON object — `{"reason": ...}`
