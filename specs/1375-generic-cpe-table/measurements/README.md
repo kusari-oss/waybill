@@ -196,3 +196,253 @@ that run"* — **and it was not**. The note was written and the append was not.
 `m1375_every_product_has_a_committed_title_query` failed on `texinfo` the
 first time it ran, which is exactly what a traceability check is for: the
 prose claimed evidence that was not there.
+
+## T017 — the disposition of every name in the population
+
+All **186** names, so none is left in an unknown state and the
+population is answered once rather than re-probed (FR-007, SC-006).
+
+| disposition | names |
+| --- | --- |
+| **accepted** | 48 |
+| **rejected** | 3 |
+| **nixpkgs-shaped** | 47 |
+| **absent from NVD** | 88 |
+
+Totals: 186 = 186.
+
+- **accepted** — a dictionary-verified, title-confirmed row was added.
+- **rejected** — in NVD, but its entries are a different product. Three:
+  `ninja`, `cmake`, `libxcrypt`; see `research.md` R4 and the comment above
+  the table in `cpe.rs`.
+- **nixpkgs-shaped** — a construction name no one files advisories against
+  (`bootstrap-stage0-stdenv-darwin`, `apple-sdk-private-frameworks-hook`,
+  `cctools-binutils-darwin-wrapper`). Absence is **structural**; no probe
+  is needed and none was wasted on them.
+- **absent from NVD** — a canonical upstream name the dictionary simply
+  does not carry. Probed, found empty, recorded. This is the population a
+  future NVD addition could move, and the only one worth re-probing later.
+
+<details><summary>the full list</summary>
+
+- `AvailabilityVersions` — absent from NVD
+- `CoreSymbolication` — absent from NVD
+- `DarwinTools` — absent from NVD
+- `adv_cmds` — absent from NVD
+- `apple-sdk` — nixpkgs-shaped
+- `apple-sdk-private-frameworks-hook` — nixpkgs-shaped
+- `asciidoc` — absent from NVD
+- `atf` — absent from NVD
+- `auto-sign-darwin-binaries-hook` — nixpkgs-shaped
+- `autoconf` — absent from NVD
+- `automake` — accepted
+- `autoreconf-hook` — nixpkgs-shaped
+- `bash` — accepted
+- `bash-interactive` — absent from NVD
+- `bc` — accepted
+- `bison` — accepted
+- `bmake` — absent from NVD
+- `bootstrap-stage-xclang-stdenv-darwin` — nixpkgs-shaped
+- `bootstrap-stage0-clang-wrapper` — nixpkgs-shaped
+- `bootstrap-stage0-stdenv-darwin` — nixpkgs-shaped
+- `bootstrap-stage1-stdenv-darwin` — nixpkgs-shaped
+- `bootstrap-stage2-stdenv-darwin` — nixpkgs-shaped
+- `bootstrap-stage3-stdenv-darwin` — nixpkgs-shaped
+- `bootstrap-stage4-stdenv-darwin` — nixpkgs-shaped
+- `bootstrap_cmds` — nixpkgs-shaped
+- `brotli` — accepted
+- `byacc` — absent from NVD
+- `bzip2` — accepted
+- `c-ares` — accepted
+- `cctools` — nixpkgs-shaped
+- `cctools-binutils-darwin` — nixpkgs-shaped
+- `cctools-binutils-darwin-wrapper` — nixpkgs-shaped
+- `clang` — accepted
+- `clang-wrapper` — nixpkgs-shaped
+- `cmake` — rejected
+- `cmake-minimal` — absent from NVD
+- `compiler-rt` — accepted
+- `compiler-rt-libc` — absent from NVD
+- `copyfile` — absent from NVD
+- `coreutils` — accepted
+- `cpio` — accepted
+- `cups-headers` — absent from NVD
+- `die-hook` — nixpkgs-shaped
+- `diffutils` — accepted
+- `docbook-xml` — absent from NVD
+- `docbook-xsl-nons` — absent from NVD
+- `docbook-xsl-ns` — absent from NVD
+- `ed` — accepted
+- `ensure-newer-sources-hook` — nixpkgs-shaped
+- `expat` — accepted
+- `file` — accepted
+- `file_cmds` — absent from NVD
+- `find-xml-catalogs-hook` — nixpkgs-shaped
+- `findutils` — accepted
+- `fix-darwin-dylib-names-hook` — nixpkgs-shaped
+- `flex` — accepted
+- `gawk` — accepted
+- `gdbm` — absent from NVD
+- `getopt` — absent from NVD
+- `gettext` — accepted
+- `ghc` — absent from NVD
+- `ghc-binary` — absent from NVD
+- `ghc-platform` — absent from NVD
+- `ghc-settings-edit` — absent from NVD
+- `ghc-toolchain` — absent from NVD
+- `git-minimal` — absent from NVD
+- `gmp-with-cxx` — absent from NVD
+- `gnu-config` — absent from NVD
+- `gnugrep` — absent from NVD
+- `gnum4` — absent from NVD
+- `gnumake` — absent from NVD
+- `gnused` — absent from NVD
+- `gnutar` — absent from NVD
+- `gtest` — absent from NVD
+- `gtk-doc` — absent from NVD
+- `gzip` — accepted
+- `hadrian` — absent from NVD
+- `help2man` — absent from NVD
+- `install-shell-files` — absent from NVD
+- `jq` — accepted
+- `krb5` — absent from NVD
+- `kyua` — absent from NVD
+- `ld64` — absent from NVD
+- `less` — accepted
+- `libSystem` — absent from NVD
+- `libarchive` — accepted
+- `libcxx` — absent from NVD
+- `libedit` — accepted
+- `libev` — absent from NVD
+- `libffi` — accepted
+- `libiconv` — absent from NVD
+- `libidn2` — accepted
+- `libmd` — absent from NVD
+- `libpng-apng` — absent from NVD
+- `libpsl` — absent from NVD
+- `libresolv` — absent from NVD
+- `libsbuf` — absent from NVD
+- `libssh2` — accepted
+- `libstemmer` — absent from NVD
+- `libtool` — accepted
+- `libunistring` — accepted
+- `libutil` — absent from NVD
+- `libuv` — accepted
+- `libxcrypt` — rejected
+- `libxml2` — accepted
+- `libxo` — absent from NVD
+- `libxslt` — accepted
+- `lld` — absent from NVD
+- `llvm-binutils` — absent from NVD
+- `llvm-tblgen` — absent from NVD
+- `locale` — absent from NVD
+- `lua` — accepted
+- `lutok` — absent from NVD
+- `lzip` — absent from NVD
+- `lzo` — accepted
+- `macOS-SDK` — absent from NVD
+- `mailcap` — absent from NVD
+- `make-binary-wrapper-hook` — nixpkgs-shaped
+- `make-shell-wrapper-hook` — nixpkgs-shaped
+- `meson` — absent from NVD
+- `mpdecimal` — absent from NVD
+- `ncurses` — accepted
+- `nghttp2` — accepted
+- `nghttp3` — absent from NVD
+- `ngtcp2` — accepted
+- `ninja` — rejected
+- `nixpkgs` — absent from NVD
+- `nss-cacert` — absent from NVD
+- `oniguruma` — accepted
+- `openpam` — absent from NVD
+- `os-string` — absent from NVD
+- `patch` — accepted
+- `patchutils` — absent from NVD
+- `pbzx` — absent from NVD
+- `perl` — accepted
+- `pkg-config` — absent from NVD
+- `pkg-config-role-hook` — nixpkgs-shaped
+- `pkg-config-wrapper` — nixpkgs-shaped
+- `pkgconf` — accepted
+- `pkgconf-wrapper` — nixpkgs-shaped
+- `pkgs-config-setup-hook` — nixpkgs-shaped
+- `publicsuffix-list` — absent from NVD
+- `pypa-build-hook.sh` — absent from NVD
+- `pypa-install-hook` — nixpkgs-shaped
+- `pytest-check-hook` — nixpkgs-shaped
+- `python-catch-conflicts-hook` — nixpkgs-shaped
+- `python-imports-check-hook.sh` — absent from NVD
+- `python-namespaces-hook.sh` — absent from NVD
+- `python-output-dist-hook` — nixpkgs-shaped
+- `python-relax-deps-hook` — nixpkgs-shaped
+- `python-remove-bin-bytecode-hook` — nixpkgs-shaped
+- `python-remove-tests-dir-hook` — nixpkgs-shaped
+- `python-runtime-deps-check-hook.sh` — absent from NVD
+- `python3` — absent from NVD
+- `python3.13-bootstrap-build` — nixpkgs-shaped
+- `python3.13-bootstrap-flit-core` — nixpkgs-shaped
+- `python3.13-bootstrap-installer` — nixpkgs-shaped
+- `python3.13-bootstrap-packaging` — nixpkgs-shaped
+- `python3.13-bootstrap-pyproject-hooks` — nixpkgs-shaped
+- `python3.13-bootstrap-tomli` — nixpkgs-shaped
+- `re2c` — accepted
+- `readline` — accepted
+- `removefile` — absent from NVD
+- `rhash` — accepted
+- `setuptools-build-hook` — nixpkgs-shaped
+- `shell_cmds` — absent from NVD
+- `sigtool` — absent from NVD
+- `stdenv-darwin` — nixpkgs-shaped
+- `system_cmds` — absent from NVD
+- `tcl` — accepted
+- `texinfo` — accepted
+- `tzdata` — absent from NVD
+- `unifdef` — absent from NVD
+- `unittest-check-hook` — nixpkgs-shaped
+- `unzip` — accepted
+- `update-autotools-gnu-config-scripts-hook` — nixpkgs-shaped
+- `version-check-hook` — nixpkgs-shaped
+- `which` — absent from NVD
+- `wrap-python-hook` — nixpkgs-shaped
+- `writable-tmpdir-as-home-hook` — nixpkgs-shaped
+- `xar-minimal` — absent from NVD
+- `xcbuild` — absent from NVD
+- `xcode-project-check-hook` — nixpkgs-shaped
+- `xz` — accepted
+- `zlib-ng` — absent from NVD
+- `zstd` — absent from NVD
+
+</details>
+
+## T020 — the mutation check
+
+| mutation | result |
+| --- | --- |
+| a row's vendor "corrected" to the component name (`gnu:bash` → `bash:bash`) | **failed** |
+| an observation deleted | **failed**, naming the pair |
+| a `ninja` row added | **failed** |
+| T016's control removed **and** `synthesize_cpes` broken outright | **passed** |
+
+**The fourth is the informative one and it is meant to pass.** It demonstrates
+what the control prevents: with the control gone, a synthesizer that returns
+nothing for everything satisfies "the rejected names emit no CPE" perfectly.
+The control is what makes that assertion mean something, and this is the
+evidence rather than the claim.
+
+Every mutation was reverted with `cp` from a backup. Milestone 1373 used
+`git checkout` on an uncommitted file for one of its mutations, which deleted
+the work under test while the gate still passed.
+
+## T021 — no documentation change, and why
+
+The task named `docs/reference/sbom-format-mapping.md`'s **C19** row and said:
+if it does not discuss the table's coverage, **add nothing** and record that.
+
+It does not. C19 describes the *carrier* for multiple CPE candidates — the
+JSON-array-in-string shape, and #995's pipe-joined-vs-array fix — and says
+nothing about which names the curated table covers. The table's coverage is
+documented where it is maintained: in `cpe.rs`, above the table and in the
+rejections block.
+
+**Nothing was added.** Inventing a doc section to satisfy a task is worse than
+the task turning out to be unnecessary.
