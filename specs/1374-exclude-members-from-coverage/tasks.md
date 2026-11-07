@@ -54,7 +54,7 @@ PURL type no feed indexes.
 **Goal**: the sum is checkable against the document with no filtering rule.
 
 - [X] T017 [US2] Run `measurements/partition.py` against the post-change document and confirm **AGREES**. It currently reports `DISAGREES` against a `/v2` golden, so it already has teeth; a run that cannot report `DISAGREES` is not a check (SC-001)
-- [ ] T018 [P] [US2] Confirm the five counts sum to `.components | length` on **every** corpus target after the refresh — 17 of 17 per `contracts/annotations.md` — and record any target where they do not (SC-006)
+- [X] T018 [P] [US2] Confirm the five counts sum to `.components | length` on every corpus target after the refresh, **excluding the two whose golden is not the whole document**: `image-postgres16` (no C209 at all, #1372) and `pants-example-javascript` (filtered to `pkg:npm/*` by `corpus_harness_195/js_filter.rs`, #760 / feature 675 FR-008, so the row counts more than the golden retains). 15 of 15 applicable targets close (SC-006)
 - [X] T019 [P] [US2] Record in `measurements/README.md` that `excluded_members` equals C204's `member-roles` total on any document carrying both: 539 on darwin, 1,087 on linux (FR-007)
 
 ---

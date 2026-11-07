@@ -66,14 +66,26 @@ moved. `with_candidates` is unchanged in meaning and in value.
 | `npm-express` | 1 | 43 | 0 | 0 | 1 | 45 |
 | `pants-clojure-polyglot` | 51 | 0 | 4 | 0 | 0 | 55 |
 | `pants-example-django` | 33 | 12 | 1 | 0 | 1 | 47 |
-| `pants-example-javascript` | 303 | 0 | 0 | 0 | 0 | 303 |
+| `pants-example-javascript` | 303 | 0 | 0 | 0 | **1** | 304 ≠ 303 — see below |
 | `pants-example-jvm` | 27 | 0 | 1 | 0 | 1 | 29 |
 | `pants-example-python` | 10 | 0 | 1 | 0 | 1 | 12 |
 | `pants-example-golang` | 4 | 0 | 0 | 0 | 2 | 6 |
 | `python-flask` | 108 | 0 | 0 | 0 | 0 | 108 |
 | `go-cobra` | 8 | 0 | 0 | 0 | 0 | 8 |
 
-**The sum closes on 17 of 17.** These are the expectation, not the contract;
+**The sum closes on 15 of 17**, and the two exceptions are both cases where
+the golden is **not the whole document**:
+
+- `image-postgres16` carries no C209 at all (#1372).
+- `pants-example-javascript` is filtered to `pkg:npm/*` only by
+  `corpus_harness_195/js_filter.rs` (#760, feature 675 FR-008). The row counts
+  the full document — 302 npm components, the root, and one file-tier entry —
+  while the golden retains 303 of those. **The row is right and the golden is
+  a subset**, so the sum cannot close there.
+
+This row's figure was predicted as `… / 0 / 303` from the filtered golden read
+as though it were whole, and the real document has `excluded_files: 1`.
+Running the check is what found it. These are the expectation, not the contract;
 a task records the implementation's own figures and a mismatch is a finding.
 
 **aarch64-darwin differs and is not in this table.** There the row reads

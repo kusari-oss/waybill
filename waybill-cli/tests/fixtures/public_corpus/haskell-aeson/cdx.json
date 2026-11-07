@@ -4172,7 +4172,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":61,\"schema\":\"waybill-cpe-coverage/v2\",\"unaddressable\":0,\"with_candidates\":0}"
+        "value": "{\"addressable_without_cpe\":61,\"excluded_files\":2,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":0,\"with_candidates\":0}"
       },
       {
         "name": "waybill:file-inventory-skipped-build-dirs",

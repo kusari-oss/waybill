@@ -264,7 +264,22 @@ closure record at all.
   against a pre-change binary. No component, relationship, licence or other
   annotation moves.
 - **SC-006**: Every corpus target's row agrees with an independent recompute
-  of the same document.
+  of the same document, **except the two where the golden is not the whole
+  document**:
+
+  - `image-postgres16` carries no C209 at all; its golden predates milestone
+    1367 and is excluded for #1372's drift.
+  - `pants-example-javascript` is **filtered to `pkg:npm/*` only** by
+    `corpus_harness_195/js_filter.rs` (#760, feature 675 FR-008) to stay under
+    a size budget. Its row is computed over the full document — 302 npm
+    components plus one file-tier entry — while the golden retains 303. The
+    sum cannot close there **by construction**, and a check that demanded it
+    would be demanding the impossible.
+
+  This exception was found by running the check, not by reading the harness:
+  the predicted figure for that target was computed from the filtered golden
+  as though it were whole, so it said `excluded_files: 0` where the real
+  document has 1.
 
 ## Assumptions
 
