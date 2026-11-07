@@ -91,7 +91,7 @@ the error milestone 1366 recorded once already.
 | `with_candidates`, on every target | **unchanged** (FR-004) |
 | `synthesize_cpes`, `GENERIC_LIBRARY_CPES`, `OSV_INDEXED_PURL_TYPES` | **unchanged** |
 | the three carriers | **unchanged** |
-| a scan with no closure and no file inventory | **byte-identical except the schema string and two zero fields** |
+| a scan with no closure | **one differing path** — the C209 value. `excluded_members` is 0; `excluded_files` need not be (`rust-ripgrep` has 7) |
 
 > **`addressable_without_cpe` is not on that list**, and the omission is
 > deliberate. It falls 163 → 162 on `nix-closure-moat` because one member

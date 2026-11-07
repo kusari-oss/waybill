@@ -195,7 +195,8 @@ closure record at all.
 ## Requirements *(mandatory)*
 
 - **FR-001**: Components carrying a closure member role MUST be excluded from
-  all three C209 counts.
+  the three software counts — `with_candidates`, `addressable_without_cpe`
+  and `unaddressable` — and counted as `excluded_members` instead.
 - **FR-002**: The **five** counts MUST partition the document's components —
   `with_candidates`, `addressable_without_cpe` and `unaddressable` over
   software, `excluded_members` over closure members, `excluded_files` over
@@ -217,7 +218,18 @@ closure record at all.
   figures in this spec suggested a rule that does not hold. Whether a Haskell
   boot library should be a `fragment` at all is #1374; it does not change what
   this feature must do with it.
-- **FR-005**: A scan with no closure MUST produce a byte-identical document.
+- **FR-005**: A scan with no closure MUST differ in **exactly one JSON path**
+  — the C209 record. `excluded_members` is 0 there, because a non-closure scan
+  has no members; `excluded_files` may be non-zero, because file inventory is
+  independent of closures (`rust-ripgrep` has 7).
+
+  **This requirement said "byte-identical" until task-writing checked it, and
+  that is the third time this shape has been written wrongly** — milestone
+  1373's FR-005 made the same claim and was corrected the same way. C209 is
+  emitted on **every** scan, not only closure ones, so no document can be
+  byte-identical across a schema bump. The habit being corrected is assuming a
+  closure-tier change is confined to closure documents; for this row it never
+  is.
 - **FR-006**: No component's identifiers change. No `cpes` entry is added,
   removed or modified.
 - **FR-007**: `excluded_members` MUST equal the total of C204's
@@ -245,7 +257,10 @@ closure record at all.
   **except** on `nix-closure-moat`, where it falls by exactly 1
   (`pkg:hackage/time`); any other movement is a finding.
 - **SC-004**: Zero components change `{purl, cpe, cpes}`, compared as a set.
-- **SC-005**: A scan with no closure differs in no JSON path at all.
+- **SC-005**: A scan with no closure differs in exactly one JSON path, the
+  `waybill:cpe-coverage` value, compared structurally in all three formats
+  against a pre-change binary. No component, relationship, licence or other
+  annotation moves.
 - **SC-006**: Every corpus target's row agrees with an independent recompute
   of the same document.
 
