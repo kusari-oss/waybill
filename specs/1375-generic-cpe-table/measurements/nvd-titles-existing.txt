@@ -1,0 +1,27 @@
+=== curl (238 entries) ===
+    haxx                         Haxx Curl 7.28.1
+=== gnutls (366 entries) ===
+    gnu                          GNU GnuTLS
+=== libressl (110 entries) ===
+    openbsd                      OpenBSD LibreSSL 2.1.1
+=== llvm (55 entries) ===
+    llvm                         LLVM 1.0
+=== openjdk (241 entries) ===
+    oracle                       Oracle OpenJDK 1.7.0 (7)
+=== openssl (724 entries) ===
+    openssl                      OpenSSL Project OpenSSL
+    redhat                       Red Hat openssl
+=== pcre (91 entries) ===
+    pcre                         PCRE 8.12
+=== pcre2 (25 entries) ===
+    pcre                         PCRE2 10.23
+=== php (1641 entries) ===
+    php                          PHP PHP
+=== sqlite (372 entries) ===
+    sqlite                       SQLite 3.8.8.3
+=== zlib (125 entries) ===
+    gnu                          GNU zlib
+    zlib                         zlib 0.3
+=== node.js (1716 entries) ===
+    joyent                       Joyent Node.js 0.6.1
+    nodejs                       nodejs Node.js 0.10.18

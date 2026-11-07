@@ -17,7 +17,7 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[ … ];
 | | now | after |
 | --- | --- | --- |
 | rows | 12 | **60** |
-| rows emitting >1 candidate | 1 (`curl`) | **10** |
+| rows emitting >1 candidate | 1 (`curl`) | **11** |
 
 The shape is unchanged. The slug is matched by **exact lowercase component
 name**, and that stays — no aliasing, no prefix stripping. None of the 48
@@ -33,6 +33,10 @@ accepted names needs it, so adding the mechanism would be speculative.
   V1 alone is insufficient: `ninja` would pass V1 three times over.
 - **V3 — the vendor comes from the dictionary.** Never the component name by
   default. `bash` is `gnu`, not `bash`.
+- **V4 — the slug is the component name; the product is NVD's.** They coincide
+  for 59 of the 60 rows and must not be assumed equal: `node`'s slug is `node`
+  while its product is `node.js`, and a check keyed on the slug reports zero
+  entries for a correct row.
 
 ---
 
