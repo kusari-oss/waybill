@@ -49,6 +49,18 @@ def main() -> None:
     buckets = collections.Counter()
     detail = collections.defaultdict(collections.Counter)
     for c in doc.get("components", []):
+        # File-tier entries are not in the partition, and the exclusion was
+        # found by measurement rather than designed: nine corpus targets
+        # disagreed with their own emitted row until it was added.
+        #
+        # They are emitted by the file-tier emitter *after* the resolver, so
+        # the slice `fill_missing_cpes` counts never contains them --
+        # `components.len()` there is smaller than the document's. They also
+        # should not be counted: `utils.sh` is a file, not software a
+        # vulnerability feed could address, and calling it `unaddressable`
+        # would make that word mean two different things in one row.
+        if c.get("type") == "file" or not c.get("purl"):
+            continue
         purl = c.get("purl") or ""
         t = purl.split(":")[1].split("/")[0] if purl.startswith("pkg:") else "(none)"
         if c.get("cpe") or c.get("cpes"):
@@ -60,10 +72,14 @@ def main() -> None:
         buckets[b] += 1
         detail[b][t] += 1
 
-    total = len(doc.get("components", []))
+    total = sum(
+        1
+        for c in doc.get("components", [])
+        if c.get("type") != "file" and c.get("purl")
+    )
     for b in ("with_candidates", "addressable_without_cpe", "unaddressable"):
         print(f"{b:26}{buckets[b]:>6}   {dict(detail[b])}")
-    print(f"{'sum':26}{sum(buckets.values()):>6}   components={total}")
+    print(f"{'sum':26}{sum(buckets.values()):>6}   resolved components={total}")
     if sum(buckets.values()) != total:
         sys.exit("counts do not partition the component set")
 

@@ -361,3 +361,52 @@ the end of the module rather than anchor it between existing items, and the
 check was `git diff -U0 … | grep '^-'`: **one deleted line, the closing
 brace.** A diff that deletes nothing but what it meant to move is the evidence
 that an insertion did not displace anything.
+
+## T032 / T033 — the corpus refresh, and FR-002 falsified by it
+
+Dispatched against this branch; run `42347651466`. **The scanned commit it
+reports — `7ab1fc9b` — is this branch's tip**, checked rather than assumed
+(a `workflow_dispatch` run's `github.sha` is the workflow's commit, not the
+scanned one).
+
+Accounted for independently of the run summary: 51 committed JSON files, 51
+in the artifact, none new, none missing, **all 51 differ**.
+
+| target | changed lines | taken? |
+| --- | --- | --- |
+| 16 targets | **6 each, all C209, zero other** | **yes** — 48 files |
+| `image-postgres16` | **896 other** + 4 C209 | **no** — #1372's drift |
+
+**The prediction was 16 of 17 and that was right about this feature, but
+wrong about the file count.** `image-postgres16` changes too; it simply
+changes for its own reason. It stays excluded, so after this milestone every
+corpus document carries `/v2` except that one, whose golden carries no C209
+at all.
+
+### FR-002 said something not satisfiable, and the refresh proved it
+
+T021 re-run after the refresh: **9 of 16 targets still `DISAGREES`**. The row
+and the document disagreed about the denominator, always in `unaddressable`,
+always by components the document shows with **no PURL**.
+
+They are **file-tier entries** — `type: "file"`, carrying
+`waybill:component-tier`: `utils.sh`, `copy-examples`,
+`verify_released_changelog.sh`. The file-tier emitter appends them *after* the
+resolver, so the slice `fill_missing_cpes` counts never contains them.
+`rust-ripgrep` has 7, `npm-express` and `go-opentelemetry` 1 each.
+
+So FR-002's "partition every component in the document" **cannot hold at that
+point in the pipeline**, and nothing in the suite could have told me: the
+`debug_assert` compares against the slice, which is self-consistent. It took
+comparing the emitted row against the emitted document on sixteen real
+projects.
+
+They also *should* be outside the partition. `utils.sh` is a file, not
+software a vulnerability feed could address; counting one `unaddressable`
+would make that word mean two different things in one row.
+
+Scoped to "every **resolved** component" in FR-002, SC-002, `partition.py`,
+the source comment and the C209 doc row. **All 16 now `AGREE`.**
+
+This is the third claim of mine this milestone's measurement falsified, after
+the non-zero-probe rule and the 66-golden baseline.

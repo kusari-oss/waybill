@@ -152,11 +152,22 @@ probe output, of why no `hackage` arm exists.
 
 - **FR-001**: C209 MUST distinguish components no feed can address from
   components the synthesizer simply had no arm for.
-- **FR-002**: The three counts MUST **partition every component** in the
-  document — not only the subset passing the synthesizer's eligibility gate —
-  so a reader can verify the row against the component count rather than
-  trusting it. Partitioning the whole population is also what stops the 24
-  versionless components falling outside every count, as they do today.
+- **FR-002**: The three counts MUST **partition every resolved component** —
+  not only the subset passing the synthesizer's eligibility gate — so a reader
+  can verify the row against the component count rather than trusting it.
+  Partitioning the whole resolved population is what stops the 24 versionless
+  components falling outside every count, as they do today.
+
+  **"Resolved" excludes file-tier entries, and that qualifier was added after
+  implementation measured it.** This requirement first said "every component
+  in the document", which is **not satisfiable**: the file-tier emitter adds
+  `type: "file"` components with no PURL *after* the resolver runs, so the
+  slice the row counts is smaller than the document's `components[]`. Nine
+  corpus targets disagreed with their own emitted row until the qualifier was
+  added — `rust-ripgrep` by 7, `npm-express` and `go-opentelemetry` by 1 each.
+  They are also not candidates for the question the row asks: `utils.sh` is a
+  file, not software a feed could address, and counting one `unaddressable`
+  would make that word mean two different things.
 - **FR-003**: A PURL type is classified `AddressableWithoutCpe` only when **both** hold,
   and both MUST be traceable to recorded output: (a) it maps to an ecosystem
   OSV declares in its published list, and (b) a probe with a known-vulnerable
@@ -204,8 +215,9 @@ probe output, of why no `hackage` arm exists.
 - **SC-001**: On the pinned closure, the count of components no feed can
   address equals an independently computed figure from the emitted document,
   derived without reference to the implementation.
-- **SC-002**: The three counts **partition every component in the document** —
-  they sum to the component count, asserted and not commented.
+- **SC-002**: The three counts **partition every resolved component** — they
+  sum to the count of components carrying a PURL and not of `type: "file"`,
+  asserted and not commented.
 
   **This criterion originally said "the eligible population"**, contradicting
   FR-002 after that requirement was corrected. The two readings differ by more

@@ -27434,7 +27434,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"eligible_unmapped\":327,\"schema\":\"waybill-cpe-coverage/v1\",\"with_candidates\":0}"
+        "value": "{\"addressable_without_cpe\":364,\"schema\":\"waybill-cpe-coverage/v2\",\"unaddressable\":6,\"with_candidates\":0}"
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",

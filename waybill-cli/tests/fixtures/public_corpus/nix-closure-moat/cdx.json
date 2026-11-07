@@ -93554,7 +93554,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"eligible_unmapped\":442,\"schema\":\"waybill-cpe-coverage/v1\",\"with_candidates\":6}"
+        "value": "{\"addressable_without_cpe\":163,\"schema\":\"waybill-cpe-coverage/v2\",\"unaddressable\":1446,\"with_candidates\":6}"
       },
       {
         "name": "waybill:closure-graph-admission",

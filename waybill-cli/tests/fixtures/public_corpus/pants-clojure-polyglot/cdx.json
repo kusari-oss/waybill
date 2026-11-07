@@ -4503,7 +4503,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"eligible_unmapped\":0,\"schema\":\"waybill-cpe-coverage/v1\",\"with_candidates\":51}"
+        "value": "{\"addressable_without_cpe\":0,\"schema\":\"waybill-cpe-coverage/v2\",\"unaddressable\":4,\"with_candidates\":51}"
       },
       {
         "name": "waybill:file-inventory-skipped-build-dirs",

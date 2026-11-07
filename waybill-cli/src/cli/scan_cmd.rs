@@ -6655,9 +6655,19 @@ fn fill_missing_cpes(
         }
     }
 
-    // FR-002 / SC-002 — the three partition the component set. An assertion
-    // rather than a comment: it is the property the v1 row never had, and the
-    // cheapest check that no component was classified twice or not at all.
+    // FR-002 / SC-002 — the three partition the **resolved** component set.
+    // An assertion rather than a comment: it is the property the v1 row never
+    // had, and the cheapest check that no component was classified twice or
+    // not at all.
+    //
+    // "Resolved" is narrower than the emitted document, and the difference is
+    // measured rather than assumed. The file-tier emitter appends
+    // `type: "file"` components with no PURL *after* this runs, so
+    // `components.len()` here is smaller than the document's `components[]` —
+    // by 7 on `rust-ripgrep`, 1 on `npm-express`. They are correctly outside
+    // the partition: `utils.sh` is a file, not software a vulnerability feed
+    // could address, and counting one `unaddressable` would make that word
+    // mean two different things in one row.
     debug_assert_eq!(
         coverage.total(),
         components.len(),
