@@ -1,0 +1,128 @@
+=== automake (51 entries) ===
+    gnu                          GNU Automake 1.11.1
+=== bash (92 entries) ===
+    gnu                          GNU Bourne-Again SHellbash (GNU Bash) 3.0
+=== bc (8 entries) ===
+    gnu                          GNU bc 1.06.94
+=== bison (70 entries) ===
+    gnu                          GNU Bison 3.5.4
+=== brotli (57 entries) ===
+    google                       Google Brotli 1.0.8
+    andybalholm                  Andy Balholm (andybalholm) Brotli 1.0.0 for Go
+=== bzip2 (31 entries) ===
+    bzip                         bzip bzip2 1.0.4
+    bzip2_project                bzip2 Project bzip2 0.4.3 for Rust
+=== c-ares (106 entries) ===
+    c-ares_project               c-ares Project c-ares 1.0.0
+    c-ares                       c-ares 1.16.1
+=== clang (24 entries) ===
+    llvm                         Clang 3.5
+    arm                          ARM Clang 11.0.0
+=== cmake (5 entries) ===
+    cmake_project                cmake Project cmake for Node.js
+=== compiler-rt (52 entries) ===
+    llvm                         LLVM Compiler-rt 1.0
+=== coreutils (110 entries) ===
+    gnu                          GNU Coreutils
+=== cpio (16 entries) ===
+    gnu                          GNU cpio
+=== diffutils (12 entries) ===
+    gnu                          GNU diffutils 2.7
+=== ed (3 entries) ===
+    gnu                          GNU Ed
+=== expat (25 entries) ===
+    libexpat                     libexpat Expat 2.1.0
+=== file (106 entries) ===
+    gentoo                       Gentoo File 4.20
+    christos_zoulas              Christos Zoulas file 5.00
+    file_project                 File Project File 5.20
+=== findutils (6 entries) ===
+    gnu                          GNU findutils
+=== flex (71 entries) ===
+    apache                       Apache Software Foundation Flex 4.14.0
+    flex_project                 Flex Project Flex 2.6.0
+    westes                       Flex: The Fast Lexical Analyzer 2.5.5b
+=== gawk (15 entries) ===
+    fossies                      Fossies Gawk 5.1.1
+=== gettext (47 entries) ===
+    gnu                          GNU gettext
+=== gzip (26 entries) ===
+    gnu                          GNU Gzip
+=== jq (26 entries) ===
+    jq_project                   jq Project jq 1.5
+    jqlang                       Jqlang Jq 1.7-37-g88f01a7
+=== less (421 entries) ===
+    gnu                          GNU less
+    greenwoodsoftware            Greenwoodsoftware Less 606
+=== libarchive (55 entries) ===
+    freebsd                      FreeBSD libarchive
+    libarchive                   Libarchive Libarchive 3.1.2 (x64) 64-bit
+=== libedit (2 entries) ===
+    libedit_project              libedit Project libedit
+=== libffi (9 entries) ===
+    libffi_project               libffi Project libffi 3.0.9
+=== libidn2 (46 entries) ===
+    libidn2_project              Libidn2 Project Libidn2 0.3
+    gnu                          GNU libidn 0.3
+=== libssh2 (41 entries) ===
+    libssh2                      libssh2 1.4.3
+=== libtool (14 entries) ===
+    gnu                          GNU libtool
+=== libunistring (13 entries) ===
+    gnu                          GNU libunistring 0.9
+=== libuv (153 entries) ===
+    libuv_project                libuv project libuv 0.10.33
+    libuv                        Libuv
+=== libxcrypt (1 entries) ===
+    elektrobit                   Elektrobit libxcrypt 4.4.2
+=== libxml2 (221 entries) ===
+    xmlsoft                      XMLSoft Libxml2 2.4.19
+=== libxslt (97 entries) ===
+    xmlsoft                      XMLSoft libxslt 1.1.24
+=== lua (54 entries) ===
+    lua                          Lua 5.3.5
+=== lzo (11 entries) ===
+    lzo_project                  LZO Project LZO 2.00
+=== ncurses (391 entries) ===
+    gnu                          GNU Ncurses 4.0
+    ncurses_project              ncurses Project ncurses 5.71.1
+=== nghttp2 (134 entries) ===
+    nghttp2                      Nghttp2 1.5.0
+=== ngtcp2 (54 entries) ===
+    tatsuhiro-t                  Tatsuhiro-t Ngtcp2 1.22.1
+=== ninja (126 entries) ===
+    visualshortcodes             Visualshortcodes Ninja 1.4 for WordPress
+    itrsgroup                    ITRS Group Ninja 2023.05.19
+    ninjaframework               Ninja Framework Ninja 7.0.0
+=== oniguruma (38 entries) ===
+    oniguruma_project            Oniguruma Project Oniguruma 5.9.6
+=== patch (18 entries) ===
+    gnu                          GNU patch 2.7.1
+    tanium                       Tanium Patch 3.17.0
+=== perl (614 entries) ===
+    perl                         Perl 5.8.8
+=== pkgconf (64 entries) ===
+    pkgconf                      pkgconf 0.1
+=== re2c (3 entries) ===
+    re2c                         Re2c 1.3
+=== readline (17 entries) ===
+    gnu                          GNU readline 6.3
+=== rhash (55 entries) ===
+    rhash_project                RHash Project RHash 0.5
+=== tcl (81 entries) ===
+    tcl                          Tcl 3.3
+texinfo	ERR	timeout
+=== unzip (10 entries) ===
+    info-zip                     Info-ZIP UnZip 6.0
+    unzip_project                UnZip Project UnZip 5.51
+=== xz (94 entries) ===
+    tukaani                      tukaani xz 4.999.9 beta
+    xz_project                   xz Project xz 0.5.8
+
+=== texinfo (2 entries) ===
+    gnu                          GNU texinfo
+
+(texinfo timed out in the batch run above and is re-probed here. The note
+that previously stood in this place claimed the result had been appended
+when it had not; `m1375_every_product_has_a_committed_title_query` caught
+that on its first run, which is what the check is for.)
