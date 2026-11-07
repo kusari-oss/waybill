@@ -32,8 +32,10 @@ Five findings shaped the plan:
    OSS-Fuzz record. Both halves — OSV's declared list *and* a probe — are
    required (research R5).
 3. **C209 is not closure-gated**, contradicting four statements in the first
-   draft. 66 local goldens and 48 corpus goldens carry it, so the blast radius
-   is the **inverse of milestone 1372** and larger than 1367's 34.
+   draft. 33 local goldens and 48 corpus goldens carry it, so the blast radius
+   is the **inverse of milestone 1372**. (The spec said 66 until
+   implementation measured it: half the `grep` hits are `*.actual.json`
+   diagnostics rather than tracked goldens.)
 4. **NVD has 1 of 163 Haskell names**, and the three with live advisories —
    `base`, `Cabal`, `process` — have no dictionary entry at all. No arm.
 5. **The 24 versionless `pkg:hackage` components are in no count today.**
@@ -50,7 +52,7 @@ Five findings shaped the plan:
 **Project Type**: single Rust CLI workspace (Constitution VI). Changes confined to `waybill-cli`.
 **Performance Goals**: one extra pass over the component slice; no I/O.
 **Constraints**: no component's `cpes` may change (FR-004, SC-004); `with_candidates` keeps its meaning (FR-006); the counts must partition the component set (FR-002).
-**Scale/Scope**: 977 components on the pinned closure; 114 golden files carry the row.
+**Scale/Scope**: 977 components on the pinned closure; 81 tracked golden files carry the row (33 local, 48 corpus).
 
 ## Constitution Check
 
@@ -98,7 +100,7 @@ waybill-cli/src/
 │                                #   Otherwise UNCHANGED — no arm is added.
 └── parity/extractors/           # expected UNCHANGED; a task verifies it
 
-waybill-cli/tests/fixtures/golden/        # 66 files regenerate
+waybill-cli/tests/fixtures/golden/        # 33 files regenerate
 waybill-cli/tests/fixtures/public_corpus/ # 48 files, 16 of 17 targets
 docs/reference/sbom-format-mapping.md     # C209's row text
 ```
@@ -116,7 +118,7 @@ struct and one classification function.
 4. **US2** — the per-ecosystem composition is already measurable from the
    document; the task is to confirm the row and the document agree.
 5. **US3 / FR-007** — record the no-arm decision in `generate/cpe.rs`.
-6. **Goldens.** Local first (66 files), because a local golden moving in an
+6. **Goldens.** Local first (33 files), because a local golden moving in an
    unexpected *target* is the signal that the change leaked. Corpus second.
 
 **US2 before US1 was considered and rejected**: US1 defines the counts US2
@@ -127,12 +129,12 @@ do not exist.
 
 | Risk | Mitigation |
 | --- | --- |
-| **A 114-file golden diff hides a wrong implementation** | quickstart Control 2 recomputes the row from the document independently; Control 1 is the sum |
+| **An 81-file golden diff hides a wrong implementation** | quickstart Control 2 recomputes the row from the document independently; Control 1 is the sum |
 | The change leaks beyond the metric into component output | Control 3 diffs every `{purl, cpe, cpes}`; SC-004 |
 | A new PURL type is silently counted `unaddressable` | closed enum + exhaustive match, not an allowlist (`feedback_enum_allowlist_falls_out_of_date`) |
 | A type is called addressable on list membership alone, or on a probe alone | FR-003 requires both; `generic`'s OSS-Fuzz hit is the worked example in research R5 |
 | `image-postgres16` appears as an unexplained 17th changed target | It carries no C209 at all — verified against the m1372 regen artifact — and stays excluded for #1372 |
-| The blast radius surprises the gate, as it did in m1367 | Predicted here in files and targets: 66 local, 48 corpus, 16 of 17 targets. **If a local golden does *not* move, the row is not being emitted where it was** |
+| The blast radius surprises the gate, as it did in m1367 | Predicted here in files and targets: 33 local, 48 corpus, 16 of 17 targets. **If a local golden does *not* move, the row is not being emitted where it was** |
 | OSV's ecosystem list changes and the table silently rots | The table is dated, committed, and the plan says it is an observation; re-probing is the documented way to add a row |
 
 ## Complexity Tracking

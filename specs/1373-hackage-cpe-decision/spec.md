@@ -112,7 +112,7 @@ whose PURL type no feed indexes and which carry no CPE.
    feed are distinguishable from those that are not.
 2. **Given** a document with no closure, **When** C209 is read, **Then** it
    carries the same three counts, because the row has never been
-   closure-gated — 66 local goldens and 48 corpus goldens carry it today.
+   closure-gated — 33 local goldens and 48 corpus goldens carry it today.
 
 ### User Story 2 — a reader can tell which ecosystems are carrying the gap (P2)
 
@@ -174,8 +174,13 @@ probe output, of why no `hackage` arm exists.
   document-scope metric and MUST NOT add, remove or modify any `cpes` entry.
 - **FR-005**: Every document's C209 changes, and this MUST be planned for
   rather than discovered. The row is **not** closure-gated: it is emitted on
-  every scan, and 66 local goldens plus 48 corpus goldens carry it. Replacing
-  `eligible_unmapped` therefore churns all of them.
+  every scan, and **33** local goldens plus 48 corpus goldens carry it.
+  Replacing `eligible_unmapped` therefore churns all of them.
+
+  **The local figure was 66 in this spec until implementation measured it.**
+  `grep -rl` over the golden directory counts 66 files, but 33 of those are
+  `*.actual.json` — diagnostic output a failing test writes, not committed
+  goldens. The tracked count is 33, and all 33 moved.
 
   **This requirement originally said the opposite** — that a non-closure scan
   stays byte-identical — which was false and would have been found only when

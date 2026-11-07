@@ -287,3 +287,42 @@ gates are `every_catalog_row_has_an_extractor`,
 `the_closure_rows_extract_equal_sets_from_all_three_formats`,
 `extractors_table_is_sorted_by_row_id` and `extractors_have_unique_labels`.
 Corrected in `tasks.md`.
+
+## T029 / T030 — the local goldens, and a baseline that was double-counted
+
+```
+33 files changed, 33 insertions(+), 33 deletions(-)
+every changed line: 66 of 66 are C209 values. OTHER: 0
+```
+
+One line replaced per file, in exactly the files that carry the row, and
+nothing else moved.
+
+**The expected count was 33, not the 66 this spec carried from T005 onward.**
+`grep -rl 'waybill:cpe-coverage'` over the golden directory returns 66 files;
+**half are `*.actual.json`** — diagnostic output a failing test writes beside
+the golden it failed against, not tracked goldens. The tracked count is 33.
+
+Counting them made a complete regeneration look half-applied. The check that
+settled it was not the count but the complement: **which tracked golden
+carrying C209 did *not* move?** The answer was none, which is the question
+worth asking, because a count can be short for two very different reasons.
+Corrected in `spec.md`, `plan.md`, `research.md`, `contracts/annotations.md`,
+`quickstart.md` and `tasks.md`.
+
+The corpus figure of 48 is unaffected: none of those is an `.actual` file.
+
+## T021 — the row against the document, per corpus target
+
+Run before the corpus refresh, so the expected answer is `DISAGREES`
+everywhere — the committed goldens still carry `/v1`:
+
+| | targets |
+| --- | --- |
+| `DISAGREES` (row is v1, document is the new partition) | **16** |
+| no C209 row at all | **1** — `image-postgres16` |
+
+Which is the 16-of-17 prediction, and the one exception is the target whose
+golden predates milestone 1367. They become `AGREES` after T032's refresh;
+this run establishes that the check can say `DISAGREES`, without which an
+`AGREES` after the refresh would prove nothing.

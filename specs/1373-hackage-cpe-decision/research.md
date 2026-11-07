@@ -90,7 +90,7 @@ it is always `Some`.
 
 | | files carrying C209 |
 | --- | --- |
-| local goldens | **66** |
+| local goldens | **33** (a `grep -rl` says 66; half are `*.actual.json` diagnostics, not tracked goldens) |
 | corpus goldens | **48** |
 
 **Consequence**: replacing `eligible_unmapped` churns all of them. This is the

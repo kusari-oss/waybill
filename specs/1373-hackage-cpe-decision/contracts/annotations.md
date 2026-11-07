@@ -60,14 +60,17 @@ counting components themselves and knowing the eligibility rule.
 
 | | files |
 | --- | --- |
-| local goldens carrying C209 | **66** |
+| local goldens carrying C209 | **33** |
 | corpus goldens carrying C209 | **48** |
 | corpus targets whose value changes | **16 of 17** |
 
 **Every one of them changes.** C209 is not closure-gated: one production site
-sets it and it is always `Some`. This is larger than milestone 1367, which
-added the row and churned 34 local goldens, and it is the exact opposite of
-milestone 1372, where zero moved.
+sets it and it is always `Some`. It is the exact opposite of milestone 1372,
+where zero moved.
+
+> A `grep -rl` over the golden directory reports 66, but half are
+> `*.actual.json` diagnostics rather than tracked goldens. The tracked figure
+> is 33, measured at implementation time after the spec had carried 66.
 
 `image-postgres16` is the 17th target and stays **excluded**: its committed
 golden predates milestone 1367 and carries no C209 at all, for the unrelated

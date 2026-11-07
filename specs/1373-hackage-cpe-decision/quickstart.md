@@ -2,7 +2,7 @@
 
 **Feature**: `1373-hackage-cpe-decision` | **Issue**: #1375
 
-A 114-file golden diff hides a wrong implementation, and every number here is
+An 81-file golden diff hides a wrong implementation, and every number here is
 checkable against the document rather than against the code that produced it.
 Four controls, in the order they catch things.
 
