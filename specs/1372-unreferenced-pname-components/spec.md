@@ -258,8 +258,18 @@ component records which signal admitted it.
   already emit** — 603 milestone-1282 members and 38 admitted by the patches
   clause. Protecting their current role would mean keeping a label that says
   nothing depends on them while the build graph says otherwise.
-- **FR-007**: The system MUST NOT change the dependency edges it emits today
-  except by adding edges for components that did not previously exist.
+- **FR-007**: Every dependency edge the system stops emitting MUST be
+  explained by a newly admitted component lying on its path. The closure's
+  edge projection walks **through** non-emitted derivations to the nearest
+  emitting one, so admitting a derivation that previously sat mid-walk
+  replaces one long edge with two short ones — the long edge is lost, and
+  that is correct rather than a regression.
+
+  > An earlier draft of this requirement forbade losing any edge at all,
+  > which contradicted the projection's documented behaviour (research R7).
+  > The requirement is not "edges only grow"; it is **"no edge disappears
+  > without a newly admitted component to account for it"**, which is
+  > checkable and is what the projection actually guarantees.
 - **FR-008**: The system MUST record, at document scope, how many components
   were admitted by this signal — so a closure with none is distinguishable
   from a pass that did not run.
