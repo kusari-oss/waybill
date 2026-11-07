@@ -88,7 +88,7 @@ rather than re-running two NVD sweeps to reach it.
 - [X] T031 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and on the per-target `test result: ok. N passed; 0 failed` lines, never on the absence of the word FAILED
 - [X] T032 Refresh the corpus goldens through `public-corpus.yml` workflow dispatch with `regen_goldens=true` — never locally. Expect **16 of 17** targets to change
 - [X] T033 Account for **every** differing corpus file from the artifact rather than from the run summary (#1286: a clean summary once hid one target's stale goldens), and keep `image-postgres16` out of this feature's diff. **State the resulting divergence rather than leaving it silent**: after this feature every document carries `waybill-cpe-coverage/v2` except that one, whose committed golden carries no C209 at all. It carries no C209 at all because its golden predates milestone 1367, verified against the milestone-1372 regeneration artifact; its drift is #1372
-- [ ] T034 [P] Update the issue #1375 thread with the delivered figures if they differ from the predicted 78 / 166 / 733, so the issue does not become stale a second time
+- [X] T034 [P] Update the issue #1375 thread with the delivered figures if they differ from the predicted 78 / 166 / 733, so the issue does not become stale a second time
 
 ---
 
