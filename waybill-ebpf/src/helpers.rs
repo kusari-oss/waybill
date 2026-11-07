@@ -130,3 +130,16 @@ pub fn increment_event_drop(slot: u8) {
         }
     }
 }
+
+/// #1185 — bump a `HANDSHAKE_DIAG` slot. See that map for what each one
+/// distinguishes. Deliberately not routed through `increment_event_drop`:
+/// `EVENT_DROPS` feeds the completeness claim, and a diagnostic there
+/// would be reported as lost capture.
+#[inline(always)]
+pub fn increment_handshake_diag(slot: u8) {
+    if let Some(counter) = crate::maps::HANDSHAKE_DIAG.get_ptr_mut(slot as u32) {
+        unsafe {
+            *counter = (*counter).saturating_add(1);
+        }
+    }
+}
