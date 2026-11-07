@@ -267,8 +267,71 @@ a bug rather than a refresh. None did.
 
 ---
 
-## Open — not yet measured
+## T042 / T043 — the corpus goldens
 
-| item | task |
-| --- | --- |
-| corpus goldens | T042, T043 |
+Refreshed through `public-corpus.yml` workflow dispatch against this branch,
+never locally. Run `42331223972`, which names the commit it scanned —
+`0e7cd903`, this branch's tip — rather than leaving it to be inferred.
+
+**Accounted for independently of the run summary**, per #1286, where a
+successful upload carried one target's stale goldens behind a clean summary.
+51 committed JSON files, 51 in the artifact, none new, none missing, and
+exactly six differ:
+
+| target | files | taken? |
+| --- | --- | --- |
+| `nix-closure-moat` | cdx, spdx-2.3, spdx-3 | **yes** |
+| `image-postgres16` | cdx, spdx-2.3, spdx-3 | **no** — #1372, unrelated layer-digest drift |
+
+The other 15 targets are byte-identical, which is the prediction: none of them
+scans a closure.
+
+### The x86_64-linux closure, which is a different closure
+
+| | before | after |
+| --- | --- | --- |
+| components | 1,487 | **1,615** |
+| edges | 4,644 | **7,171** |
+| `artifact-input` | 238 | 232 |
+| `both` | 41 | **47** |
+| `build-tooling` | 94 | **1,310** |
+| `unreferenced` | 1,090 | **0** |
+| C211 `build-graph` | — | **1,232** |
+| C210 | absent | `admitted 171, relabelled 1143` |
+
+These are **not** the aarch64-darwin figures above and are not meant to match:
+the corpus pins x86_64-linux, which resolves a different closure. Milestone
+1366 measured 74 PyPI candidates on one host and 75 on the other for the same
+reason. The shape agrees — `unreferenced` collapses, `build-tooling` absorbs
+it, `artifact-input` is not overridden — and the magnitudes do not.
+
+### Where the closure root's `unreferenced` actually shows, and where it does not
+
+The component-role histogram reads **0** `unreferenced` on *both* hosts, not 1.
+That is not a failure of the SC-004 control, and it was checked rather than
+assumed: the one surviving `unreferenced` derivation is `moat 0.1`, which
+becomes the document's **root** — `metadata.component` — rather than an entry
+in `components[]`, and the root carries no `waybill:closure-role` property at
+all. On CI the root is renamed `nix-closure-moat d069055` by the harness's
+`--root-name`, which hides it further.
+
+So "742 → 1" is a **derivation-level** figure, asserted where the control
+lives: in `classify`, by `m1372_the_root_stays_unreferenced`, and in the T003
+capture. A reader looking for the 1 in the emitted document will not find it.
+This is the fourth place in this milestone where the derivation/component
+distinction changes the answer, and the only one where the smaller number is
+invisible rather than merely different.
+
+### The `artifact-input` → `both` movement, on the other host too
+
+6 components move on linux against 3 on darwin, in the same direction and for
+the same reason — merge semantics across build variants, not an FR-003a
+violation. `artifact-input` falls by exactly the number `both` gains on both
+hosts (238→232 and 41→47; 235→232 and 43→46), which is what a merge does and
+what an override would not.
+
+---
+
+## Open
+
+Nothing. Every task in Phase 7 is measured.

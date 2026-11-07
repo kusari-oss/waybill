@@ -137,8 +137,8 @@ Single Rust workspace. Production code under `waybill-cli/src/`, integration tes
 
 - [X] T040 [P] Assert that a scan of a project with **no** nix closure produces a byte-identical document, against a baseline from the pre-change binary, recording it in `specs/1372-unreferenced-pname-components/measurements/README.md` (SC-006)
 - [X] T041 Confirm **no local golden changes** under `waybill-cli/tests/fixtures/golden/` by running the gate before any regeneration. A local golden moving means C210 or C211 is emitted unconditionally — a bug, not a refresh (research R9, quickstart)
-- [ ] T042 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch — never locally. Expect `nix-closure-moat` to change substantially and the other 16 targets not at all
-- [ ] T043 Account for **every** differing golden file under `waybill-cli/tests/fixtures/public_corpus/` from the artifact rather than the run's summary, and keep `image-postgres16` out of this feature's diff (#1372)
+- [X] T042 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch — never locally. Expect `nix-closure-moat` to change substantially and the other 16 targets not at all
+- [X] T043 Account for **every** differing golden file under `waybill-cli/tests/fixtures/public_corpus/` from the artifact rather than the run's summary, and keep `image-postgres16` out of this feature's diff (#1372)
 - [X] T044 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` — no `+toolchain` (#1189). Assert on the positive signal and `GATE_RESULT=pass` in `target/gate/prepr.log`. Never pipe a check through `head`
 - [X] T045 [P] Update `docs/ecosystems.md` to state what `unreferenced` now means — that it is measured against the build graph nix records and not only against declared attributes — and what a `build-graph` admission says and does not say
 
