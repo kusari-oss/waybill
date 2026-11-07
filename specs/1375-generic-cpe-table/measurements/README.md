@@ -99,3 +99,52 @@ python3 -I measurements/cpe-titles.py ninja cmake flex
 curl -sS --get https://services.nvd.nist.gov/rest/json/cpes/2.0 \
   --data-urlencode 'cpeMatchString=cpe:2.3:a:kitware:cmake'
 ```
+
+---
+
+# Implementation
+
+**Date**: 2026-11-07 | **Host**: aarch64-darwin | **waybill**: `122b052e`
+
+## T001–T004 — baseline
+
+| | |
+| --- | --- |
+| components already carrying a CPE | **78** |
+| C209 before | `78 / 166 / 194 / 539 / 0` = 977 |
+
+### The blast radius is small, and that is the point
+
+| | goldens containing any of the 48 names as `pkg:generic` |
+| --- | --- |
+| local | **0** |
+| corpus | **1 target** — `nix-closure-moat` |
+
+**This is unlike the last two milestones**, where 33 local and 48 corpus
+goldens moved. C209 is on every document, but its *value* only moves where an
+affected component exists, and these 48 names appear in exactly one target.
+
+So the usual golden check inverts: **a local golden moving is a finding**, not
+a refresh, because no local fixture contains any of these names.
+
+## The remediation found a second defect in its own check
+
+`/speckit.analyze` raised U1: T009a's test would fail on all 12 pre-existing
+table rows, which were verified by `probe-cpe-dictionary.sh` under #1246 and
+never title-queried. They were **back-filled** rather than exempted — twelve
+queries buys a uniform invariant instead of an exemption list that rots.
+
+Running that back-fill then exposed a defect in the test's *shape*:
+
+```
+=== node (0 entries) ===
+```
+
+`node` returns nothing, because the row's **slug** is `node` while its
+**product** is `node.js` — which has 1,716 entries under `joyent` and
+`nodejs`. A slug-keyed check reports zero for a correct row.
+
+T009a now keys on the product, and `data-model.md` gains V4: slug and product
+coincide for 59 of the 60 rows and must not be assumed equal. The one
+exception was found by doing the work the analysis asked for, not by reading
+the code.
