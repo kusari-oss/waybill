@@ -1,0 +1,185 @@
+AvailabilityVersions	0	
+CoreSymbolication	0	
+DarwinTools	0	
+adv_cmds	0	
+apple-sdk	0	
+apple-sdk-private-frameworks-hook	0	
+asciidoc	0	
+atf	0	
+auto-sign-darwin-binaries-hook	0	
+autoconf	0	
+automake	51	gnu(51)
+autoreconf-hook	0	
+bash	92	gnu(92)
+bash-interactive	0	
+bc	8	gnu(8)
+bison	70	gnu(70)
+bmake	0	
+bootstrap-stage-xclang-stdenv-darwin	0	
+bootstrap-stage0-clang-wrapper	0	
+bootstrap-stage0-stdenv-darwin	0	
+bootstrap-stage1-stdenv-darwin	0	
+bootstrap-stage2-stdenv-darwin	0	
+bootstrap-stage3-stdenv-darwin	0	
+bootstrap-stage4-stdenv-darwin	0	
+bootstrap_cmds	0	
+brotli	57	google(40),andybalholm(17)
+byacc	0	
+bzip2	31	bzip2_project(20),bzip(11)
+c-ares	106	c-ares(61),c-ares_project(39)
+cctools	0	
+cctools-binutils-darwin	0	
+cctools-binutils-darwin-wrapper	0	
+clang	24	arm(23),llvm(1)
+clang-wrapper	0	
+cmake	5	cmake_project(5)
+cmake-minimal	0	
+compiler-rt	52	llvm(52)
+compiler-rt-libc	0	
+copyfile	0	
+coreutils	110	gnu(64),uutils(36)
+cpio	16	gnu(16)
+cups-headers	0	
+die-hook	0	
+diffutils	12	gnu(12)
+docbook-xml	0	
+docbook-xsl-nons	0	
+docbook-xsl-ns	0	
+ed	3	gnu(3)
+ensure-newer-sources-hook	0	
+expat	25	libexpat(25)
+file	106	file_project(79),christos_zoulas(20),gentoo(1)
+file_cmds	0	
+find-xml-catalogs-hook	0	
+findutils	6	gnu(6)
+fix-darwin-dylib-names-hook	0	
+flex	71	flex_project(35),westes(35),apache(1)
+gawk	15	fossies(15)
+gdbm	0	
+getopt	0	
+gettext	47	gnu(47)
+ghc	0	
+ghc-binary	0	
+ghc-platform	0	
+ghc-settings-edit	0	
+ghc-toolchain	0	
+git-minimal	0	
+gmp-with-cxx	0	
+gnu-config	0	
+gnugrep	0	
+gnum4	0	
+gnumake	0	
+gnused	0	
+gnutar	0	
+gtest	0	
+gtk-doc	0	
+gzip	26	gnu(26)
+hadrian	0	
+help2man	0	
+install-shell-files	0	
+jq	26	jqlang(25),jq_project(1)
+krb5	0	
+kyua	0	
+ld64	0	
+less	421	greenwoodsoftware(95),gnu(5)
+libSystem	0	
+libarchive	55	libarchive(53),freebsd(2)
+libcxx	0	
+libedit	2	libedit_project(2)
+libev	0	
+libffi	9	libffi_project(9)
+libiconv	0	
+libidn2	46	libidn2_project(23),gnu(23)
+libmd	0	
+libpng-apng	0	
+libpsl	0	
+libresolv	0	
+libsbuf	0	
+libssh2	41	libssh2(41)
+libstemmer	0	
+libtool	14	gnu(14)
+libunistring	13	gnu(13)
+libutil	0	
+libuv	153	libuv(99),libuv_project(1)
+libxcrypt	1	elektrobit(1)
+libxml2	221	xmlsoft(100)
+libxo	0	
+libxslt	97	xmlsoft(97)
+lld	0	
+llvm-binutils	0	
+llvm-tblgen	0	
+locale	0	
+lua	54	lua(54)
+lutok	0	
+lzip	0	
+lzo	11	lzo_project(11)
+macOS-SDK	0	
+mailcap	0	
+make-binary-wrapper-hook	0	
+make-shell-wrapper-hook	0	
+meson	0	
+mpdecimal	0	
+ncurses	391	ncurses_project(49),invisible-island(30),gnu(21)
+nghttp2	134	nghttp2(100)
+nghttp3	0	
+ngtcp2	54	tatsuhiro-t(54)
+ninja	126	ninjaframework(60),itrsgroup(39),visualshortcodes(1)
+nss-cacert	0	
+oniguruma	38	oniguruma_project(38)
+openpam	0	
+os-string	0	
+patch	18	gnu(12),tanium(6)
+patchutils	0	
+pbzx	0	
+perl	614	perl(100)
+pkg-config	0	
+pkg-config-role-hook	0	
+pkg-config-wrapper	0	
+pkgconf	64	pkgconf(64)
+pkgconf-wrapper	0	
+pkgs-config-setup-hook	0	
+publicsuffix-list	0	
+pypa-build-hook.sh	0	
+pypa-install-hook	0	
+pytest-check-hook	0	
+python-catch-conflicts-hook	0	
+python-imports-check-hook.sh	0	
+python-namespaces-hook.sh	0	
+python-output-dist-hook	0	
+python-relax-deps-hook	0	
+python-remove-bin-bytecode-hook	0	
+python-remove-tests-dir-hook	0	
+python-runtime-deps-check-hook.sh	0	
+python3	0	
+python3.13-bootstrap-build	0	
+python3.13-bootstrap-flit-core	0	
+python3.13-bootstrap-installer	0	
+python3.13-bootstrap-packaging	0	
+python3.13-bootstrap-pyproject-hooks	0	
+python3.13-bootstrap-tomli	0	
+re2c	3	re2c(3)
+readline	17	gnu(17)
+removefile	0	
+rhash	55	rhash_project(55)
+setuptools-build-hook	0	
+shell_cmds	0	
+sigtool	0	
+stdenv-darwin	0	
+system_cmds	0	
+tcl	81	tcl(81)
+texinfo	2	gnu(2)
+tzdata	0	
+unifdef	0	
+unittest-check-hook	0	
+unzip	10	info-zip(5),unzip_project(5)
+update-autotools-gnu-config-scripts-hook	0	
+version-check-hook	0	
+which	0	
+wrap-python-hook	0	
+writable-tmpdir-as-home-hook	0	
+xar-minimal	0	
+xcbuild	0	
+xcode-project-check-hook	0	
+xz	94	tukaani(62),xz_project(32)
+zlib-ng	0	
+zstd	0	
