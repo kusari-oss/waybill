@@ -94,6 +94,42 @@ produced this bug: deciding which attributes count. The six tools here are
 named in `postInstall` and `initialPath`, which no reasonable list of
 dependency attributes would include, and they are still build inputs.
 
+- Q: Does the role correction apply to components that already emit, or only
+  to the newly-admitted 100?
+  → A: **All 741.** A label that is wrong is wrong whether or not the
+  component already exists, and the same signal must not produce two
+  different labels depending on whether a component happened to emit before.
+
+**The blast radius, measured.** 741 derivations are both `unreferenced` and
+named by `inputs.drvs`. Only **100** newly emit; **641 already emit and will
+simply be relabelled** — 603 of them milestone-1282 members carrying no
+declared name, 38 admitted by the patches clause. The feature is therefore
+six times more relabelling than new content, all of it in shipped goldens.
+
+**FR-006 is narrowed to permit exactly this**, rather than left to be
+discovered as a conflict during implementation: identity, version and licence
+are protected; the role is the thing being corrected.
+
+- Q: What role does a derivation earn when only the build graph references it?
+  → A: **`build-tooling`.** Every attribute measured as naming these
+  derivations is build-time — `postInstall`, `installPhase`, `buildPhase`,
+  `initialPath`, `allowedRequisites`, `stdenv`. That supports one claim, and
+  `both` would make two.
+
+**The downstream effect, stated because it is not obvious.** Milestone 1277
+derives lifecycle scope from the C182 role, so these 741 components become
+**build-time rather than runtime** scoped. That is the intended reading —
+`gzip` reached through a package's `postInstall` is tooling that ran during
+the build — and it is a change a consumer filtering on scope will see.
+
+**The limit.** `allowedRequisites` is nixpkgs' assertion about the **runtime**
+closure, so a derivation named only there is arguably a runtime requisite
+rather than tooling. The evidence does not separate the two, and a single
+undifferentiated signal cannot; `build-tooling` is the claim the majority of
+the naming attributes support, not a claim about each one. A derivation that
+a declared attribute *also* names keeps the role that attribute gives it, so
+this default applies only where nothing better exists.
+
 **What it does not establish.** That every admitted component is a dependency
 in the sense a consumer means. `bootstrap-stage0-stdenv-darwin` is a build
 input and is not something anyone depends on deliberately. The disclosure
@@ -142,8 +178,9 @@ build graph references carries the `unreferenced` role.
 
 **Acceptance Scenarios**:
 
-1. **Given** a derivation named by another derivation's build inputs, **When**
-   it is classified, **Then** its role is not `unreferenced`.
+1. **Given** a derivation named by another derivation's build inputs and by no
+   declared dependency attribute, **When** it is classified, **Then** its role
+   is `build-tooling` rather than `unreferenced`.
 2. **Given** the closure root, which nothing consumes, **When** it is
    classified, **Then** `unreferenced` remains available and is what it
    carries.
@@ -182,6 +219,11 @@ component records which signal admitted it.
   inputs and are also not what most consumers mean by "a dependency".
 - **A derivation consumed only by something itself not emitted.** Reachability
   through a chain that ends outside the emitted set.
+- **A relabelled member.** 603 of the components whose role changes are
+  milestone-1282 members that declare no name. They already emit — via the
+  `declared_pname().is_none()` clause, not via their role — so this feature
+  changes what they are *called*, never whether they appear. Their emission
+  must not become role-dependent as a side effect.
 - **Build variants.** Several of the 45 distinct names appear at more than one
   version (`cctools-binutils-darwin` at `1010.6` and `boot`, `macOS-SDK` at
   `14.4` and `26.4`). Existing merge behaviour must not collapse them.
@@ -198,14 +240,24 @@ component records which signal admitted it.
 - **FR-002**: The system MUST emit a component for a referenced derivation
   that declares a package name, where today it emits none.
 - **FR-003**: The system MUST NOT label a derivation `unreferenced` when the
-  build graph names it. Measured: 100 of the 101 so labelled today.
+  build graph names it. Measured: 741 derivations carry that label today while
+  the build graph names them, 100 of which are not emitted at all.
+- **FR-003a**: A derivation the build graph names and **no declared dependency
+  attribute names** MUST be classified `build-tooling`. A derivation a
+  declared attribute also names keeps the role that attribute gives it, so
+  this default never overrides better evidence.
 - **FR-004**: The system MUST keep `unreferenced` available and correct for a
   derivation nothing consumes, including the closure root.
 - **FR-005**: The system MUST disclose, per newly admitted component, which
   signal admitted it, so that a declared dependency and a script-body
   reference are distinguishable.
-- **FR-006**: The system MUST NOT change the identity, version, licence or
-  annotations of any component it emits today.
+- **FR-006**: The system MUST NOT change the identity, version or licence of
+  any component it emits today, and MUST NOT change any annotation other than
+  the C182 role. **The role is the exception, deliberately**: FR-003 requires
+  correcting it, and measurement says that touches **641 components that
+  already emit** — 603 milestone-1282 members and 38 admitted by the patches
+  clause. Protecting their current role would mean keeping a label that says
+  nothing depends on them while the build graph says otherwise.
 - **FR-007**: The system MUST NOT change the dependency edges it emits today
   except by adding edges for components that did not previously exist.
 - **FR-008**: The system MUST record, at document scope, how many components
@@ -217,7 +269,9 @@ component records which signal admitted it.
 - **Build-graph reference**: the record, made by nix itself, that one
   derivation's build consumed another's output.
 - **Admission signal**: what caused a derivation to be emitted — a declared
-  dependency attribute, or the build graph alone.
+  dependency attribute, or the build graph alone. Determines the role: a
+  declared attribute gives its own, the build graph alone gives
+  `build-tooling`.
 - **Reference disclosure**: the per-component statement of which signal
   admitted it.
 
@@ -233,8 +287,14 @@ component records which signal admitted it.
 - **SC-003**: **Zero** components carrying the `unreferenced` role are named
   by another derivation's recorded build inputs.
 - **SC-004**: The closure root remains classified `unreferenced`.
+- **SC-004a**: **Zero** derivations named by a declared dependency attribute
+  have their role changed — the `build-tooling` default applies only where no
+  declared attribute names the derivation.
 - **SC-005**: Every component emitted before this change is byte-identical
-  after it, apart from any role correction FR-003 requires.
+  after it **except for its C182 role**, and the number whose role changes is
+  measured and recorded. Expected on the pinned closure: **641**. A run that
+  changes any other field on an already-emitted component is a failure, not a
+  tolerance.
 - **SC-006**: A scan of a project with no nix closure produces a
   byte-identical document.
 - **SC-007**: Disabling the feature makes a test fail.
