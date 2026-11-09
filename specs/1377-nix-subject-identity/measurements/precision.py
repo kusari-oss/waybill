@@ -14,11 +14,12 @@ derivation set for a target.
 import json, re, collections, sys
 
 sys.argv = ["x"]
-src = open("/Users/mlieberman/Projects/mikebom/target/nix-vuln-spike/adjudicate.py").read()
+HERE = __import__("os").path.dirname(__import__("os").path.abspath(__file__))
+src = open(f"{HERE}/adjudicate.py").read()
 exec(src.split("rows = {}")[0])          # reuse norm(), drv_patches(), patch_names_cve()
 
 READERS = {}
-exec(open(f"{W}/analyze.py").read().split("def runtime_names")[0])   # grype/trivy/osv readers
+exec(open(f"{HERE}/analyze.py").read().split("def runtime_names")[0])   # grype/trivy/osv readers
 READERS = {"grype": grype, "trivy": trivy, "osv": osv}
 
 tot = collections.Counter()
@@ -34,7 +35,7 @@ for t in TARGETS:
     rt = set(r[t]["grype"].get("runtime_names") or [])
     for sc in ("grype", "trivy", "osv"):
         for tool in ("sbomnix-bt", "waybill"):
-            p = f"{W}/out/{t}/{tool}.cdx.json.{sc}.json"
+            p = f"{OUT}/{t}/{tool}.cdx.json.{sc}.json"
             if not os.path.exists(p):
                 continue
             fs, _ = READERS[sc](p)

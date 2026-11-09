@@ -2,14 +2,17 @@
 # Spike: generate sbomnix and waybill SBOMs for each wrapper-flake target.
 # Usage: gen-sboms.sh sbomnix|waybill
 set -uo pipefail
-W=/Users/mlieberman/Projects/mikebom/target/nix-vuln-spike
-SBOMNIX=/nix/store/cbh4k59d3sa3w9axcwdbk6jzkg99ybvk-python3.14-sbomnix-1.9.0+g95480c2/bin/sbomnix
-WAYBILL=/Users/mlieberman/Projects/mikebom/target/debug/waybill
+TARGETS_DIR="${TARGETS_DIR:?set TARGETS_DIR (see quickstart.md)}"
+OUT_DIR="${OUT_DIR:?set OUT_DIR (see quickstart.md)}"
 TARGETS="curl openssh httpie gh ripgrep moat"
 mode="${1:?sbomnix|waybill}"
+case "$mode" in
+  sbomnix) SBOMNIX="${SBOMNIX:?set SBOMNIX}";;
+  waybill) WAYBILL="${WAYBILL:?set WAYBILL}";;
+esac
 
 for t in $TARGETS; do
-  d="$W/targets/$t"; o="$W/out/$t"; mkdir -p "$o"
+  d="$TARGETS_DIR/$t"; o="$OUT_DIR/$t"; mkdir -p "$o"
   case "$mode" in
     sbomnix)
       s=$(date +%s)

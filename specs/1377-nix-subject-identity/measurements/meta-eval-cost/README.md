@@ -50,3 +50,29 @@ names vendor, product and version, not a build, so a name+version join
 recovers exactly the declared CPE for the two members a drvPath join misses.
 sbomnix evidently joins this way: it attaches the declared CPE to all three
 build-context variants.
+
+## Independent reach count for SC-009 (`reach.py`)
+
+Population from waybill's own reader, join computed independently. Run:
+`nix derivation show -r path:<flake>#default > closure.json`, then
+`waybill --offline debug closure-dump --closure-json closure.json > dump.json`,
+then `CLOSURE_DUMP=dump.json python3 -I -B reach.py`.
+
+Openssh closure, 2026-11-09 (before any 1377 code):
+
+| | count |
+| --- | --- |
+| wanted (population) | **670**, equal to C184's `licenses.wanted` (670) |
+| received | 187 = 78 by drv + 109 by pname+version |
+| with a declared CPE | 39 derivations |
+| ambiguous (name+version rows with different CPEs) | 0 |
+| unreached | 483 |
+
+**Getting the population right took two corrections, both recorded because each gave a plausible wrong figure:**
+
+1. `emits_as_component` alone gives 732.
+2. The population milestone 1281 counts (`closure/emit.rs::emitted_drv_keys`) also requires a pname, and for milestone-1282 members only roles `source`/`package`. The excluded 62 are `fragment` (59) and `scaffolding` (3) members.
+
+**Why the license cross-check is a bracket, not an equality.** Counting drv-joined members with a license gives 76 when "license" means non-null and 74 when it means "parses under 1281's `one`/`lic`". waybill reports 75. The members that move between those counts are `llvm`, `lld` and `clang-wrapper`. Their `meta.license` is nixpkgs' compound shape, `{"licenseType":"compound","licenses":[…]}`, which 1281's parser does not read, so waybill emits **no license** for them. That is a separate license-coverage gap, outside this milestone.
+
+The license count therefore cannot validate the join exactly. SC-009 compares C184's `identifiers` against this probe directly, after implementation, and requires exact equality.

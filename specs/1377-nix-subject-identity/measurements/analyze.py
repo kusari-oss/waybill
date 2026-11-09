@@ -9,7 +9,14 @@ for openssh despite an 11-path closure.
 """
 import json, os, re, subprocess, sys, collections
 
-W = "/Users/mlieberman/Projects/mikebom/target/nix-vuln-spike"
+import os as _os
+def _env(name):
+    v = _os.environ.get(name)
+    if not v:
+        raise SystemExit(f"set {name} (see quickstart.md)")
+    return v
+TARGETS_PATH = _env("TARGETS_DIR")
+OUT = _env("OUT_DIR")
 TARGETS = "curl openssh httpie gh ripgrep moat".split()
 TOOLS = ("sbomnix-bt", "waybill", "sbomnix-rt")
 SCANNERS = ("grype", "trivy", "osv")
@@ -80,7 +87,7 @@ READ = {"grype": grype, "trivy": trivy, "osv": osv}
 def runtime_names(t):
     """pnames of Nix's runtime closure for a target, or None if unrealised."""
     try:
-        op = subprocess.run(["nix", "eval", "--raw", f"path:{W}/targets/{t}#default.outPath"],
+        op = subprocess.run(["nix", "eval", "--raw", f"path:{TARGETS_PATH}/{t}#default.outPath"],
                             capture_output=True, text=True, timeout=120).stdout.strip()
         if not op or not os.path.exists(op):
             return None
@@ -105,7 +112,7 @@ def main():
         for sc in SCANNERS:
             sets = {}
             for tool in TOOLS:
-                p = f"{W}/out/{t}/{tool}.cdx.json.{sc}.json"
+                p = f"{OUT}/{t}/{tool}.cdx.json.{sc}.json"
                 if os.path.exists(p):
                     sets[tool], kinds = READ[sc](p)
                     if sc == "grype":
@@ -123,7 +130,7 @@ def main():
                 "sbomnix_only": sorted(ao), "waybill_only": sorted(bo), "shared": sorted(shared),
                 "runtime_names": sorted(rt) if rt else None,
             }
-    with open(f"{W}/findings.json", "w") as f:
+    with open(f"{OUT}/findings.json", "w") as f:
         json.dump(report, f, indent=1, default=list)
     print("\ngrype match kinds (per tool):")
     for t in TARGETS:

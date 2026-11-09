@@ -14,15 +14,22 @@ Patch content is grepped only where the patch file is present in the store.
 """
 import json, os, re, subprocess, collections
 
-W = "/Users/mlieberman/Projects/mikebom/target/nix-vuln-spike"
+import os as _os
+def _env(name):
+    v = _os.environ.get(name)
+    if not v:
+        raise SystemExit(f"set {name} (see quickstart.md)")
+    return v
+TARGETS_PATH = _env("TARGETS_DIR")
+OUT = _env("OUT_DIR")
 TARGETS = "curl openssh httpie gh ripgrep moat".split()
-r = json.load(open(f"{W}/findings.json"))
+r = json.load(open(f"{OUT}/findings.json"))
 PY = re.compile(r"^python3(\.\d+)?-")
 norm = lambda n: PY.sub("", (n or "").lower())
 
 
 def comps(t, tool):
-    return json.load(open(f"{W}/out/{t}/{tool}.cdx.json")).get("components", [])
+    return json.load(open(f"{OUT}/{t}/{tool}.cdx.json")).get("components", [])
 
 
 drv_cache = {}
@@ -113,7 +120,7 @@ for k, n in sorted(summary.items(), key=lambda kv: -kv[1]):
 json.dump({f"{n}|{v}|{c}": {**row, "targets": sorted(row["targets"]),
                              "runtime_in": sorted(row["runtime_in"])}
            for (n, v, c), row in rows.items()},
-          open(f"{W}/adjudication.json", "w"), indent=1)
+          open(f"{OUT}/adjudication.json", "w"), indent=1)
 print("\nby component (runtime-relevant only):")
 byc = collections.Counter((n, v, rows[(n, v, c)]["why"]) for (n, v, c) in rows if rows[(n, v, c)]["runtime_in"])
 for (n, v, why), k in byc.most_common(25):
