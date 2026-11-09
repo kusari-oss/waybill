@@ -61,6 +61,28 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   v6/v7 per-package flags and missing-importer behavior are preserved.
   This addresses the pnpm portion of #1297; Yarn is unchanged.
 
+## [0.14.1] - 2026-11-09
+
+A security patch, released from the 0.14.0 line (backport). Addresses
+[GHSA-7mmp-9c2p-27mx][] (CVE pending). No behavior change for legitimate
+images — the only code change confines image-layer symlinks to the
+extraction root. The fix is also present on `main`.
+
+### Security
+
+- **A crafted container image could escape the scanned rootfs during
+  `sbom scan --image`.** When extracting a `docker save` / OCI image
+  tarball, a layer's symlink *target* was not confined to the extraction
+  root. A malicious layer could plant a symlink pointing outside the
+  rootfs and route a later hardlink, whiteout, or copy operation through
+  it, letting the image **write** or **delete** host files outside the
+  temporary extraction directory — and **read** outside-the-image files
+  back into the emitted SBOM — with the privileges of the user running
+  the scan. Image-layer symlinks are now contained: a target that would
+  escape the rootfs is refused at creation, and every direct filesystem
+  operation is re-checked against the canonicalized root. Legitimate
+  in-bounds symlinks are unaffected. Reported by [@kta1kri][].
+
 ## [0.14.0] - 2026-10-28
 
 A minor, not the `0.13.1` patch the placeholder held. Three things a
@@ -7004,7 +7026,10 @@ per-release breakdown.
 ---
 
 [Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.14.0...HEAD
+[0.14.1]: https://github.com/kusari-oss/waybill/releases/tag/v0.14.1
 [0.14.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.14.0
+[GHSA-7mmp-9c2p-27mx]: https://github.com/kusari-oss/waybill/security/advisories/GHSA-7mmp-9c2p-27mx
+[@kta1kri]: https://github.com/kta1kri
 [0.13.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.13.0
 [0.12.1]: https://github.com/kusari-oss/waybill/releases/tag/v0.12.1
 [0.12.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.12.0
