@@ -1736,80 +1736,72 @@ impl CycloneDxBuilder {
                 }));
             }
             // `waybill:evidence-kind` — milestone 004 (spec FR-004,
-            // contracts/schema.md). Six-value canonical enum identifying
-            // how the component was discovered. Consumers filter by this.
+            // contracts/schema.md). Canonical enum identifying how the
+            // component was discovered. Consumers filter by this.
             // Valid values enforced by `debug_assert!` per data-model.md
             // §Validation rules.
+            //
+            // Binary-reader kinds come from `BINARY_EVIDENCE_KINDS` rather
+            // than a copy here: a copy omitted `cargo-auditable` and panicked
+            // debug builds on every cargo-auditable binary (#1399). That
+            // constant is checked against the readers' source by
+            // `binary_evidence_kind_drift`. Package-database kinds are still
+            // listed by hand below.
             if let Some(ref kind) = component.evidence_kind {
                 debug_assert!(
-                    matches!(
-                        kind.as_str(),
-                        "rpm-file"
-                            | "rpmdb-sqlite"
-                            | "rpmdb-bdb"
-                            | "dynamic-linkage"
-                            | "elf-note-package"
-                            | "embedded-version-string"
-                            | "symbol-fingerprint"
-                            | "python-stdlib-collapsed"
-                            | "jdk-runtime-collapsed"
-                            | "alpm-local-db"
-                            | "brew-install-receipt"
-                            | "brew-cask-metadata"
-                            | "pubspec-lock"
-                            | "pubspec-yaml"
-                            | "composer-lock"
-                            | "composer-json"
-                            | "composer-installed-json"
-                            | "cocoapods-podfile-lock"
-                            | "cocoapods-podfile"
-                            | "cocoapods-manifest-lock"
-                            | "mix-lock"
-                            | "mix-exs"
-                            | "rebar-lock"
-                            | "rebar-config"
-                            | "app-src"
-                            | "sbt-lock"
-                            | "sbt-build"
-                            | "cabal-freeze"
-                            | "stack-yaml-lock"
-                            | "cabal-pkg-descriptor"
-                            // Milestone 1273 (#1278) — the hpack reader. A
-                            // component described from a `package.yaml` is
-                            // distinguishable from one described from a
-                            // `*.cabal`, which is how FR-002's "the document
-                            // MUST record which" is satisfied per component.
-                            | "hpack-manifest"
-                            // Milestone 925 (#946) — Nix flake.lock reader.
-                            | "nix-flake-lock"
-                            // Milestone 169 (T013, closes #500) — ipk
-                            // archive-file reader + opkg installed-DB
-                            // hardening. See spec.md FR-009 + FR-015.
-                            | "ipk-file"
-                            | "opkg-status-db"
-                            // Milestone 188 (#455) — Helm chart reader.
-                            // Chart-level components carry
-                            // `helm-chart-yaml` or `helm-chart-lock`;
-                            // image-ref components extracted from
-                            // `templates/*.yaml` carry
-                            // `helm-template-image-ref`.
-                            | "helm-chart-yaml"
-                            | "helm-chart-lock"
-                            | "helm-template-image-ref"
-                    ),
-                    "waybill:evidence-kind value '{kind}' is not in the canonical \
-                     enum (rpm-file | rpmdb-sqlite | rpmdb-bdb | \
-                     dynamic-linkage | elf-note-package | \
-                     embedded-version-string | symbol-fingerprint | \
-                     python-stdlib-collapsed | jdk-runtime-collapsed | \
-                     alpm-local-db | brew-install-receipt | brew-cask-metadata | \
-                     pubspec-lock | pubspec-yaml | composer-lock | composer-json | \
-                     composer-installed-json | cocoapods-podfile-lock | \
-                     cocoapods-podfile | cocoapods-manifest-lock | mix-lock | mix-exs | \
-                     rebar-lock | rebar-config | app-src | sbt-lock | sbt-build | \
-                     cabal-freeze | stack-yaml-lock | cabal-pkg-descriptor | \
-                     hpack-manifest | nix-flake-lock | \
-                     ipk-file | opkg-status-db)"
+                    crate::scan_fs::binary::BINARY_EVIDENCE_KINDS.contains(&kind.as_str())
+                        || matches!(
+                            kind.as_str(),
+                            "rpm-file"
+                                | "rpmdb-sqlite"
+                                | "rpmdb-bdb"
+                                | "alpm-local-db"
+                                | "brew-install-receipt"
+                                | "brew-cask-metadata"
+                                | "pubspec-lock"
+                                | "pubspec-yaml"
+                                | "composer-lock"
+                                | "composer-json"
+                                | "composer-installed-json"
+                                | "cocoapods-podfile-lock"
+                                | "cocoapods-podfile"
+                                | "cocoapods-manifest-lock"
+                                | "mix-lock"
+                                | "mix-exs"
+                                | "rebar-lock"
+                                | "rebar-config"
+                                | "app-src"
+                                | "sbt-lock"
+                                | "sbt-build"
+                                | "cabal-freeze"
+                                | "stack-yaml-lock"
+                                | "cabal-pkg-descriptor"
+                                // Milestone 1273 (#1278) — the hpack reader. A
+                                // component described from a `package.yaml` is
+                                // distinguishable from one described from a
+                                // `*.cabal`, which is how FR-002's "the document
+                                // MUST record which" is satisfied per component.
+                                | "hpack-manifest"
+                                // Milestone 925 (#946) — Nix flake.lock reader.
+                                | "nix-flake-lock"
+                                // Milestone 169 (T013, closes #500) — ipk
+                                // archive-file reader + opkg installed-DB
+                                // hardening. See spec.md FR-009 + FR-015.
+                                | "ipk-file"
+                                | "opkg-status-db"
+                                // Milestone 188 (#455) — Helm chart reader.
+                                // Chart-level components carry
+                                // `helm-chart-yaml` or `helm-chart-lock`;
+                                // image-ref components extracted from
+                                // `templates/*.yaml` carry
+                                // `helm-template-image-ref`.
+                                | "helm-chart-yaml"
+                                | "helm-chart-lock"
+                                | "helm-template-image-ref"
+                        ),
+                    "waybill:evidence-kind value '{kind}' is neither a binary evidence \
+                     kind (`BINARY_EVIDENCE_KINDS`, scan_fs/binary/mod.rs) nor a \
+                     package-database kind listed at this assertion"
                 );
                 properties.push(json!({
                     "name": "waybill:evidence-kind",
@@ -1821,9 +1813,11 @@ impl CycloneDxBuilder {
             // is itself informative (e.g. no `waybill:binary-class` =
             // non-binary component).
             if let Some(ref confidence) = component.confidence {
-                debug_assert_eq!(
-                    confidence, "heuristic",
-                    "waybill:confidence is currently only valid as 'heuristic'"
+                debug_assert!(
+                    crate::scan_fs::binary::BINARY_CONFIDENCE_VALUES
+                        .contains(&confidence.as_str()),
+                    "waybill:confidence value '{confidence}' is not in \
+                     `BINARY_CONFIDENCE_VALUES` (scan_fs/binary/mod.rs)"
                 );
                 properties.push(json!({
                     "name": "waybill:confidence",
@@ -2306,6 +2300,71 @@ mod tests {
             .find(|c| c["name"] == "kept-mod")
             .expect("plain component present");
         assert!(plain.get("scope").is_none());
+    }
+
+    /// #1399: every evidence kind a binary reader can produce must survive
+    /// CycloneDX emission. The `waybill:evidence-kind` `debug_assert!` kept its
+    /// own copy of the binary kinds and omitted `cargo-auditable`, so a debug
+    /// build panicked on any cargo-auditable binary. Tests compile with debug
+    /// assertions on, so a stale allowlist fails here rather than in a scan.
+    #[test]
+    fn every_binary_evidence_kind_survives_cyclonedx_emission() {
+        let kinds = crate::scan_fs::binary::BINARY_EVIDENCE_KINDS;
+        assert!(!kinds.is_empty(), "control: an empty list makes this vacuous");
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
+        let integrity = clean_integrity();
+        for kind in kinds {
+            let mut component = make_component("bin-dep", "1.0.0");
+            component.evidence_kind = Some((*kind).to_string());
+            let bom = builder
+                .build(&[component], &[], &integrity, "myapp", &[], None)
+                .expect("build bom");
+            let emitted = bom["components"]
+                .as_array()
+                .expect("components array")
+                .iter()
+                .find(|c| c["name"] == "bin-dep")
+                .expect("component emitted");
+            let props = emitted["properties"].as_array().expect("properties array");
+            assert!(
+                props
+                    .iter()
+                    .any(|p| p["name"] == "waybill:evidence-kind" && p["value"] == *kind),
+                "waybill:evidence-kind = {kind} must be emitted unchanged: {props:?}"
+            );
+        }
+    }
+
+    /// #1399, second half: the cargo-auditable reader also sets
+    /// `confidence = "high"`, which a `debug_assert_eq!(confidence,
+    /// "heuristic")` rejected. Every confidence a binary reader produces must
+    /// survive emission.
+    #[test]
+    fn every_binary_confidence_value_survives_cyclonedx_emission() {
+        let values = crate::scan_fs::binary::BINARY_CONFIDENCE_VALUES;
+        assert!(!values.is_empty(), "control: an empty list makes this vacuous");
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
+        let integrity = clean_integrity();
+        for value in values {
+            let mut component = make_component("bin-dep", "1.0.0");
+            component.confidence = Some((*value).to_string());
+            let bom = builder
+                .build(&[component], &[], &integrity, "myapp", &[], None)
+                .expect("build bom");
+            let emitted = bom["components"]
+                .as_array()
+                .expect("components array")
+                .iter()
+                .find(|c| c["name"] == "bin-dep")
+                .expect("component emitted");
+            let props = emitted["properties"].as_array().expect("properties array");
+            assert!(
+                props
+                    .iter()
+                    .any(|p| p["name"] == "waybill:confidence" && p["value"] == *value),
+                "waybill:confidence = {value} must be emitted unchanged: {props:?}"
+            );
+        }
     }
 
     /// Shade-jar nested emission (CDX 1.6 component.components[]).
