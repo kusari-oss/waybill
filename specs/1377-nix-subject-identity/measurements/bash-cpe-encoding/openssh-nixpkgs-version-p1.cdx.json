@@ -1,0 +1,14 @@
+{
+ "bomFormat": "CycloneDX",
+ "specVersion": "1.6",
+ "version": 1,
+ "components": [
+  {
+   "type": "application",
+   "bom-ref": "o",
+   "name": "openssh",
+   "version": "10.3p1",
+   "cpe": "cpe:2.3:a:openbsd:openssh:10.3p1:*:*:*:*:*:*:*"
+  }
+ ]
+}

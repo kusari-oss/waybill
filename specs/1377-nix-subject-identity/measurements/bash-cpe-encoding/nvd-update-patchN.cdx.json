@@ -1,0 +1,14 @@
+{
+ "bomFormat": "CycloneDX",
+ "specVersion": "1.6",
+ "version": 1,
+ "components": [
+  {
+   "type": "application",
+   "bom-ref": "bash",
+   "name": "bash",
+   "version": "5.0p11",
+   "cpe": "cpe:2.3:a:gnu:bash:5.0:patch11:*:*:*:*:*:*"
+  }
+ ]
+}
