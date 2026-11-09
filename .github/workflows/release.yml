@@ -398,7 +398,12 @@ jobs:
 
   build-macos-aarch64:
     name: Build — macos-aarch64
-    runs-on: macos-14
+    # macos-15 (Apple silicon) succeeds the macos-14 image GitHub retired on
+    # 2026-11-02. Both are arm64, so `aarch64-apple-darwin` is unchanged; a
+    # retired label is never scheduled, so the job cancels at allocation and
+    # skips `create-github-release` (which `needs` it). ci.yml uses
+    # `macos-latest` and was unaffected.
+    runs-on: macos-15
     # Milestone 668: id-token + attestations write for SLSA provenance
     # emission via actions/attest-build-provenance (FR-001) + FR-015
     # self-verify via `gh attestation verify`. contents: read preserves
