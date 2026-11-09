@@ -66,6 +66,14 @@ pub(crate) const BINARY_EVIDENCE_KINDS: &[&str] = &[
     "symbol-fingerprint",
 ];
 
+/// Every `confidence` a binary reader attaches to a component.
+///
+/// `heuristic` for components inferred from a binary's contents; `high` for
+/// cargo-auditable's embedded dependency list, which the toolchain wrote
+/// rather than waybill inferring it. The CycloneDX builder asserts against
+/// this list, so it must track what the readers produce (#1399).
+pub(crate) const BINARY_CONFIDENCE_VALUES: &[&str] = &["heuristic", "high"];
+
 /// Whether a component was produced by reading a binary found by walking.
 pub(crate) fn is_binary_derived(evidence_kind: Option<&str>) -> bool {
     evidence_kind.is_some_and(|k| BINARY_EVIDENCE_KINDS.contains(&k))
@@ -73,7 +81,32 @@ pub(crate) fn is_binary_derived(evidence_kind: Option<&str>) -> bool {
 
 #[cfg(test)]
 mod binary_evidence_kind_drift {
-    use super::BINARY_EVIDENCE_KINDS;
+    use super::{BINARY_CONFIDENCE_VALUES, BINARY_EVIDENCE_KINDS};
+
+    const SOURCES: &[(&str, &str)] = &[
+        ("entry.rs", include_str!("entry.rs")),
+        ("linkage.rs", include_str!("linkage.rs")),
+        ("jdk_collapse.rs", include_str!("jdk_collapse.rs")),
+        ("python_collapse.rs", include_str!("python_collapse.rs")),
+    ];
+
+    /// `<file>: <value>` for each `<field>: Some("<value>")` literal in
+    /// `SOURCES` whose value is not in `listed`.
+    fn unlisted(field: &str, listed: &[&str]) -> Vec<String> {
+        let needle = format!("{field}: Some(\"");
+        let mut missing = Vec::new();
+        for (name, src) in SOURCES {
+            for (i, _) in src.match_indices(needle.as_str()) {
+                let rest = &src[i + needle.len()..];
+                let Some(end) = rest.find('"') else { continue };
+                let value = &rest[..end];
+                if !listed.contains(&value) {
+                    missing.push(format!("{name}: {value}"));
+                }
+            }
+        }
+        missing
+    }
 
     /// Every `evidence_kind` literal in this module must be listed above.
     ///
@@ -84,24 +117,7 @@ mod binary_evidence_kind_drift {
     /// produces the values rather than trusted.
     #[test]
     fn every_evidence_kind_in_this_module_is_listed() {
-        const SOURCES: &[(&str, &str)] = &[
-            ("entry.rs", include_str!("entry.rs")),
-            ("linkage.rs", include_str!("linkage.rs")),
-            ("jdk_collapse.rs", include_str!("jdk_collapse.rs")),
-            ("python_collapse.rs", include_str!("python_collapse.rs")),
-        ];
-        let needle = "evidence_kind: Some(\"";
-        let mut missing: Vec<String> = Vec::new();
-        for (name, src) in SOURCES {
-            for (i, _) in src.match_indices(needle) {
-                let rest = &src[i + needle.len()..];
-                let Some(end) = rest.find('"') else { continue };
-                let kind = &rest[..end];
-                if !BINARY_EVIDENCE_KINDS.contains(&kind) {
-                    missing.push(format!("{name}: {kind}"));
-                }
-            }
-        }
+        let missing = unlisted("evidence_kind", BINARY_EVIDENCE_KINDS);
         assert!(
             missing.is_empty(),
             "evidence kinds produced but not listed in BINARY_EVIDENCE_KINDS, so \
@@ -110,14 +126,32 @@ mod binary_evidence_kind_drift {
         );
     }
 
+    /// Every `confidence` literal in this module must be listed above. The
+    /// CycloneDX builder asserts against that list, so an unlisted value
+    /// panics debug builds — the second half of #1399.
+    #[test]
+    fn every_confidence_in_this_module_is_listed() {
+        let missing = unlisted("confidence", BINARY_CONFIDENCE_VALUES);
+        assert!(
+            missing.is_empty(),
+            "confidence values produced but not listed in \
+             BINARY_CONFIDENCE_VALUES, so CycloneDX emission rejects them: \
+             {missing:?}"
+        );
+    }
+
     /// The control: the scan really does find literals, so an empty result
     /// cannot pass for agreement.
     #[test]
     fn the_drift_scan_actually_finds_something() {
-        let n = include_str!("entry.rs")
-            .matches("evidence_kind: Some(\"")
-            .count();
-        assert!(n >= 3, "expected several evidence_kind literals in entry.rs, found {n}");
+        let src = include_str!("entry.rs");
+        let kinds = src.matches("evidence_kind: Some(\"").count();
+        let confidences = src.matches("confidence: Some(\"").count();
+        assert!(kinds >= 3, "expected several evidence_kind literals in entry.rs, found {kinds}");
+        assert!(
+            confidences >= 3,
+            "expected several confidence literals in entry.rs, found {confidences}"
+        );
     }
 }
 
