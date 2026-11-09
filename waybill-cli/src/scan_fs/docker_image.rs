@@ -206,47 +206,109 @@ pub fn extract(archive_path: &Path, mode: ExtractMode) -> Result<ExtractedImage>
     })
 }
 
-/// Issue #401 — when a tar Symlink entry's target is absolute
-/// (`/run`, `/lib64`, `/usr/bin`, ...), rewrite it to be a relative
-/// path that climbs back to the rootfs root and then descends into
-/// the target. Returns `Some(rewritten_target)` when the rewrite
-/// applies; `None` when the target is already relative.
+/// GHSA-7mmp-9c2p-27mx — decide whether a tar Symlink entry may be
+/// created inside the rootfs, and if so with what (rootfs-anchored)
+/// target.
 ///
-/// Algorithm: for a symlink at rootfs-relative path
-/// `<parent_dir>/<link_name>` whose target is the absolute path
-/// `/x/y/z`, the rewritten target is `(../ × N)x/y/z` where N is
-/// the component count of `parent_dir`. This canonicalizes to
-/// `<rootfs>/x/y/z` instead of host `/x/y/z`.
+/// A symlink *inside* the rootfs that resolves *outside* it is the sole
+/// indirection every escape variant relies on: once such a link exists,
+/// any later `rootfs.join(rel)` with a `..`-free `rel` can be routed
+/// through it to a host path. Refusing to create escaping symlinks in the
+/// first place removes the primitive for writes, deletes, whiteouts and
+/// hardlink read-sources alike.
 ///
-/// Examples:
-/// - `var/run -> /run` → `var/run -> ../run` (1 `..`)
-/// - `usr/lib64 -> /lib64` → `usr/lib64 -> ../lib64`
-/// - `var/lib/dpkg/status -> /etc/passwd` → `../../../etc/passwd`
-///
-/// `#[cfg(unix)]`-gated to match the only call site in
-/// `extract_layer_over_rootfs`. Windows image scans skip this path
-/// (Windows symlink semantics differ enough that the rewrite would
-/// need to be re-validated there).
+/// Reasoning is purely lexical on rootfs-relative depth, so it cannot be
+/// defeated by TOCTOU. `link_rel` is the symlink's rootfs-relative path
+/// (already `..`-free by the caller). `target` is the raw tar target.
+/// Returns the target to create (absolute targets rewritten to
+/// rootfs-anchored relative form, preserving in-image semantics per the
+/// earlier #401 fix; relative targets kept verbatim), or `None` when
+/// following the link would leave the rootfs — the caller then skips it.
 #[cfg(unix)]
-fn rewrite_symlink_target_if_absolute<R: std::io::Read>(
-    link_rel_path: &Path,
-    entry: &tar::Entry<'_, R>,
-) -> Option<PathBuf> {
-    let target = entry.link_name().ok()??.into_owned();
-    if !target.is_absolute() {
+fn contained_symlink_target(link_rel: &Path, target: &Path) -> Option<PathBuf> {
+    use std::path::Component;
+    let link_dir_depth = link_rel
+        .parent()
+        .map(|p| {
+            p.components()
+                .filter(|c| matches!(c, Component::Normal(_)))
+                .count()
+        })
+        .unwrap_or(0);
+
+    let comps: Vec<Component> = target.components().collect();
+    // Absolute targets resolve from the rootfs root (depth 0); relative
+    // ones from the link's own directory.
+    let start_depth: isize = if target.is_absolute() {
+        0
+    } else {
+        link_dir_depth as isize
+    };
+
+    let mut depth = start_depth;
+    for c in &comps {
+        match c {
+            Component::ParentDir => {
+                depth -= 1;
+                if depth < 0 {
+                    return None; // rises above the rootfs root -> escape
+                }
+            }
+            Component::Normal(_) => depth += 1,
+            Component::RootDir | Component::Prefix(_) | Component::CurDir => {}
+        }
+    }
+    if depth < 0 {
         return None;
     }
-    let bare_target = target.strip_prefix("/").unwrap_or(&target).to_path_buf();
-    let parent_depth = link_rel_path
-        .parent()
-        .map(|p| p.components().count())
-        .unwrap_or(0);
-    let mut rewritten = PathBuf::new();
-    for _ in 0..parent_depth {
-        rewritten.push("..");
+
+    if target.is_absolute() {
+        // Rebuild from the normalized component list, anchored back to the
+        // rootfs root with `..` for each directory the link sits below.
+        // Normalizing here also neutralizes any `..` embedded in the
+        // absolute target (e.g. `/../victim`), which the pre-GHSA #401
+        // rewrite passed through unchanged.
+        let mut normalized: Vec<&std::ffi::OsStr> = Vec::new();
+        for c in &comps {
+            match c {
+                Component::Normal(n) => normalized.push(n),
+                Component::ParentDir => {
+                    normalized.pop();
+                }
+                _ => {}
+            }
+        }
+        let mut out = PathBuf::new();
+        for _ in 0..link_dir_depth {
+            out.push("..");
+        }
+        for n in normalized {
+            out.push(n);
+        }
+        Some(out)
+    } else {
+        Some(target.to_path_buf())
     }
-    rewritten.push(bare_target);
-    Some(rewritten)
+}
+
+/// GHSA-7mmp-9c2p-27mx — defense in depth for the explicit delete and
+/// hardlink sites, which call `fs::remove_*` / `fs::hard_link` / `fs::copy`
+/// directly (bypassing `tar::Entry::unpack_in`'s own escape guard).
+///
+/// Canonicalizes the path's *parent* — resolving every intermediate
+/// symlink — and requires it to stay under the canonicalized rootfs. The
+/// final component is left unresolved on purpose: we may be removing or
+/// replacing a symlink there and must not follow it. `contained_symlink_target`
+/// already ensures no escaping intermediate symlink exists; this is the
+/// second line that also catches any future regression.
+fn within_rootfs(rootfs_canon: &Path, abs: &Path) -> bool {
+    let Some(parent) = abs.parent() else {
+        return false;
+    };
+    match parent.canonicalize() {
+        Ok(cp) => cp.starts_with(rootfs_canon),
+        Err(_) => false,
+    }
 }
 
 /// Read a single named entry out of a tar archive into a `Vec<u8>`. The
@@ -305,6 +367,13 @@ fn extract_layer_over_rootfs(
     };
     let layer_bytes: &[u8] = &decompressed;
 
+    // GHSA-7mmp-9c2p-27mx — canonical rootfs for the defense-in-depth
+    // containment checks at the direct delete/hardlink sites below.
+    // Best-effort: on the rare canonicalize failure we fall back to the
+    // raw path, and the primary `contained_symlink_target` guard still
+    // holds.
+    let rootfs_canon = rootfs.canonicalize().unwrap_or_else(|_| rootfs.to_path_buf());
+
     // First pass: collect whiteout directives so we apply them up front.
     // Two-pass keeps the logic simple — one pass to find `.wh.*` names
     // and delete their targets, then another to unpack everything else.
@@ -353,6 +422,12 @@ fn extract_layer_over_rootfs(
 
     for opq in &opaque_dirs {
         let full = rootfs.join(opq);
+        // GHSA-7mmp-9c2p-27mx: refuse to clear a directory that
+        // resolves outside the rootfs through an escaping symlink.
+        if !within_rootfs(&rootfs_canon, &full) {
+            tracing::debug!(path = %full.display(), "skipping opaque-dir clear outside rootfs");
+            continue;
+        }
         if full.is_dir() {
             // Clear contents but keep the directory itself so subsequent
             // entries for this path can repopulate it.
@@ -373,6 +448,12 @@ fn extract_layer_over_rootfs(
     }
     for wh in &whiteouts {
         let full = rootfs.join(wh);
+        // GHSA-7mmp-9c2p-27mx: refuse a delete that resolves
+        // outside the rootfs through an escaping symlink.
+        if !within_rootfs(&rootfs_canon, &full) {
+            tracing::debug!(path = %full.display(), "skipping whiteout delete outside rootfs");
+            continue;
+        }
         if full.is_dir() {
             let _ = fs::remove_dir_all(&full);
         } else if full.exists() {
@@ -532,49 +613,70 @@ fn extract_layer_over_rootfs(
             }
         }
 
-        // Issue #401 — symlink-target host-fs escape. Container
-        // images legitimately ship absolute symlinks for distro
-        // compatibility (`var/run -> /run`, `usr/lib64 -> /lib64`,
-        // `bin -> /usr/bin`, ...). When `unpack_in` creates these
-        // verbatim, the symlink at `<rootfs>/var/run` points at the
-        // HOST's `/run` — every reader that touches that path
-        // (deep-hash, OS-package readers, os_release) then reads
-        // host content. PR #397 fixed the `safe_walk` directory
-        // walker; this fix closes the per-file-read variant.
+        // Issue #401 + GHSA-7mmp-9c2p-27mx — symlink creation is the
+        // choke point for host-fs escape. Container images legitimately
+        // ship absolute symlinks for distro compatibility (`var/run ->
+        // /run`, `usr/lib64 -> /lib64`, ...). Left verbatim, `<rootfs>/
+        // var/run -> /run` points at the HOST's `/run` (#401). Worse, a
+        // crafted relative target like `../../tmp/x` creates a link that
+        // *resolves outside the rootfs*, which later writes/deletes/
+        // hardlinks can be routed through (GHSA-7mmp-9c2p-27mx).
         //
-        // Treatment: rewrite absolute targets to be relative +
-        // rootfs-anchored. `<rootfs>/var/run -> /run` becomes
-        // `<rootfs>/var/run -> ../run`, which resolves to
-        // `<rootfs>/run` instead of host `/run`. In-image semantics
-        // preserved; host escape blocked.
+        // `contained_symlink_target` handles both: absolute targets are
+        // rewritten to rootfs-anchored relative form; any target —
+        // absolute or relative — whose resolved position leaves the
+        // rootfs is refused, so no escaping symlink ever lands in the
+        // tree. We intercept EVERY symlink here rather than letting the
+        // relative case fall through to `unpack_in`, which would create
+        // it verbatim (escape and all).
         #[cfg(unix)]
         if entry_type == tar::EntryType::Symlink {
-            if let Some(rewrite) = rewrite_symlink_target_if_absolute(&path, &e) {
-                let link_abs = rootfs.join(&path);
-                if link_abs.exists() {
-                    // Layer overlay: later layer's symlink replaces
-                    // an earlier file/symlink at the same path.
-                    let _ = fs::remove_file(&link_abs);
+            let raw_target = match e.link_name() {
+                Ok(Some(t)) => t.into_owned(),
+                _ => {
+                    tracing::debug!(link = %path.display(), "symlink entry has no target; skipping");
+                    continue;
                 }
-                match std::os::unix::fs::symlink(&rewrite, &link_abs) {
-                    Ok(()) => {
-                        tracing::debug!(
-                            link = %path.display(),
-                            rewritten = %rewrite.display(),
-                            "rewrote absolute symlink target to rootfs-anchored form (#401)"
-                        );
-                        paths_written.push(path.to_string_lossy().into_owned());
-                        continue;
+            };
+            match contained_symlink_target(&path, &raw_target) {
+                Some(safe_target) => {
+                    let link_abs = rootfs.join(&path);
+                    // Layer overlay: a later layer's symlink replaces an
+                    // earlier file/symlink at the same path. `symlink_metadata`
+                    // so we detect (and remove) an existing symlink without
+                    // following it.
+                    if link_abs.symlink_metadata().is_ok() {
+                        let _ = fs::remove_file(&link_abs);
                     }
-                    Err(err) => {
-                        tracing::debug!(
-                            link = %path.display(),
-                            error = %err,
-                            "failed to create rewritten symlink; falling back to default unpack"
-                        );
+                    match std::os::unix::fs::symlink(&safe_target, &link_abs) {
+                        Ok(()) => {
+                            tracing::debug!(
+                                link = %path.display(),
+                                target = %safe_target.display(),
+                                "created rootfs-contained symlink"
+                            );
+                            paths_written.push(path.to_string_lossy().into_owned());
+                        }
+                        Err(err) => {
+                            tracing::debug!(
+                                link = %path.display(),
+                                error = %err,
+                                "failed to create contained symlink; skipping"
+                            );
+                        }
                     }
+                }
+                None => {
+                    tracing::debug!(
+                        link = %path.display(),
+                        target = %raw_target.display(),
+                        "skipping symlink whose target escapes the rootfs (GHSA-7mmp-9c2p-27mx)"
+                    );
                 }
             }
+            // A symlink is fully handled here on unix; never fall through
+            // to `unpack_in` (which would recreate an escaping target).
+            continue;
         }
 
         if let Err(err) = e.unpack_in(rootfs) {
@@ -593,6 +695,21 @@ fn extract_layer_over_rootfs(
     for (link_rel, target_rel) in &deferred_links {
         let link_abs = rootfs.join(link_rel);
         let target_abs = rootfs.join(target_rel);
+        // GHSA-7mmp-9c2p-27mx: the hardlink pass calls remove_file /
+        // hard_link / copy directly, bypassing tar's own escape guard.
+        // Refuse if either endpoint resolves outside the rootfs — this
+        // blocks both the write-escape (link_abs) and the read-escape
+        // that pulls a host file in as the copy source (target_abs).
+        if !within_rootfs(&rootfs_canon, &link_abs)
+            || !within_rootfs(&rootfs_canon, &target_abs)
+        {
+            tracing::debug!(
+                link = %link_abs.display(),
+                target = %target_abs.display(),
+                "skipping hardlink whose link or target resolves outside rootfs"
+            );
+            continue;
+        }
         if let Some(parent) = link_abs.parent() {
             let _ = fs::create_dir_all(parent);
             // v9 Phase N: same chmod fix as the main pass — ensure
@@ -1508,4 +1625,107 @@ mod tests {
             );
         }
     }
+
+    // ---- GHSA-7mmp-9c2p-27mx: symlink-indirection containment ----
+    // A crafted layer plants a symlink inside the rootfs that points
+    // outside it, then routes a write/delete/read through it. Every
+    // variant below MUST be contained to the rootfs. Escape targets are
+    // sibling tempdirs so the test is hermetic.
+    #[cfg(unix)]
+    fn ghsa_build_layer(entries: &[(tar::EntryType, &str, Option<&str>, &[u8])]) -> Vec<u8> {
+        let mut buf = Vec::new();
+        {
+            let mut t = tar::Builder::new(&mut buf);
+            for (etype, path, link, content) in entries {
+                let mut h = tar::Header::new_gnu();
+                h.set_entry_type(*etype);
+                h.set_path(path).unwrap();
+                if let Some(l) = link { h.set_link_name(l).unwrap(); }
+                h.set_size(content.len() as u64);
+                h.set_mode(0o644);
+                h.set_cksum();
+                t.append(&h, *content).unwrap();
+            }
+            t.finish().unwrap();
+        }
+        buf
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn ghsa_symlink_hardlink_write_is_contained() {
+        let d = tempfile::tempdir().unwrap();
+        let rootfs = d.path().join("rootfs");
+        let victim = d.path().join("victim");
+        fs::create_dir_all(&rootfs).unwrap();
+        fs::create_dir_all(&victim).unwrap();
+        let vf = victim.join("existing.txt");
+        fs::write(&vf, b"ORIGINAL").unwrap();
+        let layer = ghsa_build_layer(&[
+            (tar::EntryType::Regular, "usr/share/payload.txt", None, b"PAYLOAD"),
+            (tar::EntryType::Symlink, "esc", Some("../victim"), b""),
+            (tar::EntryType::Link, "esc/existing.txt", Some("usr/share/payload.txt"), b""),
+        ]);
+        let _ = extract_layer_over_rootfs(&layer, &rootfs, ExtractMode::Full);
+        assert_eq!(fs::read(&vf).unwrap(), b"ORIGINAL",
+            "hardlink routed through an escaping symlink must not overwrite outside the rootfs");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn ghsa_two_layer_whiteout_delete_is_contained() {
+        let d = tempfile::tempdir().unwrap();
+        let rootfs = d.path().join("rootfs");
+        let victim = d.path().join("victim");
+        fs::create_dir_all(&rootfs).unwrap();
+        fs::create_dir_all(&victim).unwrap();
+        let secret = victim.join("secret.txt");
+        fs::write(&secret, b"SECRET").unwrap();
+        let l1 = ghsa_build_layer(&[(tar::EntryType::Symlink, "esc", Some("../victim"), b"")]);
+        let l2 = ghsa_build_layer(&[(tar::EntryType::Regular, "esc/.wh.secret.txt", None, b"")]);
+        let _ = extract_layer_over_rootfs(&l1, &rootfs, ExtractMode::Full);
+        let _ = extract_layer_over_rootfs(&l2, &rootfs, ExtractMode::Full);
+        assert!(secret.is_file(),
+            "whiteout routed through an earlier layer's escaping symlink must not delete outside the rootfs");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn ghsa_hardlink_target_cannot_read_outside_rootfs() {
+        let d = tempfile::tempdir().unwrap();
+        let rootfs = d.path().join("rootfs");
+        let victim = d.path().join("victim");
+        fs::create_dir_all(&rootfs).unwrap();
+        fs::create_dir_all(&victim).unwrap();
+        fs::write(victim.join("host-secret.txt"), b"HOST-SECRET-CONTENT").unwrap();
+        let layer = ghsa_build_layer(&[
+            (tar::EntryType::Symlink, "src", Some("../victim"), b""),
+            (tar::EntryType::Link, "pulls_in.txt", Some("src/host-secret.txt"), b""),
+        ]);
+        let _ = extract_layer_over_rootfs(&layer, &rootfs, ExtractMode::Full);
+        let got = fs::read(rootfs.join("pulls_in.txt")).unwrap_or_default();
+        assert_ne!(got, b"HOST-SECRET-CONTENT",
+            "a hardlink/copy target must not read a file outside the rootfs");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn ghsa_absolute_symlink_target_with_dotdot_is_contained() {
+        let d = tempfile::tempdir().unwrap();
+        let rootfs = d.path().join("rootfs");
+        let victim = d.path().join("victim");
+        fs::create_dir_all(&rootfs).unwrap();
+        fs::create_dir_all(&victim).unwrap();
+        let vf = victim.join("z.txt");
+        fs::write(&vf, b"ORIGINAL").unwrap();
+        let layer = ghsa_build_layer(&[
+            (tar::EntryType::Regular, "payload.txt", None, b"PAYLOAD"),
+            (tar::EntryType::Symlink, "esc", Some("/../victim"), b""),
+            (tar::EntryType::Link, "esc/z.txt", Some("payload.txt"), b""),
+        ]);
+        let _ = extract_layer_over_rootfs(&layer, &rootfs, ExtractMode::Full);
+        assert_eq!(fs::read(&vf).unwrap(), b"ORIGINAL",
+            "an absolute symlink target containing .. must not escape after rewrite");
+    }
+
 }
