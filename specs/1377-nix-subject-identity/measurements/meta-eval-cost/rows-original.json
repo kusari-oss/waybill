@@ -1,0 +1,1446 @@
+[
+{
+"attr": "apple-sdk",
+"drv": "mylx4ddry0bkj5h60jsgf7bf4nm4alsi-apple-sdk-14.4.drv",
+"licenses": [],
+"out": "/nix/store/0p9q77zfnr32pmql2j2qb1had4wkq06m-apple-sdk-14.4",
+"root": "pkgs"
+},
+{
+"attr": "asciidoc",
+"drv": "i7d8vjbaxxx7lm469jnlhwgmcl7klari-asciidoc-10.2.1.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+}
+],
+"out": "/nix/store/pldqcay62b4km1zq5vvfdhgrb3qr8x90-asciidoc-10.2.1",
+"root": "pkgs"
+},
+{
+"attr": "asciidoc",
+"drv": "d751yj100f89mqrsiwrfgj33bhmdc836-asciidoc-0.1.0.2.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/3plvgj1lih15dfg4w0r6wb66iw3m5pdl-asciidoc-0.1.0.2",
+"root": "haskellPackages"
+},
+{
+"attr": "atf",
+"drv": "ljsg1rzn88j84v3d2x5md1nrjdhys36q-atf-0.23.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/scdp333yfcvj4npdvd33p349w037racv-atf-0.23",
+"root": "pkgs"
+},
+{
+"attr": "autoconf",
+"drv": "qzqqfiki3a3n678xx6xmlxgr2vs1li52-autoconf-2.73.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/z81cjs7gbr38jza8a9rslfb9x0nyywn1-autoconf-2.73",
+"root": "pkgs"
+},
+{
+"attr": "automake",
+"drv": "lgidykw3b67h09qyhi3zsq35a938ad5j-automake-1.18.1.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+}
+],
+"out": "/nix/store/2p90i81rx0qh27izydnpa3h2w2zyf2ah-automake-1.18.1",
+"root": "pkgs"
+},
+{
+"attr": "bash",
+"drv": "2nzhs7jg63fpazry1c5ag2qxiqfbkw9b-bash-interactive-5.3p9.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/jmww9gmmd1h1wjhlw4adcfnb2xkbab1w-bash-interactive-5.3p9",
+"root": "pkgs"
+},
+{
+"attr": "bc",
+"drv": "6d9ffdraykfa7k8g7fr7y22vh75x4n23-bc-1.08.2.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/z1c5fbzr742k9zwvpi66z2q8gsvycvjg-bc-1.08.2",
+"root": "pkgs"
+},
+{
+"attr": "bin",
+"drv": "zypid16dm4yg8k1m5281326vsll08ps8-bin-0.1.4.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+}
+],
+"out": "/nix/store/3i678dfsdgv2fllnnr1wjz5irr89whna-bin-0.1.4",
+"root": "haskellPackages"
+},
+{
+"attr": "bison",
+"drv": "1b5f61f97rgkb8iz1amdlr34hlwsxdam-bison-3.8.2.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/v7z36kkh1npbjsfcf6qyvpc2hzzbwjrh-bison-3.8.2",
+"root": "pkgs"
+},
+{
+"attr": "bmake",
+"drv": "xkgwm1pl2mg7di9z1hz47r4vz8mgcghr-bmake-20260313.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/9lq09m4myarmirygam3y225s08n0kw97-bmake-20260313",
+"root": "pkgs"
+},
+{
+"attr": "byacc",
+"drv": "kgxbkf7lqafcdh26i33b1xsrxqwgfhv9-byacc-20241231.drv",
+"licenses": [
+{
+"name": "publicDomain",
+"spdx": null
+}
+],
+"out": "/nix/store/7s0x9k9adcbi3nrwlc0da9s18jz5fcsi-byacc-20241231",
+"root": "pkgs"
+},
+{
+"attr": "bzip2",
+"drv": "zs5w76n5w5avbfiv76gssbj3j1a58wfa-bzip2-1.0.8.drv",
+"licenses": [
+{
+"name": "bzip2",
+"spdx": "bzip2-1.0.6"
+}
+],
+"out": "/nix/store/a6r9ryv9pqcvwv8ffmzi4ichd5br0vl6-bzip2-1.0.8-bin",
+"root": "pkgs"
+},
+{
+"attr": "c-ares",
+"drv": "brg0nvf6chmmh1lnwi5h8kkychw7wg9a-c-ares-1.34.6.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/55q4frkbby4a2bch4ckjkx9j6clsv2n4-c-ares-1.34.6",
+"root": "pkgs"
+},
+{
+"attr": "cctools",
+"drv": "y90gpvhrcxlyr017j28w8h2b1v69m7md-cctools-1010.6.drv",
+"licenses": [
+{
+"name": "apple-psl20",
+"spdx": "APSL-2.0"
+},
+{
+"name": "gpl2",
+"spdx": "GPL-2.0"
+}
+],
+"out": "/nix/store/zfqw29ad23h86p8242ma5jp26z5nk00a-cctools-1010.6",
+"root": "pkgs"
+},
+{
+"attr": "clang",
+"drv": "cyj8cl8sfj0lbv8k88a7jja4lxn7g8i1-clang-wrapper-21.1.8.drv",
+"licenses": [
+{
+"name": null,
+"spdx": null
+}
+],
+"out": "/nix/store/l32bv33wqwkj2l1y8dp5x6h9r3q9im77-clang-wrapper-21.1.8",
+"root": "pkgs"
+},
+{
+"attr": "cmake",
+"drv": "l9li3q8fz074acvwiq1kkd291bcj463x-cmake-4.1.2.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/gvabsb4yqb5xsqzqph54rijnn4zpihnp-cmake-4.1.2",
+"root": "pkgs"
+},
+{
+"attr": "cmocka",
+"drv": "9khi09jw1k1xgx950g0bqfj2z5vz9cdb-cmocka-2.0.1.drv",
+"licenses": [
+{
+"name": "asl20",
+"spdx": "Apache-2.0"
+}
+],
+"out": "/nix/store/4cb9qxw6saj8dhwswcqm939al3xfyphk-cmocka-2.0.1",
+"root": "pkgs"
+},
+{
+"attr": "coreutils",
+"drv": "xhh9r2djb00zz515x68m359kv3z35lp6-coreutils-9.11.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/y0ha8v4gh5vnwwmp2r0msfbdlvgwv2np-coreutils-9.11",
+"root": "pkgs"
+},
+{
+"attr": "cpio",
+"drv": "19c3zfa5lkf9qzpsrz94899c064nfli2-cpio-2.15.drv",
+"licenses": [
+{
+"name": "gpl3",
+"spdx": "GPL-3.0"
+}
+],
+"out": "/nix/store/aqnqk8r4h2qhg9v868ypavjrjgli4p3s-cpio-2.15",
+"root": "pkgs"
+},
+{
+"attr": "curl",
+"drv": "6jvivpv117d6i4zj547wl2crkk20wm47-curl-8.20.0.drv",
+"licenses": [
+{
+"name": "curl",
+"spdx": "curl"
+}
+],
+"out": "/nix/store/56qb7awbplza7z35iz4k8gyr2fjk2acw-curl-8.20.0-bin",
+"root": "pkgs"
+},
+{
+"attr": "curl",
+"drv": "gzw9hyh40h9mm006l8prdrhh31k199vk-curl-1.3.8.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/8xks9xqsyddjm5w5z2jgxslszqy082f1-curl-1.3.8",
+"root": "haskellPackages"
+},
+{
+"attr": "diffutils",
+"drv": "v6f7v4qrrzhicaks66wn8nndwb7yyg8c-diffutils-3.12.drv",
+"licenses": [
+{
+"name": "gpl3",
+"spdx": "GPL-3.0"
+}
+],
+"out": "/nix/store/37rdk8zsdbqcp73l3nrmwilwb2ixkacv-diffutils-3.12",
+"root": "pkgs"
+},
+{
+"attr": "dns-root-data",
+"drv": "gla7f1kl3jjmj3d627v6hijl6znhc3y5-dns-root-data-2025-04-14.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/94ad87pr73pp31982x01vc37pi0svyf3-dns-root-data-2025-04-14",
+"root": "pkgs"
+},
+{
+"attr": "docbook-xsl-nons",
+"drv": "s9ird0mahsrzrykmsxils5x17apqxv20-docbook-xsl-nons-1.79.2.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/pjxskmbdw5lbj01lx8rlm3zq5ba2nzvd-docbook-xsl-nons-1.79.2",
+"root": "pkgs"
+},
+{
+"attr": "docbook-xsl-ns",
+"drv": "5z180p8y01fnqylg00in2ngm371prmp8-docbook-xsl-ns-1.79.2.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/j28brh94q70gy63r5cnqy203brra0ymb-docbook-xsl-ns-1.79.2",
+"root": "pkgs"
+},
+{
+"attr": "ed",
+"drv": "30ax6sc1azjnvk35kliiqnm1nch5mbgb-ed-1.22.5.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/clinbqq0dm364gzdglc78q7010lwmgzl-ed-1.22.5",
+"root": "pkgs"
+},
+{
+"attr": "expand-response-params",
+"drv": "2lk64f86ksdf657pl6431is5lhwnsq9m-expand-response-params.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/ssrj0w8v9xzfm8ly8w32dz3mnj6psa2m-expand-response-params",
+"root": "pkgs"
+},
+{
+"attr": "expat",
+"drv": "dxfy5y979nq9a10inc1c1kfa3fgf376a-expat-2.8.0.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/yxxnl1wqyr8vqragaqgmaakwsd50ldic-expat-2.8.0",
+"root": "pkgs"
+},
+{
+"attr": "file",
+"drv": "nfn1r1wisp1h195g87g9pdh12k5k73aq-file-5.47.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+}
+],
+"out": "/nix/store/dax63li7wwcbqxxkkgzc4g2rx7d4w86x-file-5.47",
+"root": "pkgs"
+},
+{
+"attr": "findutils",
+"drv": "pc4qv6aafrlh0vwjj2ijjvji29a41bv5-findutils-4.10.0.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/3wz2j41nnr1badij6fcnip5vgrfpdd82-findutils-4.10.0",
+"root": "pkgs"
+},
+{
+"attr": "flex",
+"drv": "qmghl5p4yg9abz4k9jm97hwlsj9dlizn-flex-2.6.4.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+}
+],
+"out": "/nix/store/rj872hqzghsgbi6dbcs6zvwxwv44y8ll-flex-2.6.4",
+"root": "pkgs"
+},
+{
+"attr": "gawk",
+"drv": "3ngcyi3sgdczrxbs57j27kkha7mjlhaj-gawk-5.4.0.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/af7n5cc4bzd9c6mwsgh7sfmcbasjr5kd-gawk-5.4.0",
+"root": "pkgs"
+},
+{
+"attr": "gdbm",
+"drv": "3dhy5vv9qdg1b1m1nm56a684xsdkx2gh-gdbm-1.26.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/k628zjvj8pn4kbivnajs46gng0i0g5c6-gdbm-1.26",
+"root": "pkgs"
+},
+{
+"attr": "getopt",
+"drv": "5lz486mqq135yly76rjfbkzv2f1py2sr-getopt-1.1.6.drv",
+"licenses": [],
+"out": "/nix/store/vz5fzzvm0jyy5rmkpvx6n96zb4ps399d-getopt-1.1.6",
+"root": "pkgs"
+},
+{
+"attr": "gettext",
+"drv": "4ac6fvrnc1fk37c35fdfhbxw4fh5j9bf-gettext-1.0.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+}
+],
+"out": "/nix/store/i5aw4v15lklq5r5w5clvcy8dxc2igjck-gettext-1.0",
+"root": "pkgs"
+},
+{
+"attr": "gnu-config",
+"drv": "vp445id0vn8w4zzxzmnjw1vzxyjk0cwl-gnu-config-2024-01-01.drv",
+"licenses": [
+{
+"name": "gpl3",
+"spdx": "GPL-3.0"
+}
+],
+"out": "/nix/store/3i7rw9gqw4j03fa7nw6js4xjgdq5zc5a-gnu-config-2024-01-01",
+"root": "pkgs"
+},
+{
+"attr": "gnugrep",
+"drv": "2h2d8pqh2frvjxdv8sbyqb2h2w8f87yq-gnugrep-3.12.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/209wkryzwczs2nlvwfzkwf4fm8mpr922-gnugrep-3.12",
+"root": "pkgs"
+},
+{
+"attr": "gnum4",
+"drv": "ivmq68q81sdiivsz64fq7vdfm3g6b0qk-gnum4-1.4.21.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/7zl7gnvr7y4fn1rzpgbqkgmy6pdbjbii-gnum4-1.4.21",
+"root": "pkgs"
+},
+{
+"attr": "gnumake",
+"drv": "sywyz1ykchhvm940gw5zka1rssbvd7fr-gnumake-4.4.1.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/8wwiw8pwyhrkzyq28hqzxfl4z84lks81-gnumake-4.4.1",
+"root": "pkgs"
+},
+{
+"attr": "gnused",
+"drv": "4xsxslqxny9qlvi8hhz6qxqnsfq2bvcd-gnused-4.9.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/v1lxnb2804dgaf9sf60y6najgjs3wjsi-gnused-4.9",
+"root": "pkgs"
+},
+{
+"attr": "gnutar",
+"drv": "kgn5s9g8931mp6zr2405xf56ac67g8nd-gnutar-1.35.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/3aikbnf5fq99gvw1wb242wrjnbj7fcr9-gnutar-1.35",
+"root": "pkgs"
+},
+{
+"attr": "gzip",
+"drv": "kizjyhmz1sbwjx7v3i0g16giphqqj6kz-gzip-1.14.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/b7rf7jfkadwjajzfb5430l5k60gwfqa8-gzip-1.14",
+"root": "pkgs"
+},
+{
+"attr": "help2man",
+"drv": "609x6l5p1f9bpvvimqxiyihn6p5psyqb-help2man-1.49.3.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/3ixs3s9x30a8jb6hw0jq71hjcya2cgrp-help2man-1.49.3",
+"root": "pkgs"
+},
+{
+"attr": "hidapi",
+"drv": "3fgj17mg0hwyvzjawfm1z0i1yf7b4aqb-hidapi-0.15.0.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+},
+{
+"name": "gpl3Only",
+"spdx": "GPL-3.0-only"
+}
+],
+"out": "/nix/store/lpk0d57z5jnsqszvr1pxbhflz0pfvqrq-hidapi-0.15.0",
+"root": "pkgs"
+},
+{
+"attr": "hidapi",
+"drv": "armfr6xnp3sw7bb10zr4j08kds2gcfax-hidapi-0.1.8.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/2arl4s8iayn2nfm81zf5fn6a6zc74w87-hidapi-0.1.8",
+"root": "haskellPackages"
+},
+{
+"attr": "jq",
+"drv": "bmchk7n1crrqvaw88rk288m1934gwlzq-jq-1.8.1.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/d551vj6hjc2bqiyg8dim6lv1v1xw7841-jq-1.8.1-bin",
+"root": "pkgs"
+},
+{
+"attr": "krb5",
+"drv": "hf8mvv4ka71wllgg1hvxvr7kbzdxvbw2-krb5-1.22.1.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/lzzppwcl4xmynbm8qb2m1bi4v2y2lb9q-krb5-1.22.1",
+"root": "pkgs"
+},
+{
+"attr": "kyua",
+"drv": "gzc90av7a5izql79pzd8hddmwvd9cymv-kyua-0.13-unstable-2024-01-22.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/xfncc2zz9pvifylal13x5cpipn2mzyly-kyua-0.13-unstable-2024-01-22",
+"root": "pkgs"
+},
+{
+"attr": "ld64",
+"drv": "88laps7zh4vic382v1p1wc8q6kh1mmkv-ld64-956.6.drv",
+"licenses": [
+{
+"name": "apple-psl20",
+"spdx": "APSL-2.0"
+}
+],
+"out": "/nix/store/8sab9m2g06nd3bqklxxg3ndfdgs83ij6-ld64-956.6",
+"root": "pkgs"
+},
+{
+"attr": "ldns",
+"drv": "0amwmrh7a0mrms2ljjvidr1cn0i0zlh2-ldns-1.9.0.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/rwk2i8sy6v6ay3irsndj6zmqj9dj0n2d-ldns-1.9.0",
+"root": "pkgs"
+},
+{
+"attr": "libarchive",
+"drv": "lw3zc2sb2rbimfb8siy5z10daxbcabf7-libarchive-3.8.7.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/7wrsc0cibi28a523lqvwl8gwf9z4hzcj-libarchive-3.8.7",
+"root": "pkgs"
+},
+{
+"attr": "libarchive",
+"drv": "3n8ilmmpzwiq2nnr56kjs7v5a5i9n1v5-libarchive-3.0.5.0.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/nw61pnvcpmcz7sn6l5h320gj0h1m1ch0-libarchive-3.0.5.0",
+"root": "haskellPackages"
+},
+{
+"attr": "libcbor",
+"drv": "kc5gcdjjm7lqx63nl731sik1v5h801vp-libcbor-0.13.0.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/0qgp1hw5dk9q0vjgcb1idpg91gcpjx6z-libcbor-0.13.0",
+"root": "pkgs"
+},
+{
+"attr": "libcxx",
+"drv": "f9sfh3lrrsnq2j6vijd13zn0df0zy0gk-libcxx-21.1.8.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+},
+{
+"name": "ncsa",
+"spdx": "NCSA"
+}
+],
+"out": "/nix/store/8mg5gfh5rwrc79zxp25v89fl5rjjj29y-libcxx-21.1.8",
+"root": "pkgs"
+},
+{
+"attr": "libedit",
+"drv": "39wi93qm3vq8nxrdxdv104h8jh3ajv2s-libedit-20251016-3.1.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/858wvy72ks6k639vgnxv5hvr5dy2irsi-libedit-20251016-3.1",
+"root": "pkgs"
+},
+{
+"attr": "libev",
+"drv": "mg5749kp0m0a4klrf38cp220il1ad4rd-libev-4.33.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+}
+],
+"out": "/nix/store/sxiwgn8ar997lzwnib0i3vjgg4wv2c8k-libev-4.33",
+"root": "pkgs"
+},
+{
+"attr": "libffi",
+"drv": "w8xdyc58dvihdcsmfiix62yhs1ghx5xa-libffi-40.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/f0afx0r5bzvk3gdf8bdh4fssl0p75m1k-libffi-40",
+"root": "pkgs"
+},
+{
+"attr": "libffi",
+"drv": "hpbd560n3pg1s1wxisv123wr8agrdn1d-libffi-0.2.1.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/6as91zgi5h3xiymgidlvk8wp168zipij-libffi-0.2.1",
+"root": "haskellPackages"
+},
+{
+"attr": "libfido2",
+"drv": "gqkyvf9ck034xc9k7imr6alfrixkgv7f-libfido2-1.17.0.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+}
+],
+"out": "/nix/store/1j9qh1d0avxcc3n7223gbn6nfqmc8hd7-libfido2-1.17.0",
+"root": "pkgs"
+},
+{
+"attr": "libiconv",
+"drv": "c1kiqixgnijv81jm9bz44dkzj8ssm5mj-libiconv-113.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+},
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+},
+{
+"name": "apple-psl10",
+"spdx": "APSL-1.0"
+}
+],
+"out": "/nix/store/wjb6smwmv8cynnr776j01kjjzdks1863-libiconv-113",
+"root": "pkgs"
+},
+{
+"attr": "libredirect",
+"drv": "a1qf43ipbxm3qywszmz0myc81a8ndnc4-libredirect-0.drv",
+"licenses": [],
+"out": "/nix/store/6kh24g38xv1r64dg4j2vq7m55g903s0z-libredirect-0",
+"root": "pkgs"
+},
+{
+"attr": "libssh2",
+"drv": "3x56w4b43g8b5ysjx4qdq15madfs7jxb-libssh2-1.11.1.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/zkn7s55w769vg1zj0x1j9xa8af16cfi9-libssh2-1.11.1",
+"root": "pkgs"
+},
+{
+"attr": "libssh2",
+"drv": "zz07p8rchnqm3ny90mjhdlhlig40yis2-libssh2-0.2.0.9-unstable-2025-04-03.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/9rj53qykgr98igsrl6mpyvghb4j306i1-libssh2-0.2.0.9-unstable-2025-04-03",
+"root": "haskellPackages"
+},
+{
+"attr": "libtool",
+"drv": "kgsmwq2sc8fmlqvz9jrvrgj5h954nsss-libtool-2.5.4.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+}
+],
+"out": "/nix/store/dsnjyh29p589aqm1wh1snvw5lsaq488y-libtool-2.5.4",
+"root": "pkgs"
+},
+{
+"attr": "libuv",
+"drv": "yfyjs6zaryz7yxkndd1fnapya75p3nrz-libuv-1.52.1.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+},
+{
+"name": "isc",
+"spdx": "ISC"
+},
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+},
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+},
+{
+"name": "cc-by-40",
+"spdx": "CC-BY-4.0"
+}
+],
+"out": "/nix/store/69kvh89l278cw3dxxv9c6yhik3ws5d72-libuv-1.52.1",
+"root": "pkgs"
+},
+{
+"attr": "libxcrypt",
+"drv": "m7nsbnwxv3fpnlyiqxasdyxwnvy6yjnb-libxcrypt-4.5.2.drv",
+"licenses": [
+{
+"name": "lgpl21Plus",
+"spdx": "LGPL-2.1-or-later"
+}
+],
+"out": "/nix/store/gijqk3cnja6k2r41519j9hbjxr14q9pf-libxcrypt-4.5.2",
+"root": "pkgs"
+},
+{
+"attr": "libxml2",
+"drv": "0fn7m2riaydasi1icnzz3ygsfx3npa65-libxml2-2.15.2.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/v6v41dzykxhzqd25rg1zigrx4jjvcvpv-libxml2-2.15.2-bin",
+"root": "pkgs"
+},
+{
+"attr": "libxo",
+"drv": "071l1w7l4593qvbw25liwmkz35248wla-libxo-1.7.5.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+}
+],
+"out": "/nix/store/591qbv17j88gmg7skvqzn6k2s2svj39m-libxo-1.7.5-bin",
+"root": "pkgs"
+},
+{
+"attr": "libxslt",
+"drv": "7d7xsx3pdmsyv5nmp2n0y6h4z8lzrgk1-libxslt-1.1.45.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/hbxgbd098bpn8k960jr16wv5g9649i68-libxslt-1.1.45-bin",
+"root": "pkgs"
+},
+{
+"attr": "lld",
+"drv": "vlb7kzhv08i86lgn19cl2blkczv46adh-lld-21.1.8.drv",
+"licenses": [
+{
+"name": null,
+"spdx": null
+}
+],
+"out": "/nix/store/kswb40gixpk1sdixrzymps07d3sy0p22-lld-21.1.8",
+"root": "pkgs"
+},
+{
+"attr": "llvm",
+"drv": "8fr719g1jjdhjm4xr6i3pddgmv4mkhkx-llvm-21.1.8.drv",
+"licenses": [
+{
+"name": null,
+"spdx": null
+}
+],
+"out": "/nix/store/329vgmwkd4vp36lfih4l0l6z6n43q3fr-llvm-21.1.8",
+"root": "pkgs"
+},
+{
+"attr": "locale",
+"drv": "mc3k7szxf7gj71p3rnfl21761vcszg1f-locale-adv_cmds-237.drv",
+"licenses": [],
+"out": "/nix/store/h7y4rfr9bxxfw88vlwh69gq8wwmgba8x-locale-adv_cmds-237",
+"root": "pkgs"
+},
+{
+"attr": "lua",
+"drv": "pggnsbinsjh0pnr49m0gz28zyc00v3x7-lua-5.2.4.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/0cahfw3iv9gzsrawi9a41m0k5kjxib4k-lua-5.2.4",
+"root": "pkgs"
+},
+{
+"attr": "lua",
+"drv": "hfnaq8v3imdqnlpk00v7fmbp0v7fl34a-lua-2.3.4.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/ifp0xn5w8s3bg4cz5rlkfmz96yfdzcyh-lua-2.3.4",
+"root": "haskellPackages"
+},
+{
+"attr": "lutok",
+"drv": "rfnx9hm9yiy9q27xzyjq89msdh8bvl60-lutok-0.4.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/7rg6gkdyx2mwj2s88qsxmhff7dr9ix2q-lutok-0.4",
+"root": "pkgs"
+},
+{
+"attr": "lzip",
+"drv": "x9pwkcdx9z36lzfn8ddw4r93m10dsmnr-lzip-1.26.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+}
+],
+"out": "/nix/store/j0bngw07x8zrkj7bnfqdg81aj2glkr1v-lzip-1.26",
+"root": "pkgs"
+},
+{
+"attr": "lzo",
+"drv": "fnndki54sny8wm6d349a70xd4qflwxyf-lzo-2.10.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+}
+],
+"out": "/nix/store/x3rn37gvm6am4003cqhw3dvqb9sr4w1h-lzo-2.10",
+"root": "pkgs"
+},
+{
+"attr": "mailcap",
+"drv": "hnpy25avvvm70ngkps5832mkf02cb5gl-mailcap-2.1.54.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/d8b0n9qmlsdj6xhv1s67k494z4x9yb91-mailcap-2.1.54",
+"root": "pkgs"
+},
+{
+"attr": "meson",
+"drv": "0vnayymxqzf4zyafvdqc65d7dpzcs9by-meson-1.10.2.drv",
+"licenses": [
+{
+"name": "asl20",
+"spdx": "Apache-2.0"
+}
+],
+"out": "/nix/store/2lg5szfv0s154i0md4vsqf4flf63zyb1-meson-1.10.2",
+"root": "pkgs"
+},
+{
+"attr": "mpdecimal",
+"drv": "b4yamx742c7wk9yr9vwkfimv14p095gp-mpdecimal-4.0.1.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+}
+],
+"out": "/nix/store/4jrqpgl7v6yvm9x8ni57gps35fgsa95l-mpdecimal-4.0.1",
+"root": "pkgs"
+},
+{
+"attr": "ncurses",
+"drv": "mf2hgyj1g7bd3iqjf5s5zfy2l5j7biiv-ncurses-6.6.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/7r160i3gca967vnnsx9qkazinqhsqrxp-ncurses-6.6",
+"root": "pkgs"
+},
+{
+"attr": "nghttp2",
+"drv": "5sg7jfby1djw3y7gng4z3644m8rix3pf-nghttp2-1.69.0.drv",
+"licenses": [
+{
+"name": "mit",
+"spdx": "MIT"
+}
+],
+"out": "/nix/store/dgf4llnb646kab23lgvaxjb99pd3cg6j-nghttp2-1.69.0",
+"root": "pkgs"
+},
+{
+"attr": "ninja",
+"drv": "hcw1ijr09pvsb4l30mq4r5y77ram6js4-ninja-1.13.2.drv",
+"licenses": [
+{
+"name": "asl20",
+"spdx": "Apache-2.0"
+}
+],
+"out": "/nix/store/bqykhrblarkj4fl0hz2mf8ngwfv6x6bz-ninja-1.13.2",
+"root": "pkgs"
+},
+{
+"attr": "oniguruma",
+"drv": "mn0pr727669nrwllclxxwrhz39rb0m9v-oniguruma-6.9.10.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+}
+],
+"out": "/nix/store/750vla22q4fj4qyy42k4yxaszpdwj262-oniguruma-6.9.10-dev",
+"root": "pkgs"
+},
+{
+"attr": "openpam",
+"drv": "plpqx0cm3x9by1vqkxzaymb8b54i5z3s-openpam-20230627.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/3gfgvysnfqyy03nxk0mrcc15kacsvcrw-openpam-20230627",
+"root": "pkgs"
+},
+{
+"attr": "openssh",
+"drv": "32czlyyqwj6d1cd6m0h44f12r38ipda0-openssh-10.3p1.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+}
+],
+"out": "/nix/store/2zlngby9hapcar0gmabg5hh0j688m7ab-openssh-10.3p1",
+"root": "pkgs"
+},
+{
+"attr": "openssl",
+"drv": "n01lbk31hx767blyn05q7a32hylvdp8w-openssl-3.6.2.drv",
+"licenses": [
+{
+"name": "asl20",
+"spdx": "Apache-2.0"
+}
+],
+"out": "/nix/store/r51ad62j4z7xzqa2svcb6d1b443kphzr-openssl-3.6.2-bin",
+"root": "pkgs"
+},
+{
+"attr": "patch",
+"drv": "l5j2dwx5zk3sqldxdfn6jdhsflxfw6jg-patch-2.8.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/zn3jzk0zwhml7pgx8slyiwmk5zv0ylmh-patch-2.8",
+"root": "pkgs"
+},
+{
+"attr": "patch",
+"drv": "q6657x70hn1d9s2g1b0wapbi601vv0hc-patch-0.0.8.4.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/i1n5ws4ky5z62gwv0g858fxz2g9fifry-patch-0.0.8.4",
+"root": "haskellPackages"
+},
+{
+"attr": "patchutils",
+"drv": "xbmcn258ma3n1da4a0iiv58xkk9jisa3-patchutils-0.3.4.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+}
+],
+"out": "/nix/store/aw8raspj49qrvd7crrjvyibiwcwli41y-patchutils-0.3.4",
+"root": "pkgs"
+},
+{
+"attr": "pbzx",
+"drv": "wq62jv4gvm32ynrjs9yjzdc60h6a2kra-pbzx-1.0.2.drv",
+"licenses": [
+{
+"name": "gpl3",
+"spdx": "GPL-3.0"
+}
+],
+"out": "/nix/store/cfy323w56m0isrlwnwgqvqqy18vd2k8j-pbzx-1.0.2",
+"root": "pkgs"
+},
+{
+"attr": "pcre2",
+"drv": "rb3gdnd8p3nqi2igdd8v86jsm7hlbr65-pcre2-10.46.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/3ibiw5pwyh077w9kk52gzw2vq04qicnx-pcre2-10.46-bin",
+"root": "pkgs"
+},
+{
+"attr": "pcre2",
+"drv": "lqcs7hfx19fhcfywq2nz4pvr2nyad5rr-pcre2-2.2.3.drv",
+"licenses": [
+{
+"name": "asl20",
+"spdx": "Apache-2.0"
+}
+],
+"out": "/nix/store/ph7b5b0fyb8b9ahkisiqjv2wjamdqiaf-pcre2-2.2.3",
+"root": "haskellPackages"
+},
+{
+"attr": "perl",
+"drv": "wwjlinp8drpfsikwdyydzs8x6akc4k3r-perl-5.42.0.drv",
+"licenses": [
+{
+"name": "artistic1",
+"spdx": "Artistic-1.0"
+}
+],
+"out": "/nix/store/js13ri9fvm0ajk1fpd3acigys2a9whdv-perl-5.42.0",
+"root": "pkgs"
+},
+{
+"attr": "pkg-config",
+"drv": "byk6xh9qr0y4wrpyf11z29as4zfvl6h4-pkg-config-wrapper-0.29.2.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+}
+],
+"out": "/nix/store/lzrwr375jqhhbca116kja96xf1md83l8-pkg-config-wrapper-0.29.2",
+"root": "pkgs"
+},
+{
+"attr": "pkgconf",
+"drv": "6c5jisg5klh480vwqsg8hypqsqq3l6fz-pkgconf-wrapper-2.5.1.drv",
+"licenses": [
+{
+"name": "isc",
+"spdx": "ISC"
+}
+],
+"out": "/nix/store/nnpsp2zd3wpbrn7zk4rvgsycpv13kh4v-pkgconf-wrapper-2.5.1",
+"root": "pkgs"
+},
+{
+"attr": "python3",
+"drv": "bknb559vqzsgsrjz47gr6yfl8ivz60cs-python3-3.13.13.drv",
+"licenses": [
+{
+"name": "psfl",
+"spdx": "Python-2.0"
+}
+],
+"out": "/nix/store/ygxqin6ydzjfawywqpp5pal8wv6sf5bh-python3-3.13.13",
+"root": "pkgs"
+},
+{
+"attr": "re2c",
+"drv": "n24pgkjdsll0wp29by40xxig9awp8563-re2c-4.5.1.drv",
+"licenses": [
+{
+"name": "publicDomain",
+"spdx": null
+}
+],
+"out": "/nix/store/10glmq51026yjpv3ayb8q00fpl7vjq5j-re2c-4.5.1",
+"root": "pkgs"
+},
+{
+"attr": "readline",
+"drv": "plph4fnqipxi5pyif1mkfmi2fxs59bw5-readline-8.3p3.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/xy5a4pba2kn5rpyf5f3nc72nygv6viad-readline-8.3p3",
+"root": "pkgs"
+},
+{
+"attr": "readline",
+"drv": "58pdlaa7kv1z2wdvj0ssaswwb39ppalr-readline-1.0.3.0.drv",
+"licenses": [
+{
+"name": "GPL",
+"spdx": null
+}
+],
+"out": "/nix/store/5l9099xjq11hb7p2v1m28bq8byhncccp-readline-1.0.3.0",
+"root": "haskellPackages"
+},
+{
+"attr": "rhash",
+"drv": "g6278ndxa0nk88q91gdmp8awrxv0hihl-rhash-1.4.6.drv",
+"licenses": [
+{
+"name": "bsd0",
+"spdx": "0BSD"
+}
+],
+"out": "/nix/store/n6zhx073xkvghycb7pqmh5ifxwivl1rc-rhash-1.4.6",
+"root": "pkgs"
+},
+{
+"attr": "sqlite",
+"drv": "5l17w1ichykq3lxdxi3kvxnkxjjhakwj-sqlite-3.51.2.drv",
+"licenses": [
+{
+"name": "publicDomain",
+"spdx": null
+}
+],
+"out": "/nix/store/0hzmsbn5h50x7iyz1h5svbr68hppyicy-sqlite-3.51.2-bin",
+"root": "pkgs"
+},
+{
+"attr": "tcl",
+"drv": "6fksk15kp3nxhxa8sxjikk4asf90xiwh-tcl-8.6.16.drv",
+"licenses": [
+{
+"name": "tcltk",
+"spdx": "TCL"
+}
+],
+"out": "/nix/store/k29y33w84wzhc4823q3x8bnsqsnjdim1-tcl-8.6.16",
+"root": "pkgs"
+},
+{
+"attr": "texinfo",
+"drv": "f1a7jx8amzysyrqhfddkhiz2cshf0zpr-texinfo-7.2.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/nfh0hr4xjl3j0il5l5hvb9ig9bng64yl-texinfo-7.2",
+"root": "pkgs"
+},
+{
+"attr": "tzdata",
+"drv": "pnpnsx9n6kbz9mrghx73632lm1jspqn9-tzdata-2026b.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+},
+{
+"name": "publicDomain",
+"spdx": null
+}
+],
+"out": "/nix/store/klc90kbqghhp57qazsqh0mkjpzvj7gb7-tzdata-2026b",
+"root": "pkgs"
+},
+{
+"attr": "tzdata",
+"drv": "yj1lrf8rkkmv0ir7qf0vcahy7wv4qv1c-tzdata-0.2.20250115.0.drv",
+"licenses": [
+{
+"name": "asl20",
+"spdx": "Apache-2.0"
+}
+],
+"out": "/nix/store/jnc5382xk8n6xb4f0997nv1zqdzyx6x2-tzdata-0.2.20250115.0",
+"root": "haskellPackages"
+},
+{
+"attr": "unifdef",
+"drv": "ny7xnkq4pqr37p9b6b24mzz9rwixhdal-unifdef-2.12.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+}
+],
+"out": "/nix/store/4jwrp7w9ci6h4ajfwcwps8216byszvsx-unifdef-2.12",
+"root": "pkgs"
+},
+{
+"attr": "unzip",
+"drv": "pfs456lvwjqfb35s5ypvnbkrdy01v3i6-unzip-6.0.drv",
+"licenses": [
+{
+"name": "info-zip",
+"spdx": "Info-ZIP"
+}
+],
+"out": "/nix/store/8s625qigz41r5qvl1z3yglaak2j0llr9-unzip-6.0",
+"root": "pkgs"
+},
+{
+"attr": "which",
+"drv": "m987h94sn3sl9fsaha5sx46f628ilksq-which-2.23.drv",
+"licenses": [
+{
+"name": "gpl3Plus",
+"spdx": "GPL-3.0-or-later"
+}
+],
+"out": "/nix/store/ayi3z9yspm69qj7m0bmv8rxdsjgdy2kk-which-2.23",
+"root": "pkgs"
+},
+{
+"attr": "which",
+"drv": "15pc3yxb10bwd0cv3i7cq99yiipmxmk3-which-0.2.0.3.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/k56sdjg1gdxz7pd5cnk67qvqskfgi7bk-which-0.2.0.3",
+"root": "haskellPackages"
+},
+{
+"attr": "xcbuild",
+"drv": "3zrwmqkzxpnmmcj3azxhpis7bmxnh72r-xcbuild-0.1.1-unstable-2019-11-20.drv",
+"licenses": [
+{
+"name": "bsd2",
+"spdx": "BSD-2-Clause"
+},
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/6k0xx9g14x2v1z2fszlgmy8w1apdva82-xcbuild-0.1.1-unstable-2019-11-20",
+"root": "pkgs"
+},
+{
+"attr": "xz",
+"drv": "zqbk3zh4axf2fdx5bi045q4v7006988a-xz-5.8.3.drv",
+"licenses": [
+{
+"name": "gpl2Plus",
+"spdx": "GPL-2.0-or-later"
+},
+{
+"name": "lgpl21Plus",
+"spdx": "LGPL-2.1-or-later"
+}
+],
+"out": "/nix/store/h7484di7imn15ihxmhzqrzbaszcaxyhw-xz-5.8.3-bin",
+"root": "pkgs"
+},
+{
+"attr": "xz",
+"drv": "xyrvzzyr25aqh7krazvl1206syx1xnhm-xz-5.6.3.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/k2nqn7f7rqw0459ii557p1nardy5l7p2-xz-5.6.3",
+"root": "haskellPackages"
+},
+{
+"attr": "zlib",
+"drv": "rv0bh74zqyg6w8ag3m3ygpwa8ggq8vcf-zlib-1.3.2.drv",
+"licenses": [
+{
+"name": "zlib",
+"spdx": "Zlib"
+}
+],
+"out": "/nix/store/7fd0wqc1740i2aarz17d32q27df3kzz4-zlib-1.3.2",
+"root": "pkgs"
+},
+{
+"attr": "zlib",
+"drv": "54k096v0wapas6i4dn5fxh86is8i1825-zlib-0.7.1.1.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/gskx72q0w6mnr8yk8dcdqdi1ikrl5j3v-zlib-0.7.1.1",
+"root": "haskellPackages"
+},
+{
+"attr": "zstd",
+"drv": "1br69hzkcagaavbd8c4a04q66113w48v-zstd-1.5.7.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/lj773k1dkd7rrnrf0f05v43kwwbzlv4j-zstd-1.5.7-bin",
+"root": "pkgs"
+},
+{
+"attr": "zstd",
+"drv": "yj2ga1adfhqczgy879w49mkf9hpkd8wm-zstd-0.1.3.0.drv",
+"licenses": [
+{
+"name": "bsd3",
+"spdx": "BSD-3-Clause"
+}
+],
+"out": "/nix/store/mkmqn229s6lbzijafa7n8qlx9sbzr0xh-zstd-0.1.3.0",
+"root": "haskellPackages"
+}
+]

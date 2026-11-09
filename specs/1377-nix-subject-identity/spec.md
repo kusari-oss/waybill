@@ -17,7 +17,7 @@ This milestone is the first step of the goal set on 2026-11-09: a Nix SBOM that 
 | --- | --- | --- |
 | subject of the openssh wrapper flake | `openssh` `10.3p1`, `openbsd:openssh:10.3p1` | `filesystem-scan` `0.0.0`, `waybill:filesystem-scan:0.0.0` |
 | grype findings on `openssh 10.3p1` | 28 | **0** |
-| nixpkgs-declared CPEs in openssh's buildtime closure | 16 (plus the subject) | 14 emitted identically, gnugrep missing, bash encoded differently |
+| nixpkgs-declared CPEs in openssh's buildtime closure | 16 distinct name+version pairs, 17 derivations (two `perl` 5.42.0), plus the subject | 14 emitted identically, gnugrep missing, bash encoded differently |
 
 **The bash disagreement is decided by measurement, not preference** (`measurements/bash-cpe-encoding/`). The same bash 5.0 patch 11 component, encoded four ways:
 
@@ -44,6 +44,7 @@ nixpkgs' declared CPE is not always NVD's convention. nixpkgs writes openssh as 
 - Q: When nixpkgs and the curated table disagree, what does the document keep? → A: The nixpkgs-declared CPE is the component's single CPE identifier in every format. The curated value it overrode is not emitted as a second identifier; it is kept in that CPE's provenance record, so the disagreement stays auditable and the three formats stay in parity.
 - Q: Does the new rule re-label a subject that is already the right component (moat)? → A: Yes. The rule applies whenever a closure resolves. moat's subject identity (`pkg:hackage/moat@0.1`) is unchanged, but its recorded root-selection heuristic becomes the new rule and its `waybill:moat:0.1` placeholder CPE is dropped (FR-012). The `nix-closure-moat` corpus goldens change accordingly.
 - Q: Where is the count of closure members the `meta` evaluation could not reach reported? → A: In the document, at document level: the existing closure summary gains that count. No per-component marker, and not only in the operator log.
+- Q: When a closure member merges into a component another reader already emitted, whose CPE wins? → A: Rank by source: an operator `--supplement-cdx` assertion, then nixpkgs-declared, then curated, then none (FR-013). Two CPE sources are already on components when the closure merges: the curated table (in `read_all`) and the operator supplement. So "the existing reader wins" would let the curated CPE beat nixpkgs on merged members, contradicting FR-007's measured precedence.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -108,6 +109,7 @@ A reader auditing a match, or a consumer weighting identities, can see per compo
 - **The declared CPE's version differs from the derivation's version.** The declared value is used as declared; a mismatch is not silently corrected.
 - **A non-Nix scan, or a Nix scan without `--nix-closure`.** Unaffected.
 - **No CPE from either source** (httpie: nixpkgs has a product but no vendor, and the curated table has no row). The subject carries its PURL and no CPE (FR-012).
+- **A closure member merges into another reader's component.** If that component carries the curated CPE or none, the declared CPE replaces it. If it carries an operator-asserted or artifact-derived CPE, that CPE is kept and no nixpkgs provenance is attached (FR-013).
 - **`--no-root-purl` with no CPE.** The subject would then carry no identifier at all, below CISA's "at least one". That is an explicit operator choice and today's behaviour, not something this milestone introduces.
 
 ## Requirements *(mandatory)*
@@ -117,15 +119,16 @@ A reader auditing a match, or a consumer weighting identities, can see per compo
 - **FR-001**: When a `--nix-closure` scan resolves a closure, the derivation the evaluated attribute produced MUST be the document's subject, above every main-module heuristic and below only an explicit operator override. The rule applies whenever a closure resolves, including when a main-module rung would have chosen the same component.
 - **FR-002**: The subject MUST carry that derivation's name and version and the identity the closure tier assigns it, identically in CycloneDX, SPDX 2.3 and SPDX 3.
 - **FR-003**: When the evaluated package and a manifest main-module are one component, the subject MUST be that component, with no duplicate. When they are different components, the outranked main-module MUST be recorded the same way #1170 records main-modules an image outranked.
-- **FR-004**: The root-selection heuristic recorded in the document MUST name this rule distinctly from the existing ones, so a reader can tell why the subject was chosen.
+- **FR-004**: Whenever the document records a root-selection heuristic, it MUST name this rule distinctly from the existing ones (`nix-evaluated-package`), so a reader can tell why the subject was chosen. The existing emission gate applies unchanged: the heuristic is recorded only when the selection outranked another candidate, as for every rung (research R3).
 - **FR-005**: For each closure member, subject included, whose derivation declares `meta.identifiers.cpe`, the component MUST carry exactly that CPE.
 - **FR-006**: Where nixpkgs declares no CPE, the curated table MUST apply as it does today. A CPE MUST NOT be synthesized from `cpeParts` that lack a vendor.
-- **FR-007**: Where nixpkgs and the curated table both produce a CPE and they differ, the nixpkgs-declared CPE MUST win and MUST be the component's only CPE identifier, in every format. The curated CPE it overrode MUST NOT be emitted as a second identifier. Basis: `measurements/bash-cpe-encoding/`.
-- **FR-008**: Each CPE-bearing closure component MUST record which source supplied its CPE and, where a nixpkgs-declared CPE overrode a different curated one, the curated value it overrode. Where a format has a standards-native construct for an identifier's provenance, it MUST be used before any `waybill:*` annotation.
-- **FR-009**: The document's existing closure summary MUST state how many closure members the `meta` evaluation could not reach, so that a missing declared CPE reads as a coverage gap rather than an absence. Unreached members MUST NOT be individually marked.
+- **FR-007**: The conflict case of FR-005: where nixpkgs and the curated table both produce a CPE and they differ, the nixpkgs-declared CPE MUST win and MUST be the component's only CPE identifier, in every format. The curated CPE it overrode MUST NOT be emitted as a second identifier. Basis: `measurements/bash-cpe-encoding/`.
+- **FR-008**: Each CPE-bearing closure component MUST record which source supplied its CPE and, where a nixpkgs-declared CPE overrode a different curated one, the curated value it overrode. *Principle V audit (research R5)*: all three formats have a native carrier for an identifier's provenance, so the source MUST be recorded there: CycloneDX `evidence.identity[]` (`field: "cpe"`), SPDX 2.3 `externalRefs[].comment`, SPDX 3 `ExternalIdentifier.comment`. No format has a field for the join basis or for an overridden identifier, so those two, and only those, MAY go in a `waybill:cpe-provenance` annotation documented with a justification clause.
+- **FR-009**: The document's existing closure summary MUST state how many closure members the `meta` evaluation could not reach, so that a missing declared CPE reads as a coverage gap rather than an absence. Unreached members MUST NOT be individually marked. *Principle V audit (research R6)*: no format has a native construct for metadata-evaluation coverage (CycloneDX `compositions` concern component and dependency completeness), so the count extends the existing `waybill:nix-closure` annotation; no new field is introduced.
 - **FR-010**: Reading declared CPEs MUST NOT add network access or evaluation beyond what `--nix-closure` already performs, and MUST stay behind that opt-in.
 - **FR-011**: Output for scans that do not resolve a closure MUST be byte-identical to today's.
 - **FR-012**: When a Nix subject has neither a nixpkgs-declared nor a curated CPE, it MUST carry no CPE. It MUST NOT carry a `waybill`-vendor placeholder. It keeps its PURL, which satisfies CISA's and ENISA's "at least one identifier" (`measurements/identifier-requirements.md`).
+- **FR-013**: When a closure member merges into a component another reader already emitted, its nixpkgs-declared CPE MUST replace that component's CPE only when the existing CPE is exactly what the curated table produces for that component, or the component has none. Any other existing CPE, such as an operator `--supplement-cdx` assertion or one a reader derived from the artifact, MUST be kept, and the closure's CPE provenance MUST NOT be attached to it. The recorded provenance MUST always describe the CPE actually emitted.
 
 ### Key Entities
 
@@ -142,7 +145,7 @@ Every criterion is checked by re-running the committed spike probes (`measuremen
 
 - **SC-001**: On the openssh wrapper flake, the subject is `openssh` `10.3p1` in all three formats. Baseline: `filesystem-scan` `0.0.0`.
 - **SC-002**: grype reports at least 28 findings on openssh 10.3p1 from waybill's document. Baseline: 0. Reference: sbomnix 28.
-- **SC-003**: In openssh's buildtime closure, all 16 components with a nixpkgs-declared CPE carry it. That is 14 unchanged, gnugrep gaining `gnu:grep`, and bash carrying the nixpkgs encoding, with 0 components losing a CPE they had.
+- **SC-003**: In openssh's buildtime closure, all 16 distinct name+version pairs with a nixpkgs-declared CPE (17 derivations: two `perl` 5.42.0) carry it. That is 14 unchanged, gnugrep gaining `gnu:grep`, and bash carrying the nixpkgs encoding, with 0 components losing a CPE they had.
 - **SC-004**: A bash component encoded as the scan now emits it is matched by grype to CVE-2019-18276 on the version-5.0-patch-11 control (`measurements/bash-cpe-encoding/`), where waybill's current encoding matches nothing.
 - **SC-005**: 100% of CPE-bearing closure components in the openssh document record their CPE source.
 - **SC-006**: Across all six spike targets, no grype finding present today disappears except where a CPE's source changed. Distinct already-patched false positives (today: 6) do not increase.
@@ -161,7 +164,7 @@ Every criterion is checked by re-running the committed spike probes (`measuremen
 ## Assumptions
 
 - The closure's derivation graph identifies the evaluated attribute's derivation unambiguously. The graph has a single top derivation per evaluated attribute.
-- The `meta` evaluation milestone 1281 performs can return `identifiers` alongside licenses within the same evaluation. *Not verified; the plan must measure it before relying on it.*
+- The `meta` evaluation milestone 1281 performs can return `identifiers` alongside licenses within the same evaluation. *Verified 2026-11-09 (`measurements/meta-eval-cost/`): +0.02 s median on a 0.8 s call, license coverage unchanged, and 17 of 17 declared-CPE members reached by drvPath plus name+version.*
 - grype is a representative CPE matcher for these purposes. Kusari's matcher was proxied by grype's CPE path in the spike.
 - The measurements hold for one nixpkgs revision (`a799d3e3`) and one system (aarch64-darwin). Declared CPEs are revision-dependent; the rule is not.
 
