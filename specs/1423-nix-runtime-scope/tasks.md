@@ -20,11 +20,11 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
 
 - [X] T003 Add `ScopeEvidence { RuntimeClosure, StaticallyLinked, ReachabilityWalk, ClosureRole }` with an exhaustive `as_str()` (wire values per `contracts/c203-values.md`) and a `scope_evidence: Option<ScopeEvidence>` field on `ResolvedComponent` in `waybill-common/src/resolution.rs`. Default it to `None` at every construction site that `cargo build --workspace --all-targets` reports.
 - [X] T004 Extend `classification_source` in `waybill-cli/src/resolve/closure_role_scope.rs` to return the `ScopeEvidence` wire value when one is set. Exempt `ArtifactPresence` still wins. Unit-test each variant.
-- [ ] T005 [P] Add a `"path-info"*` branch and a `"store verify"*` branch to the shared stub in `waybill-cli/tests/common/nix_stub.rs`. They are driven by new optional `NixStub` fields `runtime: Option<String>` (a listing, one store path per line), `substituters: Vec<String>` (also printed by `config show substituters`) and `verify_ok: bool`. When `runtime` is `None`, path-info exits 1 with `path '…' is not valid`. Every argv still goes to `nix.log`.
-- [ ] T006 Add an explicit `"path-info"*) echo "path '…' is not valid" >&2; exit 1 ;;` branch, with a comment that the walk is intended, to each private stub: `waybill-cli/tests/{closure_binary_contents,closure_role_scope,closure_edges,closure_members,closure_dep_fields,closure_structured_attrs,closure_component_cpes,closure_ecosystem_identity,nix_closure_hackage_identity,nix_config_closure,nix_degradation_detail,nix_eval_tier,nix_ifd_reason}.rs`. Run each file and list every assertion that changes. Fix each one by reasoning about what the walk should produce, never by regenerating a golden blindly.
-- [ ] T007 [P] Add the C216 `waybill:closure-scope-method` row (KEEP-NO-NATIVE, with the justification from `contracts/c216-closure-scope-method.md`), and the three new C203 enum values to row C203, in `docs/reference/sbom-format-mapping.md`.
-- [ ] T008 Add C216 extractors following the C204 pattern: `cdx_anno!` in `waybill-cli/src/parity/extractors/cdx.rs`, `spdx23_anno!` in `spdx2.rs`, `spdx3_anno!` in `spdx3.rs`, plus the imports and a sorted table row in `waybill-cli/src/parity/extractors/mod.rs`. Confirm `every_catalog_row_has_an_extractor` and `extractors_table_is_sorted_by_row_id` pass.
-- [ ] T009 Add a `scope_method: Option<ScopeMethodRecord>` field and a `closure_scope_method_wire()` (sorted-key JSON, `schema: 1`) to `closure/summary.rs::NixClosureSummary`. Emit it beside C204 in `waybill-cli/src/generate/cyclonedx/metadata.rs`, `generate/spdx/annotations.rs` and `generate/spdx/v3_annotations.rs`.
+- [X] T005 [P] Add a `"path-info"*` branch and a `"store verify"*` branch to the shared stub in `waybill-cli/tests/common/nix_stub.rs`. They are driven by new optional `NixStub` fields `runtime: Option<String>` (a listing, one store path per line), `substituters: Vec<String>` (also printed by `config show substituters`) and `verify_ok: bool`. When `runtime` is `None`, path-info exits 1 with `path '…' is not valid`. Every argv still goes to `nix.log`.
+- [X] T006 Add an explicit `"path-info"*) echo "path '…' is not valid" >&2; exit 1 ;;` branch, with a comment that the walk is intended, to each private stub: `waybill-cli/tests/{closure_binary_contents,closure_role_scope,closure_edges,closure_members,closure_dep_fields,closure_structured_attrs,closure_component_cpes,closure_ecosystem_identity,nix_closure_hackage_identity,nix_config_closure,nix_degradation_detail,nix_eval_tier,nix_ifd_reason}.rs`. Run each file and list every assertion that changes. Fix each one by reasoning about what the walk should produce, never by regenerating a golden blindly.
+- [X] T007 [P] Add the C216 `waybill:closure-scope-method` row (KEEP-NO-NATIVE, with the justification from `contracts/c216-closure-scope-method.md`), and the three new C203 enum values to row C203, in `docs/reference/sbom-format-mapping.md`.
+- [X] T008 Add C216 extractors following the C204 pattern: `cdx_anno!` in `waybill-cli/src/parity/extractors/cdx.rs`, `spdx23_anno!` in `spdx2.rs`, `spdx3_anno!` in `spdx3.rs`, plus the imports and a sorted table row in `waybill-cli/src/parity/extractors/mod.rs`. Confirm `every_catalog_row_has_an_extractor` and `extractors_table_is_sorted_by_row_id` pass.
+- [X] T009 Add a `scope_method: Option<ScopeMethodRecord>` field and a `closure_scope_method_wire()` (sorted-key JSON, `schema: 1`) to `closure/summary.rs::NixClosureSummary`. Emit it beside C204 in `waybill-cli/src/generate/cyclonedx/metadata.rs`, `generate/spdx/annotations.rs` and `generate/spdx/v3_annotations.rs`.
 
 **Checkpoint:** the workspace builds, all existing tests pass with the stub changes from T006 reviewed, and C216 is emitted as absent.
 
@@ -35,7 +35,7 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
 
 ### Tests (write first, run red)
 
-- [ ] T010 [P] [US1] Create `waybill-cli/tests/closure_runtime_scope.rs` with a closure fixture under `waybill-cli/tests/fixtures/nix_closure_runtime/` (synthetic `waybill-fixture-*` names) and these tests:
+- [X] T010 [P] [US1] Create `waybill-cli/tests/closure_runtime_scope.rs` with a closure fixture under `waybill-cli/tests/fixtures/nix_closure_runtime/` (synthetic `waybill-fixture-*` names) and these tests:
   - `us1_runtime_members_unmarked_and_others_marked` (all three formats);
   - `us1_build_tooling_member_inside_runtime_closure_is_unmarked` (the dns-root-data shape, both directions of FR-001);
   - `us1_local_store_answer_records_store_local`;
@@ -44,33 +44,33 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
   - `us1_remote_queries_carry_connect_timeout_and_one_attempt` (asserts the `--option connect-timeout` / `download-attempts 1` argv in `nix.log`);
   - `us1_exempt_members_keep_exemptions`;
   - `us1_every_closure_member_has_c203`.
-- [ ] T011 [P] [US1] Add these to `closure_runtime_scope.rs`, with a fixture of a static Haskell executable whose library deps are in the static build's `buildInputs` and propagate through `propagatedBuildInputs` (the shellcheck shape, `measurements/nix-behaviour/q6-*`):
+- [X] T011 [P] [US1] Add these to `closure_runtime_scope.rs`, with a fixture of a static Haskell executable whose library deps are in the static build's `buildInputs` and propagate through `propagatedBuildInputs` (the shellcheck shape, `measurements/nix-behaviour/q6-*`):
   - `us1_static_haskell_libraries_are_runtime_and_statically_linked`;
   - `us1_test_only_haskell_dep_marked_with_declared_edges` (an ormolu-shaped fixture, run with m1275 package-set edges present);
   - `us1_test_only_haskell_dep_kept_runtime_without_declared_edges`, asserting C216 `static-link-source: derivation-fields`.
-- [ ] T012 [P] [US1] Add `us1_embedded_go_module_inherits_runtime_host` to `closure_runtime_scope.rs`. Reuse the `NIX_STORE_DIR` synthetic-binary approach from `waybill-cli/tests/closure_binary_contents.rs`: a module in a runtime host is unmarked with `statically-linked`, and a module in a non-runtime host is marked.
+- [X] T012 [P] [US1] Add `us1_embedded_go_module_inherits_runtime_host` to `closure_runtime_scope.rs`. Reuse the `NIX_STORE_DIR` synthetic-binary approach from `waybill-cli/tests/closure_binary_contents.rs`: a module in a runtime host is unmarked with `statically-linked`, and a module in a non-runtime host is marked.
 
 ### Implementation
 
-- [ ] T013 [US1] Create `closure/runtime.rs` with:
+- [X] T013 [US1] Create `closure/runtime.rs` with:
   - `RuntimeStore`, `RuntimeClosure` and `RuntimeUnavailable` (data-model.md, wire strings exhaustive);
   - argv builders: local `path-info -r <installable>`; remote `path-info -r --store <url> --option connect-timeout 2 --option download-attempts 1 <installable>`; `store verify --no-contents -r --store <url> <installable>`;
   - `fn query(cfg: &ClosureConfig, installable: &str, substituters: &[String]) -> Result<RuntimeClosure, RuntimeUnavailable>`: local first, then each substituter; a miss moves to the next; a hit is accepted only after verification succeeds.
 
   Every invocation goes through `eval::invoke::run_bounded` and `guard()`. Parse the plain one-path-per-line output into store basenames. Unit-test the parser and argv builders.
-- [ ] T014 [US1] Read `substituters` from the `nix config show` output the tier already captures (`closure/mod.rs`). Add the `config show substituters` invocation only if that output doesn't include it, and say which in a comment citing `measurements/nix-behaviour/q1-*`. Record the installable (`<flakeref>#<attr>`) on `ClassifiedClosure` so `runtime::query` can use it.
-- [ ] T015 [US1] Create `closure/static_link.rs` with `StaticLinkSource` and `fn static_link_set(raw: &RawClosure, runtime_drvs: &BTreeSet<DrvKey>, declared: Option<&DeclaredEdges>) -> StaticLinkSet`:
+- [X] T014 [US1] Read `substituters` from the `nix config show` output the tier already captures (`closure/mod.rs`). Add the `config show substituters` invocation only if that output doesn't include it, and say which in a comment citing `measurements/nix-behaviour/q1-*`. Record the installable (`<flakeref>#<attr>`) on `ClassifiedClosure` so `runtime::query` can use it.
+- [X] T015 [US1] Create `closure/static_link.rs` with `StaticLinkSource` and `fn static_link_set(raw: &RawClosure, runtime_drvs: &BTreeSet<DrvKey>, declared: Option<&DeclaredEdges>) -> StaticLinkSet`:
   - with declared edges (the m1275 `nix-closure-declared` relationships, mapped back to drv keys), follow them from each runtime Haskell-builder member;
   - otherwise take that member's `buildInputs + propagatedBuildInputs`, then `propagatedBuildInputs` transitively through Haskell derivations.
 
   Identify Haskell-builder derivations the way the closure tier already does (grep `classify.rs` / `emit.rs` for the generic-builder test). Unit-test both sources on fixtures.
-- [ ] T016 [US1] Join runtime paths to members in `runtime.rs`: `store_basename` → `RawClosure::output_index()` → drv key, collecting the runtime drv-key set and the unmatched-path count. Use the evaluated drv's own output paths, never `nix path-info`'s `deriver` field, which differs (`measurements/nix-behaviour/q2-deriver.sh`).
-- [ ] T017 [US1] Build `RuntimeEvidence` in `waybill-cli/src/cli/scan_cmd.rs` before `assign_role_scope` (around line 5111). Inputs: `ClassifiedClosure`, the runtime query, the static-link set, and the `relationships` filtered to `embedded-build-info` (host → module) and `nix-closure-declared`. Pass it to the pass, and hand the resulting `ScopeMethodRecord` to `NixClosureSummary`.
-- [ ] T018 [US1] Implement the decision function from data-model.md in `waybill-cli/src/resolve/closure_role_scope.rs::assign_role_scope`: rules 1–3 and 5, with FR-001 in both directions (clear a prior `NotInArtifact`). Map components to drv keys with the same `MemberKey` join `contents.rs` uses (`contents.rs:298-324`); extract a shared helper rather than duplicating it.
-- [ ] T019 [US1] Stop `closure/contents.rs` from deciding module presence (around line 557: `artifact_presence: (!ships).then_some(...)`). New modules start with `None`, and the pass decides. Keep the `ships` computation only if something else reads it; otherwise remove it.
-- [ ] T020 [US1] Extend invariant I10 in `waybill-cli/tests/corpus_harness_195/invariants/checks/closure_role_scope.rs` per `contracts/c203-values.md` (population, passing rule, converse check), with unit tests that include a pre-1423 document shape.
-- [ ] T021 [US1] Run T010–T012 green. Mutation-check `us1_build_tooling_member_inside_runtime_closure_is_unmarked`: save `closure_role_scope.rs` with `cp`, remove the clearing of a prior `NotInArtifact`, confirm the test fails, then restore with `cp` and confirm with `cmp`.
-- [ ] T022 [US1] Run T002's verification-cost measurement and record it. Check SC-005 against the measured per-path cost and the unreachable-substituter bound (T010's timeout test covers the argv; record the real 2.1 s figure from `q5-*`).
+- [X] T016 [US1] Join runtime paths to members in `runtime.rs`: `store_basename` → `RawClosure::output_index()` → drv key, collecting the runtime drv-key set and the unmatched-path count. Use the evaluated drv's own output paths, never `nix path-info`'s `deriver` field, which differs (`measurements/nix-behaviour/q2-deriver.sh`).
+- [X] T017 [US1] Build `RuntimeEvidence` in `waybill-cli/src/cli/scan_cmd.rs` before `assign_role_scope` (around line 5111). Inputs: `ClassifiedClosure`, the runtime query, the static-link set, and the `relationships` filtered to `embedded-build-info` (host → module) and `nix-closure-declared`. Pass it to the pass, and hand the resulting `ScopeMethodRecord` to `NixClosureSummary`.
+- [X] T018 [US1] Implement the decision function from data-model.md in `waybill-cli/src/resolve/closure_role_scope.rs::assign_role_scope`: rules 1–3 and 5, with FR-001 in both directions (clear a prior `NotInArtifact`). Map components to drv keys with the same `MemberKey` join `contents.rs` uses (`contents.rs:298-324`); extract a shared helper rather than duplicating it.
+- [X] T019 [US1] Stop `closure/contents.rs` from deciding module presence (around line 557: `artifact_presence: (!ships).then_some(...)`). New modules start with `None`, and the pass decides. Keep the `ships` computation only if something else reads it; otherwise remove it.
+- [X] T020 [US1] Extend invariant I10 in `waybill-cli/tests/corpus_harness_195/invariants/checks/closure_role_scope.rs` per `contracts/c203-values.md` (population, passing rule, converse check), with unit tests that include a pre-1423 document shape.
+- [X] T021 [US1] Run T010–T012 green. Mutation-check `us1_build_tooling_member_inside_runtime_closure_is_unmarked`: save `closure_role_scope.rs` with `cp`, remove the clearing of a prior `NotInArtifact`, confirm the test fails, then restore with `cp` and confirm with `cmp`.
+- [X] T022 [US1] Run T002's verification-cost measurement and record it. Check SC-005 against the measured per-path cost and the unreachable-substituter bound (T010's timeout test covers the argv; record the real 2.1 s figure from `q5-*`).
 
 **Checkpoint:** US1 tests green; C216 reports `runtime-closure`; every closure member carries C203.
 

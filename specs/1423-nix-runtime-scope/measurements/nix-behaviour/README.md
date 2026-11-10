@@ -394,3 +394,20 @@ A smaller finding: with `--eval-store auto`, the client forwards `--option downl
 - **In practice verification follows the query,** which has just fetched every narinfo, so it runs warm: 0.066 s for hlint's 322 paths. The cold figures are the bound if the narinfo cache is bypassed.
 - **Query cold, hlint:** 42 ms per path median, against Q3's 34 ms. The max run (26.4 s) is one outlier of five; this host's network was not controlled.
 - Every run exited 0.
+
+### SC-005 against these figures (T022)
+
+Arithmetic over the Q8 and Q5 medians above, not a separate run.
+
+| | per runtime path, median | SC-005 bound |
+|---|---|---|
+| hlint, query cold | 13.515 / 322 = **42 ms** (max run 82 ms) | ≤ 100 ms |
+| hlint, query cold + verify warm (the order waybill runs them) | (13.515 + 0.066) / 322 = **42 ms** | |
+| hlint, query cold + verify cold (narinfo cache bypassed for both) | (13.515 + 7.878) / 322 = **66 ms** | |
+| curl, query cold + verify warm | (0.838 + 0.054) / 20 = **45 ms** | |
+| shellcheck, query cold + verify warm | (0.272 + 0.052) / 5 = **65 ms** | |
+| shellcheck, query cold + verify cold | (0.272 + 0.259) / 5 = **106 ms** | over, by fixed cost on a 5-path closure (0.53 s total) |
+| unreachable substituter | **2.1 s** per substituter (Q5, `connect-timeout 2`, `download-attempts 1`) | ≤ 5 s |
+
+- **Per-path bound: met** for every closure measured in the order waybill runs the calls (verification follows the query, so its narinfos are warm). Only the 5-path shellcheck closure with both calls cold exceeds 0.1 s per path, and that is 0.53 s in total: a fixed cost, not a per-path one.
+- **Unreachable bound: met per substituter.** waybill asks each configured substituter in turn, so N unreachable substituters cost about N × 2.1 s before the fallback takes over: within 5 s for up to two, not for three or more **(inference from Q5's per-call figure; several unreachable substituters were not measured together)**. The verification call is never made against a store whose query failed.
