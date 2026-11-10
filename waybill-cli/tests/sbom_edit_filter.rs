@@ -346,7 +346,7 @@ const US3_CLOSURE: &str = r#"{
 fn us3_scope_excluded_selects_same_set_in_three_formats() {
     use common::nix_stub::{NixStub, Rows, DEFAULT_ATTR};
     let project = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/closure_role_scope/project");
-    let scan = NixStub { project, closure: US3_CLOSURE, rows: Rows::Json("[]"), attr: DEFAULT_ATTR }.scan(&["--nix-closure"]);
+    let scan = NixStub { project, closure: US3_CLOSURE, rows: Rows::Json("[]"), attr: DEFAULT_ATTR, ..Default::default() }.scan(&["--nix-closure"]);
     let sets: Vec<(&str, StrSet)> = [("cdx", &scan.cdx), ("spdx23", &scan.spdx23), ("spdx3", &scan.spdx3)]
         .into_iter()
         .map(|(label, doc)| (label, dropped_purls(doc, "scope=excluded", label)))
