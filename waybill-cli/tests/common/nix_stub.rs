@@ -54,6 +54,8 @@ pub struct Scan {
     pub spdx3: Value,
     pub stdout: String,
     pub stderr: String,
+    /// Every argv the stub was invoked with, one per line.
+    pub nix_log: String,
     _dir: tempfile::TempDir,
     _cache: tempfile::TempDir,
 }
@@ -159,7 +161,9 @@ esac
         let read = |p: &Path| -> Value {
             serde_json::from_slice(&std::fs::read(p).expect("read output")).expect("parse output")
         };
+        let nix_log = std::fs::read_to_string(dir.path().join("nix.log")).unwrap_or_default();
         Scan {
+            nix_log,
             cdx: read(&cdx_path),
             spdx23: read(&spdx23_path),
             spdx3: read(&spdx3_path),

@@ -338,6 +338,13 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
     // its role by the build graph alone.
     let mut admitted_for: std::collections::BTreeMap<MergeKey, bool> =
         std::collections::BTreeMap::new();
+    // Milestone 1377 (#1394) — the CPEs nixpkgs declares for the derivations
+    // behind each identity. Keyed by identity because that is what is
+    // emitted; the index is keyed by `.drv`, as the license index is.
+    let mut declared_for: std::collections::BTreeMap<
+        MergeKey,
+        Vec<&super::identifiers::Declared>,
+    > = std::collections::BTreeMap::new();
     // Milestone 1377 (#1398) — the derivation the evaluated attribute built.
     // It is emitted whatever its role, because it is the document's subject:
     // nothing consumes it, so it classifies `Unreferenced`, and before this
@@ -459,6 +466,15 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                 }
             }
         }
+        // Not for milestone-1282 members: a `bash-5.3.tar.gz` is named after
+        // bash and is not bash (m1367 FR-002). None of them can join in
+        // practice — they carry no version and their `.drv` is a fetch — so
+        // this states the rule rather than relying on that.
+        if member_role.is_none() {
+            if let Some(found) = closure.identifiers.index.get(key) {
+                declared_for.entry(merge_key.clone()).or_default().push(found);
+            }
+        }
         if let Some(attributes) = closure.read_outcome.unclassified_refs.get(key) {
             unclassified
                 .entry(merge_key.clone())
@@ -500,6 +516,38 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
             // not a conclusion drawn from inspecting the artifact.
             if let Some(found) = licenses_for.remove(&identity) {
                 component.licenses = found;
+            }
+            // FR-005, FR-007 — the declared CPE is the component's only CPE.
+            // Build variants of one identity that state different CPEs leave
+            // it with none here, so the curated fallback applies; a CPE names
+            // a vendor, product and version, so they never have been seen to.
+            if let Some(found) = declared_for.remove(&identity) {
+                let cpes: std::collections::BTreeSet<&super::identifiers::DeclaredCpe> =
+                    found.iter().map(|d| &d.cpe).collect();
+                if let (Some(cpe), 1) = (cpes.first(), cpes.len()) {
+                    let basis = found
+                        .iter()
+                        .map(|d| d.basis)
+                        .min()
+                        .unwrap_or(super::identifiers::JoinBasis::NameVersion);
+                    // What the curated table would have given this
+                    // component, recorded when the declaration differs:
+                    // bash's `5.3p9` against nixpkgs' `5.3` update `9`.
+                    let curated = crate::generate::cpe::synthesize_cpes(&component);
+                    let overrode = curated.first().map(String::as_str).filter(|c| *c != cpe.as_str());
+                    component.extra_annotations.insert(
+                        super::identifiers::ANN_DECLARED_CPE.to_string(),
+                        super::identifiers::provenance(basis, overrode),
+                    );
+                    component.cpes = vec![(*cpe).clone().into_string()];
+                } else {
+                    tracing::debug!(
+                        name = %component.name,
+                        version = %component.version,
+                        "nix-closure-identifiers: build variants declare different CPEs; \
+                         emitting none from nixpkgs"
+                    );
+                }
             }
             component.extra_annotations.insert(
                 ANN_CLOSURE_ROLE.to_string(),
@@ -619,6 +667,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         })
     }
 
@@ -700,6 +749,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         });
 
         let mut versions: Vec<&str> = built
@@ -757,6 +807,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         });
         let dups: Vec<_> = c.iter().filter(|x| x.name == "dup").collect();
         assert_eq!(dups.len(), 1, "two variants, one component");
@@ -813,6 +864,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         })
         .iter()
         .map(|c| c.name.clone())

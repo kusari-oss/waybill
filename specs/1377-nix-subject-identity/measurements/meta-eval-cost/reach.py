@@ -30,7 +30,13 @@ rows = json.load(open(dump_path))["rows"]
 if not rows or "in_coverage_population" not in rows[0]:
     sys.exit("closure-dump predates milestone 1377: no in_coverage_population field")
 members = [r for r in rows if r["in_coverage_population"]]
-names = sorted({m["pname_with_fallback"] for m in members if SAFE.match(m["pname_with_fallback"] or "")})
+# The NAMES evaluated are every derivation's, as production evaluates them
+# (`closure::attach_licenses`): a member's `.drv` can equal the `drvPath` of
+# an attribute named after some other closure derivation. Evaluating only the
+# population's own names misses those drv joins (measured: 2 on openssh).
+# The join below stays independent; only the input set is production's.
+names = sorted({r["pname_with_fallback"] for r in rows
+                if SAFE.match(r.get("pname_with_fallback") or "")})
 
 lst = " ".join(f'"{n}"' for n in names)
 # `haslic` uses milestone 1281's own license parse (`one`/`lic` from
@@ -61,14 +67,18 @@ out = subprocess.run(["nix", "eval", "--json", "--option", "allow-import-from-de
 if out.returncode:
     sys.exit(f"eval failed: {out.stderr[:600]}")
 meta = json.loads(out.stdout)
-by_name = {}
+by_name, by_drv_rows = {}, {}
 for r in meta:
     by_name.setdefault(r["attr"], []).append(r)
+    by_drv_rows.setdefault(r["drv"], []).append(r)
 
 by_drv = by_nv = declared = drv_with_license = ambiguous = 0
 for m in members:
     cands = by_name.get(m["pname_with_fallback"], [])
-    hit = next((r for r in cands if r["drv"] == m["drv"]), None)
+    # A store-path match is the evidence whatever attribute it was found
+    # under: `pkgs.pkg-config`'s drvPath IS the `pkg-config-wrapper` member.
+    # Matching only same-named rows under-counted by 2 on openssh.
+    hit = next(iter(by_drv_rows.get(m["drv"], [])), None)
     if hit:
         by_drv += 1
         drv_with_license += bool(hit.get("haslic"))

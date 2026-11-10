@@ -1,0 +1,65 @@
+[
+ {
+  "drv": "r00t-waybill-fixture-cpeapp-1.0.drv",
+  "out": "/nix/store/r00t-waybill-fixture-cpeapp-1.0.drv-out",
+  "attr": "waybill-fixture-cpeapp",
+  "root": "pkgs",
+  "licenses": [],
+  "version": "1.0",
+  "cpe": "cpe:2.3:a:waybill-fixture-vendor:waybill-fixture-cpeapp:1.0:*:*:*:*:*:*:*"
+ },
+ {
+  "drv": "d-zlib.drv",
+  "out": "/nix/store/d-zlib.drv-out",
+  "attr": "zlib",
+  "root": "pkgs",
+  "licenses": [],
+  "version": "9.9.9",
+  "cpe": "cpe:2.3:a:waybill-fixture-vendor:zlib:9.9.9:*:*:*:*:*:*:*"
+ },
+ {
+  "drv": "d-pkgs-shell.drv",
+  "out": "/nix/store/d-pkgs-shell.drv-out",
+  "attr": "waybill-fixture-shell",
+  "root": "pkgs",
+  "licenses": [],
+  "version": "5.3p9",
+  "cpe": "cpe:2.3:a:waybill-fixture-vendor:waybill-fixture-shell:5.3:9:*:*:*:*:*:*"
+ },
+ {
+  "drv": "d-plain.drv",
+  "out": "/nix/store/d-plain.drv-out",
+  "attr": "waybill-fixture-plain",
+  "root": "pkgs",
+  "licenses": [],
+  "version": "2.0",
+  "cpe": null
+ },
+ {
+  "drv": "d-openssl.drv",
+  "out": "/nix/store/d-openssl.drv-out",
+  "attr": "openssl",
+  "root": "pkgs",
+  "licenses": [],
+  "version": "9.9.9",
+  "cpe": null
+ },
+ {
+  "drv": "d-badcpe.drv",
+  "out": "/nix/store/d-badcpe.drv-out",
+  "attr": "waybill-fixture-badcpe",
+  "root": "pkgs",
+  "licenses": [],
+  "version": "1.0",
+  "cpe": "cpe:2.3:a::waybill-fixture-badcpe:1.0:*:*:*:*:*:*:*"
+ },
+ {
+  "drv": "d-skew.drv",
+  "out": "/nix/store/d-skew.drv-out",
+  "attr": "waybill-fixture-skew",
+  "root": "pkgs",
+  "licenses": [],
+  "version": "3.0",
+  "cpe": "cpe:2.3:a:waybill-fixture-vendor:waybill-fixture-skew:2.9:*:*:*:*:*:*:*"
+ }
+]

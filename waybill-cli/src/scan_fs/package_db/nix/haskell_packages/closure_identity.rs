@@ -452,6 +452,7 @@ mod t009_agreement_probe {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         };
         let emitted = crate::scan_fs::package_db::nix::closure::emit::components(&classified);
 

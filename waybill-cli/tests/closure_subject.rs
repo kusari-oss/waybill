@@ -137,9 +137,23 @@ fn the_evaluated_package_is_counted_in_metadata_coverage() {
 }
 
 /// FR-012 — no CPE from either source means no CPE, not a placeholder.
+///
+/// The gh shape: the row reaches the subject and declares no CPE, and the
+/// curated table has no row for the name.
 #[test]
 fn a_subject_without_a_cpe_carries_none_and_no_placeholder() {
-    let s = scan("closure.json");
+    let mut rows: Value = serde_json::from_str(&fixture("rows.json")).unwrap();
+    for r in rows.as_array_mut().unwrap() {
+        r["cpe"] = Value::Null;
+    }
+    let rows = rows.to_string();
+    let s = NixStub {
+        project: project(),
+        closure: &fixture("closure.json"),
+        rows: Rows::Json(&rows),
+        attr: DEFAULT_ATTR,
+    }
+    .scan(&["--nix-closure"]);
     assert!(
         s.cdx["metadata"]["component"].get("cpe").is_none(),
         "metadata.component carries {:?}",

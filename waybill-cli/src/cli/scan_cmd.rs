@@ -6846,7 +6846,7 @@ fn merge_closure_components(
     let (mut merged, mut appended) = (0usize, 0usize);
     let mut appended_identities: std::collections::HashSet<(String, String)> =
         std::collections::HashSet::new();
-    for c in added {
+    for mut c in added {
         match index.get(&(c.name.clone(), c.version.clone())) {
             Some(&i) => {
                 // Milestone 1281 (#1346), FR-004 — reconcile declared
@@ -6861,6 +6861,50 @@ fn merge_closure_components(
                 // because the merge carried annotations and nothing else.
                 if components[i].licenses.is_empty() && !c.licenses.is_empty() {
                     components[i].licenses = c.licenses;
+                }
+                // Milestone 1377 FR-013 — a nixpkgs-declared CPE replaces the
+                // existing component's only when that is empty or exactly
+                // what the curated table gives it. Anything else is better
+                // evidence (a reader found it in the artifact) or the
+                // operator's word (`--supplement-cdx`), and is kept; the
+                // closure's provenance is then dropped, so it never
+                // describes a CPE that was not emitted.
+                if let Some(prov) = c
+                    .extra_annotations
+                    .remove(scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE)
+                {
+                    let existing = &components[i];
+                    let operator_asserted = existing
+                        .extra_annotations
+                        .get("waybill:source-tier")
+                        .and_then(|v| v.as_str())
+                        == Some("declared");
+                    let replaceable = existing.cpes.is_empty()
+                        || (!operator_asserted
+                            && existing.cpes == crate::generate::cpe::synthesize_cpes(existing));
+                    if replaceable {
+                        // `overrode` describes THIS component: what the
+                        // curated table gave it, if that differs.
+                        let declared = c.cpes.first().cloned();
+                        let overrode = existing
+                            .cpes
+                            .first()
+                            .filter(|old| Some(*old) != declared.as_ref())
+                            .cloned();
+                        let basis = match prov.get("basis").and_then(|b| b.as_str()) {
+                            Some("drv") => scan_fs::package_db::nix::closure::identifiers::JoinBasis::Drv,
+                            _ => scan_fs::package_db::nix::closure::identifiers::JoinBasis::NameVersion,
+                        };
+                        components[i].cpes = std::mem::take(&mut c.cpes);
+                        components[i].extra_annotations.insert(
+                            scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE
+                                .to_string(),
+                            scan_fs::package_db::nix::closure::identifiers::provenance(
+                                basis,
+                                overrode.as_deref(),
+                            ),
+                        );
+                    }
                 }
                 for (k, v) in c.extra_annotations {
                     // The existing component's own annotations win: it was
@@ -8800,6 +8844,94 @@ mod tests {
         );
     }
 
+    /// Milestone 1377 FR-013 — a closure member carrying a nixpkgs-declared
+    /// CPE, as `closure::emit` builds one.
+    fn m1377_declared(purl: &str, cpe: &str, overrode: Option<&str>) -> ResolvedComponent {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut c = make_component(purl);
+        c.cpes = vec![cpe.to_string()];
+        c.extra_annotations.insert(
+            ids::ANN_DECLARED_CPE.to_string(),
+            ids::provenance(ids::JoinBasis::Drv, overrode),
+        );
+        c
+    }
+
+    const M1377_DECLARED: &str = "cpe:2.3:a:waybill-fixture-vendor:zlib:9.9.9:*:*:*:*:*:*:*";
+
+    /// FR-013 — the existing component carries exactly the curated CPE: the
+    /// declared one replaces it, and the provenance names what it overrode
+    /// on THIS component.
+    #[test]
+    fn m1377_a_declared_cpe_replaces_an_existing_curated_cpe() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut existing = vec![make_component("pkg:generic/zlib@9.9.9")];
+        existing[0].cpes = crate::generate::cpe::synthesize_cpes(&existing[0]);
+        let curated = existing[0].cpes.first().cloned().expect("zlib is curated");
+        merge_closure_components(
+            &mut existing,
+            vec![m1377_declared("pkg:generic/zlib@9.9.9", M1377_DECLARED, None)],
+        );
+        assert_eq!(existing[0].cpes, vec![M1377_DECLARED.to_string()]);
+        assert_eq!(
+            existing[0].extra_annotations.get(ids::ANN_DECLARED_CPE),
+            Some(&ids::provenance(ids::JoinBasis::Drv, Some(&curated)))
+        );
+    }
+
+    /// FR-013 — an empty slot is filled, with nothing recorded as overridden.
+    #[test]
+    fn m1377_a_declared_cpe_fills_an_empty_slot() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut existing = vec![make_component("pkg:generic/waybill-fixture-x@1.0")];
+        let cpe = "cpe:2.3:a:waybill-fixture-vendor:waybill-fixture-x:1.0:*:*:*:*:*:*:*";
+        merge_closure_components(
+            &mut existing,
+            vec![m1377_declared("pkg:generic/waybill-fixture-x@1.0", cpe, None)],
+        );
+        assert_eq!(existing[0].cpes, vec![cpe.to_string()]);
+        assert_eq!(
+            existing[0].extra_annotations.get(ids::ANN_DECLARED_CPE),
+            Some(&ids::provenance(ids::JoinBasis::Drv, None))
+        );
+    }
+
+    /// FR-013 — any other CPE (a reader found it in the artifact) is kept,
+    /// and no nixpkgs provenance is attached to a CPE nixpkgs did not supply.
+    #[test]
+    fn m1377_a_reader_derived_cpe_is_kept_without_nixpkgs_provenance() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let reader = "cpe:2.3:a:zlib:zlib:9.9.9:*:*:*:*:*:*:arm64";
+        let mut existing = vec![make_component("pkg:generic/zlib@9.9.9")];
+        existing[0].cpes = vec![reader.to_string()];
+        merge_closure_components(
+            &mut existing,
+            vec![m1377_declared("pkg:generic/zlib@9.9.9", M1377_DECLARED, None)],
+        );
+        assert_eq!(existing[0].cpes, vec![reader.to_string()]);
+        assert!(!existing[0].extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
+    }
+
+    /// FR-013 — an operator's `--supplement-cdx` CPE is kept even when it
+    /// equals the curated value: who asserted it is what matters.
+    #[test]
+    fn m1377_an_operator_cpe_equal_to_the_curated_one_is_kept() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut existing = vec![make_component("pkg:generic/zlib@9.9.9")];
+        existing[0].cpes = crate::generate::cpe::synthesize_cpes(&existing[0]);
+        let operator = existing[0].cpes.clone();
+        existing[0].extra_annotations.insert(
+            "waybill:source-tier".to_string(),
+            serde_json::Value::String("declared".to_string()),
+        );
+        merge_closure_components(
+            &mut existing,
+            vec![m1377_declared("pkg:generic/zlib@9.9.9", M1377_DECLARED, None)],
+        );
+        assert_eq!(existing[0].cpes, operator);
+        assert!(!existing[0].extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
+    }
+
     fn make_alias(lhs: &str, rhs: &str) -> PurlAlias {
         PurlAlias::try_new(lhs, rhs).unwrap()
     }
@@ -9632,6 +9764,7 @@ mod closure_ecosystem_identity_tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         };
         // The real projected graph, so the ordering test below has edges to
         // assert on. Built exactly as `closure::resolve` builds it.

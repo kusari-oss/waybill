@@ -22,6 +22,7 @@ pub(crate) mod derivation;
 pub(crate) mod ecosystem_identity;
 pub(crate) mod emit;
 pub(crate) mod graph;
+pub(crate) mod identifiers;
 /// Milestone 1282 — the four-role vocabulary for members declaring no
 /// `pname`. Distinct from [`classify`], which assigns the C182 role to every
 /// derivation; see that module's own doc comment for why they are separate.
@@ -284,6 +285,10 @@ pub(crate) struct ClassifiedClosure {
     pub(crate) degraded_licenses: Option<DegradationReason>,
     /// How many members were offered a license and how many received one.
     pub(crate) license_coverage: licenses::LicenseCoverage,
+    /// Milestone 1377 (#1394) — CPEs nixpkgs declares, keyed by `.drv`
+    /// basename, read from the same evaluation as the licenses, and their
+    /// coverage (C184 `identifiers`).
+    pub(crate) identifiers: identifiers::DeclaredIdentifiers,
 }
 
 impl ClassifiedClosure {
@@ -466,6 +471,7 @@ pub(crate) fn resolve(
         licenses: Default::default(),
         degraded_licenses: None,
         license_coverage: Default::default(),
+        identifiers: Default::default(),
     })
 }
 
@@ -509,6 +515,18 @@ pub(crate) fn attach_licenses(
         closure.graph.evaluated.as_deref(),
     );
     let wanted = emitted.len();
+    // Milestone 1377 — the identifier join runs over the same population,
+    // so `identifiers.wanted` always equals `licenses.wanted`.
+    let members = || {
+        emitted.iter().filter_map(|key| {
+            let drv = closure.raw.derivations.get(*key)?;
+            Some(identifiers::Member {
+                key,
+                pname: drv.pname()?,
+                version: drv.version(),
+            })
+        })
+    };
 
     if names.is_empty() {
         tracing::info!("nix-closure-licenses: no named members; nothing to look up");
@@ -532,11 +550,31 @@ pub(crate) fn attach_licenses(
                 withheld_ambiguous: 0,
             };
             closure.degraded_licenses = Some(reason);
+            // Degrades exactly as licenses do: no declared CPEs, so every
+            // member keeps the curated fallback, and `received: 0` says so.
+            closure.identifiers = identifiers::DeclaredIdentifiers {
+                index: Default::default(),
+                coverage: identifiers::IdentifierCoverage {
+                    wanted,
+                    ..Default::default()
+                },
+            };
             return;
         }
     };
 
     let (index, withheld_ambiguous) = licenses::index(&rows);
+    let declared = identifiers::join(&rows, members());
+    tracing::info!(
+        wanted = declared.coverage.wanted,
+        received = declared.coverage.received,
+        by_drv = declared.coverage.by_drv,
+        by_name_version = declared.coverage.by_name_version,
+        declared = declared.coverage.declared,
+        rejected = declared.coverage.rejected,
+        "nix-closure-identifiers: joined by store path, then by name and version"
+    );
+    closure.identifiers = declared;
     let received = emitted.iter().filter(|k| index.contains_key(**k)).count();
     tracing::info!(
         wanted,

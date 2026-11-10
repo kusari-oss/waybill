@@ -89,6 +89,14 @@ pub(crate) struct LicenseRow {
     pub(crate) root: String,
     /// Licenses exactly as nixpkgs states them, before canonicalisation.
     pub(crate) licenses: Vec<DeclaredLicenseRaw>,
+    /// Milestone 1377 — `p.version`, for the name+version identifier join.
+    /// Defaulted so a row without it (an older evaluation) still parses.
+    #[serde(default)]
+    pub(crate) version: Option<String>,
+    /// Milestone 1377 — `p.meta.identifiers.cpe` as nixpkgs states it, before
+    /// validation (`closure::identifiers::DeclaredCpe`).
+    #[serde(default)]
+    pub(crate) cpe: Option<String>,
 }
 
 /// Build the license-resolving expression.
@@ -144,7 +152,10 @@ fn licenses_expr(revision: &str, system: &NixSystem, names: &[&str]) -> String {
         p = if pr.success then pr.value else null;
     in if ! (builtins.isAttrs p) || ! (p ? drvPath) then [ ] else
     let v = {{ attr = name; root = root.id; drv = baseNameOf p.drvPath;
-              out = "${{p}}"; licenses = lic (p.meta.license or null); }};
+              out = "${{p}}"; licenses = lic (p.meta.license or null);
+              version = p.version or null;
+              cpe = let c = builtins.tryEval (p.meta.identifiers.cpe or null);
+                    in if c.success then c.value else null; }};
         r = builtins.tryEval (builtins.deepSeq v v);
     in if r.success then [ r.value ] else [ ];
 in builtins.concatMap (n: builtins.concatMap (r: rowIn r n) roots) [ {list} ]"#
@@ -361,6 +372,44 @@ mod tests {
         assert_eq!(rows[0].licenses[0].spdx.as_deref(), Some("MIT"));
         assert_eq!(rows[0].licenses[1].spdx, None);
         assert_eq!(rows[0].licenses[1].name.as_deref(), Some("Public Domain"));
+    }
+
+    /// Milestone 1377 T014 — the row carries `version` and `cpe`, and the
+    /// `cpe` is evaluated inside its own `tryEval`, so a package whose
+    /// `meta.identifiers` throws loses its CPE and keeps its licenses.
+    #[test]
+    fn m1377_the_expression_reads_version_and_a_separately_guarded_cpe() {
+        let expr = licenses_expr(&"a".repeat(40), &system(), &["hello"]);
+        assert!(expr.contains("version = p.version or null;"), "{expr}");
+        assert!(
+            expr.contains("builtins.tryEval (p.meta.identifiers.cpe or null)"),
+            "the cpe needs its own guard: {expr}"
+        );
+        // Inside the row, and so inside the row's own deepSeq guard too.
+        let row_start = expr.find("let v = {").unwrap();
+        let row_end = expr.find("r = builtins.tryEval (builtins.deepSeq v v)").unwrap();
+        let cpe_at = expr.find("p.meta.identifiers.cpe").unwrap();
+        assert!(row_start < cpe_at && cpe_at < row_end);
+    }
+
+    /// Milestone 1377 T014 — absent, null and present all parse.
+    #[test]
+    fn m1377_rows_parse_with_identifier_fields_absent_null_and_present() {
+        let rows = parse_rows(
+            r#"[{"drv":"a.drv","out":"/o/a","attr":"a","root":"pkgs","licenses":[]},
+                {"drv":"b.drv","out":"/o/b","attr":"b","root":"pkgs","licenses":[],
+                 "version":null,"cpe":null},
+                {"drv":"c.drv","out":"/o/c","attr":"c","root":"pkgs","licenses":[],
+                 "version":"10.3p1","cpe":"cpe:2.3:a:openbsd:openssh:10.3p1:*:*:*:*:*:*:*"}]"#,
+        );
+        assert_eq!(rows.len(), 3);
+        assert_eq!((rows[0].version.as_deref(), rows[0].cpe.as_deref()), (None, None));
+        assert_eq!((rows[1].version.as_deref(), rows[1].cpe.as_deref()), (None, None));
+        assert_eq!(rows[2].version.as_deref(), Some("10.3p1"));
+        assert_eq!(
+            rows[2].cpe.as_deref(),
+            Some("cpe:2.3:a:openbsd:openssh:10.3p1:*:*:*:*:*:*:*")
+        );
     }
 
     /// T014 — the three guards, against a real `nix`.

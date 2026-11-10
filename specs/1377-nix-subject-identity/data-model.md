@@ -45,7 +45,7 @@ Precedence for a closure component's single CPE: a valid declared CPE, then a cu
 
 | field | meaning |
 | --- | --- |
-| `wanted` | emitted closure members, the same population as `licenses.wanted` |
+| `wanted` | `emit::coverage_drv_keys`: emitted closure members plus the evaluated package, the same population as `licenses.wanted` |
 | `received` | members joined to a row by either basis |
 | `by-drv`, `by-name-version` | split of `received` |
 | `declared` | members carrying a valid declared CPE |
@@ -58,7 +58,8 @@ The unreached count FR-009 asks for is `wanted − received`.
 
 An internal annotation, never emitted (`is_internal_emission_key`), set by the
 closure on exactly one component: the one whose derivation is
-`ClassifiedClosure.graph.root`. Set on none when `root` is `None`.
+`ClassifiedClosure.graph.evaluated`, which is `root` only when it is the
+closure's sole unconsumed derivation. Set on none otherwise.
 
 ## Root selection
 

@@ -86,17 +86,17 @@ and never run a real evaluation.
 
 ### Tests (write first, see them fail)
 
-- [ ] T013 [P] [US2] Unit tests in a new `waybill-cli/src/scan_fs/package_db/nix/closure/identifiers.rs`:
+- [X] T013 [P] [US2] Unit tests in a new `waybill-cli/src/scan_fs/package_db/nix/closure/identifiers.rs`:
   - `DeclaredCpe` accepts a well-formed CPE 2.3 string and rejects a wrong field count, a bad `part`, an empty or `*` vendor, and an empty or `*` product;
   - the join prefers `drv` over `name-version`;
   - several `name-version` rows with different CPEs leave the member without one, counted as `rejected`;
   - the `IdentifierCoverage` invariants hold (`by-drv + by-name-version = received ≤ wanted`; `declared + rejected ≤ received`);
   - the closure-tier functions take and return `DeclaredCpe`, never `String`.
-- [ ] T014 [P] [US2] Unit tests in `waybill-cli/src/scan_fs/package_db/nix/eval/licenses.rs`:
+- [X] T014 [P] [US2] Unit tests in `waybill-cli/src/scan_fs/package_db/nix/eval/licenses.rs`:
   - `licenses_expr` emits `version` and a `cpe` guarded by its own `builtins.tryEval`;
   - a row deserialises with the new fields absent, null and present;
   - the existing license tests pass unchanged.
-- [ ] T015 [P] [US2] Integration test `waybill-cli/tests/closure_declared_cpe.rs`, stub `nix`:
+- [X] T015 [P] [US2] Integration test `waybill-cli/tests/closure_declared_cpe.rs`, stub `nix`:
   - a declared CPE replaces the curated one on a member the table also maps. Name a fixture member so the table matches, as `waybill-fixture-mapped`/`zlib` does in `waybill-cli/tests/closure_component_cpes.rs`;
   - a member whose drv differs but whose pname + version match gets the declared CPE (the bash shape);
   - no declared CPE leaves the curated CPE (FR-006);
@@ -110,25 +110,33 @@ and never run a real evaluation.
 
 ### Implementation
 
-- [ ] T016 [US2] In `waybill-cli/src/scan_fs/package_db/nix/eval/licenses.rs`, add `version = p.version or null;` and the guarded `cpe` to `licenses_expr`'s row, and add `version` and `cpe` fields to the row type (research R1, `measurements/meta-eval-cost/`).
-- [ ] T017 [US2] Create `waybill-cli/src/scan_fs/package_db/nix/closure/identifiers.rs`:
+- [X] T016 [US2] In `waybill-cli/src/scan_fs/package_db/nix/eval/licenses.rs`, add `version = p.version or null;` and the guarded `cpe` to `licenses_expr`'s row, and add `version` and `cpe` fields to the row type (research R1, `measurements/meta-eval-cost/`).
+- [X] T017 [US2] Create `waybill-cli/src/scan_fs/package_db/nix/closure/identifiers.rs`:
   - `DeclaredCpe` (validated; the type at every closure-tier boundary, Principle IV);
   - the drv-then-name-version join over the meta rows;
   - `IdentifierCoverage`.
   Register the module in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs`.
-- [ ] T018 [US2] In `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs`, restructure `attach_licenses` (~480–547) so the single existing meta evaluation feeds both the license index and the identifier join, and store the declared CPEs and coverage on `ClassifiedClosure`. On a failed evaluation, degrade exactly as licenses do: no declared CPEs, the curated fallback, `received: 0`.
-- [ ] T019 [US2] In `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs`:
+- [X] T018 [US2] In `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs`, restructure `attach_licenses` (~480–547) so the single existing meta evaluation feeds both the license index and the identifier join, and store the declared CPEs and coverage on `ClassifiedClosure`. On a failed evaluation, degrade exactly as licenses do: no declared CPEs, the curated fallback, `received: 0`.
+- [X] T019 [US2] In `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs`:
   - set a member's `cpes = [declared]` when it has a `DeclaredCpe`. This is the single `DeclaredCpe` → `String` conversion (analysis C1, option a);
   - compute what `waybill-cli/src/generate/cpe.rs::synthesize_cpes` would have produced, and keep it as the overridden value when it differs;
   - leave members without a declared CPE untouched, so that `fill_missing_cpes` (`waybill-cli/src/cli/scan_cmd.rs` ~4907, ~6701) applies the curated table as it does today.
-- [ ] T020 [US2] Apply FR-013 in `waybill-cli/src/cli/scan_cmd.rs::merge_closure_components`:
+- [X] T020 [US2] Apply FR-013 in `waybill-cli/src/cli/scan_cmd.rs::merge_closure_components`:
   - when a closure member carrying a declared CPE merges into an existing component, replace that component's `cpes` only when they are empty or equal `synthesize_cpes(existing)`;
   - otherwise keep them, and do not fold in the closure's CPE provenance;
   - first, establish how `--supplement-cdx`-asserted CPEs are marked (`waybill-cli/src/supplement/`), so that an asserted value equal to the curated one is still kept (research R4).
-- [ ] T021 [US2] In `waybill-cli/src/scan_fs/package_db/nix/closure/summary.rs`, add `identifiers {wanted, received, by-drv, by-name-version, declared, rejected}` to the C184 `waybill:nix-closure` JSON (~169–210), beside `licenses`.
-- [ ] T022 [P] [US2] In `docs/reference/sbom-format-mapping.md`, document C184's `identifiers` object and its Principle V audit (KEEP-NO-NATIVE, research R6).
+- [X] T021 [US2] In `waybill-cli/src/scan_fs/package_db/nix/closure/summary.rs`, add `identifiers {wanted, received, by-drv, by-name-version, declared, rejected}` to the C184 `waybill:nix-closure` JSON (~169–210), beside `licenses`.
+- [X] T022 [P] [US2] In `docs/reference/sbom-format-mapping.md`, document C184's `identifiers` object and its Principle V audit (KEEP-NO-NATIVE, research R6).
 
 **Checkpoint**: T013 to T015 pass. On the openssh wrapper flake, all 16 distinct name+version pairs with a declared CPE (17 derivations) carry it: bash `gnu:bash:5.3:9`, gnugrep `gnu:grep` (SC-003). openssh's subject carries `openbsd:openssh:10.3p1`.
+
+**Checkpoint result (2026-11-09, US2 build, grype DB built 2026-11-08):**
+- SC-003: all 17 nixpkgs-declared CPEs in sbomnix's `--exclude-cpe-matching` openssh document (16 members plus the subject) are carried exactly. That includes bash `gnu:bash:5.3:9`, gnugrep `gnu:grep` and the subject `openbsd:openssh:10.3p1`.
+- SC-002: grype finds 28 on `openssh 10.3p1`, the same CVE set as sbomnix's 28 (0 differences). Baseline: 0.
+- SC-004: the emitted bash encoding (version `5.3`, update `9`) is the nixpkgs form. Re-run on the same DB, that form at 5.0 patch 11 matches CVE-2019-18276; the old curated form matches nothing.
+- SC-006: no finding lost on any target or scanner. Gained: openssh +28 (all on openssh 10.3p1), httpie +1 grype (p11-kit, via its declared CPE) and +1 osv (PYSEC-2023-242 on httpie 3.2.4, newly present as the subject). Patched false positives are still 6 per target.
+- SC-009: C184 `identifiers` equals `reach.py` on every field. openssh: 670 wanted, 189 received (80 by drv, 109 by name+version), 39 declared, 0 rejected. gh: 722, 200 (91 + 109), 42, 0.
+- Probe correction: reach.py first matched a `.drv` only among rows with the member's own name. Production indexes rows by `.drv` globally (`pkg-config-wrapper` and `clang-wrapper` are reached through differently-named attributes), as 1281's license index does. The narrow join had also made the license control look like a 74/76 bracket. It is an exact 75. The README records both.
 
 ---
 

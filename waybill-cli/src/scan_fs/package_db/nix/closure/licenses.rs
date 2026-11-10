@@ -131,6 +131,8 @@ mod tests {
 
     fn row(drv: &str, root: &str, lics: &[(Option<&str>, Option<&str>)]) -> LicenseRow {
         LicenseRow {
+            version: None,
+            cpe: None,
             drv: drv.to_string(),
             out: format!("/nix/store/out-{drv}"),
             attr: "waybill-fixture-pkg".to_string(),
