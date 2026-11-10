@@ -40,7 +40,7 @@ Built in `scan_cmd.rs` from `ClassifiedClosure` before `assign_role_scope`. `Non
 
 It records why a closure member got the presence it did. It is set on **every** closure member the pass decides, both marked and unmarked (research R6). The exemptions keep `ArtifactPresence::Exempt*` and no `ScopeEvidence`.
 
-**Validation (and I10):** every component carrying `waybill:closure-role` ends the pass with either an exempt `ArtifactPresence` or a `ScopeEvidence`. A component whose evidence is `RuntimeClosure` or `StaticallyLinked` has no `NotInArtifact` presence.
+**Validation (and I10):** every component carrying `waybill:closure-role` ends the pass with either an exempt `ArtifactPresence` or a `ScopeEvidence`. A component whose evidence is `StaticallyLinked` never has a `NotInArtifact` presence. `RuntimeClosure` and `ReachabilityWalk` evidence appear on both marked and unmarked members (rule 3 and 4). Under runtime evidence the compiler-supplied exemption applies to any role, not only tooling roles: GHC boot libraries are linked from the compiler's own store path, which a static executable does not reference. A non-member embedded module is marked only when all its evidence lies in the Nix store; a module the project itself declares is never marked by the closure.
 
 ## Decision function (one place: `closure_role_scope::assign_role_scope`)
 

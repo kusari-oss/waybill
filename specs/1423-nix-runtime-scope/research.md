@@ -17,7 +17,9 @@ Code citations come from a read-only map of `be8924f7` taken on 2026-11-10. Meas
 
 ## R2 — Obtaining the runtime closure
 
-**Decision:** Run `nix path-info -r --json <flakeref>#<attr>` through `eval/invoke.rs::run_bounded`, using the closure tier's existing budget and `guard()` (`argv_is_safe`).
+**Decision (revised during US1, `measurements/nix-behaviour/q9-*`):** query the evaluated derivation's **default output path** (the head of its `outputs`), not the installable. Passing `<flakeref>#<attr>` failed three ways: with `--store <cache>` nix tries to upload the `.drv` and gets a 404; curl's installable does not evaluate at `a799d3e3`; and an installable selects `meta.outputsToInstall` (shellcheck: bin, man, doc), not `outPath`, which the committed truth used. The default output matched the evaluated `outPath` on 4 of 4 packages and needs no second evaluation. Untested inference: an attribute that explicitly selects a non-default output (`pkgs.curl.out`) is not seen this way. Calls go through `eval/invoke.rs::run_bounded` with the tier's budget and `guard()`.
+
+*Original plan, superseded:* run `nix path-info -r <flakeref>#<attr>`.
 
 - **Order of stores:** the local store first. If the output isn't local, query the user's configured substituters, read via `nix config show` (already invoked by the tier), in order, one `--store <url>` call per substituter, and take the first complete answer.
 - **Which output:** pass the installable, not an output path. The closure does not record which output the attribute selects (`outputName`): shellcheck's and curl's `outPath` is their `bin` output (`measurements/nix-behaviour/outpaths.tsv`). Passing the installable lets nix pick the same output a user's `nix build` would.

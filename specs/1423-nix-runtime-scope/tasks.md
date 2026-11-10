@@ -123,6 +123,7 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
   - Changed: closure scope comes from the runtime closure;
   - Added: C216, the C203 values and `scope=excluded`;
   - Changed: bare CDX `scope: excluded` no longer matches `scope=development`, which also affects Go `NotNeeded` components.
+- [ ] T041 Bound the total time spent on substituters, not only each one. Measured: an unreachable substituter costs 2.1 s; tried one after another, three or more exceed SC-005's 5 s (inference from q5). Add a cumulative remote budget in `closure/runtime.rs::query` (stop trying further substituters once 5 s have been spent; record `query-timed-out`), with a stub test using three unreachable substituters.
 - [ ] T040 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Read `>>> all pre-PR checks passed.` and count the `test result: ok` lines. Then verify every task's claim at close-out, not its tick.
 
 ## Dependencies
