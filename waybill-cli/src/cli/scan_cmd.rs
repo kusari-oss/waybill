@@ -3595,7 +3595,7 @@ pub async fn execute(
     // `selected_image_source` because the latter stays None for
     // `--image <local-archive>`: no `--image-src` dispatch runs for a
     // tarball, yet a tarball is just as explicitly named.
-    let scan_target_kind = if args.image.is_some() {
+    let mut scan_target_kind = if args.image.is_some() {
         crate::generate::root_selector::ScanTargetKind::ExplicitImage
     } else {
         crate::generate::root_selector::ScanTargetKind::Path
@@ -3842,77 +3842,17 @@ pub async fn execute(
         );
     }
 
-    // Milestone 127 FR-007 — surface a warning when the root-selection
-    // heuristic fell through past at least one detected main-module.
-    // The warning names the picked subject AND the loser main-modules'
-    // PURLs so operators can pass `--root-name`/`--root-purl-type`
-    // for deterministic control. Gated on `losers.is_empty() == false`
-    // (matches the FR-006 annotation emission gate).
-    {
-        let root_override_tmp = crate::generate::RootComponentOverride {
-            name: args.root_name.clone(),
-            version: args.root_version.clone(),
-            purl_type: args.root_purl_type.clone(),
-            omit_purl: args.no_root_purl,
-            // Issue #359 — the early root-selection helper above runs
-            // before the full RootComponentOverride is constructed.
-            // Pass the same #359 fields so the selector treats
-            // --root-purl identically to the final override.
-            full_purl: args.root_purl.clone(),
-            full_purl_name: None,
-            full_purl_version: None,
-        };
-        let selection = crate::generate::root_selector::select_root(
+    // Milestone 127 FR-007. A closure that may resolve defers it: the
+    // subject of a `--nix-closure` scan is decided once the closure resolves
+    // (milestone 1377), and the warning runs there instead.
+    if !args.nix_closure || offline {
+        warn_if_root_heuristic_outranked(
+            &args,
             &components,
-            &root_override_tmp,
             scan_target_coord.as_ref(),
             &target_name,
-            "0.0.0",
             scan_target_kind,
         );
-        if let Some(h) = selection.heuristic {
-            if !selection.losers.is_empty() {
-                let loser_strs: Vec<String> = selection
-                    .losers
-                    .iter()
-                    .map(|p| p.as_str().to_string())
-                    .collect();
-                let selected_str = match &selection.subject {
-                    crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => {
-                        components
-                            .get(*idx)
-                            .map(|c| c.purl.as_str().to_string())
-                            .unwrap_or_default()
-                    }
-                    crate::generate::root_selector::ResolvedRootSubject::MavenCoord => {
-                        scan_target_coord
-                            .as_ref()
-                            .map(|c| {
-                                format!(
-                                    "pkg:maven/{}/{}@{}",
-                                    c.group, c.artifact, c.version
-                                )
-                            })
-                            .unwrap_or_default()
-                    }
-                    crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder {
-                        name,
-                        version,
-                    } => format!("pkg:generic/{name}@{version}"),
-                    crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
-                        String::new()
-                    }
-                };
-                tracing::warn!(
-                    selected = %selected_str,
-                    losers = ?loser_strs,
-                    heuristic = h.name(),
-                    confidence = h.confidence(),
-                    hint = "pass --root-name and --root-purl-type to override",
-                    "root-component selected via heuristic; operator override recommended for deterministic identity"
-                );
-            }
-        }
     }
 
     // Enrichment source control: resolve which sources are enabled.
@@ -4753,6 +4693,14 @@ pub async fn execute(
             let added = scan_fs::package_db::nix::closure::emit::components(classified);
             let (merged, appended, appended_identities) =
                 merge_closure_components(&mut components, added);
+            // Milestone 1377 (#1398) — a resolved closure names the subject:
+            // the derivation the evaluated attribute built, which
+            // `emit::components` tagged. Set only here, so a degraded or
+            // unrequested closure leaves the scan exactly as it was.
+            // `--image` is unaffected: the closure tier never runs on one.
+            if scan_target_kind == crate::generate::root_selector::ScanTargetKind::Path {
+                scan_target_kind = crate::generate::root_selector::ScanTargetKind::NixClosure;
+            }
             tracing::info!(
                 appended,
                 merged,
@@ -4882,6 +4830,17 @@ pub async fn execute(
             relationships.extend(edges);
         }
         None => {}
+    }
+    // Milestone 127 FR-007, deferred from above for a closure that could
+    // resolve: the kind is now final, NixClosure or not.
+    if args.nix_closure && !offline {
+        warn_if_root_heuristic_outranked(
+            &args,
+            &components,
+            scan_target_coord.as_ref(),
+            &target_name,
+            scan_target_kind,
+        );
     }
 
     // Milestone 1367 (#1371) — give every component the CPE candidates the
@@ -6779,6 +6738,91 @@ pub(crate) fn cpe_coverage(
     );
 
     coverage
+}
+
+/// Milestone 127 FR-007 — warn when the root-selection heuristic fell
+/// through past at least one detected main-module. The warning names the
+/// picked subject AND the loser main-modules' PURLs so operators can pass
+/// `--root-name`/`--root-purl-type` for deterministic control. Gated on
+/// `losers.is_empty() == false` (matches the FR-006 annotation emission
+/// gate).
+///
+/// Milestone 1377 — a function so it can run where the final
+/// [`ScanTargetKind`](crate::generate::root_selector::ScanTargetKind) is
+/// known: a `--nix-closure` scan learns its subject only once the closure
+/// resolves, and a warning computed before that would name losers of a
+/// selection the evaluated-package rung then overrides.
+fn warn_if_root_heuristic_outranked(
+    args: &ScanArgs,
+    components: &[waybill_common::resolution::ResolvedComponent],
+    scan_target_coord: Option<&crate::scan_fs::package_db::maven::ScanTargetCoord>,
+    target_name: &str,
+    scan_target_kind: crate::generate::root_selector::ScanTargetKind,
+) {
+    let root_override_tmp = crate::generate::RootComponentOverride {
+        name: args.root_name.clone(),
+        version: args.root_version.clone(),
+        purl_type: args.root_purl_type.clone(),
+        omit_purl: args.no_root_purl,
+        // Issue #359 — the early root-selection helper above runs
+        // before the full RootComponentOverride is constructed.
+        // Pass the same #359 fields so the selector treats
+        // --root-purl identically to the final override.
+        full_purl: args.root_purl.clone(),
+        full_purl_name: None,
+        full_purl_version: None,
+    };
+    let selection = crate::generate::root_selector::select_root(
+        components,
+        &root_override_tmp,
+        scan_target_coord,
+        target_name,
+        "0.0.0",
+        scan_target_kind,
+    );
+    if let Some(h) = selection.heuristic {
+        if !selection.losers.is_empty() {
+            let loser_strs: Vec<String> = selection
+                .losers
+                .iter()
+                .map(|p| p.as_str().to_string())
+                .collect();
+            let selected_str = match &selection.subject {
+                crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => {
+                    components
+                        .get(*idx)
+                        .map(|c| c.purl.as_str().to_string())
+                        .unwrap_or_default()
+                }
+                crate::generate::root_selector::ResolvedRootSubject::MavenCoord => {
+                    scan_target_coord
+                        .as_ref()
+                        .map(|c| {
+                            format!(
+                                "pkg:maven/{}/{}@{}",
+                                c.group, c.artifact, c.version
+                            )
+                        })
+                        .unwrap_or_default()
+                }
+                crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder {
+                    name,
+                    version,
+                } => format!("pkg:generic/{name}@{version}"),
+                crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
+                    String::new()
+                }
+            };
+            tracing::warn!(
+                selected = %selected_str,
+                losers = ?loser_strs,
+                heuristic = h.name(),
+                confidence = h.confidence(),
+                hint = "pass --root-name and --root-purl-type to override",
+                "root-component selected via heuristic; operator override recommended for deterministic identity"
+            );
+        }
+    }
 }
 
 /// Returns `(merged, appended, appended_identities)`.

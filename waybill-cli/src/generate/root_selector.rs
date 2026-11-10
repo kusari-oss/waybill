@@ -40,6 +40,12 @@ const MAIN_MODULE_ROLE: &str = "main-module";
 /// complete. Carries a `serde_json::Value::Bool`.
 pub const IS_WORKSPACE_ROOT_KEY: &str = "waybill:is-workspace-root";
 
+/// Milestone 1377 (#1398) — marks the component the evaluated Nix attribute
+/// built: the closure's `graph.root`. Set by the closure tier, read by the
+/// [`ScanTargetKind::NixClosure`] rung, never emitted. Carries
+/// `serde_json::Value::Bool(true)`.
+pub const NIX_EVALUATED_PACKAGE_KEY: &str = "waybill:nix-evaluated-package";
+
 /// FR-003 ecosystem-priority order. Fixed at compile time per
 /// research R2. Operators wanting a different order use
 /// `--root-name`/`--root-purl-type` per FR-008.
@@ -68,6 +74,11 @@ pub enum RootSelectionHeuristic {
     /// (`--image <ref|path>`), so the image IS the subject and a
     /// package found inside its rootfs does not displace it.
     ExplicitScanTarget,
+    /// Milestone 1377 (#1398) — a `--nix-closure` scan resolved a closure,
+    /// and the derivation the evaluated attribute built is the subject. The
+    /// Nix analogue of [`Self::ExplicitScanTarget`]: the operator named the
+    /// installable, so a main module found beside it does not displace it.
+    NixEvaluatedPackage,
     /// Fallback to the existing Maven JAR-walker `scan_target_coord`.
     MavenScanTargetCoord,
     /// Fallback to `pkg:generic/<target>@0.0.0`.
@@ -82,6 +93,7 @@ impl RootSelectionHeuristic {
             Self::EcosystemPriority => "ecosystem-priority",
             Self::LongestCommonPrefix => "longest-common-prefix",
             Self::ExplicitScanTarget => "explicit-scan-target",
+            Self::NixEvaluatedPackage => "nix-evaluated-package",
             Self::MavenScanTargetCoord => "maven-scan-target-coord",
             Self::SyntheticPlaceholder => "synthetic-placeholder",
         }
@@ -92,6 +104,7 @@ impl RootSelectionHeuristic {
     pub fn confidence(&self) -> f64 {
         match self {
             Self::ExplicitScanTarget => 0.99,
+            Self::NixEvaluatedPackage => 0.99,
             Self::RepoRoot => 0.95,
             Self::LongestCommonPrefix => 0.80,
             Self::EcosystemPriority => 0.70,
@@ -135,6 +148,9 @@ pub enum ScanTargetKind {
     #[default]
     Path,
     ExplicitImage,
+    /// Milestone 1377 — `--nix-closure` resolved a closure. Set only once
+    /// the closure exists: a degraded closure leaves the scan a `Path` scan.
+    NixClosure,
 }
 
 /// Output of [`select_root`].
@@ -169,6 +185,12 @@ pub struct RootSelectionResult {
 ///    rung an image reached the subject only through branch 8, so one
 ///    package in the rootfs silently won — `node:22-alpine` ingesting
 ///    as `pkg:npm/yarn@1.22.22`.
+///
+///    **Milestone 1377, its Nix analogue**: [`ScanTargetKind::NixClosure`]
+///    with exactly one component tagged [`NIX_EVALUATED_PACKAGE_KEY`] →
+///    `MainModule(idx)` of that component, heuristic =
+///    `NixEvaluatedPackage` (confidence 0.99), `losers` = every other
+///    main-module. With no tagged component the ladder continues.
 /// 3. **Single main-module fast path** (exactly one main-module
 ///    component) → `MainModule(idx)`, no heuristic annotation
 ///    (preserves byte-identity per FR-009). This is the
@@ -243,6 +265,26 @@ pub fn select_root(
             losers: main_modules
                 .iter()
                 .copied()
+                .map(|i| components[i].purl.clone())
+                .collect(),
+        };
+    }
+
+    // Milestone 1377 (#1398) — the derivation the evaluated attribute built
+    // is the subject, returned as the real component it already is rather
+    // than a synthetic one: unlike an image, it has a name, a version and
+    // an identity of its own. Exactly one tagged component is required. The
+    // closure tags only `graph.root`, so more than one means something other
+    // than this rung put the tag there, and guessing between them would be
+    // the heuristic this rung exists to replace; the ladder below decides.
+    if let Some(picked) = evaluated_nix_package(components, target_kind) {
+        return RootSelectionResult {
+            subject: ResolvedRootSubject::MainModule(picked),
+            heuristic: Some(RootSelectionHeuristic::NixEvaluatedPackage),
+            losers: main_modules
+                .iter()
+                .copied()
+                .filter(|&i| i != picked)
                 .map(|i| components[i].purl.clone())
                 .collect(),
         };
@@ -353,6 +395,31 @@ pub fn select_root(
             heuristic: Some(RootSelectionHeuristic::SyntheticPlaceholder),
             losers: all_losers,
         }
+    }
+}
+
+/// Milestone 1377 — the index of the evaluated Nix package, when the
+/// evaluated-package rung applies: a `NixClosure` scan with exactly one
+/// component tagged [`NIX_EVALUATED_PACKAGE_KEY`]. One definition, read by
+/// [`select_root`] and by the CycloneDX emitter's decision about which
+/// component `metadata.component` replaces in `components[]`, so the two
+/// cannot disagree. An operator override is checked by the caller.
+pub fn evaluated_nix_package(
+    components: &[ResolvedComponent],
+    target_kind: ScanTargetKind,
+) -> Option<usize> {
+    if target_kind != ScanTargetKind::NixClosure {
+        return None;
+    }
+    let mut tagged = components.iter().enumerate().filter(|(_, c)| {
+        c.extra_annotations
+            .get(NIX_EVALUATED_PACKAGE_KEY)
+            .and_then(serde_json::Value::as_bool)
+            == Some(true)
+    });
+    match (tagged.next(), tagged.next()) {
+        (Some((picked, _)), None) => Some(picked),
+        _ => None,
     }
 }
 
@@ -510,6 +577,7 @@ pub fn is_internal_emission_key(key: &str) -> bool {
             | "waybill:is-cargo-workspace-toplevel"
             | crate::scan_fs::package_db::nix::ROOT_INPUT_KEY
             | crate::scan_fs::package_db::pip::uv_lock::ARTIFACT_URL_KEY
+            | NIX_EVALUATED_PACKAGE_KEY
     )
 }
 
@@ -1040,6 +1108,126 @@ mod tests {
             RootSelectionHeuristic::SyntheticPlaceholder.name(),
             "synthetic-placeholder"
         );
+    }
+
+    // ============================================================
+    // Milestone 1377: the evaluated Nix package is the subject
+    // ============================================================
+
+    /// A closure component carrying the evaluated-package tag.
+    fn make_evaluated(purl_str: &str) -> ResolvedComponent {
+        let mut c = make_library(purl_str);
+        c.extra_annotations.insert(
+            NIX_EVALUATED_PACKAGE_KEY.to_string(),
+            serde_json::Value::Bool(true),
+        );
+        c
+    }
+
+    fn select(components: &[ResolvedComponent], kind: ScanTargetKind) -> RootSelectionResult {
+        select_root(components, &no_override(), None, "flake", "0.0.0", kind)
+    }
+
+    /// T006 — the rung: the tagged component wins over every main-module,
+    /// and every main-module it outranked is recorded.
+    #[test]
+    fn m1377_the_evaluated_package_is_the_subject_and_records_its_losers() {
+        let components = vec![
+            make_main_module("pkg:hackage/waybill-fixture-a@0.1", "/p/a.cabal", true),
+            make_library("pkg:generic/waybill-fixture-lib@1.0"),
+            make_evaluated("pkg:generic/waybill-fixture-app@2.1"),
+            make_main_module("pkg:cargo/waybill-fixture-b@0.2", "/p/b/Cargo.toml", false),
+        ];
+        let r = select(&components, ScanTargetKind::NixClosure);
+        assert!(matches!(r.subject, ResolvedRootSubject::MainModule(2)), "{:?}", r.subject);
+        assert_eq!(r.heuristic, Some(RootSelectionHeuristic::NixEvaluatedPackage));
+        let losers: Vec<&str> = r.losers.iter().map(|p| p.as_str()).collect();
+        assert_eq!(
+            losers,
+            vec!["pkg:hackage/waybill-fixture-a@0.1", "pkg:cargo/waybill-fixture-b@0.2"]
+        );
+    }
+
+    /// T006 — the moat shape: the evaluated package IS a main-module. It is
+    /// the subject by this rung, and it is not its own loser.
+    #[test]
+    fn m1377_an_evaluated_main_module_is_not_its_own_loser() {
+        let mut moat = make_main_module("pkg:hackage/waybill-fixture-a@0.1", "/p/a.cabal", true);
+        moat.extra_annotations.insert(
+            NIX_EVALUATED_PACKAGE_KEY.to_string(),
+            serde_json::Value::Bool(true),
+        );
+        let other = make_main_module("pkg:generic/waybill-fixture-flake@0.0.0", "/p/flake.nix", true);
+        let r = select(&[other, moat], ScanTargetKind::NixClosure);
+        assert!(matches!(r.subject, ResolvedRootSubject::MainModule(1)), "{:?}", r.subject);
+        assert_eq!(r.heuristic, Some(RootSelectionHeuristic::NixEvaluatedPackage));
+        let losers: Vec<&str> = r.losers.iter().map(|p| p.as_str()).collect();
+        assert_eq!(losers, vec!["pkg:generic/waybill-fixture-flake@0.0.0"]);
+    }
+
+    /// T006 — FR-001: only an operator override outranks the evaluated package.
+    #[test]
+    fn m1377_an_operator_override_still_wins() {
+        let components = vec![make_evaluated("pkg:generic/waybill-fixture-app@2.1")];
+        let over = active_override();
+        let r = select_root(&components, &over, None, "flake", "0.0.0", ScanTargetKind::NixClosure);
+        assert!(matches!(r.subject, ResolvedRootSubject::OperatorOverride));
+        assert_eq!(r.heuristic, None);
+        assert!(r.losers.is_empty());
+    }
+
+    /// T006 — with no tagged component (a degraded closure), and with two
+    /// (which nothing produces, so it is refused rather than guessed), the
+    /// ladder below is exactly today's.
+    #[test]
+    fn m1377_without_exactly_one_tagged_component_the_ladder_is_unchanged() {
+        let cases: Vec<Vec<ResolvedComponent>> = vec![
+            vec![],
+            vec![make_library("pkg:generic/waybill-fixture-lib@1.0")],
+            vec![make_main_module("pkg:hackage/waybill-fixture-a@0.1", "/p/a.cabal", true)],
+            vec![
+                make_main_module("pkg:hackage/waybill-fixture-a@0.1", "/p/a.cabal", true),
+                make_main_module("pkg:cargo/waybill-fixture-b@0.2", "/p/b/Cargo.toml", false),
+            ],
+            vec![
+                make_evaluated("pkg:generic/waybill-fixture-app@2.1"),
+                make_evaluated("pkg:generic/waybill-fixture-app2@2.2"),
+            ],
+        ];
+        for components in cases {
+            let path = select(&components, ScanTargetKind::Path);
+            let nix = select(&components, ScanTargetKind::NixClosure);
+            assert_eq!(format!("{:?}", nix.subject), format!("{:?}", path.subject));
+            assert_eq!(nix.heuristic, path.heuristic);
+            assert_eq!(nix.losers, path.losers);
+            assert_ne!(nix.heuristic, Some(RootSelectionHeuristic::NixEvaluatedPackage));
+        }
+    }
+
+    /// T006 — the tag means nothing outside a closure scan: a stray tag on a
+    /// `--path` scan must not change the subject.
+    #[test]
+    fn m1377_the_tag_is_ignored_outside_a_closure_scan() {
+        let components = vec![
+            make_main_module("pkg:hackage/waybill-fixture-a@0.1", "/p/a.cabal", true),
+            make_evaluated("pkg:generic/waybill-fixture-app@2.1"),
+        ];
+        let r = select(&components, ScanTargetKind::Path);
+        assert!(matches!(r.subject, ResolvedRootSubject::MainModule(0)));
+        assert_eq!(r.heuristic, None);
+    }
+
+    /// T006 — FR-004's wire name and the confidence the plan fixed.
+    #[test]
+    fn m1377_heuristic_name_and_confidence() {
+        assert_eq!(RootSelectionHeuristic::NixEvaluatedPackage.name(), "nix-evaluated-package");
+        assert!((RootSelectionHeuristic::NixEvaluatedPackage.confidence() - 0.99).abs() < f64::EPSILON);
+    }
+
+    /// T006 — the tag drives selection and is never emitted.
+    #[test]
+    fn m1377_the_tag_is_an_internal_emission_key() {
+        assert!(is_internal_emission_key(NIX_EVALUATED_PACKAGE_KEY));
     }
 
     // ============================================================

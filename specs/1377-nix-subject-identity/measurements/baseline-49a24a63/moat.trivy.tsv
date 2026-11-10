@@ -1,0 +1,13 @@
+CVE-2026-112909	filelock	3.20.3
+CVE-2026-112910	filelock	3.20.3
+CVE-2026-24049	wheel	0.46.1
+CVE-2026-41066	lxml	6.0.2
+CVE-2026-44431	urllib3	2.6.3
+CVE-2026-44432	urllib3	2.6.3
+CVE-2026-45409	idna	3.13
+CVE-2026-59890	setuptools	80.10.1
+CVE-2026-97687	urllib3	2.6.3
+CVE-2026-97688	urllib3	2.6.3
+CVE-2026-97689	urllib3	2.6.3
+GHSA-6q48-6c7w-9gw2	certifi	2026.01.04
+GHSA-xmj3-9gf7-h52w	setuptools	80.10.1

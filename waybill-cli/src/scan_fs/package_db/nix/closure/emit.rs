@@ -311,11 +311,29 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
     // its role by the build graph alone.
     let mut admitted_for: std::collections::BTreeMap<MergeKey, bool> =
         std::collections::BTreeMap::new();
+    // Milestone 1377 (#1398) — the derivation the evaluated attribute built.
+    // It is emitted whatever its role, because it is the document's subject:
+    // nothing consumes it, so it classifies `Unreferenced`, and before this
+    // it reached the document only if it happened to apply a patch (openssh)
+    // or another reader emitted it (moat's cabal package).
+    //
+    // Deliberately not added to `emitted_drv_keys`. The root is never an
+    // edge target (nothing consumes it) and `graph::project` already treats
+    // it as an edge source, so the projection is unchanged. The license
+    // index is keyed by `.drv` over every evaluated row, so the root still
+    // receives its declared licenses here; what it does not do is join the
+    // `wanted` population milestone 1281 counts coverage over.
+    //
+    // `evaluated`, not `root`: with several unconsumed derivations the
+    // closure does not say which one was evaluated, and no subject is named.
+    let root_key = closure.graph.evaluated.as_deref();
+    let mut root_identity: Option<MergeKey> = None;
     for (key, drv) in &closure.raw.derivations {
         let Some(role) = closure.roles.get(key).copied() else {
             continue;
         };
-        if !emits_as_component(role, drv) {
+        let is_root = root_key == Some(key.as_str());
+        if !is_root && !emits_as_component(role, drv) {
             continue;
         }
         let Some(name) = drv.pname() else {
@@ -348,6 +366,9 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         };
         let identity_key = basis.as_ref().map(|b| b.hash().to_string()).unwrap_or_default();
         let merge_key: MergeKey = (name.to_string(), version.to_string(), identity_key);
+        if is_root {
+            root_identity = Some(merge_key.clone());
+        }
         if closure.graph_admitted.contains(key) {
             admitted_for.insert(merge_key.clone(), true);
         }
@@ -457,6 +478,17 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                 ANN_CLOSURE_ROLE.to_string(),
                 serde_json::Value::String(role.wire().to_string()),
             );
+            // Internal: read by the root selector's evaluated-package rung,
+            // filtered from every format by `is_internal_emission_key`.
+            // `merge_closure_components` folds closure annotations into an
+            // existing component with `or_insert`, which is how the tag
+            // reaches a reader's component the root merged into.
+            if root_identity.as_ref() == Some(&identity) {
+                component.extra_annotations.insert(
+                    crate::generate::root_selector::NIX_EVALUATED_PACKAGE_KEY.to_string(),
+                    serde_json::Value::Bool(true),
+                );
+            }
             // C211 — how this identity earned that role. Only `build-graph`
             // is disclosed: a declared dependency attribute is the ordinary
             // case and says nothing a reader needs told.

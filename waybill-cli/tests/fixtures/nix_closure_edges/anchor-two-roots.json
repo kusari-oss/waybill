@@ -1,0 +1,80 @@
+{
+  "derivations": {
+    "root.drv": {
+      "name": "waybill-fixture-root-0.1",
+      "env": {
+        "pname": "waybill-fixture-root",
+        "version": "0.1",
+        "buildInputs": "/nix/store/h1-anchora",
+        "nativeBuildInputs": "/nix/store/h2-anchorb"
+      },
+      "inputs": {
+        "drvs": {
+          "anchora.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "anchorb.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h0-root"
+        }
+      }
+    },
+    "anchora.drv": {
+      "name": "waybill-fixture-anchora-1.0",
+      "env": {
+        "pname": "waybill-fixture-anchora",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-anchora"
+        }
+      }
+    },
+    "anchorb.drv": {
+      "name": "waybill-fixture-anchorb-2.0",
+      "env": {
+        "pname": "waybill-fixture-anchorb",
+        "version": "2.0"
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      },
+      "outputs": {
+        "out": {
+          "path": "h2-anchorb"
+        }
+      }
+    },
+    "stray.drv": {
+      "name": "waybill-fixture-stray-1.0",
+      "env": {
+        "pname": "waybill-fixture-stray",
+        "version": "1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/h9-stray"
+        }
+      }
+    }
+  },
+  "version": 4
+}

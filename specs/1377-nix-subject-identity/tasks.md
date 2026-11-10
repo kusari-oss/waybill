@@ -16,13 +16,13 @@ and never run a real evaluation.
 - [X] T001 Make the spike probes path-independent: read `TARGETS_DIR`, `OUT_DIR`, `WAYBILL`, `GRYPE`, `SBOMNIX` from the environment, failing loudly when one is unset, instead of the hard-coded `target/nix-vuln-spike/` paths. Files: `specs/1377-nix-subject-identity/measurements/gen-sboms.sh`, `scan.sh`, `analyze.py`, `adjudicate.py`, `precision.py` (research R9).
 - [X] T002 Add an independent reach probe, `specs/1377-nix-subject-identity/measurements/meta-eval-cost/reach.py`, for SC-009. It takes a target's members from `nix derivation show -r` (pname and version from `env`/`structuredAttrs`, `.drv` basename) and the rows `probe.py`'s guarded expression returns for their names. It joins them by drv, then by pname + version, without using waybill, and prints `wanted`, `received`, `by-drv`, `by-name-version` and the unreached count.
 - [X] T003 File the issue *"`ResolvedComponent.cpes` is `Vec<String>`; Principle IV requires a `Cpe` newtype"*, citing 108 references in 49 files, this milestone's single conversion point, and plan.md's Constitution Check. Use `gh issue create` on `kusari-oss/waybill`, with no @-mentions and ending with the AI-drafting line. Record the number in `specs/1377-nix-subject-identity/plan.md` (analysis C1, option a).
-- [ ] T004 Record a control baseline on the base commit `49a24a63`, before any code change. Run the probes per `specs/1377-nix-subject-identity/quickstart.md` over all six targets and save the per-target, per-scanner finding sets, the subjects and the C184 JSON as a summary in `specs/1377-nix-subject-identity/measurements/baseline-49a24a63/`. Raw scanner JSON stays outside the repo.
+- [X] T004 Record a control baseline on the base commit `49a24a63`, before any code change. Run the probes per `specs/1377-nix-subject-identity/quickstart.md` over all six targets and save the per-target, per-scanner finding sets, the subjects and the C184 JSON as a summary in `specs/1377-nix-subject-identity/measurements/baseline-49a24a63/`. Raw scanner JSON stays outside the repo.
 
 ---
 
 ## Phase 2: Foundational (blocks every story)
 
-- [ ] T005 Extend the stub-`nix` fixture support used by `waybill-cli/tests/closure_licenses.rs`:
+- [X] T005 Extend the stub-`nix` fixture support used by `waybill-cli/tests/closure_licenses.rs`:
   - a test can supply meta-evaluation rows carrying `version` and `cpe` (absent, null and present);
   - a test can supply a derivation-show closure whose `graph.root` is a chosen derivation.
   Put the shared helper where the closure tests already share fixture code, and add fixtures under `waybill-cli/tests/fixtures/` with `waybill-fixture-*` names only.
@@ -38,13 +38,13 @@ and never run a real evaluation.
 
 ### Tests (write first, see them fail)
 
-- [ ] T006 [P] [US1] Unit tests in `waybill-cli/src/generate/root_selector.rs`:
+- [X] T006 [P] [US1] Unit tests in `waybill-cli/src/generate/root_selector.rs`:
   - `NixClosure` with exactly one evaluated-package-tagged component returns `MainModule(idx)` with `NixEvaluatedPackage`, and `losers` holds every other main-module;
   - an operator override still wins;
   - no tagged component falls through to today's ladder, byte-identical;
   - the heuristic serialises as `"nix-evaluated-package"` with confidence 0.99;
   - the tag key is listed by `is_internal_emission_key`.
-- [ ] T007 [P] [US1] Integration test `waybill-cli/tests/closure_subject.rs`, stub `nix`:
+- [X] T007 [P] [US1] Integration test `waybill-cli/tests/closure_subject.rs`, stub `nix`:
   - the subject is the root derivation's package in CycloneDX `metadata.component`, SPDX 2.3 `documentDescribes` and SPDX 3 `rootElement`;
   - a root with no CPE gives no `cpe` on CycloneDX `metadata.component` and no synthesised `waybill:` CPE in either SPDX format (FR-012);
   - a degraded closure leaves today's subject;
@@ -54,19 +54,27 @@ and never run a real evaluation.
 
 ### Implementation
 
-- [ ] T008 [US1] In `waybill-cli/src/generate/root_selector.rs`:
+- [X] T008 [US1] In `waybill-cli/src/generate/root_selector.rs`:
   - add `ScanTargetKind::NixClosure` and `RootSelectionHeuristic::NixEvaluatedPackage` (`name()` → `"nix-evaluated-package"`, `confidence()` → 0.99);
   - add the internal evaluated-package tag key and register it in `is_internal_emission_key`;
   - add the rung in `select_root`, after the operator override and before the main-module rungs (research R3).
-- [ ] T009 [US1] In `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs`, always emit the `ClassifiedClosure.graph.root` derivation as a component and set the evaluated-package tag on it. Do not add duplicate-avoidance here: `merge_closure_components` in `waybill-cli/src/cli/scan_cmd.rs` already merges on `(name, version)` and folds annotations with `or_insert`, which carries the tag to an existing component (research R2).
-- [ ] T010 [US1] In `waybill-cli/src/cli/scan_cmd.rs`:
+- [X] T009 [US1] In `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs`, always emit the `ClassifiedClosure.graph.root` derivation as a component and set the evaluated-package tag on it. Do not add duplicate-avoidance here: `merge_closure_components` in `waybill-cli/src/cli/scan_cmd.rs` already merges on `(name, version)` and folds annotations with `or_insert`, which carries the tag to an existing component (research R2).
+- [X] T010 [US1] In `waybill-cli/src/cli/scan_cmd.rs`:
   - set `scan_target_kind = ScanTargetKind::NixClosure` once a closure resolves. The local is computed at ~3598, before resolution at ~4503, so it has to be updated after resolution;
   - make sure every later consumer sees the new value: the ~4989 seeds call, `classify_orphans_pre_emit` and `ScanArtifacts`;
   - make sure the early ~3865 selection's FR-007 warning does not report losers for a selection the final rung overrides.
-- [ ] T011 [US1] In `waybill-cli/src/generate/cyclonedx/metadata.rs` (~1275–1301), under `NixEvaluatedPackage` emit no `cpe` on `metadata.component` when the subject's `cpes` is empty, rather than the `waybill:` placeholder (FR-012, research R7). Confirm that `waybill-cli/src/generate/cyclonedx/builder.rs:841` and `:1313` still treat the subject as a component under `NixClosure`.
-- [ ] T012 [P] [US1] In `docs/reference/sbom-format-mapping.md`, add `nix-evaluated-package` (0.99) to row C69's list of values.
+- [X] T011 [US1] In `waybill-cli/src/generate/cyclonedx/metadata.rs` (~1275–1301), under `NixEvaluatedPackage` emit no `cpe` on `metadata.component` when the subject's `cpes` is empty, rather than the `waybill:` placeholder (FR-012, research R7). Confirm that `waybill-cli/src/generate/cyclonedx/builder.rs:841` and `:1313` still treat the subject as a component under `NixClosure`.
+- [X] T012 [P] [US1] In `docs/reference/sbom-format-mapping.md`, add `nix-evaluated-package` (0.99) to row C69's list of values.
 
 **Checkpoint**: T006 and T007 pass. The openssh subject is `openssh 10.3p1` in all three formats (SC-001). moat's subject is still `pkg:hackage/moat@0.1`.
+
+**Found during US1, fixed inside it** (each one makes the US1 output wrong without the fix):
+- `resolve/closure_role_scope.rs`: the evaluated package classifies `unreferenced` (nothing consumes it), so the role-scope pass marked it `scope: excluded`. That was already true for openssh 10.3p1 at `49a24a63`. The pass now skips the tagged component; unit test `m1377_the_evaluated_package_is_never_classified_not_in_the_artifact`.
+- `generate/cyclonedx/builder.rs`: `target_ref` is the *first* `main-module` component, not the selected subject. Under the new rung, openssh's `dependencies[]` kept a `filesystem-scan@0.0.0` entry that resolved to nothing. `target_ref` now follows the selection, under `NixEvaluatedPackage` only. SPDX 2.3 and SPDX 3 already root at the selection.
+- `cli/scan_cmd.rs`: the FR-007 warning moved into `warn_if_root_heuristic_outranked`. It runs early as before, unless a closure may resolve; then it runs after the closure, with the final kind.
+- `closure/graph.rs`: `root` is the *first* unconsumed derivation in `.drv`-key order. A closure with several unconsumed derivations does not say which one was evaluated, and a fixture without `inputs.drvs` made `waybill-fixture-aeson` the "subject". The new `ProjectedGraph.evaluated` is `root` only when it is the sole candidate. The tag uses `evaluated`; edge anchoring keeps `root`. Real closures have one (all six spike targets name their package).
+- `generate/cyclonedx/builder.rs::build_components`: a lone main-module was promoted to `metadata.component`, and skipped in `components[]`, on count alone. When the evaluated package outranks it, the module dropped out of the document, and closure edges named it as an absent component (same class as #1170/#1186). Only the actual subject is promoted now. `root_selector::evaluated_nix_package` is the one definition of the rung, shared by the selector and this site.
+- `tests/closure_edges.rs::m1280_t019` now uses `anchor-two-roots.json`. A sole root is always emitted now, so "a root no reader emits" exists only as the first of several candidates.
 
 ---
 

@@ -448,6 +448,10 @@ pub(crate) fn resolve(
     tracing::info!(
         edges = graph.edges.len(),
         root = graph.root.as_deref().unwrap_or("<none>"),
+        // Milestone 1377 — `<none>` here with a root above means several
+        // derivations are unconsumed, so no evaluated package is named and
+        // the subject comes from the existing ladder.
+        evaluated = graph.evaluated.as_deref().unwrap_or("<none>"),
         visits = graph.visits,
         "nix-closure: dependency graph projected"
     );

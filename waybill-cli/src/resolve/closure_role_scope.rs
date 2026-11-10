@@ -101,6 +101,22 @@ pub(crate) fn assign_role_scope(
         };
         summary.roles_seen += 1;
 
+        // Milestone 1377 (#1398) — the derivation the evaluated attribute
+        // built IS the artifact, so it cannot be absent from it. Nothing in
+        // the closure consumes it, which is why it classifies `unreferenced`;
+        // that is a fact about nix's references, not about presence. Before
+        // this, openssh 10.3p1, the package a scan of its flake was about,
+        // was emitted `scope: excluded`. No counter: the subject is named by
+        // the document itself, so the exemption is visible where it applies.
+        if component
+            .extra_annotations
+            .get(crate::generate::root_selector::NIX_EVALUATED_PACKAGE_KEY)
+            .and_then(serde_json::Value::as_bool)
+            == Some(true)
+        {
+            continue;
+        }
+
         // Matched exhaustively over the wire values rather than tested for
         // membership of a list. A role added upstream lands in the final
         // arm and classifies nothing, which is the fail-closed answer
@@ -257,6 +273,25 @@ mod tests {
         let s = assign_role_scope(&mut c, &HashSet::new());
         assert_eq!(presence(&c, "pkg:generic/patch@1.0.0"), Some(ArtifactPresence::NotInArtifact));
         assert_eq!(s.assigned_unreferenced, 1);
+    }
+
+    /// Milestone 1377 — the evaluated package is classified `unreferenced`
+    /// because nothing consumes it, and must not be declared absent from
+    /// the artifact it is.
+    #[test]
+    fn m1377_the_evaluated_package_is_never_classified_not_in_the_artifact() {
+        let mut root = component("pkg:generic/waybill-fixture-app@2.1", Some("unreferenced"));
+        root.extra_annotations.insert(
+            crate::generate::root_selector::NIX_EVALUATED_PACKAGE_KEY.to_string(),
+            serde_json::Value::Bool(true),
+        );
+        // CONTROL: the same role without the tag is still classified.
+        let mut c = vec![root, component("pkg:generic/patch@1.0.0", Some("unreferenced"))];
+        let s = assign_role_scope(&mut c, &HashSet::new());
+        assert_eq!(presence(&c, "pkg:generic/waybill-fixture-app@2.1"), None);
+        assert_eq!(presence(&c, "pkg:generic/patch@1.0.0"), Some(ArtifactPresence::NotInArtifact));
+        assert_eq!(s.assigned_unreferenced, 1);
+        assert_eq!(s.roles_seen, 2);
     }
 
     /// FR-002. `artifact-input` includes test dependencies on real data —

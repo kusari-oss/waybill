@@ -561,9 +561,15 @@ fn m1280_t023_no_closure_flag_means_no_closure_edges() {
 /// detection, so it belongs beside
 /// `graph_completeness::anchor_retained_mainmod_edges` and not in the reader.
 /// Tracked as a follow-up rather than built for a case never observed.
+///
+/// Milestone 1377 closes that follow-up for a closure's **sole** root: it is
+/// the evaluated package, always emitted, and the document's subject, so its
+/// edges resolve. The branch survives only when several derivations are
+/// unconsumed and `root` is merely the first of them, which is what
+/// `anchor-two-roots.json` adds (`stray.drv`, sorting after `root.drv`).
 #[test]
 fn m1280_t019_a_root_with_no_component_drops_its_edges_rather_than_faking_them() {
-    let s = scan_closure(&closure("anchor.json"));
+    let s = scan_closure(&closure("anchor-two-roots.json"));
 
     // CONTROL: both members really are emitted, so "they have no incoming
     // edge" is a statement about the anchor and not about emission.

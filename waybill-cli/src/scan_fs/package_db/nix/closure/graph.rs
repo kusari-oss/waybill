@@ -70,6 +70,18 @@ pub(crate) struct ProjectedGraph {
     /// means a cycle spans all of it. The anchor is then unavailable and the
     /// caller emits what it has rather than guessing a root.
     pub(crate) root: Option<String>,
+    /// Milestone 1377 — `root`, only when it is the closure's **only**
+    /// unconsumed derivation. That is the derivation the evaluated attribute
+    /// built, and so the document's subject.
+    ///
+    /// `root` itself stays the first of several candidates, because as an
+    /// edge source a deterministic choice is harmless. As the subject it is
+    /// not: several unconsumed derivations means the closure does not say
+    /// which one was evaluated, and the first `.drv` key in sort order is a
+    /// hash, not an answer. A closure read from `nix derivation show -r`
+    /// records `inputs.drvs` and has exactly one (measured: openssh, moat);
+    /// a closure missing them makes every member a candidate.
+    pub(crate) evaluated: Option<String>,
     /// How many derivations the projection visited, for FR-012.
     ///
     /// Asserted rather than timed: both measured closures are small enough
@@ -125,7 +137,8 @@ pub(crate) fn project(closure: &RawClosure, emitted: &HashSet<&str>) -> Projecte
     }
 
     let mut edges: BTreeSet<(String, String)> = BTreeSet::new();
-    let root = root_of(drvs);
+    let (root, root_count) = root_of(drvs);
+    let evaluated = (root_count == 1).then(|| root.clone()).flatten();
     // The root is a source of edges even when it is not an emitted component.
     // Without it, measured, 381 of 381 components stay orphaned while 3,088
     // edges are emitted (FR-004).
@@ -148,6 +161,7 @@ pub(crate) fn project(closure: &RawClosure, emitted: &HashSet<&str>) -> Projecte
     ProjectedGraph {
         edges,
         root,
+        evaluated,
         visits,
     }
 }
@@ -193,18 +207,21 @@ fn nearest_stopping<'a>(
 }
 
 /// The derivation no other derivation's `inputs.drvs` names.
-fn root_of(drvs: &BTreeMap<String, RawDerivation>) -> Option<String> {
+fn root_of(drvs: &BTreeMap<String, RawDerivation>) -> (Option<String>, usize) {
     let consumed: HashSet<&str> = drvs
         .values()
         .flat_map(|d| d.input_drvs(drvs))
         .collect();
     let mut roots = drvs.keys().filter(|k| !consumed.contains(k.as_str()));
-    let first = roots.next()?;
-    // More than one root is possible in principle and has not been observed:
-    // measured, both closures have exactly one. Taking the first of a
-    // `BTreeMap`'s keys is deterministic, so a second root cannot make the
-    // output vary between runs.
-    Some(first.clone())
+    let Some(first) = roots.next() else {
+        return (None, 0);
+    };
+    // More than one root is possible in principle and has not been observed
+    // in a real closure: measured, both have exactly one. Taking the first of
+    // a `BTreeMap`'s keys is deterministic, so a second root cannot make the
+    // output vary between runs. The count is returned so the caller can tell
+    // "the root" from "the first of several" (milestone 1377).
+    (Some(first.clone()), 1 + roots.count())
 }
 
 /// Turn the `.drv`-keyed graph into PURL-keyed relationships.
@@ -522,5 +539,33 @@ mod tests {
                 c.derivations.len()
             );
         }
+    }
+
+    /// Milestone 1377 — the evaluated package is named only when the
+    /// closure has one root. Several candidates name none, while `root`
+    /// keeps its deterministic first pick for edge anchoring.
+    #[test]
+    fn m1377_only_a_sole_root_is_the_evaluated_package() {
+        let one = RawClosure::parse(
+            r#"{"derivations":{
+              "a-lib.drv":{"env":{"pname":"lib","version":"1"},"outputs":{"out":{"path":"h1"}}},
+              "b-app.drv":{"env":{"pname":"app","version":"2"},"inputs":{"drvs":{"a-lib.drv":{"outputs":["out"]}}},"outputs":{"out":{"path":"h2"}}}
+            }}"#,
+        )
+        .unwrap();
+        let g = project(&one, &HashSet::new());
+        assert_eq!(g.root.as_deref(), Some("b-app.drv"));
+        assert_eq!(g.evaluated.as_deref(), Some("b-app.drv"));
+
+        let two = RawClosure::parse(
+            r#"{"derivations":{
+              "a-lib.drv":{"env":{"pname":"lib","version":"1"},"outputs":{"out":{"path":"h1"}}},
+              "b-app.drv":{"env":{"pname":"app","version":"2"},"outputs":{"out":{"path":"h2"}}}
+            }}"#,
+        )
+        .unwrap();
+        let g = project(&two, &HashSet::new());
+        assert_eq!(g.root.as_deref(), Some("a-lib.drv"), "edge anchoring keeps its first pick");
+        assert_eq!(g.evaluated, None, "two candidates name no evaluated package");
     }
 }

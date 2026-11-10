@@ -1,0 +1,42 @@
+[
+ {
+  "drv": "r00t-waybill-fixture-app-2.1.drv",
+  "out": "/nix/store/h0-app",
+  "attr": "waybill-fixture-app",
+  "root": "pkgs",
+  "version": "2.1",
+  "cpe": "cpe:2.3:a:waybill-fixture-vendor:waybill-fixture-app:2.1:*:*:*:*:*:*:*",
+  "licenses": [
+   {
+    "spdx": "MIT",
+    "name": "mit"
+   }
+  ]
+ },
+ {
+  "drv": "aaaa-waybill-fixture-lib-1.0.drv",
+  "out": "/nix/store/h1-lib",
+  "attr": "waybill-fixture-lib",
+  "root": "pkgs",
+  "version": "1.0",
+  "cpe": null,
+  "licenses": [
+   {
+    "spdx": "Apache-2.0",
+    "name": "asl20"
+   }
+  ]
+ },
+ {
+  "drv": "bbbb-waybill-fixture-tool-3.0.drv",
+  "out": "/nix/store/h2-tool",
+  "attr": "waybill-fixture-tool",
+  "root": "pkgs",
+  "licenses": [
+   {
+    "spdx": "BSD-3-Clause",
+    "name": "bsd3"
+   }
+  ]
+ }
+]
