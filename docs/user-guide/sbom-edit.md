@@ -51,12 +51,32 @@ AND; values within a term combine with OR.
 |---|---|
 | `purl` | the PURL, as a glob |
 | `ecosystem` | the PURL type: `npm`, `cargo`, `deb`, … |
-| `scope` | `runtime`, `development`, `build`, `test`, `optional` |
+| `scope` | `runtime`, `development`, `build`, `test`, `optional`, `excluded` |
 | `tier` | the component's tier: `source`, `design`, `analyzed`, …, or `file` |
 | `role` | the component's role or type |
 | `name` | the name, as a glob, or `re:<regex>` |
 
 Examples: `scope=development,test`, `ecosystem=npm;name=@acme/*`, `tier=file`.
+
+`scope=excluded` matches components that are not in the artifact at all, as
+opposed to dependencies with a non-runtime lifecycle scope. Each format has a
+native mark for this:
+
+| Format | A component matches `scope=excluded` when |
+|---|---|
+| CycloneDX | it has `"scope": "excluded"` and no `waybill:lifecycle-scope` or `waybill:optional-derivation` property |
+| SPDX 2.3 | it is the `spdxElementId` of a `BUILD_TOOL_OF` relationship |
+| SPDX 3 | it is a `to` of a `LifecycleScopedRelationship` with `relationshipType: usesTool` and `scope: build` |
+
+The marked components are the members of a `--nix-closure` scan that only
+build the artifact, and, in CycloneDX only, Go modules that `go mod why`
+proved unneeded (`waybill:build-inclusion: not-needed`). CycloneDX also writes
+development, build, test and optional dependencies as `"scope": "excluded"`.
+For those, the lifecycle property says which scope they have, so they match
+that scope and not `excluded`. The one case this cannot express is a component
+that has a lifecycle scope and is also not in the artifact. CycloneDX has a
+single field for both, so `scope=excluded` misses that component in CycloneDX
+and matches it in SPDX.
 
 Dropping a component removes everything that refers to it:
 
