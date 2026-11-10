@@ -1247,6 +1247,7 @@ mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: "test".to_string(),
             version: "1.0.0".to_string(),
             purl,

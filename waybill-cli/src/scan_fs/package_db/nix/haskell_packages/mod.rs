@@ -1341,6 +1341,7 @@ fn new_closure_component(name: &str) -> ResolvedComponent {
     ResolvedComponent {
         build_inclusion: None,
         artifact_presence: None,
+        scope_evidence: None,
         name: name.to_string(),
         version: String::new(),
         purl,
@@ -2010,6 +2011,7 @@ mod enrich_tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: name.to_string(),
             version: String::new(),
             purl,

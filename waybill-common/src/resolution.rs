@@ -87,6 +87,14 @@ pub struct ResolvedComponent {
     /// lifecycle-scope preference the operator can toggle.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_presence: Option<ArtifactPresence>,
+    /// Milestone 1423 — which evidence decided `artifact_presence` for a
+    /// nix closure member: the runtime closure, static linking, the
+    /// reachability walk, or the closure role. Set on every member the
+    /// scope pass decides, marked or not, so "decided runtime" and "never
+    /// reached" stay distinguishable. `None` on exempt members (their
+    /// `ArtifactPresence` says why) and outside `--nix-closure` scans.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scope_evidence: Option<ScopeEvidence>,
     /// Original unresolved requirement specifications for fallback-tier
     /// entries (`requirements.txt` range specs, root `package.json`
     /// dependency declarations without a lockfile). Strings preserved
@@ -715,6 +723,47 @@ impl ArtifactPresence {
     }
 }
 
+/// Milestone 1423 — the evidence a nix closure member's presence was
+/// decided from (C203's non-exempt values).
+///
+/// Carried beside [`ArtifactPresence`] rather than folded into it: presence
+/// says *whether* the member ships, this says *how that was established*. A
+/// member proven present by a store reference and one inferred from link
+/// edges are both runtime, and a reader auditing the document needs to tell
+/// them apart (spec FR-008).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ScopeEvidence {
+    /// The evaluated output's runtime closure (`nix path-info -r`) decided
+    /// it: in the closure means runtime, outside it means not in the artifact.
+    RuntimeClosure,
+    /// Outside the runtime closure, but compiled into a runtime member: a Go
+    /// module or Rust crate read from a runtime binary, or a Haskell library
+    /// reached over library-dependency edges. Never paired with a
+    /// not-in-artifact mark.
+    StaticallyLinked,
+    /// The fallback walk from the evaluated package decided it.
+    ReachabilityWalk,
+    /// Neither evidence source was usable, so the milestone-1277 role rule
+    /// decided it.
+    ClosureRole,
+}
+
+impl ScopeEvidence {
+    /// The C203 wire value.
+    ///
+    /// Exhaustive, so a variant added later is a compile error here rather
+    /// than a silently missing annotation (#892).
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ScopeEvidence::RuntimeClosure => "runtime-closure",
+            ScopeEvidence::StaticallyLinked => "statically-linked",
+            ScopeEvidence::ReachabilityWalk => "reachability-walk",
+            ScopeEvidence::ClosureRole => "closure-role",
+        }
+    }
+}
+
 /// Backward-compat helper bridging the milestone-052 lifecycle_scope
 /// field to the pre-052 `is_dev: Option<bool>` semantic. Returns true
 /// when the component is `Development`, `Build`, or `Test` scoped —
@@ -856,6 +905,7 @@ mod tests {
             lifecycle_scope: None,
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
@@ -978,6 +1028,7 @@ mod tests {
             lifecycle_scope: None,
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,

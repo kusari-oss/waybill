@@ -555,6 +555,7 @@ fn component_from_entry(entry: &PackageDbEntry, ships: bool) -> ResolvedComponen
         // in the artifact; one any shipped member reaches is left unclaimed,
         // exactly as a shipped member itself is.
         artifact_presence: (!ships).then_some(ArtifactPresence::NotInArtifact),
+        scope_evidence: None,
     }
 }
 

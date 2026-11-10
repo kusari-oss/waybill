@@ -330,6 +330,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             lifecycle_scope: None,
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: Some("analyzed".to_string()),
@@ -1055,6 +1056,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // Milestone 1277 — the closure-role pass runs at the resolve
                 // stage, after this construction, so nothing is known here.
                 artifact_presence: None,
+                scope_evidence: None,
             });
             // Milestone 867 (#886) — index of the component just pushed, so
             // declared names that resolve to nothing can be localised on it
@@ -2659,6 +2661,7 @@ mod m179_dispatch_tests {
             lifecycle_scope: None,
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
@@ -3153,6 +3156,7 @@ Architecture: amd64
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: purl.name().to_string(),
             version: purl.version().unwrap_or("0.0.0").to_string(),
             purl,
@@ -3289,6 +3293,7 @@ Architecture: amd64
             lifecycle_scope: None,
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
@@ -3604,6 +3609,7 @@ mod workspace_member_tagging_759 {
             lifecycle_scope: None,
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,

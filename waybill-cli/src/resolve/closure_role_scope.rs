@@ -43,7 +43,7 @@
 
 use std::collections::HashSet;
 
-use waybill_common::resolution::{ArtifactPresence, ResolvedComponent};
+use waybill_common::resolution::{ArtifactPresence, ResolvedComponent, ScopeEvidence};
 
 /// The C182 annotation key this pass reads.
 ///
@@ -194,13 +194,28 @@ pub(crate) const CLASSIFICATION_SOURCE: &str = "waybill:scope-classification-sou
 pub(crate) fn classification_source(
     component: &ResolvedComponent,
 ) -> Option<&'static str> {
-    let presence = component.artifact_presence?;
-    if !presence.is_absent_from_artifact() {
-        // The exempt state. Reported as itself, because "the rule exempted
-        // this" and "the rule did not reach this" are different facts and
-        // absence can only mean one of them.
-        return Some(presence.as_str());
+    if let Some(presence) = component.artifact_presence {
+        if !presence.is_absent_from_artifact() {
+            // The exempt state. Reported as itself, because "the rule
+            // exempted this" and "the rule did not reach this" are different
+            // facts and absence can only mean one of them. An exemption wins
+            // over any evidence (spec FR-006).
+            return Some(presence.as_str());
+        }
     }
+    // Milestone 1423 — the evidence the scope pass decided from. Reported
+    // whether or not the member was marked: the native mark says which way
+    // it was decided, this says how (contracts/c203-values.md).
+    match component.scope_evidence {
+        Some(e @ (ScopeEvidence::RuntimeClosure
+        | ScopeEvidence::StaticallyLinked
+        | ScopeEvidence::ReachabilityWalk)) => return Some(e.as_str()),
+        // Today's rule. Keeps the pre-1423 vocabulary, including the
+        // propagation suffix, so a `closure-role` document reads exactly as
+        // it did before this milestone.
+        Some(ScopeEvidence::ClosureRole) | None => {}
+    }
+    let presence = component.artifact_presence?;
     // The propagation reached the same conclusion independently. Worth
     // distinguishing: a reader deciding whether to trust one analysis wants
     // to know the other agreed.
@@ -484,6 +499,64 @@ mod tests {
             "`unix` in the boot set is the Hackage package, not every component so named"
         );
         assert_eq!(s.exempt_compiler_supplied, 0);
+    }
+
+    // ---- m1423 T004: C203 reports the scope evidence ----
+
+    fn with(
+        presence: Option<ArtifactPresence>,
+        evidence: Option<ScopeEvidence>,
+    ) -> ResolvedComponent {
+        let mut c = component("pkg:generic/waybill-fixture-m@1.0", Some("build-tooling"));
+        c.artifact_presence = presence;
+        c.scope_evidence = evidence;
+        c
+    }
+
+    #[test]
+    fn m1423_each_new_evidence_value_is_reported_marked_or_not() {
+        for (e, wire) in [
+            (ScopeEvidence::RuntimeClosure, "runtime-closure"),
+            (ScopeEvidence::StaticallyLinked, "statically-linked"),
+            (ScopeEvidence::ReachabilityWalk, "reachability-walk"),
+        ] {
+            assert_eq!(classification_source(&with(None, Some(e))), Some(wire), "unmarked {e:?}");
+            assert_eq!(
+                classification_source(&with(Some(ArtifactPresence::NotInArtifact), Some(e))),
+                Some(wire),
+                "marked {e:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn m1423_closure_role_evidence_keeps_the_pre_1423_vocabulary() {
+        let mut c = with(Some(ArtifactPresence::NotInArtifact), Some(ScopeEvidence::ClosureRole));
+        assert_eq!(classification_source(&c), Some("closure-role"));
+        c.lifecycle_scope = Some(waybill_common::resolution::LifecycleScope::Development);
+        assert_eq!(classification_source(&c), Some("closure-role+lifecycle-propagation"));
+        // No mark, so the role rule decided nothing and nothing is reported.
+        assert_eq!(classification_source(&with(None, Some(ScopeEvidence::ClosureRole))), None);
+        assert_eq!(classification_source(&with(None, None)), None);
+    }
+
+    #[test]
+    fn m1423_an_exemption_wins_over_any_evidence() {
+        for e in [
+            ScopeEvidence::RuntimeClosure,
+            ScopeEvidence::StaticallyLinked,
+            ScopeEvidence::ReachabilityWalk,
+            ScopeEvidence::ClosureRole,
+        ] {
+            assert_eq!(
+                classification_source(&with(Some(ArtifactPresence::ExemptEvaluatedPackage), Some(e))),
+                Some("exempt-evaluated-package")
+            );
+            assert_eq!(
+                classification_source(&with(Some(ArtifactPresence::ExemptCompilerSupplied), Some(e))),
+                Some("exempt-compiler-supplied")
+            );
+        }
     }
 
     /// An unrecognised role value is not a licence to guess. It is neither
