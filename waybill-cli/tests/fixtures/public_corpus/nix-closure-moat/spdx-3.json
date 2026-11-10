@@ -2129,6 +2129,12 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:python:python:3.13.13:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/python3@3.13.13",
           "type": "ExternalIdentifier"
@@ -5952,6 +5958,12 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:python:python:3.13.13:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/python3-minimal@3.13.13",
@@ -67963,7 +67975,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5P4RIHJ63RQNJ3BZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":303,\\\"with_candidates\\\":63}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":301,\\\"with_candidates\\\":65}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
