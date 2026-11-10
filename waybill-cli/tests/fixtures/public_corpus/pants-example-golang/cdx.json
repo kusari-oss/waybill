@@ -429,7 +429,6 @@
     ],
     "component": {
       "bom-ref": "pants-example-golang@048c22e",
-      "cpe": "cpe:2.3:a:waybill:pants-example-golang:048c22e:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

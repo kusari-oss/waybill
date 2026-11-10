@@ -66,11 +66,6 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:waybill:go-cobra:a655097:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/go-cobra@a655097",
           "type": "ExternalIdentifier"

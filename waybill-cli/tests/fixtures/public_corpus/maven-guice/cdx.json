@@ -3612,7 +3612,6 @@
     ],
     "component": {
       "bom-ref": "maven-guice@b0e1d0f",
-      "cpe": "cpe:2.3:a:waybill:maven-guice:b0e1d0f:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

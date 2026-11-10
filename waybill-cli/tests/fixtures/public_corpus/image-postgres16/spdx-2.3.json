@@ -17,6 +17,12 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"excluded_files\\\":117,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":1,\\\"with_candidates\\\":145}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-inventory-skipped-oversize\",\"value\":\"1\"}"
     },
     {
@@ -342,7 +348,7 @@
       "name": "waybill-extracted-license"
     }
   ],
-  "name": "image@sha256:ae3cbe1916adf7574e22472b9e3f84e848581e16f253a82851e214a0f3826a76",
+  "name": "image@sha256:5016977addc7f01c20e68d0afd3e960dffb82d5f851ad257ffb38083665303d1",
   "packages": [
     {
       "SPDXID": "SPDXRef-DocumentRoot-<masked>",
@@ -352,11 +358,6 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/image-postgres16@4c9405bdf36a",
           "referenceType": "purl"
-        },
-        {
-          "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:waybill:image-postgres16:4c9405bdf36a:*:*:*:*:*:*:*",
-          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -403,7 +404,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -481,7 +482,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -559,7 +560,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -637,7 +638,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -715,7 +716,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -793,7 +794,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -871,7 +872,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -949,7 +950,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1027,7 +1028,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1105,7 +1106,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1183,7 +1184,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1261,7 +1262,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1339,7 +1340,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1417,7 +1418,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1495,7 +1496,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1573,7 +1574,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1651,7 +1652,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1729,7 +1730,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1807,7 +1808,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1891,7 +1892,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1969,7 +1970,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2047,7 +2048,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2125,7 +2126,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2203,7 +2204,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2281,7 +2282,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2359,7 +2360,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2437,7 +2438,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2515,7 +2516,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2593,7 +2594,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2671,7 +2672,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2749,7 +2750,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2827,7 +2828,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2905,7 +2906,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2983,7 +2984,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3061,7 +3062,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3139,7 +3140,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3217,7 +3218,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3295,7 +3296,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3373,7 +3374,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3451,7 +3452,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3529,7 +3530,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3607,7 +3608,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3685,7 +3686,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3763,7 +3764,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3841,7 +3842,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3919,7 +3920,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3997,7 +3998,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4075,7 +4076,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4153,7 +4154,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4231,7 +4232,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4309,7 +4310,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4387,7 +4388,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4465,7 +4466,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4543,7 +4544,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4621,7 +4622,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4699,7 +4700,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4777,7 +4778,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4855,7 +4856,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4933,7 +4934,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5011,7 +5012,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5089,7 +5090,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5167,7 +5168,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5245,7 +5246,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5323,7 +5324,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5401,7 +5402,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5479,7 +5480,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5557,7 +5558,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5635,7 +5636,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5713,7 +5714,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5791,7 +5792,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5869,7 +5870,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5947,7 +5948,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6025,7 +6026,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6103,7 +6104,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6181,7 +6182,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6259,7 +6260,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6337,7 +6338,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6415,7 +6416,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6493,7 +6494,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6577,7 +6578,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6661,7 +6662,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6739,7 +6740,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6817,7 +6818,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6895,7 +6896,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6973,7 +6974,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7051,7 +7052,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7129,7 +7130,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7207,7 +7208,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7285,7 +7286,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7363,7 +7364,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7441,7 +7442,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7519,7 +7520,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7597,7 +7598,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7675,7 +7676,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7753,7 +7754,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7831,7 +7832,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7909,7 +7910,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7987,7 +7988,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8065,7 +8066,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8149,7 +8150,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8227,7 +8228,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8305,7 +8306,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8383,7 +8384,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8461,7 +8462,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8539,7 +8540,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8617,7 +8618,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8695,7 +8696,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8773,7 +8774,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8851,7 +8852,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8929,7 +8930,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9013,7 +9014,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9091,7 +9092,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9169,7 +9170,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9247,7 +9248,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9325,7 +9326,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9403,7 +9404,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9481,7 +9482,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9559,7 +9560,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9637,7 +9638,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9715,7 +9716,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9793,7 +9794,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9871,7 +9872,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9949,7 +9950,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10027,7 +10028,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10105,7 +10106,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10189,7 +10190,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10267,7 +10268,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10345,7 +10346,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10429,7 +10430,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10507,7 +10508,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10585,7 +10586,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10663,7 +10664,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10741,7 +10742,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10819,7 +10820,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10903,7 +10904,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10981,7 +10982,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -11059,7 +11060,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -11143,7 +11144,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -11227,7 +11228,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -11305,7 +11306,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -11383,7 +11384,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -11461,7 +11462,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:38b0c48689f9f82863a9e82c853364cbd0f90f3139aad0b0f9ef5f0510eff7bb\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -11569,7 +11570,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:b4ee886bfa230299aa732f8e388201e2aa27c41854717dabca17a9f02657525b\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:0a8183b0319ecf132ca1267d158abba90ebe570b76151fe683248313420d3606\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -11624,7 +11625,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:b4ee886bfa230299aa732f8e388201e2aa27c41854717dabca17a9f02657525b\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:0a8183b0319ecf132ca1267d158abba90ebe570b76151fe683248313420d3606\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -11689,7 +11690,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:b4ee886bfa230299aa732f8e388201e2aa27c41854717dabca17a9f02657525b\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:0a8183b0319ecf132ca1267d158abba90ebe570b76151fe683248313420d3606\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -11743,7 +11744,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:b4ee886bfa230299aa732f8e388201e2aa27c41854717dabca17a9f02657525b\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:0a8183b0319ecf132ca1267d158abba90ebe570b76151fe683248313420d3606\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",

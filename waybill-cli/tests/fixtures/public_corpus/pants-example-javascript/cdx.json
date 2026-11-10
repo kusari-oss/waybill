@@ -21897,7 +21897,6 @@
     ],
     "component": {
       "bom-ref": "pants-example-javascript@da76d5d",
-      "cpe": "cpe:2.3:a:waybill:pants-example-javascript:da76d5d:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

@@ -4467,7 +4467,6 @@
     ],
     "component": {
       "bom-ref": "pants-clojure-polyglot@e068ffb",
-      "cpe": "cpe:2.3:a:waybill:pants-clojure-polyglot:e068ffb:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

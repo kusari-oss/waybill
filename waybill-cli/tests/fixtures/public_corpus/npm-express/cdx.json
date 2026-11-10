@@ -2718,7 +2718,6 @@
     ],
     "component": {
       "bom-ref": "npm-express@e996498",
-      "cpe": "cpe:2.3:a:waybill:npm-express:e996498:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

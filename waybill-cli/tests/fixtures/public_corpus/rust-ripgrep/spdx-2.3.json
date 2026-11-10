@@ -96,11 +96,6 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/rust-ripgrep@0e8390a",
           "referenceType": "purl"
-        },
-        {
-          "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:waybill:rust-ripgrep:0e8390a:*:*:*:*:*:*:*",
-          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,

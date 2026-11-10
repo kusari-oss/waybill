@@ -4136,7 +4136,6 @@
     ],
     "component": {
       "bom-ref": "haskell-aeson@682162c",
-      "cpe": "cpe:2.3:a:waybill:haskell-aeson:682162c:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

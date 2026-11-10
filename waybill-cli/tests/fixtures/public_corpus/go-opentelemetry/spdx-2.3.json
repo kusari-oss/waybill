@@ -138,11 +138,6 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/go-opentelemetry@55899e3",
           "referenceType": "purl"
-        },
-        {
-          "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:waybill:go-opentelemetry:55899e3:*:*:*:*:*:*:*",
-          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,

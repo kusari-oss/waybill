@@ -66,11 +66,6 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:waybill:rust-ripgrep:0e8390a:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/rust-ripgrep@0e8390a",
           "type": "ExternalIdentifier"

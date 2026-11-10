@@ -94491,7 +94491,6 @@
     ],
     "component": {
       "bom-ref": "nix-closure-moat@d069055",
-      "cpe": "cpe:2.3:a:waybill:nix-closure-moat:d069055:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

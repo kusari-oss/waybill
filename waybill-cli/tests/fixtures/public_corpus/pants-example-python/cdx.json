@@ -982,7 +982,6 @@
     ],
     "component": {
       "bom-ref": "pants-example-python@e8cfd79",
-      "cpe": "cpe:2.3:a:waybill:pants-example-python:e8cfd79:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

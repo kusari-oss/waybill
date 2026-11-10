@@ -11070,7 +11070,6 @@
     ],
     "component": {
       "bom-ref": "python-flask@80be49b",
-      "cpe": "cpe:2.3:a:waybill:python-flask:80be49b:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

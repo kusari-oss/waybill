@@ -66,11 +66,6 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:waybill:pants-example-golang:048c22e:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/pants-example-golang@048c22e",
           "type": "ExternalIdentifier"

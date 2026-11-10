@@ -66,11 +66,6 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:waybill:go-opentelemetry:55899e3:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/go-opentelemetry@55899e3",
           "type": "ExternalIdentifier"
