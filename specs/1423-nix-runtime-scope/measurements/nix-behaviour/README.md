@@ -23,6 +23,7 @@ Each `q<N>-*.sh` script writes raw stdout, stderr, exit code and wall time to `q
 | `q3-timing.sh` → `q3-out/`, `q3-summary.txt` | 5 runs × {local, cache warm, cache cold} × 4 attributes |
 | `q4-multi-output.sh` → `q4-out/`, `q4-summary.txt` | curl's outputs and each output's closure |
 | `q5-offline.sh`, `q5b-offline-flag.sh` → `q5-out/`, `q5-summary.txt` | dead proxy (refused and blackholed), timeouts, retries, `--offline` |
+| `q5c-connect-timeout-units.sh` → `q5-out/c-*` | which `connect-timeout` values nix honours (whole seconds; 0 is no limit) |
 | `cabal-closure.nix` | truth set: transitive Haskell **library** deps from `getCabalDeps` |
 | `q6-static-link.sh` + `q6-rule.py` → `q6-out/*.rule-score.txt` | scores candidate derivation-field rules against that truth |
 | `q6-binary.sh` + `q6-linked-units.py` + `q6-binary-vs-rule.py` → `q6-out/*.linked-units.tsv`, `*.binary-vs-rule.txt` | second truth: the GHC units with code defined in the shipped binary |
@@ -223,6 +224,20 @@ Conclusions:
 - nix's own `--offline` does **not** suppress an explicit `--store https://…` query. It suppresses only the daemon's substituter report.
 - A warm narinfo cache answers correctly with the network down.
 
+### Q5c. `connect-timeout` takes whole seconds, and 0 means no limit
+
+`q5c-connect-timeout-units.sh` → `q5-out/c-*`. No network: `nix config show --option connect-timeout <v> connect-timeout` prints the value nix would use.
+
+| value passed | effective value | stderr |
+|---|---|---|
+| `2` | 2 | |
+| `1` | 1 | |
+| `1.5` | **15** (the default) | `warning: setting 'connect-timeout' has invalid value '1.5'` |
+| `0.5` | **15** (the default) | same warning |
+| `0` | 0 | (the setting's description: "A value of 0 means no limit") |
+
+So the remote budget can shrink the timeout only in whole seconds, and never below 1: a fractional value silently becomes 15 s and 0 removes the bound, each worse than the 2 s it replaced. waybill passes `min(2, floor(remaining))` and does not start a substituter with under 1 s left (`closure/runtime.rs::query_with`).
+
 ## Q6. Static linking in Haskell
 
 ### Where the libraries are recorded
@@ -411,3 +426,4 @@ Arithmetic over the Q8 and Q5 medians above, not a separate run.
 
 - **Per-path bound: met** for every closure measured in the order waybill runs the calls (verification follows the query, so its narinfos are warm). Only the 5-path shellcheck closure with both calls cold exceeds 0.1 s per path, and that is 0.53 s in total: a fixed cost, not a per-path one.
 - **Unreachable bound: met per substituter.** waybill asks each configured substituter in turn, so N unreachable substituters cost about N × 2.1 s before the fallback takes over: within 5 s for up to two, not for three or more **(inference from Q5's per-call figure; several unreachable substituters were not measured together)**. The verification call is never made against a store whose query failed.
+- **Unreachable bound across substituters (T041 and its follow-up).** waybill now keeps a 5 s remote budget. Before each substituter it computes what is left; with under 1 s left it starts no further one (`query-timed-out`), otherwise it passes `connect-timeout min(2, floor(remaining))` (Q5c: whole seconds only). At 2.1 s per unreachable cache that is two calls (4.2 s) and the third skipped, where the first T041 version, which only checked whether the budget was already spent, started the third at 4.2 s and ran to about 6.3 s. The bound is then the budget plus nix's overhead past its connect timeout on the last call (about 0.1 s in Q5) **(inference from Q5's per-call figure; tested with a stub runner and an injected clock, not against unreachable caches)**. The timeout covers the connect phase only, so a reachable cache's slow answer (hlint cold, about 11 s in Q3) is not cut short.

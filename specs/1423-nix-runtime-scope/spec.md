@@ -52,7 +52,7 @@ A user scans a flake whose output isn't available: never built, and not in any c
 
 **Why this priority**: Haskell flakes are the motivating case for this whole effort, and moat's output was the one not cached. Without a fallback, the scans that most need better marks would get none of the improvement.
 
-**Independent Test**: Run the walk on the five targets with the store query disabled, then score it against `rt/<t>.paths`. Finding-level precision and recall must both be at or above the committed figures (95.7% / 94.6%).
+**Independent Test**: Run the walk on the five targets with the store query disabled, then score it against `rt/<t>.paths`. Finding-level precision and recall must both be at or above the committed figures (331/346 and 331/350; SC-003).
 
 **Acceptance Scenarios**:
 
@@ -93,6 +93,7 @@ A user who wants runtime-only scanner results follows one documented step and ge
 
 - **Output partly present.** For a multi-output package (`out`, `lib`, `dev`), use the outputs the evaluated attribute selects; a runtime path present in another output still counts.
 - **The store query fails or times out** (nix daemon down, cache unreachable, offline). Fall back to the walk (US2), record why, and don't fail the scan.
+- **The walk reaches only the root, which wraps a Haskell build** (shellcheck's `justStaticExecutables` wrapper names its static build only in `inputs.drvs`). The walk is not used; the role rule decides, and C216 records `method: closure-role` with `walk-outcome: reached-only-root`.
 - **`--offline`.** The closure tier already declines to run under `--offline` (C190 `offline-requested`), so there is no closure and no marks. waybill must not rely on nix's own `--offline`, which still tries an explicit `--store` URL once.
 - **The query succeeds but some runtime paths match no component.** Darwin's `libSystem` and `libiconv`, for example, have no closure component, so there is nothing to mark. Count them and report the count; don't invent components for them.
 - **A component matches a runtime path by name but not by version.** It is not runtime. The join is by derivation output path, so this case surfaces as an unmatched runtime path; it is counted in C216 `unmatched-runtime-paths` rather than guessed at.
@@ -162,7 +163,7 @@ A user who wants runtime-only scanner results follows one documented step and ge
 
 - **SC-001**: On the five wrapper flakes with outputs available, grype run on the runtime-only result reports exactly the 350 findings the committed runtime truth gives. That is no finding lost and none added, down from 1,301 for the full document.
 - **SC-002**: Those findings include all 243 that sbomnix's runtime SBOM yields for the same targets.
-- **SC-003**: With the store query disabled, the walk's finding-level precision and recall on the five targets are each ≥ 95.7% and ≥ 94.6%. These are the committed measurements, used as a floor rather than a target.
+- **SC-003**: With the store query disabled, the walk's finding-level precision is ≥ 331/346 (95.66%) and its recall ≥ 331/350 (94.57%) on the five targets. These are the committed measurements as exact fractions, used as a floor rather than a target. Earlier drafts gave them rounded up, as 95.7% and 94.6%, which the committed walk itself does not reach.
 - **SC-004**: On all six targets, the not-in-artifact selection picks identical PURL sets in CycloneDX, SPDX 2.3 and SPDX 3. Today on moat it picks 1,320 vs 11.
 - **SC-005**: Obtaining the runtime closure costs at most 0.1 s per runtime path on a cold remote query (measured: 34 ms per path, hlint 322 paths in 10–12 s), plus signature verification as re-measured in implementation. An unreachable substituter costs at most 5 s before the walk takes over (measured: 2.1 s with a 2 s connect timeout and one attempt).
 - **SC-006**: On non-Nix corpus targets, every `scope=` selection result and every emitted document is unchanged.

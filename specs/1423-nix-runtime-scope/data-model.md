@@ -54,7 +54,7 @@ For each closure member `c`, the first rule that applies wins:
    - `c`'s outputs intersect `runtime.paths` → runtime, `RuntimeClosure`;
    - else `c ∈ static_link.members`, or `c` is an embedded module of a runtime host → runtime, `StaticallyLinked`;
    - else → `NotInArtifact`, `RuntimeClosure`.
-4. Under `RuntimeEvidence::Walk`: `c ∈ reached` (or an embedded module of a reached host) → runtime, `ReachabilityWalk`; else `NotInArtifact`, `ReachabilityWalk`. A statically linked Haskell library is in `reached`, so it too carries `ReachabilityWalk`, never `StaticallyLinked`: its root is an approximation, and the document must not present it as proven (US2 scenario 2). The compiler-supplied exemption applies to any role, as under rule 3.
+4. Under `RuntimeEvidence::Walk`: `c ∈ reached` (or an embedded module of a reached host) → runtime, `ReachabilityWalk`; else `NotInArtifact`, `ReachabilityWalk`. A statically linked Haskell library is in `reached`, so it too carries `ReachabilityWalk`, never `StaticallyLinked`: its root is an approximation, and the document must not present it as proven (US2 scenario 2). The compiler-supplied exemption applies to any role, as under rule 3. A walk that reaches no member but the root, from a root that consumed a Haskell build through `inputs.drvs` (shellcheck's wrapper), is not used: `evidence` returns `None`, so rule 5 applies, and C216 says `walk-outcome: reached-only-root`.
 5. Under `RuntimeEvidence::None`: today's role rule, with `ClosureRole` evidence.
 
 "Runtime" means `artifact_presence = None` (nothing asserted absent). Any `NotInArtifact` that the contents pass or the role rule set earlier is cleared in that case. That is FR-001 in both directions.

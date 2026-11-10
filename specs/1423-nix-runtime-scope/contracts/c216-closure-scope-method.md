@@ -19,6 +19,7 @@
   "static-link-source": "declared-edges" | "derivation-fields" | "none" | null,
   "static-c-linking-detected": false,
   "unmatched-runtime-paths": <non-negative integer> | null,
+  "walk-outcome": "used" | "reached-only-root" | null,
   "schema": 1
 }
 ```
@@ -31,10 +32,14 @@
   - `unavailable-reason` is null.
 - `method = reachability-walk`:
   - `store` and `verified` are null;
-  - `unavailable-reason` is non-null.
+  - `unavailable-reason` is non-null;
+  - `walk-outcome` is `used`.
 - `method = closure-role`:
-  - the tier ran, but the scope pass could not use either evidence source (e.g. `no-evaluated-package` and the walk has no root);
-  - `unavailable-reason` is non-null.
+  - the tier ran, but the scope pass could not use either evidence source;
+  - `unavailable-reason` is non-null, and is the reason the runtime closure was unavailable;
+  - `walk-outcome` is `reached-only-root` when a walk ran and was set aside, and null when no walk could run (`no-evaluated-package`: there is no root).
+- A walk is set aside (`reached-only-root`) when it reaches no closure member other than the evaluated root **and** the root consumed a Haskell-builder derivation through `inputs.drvs`. That is shellcheck's `justStaticExecutables` wrapper, which names its static build only in `inputs.drvs` and an `installPhase` path. Used, such a walk would mark every library linked into the binary, and the fallback errs toward runtime, never toward dropping linked code (FR-002). A root that reaches only itself and consumed no Haskell build keeps the walk: gh's walk reaches 1 of 788 derivations and is exact on its findings (55 true, 0 false), where the role rule leaves 185 false-runtime findings (`measurements/us2-walk-score/`, re-scored unchanged after this rule in `score-followup.json`).
+- `walk-outcome` is null for `runtime-closure`: no walk ran.
 - `static-link-source` is `none` when the runtime closure (under `reachability-walk`, the walk's reached set) contains no Haskell-builder member, and null for `closure-role`.
 - `static-c-linking-detected` is always `false`. It exists so the document says, rather than implies, that static C linking is not detected (spec edge case).
 - `unmatched-runtime-paths` counts runtime store paths that joined to no emitted component, including a path whose name matches a component but whose version does not (the join is by output path, never by name). It is null unless `method = runtime-closure`.

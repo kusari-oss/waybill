@@ -18,7 +18,7 @@
 //! | file | shape | what it exercises |
 //! |---|---|---|
 //! | `closure-runtime.json` | curl / openssh | `xml` is an `artifact-input` the output does not reference (marked); `dnsroot` is `build-tooling` but referenced (unmarked); `bootlib` is a compiler-supplied boot library |
-//! | `closure-static.json` | shellcheck / ormolu | a static Haskell executable whose libraries are in its static build's `buildInputs` and propagate; `hspec` is a test-only dependency |
+//! | `closure-static.json` | shellcheck / ormolu | a static Haskell executable whose libraries are in its static build's `buildInputs` and propagate; `hspec` is a test-only dependency. The wrapper root names the static build only in `inputs.drvs`, so under US2 the walk reaches only the root |
 //! | `closure-embedded.json` | gh | Go modules read from a runtime binary and from a build tool's binary |
 //! | `closure-walk.json` | US2 | `perl` is `both` but reached only through a reached member's `nativeBuildInputs`; `xml` is an `artifact-input` of the build tool only |
 //! | `closure-tworoots.json` | US2 | two unconsumed derivations, so no evaluated package to walk from |
@@ -325,6 +325,7 @@ fn us1_local_store_answer_records_store_local() {
             "unavailable-reason": null,
             "unmatched-runtime-paths": 1,
             "verified": true,
+            "walk-outcome": null,
         })
     );
     assert!(
@@ -610,6 +611,7 @@ fn us2_no_store_answer_uses_walk() {
             "unavailable-reason": "not-in-any-store",
             "unmatched-runtime-paths": null,
             "verified": null,
+            "walk-outcome": "used",
         }),
         "stderr:\n{}",
         run.scan.stderr
@@ -702,6 +704,92 @@ fn us2_embedded_module_inherits_reached_host() {
     assert!(marked.contains("waybill-fixture-tool") && !marked.contains("waybill-fixture-lib"));
 }
 
+/// The spec's fallback "errs toward runtime, never toward dropping linked
+/// code". A `justStaticExecutables` wrapper (shellcheck's shape) names its
+/// static Haskell build only in `inputs.drvs` and an `installPhase` path,
+/// never in a dependency field, so the walk from it reaches nothing but the
+/// root. Used as is, it would mark every library compiled into the binary.
+/// Such a walk is not used: the role rule decides, and C216 says why.
+#[test]
+fn us2_walk_that_reaches_only_the_root_is_not_used() {
+    let closure = fixture("closure-static.json");
+    let run = scan_with(base(&closure));
+    // The marks first: they are the defect, and the record only reports it.
+    let marked = run.marked();
+    for lib in HASKELL_LIBS.iter().chain(&["waybill-fixture-gmp"]) {
+        assert!(!marked.contains(*lib), "{lib} is linked into the binary; marked: {marked:?}");
+        assert_ne!(run.c203(lib).as_deref(), Some("reachability-walk"), "{lib}");
+    }
+    assert_eq!(
+        run.c216().expect("C216"),
+        serde_json::json!({
+            "method": "closure-role",
+            "schema": 1,
+            "static-c-linking-detected": false,
+            "static-link-source": null,
+            "store": null,
+            "unavailable-reason": "not-in-any-store",
+            "unmatched-runtime-paths": null,
+            "verified": null,
+            "walk-outcome": "reached-only-root",
+        }),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+}
+
+/// CONTROL for the test above, changing one variable: the same closure with
+/// the wrapper also naming its static build in `buildInputs`. The walk now
+/// reaches past the root, so it is used, and the libraries are runtime by
+/// the walk rather than by the role rule.
+#[test]
+fn us2_walk_that_reaches_past_the_root_is_used() {
+    let closure = fixture("closure-static.json").replacen(
+        "\"installPhase\":",
+        "\"buildInputs\": \"/nix/store/h-SC\",\n        \"installPhase\":",
+        1,
+    );
+    assert!(closure.contains("\"buildInputs\": \"/nix/store/h-SC\""), "the fixture edit applied");
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}");
+    assert_eq!(c216["walk-outcome"], "used", "{c216}");
+    assert_eq!(c216["unavailable-reason"], "not-in-any-store", "{c216}");
+    let marked = run.marked();
+    for lib in HASKELL_LIBS {
+        assert!(!marked.contains(lib), "{lib}; marked: {marked:?}");
+        assert_eq!(run.c203(lib).as_deref(), Some("reachability-walk"), "{lib}");
+    }
+}
+
+/// CONTROL on the trigger, gh's shape: a walk that reaches only the root is
+/// still used when the root consumed no Haskell build. gh's walk reaches 1
+/// of 788 derivations and is exact on its findings (55 true, 0 false); the
+/// role rule leaves 185 false-runtime findings there
+/// (`specs/1423-nix-runtime-scope/measurements/us2-walk-score/`). One
+/// variable against `closure-walk.json`: the root no longer names `ssl` in
+/// `buildInputs`, only in `inputs.drvs`.
+#[test]
+fn us2_walk_reaching_only_a_non_wrapper_root_is_used() {
+    let closure = fixture("closure-walk.json").replacen("\"buildInputs\": \"/nix/store/w-ssl\",", "", 1);
+    assert!(!closure.contains("\"buildInputs\": \"/nix/store/w-ssl\""), "the fixture edit applied");
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}");
+    assert_eq!(c216["walk-outcome"], "used", "{c216}");
+    assert_eq!(
+        run.marked(),
+        names(&[
+            "waybill-fixture-perl",
+            "waybill-fixture-ssl",
+            "waybill-fixture-tool",
+            "waybill-fixture-xml",
+            "waybill-fixture-z",
+        ]),
+        "everything but the root is unreached, and marked"
+    );
+}
+
 /// Data-model rule 5: with no single evaluated package there is no root to
 /// walk from, so the role rule decides and C216 says why. No runtime query is
 /// made either: there is no output to ask about.
@@ -720,6 +808,7 @@ fn us2_no_evaluated_package_falls_back_to_closure_role() {
             "unavailable-reason": "no-evaluated-package",
             "unmatched-runtime-paths": null,
             "verified": null,
+            "walk-outcome": null,
         }),
         "stderr:\n{}",
         run.scan.stderr

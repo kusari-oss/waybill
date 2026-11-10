@@ -40,7 +40,9 @@ python3 -I -B score.py "$OUT_DIR" "$NOISE_DIR" "$WALK_DIR" > score.json
 - **reach.py:** the same, 95.66% and 94.57%.
 - The two agree on every one of the 1,301 findings (`disagreements_with_reach` is empty for every target in `score.json`).
 
-**SC-003** sets the committed figures as a floor (≥ 95.7% / ≥ 94.6%, which are 331/346 and 331/350 rounded). The implemented walk equals them exactly. It does not exceed them, and was not expected to: it is the same rule.
+**SC-003** sets the committed figures as a floor. The implemented walk equals them exactly. It does not exceed them, and was not expected to: it is the same rule.
+
+**Rounding.** SC-003 first stated the floor as ≥ 95.7% / ≥ 94.6%: these figures rounded *up*, so read literally the walk missed both (95.66% < 95.7%, 94.57% < 94.6%). It now states the exact fractions, precision ≥ 331/346 (95.66%) and recall ≥ 331/350 (94.57%). The measurement is unchanged; only its statement is.
 
 ## Where the walk is wrong
 
@@ -53,4 +55,8 @@ The static-link addition (FR-002 under the walk) found nothing on these five tar
 
 ## Not covered here
 
-A static Haskell executable built with `justStaticExecutables` (shellcheck's shape, `../nix-behaviour/q6-*`) reaches its static build only through `inputs.drvs` and an `installPhase` path, never a dependency field. The walk therefore reaches nothing from such a root and marks every linked library. None of the five targets has this shape, so this score says nothing about it. It is the US1 path's case (SC-007), and the walk is used only when the runtime closure is unavailable.
+A static Haskell executable built with `justStaticExecutables` (shellcheck's shape, `../nix-behaviour/q6-*`) reaches its static build only through `inputs.drvs` and an `installPhase` path, never a dependency field. The walk therefore reaches nothing from such a root, and used as is it would mark every linked library. None of the five targets has this shape, so this score says nothing about it.
+
+Since the US2 follow-up, such a walk is not used. When the walk reaches no member but the evaluated root **and** that root consumed a Haskell build through `inputs.drvs`, the role rule decides and C216 records `method: closure-role`, `walk-outcome: reached-only-root` (`contracts/c216-closure-scope-method.md`). The Haskell condition is what keeps this score unchanged: gh's walk also reaches only its root (`../reach.json`: 1 of 788 derivations), and on gh that walk is exact (55 true, 0 false above), while the role rule leaves 185 false-runtime findings there (`selfcheck.json`, `targets.gh.counts.walk_fp`). gh's root consumes no Haskell build, so it keeps the walk. Without the Haskell condition the guard would fire on gh and, by `selfcheck.json`, take precision from 331/346 to about 331/531 **(inference: that arm was not run)**.
+
+**Re-run after the change** (`score-followup.json`, 2026-11-10, same host and inputs, `run.sh` + `score.py` with a debug build of branch `1423-us2-followups` before its commit): every target's C216 is `method: reachability-walk`, `walk-outcome: used`; every target's counts and the totals equal `score.json`'s (331 / 15 / 19); `disagreements_with_reach` is empty for every target.
