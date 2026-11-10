@@ -207,9 +207,20 @@ fn assign_modules(
         *ships.entry(module).or_default() |= host_ships;
     }
     let under_runtime = matches!(evidence, RuntimeEvidence::Closure { .. });
+    let store = crate::scan_fs::package_db::nix::closure::contents::store_dir();
     for (module, host_ships) in ships {
         let c = &mut components[module];
         let is_member = c.extra_annotations.contains_key(CLOSURE_ROLE);
+        // Only a module the closure itself recovered from a binary is the
+        // closure's to mark. One the project declares (a `go.mod`, a
+        // `Cargo.lock`) has evidence outside the store, and a build tool
+        // embedding the same module says nothing about whether the project
+        // ships it. Milestone 1378 never marked those either.
+        let markable = !is_member
+            && c.evidence
+                .source_file_paths
+                .iter()
+                .all(|p| std::path::Path::new(p).starts_with(&store));
         if under_runtime {
             if host_ships {
                 // A member the runtime closure marked, compiled into a
@@ -219,12 +230,12 @@ fn assign_modules(
                     c.artifact_presence = None;
                     c.scope_evidence = Some(ScopeEvidence::StaticallyLinked);
                 }
-            } else if !is_member {
+            } else if markable {
                 summary.not_in_runtime_closure += 1;
                 c.artifact_presence = Some(ArtifactPresence::NotInArtifact);
                 c.scope_evidence = Some(ScopeEvidence::RuntimeClosure);
             }
-        } else if !is_member && !host_ships {
+        } else if markable && !host_ships {
             c.artifact_presence = Some(ArtifactPresence::NotInArtifact);
             c.scope_evidence = Some(ScopeEvidence::ClosureRole);
         }
@@ -795,6 +806,38 @@ mod tests {
         assert_eq!(c[2].artifact_presence, None, "a shipped member reaches it");
         assert_eq!(c[3].artifact_presence, Some(ArtifactPresence::NotInArtifact));
         assert_eq!(classification_source(&c[3]), Some("closure-role"));
+    }
+
+    /// A module the project declares itself (here, from a `go.mod`) is not
+    /// the closure's to mark, even when a build tool's binary also embeds
+    /// it. Milestone 1378 only ever marked modules it recovered from a
+    /// binary; a manifest-derived one got the host edge and nothing else.
+    #[test]
+    fn m1423_a_manifest_declared_module_is_never_marked_from_a_tool_binary() {
+        for ev in [closure_evidence(&[("waybill-fixture-app", "1.0")], &[]), RuntimeEvidence::None] {
+            let mut declared = component("pkg:golang/example.test/declared@v1.0.0", None);
+            declared.evidence.source_file_paths = vec!["go.mod".to_string()];
+            let mut recovered = component("pkg:golang/example.test/recovered@v1.0.0", None);
+            recovered.evidence.source_file_paths =
+                vec!["/nix/store/aaaa-waybill-fixture-tool-3.0/bin/tool".to_string()];
+            let mut c = vec![
+                component("pkg:generic/waybill-fixture-app@1.0", Some("artifact-input")),
+                component("pkg:generic/waybill-fixture-tool@3.0", Some("build-tooling")),
+                declared,
+                recovered,
+            ];
+            let rels = [
+                embedded("pkg:generic/waybill-fixture-tool@3.0", "pkg:golang/example.test/declared@v1.0.0"),
+                embedded("pkg:generic/waybill-fixture-tool@3.0", "pkg:golang/example.test/recovered@v1.0.0"),
+            ];
+            assign_role_scope(&mut c, &HashSet::new(), &ev, &rels);
+            assert_eq!(c[2].artifact_presence, None, "the project's own go.mod declares it");
+            assert_eq!(
+                c[3].artifact_presence,
+                Some(ArtifactPresence::NotInArtifact),
+                "control: a module known only from the tool's binary is still marked"
+            );
+        }
     }
 
     // ---- m1423 T004: C203 reports the scope evidence ----
