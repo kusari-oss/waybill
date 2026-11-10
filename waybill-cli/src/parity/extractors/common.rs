@@ -277,10 +277,10 @@ pub fn walk_cdx_components(doc: &Value) -> Vec<&Value> {
 ///
 /// Section A extractors (purl, name, version, supplier, cpe) MUST
 /// NOT use this — those fields on `metadata.component` are
-/// synthesized in a CDX-specific shape (e.g., `cpe:2.3:a:waybill:…`
-/// for the synthetic placeholder; `cpe:2.3:a:<name>:<name>:…` for
-/// the main-module's promoted entry) and don't round-trip to the
-/// SPDX side identically.
+/// synthesized in a CDX-specific shape (e.g., the main-module's
+/// promoted entry, or a synthetic placeholder's PURL) and don't
+/// round-trip to the SPDX side identically. (A synthetic subject
+/// carried a `cpe:2.3:a:waybill:…` placeholder until #1402.)
 pub fn walk_cdx_components_and_main_module(doc: &Value) -> Vec<&Value> {
     let mut out = walk_cdx_components(doc);
     if let Some(metadata_component) = doc.get("metadata").and_then(|m| m.get("component")) {

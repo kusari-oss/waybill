@@ -3095,10 +3095,8 @@ mod tests {
         assert_eq!(comp["version"], "1.2.3");
         assert_eq!(comp["bom-ref"], "widget-svc@1.2.3");
         assert_eq!(comp["purl"], "pkg:generic/widget-svc@1.2.3");
-        assert_eq!(
-            comp["cpe"],
-            "cpe:2.3:a:waybill:widget-svc:1.2.3:*:*:*:*:*:*:*"
-        );
+        // #1402 — an override names the subject; it does not invent a CPE.
+        assert!(comp.get("cpe").is_none(), "{comp}");
     }
 
     /// T017 — C-2.3. The component set emitted WITH an override is a

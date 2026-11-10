@@ -65,6 +65,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Document subjects no longer carry a `waybill`-vendor CPE.** A subject
+  without a CPE of its own (the synthetic placeholder, or one named with
+  `--root-name`/`--root-purl`) was given `cpe:2.3:a:waybill:<name>:<version>`
+  in all three formats. That names waybill as the vendor of software it did
+  not make, and matches nothing in any vulnerability database. Since a
+  `--path .` self-scan is named after its directory, waybill's own release
+  SBOM would have claimed `cpe:2.3:a:waybill:waybill:0.0.0`. Such subjects
+  now carry their PURL and no CPE; a main-module's own CPE is unchanged.
+  sbomqs v2.1.1's overall score and NTIA 2026 profile do not move; its
+  CPE-coverage feature drops by one component's share (#1402). Supplying a
+  CPE for the subject is #1413.
+
 - **The Python interpreter in a Nix closure is matchable by CPE.**
   nixpkgs names CPython's product but no vendor, so it declares no CPE,
   and the curated table had no row: `python3` reached every closure with

@@ -146,7 +146,6 @@
     ],
     "component": {
       "bom-ref": "synthetic@0.0.0",
-      "cpe": "cpe:2.3:a:waybill:synthetic:0.0.0:*:*:*:*:*:*:*",
       "name": "synthetic",
       "purl": "pkg:generic/synthetic@0.0.0",
       "type": "application",

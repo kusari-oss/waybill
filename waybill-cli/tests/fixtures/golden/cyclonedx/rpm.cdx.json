@@ -23,7 +23,6 @@
     ],
     "component": {
       "bom-ref": "bdb-only@0.0.0",
-      "cpe": "cpe:2.3:a:waybill:bdb-only:0.0.0:*:*:*:*:*:*:*",
       "name": "bdb-only",
       "purl": "pkg:generic/bdb-only@0.0.0",
       "type": "application",

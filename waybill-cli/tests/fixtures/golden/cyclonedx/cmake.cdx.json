@@ -247,7 +247,6 @@
     ],
     "component": {
       "bom-ref": "cmake@0.0.0",
-      "cpe": "cpe:2.3:a:waybill:cmake:0.0.0:*:*:*:*:*:*:*",
       "name": "cmake",
       "purl": "pkg:generic/cmake@0.0.0",
       "type": "application",
