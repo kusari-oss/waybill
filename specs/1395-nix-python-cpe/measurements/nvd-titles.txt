@@ -1,0 +1,3 @@
+=== python (1000 entries) ===
+    python                       Python Python 2.4.3
+    microsoft                    Microsoft Python 0.0.3 for Visual Studio Code
