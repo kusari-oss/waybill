@@ -1,0 +1,42 @@
+blackhole-cache-cold           n=3 min= 79.263 med= 79.357 max= 79.594 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://192.0.2.1:9 HTTP_PROXY=http://192.0.2.1:9 https_proxy=http://192.0.2.1:9 http_proxy=http://192.0.2.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --store https://cache.nixos.org --option narinfo-cache-positive-ttl 0 --option narinfo-cache-negative-ttl 0 /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: error: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Timeout was reached (28) Connection timed out after 15000 milliseconds
+blackhole-cache-cold-c2        n=3 min= 14.227 med= 14.701 max= 15.247 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://192.0.2.1:9 HTTP_PROXY=http://192.0.2.1:9 https_proxy=http://192.0.2.1:9 http_proxy=http://192.0.2.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --store https://cache.nixos.org --option narinfo-cache-positive-ttl 0 --option narinfo-cache-negative-ttl 0 --option connect-timeout 2 /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: error: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Timeout was reached (28) Connection timed out after 2001 milliseconds
+blackhole-cache-cold-c2-a1     n=3 min=  2.121 med=  2.127 max=  2.140 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://192.0.2.1:9 HTTP_PROXY=http://192.0.2.1:9 https_proxy=http://192.0.2.1:9 http_proxy=http://192.0.2.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --store https://cache.nixos.org --option narinfo-cache-positive-ttl 0 --option narinfo-cache-negative-ttl 0 --option connect-timeout 2 --option download-attempts 1 /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: error: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Timeout was reached (28) Connection timed out after 2001 milliseconds
+blackhole-cache-cold-c2-a2     n=3 min=  4.332 med=  4.419 max=  4.481 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://192.0.2.1:9 HTTP_PROXY=http://192.0.2.1:9 https_proxy=http://192.0.2.1:9 http_proxy=http://192.0.2.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --store https://cache.nixos.org --option narinfo-cache-positive-ttl 0 --option narinfo-cache-negative-ttl 0 --option connect-timeout 2 --option download-attempts 2 /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: error: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Timeout was reached (28) Connection timed out after 2001 milliseconds
+blackhole-hlint-cold-c2-a1     n=3 min=  2.064 med=  2.069 max=  2.128 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://192.0.2.1:9 HTTP_PROXY=http://192.0.2.1:9 https_proxy=http://192.0.2.1:9 http_proxy=http://192.0.2.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --store https://cache.nixos.org --option narinfo-cache-positive-ttl 0 --option narinfo-cache-negative-ttl 0 --option connect-timeout 2 --option download-attempts 1 /nix/store/bghsgjl73fagxyrq45iassnfikh33x7r-hlint-3.10
+    last stderr: error: unable to download 'https://cache.nixos.org/bghsgjl73fagxyrq45iassnfikh33x7r.narinfo': Timeout was reached (28) Connection timed out after 2001 milliseconds
+blackhole-local-absent         n=3 min=  0.086 med=  0.089 max=  0.324 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://192.0.2.1:9 HTTP_PROXY=http://192.0.2.1:9 https_proxy=http://192.0.2.1:9 http_proxy=http://192.0.2.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: error: path '/nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin' is not valid
+control-curl-refused           n=1 min=  0.011 med=  0.011 max=  0.011 exit=7 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 curl -sS -m 5 -o /dev/null https://cache.nixos.org/nix-cache-info
+    last stderr: curl: (7) Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server
+refused-cache-cold             n=3 min=  4.153 med=  4.380 max=  4.780 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --store https://cache.nixos.org --option narinfo-cache-positive-ttl 0 --option narinfo-cache-negative-ttl 0 /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: error: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Could not connect to server (7) Failed to connect to cache.nixos.org port 443 via 127.0.0.1 after 0 ms: Could not connect to server
+refused-cache-cold-a1          n=3 min=  0.062 med=  0.064 max=  0.076 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --store https://cache.nixos.org --option narinfo-cache-positive-ttl 0 --option narinfo-cache-negative-ttl 0 --option download-attempts 1 /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: error: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Could not connect to server (7) Failed to connect to cache.nixos.org port 443 via 127.0.0.1 after 0 ms: Could not connect to server
+refused-cache-cold-offline     n=3 min=  0.056 med=  0.057 max=  0.057 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --offline --store https://cache.nixos.org --option narinfo-cache-positive-ttl 0 --option narinfo-cache-negative-ttl 0 /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: error: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Could not connect to server (7) Failed to connect to cache.nixos.org port 443 via 127.0.0.1 after 0 ms: Could not connect to server
+refused-cache-warm             n=3 min=  0.056 med=  0.058 max=  0.059 exit=0 out_lines=[5]
+    cmd: env HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --store https://cache.nixos.org /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: 
+refused-cache-warm-offline     n=3 min=  0.054 med=  0.056 max=  0.058 exit=0 out_lines=[5]
+    cmd: env HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r --offline --store https://cache.nixos.org /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: 
+refused-local-absent           n=3 min=  0.084 med=  0.084 max=  0.085 exit=1 out_lines=[0]
+    cmd: env HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    last stderr: error: path '/nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin' is not valid
+refused-local-present          n=3 min=  0.087 med=  0.087 max=  0.089 exit=0 out_lines=[20]
+    cmd: env HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r /nix/store/56qb7awbplza7z35iz4k8gyr2fjk2acw-curl-8.20.0-bin
+    last stderr: 

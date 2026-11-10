@@ -1,0 +1,80 @@
+== curl: eval drvPath /nix/store/6jvivpv117d6i4zj547wl2crkk20wm47-curl-8.20.0.drv
+  0wk4mrmpas5dhpqz06f4gx4jfys4aib6-libpsl-0.21.5
+    cache deriver: /nix/store/dfzyg2isvvxp9jfjkbpkpz66cfdmd4db-libpsl-0.21.5.drv
+    local deriver: /nix/store/dfzyg2isvvxp9jfjkbpkpz66cfdmd4db-libpsl-0.21.5.drv
+  3z3ksp4dkl7klq5dyz691vi3ykc7s438-nghttp3-1.15.0
+    cache deriver: /nix/store/arq8bsg6ai81pqiah1jml84g1hk8fxy4-nghttp3-1.15.0.drv
+    local deriver: /nix/store/arq8bsg6ai81pqiah1jml84g1hk8fxy4-nghttp3-1.15.0.drv
+  55976waa157aqb1ncbwm6b8sa64b6m3h-bash-5.3p9
+    cache deriver: /nix/store/5s67vaki330q0a15cv91mn58kmkjyy5w-bash-5.3p9.drv
+    local deriver: /nix/store/5s67vaki330q0a15cv91mn58kmkjyy5w-bash-5.3p9.drv
+  56qb7awbplza7z35iz4k8gyr2fjk2acw-curl-8.20.0-bin
+    cache deriver: /nix/store/pdhn4vf0wgqcrd0zdgc8awsian0z8dwj-curl-8.20.0.drv
+    local deriver: /nix/store/pdhn4vf0wgqcrd0zdgc8awsian0z8dwj-curl-8.20.0.drv
+  5cfjgwf285nif079v2aisf7k642g98kd-libunistring-1.4.2
+    cache deriver: /nix/store/034wq3j7czg2610x398n1fci0cs3l049-libunistring-1.4.2.drv
+    local deriver: /nix/store/034wq3j7czg2610x398n1fci0cs3l049-libunistring-1.4.2.drv
+  5ksfjgx970dszhbjn6kcbcf07yn52s1i-curl-8.20.0
+    cache deriver: /nix/store/pdhn4vf0wgqcrd0zdgc8awsian0z8dwj-curl-8.20.0.drv
+    local deriver: /nix/store/pdhn4vf0wgqcrd0zdgc8awsian0z8dwj-curl-8.20.0.drv
+  7fd0wqc1740i2aarz17d32q27df3kzz4-zlib-1.3.2
+    cache deriver: /nix/store/bjas12n4xs83j8i34nhnmlg5xnx4mdpj-zlib-1.3.2.drv
+    local deriver: /nix/store/bjas12n4xs83j8i34nhnmlg5xnx4mdpj-zlib-1.3.2.drv
+  a3hhkd5vzw97issax60xx47qfnkl6ddf-openssl-3.6.2
+    cache deriver: /nix/store/r1fqhfkxr6q1h01fv54kr7mynp0jg5wi-openssl-3.6.2.drv
+    local deriver: /nix/store/r1fqhfkxr6q1h01fv54kr7mynp0jg5wi-openssl-3.6.2.drv
+  ahv7ryg45y6n6yx7l0602684gx2w110m-krb5-1.22.1-lib
+    cache deriver: /nix/store/37j0sf3bf86dkm5a5nyg4wfmdv1psjn1-krb5-1.22.1.drv
+    local deriver: /nix/store/37j0sf3bf86dkm5a5nyg4wfmdv1psjn1-krb5-1.22.1.drv
+  cazd7ilkx7m793lp6x4jbwb667khfr03-ngtcp2-1.22.1
+    cache deriver: /nix/store/1bvy4rzsqmqxc5h37x93b79kvmi9i0f2-ngtcp2-1.22.1.drv
+    local deriver: /nix/store/1bvy4rzsqmqxc5h37x93b79kvmi9i0f2-ngtcp2-1.22.1.drv
+  db7jzr61wj1xnflacfcnfhzk3ci1gwrx-brotli-1.2.0-lib
+    cache deriver: /nix/store/3xiqcq8w7klsbsap2xi5kr8sgb9gd52n-brotli-1.2.0.drv
+    local deriver: /nix/store/3xiqcq8w7klsbsap2xi5kr8sgb9gd52n-brotli-1.2.0.drv
+  fk38lw91gqqr7vz1yjnqhasyis1c44hm-publicsuffix-list-0-unstable-2026-03-26
+    cache deriver: /nix/store/4x97vynhr7jsglflw2fss9v85yw51xyb-publicsuffix-list-0-unstable-2026-03-26.drv
+    local deriver: /nix/store/4x97vynhr7jsglflw2fss9v85yw51xyb-publicsuffix-list-0-unstable-2026-03-26.drv
+  i5aw4v15lklq5r5w5clvcy8dxc2igjck-gettext-1.0
+    cache deriver: /nix/store/pxiqakpa5ynlnwxfwmg5ankis9zxbld7-gettext-1.0.drv
+    local deriver: /nix/store/pxiqakpa5ynlnwxfwmg5ankis9zxbld7-gettext-1.0.drv
+  mm86qwzdnjlj2lkghh7x7jnpmn3wwnxq-nghttp2-1.69.0-lib
+    cache deriver: /nix/store/p1l0bwiwr7bix0bg28vbamrx7jd5jyba-nghttp2-1.69.0.drv
+    local deriver: /nix/store/p1l0bwiwr7bix0bg28vbamrx7jd5jyba-nghttp2-1.69.0.drv
+  p4lp3xq4imd1qzqh08x8vcq2zfhi7rca-libresolv-93
+    cache deriver: /nix/store/c34cc521ajhzmgxl8953qncvib7d269w-libresolv-93.drv
+    local deriver: /nix/store/c34cc521ajhzmgxl8953qncvib7d269w-libresolv-93.drv
+  qzsfr7xjxisnglc5iwgmq3a8q8zy95xm-libidn2-2.3.8
+    cache deriver: /nix/store/z2wn5prp7j9g83giqp5xfz4as10j0hs2-libidn2-2.3.8.drv
+    local deriver: /nix/store/z2wn5prp7j9g83giqp5xfz4as10j0hs2-libidn2-2.3.8.drv
+  wjb6smwmv8cynnr776j01kjjzdks1863-libiconv-113
+    cache deriver: /nix/store/zqa06v2gz6wk48i4xpimllywckk5hd90-libiconv-113.drv
+    local deriver: /nix/store/zqa06v2gz6wk48i4xpimllywckk5hd90-libiconv-113.drv
+  ym2h5axmyxqkwmrrrz570gmkbmdlwvbv-zstd-1.5.7
+    cache deriver: /nix/store/l386x1s18hjy6k7hix587k72km3av4wf-zstd-1.5.7.drv
+    local deriver: /nix/store/l386x1s18hjy6k7hix587k72km3av4wf-zstd-1.5.7.drv
+  yq024wygl044gnrl60hgdjarssr2s05n-libiconv-1.19
+    cache deriver: /nix/store/yid94y33prpmiq9ddax2mqsnfbip3203-libiconv-1.19.drv
+    local deriver: /nix/store/yid94y33prpmiq9ddax2mqsnfbip3203-libiconv-1.19.drv
+  zkn7s55w769vg1zj0x1j9xa8af16cfi9-libssh2-1.11.1
+    cache deriver: /nix/store/jw2719dwk6vykjxz5mm184v399z7rvd8-libssh2-1.11.1.drv
+    local deriver: /nix/store/jw2719dwk6vykjxz5mm184v399z7rvd8-libssh2-1.11.1.drv
+  root output's cache deriver == eval drvPath: False
+  local vs cache deriver: same=20 differ=0 of 20
+== shellcheck: eval drvPath /nix/store/vxrqivf2qkjbrglzi13ssg4h20g58vb1-shellcheck-0.11.0.drv
+  0qxyki0kvcyfyw3384882d0hs0yrd942-ShellCheck-0.11.0
+    cache deriver: /nix/store/zjzc7cdvm2yj68az85g00pwg97xx3cy0-ShellCheck-0.11.0.drv
+    local deriver: None
+  f0afx0r5bzvk3gdf8bdh4fssl0p75m1k-libffi-40
+    cache deriver: /nix/store/2qxxnbn993xga4jpfjns98n23sgg7d5l-libffi-40.drv
+    local deriver: None
+  vbfjrppkj89nzlb861xsr5k5zfsq60xp-gmp-with-cxx-6.3.0
+    cache deriver: /nix/store/wh56k802sbw5wpwfjfyh6fckjc1hgjp9-gmp-with-cxx-6.3.0.drv
+    local deriver: None
+  wjb6smwmv8cynnr776j01kjjzdks1863-libiconv-113
+    cache deriver: /nix/store/zqa06v2gz6wk48i4xpimllywckk5hd90-libiconv-113.drv
+    local deriver: None
+  xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+    cache deriver: /nix/store/vxrqivf2qkjbrglzi13ssg4h20g58vb1-shellcheck-0.11.0.drv
+    local deriver: None
+  root output's cache deriver == eval drvPath: True

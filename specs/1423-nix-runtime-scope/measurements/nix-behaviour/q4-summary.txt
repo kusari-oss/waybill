@@ -1,0 +1,13 @@
+curl.outputName = bin
+curl.outputs = ["bin","dev","out","man","devdoc"]
+curl.outPath = /nix/store/56qb7awbplza7z35iz4k8gyr2fjk2acw-curl-8.20.0-bin
+curl.meta.outputsToInstall = ["bin","man"]
+curl.drvPath = /nix/store/6jvivpv117d6i4zj547wl2crkk20wm47-curl-8.20.0.drv
+
+drv outputs (nix derivation show): {'bin': '56qb7awbplza7z35iz4k8gyr2fjk2acw-curl-8.20.0-bin', 'dev': 'z43571apx58qpq4kdz207f4vcbbzd6nj-curl-8.20.0-dev', 'devdoc': 'rasyzrv7w7430kfk4jppr9xa56dzr487-curl-8.20.0-devdoc', 'man': '8kl0c1xmasvhrn76cjmdmkk5qcq6spkn-curl-8.20.0-man', 'out': '5ksfjgx970dszhbjn6kcbcf07yn52s1i-curl-8.20.0'}
+bin     exit=0 local_exit=0 closure= 20  other curl outputs in its closure: ['out']
+dev     exit=0 local_exit=1 closure= 47  other curl outputs in its closure: ['bin', 'out', 'man']
+out     exit=0 local_exit=0 closure= 19  other curl outputs in its closure: []
+man     exit=0 local_exit=0 closure=  1  other curl outputs in its closure: []
+devdoc  exit=0 local_exit=1 closure=  1  other curl outputs in its closure: []
+union of all outputs: 48

@@ -1,0 +1,3 @@
+/nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1[0m
+└───lib/links/libHSChasingBottoms-1.3.1.17-KNUMd6C6VG7AHXbqRJ5Pr1-ghc9.10.3.dylib -> /nix/store/[32;1m0qw6hy7wz6pri9l26wp6wf0zksyvl55n[0m-ChasingBottoms-1.3.1.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSChasingBottoms-1.3.1.17-KNUMd6C6VG7AHXbqRJ5Pr1-ghc9.10.3.dylib
+    → /nix/store/0qw6hy7wz6pri9l26wp6wf0zksyvl55n-ChasingBottoms-1.3.1.17[0m

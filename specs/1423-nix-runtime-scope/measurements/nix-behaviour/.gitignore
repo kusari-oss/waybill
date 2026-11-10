@@ -1,0 +1,3 @@
+# Regenerable by q6-static-link.sh and q7-why.sh; ~36 MB.
+q6-out/*.drv-closure.json
+q7-out/ghc.ls

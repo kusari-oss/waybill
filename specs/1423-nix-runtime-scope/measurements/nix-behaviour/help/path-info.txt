@@ -1,0 +1,341 @@
+Name
+
+nix path-info - query information about store paths
+
+Synopsis
+
+nix path-info [option...] installables...
+
+Examples
+
+  · Print the store path produced by nixpkgs#hello:
+    
+      │ # nix path-info nixpkgs#hello
+      │ /nix/store/10l19qifk7hjjq47px8m2prqk1gv4isy-hello-2.10
+
+  · Show the closure sizes of every path in the current
+    NixOS system closure, sorted by size:
+    
+      │ # nix path-info --recursive --closure-size /run/current-system | sort -nk2
+      │ /nix/store/zlnmjjbpv5pwwv911qp0grqi25y80wbs-empty                                                96
+      │ /nix/store/v40fjpq45135avrmnfm8klbvdhf0dcp7-nameservers                                         112
+      │ …
+      │ /nix/store/539jkw9a8dyry7clcv60gk6na816j7y8-etc                                          5783255504
+      │ /nix/store/zqamz3cz4dbzfihki2mk7a63mbkxz9xq-nixos-system-machine-20.09.20201112.3090c65  5887562256
+
+  · Show a package's closure size and all its dependencies
+    with human readable sizes:
+    
+      │ # nix path-info --recursive --size --closure-size --human-readable nixpkgs#rustc
+      │ /nix/store/klarszqikbvf6n70581w0381zb7rlzri-ncurses-6.2-dev      386.7 KiB   69.1 MiB
+      │ /nix/store/30rva1kafnr6fyf8y5xxlpnwixvdpv4w-libpfm-4.11.0          5.9 MiB   37.4 MiB
+      │ …
+
+  · Check the existence of a path in a binary cache:
+    
+      │ # nix path-info --recursive /nix/store/blzxgyvrk32ki6xga10phr4sby2xf25q-geeqie-1.5.1 --store https://cache.nixos.org/
+      │ path '/nix/store/blzxgyvrk32ki6xga10phr4sby2xf25q-geeqie-1.5.1' is not valid
+      │ 
+
+  · Print the 10 most recently added paths (using --json
+    and the jq(1) command):
+    
+      │ # nix path-info --json --all | jq -r 'to_entries | sort_by(.value.registrationTime) | .[-11:-1][] | .key'
+
+  · Show the size of the entire Nix store:
+    
+      │ # nix path-info --json --all | jq 'map(.narSize) | add'
+      │ 49812020936
+
+  · Show every path whose closure is bigger than 1 GB,
+    sorted by closure size:
+    
+      │ # nix path-info --json --all --closure-size \
+      │ | jq 'map_values(.closureSize | select(. < 1e9)) | to_entries | sort_by(.value)'
+      │ [
+      │ …,
+      │ {
+      │   .key = "/nix/store/zqamz3cz4dbzfihki2mk7a63mbkxz9xq-nixos-system-machine-20.09.20201112.3090c65",
+      │   .value = 5887562256,
+      │ }
+      │ ]
+
+  · Print the path of the store derivation produced by 
+    nixpkgs#hello:
+    
+      │ # nix path-info --derivation nixpkgs#hello
+      │ /nix/store/s6rn4jz1sin56rf4qj5b5v8jxjm32hlk-hello-2.10.drv
+
+Description
+
+This command shows information about the store paths
+produced by installables, or about all paths in the store
+if you pass --all.
+
+By default, this command only prints the store paths. You
+can get additional information by passing flags such as 
+--closure-size, --size, --sigs or --json.
+
+  │ Warning
+  │ 
+  │ Note that nix path-info does not build or substitute
+  │ the installables you specify. Thus, if the
+  │ corresponding store paths don't already exist, this
+  │ command will fail. You can use nix build to ensure that
+  │ they exist.
+
+Options
+
+  · --closure-size / -S
+    
+    Print the sum of the sizes of the NAR serialisations of
+    the closure of each path.
+
+  · --default-flake-schemas flake-ref
+    
+    The URL of the flake providing default flake schema
+    definitions.
+
+  · --human-readable / -h
+    
+    With -s and -S, print sizes in a human-friendly format
+    such as 5.67G.
+
+  · --json
+    
+    Produce output in JSON format, suitable for consumption
+    by another program.
+
+  · --json-format version
+    
+    JSON format version to use (1 or 2). Version 1 uses
+    string hashes and full store paths. Version 2 uses
+    structured hashes and store path base names. This flag
+    will be required in a future release.
+
+  · --no-pretty
+    
+    Print compact JSON output on a single line, even when
+    the output is a terminal. Some commands may print
+    multiple JSON objects on separate lines.
+    
+      │             See `--pretty`.
+
+  · --pretty
+    
+    Print multi-line, indented JSON output for readability.
+    
+      │             Default: indent if output is to a terminal.
+      │ 
+      │             This option is only effective when `--json` is also specified.
+
+  · --sigs
+    
+    Show signatures.
+
+  · --size / -s
+    
+    Print the size of the NAR serialisation of each path.
+
+  · --stdin
+    
+    Read installables from the standard input. No default
+    installable applied.
+
+## Common evaluation options
+
+  · --arg name expr
+    
+    Pass the value expr as the argument name to Nix
+    functions.
+
+  · --arg-from-file name path
+    
+    Pass the contents of file path as the argument name to
+    Nix functions.
+
+  · --arg-from-stdin name
+    
+    Pass the contents of stdin as the argument name to Nix
+    functions.
+
+  · --argstr name string
+    
+    Pass the string string as the argument name to Nix
+    functions.
+
+  · --debugger
+    
+    Start an interactive environment if evaluation fails.
+
+  · --eval-store store-url
+    
+    The URL of the Nix store to use for evaluation, i.e. to
+    store derivations (.drv files) and inputs referenced by
+    them.
+
+  · --impure
+    
+    Allow access to mutable paths and repositories.
+
+  · --include / -I path
+    
+    Add path to search path entries used to resolve lookup
+    paths
+    
+    This option may be given multiple times.
+    
+    Paths added through -I take precedence over the 
+    nix-path configuration setting and the NIX_PATH
+    environment variable.
+
+  · --override-flake original-ref resolved-ref
+    
+    Override the flake registries, redirecting original-ref
+    to resolved-ref.
+
+## Common flake-related options
+
+  · --commit-lock-file
+    
+    Commit changes to the flake's lock file.
+
+  · --inputs-from flake-url
+    
+    Use the inputs of the specified flake as registry
+    entries.
+
+  · --no-registries
+    
+    Don't allow lookups in the flake registries.
+    
+      │ DEPRECATED
+      │ 
+      │ Use --no-use-registries instead.
+
+  · --no-update-lock-file
+    
+    Do not allow any updates to the flake's lock file.
+
+  · --no-write-lock-file
+    
+    Do not write the flake's newly generated lock file.
+
+  · --output-lock-file flake-lock-path
+    
+    Write the given lock file instead of flake.lock within
+    the top-level flake.
+
+  · --override-input input-path flake-url
+    
+    Override a specific flake input (e.g. dwarffs/nixpkgs).
+    The input path must not be empty. This implies 
+    --no-write-lock-file.
+
+  · --recreate-lock-file
+    
+    Recreate the flake's lock file from scratch.
+    
+      │ DEPRECATED
+      │ 
+      │ Use nix flake update instead.
+
+  · --reference-lock-file flake-lock-path
+    
+    Read the given lock file instead of flake.lock within
+    the top-level flake.
+
+  · --update-input input-path
+    
+    Update a specific flake input (ignoring its previous
+    entry in the lock file).
+    
+      │ DEPRECATED
+      │ 
+      │ Use nix flake update instead.
+
+## Logging-related options
+
+  · --debug
+    
+    Set the logging verbosity level to 'debug'.
+
+  · --log-format format
+    
+    Set the format of log output; one of raw, internal-json,
+    bar or bar-with-logs.
+
+  · --print-build-logs / -L
+    
+    Print full build logs on standard error.
+
+  · --quiet
+    
+    Decrease the logging verbosity level.
+
+  · --verbose / -v
+    
+    Increase the logging verbosity level.
+
+## Miscellaneous global options
+
+  · --help
+    
+    Show usage information.
+
+  · --offline
+    
+    Disable substituters and consider all previously
+    downloaded files up-to-date.
+
+  · --option name value
+    
+    Set the Nix configuration setting name to value
+    (overriding nix.conf).
+
+  · --refresh
+    
+    Consider all previously downloaded files out-of-date.
+
+  · --repair
+    
+    During evaluation, rewrite missing or corrupted files
+    in the Nix store. During building, rebuild missing or
+    corrupted store paths.
+
+  · --version
+    
+    Show version information.
+
+## Options that change the interpretation of installables
+
+  · --all
+    
+    Apply the operation to every store path.
+
+  · --derivation
+    
+    Operate on the store derivation rather than its
+    outputs.
+
+  · --expr expr
+    
+    Interpret installables as attribute paths relative to
+    the Nix expression expr.
+
+  · --file / -f file
+    
+    Interpret installables as attribute paths relative to
+    the Nix expression stored in file. If file is the
+    character -, then a Nix expression is read from
+    standard input. Implies --impure.
+
+  · --recursive / -r
+    
+    Apply operation to closure of the specified paths.
+
+  │ Note
+  │ 
+  │ See man nix.conf for overriding configuration settings
+  │ with command line flags.
+
