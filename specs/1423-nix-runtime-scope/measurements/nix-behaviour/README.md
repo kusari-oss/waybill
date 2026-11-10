@@ -29,6 +29,9 @@ Each `q<N>-*.sh` script writes raw stdout, stderr, exit code and wall time to `q
 | `q6-fp-why.py` → `q6-out/pandoc.fp-why.txt` | which derivation propagates a false positive |
 | `q7-graph.py`, `q7-why.sh`, `q7-hs-extra.py`, `q7-linux-compare.sh` → `q7-out/` | why hlint's runtime closure holds -doc outputs, the C toolchain and test frameworks |
 | `help/` | `nix path-info --help`, `nix build --help`, `nix store --help` as installed |
+| `q8-verify-cost.sh` → `q8-out/`, `q8-summary.txt` | T002 / R11: `nix store verify --no-contents -r` cost beside the query it follows, cold and warm |
+| `q9-installable.sh` → `q9-out/` | T001: path-info and verify given the **installable** rather than an outPath |
+| `q9-default-output.sh` + `q9-default-output.py` → `q9-out/d-*` | T001: whether the default output can be read from the closure itself |
 
 `q6-out/*.drv-closure.json` total about 36 MB. They are `nix derivation show -r` output, and `q6-static-link.sh` regenerates any that are missing.
 
@@ -342,3 +345,52 @@ So the test-dependency inflation in runtime closures is **darwin-specific** at t
 6. **FR-002, test edges.** At a static Haskell root, test deps share `buildInputs` with lib/exe deps when `doCheck` is set, so the derivation alone can't exclude them. ormolu's R1 precision is 0.387. Excluding them needs `getCabalDeps` from evaluation. The m1269 lifecycle propagation was not examined here.
 7. **The Assumptions' hlint description.** The 322 paths are 134 haddock -doc outputs, the C toolchain via ghc (32 paths only via ghc), and 62 test-framework libraries pulled in by darwin `lib/links` symlinks. The linux closure is 220. The "References count as shipping" rule will therefore report test frameworks as runtime on darwin.
 8. **Multi-output edge case.** An evaluated attribute's `outPath` names one output (`bin` for curl), while `meta.outputsToInstall` names two (`bin`, `man`). The spec's "outputs the evaluated attribute selects" needs to say which of these it means.
+
+---
+
+## Implementation-time re-checks (T001, T002)
+
+Re-run on 2026-11-10 (EST), same host, same nix (`nix (Determinate Nix 3.20.0) 2.34.6`), so the nix version recorded above still holds.
+
+### T001: `q2-query.sh` re-run
+
+Every case gave the same exit code and the same stdout as the committed `q2-out/`. The only differences were timings and the order of `nix store verify`'s `checking …` lines on stderr, which it prints from parallel workers. The committed `q2-out/` was kept. The plain `nix path-info -r --store <url> <path>` output is still one full store path per line.
+
+### Q9. The installable form does not work; query the output path (T001)
+
+Q2 always passed an **outPath**. The plan proposed passing the **installable** (`<flakeref>#<attr>`) instead. `q9-installable.sh` tried that for shellcheck and curl (`q9-out/`):
+
+| case | shellcheck | curl |
+|---|---|---|
+| `path-info -r --store <cache> <installable>` | exit 1: evaluation tries to **upload** the `.drv` to the cache (`unable to upload '…narinfo': HTTP error 404`) | exit 1: `'…curl.meta.outputsToInstall' is not a list of strings` |
+| the same with `--eval-store auto` | exit 0, **7** paths (bin + man + doc) | exit 1, same error |
+| `path-info -r <installable>` (local) | selects bin, man, doc; fails on the absent doc | exit 1, same error |
+| `path-info -r --store <cache> <outPath>` | exit 0, 5 paths | exit 0, 20 paths |
+| `store verify --no-contents -r --store <cache> <outPath>` | exit 0 | exit 0 |
+
+So the installable form fails three ways:
+
+1. With `--store <binary cache>`, the cache is also the evaluation store, and evaluation writes the `.drv` there.
+2. curl's installable does not evaluate at all at this revision, and curl is one of the five targets. `nix derivation show "$R#curl"` fails the same way (`q9-default-output.sh` has to go through `drvPath`).
+3. An installable selects `meta.outputsToInstall` (shellcheck: `bin man doc`), not `outPath`. The committed runtime truth (`measurements/rt/*.paths`) was taken from `outPath`.
+
+**Decision:** query the evaluated derivation's **default output path**, never the installable. It needs no second evaluation of the scanned flake, which also means no repository code runs for the query.
+
+**Can the default output be read from the closure?** `outPath` is the first entry of the derivation's `outputs` attribute. `nix derivation show` keys its `outputs` object alphabetically, so the order survives only in that attribute (`env.outputs`, or `structuredAttrs.outputs`). `q9-default-output.sh` compared the head of that attribute with the evaluated `outPath` for shellcheck, curl, hlint and pandoc: **4 of 4 agree** (`q9-out/d-*.default-output.txt`). An attribute that selects a non-default output explicitly (`pkgs.curl.out`) would not be seen this way **(inference; not probed)**.
+
+A smaller finding: with `--eval-store auto`, the client forwards `--option download-attempts` and `--store` to the daemon, which ignores them as restricted settings for an untrusted user and prints a warning. Querying a store path needs no evaluation store, so this does not arise.
+
+### Q8. Signature verification cost (T002, research R11)
+
+`q8-verify-cost.sh`, 5 runs per cell, `--store https://cache.nixos.org --option connect-timeout 2 --option download-attempts 1 <outPath>` (outPath per Q9). `cold` sets both narinfo TTLs to 0. Full table: `q8-summary.txt`.
+
+| attr | paths | query cold, median (min–max) | verify cold, median (min–max) | query warm | verify warm |
+|---|---|---|---|---|---|
+| shellcheck | 5 | 0.272 s (0.246–0.310) | 0.259 s (0.239–0.469) | 0.052 s | 0.052 s |
+| curl | 20 | 0.838 s (0.772–1.006) | 0.616 s (0.596–1.461) | 0.053 s | 0.054 s |
+| hlint | 322 | 13.515 s (11.094–26.391) | 7.878 s (7.173–18.060) | 0.062 s | 0.066 s |
+
+- **Per path, cold:** verification costs 24.5 ms (hlint), 30.8 ms (curl) and 51.8 ms (shellcheck, where the fixed cost dominates). That is well under the 0.2 s per path at which T002 says to stop, so verification stays.
+- **In practice verification follows the query,** which has just fetched every narinfo, so it runs warm: 0.066 s for hlint's 322 paths. The cold figures are the bound if the narinfo cache is bypassed.
+- **Query cold, hlint:** 42 ms per path median, against Q3's 34 ms. The max run (26.4 s) is one outlier of five; this host's network was not controlled.
+- Every run exited 0.

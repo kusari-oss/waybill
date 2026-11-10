@@ -13,8 +13,8 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
 
 ## Phase 1: Setup
 
-- [ ] T001 Re-run `specs/1423-nix-runtime-scope/measurements/nix-behaviour/q2-query.sh` against the current host's nix and confirm the plain `nix path-info -r --store <url> <installable>` output format (one path per line) still holds. Record the nix version in `measurements/nix-behaviour/README.md` if it differs.
-- [ ] T002 [P] Write `specs/1423-nix-runtime-scope/measurements/nix-behaviour/q8-verify-cost.sh`. It times `nix store verify --no-contents -r --store https://cache.nixos.org <installable>` for shellcheck, curl and haskellPackages.hlint at nixpkgs `a799d3e3`, cold and warm, 5 runs each (min/median/max), and writes the results to `q8-out/` and the README (research R11). If hlint verification costs more than about 0.2 s per path, stop and report back before T014.
+- [X] T001 Re-run `specs/1423-nix-runtime-scope/measurements/nix-behaviour/q2-query.sh` against the current host's nix and confirm the plain `nix path-info -r --store <url> <installable>` output format (one path per line) still holds. Record the nix version in `measurements/nix-behaviour/README.md` if it differs.
+- [X] T002 [P] Write `specs/1423-nix-runtime-scope/measurements/nix-behaviour/q8-verify-cost.sh`. It times `nix store verify --no-contents -r --store https://cache.nixos.org <installable>` for shellcheck, curl and haskellPackages.hlint at nixpkgs `a799d3e3`, cold and warm, 5 runs each (min/median/max), and writes the results to `q8-out/` and the README (research R11). If hlint verification costs more than about 0.2 s per path, stop and report back before T014.
 
 ## Phase 2: Foundational (blocks all stories)
 

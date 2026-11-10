@@ -1,0 +1,22 @@
+error:
+       … while evaluating a branch condition
+         at «github:NixOS/nixpkgs/a799d3e»/pkgs/stdenv/booter.nix:107:9:
+          106|       thisStage =
+          107|         if args.__raw or false then
+             |         ^
+          108|           args'
+
+       … in the right operand of the update (//) operator
+         at «github:NixOS/nixpkgs/a799d3e»/pkgs/stdenv/booter.nix:90:44:
+           89|     # for the final stage.
+           90|     { allowCustomOverrides = index == 1; } // (stageFun prevStage)
+             |                                            ^
+           91|   ) (lib.lists.reverseList stageFuns);
+
+       (stack trace truncated; use '--show-trace' to show the full, detailed trace)
+
+       error: unable to upload 'https://cache.nixos.org/kzhs0iqzhs4iscivr27rbgz3hc27zyfc.narinfo': HTTP error 404
+
+       response body:
+
+       404

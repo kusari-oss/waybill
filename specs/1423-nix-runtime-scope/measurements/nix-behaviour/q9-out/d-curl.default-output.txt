@@ -1,0 +1,1 @@
+6jvivpv117d6i4zj547wl2crkk20wm47-curl-8.20.0.drv outputs-attr=['bin', 'dev', 'out', 'man', 'devdoc'] head=bin head-path=56qb7awbplza7z35iz4k8gyr2fjk2acw-curl-8.20.0-bin outPath=56qb7awbplza7z35iz4k8gyr2fjk2acw-curl-8.20.0-bin agree=True

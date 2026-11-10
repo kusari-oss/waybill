@@ -1,0 +1,13 @@
+attr                     case             min  median     max  exits  paths  median-s/path
+shellcheck               query-cold     0.246   0.272   0.310  0          5  0.0544
+shellcheck               verify-cold    0.239   0.259   0.469  0          5  0.0518
+shellcheck               query-warm     0.051   0.052   0.069  0          5  0.0104
+shellcheck               verify-warm    0.051   0.052   0.064  0          5  0.0104
+curl                     query-cold     0.772   0.838   1.006  0         20  0.0419
+curl                     verify-cold    0.596   0.616   1.461  0         20  0.0308
+curl                     query-warm     0.052   0.053   0.054  0         20  0.0027
+curl                     verify-warm    0.052   0.054   0.056  0         20  0.0027
+haskellPackages.hlint    query-cold    11.094  13.515  26.391  0        322  0.0420
+haskellPackages.hlint    verify-cold    7.173   7.878  18.060  0        322  0.0245
+haskellPackages.hlint    query-warm     0.057   0.062   0.075  0        322  0.0002
+haskellPackages.hlint    verify-warm    0.063   0.066   0.076  0        322  0.0002
