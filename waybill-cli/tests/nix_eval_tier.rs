@@ -524,7 +524,14 @@ fn offline_refuses_the_tier_rather_than_reaching_the_network() {
     // So the two flags are mutually exclusive in effect, and `--offline` wins.
     // The alternative -- evaluating and hoping the store is warm -- keeps the
     // promise only by luck.
+    //
+    // The cache is seeded here too. Without it this test relied on another
+    // test having downloaded the package set into the default cache first;
+    // on a fresh runner `--offline` then had no package set, the tier was
+    // never reached, and it recorded nothing (#1418).
+    let cache = seeded_cache();
     let out = Command::new(binary_path())
+        .env("WAYBILL_NIXPKGS_CACHE", cache.path())
         .arg("sbom")
         .arg("scan")
         .arg("--path")
