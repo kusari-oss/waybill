@@ -1,0 +1,26 @@
+curl grype before=211 after=211 lost=0 gained=0 gained_elsewhere=0
+curl trivy before=4 after=4 lost=0 gained=0 gained_elsewhere=0
+curl osv before=7 after=7 lost=0 gained=0 gained_elsewhere=0
+openssh grype before=237 after=237 lost=0 gained=0 gained_elsewhere=0
+openssh trivy before=3 after=3 lost=0 gained=0 gained_elsewhere=0
+openssh osv before=5 after=5 lost=0 gained=0 gained_elsewhere=0
+httpie grype before=355 after=434 lost=0 gained=79 gained_elsewhere=0
+httpie trivy before=141 after=141 lost=0 gained=0 gained_elsewhere=0
+httpie osv before=246 after=246 lost=0 gained=0 gained_elsewhere=0
+gh grype before=266 after=266 lost=0 gained=0 gained_elsewhere=0
+gh trivy before=57 after=57 lost=0 gained=0 gained_elsewhere=0
+gh osv before=72 after=72 lost=0 gained=0 gained_elsewhere=0
+ripgrep grype before=232 after=232 lost=0 gained=0 gained_elsewhere=0
+ripgrep trivy before=26 after=26 lost=0 gained=0 gained_elsewhere=0
+ripgrep osv before=53 after=53 lost=0 gained=0 gained_elsewhere=0
+moat grype before=220 after=220 lost=0 gained=0 gained_elsewhere=0
+moat trivy before=13 after=13 lost=0 gained=0 gained_elsewhere=0
+moat osv before=26 after=26 lost=0 gained=0 gained_elsewhere=0
+--- grype findings gained, by component (union of targets)
+   4 httpie	cjson	1.7.19
+   4 httpie	fontforge	20251009
+   3 httpie	giflib	5.2.2
+   2 httpie	libass	0.17.4
+   6 httpie	libsndfile	1.2.2
+  11 httpie	libssh	0.12.0
+  49 httpie	unbound	1.25.0
