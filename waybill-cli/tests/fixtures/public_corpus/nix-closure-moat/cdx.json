@@ -801,6 +801,10 @@
           "value": "[\"package.yaml\"]"
         },
         {
+          "name": "waybill:scope-classification-source",
+          "value": "exempt-evaluated-package"
+        },
+        {
           "name": "waybill:source-type",
           "value": "hackage-main-module"
         },
@@ -811,6 +815,10 @@
         {
           "name": "waybill:evidence-kind",
           "value": "hpack-manifest"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "unreferenced"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -6762,6 +6770,7 @@
     },
     {
       "bom-ref": "pkg:generic/acl@2.3.2",
+      "cpe": "cpe:2.3:a:acl_project:acl:2.3.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -6771,6 +6780,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:acl_project:acl:2.3.2:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -6797,6 +6818,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/acl@2.3.2",
@@ -8112,6 +8137,7 @@
     },
     {
       "bom-ref": "pkg:generic/attr@2.5.2",
+      "cpe": "cpe:2.3:a:attr_project:attr:2.5.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -8121,6 +8147,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:attr_project:attr:2.5.2:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -8154,6 +8192,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/attr@2.5.2",
@@ -8618,6 +8660,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:automake:1.16.5:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -8657,6 +8711,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:automake:1.18.1:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -9403,6 +9469,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:bash:2.05b:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -9448,6 +9526,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:bash:5.3:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -9481,7 +9571,7 @@
     },
     {
       "bom-ref": "pkg:generic/bash@5.3p9",
-      "cpe": "cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -9491,6 +9581,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -9547,6 +9649,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"name-version\",\"overrode\":\"cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*\"}"
         }
       ],
       "purl": "pkg:generic/bash@5.3p9",
@@ -9857,6 +9963,7 @@
     },
     {
       "bom-ref": "pkg:generic/bash-interactive@5.3p9",
+      "cpe": "cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -9866,6 +9973,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -9926,6 +10045,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/bash-interactive@5.3p9",
@@ -11113,6 +11236,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:bison:3.8.2:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -12922,6 +13057,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:google:brotli:1.2.0:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -12953,6 +13100,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/brotli@1.2.0",
@@ -13474,6 +13625,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:bzip:bzip2:1.0.8:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -13718,6 +13881,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -16542,6 +16717,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:coreutils:9.11:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -16570,6 +16757,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/coreutils@9.11",
@@ -17901,6 +18092,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:haxx:curl:8.20.0:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -17915,10 +18118,6 @@
       "name": "curl",
       "properties": [
         {
-          "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:haxx:curl:8.20.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:curl:curl:8.20.0:*:*:*:*:*:*:*\"]"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -17929,6 +18128,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/curl@8.20.0",
@@ -18408,6 +18611,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:diffutils:3.12:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -18469,6 +18684,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:diffutils:3.8:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -20141,6 +20368,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:ed:1.22.5:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -20305,6 +20544,7 @@
     },
     {
       "bom-ref": "pkg:generic/elfutils@0.194",
+      "cpe": "cpe:2.3:a:elfutils_project:elfutils:0.194:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -20314,6 +20554,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:elfutils_project:elfutils:0.194:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -20377,6 +20629,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/elfutils@0.194",
@@ -21690,6 +21946,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:libexpat:expat:2.8.0:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -23205,6 +23473,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -23528,6 +23808,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:findutils:4.10.0:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -23570,6 +23862,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/findutils@4.10.0",
@@ -24074,6 +24370,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -25675,6 +25983,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:fossies:gawk:5.3.2:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -25718,6 +26038,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:fossies:gawk:5.4.0:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -26295,6 +26627,7 @@
     },
     {
       "bom-ref": "pkg:generic/gcc@15.2.0",
+      "cpe": "cpe:2.3:a:gnu:gcc:15.2.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -26304,6 +26637,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:gcc:15.2.0:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -26355,6 +26700,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"name-version\"}"
         }
       ],
       "purl": "pkg:generic/gcc@15.2.0",
@@ -26950,6 +27299,7 @@
     },
     {
       "bom-ref": "pkg:generic/gcc-wrapper@15.2.0",
+      "cpe": "cpe:2.3:a:gnu:gcc:15.2.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -26959,6 +27309,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:gcc:15.2.0:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -26993,6 +27355,10 @@
         {
           "name": "waybill:closure-unclassified-refs",
           "value": "[\"defaultNativeBuildInputs\"]"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/gcc-wrapper@15.2.0",
@@ -28046,6 +28412,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:gettext:1.0:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -28098,6 +28476,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:gettext:1.07:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -29279,6 +29669,7 @@
     },
     {
       "bom-ref": "pkg:generic/glibc@2.42",
+      "cpe": "cpe:2.3:a:gnu:glibc:2.42:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -29288,6 +29679,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:glibc:2.42:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -29314,6 +29717,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"name-version\"}"
         }
       ],
       "purl": "pkg:generic/glibc@2.42",
@@ -29323,6 +29730,7 @@
     },
     {
       "bom-ref": "pkg:generic/glibc@2.42-61",
+      "cpe": "cpe:2.3:a:gnu:glibc:2.42:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -29332,6 +29740,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:glibc:2.42:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -29403,6 +29823,10 @@
         {
           "name": "waybill:closure-unclassified-refs",
           "value": "[\"extraNativeBuildInputs\"]"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/glibc@2.42-61",
@@ -30306,6 +30730,7 @@
     },
     {
       "bom-ref": "pkg:generic/gnugrep@3.12",
+      "cpe": "cpe:2.3:a:gnu:grep:3.12:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -30315,6 +30740,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:grep:3.12:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -30356,6 +30793,10 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/gnugrep@3.12",
@@ -31787,6 +32228,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:gnutls:3.8.13:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -31818,6 +32271,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/gnutls@3.8.13",
@@ -32178,6 +32635,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:gzip:1.14:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -32229,6 +32698,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:gzip:1.2.4:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -38533,6 +39014,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -38547,10 +39040,6 @@
       "name": "libarchive",
       "properties": [
         {
-          "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:freebsd:libarchive:3.8.7:*:*:*:*:*:*:*\"]"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -38561,6 +39050,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/libarchive@3.8.7",
@@ -39723,6 +40216,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:libffi_project:libffi:3.5.2:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -39809,6 +40314,7 @@
     },
     {
       "bom-ref": "pkg:generic/libgcrypt@1.11.2",
+      "cpe": "cpe:2.3:a:gnupg:libgcrypt:1.11.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -39818,6 +40324,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnupg:libgcrypt:1.11.2:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -39844,6 +40362,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/libgcrypt@1.11.2",
@@ -40805,7 +41327,7 @@
     },
     {
       "bom-ref": "pkg:generic/libidn2@2.3.8",
-      "cpe": "cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:gnu:libidn2:2.3.8:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -40815,6 +41337,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:libidn2:2.3.8:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -40857,6 +41391,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\",\"overrode\":\"cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*\"}"
         }
       ],
       "purl": "pkg:generic/libidn2@2.3.8",
@@ -41185,6 +41723,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:libssh2:libssh2:1.11.1:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -42249,6 +42799,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:libtool:2.5.4:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -42344,6 +42906,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:libunistring:1.4.2:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -42443,6 +43017,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -42481,10 +43067,6 @@
       "name": "libuv",
       "properties": [
         {
-          "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:libuv_project:libuv:1.52.1:*:*:*:*:*:*:*\"]"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -42495,6 +43077,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/libuv@1.52.1",
@@ -42618,6 +43204,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:xmlsoft:libxml2:2.15.2:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -42642,6 +43240,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/libxml2@2.15.2",
@@ -42660,6 +43262,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:xmlsoft:libxslt:1.1.45:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -42693,6 +43307,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/libxslt@1.1.45",
@@ -44193,6 +44811,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:lzo_project:lzo:2.10:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -48819,6 +49449,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -48833,10 +49475,6 @@
       "name": "ncurses",
       "properties": [
         {
-          "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*\"]"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -48847,6 +49485,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/ncurses@6.6",
@@ -49010,6 +49652,7 @@
     },
     {
       "bom-ref": "pkg:generic/nettle@3.10.2",
+      "cpe": "cpe:2.3:a:nettle_project:nettle:3.10.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -49019,6 +49662,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:nettle_project:nettle:3.10.2:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -49045,6 +49700,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/nettle@3.10.2",
@@ -49255,6 +49914,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:nghttp2:nghttp2:1.69.0:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -49434,6 +50105,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:tatsuhiro-t:ngtcp2:1.22.1:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -50757,6 +51440,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:openssl:openssl:3.6.2:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -50794,6 +51489,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/openssl@3.6.2",
@@ -51282,6 +51981,7 @@
     },
     {
       "bom-ref": "pkg:generic/p11-kit@0.26.2",
+      "cpe": "cpe:2.3:a:p11-kit_project:p11-kit:0.26.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -51291,6 +51991,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:p11-kit_project:p11-kit:0.26.2:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
               }
             ]
           }
@@ -51317,6 +52029,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/p11-kit@0.26.2",
@@ -51703,6 +52419,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:patch:2.8:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -52440,6 +53168,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:pcre:pcre2:10.46:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -52464,6 +53204,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/pcre2@10.46",
@@ -52537,6 +53281,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:perl:perl:5.42.0:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -52572,6 +53328,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/perl@5.42.0",
@@ -56900,6 +57660,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:re2c:re2c:4.5.1:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -57151,6 +57923,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:readline:8.3p3:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -58421,6 +59205,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:rhash_project:rhash:1.4.6:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -64450,6 +65246,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:sqlite:sqlite:3.51.2:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -64474,6 +65282,10 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/sqlite@3.51.2",
@@ -68882,6 +69694,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:tcl:tcl:8.6.16:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -69430,6 +70254,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:texinfo:7.2:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -75150,6 +75986,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
+              }
+            ]
           }
         ]
       },
@@ -78238,6 +79086,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -78258,10 +79118,6 @@
       "name": "xz",
       "properties": [
         {
-          "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:xz_project:xz:5.8.3:*:*:*:*:*:*:*\"]"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -78280,6 +79136,10 @@
         {
           "name": "waybill:closure-unclassified-refs",
           "value": "[\"defaultNativeBuildInputs\"]"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/xz@5.8.3",
@@ -78541,6 +79401,18 @@
                 "technique": "instrumentation"
               }
             ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*",
+            "confidence": 0.9,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.9,
+                "technique": "manifest-analysis",
+                "value": "nixpkgs meta.identifiers.cpe"
+              }
+            ]
           }
         ]
       },
@@ -78576,6 +79448,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:cpe-provenance",
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/zlib@1.3.2",
@@ -93631,7 +94507,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":162,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":315,\"with_candidates\":51}"
+        "value": "{\"addressable_without_cpe\":162,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":303,\"with_candidates\":63}"
       },
       {
         "name": "waybill:closure-graph-admission",
@@ -93707,7 +94583,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":1589,\"components-without-member-role\":502,\"derivations\":1749,\"distinct-cves\":13,\"edge-ineligible-components\":512,\"edges\":7761,\"licenses\":{\"degraded\":null,\"received\":230,\"wanted\":1236,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":245,\"package\":73,\"scaffolding\":267,\"source\":502},\"patches\":212,\"patches-without-cve\":197,\"roles\":{\"artifact-input\":268,\"both\":45,\"build-tooling\":1435,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":1590,\"components-without-member-role\":503,\"derivations\":1749,\"distinct-cves\":13,\"edge-ineligible-components\":512,\"edges\":7761,\"identifiers\":{\"by-drv\":231,\"by-name-version\":95,\"declared\":50,\"received\":326,\"rejected\":0,\"wanted\":1237},\"licenses\":{\"degraded\":null,\"received\":230,\"wanted\":1237,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":245,\"package\":73,\"scaffolding\":267,\"source\":502},\"patches\":212,\"patches-without-cve\":197,\"roles\":{\"artifact-input\":268,\"both\":45,\"build-tooling\":1435,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",

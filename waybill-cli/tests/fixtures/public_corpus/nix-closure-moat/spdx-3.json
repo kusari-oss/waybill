@@ -193,6 +193,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:xmlsoft:libxslt:1.1.45:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -478,6 +479,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:re2c:re2c:4.5.1:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -512,6 +514,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:gettext:1.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -940,6 +943,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:bzip:bzip2:1.0.8:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -1392,6 +1396,12 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:gcc:15.2.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gcc@15.2.0",
           "type": "ExternalIdentifier"
@@ -1443,6 +1453,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:libtool:2.5.4:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -1592,6 +1603,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:gnutls:3.8.13:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -1625,6 +1637,12 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:elfutils_project:elfutils:0.194:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/elfutils@0.194",
@@ -1748,6 +1766,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:gzip:1.2.4:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -1960,6 +1979,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:diffutils:3.12:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -2045,8 +2065,9 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*",
+          "identifier": "cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
@@ -2529,8 +2550,9 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*",
+          "identifier": "cpe:2.3:a:gnu:libidn2:2.3.8:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
@@ -3173,6 +3195,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:gzip:1.14:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -3683,6 +3706,12 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:nettle_project:nettle:3.10.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/nettle@3.10.2",
           "type": "ExternalIdentifier"
@@ -3697,6 +3726,12 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnupg:libgcrypt:1.11.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/libgcrypt@1.11.2",
@@ -3727,6 +3762,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:perl:perl:5.42.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -3776,11 +3812,13 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -4348,11 +4386,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:freebsd:libarchive:3.8.7:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -4480,6 +4514,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:ed:1.22.5:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -5032,11 +5067,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -5159,11 +5190,13 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -6193,6 +6226,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:automake:1.18.1:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -6269,6 +6303,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:coreutils:9.11:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -6368,6 +6403,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:lzo_project:lzo:2.10:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -6468,6 +6504,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:texinfo:7.2:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -6902,16 +6939,19 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:christos_zoulas:file:5.47:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gentoo:file:5.47:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -8064,6 +8104,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:bison:3.8.2:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -8295,6 +8336,12 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:glibc:2.42:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/glibc@2.42-61",
@@ -9477,6 +9524,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:tcl:tcl:8.6.16:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -9671,6 +9719,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:libunistring:1.4.2:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -9950,6 +9999,12 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:attr_project:attr:2.5.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/attr@2.5.2",
           "type": "ExternalIdentifier"
@@ -9979,6 +10034,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:sqlite:sqlite:3.51.2:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -10446,6 +10502,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:rhash_project:rhash:1.4.6:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -11935,6 +11992,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libexpat:expat:2.8.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -12778,13 +12836,9 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:libuv_project:libuv:1.52.1:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
@@ -12960,6 +13014,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:gettext:1.07:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -12980,6 +13035,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:automake:1.16.5:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -13628,6 +13684,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:diffutils:3.8:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -13662,6 +13719,12 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:gcc:15.2.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gcc-wrapper@15.2.0",
           "type": "ExternalIdentifier"
@@ -13677,6 +13740,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:findutils:4.10.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -13910,11 +13974,13 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -14411,6 +14477,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:fossies:gawk:5.4.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -14742,6 +14809,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:readline:8.3p3:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -15408,6 +15476,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:patch:2.8:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -15529,6 +15598,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:tatsuhiro-t:ngtcp2:1.22.1:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -15577,6 +15647,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libffi_project:libffi:3.5.2:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -16058,11 +16129,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:curl:curl:8.20.0:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:haxx:curl:8.20.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -16349,6 +16416,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:pcre:pcre2:10.46:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -16766,6 +16834,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:xmlsoft:libxml2:2.15.2:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -16965,6 +17034,12 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:p11-kit_project:p11-kit:0.26.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/p11-kit@0.26.2",
           "type": "ExternalIdentifier"
@@ -17029,6 +17104,12 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/bash-interactive@5.3p9",
@@ -17304,6 +17385,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:bash:2.05b:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -19988,6 +20070,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:fossies:gawk:5.3.2:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -21249,6 +21332,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:google:brotli:1.2.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -21620,6 +21704,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:openssl:openssl:3.6.2:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -21739,13 +21824,9 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:xz_project:xz:5.8.3:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
@@ -22104,6 +22185,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -22145,6 +22227,12 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:acl_project:acl:2.3.2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/acl@2.3.2",
@@ -22231,6 +22319,12 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:glibc:2.42:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/glibc@2.42",
@@ -22691,6 +22785,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gnu:bash:5.3:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -22880,6 +22975,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libssh2:libssh2:1.11.1:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -23339,6 +23435,7 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:nghttp2:nghttp2:1.69.0:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
@@ -24431,6 +24528,12 @@
     {
       "creationInfo": "<masked>",
       "externalIdentifier": [
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gnu:grep:3.12:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gnugrep@3.12",
@@ -58155,6 +58258,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-25PQETPU6RVUEHER",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JWPSOIDR5JXP7N7B",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-25RYAXM3HTOCQNYV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RJNP4LEHKINONHS4",
@@ -59470,6 +59581,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2MFTOYEW2Z2BQ2Y6",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"closure-member-not-an-edge-endpoint\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KUV4XZQO4NDVKKA7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2MGX6ZO55YWNCJUF",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WSSZAL5TTZMVK5KS",
       "type": "Annotation"
     },
     {
@@ -67844,7 +67963,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5P4RIHJ63RQNJ3BZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":315,\\\"with_candidates\\\":51}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":303,\\\"with_candidates\\\":63}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -69587,6 +69706,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6D2XVP3G4TYHFBS4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-L53PR77Q5BKH73YC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6D5G6Q6DYMUUT5KL",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W6EA5DCFM2RG553X",
@@ -70675,6 +70802,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6NMSAOD5YTNQZLET",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6HEL4B3OIKRXPNA3",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6NRDGCPST3PEFWQZ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"closure-member-not-an-edge-endpoint\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AE65DDZHLGJR5BCG",
@@ -71667,6 +71802,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-73EU6WAI5JNVKWID",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WUL5VZ4INLUOOAXF",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-73FLDANL4T33RJBR",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-admission\",\"value\":\"build-graph\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6YXL5EDMDWMLODR3",
@@ -71771,9 +71914,25 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-74AI6R7X7P7YE7V3",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"name-version\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WVVSKNRTS3HL4JX6",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-74BJCTTPXYZGKXMY",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"closure-member-not-an-edge-endpoint\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UJA5FCK7EAO3ZHUM",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-74EYC4E42FJB6CFN",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-A65I77WXF63XW3UB",
       "type": "Annotation"
     },
     {
@@ -75363,6 +75522,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AGHW5SUASIWPGQ34",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZRJCZOPL3KYFSTUB",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AGLBGYDGWO637HQR",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4UYXC6UKHWBC62JO",
@@ -76118,6 +76285,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AQMQBHYBUFIMKHFC",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6QM5HTCQDIMUXMKC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AQSCLU6DBDMPIAI2",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PERTJ5AY63XTKTTB",
       "type": "Annotation"
     },
     {
@@ -79075,6 +79250,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BRJSFJ74T5DF6XJW",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GIBCFMY2S3MR6KWB",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BRLM6YLH2A7WSJ2H",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SS6HTRLJDSIH66JO",
@@ -79574,6 +79757,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BYVDAVJGIDAVKZQB",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CGL4E4NHKJ7QCUZR",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BYZOHOKWBF6T2773",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3VGA2JJ4B3F62ZQZ",
       "type": "Annotation"
     },
     {
@@ -80739,6 +80930,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CGJF7ZVJ3TZ4ZPZF",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-76FQ3WGVIMJFWFIM",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CGJHBTC6LNB6UMEC",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WFLRTZTJZJQAQX5",
@@ -81462,6 +81661,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CO5ELTMW2ABZKJOK",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YHNASQL2HHU3ZY4K",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CO6ANPSHORTBC7ZP",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3XE2WNCDOKWLBJJH",
       "type": "Annotation"
     },
     {
@@ -84979,14 +85186,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DV3562B3W5X7XETS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:xz_project:xz:5.8.3:*:*:*:*:*:*:*\"]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W3IZSU6H7FUH4Y4Y",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DV3WUAHW4U2RGSPL",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H7VWNR4FVJKY5OMT",
@@ -87235,6 +87434,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EOC2G6ZCXKQR5OVM",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VVYTBMM6CVIWDX5V",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EOEPXJV7LKRRSRAQ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TH44MCHLH2KU3ZRW",
@@ -89294,6 +89501,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FFU7IJWGOFE7F3ID",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I726G2QY6VLZLEJ6",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FFYL5L7Q452IDBSO",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-L3YJDJVV44FN27O4",
       "type": "Annotation"
     },
     {
@@ -92035,6 +92250,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GGBA6KDQPGDJWKZD",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VCSGUUVEX4YG53QE",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GGHXYVGT3OCRKLOZ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"fragment\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OBY6A35ZOHZ4GJ6K",
@@ -93755,6 +93978,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GZ6TGTU7VZNDMIHT",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-26CSGGID2Y4ZTY26",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GZGDDEHBIAUHEAPH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I4UCMLDEX5QXZTAZ",
@@ -94539,14 +94770,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HDVWYMAMF245BQBI",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:haxx:curl:8.20.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:curl:curl:8.20.0:*:*:*:*:*:*:*\"]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OHGC3GBGWXOZ5CRF",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HDWHQNDKFNREOXT4",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-admission\",\"value\":\"build-graph\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYQTP3PO64O5LZ4J",
@@ -95092,7 +95315,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HK625IFVXC5PSFZ6",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1589,\\\"components-without-member-role\\\":502,\\\"derivations\\\":1749,\\\"distinct-cves\\\":13,\\\"edge-ineligible-components\\\":512,\\\"edges\\\":7761,\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":230,\\\"wanted\\\":1236,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":245,\\\"package\\\":73,\\\"scaffolding\\\":267,\\\"source\\\":502},\\\"patches\\\":212,\\\"patches-without-cve\\\":197,\\\"roles\\\":{\\\"artifact-input\\\":268,\\\"both\\\":45,\\\"build-tooling\\\":1435,\\\"unreferenced\\\":1}}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1590,\\\"components-without-member-role\\\":503,\\\"derivations\\\":1749,\\\"distinct-cves\\\":13,\\\"edge-ineligible-components\\\":512,\\\"edges\\\":7761,\\\"identifiers\\\":{\\\"by-drv\\\":231,\\\"by-name-version\\\":95,\\\"declared\\\":50,\\\"received\\\":326,\\\"rejected\\\":0,\\\"wanted\\\":1237},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":230,\\\"wanted\\\":1237,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":245,\\\"package\\\":73,\\\"scaffolding\\\":267,\\\"source\\\":502},\\\"patches\\\":212,\\\"patches-without-cve\\\":197,\\\"roles\\\":{\\\"artifact-input\\\":268,\\\"both\\\":45,\\\"build-tooling\\\":1435,\\\"unreferenced\\\":1}}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -100691,6 +100914,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JLQ6AYECDY5I2Q5J",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\",\\\"overrode\\\":\\\"cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4WJ4KEGGV6M23OMP",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JLUD7LU3IUASUDGA",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IRX447ODW5G7T6C3",
@@ -101150,6 +101381,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JQFMA7LKF5LFF3WE",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5Z47GU2KLQBIMSJE",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JQH75Y67LIDNWEGB",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EDI3L7HX6SDS4IVR",
       "type": "Annotation"
     },
     {
@@ -109851,6 +110090,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MW62G554KVDPUCQV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OHGC3GBGWXOZ5CRF",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MWBN4SYJLYLPGE5S",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-admission\",\"value\":\"build-graph\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EJMSYFDKFN2R37AE",
@@ -110219,6 +110466,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-N3SLRDPGFQWC6BKA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"exempt-evaluated-package\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ON5L5EKDDLXBA7ZZ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-N3TKTL7HFSRNYT5J",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MHEWQSRS3ZEC4TL4",
@@ -110366,6 +110621,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-N5RW3BERUVP7ZAMZ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DN7W3RPL33KCPPVD",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-N5SIVPU7OL53RICL",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6IFKGTB3NNZBVXFT",
       "type": "Annotation"
     },
     {
@@ -113387,6 +113650,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OBMNTMDMPJHYPBVB",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"name-version\\\",\\\"overrode\\\":\\\"cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4GWGWE7WNCF4U6TL",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OBTH2OXN42X6T45L",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"closure-member-not-an-edge-endpoint\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RYQTP3PO64O5LZ4J",
@@ -114438,6 +114709,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OPECI6ZBFNYIIAG3",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D3H3NY6FFCFRBMCP",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OPIDMEBADHQKJTZC",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-P4F4I4MOHCZS4KK2",
       "type": "Annotation"
     },
     {
@@ -118259,14 +118538,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Q3XQP545NGJTLZAP",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:libuv_project:libuv:1.52.1:*:*:*:*:*:*:*\"]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JWPSOIDR5JXP7N7B",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Q4267LSAJ7RNUV7N",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"closure-role\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DI6YUDUNIW5GRT3A",
@@ -120350,6 +120621,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QTFMMLIMDI5ZBNLR",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-admission\",\"value\":\"build-graph\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WXL6WVY76XX6EN7L",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QTGGPOUGUPX7YE4N",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GJCBGS7Q7MM4ARGM",
       "type": "Annotation"
     },
     {
@@ -124299,6 +124578,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SBOC7XQHSROW3F2G",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6FNWH2R5EUQLZEMU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SBOXR2VCQBCRMCPY",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2X257ONBDAPW7Y3I",
@@ -125022,6 +125309,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SKJAV5YFNZGWA3TA",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-admission\",\"value\":\"build-graph\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-A6KYKCQ5VHRJBJFQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SKXNZNHEMY5NLAE7",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PGLBQ5N64KS7Q3N7",
       "type": "Annotation"
     },
     {
@@ -127603,14 +127898,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TL565FZ62QKDEE7D",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:freebsd:libarchive:3.8.7:*:*:*:*:*:*:*\"]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-76FQ3WGVIMJFWFIM",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TL7NFPIKVQO4ASKW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OD6JVQDZRYPBWLBG",
@@ -127870,14 +128157,6 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TOE6BX5NMBGAQ3DG",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RGBWQ5XBG7JNODLJ",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TOFRSDDWEIFYWJCP",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*\"]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-A65I77WXF63XW3UB",
       "type": "Annotation"
     },
     {
@@ -135091,6 +135370,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-W7MTVQBUDXHFEZUP",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"name-version\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3O5CPNBBWVGBRDPB",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-W7PJXG5P24MXTNAM",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-63ZM2DP3NQ4X2QSD",
@@ -135851,6 +136138,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WIIE6TZZTRMGFNDS",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W3IZSU6H7FUH4Y4Y",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WIODBIDSWPF6BKX5",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"not-in-package-set\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AOXKV3FCNOIEHCPA",
@@ -135910,6 +136205,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WIWROIOMIW7GY34W",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"scaffolding\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H2HP4GQMD5YI2SK2",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WIZ2WWGWJSBROQAV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BZUD3PZIWCXAKTUL",
       "type": "Annotation"
     },
     {
@@ -137310,6 +137613,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WZXQDX7HX5QXW3ZN",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-identity\",\"value\":\"no-version-recorded\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OTRLP3Y7JOZUFUSZ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WZZZFAKJEWOYUUPS",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"unreferenced\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ON5L5EKDDLXBA7ZZ",
       "type": "Annotation"
     },
     {
@@ -139910,6 +140221,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XYQGXRNBJVPHQFZF",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6TSN3LEAMDBPBTXK",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XYQMQPZEFPLN2QHN",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OOG6LHDE2M7U6T4M",
       "type": "Annotation"
     },
     {

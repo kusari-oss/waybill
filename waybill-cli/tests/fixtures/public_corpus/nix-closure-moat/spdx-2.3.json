@@ -23,7 +23,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":315,\\\"with_candidates\\\":51}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":303,\\\"with_candidates\\\":63}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -107,7 +107,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1589,\\\"components-without-member-role\\\":502,\\\"derivations\\\":1749,\\\"distinct-cves\\\":13,\\\"edge-ineligible-components\\\":512,\\\"edges\\\":7761,\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":230,\\\"wanted\\\":1236,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":245,\\\"package\\\":73,\\\"scaffolding\\\":267,\\\"source\\\":502},\\\"patches\\\":212,\\\"patches-without-cve\\\":197,\\\"roles\\\":{\\\"artifact-input\\\":268,\\\"both\\\":45,\\\"build-tooling\\\":1435,\\\"unreferenced\\\":1}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1590,\\\"components-without-member-role\\\":503,\\\"derivations\\\":1749,\\\"distinct-cves\\\":13,\\\"edge-ineligible-components\\\":512,\\\"edges\\\":7761,\\\"identifiers\\\":{\\\"by-drv\\\":231,\\\"by-name-version\\\":95,\\\"declared\\\":50,\\\"received\\\":326,\\\"rejected\\\":0,\\\"wanted\\\":1237},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":230,\\\"wanted\\\":1237,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":245,\\\"package\\\":73,\\\"scaffolding\\\":267,\\\"source\\\":502},\\\"patches\\\":212,\\\"patches-without-cve\\\":197,\\\"roles\\\":{\\\"artifact-input\\\":268,\\\"both\\\":45,\\\"build-tooling\\\":1435,\\\"unreferenced\\\":1}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -1151,6 +1151,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"exempt-evaluated-package\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"package.yaml\"]}"
         },
         {
@@ -1164,6 +1170,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"package.yaml\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"unreferenced\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8381,6 +8393,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -8389,6 +8407,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/acl@2.3.2",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:acl_project:acl:2.3.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -9982,6 +10006,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -9990,6 +10020,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/attr@2.5.2",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:attr_project:attr:2.5.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -10553,6 +10589,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:automake:1.16.5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -10600,6 +10637,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:automake:1.18.1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -11486,6 +11524,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:bash:2.05b:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -11545,6 +11584,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:bash:5.3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -11594,6 +11634,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"name-version\\\",\\\"overrode\\\":\\\"cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -11604,8 +11650,9 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -12029,6 +12076,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -12037,6 +12090,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bash-interactive@5.3p9",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -13490,6 +13549,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:bison:3.8.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -15656,6 +15716,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -15666,6 +15732,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:google:brotli:1.2.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -16335,6 +16402,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:bzip:bzip2:1.0.8:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -16627,6 +16695,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -20075,6 +20144,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -20085,6 +20160,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:coreutils:9.11:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -21774,12 +21850,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:haxx:curl:8.20.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:curl:curl:8.20.0:*:*:*:*:*:*:*\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -21793,6 +21863,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -21803,6 +21879,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:haxx:curl:8.20.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -22412,6 +22489,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:diffutils:3.12:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -22471,6 +22549,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:diffutils:3.8:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -24454,6 +24533,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:ed:1.22.5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -24664,6 +24744,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -24672,6 +24758,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/elfutils@0.194",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:elfutils_project:elfutils:0.194:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -26372,6 +26464,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:libexpat:expat:2.8.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -28272,6 +28365,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -28645,6 +28739,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -28655,6 +28755,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:findutils:4.10.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -29318,6 +29419,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -31339,6 +31441,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:fossies:gawk:5.3.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -31398,6 +31501,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:fossies:gawk:5.4.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -32122,6 +32226,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"name-version\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -32130,6 +32240,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gcc@15.2.0",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:gcc:15.2.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -32910,6 +33026,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -32918,6 +33040,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gcc-wrapper@15.2.0",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:gcc:15.2.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -34252,6 +34380,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:gettext:1.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -34299,6 +34428,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:gettext:1.07:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -35758,6 +35888,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"name-version\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -35766,6 +35902,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/glibc@2.42",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:glibc:2.42:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -35818,6 +35960,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"extraNativeBuildInputs\\\"]\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -35826,6 +35974,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/glibc@2.42-61",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:glibc:2.42:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -36930,6 +37084,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -36938,6 +37098,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gnugrep@3.12",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:grep:3.12:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -38706,6 +38872,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -38716,6 +38888,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:gnutls:3.8.13:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -39169,6 +39342,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:gzip:1.14:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -39228,6 +39402,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:gzip:1.2.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -46852,12 +47027,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:freebsd:libarchive:3.8.7:*:*:*:*:*:*:*\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -46871,6 +47040,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -46881,6 +47056,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:libarchive:libarchive:3.8.7:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -48356,6 +48532,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:libffi_project:libffi:3.5.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -48453,6 +48630,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -48461,6 +48644,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libgcrypt@1.11.2",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnupg:libgcrypt:1.11.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -49719,6 +49908,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\",\\\"overrode\\\":\\\"cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -49729,8 +49924,9 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:gnu:libidn2:2.3.8:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -50141,6 +50337,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:libssh2:libssh2:1.11.1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -51460,6 +51657,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:libtool:2.5.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -51572,6 +51770,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:libunistring:1.4.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -51661,12 +51860,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:libuv_project:libuv:1.52.1:*:*:*:*:*:*:*\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -51680,6 +51873,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -51690,6 +51889,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:libuv:libuv:1.52.1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -51840,6 +52040,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -51850,6 +52056,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:xmlsoft:libxml2:2.15.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -51893,6 +52100,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -51903,6 +52116,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:xmlsoft:libxslt:1.1.45:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -53787,6 +54001,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:lzo_project:lzo:2.10:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -59513,12 +59728,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.6:*:*:*:*:*:*:*\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -59532,6 +59741,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -59542,6 +59757,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:ncurses_project:ncurses:6.6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -59753,6 +59969,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -59761,6 +59983,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/nettle@3.10.2",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:nettle_project:nettle:3.10.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -60033,6 +60261,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:nghttp2:nghttp2:1.69.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -60242,6 +60471,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:tatsuhiro-t:ngtcp2:1.22.1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -61832,6 +62062,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -61842,6 +62078,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:openssl:openssl:3.6.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -62490,6 +62727,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -62498,6 +62741,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/p11-kit@0.26.2",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:p11-kit_project:p11-kit:0.26.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -62992,6 +63241,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:patch:2.8:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -63853,6 +64103,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -63863,6 +64119,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:pcre:pcre2:10.46:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -63977,6 +64234,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -63987,6 +64250,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:perl:perl:5.42.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -69304,6 +69568,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:re2c:re2c:4.5.1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -69621,6 +69886,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:readline:8.3p3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -71156,6 +71422,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:rhash_project:rhash:1.4.6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -78722,6 +78989,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"artifact-input\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -78732,6 +79005,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:sqlite:sqlite:3.51.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -84290,6 +84564,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:tcl:tcl:8.6.16:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -84925,6 +85200,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:gnu:texinfo:7.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -92046,6 +92322,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -95656,12 +95933,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:xz_project:xz:5.8.3:*:*:*:*:*:*:*\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
         },
         {
@@ -95687,6 +95958,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-unclassified-refs\",\"value\":\"[\\\"defaultNativeBuildInputs\\\"]\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -95697,6 +95974,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -96043,6 +96321,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"both\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -96053,6 +96337,7 @@
           "referenceType": "purl"
         },
         {
+          "comment": "CPE declared by nixpkgs meta.identifiers.cpe",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
