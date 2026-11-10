@@ -137,10 +137,9 @@ fn root_name_and_version_override_on_arbitrary_dir() {
     assert_eq!(comp["version"].as_str(), Some("1.2.3"));
     assert_eq!(comp["bom-ref"].as_str(), Some("widget-svc@1.2.3"));
     assert_eq!(comp["purl"].as_str(), Some("pkg:generic/widget-svc@1.2.3"));
-    assert_eq!(
-        comp["cpe"].as_str(),
-        Some("cpe:2.3:a:waybill:widget-svc:1.2.3:*:*:*:*:*:*:*")
-    );
+    // #1402 — an override names the subject; it does not invent a
+    // `waybill`-vendor CPE. Operator-supplied CPEs are #1413.
+    assert!(comp.get("cpe").is_none(), "{comp}");
 }
 
 #[test]

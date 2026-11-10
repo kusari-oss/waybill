@@ -1043,22 +1043,9 @@ fn pick_root_iri(
             "{doc_iri}/pkg-root-{}",
             hash_prefix(iri_seed.as_bytes(), 16)
         );
-        // CPE: reuse `url_friendly` for sanitization parity with the
-        // existing non-override path. CPE has its own escape rules
-        // distinct from RFC 3986 percent-encoding.
-        let synth_cpe = format!(
-            "cpe:2.3:a:waybill:{}:{}:*:*:*:*:*:*:*",
-            url_friendly(name),
-            url_friendly(version),
-        );
-        // Build externalIdentifier[] conditionally — CPE always, PURL
-        // only when present.
-        let mut ext_ids: Vec<serde_json::Value> = Vec::with_capacity(2);
-        ext_ids.push(json!({
-            "type": "ExternalIdentifier",
-            "externalIdentifierType": "cpe23",
-            "identifier": synth_cpe,
-        }));
+        // #1402 — an override names the subject; it does not invent a CPE.
+        // The PURL, when present, is the only identifier.
+        let mut ext_ids: Vec<serde_json::Value> = Vec::with_capacity(1);
         if let Some(ref synth_purl) = synth_purl_opt {
             ext_ids.push(json!({
                 "type": "ExternalIdentifier",
@@ -1074,13 +1061,21 @@ fn pick_root_iri(
             "software_packageVersion": version,
             "externalIdentifier": ext_ids,
         });
-        // Add software_packageUrl only when the PURL is present.
-        if let Some(synth_purl) = synth_purl_opt {
-            if let Some(obj) = synth_pkg.as_object_mut() {
-                obj.insert(
-                    "software_packageUrl".to_string(),
-                    serde_json::Value::String(synth_purl),
-                );
+        // Add software_packageUrl only when the PURL is present. Without
+        // it (`--no-root-purl`) the root has no identifier at all since
+        // #1402, so the empty `externalIdentifier` list is omitted rather
+        // than emitted as `[]`.
+        if let Some(obj) = synth_pkg.as_object_mut() {
+            match synth_purl_opt {
+                Some(synth_purl) => {
+                    obj.insert(
+                        "software_packageUrl".to_string(),
+                        serde_json::Value::String(synth_purl),
+                    );
+                }
+                None => {
+                    obj.remove("externalIdentifier");
+                }
             }
         }
         packages.insert(0, synth_pkg);
@@ -1132,8 +1127,8 @@ fn pick_root_iri(
     // `postgres-16` for the SPDX 3 PURL — yet a third per-format
     // root-identity variant alongside CDX's `postgres:16` and the
     // SPDX 2.3 path's `postgres_16` (also fixed in this milestone).
-    // The CPE keeps `url_friendly` because the CPE 2.3 grammar
-    // uses `-` as the conventional component separator-safe filler.
+    // #1402 — no CPE: a `waybill`-vendor CPE named waybill as the vendor
+    // of software it did not make.
     let synth_purl = format!(
         "pkg:generic/{}@0.0.0",
         waybill_common::types::purl::encode_purl_segment(scan.target_name),
@@ -1141,10 +1136,6 @@ fn pick_root_iri(
     let synth_iri = format!(
         "{doc_iri}/pkg-root-{}",
         hash_prefix(synth_purl.as_bytes(), 16)
-    );
-    let synth_cpe = format!(
-        "cpe:2.3:a:waybill:{}:0.0.0:*:*:*:*:*:*:*",
-        url_friendly(scan.target_name)
     );
     let synth_pkg = json!({
         "type": "software_Package",
@@ -1154,11 +1145,6 @@ fn pick_root_iri(
         "software_packageVersion": "0.0.0",
         "software_packageUrl": synth_purl,
         "externalIdentifier": [
-            {
-                "type": "ExternalIdentifier",
-                "externalIdentifierType": "cpe23",
-                "identifier": synth_cpe,
-            },
             {
                 "type": "ExternalIdentifier",
                 "externalIdentifierType": "packageUrl",

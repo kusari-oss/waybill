@@ -957,33 +957,16 @@ fn synthesize_root(
     let encoded = BASE32_NOPAD.encode(&digest);
     let id = SpdxId::synthetic_root(&encoded[..16]);
 
-    // Synthesize identity externalRefs for the synthetic root so
-    // sbomqs's Vulnerability/comp_with_purl + comp_with_cpe features
-    // don't ding every waybill SPDX document for "one component is
-    // missing PURL/CPE" (the synthetic root is the one component).
-    // The PURL uses `pkg:generic/<target>@0.0.0` — the same shape
-    // CDX uses for the scan-subject metadata.component. The CPE
-    // mirrors `metadata.component.cpe` in CDX. Both are synthetic
-    // but spec-valid; consumers that want a real PURL/CPE look at
-    // the component-level Packages, not the root.
-    //
-    // Issue #236: PURL and CPE have different escape rules, so they
-    // are sanitized separately. The PURL uses
-    // `encode_purl_segment` (the same helper CDX uses for its
-    // `metadata.component.purl`), which preserves colon literals
-    // (so `postgres:16` → `postgres:16`, matching CDX). Pre-fix this
-    // path used `sanitize_for_coord` for both, producing
-    // `postgres_16` for the SPDX PURL — a per-format root-identity
-    // divergence the reporter flagged alongside the missing-edges
-    // bug. The CPE keeps `sanitize_for_coord` because the
-    // CPE 2.3 grammar uses `_` as the conventional component
-    // separator-safe filler.
+    // Synthesize a PURL for the synthetic root, `pkg:generic/<target>@0.0.0`,
+    // the same shape CDX uses for the scan-subject `metadata.component`.
+    // Issue #236: it uses `encode_purl_segment` (as CDX does), which keeps
+    // colon literals (`postgres:16`), so the root's identity agrees across
+    // formats. No CPE: see #1402 below.
     let version = "0.0.0";
     let purl_name = waybill_common::types::purl::encode_purl_segment(target_name);
     let synth_purl = format!("pkg:generic/{purl_name}@{version}");
-    let cpe_name = sanitize_for_coord(target_name);
-    let synth_cpe =
-        format!("cpe:2.3:a:waybill:{cpe_name}:{version}:*:*:*:*:*:*:*");
+    // #1402 — no CPE: a `waybill`-vendor CPE named waybill as the vendor of
+    // software it did not make. The PURL is the subject's identifier.
 
     let root = SpdxPackage {
         spdx_id: id.clone(),
@@ -1002,12 +985,6 @@ fn synthesize_root(
                 category: SpdxExternalRefCategory::PackageManager,
                 ref_type: "purl".to_string(),
                 locator: synth_purl,
-                comment: None,
-            },
-            SpdxExternalRef {
-                category: SpdxExternalRefCategory::Security,
-                ref_type: "cpe23Type".to_string(),
-                locator: synth_cpe,
                 comment: None,
             },
         ],
@@ -1057,15 +1034,8 @@ fn synthesize_root_with_override(
     // case we DO NOT emit the `purl` externalRef.
     let purl_opt = root_override.build_subject_purl(name, version);
 
-    // CPE uses `cpe_escape`-style sanitization for both segments; reuse
-    // the existing sanitize_for_coord helper which matches the CDX
-    // path's behavior for the override case.
-    let cpe_name = sanitize_for_coord(name);
-    let cpe_version = sanitize_for_coord(version);
-    let synth_cpe =
-        format!("cpe:2.3:a:waybill:{cpe_name}:{cpe_version}:*:*:*:*:*:*:*");
-
-    let mut external_refs: Vec<SpdxExternalRef> = Vec::with_capacity(2);
+    // #1402 — an override names the subject; it does not invent a CPE.
+    let mut external_refs: Vec<SpdxExternalRef> = Vec::with_capacity(1);
     if let Some(synth_purl) = purl_opt {
         external_refs.push(SpdxExternalRef {
             category: SpdxExternalRefCategory::PackageManager,
@@ -1074,13 +1044,6 @@ fn synthesize_root_with_override(
             comment: None,
         });
     }
-    external_refs.push(SpdxExternalRef {
-        category: SpdxExternalRefCategory::Security,
-        ref_type: "cpe23Type".to_string(),
-        locator: synth_cpe,
-        comment: None,
-    });
-
     let root = SpdxPackage {
         spdx_id: id.clone(),
         name: name.to_string(),
@@ -1098,27 +1061,6 @@ fn synthesize_root_with_override(
         primary_package_purpose: None,
     };
     (id, root)
-}
-
-/// Normalize a target-name string for inclusion in a PURL/CPE
-/// coord. Matches the loose shape CDX uses for its synthesized
-/// scan-subject PURL (see `metadata.rs::cpe_sanitize`): lowercase
-/// ASCII alphanumerics + `_` / `-` / `.` preserved; everything
-/// else collapses to `_`.
-fn sanitize_for_coord(raw: &str) -> String {
-    let mut out = String::with_capacity(raw.len());
-    for c in raw.chars() {
-        let c = c.to_ascii_lowercase();
-        if c.is_ascii_alphanumeric() || matches!(c, '_' | '-' | '.') {
-            out.push(c);
-        } else {
-            out.push('_');
-        }
-    }
-    if out.is_empty() {
-        out.push('_');
-    }
-    out
 }
 
 #[cfg(test)]

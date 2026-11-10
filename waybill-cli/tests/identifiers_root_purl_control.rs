@@ -390,7 +390,9 @@ fn no_root_purl_omits_externalref_spdx23() {
         "out.spdx23.json",
     );
     let root_pkg = &spdx["packages"][0];
-    let refs = root_pkg["externalRefs"].as_array().unwrap();
+    assert_eq!(root_pkg["name"].as_str(), Some("my-svc"), "the override root");
+    // Absent when empty, so read it as possibly missing.
+    let refs = root_pkg["externalRefs"].as_array().cloned().unwrap_or_default();
     let has_purl = refs
         .iter()
         .any(|r| r["referenceType"].as_str() == Some("purl"));
@@ -398,11 +400,13 @@ fn no_root_purl_omits_externalref_spdx23() {
         !has_purl,
         "root Package externalRefs[] must NOT contain a purl entry; got {refs:?}"
     );
-    // CPE entry should still be present.
+    // #1402 — and no `waybill`-vendor CPE either, so with `--no-root-purl`
+    // the root carries no identifier at all. That is the operator's
+    // explicit choice; nothing is invented to fill it.
     let has_cpe = refs
         .iter()
         .any(|r| r["referenceType"].as_str() == Some("cpe23Type"));
-    assert!(has_cpe, "CPE externalRef should still emit");
+    assert!(!has_cpe, "no placeholder CPE; got {refs:?}");
 }
 
 // =====================================================================
@@ -433,14 +437,12 @@ fn no_root_purl_omits_software_packageurl_and_externalidentifier_spdx3() {
         "software_packageUrl must be ABSENT; got {:?}",
         root.get("software_packageUrl")
     );
-    // externalIdentifier[] still present (CPE), but NO packageUrl entry.
-    let ext_ids = root["externalIdentifier"].as_array().unwrap();
-    let has_purl = ext_ids
-        .iter()
-        .any(|i| i["externalIdentifierType"].as_str() == Some("packageUrl"));
+    // #1402 — no placeholder CPE either, so the root has no identifier at
+    // all and the empty `externalIdentifier[]` is omitted, not `[]`.
     assert!(
-        !has_purl,
-        "externalIdentifier[] must NOT contain a packageUrl entry; got {ext_ids:?}"
+        root.get("externalIdentifier").is_none(),
+        "externalIdentifier must be ABSENT; got {:?}",
+        root.get("externalIdentifier")
     );
 }
 

@@ -10,29 +10,6 @@ use crate::generate::RootComponentOverride;
 use crate::scan_fs::package_db::nix::closure::summary as closure_summary;
 use crate::scan_fs::package_db::nix::declarations;
 
-/// Normalize a string for inclusion in a CPE 2.3 segment.
-///
-/// CPE 2.3 well-formed name segments (per NIST) are lowercase and use
-/// `_` for separators; other characters are typically escaped with a
-/// backslash. For our synthetic scan-subject CPE we only need a
-/// minimally-valid form: lowercase, ASCII alphanumerics + `_` / `-` /
-/// `.` preserved, everything else → `_`.
-fn cpe_sanitize(raw: &str) -> String {
-    let mut out = String::with_capacity(raw.len());
-    for c in raw.chars() {
-        let c = c.to_ascii_lowercase();
-        if c.is_ascii_alphanumeric() || matches!(c, '_' | '-' | '.') {
-            out.push(c);
-        } else {
-            out.push('_');
-        }
-    }
-    if out.is_empty() {
-        out.push('_');
-    }
-    out
-}
-
 /// Milestone 844 (#844): the inputs `build_metadata` always needs.
 ///
 /// Separate from [`MetadataExtras`] on purpose: these have no
@@ -1267,45 +1244,21 @@ pub fn build_metadata(
     // synthetic shape that diverged from the SPDX side; post-053 the
     // shapes are identical for the main-module case.
     //
-    // Uses waybill as the vendor for the placeholder fallback. Name
-    // and version segments are CPE-sanitized (lowercase, non-
-    // alphanumerics → underscore). sbomqs's schema validator runs CPE
-    // validation on metadata.component and flags empty/absent fields
-    // as invalid.
+    // #1402 — a subject carries a CPE only when it has one of its own: the
+    // main-module's primary CPE. A synthetic placeholder and an operator
+    // override carry none. They used to get `cpe:2.3:a:waybill:<name>:...`,
+    // which names waybill as the vendor of software waybill did not make and
+    // is a look-up key for no vulnerability database; a `--path .` self-scan
+    // made it `cpe:2.3:a:waybill:waybill:0.0.0`. The PURL remains the
+    // subject's identifier, which meets CISA's and ENISA's "at least one".
     //
-    // Milestone 1377 (#1398, FR-012) — `None` for an evaluated Nix package
-    // with no CPE of its own. That subject is a real, identified package
-    // whose PURL already meets CISA's and ENISA's "at least one
-    // identifier"; a `waybill`-vendor CPE would assert an identity no
-    // dictionary holds, beside a PURL that is correct.
-    let evaluated_nix_package = selection.heuristic
-        == Some(crate::generate::root_selector::RootSelectionHeuristic::NixEvaluatedPackage);
+    // The sbomqs concern that kept the placeholder was re-measured: sbomqs
+    // v2.1.1's overall score and NTIA 2026 profile do not move without it;
+    // the Interlynk profile moves by -0.005 (rust-ripgrep corpus golden).
     let synthetic_component_cpe: Option<String> = if override_active {
-        // Milestone 077 — operator-supplied identity drives the CPE
-        // verbatim through the existing `cpe_sanitize` helper. Vendor
-        // stays hardcoded `waybill` per spec assumption (out of scope
-        // for this milestone).
-        Some(format!(
-            "cpe:2.3:a:waybill:{}:{}:*:*:*:*:*:*:*",
-            cpe_sanitize(&subject_name),
-            cpe_sanitize(&subject_version),
-        ))
-    } else if let Some(c) = main_module {
-        match c.cpes.first() {
-            Some(cpe) => Some(cpe.clone()),
-            None if evaluated_nix_package => None,
-            None => Some(format!(
-                "cpe:2.3:a:waybill:{}:{}:*:*:*:*:*:*:*",
-                cpe_sanitize(&subject_name),
-                cpe_sanitize(&subject_version),
-            )),
-        }
+        None
     } else {
-        Some(format!(
-            "cpe:2.3:a:waybill:{}:{}:*:*:*:*:*:*:*",
-            cpe_sanitize(&subject_name),
-            cpe_sanitize(&subject_version),
-        ))
+        main_module.and_then(|c| c.cpes.first().cloned())
     };
 
     // Milestone 080 — user-supplied creators routed by Type per the
@@ -2103,9 +2056,8 @@ mod tests {
     }
 
     #[test]
-    fn metadata_component_has_synthetic_cpe() {
-        // sbomqs flags empty/absent cpe on metadata.component as invalid.
-        // Waybill emits cpe:2.3:a:waybill:<name>:<version>:*:*:*:*:*:*:*.
+    fn a_synthetic_subject_carries_no_cpe() {
+        // #1402 — no `waybill`-vendor placeholder; the field is absent.
         let meta =
             build_metadata(
             MetadataSubject {
@@ -2119,19 +2071,7 @@ mod tests {
             },
             MetadataExtras::default(),
         );
-        assert_eq!(
-            meta["component"]["cpe"],
-            "cpe:2.3:a:waybill:myapp:0.1.0:*:*:*:*:*:*:*"
-        );
-    }
-
-    #[test]
-    fn cpe_sanitize_handles_special_characters() {
-        assert_eq!(cpe_sanitize("My App"), "my_app");
-        assert_eq!(cpe_sanitize("app+v1"), "app_v1");
-        assert_eq!(cpe_sanitize("MYAPP"), "myapp");
-        assert_eq!(cpe_sanitize("my-app.v2"), "my-app.v2");
-        assert_eq!(cpe_sanitize(""), "_");
+        assert!(meta["component"].get("cpe").is_none(), "{}", meta["component"]);
     }
 
     #[test]

@@ -4668,7 +4668,6 @@
     ],
     "component": {
       "bom-ref": "rust-ripgrep@0e8390a",
-      "cpe": "cpe:2.3:a:waybill:rust-ripgrep:0e8390a:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

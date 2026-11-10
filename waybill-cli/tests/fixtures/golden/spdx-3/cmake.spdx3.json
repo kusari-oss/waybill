@@ -58,11 +58,6 @@
       "creationInfo": "_:creation-info",
       "externalIdentifier": [
         {
-          "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:waybill:cmake:0.0.0:*:*:*:*:*:*:*",
-          "type": "ExternalIdentifier"
-        },
-        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/cmake@0.0.0",
           "type": "ExternalIdentifier"

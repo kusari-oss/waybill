@@ -252,7 +252,6 @@
     ],
     "component": {
       "bom-ref": "bazel@0.0.0",
-      "cpe": "cpe:2.3:a:waybill:bazel:0.0.0:*:*:*:*:*:*:*",
       "name": "bazel",
       "purl": "pkg:generic/bazel@0.0.0",
       "type": "application",

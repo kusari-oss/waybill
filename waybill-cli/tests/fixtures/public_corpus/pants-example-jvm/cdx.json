@@ -2141,7 +2141,6 @@
     ],
     "component": {
       "bom-ref": "pants-example-jvm@675ee75",
-      "cpe": "cpe:2.3:a:waybill:pants-example-jvm:675ee75:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

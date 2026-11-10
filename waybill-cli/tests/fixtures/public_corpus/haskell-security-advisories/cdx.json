@@ -17175,7 +17175,6 @@
     ],
     "component": {
       "bom-ref": "haskell-security-advisories@4dc0b9b",
-      "cpe": "cpe:2.3:a:waybill:haskell-security-advisories:4dc0b9b:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

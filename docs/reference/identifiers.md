@@ -1003,7 +1003,7 @@ jq '.metadata.component | {name, version, "bom-ref", purl, cpe}' widget-svc.cdx.
 #   "version": "1.2.3",
 #   "bom-ref": "widget-svc@1.2.3",
 #   "purl": "pkg:generic/widget-svc@1.2.3",
-#   "cpe": "cpe:2.3:a:waybill:widget-svc:1.2.3:*:*:*:*:*:*:*"
+#   "cpe": null
 # }
 ```
 
@@ -1052,7 +1052,7 @@ waybill sbom scan --image acme/internal-bld:v1 \
 | Version | `metadata.component.version` | Synthesized root `Package.versionInfo` | Synthesized root element `software_packageVersion` |
 | `bom-ref`/SPDXID | `metadata.component.bom-ref = <name>@<version>` | `Package.SPDXID` (hash-derived from override) | Element `spdxId` (hash-derived from override) |
 | PURL | `metadata.component.purl = pkg:generic/<percent-encoded(name)>@<percent-encoded(version)>` | `Package.externalRefs[purl]` | Element `software_packageUrl` |
-| CPE | `metadata.component.cpe` | `Package.externalRefs[cpe23Type]` | Element `externalIdentifier[cpe23]` |
+| CPE | none: an override names the subject and does not invent a CPE (#1402; operator-supplied CPEs are #1413) | none | none |
 
 When the override is active, manifest-derived main-module components
 (identified by `properties[waybill:component-role=main-module]`) are

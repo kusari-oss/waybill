@@ -27395,7 +27395,6 @@
     ],
     "component": {
       "bom-ref": "haskell-language-server@1b4b3c6",
-      "cpe": "cpe:2.3:a:waybill:haskell-language-server:1b4b3c6:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

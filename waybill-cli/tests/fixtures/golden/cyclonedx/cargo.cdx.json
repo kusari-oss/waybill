@@ -681,7 +681,6 @@
     ],
     "component": {
       "bom-ref": "lockfile-v3@0.0.0",
-      "cpe": "cpe:2.3:a:waybill:lockfile-v3:0.0.0:*:*:*:*:*:*:*",
       "name": "lockfile-v3",
       "purl": "pkg:generic/lockfile-v3@0.0.0",
       "type": "application",

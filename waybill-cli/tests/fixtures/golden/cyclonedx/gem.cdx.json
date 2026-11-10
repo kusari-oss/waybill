@@ -950,7 +950,6 @@
     ],
     "component": {
       "bom-ref": "simple-bundle@0.0.0",
-      "cpe": "cpe:2.3:a:waybill:simple-bundle:0.0.0:*:*:*:*:*:*:*",
       "name": "simple-bundle",
       "purl": "pkg:generic/simple-bundle@0.0.0",
       "type": "application",

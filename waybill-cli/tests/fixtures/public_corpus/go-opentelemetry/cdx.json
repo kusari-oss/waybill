@@ -28548,7 +28548,6 @@
     ],
     "component": {
       "bom-ref": "go-opentelemetry@55899e3",
-      "cpe": "cpe:2.3:a:waybill:go-opentelemetry:55899e3:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

@@ -635,7 +635,6 @@
     ],
     "component": {
       "bom-ref": "go-cobra@a655097",
-      "cpe": "cpe:2.3:a:waybill:go-cobra:a655097:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",

@@ -96,7 +96,6 @@
     ],
     "component": {
       "bom-ref": "waybill-test:latest@0.0.0",
-      "cpe": "cpe:2.3:a:waybill:waybill-test_latest:0.0.0:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from resolved image reference",

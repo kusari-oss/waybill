@@ -3630,7 +3630,6 @@
     ],
     "component": {
       "bom-ref": "pants-example-django@7da716f",
-      "cpe": "cpe:2.3:a:waybill:pants-example-django:7da716f:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",
