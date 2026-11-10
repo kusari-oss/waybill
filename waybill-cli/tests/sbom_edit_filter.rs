@@ -229,3 +229,201 @@ fn corpus_golden_drops_development_and_test_cleanly() {
         }
     }
 }
+
+// ---------------------------------------------------------------- 1423 US3
+
+type StrSet = std::collections::BTreeSet<String>;
+
+/// Every component PURL in a document, in any of the three formats.
+/// CycloneDX components nest (a binary's compiled-in modules sit under it),
+/// so that walk is recursive.
+fn purls(doc: &Value) -> StrSet {
+    fn cdx_walk(cs: &[Value], out: &mut StrSet) {
+        for c in cs {
+            if let Some(p) = c.get("purl").and_then(Value::as_str) {
+                out.insert(p.to_string());
+            }
+            cdx_walk(c.get("components").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]), out);
+        }
+    }
+    let mut out = StrSet::new();
+    match format_of(doc) {
+        "cdx" => {
+            if let Some(root) = doc.pointer("/metadata/component") {
+                cdx_walk(std::slice::from_ref(root), &mut out);
+            }
+            cdx_walk(doc.get("components").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]), &mut out);
+        }
+        "spdx23" => {
+            for p in doc.get("packages").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]) {
+                for r in p.get("externalRefs").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]) {
+                    if r.get("referenceType").and_then(Value::as_str) == Some("purl") {
+                        if let Some(l) = r.get("referenceLocator").and_then(Value::as_str) {
+                            out.insert(l.to_string());
+                        }
+                    }
+                }
+            }
+        }
+        _ => {
+            for e in doc.get("@graph").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]) {
+                if let Some(p) = e.get("software_packageUrl").and_then(Value::as_str) {
+                    out.insert(p.to_string());
+                }
+            }
+        }
+    }
+    out
+}
+
+/// The PURLs `--drop <selector>` removed from a document: the input's set
+/// minus the output's. Also checks the count the edit reports, so that two
+/// components sharing a PURL cannot hide a disagreement.
+fn dropped_purls(input: &Value, selector: &str, label: &str) -> StrSet {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join(format!("in.{label}"));
+    std::fs::write(&path, serde_json::to_string_pretty(input).unwrap()).unwrap();
+    let e = edit(&path, &["--drop", selector]);
+    e.assert_ok();
+    let dropped: StrSet = purls(input).difference(&purls(&e.json())).cloned().collect();
+    assert!(
+        e.stderr.contains(&format!("drop-components: matched {},", dropped.len())),
+        "{label}: `{selector}` reported a count other than the {} PURLs it removed: {}",
+        dropped.len(),
+        e.stderr
+    );
+    dropped
+}
+
+/// A closure with one member of each kind that decides the native mark:
+/// `us3lib` is linked into the artifact (`buildInputs`), `us3tool` only builds
+/// it (`nativeBuildInputs`), and `us3patch` is referenced by nothing and is
+/// emitted only because it carries `patches`. The last two are not in the
+/// artifact, and each format marks them natively: CycloneDX `scope:
+/// excluded`, SPDX 2.3 `BUILD_TOOL_OF`, SPDX 3 `usesTool` with `scope: build`.
+#[cfg(unix)]
+const US3_CLOSURE: &str = r#"{
+  "derivations": {
+    "d-root.drv": {
+      "name": "waybill-fixture-us3root-0.1.0",
+      "env": {
+        "pname": "waybill-fixture-us3root",
+        "version": "0.1.0",
+        "buildInputs": "/nix/store/h1-us3lib",
+        "nativeBuildInputs": "/nix/store/h2-us3tool"
+      },
+      "outputs": { "out": { "path": "h0-us3root" } }
+    },
+    "d-us3lib.drv": {
+      "name": "waybill-fixture-us3lib-1.0.0",
+      "env": { "pname": "waybill-fixture-us3lib", "version": "1.0.0" },
+      "outputs": { "out": { "path": "h1-us3lib" } }
+    },
+    "d-us3tool.drv": {
+      "name": "waybill-fixture-us3tool-2.0.0",
+      "env": { "pname": "waybill-fixture-us3tool", "version": "2.0.0" },
+      "outputs": { "out": { "path": "h2-us3tool" } }
+    },
+    "d-us3patch.drv": {
+      "name": "waybill-fixture-us3patch-3.0.0",
+      "env": {
+        "pname": "waybill-fixture-us3patch",
+        "version": "3.0.0",
+        "patches": "/nix/store/p1-fix.patch"
+      },
+      "outputs": { "out": { "path": "h3-us3patch" } }
+    }
+  },
+  "version": 3
+}"#;
+
+/// SC-004 / FR-010: one closure scan, edited three times with the same
+/// selector, loses the same PURLs from each document. Before 1423 the
+/// selector did not exist, and the nearest one, `scope=development`, took
+/// the excluded members from CycloneDX and none from SPDX.
+#[cfg(unix)]
+#[test]
+fn us3_scope_excluded_selects_same_set_in_three_formats() {
+    use common::nix_stub::{NixStub, Rows, DEFAULT_ATTR};
+    let project = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/closure_role_scope/project");
+    let scan = NixStub { project, closure: US3_CLOSURE, rows: Rows::Json("[]"), attr: DEFAULT_ATTR }.scan(&["--nix-closure"]);
+    let sets: Vec<(&str, StrSet)> = [("cdx", &scan.cdx), ("spdx23", &scan.spdx23), ("spdx3", &scan.spdx3)]
+        .into_iter()
+        .map(|(label, doc)| (label, dropped_purls(doc, "scope=excluded", label)))
+        .collect();
+    let cdx = &sets[0].1;
+    let has = |n: &str| cdx.iter().any(|p| p.contains(n));
+    assert!(has("waybill-fixture-us3tool"), "the build tool was not selected: {cdx:?}");
+    assert!(has("waybill-fixture-us3patch"), "the unreferenced patch-applier was not selected: {cdx:?}");
+    assert!(!has("waybill-fixture-us3lib"), "a member linked into the artifact was selected: {cdx:?}");
+    assert!(!has("waybill-fixture-us3root"), "the evaluated package was selected: {cdx:?}");
+    for (label, set) in &sets[1..] {
+        assert_eq!(set, cdx, "{label} selects a different set from CycloneDX");
+    }
+}
+
+/// A CycloneDX `scope: excluded` with no lifecycle property is how a closure
+/// member not in the artifact, and a Go module `go mod why` proved unneeded,
+/// are written. It used to be read as `development`; it is now `excluded`,
+/// and `development` still means what the lifecycle property says.
+#[test]
+fn us3_scope_development_no_longer_matches_bare_excluded() {
+    let mut doc = read_json(&fixture("full.cdx.json"));
+    let express = doc["components"].as_array_mut().unwrap().iter_mut().find(|c| c["name"] == "express").unwrap();
+    express["scope"] = json!("excluded");
+    express["properties"] = json!([{"name": "waybill:build-inclusion", "value": "not-needed"}]);
+    let express_purl = express["purl"].as_str().unwrap().to_string();
+    let name_of = |p: &String| {
+        doc["components"].as_array().unwrap().iter().find(|c| c["purl"].as_str() == Some(p)).unwrap()["name"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
+
+    let dev = dropped_purls(&doc, "scope=development", "cdx");
+    assert!(!dev.contains(&express_purl), "a bare `scope: excluded` still reads as development");
+    let dev_names: StrSet = dev.iter().map(name_of).collect();
+    assert_eq!(dev_names, ["jest-lite", "pretty-format-lite"].map(String::from).into(), "development changed");
+
+    let excluded = dropped_purls(&doc, "scope=excluded", "cdx");
+    assert_eq!(excluded, [express_purl].into(), "`scope=excluded` must take exactly the bare-excluded component");
+}
+
+/// SC-006 / US3 scenario 2: on documents whose components carry real
+/// lifecycle scopes, `scope=development` selects what it selected before
+/// 1423 — pinned from the pre-1423 binary: the fixture's dev chain, and the
+/// 16 development components of the npm-express goldens — in every format.
+/// The confusion must not run the other way either. CycloneDX writes those
+/// development components as `scope: excluded` too, and `scope=excluded`
+/// takes none of them, as it takes none from SPDX.
+#[test]
+fn us3_real_lifecycle_scopes_unchanged() {
+    let fixture_dev: StrSet = ["jest-lite", "pretty-format-lite"].map(String::from).into();
+    for (label, file) in FORMATS {
+        let input = read_json(&fixture(file));
+        let out = edit(&fixture(file), &["--drop", "scope=development"]).assert_ok().json();
+        let dropped: StrSet = names(&input).difference(&names(&out)).cloned().collect();
+        assert_eq!(dropped, fixture_dev, "{label}: `scope=development` changed");
+        assert!(dropped_purls(&input, "scope=excluded", label).is_empty(), "{label}: development read as excluded");
+    }
+
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/public_corpus/npm-express");
+    let cdx = read_json(&dir.join("cdx.json"));
+    let dev_purls: StrSet = cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|c| {
+            c["properties"].as_array().is_some_and(|ps| {
+                ps.iter().any(|p| p["name"] == "waybill:lifecycle-scope" && p["value"] == "development")
+            })
+        })
+        .filter_map(|c| c["purl"].as_str().map(str::to_string))
+        .collect();
+    assert_eq!(dev_purls.len(), 16, "the golden's development population moved; re-pin this test");
+    for file in ["cdx.json", "spdx-2.3.json", "spdx-3.json"] {
+        let input = read_json(&dir.join(file));
+        assert_eq!(dropped_purls(&input, "scope=development", file), dev_purls, "{file}: `scope=development` changed");
+        assert!(dropped_purls(&input, "scope=excluded", file).is_empty(), "{file}: development read as excluded");
+    }
+}

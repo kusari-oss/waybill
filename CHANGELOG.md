@@ -9,6 +9,22 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **`sbom edit --drop 'scope=development'` no longer matches a bare
+  CycloneDX `scope: excluded`.** A component with `"scope": "excluded"`
+  and no `waybill:lifecycle-scope` or `waybill:optional-derivation`
+  property used to be read as `development`. That component is not a
+  development dependency: it is a `--nix-closure` member that only builds
+  the artifact, or a Go module that `go mod why` proved unneeded
+  (`waybill:build-inclusion: not-needed`). It now matches the new
+  `scope=excluded` and nothing else. In SPDX the same members, which
+  carried no scope and so matched `scope=runtime`, now match only
+  `scope=excluded` as well. On the nix-closure-moat golden,
+  `scope=development` took 1,319 components from the CycloneDX document
+  and 10 from each SPDX document; it now takes 10 from all three.
+  Selections on documents with real lifecycle scopes are unchanged:
+  across the other 16 public-corpus goldens, `scope=development`,
+  `build`, `test` and `optional` match the same count in every format
+  before and after (1423).
 - **A recorded read set no longer carries opens that failed.** Capture
   observed open *requests*, so a file the build looked for and did not
   find was recorded as a file the build read. On the integration
@@ -36,6 +52,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **`sbom edit` selector `scope=excluded`: components not in the
+  artifact, the same set in all three formats.** It matches CycloneDX
+  `"scope": "excluded"` that no lifecycle property explains, the source of
+  an SPDX 2.3 `BUILD_TOOL_OF`, and a `to` of an SPDX 3 `usesTool`
+  relationship scoped `build`. On the nix-closure-moat golden it selects
+  the same 1,309 PURLs from each format. Before this change, the nearest
+  selector, `scope=development,build,test`, took 1,320 from CycloneDX and
+  11 from each SPDX document (1423).
 - **`--nix-closure` lists the Go modules and Rust crates compiled into a
   nix-built binary.** The closure tier enumerates derivations, and a Go or
   Rust program's dependencies are not derivations, so a closure scan of
