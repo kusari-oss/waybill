@@ -79,6 +79,23 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **grype now sees a curated CPE row's second vendor.** CycloneDX
+  `component.cpe` holds one CPE, so the further vendors of a curated row
+  (`unzip` is `info-zip`, then `unzip_project`) reached CycloneDX only in
+  `waybill:cpe-candidates`, which no scanner reads, and SPDX 2.3 only as the
+  same annotation.
+  NVD files every unzip CVE grype knows under `unzip_project`. On a
+  `pkg:generic` component, each further curated CPE is now a `syft:cpe23`
+  property in CycloneDX, the one carrier beside `component.cpe` that grype
+  0.120.0 reads (`evidence.identity[]` was measured and is not read), and a
+  further `cpe23Type` reference in SPDX 2.3. On six Nix closures grype gains
+  15 findings per target (14 on `unzip 6.0`, 1 on `flex 2.6.4`) and loses
+  none; Trivy and osv-scanner are unchanged. **13 of the 15 name CVEs
+  nixpkgs patches**, recorded in the component's pedigree, which grype does
+  not read; sbomnix's document reports the same 13. Other ecosystems' extra
+  candidates are vendor guesses and are not exposed. Measurements in
+  `specs/1430-secondary-cpe-carrier/` (#1430).
+
 - **Document subjects no longer carry a `waybill`-vendor CPE.** A subject
   without a CPE of its own (the synthetic placeholder, or one named with
   `--root-name`/`--root-purl`) was given `cpe:2.3:a:waybill:<name>:<version>`

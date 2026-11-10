@@ -514,6 +514,38 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<String> {
         .collect()
 }
 
+/// The CPEs after the primary that each format also hands a CPE matcher
+/// (#1430).
+///
+/// CycloneDX `component.cpe` is single-valued, so a curated row's second
+/// vendor used to reach CycloneDX only in `waybill:cpe-candidates`, which no
+/// scanner reads, and SPDX 2.3 only as that annotation. grype 0.120.0 reads
+/// `component.cpe` plus every `syft:cpe23` property in CycloneDX, and every
+/// `cpe23Type` external reference in SPDX 2.3; it does not read
+/// `evidence.identity`. Measured: all 14 grype findings on `unzip 6.0` are
+/// filed under `unzip_project`, the row's second vendor, and none surfaced.
+/// See `specs/1430-secondary-cpe-carrier/`.
+///
+/// **Only `pkg:generic` components.** Their CPEs come solely from
+/// `GENERIC_LIBRARY_CPES`, whose every pair was probed against NVD's
+/// dictionary. Every other ecosystem's extra candidates are vendor guesses
+/// (`debian:jq`, `python-<name>`), and grype's apk matcher matches every CPE
+/// it is given, so exposing those is a separate decision with its own
+/// measurement. A candidate without a release version is never returned: a
+/// matcher would read a wildcard version as every version.
+pub fn secondary_cpes(component: &ResolvedComponent) -> Vec<&str> {
+    if component.purl.ecosystem() != "generic" {
+        return Vec::new();
+    }
+    component
+        .cpes
+        .iter()
+        .skip(1)
+        .map(String::as_str)
+        .filter(|cpe| crate::generate::spdx::v3_external_ids::is_fully_resolved_cpe23(cpe))
+        .collect()
+}
+
 /// Insert `value` (lowercased, CPE-segment-safe) into `out` unless it's
 /// already present. Empty strings are dropped.
 fn push_unique(out: &mut Vec<String>, value: &str) {
@@ -609,6 +641,71 @@ mod tests {
             extra_annotations: Default::default(),
             binary_role: None,
         }
+    }
+
+    /// #1430 — a curated row's second vendor is handed to the matcher; the
+    /// primary is not repeated.
+    #[test]
+    fn i1430_a_curated_rows_second_vendor_is_a_secondary_cpe() {
+        let mut c = make_component("pkg:generic/unzip@9.9.9");
+        c.cpes = synthesize_cpes(&c);
+        // CONTROL: the row really has two vendors, or this passes vacuously.
+        assert_eq!(c.cpes.len(), 2, "{:?}", c.cpes);
+        assert_eq!(
+            secondary_cpes(&c),
+            vec!["cpe:2.3:a:unzip_project:unzip:9.9.9:*:*:*:*:*:*:*"]
+        );
+
+        let mut file = make_component("pkg:generic/file@9.9");
+        file.cpes = synthesize_cpes(&file);
+        assert_eq!(
+            secondary_cpes(&file),
+            vec![
+                "cpe:2.3:a:christos_zoulas:file:9.9:*:*:*:*:*:*:*",
+                "cpe:2.3:a:gentoo:file:9.9:*:*:*:*:*:*:*",
+            ],
+            "every vendor after the first, in table order"
+        );
+    }
+
+    /// #1430 — a single-vendor row has nothing to add.
+    #[test]
+    fn i1430_a_single_vendor_row_has_no_secondary_cpe() {
+        let mut c = make_component("pkg:generic/zlib@9.9.9");
+        c.cpes = synthesize_cpes(&c);
+        assert_eq!(c.cpes.len(), 1, "CONTROL: {:?}", c.cpes);
+        assert!(secondary_cpes(&c).is_empty());
+    }
+
+    /// #1430 — heuristic candidates in other ecosystems stay out of the
+    /// matcher's reach, though they keep their `waybill:cpe-candidates` entry.
+    #[test]
+    fn i1430_heuristic_candidates_are_not_secondary_cpes() {
+        for purl in [
+            "pkg:deb/debian/jq@1.6-2.1?distro=bookworm",
+            "pkg:apk/alpine/musl@1.2.4-r2",
+            "pkg:pypi/requests@2.31.0",
+        ] {
+            let mut c = make_component(purl);
+            c.cpes = synthesize_cpes(&c);
+            assert!(c.cpes.len() > 1, "CONTROL {purl}: {:?}", c.cpes);
+            assert!(secondary_cpes(&c).is_empty(), "{purl}: {:?}", secondary_cpes(&c));
+        }
+    }
+
+    /// #1430 — a wildcard version reads as "every version" to a matcher.
+    #[test]
+    fn i1430_a_candidate_without_a_release_version_is_not_handed_on() {
+        let mut c = make_component("pkg:generic/waybill-fixture-lib@9.9.9");
+        c.cpes = vec![
+            "cpe:2.3:a:waybill-fixture-a:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*".to_string(),
+            "cpe:2.3:a:waybill-fixture-b:waybill-fixture-lib:*:*:*:*:*:*:*:*".to_string(),
+            "cpe:2.3:a:waybill-fixture-c:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*".to_string(),
+        ];
+        assert_eq!(
+            secondary_cpes(&c),
+            vec!["cpe:2.3:a:waybill-fixture-c:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*"]
+        );
     }
 
     #[test]

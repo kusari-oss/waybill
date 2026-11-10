@@ -182,10 +182,23 @@ pub(super) fn cdx_attestation(doc: &Value) -> BTreeSet<String> {
     cdx_external_ref_by_type(doc, "attestation")
 }
 
+/// A12 — `component.cpe` plus each `syft:cpe23` property, the carrier of a
+/// curated row's further vendors (#1430). Both SPDX formats carry those as
+/// further CPE references, so the subset check covers them too.
 pub(super) fn cdx_cpe(doc: &Value) -> BTreeSet<String> {
     walk_cdx_components_and_main_module(doc)
         .iter()
-        .filter_map(|c| c.get("cpe").and_then(|v| v.as_str()).map(String::from))
+        .flat_map(|c| {
+            let primary = c.get("cpe").and_then(|v| v.as_str());
+            let further = c
+                .get("properties")
+                .and_then(|v| v.as_array())
+                .into_iter()
+                .flatten()
+                .filter(|p| p.get("name").and_then(|v| v.as_str()) == Some("syft:cpe23"))
+                .filter_map(|p| p.get("value").and_then(|v| v.as_str()));
+            primary.into_iter().chain(further).map(String::from)
+        })
         .collect()
 }
 

@@ -1589,6 +1589,10 @@ pub fn build_metadata(
                 "value": serde_json::to_string(&c.cpes).unwrap_or_default(),
             }));
         }
+        // #1430 — the second-vendor carrier grype reads, as in builder.rs.
+        for cpe in crate::generate::cpe::secondary_cpes(c) {
+            comp_props.push(json!({ "name": "syft:cpe23", "value": cpe }));
+        }
         metadata["component"]["properties"] = json!(comp_props);
 
         // Propagate the supplier so the parity Section A `cdx_supplier`

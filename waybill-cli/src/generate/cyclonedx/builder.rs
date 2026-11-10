@@ -1641,6 +1641,11 @@ impl CycloneDxBuilder {
                         "value": serde_json::to_string(&component.cpes).unwrap_or_default()
                     }));
                 }
+                // #1430 — grype reads `component.cpe` and `syft:cpe23`, so
+                // a curated row's second vendor needs this to be matched.
+                for cpe in crate::generate::cpe::secondary_cpes(component) {
+                    properties.push(json!({ "name": "syft:cpe23", "value": cpe }));
+                }
             }
 
             // Include source file paths if configured and present.
@@ -2625,6 +2630,61 @@ mod tests {
                 && p["value"].as_str().unwrap().contains("jq:jq")),
             "expected cpe-candidates property, got {props:?}"
         );
+    }
+
+    fn property_values<'a>(component: &'a serde_json::Value, name: &str) -> Vec<&'a str> {
+        component["properties"]
+            .as_array()
+            .map(|ps| {
+                ps.iter()
+                    .filter(|p| p["name"] == name)
+                    .filter_map(|p| p["value"].as_str())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// #1430 — a curated second vendor rides `syft:cpe23`, the one carrier
+    /// beside `component.cpe` that grype's CycloneDX decoder reads. The C19
+    /// candidates property is unchanged.
+    #[test]
+    fn i1430_curated_secondary_cpes_ride_syft_cpe23() {
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
+        let mut component = make_component("waybill-fixture-lib", "9.9.9");
+        component.purl = Purl::new("pkg:generic/waybill-fixture-lib@9.9.9").expect("purl");
+        let cpes = [
+            "cpe:2.3:a:waybill-fixture-a:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*",
+            "cpe:2.3:a:waybill-fixture-b:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*",
+            "cpe:2.3:a:waybill-fixture-c:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*",
+        ];
+        component.cpes = cpes.iter().map(|s| s.to_string()).collect();
+        let bom = builder
+            .build(&[component], &[], &clean_integrity(), "myapp", &[], None)
+            .expect("build bom");
+        let c = &bom["components"][0];
+        assert_eq!(c["cpe"], cpes[0]);
+        assert_eq!(property_values(c, "syft:cpe23"), vec![cpes[1], cpes[2]]);
+        assert_eq!(
+            property_values(c, "waybill:cpe-candidates"),
+            vec![serde_json::to_string(&cpes).expect("json")]
+        );
+    }
+
+    /// #1430 — heuristic candidates outside `pkg:generic` keep only C19.
+    #[test]
+    fn i1430_heuristic_candidates_get_no_syft_cpe23() {
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
+        let mut component = make_component("jq", "1.6-2.1");
+        component.cpes = vec![
+            "cpe:2.3:a:debian:jq:1.6-2.1:*:*:*:*:*:*:*".to_string(),
+            "cpe:2.3:a:jq:jq:1.6-2.1:*:*:*:*:*:*:*".to_string(),
+        ];
+        let bom = builder
+            .build(&[component], &[], &clean_integrity(), "myapp", &[], None)
+            .expect("build bom");
+        let c = &bom["components"][0];
+        assert_eq!(property_values(c, "waybill:cpe-candidates").len(), 1, "CONTROL");
+        assert!(property_values(c, "syft:cpe23").is_empty());
     }
 
     #[test]
