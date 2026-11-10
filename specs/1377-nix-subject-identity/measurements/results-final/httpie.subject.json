@@ -1,0 +1,7 @@
+{
+  "name": "httpie",
+  "version": "3.2.4",
+  "purl": "pkg:pypi/httpie@3.2.4",
+  "cpe": "cpe:2.3:a:httpie:httpie:3.2.4:*:*:*:*:*:*:*",
+  "heuristic": null
+}

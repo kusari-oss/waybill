@@ -1,0 +1,37 @@
+{
+  "attribute": "default",
+  "components-emitted": 2117,
+  "components-without-member-role": 903,
+  "derivations": 2458,
+  "distinct-cves": 23,
+  "edge-ineligible-components": 97,
+  "edges": 17159,
+  "identifiers": {
+    "by-drv": 557,
+    "by-name-version": 146,
+    "declared": 48,
+    "received": 703,
+    "rejected": 0,
+    "wanted": 2361
+  },
+  "licenses": {
+    "degraded": null,
+    "received": 550,
+    "wanted": 2361,
+    "withheld-ambiguous": 0
+  },
+  "member-roles": {
+    "fragment": 84,
+    "package": 55,
+    "scaffolding": 13,
+    "source": 1062
+  },
+  "patches": 365,
+  "patches-without-cve": 339,
+  "roles": {
+    "artifact-input": 650,
+    "both": 110,
+    "build-tooling": 1697,
+    "unreferenced": 1
+  }
+}

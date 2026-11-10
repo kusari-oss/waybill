@@ -1,0 +1,7 @@
+{
+  "name": "openssh",
+  "version": "10.3p1",
+  "purl": "pkg:generic/openssh@10.3p1",
+  "cpe": "cpe:2.3:a:openbsd:openssh:10.3p1:*:*:*:*:*:*:*",
+  "heuristic": null
+}

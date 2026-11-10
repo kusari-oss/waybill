@@ -189,15 +189,15 @@ and never run a real evaluation.
 
 - [X] T030 [P] Document the subject rule, declared-CPE precedence (including FR-013), the join bases and the C184 `identifiers` counts for operators in `docs/reference/nix-evaluation.md`, in the `--nix-closure` section.
 - [X] T031 [P] Add an `[Unreleased]` entry to `CHANGELOG.md` covering #1398 and #1394.
-- [ ] T032 Update the closure tests that pin a whole document (`waybill-cli/tests/closure_*.rs`, `waybill-cli/tests/nix_config_closure.rs`) for the new subject and provenance. Change only what this milestone changes.
+- [X] T032 Update the closure tests that pin a whole document (`waybill-cli/tests/closure_*.rs`, `waybill-cli/tests/nix_config_closure.rs`) for the new subject and provenance. Change only what this milestone changes.
 - [ ] T033 Regenerate every golden. Verify with a normalised, sorted diff (content-addressed IDs masked, `LC_ALL=C sort`) that only `waybill-cli/tests/fixtures/public_corpus/nix-closure-moat/` and closure-test fixtures change (SC-007). Verify that the moat diff is exactly the following, and nothing else (SC-008):
   - the subject stays `nix-closure-moat` (the harness passes `--root-name`, which wins; no heuristic is recorded);
   - CPEs and their provenance on closure members;
   - C184 `identifiers`, and `licenses.wanted` if the root was not already counted.
   Any other change is investigated, not accepted. The moat-shaped subject itself (`pkg:hackage/moat@0.1`, `nix-evaluated-package`) is checked by `closure_subject.rs` and by the override-free probe scan in T035.
   Corpus goldens are `#[ignore]`d locally, so run that target's harness explicitly.
-- [ ] T034 Run the full gate, `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, and read its positive signals: the pass line, per-target `ok. N passed; 0 failed`, and the new tests by name.
-- [ ] T035 Re-run the probes per `quickstart.md` against the T004 baseline. Record SC-001 to SC-009 with numbers in `specs/1377-nix-subject-identity/measurements/results.md`:
+- [X] T034 Run the full gate, `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, and read its positive signals: the pass line, per-target `ok. N passed; 0 failed`, and the new tests by name.
+- [X] T035 Re-run the probes per `quickstart.md` against the T004 baseline. Record SC-001 to SC-009 with numbers in `specs/1377-nix-subject-identity/measurements/results.md`:
   - SC-002: at least 28 findings on openssh 10.3p1;
   - SC-004: run the emitted bash CPE through the `measurements/bash-cpe-encoding/` control, expecting CVE-2019-18276;
   - SC-006: no finding lost except by a CPE-source change, and distinct patched false positives ≤ 6;

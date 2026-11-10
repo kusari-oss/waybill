@@ -1,0 +1,7 @@
+{
+  "name": "curl",
+  "version": "8.20.0",
+  "purl": "pkg:generic/curl@8.20.0",
+  "cpe": "cpe:2.3:a:haxx:curl:8.20.0:*:*:*:*:*:*:*",
+  "heuristic": null
+}
