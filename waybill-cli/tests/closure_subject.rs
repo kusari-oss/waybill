@@ -38,6 +38,7 @@ fn scan_closure(closure: &str, attr: &str, extra: &[&str]) -> Scan {
         closure,
         rows: Rows::Json(&rows),
         attr,
+        ..Default::default()
     }
     .scan(&args)
 }
@@ -152,6 +153,7 @@ fn a_subject_without_a_cpe_carries_none_and_no_placeholder() {
         closure: &fixture("closure.json"),
         rows: Rows::Json(&rows),
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&["--nix-closure"]);
     assert!(
@@ -208,6 +210,7 @@ fn an_evaluated_package_that_is_also_the_main_module_is_one_subject() {
         closure: &fixture("closure-mainmodule.json"),
         rows: Rows::Json(&rows),
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&["--nix-closure"]);
     let [cdx, _, _] = subjects(&s);
@@ -244,6 +247,7 @@ fn control_without_a_closure_the_ladder_picks_the_other_main_module() {
         closure: &fixture("closure-mainmodule.json"),
         rows: Rows::Fail,
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&[]);
     let [cdx, _, _] = subjects(&s);
@@ -262,6 +266,7 @@ fn a_degraded_closure_leaves_todays_subject() {
         // No attribute matches, so `derivation show` fails and the tier
         // degrades with "no evaluable attribute".
         attr: "packages.aarch64-darwin.waybill-fixture-absent",
+        ..Default::default()
     }
     .scan(&["--nix-closure"]);
     let without = NixStub {
@@ -269,6 +274,7 @@ fn a_degraded_closure_leaves_todays_subject() {
         closure: &fixture("closure.json"),
         rows: Rows::Fail,
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&[]);
     assert_eq!(subjects(&degraded), subjects(&without));
@@ -286,6 +292,7 @@ fn a_closure_with_two_roots_names_no_evaluated_package() {
         closure: &fixture("closure-two-roots.json"),
         rows: Rows::Fail,
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&[]);
     assert_eq!(subjects(&two)[0].2, subjects(&without)[0].2);

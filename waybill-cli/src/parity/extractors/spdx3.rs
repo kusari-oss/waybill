@@ -785,6 +785,8 @@ spdx3_anno!(c212_spdx3, "waybill:cpe-provenance", component);
 spdx3_anno!(c213_spdx3, "waybill:nix-closure-contents", document);
 spdx3_anno!(c214_spdx3, "waybill:closure-contents", component);
 spdx3_anno!(c215_spdx3, "waybill:closure-binary-identity", component);
+// Milestone 1423 (#1423): C216 — how the closure scope marks were decided.
+spdx3_anno!(c216_spdx3, "waybill:closure-scope-method", document);
 spdx3_anno!(c183_spdx3, "waybill:patch-evidence-grade", document);
 spdx3_anno!(c184_spdx3, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.
