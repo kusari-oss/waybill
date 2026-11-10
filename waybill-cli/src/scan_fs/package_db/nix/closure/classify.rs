@@ -35,7 +35,11 @@ use super::derivation::{store_basename, RawClosure};
 /// distinguishable things. A fifth role value is the follow-up if a genuinely
 /// cross closure makes that expensive — it would change the C182 closed enum,
 /// every consumer of it, invariant I10's population and C203's vocabulary.
-const ARTIFACT_FIELDS: &[&str] = &[
+///
+/// Milestone 1423 — also the edge set of the reachability walk
+/// ([`super::walk`]), which follows these from the evaluated package. One
+/// constant for both, so the walk cannot drift from the role it replaces.
+pub(crate) const ARTIFACT_FIELDS: &[&str] = &[
     "buildInputs",
     "propagatedBuildInputs",
     "depsHostHost",

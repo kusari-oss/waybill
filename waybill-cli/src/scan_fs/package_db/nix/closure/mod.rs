@@ -39,6 +39,9 @@ pub(crate) mod runtime;
 /// runtime member.
 pub(crate) mod static_link;
 pub(crate) mod summary;
+/// Milestone 1423 (#1423), US2 — the reachability walk used when no store
+/// holds the evaluated output.
+pub(crate) mod walk;
 
 use std::path::Path;
 use std::time::Duration;

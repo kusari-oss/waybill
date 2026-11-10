@@ -35,7 +35,7 @@
 - `method = closure-role`:
   - the tier ran, but the scope pass could not use either evidence source (e.g. `no-evaluated-package` and the walk has no root);
   - `unavailable-reason` is non-null.
-- `static-link-source` is `none` when the runtime closure contains no Haskell-builder member, and null for `closure-role`.
+- `static-link-source` is `none` when the runtime closure (under `reachability-walk`, the walk's reached set) contains no Haskell-builder member, and null for `closure-role`.
 - `static-c-linking-detected` is always `false`. It exists so the document says, rather than implies, that static C linking is not detected (spec edge case).
 - `unmatched-runtime-paths` counts runtime store paths that joined to no emitted component, including a path whose name matches a component but whose version does not (the join is by output path, never by name). It is null unless `method = runtime-closure`.
 

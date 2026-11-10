@@ -69,12 +69,13 @@ pub(crate) struct RoleScopeSummary {
     pub(crate) exempt_compiler_supplied: usize,
     /// Members carrying a closure role at all, so the denominator.
     pub(crate) roles_seen: usize,
-    /// Milestone 1423 — members and modules decided runtime by the runtime
-    /// closure, by static linking, and marked not-in-artifact by the runtime
-    /// closure. All zero unless the evidence was the runtime closure.
-    pub(crate) runtime_closure: usize,
+    /// Milestone 1423 — members and modules the runtime evidence (the runtime
+    /// closure, or the walk) decided runtime, kept runtime by static linking,
+    /// and marked not-in-artifact. All zero under the role rule; C216 says
+    /// which evidence it was.
+    pub(crate) decided_runtime: usize,
     pub(crate) statically_linked: usize,
-    pub(crate) not_in_runtime_closure: usize,
+    pub(crate) decided_not_in_artifact: usize,
 }
 
 impl RoleScopeSummary {
@@ -97,6 +98,9 @@ const EMBEDDED_BUILD_INFO: &str = "embedded-build-info";
 /// 3. under [`RuntimeEvidence::Closure`]: in the runtime closure → runtime;
 ///    else statically linked into a runtime member → runtime; else
 ///    not-in-artifact — each recorded with its [`ScopeEvidence`];
+/// 4. under [`RuntimeEvidence::Walk`]: reached by the walk (or statically
+///    linked into a reached member) → runtime; else not-in-artifact — both
+///    recorded as `ReachabilityWalk`;
 /// 5. under [`RuntimeEvidence::None`]: the milestone-1277 role rule.
 ///
 /// Runtime means `artifact_presence = None`, so a `NotInArtifact` any earlier
@@ -115,20 +119,37 @@ pub(crate) fn assign_role_scope(
 ) -> RoleScopeSummary {
     let mut summary = match evidence {
         RuntimeEvidence::None => assign_from_roles(components, boot_libraries),
-        RuntimeEvidence::Closure { runtime, static_linked } => {
-            assign_from_runtime(components, boot_libraries, runtime, static_linked)
-        }
+        RuntimeEvidence::Closure { runtime, static_linked } => assign_from_runtime(
+            components,
+            boot_libraries,
+            runtime,
+            static_linked,
+            ScopeEvidence::RuntimeClosure,
+        ),
+        // Rule 4. The same decision as rule 3, with the walk's reached set in
+        // place of the runtime closure and every member decided by it
+        // carrying the walk's evidence, marked or not.
+        RuntimeEvidence::Walk { reached } => assign_from_runtime(
+            components,
+            boot_libraries,
+            reached,
+            &HashSet::new(),
+            ScopeEvidence::ReachabilityWalk,
+        ),
     };
     assign_modules(components, evidence, relationships, &mut summary);
     summary
 }
 
-/// Rules 1–3 under the runtime closure.
+/// Rules 1–4 under runtime evidence: `runtime` is the runtime closure (rule
+/// 3) or the walk's reached set (rule 4), and `decided_by` is the evidence
+/// recorded on every member either way.
 fn assign_from_runtime(
     components: &mut [ResolvedComponent],
     boot_libraries: &HashSet<String>,
     runtime: &HashSet<MemberKey>,
     static_linked: &HashSet<MemberKey>,
+    decided_by: ScopeEvidence,
 ) -> RoleScopeSummary {
     let mut summary = RoleScopeSummary::default();
     for component in components.iter_mut() {
@@ -154,14 +175,14 @@ fn assign_from_runtime(
         }
         let key = key_of_component(component);
         let (presence, evidence) = if key.as_ref().is_some_and(|k| runtime.contains(k)) {
-            summary.runtime_closure += 1;
-            (None, ScopeEvidence::RuntimeClosure)
+            summary.decided_runtime += 1;
+            (None, decided_by)
         } else if key.as_ref().is_some_and(|k| static_linked.contains(k)) {
             summary.statically_linked += 1;
             (None, ScopeEvidence::StaticallyLinked)
         } else {
-            summary.not_in_runtime_closure += 1;
-            (Some(ArtifactPresence::NotInArtifact), ScopeEvidence::RuntimeClosure)
+            summary.decided_not_in_artifact += 1;
+            (Some(ArtifactPresence::NotInArtifact), decided_by)
         };
         // Assigned, not merged: a `NotInArtifact` set earlier is cleared when
         // the runtime closure says the member ships (FR-001's second
@@ -206,7 +227,19 @@ fn assign_modules(
             .is_some_and(|p| p.is_absent_from_artifact());
         *ships.entry(module).or_default() |= host_ships;
     }
-    let under_runtime = matches!(evidence, RuntimeEvidence::Closure { .. });
+    // (evidence on a module that ships, evidence on one that does not), or
+    // `None` under the role rule. Under the runtime closure a shipping module
+    // is runtime by link, not by reference; under the walk both directions
+    // are the walk's approximation (data-model rule 4).
+    let decided_by = match evidence {
+        RuntimeEvidence::Closure { .. } => {
+            Some((ScopeEvidence::StaticallyLinked, ScopeEvidence::RuntimeClosure))
+        }
+        RuntimeEvidence::Walk { .. } => {
+            Some((ScopeEvidence::ReachabilityWalk, ScopeEvidence::ReachabilityWalk))
+        }
+        RuntimeEvidence::None => None,
+    };
     let store = crate::scan_fs::package_db::nix::closure::contents::store_dir();
     for (module, host_ships) in ships {
         let c = &mut components[module];
@@ -221,19 +254,23 @@ fn assign_modules(
                 .source_file_paths
                 .iter()
                 .all(|p| std::path::Path::new(p).starts_with(&store));
-        if under_runtime {
+        if let Some((shipping, absent)) = decided_by {
             if host_ships {
-                // A member the runtime closure marked, compiled into a
-                // runtime binary, ships after all.
+                // A member the evidence marked, compiled into a runtime
+                // binary, ships after all.
                 if !is_member || c.artifact_presence.is_some_and(|p| p.is_absent_from_artifact()) {
-                    summary.statically_linked += 1;
+                    if shipping == ScopeEvidence::StaticallyLinked {
+                        summary.statically_linked += 1;
+                    } else {
+                        summary.decided_runtime += 1;
+                    }
                     c.artifact_presence = None;
-                    c.scope_evidence = Some(ScopeEvidence::StaticallyLinked);
+                    c.scope_evidence = Some(shipping);
                 }
             } else if markable {
-                summary.not_in_runtime_closure += 1;
+                summary.decided_not_in_artifact += 1;
                 c.artifact_presence = Some(ArtifactPresence::NotInArtifact);
-                c.scope_evidence = Some(ScopeEvidence::RuntimeClosure);
+                c.scope_evidence = Some(absent);
             }
         } else if markable && !host_ships {
             c.artifact_presence = Some(ArtifactPresence::NotInArtifact);
@@ -726,7 +763,44 @@ mod tests {
         for x in &c {
             assert_eq!(x.scope_evidence, Some(ScopeEvidence::RuntimeClosure), "{}", x.name);
         }
-        assert_eq!((s.runtime_closure, s.not_in_runtime_closure), (2, 1));
+        assert_eq!((s.decided_runtime, s.decided_not_in_artifact), (2, 1));
+    }
+
+    /// Rule 4: the walk decides in both directions, records itself on every
+    /// member and module it decided, and never falls back to the role.
+    #[test]
+    fn m1423_the_walk_decides_in_both_directions() {
+        let mut c = vec![
+            component("pkg:generic/waybill-fixture-lib@3.0", Some("artifact-input")),
+            component("pkg:generic/waybill-fixture-xml@2.0", Some("artifact-input")),
+            component("pkg:generic/waybill-fixture-dns@1.0", Some("build-tooling")),
+            component("pkg:golang/example.test/libmod@v1.0.0", None),
+            component("pkg:golang/example.test/xmlmod@v1.0.0", None),
+        ];
+        c[2].artifact_presence = Some(ArtifactPresence::NotInArtifact);
+        let rels = [
+            embedded("pkg:generic/waybill-fixture-lib@3.0", "pkg:golang/example.test/libmod@v1.0.0"),
+            embedded("pkg:generic/waybill-fixture-xml@2.0", "pkg:golang/example.test/xmlmod@v1.0.0"),
+        ];
+        let ev = RuntimeEvidence::Walk {
+            reached: [key("waybill-fixture-lib", "3.0"), key("waybill-fixture-dns", "1.0")]
+                .into_iter()
+                .collect(),
+        };
+        let s = assign_role_scope(&mut c, &HashSet::new(), &ev, &rels);
+        assert_eq!(c[0].artifact_presence, None);
+        assert_eq!(
+            c[1].artifact_presence,
+            Some(ArtifactPresence::NotInArtifact),
+            "an artifact-input the walk does not reach, which the role rule would leave alone"
+        );
+        assert_eq!(c[2].artifact_presence, None, "reached, so a prior mark is cleared");
+        assert_eq!(c[3].artifact_presence, None, "compiled into a reached host");
+        assert_eq!(c[4].artifact_presence, Some(ArtifactPresence::NotInArtifact));
+        for x in &c {
+            assert_eq!(classification_source(x), Some("reachability-walk"), "{}", x.purl.as_str());
+        }
+        assert_eq!((s.decided_runtime, s.decided_not_in_artifact, s.statically_linked), (3, 2, 0));
     }
 
     #[test]

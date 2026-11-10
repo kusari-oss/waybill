@@ -5122,8 +5122,10 @@ pub async fn execute(
         // the evaluated output's runtime closure plus what is statically
         // linked into it, read against the document as it stands now (after
         // the identity, contents and edge passes), so the declared edges and
-        // the host → module edges are final. With no runtime closure the role
-        // rule decides, exactly as before, and C216 records why.
+        // the host → module edges are final. With no runtime closure the
+        // reachability walk from the evaluated package decides (US2); with no
+        // single evaluated package the role rule decides, exactly as before.
+        // C216 records which, and why.
         let (runtime_evidence, scope_method) = match &nix_closure {
             Some(Ok(classified)) => scan_fs::package_db::nix::closure::runtime::evidence(
                 classified,
@@ -5150,9 +5152,9 @@ pub async fn execute(
                 build_tooling = role_scope_summary.assigned_build_tooling,
                 unreferenced = role_scope_summary.assigned_unreferenced,
                 exempt_compiler_supplied = role_scope_summary.exempt_compiler_supplied,
-                runtime_closure = role_scope_summary.runtime_closure,
+                decided_runtime = role_scope_summary.decided_runtime,
                 statically_linked = role_scope_summary.statically_linked,
-                not_in_runtime_closure = role_scope_summary.not_in_runtime_closure,
+                decided_not_in_artifact = role_scope_summary.decided_not_in_artifact,
                 "nix-closure: artifact-presence classification"
             );
         }

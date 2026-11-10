@@ -26,7 +26,7 @@
 //! nix's ~79 s default (q5).
 
 use std::collections::{BTreeSet, HashSet};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use serde_json::Value;
 use waybill_common::resolution::{Relationship, ResolvedComponent};
@@ -34,6 +34,7 @@ use waybill_common::resolution::{Relationship, ResolvedComponent};
 use super::derivation::{store_basename, RawClosure};
 use super::member_key::{key_of_component, key_of_derivation, MemberKey};
 use super::static_link::{static_link_set, DeclaredEdges, StaticLinkSource};
+use super::walk;
 use super::{guard, ClassifiedClosure};
 use crate::scan_fs::package_db::nix::eval::invoke::run_bounded;
 use crate::scan_fs::package_db::nix::eval::reason::DegradationReason;
@@ -117,8 +118,7 @@ impl RuntimeUnavailable {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ScopeMethod {
     RuntimeClosure,
-    /// Constructed by the walk fallback (milestone 1423 US2, tasks T024/T025).
-    #[allow(dead_code)]
+    /// The walk fallback (US2): no store answered.
     ReachabilityWalk,
     ClosureRole,
 }
@@ -158,6 +158,22 @@ impl ScopeMethodRecord {
             unavailable_reason: None,
             static_link_source: Some(static_link_source),
             unmatched_runtime_paths: Some(unmatched_runtime_paths),
+        }
+    }
+
+    /// The record for marks taken from the reachability walk, because the
+    /// runtime closure could not be had for `reason`.
+    pub(crate) fn reachability_walk(
+        reason: RuntimeUnavailable,
+        static_link_source: StaticLinkSource,
+    ) -> Self {
+        Self {
+            method: ScopeMethod::ReachabilityWalk,
+            store: None,
+            verified: None,
+            unavailable_reason: Some(reason),
+            static_link_source: Some(static_link_source),
+            unmatched_runtime_paths: None,
         }
     }
 
@@ -325,7 +341,12 @@ fn run(argv: &[&str], budget: Duration) -> Result<(bool, String, String), Runtim
     }
 }
 
-fn ask(argv: &[&str], budget: Duration) -> Answer {
+/// How a query runs one `nix` invocation: [`run`] in production, a fake in
+/// the tests, so the cumulative budget can be tested without a clock.
+type Runner<'a> =
+    dyn FnMut(&[&str], Duration) -> Result<(bool, String, String), RuntimeUnavailable> + 'a;
+
+fn ask(run: &mut Runner<'_>, argv: &[&str], budget: Duration) -> Answer {
     match run(argv, budget) {
         Ok((true, stdout, _)) => {
             let paths = parse_paths(&stdout);
@@ -352,7 +373,36 @@ pub(crate) fn query(
     output: &str,
     substituters: &[String],
 ) -> Result<RuntimeClosure, RuntimeUnavailable> {
-    let mut worst = match ask(&local_argv(output), budget) {
+    let started = Instant::now();
+    query_with(&mut run, &|| started.elapsed(), budget, REMOTE_BUDGET, output, substituters)
+}
+
+/// The total time the substituter queries may spend before no further
+/// substituter is tried (T041, SC-005).
+///
+/// Each remote call is already bounded by nix's connect timeout: an
+/// unreachable cache costs ~2.1 s (q5). Tried one after another, three of them
+/// would cost ~6.3 s, past SC-005's 5 s, before the walk takes over. This
+/// bounds how many are *started*, not how long one runs: a reachable cache
+/// answering a cold query is slow by nature (hlint: 11 s for 322 paths, q3),
+/// and cutting that short would trade a correct answer for the walk. So the
+/// worst case is this budget plus one bounded call.
+pub(crate) const REMOTE_BUDGET: Duration = Duration::from_secs(5);
+
+/// [`query`], with the runner, the clock and the remote budget supplied.
+///
+/// `elapsed` is time since the query started; only the time spent on
+/// substituters counts against `remote_budget`, the local store's answer
+/// costing no network.
+fn query_with(
+    run: &mut Runner<'_>,
+    elapsed: &dyn Fn() -> Duration,
+    budget: Duration,
+    remote_budget: Duration,
+    output: &str,
+    substituters: &[String],
+) -> Result<RuntimeClosure, RuntimeUnavailable> {
+    let mut worst = match ask(run, &local_argv(output), budget) {
         Answer::Hit(paths) => {
             return Ok(RuntimeClosure {
                 paths,
@@ -363,8 +413,21 @@ pub(crate) fn query(
         }
         Answer::Miss(reason) => reason,
     };
-    for url in substituters {
-        let reason = match ask(&remote_argv(url, output), budget) {
+    let remote_started = elapsed();
+    for (i, url) in substituters.iter().enumerate() {
+        let spent = elapsed().saturating_sub(remote_started);
+        if spent >= remote_budget {
+            tracing::info!(
+                spent_ms = spent.as_millis(),
+                untried = substituters.len() - i,
+                "nix-closure: substituter budget spent; not trying the rest"
+            );
+            if RuntimeUnavailable::QueryTimedOut.severity() > worst.severity() {
+                worst = RuntimeUnavailable::QueryTimedOut;
+            }
+            break;
+        }
+        let reason = match ask(run, &remote_argv(url, output), budget) {
             Answer::Hit(paths) => match run(&verify_argv(url, output), budget) {
                 Ok((true, _, _)) => {
                     return Ok(RuntimeClosure {
@@ -456,6 +519,13 @@ pub(crate) enum RuntimeEvidence {
         runtime: HashSet<MemberKey>,
         static_linked: HashSet<MemberKey>,
     },
+    /// Marks come from the reachability walk (US2): `reached` is what the walk
+    /// from the evaluated package reaches, plus the Haskell libraries
+    /// statically linked into the reached members. One set, because every
+    /// member in it is decided by the walk's approximation, and C203 says so
+    /// for each rather than presenting a link-edge inference from an
+    /// approximate root as proven (spec US2 scenario 2).
+    Walk { reached: HashSet<MemberKey> },
     /// No evidence: the milestone-1277 role rule decides, as before 1423.
     None,
 }
@@ -473,22 +543,43 @@ pub(crate) fn evidence(
     relationships: &[Relationship],
     package_set_available: bool,
 ) -> (RuntimeEvidence, Option<ScopeMethodRecord>) {
+    let raw = &closure.raw;
+    let declared = || {
+        package_set_available.then(|| DeclaredEdges::from_document(raw, components, relationships))
+    };
+    let key_of = |k: &String| raw.derivations.get(k).and_then(|d| key_of_derivation(d, k));
     let rc = match &closure.runtime {
         None => return (RuntimeEvidence::None, None),
         Some(Err(reason)) => {
-            // Until the walk fallback lands (US2), an unavailable runtime
-            // closure leaves today's role rule in charge, and C216 says so.
-            return (RuntimeEvidence::None, Some(ScopeMethodRecord::closure_role(*reason)));
+            // Data-model rule 5: no single evaluated package means no root to
+            // walk from, so the role rule decides and C216 says why. The
+            // query reports `no-evaluated-package` for exactly this case.
+            let Some(root) = closure.graph.evaluated.as_deref() else {
+                let record = ScopeMethodRecord::closure_role(RuntimeUnavailable::NoEvaluatedPackage);
+                return (RuntimeEvidence::None, Some(record));
+            };
+            // Rule 4 (FR-005): the walk, never the role rule.
+            let walked = walk::reachable(raw, root);
+            let linked = static_link_set(raw, &walked, declared().as_ref());
+            let reached: HashSet<MemberKey> =
+                walked.iter().chain(&linked.members).filter_map(key_of).collect();
+            tracing::info!(
+                reason = reason.wire(),
+                derivations = raw.derivations.len(),
+                reached_derivations = walked.len(),
+                statically_linked = linked.members.len(),
+                reached_members = reached.len(),
+                static_link_source = linked.source.wire(),
+                "nix-closure: scope from the reachability walk (an approximation)"
+            );
+            let record = ScopeMethodRecord::reachability_walk(*reason, linked.source);
+            return (RuntimeEvidence::Walk { reached }, Some(record));
         }
         Some(Ok(rc)) => rc,
     };
-    let raw = &closure.raw;
     let (runtime_drvs, stray) = join(raw, &rc.paths);
-    let declared = package_set_available
-        .then(|| DeclaredEdges::from_document(raw, components, relationships));
-    let linked = static_link_set(raw, &runtime_drvs, declared.as_ref());
+    let linked = static_link_set(raw, &runtime_drvs, declared().as_ref());
 
-    let key_of = |k: &String| raw.derivations.get(k).and_then(|d| key_of_derivation(d, k));
     let runtime: HashSet<MemberKey> = runtime_drvs.iter().filter_map(key_of).collect();
     let static_linked: HashSet<MemberKey> = linked.members.iter().filter_map(key_of).collect();
 
@@ -603,6 +694,78 @@ mod tests {
             RuntimeUnavailable::QueryTimedOut
         );
         assert_eq!(failure_of("error: something else"), RuntimeUnavailable::QueryFailed);
+    }
+
+    /// A stub `nix` for [`query_with`]: the local store misses at once, and
+    /// each substituter is unreachable, costing `per_remote` of the fake
+    /// clock before failing as nix does when its connect timeout fires (q5).
+    /// Returns the outcome and every argv the stub saw.
+    fn unreachable_substituters(
+        substituters: &[&str],
+        per_remote: Duration,
+        remote_budget: Duration,
+    ) -> (Result<RuntimeClosure, RuntimeUnavailable>, Vec<String>) {
+        use std::cell::{Cell, RefCell};
+        let clock = Cell::new(Duration::ZERO);
+        let log = RefCell::new(Vec::new());
+        let mut stub = |argv: &[&str], _budget: Duration| {
+            log.borrow_mut().push(argv.join(" "));
+            if argv.contains(&"--store") {
+                clock.set(clock.get() + per_remote);
+                Ok((false, String::new(), "error: unable to download: Timeout was reached".to_string()))
+            } else {
+                Ok((false, String::new(), "error: path '/nix/store/x' is not valid".to_string()))
+            }
+        };
+        let subs: Vec<String> = substituters.iter().map(|s| s.to_string()).collect();
+        let got = query_with(
+            &mut stub,
+            &|| clock.get(),
+            Duration::from_secs(300),
+            remote_budget,
+            "/nix/store/x-out",
+            &subs,
+        );
+        (got, log.into_inner())
+    }
+
+    /// T041 / SC-005: once the substituters have cost the budget, no further
+    /// one is tried and the reason is `query-timed-out`. Driven by a fake
+    /// clock, so it is deterministic and instant.
+    #[test]
+    fn the_remote_budget_stops_further_substituters() {
+        let subs = ["https://a.test", "https://b.test", "https://c.test"];
+        let (got, log) =
+            unreachable_substituters(&subs, Duration::from_millis(2600), REMOTE_BUDGET);
+        assert_eq!(got, Err(RuntimeUnavailable::QueryTimedOut));
+        let tried: Vec<&String> = log.iter().filter(|l| l.contains("--store")).collect();
+        assert_eq!(tried.len(), 2, "two calls spend 5.2 s, so the third is never started: {log:?}");
+        assert!(!log.iter().any(|l| l.contains("https://c.test")), "{log:?}");
+    }
+
+    /// CONTROL: the budget does not fire early. At the measured 2.1 s per
+    /// unreachable cache the third starts at 4.2 s, under the budget.
+    #[test]
+    fn the_remote_budget_does_not_stop_a_query_still_under_it() {
+        let subs = ["https://a.test", "https://b.test", "https://c.test"];
+        let (got, log) =
+            unreachable_substituters(&subs, Duration::from_millis(2100), REMOTE_BUDGET);
+        assert_eq!(got, Err(RuntimeUnavailable::QueryTimedOut), "every cache timed out");
+        assert_eq!(log.iter().filter(|l| l.contains("--store")).count(), 3, "{log:?}");
+    }
+
+    /// The local store costs nothing against the remote budget, and a zero
+    /// budget tries no substituter at all.
+    #[test]
+    fn a_spent_budget_tries_no_substituter() {
+        let (got, log) =
+            unreachable_substituters(&["https://a.test"], Duration::from_secs(1), Duration::ZERO);
+        assert_eq!(got, Err(RuntimeUnavailable::QueryTimedOut));
+        assert_eq!(log, vec!["path-info -r /nix/store/x-out".to_string()]);
+        // Without substituters there is nothing to stop, so the reason stays
+        // the local miss.
+        let (got, _) = unreachable_substituters(&[], Duration::from_secs(1), Duration::ZERO);
+        assert_eq!(got, Err(RuntimeUnavailable::NotInAnyStore));
     }
 
     #[test]

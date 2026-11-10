@@ -30,9 +30,11 @@ Go and Rust modules are not in this set. They inherit from their host through th
 
 ## RuntimeEvidence (input to the scope pass)
 
-`enum RuntimeEvidence { Closure { runtime: RuntimeClosure, static_link: StaticLinkSet }, Walk { reached: BTreeSet<DrvKey>, reason: RuntimeUnavailable }, None }`
+`enum RuntimeEvidence { Closure { runtime: HashSet<MemberKey>, static_linked: HashSet<MemberKey> }, Walk { reached: HashSet<MemberKey> }, None }`
 
-Built in `scan_cmd.rs` from `ClassifiedClosure` before `assign_role_scope`. `None` is used when the closure tier degraded, and today's behaviour is unchanged in that case.
+Built in `scan_cmd.rs` (via `closure/runtime.rs::evidence`) from `ClassifiedClosure` before `assign_role_scope`, keyed by component identity (`MemberKey`) rather than `.drv`, because build variants share a component. `None` is used when the closure tier degraded, and today's behaviour is unchanged in that case; it is also used for `no-evaluated-package` (rule 5).
+
+`Walk.reached` is the walk from the evaluated derivation over `ARTIFACT_FIELDS` (`closure/walk.rs`, the `reach.py` rule) united with the static-link set computed from the reached Haskell members. The `RuntimeUnavailable` reason is not carried here: the pass does not need it, and C216's `ScopeMethodRecord` holds it.
 
 ## ScopeEvidence (`waybill-common/src/resolution.rs`, beside `ArtifactPresence`)
 
@@ -52,7 +54,7 @@ For each closure member `c`, the first rule that applies wins:
    - `c`'s outputs intersect `runtime.paths` → runtime, `RuntimeClosure`;
    - else `c ∈ static_link.members`, or `c` is an embedded module of a runtime host → runtime, `StaticallyLinked`;
    - else → `NotInArtifact`, `RuntimeClosure`.
-4. Under `RuntimeEvidence::Walk`: `c ∈ reached` (or an embedded module of a reached host) → runtime, `ReachabilityWalk`; else `NotInArtifact`, `ReachabilityWalk`.
+4. Under `RuntimeEvidence::Walk`: `c ∈ reached` (or an embedded module of a reached host) → runtime, `ReachabilityWalk`; else `NotInArtifact`, `ReachabilityWalk`. A statically linked Haskell library is in `reached`, so it too carries `ReachabilityWalk`, never `StaticallyLinked`: its root is an approximation, and the document must not present it as proven (US2 scenario 2). The compiler-supplied exemption applies to any role, as under rule 3.
 5. Under `RuntimeEvidence::None`: today's role rule, with `ClosureRole` evidence.
 
 "Runtime" means `artifact_presence = None` (nothing asserted absent). Any `NotInArtifact` that the contents pass or the role rule set earlier is cleared in that case. That is FR-001 in both directions.

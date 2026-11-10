@@ -20,6 +20,8 @@
 //! | `closure-runtime.json` | curl / openssh | `xml` is an `artifact-input` the output does not reference (marked); `dnsroot` is `build-tooling` but referenced (unmarked); `bootlib` is a compiler-supplied boot library |
 //! | `closure-static.json` | shellcheck / ormolu | a static Haskell executable whose libraries are in its static build's `buildInputs` and propagate; `hspec` is a test-only dependency |
 //! | `closure-embedded.json` | gh | Go modules read from a runtime binary and from a build tool's binary |
+//! | `closure-walk.json` | US2 | `perl` is `both` but reached only through a reached member's `nativeBuildInputs`; `xml` is an `artifact-input` of the build tool only |
+//! | `closure-tworoots.json` | US2 | two unconsumed derivations, so no evaluated package to walk from |
 
 #![cfg(unix)]
 #![allow(clippy::unwrap_used)]
@@ -292,7 +294,8 @@ fn us1_build_tooling_member_inside_runtime_closure_is_unmarked() {
     assert!(!run.marked().contains("waybill-fixture-dnsroot"), "referenced, so it ships");
     assert_eq!(run.c203("waybill-fixture-dnsroot").as_deref(), Some("runtime-closure"));
 
-    // CONTROL: no store holds the output, so the role decides and marks it.
+    // CONTROL: no store holds the output, so the walk decides, and it reaches
+    // `dnsroot` only through `nativeBuildInputs`, so it marks it.
     let control = scan_with(base(&closure));
     assert_eq!(
         control.c216().expect("C216")["unavailable-reason"],
@@ -301,7 +304,7 @@ fn us1_build_tooling_member_inside_runtime_closure_is_unmarked() {
     );
     assert!(
         control.marked().contains("waybill-fixture-dnsroot"),
-        "without a runtime answer the role rule marks it -- otherwise this test \
+        "without a runtime answer the walk marks it -- otherwise this test \
          could not tell the runtime closure clearing a mark from no mark at all"
     );
 }
@@ -362,15 +365,16 @@ fn us1_unverified_substituter_answer_is_not_used() {
         ..base(&closure)
     });
     let c216 = run.c216().expect("C216");
-    assert_ne!(c216["method"], "runtime-closure", "{c216}");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}");
     assert_eq!(c216["unavailable-reason"], "verification-failed", "{c216}");
     assert_eq!(c216["store"], Value::Null);
     assert_eq!(c216["verified"], Value::Null);
     assert!(
         !run.marked().contains("waybill-fixture-xml"),
-        "the unverified listing must not decide anything: `xml` is marked only \
-         by the runtime closure, and an `artifact-input` under either fallback"
+        "the unverified listing must not decide anything: the runtime closure \
+         marks `xml`, and the walk reaches it through the app's `buildInputs`"
     );
+    assert_eq!(run.c203("waybill-fixture-xml").as_deref(), Some("reachability-walk"));
 }
 
 /// FR-004 / SC-005: every remote query is bounded, so an unreachable cache
@@ -585,4 +589,145 @@ fn us1_embedded_go_module_inherits_runtime_host() {
     // The hosts themselves, for the record.
     assert!(marked.contains("waybill-fixture-tool"));
     assert!(!marked.contains("waybill-fixture-lib"));
+}
+
+// ---- US2: the reachability walk (FR-005, FR-007) --------------------------
+
+/// FR-005 / FR-007: with no store holding the output, scope comes from the
+/// walk, and the document says the marks are an approximation and why.
+#[test]
+fn us2_no_store_answer_uses_walk() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(base(&closure));
+    assert_eq!(
+        run.c216().expect("C216 on a closure document"),
+        serde_json::json!({
+            "method": "reachability-walk",
+            "schema": 1,
+            "static-c-linking-detected": false,
+            "static-link-source": "none",
+            "store": null,
+            "unavailable-reason": "not-in-any-store",
+            "unmatched-runtime-paths": null,
+            "verified": null,
+        }),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    // Every member the walk decided says so, marked or not; the evaluated
+    // package keeps its exemption.
+    for m in run.closure_members() {
+        let want = if m == "waybill-fixture-app" { "exempt-evaluated-package" } else { "reachability-walk" };
+        assert_eq!(run.c203(&m).as_deref(), Some(want), "{m}");
+    }
+}
+
+/// FR-005: every member the walk does not reach is marked, every member it
+/// reaches is not, in all three formats.
+#[test]
+fn us2_walk_marks_unreached_members() {
+    let closure = fixture("closure-walk.json");
+    let run = scan_with(base(&closure));
+    assert_eq!(
+        run.marked(),
+        names(&["waybill-fixture-perl", "waybill-fixture-tool", "waybill-fixture-xml"]),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    for n in ["waybill-fixture-ssl", "waybill-fixture-z"] {
+        assert_eq!(run.c203(n).as_deref(), Some("reachability-walk"), "{n}");
+    }
+    assert_eq!(run.c216().unwrap()["method"], "reachability-walk");
+}
+
+/// FR-005: the walk follows runtime-linking fields only. `perl` is linked by
+/// the build tool (so its role is `both`, which the role rule never marks)
+/// and is reached from the root only through `ssl`'s `nativeBuildInputs`. So
+/// is everything the tool links: `xml` is an `artifact-input` the role rule
+/// leaves alone.
+#[test]
+fn us2_walk_follows_only_runtime_linking_fields() {
+    let closure = fixture("closure-walk.json");
+    let run = scan_with(base(&closure));
+    let perl = run.cdx("waybill-fixture-perl");
+    assert_eq!(
+        Run::cdx_prop(perl, "waybill:closure-role"),
+        Some("both"),
+        "precondition: the role rule would leave perl unmarked"
+    );
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-xml"), "waybill:closure-role"),
+        Some("artifact-input")
+    );
+    let marked = run.marked();
+    assert!(marked.contains("waybill-fixture-perl"), "reached only through nativeBuildInputs");
+    assert!(marked.contains("waybill-fixture-xml"), "linked only by a build tool");
+    // CONTROL: the propagated edge is followed, so the walk is not simply
+    // stopping at the root's own fields.
+    assert!(!marked.contains("waybill-fixture-z"), "propagated by a reached member");
+}
+
+/// Embedded modules inherit a reached host's status under the walk, and are
+/// decided by it (data-model rule 4).
+#[test]
+fn us2_embedded_module_inherits_reached_host() {
+    let store = tempfile::tempdir().unwrap();
+    put(
+        store.path(),
+        "h0-waybill-fixture-app-1.2.3",
+        "app",
+        &go_binary("example.test/waybill-fixture-app", &[("example.test/waybill-fixture-goa", "v1.0.0")]),
+    );
+    put(
+        store.path(),
+        "h1-waybill-fixture-lib-2.0.0",
+        "lib",
+        &go_binary("example.test/waybill-fixture-lib", &[("example.test/waybill-fixture-libmod", "v1.1.0")]),
+    );
+    put(
+        store.path(),
+        "h2-waybill-fixture-tool-3.0.0",
+        "tool",
+        &go_binary("example.test/waybill-fixture-tool", &[("example.test/waybill-fixture-toolmod", "v0.1.0")]),
+    );
+    let closure = fixture("closure-embedded.json");
+    let run = scan_with(NixStub { store_dir: Some(store.path().to_path_buf()), ..base(&closure) });
+    let marked = run.marked();
+    let libmod = "example.test/waybill-fixture-libmod";
+    let toolmod = "example.test/waybill-fixture-toolmod";
+    assert!(!marked.contains(libmod), "compiled into a reached lib; stderr:\n{}", run.scan.stderr);
+    assert_eq!(run.c203(libmod).as_deref(), Some("reachability-walk"));
+    assert!(marked.contains(toolmod), "compiled into a build tool only");
+    assert_eq!(run.c203(toolmod).as_deref(), Some("reachability-walk"));
+    assert!(marked.contains("waybill-fixture-tool") && !marked.contains("waybill-fixture-lib"));
+}
+
+/// Data-model rule 5: with no single evaluated package there is no root to
+/// walk from, so the role rule decides and C216 says why. No runtime query is
+/// made either: there is no output to ask about.
+#[test]
+fn us2_no_evaluated_package_falls_back_to_closure_role() {
+    let closure = fixture("closure-tworoots.json");
+    let run = scan_with(base(&closure));
+    assert_eq!(
+        run.c216().expect("C216"),
+        serde_json::json!({
+            "method": "closure-role",
+            "schema": 1,
+            "static-c-linking-detected": false,
+            "static-link-source": null,
+            "store": null,
+            "unavailable-reason": "no-evaluated-package",
+            "unmatched-runtime-paths": null,
+            "verified": null,
+        }),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    assert!(!run.nix_log().contains("path-info"), "{}", run.nix_log());
+    let marked = run.marked();
+    assert!(marked.contains("waybill-fixture-tool"), "build-tooling, marked by the role rule");
+    assert!(!marked.contains("waybill-fixture-lib"), "artifact-input, left alone by the role rule");
+    assert_eq!(run.c203("waybill-fixture-tool").as_deref(), Some("closure-role"));
+    assert_eq!(run.c203("waybill-fixture-lib"), None, "the role rule decides nothing about it");
 }

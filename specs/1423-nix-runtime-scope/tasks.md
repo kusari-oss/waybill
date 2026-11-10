@@ -79,14 +79,18 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
 **Goal:** when no store answers, scope comes from a walk from the evaluated package over runtime-linking edges (FR-005, FR-007).
 **Independent test:** `cargo test -p waybill --test closure_runtime_scope us2_`. With the stub returning no listing, members reached from the root are unmarked with C203 `reachability-walk`, and C216 records `not-in-any-store`.
 
-- [ ] T023 [P] [US2] Add these to `closure_runtime_scope.rs` (red first):
+- [X] T023 [P] [US2] Add these to `closure_runtime_scope.rs` (red first):
   - `us2_no_store_answer_uses_walk` (C216 `method: reachability-walk`, `unavailable-reason: not-in-any-store`);
   - `us2_walk_marks_unreached_members`;
   - `us2_walk_follows_only_runtime_linking_fields` (a member reached only through `nativeBuildInputs` is marked);
   - `us2_no_evaluated_package_falls_back_to_closure_role` (two-root fixture; C216 `method: closure-role`).
-- [ ] T024 [US2] Implement the walk in `closure/static_link.rs` or a new `closure/walk.rs`. Start from the evaluated drv and follow `ARTIFACT_FIELDS` (`closure/classify.rs:38-44`) through `inputs.drvs`, matching the committed `measurements/reach.py` rule. Add the static-link set computed from the reached Haskell members. Return the reached drv-key set.
-- [ ] T025 [US2] Wire `RuntimeEvidence::Walk` into `scan_cmd.rs` (T017) and rule 4 into `assign_role_scope` (T018). C216 carries the `RuntimeUnavailable` reason.
-- [ ] T026 [US2] Score the walk on the five targets with the store query disabled. Run waybill against the wrapper flakes with `PATH` pointing at a nix wrapper that fails `path-info`, then compare the unmarked set with `measurements/rt/*.paths` using `measurements/reach.py`'s scoring. Assert finding-level precision ≥ 95.7% and recall ≥ 94.6% (SC-003), and record the result under `measurements/us2-walk-score/`.
+
+  Done. Red before T024/T025 for the first three, plus `us2_embedded_module_inherits_reached_host` (added) and the tightened `us1_unverified_substituter_answer_is_not_used` (now asserts `method: reachability-walk`). `us2_no_evaluated_package_falls_back_to_closure_role` passed from the start: US1 already routed `no-evaluated-package` to the role rule, so it is a regression guard. Mutation: making the walk also follow `nativeBuildInputs` fails `us2_walk_follows_only_runtime_linking_fields` (perl, line 663); restored with `cp`, confirmed with `cmp`.
+- [X] T024 [US2] Implement the walk in `closure/static_link.rs` or a new `closure/walk.rs`. Start from the evaluated drv and follow `ARTIFACT_FIELDS` (`closure/classify.rs:38-44`) through `inputs.drvs`, matching the committed `measurements/reach.py` rule. Add the static-link set computed from the reached Haskell members. Return the reached drv-key set.
+- [X] T025 [US2] Wire `RuntimeEvidence::Walk` into `scan_cmd.rs` (T017) and rule 4 into `assign_role_scope` (T018). C216 carries the `RuntimeUnavailable` reason.
+- [X] T026 [US2] Score the walk on the five targets with the store query disabled. Run waybill against the wrapper flakes with `PATH` pointing at a nix wrapper that fails `path-info`, then compare the unmarked set with `measurements/rt/*.paths` using `measurements/reach.py`'s scoring. Assert finding-level precision ≥ 95.7% and recall ≥ 94.6% (SC-003), and record the result under `measurements/us2-walk-score/`.
+
+  Done: 331/346 = 95.66% precision, 331/350 = 94.57% recall, identical to `reach.py` on all 1,301 findings, which are the committed figures before rounding (`measurements/us2-walk-score/README.md`).
 
 **Checkpoint:** US2 tests green; moat (output not in any store) produces walk-derived marks.
 
@@ -123,7 +127,9 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
   - Changed: closure scope comes from the runtime closure;
   - Added: C216, the C203 values and `scope=excluded`;
   - Changed: bare CDX `scope: excluded` no longer matches `scope=development`, which also affects Go `NotNeeded` components.
-- [ ] T041 Bound the total time spent on substituters, not only each one. Measured: an unreachable substituter costs 2.1 s; tried one after another, three or more exceed SC-005's 5 s (inference from q5). Add a cumulative remote budget in `closure/runtime.rs::query` (stop trying further substituters once 5 s have been spent; record `query-timed-out`), with a stub test using three unreachable substituters.
+- [X] T041 Bound the total time spent on substituters, not only each one. Measured: an unreachable substituter costs 2.1 s; tried one after another, three or more exceed SC-005's 5 s (inference from q5). Add a cumulative remote budget in `closure/runtime.rs::query` (stop trying further substituters once 5 s have been spent; record `query-timed-out`), with a stub test using three unreachable substituters.
+
+  Done: `runtime::REMOTE_BUDGET`, checked before each substituter is started; a running call is not cut short (research R2). Tested through `query_with` with a stub runner and an injected clock (`the_remote_budget_stops_further_substituters` at 2.6 s per cache, its control at 2.1 s, `a_spent_budget_tries_no_substituter`). At the measured 2.1 s, three unreachable caches still all run (~6.3 s); the budget stops the fourth onward.
 - [ ] T040 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Read `>>> all pre-PR checks passed.` and count the `test result: ok` lines. Then verify every task's claim at close-out, not its tick.
 
 ## Dependencies

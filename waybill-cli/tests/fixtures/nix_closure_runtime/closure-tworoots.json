@@ -1,0 +1,45 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-one-1.0.drv": {
+      "name": "waybill-fixture-one-1.0",
+      "env": {
+        "pname": "waybill-fixture-one",
+        "version": "1.0",
+        "buildInputs": "/nix/store/t-lib",
+        "nativeBuildInputs": "/nix/store/t-tool"
+      },
+      "inputs": {
+        "drvs": {
+          "t-lib.drv": { "outputs": ["out"] },
+          "t-tool.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "t-one" } }
+    },
+    "r00t-waybill-fixture-two-1.0.drv": {
+      "name": "waybill-fixture-two-1.0",
+      "env": {
+        "pname": "waybill-fixture-two",
+        "version": "1.0",
+        "buildInputs": "/nix/store/t-lib"
+      },
+      "inputs": {
+        "drvs": { "t-lib.drv": { "outputs": ["out"] } },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "t-two" } }
+    },
+    "t-lib.drv": {
+      "name": "waybill-fixture-lib-2.0",
+      "env": { "pname": "waybill-fixture-lib", "version": "2.0" },
+      "outputs": { "out": { "path": "t-lib" } }
+    },
+    "t-tool.drv": {
+      "name": "waybill-fixture-tool-3.0",
+      "env": { "pname": "waybill-fixture-tool", "version": "3.0" },
+      "outputs": { "out": { "path": "t-tool" } }
+    }
+  },
+  "version": 4
+}

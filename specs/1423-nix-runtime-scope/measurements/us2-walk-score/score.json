@@ -1,0 +1,149 @@
+{
+ "targets": {
+  "curl": {
+   "c203_values": {
+    "exempt-evaluated-package": 1,
+    "reachability-walk": 463
+   },
+   "c216": {
+    "method": "reachability-walk",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": null,
+    "unavailable-reason": "not-in-any-store",
+    "unmatched-runtime-paths": null,
+    "verified": null
+   },
+   "counts": {
+    "findings": 211,
+    "reach_fp": 15,
+    "reach_tn": 96,
+    "reach_tp": 100,
+    "walk_fp": 15,
+    "walk_tn": 96,
+    "walk_tp": 100
+   },
+   "disagreements_with_reach": []
+  },
+  "gh": {
+   "c203_values": {
+    "exempt-evaluated-package": 1,
+    "reachability-walk": 655
+   },
+   "c216": {
+    "method": "reachability-walk",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": null,
+    "unavailable-reason": "not-in-any-store",
+    "unmatched-runtime-paths": null,
+    "verified": null
+   },
+   "counts": {
+    "findings": 266,
+    "reach_tn": 211,
+    "reach_tp": 55,
+    "walk_tn": 211,
+    "walk_tp": 55
+   },
+   "disagreements_with_reach": []
+  },
+  "httpie": {
+   "c203_values": {
+    "exempt-evaluated-package": 1,
+    "reachability-walk": 2482
+   },
+   "c216": {
+    "method": "reachability-walk",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": null,
+    "unavailable-reason": "not-in-any-store",
+    "unmatched-runtime-paths": null,
+    "verified": null
+   },
+   "counts": {
+    "findings": 355,
+    "reach_fn": 19,
+    "reach_tn": 236,
+    "reach_tp": 100,
+    "walk_fn": 19,
+    "walk_tn": 236,
+    "walk_tp": 100
+   },
+   "disagreements_with_reach": []
+  },
+  "openssh": {
+   "c203_values": {
+    "exempt-evaluated-package": 1,
+    "reachability-walk": 455
+   },
+   "c216": {
+    "method": "reachability-walk",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": null,
+    "unavailable-reason": "not-in-any-store",
+    "unmatched-runtime-paths": null,
+    "verified": null
+   },
+   "counts": {
+    "findings": 237,
+    "reach_tn": 167,
+    "reach_tp": 70,
+    "walk_tn": 167,
+    "walk_tp": 70
+   },
+   "disagreements_with_reach": []
+  },
+  "ripgrep": {
+   "c203_values": {
+    "exempt-evaluated-package": 1,
+    "reachability-walk": 983
+   },
+   "c216": {
+    "method": "reachability-walk",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": null,
+    "unavailable-reason": "not-in-any-store",
+    "unmatched-runtime-paths": null,
+    "verified": null
+   },
+   "counts": {
+    "findings": 232,
+    "reach_tn": 226,
+    "reach_tp": 6,
+    "walk_tn": 226,
+    "walk_tp": 6
+   },
+   "disagreements_with_reach": []
+  }
+ },
+ "total": {
+  "findings": 1301,
+  "reach": {
+   "fn": 19,
+   "fp": 15,
+   "marked_runtime": 346,
+   "precision": 0.9566473988439307,
+   "recall": 0.9457142857142857,
+   "tp": 331
+  },
+  "truth_runtime_findings": 350,
+  "walk": {
+   "fn": 19,
+   "fp": 15,
+   "marked_runtime": 346,
+   "precision": 0.9566473988439307,
+   "recall": 0.9457142857142857,
+   "tp": 331,
+   "unjoined_findings": 0
+  }
+ }
+}
