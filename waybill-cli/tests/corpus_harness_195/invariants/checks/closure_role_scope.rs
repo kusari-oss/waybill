@@ -113,8 +113,11 @@ pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
         // Being exempt satisfies it too, and says so. This is the arm that
         // makes the row checkable at all.
         .filter(|c| {
-            cdx_prop(c, "waybill:scope-classification-source")
-                != Some("exempt-compiler-supplied")
+            !matches!(
+                cdx_prop(c, "waybill:scope-classification-source"),
+                // Milestone 1377: the evaluated package is the artifact.
+                Some("exempt-compiler-supplied" | "exempt-evaluated-package")
+            )
         })
         .filter_map(|c| cdx_component_ref(c))
         .collect();
@@ -262,6 +265,26 @@ mod tests {
             ),
             "a member recording `exempt-compiler-supplied` must satisfy this row"
         );
+    }
+
+    /// Milestone 1377 — the evaluated package is exempt the same way, and
+    /// `unreferenced` is the role it carries (nothing consumes it).
+    #[test]
+    fn i10_the_evaluated_package_passes_without_a_marker() {
+        let mut d = doc("unreferenced", false, false);
+        d["components"][0]["properties"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "name": "waybill:scope-classification-source",
+                "value": "exempt-evaluated-package"
+            }));
+        assert!(matches!(check(&sboms(d)), CellOutcome::Pass));
+        // CONTROL: the same member without the value fails.
+        assert!(!matches!(
+            check(&sboms(doc("unreferenced", false, false))),
+            CellOutcome::Pass
+        ));
     }
 
     /// The control on the exemption arm. If the arm matched any C203 value

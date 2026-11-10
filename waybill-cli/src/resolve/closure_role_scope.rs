@@ -106,14 +106,17 @@ pub(crate) fn assign_role_scope(
         // the closure consumes it, which is why it classifies `unreferenced`;
         // that is a fact about nix's references, not about presence. Before
         // this, openssh 10.3p1, the package a scan of its flake was about,
-        // was emitted `scope: excluded`. No counter: the subject is named by
-        // the document itself, so the exemption is visible where it applies.
+        // was emitted `scope: excluded`. Recorded rather than skipped (C203
+        // `exempt-evaluated-package`): with `--root-name` the evaluated
+        // package is not the subject, and an unmarked `unreferenced` member
+        // is what invariant I10 reports as a rule that never ran.
         if component
             .extra_annotations
             .get(crate::generate::root_selector::NIX_EVALUATED_PACKAGE_KEY)
             .and_then(serde_json::Value::as_bool)
             == Some(true)
         {
+            component.artifact_presence = Some(ArtifactPresence::ExemptEvaluatedPackage);
             continue;
         }
 
@@ -288,7 +291,15 @@ mod tests {
         // CONTROL: the same role without the tag is still classified.
         let mut c = vec![root, component("pkg:generic/patch@1.0.0", Some("unreferenced"))];
         let s = assign_role_scope(&mut c, &HashSet::new());
-        assert_eq!(presence(&c, "pkg:generic/waybill-fixture-app@2.1"), None);
+        assert_eq!(
+            presence(&c, "pkg:generic/waybill-fixture-app@2.1"),
+            Some(ArtifactPresence::ExemptEvaluatedPackage)
+        );
+        assert_eq!(
+            classification_source(&c[0]),
+            Some("exempt-evaluated-package"),
+            "the exemption leaves a trace (C203)"
+        );
         assert_eq!(presence(&c, "pkg:generic/patch@1.0.0"), Some(ArtifactPresence::NotInArtifact));
         assert_eq!(s.assigned_unreferenced, 1);
         assert_eq!(s.roles_seen, 2);
