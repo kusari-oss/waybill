@@ -699,6 +699,14 @@ pub struct ScanArgs {
     /// *built from*, not what is installed on it. Whenever a requested
     /// closure is not recorded, the document says why
     /// (`waybill:nix-closure-degraded`).
+    ///
+    /// The outputs of closure members that are already present in the nix
+    /// store are also read for the Go modules and Rust crates compiled into
+    /// their binaries, which are not derivations and would otherwise be
+    /// missing. Nothing is built or fetched to do this, so the result
+    /// depends on the machine: build the package first to have its contents
+    /// listed. `waybill:nix-closure-contents` records what was read. See
+    /// `--nix-closure-require-root-contents`.
     #[arg(long = "nix-closure", default_value_t = false)]
     pub nix_closure: bool,
 
@@ -719,6 +727,28 @@ pub struct ScanArgs {
         requires = "nix_closure"
     )]
     pub nix_closure_attr: Option<String>,
+
+    /// Fail the scan when the closure root's built output could not be read.
+    ///
+    /// `--nix-closure` reads the outputs of closure members that are already
+    /// present in the store for the Go modules and Rust crates compiled into
+    /// them. It never builds or fetches, so on a machine that has not built
+    /// the package — a fresh CI runner — nothing is recovered, the scan
+    /// still succeeds, and the document records that the root was not read
+    /// (`waybill:nix-closure-contents`).
+    ///
+    /// With this flag that case is an error instead, and no document is
+    /// written: use it where a document without the program's own
+    /// dependencies would be mistaken for a complete one. It fails when the
+    /// root's output is absent or unreadable, when the closure names no
+    /// single root, and when the closure tier itself degraded. A root that
+    /// was read and embeds nothing (a C program) passes.
+    #[arg(
+        long = "nix-closure-require-root-contents",
+        default_value_t = false,
+        requires = "nix_closure"
+    )]
+    pub nix_closure_require_root_contents: bool,
 
     /// The Nix platform to evaluate for, e.g. `x86_64-linux`.
     ///
@@ -4679,6 +4709,9 @@ pub async fn execute(
     let mut closure_ecosystem_identity: Option<
         scan_fs::package_db::nix::closure::ecosystem_identity::ConfirmationRecord,
     > = None;
+    // Milestone 1378 (#1396; C213) — what the contents pass read. Hoisted for
+    // the same reason the record above is: its presence says the pass ran.
+    let mut closure_contents: Option<ClosureContentsSummary> = None;
     match &nix_closure {
         Some(Err(reason)) => tracing::info!(
             reason = reason.wire(),
@@ -4790,6 +4823,23 @@ pub async fn execute(
             )
             .await);
 
+            // Milestone 1378 (#1396) — what is compiled into each member's
+            // output, for the outputs already present in the store.
+            //
+            // HERE, between the identity pass and the edges, for the reason
+            // that pass is here: this one may promote a member's identifier
+            // (a binary names its own module; the registry confirms it), and
+            // the edge join below reads `c.purl` from the live slice.
+            let contents = run_closure_contents(
+                classified,
+                &mut components,
+                &scan_fs::package_db::nix::closure::contents::store_dir(),
+                (enrich_cfg.deps_dev && !offline).then_some(&deps_dev_source),
+            )
+            .await;
+            relationships.extend(contents.relationships);
+            closure_contents = Some(contents.summary);
+
             // Milestone 1280 (#1346) — the closure's dependency edges.
             //
             // HERE, after the identity pass, because the identity -> PURL join
@@ -4837,6 +4887,19 @@ pub async fn execute(
             &target_name,
             scan_target_kind,
         );
+    }
+
+    // Milestone 1378 (#1396), FR-015a/b — an unread closure root.
+    //
+    // HERE, straight after the tier and long before any document is written,
+    // so the strict path leaves nothing behind.
+    if let Err(message) = closure_root_contents_verdict(
+        args.nix_closure,
+        args.nix_closure_require_root_contents,
+        nix_closure.as_ref().map(|r| r.as_ref().map(|_| ()).map_err(|e| e.wire().to_string())),
+        closure_contents.as_ref(),
+    ) {
+        anyhow::bail!(message);
     }
 
     // Milestone 1367 (#1371) — give every component the CPE candidates the
@@ -5509,6 +5572,8 @@ pub async fn execute(
         closure_ecosystem_identity: closure_ecosystem_identity_value,
         cpe_coverage: Some(cpe_coverage_json.as_str()),
         closure_graph_admission: closure_graph_admission_json.as_deref(),
+        nix_closure_contents: closure_contents.as_ref().map(|c| c.wire.as_str()),
+        nix_closure_contents_unread: closure_contents.as_ref().is_some_and(|c| c.unread),
         // C192 (m1067): answers served from the disk cache count as online.
         deps_dev_online: enrich_cfg.deps_dev && !offline,
         nixpkgs_haskell_degraded,
@@ -6351,6 +6416,196 @@ async fn run_closure_ecosystem_identity(
         "nix-closure: ecosystem identity"
     );
     record
+}
+
+/// Milestone 1378 (#1396) — what the contents pass leaves for the rest of
+/// the scan: the rendered C213 record and the facts the strict check needs.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ClosureContentsSummary {
+    wire: String,
+    unread: bool,
+    root: scan_fs::package_db::nix::closure::contents::RootState,
+    root_label: Option<String>,
+}
+
+struct ClosureContentsRun {
+    relationships: Vec<waybill_common::resolution::Relationship>,
+    summary: ClosureContentsSummary,
+}
+
+/// Milestone 1378 (#1396) — read present outputs, settle the identities
+/// binaries report for themselves, and append the recovered modules.
+///
+/// A named function for the reason [`run_closure_ecosystem_identity`] is one:
+/// wiring expressed inline is wiring no test can reach.
+///
+/// `confirmation` is `None` when deps.dev is off. Then every candidate is
+/// recorded `unchecked: disabled` and nothing is promoted — an identifier
+/// built by joining a binary's module path to a closure's version is an
+/// inference until a registry has seen it (FR-012b).
+async fn run_closure_contents(
+    classified: &scan_fs::package_db::nix::closure::ClassifiedClosure,
+    components: &mut Vec<waybill_common::resolution::ResolvedComponent>,
+    store: &std::path::Path,
+    confirmation: Option<&crate::enrich::depsdev_source::DepsDevSource>,
+) -> ClosureContentsRun {
+    use crate::enrich::depsdev_source::LookupResult;
+    use crate::enrich::request_key::EnrichmentKey;
+    use scan_fs::package_db::nix::closure::contents::{self, IdentityStatus, UncheckedReason};
+
+    let outcome = contents::read(classified, components, store);
+
+    // Settle identities. A finding the pass already settled (ambiguous, no
+    // version, existing identity, collision) is not asked about.
+    let mut statuses: Vec<IdentityStatus> = Vec::with_capacity(outcome.identities.len());
+    let keys: Vec<Option<EnrichmentKey>> = outcome
+        .identities
+        .iter()
+        .map(|f| {
+            if f.settled.is_some() {
+                return None;
+            }
+            EnrichmentKey::from_purl_parts(
+                f.registry_system()?,
+                None,
+                f.name.as_deref()?,
+                f.version.as_deref()?,
+            )
+        })
+        .collect();
+    let askable: Vec<EnrichmentKey> = keys.iter().flatten().cloned().collect();
+    let mut answers = match confirmation {
+        Some(source) if !askable.is_empty() => source.confirm(&askable).await.into_iter(),
+        _ => Vec::new().into_iter(),
+    };
+    for (finding, key) in outcome.identities.iter().zip(&keys) {
+        let status = match (finding.settled, key, confirmation) {
+            (Some(settled), _, _) => settled,
+            (None, None, _) => IdentityStatus::Unchecked(UncheckedReason::Unkeyable),
+            (None, Some(_), None) => IdentityStatus::Unchecked(UncheckedReason::Disabled),
+            (None, Some(_), Some(_)) => match answers.next() {
+                // Exhaustive on purpose, as in the m1366 pass: a state added
+                // to `LookupResult` must break this build rather than fall
+                // into a default.
+                Some(LookupResult::Found(_)) => IdentityStatus::Confirmed,
+                Some(LookupResult::Absent) => IdentityStatus::Declined,
+                Some(LookupResult::Failed) | Some(LookupResult::Unqueried) | None => {
+                    IdentityStatus::Unchecked(UncheckedReason::Unreachable)
+                }
+            },
+        };
+        statuses.push(status);
+    }
+    for (finding, status) in outcome.identities.iter().zip(&statuses) {
+        contents::apply_identity(components, finding, *status);
+    }
+
+    // Edges last: they are read against the members' final identifiers.
+    let relationships = outcome.relationships(components);
+    let recovered = outcome.components.len();
+    let record = &outcome.record;
+    tracing::info!(
+        members = record.members,
+        read = record.read,
+        partial = record.partial,
+        absent = record.absent,
+        failed = record.failed,
+        yielded = record.yielded,
+        golang = record.modules.get("golang").copied().unwrap_or(0),
+        cargo = record.modules.get("cargo").copied().unwrap_or(0),
+        recovered_components = recovered,
+        identities_confirmed = statuses
+            .iter()
+            .filter(|s| **s == IdentityStatus::Confirmed)
+            .count(),
+        root = record.root.wire(),
+        store = %store.display(),
+        "nix-closure: contents"
+    );
+    let summary = ClosureContentsSummary {
+        wire: record.wire(),
+        unread: record.has_unread(),
+        root: record.root,
+        root_label: outcome.root_label.clone(),
+    };
+    components.extend(outcome.components);
+    ClosureContentsRun {
+        relationships,
+        summary,
+    }
+}
+
+/// Milestone 1378 (#1396), FR-015a/b — what an unread closure root means for
+/// this scan.
+///
+/// `Ok` to continue (having warned, if there was something to warn about);
+/// `Err` with the message to fail with. Pure, so both branches are testable
+/// without a store or a nix.
+///
+/// `tier` is `None` when `--nix-closure` produced no attempt, `Some(Err)`
+/// with the degradation's wire reason when it degraded, `Some(Ok)` otherwise.
+fn closure_root_contents_verdict(
+    requested: bool,
+    strict: bool,
+    tier: Option<Result<(), String>>,
+    contents: Option<&ClosureContentsSummary>,
+) -> Result<(), String> {
+    use scan_fs::package_db::nix::closure::contents::RootState;
+    const FLAG: &str = "--nix-closure-require-root-contents";
+
+    if !requested {
+        return Ok(());
+    }
+    let (label, state) = match (tier, contents) {
+        (Some(Ok(())), Some(c)) => (c.root_label.as_deref(), c.root),
+        (Some(Err(reason)), _) => {
+            return if strict {
+                Err(format!(
+                    "{FLAG}: the closure was not recorded ({reason}), so its root's contents could not be read"
+                ))
+            } else {
+                // The tier already logged its degradation and C190 records it.
+                Ok(())
+            };
+        }
+        _ => {
+            return if strict {
+                Err(format!("{FLAG}: no closure was taken, so there is no root to read"))
+            } else {
+                Ok(())
+            };
+        }
+    };
+    let (satisfied, wire) = match state {
+        RootState::Member(s) => (s.satisfies_strict(), s.wire()),
+        RootState::None => (false, "none"),
+    };
+    let name = label.unwrap_or("<unknown>");
+    if satisfied {
+        if wire != "read" {
+            tracing::warn!(
+                root = name,
+                state = wire,
+                "nix-closure: the closure root was only partly read; some of its outputs are not present in the store"
+            );
+        }
+        return Ok(());
+    }
+    let why = match state {
+        RootState::None => "the closure names no single root component".to_string(),
+        _ => format!("the closure root `{name}` could not be read ({wire})"),
+    };
+    if strict {
+        return Err(format!(
+            "{FLAG}: {why}. Its built output must be present in the nix store; build or fetch it first. Nothing was written."
+        ));
+    }
+    tracing::warn!(
+        root = name,
+        state = wire,
+        "nix-closure: {why}; the modules compiled into it are NOT in this document. Build or fetch the package first, or pass {FLAG} to make this an error"
+    );
+    Ok(())
 }
 
 /// Milestone 1367 (#1371) — the document-scope record of what CPE synthesis
@@ -8132,6 +8387,7 @@ mod tests {
             nix_eval_timeout_secs: None,
             nix_closure: false,
             nix_closure_attr: None,
+            nix_closure_require_root_contents: false,
             no_nixpkgs_haskell: false,
             no_nixpkgs_haskell_closure: false,
             no_nixpkgs_security: false,
@@ -10694,5 +10950,276 @@ mod cpe_coverage_tests {
             extra_annotations: Default::default(),
             binary_role: None,
         }
+    }
+}
+
+/// Milestone 1378 (#1396) — the wiring around the contents pass: reading,
+/// asking the registry, and promoting only what it confirms.
+///
+/// The pass itself is unit-tested in `closure/contents.rs` and the emitted
+/// documents in `tests/closure_binary_contents.rs`, which runs with
+/// `--no-deps-dev`. Neither reaches the confirming path, so it has a stub of
+/// its own here, for the same reason the m1366 pass does.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod closure_contents_tests {
+    use super::*;
+    use crate::enrich::deps_dev_client::DepsDevClient;
+    use crate::enrich::depsdev_source::DepsDevSource;
+    use scan_fs::binary::embedded::fixtures;
+    use scan_fs::package_db::nix::closure::contents::{self, ReadState, RootState};
+    use scan_fs::package_db::nix::closure::{classify::classify, derivation::RawClosure};
+    use waybill_common::resolution::ResolvedComponent;
+
+    const APP: &str = "h0-waybill-fixture-app-1.2.3";
+    const TOOL: &str = "h2-waybill-fixture-tool-3.0.0";
+
+    fn merged() -> (
+        scan_fs::package_db::nix::closure::ClassifiedClosure,
+        Vec<ResolvedComponent>,
+    ) {
+        let json = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures/nix_closure_contents/app.json"),
+        )
+        .unwrap();
+        let raw = RawClosure::parse(&json).unwrap();
+        let roles = classify(&raw);
+        let graph = scan_fs::package_db::nix::closure::graph::project(
+            &raw,
+            &scan_fs::package_db::nix::closure::emit::emitted_drv_keys(&raw, &roles),
+        );
+        let classified = scan_fs::package_db::nix::closure::ClassifiedClosure {
+            attribute: "default".into(),
+            raw,
+            roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
+            read_outcome: Default::default(),
+            graph,
+            identifiers: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
+        };
+        let added = scan_fs::package_db::nix::closure::emit::components(&classified);
+        let mut components = Vec::new();
+        merge_closure_components(&mut components, added);
+        (classified, components)
+    }
+
+    /// The root holds a Go program, the build tool a Rust one.
+    fn store() -> tempfile::TempDir {
+        let store = tempfile::tempdir().unwrap();
+        for (output, file, bytes) in [
+            (
+                APP,
+                "app",
+                fixtures::go_binary(
+                    "example.test/waybill-fixture-app",
+                    "(devel)",
+                    &[("example.test/waybill-fixture-goa", "v1.0.0")],
+                ),
+            ),
+            (
+                TOOL,
+                "tool",
+                fixtures::cargo_binary(&[
+                    ("waybill-fixture-tool", "3.0.0", "local", "runtime"),
+                    ("waybill-fixture-cratea", "0.5.0", "crates.io", "runtime"),
+                ]),
+            ),
+        ] {
+            let dir = store.path().join(output).join("bin");
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(dir.join(file), bytes).unwrap();
+        }
+        store
+    }
+
+    fn by_name<'a>(c: &'a [ResolvedComponent], name: &str) -> &'a ResolvedComponent {
+        let found: Vec<_> = c.iter().filter(|x| x.name == name).collect();
+        assert_eq!(found.len(), 1, "exactly one component named {name}");
+        found[0]
+    }
+
+    fn identity(c: &ResolvedComponent) -> serde_json::Value {
+        serde_json::from_str(
+            c.extra_annotations
+                .get(contents::ANN_BINARY_IDENTITY)
+                .and_then(|v| v.as_str())
+                .expect("C215"),
+        )
+        .unwrap()
+    }
+
+    #[tokio::test]
+    async fn with_confirmation_disabled_modules_arrive_and_no_identifier_moves() {
+        let (classified, mut components) = merged();
+        let store = store();
+        let run = run_closure_contents(&classified, &mut components, store.path(), None).await;
+
+        // CONTROL: the pass did something.
+        assert_eq!(run.relationships.len(), 3, "goa, stdlib, cratea");
+        assert_eq!(run.summary.root, RootState::Member(ReadState::Read));
+        assert_eq!(run.summary.root_label.as_deref(), Some("waybill-fixture-app 1.2.3"));
+        assert!(run.summary.unread, "the library's outputs are absent");
+
+        let app = by_name(&components, "waybill-fixture-app");
+        assert_eq!(app.purl.as_str(), "pkg:generic/waybill-fixture-app@1.2.3");
+        assert_eq!(identity(app)["status"], "unchecked");
+        assert_eq!(identity(app)["reason"], "disabled");
+        assert!(run
+            .relationships
+            .iter()
+            .any(|r| r.from == "pkg:generic/waybill-fixture-app@1.2.3"));
+    }
+
+    /// FR-012a / FR-012b, both arms in one run: the registry knows the Go
+    /// program at the closure's version and does not know the Rust one.
+    #[tokio::test]
+    async fn a_confirmed_identity_is_promoted_and_a_declined_one_is_not() {
+        let server = wiremock::MockServer::start().await;
+        // The Go key carries the `v` the closure's version lacks. If the
+        // pass asked for `1.2.3` this mock would not match and the member
+        // would be declined — which is what the real registry does (measured:
+        // 404 for the un-prefixed form of a real version).
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path_regex(
+                r"^/systems/go/packages/.*waybill-fixture-app/versions/v1\.2\.3$",
+            ))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "versionKey": {"system": "GO", "name": "example.test/waybill-fixture-app", "version": "v1.2.3"},
+                "licenses": [],
+                "links": []
+            })))
+            .mount(&server)
+            .await;
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path(
+                "/systems/cargo/packages/waybill-fixture-tool/versions/3.0.0",
+            ))
+            .respond_with(wiremock::ResponseTemplate::new(404))
+            .mount(&server)
+            .await;
+        let source = DepsDevSource::new(
+            DepsDevClient::new(std::time::Duration::from_secs(5)).with_base_url(server.uri()),
+            false,
+        )
+        .with_batch(false)
+        .with_disk_cache(false, None);
+
+        let (classified, mut components) = merged();
+        let store = store();
+        let run =
+            run_closure_contents(&classified, &mut components, store.path(), Some(&source)).await;
+
+        let app = by_name(&components, "waybill-fixture-app");
+        assert_eq!(
+            app.purl.as_str(),
+            "pkg:golang/example.test/waybill-fixture-app@v1.2.3",
+            "confirmed, so promoted"
+        );
+        assert_eq!(app.version, "1.2.3", "the closure's version is kept");
+        assert_eq!(identity(app)["status"], "confirmed");
+        assert_eq!(identity(app)["candidate"], app.purl.as_str());
+
+        let tool = by_name(&components, "waybill-fixture-tool");
+        assert_eq!(
+            tool.purl.as_str(),
+            "pkg:generic/waybill-fixture-tool@3.0.0",
+            "a 404 is an answer, and the answer is no"
+        );
+        assert_eq!(identity(tool)["status"], "declined");
+        assert_eq!(identity(tool)["candidate"], "pkg:cargo/waybill-fixture-tool@3.0.0");
+
+        // The contents edges follow the promoted identifier...
+        assert!(run.relationships.iter().any(|r| r.from
+            == "pkg:golang/example.test/waybill-fixture-app@v1.2.3"
+            && r.to == "pkg:golang/example.test/waybill-fixture-goa@v1.0.0"));
+        // ...and so do the closure's own edges, which is why the pass runs
+        // before they are joined.
+        let (edges, unanchored) = scan_fs::package_db::nix::closure::graph::relationships(
+            &classified.graph,
+            &classified.raw,
+            &components,
+        );
+        assert_eq!(unanchored, 0);
+        assert_eq!(
+            edges
+                .iter()
+                .filter(|e| e.from == "pkg:golang/example.test/waybill-fixture-app@v1.2.3")
+                .count(),
+            2,
+            "root → lib and root → tool, from the promoted identifier"
+        );
+        // FR-011 — still one component for the program.
+        assert_eq!(
+            components
+                .iter()
+                .filter(|c| c.purl.as_str().contains("waybill-fixture-app"))
+                .count(),
+            1
+        );
+    }
+
+    // ---- the strict verdict ---------------------------------------------
+
+    fn summary(root: RootState) -> ClosureContentsSummary {
+        ClosureContentsSummary {
+            wire: String::new(),
+            unread: true,
+            root,
+            root_label: Some("waybill-fixture-app 1.2.3".to_string()),
+        }
+    }
+
+    #[test]
+    fn without_the_flag_an_unread_root_never_fails() {
+        for root in [
+            RootState::Member(ReadState::Absent),
+            RootState::Member(ReadState::Failed),
+            RootState::Member(ReadState::NoOutputs),
+            RootState::None,
+        ] {
+            assert_eq!(
+                closure_root_contents_verdict(true, false, Some(Ok(())), Some(&summary(root))),
+                Ok(()),
+                "{root:?}"
+            );
+        }
+        assert_eq!(
+            closure_root_contents_verdict(true, false, Some(Err("nix-missing".into())), None),
+            Ok(())
+        );
+        assert_eq!(closure_root_contents_verdict(false, false, None, None), Ok(()));
+    }
+
+    #[test]
+    fn strict_fails_exactly_when_the_root_was_not_read() {
+        let verdict = |root| {
+            closure_root_contents_verdict(true, true, Some(Ok(())), Some(&summary(root)))
+        };
+        assert!(verdict(RootState::Member(ReadState::Read)).is_ok());
+        assert!(
+            verdict(RootState::Member(ReadState::Partial)).is_ok(),
+            "partly read passes: which output holds the program is not knowable"
+        );
+        for root in [
+            RootState::Member(ReadState::Absent),
+            RootState::Member(ReadState::Failed),
+            RootState::Member(ReadState::NoOutputs),
+            RootState::None,
+        ] {
+            let err = verdict(root).expect_err("must fail");
+            assert!(err.contains("--nix-closure-require-root-contents"), "{err}");
+        }
+        let err = verdict(RootState::Member(ReadState::Absent)).unwrap_err();
+        assert!(err.contains("waybill-fixture-app 1.2.3") && err.contains("absent"), "{err}");
+
+        // A degraded tier has no root to read.
+        let err = closure_root_contents_verdict(true, true, Some(Err("nix-missing".into())), None)
+            .unwrap_err();
+        assert!(err.contains("nix-missing"), "{err}");
     }
 }

@@ -36,6 +36,20 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **`--nix-closure` lists the Go modules and Rust crates compiled into a
+  nix-built binary.** The closure tier enumerates derivations, and a Go or
+  Rust program's dependencies are not derivations, so a closure scan of
+  `gh` listed 0 Go modules where the binary holds 163, and of `ripgrep` 0
+  crates where the binary records 42. The tier now reads the outputs of
+  closure members that are **already present in the store** — it never
+  builds or fetches — and emits what their binaries declare as
+  dependencies of the member. What was read is recorded per member
+  (`waybill:closure-contents`) and for the document
+  (`waybill:nix-closure-contents`), because it depends on the machine: on
+  a fresh CI runner nothing is present and nothing is recovered.
+  `--nix-closure-require-root-contents` makes an unread closure root an
+  error. Where the registry confirms it, the evaluated package takes the
+  ecosystem identifier its binary reports (#1396).
 - **The subject of a `--nix-closure` scan is the package it built.** When
   the closure resolves, the derivation the evaluated attribute produced is
   the document's subject in CycloneDX, SPDX 2.3 and SPDX 3, recorded as

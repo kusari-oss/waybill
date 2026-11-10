@@ -482,16 +482,30 @@ pub fn read_binary(path: &Path) -> (BuildInfoStatus, Option<GoBinaryInfo>) {
         Ok(b) => b,
         Err(_) => return (BuildInfoStatus::NotGoBinary, None),
     };
+    read_binary_bytes(path, &bytes)
+}
+
+/// [`read_binary`] over a buffer the caller already holds.
+///
+/// Milestone 1378 (#1396): the nix closure tier reads each binary once and
+/// asks both this reader and the cargo-auditable one about the same bytes.
+/// Split out of `read_binary` rather than written beside it, so the size
+/// gate, detection and decoding are one implementation.
+pub(crate) fn read_binary_bytes(path: &Path, bytes: &[u8]) -> (BuildInfoStatus, Option<GoBinaryInfo>) {
+    let size = bytes.len() as u64;
+    if !(MIN_BINARY_SIZE_BYTES..=MAX_BINARY_SIZE_BYTES).contains(&size) {
+        return (BuildInfoStatus::NotGoBinary, None);
+    }
     // Detection runs over the buffer we already read — calling the
     // path-based `detect_is_go` here would read the whole file from
     // disk a second time, which dominated scan wall-time on large
     // build trees.
-    let offset = match detect_is_go_bytes(&bytes) {
+    let offset = match detect_is_go_bytes(bytes) {
         DetectResult::Found { buildinfo_offset } => buildinfo_offset,
         DetectResult::NotGoBinary => return (BuildInfoStatus::NotGoBinary, None),
         DetectResult::AmbiguousError => return (BuildInfoStatus::Missing, None),
     };
-    match decode_buildinfo(&bytes, offset) {
+    match decode_buildinfo(bytes, offset) {
         Ok(mut info) => {
             info.path = path.to_path_buf();
             (BuildInfoStatus::Ok, Some(info))
@@ -798,6 +812,27 @@ fn should_skip_binary_descent(path: &Path) -> bool {
         }
     }
     false
+}
+
+/// Milestone 1378 (#1396) — the modules compiled into one binary, without
+/// the binary's own main module.
+///
+/// For a caller that already has a component for the program and wants only
+/// what was linked into it: the nix closure tier, whose member *is* the
+/// program and carries a version the BuildInfo `mod` line usually lacks
+/// (`(devel)`, because nixpkgs builds from a tarball).
+///
+/// A wrapper over [`emit_entries_from_info`] rather than a second builder, so
+/// the dependency and `stdlib` entries are byte-for-byte what a standalone
+/// scan of the same binary emits. The main module is withheld by clearing it
+/// on a copy; nothing else about the input changes.
+pub(crate) fn dependency_entries(info: &GoBinaryInfo) -> Vec<PackageDbEntry> {
+    let mut without_main = info.clone();
+    without_main.main_module = None;
+    let mut out = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    emit_entries_from_info(&without_main, &mut out, &mut seen);
+    out
 }
 
 fn emit_entries_from_info(

@@ -1037,6 +1037,10 @@ cdx_anno!(c209_cdx, "waybill:cpe-coverage", document);
 cdx_anno!(c210_cdx, "waybill:closure-graph-admission", document);
 cdx_anno!(c211_cdx, "waybill:closure-admission", component);
 cdx_anno!(c212_cdx, "waybill:cpe-provenance", component);
+// Milestone 1378 (#1396): C213–C215 — closure binary contents.
+cdx_anno!(c213_cdx, "waybill:nix-closure-contents", document);
+cdx_anno!(c214_cdx, "waybill:closure-contents", component);
+cdx_anno!(c215_cdx, "waybill:closure-binary-identity", component);
 cdx_anno!(c183_cdx, "waybill:patch-evidence-grade", document);
 cdx_anno!(c184_cdx, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.

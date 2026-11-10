@@ -697,9 +697,15 @@ pub fn build_document(
         // which is the whole point of m1069 routing both formats through it:
         // a second computation here could disagree, and the two formats would
         // then make different completeness claims about one scan.
+        //
+        // Milestone 1378 (#1396): and the same second condition CycloneDX
+        // applies — members whose outputs were not read. Adding it to one
+        // format and not the other is exactly the disagreement the comment
+        // above warns about, and `m1280_t056` caught it when it happened.
         scan.nix_closure_summary
             .as_ref()
-            .is_some_and(|s| s.read_outcome.has_gap()),
+            .is_some_and(|s| s.read_outcome.has_gap())
+            || scan.nix_closure_contents_unread,
     );
 
     // 7. Relationship elements — dependency edges, containment edges,

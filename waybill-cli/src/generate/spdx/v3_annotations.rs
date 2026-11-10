@@ -655,6 +655,10 @@ fn push_document_fields(
     if let Some(record) = scan.closure_graph_admission {
         push(out, "waybill:closure-graph-admission", json!(record));
     }
+    // C213 (m1378, #1396) — which closure members had their outputs read.
+    if let Some(record) = scan.nix_closure_contents {
+        push(out, crate::scan_fs::package_db::nix::closure::contents::ANN_NIX_CLOSURE_CONTENTS, json!(record));
+    }
     // C209 (m1367, #1371) — the CPE synthesis coverage record.
     if let Some(record) = scan.cpe_coverage {
         push(out,

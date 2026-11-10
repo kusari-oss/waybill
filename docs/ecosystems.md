@@ -2439,6 +2439,70 @@ components**, because the classifier works in derivations; build variants share
 a `(name, version)` and merge, so the component figure is smaller and a reader
 comparing the two will find they disagree.
 
+### What is compiled into a member
+
+A Go or Rust program's dependencies are not derivations. nixpkgs fetches them
+as one bundle (`<name>-go-modules`, `<name>-vendor`) and compiles them into
+the binary, so the closure lists the bundle and none of what is in it.
+Measured, a closure scan of `gh` listed 0 Go modules where the binary holds
+163, and of `ripgrep` 0 crates where the binary records 42.
+
+Since milestone 1378 (#1396) `--nix-closure` reads the **outputs of closure
+members that are already present in the store** with the same Go BuildInfo
+and cargo-auditable readers a binary scan uses, and emits what they declare
+as ordinary top-level components the member depends on.
+
+It **never builds or fetches**. Realising an output runs a build; reading a
+file that is already there does not. The consequence is that what this step
+recovers depends on the machine:
+
+| where | what is present |
+| --- | --- |
+| a machine that built or installed the package | its output, and whatever else was fetched |
+| a developer machine, typically | about one output path in ten |
+| a fresh CI runner | nothing |
+
+So the document says what was read. `waybill:closure-contents` on every
+member is one of `read`, `partial`, `absent`, `failed`, `no-outputs`, and
+`waybill:nix-closure-contents` at document scope carries the counts and the
+closure root's own state. **`read: 0` and `root: "absent"` mean the outputs
+were not there — not that the program has no dependencies.** When any member
+is unread, the CycloneDX root-completeness claim is withheld.
+
+To make an unread root an error rather than a recorded gap:
+
+```sh
+nix build .#default --no-link         # put the output in the store
+waybill sbom scan --path . --nix-closure --nix-closure-require-root-contents
+```
+
+With the flag, a root whose output is absent or unreadable fails the scan and
+no document is written. A root that was read and embeds nothing passes.
+
+Three things to know when reading the result:
+
+- **Its contents attach to the scan's subject.** Since milestone 1377
+  (#1398) the package a closure scan evaluated is a component and the
+  document's subject, so the modules compiled into it are its dependencies.
+- **The program appears once.** A binary's description of itself — the Go
+  main module, the cargo root crate — is reconciled into the member, never
+  emitted beside it. Where the ecosystem registry confirms the binary's name
+  at the closure's version, that becomes the member's identifier
+  (`gh 2.93.0` → `pkg:golang/github.com/cli/cli/v2@v2.93.0`); otherwise the
+  candidate is recorded in `waybill:closure-binary-identity` and the
+  identifier is left alone. With `--no-deps-dev` nothing is confirmed.
+- **Build tools embed modules too.** `cargo` carries 321 crates and
+  `cargo-auditable` 97. When those outputs are present their contents are
+  emitted with `scope: excluded`, like the tool itself. On a Rust closure
+  with its toolchain present, build-only crates outnumber shipped ones about
+  nine to one.
+
+Members that declare no output path (`no-outputs`) cannot be read this way at
+all; measured, that is 204 of 493 members on one closure, mostly fetched
+sources. Dependency edges *between* recovered crates are not emitted.
+
+Outputs are looked for in `NIX_STORE_DIR` when it is set, else `/nix/store`.
+
 ### When the closure tier degrades, it says why
 
 `waybill:nix-closure-degraded` carries a JSON object — `{"reason": ...}`

@@ -18,6 +18,8 @@
 //! reused unchanged and becomes load-bearing rather than precautionary.
 
 pub(crate) mod classify;
+/// Milestone 1378 (#1396) — what is compiled into a member's output.
+pub(crate) mod contents;
 pub(crate) mod derivation;
 pub(crate) mod ecosystem_identity;
 pub(crate) mod emit;
