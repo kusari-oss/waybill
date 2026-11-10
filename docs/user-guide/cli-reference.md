@@ -2013,7 +2013,11 @@ AND, and values within a term with OR. The keys are:
 
 - `purl`: glob;
 - `ecosystem`: PURL type;
-- `scope`: `runtime`, `development`, `build`, `test` or `optional`;
+- `scope`: `runtime`, `development`, `build`, `test`, `optional` or
+  `excluded`. `excluded` matches components that are not in the artifact:
+  CycloneDX `"scope": "excluded"` with no lifecycle property, the source of an
+  SPDX 2.3 `BUILD_TOOL_OF`, or a `to` of an SPDX 3 `usesTool` relationship with
+  `scope: build`. See the [editing guide](sbom-edit.md#dropping-components---drop-selector);
 - `tier`: the `waybill:sbom-tier`, or `file` for file components;
 - `role`;
 - `name`: glob, or `re:<regex>`.

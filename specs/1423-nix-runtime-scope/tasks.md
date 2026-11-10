@@ -95,15 +95,15 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
 **Goal:** `sbom edit` selects not-in-artifact members identically in CDX, SPDX 2.3 and SPDX 3 (FR-009, FR-010).
 **Independent test:** `cargo test -p waybill --bins edit::` plus `cargo test -p waybill --test sbom_edit_filter us3_`. On one scan, `--keep 'scope=excluded'` yields the same PURL set in all three formats.
 
-- [ ] T027 [P] [US3] Add these to `waybill-cli/tests/sbom_edit_filter.rs` (red first):
+- [X] T027 [P] [US3] Add these to `waybill-cli/tests/sbom_edit_filter.rs` (red first):
   - `us3_scope_excluded_selects_same_set_in_three_formats` (a closure fixture scanned once, edited three times);
   - `us3_scope_development_no_longer_matches_bare_excluded`;
   - `us3_real_lifecycle_scopes_unchanged` (an npm fixture with dev dependencies; the `scope=development` result is identical to before).
-- [ ] T028 [US3] Add `Scope::NotInArtifact`, parsed from `excluded`, to `waybill-cli/src/edit/select.rs`, and update the selector help text and the unknown-scope error.
-- [ ] T029 [P] [US3] In `waybill-cli/src/edit/cdx.rs` (around 131-138), match `scope: "excluded"` as `NotInArtifact` and remove the fallback that inserted `Scope::Development`.
-- [ ] T030 [P] [US3] In `waybill-cli/src/edit/spdx23.rs`, read `BUILD_TOOL_OF` relationships: their `spdxElementId` gets `NotInArtifact`.
-- [ ] T031 [P] [US3] In `waybill-cli/src/edit/spdx3.rs`, read `LifecycleScopedRelationship` elements with `relationshipType: usesTool` and `scope: build`: each `to` gets `NotInArtifact`.
-- [ ] T032 [US3] Run T027 green. Mutation-check `us3_scope_excluded_selects_same_set_in_three_formats` by removing the SPDX 2.3 `BUILD_TOOL_OF` read (T030), reverting with `cp`.
+- [X] T028 [US3] Add `Scope::NotInArtifact`, parsed from `excluded`, to `waybill-cli/src/edit/select.rs`, and update the selector help text and the unknown-scope error.
+- [X] T029 [P] [US3] In `waybill-cli/src/edit/cdx.rs` (around 131-138), match `scope: "excluded"` as `NotInArtifact` and remove the fallback that inserted `Scope::Development`.
+- [X] T030 [P] [US3] In `waybill-cli/src/edit/spdx23.rs`, read `BUILD_TOOL_OF` relationships: their `spdxElementId` gets `NotInArtifact`.
+- [X] T031 [P] [US3] In `waybill-cli/src/edit/spdx3.rs`, read `LifecycleScopedRelationship` elements with `relationshipType: usesTool` and `scope: build`: each `to` gets `NotInArtifact`.
+- [X] T032 [US3] Run T027 green. Mutation-check `us3_scope_excluded_selects_same_set_in_three_formats` by removing the SPDX 2.3 `BUILD_TOOL_OF` read (T030), reverting with `cp`.
 
 ## Phase 6: User Story 4 — runtime-only document (P3)
 

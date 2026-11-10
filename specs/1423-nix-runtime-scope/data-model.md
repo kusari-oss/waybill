@@ -63,7 +63,7 @@ Lifecycle scope from milestone 1269 (e.g. `development`) is left untouched. Not-
 
 | value | from |
 |---|---|
-| `closure-role` | today's rule (method `none`) |
+| `closure-role` | today's rule (C216 method `closure-role`) |
 | `closure-role+lifecycle-propagation` | as today |
 | `exempt-compiler-supplied` | as today |
 | `exempt-evaluated-package` | as today |
