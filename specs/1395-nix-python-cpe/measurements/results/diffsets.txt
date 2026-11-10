@@ -1,0 +1,20 @@
+curl grype before=176 after=211 lost=0 gained=35 gained_not_on_python3=0
+curl trivy before=4 after=4 lost=0 gained=0 gained_not_on_python3=0
+curl osv before=7 after=7 lost=0 gained=0 gained_not_on_python3=0
+openssh grype before=202 after=237 lost=0 gained=35 gained_not_on_python3=0
+openssh trivy before=3 after=3 lost=0 gained=0 gained_not_on_python3=0
+openssh osv before=5 after=5 lost=0 gained=0 gained_not_on_python3=0
+httpie grype before=308 after=343 lost=0 gained=35 gained_not_on_python3=0
+httpie trivy before=128 after=128 lost=0 gained=0 gained_not_on_python3=0
+httpie osv before=216 after=216 lost=0 gained=0 gained_not_on_python3=0
+gh grype before=176 after=211 lost=0 gained=35 gained_not_on_python3=0
+gh trivy before=4 after=4 lost=0 gained=0 gained_not_on_python3=0
+gh osv before=7 after=7 lost=0 gained=0 gained_not_on_python3=0
+ripgrep grype before=185 after=220 lost=0 gained=35 gained_not_on_python3=0
+ripgrep trivy before=13 after=13 lost=0 gained=0 gained_not_on_python3=0
+ripgrep osv before=23 after=23 lost=0 gained=0 gained_not_on_python3=0
+moat grype before=185 after=220 lost=0 gained=35 gained_not_on_python3=0
+moat trivy before=13 after=13 lost=0 gained=0 gained_not_on_python3=0
+moat osv before=26 after=26 lost=0 gained=0 gained_not_on_python3=0
+--- distinct CVE ids gained on python3, union over targets
+      35

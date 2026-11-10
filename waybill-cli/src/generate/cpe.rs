@@ -183,6 +183,17 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // criteria are `cpe:2.3:a:php:php:*`. #1258.
     ("php", &[("php", "php")]),
     ("pkgconf", &[("pkgconf", "pkgconf")]),
+    // CPython (#1395), keyed on the two pnames nixpkgs gives its
+    // interpreter: `python3` (python3, python312, python313, python314)
+    // and `python3-minimal` (python3Minimal). nixpkgs declares a product
+    // and no vendor, so no CPE arrives from `meta.identifiers`. NVD files
+    // CPython under `python:python` with the release in the version field
+    // (`3.13.13`). `microsoft` also files a `python` product — the VS Code
+    // extension — deliberately not emitted. Exact names only: nixpkgs'
+    // `python3.13-<pkg>`, `python-<hook>` and `python3-<v>-env` are not
+    // the interpreter. See `specs/1395-nix-python-cpe/`.
+    ("python3", &[("python", "python")]),
+    ("python3-minimal", &[("python", "python")]),
     ("re2c", &[("re2c", "re2c")]),
     ("readline", &[("gnu", "readline")]),
     ("rhash", &[("rhash_project", "rhash")]),
@@ -308,6 +319,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("perl", "perl", 614),
     ("php", "php", 1641),
     ("pkgconf", "pkgconf", 64),
+    // Probed 2026-11-09, `specs/1395-nix-python-cpe/measurements/nvd-probe.sh`.
+    ("python", "python", 651),
     ("re2c", "re2c", 3),
     ("rhash_project", "rhash", 55),
     ("sqlite", "sqlite", 372),
@@ -984,6 +997,7 @@ mod tests {
             include_str!(
                 "../../../specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt"
             ),
+            include_str!("../../../specs/1395-nix-python-cpe/measurements/nvd-titles.txt"),
         );
 
         // CONTROL: the files parsed to something. Without this every
@@ -1134,6 +1148,58 @@ mod tests {
             cpes.is_empty(),
             "FR-004: versionless generic component must not emit a CPE; got {cpes:?}"
         );
+    }
+
+    /// #1395 — the CPython interpreter, as nixpkgs names it, is matchable.
+    ///
+    /// nixpkgs' `python3` / `python313` / `python312` / `python314` all
+    /// build a derivation whose pname is `python3`, and `python3Minimal`'s is
+    /// `python3-minimal`. None states a vendor, so none carries a declared
+    /// CPE. NVD files every CPython record under `python:python`, with the
+    /// release in the version field (`3.13.13`, not `3.13`).
+    #[test]
+    fn i1395_the_cpython_interpreter_maps_to_python_python() {
+        for (name, version, want) in [
+            ("python3", "3.13.13", "cpe:2.3:a:python:python:3.13.13:*:*:*:*:*:*:*"),
+            ("python3-minimal", "3.13.13", "cpe:2.3:a:python:python:3.13.13:*:*:*:*:*:*:*"),
+        ] {
+            let c = make_component(&format!("pkg:generic/{name}@{version}"));
+            assert_eq!(synthesize_cpes(&c), vec![want.to_string()], "{name}");
+        }
+    }
+
+    /// #1395 — only the interpreter. A nixpkgs Python *package* is named
+    /// `python3.13-<pkg>`, its hooks `python-<hook>`, and an interpreter
+    /// environment `python3-<v>-env`; none of them is CPython, and a
+    /// `python:python` CPE on one would attach every interpreter CVE to it.
+    /// Neither is `pypy3.11`, nor Microsoft's VS Code extension, which NVD
+    /// also files under the product `python`.
+    #[test]
+    fn i1395_names_that_are_not_the_interpreter_get_no_cpe() {
+        // CONTROL: the interpreter row exists, or every assertion below is
+        // vacuous.
+        let control = make_component("pkg:generic/python3@3.13.13");
+        assert!(
+            !synthesize_cpes(&control).is_empty(),
+            "the control must produce a candidate, or the rejections below are vacuous"
+        );
+
+        for name in [
+            "python",
+            "python3.13",
+            "python313",
+            "python3.13-waybill-fixture-pkg",
+            "python3-waybill-fixture-pkg",
+            "python-setup-hook.sh",
+            "python-catch-conflicts-hook",
+            "pypy3.11",
+        ] {
+            let c = make_component(&format!("pkg:generic/{name}@3.13.13"));
+            assert!(
+                synthesize_cpes(&c).is_empty(),
+                "{name} gained a CPE; only the interpreter is CPython (#1395)"
+            );
+        }
     }
 
     /// Milestone 1373 (#1375) — `pkg:hackage` gets nothing, on purpose.
