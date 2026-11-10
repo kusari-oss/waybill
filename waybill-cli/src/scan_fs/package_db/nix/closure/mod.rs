@@ -503,7 +503,11 @@ pub(crate) fn attach_licenses(
     // FR-008 — eligibility is counted over the members that will be emitted,
     // not over every derivation, so coverage is a fraction a reader can
     // compare against the component count they actually receive.
-    let emitted = emit::emitted_drv_keys(&closure.raw, &closure.roles);
+    let emitted = emit::coverage_drv_keys(
+        &closure.raw,
+        &closure.roles,
+        closure.graph.evaluated.as_deref(),
+    );
     let wanted = emitted.len();
 
     if names.is_empty() {

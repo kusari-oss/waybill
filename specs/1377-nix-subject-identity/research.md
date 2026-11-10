@@ -106,7 +106,7 @@ So the verdict is KEEP-NO-NATIVE. This extends an existing row, so no new row is
 
 ## R8 — What changes in committed output
 
-- `public_corpus/nix-closure-moat` (3 files): subject heuristic, no placeholder CPE, CPE provenance on closure members, C184 `identifiers`. SC-008 bounds this.
+- `public_corpus/nix-closure-moat` (3 files): CPE provenance on closure members, C184 `identifiers`. The subject does not change: the harness passes `--root-name`, which outranks the new rung. SC-008 bounds this.
 - Closure integration tests that pin a document (`tests/closure_*.rs`, `nix_config_closure.rs`) use a stub `nix` fed fixture JSON. Their stub must return the new row fields, or they see no declared CPEs.
 - Everything produced without a resolved closure stays byte-identical (SC-007), checked by regenerating every golden and diffing.
 

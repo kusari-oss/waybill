@@ -113,6 +113,29 @@ fn the_evaluated_package_is_the_subject_in_every_format() {
     }
 }
 
+/// Clarification 2026-11-09 — the metadata lookup's coverage counts the
+/// evaluated package. The fixture root is `unreferenced` and applies no
+/// patch, so before milestone 1377 it was neither emitted nor counted.
+#[test]
+fn the_evaluated_package_is_counted_in_metadata_coverage() {
+    let s = scan("closure.json");
+    let c184: Value = s.cdx["metadata"]["properties"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["name"] == "waybill:nix-closure")
+        .and_then(|p| p["value"].as_str())
+        .and_then(|v| serde_json::from_str(v).ok())
+        .expect("a C184 record");
+    // lib, tool and the root app; all three have a row.
+    assert_eq!(c184["licenses"]["wanted"], 3, "{}", c184["licenses"]);
+    assert_eq!(c184["licenses"]["received"], 3, "{}", c184["licenses"]);
+    assert_eq!(
+        s.cdx["metadata"]["component"]["licenses"][0]["license"]["id"], "MIT",
+        "the subject carries the license its row declares"
+    );
+}
+
 /// FR-012 — no CPE from either source means no CPE, not a placeholder.
 #[test]
 fn a_subject_without_a_cpe_carries_none_and_no_placeholder() {

@@ -34,7 +34,7 @@ and never run a real evaluation.
 ## Phase 3: User Story 1 — the built package is the subject (P1) 🎯 MVP
 
 **Goal**: when a closure resolves, `graph.root`'s component is the subject in all three formats (FR-001 to FR-004, FR-012).
-**Independent test**: SC-001 on the openssh wrapper flake; SC-008's subject identity on `nix-closure-moat`. SC-002 also needs US2, because openssh has no curated CPE.
+**Independent test**: SC-001 on the openssh wrapper flake; SC-008's subject identity on the override-free moat probe scan. SC-002 also needs US2, because openssh has no curated CPE.
 
 ### Tests (write first, see them fail)
 
@@ -74,6 +74,7 @@ and never run a real evaluation.
 - `cli/scan_cmd.rs`: the FR-007 warning moved into `warn_if_root_heuristic_outranked`. It runs early as before, unless a closure may resolve; then it runs after the closure, with the final kind.
 - `closure/graph.rs`: `root` is the *first* unconsumed derivation in `.drv`-key order. A closure with several unconsumed derivations does not say which one was evaluated, and a fixture without `inputs.drvs` made `waybill-fixture-aeson` the "subject". The new `ProjectedGraph.evaluated` is `root` only when it is the sole candidate. The tag uses `evaluated`; edge anchoring keeps `root`. Real closures have one (all six spike targets name their package).
 - `generate/cyclonedx/builder.rs::build_components`: a lone main-module was promoted to `metadata.component`, and skipped in `components[]`, on count alone. When the evaluated package outranks it, the module dropped out of the document, and closure edges named it as an absent component (same class as #1170/#1186). Only the actual subject is promoted now. `root_selector::evaluated_nix_package` is the one definition of the rung, shared by the selector and this site.
+- Coverage counts the evaluated package (clarification 2026-11-09): `emit::coverage_drv_keys` feeds C184's `wanted`/`received`, and `debug closure-dump` reports it per row (`in_coverage_population`, `evaluated_package`), which `reach.py` now reads. Test: `the_evaluated_package_is_counted_in_metadata_coverage`.
 - `tests/closure_edges.rs::m1280_t019` now uses `anchor-two-roots.json`. A sole root is always emitted now, so "a root no reader emits" exists only as the first of several candidates.
 
 ---
@@ -175,11 +176,10 @@ and never run a real evaluation.
 - [ ] T031 [P] Add an `[Unreleased]` entry to `CHANGELOG.md` covering #1398 and #1394.
 - [ ] T032 Update the closure tests that pin a whole document (`waybill-cli/tests/closure_*.rs`, `waybill-cli/tests/nix_config_closure.rs`) for the new subject and provenance. Change only what this milestone changes.
 - [ ] T033 Regenerate every golden. Verify with a normalised, sorted diff (content-addressed IDs masked, `LC_ALL=C sort`) that only `waybill-cli/tests/fixtures/public_corpus/nix-closure-moat/` and closure-test fixtures change (SC-007). Verify that the moat diff is exactly the following, and nothing else (SC-008):
-  - heuristic `nix-evaluated-package`;
-  - no `waybill:` CPE;
-  - provenance on closure members;
-  - C184 `identifiers`;
-  - subject still `pkg:hackage/moat@0.1`.
+  - the subject stays `nix-closure-moat` (the harness passes `--root-name`, which wins; no heuristic is recorded);
+  - CPEs and their provenance on closure members;
+  - C184 `identifiers`, and `licenses.wanted` if the root was not already counted.
+  Any other change is investigated, not accepted. The moat-shaped subject itself (`pkg:hackage/moat@0.1`, `nix-evaluated-package`) is checked by `closure_subject.rs` and by the override-free probe scan in T035.
   Corpus goldens are `#[ignore]`d locally, so run that target's harness explicitly.
 - [ ] T034 Run the full gate, `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, and read its positive signals: the pass line, per-target `ok. N passed; 0 failed`, and the new tests by name.
 - [ ] T035 Re-run the probes per `quickstart.md` against the T004 baseline. Record SC-001 to SC-009 with numbers in `specs/1377-nix-subject-identity/measurements/results.md`:

@@ -169,6 +169,33 @@ pub(crate) fn emitted_drv_keys<'a>(
         .collect()
 }
 
+/// The members the nixpkgs metadata lookup is counted over: every
+/// [`emitted_drv_keys`] member, plus the evaluated package.
+///
+/// Milestone 1377 — the evaluated package is emitted whatever its role (it
+/// is the subject), and its metadata is looked up like any member's, so it
+/// is counted. Without it, a root emitted only because it is the root was
+/// looked up but appeared in neither `wanted` nor `received`. Kept apart
+/// from `emitted_drv_keys` because that set is also the edge projection's,
+/// and the root is never an edge target.
+///
+/// `debug closure-dump` reports membership of this set per row, so an
+/// independent count (`specs/1377-…/measurements/meta-eval-cost/reach.py`)
+/// takes its population from the binary rather than modelling it.
+pub(crate) fn coverage_drv_keys<'a>(
+    raw: &'a super::derivation::RawClosure,
+    roles: &std::collections::BTreeMap<String, DerivationRole>,
+    evaluated: Option<&str>,
+) -> std::collections::HashSet<&'a str> {
+    let mut keys = emitted_drv_keys(raw, roles);
+    if let Some((key, drv)) = evaluated.and_then(|k| raw.derivations.get_key_value(k)) {
+        if drv.pname().is_some() {
+            keys.insert(key.as_str());
+        }
+    }
+    keys
+}
+
 /// Every `.drv` key this scan emits as a component.
 ///
 /// Test-only: production derives the same population by building the

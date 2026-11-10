@@ -68,7 +68,9 @@ Openssh closure, 2026-11-09 (before any 1377 code):
 | ambiguous (name+version rows with different CPEs) | 0 |
 | unreached | 483 |
 
-**Getting the population right took two corrections, both recorded because each gave a plausible wrong figure:**
+**Since milestone 1377 the population is read from the binary.** `debug closure-dump` reports `in_coverage_population` per row (`closure/emit.rs::coverage_drv_keys`: the emitted members plus the evaluated package), and reach.py uses that instead of re-deriving it. The evaluated package is counted (clarification 2026-11-09). openssh's root was already in the population because it applies patches, so its count stays 670. gh's root was not: its `wanted` moves from 721 to 722 and `received` from 85 to 86, and reach.py agrees on 722.
+
+**Before that, getting the population right took two corrections, both recorded because each gave a plausible wrong figure:**
 
 1. `emits_as_component` alone gives 732.
 2. The population milestone 1281 counts (`closure/emit.rs::emitted_drv_keys`) also requires a pname, and for milestone-1282 members only roles `source`/`package`. The excluded 62 are `fragment` (59) and `scaffolding` (3) members.

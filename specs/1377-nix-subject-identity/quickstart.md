@@ -26,5 +26,5 @@ OUT_DIR=$W/out bash $M/scan.sh
 | SC-005 | every closure component with a CPE | a native provenance carrier in each format |
 | SC-006 | `analyze.py` + `precision.py`, all six targets, against the spike baseline | no lost finding except by CPE source change; distinct patched FPs ≤ 6 |
 | SC-007 | regenerate every golden, `git diff --stat` | only `nix-closure-moat` and closure-test fixtures change |
-| SC-008 | `nix-closure-moat` golden diff | subject `pkg:hackage/moat@0.1`, heuristic `nix-evaluated-package`, no `waybill:` CPE, nothing else |
+| SC-008 | moat from `gen-sboms.sh` (no override); then the `nix-closure-moat` golden diff | probe: subject `pkg:hackage/moat@0.1`, heuristic `nix-evaluated-package`, no `waybill:` CPE. Golden: subject still `nix-closure-moat` (harness `--root-name` wins), changes only in closure-member CPEs and provenance and C184 |
 | SC-009 | `identifiers.wanted − identifiers.received` from C184, against `measurements/meta-eval-cost/reach.py` run on the same closure | equal |

@@ -38,6 +38,9 @@ nixpkgs' declared CPE is not always NVD's convention. nixpkgs writes openssh as 
 
 ### Session 2026-11-09
 
+- Q: SC-008 expects the `nix-closure-moat` corpus golden's subject to become `pkg:hackage/moat@0.1`, but the harness passes `--root-name` for every target, so the override wins. Rewrite SC-008? → A: Yes. The moat-shaped subject is proven by the `closure_subject` integration test and the override-free probe scan; the golden's subject stays the override.
+- Q: The closure root is now always emitted, but the metadata-coverage population (C184 `licenses.wanted`, later `identifiers.wanted`) counts it only when it would be emitted anyway. Count the root? → A: Yes. The coverage population is every member the lookup was wanted for, the evaluated package included.
+
 - Q: When a Nix subject has neither a nixpkgs-declared nor a curated CPE, should it carry no CPE or the `cpe:2.3:a:waybill:<name>:<version>` placeholder? → A: **No CPE.** Checked against CISA's 2026 Minimum Elements (final, co-sealed by CISA, NSA, BSI, ANSSI, NCSC-NL and others) and ENISA's December 2025 SBOM landscape analysis (`measurements/identifier-requirements.md`). Both require at least one component identifier and name CPE as one example among several, and the subject keeps its PURL. CISA defines an identifier as something that identifies the component or serves as a look-up key for a database, which a `waybill`-vendor CPE does not do.
 - Q: Which CPE wins when nixpkgs and the curated table disagree? → A: nixpkgs-declared, settled by measurement rather than asked: waybill's curated bash encoding misses CVE-2019-18276 where nixpkgs' finds it (`measurements/bash-cpe-encoding/`).
 - Q: Which component is the subject when a flake has both a manifest main-module and an evaluated package? → A: settled by evidence and precedent rather than asked: for moat they are already one component; where they differ, the evaluated package wins and the main-module is recorded as outranked, as #1170 does for an image.
@@ -78,7 +81,7 @@ The same user's scanner matches closure members, the subject included, by the CP
 1. **Given** a closure member whose derivation declares `meta.identifiers.cpe`, **When** the closure is scanned, **Then** that component carries exactly the declared CPE.
 2. **Given** bash, where nixpkgs declares version `5.3` update `9` and the curated table produces version `5.3p9`, **When** scanned, **Then** the component carries the nixpkgs form.
 3. **Given** gnugrep, which nixpkgs identifies and waybill currently leaves without a CPE, **When** scanned, **Then** it carries `gnu:grep`.
-4. **Given** a member nixpkgs does not identify with a vendor (python3, httpie), **When** scanned, **Then** the curated table is consulted as it is today, and nothing is synthesized from `cpeParts` without a vendor.
+4. **Given** a member nixpkgs does not identify with a vendor (python3, gh), **When** scanned, **Then** the curated table is consulted as it is today, and nothing is synthesized from `cpeParts` without a vendor.
 5. **Given** any component that carries a CPE today, **When** scanned after this change, **Then** it still carries one.
 
 ---
@@ -108,7 +111,7 @@ A reader auditing a match, or a consumer weighting identities, can see per compo
 - **A member the `meta` evaluation cannot reach.** Milestone 1281 reaches members by attribute, not all of them. Such a member keeps today's behaviour (the curated table), and the gap is counted in the document's closure summary, not hidden (FR-009).
 - **The declared CPE's version differs from the derivation's version.** The declared value is used as declared; a mismatch is not silently corrected.
 - **A non-Nix scan, or a Nix scan without `--nix-closure`.** Unaffected.
-- **No CPE from either source** (httpie: nixpkgs has a product but no vendor, and the curated table has no row). The subject carries its PURL and no CPE (FR-012).
+- **No CPE from either source** (gh: nixpkgs has a product but no vendor, and the curated table has no row; measured 2026-11-09). The subject carries its PURL and no CPE (FR-012).
 - **A closure member merges into another reader's component.** If that component carries the curated CPE or none, the declared CPE replaces it. If it carries an operator-asserted or artifact-derived CPE, that CPE is kept and no nixpkgs provenance is attached (FR-013).
 - **`--no-root-purl` with no CPE.** The subject would then carry no identifier at all, below CISA's "at least one". That is an explicit operator choice and today's behaviour, not something this milestone introduces.
 
@@ -150,7 +153,7 @@ Every criterion is checked by re-running the committed spike probes (`measuremen
 - **SC-005**: 100% of CPE-bearing closure components in the openssh document record their CPE source.
 - **SC-006**: Across all six spike targets, no grype finding present today disappears except where a CPE's source changed. Distinct already-patched false positives (today: 6) do not increase.
 - **SC-007**: Every committed golden produced without `--nix-closure` is byte-identical.
-- **SC-008**: For `moat`, the subject remains `pkg:hackage/moat@0.1`, its recorded heuristic is the evaluated-package rule, and it carries no `waybill`-vendor CPE. The `nix-closure-moat` corpus goldens change in exactly those respects and no others.
+- **SC-008**: For `moat` scanned without an operator override (the probe in `measurements/gen-sboms.sh`), the subject is `pkg:hackage/moat@0.1`, its recorded heuristic is the evaluated-package rule, and it carries no `waybill`-vendor CPE. The `nix-closure-moat` corpus golden is a different case: the harness passes `--root-name <target>` for every target (`waybill-cli/tests/corpus_harness_195/harness.rs:248`), the override wins (FR-001), and that golden's subject stays `nix-closure-moat`. Its diff is limited to closure-member CPEs and their provenance and to C184; any other change is investigated, not accepted.
 - **SC-009**: The openssh document's closure summary states how many closure members the `meta` evaluation could not reach, and that count equals an independent count taken by the probe (members of the same closure for which a separate evaluation returns no `meta`).
 
 ## Out of scope

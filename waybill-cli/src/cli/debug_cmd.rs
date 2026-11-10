@@ -38,7 +38,7 @@ use serde_json::{json, Value};
 
 use crate::scan_fs::package_db::nix::closure::classify::classify;
 use crate::scan_fs::package_db::nix::closure::derivation::RawClosure;
-use crate::scan_fs::package_db::nix::closure::{ecosystem_identity, emit, member};
+use crate::scan_fs::package_db::nix::closure::{ecosystem_identity, emit, graph, member};
 
 #[derive(Debug, Parser)]
 pub struct DebugCommand {
@@ -87,6 +87,10 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
     let closure = RawClosure::parse(&text)
         .map_err(|e| anyhow::anyhow!("{} is not a closure document: {e}", args.closure_json.display()))?;
     let roles = classify(&closure);
+    // Milestone 1377 — built exactly as `closure::resolve` builds it, so the
+    // evaluated package and the coverage population are production's.
+    let evaluated = graph::project(&closure, &emit::emitted_drv_keys(&closure, &roles)).evaluated;
+    let coverage = emit::coverage_drv_keys(&closure, &roles, evaluated.as_deref());
 
     let mut rows: Vec<Value> = Vec::new();
     let mut n_emitted = 0usize;
@@ -156,6 +160,8 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
             "version": drv.version(),
             "c182_role": role.wire(),
             "emits_as_component": emits,
+            "evaluated_package": evaluated.as_deref() == Some(key.as_str()),
+            "in_coverage_population": coverage.contains(key.as_str()),
             "member_role": member_role.map(|r| r.wire()),
             "edge_endpoint": member_role.map(|r| r.is_edge_endpoint()),
             "identity_hash": basis.as_ref().map(|b| b.hash()),
@@ -168,6 +174,8 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
         "source": args.closure_json.display().to_string(),
         "derivations": closure.derivations.len(),
         "emitted_as_component": n_emitted,
+        "evaluated_package": evaluated,
+        "coverage_population": coverage.len(),
         "members_1282": n_members,
         "distinct_member_identities": identities.len(),
         "pypi_candidates": n_pypi_candidates,

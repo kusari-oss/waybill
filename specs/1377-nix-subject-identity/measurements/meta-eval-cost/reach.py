@@ -23,12 +23,13 @@ SYS = os.environ.get("NIX_SYSTEM", "aarch64-darwin")
 SAFE = re.compile(r"^[A-Za-z0-9._+-]+$")
 
 rows = json.load(open(dump_path))["rows"]
-# The population milestone 1281 counts as `licenses.wanted`
-# (closure/emit.rs::emitted_drv_keys): emitted, carrying a pname, and either
-# not a milestone-1282 member or one whose member role is an edge endpoint
-# (`source` / `package`). Checked: 670 on openssh, equal to C184's `wanted`.
-members = [r for r in rows if r.get("emits_as_component") and r.get("pname_with_fallback")
-           and (r.get("member_role") is None or r["member_role"] in ("source", "package"))]
+# The population C184 counts as `wanted`, read from the binary
+# (`closure/emit.rs::coverage_drv_keys`, reported per row since milestone
+# 1377) rather than re-derived here. Before 1377 this script re-derived it,
+# and needed two corrections to get it right (README).
+if not rows or "in_coverage_population" not in rows[0]:
+    sys.exit("closure-dump predates milestone 1377: no in_coverage_population field")
+members = [r for r in rows if r["in_coverage_population"]]
 names = sorted({m["pname_with_fallback"] for m in members if SAFE.match(m["pname_with_fallback"] or "")})
 
 lst = " ".join(f'"{n}"' for n in names)
