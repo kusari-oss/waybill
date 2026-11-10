@@ -58,7 +58,12 @@ const ROOTS: &[(&str, &str)] = &[("pkgs", "pkgs"), ("haskellPackages", "pkgs.has
 /// most carry `spdxId`, some carry only a `shortName` (`publicDomain` is in
 /// the measured population and SPDX has no identifier for it), and a license
 /// may also be stated as a bare string.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
+///
+/// #1404 — nixpkgs also composes licenses with `lib.licenses.{AND,OR,WITH,PLUS}`
+/// (`lib/licenses/operators.nix`). Such a value is a tree, projected as a node
+/// carrying `op` and its operands in `terms`; a leaf has neither. Both are
+/// defaulted, so a row from before #1404 still parses as a leaf.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize)]
 pub(crate) struct DeclaredLicenseRaw {
     /// nixpkgs' own `spdxId`. **The authority** where present (spec FR-014) —
     /// re-deriving an identifier from the attribute name would be a second
@@ -68,6 +73,15 @@ pub(crate) struct DeclaredLicenseRaw {
     /// The attribute's `shortName`/`fullName`, or a bare string declaration.
     #[serde(default)]
     pub(crate) name: Option<String>,
+    /// The composing operator, as nixpkgs states it: `AND` or `OR` for a
+    /// `compound`, `WITH` for an `exception`, `+` for a `plus`. `None` on a
+    /// leaf.
+    #[serde(default)]
+    pub(crate) op: Option<String>,
+    /// The operands, in nixpkgs' order: the `licenses` of a compound,
+    /// `[license, exception]` for `WITH`, `[license]` for `+`.
+    #[serde(default)]
+    pub(crate) terms: Vec<DeclaredLicenseRaw>,
 }
 
 /// One row of the license evaluation.
@@ -98,6 +112,37 @@ pub(crate) struct LicenseRow {
     #[serde(default)]
     pub(crate) cpe: Option<String>,
 }
+
+/// The Nix bindings that turn `meta.license` into [`DeclaredLicenseRaw`] rows.
+///
+/// #1404 — `one` recurses through the composite shapes `lib/licenses/
+/// operators.nix` builds (`compound`, `exception`, `plus`), keeping nixpkgs'
+/// operator and operand order. A leaf is read as before: `spdxId` where nixpkgs
+/// states one, else the name it states. Nothing here mints an identifier —
+/// nixpkgs' own `toSPDX` writes `LicenseRef-nixos-<shortName>` for a leaf with
+/// no `spdxId`, which is why this does not call it (spec FR-003, FR-014).
+///
+/// An attrset with no `licenseType` is a leaf: hand-written `meta.license`
+/// attrsets predate the field. A throw anywhere in the tree is caught by the
+/// row's own `deepSeq` guard and costs that row, not the pass. `op` is passed
+/// through `str` because the rows are parsed as one JSON array: a non-string
+/// there would fail the parse and cost every row, not one.
+const LICENSE_PROJECTION: &str = r#"str = v: if builtins.isString v then v else null;
+  one = l:
+    if builtins.isAttrs l then
+      let t = l.licenseType or "simple";
+          node = terms: { spdx = null; name = null; op = str (l.operator or null); inherit terms; };
+      in
+      if t == "compound" then node (map one (if builtins.isList (l.licenses or null) then l.licenses else [ ]))
+      else if t == "exception" then node [ (one (l.license or null)) (one (l.exception or null)) ]
+      else if t == "plus" then node [ (one (l.license or null)) ]
+      else { spdx = l.spdxId or null; name = l.shortName or l.fullName or null; }
+    else if builtins.isString l then { spdx = null; name = l; }
+    else { spdx = null; name = null; };
+  lic = l:
+    if builtins.isList l then map one l
+    else if l == null then [ ]
+    else [ (one l) ];"#;
 
 /// Build the license-resolving expression.
 ///
@@ -138,14 +183,7 @@ fn licenses_expr(revision: &str, system: &NixSystem, names: &[&str]) -> String {
         r#"let
   pkgs = (builtins.getFlake "github:NixOS/nixpkgs/{revision}").legacyPackages.{system};
   roots = [ {roots} ];
-  one = l:
-    if builtins.isAttrs l then {{ spdx = l.spdxId or null; name = l.shortName or l.fullName or null; }}
-    else if builtins.isString l then {{ spdx = null; name = l; }}
-    else {{ spdx = null; name = null; }};
-  lic = l:
-    if builtins.isList l then map one l
-    else if l == null then [ ]
-    else [ (one l) ];
+  {LICENSE_PROJECTION}
   rowIn = root: name:
     if ! (builtins.hasAttr name root.set) then [ ] else
     let pr = builtins.tryEval (builtins.getAttr name root.set);
@@ -410,6 +448,116 @@ mod tests {
             rows[2].cpe.as_deref(),
             Some("cpe:2.3:a:openbsd:openssh:10.3p1:*:*:*:*:*:*:*")
         );
+    }
+
+    /// #1404 — the new fields parse, and a pre-#1404 row is still a leaf.
+    #[test]
+    fn rows_parse_with_compound_licenses_and_without() {
+        let rows = parse_rows(
+            r#"[{"drv":"a.drv","out":"/o/a","attr":"a","root":"pkgs",
+                 "licenses":[{"spdx":"MIT","name":"mit"},
+                             {"spdx":null,"name":null,"op":"AND","terms":[
+                                {"spdx":"NCSA","name":"ncsa"},
+                                {"spdx":null,"name":null,"op":"WITH","terms":[
+                                   {"spdx":"Apache-2.0","name":"asl20"},
+                                   {"spdx":"LLVM-exception","name":"llvm-exception"}]}]}]}]"#,
+        );
+        assert_eq!(rows.len(), 1);
+        let l = &rows[0].licenses;
+        assert_eq!((l[0].op.as_deref(), l[0].terms.len()), (None, 0));
+        assert_eq!(l[1].op.as_deref(), Some("AND"));
+        assert_eq!(l[1].terms[0].spdx.as_deref(), Some("NCSA"));
+        assert_eq!(l[1].terms[1].op.as_deref(), Some("WITH"));
+        assert_eq!(
+            l[1].terms[1].terms[1].spdx.as_deref(),
+            Some("LLVM-exception")
+        );
+    }
+
+    /// #1404 — the projection the license evaluation uses is the one this
+    /// module defines, not a copy.
+    #[test]
+    fn the_expression_uses_the_tested_projection() {
+        let expr = licenses_expr(&"a".repeat(40), &system(), &["hello"]);
+        assert!(expr.contains(LICENSE_PROJECTION), "{expr}");
+        assert!(expr.contains("licenses = lic (p.meta.license or null);"), "{expr}");
+    }
+
+    /// #1404 — the projection, evaluated by a real `nix` over values built the
+    /// way `lib/licenses/operators.nix` builds them. No flake, no nixpkgs: the
+    /// operators are restated inline so the test needs neither a fetch nor a
+    /// fixture flake (evaluating one rewrote a committed `flake.lock` once).
+    ///
+    /// Asserts on what `parse_rows` makes of it, so the Nix and Rust halves are
+    /// tested as one contract.
+    #[test]
+    fn the_projection_keeps_operators_nesting_and_exceptions() {
+        if !nix_available() {
+            eprintln!("skipping: no nix on PATH");
+            return;
+        }
+        let expr = format!(
+            r#"let
+  {LICENSE_PROJECTION}
+  simple = id: s: {{ spdxId = id; shortName = s; fullName = s; licenseType = "simple"; }};
+  AND = ls: {{ licenseType = "compound"; operator = "AND"; licenses = ls; }};
+  OR = ls: {{ licenseType = "compound"; operator = "OR"; licenses = ls; }};
+  WITH = l: e: {{ licenseType = "exception"; operator = "WITH"; license = l; exception = e; }};
+  PLUS = l: {{ licenseType = "plus"; operator = "+"; license = l; }};
+  ncsa = simple "NCSA" "ncsa";
+  asl20 = simple "Apache-2.0" "asl20";
+  llvmExc = simple "LLVM-exception" "llvm-exception";
+  mit = simple "MIT" "mit";
+  publicDomain = {{ shortName = "publicDomain"; fullName = "Public Domain"; licenseType = "simple"; }};
+  mk = l: {{ drv = "x.drv"; out = "/o/x"; attr = "x"; root = "t"; licenses = lic l; }};
+in [
+  (mk (AND [ ncsa (WITH asl20 llvmExc) ]))
+  (mk (OR [ (AND [ mit ncsa ]) publicDomain ]))
+  (mk (PLUS (simple "EUPL-1.1" "eupl11")))
+  (mk [ mit (OR [ mit asl20 ]) ])
+  (mk "Some License")
+  (mk null)
+  (mk {{ fullName = "Legacy, no licenseType"; }})
+]"#
+        );
+        let argv = vec!["eval", "--json", "--expr", expr.as_str()];
+        let out = run_bounded(&argv, Duration::from_secs(60)).expect("nix should run");
+        assert!(out.status_success, "stderr: {}", out.stderr);
+        let rows = parse_rows(&out.stdout);
+        assert_eq!(rows.len(), 7, "every row must parse: {}", out.stdout);
+
+        let llvm = &rows[0].licenses;
+        assert_eq!(llvm.len(), 1);
+        assert_eq!(llvm[0].op.as_deref(), Some("AND"));
+        assert_eq!(llvm[0].terms[0].spdx.as_deref(), Some("NCSA"));
+        let with = &llvm[0].terms[1];
+        assert_eq!(with.op.as_deref(), Some("WITH"));
+        assert_eq!(with.terms[0].spdx.as_deref(), Some("Apache-2.0"));
+        assert_eq!(with.terms[1].spdx.as_deref(), Some("LLVM-exception"));
+
+        let nested = &rows[1].licenses[0];
+        assert_eq!(nested.op.as_deref(), Some("OR"));
+        assert_eq!(nested.terms[0].op.as_deref(), Some("AND"));
+        // No spdxId: the name survives, and no identifier is made up for it.
+        assert_eq!(nested.terms[1].spdx, None);
+        assert_eq!(nested.terms[1].name.as_deref(), Some("publicDomain"));
+
+        let plus = &rows[2].licenses[0];
+        assert_eq!(plus.op.as_deref(), Some("+"));
+        assert_eq!(plus.terms[0].spdx.as_deref(), Some("EUPL-1.1"));
+
+        let list = &rows[3].licenses;
+        assert_eq!(list.len(), 2);
+        assert_eq!(list[0].spdx.as_deref(), Some("MIT"));
+        assert_eq!(list[1].op.as_deref(), Some("OR"));
+
+        assert_eq!(rows[4].licenses[0].name.as_deref(), Some("Some License"));
+        assert!(rows[5].licenses.is_empty());
+        assert_eq!(
+            rows[6].licenses[0].name.as_deref(),
+            Some("Legacy, no licenseType")
+        );
+        assert_eq!(rows[6].licenses[0].op, None);
     }
 
     /// T014 — the three guards, against a real `nix`.
