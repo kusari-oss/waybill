@@ -1,0 +1,130 @@
+{
+ "curl": {
+  "drvs": 746,
+  "reached": 27,
+  "rt_drvs": 19,
+  "rt_unmapped": 0,
+  "tp": 18,
+  "fp": 9,
+  "fn": 1,
+  "fn_list": [
+   "libresolv-93.drv"
+  ],
+  "fp_sample": [
+   "atf-0.23.drv",
+   "c-ares-1.34.6.drv",
+   "find-xml-catalogs-hook.drv",
+   "find-xml-catalogs-hook.drv",
+   "libedit-20251016-3.1.drv",
+   "libev-4.33.drv",
+   "libxml2-2.15.2.drv",
+   "libxslt-1.1.45.drv",
+   "ncurses-6.6.drv"
+  ],
+  "findings_total": 211,
+  "findings_reach_marked": 115,
+  "components_reach_marked": 26
+ },
+ "openssh": {
+  "drvs": 732,
+  "reached": 10,
+  "rt_drvs": 11,
+  "rt_unmapped": 0,
+  "tp": 9,
+  "fp": 1,
+  "fn": 2,
+  "fn_list": [
+   "dns-root-data-2025-04-14.drv",
+   "libresolv-93.drv"
+  ],
+  "fp_sample": [
+   "cmocka-2.0.1.drv"
+  ],
+  "findings_total": 237,
+  "findings_reach_marked": 70,
+  "components_reach_marked": 10
+ },
+ "httpie": {
+  "drvs": 2458,
+  "reached": 29,
+  "rt_drvs": 55,
+  "rt_unmapped": 0,
+  "tp": 29,
+  "fp": 0,
+  "fn": 26,
+  "fn_list": [
+   "apple-sdk-14.4.drv",
+   "cctools-1010.6.drv",
+   "cctools-binutils-darwin-1010.6.drv",
+   "cctools-binutils-darwin-wrapper-1010.6.drv",
+   "clang-21.1.8.drv",
+   "clang-wrapper-21.1.8.drv",
+   "compiler-rt-libc-21.1.8.drv",
+   "coreutils-9.11.drv",
+   "cups-headers-2.4.19.drv",
+   "expand-response-params.drv",
+   "gmp-with-cxx-6.3.0.drv",
+   "gnugrep-3.12.drv",
+   "ld64-956.6.drv",
+   "libSystem-B.drv",
+   "libcxx-21.1.6+apple-sdk-26.4.drv",
+   "libiconv-113.drv",
+   "libresolv-93.drv",
+   "libsbuf-14.1.0.drv",
+   "libutil-73.drv",
+   "libxml2-2.15.2.drv",
+   "llvm-21.1.8.drv",
+   "mailcap-2.1.54.drv",
+   "nss-cacert-3.123.drv",
+   "pcre2-10.46.drv",
+   "xar-minimal-501.drv",
+   "xcbuild-0.1.1-unstable-2019-11-20.drv"
+  ],
+  "fp_sample": [],
+  "findings_total": 355,
+  "findings_reach_marked": 100,
+  "components_reach_marked": 29
+ },
+ "gh": {
+  "drvs": 788,
+  "reached": 1,
+  "rt_drvs": 5,
+  "rt_unmapped": 0,
+  "tp": 1,
+  "fp": 0,
+  "fn": 4,
+  "fn_list": [
+   "bash-5.3p9.drv",
+   "iana-etc-20251215.drv",
+   "mailcap-2.1.54.drv",
+   "tzdata-2026b.drv"
+  ],
+  "fp_sample": [],
+  "findings_total": 266,
+  "findings_reach_marked": 55,
+  "components_reach_marked": 164
+ },
+ "ripgrep": {
+  "drvs": 897,
+  "reached": 2,
+  "rt_drvs": 3,
+  "rt_unmapped": 0,
+  "tp": 2,
+  "fp": 0,
+  "fn": 1,
+  "fn_list": [
+   "libiconv-113.drv"
+  ],
+  "fp_sample": [],
+  "findings_total": 232,
+  "findings_reach_marked": 6,
+  "components_reach_marked": 22
+ },
+ "moat": {
+  "drvs": 1275,
+  "reached": 132,
+  "findings_total": 220,
+  "findings_reach_marked": 0,
+  "components_reach_marked": 132
+ }
+}
