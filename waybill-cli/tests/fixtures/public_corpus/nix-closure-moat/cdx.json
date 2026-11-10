@@ -56608,6 +56608,7 @@
     },
     {
       "bom-ref": "pkg:generic/python3@3.13.13",
+      "cpe": "cpe:2.3:a:python:python:3.13.13:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -56617,6 +56618,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:python:python:3.13.13:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -56664,6 +56677,7 @@
     },
     {
       "bom-ref": "pkg:generic/python3-minimal@3.13.13",
+      "cpe": "cpe:2.3:a:python:python:3.13.13:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -56673,6 +56687,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:python:python:3.13.13:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -94507,7 +94533,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":162,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":303,\"with_candidates\":63}"
+        "value": "{\"addressable_without_cpe\":162,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":301,\"with_candidates\":65}"
       },
       {
         "name": "waybill:closure-graph-admission",

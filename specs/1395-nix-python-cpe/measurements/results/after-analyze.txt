@@ -1,0 +1,27 @@
+target   scanner | sbomnix-bt  waybill  shared sbx-only  wb-only |  sbx-rt | runtime-relevant sbx/wb
+curl     grype  |        218      211     204       14        7 |     100 | 100/100
+curl     trivy  |          0        4       0        0        4 |       0 | 0/0
+curl     osv    |          0        4       0        0        4 |       0 | 0/0
+openssh  grype  |        246      237     231       15        6 |      28 | 71/70
+openssh  trivy  |          0        3       0        0        3 |       0 | 0/0
+openssh  osv    |          0        3       0        0        3 |       0 | 0/0
+httpie   grype  |        343      343     213      130      130 |     109 | 111/119
+httpie   trivy  |          0      128       0        0      128 |       0 | 0/10
+httpie   osv    |          0      136       0        0      136 |       0 | 0/12
+gh       grype  |        218      211     204       14        7 |       0 | 0/0
+gh       trivy  |          0        4       0        0        4 |       0 | 0/0
+gh       osv    |          0        4       0        0        4 |       0 | 0/0
+ripgrep  grype  |        218      220     204       14       16 |       6 | 6/6
+ripgrep  trivy  |          0       13       0        0       13 |       0 | 0/0
+ripgrep  osv    |          0       14       0        0       14 |       0 | 0/0
+moat     grype  |        232      220     204       28       16 |       - | n/a (unrealised)
+moat     trivy  |          0       13       0        0       13 |       - | n/a (unrealised)
+moat     osv    |          0       17       0        0       17 |       - | n/a (unrealised)
+
+grype match kinds (per tool):
+  curl     {'sbomnix-bt': {'cpe-match': 496}, 'waybill': {'cpe-match': 207, 'exact-direct-match': 4}, 'sbomnix-rt': {'cpe-match': 100}}
+  openssh  {'sbomnix-bt': {'cpe-match': 478}, 'waybill': {'cpe-match': 234, 'exact-direct-match': 3}, 'sbomnix-rt': {'cpe-match': 28}}
+  httpie   {'sbomnix-bt': {'cpe-match': 650}, 'waybill': {'exact-direct-match': 128, 'cpe-match': 215}, 'sbomnix-rt': {'cpe-match': 109}}
+  gh       {'sbomnix-bt': {'cpe-match': 496}, 'waybill': {'cpe-match': 207, 'exact-direct-match': 4}, 'sbomnix-rt': {}}
+  ripgrep  {'sbomnix-bt': {'cpe-match': 499}, 'waybill': {'cpe-match': 207, 'exact-direct-match': 13}, 'sbomnix-rt': {'cpe-match': 6}}
+  moat     {'sbomnix-bt': {'cpe-match': 531}, 'waybill': {'cpe-match': 207, 'exact-direct-match': 13}}

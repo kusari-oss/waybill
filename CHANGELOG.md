@@ -65,6 +65,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **The Python interpreter in a Nix closure is matchable by CPE.**
+  nixpkgs names CPython's product but no vendor, so it declares no CPE,
+  and the curated table had no row: `python3` reached every closure with
+  no CPE and grype reported nothing against it. The table now maps the
+  exact names `python3` and `python3-minimal` to NVD's `python:python`
+  (651 dictionary entries; the release goes in the version field). On a
+  `--nix-closure` scan of httpie, grype now reports the same 35 findings
+  on `python3 3.13.13` that it reports from sbomnix's document, none of
+  them patched by nixpkgs, and loses none elsewhere. Python packages,
+  hooks and `python3-<v>-env` environments are deliberately not matched
+  (#1395).
 - **`kprobe_attach_failures` says what it holds.** The field has carried
   counter-map names since m212 and tracepoint names since m210, and now
   carries no kprobe names at all. The name is kept — documents produced

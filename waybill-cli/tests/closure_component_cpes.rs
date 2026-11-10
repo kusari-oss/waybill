@@ -510,3 +510,136 @@ fn m1367_every_emitted_cpe_carries_a_release_version() {
         );
     }
 }
+
+// ---------------------------------------------------------------------
+// #1395 — the CPython interpreter a Python application ships with
+// ---------------------------------------------------------------------
+
+/// A Python application's closure, shaped like nixpkgs' at `a799d3e3`.
+///
+/// The interpreter's derivation is `python3-<v>` with pname `python3`; an
+/// interpreter environment (`python3.withPackages`) is `python3-<v>-env`
+/// with no pname at all; a Python package is `python3.13-<pkg>-<v>`; a
+/// build hook is `python-<hook>`. Only the first is CPython.
+///
+/// `python3` is the real pname because the curated table is keyed on it; the
+/// *version* is synthetic, so nothing here asserts anything about a real
+/// CPython release.
+const CLOSURE_PYTHON_APP: &str = r#"{
+  "derivations": {
+    "d-root.drv": {
+      "name": "waybill-fixture-pyapp-0.1.0",
+      "env": {
+        "pname": "waybill-fixture-pyapp",
+        "version": "0.1.0",
+        "buildInputs": "/nix/store/h1-python /nix/store/h2-env /nix/store/h3-pkg /nix/store/h4-hook"
+      },
+      "outputs": { "out": { "path": "h0-root" } }
+    },
+    "d-python.drv": {
+      "name": "python3-9.9.9",
+      "env": { "pname": "python3", "version": "9.9.9" },
+      "outputs": { "out": { "path": "h1-python" } }
+    },
+    "d-env.drv": {
+      "name": "python3-9.9.9-env",
+      "env": { },
+      "outputs": { "out": { "path": "h2-env" } }
+    },
+    "d-pkg.drv": {
+      "name": "python3.13-waybill-fixture-pkg-2.0",
+      "env": { "pname": "python3.13-waybill-fixture-pkg", "version": "2.0" },
+      "outputs": { "out": { "path": "h3-pkg" } }
+    },
+    "d-hook.drv": {
+      "name": "python-waybill-fixture-hook",
+      "env": { "pname": "python-waybill-fixture-hook", "version": "26.05pre-git" },
+      "outputs": { "out": { "path": "h4-hook" } }
+    }
+  },
+  "version": 4
+}"#;
+
+/// The interpreter carries `python:python` — NVD's CPython vendor and
+/// product — at its release version, in all three formats, recorded as
+/// coming from the curated table.
+#[test]
+fn i1395_the_interpreter_in_a_closure_carries_the_cpython_cpe() {
+    let s = scan_closure(CLOSURE_PYTHON_APP);
+    // CONTROL: the closure was read, or the assertions below say nothing.
+    assert!(
+        s.doc_prop("waybill:nix-closure").is_some(),
+        "C184 absent — the closure tier degraded, so nothing below is evidence"
+    );
+
+    let python = s
+        .component("python3")
+        .expect("the interpreter must be emitted as `python3`");
+    assert_eq!(
+        python["cpe"].as_str(),
+        Some("cpe:2.3:a:python:python:9.9.9:*:*:*:*:*:*:*"),
+        "CycloneDX `component.cpe`"
+    );
+    assert_eq!(python["purl"].as_str(), Some("pkg:generic/python3@9.9.9"));
+
+    let sources: Vec<&str> = python["evidence"]["identity"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter(|i| i["field"].as_str() == Some("cpe"))
+                .filter_map(|i| i["methods"][0]["value"].as_str())
+                .collect()
+        })
+        .unwrap_or_default();
+    assert_eq!(
+        sources,
+        vec!["waybill curated CPE table"],
+        "the CPE must be recorded as curated, not nixpkgs-declared"
+    );
+
+    let refs = s.spdx23_cpe_refs();
+    assert!(
+        refs.iter()
+            .any(|r| r == "cpe:2.3:a:python:python:9.9.9:*:*:*:*:*:*:*"),
+        "SPDX 2.3 cpe23Type externalRef; got {refs:?}"
+    );
+    assert!(
+        serde_json::to_string(&s.spdx3)
+            .unwrap()
+            .contains("cpe:2.3:a:python:python:9.9.9:"),
+        "SPDX 3 must carry the CPE"
+    );
+}
+
+/// Nothing else in a Python application's closure becomes CPython: not the
+/// interpreter environment, a Python package, a hook, nor the application.
+#[test]
+fn i1395_only_the_interpreter_gets_the_cpython_cpe() {
+    let s = scan_closure(CLOSURE_PYTHON_APP);
+    let cpes = s.cpes();
+    // CONTROL: the interpreter carries it, so the population is not empty.
+    assert!(
+        cpes.iter().any(|(n, _)| n == "python3"),
+        "the interpreter must carry a CPE, or this passes over an empty set: {cpes:?}"
+    );
+    let cpython: Vec<&(String, String)> = cpes
+        .iter()
+        .filter(|(_, c)| c.starts_with("cpe:2.3:a:python:python:"))
+        .collect();
+    assert_eq!(
+        cpython.len(),
+        1,
+        "exactly one component is CPython; got {cpython:?}"
+    );
+    // The document subject is not in `components`; it must not be CPython
+    // either.
+    let subject = &s.cdx["metadata"]["component"];
+    assert!(
+        !subject["cpe"]
+            .as_str()
+            .is_some_and(|c| c.starts_with("cpe:2.3:a:python:python:")),
+        "the subject {:?} got {:?}",
+        subject["name"],
+        subject["cpe"]
+    );
+}
