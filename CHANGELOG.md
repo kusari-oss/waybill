@@ -107,6 +107,13 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   runs: 21.2 s to 8.4 s median, with identical output. On gh: 23.3 s to
   10.9 s, with the same 657 components and 164 Go modules.
 
+- **A backported CVE's `affected` statement no longer says "Resolved".**
+  Each nixpkgs backport produces two VEX statements: `affected` for the
+  version as published, and `not_affected` for this build. Both carried the
+  note "Resolved by a nixpkgs backport applied to this build", so CycloneDX
+  showed an `exploitable` entry whose detail said resolved (18 such entries
+  on moat). The `affected` statement now says it is about the upstream
+  version and points to the build's `not_affected` statement (#1421).
 - **Document subjects no longer carry a `waybill`-vendor CPE.** A subject
   without a CPE of its own (the synthetic placeholder, or one named with
   `--root-name`/`--root-purl`) was given `cpe:2.3:a:waybill:<name>:<version>`

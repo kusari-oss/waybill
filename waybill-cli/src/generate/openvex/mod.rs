@@ -58,6 +58,23 @@ fn grade_note(cve: &str, grade: &str) -> String {
     )
 }
 
+/// The note on a backport's `affected` statement, whose subject is the
+/// component version as published, not this build.
+///
+/// Kept apart from [`grade_note`] (#1421): sharing it put "Resolved by a
+/// nixpkgs backport applied to this build" under status `affected`, which
+/// CycloneDX renders as an `exploitable` entry whose detail says resolved.
+fn published_version_note(cve: &str, grade: &str) -> String {
+    format!(
+        "This version as published is affected: nixpkgs applies a patch for \
+         {cve} to it, which is evidence the maintainers believed it \
+         vulnerable. The association is {grade}: it comes from the patch \
+         filename. This statement is about the upstream version; the \
+         `not_affected` statement for {cve} covers the build this document \
+         describes, which has the patch applied."
+    )
+}
+
 /// The note a declaration-derived statement carries.
 ///
 /// Says *who* asserted it, not only how strong it is. A consumer weighing
@@ -248,7 +265,7 @@ fn backport_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
             products: products.clone(),
             status: OpenVexStatus::Affected,
             justification: None,
-            impact_statement: Some(grade_note(&cve, grade)),
+            impact_statement: Some(published_version_note(&cve, grade)),
             action_statement: None,
         });
         // 2. This build is not, because the patch was applied to it.
@@ -999,6 +1016,37 @@ pub(crate) mod tests {
                 s["status"]
             );
         }
+    }
+
+    #[test]
+    fn the_affected_statement_does_not_say_resolved() {
+        // #1421. The two statements make opposite claims about different
+        // subjects, so they cannot share a note: "resolved … applied to this
+        // build" under status `affected` contradicts itself, and CycloneDX
+        // renders it as an `exploitable` entry whose detail says resolved.
+        let stmts = backport_statements_of(&backport_scan());
+        let note = |st: &str| -> String {
+            stmts
+                .iter()
+                .find(|s| s["status"] == st)
+                .and_then(|s| s["impact_statement"].as_str())
+                .unwrap_or_default()
+                .to_string()
+        };
+        let affected = note("affected");
+        let not = note("not_affected");
+        // CONTROL: both notes exist, so the comparison below is not between
+        // two empty strings.
+        assert!(!affected.is_empty() && !not.is_empty(), "{stmts:#?}");
+        assert!(
+            !affected.to_lowercase().contains("resolved"),
+            "the affected statement claims resolution: {affected:?}"
+        );
+        assert!(
+            affected.contains("as published"),
+            "the affected statement must name its subject: {affected:?}"
+        );
+        assert!(not.contains("Resolved by a nixpkgs backport"), "{not:?}");
     }
 
     #[test]
