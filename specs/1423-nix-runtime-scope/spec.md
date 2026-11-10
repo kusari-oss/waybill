@@ -95,7 +95,7 @@ A user who wants runtime-only scanner results follows one documented step and ge
 - **The store query fails or times out** (nix daemon down, cache unreachable, offline). Fall back to the walk (US2), record why, and don't fail the scan.
 - **`--offline`.** The closure tier already declines to run under `--offline` (C190 `offline-requested`), so there is no closure and no marks. waybill must not rely on nix's own `--offline`, which still tries an explicit `--store` URL once.
 - **The query succeeds but some runtime paths match no component.** Darwin's `libSystem` and `libiconv`, for example, have no closure component, so there is nothing to mark. Count them and report the count; don't invent components for them.
-- **A component matches a runtime path by name but not by version.** It is not runtime. Report the version mismatch rather than guessing.
+- **A component matches a runtime path by name but not by version.** It is not runtime. The join is by derivation output path, so this case surfaces as an unmatched runtime path; it is counted in C216 `unmatched-runtime-paths` rather than guessed at.
 - **Exempt members.** The evaluated package (`exempt-evaluated-package`) and compiler-supplied boot libraries (`exempt-compiler-supplied`) keep their exemptions; nothing here may mark them.
 - **A statically linked Haskell library also reachable only through a test edge.** It is runtime if any non-test library path from a runtime member reaches it. A test edge alone does not make it runtime.
 - **Statically linked C libraries** (`pkgsStatic`, vendored `.a` archives). Nothing here detects these. They are marked by the runtime closure like any other member, and the method annotation (FR-007) MUST say that static C linking is not detected.
@@ -122,7 +122,7 @@ A user who wants runtime-only scanner results follows one documented step and ge
 **Recording the method**
 
 - **FR-007**: Every `--nix-closure` document MUST record, at document scope in all three formats:
-  - the method that produced its scope marks: `runtime-closure`, `reachability-walk`, or `none` when the closure tier degraded;
+  - the method that produced its scope marks: `runtime-closure`, `reachability-walk`, or `closure-role` when neither evidence source was usable (the record is absent when the closure tier did not run at all);
   - for `runtime-closure`, which store answered;
   - for `reachability-walk`, why the runtime closure was unavailable;
   - the count of runtime paths that matched no component.
@@ -153,7 +153,7 @@ A user who wants runtime-only scanner results follows one documented step and ge
 
 - **Runtime closure**: the set of store paths the evaluated output references at runtime, as nix reports it. Exact for what is referenced; blind to what is statically linked.
 - **Statically linked member**: a component compiled into a runtime member's binary, so it ships without a store reference. Found by the embedded readers (Go, Rust) or by library-dependency edges (Haskell).
-- **Scope method**: which of `runtime-closure`, `reachability-walk` or `none` produced a document's marks, with the store that answered (or why none did) and the count of unmatched runtime paths.
+- **Scope method**: which of `runtime-closure`, `reachability-walk` or `closure-role` produced a document's marks, with the store that answered (or why none did) and the count of unmatched runtime paths.
 - **Not-in-artifact mark**: the per-component assertion, expressed natively in each format, that a closure member does not ship. Paired with C203.
 
 ## Success Criteria *(mandatory)*
