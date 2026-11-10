@@ -1,0 +1,21 @@
+[
+  {"drv":"aaaa-waybill-fixture-alpha-1.0.drv","out":"/nix/store/h1-alpha","attr":"waybill-fixture-alpha","root":"pkgs",
+   "licenses":[{"spdx":null,"name":null,"op":"AND","terms":[
+     {"spdx":"NCSA","name":"ncsa"},
+     {"spdx":null,"name":null,"op":"WITH","terms":[
+       {"spdx":"Apache-2.0","name":"asl20"},
+       {"spdx":"LLVM-exception","name":"llvm-exception"}]}]}]},
+  {"drv":"bbbb-waybill-fixture-beta-2.0.drv","out":"/nix/store/h2-beta","attr":"waybill-fixture-beta","root":"pkgs",
+   "licenses":[{"spdx":null,"name":null,"op":"OR","terms":[
+     {"spdx":"MIT","name":"mit"},
+     {"spdx":"Apache-2.0","name":"asl20"}]}]},
+  {"drv":"cccc-waybill-fixture-gamma-3.0.drv","out":"/nix/store/h3-gamma","attr":"waybill-fixture-gamma","root":"pkgs",
+   "licenses":[{"spdx":null,"name":null,"op":"AND","terms":[
+     {"spdx":"MIT","name":"mit"},
+     {"spdx":null,"name":"Public Domain"}]}]},
+  {"drv":"dddd-waybill-fixture-twin-1.0.drv","out":"/nix/store/h4-twin","attr":"waybill-fixture-twin","root":"pkgs",
+   "licenses":[{"spdx":null,"name":null,"op":"+","terms":[
+     {"spdx":"EUPL-1.1","name":"eupl11"}]}]},
+  {"drv":"eeee-waybill-fixture-twin-2.0.drv","out":"/nix/store/h5-twin","attr":"waybill-fixture-twin","root":"pkgs",
+   "licenses":[{"spdx":"GPL-3.0-only","name":"gpl3Only"}]}
+]

@@ -1,0 +1,122 @@
+# #1404 — compound nixpkgs licenses on closure members
+
+A bounded fix; there is no Spec Kit spec. This directory holds the probe that
+sized the defect before it was fixed and the before/after comparison.
+
+## The defect
+
+Milestone 1281's `--nix-closure` license lookup projects `meta.license` with a
+Nix function that understood a single license attrset, a bare string or a
+list. nixpkgs also composes licenses with `lib.licenses.{AND,OR,WITH,PLUS}`
+(`lib/licenses/operators.nix` at the pinned revision), which builds a tree:
+
+```text
+{ licenseType = "compound";  operator = "AND"|"OR"; licenses = [ … ]; }
+{ licenseType = "exception"; operator = "WITH";     license = …; exception = …; }
+{ licenseType = "plus";      operator = "+";        license = …; }
+```
+
+A tree has no `spdxId`, `shortName` or `fullName` at its top, so the old
+projection produced `{spdx: null, name: null}` and the component was emitted
+with no license.
+
+## What was measured
+
+nixpkgs `a799d3e3886da994fa307f817a6bc705ae538eeb`, `aarch64-darwin`, the five
+milestone-1377 wrapper flakes, with real `nix` (Determinate Nix 3.20.0 /
+2.34.6). `probe.sh` puts `nix-logging-shim.sh` first on `PATH` so the names
+the reader asks the license evaluation about come from waybill's own argv,
+then `raw-licenses.nix` evaluates each name's `meta.license` **unprojected**,
+with the reader's roots and guards, and `classify.py` keeps only rows whose
+`.drv` is a closure member (the m1281 join).
+
+| target | closure members | members with a row | compound top level | members lost before #1404 | operators |
+|---|---|---|---|---|---|
+| curl | 746 | 84 | 3 | 3 | AND, WITH |
+| openssh | 732 | 81 | 3 | 3 | AND, WITH |
+| httpie | 2458 | 558 | 4 | 4 | AND, WITH, OR |
+| gh | 788 | 92 | 3 | 3 | AND, WITH |
+| ripgrep | 897 | 96 | 3 | 3 | AND, WITH |
+
+Across the five closures four distinct members use an operator — `llvm`,
+`lld`, `clang-wrapper` (attr `clang`) 21.1.8, and `zvbi` 0.2.44 in httpie —
+all at nesting depth 2. No member used `PLUS`; no list contained a compound;
+no operand of a compound lacked an `spdxId`. Every compound member was lost:
+the "lost" and "compound" columns are the same members.
+
+`llvm` declares `NCSA AND (Apache-2.0 WITH LLVM-exception)`; `zvbi` declares
+`BSD-2-Clause AND (BSD-3-Clause OR GPL-2.0-or-later) AND GPL-2.0-only AND
+GPL-2.0-or-later AND LGPL-2.1-or-later AND LGPL-2.0-or-later AND MIT`.
+
+## The fix
+
+* `eval/licenses.rs` — the projection recurses through the three composite
+  shapes, emitting `{op, terms}` nodes in nixpkgs' operand order. Leaves are
+  read as before. It does **not** call nixpkgs' `toSPDX`, which writes
+  `LicenseRef-nixos-<shortName>` for an operand with no `spdxId` — an
+  identifier that is not in the declaration (m1281 FR-003, FR-014).
+* `closure/licenses.rs` — a node is rendered to SPDX text, bracketed where
+  `toSPDX` brackets, and resolved whole through `declared_license::resolve`.
+  An operand with no `spdxId` keeps its stated name and the expression is
+  preserved rather than canonicalised; an unreadable operand yields no
+  license rather than a subset. FR-015's cross-root comparison now compares
+  the whole tree, since every compound reads `(None, None)` at its top.
+
+Emission is unchanged: each format already had a native slot for an SPDX
+expression.
+
+## Before and after
+
+`compare.py` keys each format's license field by the format's own element id
+and diffs the two runs; it also diffs everything else with licenses removed
+and volatile fields masked. Scans ran with `--no-deps-dev
+--no-clearly-defined` so that no network enrichment differs between runs.
+
+| target | components gained a license (each format) | changed or lost | C184 `licenses.received` | other non-license differences |
+|---|---|---|---|---|
+| curl | 3 | 0 | 79 → 82 | none |
+| openssh | 3 | 0 | 75 → 78 | none |
+| httpie | 4 | 0 | 550 → 554 | none |
+| gh | 3 | 0 | 86 → 89 | none |
+| ripgrep | 3 | 0 | 90 → 93 | none |
+
+The only non-license line that differs in any document is the C184 record,
+and within it only `licenses.received`.
+
+**moat** (the `nix-closure-moat` corpus target, cloned at its pin
+`d06905558ba68b49b17f36c875e97f7234a9c19b`, scanned on `aarch64-darwin` with
+the same flags): the same three LLVM components gained the same expression in
+all three formats, nothing changed or was lost, and the non-license
+differences were C184 plus the SPDX 2.3 `externalDocumentRefs` checksum of
+the OpenVEX sidecar, whose only difference between the runs is its
+`timestamp`.
+
+The committed `nix-closure-moat` golden was generated on `x86_64-linux` and
+contains no `llvm`, `lld` or `clang-wrapper` component. A census of moat's
+`x86_64-linux` closure (`nix derivation show -r …#packages.x86_64-linux.default`),
+looking up the golden's own component names, found 232 members with a row and
+**no** composite license, so that golden is not expected to change. That is a
+prediction from the census, not a regenerated golden: the corpus goldens are
+`#[ignore]`d locally and regenerated by the corpus workflow.
+
+`llvm` 21.1.8, as emitted after the fix:
+
+* CycloneDX: `"licenses": [{"expression": "NCSA AND (Apache-2.0 WITH LLVM-exception)", "acknowledgement": "declared"}]`
+* SPDX 2.3: `"licenseDeclared": "NCSA AND (Apache-2.0 WITH LLVM-exception)"`
+* SPDX 3: `hasDeclaredLicense` → `simplelicensing_LicenseExpression`
+  `"NCSA AND (Apache-2.0 WITH LLVM-exception)"`
+
+## Reproduce
+
+```sh
+cargo build -p waybill --bin waybill
+M=specs/1404-nix-compound-licenses/measurements
+W=$(mktemp -d); cp -R specs/1377-nix-subject-identity/measurements/wrapper-flakes/* $W/
+for t in $W/*; do git -C $t init -q; git -C $t add .; git -C $t -c user.name=q -c user.email=q@q commit -qm q; done
+
+# Before: a binary built from the parent commit. After: this branch.
+TARGETS_DIR=$W OUT_DIR=$W/out WAYBILL=<before-binary> LABEL=before bash $M/probe.sh
+TARGETS_DIR=$W OUT_DIR=$W/out WAYBILL=target/debug/waybill LABEL=after bash $M/probe.sh
+python3 -I $M/compare.py $W/out curl openssh httpie gh ripgrep
+cat $W/out/before/*/census.json
+```

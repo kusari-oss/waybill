@@ -52,8 +52,15 @@ pub(crate) struct LicenseCoverage {
 /// drift. Where no `spdxId` exists the attribute is preserved as stated and
 /// resolved leniently, which mints a non-listed reference rather than
 /// inventing a plausible-looking identifier (FR-003).
+///
+/// #1404 — a composite declaration is rendered to the one expression it
+/// states and resolved whole. Where every operand carries an `spdxId` that is
+/// a canonical SPDX expression; where one does not, the ladder preserves the
+/// whole stated text rather than keeping only the operands that canonicalise,
+/// which would assert a narrower license than the package declared.
 fn to_expression(raw: &DeclaredLicenseRaw) -> Option<SpdxExpression> {
-    let value = raw.spdx.as_deref().or(raw.name.as_deref())?.trim();
+    let rendered = render(raw)?;
+    let value = rendered.trim();
     if value.is_empty() {
         return None;
     }
@@ -65,6 +72,48 @@ fn to_expression(raw: &DeclaredLicenseRaw) -> Option<SpdxExpression> {
         .into_licenses()
         .into_iter()
         .next()
+}
+
+/// Render one declaration as SPDX expression text.
+///
+/// Brackets exactly where nixpkgs' `lib.licenses.toSPDX` brackets — around a
+/// compound or exception operand — so the text has the structure nixpkgs
+/// built. `None` when any part is unreadable (no `spdxId` and no name, an
+/// operator this does not know, or the wrong number of operands): dropping one
+/// operand of an `AND` would state a narrower license than the package
+/// declared, and of an `OR` a choice it did not offer.
+fn render(raw: &DeclaredLicenseRaw) -> Option<String> {
+    let Some(op) = raw.op.as_deref() else {
+        let leaf = raw.spdx.as_deref().or(raw.name.as_deref())?.trim();
+        return (!leaf.is_empty()).then(|| leaf.to_string());
+    };
+    let operand = |t: &DeclaredLicenseRaw| -> Option<String> {
+        let text = render(t)?;
+        Some(if is_bracketed_operand(t) { format!("({text})") } else { text })
+    };
+    match (op, raw.terms.as_slice()) {
+        ("AND" | "OR", [only]) => render(only),
+        ("AND" | "OR", terms @ [_, _, ..]) => {
+            let parts = terms.iter().map(operand).collect::<Option<Vec<_>>>()?;
+            Some(parts.join(&format!(" {op} ")))
+        }
+        ("WITH", [license, exception]) => {
+            Some(format!("{} WITH {}", operand(license)?, operand(exception)?))
+        }
+        ("+", [license]) => Some(format!("{}+", operand(license)?)),
+        _ => None,
+    }
+}
+
+/// Whether nixpkgs' `toSPDX` would bracket this operand: a compound of more
+/// than one license, or an exception. A compound of one renders as its only
+/// license, so it needs none.
+fn is_bracketed_operand(raw: &DeclaredLicenseRaw) -> bool {
+    match raw.op.as_deref() {
+        Some("AND" | "OR") => raw.terms.len() > 1,
+        Some("WITH") => true,
+        _ => false,
+    }
 }
 
 /// Build the index, applying FR-015 where a store path is reached by several
@@ -85,16 +134,11 @@ pub(crate) fn index(rows: &[LicenseRow]) -> (LicenseIndex, usize) {
     for (drv, rows) in by_drv {
         // Compare the declarations themselves, not the resolved expressions:
         // two roots stating the same thing must agree before canonicalisation
-        // collapses any difference.
-        let shapes: BTreeSet<Vec<(Option<&str>, Option<&str>)>> = rows
-            .iter()
-            .map(|r| {
-                r.licenses
-                    .iter()
-                    .map(|l| (l.spdx.as_deref(), l.name.as_deref()))
-                    .collect()
-            })
-            .collect();
+        // collapses any difference. The whole tree is compared (#1404): every
+        // compound's top level reads `(None, None)`, so comparing only that
+        // would call two different compounds equal.
+        let shapes: BTreeSet<&Vec<DeclaredLicenseRaw>> =
+            rows.iter().map(|r| &r.licenses).collect();
         if shapes.len() > 1 {
             ambiguous += 1;
             tracing::warn!(
@@ -142,6 +186,8 @@ mod tests {
                 .map(|(s, n)| DeclaredLicenseRaw {
                     spdx: s.map(str::to_string),
                     name: n.map(str::to_string),
+                    op: None,
+                    terms: Vec::new(),
                 })
                 .collect(),
         }
@@ -232,5 +278,177 @@ mod tests {
     fn a_member_with_no_declaration_gets_no_entry() {
         let (idx, _) = index(&[row("ggg-t-1.0.drv", "pkgs", &[])]);
         assert!(idx.is_empty());
+    }
+
+    // ------------------------------------------------ #1404 compound licenses
+
+    fn leaf(spdx: Option<&str>, name: Option<&str>) -> DeclaredLicenseRaw {
+        DeclaredLicenseRaw {
+            spdx: spdx.map(str::to_string),
+            name: name.map(str::to_string),
+            op: None,
+            terms: Vec::new(),
+        }
+    }
+
+    fn node(op: &str, terms: Vec<DeclaredLicenseRaw>) -> DeclaredLicenseRaw {
+        DeclaredLicenseRaw {
+            spdx: None,
+            name: None,
+            op: Some(op.to_string()),
+            terms,
+        }
+    }
+
+    fn row_of(drv: &str, root: &str, licenses: Vec<DeclaredLicenseRaw>) -> LicenseRow {
+        LicenseRow {
+            licenses,
+            ..row(drv, root, &[])
+        }
+    }
+
+    fn one_expression(licenses: Vec<DeclaredLicenseRaw>) -> Option<String> {
+        let (idx, _) = index(&[row_of("hhh-c-1.0.drv", "pkgs", licenses)]);
+        idx.get("hhh-c-1.0.drv").map(|v| {
+            assert_eq!(v.len(), 1, "one declaration must stay one expression: {v:?}");
+            v[0].as_str().to_string()
+        })
+    }
+
+    /// `llvm`, `lld` and `clang-wrapper` 21.1.8 — the shape #1404 measured,
+    /// which was emitted with no license at all.
+    fn llvm() -> DeclaredLicenseRaw {
+        node(
+            "AND",
+            vec![
+                leaf(Some("NCSA"), Some("ncsa")),
+                node(
+                    "WITH",
+                    vec![
+                        leaf(Some("Apache-2.0"), Some("asl20")),
+                        leaf(Some("LLVM-exception"), Some("llvm-exception")),
+                    ],
+                ),
+            ],
+        )
+    }
+
+    #[test]
+    fn a_compound_license_becomes_the_spdx_expression_it_states() {
+        let got = one_expression(vec![llvm()]).expect("llvm must be licensed");
+        assert_eq!(got, "NCSA AND (Apache-2.0 WITH LLVM-exception)");
+        assert!(
+            SpdxExpression::try_canonical(&got).is_ok(),
+            "every operand had an spdxId, so the expression must canonicalise"
+        );
+    }
+
+    #[test]
+    fn a_disjunction_keeps_its_operator() {
+        let got = one_expression(vec![node(
+            "OR",
+            vec![leaf(Some("MIT"), Some("mit")), leaf(Some("Apache-2.0"), Some("asl20"))],
+        )]);
+        assert_eq!(got.as_deref(), Some("MIT OR Apache-2.0"));
+    }
+
+    /// Nesting is bracketed exactly where nixpkgs' own `toSPDX` brackets it,
+    /// so `(A AND B) OR C` does not come out as `A AND B OR C`.
+    #[test]
+    fn nested_compounds_are_bracketed() {
+        let got = one_expression(vec![node(
+            "OR",
+            vec![
+                node("AND", vec![leaf(Some("MIT"), None), leaf(Some("ISC"), None)]),
+                leaf(Some("Apache-2.0"), None),
+            ],
+        )]);
+        assert_eq!(got.as_deref(), Some("(MIT AND ISC) OR Apache-2.0"));
+    }
+
+    #[test]
+    fn a_plus_license_is_the_or_later_form() {
+        let got = one_expression(vec![node("+", vec![leaf(Some("EUPL-1.1"), Some("eupl11"))])]);
+        assert_eq!(got.as_deref(), Some("EUPL-1.1+"));
+    }
+
+    #[test]
+    fn a_compound_of_one_is_that_license_without_brackets() {
+        let got = one_expression(vec![node("AND", vec![leaf(Some("MIT"), Some("mit"))])]);
+        assert_eq!(got.as_deref(), Some("MIT"));
+    }
+
+    /// FR-003 inside a compound: the member with no `spdxId` keeps its stated
+    /// name. nixpkgs' `toSPDX` would write `LicenseRef-nixos-publicDomain`; that
+    /// identifier is nixpkgs' invention and is not stated in `meta.license`, so
+    /// it must not appear here either. The whole expression is preserved, as
+    /// `declared_license::resolve_many` preserves a list with one unknown term.
+    #[test]
+    fn a_compound_member_without_an_spdx_id_is_preserved_not_faked() {
+        let (idx, _) = index(&[row_of(
+            "iii-p-1.0.drv",
+            "pkgs",
+            vec![node(
+                "AND",
+                vec![leaf(Some("MIT"), Some("mit")), leaf(None, Some("Public Domain"))],
+            )],
+        )]);
+        let got = &idx["iii-p-1.0.drv"][0];
+        assert_eq!(got.as_str(), "MIT AND Public Domain");
+        assert!(got.as_spdx_id().is_none());
+        assert!(SpdxExpression::try_canonical(got.as_str()).is_err());
+        assert!(!got.as_str().contains("LicenseRef"), "no invented identifier: {got}");
+    }
+
+    /// Dropping the unrenderable operand would state a narrower license than
+    /// the package declared (for AND) or a choice it did not offer (for OR).
+    #[test]
+    fn a_compound_with_an_unreadable_member_yields_no_license_rather_than_a_subset() {
+        let got = one_expression(vec![node(
+            "AND",
+            vec![leaf(Some("MIT"), Some("mit")), leaf(None, None)],
+        )]);
+        assert_eq!(got, None);
+    }
+
+    #[test]
+    fn an_unknown_operator_or_malformed_arity_yields_no_license() {
+        assert_eq!(one_expression(vec![node("XOR", vec![leaf(Some("MIT"), None)])]), None);
+        assert_eq!(one_expression(vec![node("AND", vec![])]), None);
+        assert_eq!(one_expression(vec![node("WITH", vec![leaf(Some("MIT"), None)])]), None);
+        assert_eq!(
+            one_expression(vec![node(
+                "+",
+                vec![leaf(Some("MIT"), None), leaf(Some("ISC"), None)]
+            )]),
+            None
+        );
+    }
+
+    /// FR-015 with compounds. Comparing only the top-level `(spdx, name)`
+    /// pair sees two compounds as `(None, None)` each and calls them equal,
+    /// so roots that disagree inside the tree must still withhold.
+    #[test]
+    fn roots_that_disagree_inside_a_compound_withhold_the_license() {
+        let other = node(
+            "AND",
+            vec![leaf(Some("NCSA"), Some("ncsa")), leaf(Some("MIT"), Some("mit"))],
+        );
+        let (idx, amb) = index(&[
+            row_of("jjj-d-1.0.drv", "pkgs", vec![llvm()]),
+            row_of("jjj-d-1.0.drv", "haskellPackages", vec![other]),
+        ]);
+        assert_eq!(amb, 1);
+        assert!(!idx.contains_key("jjj-d-1.0.drv"));
+    }
+
+    #[test]
+    fn roots_that_agree_on_a_compound_license_the_member() {
+        let (idx, amb) = index(&[
+            row_of("kkk-a-1.0.drv", "pkgs", vec![llvm()]),
+            row_of("kkk-a-1.0.drv", "haskellPackages", vec![llvm()]),
+        ]);
+        assert_eq!(amb, 0);
+        assert_eq!(idx["kkk-a-1.0.drv"].len(), 1);
     }
 }

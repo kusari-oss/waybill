@@ -460,6 +460,116 @@ fn a_member_nixpkgs_does_not_describe_is_unlicensed_but_accounted_for() {
     );
 }
 
+// ---------------------------------------------------------------- #1404
+
+/// #1404 — a compound `meta.license` (`lib.licenses.AND [ ncsa (WITH asl20
+/// llvm-exception) ]`, the shape `llvm`, `lld` and `clang-wrapper` declare)
+/// was emitted with no license at all. It must reach each format's native
+/// expression construct, operator and exception intact.
+#[test]
+fn a_compound_license_reaches_every_format_as_one_expression() {
+    let s = scan(&fixture("closure.json"), &fixture("rows-compound.json"));
+    let want = "NCSA AND (Apache-2.0 WITH LLVM-exception)";
+
+    let licenses = s.component("waybill-fixture-alpha")["licenses"].clone();
+    assert_eq!(
+        licenses,
+        serde_json::json!([{ "expression": want, "acknowledgement": "declared" }]),
+        "CycloneDX: a parenthesised WITH compound takes the expression slot"
+    );
+    assert_eq!(s.spdx23_license("waybill-fixture-alpha").as_deref(), Some(want));
+    assert_eq!(s.spdx3_declared("waybill-fixture-alpha"), vec![want.to_string()]);
+}
+
+/// #1404 — an OR is a choice, and a choice must not be split into entries
+/// that read as "both apply".
+#[test]
+fn a_disjunction_keeps_its_operator_in_every_format() {
+    let s = scan(&fixture("closure.json"), &fixture("rows-compound.json"));
+    let want = "MIT OR Apache-2.0";
+    assert_eq!(s.cdx_licenses("waybill-fixture-beta"), vec![want]);
+    assert_eq!(s.cdx_license_slots("waybill-fixture-beta"), vec!["other"]);
+    assert_eq!(s.spdx23_license("waybill-fixture-beta").as_deref(), Some(want));
+    assert_eq!(s.spdx3_declared("waybill-fixture-beta"), vec![want.to_string()]);
+}
+
+/// #1404, FR-003 — an operand nixpkgs gives no `spdxId` keeps its stated
+/// name. The compound is preserved whole rather than reduced to the operands
+/// that canonicalise, and nothing in any format names an identifier the
+/// declaration does not state (nixpkgs' own `toSPDX` would say
+/// `LicenseRef-nixos-publicDomain`).
+#[test]
+fn a_compound_member_without_an_spdx_id_is_preserved_not_faked() {
+    let s = scan(&fixture("closure.json"), &fixture("rows-compound.json"));
+    let stated = "MIT AND Public Domain";
+    assert_eq!(s.cdx_licenses("waybill-fixture-gamma"), vec![stated]);
+    assert_eq!(
+        s.cdx_license_slots("waybill-fixture-gamma"),
+        vec!["name"],
+        "not a valid expression, so neither the id nor the expression slot"
+    );
+    let all = format!("{}{}{}", s.cdx, s.spdx23, s.spdx3);
+    assert!(!all.contains("LicenseRef-nixos"), "an invented identifier was emitted");
+    // SPDX 2.3 mints its usual content-addressed reference and keeps the
+    // declaration as the extracted text.
+    let declared = s.spdx23_license("waybill-fixture-gamma").unwrap_or_default();
+    assert!(declared.starts_with("LicenseRef-"), "{declared}");
+    let extracted = s.spdx23["hasExtractedLicensingInfos"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+    assert!(
+        extracted
+            .iter()
+            .any(|e| e["licenseId"].as_str() == Some(declared.as_str())
+                && e["extractedText"].as_str() == Some(stated)),
+        "the declaration must survive as extracted text: {extracted:?}"
+    );
+}
+
+#[test]
+fn a_plus_license_is_emitted_as_the_or_later_form() {
+    let s = scan(&fixture("closure.json"), &fixture("rows-compound.json"));
+    let twins: Vec<Vec<String>> = s
+        .components()
+        .iter()
+        .filter(|c| c["name"].as_str() == Some("waybill-fixture-twin"))
+        .map(|c| {
+            c["licenses"]
+                .as_array()
+                .map(|a| {
+                    a.iter()
+                        .filter_map(|l| {
+                            l["license"]["id"]
+                                .as_str()
+                                .or_else(|| l["license"]["name"].as_str())
+                                .or_else(|| l["expression"].as_str())
+                                .map(str::to_string)
+                        })
+                        .collect()
+                })
+                .unwrap_or_default()
+        })
+        .collect();
+    assert!(
+        twins.contains(&vec!["EUPL-1.1+".to_string()]),
+        "the PLUS twin must carry EUPL-1.1+, got {twins:?}"
+    );
+    // A pre-#1404 row shape in the same evaluation still licenses its member.
+    assert!(
+        twins.contains(&vec!["GPL-3.0-only".to_string()]),
+        "a plain row beside compound ones must still license, got {twins:?}"
+    );
+}
+
+/// #1404 — the coverage record counts compound-licensed members as received;
+/// before the fix only the one plain row did.
+#[test]
+fn compound_licensed_members_count_as_received() {
+    let s = scan(&fixture("closure.json"), &fixture("rows-compound.json"));
+    assert_eq!(s.coverage()["received"].as_u64(), Some(5), "{}", s.coverage());
+}
+
 /// T043 / SC-007 and T044 / SC-002 — this feature adds licenses, and nothing
 /// else.
 ///

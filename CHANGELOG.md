@@ -65,6 +65,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Closure members with a compound nixpkgs license are licensed.** The
+  `--nix-closure` license lookup understood a single license, a string or
+  a list, but not the trees `lib.licenses.AND`/`OR`/`WITH`/`PLUS` build, so
+  `llvm`, `lld` and `clang-wrapper` 21.1.8 were emitted with no license at
+  all. They now carry `NCSA AND (Apache-2.0 WITH LLVM-exception)`, in the
+  CycloneDX `expression` slot, SPDX 2.3 `licenseDeclared` and SPDX 3
+  `hasDeclaredLicense`; `zvbi` carries its seven-license expression with
+  its nested `OR`. The text is built from nixpkgs' own `spdxId`s; an
+  operand without one keeps its stated name and the whole declaration is
+  preserved, never given nixpkgs' `LicenseRef-nixos-*` names. Measured on
+  five nixpkgs closures (curl, openssh, httpie, gh, ripgrep): 3, 3, 4, 3
+  and 3 components gained a license, and no other component's license
+  changed in any format (#1404).
 - **`kprobe_attach_failures` says what it holds.** The field has carried
   counter-map names since m212 and tracepoint names since m210, and now
   carries no kprobe names at all. The name is kept — documents produced
