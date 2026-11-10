@@ -89,6 +89,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   Runtime and optional importer evidence survives absent child manifests.
   v6/v7 per-package flags and missing-importer behavior are preserved.
   This addresses the pnpm portion of #1297; Yarn is unchanged.
+- **`--path .` names the scan target after the directory.** A path whose
+  last component is `.` or `..` (`.`, `./`, `..`, `sub/..`) has no file
+  name, so the target was named `filesystem-scan`. That name reaches the
+  placeholder subject (`pkg:generic/filesystem-scan@0.0.0`, its `bom-ref`
+  and CPE) and the SPDX 2.3 document namespace, so one directory produced
+  different documents depending on where the scan ran from. Such a path is
+  now resolved before its last component is read, and the documents match
+  those from the absolute path. A path that already ends in a name is read
+  as before, so a symlink is still named for the link. `filesystem-scan`
+  remains the name of the filesystem root. The release workflow scans its
+  own source with `--path .`, so its source SBOM's placeholder subject
+  becomes `pkg:generic/waybill@0.0.0` (#1401).
 
 ## [0.14.1] - 2026-11-09
 
