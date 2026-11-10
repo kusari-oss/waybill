@@ -207,6 +207,8 @@ pub struct MetadataExtras<'a> {
     pub cpe_coverage: Option<&'a str>,
     /// C210 (m1372, #1366) — the build-graph admission record.
     pub closure_graph_admission: Option<&'a str>,
+    /// C213 (m1378, #1396) — the closure contents read record.
+    pub nix_closure_contents: Option<&'a str>,
     /// C195/C196 (#1154) — the `go mod why` pass's outcome.
     pub go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     /// C192 (m1067) — deps.dev outcome counts, pre-rendered JSON.
@@ -289,6 +291,7 @@ pub fn build_metadata(
         closure_ecosystem_identity,
         cpe_coverage,
         closure_graph_admission,
+        nix_closure_contents,
         go_mod_why,
         deps_dev_outcomes,
         vex_claims_omitted,
@@ -444,6 +447,10 @@ pub fn build_metadata(
     // C210 (m1372, #1366) — what the build-graph admission signal did.
     if let Some(record) = closure_graph_admission {
         properties.push(json!({ "name": "waybill:closure-graph-admission", "value": record }));
+    }
+    // C213 (m1378, #1396) — which closure members had their outputs read.
+    if let Some(record) = nix_closure_contents {
+        properties.push(json!({ "name": crate::scan_fs::package_db::nix::closure::contents::ANN_NIX_CLOSURE_CONTENTS, "value": record }));
     }
     // C208 (m1366, #1365) — what the ecosystem identity pass did. Emitted
     // wherever a closure was recorded, including when it confirmed nothing:

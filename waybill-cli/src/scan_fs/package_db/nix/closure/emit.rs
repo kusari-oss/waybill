@@ -290,6 +290,46 @@ fn source_url(drv: &RawDerivation) -> Option<&str> {
         .filter(|u| !u.is_empty())
 }
 
+/// The PURL coordinate a derivation is emitted under, and the identity hash
+/// that distinguishes it (empty for every member that declares a `pname`).
+///
+/// `None` when the derivation yields no name.
+///
+/// Milestone 1378 (#1396) lifted this out of [`components`] so the contents
+/// pass can find the component a derivation became. A `pname`-less member is
+/// keyed by its hash, not by `(name, version)` — 56 members named `source`
+/// share that pair — and a second copy of this rule in the caller would be
+/// two predicates that have to agree.
+pub(crate) fn coordinate(drv: &RawDerivation, key: &str) -> Option<(String, String)> {
+    let name = drv.pname()?;
+    let version = drv.version().unwrap_or_default();
+    let basis = is_1282_member(drv).then(|| member::identity(drv, key));
+
+    // `pkg:nix` is not a purl-spec type, so these carry `pkg:generic`
+    // with the name and version nix recorded. A wrong-but-well-formed
+    // PURL would be worse than a generic one: it would collide with
+    // whatever really owns that coordinate.
+    let coordinate = match &basis {
+        // FR-002 — the hash occupies the **name segment**. A qualifier
+        // does not satisfy the requirement: PURL equality is how
+        // downstream tooling matches components, some tools compare
+        // without qualifiers, and under such a comparison the 56 distinct
+        // artifacts named `source` would collapse to one. That is
+        // precisely the collision this identity exists to prevent.
+        Some(b) => format!("pkg:generic/{}-{}", name, encode_hash_segment(b.hash())),
+        None if version.is_empty() => format!("pkg:generic/{name}"),
+        None => format!("pkg:generic/{name}@{version}"),
+    };
+    let identity_key = basis.as_ref().map(|b| b.hash().to_string()).unwrap_or_default();
+    Some((coordinate, identity_key))
+}
+
+/// Is this a member milestone 1282 added? Crate-visible for the contents
+/// pass, which keys such members by hash.
+pub(crate) fn is_hash_keyed_member(drv: &RawDerivation) -> bool {
+    is_1282_member(drv)
+}
+
 /// Build the components a classified closure contributes.
 ///
 /// Returns them rather than mutating a caller's vector, so the supplementing
@@ -379,26 +419,9 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         // feature, which is what keeps their identity and their key exactly
         // as they were.
         let member_role = is_1282_member(drv).then(|| member::classify(drv));
-        let basis = member_role
-            .is_some()
-            .then(|| member::identity(drv, key));
-
-        // `pkg:nix` is not a purl-spec type, so these carry `pkg:generic`
-        // with the name and version nix recorded. A wrong-but-well-formed
-        // PURL would be worse than a generic one: it would collide with
-        // whatever really owns that coordinate.
-        let coordinate = match &basis {
-            // FR-002 — the hash occupies the **name segment**. A qualifier
-            // does not satisfy the requirement: PURL equality is how
-            // downstream tooling matches components, some tools compare
-            // without qualifiers, and under such a comparison the 56 distinct
-            // artifacts named `source` would collapse to one. That is
-            // precisely the collision this identity exists to prevent.
-            Some(b) => format!("pkg:generic/{}-{}", name, encode_hash_segment(b.hash())),
-            None if version.is_empty() => format!("pkg:generic/{name}"),
-            None => format!("pkg:generic/{name}@{version}"),
+        let Some((coordinate, identity_key)) = coordinate(drv, key) else {
+            continue;
         };
-        let identity_key = basis.as_ref().map(|b| b.hash().to_string()).unwrap_or_default();
         let merge_key: MergeKey = (name.to_string(), version.to_string(), identity_key);
         if is_root {
             root_identity = Some(merge_key.clone());

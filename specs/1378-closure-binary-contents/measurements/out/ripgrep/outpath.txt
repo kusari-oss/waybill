@@ -1,0 +1,1 @@
+/nix/store/8k3a39k5wxvch0ir2lb1pskvwing02lq-ripgrep-15.1.0

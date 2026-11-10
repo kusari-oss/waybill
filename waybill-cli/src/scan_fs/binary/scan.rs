@@ -45,6 +45,40 @@ pub(super) fn is_go_binary(bytes: &[u8]) -> bool {
 }
 
 
+/// The cargo-auditable manifest in one (thin) object's `.dep-v0` section.
+///
+/// The section name is the same across ELF, Mach-O (`__DATA,.dep-v0`) and
+/// PE. `None` for anything `object` cannot parse, for an object without the
+/// section, and for a section that is not a valid manifest.
+///
+/// Milestone 1378 (#1396) named this so the nix closure tier can ask for the
+/// manifest alone. [`scan_binary`] computes linkage, identity, strings, role
+/// and packer signatures as well, and logs as it goes; on a closure with a
+/// hundred present outputs that was most of the pass's time and several
+/// thousand log lines, for one section lookup.
+pub(super) fn dep_v0_manifest(
+    thin_object: &[u8],
+) -> Option<super::cargo_auditable::CargoAuditableManifest> {
+    use object::{Object, ObjectSection};
+    object::read::File::parse(thin_object)
+        .ok()
+        .and_then(|f| f.section_by_name_bytes(b".dep-v0").and_then(|s| s.data().ok()))
+        .and_then(super::cargo_auditable::parse_dep_v0)
+}
+
+/// Whether these bytes open with a fat (universal) Mach-O magic. Java class
+/// files share `0xCAFEBABE`, so this is a necessary test, not a sufficient
+/// one.
+pub(super) fn has_fat_macho_magic(bytes: &[u8]) -> bool {
+    matches!(
+        bytes.first_chunk::<4>(),
+        Some(&[0xCA, 0xFE, 0xBA, 0xBE])
+            | Some(&[0xBE, 0xBA, 0xFE, 0xCA])
+            | Some(&[0xCA, 0xFE, 0xBA, 0xBF])
+            | Some(&[0xBF, 0xBA, 0xFE, 0xCA])
+    )
+}
+
 pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
     use object::Object;
 
@@ -491,13 +525,7 @@ fn scan_fat_macho(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
     // `.dep-v0` section (Mach-O `__DATA,.dep-v0`) is whole-binary
     // metadata and not arch-specific in practice, so reading from the
     // first slice is sufficient.
-    let cargo_auditable = {
-        use object::Object;
-        object::read::File::parse(first_slice)
-            .ok()
-            .and_then(|f| f.section_by_name_bytes(b".dep-v0").and_then(|s| s.data().ok()))
-            .and_then(super::cargo_auditable::parse_dep_v0)
-    };
+    let cargo_auditable = dep_v0_manifest(first_slice);
 
     // Milestone 104 — role classification from the first slice
     // (matches FR-006: fat-binary classification is taken from the

@@ -36,6 +36,9 @@ use std::path::Path;
 use super::package_db::PackageDbEntry;
 
 mod discover;
+/// Milestone 1378 (#1396) — the two embedded-build-information readers, for a
+/// caller that wants a binary's contents and not a scan of its directory.
+pub(crate) mod embedded;
 mod entry;
 mod predicates;
 mod scan;

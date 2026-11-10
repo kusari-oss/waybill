@@ -201,7 +201,19 @@ fn scan_closure(closure_json: &str) -> Scan {
 
 /// The same, with extra CLI arguments — for the `--tier` interaction (T058).
 fn scan_closure_with_args(closure_json: &str, extra: &[&str]) -> Scan {
+    scan_closure_in(closure_json, extra, None)
+}
+
+/// Milestone 1378 (#1396) — the same, with the store the scan looks in.
+///
+/// Since that milestone the closure tier checks whether each member's output
+/// is present in the store. `None` points it at a directory that does not
+/// exist, so every output is absent and no test here depends on what the host
+/// happens to have under `/nix/store`. `Some` is a directory the test built.
+fn scan_closure_in(closure_json: &str, extra: &[&str], store: Option<&Path>) -> Scan {
     let dir = tempfile::tempdir().unwrap();
+    let no_store = dir.path().join("no-such-store");
+    let store = store.unwrap_or(&no_store);
     let cache = seed_cache();
     let bin = dir.path().join("bin");
     std::fs::create_dir_all(&bin).unwrap();
@@ -237,6 +249,7 @@ fn scan_closure_with_args(closure_json: &str, extra: &[&str]) -> Scan {
         .arg("--output")
         .arg(format!("spdx-3-json={}", spdx3_path.display()))
         .args(extra)
+        .env("NIX_STORE_DIR", store)
         .env("PATH", format!("{}:{}", bin.display(), std::env::var("PATH").unwrap()))
         .env("WAYBILL_NIXPKGS_CACHE", cache.path())
         .output()
@@ -601,12 +614,41 @@ fn m1280_t019_a_root_with_no_component_drops_its_edges_rather_than_faking_them()
     );
 }
 
+/// Milestone 1378 (#1396), FR-016 — with members unread, neither format
+/// claims the root's dependencies are complete.
+///
+/// The counterpart to `m1280_t056`, which supplies a store with every output
+/// present and so sees the claim made. Here nothing is present. What is
+/// compiled into an unread member is a dependency that may exist and is not
+/// known, which is the one thing `aggregate: "complete"` denies. Asserted on
+/// both formats because the change had to be made in both, and the first
+/// attempt made it in one.
+#[test]
+fn m1378_unread_members_withhold_the_completeness_claim_in_both_formats() {
+    let s = scan_closure(&closure("through_fetch.json"));
+    let cdx_complete = s.cdx["compositions"].as_array().is_some_and(|cs| {
+        cs.iter().any(|c| {
+            c.get("dependencies").is_some() && c["aggregate"].as_str() == Some("complete")
+        })
+    });
+    assert!(!cdx_complete, "CycloneDX: {:?}", s.cdx["compositions"]);
+    let spdx3_complete = s.spdx3["@graph"].as_array().is_some_and(|g| {
+        g.iter().any(|e| e["completeness"].as_str() == Some("complete"))
+    });
+    assert!(!spdx3_complete, "SPDX 3 must not claim what CycloneDX withholds");
+}
+
 // ---------------------------------------------------------------------
 // User Story 2 — the orphan population explains itself
 // ---------------------------------------------------------------------
 
 /// T031 + T032 are **unit tests in `generate/orphan_reason.rs`**, not here,
 /// and the reason is a fixture limitation worth recording.
+///
+/// **True when written (milestone 1280), no longer true since milestone 1377
+/// (#1398):** a sole closure root is now an emitted component, so its edges
+/// resolve. Whether these fixtures can therefore test root-reachability has
+/// not been revisited; the tests stay where they are. The original reasoning:
 ///
 /// These fixtures cannot test root-reachability. Their root derivation is by
 /// definition referenced by nothing, so it is never an emitted component, so
@@ -838,13 +880,23 @@ fn m1280_t058_tier_filtering_leaves_no_dangling_closure_edge() {
 /// reach, and no other task covered it.
 ///
 /// **The other half — that the `orphaned-components-detected` clause
-/// disappears — is corpus-measured, not asserted here.** These fixtures cannot
-/// connect anything to the subject: their root derivation is referenced by
-/// nothing, so it is never a component and its edges are unanchored (FR-004b).
+/// disappears — is corpus-measured, not asserted here.** When this was
+/// written these fixtures could not connect anything to the subject: their
+/// root derivation is referenced by nothing, so it was never a component and
+/// its edges were unanchored (FR-004b). Since milestone 1377 (#1398) a sole root
+/// is a component; this test has not been extended to use that.
 /// On the corpus the clause's count falls 352 → 10.
 #[test]
 fn m1280_t056_the_native_completeness_carriers_agree() {
-    let s = scan_closure(&closure("through_fetch.json"));
+    // Milestone 1378 (#1396): a closure with members whose outputs were not
+    // read withholds the root's completeness claim, in both formats. So the
+    // claim this test compares only exists when every output is present —
+    // which is what this store provides. The absent case is the next test.
+    let store = tempfile::tempdir().unwrap();
+    for output in ["h0-root", "h1-pkga", "h2-fetch", "h3-pkgb"] {
+        std::fs::create_dir_all(store.path().join(output)).unwrap();
+    }
+    let s = scan_closure_in(&closure("through_fetch.json"), &[], Some(store.path()));
 
     let cdx_incomplete = s.cdx["compositions"].as_array().is_some_and(|cs| {
         cs.iter().any(|c| {

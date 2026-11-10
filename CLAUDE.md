@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-09
+Auto-generated from all feature plans. Last updated: 2026-11-10
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -462,6 +462,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-09
 - N/A. The classification is computed once per scan and emitted. (1373-hackage-cpe-decision)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + none new. The table is `const` data; the enforcement test already exists (#1246). (1375-generic-cpe-table)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `tracing`, `anyhow`. The host's `nix`, already required by `--nix-closure`. **Zero new Cargo dependencies.** (1377-nix-subject-identity)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `go_binary::read_binary`, `binary::scan::scan_binary`, `binary::entry::cargo_auditable_packages_to_entries`, `binary::discover::discover_binaries`, `DepsDevSource::confirm` + `EnrichmentKey`, `serde`/`serde_json`, `tracing`, `clap`. **Zero new Cargo dependencies.** (1378-closure-binary-contents)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -695,6 +696,7 @@ Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard
 
 ## Recent Changes
 - 1377-nix-subject-identity: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `tracing`, `anyhow`. The host's `nix`, already required by `--nix-closure`. **Zero new Cargo dependencies.**
+- 1378-closure-binary-contents: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `go_binary::read_binary`, `binary::scan::scan_binary`, `binary::entry::cargo_auditable_packages_to_entries`, `binary::discover::discover_binaries`, `DepsDevSource::confirm` + `EnrichmentKey`, `serde`/`serde_json`, `tracing`, `clap`. **Zero new Cargo dependencies.**
 - 1376-count-emitted-components: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 1375-generic-cpe-table: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + none new. The table is `const` data; the enforcement test already exists (#1246).
 

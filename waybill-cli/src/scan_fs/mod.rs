@@ -2091,7 +2091,7 @@ pub(crate) fn normalize_dep_name(ecosystem: &str, name: &str) -> String {
 ///    (cargo, nuget, pypi, gem, apk, deb, rpm) and for unscoped npm.
 ///    Sets the emitted `supplier.name` field via the existing
 ///    `entry.maintainer.or_else` chain at `scan_fs/mod.rs:572`.
-fn supplier_from_purl(purl: &waybill_common::types::purl::Purl) -> Option<String> {
+pub(crate) fn supplier_from_purl(purl: &waybill_common::types::purl::Purl) -> Option<String> {
     let ecosystem = purl.ecosystem();
 
     // Existing namespace-derived heuristics (milestone 001) — preserved
@@ -2143,7 +2143,7 @@ fn supplier_from_purl(purl: &waybill_common::types::purl::Purl) -> Option<String
 /// `pkg:maven` components (FR-017..019), plus a `vcs` URL parsed
 /// from cargo-auditable's `source` field when carried via the C98
 /// `waybill:cargo-vcs-source-url` plumbing annotation (FR-020).
-fn external_refs_from_purl(
+pub(crate) fn external_refs_from_purl(
     purl: &waybill_common::types::purl::Purl,
     extra_annotations: &std::collections::BTreeMap<String, serde_json::Value>,
 ) -> Vec<waybill_common::resolution::ExternalReference> {

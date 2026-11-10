@@ -848,6 +848,8 @@ mod tests {
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,
+            nix_closure_contents: None,
+            nix_closure_contents_unread: false,
             deps_dev_online: false,
             nix_eval_system: None,
             nixpkgs_haskell_resolution: None,

@@ -173,6 +173,15 @@ pub struct ScanArtifacts<'a> {
     /// admission signal did. Both counts are **derivations**. Emitted only
     /// where a closure was recorded, like C204 and C208.
     pub closure_graph_admission: Option<&'a str>,
+    /// Milestone 1378 (#1396; C213) — how many closure members had their
+    /// outputs read for embedded build information. Emitted wherever a
+    /// closure was recorded, including when nothing was read: "493 members,
+    /// 0 read" and "this scan never looked" are different documents.
+    pub nix_closure_contents: Option<&'a str>,
+    /// Whether that record has members whose contents this scan cannot
+    /// vouch for. Carried beside the rendered record so the CycloneDX
+    /// builder can withhold a completeness claim without parsing it back.
+    pub nix_closure_contents_unread: bool,
     /// Milestone 1067 (#1058; C192) — the deps.dev enrichment pass ran
     /// online. Gates the document-scope outcome counts, which are computed
     /// in each emitter from the components it emits so they always agree
