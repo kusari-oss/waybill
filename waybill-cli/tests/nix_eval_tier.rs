@@ -85,11 +85,39 @@ impl ScanResult {
     }
 }
 
+/// The nixpkgs revision the `ifd` fixture's `flake.lock` pins.
+const IFD_REV: &str = "cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73";
+
+/// A nixpkgs package-set cache seeded for [`IFD_REV`], so no scan here
+/// downloads the package set.
+///
+/// Without it every `--nix-eval` scan fetched `hackage-packages.nix` from
+/// GitHub, and a failed download stopped the Haskell enrichment before the
+/// eval tier ran: the tier then recorded nothing, and the assertions about its
+/// degradation reason failed. That failed `main` intermittently on hosted
+/// runners, and reproduces every time with the download blocked
+/// (Constitution Principle VII: tests must not depend on the network).
+///
+/// Empty sets are enough. The fixture's packages are synthetic and absent
+/// from any real package set, so the outcome is the same either way.
+fn seeded_cache() -> tempfile::TempDir {
+    let dir = tempfile::tempdir().unwrap();
+    let rev = dir.path().join(IFD_REV);
+    std::fs::create_dir_all(&rev).unwrap();
+    std::fs::write(rev.join("hackage-packages.nix"), "{ }\n").unwrap();
+    for s in ["9.4.x", "9.6.x", "9.8.x", "9.10.x", "9.12.x"] {
+        std::fs::write(rev.join(format!("configuration-ghc-{s}.nix")), "{ }\n").unwrap();
+    }
+    dir
+}
+
 /// Run a scan, optionally with `nix` removed from `PATH`.
 fn scan(path: &Path, extra: &[&str], strip_nix: bool) -> ScanResult {
     let out_dir = tempfile::tempdir().unwrap();
     let out_path = out_dir.path().join("out.cdx.json");
+    let cache = seeded_cache();
     let mut cmd = Command::new(binary_path());
+    cmd.env("WAYBILL_NIXPKGS_CACHE", cache.path());
     cmd.arg("sbom")
         .arg("scan")
         .arg("--path")
@@ -206,6 +234,7 @@ fn a_nix_whose_config_omits_the_setting_is_refused_not_trusted() {
 
     let out_dir = tempfile::tempdir().unwrap();
     let out_path = out_dir.path().join("out.cdx.json");
+    let cache = seeded_cache();
     let out = Command::new(binary_path())
         .arg("sbom")
         .arg("scan")
@@ -218,6 +247,7 @@ fn a_nix_whose_config_omits_the_setting_is_refused_not_trusted() {
         .arg("--output")
         .arg(format!("cyclonedx-json={}", out_path.display()))
         .env("PATH", format!("{}:/usr/bin:/bin", dir.path().display()))
+        .env("WAYBILL_NIXPKGS_CACHE", cache.path())
         .output()
         .unwrap();
 
@@ -494,7 +524,14 @@ fn offline_refuses_the_tier_rather_than_reaching_the_network() {
     // So the two flags are mutually exclusive in effect, and `--offline` wins.
     // The alternative -- evaluating and hoping the store is warm -- keeps the
     // promise only by luck.
+    //
+    // The cache is seeded here too. Without it this test relied on another
+    // test having downloaded the package set into the default cache first;
+    // on a fresh runner `--offline` then had no package set, the tier was
+    // never reached, and it recorded nothing (#1418).
+    let cache = seeded_cache();
     let out = Command::new(binary_path())
+        .env("WAYBILL_NIXPKGS_CACHE", cache.path())
         .arg("sbom")
         .arg("scan")
         .arg("--path")
@@ -543,6 +580,7 @@ fn scan_with_stub_nix(script: &str) -> (bool, Option<String>) {
     }
     let out_dir = tempfile::tempdir().unwrap();
     let out_path = out_dir.path().join("out.cdx.json");
+    let cache = seeded_cache();
     let out = Command::new(binary_path())
         .arg("sbom")
         .arg("scan")
@@ -555,6 +593,7 @@ fn scan_with_stub_nix(script: &str) -> (bool, Option<String>) {
         .arg("--output")
         .arg(format!("cyclonedx-json={}", out_path.display()))
         .env("PATH", format!("{}:/usr/bin:/bin", dir.path().display()))
+        .env("WAYBILL_NIXPKGS_CACHE", cache.path())
         .output()
         .unwrap();
     let reason = std::fs::read(&out_path)
