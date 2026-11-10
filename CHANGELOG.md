@@ -79,6 +79,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Cargo: a default-enabled optional dependency with a hyphenated or
+  renamed name is no longer marked excluded.** The set of dependencies
+  `cargo metadata` resolves as activated was built from
+  `resolve.nodes[].deps[].name`, which is the library name: hyphens become
+  underscores, and a `package = "…"` rename appears under its new name.
+  Compared against Cargo.lock package names, it missed such dependencies,
+  and they were emitted `scope: "excluded"` with
+  `waybill:optional-derivation = cargo-optional-true` although the default
+  features turn them on. The same mismatch excluded a transitive crate
+  whose hyphenated name matched a declared-optional one. The set is now
+  read from each dependency's package id and keyed by `(name, version)`,
+  so two versions of one crate are also classified separately (#1429).
 - **Document subjects no longer carry a `waybill`-vendor CPE.** A subject
   without a CPE of its own (the synthetic placeholder, or one named with
   `--root-name`/`--root-purl`) was given `cpe:2.3:a:waybill:<name>:<version>`
