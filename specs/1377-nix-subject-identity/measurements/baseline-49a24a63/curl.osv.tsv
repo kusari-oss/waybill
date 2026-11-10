@@ -1,0 +1,7 @@
+GHSA-8rrh-rw8j-w5fx	wheel	0.46.1
+GHSA-h35f-9h28-mq5c	setuptools	80.10.1
+GHSA-vfmq-68hx-4jfw	lxml	6.0.2
+GHSA-xmj3-9gf7-h52w	setuptools	80.10.1
+PYSEC-2026-2047	wheel	0.46.1
+PYSEC-2026-3447	setuptools	80.10.1
+PYSEC-2026-87	lxml	6.0.2

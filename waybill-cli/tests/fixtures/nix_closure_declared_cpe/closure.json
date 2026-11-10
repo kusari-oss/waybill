@@ -1,0 +1,131 @@
+{
+ "derivations": {
+  "d-zlib.drv": {
+   "name": "zlib-9.9.9",
+   "env": {
+    "pname": "zlib",
+    "version": "9.9.9"
+   },
+   "outputs": {
+    "out": {
+     "path": "h-zlib"
+    }
+   }
+  },
+  "d-stdenv-shell.drv": {
+   "name": "waybill-fixture-shell-5.3p9",
+   "env": {
+    "pname": "waybill-fixture-shell",
+    "version": "5.3p9"
+   },
+   "outputs": {
+    "out": {
+     "path": "h-waybill-fixture-shell"
+    }
+   }
+  },
+  "d-plain.drv": {
+   "name": "waybill-fixture-plain-2.0",
+   "env": {
+    "pname": "waybill-fixture-plain",
+    "version": "2.0"
+   },
+   "outputs": {
+    "out": {
+     "path": "h-waybill-fixture-plain"
+    }
+   }
+  },
+  "d-openssl.drv": {
+   "name": "openssl-9.9.9",
+   "env": {
+    "pname": "openssl",
+    "version": "9.9.9"
+   },
+   "outputs": {
+    "out": {
+     "path": "h-openssl"
+    }
+   }
+  },
+  "d-badcpe.drv": {
+   "name": "waybill-fixture-badcpe-1.0",
+   "env": {
+    "pname": "waybill-fixture-badcpe",
+    "version": "1.0"
+   },
+   "outputs": {
+    "out": {
+     "path": "h-waybill-fixture-badcpe"
+    }
+   }
+  },
+  "d-skew.drv": {
+   "name": "waybill-fixture-skew-3.0",
+   "env": {
+    "pname": "waybill-fixture-skew",
+    "version": "3.0"
+   },
+   "outputs": {
+    "out": {
+     "path": "h-waybill-fixture-skew"
+    }
+   }
+  },
+  "r00t-waybill-fixture-cpeapp-1.0.drv": {
+   "name": "waybill-fixture-cpeapp-1.0",
+   "env": {
+    "pname": "waybill-fixture-cpeapp",
+    "version": "1.0",
+    "buildInputs": "/nix/store/h-zlib /nix/store/h-waybill-fixture-shell /nix/store/h-waybill-fixture-plain /nix/store/h-openssl /nix/store/h-waybill-fixture-badcpe /nix/store/h-waybill-fixture-skew"
+   },
+   "inputs": {
+    "drvs": {
+     "d-zlib.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     },
+     "d-stdenv-shell.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     },
+     "d-plain.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     },
+     "d-openssl.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     },
+     "d-badcpe.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     },
+     "d-skew.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     }
+    },
+    "srcs": []
+   },
+   "outputs": {
+    "out": {
+     "path": "h-cpeapp"
+    }
+   }
+  }
+ },
+ "version": 4
+}

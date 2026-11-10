@@ -1,0 +1,7 @@
+{
+  "name": "moat",
+  "version": "0.1",
+  "purl": "pkg:hackage/moat@0.1",
+  "cpe": null,
+  "heuristic": "{\"confidence\":0.99,\"heuristic\":\"nix-evaluated-package\"}"
+}

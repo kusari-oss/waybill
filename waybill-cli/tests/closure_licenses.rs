@@ -17,17 +17,12 @@
 #![cfg(unix)]
 #![allow(clippy::unwrap_used)]
 
+mod common;
+
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
+use common::nix_stub::{NixStub, Rows, Scan, DEFAULT_ATTR};
 use serde_json::Value;
-
-/// The revision the fixture `flake.lock` pins.
-const REV: &str = "a799d3e3886da994fa307f817a6bc705ae538eeb";
-
-fn binary_path() -> &'static str {
-    env!("CARGO_BIN_EXE_waybill")
-}
 
 fn project() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/closure_role_scope/project")
@@ -40,60 +35,18 @@ fn fixture(name: &str) -> String {
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
 }
 
-fn seed_cache() -> tempfile::TempDir {
-    let dir = tempfile::tempdir().unwrap();
-    let rev = dir.path().join(REV);
-    std::fs::create_dir_all(&rev).unwrap();
-    std::fs::write(rev.join("hackage-packages.nix"), "{ }\n").unwrap();
-    for s in ["9.4.x", "9.6.x", "9.8.x", "9.10.x", "9.12.x"] {
-        std::fs::write(rev.join(format!("configuration-ghc-{s}.nix")), "{ }\n").unwrap();
-    }
-    dir
+/// The suite's accessors, over the shared stub's [`Scan`].
+trait LicenseView {
+    fn components(&self) -> &Vec<Value>;
+    fn component(&self, name: &str) -> &Value;
+    fn cdx_licenses(&self, name: &str) -> Vec<String>;
+    fn cdx_license_slots(&self, name: &str) -> Vec<&'static str>;
+    fn spdx23_license(&self, name: &str) -> Option<String>;
+    fn spdx3_declared(&self, name: &str) -> Vec<String>;
+    fn coverage(&self) -> Value;
 }
 
-/// `rows` is what the stub returns for the license evaluation; passing an
-/// empty string makes that call fail, which is how US3 is exercised.
-fn stub_script(log_path: &Path, closure: &str, rows: &str) -> String {
-    let log = log_path.display();
-    let license_case = if rows.is_empty() {
-        // A failing evaluation. Not a crash and not an empty result — the two
-        // are different outcomes and FR-008 requires the document to tell
-        // them apart.
-        "  *rowIn*) echo 'error: stub refuses this evaluation' >&2; exit 1 ;;".to_string()
-    } else {
-        format!(
-            "  *rowIn*) cat <<'ROWSEOF'\n{rows}\nROWSEOF\n  ;;"
-        )
-    };
-    format!(
-        r##"#!/bin/sh
-echo "$*" >> '{log}'
-case "$*" in
-  *builtins.currentSystem*) printf '%s' 'aarch64-darwin' ;;
-  "config show"*) echo 'allow-dirty = true'; echo 'allow-import-from-derivation = false' ;;
-{license_case}
-  "derivation show"*"#packages.aarch64-darwin.default") cat <<'CLOSUREEOF'
-{closure}
-CLOSUREEOF
-  ;;
-  *"#packages.aarch64-darwin") echo '["default"]' ;;
-  *"#packages") echo '["aarch64-darwin"]' ;;
-  "derivation show"*) echo "error: flake 'stub' does not provide attribute" >&2; exit 1 ;;
-  *) echo 'stub nix: unhandled invocation' >&2; exit 1 ;;
-esac
-"##
-    )
-}
-
-struct Scan {
-    cdx: Value,
-    spdx23: Value,
-    spdx3: Value,
-    _dir: tempfile::TempDir,
-    _cache: tempfile::TempDir,
-}
-
-impl Scan {
+impl LicenseView for Scan {
     fn components(&self) -> &Vec<Value> {
         self.cdx["components"].as_array().unwrap()
     }
@@ -217,67 +170,16 @@ fn scan(closure_json: &str, rows: &str) -> Scan {
     scan_with(closure_json, rows, &["--nix-closure"])
 }
 
+/// `rows` is what the stub returns for the license evaluation; passing an
+/// empty string makes that call fail, which is how US3 is exercised.
 fn scan_with(closure_json: &str, rows: &str, extra: &[&str]) -> Scan {
-    let dir = tempfile::tempdir().unwrap();
-    let cache = seed_cache();
-    let bin = dir.path().join("bin");
-    std::fs::create_dir_all(&bin).unwrap();
-    let nix = bin.join("nix");
-    std::fs::write(
-        &nix,
-        stub_script(&dir.path().join("nix.log"), closure_json, rows),
-    )
-    .unwrap();
-    {
-        use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(&nix, std::fs::Permissions::from_mode(0o755)).unwrap();
+    NixStub {
+        project: project(),
+        closure: closure_json,
+        rows: if rows.is_empty() { Rows::Fail } else { Rows::Json(rows) },
+        attr: DEFAULT_ATTR,
     }
-
-    let cdx_path = dir.path().join("out.cdx.json");
-    let spdx23_path = dir.path().join("out.spdx23.json");
-    let spdx3_path = dir.path().join("out.spdx3.json");
-    let out = Command::new(binary_path())
-        .args([
-            "sbom",
-            "scan",
-            "--path",
-            project().to_str().unwrap(),
-            "--no-deep-hash",
-            "--format",
-            "cyclonedx-json",
-            "--format",
-            "spdx-2.3-json",
-            "--format",
-            "spdx-3-json",
-            "--output",
-        ])
-        .arg(format!("cyclonedx-json={}", cdx_path.display()))
-        .arg("--output")
-        .arg(format!("spdx-2.3-json={}", spdx23_path.display()))
-        .arg("--output")
-        .arg(format!("spdx-3-json={}", spdx3_path.display()))
-        .args(extra)
-        .env(
-            "PATH",
-            format!("{}:{}", bin.display(), std::env::var("PATH").unwrap()),
-        )
-        .env("WAYBILL_NIXPKGS_CACHE", cache.path())
-        .output()
-        .unwrap();
-    assert!(
-        cdx_path.exists(),
-        "scan produced no document.\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&out.stdout),
-        String::from_utf8_lossy(&out.stderr)
-    );
-    let read = |p: &Path| -> Value { serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap() };
-    Scan {
-        cdx: read(&cdx_path),
-        spdx23: read(&spdx23_path),
-        spdx3: read(&spdx3_path),
-        _dir: dir,
-        _cache: cache,
-    }
+    .scan(extra)
 }
 
 // ---------------------------------------------------------------- US1

@@ -40,6 +40,10 @@
 
 pub mod cdx_schema;
 pub mod normalize;
+// Unix-only: the stub is a `#!/bin/sh` script made executable with
+// `PermissionsExt`, and every suite that uses it is `#![cfg(unix)]`.
+#[cfg(unix)]
+pub mod nix_stub;
 
 use std::path::PathBuf;
 

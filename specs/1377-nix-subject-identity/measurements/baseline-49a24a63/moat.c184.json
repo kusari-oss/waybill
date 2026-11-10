@@ -1,0 +1,29 @@
+{
+  "attribute": "default",
+  "components-emitted": 950,
+  "components-without-member-role": 411,
+  "derivations": 1275,
+  "distinct-cves": 18,
+  "edge-ineligible-components": 72,
+  "edges": 7978,
+  "licenses": {
+    "degraded": null,
+    "received": 219,
+    "wanted": 1202,
+    "withheld-ambiguous": 0
+  },
+  "member-roles": {
+    "fragment": 65,
+    "package": 12,
+    "scaffolding": 7,
+    "source": 455
+  },
+  "patches": 239,
+  "patches-without-cve": 219,
+  "roles": {
+    "artifact-input": 298,
+    "both": 63,
+    "build-tooling": 913,
+    "unreferenced": 1
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "filesystem-scan",
+  "version": "0.0.0",
+  "purl": "pkg:generic/filesystem-scan@0.0.0",
+  "cpe": "cpe:2.3:a:waybill:filesystem-scan:0.0.0:*:*:*:*:*:*:*",
+  "heuristic": null
+}

@@ -3595,7 +3595,7 @@ pub async fn execute(
     // `selected_image_source` because the latter stays None for
     // `--image <local-archive>`: no `--image-src` dispatch runs for a
     // tarball, yet a tarball is just as explicitly named.
-    let scan_target_kind = if args.image.is_some() {
+    let mut scan_target_kind = if args.image.is_some() {
         crate::generate::root_selector::ScanTargetKind::ExplicitImage
     } else {
         crate::generate::root_selector::ScanTargetKind::Path
@@ -3842,77 +3842,17 @@ pub async fn execute(
         );
     }
 
-    // Milestone 127 FR-007 — surface a warning when the root-selection
-    // heuristic fell through past at least one detected main-module.
-    // The warning names the picked subject AND the loser main-modules'
-    // PURLs so operators can pass `--root-name`/`--root-purl-type`
-    // for deterministic control. Gated on `losers.is_empty() == false`
-    // (matches the FR-006 annotation emission gate).
-    {
-        let root_override_tmp = crate::generate::RootComponentOverride {
-            name: args.root_name.clone(),
-            version: args.root_version.clone(),
-            purl_type: args.root_purl_type.clone(),
-            omit_purl: args.no_root_purl,
-            // Issue #359 — the early root-selection helper above runs
-            // before the full RootComponentOverride is constructed.
-            // Pass the same #359 fields so the selector treats
-            // --root-purl identically to the final override.
-            full_purl: args.root_purl.clone(),
-            full_purl_name: None,
-            full_purl_version: None,
-        };
-        let selection = crate::generate::root_selector::select_root(
+    // Milestone 127 FR-007. A closure that may resolve defers it: the
+    // subject of a `--nix-closure` scan is decided once the closure resolves
+    // (milestone 1377), and the warning runs there instead.
+    if !args.nix_closure || offline {
+        warn_if_root_heuristic_outranked(
+            &args,
             &components,
-            &root_override_tmp,
             scan_target_coord.as_ref(),
             &target_name,
-            "0.0.0",
             scan_target_kind,
         );
-        if let Some(h) = selection.heuristic {
-            if !selection.losers.is_empty() {
-                let loser_strs: Vec<String> = selection
-                    .losers
-                    .iter()
-                    .map(|p| p.as_str().to_string())
-                    .collect();
-                let selected_str = match &selection.subject {
-                    crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => {
-                        components
-                            .get(*idx)
-                            .map(|c| c.purl.as_str().to_string())
-                            .unwrap_or_default()
-                    }
-                    crate::generate::root_selector::ResolvedRootSubject::MavenCoord => {
-                        scan_target_coord
-                            .as_ref()
-                            .map(|c| {
-                                format!(
-                                    "pkg:maven/{}/{}@{}",
-                                    c.group, c.artifact, c.version
-                                )
-                            })
-                            .unwrap_or_default()
-                    }
-                    crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder {
-                        name,
-                        version,
-                    } => format!("pkg:generic/{name}@{version}"),
-                    crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
-                        String::new()
-                    }
-                };
-                tracing::warn!(
-                    selected = %selected_str,
-                    losers = ?loser_strs,
-                    heuristic = h.name(),
-                    confidence = h.confidence(),
-                    hint = "pass --root-name and --root-purl-type to override",
-                    "root-component selected via heuristic; operator override recommended for deterministic identity"
-                );
-            }
-        }
     }
 
     // Enrichment source control: resolve which sources are enabled.
@@ -4753,6 +4693,14 @@ pub async fn execute(
             let added = scan_fs::package_db::nix::closure::emit::components(classified);
             let (merged, appended, appended_identities) =
                 merge_closure_components(&mut components, added);
+            // Milestone 1377 (#1398) — a resolved closure names the subject:
+            // the derivation the evaluated attribute built, which
+            // `emit::components` tagged. Set only here, so a degraded or
+            // unrequested closure leaves the scan exactly as it was.
+            // `--image` is unaffected: the closure tier never runs on one.
+            if scan_target_kind == crate::generate::root_selector::ScanTargetKind::Path {
+                scan_target_kind = crate::generate::root_selector::ScanTargetKind::NixClosure;
+            }
             tracing::info!(
                 appended,
                 merged,
@@ -4883,6 +4831,17 @@ pub async fn execute(
         }
         None => {}
     }
+    // Milestone 127 FR-007, deferred from above for a closure that could
+    // resolve: the kind is now final, NixClosure or not.
+    if args.nix_closure && !offline {
+        warn_if_root_heuristic_outranked(
+            &args,
+            &components,
+            scan_target_coord.as_ref(),
+            &target_name,
+            scan_target_kind,
+        );
+    }
 
     // Milestone 1367 (#1371) — give every component the CPE candidates the
     // synthesizer already knows how to produce for it.
@@ -4905,6 +4864,9 @@ pub async fn execute(
     // Unlike the identity pass there is no edge-ordering constraint: CPEs are
     // per-component metadata and no relationship endpoint is derived from them.
     fill_missing_cpes(&mut components);
+    // Milestone 1377 US3 — record where each closure component's CPE came
+    // from, now that both sources have run and identities are final.
+    record_closure_cpe_sources(&mut components);
     // The counts are NOT taken here (milestone 1374, #1380). File-tier
     // components join `components` at the file-inventory step below, and
     // they belong in `excluded_files`; counting now would miss them, which
@@ -6731,6 +6693,55 @@ fn fill_missing_cpes(components: &mut [waybill_common::resolution::ResolvedCompo
     }
 }
 
+/// Milestone 1377 US3 (FR-008) — record each closure component's CPE source.
+///
+/// Runs after `fill_missing_cpes` and after the milestone-1366 identity pass,
+/// so it sees both sources' final output and each component's final PURL:
+///
+/// - A nixpkgs-declared CPE (C212 present): `overrode` is recomputed against
+///   the final identity. The identity pass can turn `pkg:generic` into
+///   `pkg:pypi`, and the curated table answers differently for the two, so a
+///   value computed at emission could name a CPE this component would never
+///   have been given.
+/// - Otherwise a closure component (C182 present) whose CPEs are exactly what
+///   the curated table gives it, and which the operator did not supply, is
+///   marked curated.
+///
+/// Anything else (a reader-derived CPE, an operator's `--supplement-cdx`
+/// value) gets no closure provenance, so the record always describes the CPE
+/// actually emitted (FR-013). Components without C182, which is every
+/// component of a scan without a closure, are untouched (FR-011).
+fn record_closure_cpe_sources(components: &mut [waybill_common::resolution::ResolvedComponent]) {
+    use scan_fs::package_db::nix::closure::identifiers as ids;
+    for c in components.iter_mut() {
+        if c.cpes.is_empty() {
+            continue;
+        }
+        if let Some(prov) = c.extra_annotations.get(ids::ANN_DECLARED_CPE) {
+            let basis = ids::provenance_basis(prov).unwrap_or(ids::JoinBasis::NameVersion);
+            let curated = crate::generate::cpe::synthesize_cpes(c);
+            let overrode = curated.first().filter(|cur| Some(*cur) != c.cpes.first()).cloned();
+            c.extra_annotations.insert(
+                ids::ANN_DECLARED_CPE.to_string(),
+                ids::provenance(basis, overrode.as_deref()),
+            );
+            continue;
+        }
+        let closure_member = c
+            .extra_annotations
+            .contains_key(crate::resolve::closure_role_scope::CLOSURE_ROLE);
+        let operator = c
+            .extra_annotations
+            .get("waybill:source-tier")
+            .and_then(|v| v.as_str())
+            == Some("declared");
+        if closure_member && !operator && c.cpes == crate::generate::cpe::synthesize_cpes(c) {
+            c.extra_annotations
+                .insert(ids::ANN_CURATED_CPE.to_string(), serde_json::Value::Bool(true));
+        }
+    }
+}
+
 /// Count the five C209 buckets over the final component vector (milestone
 /// 1374, #1380).
 ///
@@ -6781,6 +6792,91 @@ pub(crate) fn cpe_coverage(
     coverage
 }
 
+/// Milestone 127 FR-007 — warn when the root-selection heuristic fell
+/// through past at least one detected main-module. The warning names the
+/// picked subject AND the loser main-modules' PURLs so operators can pass
+/// `--root-name`/`--root-purl-type` for deterministic control. Gated on
+/// `losers.is_empty() == false` (matches the FR-006 annotation emission
+/// gate).
+///
+/// Milestone 1377 — a function so it can run where the final
+/// [`ScanTargetKind`](crate::generate::root_selector::ScanTargetKind) is
+/// known: a `--nix-closure` scan learns its subject only once the closure
+/// resolves, and a warning computed before that would name losers of a
+/// selection the evaluated-package rung then overrides.
+fn warn_if_root_heuristic_outranked(
+    args: &ScanArgs,
+    components: &[waybill_common::resolution::ResolvedComponent],
+    scan_target_coord: Option<&crate::scan_fs::package_db::maven::ScanTargetCoord>,
+    target_name: &str,
+    scan_target_kind: crate::generate::root_selector::ScanTargetKind,
+) {
+    let root_override_tmp = crate::generate::RootComponentOverride {
+        name: args.root_name.clone(),
+        version: args.root_version.clone(),
+        purl_type: args.root_purl_type.clone(),
+        omit_purl: args.no_root_purl,
+        // Issue #359 — the early root-selection helper above runs
+        // before the full RootComponentOverride is constructed.
+        // Pass the same #359 fields so the selector treats
+        // --root-purl identically to the final override.
+        full_purl: args.root_purl.clone(),
+        full_purl_name: None,
+        full_purl_version: None,
+    };
+    let selection = crate::generate::root_selector::select_root(
+        components,
+        &root_override_tmp,
+        scan_target_coord,
+        target_name,
+        "0.0.0",
+        scan_target_kind,
+    );
+    if let Some(h) = selection.heuristic {
+        if !selection.losers.is_empty() {
+            let loser_strs: Vec<String> = selection
+                .losers
+                .iter()
+                .map(|p| p.as_str().to_string())
+                .collect();
+            let selected_str = match &selection.subject {
+                crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => {
+                    components
+                        .get(*idx)
+                        .map(|c| c.purl.as_str().to_string())
+                        .unwrap_or_default()
+                }
+                crate::generate::root_selector::ResolvedRootSubject::MavenCoord => {
+                    scan_target_coord
+                        .as_ref()
+                        .map(|c| {
+                            format!(
+                                "pkg:maven/{}/{}@{}",
+                                c.group, c.artifact, c.version
+                            )
+                        })
+                        .unwrap_or_default()
+                }
+                crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder {
+                    name,
+                    version,
+                } => format!("pkg:generic/{name}@{version}"),
+                crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
+                    String::new()
+                }
+            };
+            tracing::warn!(
+                selected = %selected_str,
+                losers = ?loser_strs,
+                heuristic = h.name(),
+                confidence = h.confidence(),
+                hint = "pass --root-name and --root-purl-type to override",
+                "root-component selected via heuristic; operator override recommended for deterministic identity"
+            );
+        }
+    }
+}
+
 /// Returns `(merged, appended, appended_identities)`.
 ///
 /// The third element exists for milestone 1366 (#1365). Its pass may only
@@ -6802,7 +6898,7 @@ fn merge_closure_components(
     let (mut merged, mut appended) = (0usize, 0usize);
     let mut appended_identities: std::collections::HashSet<(String, String)> =
         std::collections::HashSet::new();
-    for c in added {
+    for mut c in added {
         match index.get(&(c.name.clone(), c.version.clone())) {
             Some(&i) => {
                 // Milestone 1281 (#1346), FR-004 — reconcile declared
@@ -6817,6 +6913,51 @@ fn merge_closure_components(
                 // because the merge carried annotations and nothing else.
                 if components[i].licenses.is_empty() && !c.licenses.is_empty() {
                     components[i].licenses = c.licenses;
+                }
+                // Milestone 1377 FR-013 — a nixpkgs-declared CPE replaces the
+                // existing component's only when that is empty or exactly
+                // what the curated table gives it. Anything else is better
+                // evidence (a reader found it in the artifact) or the
+                // operator's word (`--supplement-cdx`), and is kept; the
+                // closure's provenance is then dropped, so it never
+                // describes a CPE that was not emitted.
+                if let Some(prov) = c
+                    .extra_annotations
+                    .remove(scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE)
+                {
+                    let existing = &components[i];
+                    let operator_asserted = existing
+                        .extra_annotations
+                        .get("waybill:source-tier")
+                        .and_then(|v| v.as_str())
+                        == Some("declared");
+                    let replaceable = existing.cpes.is_empty()
+                        || (!operator_asserted
+                            && existing.cpes == crate::generate::cpe::synthesize_cpes(existing));
+                    if replaceable {
+                        // `overrode` describes THIS component: what the
+                        // curated table gave it, if that differs.
+                        let declared = c.cpes.first().cloned();
+                        let overrode = existing
+                            .cpes
+                            .first()
+                            .filter(|old| Some(*old) != declared.as_ref())
+                            .cloned();
+                        let basis =
+                            scan_fs::package_db::nix::closure::identifiers::provenance_basis(&prov)
+                                .unwrap_or(
+                                    scan_fs::package_db::nix::closure::identifiers::JoinBasis::NameVersion,
+                                );
+                        components[i].cpes = std::mem::take(&mut c.cpes);
+                        components[i].extra_annotations.insert(
+                            scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE
+                                .to_string(),
+                            scan_fs::package_db::nix::closure::identifiers::provenance(
+                                basis,
+                                overrode.as_deref(),
+                            ),
+                        );
+                    }
                 }
                 for (k, v) in c.extra_annotations {
                     // The existing component's own annotations win: it was
@@ -8756,6 +8897,94 @@ mod tests {
         );
     }
 
+    /// Milestone 1377 FR-013 — a closure member carrying a nixpkgs-declared
+    /// CPE, as `closure::emit` builds one.
+    fn m1377_declared(purl: &str, cpe: &str, overrode: Option<&str>) -> ResolvedComponent {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut c = make_component(purl);
+        c.cpes = vec![cpe.to_string()];
+        c.extra_annotations.insert(
+            ids::ANN_DECLARED_CPE.to_string(),
+            ids::provenance(ids::JoinBasis::Drv, overrode),
+        );
+        c
+    }
+
+    const M1377_DECLARED: &str = "cpe:2.3:a:waybill-fixture-vendor:zlib:9.9.9:*:*:*:*:*:*:*";
+
+    /// FR-013 — the existing component carries exactly the curated CPE: the
+    /// declared one replaces it, and the provenance names what it overrode
+    /// on THIS component.
+    #[test]
+    fn m1377_a_declared_cpe_replaces_an_existing_curated_cpe() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut existing = vec![make_component("pkg:generic/zlib@9.9.9")];
+        existing[0].cpes = crate::generate::cpe::synthesize_cpes(&existing[0]);
+        let curated = existing[0].cpes.first().cloned().expect("zlib is curated");
+        merge_closure_components(
+            &mut existing,
+            vec![m1377_declared("pkg:generic/zlib@9.9.9", M1377_DECLARED, None)],
+        );
+        assert_eq!(existing[0].cpes, vec![M1377_DECLARED.to_string()]);
+        assert_eq!(
+            existing[0].extra_annotations.get(ids::ANN_DECLARED_CPE),
+            Some(&ids::provenance(ids::JoinBasis::Drv, Some(&curated)))
+        );
+    }
+
+    /// FR-013 — an empty slot is filled, with nothing recorded as overridden.
+    #[test]
+    fn m1377_a_declared_cpe_fills_an_empty_slot() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut existing = vec![make_component("pkg:generic/waybill-fixture-x@1.0")];
+        let cpe = "cpe:2.3:a:waybill-fixture-vendor:waybill-fixture-x:1.0:*:*:*:*:*:*:*";
+        merge_closure_components(
+            &mut existing,
+            vec![m1377_declared("pkg:generic/waybill-fixture-x@1.0", cpe, None)],
+        );
+        assert_eq!(existing[0].cpes, vec![cpe.to_string()]);
+        assert_eq!(
+            existing[0].extra_annotations.get(ids::ANN_DECLARED_CPE),
+            Some(&ids::provenance(ids::JoinBasis::Drv, None))
+        );
+    }
+
+    /// FR-013 — any other CPE (a reader found it in the artifact) is kept,
+    /// and no nixpkgs provenance is attached to a CPE nixpkgs did not supply.
+    #[test]
+    fn m1377_a_reader_derived_cpe_is_kept_without_nixpkgs_provenance() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let reader = "cpe:2.3:a:zlib:zlib:9.9.9:*:*:*:*:*:*:arm64";
+        let mut existing = vec![make_component("pkg:generic/zlib@9.9.9")];
+        existing[0].cpes = vec![reader.to_string()];
+        merge_closure_components(
+            &mut existing,
+            vec![m1377_declared("pkg:generic/zlib@9.9.9", M1377_DECLARED, None)],
+        );
+        assert_eq!(existing[0].cpes, vec![reader.to_string()]);
+        assert!(!existing[0].extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
+    }
+
+    /// FR-013 — an operator's `--supplement-cdx` CPE is kept even when it
+    /// equals the curated value: who asserted it is what matters.
+    #[test]
+    fn m1377_an_operator_cpe_equal_to_the_curated_one_is_kept() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut existing = vec![make_component("pkg:generic/zlib@9.9.9")];
+        existing[0].cpes = crate::generate::cpe::synthesize_cpes(&existing[0]);
+        let operator = existing[0].cpes.clone();
+        existing[0].extra_annotations.insert(
+            "waybill:source-tier".to_string(),
+            serde_json::Value::String("declared".to_string()),
+        );
+        merge_closure_components(
+            &mut existing,
+            vec![m1377_declared("pkg:generic/zlib@9.9.9", M1377_DECLARED, None)],
+        );
+        assert_eq!(existing[0].cpes, operator);
+        assert!(!existing[0].extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
+    }
+
     fn make_alias(lhs: &str, rhs: &str) -> PurlAlias {
         PurlAlias::try_new(lhs, rhs).unwrap()
     }
@@ -9588,6 +9817,7 @@ mod closure_ecosystem_identity_tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         };
         // The real projected graph, so the ordering test below has edges to
         // assert on. Built exactly as `closure::resolve` builds it.

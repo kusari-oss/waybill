@@ -1,0 +1,7 @@
+{
+  "name": "moat",
+  "version": "0.1",
+  "purl": "pkg:hackage/moat@0.1",
+  "cpe": "cpe:2.3:a:waybill:moat:0.1:*:*:*:*:*:*:*",
+  "heuristic": "{\"confidence\":0.95,\"heuristic\":\"repo-root-main-module\"}"
+}

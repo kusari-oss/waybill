@@ -676,6 +676,13 @@ pub enum ArtifactPresence {
     /// not identify it, and an I10 that reused that signal would have failed
     /// on correct output.
     ExemptCompilerSupplied,
+    /// Milestone 1377 — the derivation the evaluated Nix attribute built.
+    /// Nothing in the closure consumes it, so it classifies `unreferenced`,
+    /// yet it is the artifact itself and cannot be absent from it. A
+    /// distinct state for the reason [`Self::ExemptCompilerSupplied`] is:
+    /// invariant I10 has to tell a deliberate exemption from a rule that
+    /// never ran, and found exactly that gap on `nix-closure-moat`.
+    ExemptEvaluatedPackage,
 }
 
 impl ArtifactPresence {
@@ -691,6 +698,7 @@ impl ArtifactPresence {
             // The whole point of the state: the role would have said this,
             // and the exemption means nothing is asserted.
             ArtifactPresence::ExemptCompilerSupplied => false,
+            ArtifactPresence::ExemptEvaluatedPackage => false,
         }
     }
 
@@ -702,6 +710,7 @@ impl ArtifactPresence {
         match self {
             ArtifactPresence::NotInArtifact => "closure-role",
             ArtifactPresence::ExemptCompilerSupplied => "exempt-compiler-supplied",
+            ArtifactPresence::ExemptEvaluatedPackage => "exempt-evaluated-package",
         }
     }
 }

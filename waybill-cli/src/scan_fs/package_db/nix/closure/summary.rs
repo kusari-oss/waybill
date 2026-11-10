@@ -57,6 +57,8 @@ pub struct NixClosureSummary {
     /// Milestone 1281 (#1346) — how many members were offered a declared
     /// license and how many received one.
     pub license_coverage: super::licenses::LicenseCoverage,
+    /// Milestone 1377 — C184 `identifiers`.
+    pub identifier_coverage: super::identifiers::IdentifierCoverage,
     /// Why the license lookup produced nothing, when it failed (FR-006).
     pub licenses_degraded: Option<String>,
     /// Milestone 1282 FR-009 — how many components each of the four member
@@ -148,6 +150,7 @@ impl NixClosureSummary {
             // than one that is explicit about what it counts.
             edges: closure.graph.edges.len(),
             license_coverage: closure.license_coverage.clone(),
+            identifier_coverage: closure.identifiers.coverage.clone(),
             licenses_degraded: closure.degraded_licenses.as_ref().map(|r| r.wire().to_string()),
             member_role_counts,
             components_without_member_role: without_member_role,
@@ -208,6 +211,19 @@ impl NixClosureSummary {
                 "received": self.license_coverage.received,
                 "withheld-ambiguous": self.license_coverage.withheld_ambiguous,
                 "degraded": self.licenses_degraded,
+            },
+            // Milestone 1377 (#1394) FR-009 — how far the meta evaluation
+            // reached for declared CPEs. `wanted − received` members were
+            // not reached, so their missing nixpkgs CPE is a coverage gap
+            // rather than an absence. Carried when zero, as `licenses` is.
+            // Degradation is `licenses.degraded`: one evaluation feeds both.
+            "identifiers": {
+                "wanted": self.identifier_coverage.wanted,
+                "received": self.identifier_coverage.received,
+                "by-drv": self.identifier_coverage.by_drv,
+                "by-name-version": self.identifier_coverage.by_name_version,
+                "declared": self.identifier_coverage.declared,
+                "rejected": self.identifier_coverage.rejected,
             },
         })
     }
@@ -314,6 +330,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         };
         let patched = attribute(&closure.raw);
         NixClosureSummary::build(&closure, &patched)
@@ -363,6 +380,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         };
         let patched = attribute(&closure.raw);
         let s = NixClosureSummary::build(&closure, &patched);

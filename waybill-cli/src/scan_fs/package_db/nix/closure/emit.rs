@@ -169,6 +169,33 @@ pub(crate) fn emitted_drv_keys<'a>(
         .collect()
 }
 
+/// The members the nixpkgs metadata lookup is counted over: every
+/// [`emitted_drv_keys`] member, plus the evaluated package.
+///
+/// Milestone 1377 — the evaluated package is emitted whatever its role (it
+/// is the subject), and its metadata is looked up like any member's, so it
+/// is counted. Without it, a root emitted only because it is the root was
+/// looked up but appeared in neither `wanted` nor `received`. Kept apart
+/// from `emitted_drv_keys` because that set is also the edge projection's,
+/// and the root is never an edge target.
+///
+/// `debug closure-dump` reports membership of this set per row, so an
+/// independent count (`specs/1377-…/measurements/meta-eval-cost/reach.py`)
+/// takes its population from the binary rather than modelling it.
+pub(crate) fn coverage_drv_keys<'a>(
+    raw: &'a super::derivation::RawClosure,
+    roles: &std::collections::BTreeMap<String, DerivationRole>,
+    evaluated: Option<&str>,
+) -> std::collections::HashSet<&'a str> {
+    let mut keys = emitted_drv_keys(raw, roles);
+    if let Some((key, drv)) = evaluated.and_then(|k| raw.derivations.get_key_value(k)) {
+        if drv.pname().is_some() {
+            keys.insert(key.as_str());
+        }
+    }
+    keys
+}
+
 /// Every `.drv` key this scan emits as a component.
 ///
 /// Test-only: production derives the same population by building the
@@ -311,11 +338,36 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
     // its role by the build graph alone.
     let mut admitted_for: std::collections::BTreeMap<MergeKey, bool> =
         std::collections::BTreeMap::new();
+    // Milestone 1377 (#1394) — the CPEs nixpkgs declares for the derivations
+    // behind each identity. Keyed by identity because that is what is
+    // emitted; the index is keyed by `.drv`, as the license index is.
+    let mut declared_for: std::collections::BTreeMap<
+        MergeKey,
+        Vec<&super::identifiers::Declared>,
+    > = std::collections::BTreeMap::new();
+    // Milestone 1377 (#1398) — the derivation the evaluated attribute built.
+    // It is emitted whatever its role, because it is the document's subject:
+    // nothing consumes it, so it classifies `Unreferenced`, and before this
+    // it reached the document only if it happened to apply a patch (openssh)
+    // or another reader emitted it (moat's cabal package).
+    //
+    // Deliberately not added to `emitted_drv_keys`. The root is never an
+    // edge target (nothing consumes it) and `graph::project` already treats
+    // it as an edge source, so the projection is unchanged. The license
+    // index is keyed by `.drv` over every evaluated row, so the root still
+    // receives its declared licenses here; what it does not do is join the
+    // `wanted` population milestone 1281 counts coverage over.
+    //
+    // `evaluated`, not `root`: with several unconsumed derivations the
+    // closure does not say which one was evaluated, and no subject is named.
+    let root_key = closure.graph.evaluated.as_deref();
+    let mut root_identity: Option<MergeKey> = None;
     for (key, drv) in &closure.raw.derivations {
         let Some(role) = closure.roles.get(key).copied() else {
             continue;
         };
-        if !emits_as_component(role, drv) {
+        let is_root = root_key == Some(key.as_str());
+        if !is_root && !emits_as_component(role, drv) {
             continue;
         }
         let Some(name) = drv.pname() else {
@@ -348,6 +400,9 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         };
         let identity_key = basis.as_ref().map(|b| b.hash().to_string()).unwrap_or_default();
         let merge_key: MergeKey = (name.to_string(), version.to_string(), identity_key);
+        if is_root {
+            root_identity = Some(merge_key.clone());
+        }
         if closure.graph_admitted.contains(key) {
             admitted_for.insert(merge_key.clone(), true);
         }
@@ -411,6 +466,15 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                 }
             }
         }
+        // Not for milestone-1282 members: a `bash-5.3.tar.gz` is named after
+        // bash and is not bash (m1367 FR-002). None of them can join in
+        // practice — they carry no version and their `.drv` is a fetch — so
+        // this states the rule rather than relying on that.
+        if member_role.is_none() {
+            if let Some(found) = closure.identifiers.index.get(key) {
+                declared_for.entry(merge_key.clone()).or_default().push(found);
+            }
+        }
         if let Some(attributes) = closure.read_outcome.unclassified_refs.get(key) {
             unclassified
                 .entry(merge_key.clone())
@@ -453,10 +517,53 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
             if let Some(found) = licenses_for.remove(&identity) {
                 component.licenses = found;
             }
+            // FR-005, FR-007 — the declared CPE is the component's only CPE.
+            // Build variants of one identity that state different CPEs leave
+            // it with none here, so the curated fallback applies; a CPE names
+            // a vendor, product and version, so they never have been seen to.
+            if let Some(found) = declared_for.remove(&identity) {
+                let cpes: std::collections::BTreeSet<&super::identifiers::DeclaredCpe> =
+                    found.iter().map(|d| &d.cpe).collect();
+                if let (Some(cpe), 1) = (cpes.first(), cpes.len()) {
+                    let basis = found
+                        .iter()
+                        .map(|d| d.basis)
+                        .min()
+                        .unwrap_or(super::identifiers::JoinBasis::NameVersion);
+                    // What the curated table would have given this
+                    // component, recorded when the declaration differs:
+                    // bash's `5.3p9` against nixpkgs' `5.3` update `9`.
+                    let curated = crate::generate::cpe::synthesize_cpes(&component);
+                    let overrode = curated.first().map(String::as_str).filter(|c| *c != cpe.as_str());
+                    component.extra_annotations.insert(
+                        super::identifiers::ANN_DECLARED_CPE.to_string(),
+                        super::identifiers::provenance(basis, overrode),
+                    );
+                    component.cpes = vec![(*cpe).clone().into_string()];
+                } else {
+                    tracing::debug!(
+                        name = %component.name,
+                        version = %component.version,
+                        "nix-closure-identifiers: build variants declare different CPEs; \
+                         emitting none from nixpkgs"
+                    );
+                }
+            }
             component.extra_annotations.insert(
                 ANN_CLOSURE_ROLE.to_string(),
                 serde_json::Value::String(role.wire().to_string()),
             );
+            // Internal: read by the root selector's evaluated-package rung,
+            // filtered from every format by `is_internal_emission_key`.
+            // `merge_closure_components` folds closure annotations into an
+            // existing component with `or_insert`, which is how the tag
+            // reaches a reader's component the root merged into.
+            if root_identity.as_ref() == Some(&identity) {
+                component.extra_annotations.insert(
+                    crate::generate::root_selector::NIX_EVALUATED_PACKAGE_KEY.to_string(),
+                    serde_json::Value::Bool(true),
+                );
+            }
             // C211 — how this identity earned that role. Only `build-graph`
             // is disclosed: a declared dependency attribute is the ordinary
             // case and says nothing a reader needs told.
@@ -560,6 +667,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         })
     }
 
@@ -641,6 +749,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         });
 
         let mut versions: Vec<&str> = built
@@ -698,6 +807,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         });
         let dups: Vec<_> = c.iter().filter(|x| x.name == "dup").collect();
         assert_eq!(dups.len(), 1, "two variants, one component");
@@ -754,6 +864,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         })
         .iter()
         .map(|c| c.name.clone())

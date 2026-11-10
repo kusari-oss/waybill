@@ -1,0 +1,7 @@
+{
+  "name": "ripgrep",
+  "version": "15.1.0",
+  "purl": "pkg:generic/ripgrep@15.1.0",
+  "cpe": null,
+  "heuristic": null
+}

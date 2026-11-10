@@ -36,6 +36,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **The subject of a `--nix-closure` scan is the package it built.** When
+  the closure resolves, the derivation the evaluated attribute produced is
+  the document's subject in CycloneDX, SPDX 2.3 and SPDX 3, recorded as
+  heuristic `nix-evaluated-package`. Before, it was `filesystem-scan 0.0.0`
+  with a `waybill`-vendor placeholder CPE, and openssh 10.3p1 was listed as
+  `scope: excluded` from its own SBOM. An operator override still wins. A
+  degraded closure, or one with several root candidates, leaves the
+  subject as before (#1398).
+- **Closure components carry the CPE nixpkgs declares.** `meta.identifiers.cpe`
+  is read from the evaluation `--nix-closure` already runs, joined by store
+  path, then by name and version, and it takes precedence over the curated
+  table. Each CPE's source is recorded in each format's native field, and
+  `waybill:cpe-provenance` (C212) records the join basis and any overridden
+  curated CPE. `waybill:nix-closure` gains an `identifiers` coverage count.
+  Measured with grype on an openssh flake: 28 findings on openssh 10.3p1,
+  where there were none, matching sbomnix's 28. No finding was lost on any
+  of six targets (#1394).
+
 - **`trace_integrity.open_failures_discarded`** counts the open requests
   the kernel discarded because the syscall failed — the size of the
   overstatement removed above. Omitted when zero, so a trace with no

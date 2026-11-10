@@ -715,6 +715,7 @@ mod tests {
             licenses: Default::default(),
             degraded_licenses: None,
             license_coverage: Default::default(),
+            identifiers: Default::default(),
         })
         .pop()
         .expect("the seed closure yields a component");

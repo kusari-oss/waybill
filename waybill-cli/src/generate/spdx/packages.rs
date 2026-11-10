@@ -441,6 +441,22 @@ fn supplement_service_to_package(
     }
 }
 
+/// The primary CPE as an SPDX 2.3 `SECURITY / cpe23Type` reference.
+///
+/// Milestone 1377 (FR-008) — on a closure component the `comment` says where
+/// the CPE came from, SPDX 2.3's native slot for it (Principle V). Every
+/// other component keeps `comment: None`, byte-identical to before.
+fn cpe_external_ref(c: &ResolvedComponent) -> Option<SpdxExternalRef> {
+    let primary_cpe = c.cpes.first()?;
+    Some(SpdxExternalRef {
+        category: SpdxExternalRefCategory::Security,
+        ref_type: "cpe23Type".to_string(),
+        locator: primary_cpe.clone(),
+        comment: crate::scan_fs::package_db::nix::closure::identifiers::cpe_source(c)
+            .map(|s| s.comment().to_string()),
+    })
+}
+
 #[allow(clippy::too_many_arguments)]
 fn component_to_package(
     c: &ResolvedComponent,
@@ -530,13 +546,8 @@ fn component_to_package(
     // A12: primary CPE. The first entry in `c.cpes` is the
     // highest-signal synthesized candidate; the full set lives in
     // the `waybill:cpe-candidates` annotation (C19).
-    if let Some(primary_cpe) = c.cpes.first() {
-        external_refs.push(SpdxExternalRef {
-            category: SpdxExternalRefCategory::Security,
-            ref_type: "cpe23Type".to_string(),
-            locator: primary_cpe.clone(),
-            comment: None,
-        });
+    if let Some(cpe_ref) = cpe_external_ref(c) {
+        external_refs.push(cpe_ref);
     }
 
     // A9/A10/A11: external references — homepage, vcs, distribution,
@@ -700,6 +711,31 @@ mod tests {
     };
     use waybill_common::types::hash::ContentHash;
     use waybill_common::types::purl::Purl;
+
+    /// Milestone 1377 T024 — the CPE reference carries exactly one of the two
+    /// provenance comments on a closure component, and none otherwise.
+    #[test]
+    fn m1377_the_cpe_ref_comment_states_its_source() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut c = mk_component("pkg:generic/zlib@1.3.2", "zlib", "1.3.2");
+        c.cpes = vec!["cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*".to_string()];
+        assert_eq!(cpe_external_ref(&c).unwrap().comment, None);
+
+        c.extra_annotations.insert(ids::ANN_CURATED_CPE.to_string(), serde_json::json!(true));
+        assert_eq!(
+            cpe_external_ref(&c).unwrap().comment.as_deref(),
+            Some("CPE from waybill's curated CPE table")
+        );
+
+        c.extra_annotations.insert(
+            ids::ANN_DECLARED_CPE.to_string(),
+            ids::provenance(ids::JoinBasis::Drv, None),
+        );
+        assert_eq!(
+            cpe_external_ref(&c).unwrap().comment.as_deref(),
+            Some("CPE declared by nixpkgs meta.identifiers.cpe")
+        );
+    }
 
     fn mk_component(purl: &str, name: &str, version: &str) -> ResolvedComponent {
         ResolvedComponent {

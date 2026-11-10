@@ -1,0 +1,67 @@
+{
+ "derivations": {
+  "aaaa-waybill-fixture-lib-1.0.drv": {
+   "name": "waybill-fixture-lib-1.0",
+   "env": {
+    "pname": "waybill-fixture-lib",
+    "version": "1.0"
+   },
+   "inputs": {
+    "drvs": {},
+    "srcs": []
+   },
+   "outputs": {
+    "out": {
+     "path": "h1-lib"
+    }
+   }
+  },
+  "bbbb-waybill-fixture-tool-3.0.drv": {
+   "name": "waybill-fixture-tool-3.0",
+   "env": {
+    "pname": "waybill-fixture-tool",
+    "version": "3.0"
+   },
+   "inputs": {
+    "drvs": {},
+    "srcs": []
+   },
+   "outputs": {
+    "out": {
+     "path": "h2-tool"
+    }
+   }
+  },
+  "r00t-waybill-fixture-app-2.1.drv": {
+   "name": "waybill-fixture-app-2.1",
+   "env": {
+    "pname": "waybill-fixture-app",
+    "version": "2.1",
+    "buildInputs": "/nix/store/h1-lib /nix/store/h2-tool"
+   },
+   "inputs": {
+    "drvs": {
+     "aaaa-waybill-fixture-lib-1.0.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     },
+     "bbbb-waybill-fixture-tool-3.0.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     }
+    },
+    "srcs": []
+   },
+   "outputs": {
+    "out": {
+     "path": "h0-app"
+    }
+   }
+  }
+ },
+ "version": 4
+}

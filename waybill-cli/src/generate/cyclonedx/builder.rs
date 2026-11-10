@@ -838,26 +838,6 @@ impl CycloneDxBuilder {
         // emission at the `subject_is_a_main_module` binding below; that
         // site was patched and this one was not, so the subject moved and
         // the graph root stayed behind.
-        let subject_is_a_main_module = self.config.scan_target_kind
-            != crate::generate::root_selector::ScanTargetKind::ExplicitImage;
-        let main_module_purl: Option<String> = if !override_active && subject_is_a_main_module {
-            effective_components
-                .iter()
-                .find(|c| {
-                    c.extra_annotations
-                        .get("waybill:component-role")
-                        .and_then(|v| v.as_str())
-                        == Some("main-module")
-                })
-                .map(|c| c.purl.as_str().to_string())
-        } else {
-            None
-        };
-        let target_ref: String = match main_module_purl.as_deref() {
-            Some(purl) => purl.to_string(),
-            None => format!("{}@{}", effective_target_name, effective_target_version),
-        };
-
         // Milestone 158 (US1 + US2) — pre-compute selection so we can:
         //   (a) augment the effective relationships with root → loser
         //       edges (workspace-peer linkage per FR-002).
@@ -878,6 +858,44 @@ impl CycloneDxBuilder {
             "0.0.0",
             self.config.scan_target_kind,
         );
+
+        let subject_is_a_main_module = self.config.scan_target_kind
+            != crate::generate::root_selector::ScanTargetKind::ExplicitImage;
+        // Milestone 1377 (#1398) — the evaluated Nix package is a component
+        // the selector chose by tag, not the first main-module, and under
+        // that rung the two differ (openssh has no main-module at all, so
+        // the graph was rooted at `filesystem-scan@0.0.0`, a ref nothing
+        // defined). Read from the selection itself, and only for that rung:
+        // every other scan keeps the first-main-module rule byte for byte.
+        let evaluated_nix_package_purl: Option<String> = match (
+            m158_selection.heuristic,
+            &m158_selection.subject,
+        ) {
+            (
+                Some(crate::generate::root_selector::RootSelectionHeuristic::NixEvaluatedPackage),
+                crate::generate::root_selector::ResolvedRootSubject::MainModule(idx),
+            ) => effective_components.get(*idx).map(|c| c.purl.as_str().to_string()),
+            _ => None,
+        };
+        let main_module_purl: Option<String> = if evaluated_nix_package_purl.is_some() {
+            evaluated_nix_package_purl
+        } else if !override_active && subject_is_a_main_module {
+            effective_components
+                .iter()
+                .find(|c| {
+                    c.extra_annotations
+                        .get("waybill:component-role")
+                        .and_then(|v| v.as_str())
+                        == Some("main-module")
+                })
+                .map(|c| c.purl.as_str().to_string())
+        } else {
+            None
+        };
+        let target_ref: String = match main_module_purl.as_deref() {
+            Some(purl) => purl.to_string(),
+            None => format!("{}@{}", effective_target_name, effective_target_version),
+        };
 
         // FR-002 workspace-peer linkage: for each loser Purl, emit a
         // synthetic `root → loser` DependsOn edge. `build_dependencies`
@@ -1310,10 +1328,25 @@ impl CycloneDxBuilder {
         // alone dropped it from the document entirely: it was neither
         // the subject nor a sibling, and its manifest then resurfaced as
         // an unattributed file-tier component.
+        //
+        // Milestone 1377 — the same failure under the evaluated-package
+        // rung: when the closure root is the subject, a lone main module
+        // that is not that root is a sibling and must stay in
+        // `components[]`. Only the root itself is promoted, and only when
+        // it is a main module (the moat shape), as before.
         let subject_is_a_main_module =
             self.config.scan_target_kind != crate::generate::root_selector::ScanTargetKind::ExplicitImage;
+        let evaluated = crate::generate::root_selector::evaluated_nix_package(
+            components,
+            self.config.scan_target_kind,
+        )
+        .and_then(|i| components.get(i))
+        .map(|c| c.purl.as_str().to_string());
         let is_promoted_main_module = |c: &ResolvedComponent| {
-            subject_is_a_main_module && main_module_count == 1 && is_main_module(c)
+            subject_is_a_main_module
+                && main_module_count == 1
+                && is_main_module(c)
+                && evaluated.as_deref().is_none_or(|p| p == c.purl.as_str())
         };
 
         // First pass: identify top-level PURLs so we can route children
@@ -1437,6 +1470,12 @@ impl CycloneDxBuilder {
             // for every component when `--nix-closure` is off.
             if let Some(p) = super::pedigree::from_annotation(component) {
                 entry["pedigree"] = p;
+            }
+
+            // Milestone 1377 (FR-008) — where this closure component's CPE
+            // came from, in CycloneDX's own `evidence.identity[]`.
+            if let Some(ev) = entry.get_mut("evidence") {
+                super::evidence::append_cpe_identity(ev, component);
             }
 
             // Milestone 052/part-2: native CDX `scope` field. Per

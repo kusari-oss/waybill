@@ -1,0 +1,67 @@
+{
+ "derivations": {
+  "aaaa-waybill-fixture-lib-1.0.drv": {
+   "name": "waybill-fixture-lib-1.0",
+   "env": {
+    "pname": "waybill-fixture-lib",
+    "version": "1.0"
+   },
+   "inputs": {
+    "drvs": {},
+    "srcs": []
+   },
+   "outputs": {
+    "out": {
+     "path": "h1-lib"
+    }
+   }
+  },
+  "bbbb-waybill-fixture-tool-3.0.drv": {
+   "name": "waybill-fixture-tool-3.0",
+   "env": {
+    "pname": "waybill-fixture-tool",
+    "version": "3.0"
+   },
+   "inputs": {
+    "drvs": {},
+    "srcs": []
+   },
+   "outputs": {
+    "out": {
+     "path": "h2-tool"
+    }
+   }
+  },
+  "r00t-waybill-fixture-roleproj-0.1.0.drv": {
+   "name": "waybill-fixture-roleproj-0.1.0",
+   "env": {
+    "pname": "waybill-fixture-roleproj",
+    "version": "0.1.0",
+    "buildInputs": "/nix/store/h1-lib /nix/store/h2-tool"
+   },
+   "inputs": {
+    "drvs": {
+     "aaaa-waybill-fixture-lib-1.0.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     },
+     "bbbb-waybill-fixture-tool-3.0.drv": {
+      "dynamicOutputs": {},
+      "outputs": [
+       "out"
+      ]
+     }
+    },
+    "srcs": []
+   },
+   "outputs": {
+    "out": {
+     "path": "h0-roleproj"
+    }
+   }
+  }
+ },
+ "version": 4
+}
