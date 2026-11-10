@@ -79,6 +79,25 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **SPDX license joins keep an `OR` grouped.** When a component carried
+  several licenses, both SPDX emitters joined them with ` AND ` verbatim, so
+  `["MIT OR Apache-2.0", "BSD-3-Clause"]` became
+  `MIT OR Apache-2.0 AND BSD-3-Clause`, which SPDX precedence reads as
+  `MIT OR (Apache-2.0 AND BSD-3-Clause)`. An operand containing `AND` or `OR`
+  is now bracketed: `(MIT OR Apache-2.0) AND BSD-3-Clause`, in SPDX 2.3 and
+  SPDX 3. This was live in the `image-postgres16` corpus target (`libcap2`,
+  `liblz4-1`, `libxxhash0`, `libzstd1`, `pinentry-curses`, `zstd`), Debian
+  packages that declare several licenses, one of them a dual license.
+  Its SPDX goldens change on the next corpus refresh. CycloneDX does not
+  join; it already carries one entry per license (#1411).
+- **A CycloneDX "or later" license is no longer emitted in `license.id`.**
+  `Apache-2.0+` was written as `{"license":{"id":"Apache-2.0+"}}`, and an
+  `EUPL-1.1+ AND MIT` was split with `EUPL-1.1+` in `license.id`. CycloneDX
+  1.6 restricts `license.id` to the SPDX License List, which has no `+`
+  forms. Both now take the `expression` slot, carrying the same string the
+  SPDX 2.3 and SPDX 3 documents already emit. They are not rewritten to an
+  `-or-later` identifier: most licenses, `Apache-2.0` among them, have none,
+  and the formats would disagree (#1410).
 - **Document subjects no longer carry a `waybill`-vendor CPE.** A subject
   without a CPE of its own (the synthetic placeholder, or one named with
   `--root-name`/`--root-purl`) was given `cpe:2.3:a:waybill:<name>:<version>`
