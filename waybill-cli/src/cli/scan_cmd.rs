@@ -3659,11 +3659,7 @@ pub async fn execute(
             if !path.is_dir() {
                 anyhow::bail!("--path must be an existing directory: {}", path.display());
             }
-            let target = path
-                .file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or("filesystem-scan")
-                .to_string();
+            let target = path_scan_target_name(&path);
             // If --path points at an extracted rootfs (has /etc/os-release
             // at the top), auto-populate the distro tag from it — the
             // canonical `<ID>-<VERSION_ID>` shape (falling back to
@@ -6792,6 +6788,19 @@ pub(crate) fn cpe_coverage(
     coverage
 }
 
+/// #1401 — the name a `--path` scan gives its target: the directory's
+/// final component as the operator spelled it, so a symlink keeps the
+/// link's name. A spelling with no final name (`.`, `..`, `sub/..`) is
+/// resolved first; only the filesystem root has none, and falls back to
+/// `filesystem-scan`. The resolved path is used for its last component
+/// only and never leaves this function.
+fn path_scan_target_name(path: &Path) -> String {
+    let name = |p: &Path| p.file_name().and_then(|s| s.to_str()).map(str::to_owned);
+    name(path)
+        .or_else(|| path.canonicalize().ok().as_deref().and_then(name))
+        .unwrap_or_else(|| "filesystem-scan".to_string())
+}
+
 /// Milestone 127 FR-007 — warn when the root-selection heuristic fell
 /// through past at least one detected main-module. The warning names the
 /// picked subject AND the loser main-modules' PURLs so operators can pass
@@ -7276,6 +7285,22 @@ mod tests {
 
     fn reg() -> SerializerRegistry {
         SerializerRegistry::with_defaults()
+    }
+
+    // #1401 — end-to-end spellings are in `tests/path_target_name.rs`;
+    // the filesystem root is here because scanning it is a whole-disk scan.
+    #[test]
+    fn path_scan_target_name_falls_back_only_at_the_filesystem_root() {
+        let cwd = std::env::current_dir().unwrap();
+        let root = cwd.ancestors().last().unwrap();
+        assert_eq!(path_scan_target_name(root), "filesystem-scan");
+        assert_eq!(path_scan_target_name(&root.join("..")), "filesystem-scan");
+
+        let tmp = tempfile::tempdir().unwrap();
+        let dir = tmp.path().join("waybill-fixture-name");
+        std::fs::create_dir_all(dir.join("sub")).unwrap();
+        assert_eq!(path_scan_target_name(&dir.join("sub").join("..")), "waybill-fixture-name");
+        assert_eq!(path_scan_target_name(&dir.join(".")), "waybill-fixture-name");
     }
 
     // ----- Milestone 778 US2 — signature-location reference -----
