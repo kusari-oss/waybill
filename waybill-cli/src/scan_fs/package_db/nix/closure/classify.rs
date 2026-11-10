@@ -708,6 +708,7 @@ mod tests {
         // tallies are per-derivation and the emitted set is per-identity —
         // asserting on the former would not notice the merge breaking.
         let emitted = super::super::emit::components(&super::super::ClassifiedClosure {
+            runtime: None,
             attribute: "default".to_string(),
             raw: closure,
             roles,

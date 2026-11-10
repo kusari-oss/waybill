@@ -41,9 +41,14 @@
 //! An empty boot set exempts nothing (FR-005). Unearned exclusion is as
 //! dangerous as m1276's unearned immunity.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashMap, HashSet};
 
-use waybill_common::resolution::{ArtifactPresence, ResolvedComponent, ScopeEvidence};
+use waybill_common::resolution::{
+    ArtifactPresence, Relationship, ResolvedComponent, ScopeEvidence,
+};
+
+use crate::scan_fs::package_db::nix::closure::member_key::{key_of_component, MemberKey};
+pub(crate) use crate::scan_fs::package_db::nix::closure::runtime::RuntimeEvidence;
 
 /// The C182 annotation key this pass reads.
 ///
@@ -64,22 +69,179 @@ pub(crate) struct RoleScopeSummary {
     pub(crate) exempt_compiler_supplied: usize,
     /// Members carrying a closure role at all, so the denominator.
     pub(crate) roles_seen: usize,
+    /// Milestone 1423 — members and modules decided runtime by the runtime
+    /// closure, by static linking, and marked not-in-artifact by the runtime
+    /// closure. All zero unless the evidence was the runtime closure.
+    pub(crate) runtime_closure: usize,
+    pub(crate) statically_linked: usize,
+    pub(crate) not_in_runtime_closure: usize,
 }
 
 impl RoleScopeSummary {
-    /// Total members this pass classified.
+    /// Total members this pass classified from a role.
     pub(crate) fn assigned(&self) -> usize {
         self.assigned_build_tooling + self.assigned_unreferenced
     }
 }
 
-/// Classify every closure member whose role says it is not in the artifact.
+/// The provenance of the milestone-1378 host → module edges.
+const EMBEDDED_BUILD_INFO: &str = "embedded-build-info";
+
+/// Decide every closure member's presence in the artifact: the one place
+/// that does (milestone 1423, data-model.md "Decision function").
+///
+/// For each member the first rule that applies wins:
+///
+/// 1. the evaluated package is exempt;
+/// 2. a compiler-supplied boot library is exempt;
+/// 3. under [`RuntimeEvidence::Closure`]: in the runtime closure → runtime;
+///    else statically linked into a runtime member → runtime; else
+///    not-in-artifact — each recorded with its [`ScopeEvidence`];
+/// 5. under [`RuntimeEvidence::None`]: the milestone-1277 role rule.
+///
+/// Runtime means `artifact_presence = None`, so a `NotInArtifact` any earlier
+/// step set is cleared: FR-001 holds in both directions. Embedded Go and Rust
+/// modules are decided after the members, from their hosts.
 ///
 /// Returns a zeroed summary and changes nothing when no component carries a
 /// closure role, which is every scan without `--nix-closure` and every scan
 /// whose closure tier degraded (FR-007). **An absent role is never treated
 /// as `build-tooling`.**
 pub(crate) fn assign_role_scope(
+    components: &mut [ResolvedComponent],
+    boot_libraries: &HashSet<String>,
+    evidence: &RuntimeEvidence,
+    relationships: &[Relationship],
+) -> RoleScopeSummary {
+    let mut summary = match evidence {
+        RuntimeEvidence::None => assign_from_roles(components, boot_libraries),
+        RuntimeEvidence::Closure { runtime, static_linked } => {
+            assign_from_runtime(components, boot_libraries, runtime, static_linked)
+        }
+    };
+    assign_modules(components, evidence, relationships, &mut summary);
+    summary
+}
+
+/// Rules 1–3 under the runtime closure.
+fn assign_from_runtime(
+    components: &mut [ResolvedComponent],
+    boot_libraries: &HashSet<String>,
+    runtime: &HashSet<MemberKey>,
+    static_linked: &HashSet<MemberKey>,
+) -> RoleScopeSummary {
+    let mut summary = RoleScopeSummary::default();
+    for component in components.iter_mut() {
+        if component.extra_annotations.get(CLOSURE_ROLE).and_then(|v| v.as_str()).is_none() {
+            continue;
+        }
+        summary.roles_seen += 1;
+        if is_evaluated_package(component) {
+            component.artifact_presence = Some(ArtifactPresence::ExemptEvaluatedPackage);
+            component.scope_evidence = None;
+            continue;
+        }
+        // FR-006, whatever the role. The runtime closure can omit a boot
+        // library the role never would have marked -- GHC's boot packages
+        // are linked into a static executable from the compiler's own store
+        // path, which the executable does not reference -- and no format may
+        // report a package the compiler supplies as absent.
+        if compiler_supplied(component, boot_libraries) {
+            summary.exempt_compiler_supplied += 1;
+            component.artifact_presence = Some(ArtifactPresence::ExemptCompilerSupplied);
+            component.scope_evidence = None;
+            continue;
+        }
+        let key = key_of_component(component);
+        let (presence, evidence) = if key.as_ref().is_some_and(|k| runtime.contains(k)) {
+            summary.runtime_closure += 1;
+            (None, ScopeEvidence::RuntimeClosure)
+        } else if key.as_ref().is_some_and(|k| static_linked.contains(k)) {
+            summary.statically_linked += 1;
+            (None, ScopeEvidence::StaticallyLinked)
+        } else {
+            summary.not_in_runtime_closure += 1;
+            (Some(ArtifactPresence::NotInArtifact), ScopeEvidence::RuntimeClosure)
+        };
+        // Assigned, not merged: a `NotInArtifact` set earlier is cleared when
+        // the runtime closure says the member ships (FR-001's second
+        // direction).
+        component.artifact_presence = presence;
+        component.scope_evidence = Some(evidence);
+    }
+    summary
+}
+
+/// Embedded Go and Rust modules inherit their hosts' status (FR-002).
+///
+/// A module is runtime when any host is: the module is compiled into it.
+/// Under the role rule this reproduces milestone 1378's behaviour, which
+/// marked a module only when every member reaching it was itself marked; it
+/// only ever touches modules that are not closure members themselves, as
+/// that milestone did.
+fn assign_modules(
+    components: &mut [ResolvedComponent],
+    evidence: &RuntimeEvidence,
+    relationships: &[Relationship],
+    summary: &mut RoleScopeSummary,
+) {
+    let index: HashMap<&str, usize> = components
+        .iter()
+        .enumerate()
+        .map(|(i, c)| (c.purl.as_str(), i))
+        .collect();
+    // module index → whether any host ships
+    let mut ships: BTreeMap<usize, bool> = BTreeMap::new();
+    for r in relationships.iter().filter(|r| r.provenance.data_type == EMBEDDED_BUILD_INFO) {
+        let (Some(&host), Some(&module)) = (index.get(r.from.as_str()), index.get(r.to.as_str()))
+        else {
+            continue;
+        };
+        let host = &components[host];
+        if !host.extra_annotations.contains_key(CLOSURE_ROLE) {
+            continue;
+        }
+        let host_ships = !host
+            .artifact_presence
+            .is_some_and(|p| p.is_absent_from_artifact());
+        *ships.entry(module).or_default() |= host_ships;
+    }
+    let under_runtime = matches!(evidence, RuntimeEvidence::Closure { .. });
+    for (module, host_ships) in ships {
+        let c = &mut components[module];
+        let is_member = c.extra_annotations.contains_key(CLOSURE_ROLE);
+        if under_runtime {
+            if host_ships {
+                // A member the runtime closure marked, compiled into a
+                // runtime binary, ships after all.
+                if !is_member || c.artifact_presence.is_some_and(|p| p.is_absent_from_artifact()) {
+                    summary.statically_linked += 1;
+                    c.artifact_presence = None;
+                    c.scope_evidence = Some(ScopeEvidence::StaticallyLinked);
+                }
+            } else if !is_member {
+                summary.not_in_runtime_closure += 1;
+                c.artifact_presence = Some(ArtifactPresence::NotInArtifact);
+                c.scope_evidence = Some(ScopeEvidence::RuntimeClosure);
+            }
+        } else if !is_member && !host_ships {
+            c.artifact_presence = Some(ArtifactPresence::NotInArtifact);
+            c.scope_evidence = Some(ScopeEvidence::ClosureRole);
+        }
+    }
+}
+
+/// Whether a component is the derivation the evaluated attribute built.
+fn is_evaluated_package(component: &ResolvedComponent) -> bool {
+    component
+        .extra_annotations
+        .get(crate::generate::root_selector::NIX_EVALUATED_PACKAGE_KEY)
+        .and_then(serde_json::Value::as_bool)
+        == Some(true)
+}
+
+/// Rules 1, 2 and 5: the milestone-1277 role rule, unchanged.
+fn assign_from_roles(
     components: &mut [ResolvedComponent],
     boot_libraries: &HashSet<String>,
 ) -> RoleScopeSummary {
@@ -110,12 +272,7 @@ pub(crate) fn assign_role_scope(
         // `exempt-evaluated-package`): with `--root-name` the evaluated
         // package is not the subject, and an unmarked `unreferenced` member
         // is what invariant I10 reports as a rule that never ran.
-        if component
-            .extra_annotations
-            .get(crate::generate::root_selector::NIX_EVALUATED_PACKAGE_KEY)
-            .and_then(serde_json::Value::as_bool)
-            == Some(true)
-        {
+        if is_evaluated_package(component) {
             component.artifact_presence = Some(ArtifactPresence::ExemptEvaluatedPackage);
             continue;
         }
@@ -157,6 +314,7 @@ pub(crate) fn assign_role_scope(
         }
 
         component.artifact_presence = Some(ArtifactPresence::NotInArtifact);
+        component.scope_evidence = Some(ScopeEvidence::ClosureRole);
         match role {
             Role::BuildTooling => summary.assigned_build_tooling += 1,
             Role::Unreferenced => summary.assigned_unreferenced += 1,
@@ -267,6 +425,12 @@ mod tests {
         c
     }
 
+    /// The pass with no runtime evidence and no edges: the milestone-1277
+    /// role rule, which every pre-1423 test here pins.
+    fn role_only(c: &mut [ResolvedComponent], boot: &HashSet<String>) -> RoleScopeSummary {
+        assign_role_scope(c, boot, &RuntimeEvidence::None, &[])
+    }
+
     fn presence(components: &[ResolvedComponent], purl: &str) -> Option<ArtifactPresence> {
         components
             .iter()
@@ -280,7 +444,7 @@ mod tests {
     #[test]
     fn m1277_build_tooling_is_classified_as_not_in_the_artifact() {
         let mut c = vec![component("pkg:generic/tool@1.0.0", Some("build-tooling"))];
-        let s = assign_role_scope(&mut c, &HashSet::new());
+        let s = role_only(&mut c, &HashSet::new());
         assert_eq!(presence(&c, "pkg:generic/tool@1.0.0"), Some(ArtifactPresence::NotInArtifact));
         assert_eq!(s.assigned_build_tooling, 1);
     }
@@ -288,7 +452,7 @@ mod tests {
     #[test]
     fn m1277_unreferenced_is_classified_as_not_in_the_artifact() {
         let mut c = vec![component("pkg:generic/patch@1.0.0", Some("unreferenced"))];
-        let s = assign_role_scope(&mut c, &HashSet::new());
+        let s = role_only(&mut c, &HashSet::new());
         assert_eq!(presence(&c, "pkg:generic/patch@1.0.0"), Some(ArtifactPresence::NotInArtifact));
         assert_eq!(s.assigned_unreferenced, 1);
     }
@@ -305,7 +469,7 @@ mod tests {
         );
         // CONTROL: the same role without the tag is still classified.
         let mut c = vec![root, component("pkg:generic/patch@1.0.0", Some("unreferenced"))];
-        let s = assign_role_scope(&mut c, &HashSet::new());
+        let s = role_only(&mut c, &HashSet::new());
         assert_eq!(
             presence(&c, "pkg:generic/waybill-fixture-app@2.1"),
             Some(ArtifactPresence::ExemptEvaluatedPackage)
@@ -326,7 +490,7 @@ mod tests {
     #[test]
     fn m1277_artifact_input_is_left_alone() {
         let mut c = vec![component("pkg:hackage/lib@1.0.0", Some("artifact-input"))];
-        let s = assign_role_scope(&mut c, &HashSet::new());
+        let s = role_only(&mut c, &HashSet::new());
         assert_eq!(presence(&c, "pkg:hackage/lib@1.0.0"), None);
         assert_eq!(s.assigned(), 0);
     }
@@ -334,7 +498,7 @@ mod tests {
     #[test]
     fn m1277_both_is_left_alone() {
         let mut c = vec![component("pkg:generic/dual@1.0.0", Some("both"))];
-        assign_role_scope(&mut c, &HashSet::new());
+        role_only(&mut c, &HashSet::new());
         assert_eq!(presence(&c, "pkg:generic/dual@1.0.0"), None);
     }
 
@@ -346,7 +510,7 @@ mod tests {
     #[test]
     fn m1277_an_absent_role_classifies_nothing() {
         let mut c = vec![component("pkg:cargo/plain@1.0.0", None)];
-        let s = assign_role_scope(&mut c, &HashSet::new());
+        let s = role_only(&mut c, &HashSet::new());
         assert_eq!(presence(&c, "pkg:cargo/plain@1.0.0"), None);
         assert_eq!(s.roles_seen, 0);
         assert_eq!(s.assigned(), 0);
@@ -361,7 +525,7 @@ mod tests {
             component("pkg:npm/b@1.0.0", None),
         ];
         let before = c.clone();
-        let s = assign_role_scope(&mut c, &HashSet::new());
+        let s = role_only(&mut c, &HashSet::new());
         assert_eq!(c, before, "a document with no closure roles must not move");
         assert_eq!(s, RoleScopeSummary::default());
     }
@@ -387,7 +551,7 @@ mod tests {
     #[test]
     fn m1277_a_unioned_both_classifies_nothing_which_is_the_unions_point() {
         let mut c = vec![component("pkg:generic/flex@2.6.4", Some("both"))];
-        let s = assign_role_scope(&mut c, &HashSet::new());
+        let s = role_only(&mut c, &HashSet::new());
         assert_eq!(presence(&c, "pkg:generic/flex@2.6.4"), None);
         assert_eq!(s.roles_seen, 1, "the role was seen");
         assert_eq!(s.assigned(), 0, "but it classified nothing");
@@ -401,7 +565,7 @@ mod tests {
     fn m1277_a_compiler_supplied_member_in_a_tooling_role_is_exempt() {
         let mut c = vec![component("pkg:hackage/containers@0.6.7", Some("build-tooling"))];
         let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
-        let s = assign_role_scope(&mut c, &boot);
+        let s = role_only(&mut c, &boot);
         let p = presence(&c, "pkg:hackage/containers@0.6.7");
         assert_eq!(
             p,
@@ -434,7 +598,7 @@ mod tests {
     fn m1277_an_exempt_member_keeps_its_closure_role_annotation() {
         let mut c = vec![component("pkg:hackage/containers@0.6.7", Some("build-tooling"))];
         let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
-        assign_role_scope(&mut c, &boot);
+        role_only(&mut c, &boot);
         assert_eq!(
             c[0].extra_annotations.get(CLOSURE_ROLE).and_then(|v| v.as_str()),
             Some("build-tooling"),
@@ -452,7 +616,7 @@ mod tests {
             component("pkg:hackage/happy@2.1.7", Some("build-tooling")),
         ];
         let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
-        let s = assign_role_scope(&mut c, &boot);
+        let s = role_only(&mut c, &boot);
         assert_eq!(
             presence(&c, "pkg:hackage/containers@0.6.7"),
             Some(ArtifactPresence::ExemptCompilerSupplied),
@@ -475,7 +639,7 @@ mod tests {
     #[test]
     fn m1277_an_empty_boot_set_exempts_nothing() {
         let mut c = vec![component("pkg:hackage/containers@0.6.7", Some("build-tooling"))];
-        let s = assign_role_scope(&mut c, &HashSet::new());
+        let s = role_only(&mut c, &HashSet::new());
         assert_eq!(
             presence(&c, "pkg:hackage/containers@0.6.7"),
             Some(ArtifactPresence::NotInArtifact)
@@ -492,13 +656,145 @@ mod tests {
     fn m1277_a_name_match_outside_hackage_is_not_exempt() {
         let mut c = vec![component("pkg:generic/unix@1.0.0", Some("build-tooling"))];
         let boot: HashSet<String> = ["unix".to_string()].into_iter().collect();
-        let s = assign_role_scope(&mut c, &boot);
+        let s = role_only(&mut c, &boot);
         assert_eq!(
             presence(&c, "pkg:generic/unix@1.0.0"),
             Some(ArtifactPresence::NotInArtifact),
             "`unix` in the boot set is the Hackage package, not every component so named"
         );
         assert_eq!(s.exempt_compiler_supplied, 0);
+    }
+
+    // ---- m1423 T018: the decision function ----
+
+    fn key(name: &str, version: &str) -> MemberKey {
+        MemberKey::Named(name.to_string(), version.to_string())
+    }
+
+    fn closure_evidence(runtime: &[(&str, &str)], linked: &[(&str, &str)]) -> RuntimeEvidence {
+        RuntimeEvidence::Closure {
+            runtime: runtime.iter().map(|(n, v)| key(n, v)).collect(),
+            static_linked: linked.iter().map(|(n, v)| key(n, v)).collect(),
+        }
+    }
+
+    fn embedded(host: &str, module: &str) -> Relationship {
+        Relationship {
+            from: host.to_string(),
+            to: module.to_string(),
+            relationship_type: waybill_common::resolution::RelationshipType::DependsOn,
+            provenance: waybill_common::resolution::EnrichmentProvenance {
+                source: "nix-closure-contents".to_string(),
+                data_type: EMBEDDED_BUILD_INFO.to_string(),
+            },
+        }
+    }
+
+    #[test]
+    fn m1423_the_runtime_closure_decides_in_both_directions() {
+        let mut c = vec![
+            component("pkg:generic/waybill-fixture-dns@1.0", Some("build-tooling")),
+            component("pkg:generic/waybill-fixture-xml@2.0", Some("artifact-input")),
+            component("pkg:generic/waybill-fixture-lib@3.0", Some("artifact-input")),
+        ];
+        // A mark an earlier step set is cleared when the runtime closure says
+        // the member ships.
+        c[0].artifact_presence = Some(ArtifactPresence::NotInArtifact);
+        let ev = closure_evidence(
+            &[("waybill-fixture-dns", "1.0"), ("waybill-fixture-lib", "3.0")],
+            &[],
+        );
+        let s = assign_role_scope(&mut c, &HashSet::new(), &ev, &[]);
+        assert_eq!(presence(&c, "pkg:generic/waybill-fixture-dns@1.0"), None, "tooling, but referenced");
+        assert_eq!(
+            presence(&c, "pkg:generic/waybill-fixture-xml@2.0"),
+            Some(ArtifactPresence::NotInArtifact),
+            "an artifact-input the output does not reference"
+        );
+        assert_eq!(presence(&c, "pkg:generic/waybill-fixture-lib@3.0"), None);
+        for x in &c {
+            assert_eq!(x.scope_evidence, Some(ScopeEvidence::RuntimeClosure), "{}", x.name);
+        }
+        assert_eq!((s.runtime_closure, s.not_in_runtime_closure), (2, 1));
+    }
+
+    #[test]
+    fn m1423_static_linking_keeps_a_member_runtime() {
+        let mut c = vec![component("pkg:hackage/waybill-fixture-aeson@2.2", Some("artifact-input"))];
+        let ev = closure_evidence(&[], &[("waybill-fixture-aeson", "2.2")]);
+        assign_role_scope(&mut c, &HashSet::new(), &ev, &[]);
+        assert_eq!(c[0].artifact_presence, None);
+        assert_eq!(c[0].scope_evidence, Some(ScopeEvidence::StaticallyLinked));
+    }
+
+    #[test]
+    fn m1423_exemptions_win_under_the_runtime_closure() {
+        let mut root = component("pkg:generic/waybill-fixture-app@1.0", Some("unreferenced"));
+        root.extra_annotations.insert(
+            crate::generate::root_selector::NIX_EVALUATED_PACKAGE_KEY.to_string(),
+            serde_json::Value::Bool(true),
+        );
+        let mut c = vec![
+            root,
+            // An artifact-input boot library outside the runtime closure: the
+            // static-executable shape, where GHC's boot packages are linked
+            // from the compiler's own store path.
+            component("pkg:hackage/containers@0.6.7", Some("artifact-input")),
+        ];
+        let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
+        assign_role_scope(&mut c, &boot, &closure_evidence(&[], &[]), &[]);
+        assert_eq!(c[0].artifact_presence, Some(ArtifactPresence::ExemptEvaluatedPackage));
+        assert_eq!(c[1].artifact_presence, Some(ArtifactPresence::ExemptCompilerSupplied));
+        assert!(c.iter().all(|x| x.scope_evidence.is_none()));
+    }
+
+    #[test]
+    fn m1423_module_inherits_its_hosts_status_under_the_runtime_closure() {
+        let mut c = vec![
+            component("pkg:generic/waybill-fixture-app@1.0", Some("artifact-input")),
+            component("pkg:generic/waybill-fixture-tool@3.0", Some("build-tooling")),
+            component("pkg:golang/example.test/goa@v1.0.0", None),
+            component("pkg:golang/example.test/toolmod@v0.1.0", None),
+            component("pkg:golang/example.test/shared@v2.0.0", None),
+        ];
+        let rels = [
+            embedded("pkg:generic/waybill-fixture-app@1.0", "pkg:golang/example.test/goa@v1.0.0"),
+            embedded("pkg:generic/waybill-fixture-tool@3.0", "pkg:golang/example.test/toolmod@v0.1.0"),
+            embedded("pkg:generic/waybill-fixture-app@1.0", "pkg:golang/example.test/shared@v2.0.0"),
+            embedded("pkg:generic/waybill-fixture-tool@3.0", "pkg:golang/example.test/shared@v2.0.0"),
+        ];
+        let ev = closure_evidence(&[("waybill-fixture-app", "1.0")], &[]);
+        assign_role_scope(&mut c, &HashSet::new(), &ev, &rels);
+        let get = |p: &str| c.iter().find(|x| x.purl.as_str() == p).unwrap();
+        for p in ["pkg:golang/example.test/goa@v1.0.0", "pkg:golang/example.test/shared@v2.0.0"] {
+            assert_eq!(get(p).artifact_presence, None, "{p}");
+            assert_eq!(get(p).scope_evidence, Some(ScopeEvidence::StaticallyLinked), "{p}");
+        }
+        let t = get("pkg:golang/example.test/toolmod@v0.1.0");
+        assert_eq!(t.artifact_presence, Some(ArtifactPresence::NotInArtifact));
+        assert_eq!(t.scope_evidence, Some(ScopeEvidence::RuntimeClosure));
+    }
+
+    /// Without runtime evidence, a module is marked only when every member
+    /// reaching it is marked, which is what milestone 1378's contents pass
+    /// decided before 1423 moved the decision here.
+    #[test]
+    fn m1423_module_under_the_role_rule_matches_milestone_1378() {
+        let mut c = vec![
+            component("pkg:generic/waybill-fixture-app@1.0", Some("artifact-input")),
+            component("pkg:generic/waybill-fixture-tool@3.0", Some("build-tooling")),
+            component("pkg:golang/example.test/shared@v2.0.0", None),
+            component("pkg:golang/example.test/toolonly@v0.1.0", None),
+        ];
+        let rels = [
+            embedded("pkg:generic/waybill-fixture-app@1.0", "pkg:golang/example.test/shared@v2.0.0"),
+            embedded("pkg:generic/waybill-fixture-tool@3.0", "pkg:golang/example.test/shared@v2.0.0"),
+            embedded("pkg:generic/waybill-fixture-tool@3.0", "pkg:golang/example.test/toolonly@v0.1.0"),
+        ];
+        assign_role_scope(&mut c, &HashSet::new(), &RuntimeEvidence::None, &rels);
+        assert_eq!(c[2].artifact_presence, None, "a shipped member reaches it");
+        assert_eq!(c[3].artifact_presence, Some(ArtifactPresence::NotInArtifact));
+        assert_eq!(classification_source(&c[3]), Some("closure-role"));
     }
 
     // ---- m1423 T004: C203 reports the scope evidence ----
@@ -566,7 +862,7 @@ mod tests {
     #[test]
     fn m1277_an_unknown_role_classifies_nothing() {
         let mut c = vec![component("pkg:generic/odd@1.0.0", Some("some-new-role"))];
-        let s = assign_role_scope(&mut c, &HashSet::new());
+        let s = role_only(&mut c, &HashSet::new());
         assert_eq!(presence(&c, "pkg:generic/odd@1.0.0"), None);
         assert_eq!(s.assigned(), 0);
     }

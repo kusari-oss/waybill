@@ -442,6 +442,7 @@ mod t009_agreement_probe {
         // pure, so there is no excuse for approximating it.
         let roles = crate::scan_fs::package_db::nix::closure::classify::classify(&closure);
         let classified = crate::scan_fs::package_db::nix::closure::ClassifiedClosure {
+            runtime: None,
             attribute: "probe".to_string(),
             raw: closure,
             roles,

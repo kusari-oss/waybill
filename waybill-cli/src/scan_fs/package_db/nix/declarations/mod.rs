@@ -705,6 +705,7 @@ mod tests {
         .expect("seed closure parses");
         let roles = classify(&raw);
         let mut c = emit::components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,

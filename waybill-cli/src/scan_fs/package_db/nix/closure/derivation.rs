@@ -174,6 +174,39 @@ impl RawDerivation {
         self.outputs.values().filter_map(|o| o.path.as_deref())
     }
 
+    /// The path of the output an attribute's `outPath` names: the first entry
+    /// of the derivation's `outputs` attribute.
+    ///
+    /// Milestone 1423. `nix derivation show` keys its `outputs` object
+    /// alphabetically, so the order survives only in the attribute (`env`, or
+    /// the typed carrier under structured attributes). Measured against the
+    /// evaluated `outPath` for shellcheck, curl, hlint and pandoc: 4 of 4
+    /// agree (`specs/1423-nix-runtime-scope/measurements/nix-behaviour/q9-*`).
+    /// Without the attribute, `out`, then a sole output.
+    pub(crate) fn default_output_path(&self) -> Option<&str> {
+        let named = self
+            .paths_in("outputs")
+            .next()
+            .and_then(|head| self.outputs.get(head))
+            .or_else(|| self.outputs.get("out"))
+            .or_else(|| {
+                (self.outputs.len() == 1)
+                    .then(|| self.outputs.values().next())
+                    .flatten()
+            })?;
+        named.path.as_deref()
+    }
+
+    /// Whether nixpkgs' Haskell generic builder built this derivation.
+    ///
+    /// Milestone 1423. The generic builder, and nothing else in nixpkgs,
+    /// defines `setupCompilerEnvironmentPhase`; this is the test the
+    /// static-linking rule was scored with
+    /// (`specs/1423-nix-runtime-scope/measurements/nix-behaviour/q6-rule.py`).
+    pub(crate) fn is_haskell_builder(&self) -> bool {
+        self.attr_str("setupCompilerEnvironmentPhase").is_some()
+    }
+
     /// Store paths listed in a field, from whichever carrier holds it.
     ///
     /// The resolution rule, per

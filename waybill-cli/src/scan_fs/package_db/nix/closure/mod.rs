@@ -29,7 +29,15 @@ pub(crate) mod identifiers;
 /// `pname`. Distinct from [`classify`], which assigns the C182 role to every
 /// derivation; see that module's own doc comment for why they are separate.
 pub(crate) mod member;
+/// Milestone 1423 — the derivation ↔ component join, shared by `contents` and
+/// the scope pass.
+pub(crate) mod member_key;
 pub(crate) mod patches;
+/// Milestone 1423 (#1423) — the evaluated output's runtime closure.
+pub(crate) mod runtime;
+/// Milestone 1423 (#1423) — Haskell libraries statically linked into a
+/// runtime member.
+pub(crate) mod static_link;
 pub(crate) mod summary;
 
 use std::path::Path;
@@ -37,7 +45,9 @@ use std::time::Duration;
 
 pub(crate) mod licenses;
 
-use super::eval::invoke::{argv_is_safe, is_safe_attribute_name, run_bounded, verify_ifd_refusal};
+use super::eval::invoke::{
+    argv_is_safe, is_safe_attribute_name, run_bounded, verify_ifd_refusal_with_config,
+};
 use super::eval::preflight::IFD_SETTING;
 use super::eval::reason::DegradationReason;
 use super::eval::stderr::{classify_failure, salient_stderr};
@@ -291,6 +301,10 @@ pub(crate) struct ClassifiedClosure {
     /// basename, read from the same evaluation as the licenses, and their
     /// coverage (C184 `identifiers`).
     pub(crate) identifiers: identifiers::DeclaredIdentifiers,
+    /// Milestone 1423 (#1423) — the evaluated output's runtime closure, or
+    /// why it could not be had. Queried by output path, never by installable
+    /// (`runtime` module docs).
+    pub(crate) runtime: runtime::RuntimeOutcome,
 }
 
 impl ClassifiedClosure {
@@ -372,7 +386,12 @@ pub(crate) fn resolve(
     // is listed or evaluated, exactly as the m1034 tier gates. Requesting
     // `allow-import-from-derivation false` is not evidence it applied: a nix
     // without the setting accepts the option, ignores it and exits 0.
-    verify_ifd_refusal(cfg.budget)?;
+    //
+    // Milestone 1423 (T014): the same listing carries the configured
+    // `substituters` (q1), so the runtime query below reads them from here
+    // rather than starting another `nix` process.
+    let (_, config) = verify_ifd_refusal_with_config(cfg.budget)?;
+    let substituters = runtime::substituters_from_config(&config);
 
     let root = project.display().to_string();
     let (attribute, flakeref) = match &cfg.attribute {
@@ -462,7 +481,16 @@ pub(crate) fn resolve(
         visits = graph.visits,
         "nix-closure: dependency graph projected"
     );
+    // Milestone 1423 (#1423) — what ships. Never fails the closure: an
+    // unavailable runtime closure is recorded and the scope pass falls back.
+    let runtime = Some(runtime::query_closure(
+        &raw,
+        graph.evaluated.as_deref(),
+        cfg.budget,
+        &substituters,
+    ));
     Ok(ClassifiedClosure {
+        runtime,
         graph_admitted,
         graph_admission,
         attribute,

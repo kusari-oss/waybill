@@ -4712,6 +4712,14 @@ pub async fn execute(
     // Milestone 1378 (#1396; C213) — what the contents pass read. Hoisted for
     // the same reason the record above is: its presence says the pass ran.
     let mut closure_contents: Option<ClosureContentsSummary> = None;
+    // Milestone 1423 (#1423) — whether the milestone-1275 identity pass had
+    // the pinned package set, which decides whether its declared edges can
+    // say which Haskell libraries are statically linked; and C216, which the
+    // scope pass below decides.
+    let mut closure_package_set_available = false;
+    let mut closure_scope_method: Option<
+        scan_fs::package_db::nix::closure::runtime::ScopeMethodRecord,
+    >;
     match &nix_closure {
         Some(Err(reason)) => tracing::info!(
             reason = reason.wire(),
@@ -4789,6 +4797,7 @@ pub async fn execute(
                 .unwrap_or_default(),
                 _ => Default::default(),
             };
+            closure_package_set_available = loaded_set.is_some();
             let identity = nhp::closure_identity::reclassify(
                 &mut components,
                 &mut relationships,
@@ -5108,9 +5117,31 @@ pub async fn execute(
         // two is enumerated in `contracts/role-scope.md`; none requires a
         // precedence rule. Should a future mechanism assert `required`, that
         // stops being true.
+        //
+        // Milestone 1423 (#1423, T017) — the evidence the pass decides from:
+        // the evaluated output's runtime closure plus what is statically
+        // linked into it, read against the document as it stands now (after
+        // the identity, contents and edge passes), so the declared edges and
+        // the host → module edges are final. With no runtime closure the role
+        // rule decides, exactly as before, and C216 records why.
+        let (runtime_evidence, scope_method) = match &nix_closure {
+            Some(Ok(classified)) => scan_fs::package_db::nix::closure::runtime::evidence(
+                classified,
+                &components,
+                &relationships,
+                closure_package_set_available,
+            ),
+            _ => (
+                scan_fs::package_db::nix::closure::runtime::RuntimeEvidence::None,
+                None,
+            ),
+        };
+        closure_scope_method = scope_method;
         let role_scope_summary = crate::resolve::closure_role_scope::assign_role_scope(
             &mut components,
             &boot_libraries,
+            &runtime_evidence,
+            &relationships,
         );
         if role_scope_summary.roles_seen > 0 {
             tracing::info!(
@@ -5119,7 +5150,10 @@ pub async fn execute(
                 build_tooling = role_scope_summary.assigned_build_tooling,
                 unreferenced = role_scope_summary.assigned_unreferenced,
                 exempt_compiler_supplied = role_scope_summary.exempt_compiler_supplied,
-                "nix-closure: role-derived artifact-presence classification"
+                runtime_closure = role_scope_summary.runtime_closure,
+                statically_linked = role_scope_summary.statically_linked,
+                not_in_runtime_closure = role_scope_summary.not_in_runtime_closure,
+                "nix-closure: artifact-presence classification"
             );
         }
     }
@@ -5130,8 +5164,10 @@ pub async fn execute(
         Some(Ok(classified)) => {
             use scan_fs::package_db::nix::closure;
             let patched = closure::patches::attribute(&classified.raw);
-            let summary =
+            let mut summary =
                 closure::summary::NixClosureSummary::build(classified, &patched);
+            // Milestone 1423 — C216, decided by the scope pass above.
+            summary.scope_method = closure_scope_method.take();
             tracing::info!(
                 patches = summary.patches,
                 without_cve = summary.patches_without_cve,
@@ -10089,6 +10125,7 @@ mod closure_ecosystem_identity_tests {
         let raw = RawClosure::parse(&fixture()).unwrap();
         let roles = classify(&raw);
         let classified = scan_fs::package_db::nix::closure::ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -10992,6 +11029,7 @@ mod closure_contents_tests {
             &scan_fs::package_db::nix::closure::emit::emitted_drv_keys(&raw, &roles),
         );
         let classified = scan_fs::package_db::nix::closure::ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,

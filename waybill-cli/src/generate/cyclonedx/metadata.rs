@@ -1154,6 +1154,13 @@ pub fn build_metadata(
                 "value": read,
             }));
         }
+        // Milestone 1423 (#1423): C216, how the scope marks were decided.
+        if let Some(method) = summary.closure_scope_method_wire() {
+            properties.push(json!({
+                "name": closure_summary::ANN_CLOSURE_SCOPE_METHOD,
+                "value": method,
+            }));
+        }
     }
 
     // Milestone 665 T021: doc-scope `waybill:binary-scan-suppressed`

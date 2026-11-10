@@ -1,0 +1,17 @@
+cabal-version: 2.4
+name:          waybill-fixture-runtimeproj
+version:       0.1.0
+license:       MIT
+
+-- Milestone 1423 — the exemption case.
+--
+-- A declared dependency is what engages the nixpkgs-haskell enrichment, which
+-- loads the pinned package set and hands its boot set to the scope pass. With
+-- no `.cabal` here the boot set is empty and the compiler-supplied exemption
+-- could not fire at all, so its test would be vacuous (milestone 1277 T016).
+
+library
+  build-depends:    base
+  exposed-modules:  Lib
+  hs-source-dirs:   src
+  default-language: Haskell2010

@@ -681,6 +681,7 @@ mod tests {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let roles = classify(&raw);
         components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -763,6 +764,7 @@ mod tests {
         );
 
         let built = components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -821,6 +823,7 @@ mod tests {
         assert_eq!(roles["v2.drv"], DerivationRole::BuildTooling);
 
         let c = components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -878,6 +881,7 @@ mod tests {
         assert_eq!(roles["d-fix.drv"], DerivationRole::Unreferenced);
 
         let names: Vec<&str> = components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
