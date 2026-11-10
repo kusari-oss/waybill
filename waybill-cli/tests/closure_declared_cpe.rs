@@ -135,10 +135,12 @@ fn a_declared_cpe_replaces_the_curated_one_and_is_the_only_cpe() {
     assert_eq!(cdx_cpe(&s, "zlib").as_deref(), Some(want.as_str()));
     assert_eq!(spdx23_cpes(&s, "zlib"), vec![want.clone()]);
     assert_eq!(spdx3_cpes(&s, "zlib"), vec![want]);
+    // Not a second identifier anywhere. (C212's `overrode` does name it,
+    // as a record of what was overridden, which is the point of that row.)
+    let props = component(&s, "zlib")["properties"].as_array().cloned().unwrap_or_default();
     assert!(
-        !component(&s, "zlib").to_string().contains("cpe:2.3:a:zlib:zlib"),
-        "the overridden curated CPE must not be emitted as a second identifier: {}",
-        component(&s, "zlib")
+        !props.iter().any(|p| p["name"] == "waybill:cpe-candidates"),
+        "the overridden curated CPE must not be emitted as a candidate: {props:?}"
     );
 }
 
@@ -276,4 +278,222 @@ fn an_operator_supplied_cpe_is_kept() {
         &["--supplement-cdx", supp.to_str().unwrap()],
     );
     assert_eq!(cdx_cpe(&s, "zlib").as_deref(), Some(operator));
+}
+
+// ---------------------------------------------------------------- US3
+
+const C212: &str = "waybill:cpe-provenance";
+const DECLARED_COMMENT: &str = "CPE declared by nixpkgs meta.identifiers.cpe";
+const CURATED_COMMENT: &str = "CPE from waybill's curated CPE table";
+
+/// The `evidence.identity[]` entry with `field: "cpe"`, if any.
+fn cdx_cpe_identity(s: &Scan, name: &str) -> Option<Value> {
+    component(s, name)["evidence"]["identity"]
+        .as_array()?
+        .iter()
+        .find(|i| i["field"] == "cpe")
+        .cloned()
+}
+
+fn spdx23_cpe_comment(s: &Scan, name: &str) -> Option<String> {
+    s.spdx23["packages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|p| p["name"].as_str() == Some(name))
+        .flat_map(|p| p["externalRefs"].as_array().cloned().unwrap_or_default())
+        .find(|r| r["referenceType"] == "cpe23Type")
+        .and_then(|r| r["comment"].as_str().map(str::to_string))
+}
+
+fn spdx3_cpe_comment(s: &Scan, name: &str) -> Option<String> {
+    let graph = s.spdx3["@graph"].as_array().unwrap();
+    graph
+        .iter()
+        .filter(|e| e["type"] == "software_Package" && e["name"].as_str() == Some(name))
+        .flat_map(|e| e["externalIdentifier"].as_array().cloned().unwrap_or_default())
+        .find(|id| id["externalIdentifierType"] == "cpe23")
+        .and_then(|id| id["comment"].as_str().map(str::to_string))
+}
+
+fn envelope_value(comment: &str, name: &str) -> Option<String> {
+    let v: Value = serde_json::from_str(comment).ok()?;
+    if v.get("field")?.as_str()? != name {
+        return None;
+    }
+    Some(match v.get("value")? {
+        Value::String(s) => s.clone(),
+        other => other.to_string(),
+    })
+}
+
+/// Every C212 value in each format, sorted, so the three can be compared.
+fn c212_values(s: &Scan) -> [Vec<String>; 3] {
+    let mut cdx: Vec<String> = s.cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|c| c["properties"].as_array().cloned().unwrap_or_default())
+        .filter(|p| p["name"] == C212)
+        .filter_map(|p| p["value"].as_str().map(str::to_string))
+        .collect();
+    let mut spdx23: Vec<String> = s.spdx23["packages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|p| p["annotations"].as_array().cloned().unwrap_or_default())
+        .filter_map(|a| envelope_value(a["comment"].as_str()?, C212))
+        .collect();
+    let mut spdx3: Vec<String> = s.spdx3["@graph"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|e| e["type"] == "Annotation")
+        .filter_map(|a| envelope_value(a["statement"].as_str()?, C212))
+        .collect();
+    cdx.sort();
+    spdx23.sort();
+    spdx3.sort();
+    [cdx, spdx23, spdx3]
+}
+
+/// US3 scenario 1, SC-005 — a declared CPE's source, natively, in every
+/// format.
+#[test]
+fn a_declared_cpe_records_its_source_natively_in_every_format() {
+    let s = scan();
+    let id = cdx_cpe_identity(&s, "zlib").expect("an evidence.identity cpe entry");
+    assert_eq!(id["concludedValue"], declared("zlib", "9.9.9"));
+    assert_eq!(id["confidence"], 0.9);
+    assert_eq!(id["methods"][0]["technique"], "manifest-analysis");
+    assert_eq!(id["methods"][0]["value"], "nixpkgs meta.identifiers.cpe");
+    assert_eq!(spdx23_cpe_comment(&s, "zlib").as_deref(), Some(DECLARED_COMMENT));
+    assert_eq!(spdx3_cpe_comment(&s, "zlib").as_deref(), Some(DECLARED_COMMENT));
+}
+
+/// US3 scenario 2 — a curated CPE says so, and carries no C212.
+#[test]
+fn a_curated_cpe_records_its_source_natively_and_no_c212() {
+    let s = scan();
+    let id = cdx_cpe_identity(&s, "openssl").expect("an evidence.identity cpe entry");
+    assert_eq!(id["methods"][0]["technique"], "other");
+    assert_eq!(id["methods"][0]["value"], "waybill curated CPE table");
+    assert_eq!(id["confidence"], 0.7);
+    assert_eq!(spdx23_cpe_comment(&s, "openssl").as_deref(), Some(CURATED_COMMENT));
+    assert_eq!(spdx3_cpe_comment(&s, "openssl").as_deref(), Some(CURATED_COMMENT));
+    let props = component(&s, "openssl")["properties"].as_array().cloned().unwrap_or_default();
+    assert!(!props.iter().any(|p| p["name"] == C212), "{props:?}");
+}
+
+/// SC-005 — every CPE-bearing closure component records a source in each
+/// format. The project's own cabal package is not a closure component.
+#[test]
+fn every_cpe_bearing_closure_component_records_a_source() {
+    let s = scan();
+    let mut checked = 0;
+    for c in s.cdx["components"].as_array().unwrap() {
+        let closure_member = c["properties"]
+            .as_array()
+            .is_some_and(|ps| ps.iter().any(|p| p["name"] == "waybill:closure-role"));
+        if !closure_member || !c["cpe"].is_string() {
+            continue;
+        }
+        let name = c["name"].as_str().unwrap();
+        assert!(cdx_cpe_identity(&s, name).is_some(), "{name}: no CDX cpe identity");
+        assert!(spdx23_cpe_comment(&s, name).is_some(), "{name}: no SPDX 2.3 comment");
+        assert!(spdx3_cpe_comment(&s, name).is_some(), "{name}: no SPDX 3 comment");
+        checked += 1;
+    }
+    // zlib, shell, openssl, skew and the subject's components[] entry.
+    assert!(checked >= 4, "the population checked was {checked}");
+}
+
+/// US3 scenario 3 — the bash shape on zlib: one CPE identifier, the declared
+/// one, and C212 names the curated CPE it overrode.
+#[test]
+fn c212_records_the_basis_and_the_overridden_curated_cpe() {
+    let s = scan();
+    let [cdx, _, _] = c212_values(&s);
+    let parsed: Vec<Value> = cdx.iter().map(|v| serde_json::from_str(v).unwrap()).collect();
+    assert!(
+        parsed.contains(&serde_json::json!({
+            "basis": "drv",
+            "overrode": "cpe:2.3:a:zlib:zlib:9.9.9:*:*:*:*:*:*:*"
+        })),
+        "{cdx:?}"
+    );
+    assert!(parsed.contains(&serde_json::json!({ "basis": "name-version" })), "{cdx:?}");
+    // root, zlib, shell, skew.
+    assert_eq!(cdx.len(), 4, "{cdx:?}");
+}
+
+/// T025 — C212 carries identical values in all three formats.
+#[test]
+fn c212_is_identical_in_all_three_formats() {
+    let s = scan();
+    let [cdx, spdx23, spdx3] = c212_values(&s);
+    assert!(!cdx.is_empty());
+    assert_eq!(cdx, spdx23);
+    assert_eq!(cdx, spdx3);
+}
+
+/// T025 — the project's own parity check reports C212 present, with the
+/// same count, in every format.
+#[test]
+fn parity_check_reports_c212_in_every_format() {
+    let s = scan();
+    let dir = tempfile::tempdir().unwrap();
+    for (f, v) in [
+        ("waybill.cdx.json", &s.cdx),
+        ("waybill.spdx.json", &s.spdx23),
+        ("waybill.spdx3.json", &s.spdx3),
+    ] {
+        std::fs::write(dir.path().join(f), v.to_string()).unwrap();
+    }
+    let out = std::process::Command::new(env!("CARGO_BIN_EXE_waybill"))
+        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
+        .arg(dir.path())
+        .output()
+        .unwrap();
+    let report: Value = serde_json::from_slice(&out.stdout).unwrap_or_else(|e| {
+        panic!("{e}: {}", String::from_utf8_lossy(&out.stderr))
+    });
+    let row = report["rows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|r| r["row_id"] == "C212")
+        .expect("a C212 row");
+    // Counted as a set of values: the root and skew share `{"basis":"drv"}`,
+    // so four components give three distinct values.
+    for f in ["cdx", "spdx23", "spdx3"] {
+        assert_eq!(row[f]["kind"], "present", "{row}");
+        assert_eq!(row[f]["value_count"], 3, "{row}");
+    }
+    assert_eq!(row["universal_parity"], true, "{row}");
+}
+
+/// FR-013 — an operator's CPE carries no closure provenance of any kind.
+#[test]
+fn an_operator_supplied_cpe_carries_no_closure_provenance() {
+    let dir = tempfile::tempdir().unwrap();
+    let supp = dir.path().join("supplement.cdx.json");
+    std::fs::write(
+        &supp,
+        r#"{"bomFormat":"CycloneDX","specVersion":"1.6","components":[
+            {"type":"library","bom-ref":"zlib","name":"zlib","version":"9.9.9",
+             "purl":"pkg:generic/zlib@9.9.9","cpe":"cpe:2.3:a:zlib:zlib:9.9.9:*:*:*:*:*:*:*"}]}"#,
+    )
+    .unwrap();
+    let rows = fixture("rows.json");
+    let s = scan_with(
+        Rows::Json(&rows),
+        project(),
+        &["--supplement-cdx", supp.to_str().unwrap()],
+    );
+    assert!(cdx_cpe_identity(&s, "zlib").is_none());
+    assert_eq!(spdx23_cpe_comment(&s, "zlib"), None);
+    assert_eq!(spdx3_cpe_comment(&s, "zlib"), None);
+    let props = component(&s, "zlib")["properties"].as_array().cloned().unwrap_or_default();
+    assert!(!props.iter().any(|p| p["name"] == C212), "{props:?}");
 }

@@ -202,6 +202,51 @@ pub fn build_evidence(
     out
 }
 
+/// Milestone 1377 (FR-008) — the `evidence.identity[]` entry recording where
+/// a closure component's CPE came from, per `contracts/wire.md` §3.
+///
+/// CycloneDX 1.6's own construct for "this identifier was concluded, by this
+/// technique, with this confidence" (Principle V). The two confidences are
+/// ordinal, declared over curated, and deliberate rather than calibrated, as
+/// with milestone 1366's 0.8.
+pub fn cpe_identity(
+    cpe: &str,
+    source: crate::scan_fs::package_db::nix::closure::identifiers::CpeSource,
+) -> serde_json::Value {
+    use crate::scan_fs::package_db::nix::closure::identifiers::CpeSource;
+    let (technique, value, confidence) = match source {
+        CpeSource::NixpkgsDeclared => ("manifest-analysis", "nixpkgs meta.identifiers.cpe", 0.9),
+        CpeSource::Curated => ("other", "waybill curated CPE table", 0.7),
+    };
+    json!({
+        "field": "cpe",
+        "concludedValue": cpe,
+        "confidence": confidence,
+        "methods": [ { "technique": technique, "confidence": confidence, "value": value } ],
+    })
+}
+
+/// Append [`cpe_identity`] to an `evidence` object's `identity[]`, creating
+/// either if absent. A no-op for a component with no recorded CPE source.
+pub fn append_cpe_identity(
+    evidence: &mut serde_json::Value,
+    component: &waybill_common::resolution::ResolvedComponent,
+) {
+    let Some(source) = crate::scan_fs::package_db::nix::closure::identifiers::cpe_source(component)
+    else {
+        return;
+    };
+    let Some(cpe) = component.cpes.first() else { return };
+    if !evidence.is_object() {
+        *evidence = json!({});
+    }
+    let entry = cpe_identity(cpe, source);
+    match evidence.get_mut("identity").and_then(|v| v.as_array_mut()) {
+        Some(arr) => arr.push(entry),
+        None => evidence["identity"] = json!([entry]),
+    }
+}
+
 /// Serialize `source_connection_ids` and `deps_dev_match` as CDX
 /// component properties. These used to live under
 /// `evidence.identity.tools` — per CDX 1.6 those entries must be
@@ -242,6 +287,54 @@ mod tests {
             source_file_paths: vec![],
             deps_dev_match: None,
         }
+    }
+
+    /// Milestone 1377 T023 — the declared and curated entries, per
+    /// `contracts/wire.md` §3.
+    #[test]
+    fn m1377_cpe_identity_for_a_declared_and_a_curated_cpe() {
+        use crate::scan_fs::package_db::nix::closure::identifiers::CpeSource;
+        let bash = "cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*";
+        assert_eq!(
+            cpe_identity(bash, CpeSource::NixpkgsDeclared),
+            json!({
+                "field": "cpe", "concludedValue": bash, "confidence": 0.9,
+                "methods": [{ "technique": "manifest-analysis", "confidence": 0.9,
+                              "value": "nixpkgs meta.identifiers.cpe" }]
+            })
+        );
+        let zlib = "cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*";
+        assert_eq!(
+            cpe_identity(zlib, CpeSource::Curated),
+            json!({
+                "field": "cpe", "concludedValue": zlib, "confidence": 0.7,
+                "methods": [{ "technique": "other", "confidence": 0.7,
+                              "value": "waybill curated CPE table" }]
+            })
+        );
+    }
+
+    /// Milestone 1377 T023 — appended after the PURL entry; nothing added to
+    /// a component with no recorded source (every non-closure component).
+    #[test]
+    fn m1377_append_cpe_identity_only_when_a_source_is_recorded() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let base = || build_evidence(&make_evidence(ResolutionTechnique::UrlPattern, 0.95), &[], None, &[], None);
+        let mut c = crate::generate::graph_completeness::test_support::mk_component("pkg:generic/zlib@1.3.2");
+        c.cpes = vec!["cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*".to_string()];
+
+        let mut untouched = base();
+        append_cpe_identity(&mut untouched, &c);
+        assert_eq!(untouched, base(), "no recorded source, no entry");
+
+        c.extra_annotations.insert(ids::ANN_CURATED_CPE.to_string(), json!(true));
+        let mut ev = base();
+        append_cpe_identity(&mut ev, &c);
+        let identity = ev["identity"].as_array().unwrap();
+        assert_eq!(identity.len(), 2);
+        assert_eq!(identity[0]["field"], "purl");
+        assert_eq!(identity[1]["field"], "cpe");
+        assert_eq!(identity[1]["methods"][0]["technique"], "other");
     }
 
     #[test]

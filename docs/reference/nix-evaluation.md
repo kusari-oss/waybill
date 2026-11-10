@@ -248,6 +248,97 @@ that apply a patch are. Measured, `jq` and `lua` are unreferenced in one
 project's closure and carry 6 of its 18 CVEs, so dropping them would leave
 those patches with no component to attach to.
 
+### The document's subject (milestone 1377)
+
+When the closure resolves, the derivation the evaluated attribute built is
+the document's subject: CycloneDX `metadata.component`, SPDX 2.3
+`documentDescribes` and SPDX 3 `rootElement`. That derivation is the
+closure's root, the one no other member consumes. Measured on six wrapper
+flakes, the subject is `openssh 10.3p1`, `curl 8.20.0`, `httpie 3.2.4`,
+`gh 2.93.0`, `ripgrep 15.1.0` and `moat 0.1`. Before this, each was
+`filesystem-scan 0.0.0` with a `waybill`-vendor placeholder CPE.
+
+- **The heuristic.** It is recorded as `nix-evaluated-package` (confidence
+  0.99) in `waybill:root-selection-heuristic` when it outranked a manifest
+  main-module. A main-module it outranked stays in the document as an
+  ordinary component.
+- **An override wins.** `--root-name` / `--root-purl` still decide the
+  subject, as they do for every scan.
+- **No subject is guessed.** If the closure degrades, or has more than one
+  unconsumed derivation (it then does not say which one was evaluated), the
+  subject is chosen exactly as without `--nix-closure`.
+- **Identity, and no placeholder.** When the evaluated package is also the
+  project's manifest main-module (moat's cabal package), it is one
+  component with the manifest reader's identity, `pkg:hackage/moat@0.1`.
+  A subject with no CPE carries none: its PURL is the identifier, which
+  meets CISA's and ENISA's "at least one" (`specs/1377-nix-subject-identity/measurements/identifier-requirements.md`).
+
+### CPEs nixpkgs declares (milestone 1377)
+
+nixpkgs records a CPE in `meta.identifiers.cpe` for packages whose vendor
+its maintainers know. The closure tier reads it from the same pure
+evaluation that supplies licenses, so it adds no evaluation and no network
+access. Each closure member is joined to that metadata in two steps:
+
+1. **by `.drv` store path**, the same evidence the licenses use;
+2. otherwise **by `pname` and version**. A CPE names a product and a
+   version, not a build, so stdenv's `bash 5.3p9` takes the CPE nixpkgs
+   declares for `pkgs.bash 5.3p9`, though the two are different
+   derivations.
+
+Rows that disagree give no declared CPE, and the disagreement is counted.
+A declared value that is not a valid CPE 2.3 name is not emitted.
+
+**Precedence.** A declared CPE becomes the component's only CPE. waybill's
+curated table applies where nixpkgs declares none. The two disagree on
+bash: the curated table writes `gnu:bash:5.3p9`, nixpkgs writes
+`gnu:bash:5.3:9` (update `9`). The NVD dictionary keeps a bash patch level
+in the update field, and grype matches the curated form to nothing
+(`specs/1377-nix-subject-identity/measurements/bash-cpe-encoding/`).
+nixpkgs gives no vendor for some packages (python3, httpie, gh), and
+nothing is synthesised from the parts it does give.
+
+**When a closure member merges into another reader's component**, its
+declared CPE replaces that component's CPE only if the component had none,
+or exactly the curated value. A CPE the operator supplied with
+`--supplement-cdx`, or one another reader found in the artifact, is kept,
+and gets no nixpkgs provenance.
+
+**Where each CPE came from** is recorded natively in each format:
+
+| format | carrier | declared | curated |
+| --- | --- | --- | --- |
+| CycloneDX | `evidence.identity[]`, `field: "cpe"` | technique `manifest-analysis`, value `nixpkgs meta.identifiers.cpe`, confidence 0.9 | technique `other`, value `waybill curated CPE table`, confidence 0.7 |
+| SPDX 2.3 | CPE `externalRefs[].comment` | `CPE declared by nixpkgs meta.identifiers.cpe` | `CPE from waybill's curated CPE table` |
+| SPDX 3 | `cpe23` `ExternalIdentifier.comment` | the same | the same |
+
+For a declared CPE, `waybill:cpe-provenance` (C212) adds what no format has
+a field for: the join basis, and the curated CPE it overrode.
+
+```sh
+jq -c '.components[]|select(.name=="bash")
+       |{cpe, p: [.properties[]|select(.name=="waybill:cpe-provenance").value]}' sbom.json
+# {"cpe":"cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*",
+#  "p":["{\"basis\":\"name-version\",\"overrode\":\"cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*\"}"]}
+```
+
+**Coverage.** The evaluation reaches members by attribute name, and not
+all of them. The `waybill:nix-closure` record counts how far it got:
+
+```sh
+jq -c '.metadata.properties[]|select(.name=="waybill:nix-closure").value|fromjson|.identifiers' sbom.json
+# {"by-drv":80,"by-name-version":109,"declared":39,"received":189,"rejected":0,"wanted":670}
+```
+
+That is openssh's buildtime closure. 481 of 670 members were not reached,
+so a missing nixpkgs CPE on one of them is a coverage gap, not evidence
+that nixpkgs declares none. `wanted` is the same population as
+`licenses.wanted`, and includes the subject.
+
+Measured with grype 0.120.0 on the openssh wrapper flake: 28 findings on
+`openssh 10.3p1`, the same 28 sbomnix's document yields. Before, there
+were none.
+
 ### Members that declare no `pname` (milestone 1282)
 
 The rule above held for every member until milestone 1282, and it hid most of

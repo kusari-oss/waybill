@@ -71,13 +71,22 @@ pub fn build_external_identifiers_for(component: &ResolvedComponent) -> Vec<Valu
     // synthesized candidate set; entries that pass the
     // resolution check land here, the rest go to the C19
     // Annotation (build_component_annotations in US2).
+    // Milestone 1377 (FR-008) — on a closure component, the comment says
+    // where the CPE came from. One source covers all of a component's CPEs:
+    // a declared CPE is its only one, and curated candidates all come from
+    // the table.
+    let source = crate::scan_fs::package_db::nix::closure::identifiers::cpe_source(component);
     for cpe in &component.cpes {
         if is_fully_resolved_cpe23(cpe) {
-            entries.push(json!({
+            let mut entry = json!({
                 "type": "ExternalIdentifier",
                 "externalIdentifierType": "cpe23",
                 "identifier": cpe,
-            }));
+            });
+            if let Some(s) = source {
+                entry["comment"] = json!(s.comment());
+            }
+            entries.push(entry);
         }
     }
 
@@ -133,6 +142,33 @@ fn is_fully_resolved_cpe23(cpe: &str) -> bool {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// Milestone 1377 T024 — the `cpe23` identifier carries the provenance
+    /// comment on a closure component, and none otherwise.
+    #[test]
+    fn m1377_the_cpe23_identifier_comment_states_its_source() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut c = crate::generate::graph_completeness::test_support::mk_component(
+            "pkg:generic/bash@5.3p9",
+        );
+        c.cpes = vec!["cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*".to_string()];
+        let cpe_comments = |c: &ResolvedComponent| -> Vec<Option<String>> {
+            build_external_identifiers_for(c)
+                .into_iter()
+                .filter(|e| e["externalIdentifierType"] == "cpe23")
+                .map(|e| e.get("comment").and_then(|v| v.as_str()).map(str::to_string))
+                .collect()
+        };
+        assert_eq!(cpe_comments(&c), vec![None]);
+        c.extra_annotations.insert(
+            ids::ANN_DECLARED_CPE.to_string(),
+            ids::provenance(ids::JoinBasis::NameVersion, Some("cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*")),
+        );
+        assert_eq!(
+            cpe_comments(&c),
+            vec![Some("CPE declared by nixpkgs meta.identifiers.cpe".to_string())]
+        );
+    }
 
     #[test]
     fn synthesized_cpe_with_wildcard_update_passes() {

@@ -1472,6 +1472,12 @@ impl CycloneDxBuilder {
                 entry["pedigree"] = p;
             }
 
+            // Milestone 1377 (FR-008) — where this closure component's CPE
+            // came from, in CycloneDX's own `evidence.identity[]`.
+            if let Some(ev) = entry.get_mut("evidence") {
+                super::evidence::append_cpe_identity(ev, component);
+            }
+
             // Milestone 052/part-2: native CDX `scope` field. Per
             // FR-010, components with non-Runtime lifecycle_scope
             // emit `scope: "excluded"` (CDX 1.6 enum value meaning

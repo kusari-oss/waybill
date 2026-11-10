@@ -147,41 +147,48 @@ and never run a real evaluation.
 
 ### Tests (write first, see them fail)
 
-- [ ] T023 [P] [US3] Unit tests in `waybill-cli/src/generate/cyclonedx/evidence.rs`, values per `contracts/wire.md` §3:
+- [X] T023 [P] [US3] Unit tests in `waybill-cli/src/generate/cyclonedx/evidence.rs`, values per `contracts/wire.md` §3:
   - a closure component with a declared CPE gets an `evidence.identity[]` entry with `field: "cpe"`, `concludedValue`, technique `manifest-analysis`, value `nixpkgs meta.identifiers.cpe`, confidence 0.9;
   - a curated one gets technique `other`, value `waybill curated CPE table`, confidence 0.7;
   - non-closure components are unchanged.
-- [ ] T024 [P] [US3] Unit tests in `waybill-cli/src/generate/spdx/packages.rs` and `waybill-cli/src/generate/spdx/v3_external_ids.rs`:
+- [X] T024 [P] [US3] Unit tests in `waybill-cli/src/generate/spdx/packages.rs` and `waybill-cli/src/generate/spdx/v3_external_ids.rs`:
   - the CPE `externalRefs` entry and the `cpe23` `ExternalIdentifier` carry exactly one of the two comment strings in `contracts/wire.md` §3;
   - non-closure CPE refs keep `comment: None`.
-- [ ] T025 [P] [US3] Parity test for row C212 `waybill:cpe-provenance` (`SymmetricEqual`, `order_sensitive: false`), placed beside the existing per-row parity tests under `waybill-cli/src/parity/`. Cover `{basis, overrode}` and the case where `overrode` is omitted.
+- [X] T025 [P] [US3] Parity test for row C212 `waybill:cpe-provenance` (`SymmetricEqual`, `order_sensitive: false`), placed beside the existing per-row parity tests under `waybill-cli/src/parity/`. Cover `{basis, overrode}` and the case where `overrode` is omitted.
 
 ### Implementation
 
-- [ ] T026 [US3] Carry each closure component's `CpeProvenance` (data-model.md) from `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs` to the emitters, as follows:
+- [X] T026 [US3] Carry each closure component's `CpeProvenance` (data-model.md) from `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs` to the emitters, as follows:
   - put `waybill:cpe-provenance` in the component's existing annotation channel;
   - give the emitters a value they can read for the native carriers;
   - make the provenance survive the m1366 identity pass;
   - drop the provenance wherever T020 kept another reader's CPE.
-- [ ] T027 [US3] Emit the native CPE provenance in three places:
+- [X] T027 [US3] Emit the native CPE provenance in three places:
   - the `evidence.identity[]` CPE entry, in `waybill-cli/src/generate/cyclonedx/evidence.rs`;
   - the CPE `externalRefs[].comment`, in `waybill-cli/src/generate/spdx/packages.rs`;
   - the `cpe23` `ExternalIdentifier.comment`, in `waybill-cli/src/generate/spdx/v3_external_ids.rs`.
   Define the two comment strings once, the way `SOURCE_PACKAGE_COMMENT` is defined in `waybill-cli/src/os_source_package.rs`.
-- [ ] T028 [US3] Emit C212 `waybill:cpe-provenance` on nixpkgs-declared CPEs only:
+- [X] T028 [US3] Emit C212 `waybill:cpe-provenance` on nixpkgs-declared CPEs only:
   - in `waybill-cli/src/generate/cyclonedx/builder.rs`, as a `properties[]` entry;
   - in `waybill-cli/src/generate/spdx/annotations.rs`, as a `waybill-annotation/v1` envelope;
   - in `waybill-cli/src/generate/spdx/v3_annotations.rs`, as `Annotation.statement`.
-- [ ] T029 [US3] Add the C212 parity extractors in `waybill-cli/src/parity/extractors/cdx.rs`, `spdx2.rs` and `spdx3.rs`, and register the row in `waybill-cli/src/parity/extractors/mod.rs`. In the same task, add the C212 row to `docs/reference/sbom-format-mapping.md` with its justification clause: no format has a field for an identifier's join basis, or for an identifier that was overridden. The doc-row coverage test lives in the lib target, so the row and the extractor must land together.
+- [X] T029 [US3] Add the C212 parity extractors in `waybill-cli/src/parity/extractors/cdx.rs`, `spdx2.rs` and `spdx3.rs`, and register the row in `waybill-cli/src/parity/extractors/mod.rs`. In the same task, add the C212 row to `docs/reference/sbom-format-mapping.md` with its justification clause: no format has a field for an identifier's join basis, or for an identifier that was overridden. The doc-row coverage test lives in the lib target, so the row and the extractor must land together.
 
 **Checkpoint**: T023 to T025 pass. Every CPE-bearing closure component in the openssh document records its source natively in all three formats (SC-005). bash's provenance records `overrode: "cpe:2.3:a:gnu:bash:5.3p9:…"`.
+
+**Checkpoint result (2026-11-09, US3 build):**
+- SC-005: every CPE-bearing closure component records its source natively in all three formats. openssh: 72 of 72 in CycloneDX `evidence.identity[]`, 72 of 72 SPDX 2.3 `cpe23Type` refs carry the comment, and 99 of 99 SPDX 3 `cpe23` identifiers. httpie: 263 of 263, which includes members the m1366 pass re-identified as `pkg:pypi`, so the provenance survives that pass.
+- bash: `waybill:cpe-provenance` = `{"basis":"name-version","overrode":"cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*"}`. The only CPE identifier is `gnu:bash:5.3:9`.
+- openssh has 18 nixpkgs-declared CPEs where sbomnix's declared-only document has 17. The extra one is `curl 8.20.0` (`haxx:curl`), reached by the name+version join, which sbomnix evidently does not make.
+- How it was built: `overrode` is recomputed after the m1366 identity pass and `fill_missing_cpes` (`scan_cmd::record_closure_cpe_sources`), so it names what the curated table gives the component's *final* PURL. A curated CPE is marked only on closure components whose CPEs equal `synthesize_cpes`, and never on operator-supplied ones. The internal key `waybill:nix-curated-cpe` is never emitted. The C212 key is emitted through the generic annotation channel.
+- T025 uses `waybill sbom parity-check`. It counts distinct values (3, for 4 components), so the integration test also compares the sorted C212 values across the three formats directly.
 
 ---
 
 ## Phase 6: Polish and cross-cutting
 
-- [ ] T030 [P] Document the subject rule, declared-CPE precedence (including FR-013), the join bases and the C184 `identifiers` counts for operators in `docs/reference/nix-evaluation.md`, in the `--nix-closure` section.
-- [ ] T031 [P] Add an `[Unreleased]` entry to `CHANGELOG.md` covering #1398 and #1394.
+- [X] T030 [P] Document the subject rule, declared-CPE precedence (including FR-013), the join bases and the C184 `identifiers` counts for operators in `docs/reference/nix-evaluation.md`, in the `--nix-closure` section.
+- [X] T031 [P] Add an `[Unreleased]` entry to `CHANGELOG.md` covering #1398 and #1394.
 - [ ] T032 Update the closure tests that pin a whole document (`waybill-cli/tests/closure_*.rs`, `waybill-cli/tests/nix_config_closure.rs`) for the new subject and provenance. Change only what this milestone changes.
 - [ ] T033 Regenerate every golden. Verify with a normalised, sorted diff (content-addressed IDs masked, `LC_ALL=C sort`) that only `waybill-cli/tests/fixtures/public_corpus/nix-closure-moat/` and closure-test fixtures change (SC-007). Verify that the moat diff is exactly the following, and nothing else (SC-008):
   - the subject stays `nix-closure-moat` (the harness passes `--root-name`, which wins; no heuristic is recorded);

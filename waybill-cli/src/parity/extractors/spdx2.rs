@@ -715,6 +715,7 @@ spdx23_anno!(
 spdx23_anno!(c209_spdx23, "waybill:cpe-coverage", document);
 spdx23_anno!(c210_spdx23, "waybill:closure-graph-admission", document);
 spdx23_anno!(c211_spdx23, "waybill:closure-admission", component);
+spdx23_anno!(c212_spdx23, "waybill:cpe-provenance", component);
 spdx23_anno!(c183_spdx23, "waybill:patch-evidence-grade", document);
 spdx23_anno!(c184_spdx23, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.

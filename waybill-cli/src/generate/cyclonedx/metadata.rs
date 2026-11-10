@@ -1675,10 +1675,22 @@ pub fn build_metadata(
                 &c.occurrences,
                 None,
                 &[],
-                // The BOM subject is never a closure component.
                 None,
             );
             metadata["component"]["evidence"] = evidence_value;
+        }
+        // Milestone 1377 — the subject can be a closure component now, and
+        // its CPE provenance belongs beside its CPE. Only when the subject
+        // carries its own CPE: the placeholder fallback has no source.
+        if metadata["component"]["cpe"].as_str() == c.cpes.first().map(String::as_str) {
+            let mut ev = metadata["component"]
+                .get("evidence")
+                .cloned()
+                .unwrap_or(serde_json::Value::Null);
+            crate::generate::cyclonedx::evidence::append_cpe_identity(&mut ev, c);
+            if !ev.is_null() {
+                metadata["component"]["evidence"] = ev;
+            }
         }
     }
 

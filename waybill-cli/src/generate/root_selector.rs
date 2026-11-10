@@ -578,7 +578,7 @@ pub fn is_internal_emission_key(key: &str) -> bool {
             | crate::scan_fs::package_db::nix::ROOT_INPUT_KEY
             | crate::scan_fs::package_db::pip::uv_lock::ARTIFACT_URL_KEY
             | NIX_EVALUATED_PACKAGE_KEY
-            | crate::scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE
+            | crate::scan_fs::package_db::nix::closure::identifiers::ANN_CURATED_CPE
     )
 }
 

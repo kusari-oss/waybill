@@ -25,13 +25,59 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use super::super::eval::licenses::LicenseRow;
 
-/// Internal annotation: this component's CPE is nixpkgs-declared. Value
-/// `{"basis": "drv"|"name-version", "overrode": "<curated cpe>"?}`.
+/// C212 — this component's CPE is nixpkgs-declared. The value is the JSON
+/// string `{"basis":"drv"|"name-version","overrode":"<curated cpe>"}`, with
+/// `overrode` omitted when the curated table agreed or had no row.
 ///
-/// Read by the merge (FR-013) and, in milestone 1377 US3, turned into the
-/// emitted provenance. Never emitted itself
+/// Its presence is also the signal the native provenance carriers read
+/// ([`cpe_source`]). It carries only what no format has a field for, the
+/// join basis and the overridden identifier (FR-008, Principle V).
+pub(crate) const ANN_DECLARED_CPE: &str = "waybill:cpe-provenance";
+
+/// Internal: this closure component's CPE came from the curated table.
+/// Drives the native carriers only; never emitted
 /// (`root_selector::is_internal_emission_key`).
-pub(crate) const ANN_DECLARED_CPE: &str = "waybill:nix-declared-cpe";
+pub(crate) const ANN_CURATED_CPE: &str = "waybill:nix-curated-cpe";
+
+/// SPDX 2.3 `externalRefs[].comment` and SPDX 3 `ExternalIdentifier.comment`
+/// on a nixpkgs-declared CPE (contracts/wire.md §3).
+pub const DECLARED_CPE_COMMENT: &str = "CPE declared by nixpkgs meta.identifiers.cpe";
+/// The same, on a CPE from waybill's curated table.
+pub const CURATED_CPE_COMMENT: &str = "CPE from waybill's curated CPE table";
+
+/// Where a closure component's CPE came from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CpeSource {
+    NixpkgsDeclared,
+    Curated,
+}
+
+impl CpeSource {
+    /// The comment both SPDX formats carry on the CPE.
+    pub fn comment(self) -> &'static str {
+        match self {
+            Self::NixpkgsDeclared => DECLARED_CPE_COMMENT,
+            Self::Curated => CURATED_CPE_COMMENT,
+        }
+    }
+}
+
+/// The recorded source of `c`'s CPEs, or `None` when nothing recorded one:
+/// every non-closure component, and a closure component whose CPE another
+/// reader or the operator supplied (FR-013). One function for all three
+/// emitters, so the formats agree by construction.
+pub fn cpe_source(c: &waybill_common::resolution::ResolvedComponent) -> Option<CpeSource> {
+    if c.cpes.is_empty() {
+        return None;
+    }
+    if c.extra_annotations.contains_key(ANN_DECLARED_CPE) {
+        Some(CpeSource::NixpkgsDeclared)
+    } else if c.extra_annotations.contains_key(ANN_CURATED_CPE) {
+        Some(CpeSource::Curated)
+    } else {
+        None
+    }
+}
 
 /// A CPE 2.3 formatted string that parsed (Constitution Principle IV).
 ///
@@ -224,13 +270,25 @@ pub(crate) fn join<'a>(
     out
 }
 
-/// The internal provenance value carried in [`ANN_DECLARED_CPE`].
+/// The C212 value carried in [`ANN_DECLARED_CPE`]: a JSON string, as every
+/// per-component closure row is, so CycloneDX and both SPDX envelopes carry
+/// the same bytes.
 pub(crate) fn provenance(basis: JoinBasis, overrode: Option<&str>) -> serde_json::Value {
     let mut v = serde_json::json!({ "basis": basis.wire() });
     if let Some(o) = overrode {
         v["overrode"] = serde_json::Value::String(o.to_string());
     }
-    v
+    serde_json::Value::String(v.to_string())
+}
+
+/// The join basis recorded in a C212 value.
+pub(crate) fn provenance_basis(value: &serde_json::Value) -> Option<JoinBasis> {
+    let parsed: serde_json::Value = serde_json::from_str(value.as_str()?).ok()?;
+    match parsed.get("basis")?.as_str()? {
+        "drv" => Some(JoinBasis::Drv),
+        "name-version" => Some(JoinBasis::NameVersion),
+        _ => None,
+    }
 }
 
 #[cfg(test)]
@@ -378,10 +436,15 @@ mod tests {
 
     #[test]
     fn provenance_omits_overrode_when_nothing_was_overridden() {
-        assert_eq!(provenance(JoinBasis::Drv, None), serde_json::json!({"basis": "drv"}));
+        assert_eq!(provenance(JoinBasis::Drv, None), serde_json::json!(r#"{"basis":"drv"}"#));
         assert_eq!(
             provenance(JoinBasis::NameVersion, Some("cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*")),
-            serde_json::json!({"basis": "name-version", "overrode": "cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*"})
+            serde_json::json!(
+                r#"{"basis":"name-version","overrode":"cpe:2.3:a:gnu:bash:5.3p9:*:*:*:*:*:*:*"}"#
+            )
         );
+        for b in [JoinBasis::Drv, JoinBasis::NameVersion] {
+            assert_eq!(provenance_basis(&provenance(b, Some("x"))), Some(b));
+        }
     }
 }

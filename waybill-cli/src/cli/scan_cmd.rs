@@ -4864,6 +4864,9 @@ pub async fn execute(
     // Unlike the identity pass there is no edge-ordering constraint: CPEs are
     // per-component metadata and no relationship endpoint is derived from them.
     fill_missing_cpes(&mut components);
+    // Milestone 1377 US3 — record where each closure component's CPE came
+    // from, now that both sources have run and identities are final.
+    record_closure_cpe_sources(&mut components);
     // The counts are NOT taken here (milestone 1374, #1380). File-tier
     // components join `components` at the file-inventory step below, and
     // they belong in `excluded_files`; counting now would miss them, which
@@ -6690,6 +6693,55 @@ fn fill_missing_cpes(components: &mut [waybill_common::resolution::ResolvedCompo
     }
 }
 
+/// Milestone 1377 US3 (FR-008) — record each closure component's CPE source.
+///
+/// Runs after `fill_missing_cpes` and after the milestone-1366 identity pass,
+/// so it sees both sources' final output and each component's final PURL:
+///
+/// - A nixpkgs-declared CPE (C212 present): `overrode` is recomputed against
+///   the final identity. The identity pass can turn `pkg:generic` into
+///   `pkg:pypi`, and the curated table answers differently for the two, so a
+///   value computed at emission could name a CPE this component would never
+///   have been given.
+/// - Otherwise a closure component (C182 present) whose CPEs are exactly what
+///   the curated table gives it, and which the operator did not supply, is
+///   marked curated.
+///
+/// Anything else (a reader-derived CPE, an operator's `--supplement-cdx`
+/// value) gets no closure provenance, so the record always describes the CPE
+/// actually emitted (FR-013). Components without C182, which is every
+/// component of a scan without a closure, are untouched (FR-011).
+fn record_closure_cpe_sources(components: &mut [waybill_common::resolution::ResolvedComponent]) {
+    use scan_fs::package_db::nix::closure::identifiers as ids;
+    for c in components.iter_mut() {
+        if c.cpes.is_empty() {
+            continue;
+        }
+        if let Some(prov) = c.extra_annotations.get(ids::ANN_DECLARED_CPE) {
+            let basis = ids::provenance_basis(prov).unwrap_or(ids::JoinBasis::NameVersion);
+            let curated = crate::generate::cpe::synthesize_cpes(c);
+            let overrode = curated.first().filter(|cur| Some(*cur) != c.cpes.first()).cloned();
+            c.extra_annotations.insert(
+                ids::ANN_DECLARED_CPE.to_string(),
+                ids::provenance(basis, overrode.as_deref()),
+            );
+            continue;
+        }
+        let closure_member = c
+            .extra_annotations
+            .contains_key(crate::resolve::closure_role_scope::CLOSURE_ROLE);
+        let operator = c
+            .extra_annotations
+            .get("waybill:source-tier")
+            .and_then(|v| v.as_str())
+            == Some("declared");
+        if closure_member && !operator && c.cpes == crate::generate::cpe::synthesize_cpes(c) {
+            c.extra_annotations
+                .insert(ids::ANN_CURATED_CPE.to_string(), serde_json::Value::Bool(true));
+        }
+    }
+}
+
 /// Count the five C209 buckets over the final component vector (milestone
 /// 1374, #1380).
 ///
@@ -6891,10 +6943,11 @@ fn merge_closure_components(
                             .first()
                             .filter(|old| Some(*old) != declared.as_ref())
                             .cloned();
-                        let basis = match prov.get("basis").and_then(|b| b.as_str()) {
-                            Some("drv") => scan_fs::package_db::nix::closure::identifiers::JoinBasis::Drv,
-                            _ => scan_fs::package_db::nix::closure::identifiers::JoinBasis::NameVersion,
-                        };
+                        let basis =
+                            scan_fs::package_db::nix::closure::identifiers::provenance_basis(&prov)
+                                .unwrap_or(
+                                    scan_fs::package_db::nix::closure::identifiers::JoinBasis::NameVersion,
+                                );
                         components[i].cpes = std::mem::take(&mut c.cpes);
                         components[i].extra_annotations.insert(
                             scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE
