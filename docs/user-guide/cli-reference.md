@@ -2457,11 +2457,18 @@ Default is `cyclonedx-json`. Duplicates dedupe silently.
 | `spdx-3-json` | Stable. SPDX 3.0.1 JSON-LD. Production-grade output with native-field + annotation parity vs. CDX and SPDX 2.3. | `waybill.spdx3.json` |
 | `spdx-3-json-experimental` *(deprecated)* | Byte-identical to `spdx-3-json`; emits a stderr deprecation notice. | `waybill.spdx3-experimental.json` |
 
-**OpenVEX sidecar** — when the scan produces VEX statements AND SPDX 2.3
-output is requested, waybill co-emits an OpenVEX 0.2.0 JSON file alongside
-the SPDX file. The SPDX document carries a `DocumentRef-OpenVEX` entry in
-`externalDocumentRefs` with a SHA-256 of the sidecar bytes. Use
-`--output openvex=<path>` to retarget the sidecar.
+**OpenVEX sidecar** — when the scan produces VEX statements and an SPDX
+format is requested, waybill writes one OpenVEX 0.2.0 JSON file beside the
+SPDX document, named after it: the SPDX path loses `.json` and then a
+`.spdx` or `.spdx3` marker, and gains `.openvex.json`. So
+`out/app.spdx.json` gets `out/app.openvex.json`, `scan1.json` gets
+`scan1.openvex.json`, and the default `waybill.spdx.json` gets
+`waybill.openvex.json`. When both SPDX formats are requested, the SPDX 2.3
+path names it and both documents reference the one file. The SPDX 2.3
+document carries a `DocumentRef-OpenVEX` entry in `externalDocumentRefs`
+with a SHA-256 of the sidecar bytes; the SPDX 3 document carries an
+`externalRef` locator. Use `--output openvex=<path>` to choose the path
+yourself. The scan log reports it as `wrote SBOM artifact format=openvex`.
 
 See [Generation](../architecture/generation.md) for the per-format builder
 architecture and [SBOM format mapping](../reference/sbom-format-mapping.md)

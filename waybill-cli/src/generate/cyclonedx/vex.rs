@@ -406,6 +406,37 @@ mod m1068_tests {
         assert_eq!(c, o, "a declaration withholding the patch-derived not_affected");
     }
 
+    /// #1443 — the sidecar's `action_statement` is CycloneDX's
+    /// `recommendation`, on the same entries and nowhere else.
+    #[test]
+    fn the_action_statement_is_the_recommendation() {
+        let integ = empty_integrity();
+        let (comps, s) = contested_scan();
+        let backport = backport_scan();
+        let mut contested = mk_artifacts(&comps, &integ);
+        contested.nixpkgs_security_summary = Some(&s);
+        for (label, arts) in [("backport", mk_artifacts(&backport, &integ)), ("contested", contested)] {
+            let actions: BTreeSet<(String, String)> = sidecar(&arts)
+                .iter()
+                .filter_map(|st| {
+                    let a = st["action_statement"].as_str()?;
+                    Some((st["vulnerability"]["name"].as_str().unwrap().to_string(), a.to_string()))
+                })
+                .collect();
+            let recommendations: BTreeSet<(String, String)> = vulns(&cdx(&arts))
+                .iter()
+                .filter_map(|e| {
+                    let r = e["recommendation"].as_str()?;
+                    assert_eq!(e["analysis"]["state"], "exploitable", "{label}: {e:#}");
+                    Some((e["id"].as_str().unwrap().to_string(), r.to_string()))
+                })
+                .collect();
+            // CONTROL: there are actions to carry.
+            assert!(!actions.is_empty(), "{label}");
+            assert_eq!(recommendations, actions, "{label}");
+        }
+    }
+
     /// T007.1 — under a root override the build entries name the override
     /// root, and nothing is lost.
     #[test]

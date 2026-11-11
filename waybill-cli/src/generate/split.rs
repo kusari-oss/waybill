@@ -1265,6 +1265,8 @@ fn emit_groups(
             group.members[0].subproject_id()
         };
 
+        // #1443: both SPDX serializers return the group's one sidecar.
+        let mut openvex_written = false;
         for fmt in formats {
             let serializer = registry.get(fmt).ok_or_else(|| {
                 anyhow::anyhow!("split emit: unknown format id {fmt:?}")
@@ -1297,6 +1299,15 @@ fn emit_groups(
             };
             let emitted = serializer.serialize(&sub_artifacts, &sub_output_cfg)?;
             for (i, artifact) in emitted.into_iter().enumerate() {
+                let is_openvex = i > 0
+                    && artifact.relative_path
+                        == std::path::Path::new(crate::generate::openvex::OPENVEX_DEFAULT_FILENAME);
+                if is_openvex {
+                    if openvex_written {
+                        continue;
+                    }
+                    openvex_written = true;
+                }
                 let target = if i == 0 {
                     output_dir.join(&filename)
                 } else {
@@ -1323,7 +1334,7 @@ fn emit_groups(
                     entry_files.insert(fmt.clone(), filename.clone());
                 }
                 tracing::info!(
-                    format = %fmt,
+                    format = %if is_openvex { "openvex" } else { fmt.as_str() },
                     path = %target.display(),
                     bytes = artifact.bytes.len(),
                     subproject = %group_subproject_id,
