@@ -1,0 +1,7 @@
+gnu:glibc	196
+gnu:binutils	81
+gnu:gcc	128
+p11-kit_project:p11-kit	93
+gnu:libmicrohttpd	61
+openssl:openssl	387
+waybill-fixture-vendor:waybill-fixture-product	0

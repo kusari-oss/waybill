@@ -98,6 +98,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   Present on success and degradation alike; absent with no Nix tier and
   under `--offline`. Documents of scans without a Nix tier are
   byte-identical (#1283).
+- **Curated CPEs for glibc, binutils, gcc, p11-kit and libmicrohttpd.**
+  A Linux `--nix-closure` document's runtime closure holds all five
+  (glibc in any dynamically linked output; binutils and gcc through GHC's
+  toolchain), and nixpkgs revisions that predate `meta.identifiers`
+  declare no CPE for them, so a CPE matcher saw them as unaddressable: 62
+  of slack-web's 300 recall-truth findings and 57 of openai's 268. Each
+  pair is in NVD's dictionary (`gnu:glibc` 196 entries, `gnu:binutils` 81,
+  `gnu:gcc` 128, `p11-kit_project:p11-kit` 93, `gnu:libmicrohttpd` 61,
+  probed 2026-11-11) and its NVD titles name the same software (#1283).
 
 - **`sbom edit` selector `scope=excluded`: components not in the
   artifact, the same set in all three formats.** It matches CycloneDX

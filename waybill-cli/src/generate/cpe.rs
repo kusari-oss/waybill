@@ -86,6 +86,9 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("automake", &[("gnu", "automake")]),
     ("bash", &[("gnu", "bash")]),
     ("bc", &[("gnu", "bc")]),
+    // GNU Binutils — reached in a Linux Nix closure through GHC's toolchain
+    // (#1283; 21 of slack-web's 300 truth findings).
+    ("binutils", &[("gnu", "binutils")]),
     ("bison", &[("gnu", "bison")]),
     // `andybalholm` also files `brotli` — a Go port. Deliberately not
     // emitted; this row is Google's implementation.
@@ -131,8 +134,18 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // vendor NVD has for gawk. The attribution is upstream's to explain;
     // a scanner keyed on CPEs would use it.
     ("gawk", &[("fossies", "gawk")]),
+    // GCC — the compiler runtime (libgcc_s) a Linux closure keeps (#1283).
+    // `groups_communities_and_co_project` also files a `gcc` product
+    // ("Groups, Communities and Co (GCC)") — a different product,
+    // deliberately not emitted.
+    ("gcc", &[("gnu", "gcc")]),
     ("gettext", &[("gnu", "gettext")]),
     ("giflib", &[("giflib_project", "giflib")]),
+    // The GNU C Library — every dynamically linked Linux output loads it, and
+    // nixpkgs revisions before meta.identifiers declare no CPE for it (#1283:
+    // 36 of slack-web's 300 truth findings).
+    // `gentoo` also files `glibc` (Gentoo's package); not emitted.
+    ("glibc", &[("gnu", "glibc")]),
     // GnuTLS — NVD canonical.
     ("gnutls", &[("gnu", "gnutls")]),
     ("gzip", &[("gnu", "gzip")]),
@@ -148,6 +161,7 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // "GNU libidn 0.3" — that is libidn v1, a different library.
     // Deliberately not emitted.
     ("libidn2", &[("libidn2_project", "libidn2")]),
+    ("libmicrohttpd", &[("gnu", "libmicrohttpd")]),
     // LibreSSL — `openbsd:libressl` (LibreSSL is an OpenBSD project).
     // A second `libressl:libressl` candidate was emitted here until
     // #1246: the vendor does not exist. All 110 libressl entries in
@@ -189,6 +203,7 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("openjdk", &[("oracle", "openjdk")]),
     // OpenSSL — every CVE since 2014 uses `openssl:openssl`.
     ("openssl", &[("openssl", "openssl")]),
+    ("p11-kit", &[("p11-kit_project", "p11-kit")]),
     // `tanium` also files `patch` (Tanium Patch, endpoint management) —
     // a different product, deliberately not emitted.
     ("patch", &[("gnu", "patch")]),
@@ -317,16 +332,24 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("gnu", "automake", 51),
     ("gnu", "bash", 92),
     ("gnu", "bc", 8),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("gnu", "binutils", 81),
     ("gnu", "bison", 70),
     ("gnu", "coreutils", 71),
     ("gnu", "cpio", 16),
     ("gnu", "diffutils", 12),
     ("gnu", "ed", 3),
     ("gnu", "findutils", 6),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("gnu", "gcc", 128),
     ("gnu", "gettext", 47),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("gnu", "glibc", 196),
     ("gnu", "gnutls", 366),
     ("gnu", "gzip", 26),
     ("gnu", "less", 5),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("gnu", "libmicrohttpd", 61),
     ("gnu", "libtool", 14),
     ("gnu", "libunistring", 13),
     ("gnu", "ncurses", 21),
@@ -366,6 +389,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("openbsd", "libressl", 110),
     ("openssl", "openssl", 368),
     ("oracle", "openjdk", 241),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("p11-kit_project", "p11-kit", 93),
     ("pcre", "pcre", 91),
     ("pcre", "pcre2", 25),
     ("perl", "perl", 614),
@@ -1052,6 +1077,7 @@ mod tests {
             ),
             include_str!("../../../specs/1395-nix-python-cpe/measurements/nvd-titles.txt"),
             include_str!("../../../specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt"),
+            include_str!("../../../specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt"),
         );
 
         // CONTROL: the files parsed to something. Without this every
