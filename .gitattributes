@@ -14,3 +14,8 @@ mikebom-cli/tests/fixtures/golden/**/*.json text eol=lf
 
 # Rust source files — LF everywhere. cargo + rustfmt assume LF.
 *.rs text eol=lf
+
+# #1417: vendored SPDX 3 resources served to spdx3-validate. The wrapper
+# checks each file's SHA-256, so they must reach the checkout byte for
+# byte; no line-ending conversion.
+scripts/spdx3-validate-offline/resources/** -text

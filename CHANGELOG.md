@@ -79,6 +79,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **`sbom edit` can drop components that VEX names.** A CycloneDX build
+  statement names the root in `affects[]` and the patched component in a
+  `waybill:vex-subcomponent` property. Edit pruned the first and not the
+  second, so dropping a patched component failed the leftover-identifier
+  check and wrote nothing; the `nix-closure-moat` golden could not be
+  filtered with `--drop 'scope=development,build,test'`. The property is now
+  pruned, a statement left with no subcomponent goes with it, and stderr
+  counts the statements removed (24 of 26 on that golden). In SPDX 3, an
+  assessment whose `security_assessedElement` was dropped is removed, and a
+  drop no longer removes every `security_*VulnAssessmentRelationship` in the
+  document as an unreferenced orphan. If the check ever fails again, the
+  error names the identifier and its JSON Pointer (#1422).
+- **`sbom edit` refuses `--exclude-scope`.** The global flag is read only by
+  `sbom scan`, so on `edit` it was accepted and ignored. Edit now refuses it
+  and names the equivalent `--drop 'scope=…'` (#1422).
+- **`sbom edit --drop role=` matches the closure role.** Closure members
+  carry their role in `waybill:closure-role` (`artifact-input`,
+  `build-tooling`, `both`, `unreferenced`), which the selector did not read.
+  `role=build-tooling` now selects 1,310 components of the `nix-closure-moat`
+  golden in all three formats; on CycloneDX it selected none before (#1422).
 - **SPDX license joins keep an `OR` grouped.** When a component carried
   several licenses, both SPDX emitters joined them with ` AND ` verbatim, so
   `["MIT OR Apache-2.0", "BSD-3-Clause"]` became
@@ -107,6 +127,44 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   SPDX 2.3 and SPDX 3 documents already emit. They are not rewritten to an
   `-or-later` identifier: most licenses, `Apache-2.0` among them, have none,
   and the formats would disagree (#1410).
+- **`--nix-closure` scans are about 2.5× faster again.** Since #1415 the
+  closure tier reads the binaries in members' store outputs for embedded Go
+  and Rust dependencies. Its Go build-info fallback searched every byte of
+  every non-Go binary with a naive comparison, and that search was most of
+  the scan time. It now uses `memchr::memmem` (already in the dependency
+  tree). Measured on the openssh wrapper flake, debug build, 3 alternating
+  runs: 21.2 s to 8.4 s median, with identical output. On gh: 23.3 s to
+  10.9 s, with the same 657 components and 164 Go modules.
+
+- **A backported CVE's `affected` statement no longer says "Resolved".**
+  Each nixpkgs backport produces two VEX statements: `affected` for the
+  version as published, and `not_affected` for this build. Both carried the
+  note "Resolved by a nixpkgs backport applied to this build", so CycloneDX
+  showed an `exploitable` entry whose detail said resolved (18 such entries
+  on moat). The `affected` statement now says it is about the upstream
+  version and points to the build's `not_affected` statement (#1421).
+- **A `--nix-closure` scan's VEX names the subject its document names.**
+  Backport statements found their "this build" subject only through a
+  main-module component, but since milestone 1377 a closure scan's subject
+  is the evaluated Nix package. A wrapper flake has no main module, so it
+  got no OpenVEX sidecar and no CycloneDX `vulnerabilities[]` at all, though
+  nixpkgs patches CVEs in its closure; and where a main module sat beside
+  the evaluated package, the statements named the main module while the
+  document named the package. The VEX subject is now the component the root
+  selector elects, from the same inputs the format emitters use. The
+  two-statement shape is unchanged; which shape grype honours is still open
+  (Refs #1436, #1421).
+- **An SPDX 3 override root over a Nix closure depends on what the other
+  formats say it does.** With `--root-name` on a `--nix-closure` scan whose
+  evaluated package is not a manifest main module, the SPDX 3 root carried
+  `usesTool` edges to the closure's build tooling and no `dependsOn` at all.
+  The root fallback that gives such a root its graph-root components counted
+  `usesTool` as "the root already has edges" and stood down; CycloneDX and
+  SPDX 2.3 had no such edge in the way. It now counts only `dependsOn`. On
+  the shellcheck flake (aarch64-darwin) the root's dependency edges were
+  CycloneDX 169, SPDX 2.3 169, SPDX 3 0; all three are now 169, over the
+  same components (#1438).
+
 - **Document subjects no longer carry a `waybill`-vendor CPE.** A subject
   without a CPE of its own (the synthetic placeholder, or one named with
   `--root-name`/`--root-purl`) was given `cpe:2.3:a:waybill:<name>:<version>`
@@ -130,6 +188,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   them patched by nixpkgs, and loses none elsewhere. Python packages,
   hooks and `python3-<v>-env` environments are deliberately not matched
   (#1395).
+- **Seven more C libraries in Nix closures are matchable by CPE.** nixpkgs
+  declares no vendor for `unbound`, `libssh`, `libsndfile`, `fontforge`,
+  `cjson`, `giflib` or `libass`, so none carried a CPE. The curated table
+  now maps each exact name to the pair NVD files it under (`nlnetlabs:unbound`,
+  `libssh:libssh`, `libsndfile_project:libsndfile`, `fontforge:fontforge`,
+  `davegamble:cjson` and `cjson_project:cjson`, `giflib_project:giflib`,
+  `libass_project:libass`). On a `--nix-closure` scan of httpie, grype now
+  reports 79 more findings, the same ones it reports from sbomnix's document,
+  and loses none on any of six targets; one of the 79 is patched by nixpkgs.
+  `warp` and `cmark-gfm` get no row: in these closures they are Hackage
+  packages, and NVD's entries under those names are Cloudflare WARP and
+  GitHub's C library. Evidence in `specs/nix-curated-cpe-gaps/`.
 - **Closure members with a compound nixpkgs license are licensed.** The
   `--nix-closure` license lookup understood a single license, a string or
   a list, but not the trees `lib.licenses.AND`/`OR`/`WITH`/`PLUS` build, so

@@ -83,6 +83,9 @@ pub struct EditReport {
     pub ops: Vec<OpReport>,
     /// Components whose dependency list changed (bridging or removal).
     pub dependency_lists_changed: usize,
+    /// Vulnerability statements removed because every component they
+    /// assessed was dropped.
+    pub vulnerability_statements_removed: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -134,6 +137,10 @@ pub struct DropOutcome {
     /// Components whose dependency list gained bridged edges or lost
     /// members; their completeness claims are downgraded.
     pub changed: BTreeSet<String>,
+    /// Vulnerability statements removed because every component they
+    /// assessed was dropped (CycloneDX `vulnerabilities[]` entries, SPDX 3
+    /// `security_*VulnAssessmentRelationship` elements).
+    pub vulnerability_statements_removed: usize,
 }
 
 /// One format's editor over the document's own JSON.
@@ -305,6 +312,7 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
                 }
                 let outcome = adapter.drop_components(&selected);
                 changed_lists.extend(outcome.changed);
+                report.vulnerability_statements_removed += outcome.vulnerability_statements_removed;
                 dropped.extend(selected.iter().cloned());
                 OpReport {
                     category: op.category().to_string(),
@@ -352,10 +360,9 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
             dangling.len()
         );
     }
-    let flat = serde_json::to_string(adapter.doc()).context("serialising edited document")?;
     for id in &dropped {
-        if flat.contains(&serde_json::to_string(id)?) {
-            bail!("a dropped component's identifier is still referenced in the output; nothing written");
+        if let Some(path) = find_string(adapter.doc(), id) {
+            bail!("dropped component `{id}` is still referenced at {path}; nothing written");
         }
     }
     redactor.check_no_leaks(adapter.as_mut())?;
@@ -430,6 +437,28 @@ pub(crate) fn bridge(edges: &Edges, dropped: &BTreeSet<String>) -> (Edges, BTree
         out.insert(from.clone(), list);
     }
     (out, changed)
+}
+
+/// The JSON Pointer of a string value or object key equal to `needle`: the
+/// same matches the serialised-text search this replaced, with a location.
+pub(crate) fn find_string(v: &Value, needle: &str) -> Option<String> {
+    fn escape(token: &str) -> String {
+        token.replace('~', "~0").replace('/', "~1")
+    }
+    match v {
+        Value::String(s) if s == needle => Some(String::new()),
+        Value::Array(a) => a
+            .iter()
+            .enumerate()
+            .find_map(|(i, x)| find_string(x, needle).map(|rest| format!("/{i}{rest}"))),
+        Value::Object(m) => m.iter().find_map(|(k, x)| {
+            if k == needle {
+                return Some(format!("/{}", escape(k)));
+            }
+            find_string(x, needle).map(|rest| format!("/{}{rest}", escape(k)))
+        }),
+        _ => None,
+    }
 }
 
 /// The `field` of a `waybill-annotation/v1` envelope, if `s` is one.
@@ -522,6 +551,67 @@ mod tests {
         assert_eq!(op.category(), "drop-components");
         let op: EditOp = serde_json::from_value(json!({"action":"redact","class":"names","mode":"pseudonymise","pattern":"@acme/*"})).unwrap();
         assert_eq!(op.category(), "redact-names");
+    }
+
+    fn cdx_doc(extra_meta_props: Value, vulnerabilities: Value) -> Vec<u8> {
+        let mut props = vec![json!({"name": "waybill:generation-context", "value": "filesystem-scan"})];
+        props.extend(extra_meta_props.as_array().cloned().unwrap_or_default());
+        serde_json::to_vec(&json!({
+            "bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1,
+            "metadata": {"component": {"bom-ref": "waybill-fixture-app", "name": "waybill-fixture-app", "type": "application"},
+                         "properties": props},
+            "components": [
+                {"bom-ref": "pkg:generic/waybill-fixture-lib@1", "name": "waybill-fixture-lib", "purl": "pkg:generic/waybill-fixture-lib@1"},
+                {"bom-ref": "pkg:generic/waybill-fixture-tool@1", "name": "waybill-fixture-tool", "purl": "pkg:generic/waybill-fixture-tool@1"}
+            ],
+            "dependencies": [
+                {"ref": "waybill-fixture-app", "dependsOn": ["pkg:generic/waybill-fixture-lib@1"]},
+                {"ref": "pkg:generic/waybill-fixture-lib@1", "dependsOn": []},
+                {"ref": "pkg:generic/waybill-fixture-tool@1", "dependsOn": []}
+            ],
+            "vulnerabilities": vulnerabilities
+        }))
+        .unwrap()
+    }
+
+    fn drop_tool() -> Vec<EditOp> {
+        vec![EditOp::DropComponents { selector: "name=waybill-fixture-tool".parse().unwrap() }]
+    }
+
+    /// #1422: a document whose VEX names a dropped component is editable,
+    /// and the report says how many statements went with it.
+    #[test]
+    fn vex_on_a_dropped_component_is_pruned_and_counted() {
+        let input = cdx_doc(
+            json!([]),
+            json!([{"id": "CVE-2026-0001", "affects": [{"ref": "waybill-fixture-app"}],
+                    "properties": [{"name": "waybill:vex-subcomponent", "value": "pkg:generic/waybill-fixture-tool@1"}]}]),
+        );
+        let out = run(&input, &drop_tool(), &EditOptions::default()).unwrap();
+        assert_eq!(out.report.vulnerability_statements_removed, 1);
+        let doc: Value = serde_json::from_slice(&out.bytes).unwrap();
+        assert_eq!(doc["vulnerabilities"], json!([]));
+    }
+
+    /// #1422: the fail-closed check names what it found and where.
+    #[test]
+    fn a_leftover_reference_is_named_with_its_path() {
+        let input = cdx_doc(
+            json!([{"name": "waybill:fixture-pointer", "value": "pkg:generic/waybill-fixture-tool@1"}]),
+            json!([]),
+        );
+        let err = run(&input, &drop_tool(), &EditOptions::default()).err().unwrap().to_string();
+        assert!(err.contains("`pkg:generic/waybill-fixture-tool@1`"), "{err}");
+        assert!(err.contains("/metadata/properties/1/value"), "{err}");
+    }
+
+    #[test]
+    fn reference_paths_are_json_pointers_and_find_keys_too() {
+        let v = json!({"a": [{"x": "id"}], "m": {"id": 1}, "s": "id/x~y"});
+        assert_eq!(find_string(&v, "id").as_deref(), Some("/a/0/x"));
+        assert_eq!(find_string(&json!({"m": {"id": 1}}), "id").as_deref(), Some("/m/id"));
+        assert_eq!(find_string(&json!({"a/b~": "id"}), "id").as_deref(), Some("/a~1b~0"));
+        assert_eq!(find_string(&v, "absent"), None);
     }
 
     #[test]

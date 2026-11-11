@@ -184,6 +184,9 @@ Flag or env var — either one disables. Milestone 112.\
     /// When omitted, waybill emits all scopes (Runtime +
     /// Development + Build + Test + Optional) — the milestone-052
     /// default.
+    ///
+    /// Read by `sbom scan`. `sbom edit` refuses it; use
+    /// `--drop 'scope=…'` there (#1422).
     #[arg(long, global = true, value_delimiter = ',')]
     exclude_scope: Vec<ExcludeScopeArg>,
 

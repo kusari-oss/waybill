@@ -4570,6 +4570,7 @@ dependencies = [
  "json-patch",
  "jsonschema",
  "libc",
+ "memchr",
  "object",
  "oci-spec 0.9.0",
  "pem",
