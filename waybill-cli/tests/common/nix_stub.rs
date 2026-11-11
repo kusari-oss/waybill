@@ -108,6 +108,24 @@ esac
     /// tier to run at all.
     pub fn scan(&self, extra: &[&str]) -> Scan {
         let dir = tempfile::tempdir().expect("tempdir");
+        let out = dir.path().to_path_buf();
+        self.run(dir, &out, ["out.cdx.json", "out.spdx23.json", "out.spdx3.json"], extra)
+    }
+
+    /// As [`Self::scan`], but writes the three documents into `out_dir` as
+    /// `<stem>.cdx.json`, `<stem>.spdx.json` and `<stem>.spdx3.json`, so
+    /// several scans can share one output directory.
+    pub fn scan_to(&self, out_dir: &Path, stem: &str, extra: &[&str]) -> Scan {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let names = [
+            format!("{stem}.cdx.json"),
+            format!("{stem}.spdx.json"),
+            format!("{stem}.spdx3.json"),
+        ];
+        self.run(dir, out_dir, [&names[0], &names[1], &names[2]], extra)
+    }
+
+    fn run(&self, dir: tempfile::TempDir, out_dir: &Path, names: [&str; 3], extra: &[&str]) -> Scan {
         let cache = seed_cache();
         let bin = dir.path().join("bin");
         std::fs::create_dir_all(&bin).expect("mkdir bin");
@@ -119,9 +137,9 @@ esac
                 .expect("chmod stub");
         }
 
-        let cdx_path = dir.path().join("out.cdx.json");
-        let spdx23_path = dir.path().join("out.spdx23.json");
-        let spdx3_path = dir.path().join("out.spdx3.json");
+        let cdx_path = out_dir.join(names[0]);
+        let spdx23_path = out_dir.join(names[1]);
+        let spdx3_path = out_dir.join(names[2]);
         let out = Command::new(env!("CARGO_BIN_EXE_waybill"))
             .args(["sbom", "scan", "--path"])
             .arg(&self.project)

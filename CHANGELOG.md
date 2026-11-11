@@ -94,6 +94,47 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   component's unscoped `dependsOn` is removed from its scoped ones, which
   had counted six pairs twice on the haskell-language-server corpus target
   (#1444).
+- **The OpenVEX sidecar is valid OpenVEX 0.2.0, has its own name, and is
+  logged as itself** (#1443).
+  - Every `affected` statement now carries the `action_statement` the
+    schema requires. On moat the sidecar failed the vendored schema 18
+    times, once per `affected` statement. A backport's statement says to
+    use a build that applies the nixpkgs backport, that this build does,
+    and that the backport is matched to the CVE by filename alone. A
+    nixpkgs declaration's says to remove the package or move to a nixpkgs
+    revision that no longer declares the CVE. CycloneDX carries the same
+    text as `recommendation` on the matching `exploitable` entry.
+  - The sidecar is named after the SPDX document instead of always
+    `waybill.openvex.json`, so two scans into one directory no longer
+    overwrite each other's: `out/app.spdx.json` gets
+    `out/app.openvex.json`. The default path is unchanged. With both SPDX
+    formats, one sidecar is written, named after the SPDX 2.3 document,
+    and both documents reference it. `--output openvex=<path>` still
+    overrides, and is now accepted with SPDX 3 alone.
+  - The scan log reports `wrote SBOM artifact format=openvex` once. It
+    used to report the sidecar twice, as `format=spdx-2.3-json` and
+    `format=spdx-3-json`.
+- **A `--nix-closure` CycloneDX document with re-identified Python
+  members is schema-valid again.** Milestone 1366 recorded why a closure
+  member's `pkg:pypi` identifier was derived by adding a
+  `waybill-closure-ecosystem-evidence` key to the member's
+  `evidence.identity[].methods[]` entry. CycloneDX 1.6 allows only
+  `technique`, `confidence` and `value` there, so each re-identified
+  component was a schema error: 75 on moat. The value now travels as the
+  `waybill:closure-ecosystem-identity` component property, the same row
+  SPDX 2.3 and SPDX 3 carry; the derived PURL is still the identity
+  entry's `concludedValue`. Consumers that read the old key should read
+  the property (#1442).
+- **A `--nix-closure` scan that gets no closure now warns.** When the
+  closure tier degraded — for example on a `callCabal2nix` flake, which
+  needs import-from-derivation that waybill refuses — the scan exited 0
+  with a manifest-only document and logged the cause only at INFO. The
+  degradation is now logged at WARN for every reason, including
+  `offline-requested`, and says that no Nix closure components were added
+  and the document contains only manifest-derived components. The
+  import-from-derivation case adds a sentence saying why it is refused.
+  Whether import-from-derivation is allowed is unchanged, as is
+  `waybill:nix-closure-degraded` (#1446).
 - **Cargo: a default-enabled optional dependency with a hyphenated or
   renamed name is no longer marked excluded.** The set of dependencies
   `cargo metadata` resolves as activated was built from

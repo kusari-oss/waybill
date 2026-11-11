@@ -988,45 +988,12 @@ cdx_anno!(c182_cdx, "waybill:closure-role", component);
 // C206 (m1282) — which of four kinds a `pname`-less closure member is.
 cdx_anno!(c206_cdx, "waybill:closure-member-role", component);
 
-/// C207 (m1366, #1365) — the derived-identity disclosure.
-///
-/// CycloneDX carries this **natively**, in `evidence.identity[].methods[]`,
-/// per Constitution Principle V's native-field precedence; the generic
-/// `extra_annotations` property is suppressed on the CDX path so the signal
-/// has one home per format. The SPDX sides have no native carrier and read
-/// the annotation, and both normalise to this same value set — which is what
-/// makes the row SymmetricEqual across three different spellings.
-///
-/// Shaped on `c56_cdx`, which does the same thing for
-/// `waybill-source-mechanism`. Unlike C56 this does **not** skip the first
-/// method: C56's first entry is the winning reader and the row is about the
-/// losers, while here every entry carrying the key is a disclosure.
-pub(super) fn c207_cdx(doc: &Value) -> BTreeSet<String> {
-    let mut out = BTreeSet::new();
-    for component in walk_cdx_components_and_main_module(doc) {
-        let Some(identities) = component
-            .get("evidence")
-            .and_then(|e| e.get("identity"))
-            .and_then(|i| i.as_array())
-        else {
-            continue;
-        };
-        for identity in identities {
-            let Some(methods) = identity.get("methods").and_then(|m| m.as_array()) else {
-                continue;
-            };
-            for method in methods {
-                if let Some(v) = method
-                    .get("waybill-closure-ecosystem-evidence")
-                    .and_then(|v| v.as_str())
-                {
-                    out.insert(v.to_string());
-                }
-            }
-        }
-    }
-    out
-}
+// C207 (m1366, #1365) — the derived-identity disclosure. A component property
+// since #1442: m1366 wrote it as an extension key on
+// `evidence.identity[].methods[]`, which CycloneDX 1.6 closes to `technique`,
+// `confidence` and `value`, so every confirmed component made the document
+// schema-invalid. The derived PURL itself is still `identity[].concludedValue`.
+cdx_anno!(c207_cdx, "waybill:closure-ecosystem-identity", component);
 
 cdx_anno!(
     c208_cdx,

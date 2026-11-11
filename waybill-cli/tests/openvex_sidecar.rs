@@ -102,9 +102,20 @@ fn scan_spdx(case: &EcosystemCase) -> (tempfile::TempDir, PathBuf, serde_json::V
 
 fn assert_no_vex_sidecar(case: &EcosystemCase) {
     let (_guard, dir, spdx) = scan_spdx(case);
+    // CONTROL: the scan wrote into `dir`, so an empty listing below is
+    // about the sidecar and not about the wrong directory.
+    assert!(dir.join("out.spdx.json").exists(), "{}: no SPDX document in {}", case.label, dir.display());
+    // #1443: the sidecar is named after the SPDX output (`out.openvex.json`
+    // here), so look for any sidecar rather than one fixed name.
+    let sidecars: Vec<String> = std::fs::read_dir(&dir)
+        .expect("read output dir")
+        .filter_map(|e| e.ok())
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.ends_with(".openvex.json"))
+        .collect();
     assert!(
-        !dir.join("waybill.openvex.json").exists(),
-        "{}: unexpected waybill.openvex.json produced in {}; \
+        sidecars.is_empty(),
+        "{}: unexpected OpenVEX sidecar {sidecars:?} produced in {}; \
          no fixture should populate advisories today",
         case.label,
         dir.display()

@@ -225,7 +225,7 @@ The exit status is non-zero if any check failed or mismatched.
 ## Limits
 
 - **One document per invocation.** The OpenVEX sidecar a scan writes next
-  to an SPDX document (`waybill.openvex.json`) is not edited. It names
+  to an SPDX document (`<name>.openvex.json`) is not edited. It names
   components by PURL, so edit or withhold it separately when you drop or
   redact components.
 - **SPDX 2.3 key order.** waybill writes SPDX 2.3 in field order, not sorted.

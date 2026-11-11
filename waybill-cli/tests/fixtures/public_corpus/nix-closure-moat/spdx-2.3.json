@@ -171,7 +171,7 @@
         "checksumValue": "<masked>"
       },
       "externalDocumentId": "DocumentRef-OpenVEX",
-      "spdxDocument": "waybill.openvex.json"
+      "spdxDocument": "nix-closure-moat.openvex.json"
     }
   ],
   "hasExtractedLicensingInfos": [
