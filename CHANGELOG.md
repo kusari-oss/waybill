@@ -132,6 +132,59 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A `--nix-closure` CycloneDX document with re-identified Python
+  members is schema-valid again.** Milestone 1366 recorded why a closure
+  member's `pkg:pypi` identifier was derived by adding a
+  `waybill-closure-ecosystem-evidence` key to the member's
+  `evidence.identity[].methods[]` entry. CycloneDX 1.6 allows only
+  `technique`, `confidence` and `value` there, so each re-identified
+  component was a schema error: 75 on moat. The value now travels as the
+  `waybill:closure-ecosystem-identity` component property, the same row
+  SPDX 2.3 and SPDX 3 carry; the derived PURL is still the identity
+  entry's `concludedValue`. Consumers that read the old key should read
+  the property (#1442).
+- **A `--nix-closure` scan that gets no closure now warns.** When the
+  closure tier degraded — for example on a `callCabal2nix` flake, which
+  needs import-from-derivation that waybill refuses — the scan exited 0
+  with a manifest-only document and logged the cause only at INFO. The
+  degradation is now logged at WARN for every reason, including
+  `offline-requested`, and says that no Nix closure components were added
+  and the document contains only manifest-derived components. The
+  import-from-derivation case adds a sentence saying why it is refused.
+  Whether import-from-derivation is allowed is unchanged, as is
+  `waybill:nix-closure-degraded` (#1446).
+- **Cargo: a default-enabled optional dependency with a hyphenated or
+  renamed name is no longer marked excluded.** The set of dependencies
+  `cargo metadata` resolves as activated was built from
+  `resolve.nodes[].deps[].name`, which is the library name: hyphens become
+  underscores, and a `package = "…"` rename appears under its new name.
+  Compared against Cargo.lock package names, it missed such dependencies,
+  and they were emitted `scope: "excluded"` with
+  `waybill:optional-derivation = cargo-optional-true` although the default
+  features turn them on. The same mismatch excluded a transitive crate
+  whose hyphenated name matched a declared-optional one. The set is now
+  read from each dependency's package id and keyed by `(name, version)`,
+  so two versions of one crate are also classified separately (#1429).
+- **The OpenVEX sidecar is valid OpenVEX 0.2.0, has its own name, and is
+  logged as itself** (#1443).
+  - Every `affected` statement now carries the `action_statement` the
+    schema requires. On moat the sidecar failed the vendored schema 18
+    times, once per `affected` statement. A backport's statement says to
+    use a build that applies the nixpkgs backport, that this build does,
+    and that the backport is matched to the CVE by filename alone. A
+    nixpkgs declaration's says to remove the package or move to a nixpkgs
+    revision that no longer declares the CVE. CycloneDX carries the same
+    text as `recommendation` on the matching `exploitable` entry.
+  - The sidecar is named after the SPDX document instead of always
+    `waybill.openvex.json`, so two scans into one directory no longer
+    overwrite each other's: `out/app.spdx.json` gets
+    `out/app.openvex.json`. The default path is unchanged. With both SPDX
+    formats, one sidecar is written, named after the SPDX 2.3 document,
+    and both documents reference it. `--output openvex=<path>` still
+    overrides, and is now accepted with SPDX 3 alone.
+  - The scan log reports `wrote SBOM artifact format=openvex` once. It
+    used to report the sidecar twice, as `format=spdx-2.3-json` and
+    `format=spdx-3-json`.
 - **`sbom edit` can drop components that VEX names.** A CycloneDX build
   statement names the root in `affects[]` and the patched component in a
   `waybill:vex-subcomponent` property. Edit pruned the first and not the
@@ -147,6 +200,21 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 - **`sbom edit` refuses `--exclude-scope`.** The global flag is read only by
   `sbom scan`, so on `edit` it was accepted and ignored. Edit now refuses it
   and names the equivalent `--drop 'scope=…'` (#1422).
+- **SPDX 2.3 no longer emits a relationship twice when two sources observe
+  the same edge.** The `--nix-closure` build graph (milestone 1280) adds an
+  edge for every pair it records, including pairs the project's manifest,
+  the pinned package set (m1275) or the m985 runtime closure already
+  contributed. CycloneDX and SPDX 3 collapse such pairs into a set; SPDX 2.3
+  wrote one row per edge. On moat that was 331 duplicate relationships
+  (7,631 emitted, 7,300 distinct), and the root's direct dependencies read
+  40 in SPDX 2.3 against 28 in CycloneDX and SPDX 3. SPDX 2.3 now
+  deduplicates once all relationships are assembled. Where one
+  dependent→dependency pair carries both `DEPENDS_ON` and a typed
+  `*_DEPENDENCY_OF`, `DEPENDS_ON` is kept, because a dependency needed at
+  runtime is needed. SPDX 3 applies the same rule: a target listed in a
+  component's unscoped `dependsOn` is removed from its scoped ones, which
+  had counted six pairs twice on the haskell-language-server corpus target
+  (#1444).
 - **`sbom edit --drop role=` matches the closure role.** Closure members
   carry their role in `waybill:closure-role` (`artifact-input`,
   `build-tooling`, `both`, `unreferenced`), which the selector did not read.
@@ -163,6 +231,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   packages that declare several licenses, one of them a dual license.
   Its SPDX goldens change on the next corpus refresh. CycloneDX does not
   join; it already carries one entry per license (#1411).
+- **A project's own declared licenses keep an `OR` grouped too.** The gem,
+  maven, elixir, erlang and scala readers combine several declared licenses
+  into one expression before emission, and joined them the same unbracketed
+  way: a gemspec with `licenses = ["MIT OR Apache-2.0", "BSD-3-Clause"]`
+  emitted `MIT OR Apache-2.0 AND BSD-3-Clause` in all three formats. These
+  readers now share the bracketing join above and emit
+  `(MIT OR Apache-2.0) AND BSD-3-Clause` (in CycloneDX as an `expression`).
+  Composer's disjunctive join is unchanged; `AND` already binds tighter than
+  `OR` (#1431).
 - **A CycloneDX "or later" license is no longer emitted in `license.id`.**
   `Apache-2.0+` was written as `{"license":{"id":"Apache-2.0+"}}`, and an
   `EUPL-1.1+ AND MIT` was split with `EUPL-1.1+` in `license.id`. CycloneDX
@@ -232,6 +309,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   them patched by nixpkgs, and loses none elsewhere. Python packages,
   hooks and `python3-<v>-env` environments are deliberately not matched
   (#1395).
+- **Seven more C libraries in Nix closures are matchable by CPE.** nixpkgs
+  declares no vendor for `unbound`, `libssh`, `libsndfile`, `fontforge`,
+  `cjson`, `giflib` or `libass`, so none carried a CPE. The curated table
+  now maps each exact name to the pair NVD files it under (`nlnetlabs:unbound`,
+  `libssh:libssh`, `libsndfile_project:libsndfile`, `fontforge:fontforge`,
+  `davegamble:cjson` and `cjson_project:cjson`, `giflib_project:giflib`,
+  `libass_project:libass`). On a `--nix-closure` scan of httpie, grype now
+  reports 79 more findings, the same ones it reports from sbomnix's document,
+  and loses none on any of six targets; one of the 79 is patched by nixpkgs.
+  `warp` and `cmark-gfm` get no row: in these closures they are Hackage
+  packages, and NVD's entries under those names are Cloudflare WARP and
+  GitHub's C library. Evidence in `specs/nix-curated-cpe-gaps/`.
 - **Closure members with a compound nixpkgs license are licensed.** The
   `--nix-closure` license lookup understood a single license, a string or
   a list, but not the trees `lib.licenses.AND`/`OR`/`WITH`/`PLUS` build, so

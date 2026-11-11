@@ -1,0 +1,22 @@
+=== unbound (207 entries) ===
+    nlnetlabs                    NLnet Labs Unbound 1.5.0
+    unbound_project              unbound Project unbound 1.6.6-5
+=== libssh (53 entries) ===
+    libssh                       Libssh 0.5.2
+=== libsndfile (41 entries) ===
+    gentoo                       Gentoo libsndfile
+    libsndfile_project           libsndfile Project libsndfile 1.0.28
+=== fontforge (57 entries) ===
+    fontforge_project            FontForge Project FontForge 20110222
+    fontforge                    FontForge 20161012
+=== cjson (98 entries) ===
+    cjson_project                cJSON Project cJSON 1.0.0
+    davegamble                   DaveGamble cJSON 0.0.0
+=== giflib (40 entries) ===
+    giflib_project               giflib project giflib 5.1.1
+=== libass (4 entries) ===
+    libass_project               libass Project libass 0.13.3
+=== warp (80 entries) ===
+    cloudflare                   Cloudflare WARP for Windows
+=== cmark-gfm (37 entries) ===
+    github                       Github cmark-gfm 0.29.0.gfm.3

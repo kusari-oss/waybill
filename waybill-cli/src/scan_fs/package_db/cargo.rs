@@ -79,6 +79,13 @@ pub(super) enum CargoMetadataResolveFailure {
     ParseError { source: serde_json::Error },
     #[error("`cargo metadata` I/O error: {0}")]
     IoError(#[from] std::io::Error),
+    /// A `resolve.nodes[].deps[].pkg` id with no entry in `packages[]`.
+    /// Cargo has never produced one in observation; if it does, the
+    /// set would silently lose that dependency, and a lost dependency
+    /// classifies as not activated — the false-negative direction. So
+    /// it is a failure and takes the no-evidence fallback instead.
+    #[error("`cargo metadata` resolve references package id {id} absent from `packages`")]
+    UnresolvedPackageId { id: String },
 }
 
 /// What is known about which optional dependencies Cargo's resolved
@@ -112,9 +119,9 @@ pub(super) enum CargoMetadataResolveFailure {
 /// exists to prevent.
 #[derive(Debug, Clone)]
 pub(super) enum FeatureActivation {
-    /// `cargo metadata` resolved the feature set; these dep names are
-    /// activated. An empty set is meaningful: nothing is activated.
-    Known(HashSet<String>),
+    /// The activated dependencies are known. An empty set is
+    /// meaningful: nothing is activated.
+    Known(ActivatedSet),
     /// The subprocess was skipped or failed, so there is no activation
     /// information at all. Distinct from `Known(empty)`.
     ///
@@ -124,6 +131,33 @@ pub(super) enum FeatureActivation {
     /// the tree, and a failed subprocess is an environment defect to
     /// go and fix. #1300.
     Unknown(NoEvidenceReason),
+}
+
+/// The activated dependencies, in whichever identity the evidence
+/// carries. Both are Cargo.lock package names, never library names.
+#[derive(Debug, Clone)]
+pub(super) enum ActivatedSet {
+    /// From `cargo metadata`: the `(name, version)` of every package
+    /// the resolve graph depends on.
+    ///
+    /// Versioned because Cargo.lock can hold two versions of a crate
+    /// with different answers — one arriving transitively and shipping,
+    /// another declared optional and enabled by nothing. A name-only
+    /// key gives both the same answer. #1429.
+    Packages(HashSet<(String, String)>),
+    /// From a manifest's own default-feature closure (#1302): resolved
+    /// package names. A manifest names no versions, so this is as
+    /// precise as that evidence gets.
+    Names(HashSet<String>),
+}
+
+impl ActivatedSet {
+    fn contains(&self, name: &str, version: &str) -> bool {
+        match self {
+            ActivatedSet::Packages(set) => set.contains(&(name.to_string(), version.to_string())),
+            ActivatedSet::Names(set) => set.contains(name),
+        }
+    }
 }
 
 /// Why waybill has no feature-activation evidence for a cargo
@@ -158,15 +192,16 @@ impl NoEvidenceReason {
 }
 
 impl FeatureActivation {
-    /// Whether `name` is to be treated as activated — i.e. as shipping.
+    /// Whether the Cargo.lock package `name`@`version` is to be treated
+    /// as activated — i.e. as shipping.
     ///
-    /// `Unknown` answers `true` for every name, so the caller's
+    /// `Unknown` answers `true` for every package, so the caller's
     /// "declared optional AND not activated" test cannot fire without
     /// evidence. See the type's documentation for why that direction
     /// and not the other.
-    fn treats_as_activated(&self, name: &str) -> bool {
+    fn treats_as_activated(&self, name: &str, version: &str) -> bool {
         match self {
-            FeatureActivation::Known(activated) => activated.contains(name),
+            FeatureActivation::Known(activated) => activated.contains(name, version),
             FeatureActivation::Unknown(_) => true,
         }
     }
@@ -210,11 +245,11 @@ fn cargo_metadata_cap_stderr_lines(bytes: &[u8], max_lines: usize) -> String {
 
 /// Milestone 205 (#593) — shell out to `cargo metadata --format-
 /// version 1 --offline --locked` in `workspace_root`; parse the JSON;
-/// return the union of `resolve.nodes[].deps[].name` — i.e., the set
-/// of dep NAMES that Cargo's actual resolver activates under the
-/// enabled feature set. Consumers (the classifier at line 1155)
-/// treat this as the ground truth for "which optional deps are truly
-/// optional in effect."
+/// return the `(name, version)` of every package Cargo's actual
+/// resolver activates under the enabled feature set (see
+/// [`activated_packages_from_metadata`]). The classifier in
+/// `parse_lockfile` treats this as the ground truth for "which
+/// optional deps are truly optional in effect."
 ///
 /// **Flag rationale** (data-model E3 + FR-006):
 /// - `--offline` — REQUIRED per FR-006. Blocks cargo from reaching
@@ -242,7 +277,7 @@ fn cargo_metadata_cap_stderr_lines(bytes: &[u8], max_lines: usize) -> String {
 pub(super) fn resolve_activated_deps_via_cargo_metadata(
     workspace_root: &Path,
     timeout: Duration,
-) -> Result<HashSet<String>, CargoMetadataResolveFailure> {
+) -> Result<HashSet<(String, String)>, CargoMetadataResolveFailure> {
     use std::process::Command;
     use std::sync::mpsc;
     use std::thread;
@@ -285,17 +320,53 @@ pub(super) fn resolve_activated_deps_via_cargo_metadata(
 
     let parsed: serde_json::Value = serde_json::from_slice(&output.stdout)
         .map_err(|source| CargoMetadataResolveFailure::ParseError { source })?;
+    activated_packages_from_metadata(&parsed)
+}
 
-    let mut activated: HashSet<String> = HashSet::new();
-    if let Some(nodes) = parsed.pointer("/resolve/nodes").and_then(|v| v.as_array()) {
-        for node in nodes {
-            if let Some(deps) = node.get("deps").and_then(|v| v.as_array()) {
-                for dep in deps {
-                    if let Some(name) = dep.get("name").and_then(|v| v.as_str()) {
-                        activated.insert(name.to_string());
-                    }
-                }
-            }
+/// #1429 — the `(name, version)` of every package that some
+/// `resolve.nodes[].deps[]` entry points at, read through its `pkg` id.
+///
+/// Not `deps[].name`: that is the dependency's *library* name, in which
+/// hyphens become underscores and a `package = "…"` rename appears under
+/// the rename. The classifier matches Cargo.lock package names, so a
+/// set built from `name` missed `waybill-fixture-hy` (reported as
+/// `waybill_fixture_hy`) and every renamed dependency, and emitted them
+/// `scope: "excluded"` although the default features turn them on.
+fn activated_packages_from_metadata(
+    metadata: &serde_json::Value,
+) -> Result<HashSet<(String, String)>, CargoMetadataResolveFailure> {
+    let mut identity: HashMap<&str, (&str, &str)> = HashMap::new();
+    for pkg in metadata
+        .get("packages")
+        .and_then(|v| v.as_array())
+        .into_iter()
+        .flatten()
+    {
+        if let (Some(id), Some(name), Some(version)) = (
+            pkg.get("id").and_then(|v| v.as_str()),
+            pkg.get("name").and_then(|v| v.as_str()),
+            pkg.get("version").and_then(|v| v.as_str()),
+        ) {
+            identity.insert(id, (name, version));
+        }
+    }
+
+    let mut activated: HashSet<(String, String)> = HashSet::new();
+    let nodes = metadata
+        .pointer("/resolve/nodes")
+        .and_then(|v| v.as_array())
+        .into_iter()
+        .flatten();
+    for node in nodes {
+        let deps = node.get("deps").and_then(|v| v.as_array()).into_iter().flatten();
+        for dep in deps {
+            let Some(id) = dep.get("pkg").and_then(|v| v.as_str()) else {
+                continue;
+            };
+            let (name, version) = identity
+                .get(id)
+                .ok_or_else(|| CargoMetadataResolveFailure::UnresolvedPackageId { id: id.to_string() })?;
+            activated.insert((name.to_string(), version.to_string()));
         }
     }
     Ok(activated)
@@ -1818,7 +1889,7 @@ fn parse_lockfile(
                     entry.lifecycle_scope = Some(LifecycleScope::Runtime);
                 } else if prod_set.contains(&key)
                     && optional_names.contains(&pkg.name)
-                    && !activation.treats_as_activated(&pkg.name)
+                    && !activation.treats_as_activated(&pkg.name, &pkg.version)
                 {
                     // Milestone 205 (#593): dep is TRULY Optional iff
                     // declared `optional = true` in some workspace
@@ -2082,7 +2153,9 @@ pub(crate) fn finalize(
                  from the manifest's own default-feature closure instead \
                  (single-package workspace, so the closure is the build)"
             );
-            FeatureActivation::Known(workspace_sections.feature_activated_optional.clone())
+            FeatureActivation::Known(ActivatedSet::Names(
+                workspace_sections.feature_activated_optional.clone(),
+            ))
         } else if offline {
             tracing::info!(
                 workspace = %workspace_root.display(),
@@ -2097,7 +2170,7 @@ pub(crate) fn finalize(
                 workspace_root,
                 cargo_metadata_timeout,
             ) {
-                Ok(names) => FeatureActivation::Known(names),
+                Ok(packages) => FeatureActivation::Known(ActivatedSet::Packages(packages)),
                 Err(e) => {
                     tracing::warn!(
                         workspace = %workspace_root.display(),
@@ -2126,9 +2199,9 @@ pub(crate) fn finalize(
                              default-feature closure (single-package workspace, so \
                              the closure is the build)"
                         );
-                        FeatureActivation::Known(
+                        FeatureActivation::Known(ActivatedSet::Names(
                             workspace_sections.feature_activated_optional.clone(),
-                        )
+                        ))
                     } else {
                         FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed)
                     }
@@ -4813,7 +4886,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
     #[test]
     fn evidence_present_emits_no_absence_marker() {
         let activated =
-            FeatureActivation::Known(HashSet::from(["shipped".to_string()]));
+            FeatureActivation::Known(ActivatedSet::Names(HashSet::from(["shipped".to_string()])));
         assert_eq!(
             evidence_annotation_under(&activated),
             (None, None),
@@ -4821,7 +4894,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
              it — a finding, not a default, so there is no absence to report"
         );
 
-        let nothing_activated = FeatureActivation::Known(HashSet::new());
+        let nothing_activated = FeatureActivation::Known(ActivatedSet::Names(HashSet::new()));
         assert_eq!(
             evidence_annotation_under(&nothing_activated),
             (None, None),
@@ -4893,7 +4966,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
     /// have deleted the branch rather than gated it.
     #[test]
     fn known_empty_activation_still_classifies_it_optional() {
-        let (shipped, _core) = classify_under(&FeatureActivation::Known(HashSet::new()));
+        let (shipped, _core) = classify_under(&FeatureActivation::Known(ActivatedSet::Names(HashSet::new())));
         assert_eq!(
             shipped,
             Some(LifecycleScope::Optional),
@@ -4905,9 +4978,94 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
     /// ships, so `Runtime`.
     #[test]
     fn known_activation_naming_the_dep_classifies_it_runtime() {
-        let (shipped, _core) = classify_under(&FeatureActivation::Known(HashSet::from([
-            "shipped".to_string(),
-        ])));
+        let (shipped, _core) = classify_under(&FeatureActivation::Known(ActivatedSet::Names(
+            HashSet::from(["shipped".to_string()]),
+        )));
         assert_eq!(shipped, Some(LifecycleScope::Runtime));
+    }
+
+    /// #1429 — `cargo metadata` evidence matches the Cargo.lock
+    /// version, not just the name. The lockfile holds `shipped 1.0.0`;
+    /// evidence that `shipped 2.0.0` is activated says nothing about it.
+    #[test]
+    fn package_activation_matches_the_lockfile_version() {
+        let packages = |version: &str| {
+            FeatureActivation::Known(ActivatedSet::Packages(HashSet::from([(
+                "shipped".to_string(),
+                version.to_string(),
+            )])))
+        };
+        assert_eq!(classify_under(&packages("1.0.0")).0, Some(LifecycleScope::Runtime));
+        assert_eq!(
+            classify_under(&packages("2.0.0")).0,
+            Some(LifecycleScope::Optional),
+            "another version of the crate being activated must not activate this one"
+        );
+    }
+
+    /// The shape `cargo metadata --format-version 1` emitted (cargo
+    /// 1.98.1) for a manifest with a hyphenated optional dep and a
+    /// renamed one, both in `default`, plus a crate pulled in at a second
+    /// version transitively — the fixtures of
+    /// `tests/cargo_activated_dep_identity.rs`, combined. Ids shortened,
+    /// fields trimmed; as observed, `packages[]` holds only what the
+    /// resolve activated.
+    const METADATA_1429: &str = r#"{
+      "packages": [
+        {"id": "path+file:///ws#probe@0.1.0", "name": "probe", "version": "0.1.0"},
+        {"id": "registry+crates-io#waybill-fixture-hy@1.0.0", "name": "waybill-fixture-hy", "version": "1.0.0"},
+        {"id": "registry+crates-io#waybill-fixture-real@1.0.0", "name": "waybill-fixture-real", "version": "1.0.0"},
+        {"id": "registry+crates-io#waybill-fixture-mid@1.0.0", "name": "waybill-fixture-mid", "version": "1.0.0"},
+        {"id": "registry+crates-io#waybill-fixture-dup@1.0.0", "name": "waybill-fixture-dup", "version": "1.0.0"}
+      ],
+      "resolve": {"nodes": [
+        {"id": "path+file:///ws#probe@0.1.0", "deps": [
+          {"name": "waybill_fixture_hy", "pkg": "registry+crates-io#waybill-fixture-hy@1.0.0"},
+          {"name": "alias", "pkg": "registry+crates-io#waybill-fixture-real@1.0.0"},
+          {"name": "waybill_fixture_mid", "pkg": "registry+crates-io#waybill-fixture-mid@1.0.0"}
+        ]},
+        {"id": "registry+crates-io#waybill-fixture-mid@1.0.0", "deps": [
+          {"name": "waybill_fixture_dup", "pkg": "registry+crates-io#waybill-fixture-dup@1.0.0"}
+        ]}
+      ]}
+    }"#;
+
+    /// #1429 — the set is keyed by package identity, not by the
+    /// library name `deps[].name` carries.
+    #[test]
+    fn metadata_activation_is_keyed_by_package_not_library_name() {
+        let metadata: serde_json::Value = serde_json::from_str(METADATA_1429).unwrap();
+        let activated = activated_packages_from_metadata(&metadata).unwrap();
+        let pair = |n: &str, v: &str| (n.to_string(), v.to_string());
+        assert_eq!(
+            activated,
+            HashSet::from([
+                pair("waybill-fixture-hy", "1.0.0"),
+                pair("waybill-fixture-real", "1.0.0"),
+                pair("waybill-fixture-mid", "1.0.0"),
+                pair("waybill-fixture-dup", "1.0.0"),
+            ]),
+            "hyphens kept, the rename `alias` resolved to its package, and \
+             the workspace root absent because nothing depends on it"
+        );
+    }
+
+    /// A dependency id `packages[]` cannot resolve is a failure, not a
+    /// silent omission: an omitted dependency classifies as inactive,
+    /// which is the false-negative direction, whereas a failure takes
+    /// the no-evidence fallback.
+    #[test]
+    fn unresolvable_package_id_is_a_failure_not_an_omission() {
+        let mut metadata: serde_json::Value = serde_json::from_str(METADATA_1429).unwrap();
+        metadata["packages"].as_array_mut().unwrap().remove(1);
+        let err = activated_packages_from_metadata(&metadata).unwrap_err();
+        assert!(
+            matches!(
+                &err,
+                CargoMetadataResolveFailure::UnresolvedPackageId { id }
+                    if id == "registry+crates-io#waybill-fixture-hy@1.0.0"
+            ),
+            "got {err:?}"
+        );
     }
 }

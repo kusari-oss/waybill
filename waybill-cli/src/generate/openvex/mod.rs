@@ -34,10 +34,30 @@ use statements::{
     OpenVexVulnerability, OPENVEX_CONTEXT_V0_2_0,
 };
 
-/// Default sidecar filename. Kept in lockstep with the SPDX
-/// serializer's `externalDocumentRefs` entry so a consumer reading
-/// only the SPDX file can locate the sidecar.
+/// The sidecar's filename when the SPDX document is at its default path,
+/// and the name a serializer gives the sidecar artifact it returns. The CLI
+/// writes it to [`sidecar_path_for`] of the SPDX output instead (#1443).
 pub const OPENVEX_DEFAULT_FILENAME: &str = "waybill.openvex.json";
+
+/// #1443 — where the sidecar for an SPDX document at `spdx_doc` goes: beside
+/// it, named after it. `out/app.spdx.json` → `out/app.openvex.json`.
+///
+/// The document's name loses `.json` and then an `.spdx` or `.spdx3` marker,
+/// so the default `waybill.spdx.json` still yields `waybill.openvex.json`.
+/// Any other name keeps its stem whole: `scan1.json` → `scan1.openvex.json`.
+pub(crate) fn sidecar_path_for(spdx_doc: &std::path::Path) -> PathBuf {
+    let name = spdx_doc
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let stem = name.strip_suffix(".json").unwrap_or(&name);
+    let stem = stem
+        .strip_suffix(".spdx3")
+        .or_else(|| stem.strip_suffix(".spdx"))
+        .filter(|s| !s.is_empty())
+        .unwrap_or(stem);
+    spdx_doc.with_file_name(format!("{stem}.openvex.json"))
+}
 
 /// Length of the base32 prefix used in the `@id` URI — same
 /// 160-bit budget as SPDX's `documentNamespace` (32 chars × 5 bits).
@@ -72,6 +92,37 @@ fn published_version_note(cve: &str, grade: &str) -> String {
          filename. This statement is about the upstream version; the \
          `not_affected` statement for {cve} covers the build this document \
          describes, which has the patch applied."
+    )
+}
+
+/// What to do about a backport's `affected` statement (#1443).
+///
+/// OpenVEX 0.2.0 requires an action on every `affected` statement. The
+/// subject is the version as published, so the remedy is a build that
+/// carries the patch, and this build is one. It goes no further than the
+/// evidence: the patch is tied to the CVE by its filename, which is why the
+/// paired `not_affected` is graded and not proof.
+fn backport_action(cve: &str) -> String {
+    format!(
+        "Use a build that applies the nixpkgs backport for {cve}; the build \
+         this document describes applies it. The backport is matched to \
+         {cve} by its patch filename alone, so confirm it addresses the \
+         issue before relying on it."
+    )
+}
+
+/// What to do about a declaration-derived `affected` statement (#1443).
+///
+/// The subject is this build, and nixpkgs says the package in it is
+/// vulnerable. waybill knows of no fix, so it names the two moves that
+/// remove the declaration rather than inventing a fixed version. The
+/// maintainer's text, carried in the impact statement, sometimes names one.
+fn declaration_action(cve: &str) -> String {
+    format!(
+        "Remove this package from the build, or move to a nixpkgs revision \
+         that no longer declares {cve} against it. The nixpkgs text in the \
+         impact statement may name a specific fix; waybill has not checked \
+         that one exists."
     )
 }
 
@@ -213,7 +264,7 @@ fn declaration_statements(
             status: OpenVexStatus::Affected,
             justification: None,
             impact_statement: Some(declaration_note(&f.vulnerability, grade, &f.text)),
-            action_statement: None,
+            action_statement: Some(declaration_action(&f.vulnerability)),
         })
         .collect()
 }
@@ -295,7 +346,7 @@ fn backport_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
             status: OpenVexStatus::Affected,
             justification: None,
             impact_statement: Some(published_version_note(&cve, grade)),
-            action_statement: None,
+            action_statement: Some(backport_action(&cve)),
         });
         // 2. This build is not, because the patch was applied to it.
         out.push(OpenVexStatement {
@@ -1264,5 +1315,95 @@ pub(crate) mod tests {
         let a_doc: serde_json::Value = serde_json::from_slice(&a.bytes).unwrap();
         let b_doc: serde_json::Value = serde_json::from_slice(&b.bytes).unwrap();
         assert_eq!(a_doc["@id"], b_doc["@id"]);
+    }
+
+    // ============================================================
+    // #1443 — OpenVEX 0.2.0 requires `action_statement` on `affected`
+    // ============================================================
+
+    fn openvex_schema_errors(doc: &serde_json::Value) -> Vec<String> {
+        let raw = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures/schemas/openvex-0.2.0.json"),
+        )
+        .unwrap();
+        let schema: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        jsonschema::validator_for(&schema)
+            .unwrap()
+            .iter_errors(doc)
+            .map(|e| format!("{e} at {}", e.instance_path()))
+            .collect()
+    }
+
+    /// The three sidecars the two sources can produce: backports alone,
+    /// declarations alone, and both on one component.
+    fn every_sidecar_shape() -> Vec<(&'static str, serde_json::Value)> {
+        let integ = empty_integrity();
+        let doc = |arts: &ScanArtifacts<'_>| -> serde_json::Value {
+            serde_json::from_slice(&serialize_openvex(arts, &mk_cfg()).unwrap().unwrap().bytes)
+                .unwrap()
+        };
+        let backport = backport_scan();
+        let declared = declared_summary(&[("pkg:generic/unzip@6.0", "CVE-2099-0001", "synthetic")]);
+        let mut root = mk_component("pkg:generic/the-build@1.0");
+        root.extra_annotations.insert(
+            "waybill:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        let declared_comps = [mk_component("pkg:generic/unzip@6.0"), root];
+        let (contested, contested_summary) = contested_scan();
+
+        let mut declared_arts = mk_artifacts(&declared_comps, &integ);
+        declared_arts.nixpkgs_security_summary = Some(&declared);
+        let mut contested_arts = mk_artifacts(&contested, &integ);
+        contested_arts.nixpkgs_security_summary = Some(&contested_summary);
+        vec![
+            ("backport", doc(&mk_artifacts(&backport, &integ))),
+            ("declaration", doc(&declared_arts)),
+            ("contested", doc(&contested_arts)),
+        ]
+    }
+
+    #[test]
+    fn every_sidecar_shape_validates_against_the_openvex_schema() {
+        for (label, doc) in every_sidecar_shape() {
+            // CONTROL: the shape holds an `affected` statement, the status
+            // whose required field is at issue.
+            assert!(
+                doc["statements"].as_array().unwrap().iter().any(|s| s["status"] == "affected"),
+                "{label}: no affected statement: {doc:#}"
+            );
+            let errors = openvex_schema_errors(&doc);
+            assert!(errors.is_empty(), "{label}: {} schema errors:\n{}", errors.len(), errors.join("\n"));
+        }
+    }
+
+    #[test]
+    fn each_affected_statement_says_what_to_do_within_its_evidence() {
+        for (label, doc) in every_sidecar_shape() {
+            for st in doc["statements"].as_array().unwrap() {
+                let cve = st["vulnerability"]["name"].as_str().unwrap();
+                let action = st["action_statement"].as_str();
+                if st["status"] != "affected" {
+                    assert!(action.is_none(), "{label}: action on {}: {st:#}", st["status"]);
+                    continue;
+                }
+                let action = action.unwrap_or_else(|| panic!("{label}: no action: {st:#}"));
+                assert!(action.contains(cve), "{label}: {action:?}");
+                let lower = action.to_lowercase();
+                assert!(
+                    !lower.contains("resolved") && !lower.contains("fixed in"),
+                    "{label}: the action claims a resolution its evidence does not show: {action:?}"
+                );
+                // The backport half rests on a filename, and must say so;
+                // the declaration half rests on nixpkgs, and must say so.
+                let from_backport = st["products"][0]["subcomponents"].is_null();
+                if from_backport {
+                    assert!(lower.contains("filename"), "{label}: {action:?}");
+                } else {
+                    assert!(action.contains("nixpkgs"), "{label}: {action:?}");
+                }
+            }
+        }
     }
 }

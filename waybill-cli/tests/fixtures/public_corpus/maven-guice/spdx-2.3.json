@@ -4225,11 +4225,6 @@
       "spdxElementId": "SPDXRef-Package-WW6PY5U2QVWHQ26J"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-WW6PY5U2QVWHQ26J"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-CZWDGGRKJBALGMSV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-YQFYBDY6EYSTD2G4"

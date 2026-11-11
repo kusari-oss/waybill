@@ -24622,11 +24622,6 @@
       "spdxElementId": "SPDXRef-Package-3HNAON6F3M5ZZ62C"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-OWQFBW4LHSY5E3BC",
-      "relationshipType": "DEV_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-3HNAON6F3M5ZZ62C"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-3ODEA3XUSHLXRJMY"
@@ -25637,22 +25632,7 @@
       "spdxElementId": "SPDXRef-Package-6RPNZFUWQMP5WNSR"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-B5FSSMD3U2AKTZ3U",
-      "relationshipType": "DEV_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-6UHHA44VGVVLXE6J"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-DRO4K43YKHDV346C",
-      "relationshipType": "DEV_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-6UHHA44VGVVLXE6J"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-JMVPSHHJ4OUVMCAC",
-      "relationshipType": "DEV_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-6UHHA44VGVVLXE6J"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-OWQFBW4LHSY5E3BC",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-6UHHA44VGVVLXE6J"
     },
@@ -29553,11 +29533,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-JMVPSHHJ4OUVMCAC",
-      "relationshipType": "DEV_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-IYAUKBZ2DPRUFADS"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-OWQFBW4LHSY5E3BC",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-IYAUKBZ2DPRUFADS"
     },
@@ -34373,11 +34348,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-B5FSSMD3U2AKTZ3U",
-      "relationshipType": "DEV_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-ULNGSJR24FNFS544"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-OWQFBW4LHSY5E3BC",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-ULNGSJR24FNFS544"
     },

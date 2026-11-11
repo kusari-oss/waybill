@@ -165,6 +165,24 @@ impl SpdxRelationshipType {
             Self::DescendantOf => "DESCENDANT_OF",
         }
     }
+
+    /// A dependency verb written dependency→dependent (the m228 reversal),
+    /// i.e. a typed counterpart of `DEPENDS_ON`.
+    fn is_reversed_dependency(self) -> bool {
+        match self {
+            Self::DevDependencyOf
+            | Self::BuildDependencyOf
+            | Self::TestDependencyOf
+            | Self::ProvidedDependencyOf
+            | Self::OptionalDependencyOf => true,
+            Self::Describes
+            | Self::DependsOn
+            | Self::BuildToolOf
+            | Self::Contains
+            | Self::ContainedBy
+            | Self::DescendantOf => false,
+        }
+    }
 }
 
 /// One SPDX 2.3 relationship edge.
@@ -507,7 +525,38 @@ pub fn build_relationships(
 /// Caught by the #898 corpus target: the same pinned revision emitted an
 /// identical SET of 111 relationships in two CI runs, in different orders, so
 /// the golden comparison failed while packages, CycloneDX and SPDX 3 matched.
-pub(crate) fn sort_relationships(relationships: &mut [SpdxRelationship]) {
+///
+/// **And deduplicate (#1444)**, for the same reason and at the same layer. The
+/// internal edge list may name a pair more than once — several sources can
+/// observe one relation, e.g. a project's manifest and the milestone-1280 Nix
+/// build graph — and the other two emitters already collapse that: CycloneDX
+/// into its `BTreeSet`, SPDX 3 in `group_dependency_relationships`'s target
+/// set. SPDX 2.3 wrote one row per edge: 331 exact duplicates on moat, and the
+/// root's out-edges read 40 against CycloneDX's and SPDX 3's 28.
+///
+/// Two rules, applied after every producer has contributed:
+///
+/// 1. A typed `*_DEPENDENCY_OF` is dropped when the same dependent→dependency
+///    pair also carries a plain `DEPENDS_ON`. A dependency needed at runtime is
+///    needed, whatever else it is used for: keeping only the narrower claim
+///    would let a consumer that filters out development dependencies drop a
+///    package the dependent cannot run without, while dropping it loses only
+///    "also used in development". It is also what the other two formats say.
+///    CycloneDX carries one edge and the scope on the component, and SPDX 3
+///    applies this rule in `group_dependency_relationships`. Seen in the
+///    haskell-language-server corpus golden: six pairs carried both, with the
+///    target's CycloneDX `scope` unset, i.e. required.
+/// 2. Rows identical in every field collapse to one.
+pub(crate) fn sort_and_dedup_relationships(relationships: &mut Vec<SpdxRelationship>) {
+    let runtime: std::collections::HashSet<(SpdxId, SpdxId)> = relationships
+        .iter()
+        .filter(|r| r.kind == SpdxRelationshipType::DependsOn)
+        .map(|r| (r.source.clone(), r.target.clone()))
+        .collect();
+    relationships.retain(|r| {
+        !r.kind.is_reversed_dependency()
+            || !runtime.contains(&(r.target.clone(), r.source.clone()))
+    });
     relationships.sort_by(|a, b| {
         a.source
             .as_str()
@@ -515,6 +564,9 @@ pub(crate) fn sort_relationships(relationships: &mut [SpdxRelationship]) {
             .then_with(|| a.kind.as_spdx_str().cmp(b.kind.as_spdx_str()))
             .then_with(|| a.target.as_str().cmp(b.target.as_str()))
             .then_with(|| a.comment.cmp(&b.comment))
+    });
+    relationships.dedup_by(|a, b| {
+        a.source == b.source && a.kind == b.kind && a.target == b.target && a.comment == b.comment
     });
 }
 
@@ -1022,5 +1074,72 @@ mod tests {
         let rels = build_relationships(&arts, std::slice::from_ref(&root), &[]);
         // Only the DESCRIBES edge remains.
         assert_eq!(rels.len(), 1);
+    }
+
+    fn id(purl: &str) -> SpdxId {
+        SpdxId::for_purl(&Purl::new(purl).unwrap())
+    }
+
+    fn rel(source: &SpdxId, kind: SpdxRelationshipType, target: &SpdxId) -> SpdxRelationship {
+        SpdxRelationship {
+            source: source.clone(),
+            target: target.clone(),
+            kind,
+            comment: None,
+        }
+    }
+
+    /// #1444 — two sources naming one pair produce one row, whatever order
+    /// they arrived in.
+    #[test]
+    fn identical_relationships_collapse_to_one() {
+        let (app, lib, dev) = (
+            id("pkg:cargo/waybill-fixture-app@1"),
+            id("pkg:cargo/waybill-fixture-lib@1"),
+            id("pkg:cargo/waybill-fixture-dev@1"),
+        );
+        let mut rels = vec![
+            rel(&app, SpdxRelationshipType::DependsOn, &lib),
+            rel(&dev, SpdxRelationshipType::DevDependencyOf, &app),
+            rel(&app, SpdxRelationshipType::DependsOn, &lib),
+            rel(&dev, SpdxRelationshipType::DevDependencyOf, &app),
+        ];
+        sort_and_dedup_relationships(&mut rels);
+        assert_eq!(rels.len(), 2, "{rels:#?}");
+    }
+
+    /// #1444 — a pair carrying both a plain `DEPENDS_ON` and a typed
+    /// `*_DEPENDENCY_OF` keeps `DEPENDS_ON`. A typed edge whose reversed pair
+    /// has no `DEPENDS_ON` (here `lib DEV_DEPENDENCY_OF app`, while the
+    /// `DEPENDS_ON` runs `lib -> app`, a different pair) is untouched.
+    #[test]
+    fn depends_on_supersedes_a_typed_dependency_for_the_same_pair() {
+        let (app, dev, lib) = (
+            id("pkg:cargo/waybill-fixture-app@1"),
+            id("pkg:cargo/waybill-fixture-dev@1"),
+            id("pkg:cargo/waybill-fixture-lib@1"),
+        );
+        let mut rels = vec![
+            rel(&dev, SpdxRelationshipType::DevDependencyOf, &app),
+            rel(&app, SpdxRelationshipType::DependsOn, &dev),
+            rel(&lib, SpdxRelationshipType::DevDependencyOf, &app),
+            rel(&lib, SpdxRelationshipType::DependsOn, &app),
+        ];
+        sort_and_dedup_relationships(&mut rels);
+        let mut kept: Vec<_> = rels
+            .iter()
+            .map(|r| (r.source.clone(), r.kind, r.target.clone()))
+            .collect();
+        let mut want = vec![
+            (app.clone(), SpdxRelationshipType::DependsOn, dev),
+            (lib.clone(), SpdxRelationshipType::DependsOn, app.clone()),
+            (lib, SpdxRelationshipType::DevDependencyOf, app),
+        ];
+        let key = |t: &(SpdxId, SpdxRelationshipType, SpdxId)| {
+            (t.0.as_str().to_string(), t.1.as_spdx_str(), t.2.as_str().to_string())
+        };
+        kept.sort_by_key(key);
+        want.sort_by_key(key);
+        assert_eq!(kept, want);
     }
 }
