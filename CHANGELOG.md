@@ -79,6 +79,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **`sbom edit` can drop components that VEX names.** A CycloneDX build
+  statement names the root in `affects[]` and the patched component in a
+  `waybill:vex-subcomponent` property. Edit pruned the first and not the
+  second, so dropping a patched component failed the leftover-identifier
+  check and wrote nothing; the `nix-closure-moat` golden could not be
+  filtered with `--drop 'scope=development,build,test'`. The property is now
+  pruned, a statement left with no subcomponent goes with it, and stderr
+  counts the statements removed (24 of 26 on that golden). In SPDX 3, an
+  assessment whose `security_assessedElement` was dropped is removed, and a
+  drop no longer removes every `security_*VulnAssessmentRelationship` in the
+  document as an unreferenced orphan. If the check ever fails again, the
+  error names the identifier and its JSON Pointer (#1422).
+- **`sbom edit` refuses `--exclude-scope`.** The global flag is read only by
+  `sbom scan`, so on `edit` it was accepted and ignored. Edit now refuses it
+  and names the equivalent `--drop 'scope=…'` (#1422).
+- **`sbom edit --drop role=` matches the closure role.** Closure members
+  carry their role in `waybill:closure-role` (`artifact-input`,
+  `build-tooling`, `both`, `unreferenced`), which the selector did not read.
+  `role=build-tooling` now selects 1,310 components of the `nix-closure-moat`
+  golden in all three formats; on CycloneDX it selected none before (#1422).
 - **SPDX license joins keep an `OR` grouped.** When a component carried
   several licenses, both SPDX emitters joined them with ` AND ` verbatim, so
   `["MIT OR Apache-2.0", "BSD-3-Clause"]` became
