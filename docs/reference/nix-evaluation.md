@@ -261,6 +261,14 @@ what ships, drop the marked members first with
 `waybill sbom edit closure.cdx.json --drop 'scope=excluded' -o runtime.cdx.json`.
 See [Runtime-only view of a Nix closure](../user-guide/sbom-edit.md#runtime-only-view-of-a-nix-closure).
 
+A statically linked Haskell library is kept as runtime even though no output
+references its path. The walk starts at the root's declared Haskell
+dependencies; a declared target binds to the Haskell build of that name, so
+Haskell `zlib` is never confused with C `zlib`. Below the root, each
+library's `propagatedBuildInputs` is followed too. Those carry no test
+dependencies, and they hold the platform-conditional ones (`hfsevents` on
+darwin) that the Linux-resolved package-set relations lack (#1459).
+
 ### The document's subject (milestone 1377)
 
 When the closure resolves, the derivation the evaluated attribute built is
