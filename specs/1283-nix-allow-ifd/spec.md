@@ -17,6 +17,13 @@ sbomnix reads the same flakes because it inherits nix's default, `allow-import-f
 
 This feature lets a user who trusts the flake opt in, records that they did, and leaves the safe default unchanged.
 
+## Clarifications
+
+### Session 2026-11-11
+
+- Q: When nix's sandbox is off (the macOS default), what does the opt-in do? → A: Allow it (option A): log a WARN naming the unsandboxed build, and record `sandbox=false` in the document. No second flag, no refusal.
+- Q: Where are the IFD flakes measured on an ongoing basis? → A: As pinned public-corpus targets (option A). slack-web, openai and slacklinker scan with the opt-in in the nightly Linux job, which is sandboxed and disposable, and the success criteria are checked there as corpus expectations.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Scan a callCabal2nix flake I trust (Priority: P1)
@@ -71,7 +78,7 @@ A consumer reading a waybill document can tell whether IFD was allowed for the s
 - **The flake's `nixConfig` requests extra substituters or keys** (slack-web's and slacklinker's do). These remain refused: waybill doesn't pass `--accept-flake-config`. IFD derivations are therefore built from the user's configured substituters, or locally.
 - **The IFD build fails.** Example: slacklinker's output fails `disallowedReferences` on darwin. If evaluation fails, the closure tier degrades with the failure recorded, as for any evaluation failure. This must not be confused with the IFD refusal.
 - **The IFD build is slow or hangs.** It runs under the closure tier's existing time budget; exceeding it degrades with the budget reason.
-- **The nix sandbox is off** (the macOS default). waybill can't make the build sandboxed. The docs and the WARN say so, and the document records the sandbox setting nix reported.
+- **The nix sandbox is off** (the macOS default). The opt-in still applies: waybill can't make the build sandboxed, and refusing would exclude most macOS users. Each such scan logs a WARN that IFD builds will run unsandboxed, and the document records `sandbox=false` (FR-013).
 - **`--offline`.** The closure tier doesn't run under `--offline` (C190 `offline-requested`), so the opt-in has no effect there, and saying so is enough.
 - **The opt-in without `--nix-closure`.** It has nothing to apply to. waybill accepts it with an INFO note, or rejects it with a clear message; the plan decides which.
 
@@ -96,6 +103,8 @@ A consumer reading a waybill document can tell whether IFD was allowed for the s
 - **FR-010**: When an IFD build fails, or exceeds the closure tier's budget, the degradation MUST be recorded with that reason, distinct from "IFD refused".
 - **FR-011**: The opt-in MUST be testable without network access and without real builds, using the existing stub-nix harness: allowance passed, allowance verified, allowance not verified, IFD build failure.
 - **FR-012**: No new Cargo dependencies. Network reach stays what the closure tier already has, including the configured substituters from 1423. IFD derivations may themselves fetch through nix, as any nix build does; this is the risk FR-005 states.
+- **FR-013**: When the opt-in is used and nix reports `sandbox = false`, waybill MUST log a WARN on that scan saying derivations built during evaluation run unsandboxed, and MUST still proceed. No second confirmation is required.
+- **FR-014**: slack-web, openai and slacklinker MUST be added as public-corpus targets pinned to commit SHAs, scanning with `--nix-closure` and the opt-in in the nightly x86_64-linux job. Their expectations MUST assert that the closure was read (no IFD degradation), that IFD was recorded as allowed, and that recall clears the SC-001–SC-003 bars against the committed truth rule. Goldens are produced by the CI regen, never locally.
 
 ### Key Entities
 
@@ -119,5 +128,5 @@ A consumer reading a waybill document can tell whether IFD was allowed for the s
 - **Opt-in, not default:** the user chose an opt-in with clear documentation (2026-11-11). Default-on was considered and rejected as a change to waybill's security posture.
 - **Same evaluation path:** IFD is enabled by changing the setting passed to the same Nix invocations waybill already makes. No new kind of evaluation is introduced.
 - **Recall truth:** the recall-corpus truth rule is sbomnix runtime grype findings minus name-collision false positives, plus Haskell advisories (HSEC). It counts what nix references as shipping. For libraries this includes GHC's toolchain (openai's 52 truth findings all reach the output through GHC), which the success criteria accept as measured. Whether toolchain references in a library's closure should count is a separate question, not this feature's.
-- **Measuring slacklinker:** it is measured on x86_64-linux in a disposable environment (CI), because its build fails on darwin. That is approved as the way to measure it.
+- **Measuring the IFD flakes:** all three are measured on x86_64-linux in the nightly corpus job (FR-014), which is sandboxed and disposable. That matters most for slacklinker, whose build fails on darwin. Recall truth for the corpus expectations is computed from a committed sbomnix runtime baseline per target, because the nightly job doesn't run sbomnix; the plan decides how the baseline is produced and refreshed.
 - **Out of scope:** haskell.nix flakes (no measured target uses it), relaxing `--accept-flake-config`, and sandboxing builds on the user's behalf.
