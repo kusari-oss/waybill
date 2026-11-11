@@ -158,6 +158,31 @@ impl DegradationReason {
         }
     }
 
+    /// A sentence for the operator log saying what this reason means for
+    /// them, where the wire string and [`Display`] do not already.
+    ///
+    /// #1446. Log-only: C190 is unchanged. Exhaustive for the same reason
+    /// [`Self::detail`] is.
+    ///
+    /// [`Display`]: std::fmt::Display
+    pub(crate) fn explanation(&self) -> Option<&'static str> {
+        match self {
+            Self::ImportFromDerivationRequired(_) => Some(
+                "The flake evaluates through import-from-derivation (e.g. callCabal2nix), \
+                 which waybill refuses because it would build during evaluation.",
+            ),
+            Self::OfflineRequested
+            | Self::ToolAbsent
+            | Self::ToolUnusable(_)
+            | Self::IfdRefusalUnverified(_)
+            | Self::RevisionUnfetchable { .. }
+            | Self::NoEvaluableAttribute
+            | Self::AmbiguousSystemConfiguration { .. }
+            | Self::EvaluationFailed(_)
+            | Self::BudgetExceeded { .. } => None,
+        }
+    }
+
     /// The C190 / C180 document value: `{"reason": ...}`, plus `"detail"`
     /// when there is one.
     ///
@@ -341,6 +366,22 @@ mod tests {
             assert_eq!(r.detail(), None, "{}", r.wire());
         }
         assert_eq!(with.len() + without.len(), 10, "all ten variants are covered");
+    }
+
+    /// #1446 — only the import-from-derivation refusal needs a sentence its
+    /// wire string and Display do not already give.
+    #[test]
+    fn only_the_ifd_refusal_carries_an_explanation() {
+        let ifd = DegradationReason::ImportFromDerivationRequired("d".into());
+        let e = ifd.explanation().unwrap();
+        assert!(e.contains("callCabal2nix") && e.contains("would build during evaluation"), "{e}");
+        for r in [
+            DegradationReason::OfflineRequested,
+            DegradationReason::IfdRefusalUnverified("d".into()),
+            DegradationReason::EvaluationFailed("d".into()),
+        ] {
+            assert_eq!(r.explanation(), None, "{}", r.wire());
+        }
     }
 
     #[test]
