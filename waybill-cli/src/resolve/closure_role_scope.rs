@@ -71,8 +71,9 @@ pub(crate) struct RoleScopeSummary {
     pub(crate) roles_seen: usize,
     /// Milestone 1423 — members and modules the runtime evidence (the runtime
     /// closure, or the walk) decided runtime, kept runtime by static linking,
-    /// and marked not-in-artifact. All zero under the role rule; C216 says
-    /// which evidence it was.
+    /// and marked not-in-artifact. All zero under the role rule, except
+    /// `statically_linked` when a set-aside walk kept a wrapper's consumed
+    /// static build runtime (T042); C216 says which evidence it was.
     pub(crate) decided_runtime: usize,
     pub(crate) statically_linked: usize,
     pub(crate) decided_not_in_artifact: usize,
@@ -101,7 +102,10 @@ const EMBEDDED_BUILD_INFO: &str = "embedded-build-info";
 /// 4. under [`RuntimeEvidence::Walk`]: reached by the walk (or statically
 ///    linked into a reached member) → runtime; else not-in-artifact — both
 ///    recorded as `ReachabilityWalk`;
-/// 5. under [`RuntimeEvidence::None`]: the milestone-1277 role rule.
+/// 5. under [`RuntimeEvidence::None`]: the milestone-1277 role rule. Under
+///    [`RuntimeEvidence::RoleWithLinked`] (the walk set aside as
+///    `reached-only-root`), the same, except that a member in `linked` is
+///    runtime and `StaticallyLinked` (T042).
 ///
 /// Runtime means `artifact_presence = None`, so a `NotInArtifact` any earlier
 /// step set is cleared: FR-001 holds in both directions. Embedded Go and Rust
@@ -118,7 +122,12 @@ pub(crate) fn assign_role_scope(
     relationships: &[Relationship],
 ) -> RoleScopeSummary {
     let mut summary = match evidence {
-        RuntimeEvidence::None => assign_from_roles(components, boot_libraries),
+        RuntimeEvidence::None => assign_from_roles(components, boot_libraries, &HashSet::new()),
+        // Rule 4's set-aside walk (`reached-only-root`): rule 5, except for
+        // the consumed static build and what is linked into it (T042).
+        RuntimeEvidence::RoleWithLinked { linked } => {
+            assign_from_roles(components, boot_libraries, linked)
+        }
         RuntimeEvidence::Closure { runtime, static_linked } => assign_from_runtime(
             components,
             boot_libraries,
@@ -238,7 +247,7 @@ fn assign_modules(
         RuntimeEvidence::Walk { .. } => {
             Some((ScopeEvidence::ReachabilityWalk, ScopeEvidence::ReachabilityWalk))
         }
-        RuntimeEvidence::None => None,
+        RuntimeEvidence::None | RuntimeEvidence::RoleWithLinked { .. } => None,
     };
     let store = crate::scan_fs::package_db::nix::closure::contents::store_dir();
     for (module, host_ships) in ships {
@@ -288,10 +297,13 @@ fn is_evaluated_package(component: &ResolvedComponent) -> bool {
         == Some(true)
 }
 
-/// Rules 1, 2 and 5: the milestone-1277 role rule, unchanged.
+/// Rules 1, 2 and 5: the milestone-1277 role rule, unchanged, except for
+/// members in `linked`, which are runtime and `StaticallyLinked` whatever
+/// their role (T042). `linked` is empty under [`RuntimeEvidence::None`].
 fn assign_from_roles(
     components: &mut [ResolvedComponent],
     boot_libraries: &HashSet<String>,
+    linked: &HashSet<MemberKey>,
 ) -> RoleScopeSummary {
     let mut summary = RoleScopeSummary::default();
 
@@ -322,6 +334,24 @@ fn assign_from_roles(
         // is what invariant I10 reports as a rule that never ran.
         if is_evaluated_package(component) {
             component.artifact_presence = Some(ArtifactPresence::ExemptEvaluatedPackage);
+            continue;
+        }
+
+        // T042 — the walk was set aside because it reached only a wrapper
+        // root, and this member is the static build that root consumed, or
+        // a library linked into it: its code is in the wrapper's binary, so
+        // it ships, whatever its role (the build itself is `build-tooling`).
+        // The compiler-supplied exemption still wins, as under rule 3.
+        if key_of_component(component).is_some_and(|k| linked.contains(&k)) {
+            if compiler_supplied(component, boot_libraries) {
+                summary.exempt_compiler_supplied += 1;
+                component.artifact_presence = Some(ArtifactPresence::ExemptCompilerSupplied);
+                component.scope_evidence = None;
+            } else {
+                summary.statically_linked += 1;
+                component.artifact_presence = None;
+                component.scope_evidence = Some(ScopeEvidence::StaticallyLinked);
+            }
             continue;
         }
 
@@ -801,6 +831,43 @@ mod tests {
             assert_eq!(classification_source(x), Some("reachability-walk"), "{}", x.purl.as_str());
         }
         assert_eq!((s.decided_runtime, s.decided_not_in_artifact, s.statically_linked), (3, 2, 0));
+    }
+
+    /// T042: with the walk set aside, the role rule decides everything but
+    /// the linked set, which is runtime and `statically-linked` whatever its
+    /// role. The exemption still wins inside the set; outside it, a tooling
+    /// member stays marked (the control).
+    #[test]
+    fn m1423_a_set_aside_walk_keeps_the_linked_set_runtime() {
+        let mut c = vec![
+            component("pkg:hackage/waybill-fixture-ShellCheck@0.11.0", Some("build-tooling")),
+            component("pkg:hackage/waybill-fixture-aeson@2.2", Some("artifact-input")),
+            component("pkg:hackage/containers@0.6.7", Some("artifact-input")),
+            component("pkg:hackage/waybill-fixture-alex@3.5", Some("build-tooling")),
+        ];
+        c[0].artifact_presence = Some(ArtifactPresence::NotInArtifact);
+        let ev = RuntimeEvidence::RoleWithLinked {
+            linked: [
+                key("waybill-fixture-ShellCheck", "0.11.0"),
+                key("waybill-fixture-aeson", "2.2"),
+                key("containers", "0.6.7"),
+            ]
+            .into_iter()
+            .collect(),
+        };
+        let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
+        let s = assign_role_scope(&mut c, &boot, &ev, &[]);
+        for x in &c[..2] {
+            assert_eq!(x.artifact_presence, None, "{}", x.name);
+            assert_eq!(classification_source(x), Some("statically-linked"), "{}", x.name);
+        }
+        assert_eq!(c[2].artifact_presence, Some(ArtifactPresence::ExemptCompilerSupplied));
+        assert_eq!(c[3].artifact_presence, Some(ArtifactPresence::NotInArtifact));
+        assert_eq!(classification_source(&c[3]), Some("closure-role"));
+        assert_eq!(
+            (s.statically_linked, s.exempt_compiler_supplied, s.assigned_build_tooling),
+            (2, 1, 1)
+        );
     }
 
     #[test]

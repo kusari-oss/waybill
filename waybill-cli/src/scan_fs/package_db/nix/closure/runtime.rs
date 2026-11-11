@@ -145,7 +145,9 @@ pub(crate) enum WalkOutcome {
     /// names its static build only in `inputs.drvs` and `installPhase`, so
     /// the walk from it reaches nothing; used, it would mark every library
     /// compiled into the binary, and the fallback errs toward runtime, never
-    /// toward dropping linked code (spec FR-002).
+    /// toward dropping linked code (spec FR-002). For the same reason the
+    /// consumed static build and its libraries are kept runtime
+    /// ([`RuntimeEvidence::RoleWithLinked`]).
     ReachedOnlyRoot,
 }
 
@@ -208,14 +210,20 @@ impl ScopeMethodRecord {
 
     /// The record for marks left to the role rule, because the runtime
     /// closure could not be had for `reason`. `walk_outcome` says whether a
-    /// walk ran and was set aside, or none could run.
-    pub(crate) fn closure_role(reason: RuntimeUnavailable, walk_outcome: Option<WalkOutcome>) -> Self {
+    /// walk ran and was set aside, or none could run. `static_link_source`
+    /// is set only when the walk was set aside and the consumed static
+    /// build's libraries were kept runtime (T042).
+    pub(crate) fn closure_role(
+        reason: RuntimeUnavailable,
+        walk_outcome: Option<WalkOutcome>,
+        static_link_source: Option<StaticLinkSource>,
+    ) -> Self {
         Self {
             method: ScopeMethod::ClosureRole,
             store: None,
             verified: None,
             unavailable_reason: Some(reason),
-            static_link_source: None,
+            static_link_source,
             unmatched_runtime_paths: None,
             walk_outcome,
         }
@@ -583,6 +591,13 @@ pub(crate) enum RuntimeEvidence {
     /// for each rather than presenting a link-edge inference from an
     /// approximate root as proven (spec US2 scenario 2).
     Walk { reached: HashSet<MemberKey> },
+    /// The walk was set aside (`reached-only-root`), so the role rule
+    /// decides, except for `linked`: the Haskell builds the wrapper root
+    /// consumed through `inputs.drvs` and the libraries linked into them,
+    /// which ship inside the wrapper's binary and are kept runtime as
+    /// statically linked (T042). The fallback errs toward runtime, never
+    /// toward dropping linked code (FR-002).
+    RoleWithLinked { linked: HashSet<MemberKey> },
     /// No evidence: the milestone-1277 role rule decides, as before 1423.
     None,
 }
@@ -612,8 +627,11 @@ pub(crate) fn evidence(
             // walk from, so the role rule decides and C216 says why. The
             // query reports `no-evaluated-package` for exactly this case.
             let Some(root) = closure.graph.evaluated.as_deref() else {
-                let record =
-                    ScopeMethodRecord::closure_role(RuntimeUnavailable::NoEvaluatedPackage, None);
+                let record = ScopeMethodRecord::closure_role(
+                    RuntimeUnavailable::NoEvaluatedPackage,
+                    None,
+                    None,
+                );
                 return (RuntimeEvidence::None, Some(record));
             };
             // Rule 4 (FR-005): the walk, never the role rule...
@@ -629,21 +647,34 @@ pub(crate) fn evidence(
             // toward dropping linked code (FR-002), so the role rule decides,
             // as with no evidence at all. A root that reaches only itself and
             // consumed no Haskell build keeps the walk: gh's does, and is
-            // exact on its findings (`walk::consumes_haskell_build`).
+            // exact on its findings (`walk::consumed_haskell_builds`).
+            //
+            // T042: the consumed Haskell builds themselves, and what is
+            // linked into them, are not left to the role rule, which marks
+            // the build `build-tooling`: their code is in the wrapper's
+            // binary.
             let root_key = key_of(&root.to_string());
-            if reached.iter().all(|k| Some(k) == root_key.as_ref())
-                && walk::consumes_haskell_build(raw, root)
-            {
+            let consumed = walk::consumed_haskell_builds(raw, root);
+            if reached.iter().all(|k| Some(k) == root_key.as_ref()) && !consumed.is_empty() {
+                let linked_libs = static_link_set(raw, &consumed, declared().as_ref());
+                let linked: HashSet<MemberKey> =
+                    consumed.iter().chain(&linked_libs.members).filter_map(key_of).collect();
                 tracing::info!(
                     reason = reason.wire(),
                     derivations = raw.derivations.len(),
                     reached_derivations = walked.len(),
+                    consumed_haskell_builds = consumed.len(),
+                    statically_linked = linked.len(),
+                    static_link_source = linked_libs.source.wire(),
                     "nix-closure: the reachability walk reached only the evaluated package; \
-                     scope from the closure role instead"
+                     scope from the closure role, keeping the consumed static build runtime"
                 );
-                let record =
-                    ScopeMethodRecord::closure_role(*reason, Some(WalkOutcome::ReachedOnlyRoot));
-                return (RuntimeEvidence::None, Some(record));
+                let record = ScopeMethodRecord::closure_role(
+                    *reason,
+                    Some(WalkOutcome::ReachedOnlyRoot),
+                    Some(linked_libs.source),
+                );
+                return (RuntimeEvidence::RoleWithLinked { linked }, Some(record));
             }
             tracing::info!(
                 reason = reason.wire(),
@@ -985,7 +1016,8 @@ mod tests {
             w,
             r#"{"method":"runtime-closure","schema":1,"static-c-linking-detected":false,"static-link-source":"declared-edges","store":"https://cache.example","unavailable-reason":null,"unmatched-runtime-paths":3,"verified":true,"walk-outcome":null}"#
         );
-        let w = ScopeMethodRecord::closure_role(RuntimeUnavailable::NoEvaluatedPackage, None).wire();
+        let w = ScopeMethodRecord::closure_role(RuntimeUnavailable::NoEvaluatedPackage, None, None)
+            .wire();
         assert_eq!(
             w,
             r#"{"method":"closure-role","schema":1,"static-c-linking-detected":false,"static-link-source":null,"store":null,"unavailable-reason":"no-evaluated-package","unmatched-runtime-paths":null,"verified":null,"walk-outcome":null}"#
@@ -993,9 +1025,11 @@ mod tests {
         let w = ScopeMethodRecord::closure_role(
             RuntimeUnavailable::NotInAnyStore,
             Some(WalkOutcome::ReachedOnlyRoot),
+            Some(StaticLinkSource::DerivationFields),
         )
         .wire();
         assert!(w.ends_with(r#""verified":null,"walk-outcome":"reached-only-root"}"#), "{w}");
+        assert!(w.contains(r#""static-link-source":"derivation-fields""#), "{w}");
         let w = ScopeMethodRecord::reachability_walk(
             RuntimeUnavailable::QueryTimedOut,
             StaticLinkSource::None,

@@ -5,7 +5,7 @@ The existing per-component row. Its closed enum gains three values. Carriers, pa
 | value | meaning | native mark |
 |---|---|---|
 | `runtime-closure` | decided by the runtime closure (in it → runtime; not in it → not-in-artifact) | `scope: excluded` / `BUILD_TOOL_OF` / `usesTool` only when not-in-artifact |
-| `statically-linked` | not in the runtime closure, but linked into a runtime member (Go/Rust embedded, or a Haskell library) | none (runtime) |
+| `statically-linked` | not in the runtime closure, but linked into a runtime member (Go/Rust embedded, or a Haskell library); or, when a walk is set aside as `reached-only-root`, the Haskell build a wrapper root consumes and the libraries linked into it | none (runtime) |
 | `reachability-walk` | decided by the fallback walk | marked when the walk did not reach it |
 
 ## Rules

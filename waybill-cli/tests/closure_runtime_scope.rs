@@ -726,7 +726,9 @@ fn us2_walk_that_reaches_only_the_root_is_not_used() {
             "method": "closure-role",
             "schema": 1,
             "static-c-linking-detected": false,
-            "static-link-source": null,
+            // The consumed static build's libraries are kept runtime (T042),
+            // found through its derivation fields: no package set here.
+            "static-link-source": "derivation-fields",
             "store": null,
             "unavailable-reason": "not-in-any-store",
             "unmatched-runtime-paths": null,
@@ -738,7 +740,67 @@ fn us2_walk_that_reaches_only_the_root_is_not_used() {
     );
 }
 
-/// CONTROL for the test above, changing one variable: the same closure with
+/// T042: when the walk is set aside, the static Haskell build the wrapper
+/// consumes through `inputs.drvs`, and the libraries linked into it, are
+/// runtime. Their code ships inside the wrapper's binary, and the role rule
+/// alone would mark the build itself (`build-tooling`). Everything else stays
+/// on the role rule.
+///
+/// CONTROL, in the same scan: a Haskell derivation the static build uses only
+/// as a build tool (`nativeBuildInputs`), which the root does not consume. It
+/// is `build-tooling` too, and stays marked by the role rule.
+#[test]
+fn us2_reached_only_root_keeps_the_consumed_static_build_runtime() {
+    let closure = fixture("closure-static.json")
+        .replacen(
+            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8\",\n        \"buildInputs\": \"/nix/store/h-aeson",
+            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8 /nix/store/h-alex\",\n        \"buildInputs\": \"/nix/store/h-aeson",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": { \"outputs\": [\"out\"] }\n        },",
+            "\"d-gmp.drv\": { \"outputs\": [\"out\"] },\n          \"d-alex.drv\": { \"outputs\": [\"out\"] }\n        },",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": {\n",
+            "\"d-alex.drv\": {\n      \"name\": \"waybill-fixture-alex-3.5.1.0\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-alex\",\n        \"version\": \"3.5.1.0\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\"\n      },\n      \"outputs\": { \"out\": { \"path\": \"h-alex\" } }\n    },\n    \"d-gmp.drv\": {\n",
+            1,
+        );
+    assert_eq!(closure.matches("h-alex").count(), 2, "the fixture edits applied");
+    assert_eq!(closure.matches("d-alex.drv").count(), 2, "the fixture edits applied");
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "closure-role", "{c216}");
+    assert_eq!(c216["walk-outcome"], "reached-only-root", "{c216}");
+
+    let marked = run.marked();
+    for n in std::iter::once("waybill-fixture-ShellCheck").chain(HASKELL_LIBS) {
+        assert!(!marked.contains(n), "{n} ships inside the wrapper's binary; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-ShellCheck"), "waybill:closure-role"),
+        Some("build-tooling"),
+        "precondition: the role rule alone would mark the static build"
+    );
+
+    // CONTROL: not consumed by the root, so the role rule still decides.
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-alex"), "waybill:closure-role"),
+        Some("build-tooling"),
+        "precondition: the control is in a tooling role"
+    );
+    assert!(marked.contains("waybill-fixture-alex"), "marked: {marked:?}");
+    assert_eq!(run.c203("waybill-fixture-alex").as_deref(), Some("closure-role"));
+    // gmp is linked too, but is not a Haskell library: the static-link logic
+    // does not follow it, so the role rule decides (`artifact-input`, unmarked).
+    assert!(!marked.contains("waybill-fixture-gmp"));
+    assert_eq!(run.c203("waybill-fixture-gmp"), None);
+}
+
+/// CONTROL for `us2_walk_that_reaches_only_the_root_is_not_used`, changing
+/// one variable: the same closure with
 /// the wrapper also naming its static build in `buildInputs`. The walk now
 /// reaches past the root, so it is used, and the libraries are runtime by
 /// the walk rather than by the role rule.

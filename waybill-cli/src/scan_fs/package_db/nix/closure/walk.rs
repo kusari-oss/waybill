@@ -33,8 +33,11 @@
 //! dependency field, so the walk reaches nothing from it. None of the scored
 //! targets has that shape. Such a walk is not used: when the walk reaches no
 //! member but the root and the root consumed a Haskell build
-//! ([`consumes_haskell_build`]), [`super::runtime::evidence`] leaves the
+//! ([`consumed_haskell_builds`]), [`super::runtime::evidence`] leaves the
 //! closure to the role rule, and C216 says `walk-outcome: reached-only-root`.
+//! The consumed Haskell builds and the libraries linked into them are the
+//! exception: their code ships inside the wrapper's binary, so they are kept
+//! runtime as statically linked (T042).
 
 use std::collections::{BTreeSet, VecDeque};
 
@@ -69,8 +72,8 @@ pub(crate) fn reachable(raw: &RawClosure, root: &str) -> BTreeSet<String> {
     seen
 }
 
-/// Whether `root` consumed a Haskell-builder derivation (`inputs.drvs`), the
-/// sign of a wrapper around a static Haskell build.
+/// The Haskell-builder derivations `root` consumed through `inputs.drvs`: when
+/// non-empty, the sign of a wrapper around a static Haskell build.
 ///
 /// A walk that reached only the root drops linked code only when there is
 /// linked code it could not follow. shellcheck's wrapper names its static
@@ -78,11 +81,20 @@ pub(crate) fn reachable(raw: &RawClosure, root: &str) -> BTreeSet<String> {
 /// itself too (`measurements/reach.json`: 1 of 788 derivations), but its code
 /// is its own, and that walk is exact on gh's findings (55 true, 0 false,
 /// `measurements/us2-walk-score/`).
-pub(crate) fn consumes_haskell_build(raw: &RawClosure, root: &str) -> bool {
-    raw.derivations.get(root).is_some_and(|d| {
-        d.input_drvs(&raw.derivations)
-            .any(|k| raw.derivations.get(k).is_some_and(|i| i.is_haskell_builder()))
-    })
+///
+/// When the walk is set aside (`reached-only-root`), these are the static
+/// builds whose code ships inside the wrapper's binary, so they and the
+/// libraries linked into them are kept runtime (T042).
+pub(crate) fn consumed_haskell_builds(raw: &RawClosure, root: &str) -> BTreeSet<String> {
+    raw.derivations
+        .get(root)
+        .map(|d| {
+            d.input_drvs(&raw.derivations)
+                .filter(|k| raw.derivations.get(*k).is_some_and(|i| i.is_haskell_builder()))
+                .map(str::to_string)
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 #[cfg(test)]
@@ -164,9 +176,12 @@ mod tests {
         };
         let raw = RawClosure::parse(&closure(r#","setupCompilerEnvironmentPhase":"x""#)).unwrap();
         assert_eq!(reachable(&raw, "d-wrap.drv"), set(&["d-wrap.drv"]), "the walk cannot follow it");
-        assert!(consumes_haskell_build(&raw, "d-wrap.drv"));
+        assert_eq!(consumed_haskell_builds(&raw, "d-wrap.drv"), set(&["d-hs.drv"]));
         let raw = RawClosure::parse(&closure("")).unwrap();
-        assert!(!consumes_haskell_build(&raw, "d-wrap.drv"), "control: not a Haskell build");
-        assert!(!consumes_haskell_build(&raw, "d-absent.drv"));
+        assert!(
+            consumed_haskell_builds(&raw, "d-wrap.drv").is_empty(),
+            "control: not a Haskell build"
+        );
+        assert!(consumed_haskell_builds(&raw, "d-absent.drv").is_empty());
     }
 }
