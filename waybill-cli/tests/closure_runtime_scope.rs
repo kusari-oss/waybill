@@ -19,6 +19,7 @@
 //! |---|---|---|
 //! | `closure-runtime.json` | curl / openssh | `xml` is an `artifact-input` the output does not reference (marked); `dnsroot` is `build-tooling` but referenced (unmarked); `bootlib` is a compiler-supplied boot library |
 //! | `closure-static.json` | shellcheck / ormolu | a static Haskell executable whose libraries are in its static build's `buildInputs` and propagate; `hspec` is a test-only dependency. The wrapper root names the static build only in `inputs.drvs`, so under US2 the walk reaches only the root |
+//! | `closure-static-namesake.json` | pandoc-cli / cachix (#1459) | a static Haskell executable linking Haskell `zlib`, which shares its name with a build-only C `zlib`, and `fsnotify`, whose derivation propagates `hfsevents` while the package set declares something else |
 //! | `closure-embedded.json` | gh | Go modules read from a runtime binary and from a build tool's binary |
 //! | `closure-walk.json` | US2 | `perl` is `both` but reached only through a reached member's `nativeBuildInputs`; `xml` is an `artifact-input` of the build tool only |
 //! | `closure-tworoots.json` | US2 | two unconsumed derivations, so no evaluated package to walk from |
@@ -654,6 +655,77 @@ fn us1_linux_static_build_seed_uses_declared_edges() {
         assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
     }
     assert_eq!(run.c216().unwrap()["static-link-source"], "declared-edges");
+}
+
+/// #1459's shape: the static build is in the runtime closure, as on
+/// aarch64-darwin; none of its libraries are.
+fn namesake_runtime() -> String {
+    listing(&["h-zapp-bin", "h-ZX"])
+}
+
+fn namesake_scan(closure: &str, packages: &str) -> Run {
+    scan_with(NixStub {
+        runtime: Some(namesake_runtime()),
+        package_set: Some((packages, "{ }\n")),
+        ..base(closure)
+    })
+}
+
+/// The component named `name` whose PURL starts with `prefix`, from CDX.
+fn cdx_by_purl<'a>(run: &'a Run, name: &str, prefix: &str) -> &'a Value {
+    run.cdx_components()
+        .into_iter()
+        .find(|c| c["name"] == name && c["purl"].as_str().is_some_and(|p| p.starts_with(prefix)))
+        .unwrap_or_else(|| panic!("no {prefix} component named {name}"))
+}
+
+/// #1459: a Haskell library linked into the static executable shares its name
+/// with a build-only C library. Measured on nixpkgs `a799d3e3`: Haskell
+/// `zlib` 0.7.1.1 was marked on pandoc-cli, hledger and cachix while its C
+/// namesake was not, because the declared edge `tls -> zlib` bound the name to
+/// `pkg:generic/zlib@1.3.2`. The Haskell library is runtime and
+/// `statically-linked`; the C library, which nothing at runtime references,
+/// stays marked.
+///
+/// CDX only for the two namesakes: the three-format helpers look a component
+/// up by name, which two components share here.
+#[test]
+fn us1_static_haskell_library_with_c_namesake_is_runtime() {
+    let closure = fixture("closure-static-namesake.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = namesake_scan(&closure, &packages);
+    assert_eq!(run.c216().unwrap()["static-link-source"], "declared-edges");
+
+    let hs = cdx_by_purl(&run, "waybill-fixture-zlib", "pkg:hackage/");
+    assert_eq!(hs["version"], "0.7.1.1");
+    assert_ne!(hs["scope"], "excluded", "linked into the binary; stderr:\n{}", run.scan.stderr);
+    assert_eq!(Run::cdx_prop(hs, C203), Some("statically-linked"));
+
+    let c = cdx_by_purl(&run, "waybill-fixture-zlib", "pkg:generic/");
+    assert_eq!(c["version"], "1.3.2");
+    assert_eq!(c["scope"], "excluded", "build-only C namesake; stderr:\n{}", run.scan.stderr);
+    assert_eq!(Run::cdx_prop(c, C203), Some("runtime-closure"));
+
+    // CONTROL: the declared edges still leave the test-only dependency out,
+    // so the fix did not turn the root's walk into the derivation fields.
+    assert!(run.marked().contains("waybill-fixture-hspec"));
+}
+
+/// #1459, cachix's `hfsevents`: the pinned package set's relations are
+/// cabal2nix's Linux resolution, so `fsnotify` declares `hinotify`, while on
+/// darwin its derivation propagates `hfsevents`, which is what is linked.
+/// Below the root, a library's `propagatedBuildInputs` holds no test
+/// dependencies (q6), so it is followed alongside the declared relations.
+#[test]
+fn us1_platform_conditional_haskell_dependency_is_runtime() {
+    let closure = fixture("closure-static-namesake.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = namesake_scan(&closure, &packages);
+    let marked = run.marked();
+    for n in ["waybill-fixture-fsnotify", "waybill-fixture-hfsevents"] {
+        assert!(!marked.contains(n), "{n} is linked; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
 }
 
 // ---- US1: embedded modules (FR-002) ---------------------------------------

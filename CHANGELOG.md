@@ -132,6 +132,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A Haskell library statically linked into a `--nix-closure` runtime
+  member is no longer marked excluded when it shares a name with a C
+  library, or when nixpkgs adds it for one platform.** Two causes, both
+  read off the nixpkgs `a799d3e3` aarch64-darwin documents. First, a
+  milestone-1275 declared edge bound its target by name to whichever
+  component of that name came last, so `tls -> zlib` pointed at the C
+  library `pkg:generic/zlib@1.3.2`, which `tls` does not depend on, and
+  the static-link walk never reached Haskell `zlib`. A declared target now
+  binds to the name's Haskell build, else to its `pkg:hackage` component,
+  and the walk follows only Haskell builds. Second, the declared relations are cabal2nix's
+  Linux resolution, so `fsnotify` declares `hinotify` while on darwin its
+  derivation propagates `hfsevents`. Below the root, the walk now follows
+  a library's `propagatedBuildInputs` as well as its declared relations;
+  a library propagates no test dependencies. pandoc-cli keeps Haskell
+  `lua` and `zlib`, hledger keeps `zlib`, and cachix keeps `zlib`, `zstd`
+  and `hfsevents`, each now C203 `statically-linked`. Their C namesakes'
+  marks are unchanged, and the three documents lose 17 declared edges
+  that pointed at a C library (#1459).
 - **A `--nix-closure` CycloneDX document with re-identified Python
   members is schema-valid again.** Milestone 1366 recorded why a closure
   member's `pkg:pypi` identifier was derived by adding a

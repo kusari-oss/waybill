@@ -1,0 +1,89 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-zapp-1.0.drv": {
+      "name": "waybill-fixture-zapp-1.0",
+      "env": {
+        "pname": "waybill-fixture-zapp",
+        "version": "1.0",
+        "outputs": "bin out",
+        "installPhase": "install -Dm755 /nix/store/h-ZX/bin/zx $bin/bin/zx"
+      },
+      "inputs": {
+        "drvs": { "d-ZX.drv": { "outputs": ["out"] } },
+        "srcs": []
+      },
+      "outputs": {
+        "bin": { "path": "h-zapp-bin" },
+        "out": { "path": "h-zapp" }
+      }
+    },
+    "d-ZX.drv": {
+      "name": "waybill-fixture-zexe-1.0",
+      "env": {
+        "pname": "waybill-fixture-zexe",
+        "version": "1.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8 /nix/store/h-czlib",
+        "buildInputs": "/nix/store/h-hszlib /nix/store/h-fsn /nix/store/h-hspec"
+      },
+      "inputs": {
+        "drvs": {
+          "d-hszlib.drv": { "outputs": ["out"] },
+          "d-fsn.drv": { "outputs": ["out"] },
+          "d-hspec.drv": { "outputs": ["out"] },
+          "d-zlib.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "h-ZX" } }
+    },
+    "d-hszlib.drv": {
+      "name": "waybill-fixture-zlib-0.7.1.1",
+      "env": {
+        "pname": "waybill-fixture-zlib",
+        "version": "0.7.1.1",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-hszlib" } }
+    },
+    "d-zlib.drv": {
+      "name": "waybill-fixture-zlib-1.3.2",
+      "env": { "pname": "waybill-fixture-zlib", "version": "1.3.2" },
+      "outputs": { "out": { "path": "h-czlib" } }
+    },
+    "d-fsn.drv": {
+      "name": "waybill-fixture-fsnotify-0.4.4.0",
+      "env": {
+        "pname": "waybill-fixture-fsnotify",
+        "version": "0.4.4.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8",
+        "propagatedBuildInputs": "/nix/store/h-hfsev"
+      },
+      "inputs": { "drvs": { "d-hfsev.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "h-fsn" } }
+    },
+    "d-hfsev.drv": {
+      "name": "waybill-fixture-hfsevents-0.1.8",
+      "env": {
+        "pname": "waybill-fixture-hfsevents",
+        "version": "0.1.8",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-hfsev" } }
+    },
+    "d-hspec.drv": {
+      "name": "waybill-fixture-hspec-2.11.9",
+      "env": {
+        "pname": "waybill-fixture-hspec",
+        "version": "2.11.9",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-hspec" } }
+    }
+  },
+  "version": 4
+}

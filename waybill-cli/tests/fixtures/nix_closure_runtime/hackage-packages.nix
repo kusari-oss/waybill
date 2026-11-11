@@ -45,3 +45,30 @@
       sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
       license = lib.licenses.bsd3;
   }) { };
+  waybill-fixture-zexe = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-zexe";
+      version = "1.0";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      executableHaskellDepends = [ waybill-fixture-zlib waybill-fixture-fsnotify ];
+      testHaskellDepends = [ waybill-fixture-hspec ];
+      license = lib.licenses.bsd3;
+  }) { };
+  waybill-fixture-zlib = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-zlib";
+      version = "0.7.1.1";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      license = lib.licenses.bsd3;
+  }) { };
+  waybill-fixture-fsnotify = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-fsnotify";
+      version = "0.4.4.0";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      libraryHaskellDepends = [ waybill-fixture-hinotify ];
+      license = lib.licenses.bsd3;
+  }) { };
+  waybill-fixture-hfsevents = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-hfsevents";
+      version = "0.1.8";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      license = lib.licenses.bsd3;
+  }) { };
