@@ -68,6 +68,7 @@ fn scan(project: &Path, closure: &str) -> VexScan {
         closure,
         rows: Rows::Json(&rows),
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&["--nix-closure", "--output", &sidecar_arg]);
     let openvex = std::fs::read(&sidecar)
