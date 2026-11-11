@@ -73,6 +73,7 @@
 //! | Value | Slot |
 //! |---|---|
 //! | a single SPDX-listed identifier (`MIT`) | `license.id` |
+//! | an "or later" identifier (`Apache-2.0+`), alone or as an operand (#1410) | `expression` |
 //! | an **OR** compound (`Unlicense OR MIT`) | `expression` |
 //! | an **AND** of single tokens (`GPL-2.0-only AND bzip2-1.0.4`) | split: one entry each, ids preserved |
 //! | any other valid expression (parens, mixed operators, `WITH`) | `expression` |
@@ -95,15 +96,20 @@
 use serde_json::json;
 use waybill_common::types::license::SpdxExpression;
 
-/// Whether `s` is a valid SPDX expression that carries an operator.
+/// Whether `s` is a valid SPDX expression that carries an operator, counting the
+/// `+` "or later" suffix as one (#1410).
 ///
 /// Both halves matter. The operator check alone would send prose containing the
 /// word "and" to the `expression` slot; the parse check alone would send a bare
 /// `MIT` there, when `license.id` is the better slot for a listed identifier.
+///
+/// `Apache-2.0+` is a single license with an operator, not an identifier: the
+/// SPDX License List has no `+` forms, so `license.id` cannot carry it. It takes
+/// the `expression` slot, which is also the string both SPDX emitters write.
 fn is_compound_expression(s: &str) -> bool {
     let has_operator = s
         .split_whitespace()
-        .any(|t| t == "AND" || t == "OR" || t == "WITH");
+        .any(|t| t == "AND" || t == "OR" || t == "WITH" || t.ends_with('+'));
     has_operator && spdx::Expression::parse(s).is_ok()
 }
 
@@ -219,6 +225,12 @@ fn try_split_and_compound(expr: &str) -> Option<Vec<String>> {
         if p.is_empty() || p.contains(char::is_whitespace) {
             return None;
         }
+        // #1410: an `X+` operand has no array-entry form. It is not a
+        // listed id, and minting `LicenseRef-X` for it would drop the
+        // "or later". Keep the whole value as an expression instead.
+        if p.ends_with('+') {
+            return None;
+        }
         tokens_out.push(p.to_string());
     }
     Some(tokens_out)
@@ -258,8 +270,10 @@ fn license_entry_for_token(token: &str, acknowledgement: &str) -> serde_json::Va
             }
         });
     }
-    let is_spdx_list_id =
-        spdx::license_id(token).is_some() || spdx::exception_id(token).is_some();
+    // Exact-name match: `spdx::license_id` strips a trailing `+` before its
+    // lookup, so `is_some()` alone would admit `Apache-2.0+` (#1410).
+    let is_spdx_list_id = spdx::license_id(token).is_some_and(|l| l.name == token)
+        || spdx::exception_id(token).is_some_and(|e| e.name == token);
     if is_spdx_list_id {
         return json!({
             "license": {
@@ -427,6 +441,70 @@ mod tests {
         assert!(or[0].get("expression").is_some());
         assert_eq!(and.len(), 2, "AND must split: {and:?}");
         assert!(and.iter().all(|e| e.get("expression").is_none()));
+    }
+
+    #[test]
+    fn an_or_later_license_uses_the_expression_slot() {
+        // #1410: previously `{"license":{"id":"Apache-2.0+"}}`, which the
+        // CycloneDX 1.6 `license.id` enum rejects.
+        let got = render_licenses(&[e("Apache-2.0+")], &[]);
+        assert_eq!(
+            got,
+            vec![json!({"expression":"Apache-2.0+","acknowledgement":"declared"})]
+        );
+    }
+
+    #[test]
+    fn an_and_with_an_or_later_operand_is_not_split() {
+        // #1410: splitting put `EUPL-1.1+` in `license.id`.
+        let got = render_licenses(&[e("EUPL-1.1+ AND MIT")], &[]);
+        assert_eq!(
+            got,
+            vec![json!({"expression":"EUPL-1.1+ AND MIT","acknowledgement":"declared"})]
+        );
+    }
+
+    /// Every `license.id` this renderer can emit must be an identifier on the
+    /// SPDX License List (or exception list). The CycloneDX test validator
+    /// stubs `spdx.schema.json`, so the schema enum is never checked there.
+    #[test]
+    fn every_emitted_license_id_is_on_the_spdx_list() {
+        let inputs = [
+            "MIT",
+            "Apache-2.0",
+            "GPL-2.0",
+            "GPL-2.0-or-later",
+            "Apache-2.0+",
+            "EUPL-1.1+",
+            "GPL-2.0+",
+            "MIT+",
+            "EUPL-1.1+ AND MIT",
+            "MIT AND Apache-2.0+",
+            "GPL-2.0-only AND bzip2-1.0.4",
+            "Unlicense OR MIT",
+            "LicenseRef-Acme",
+            "mit",
+        ];
+        let mut cases: Vec<(Vec<SpdxExpression>, Vec<SpdxExpression>)> = Vec::new();
+        for a in inputs {
+            cases.push((vec![e(a)], vec![]));
+            for b in inputs {
+                cases.push((vec![e(a)], vec![e(b)]));
+            }
+        }
+        for (d, c) in cases {
+            for entry in render_licenses(&d, &c) {
+                if let Some(id) = entry["license"]["id"].as_str() {
+                    let listed = spdx::license_id(id).is_some_and(|l| l.name == id)
+                        || spdx::exception_id(id).is_some_and(|x| x.name == id);
+                    assert!(
+                        listed,
+                        "license.id {id:?} is not on the SPDX list \
+                         (declared={d:?} concluded={c:?})"
+                    );
+                }
+            }
+        }
     }
 
     #[test]

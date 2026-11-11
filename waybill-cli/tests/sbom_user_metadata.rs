@@ -1241,7 +1241,7 @@ fn run_spdx3_validator(fixture_path: &Path) -> ValidationResult {
         );
         return ValidationResult::Skipped;
     }
-    let output = Command::new(&bin_path)
+    let output = common::spdx3_validate::command(&bin_path)
         .arg("--quiet")
         .arg("-j")
         .arg(fixture_path)

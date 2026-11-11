@@ -101018,7 +101018,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-8139 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-8139 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-8139 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2014-8139"
@@ -101049,7 +101049,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-8140 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-8140 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-8140 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2014-8140"
@@ -101080,7 +101080,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-8141 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-8141 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-8141 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2014-8141"
@@ -101111,7 +101111,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-9636 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-9636 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-9636 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2014-9636"
@@ -101142,7 +101142,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-9913 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-9913 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-9913 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2014-9913"
@@ -101173,7 +101173,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2015-7696 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2015-7696 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2015-7696 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2015-7696"
@@ -101204,7 +101204,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2015-7697 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2015-7697 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2015-7697 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2015-7697"
@@ -101235,7 +101235,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2016-9844 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2016-9844 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2016-9844 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2016-9844"
@@ -101266,7 +101266,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2018-18384 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2018-18384 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2018-18384 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2018-18384"
@@ -101297,7 +101297,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2019-13232 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2019-13232 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2019-13232 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2019-13232"
@@ -101328,7 +101328,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2021-4217 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2021-4217 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2021-4217 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2021-4217"
@@ -101359,7 +101359,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2025-46836 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2025-46836 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2025-46836 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2025-46836"
@@ -101390,7 +101390,7 @@
         }
       ],
       "analysis": {
-        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2026-7598 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2026-7598 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2026-7598 covers the build this document describes, which has the patch applied.",
         "state": "exploitable"
       },
       "id": "CVE-2026-7598"

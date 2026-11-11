@@ -132,16 +132,17 @@ fn run_validator(fixture_path: &Path) -> ValidationResult {
     // Retry wrapper for transient network flakes. `spdx3-validate`
     // fetches SPDX schemas (spdx-model.ttl, spdx-json-schema.json,
     // spdx-context.jsonld) from spdx.org on EVERY invocation via
-    // `urllib.request.urlopen` and `rdflib.Graph.parse(url)`. When
-    // the GHA runner sees a transient reset, the tool fails with
-    // `ConnectionResetError: [Errno 104] Connection reset by peer`
-    // and the test panics — but the underlying SBOM output was
-    // fine. Retry up to 3 times with exponential backoff; only
-    // treat the LAST attempt as authoritative.
+    // `urllib.request.urlopen` and `rdflib.Graph.parse(url)`. Since
+    // #1417 it runs through `common::spdx3_validate::command`, which
+    // serves those from vendored copies and refuses any other URL, so
+    // a network failure should no longer be reachable. The retry and
+    // the `Unreachable` classification are kept as a backstop. Retry
+    // up to 3 times with exponential backoff; only treat the LAST
+    // attempt as authoritative.
     const MAX_ATTEMPTS: u32 = 3;
     let mut last_combined_text = String::new();
     for attempt in 1..=MAX_ATTEMPTS {
-        let output = Command::new(&bin_path)
+        let output = common::spdx3_validate::command(&bin_path)
             .arg("--quiet")
             .arg("-j")
             .arg(fixture_path)

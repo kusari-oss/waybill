@@ -129,6 +129,10 @@ data-encoding = "2"
 # already in the lockfile). Plan.md / spec Primary Dependencies
 # explicitly names regex.
 regex = "1"
+# Substring search for the Go build-info marker in binaries
+# (`scan_fs/package_db/go_binary.rs`). Already in the lockfile through
+# `regex`, so promoting it adds no crate.
+memchr = "2"
 
 # Milestone 113 — user-supplied directory exclusion for `waybill scan`.
 # `globset` provides `**`-capable glob patterns with no negation

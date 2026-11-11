@@ -29,7 +29,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":300,\\\"with_candidates\\\":66}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":301,\\\"with_candidates\\\":65}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -100710,12 +100710,6 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/unbound@1.25.0",
           "referenceType": "purl"
-        },
-        {
-          "comment": "CPE from waybill's curated CPE table",
-          "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:nlnetlabs:unbound:1.25.0:*:*:*:*:*:*:*",
-          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
