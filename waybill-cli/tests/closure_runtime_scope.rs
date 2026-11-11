@@ -22,11 +22,15 @@
 //! | `closure-embedded.json` | gh | Go modules read from a runtime binary and from a build tool's binary |
 //! | `closure-walk.json` | US2 | `perl` is `both` but reached only through a reached member's `nativeBuildInputs`; `xml` is an `artifact-input` of the build tool only |
 //! | `closure-tworoots.json` | US2 | two unconsumed derivations, so no evaluated package to walk from |
+//!
+//! US4 reuses `closure-runtime.json`, adding a CVE-named patch to one member
+//! the recipe keeps and one it drops (`us4_closure`).
 
 #![cfg(unix)]
 #![allow(clippy::unwrap_used)]
 
 mod common;
+mod sbom_edit_support;
 
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -1022,4 +1026,318 @@ fn us2_no_evaluated_package_falls_back_to_closure_role() {
     assert!(!marked.contains("waybill-fixture-lib"), "artifact-input, left alone by the role rule");
     assert_eq!(run.c203("waybill-fixture-tool").as_deref(), Some("closure-role"));
     assert_eq!(run.c203("waybill-fixture-lib"), None, "the role rule decides nothing about it");
+}
+
+// ---- US4: the runtime-only recipe (FR-011, FR-012) ------------------------
+
+/// A CVE-named patch on a member the recipe keeps (`ssl`, in the runtime
+/// closure) and on one it drops (`xml`, an `artifact-input` the output does
+/// not reference). Each yields a CycloneDX backport pair (#1436): a
+/// `not_affected` statement naming the subject with the patched member as
+/// `waybill:vex-subcomponent`, and a version-scoped `exploitable` one.
+const KEPT_CVE: &str = "CVE-2026-90031";
+const DROPPED_CVE: &str = "CVE-2026-90032";
+
+fn us4_closure() -> String {
+    let mut c: Value = serde_json::from_str(&fixture("closure-runtime.json")).unwrap();
+    c["derivations"]["d-ssl.drv"]["env"]["patches"] = Value::String(format!("/nix/store/p1-{KEPT_CVE}.patch"));
+    c["derivations"]["d-xml.drv"]["env"]["patches"] = Value::String(format!("/nix/store/p2-{DROPPED_CVE}.patch"));
+    c.to_string()
+}
+
+fn cdx_walk<'a>(cs: &'a [Value], out: &mut Vec<&'a Value>) {
+    for c in cs {
+        out.push(c);
+        cdx_walk(c["components"].as_array().map(Vec::as_slice).unwrap_or(&[]), out);
+    }
+}
+
+/// Every CycloneDX component, nested ones included; with the subject first
+/// when `subject` is set.
+fn cdx_all(doc: &Value, subject: bool) -> Vec<&Value> {
+    let mut out = Vec::new();
+    if subject {
+        cdx_walk(std::slice::from_ref(&doc["metadata"]["component"]), &mut out);
+    }
+    cdx_walk(doc["components"].as_array().map(Vec::as_slice).unwrap_or(&[]), &mut out);
+    out
+}
+
+/// SPDX 2.3 package SPDXID → PURL.
+fn spdx23_purls(doc: &Value) -> HashMap<&str, &str> {
+    doc["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|p| {
+            let id = p["SPDXID"].as_str()?;
+            let r = p["externalRefs"].as_array()?.iter().find(|r| r["referenceType"] == "purl")?;
+            Some((id, r["referenceLocator"].as_str()?))
+        })
+        .collect()
+}
+
+/// SPDX 3 element IRI → PURL.
+fn spdx3_purls(doc: &Value) -> HashMap<&str, &str> {
+    doc["@graph"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|e| Some((e["spdxId"].as_str()?, e["software_packageUrl"].as_str()?)))
+        .collect()
+}
+
+/// Every component PURL, in any of the three formats.
+fn us4_purls(doc: &Value) -> BTreeSet<String> {
+    match sbom_edit_support::format_of(doc) {
+        "cdx" => cdx_all(doc, true).into_iter().filter_map(|c| c["purl"].as_str().map(str::to_string)).collect(),
+        "spdx23" => spdx23_purls(doc).into_values().map(str::to_string).collect(),
+        _ => spdx3_purls(doc).into_values().map(str::to_string).collect(),
+    }
+}
+
+/// The subject's PURL, as each format names it.
+fn us4_subject(doc: &Value) -> Option<String> {
+    match sbom_edit_support::format_of(doc) {
+        "cdx" => doc["metadata"]["component"]["purl"].as_str().map(str::to_string),
+        "spdx23" => spdx23_purls(doc).get(doc["documentDescribes"][0].as_str()?).map(|p| p.to_string()),
+        _ => {
+            let graph = doc["@graph"].as_array()?;
+            let root = graph.iter().find(|e| e["type"] == "SpdxDocument")?["rootElement"][0].as_str()?;
+            spdx3_purls(doc).get(root).map(|p| p.to_string())
+        }
+    }
+}
+
+/// Components carrying the not-in-artifact mark, by the contract's rule for
+/// each format (`contracts/sbom-edit-scope-excluded.md`), as PURLs.
+fn us4_not_in_artifact(doc: &Value) -> BTreeSet<String> {
+    match sbom_edit_support::format_of(doc) {
+        "cdx" => cdx_all(doc, false)
+            .into_iter()
+            .filter(|c| c["scope"] == "excluded")
+            .filter(|c| {
+                !c["properties"].as_array().into_iter().flatten().any(|p| {
+                    p["name"] == "waybill:lifecycle-scope" || p["name"] == "waybill:optional-derivation"
+                })
+            })
+            .filter_map(|c| c["purl"].as_str().map(str::to_string))
+            .collect(),
+        "spdx23" => {
+            let purl = spdx23_purls(doc);
+            doc["relationships"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|r| r["relationshipType"] == "BUILD_TOOL_OF")
+                .filter_map(|r| purl.get(r["spdxElementId"].as_str()?).map(|p| p.to_string()))
+                .collect()
+        }
+        _ => {
+            let purl = spdx3_purls(doc);
+            doc["@graph"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|e| e["type"] == "LifecycleScopedRelationship")
+                .filter(|e| e["relationshipType"] == "usesTool" && e["scope"] == "build")
+                .flat_map(|e| e["to"].as_array().into_iter().flatten())
+                .filter_map(|t| purl.get(t.as_str()?).map(|p| p.to_string()))
+                .collect()
+        }
+    }
+}
+
+/// Every reference a relationship, dependency or VEX statement makes that
+/// names nothing in the document.
+fn us4_dangling(doc: &Value) -> Vec<String> {
+    let mut dangling = Vec::new();
+    match sbom_edit_support::format_of(doc) {
+        "cdx" => {
+            let refs: BTreeSet<&str> = cdx_all(doc, true).into_iter().filter_map(|c| c["bom-ref"].as_str()).collect();
+            let mut check = |what: String, r: &str| {
+                if !refs.contains(r) {
+                    dangling.push(format!("{what}: {r}"));
+                }
+            };
+            for d in doc["dependencies"].as_array().into_iter().flatten() {
+                check("dependencies.ref".into(), d["ref"].as_str().unwrap_or_default());
+                for t in d["dependsOn"].as_array().into_iter().flatten() {
+                    check("dependencies.dependsOn".into(), t.as_str().unwrap_or_default());
+                }
+            }
+            for v in doc["vulnerabilities"].as_array().into_iter().flatten() {
+                for a in v["affects"].as_array().into_iter().flatten() {
+                    check(format!("{} affects", v["id"]), a["ref"].as_str().unwrap_or_default());
+                }
+                for p in v["properties"].as_array().into_iter().flatten() {
+                    if p["name"] == "waybill:vex-subcomponent" {
+                        check(format!("{} subcomponent", v["id"]), p["value"].as_str().unwrap_or_default());
+                    }
+                }
+            }
+        }
+        "spdx23" => {
+            let ids: BTreeSet<&str> = ["packages", "files"]
+                .iter()
+                .flat_map(|k| doc[*k].as_array().into_iter().flatten())
+                .filter_map(|p| p["SPDXID"].as_str())
+                .chain(["SPDXRef-DOCUMENT", "NOASSERTION", "NONE"])
+                .collect();
+            let resolves = |id: &str| ids.contains(id) || id.starts_with("DocumentRef-");
+            for r in doc["relationships"].as_array().into_iter().flatten() {
+                for k in ["spdxElementId", "relatedSpdxElement"] {
+                    let id = r[k].as_str().unwrap_or_default();
+                    if !resolves(id) {
+                        dangling.push(format!("{} {k}: {id}", r["relationshipType"]));
+                    }
+                }
+            }
+            for d in doc["documentDescribes"].as_array().into_iter().flatten() {
+                let id = d.as_str().unwrap_or_default();
+                if !resolves(id) {
+                    dangling.push(format!("documentDescribes: {id}"));
+                }
+            }
+        }
+        _ => {
+            let graph = doc["@graph"].as_array().map(Vec::as_slice).unwrap_or(&[]);
+            let mut ids: BTreeSet<&str> = graph.iter().filter_map(|e| e["spdxId"].as_str()).collect();
+            ids.extend(
+                graph
+                    .iter()
+                    .flat_map(|e| e["import"].as_array().into_iter().flatten())
+                    .filter_map(|m| m["externalSpdxId"].as_str()),
+            );
+            for e in graph {
+                let kind = e["type"].as_str().unwrap_or_default();
+                let mut named: Vec<&str> = Vec::new();
+                if kind.ends_with("Relationship") {
+                    named.extend(e["from"].as_str());
+                    named.extend(e["to"].as_array().into_iter().flatten().filter_map(Value::as_str));
+                    named.extend(e["security_assessedElement"].as_str());
+                }
+                if kind == "Annotation" {
+                    named.extend(e["subject"].as_str());
+                }
+                if kind == "SpdxDocument" || kind == "software_Sbom" {
+                    named.extend(e["rootElement"].as_array().into_iter().flatten().filter_map(Value::as_str));
+                }
+                for id in named {
+                    if !ids.contains(id) {
+                        dangling.push(format!("{kind} {}: {id}", e["relationshipType"]));
+                    }
+                }
+            }
+        }
+    }
+    dangling
+}
+
+/// The CycloneDX VEX statements as (id, analysis state).
+fn us4_vex(doc: &Value) -> BTreeSet<(String, String)> {
+    doc["vulnerabilities"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|v| {
+            let s = |x: &Value| x.as_str().unwrap_or_default().to_string();
+            (s(&v["id"]), s(&v["analysis"]["state"]))
+        })
+        .collect()
+}
+
+fn us4_backport_pair(cve: &str) -> BTreeSet<(String, String)> {
+    ["exploitable", "not_affected"].iter().map(|s| (cve.to_string(), s.to_string())).collect()
+}
+
+/// FR-011 / FR-012 / US4 scenario 1: the documented recipe,
+/// `sbom edit <doc> --drop 'scope=excluded'`, turns each of a closure scan's
+/// three documents into a valid runtime-only document. Each result validates
+/// against its schema (SPDX 3 also through `spdx3-validate` when installed),
+/// keeps the evaluated package as its subject, names nothing it no longer
+/// holds, and holds no not-in-artifact member. The three formats lose the
+/// same PURLs.
+///
+/// VEX about a kept member survives and VEX about a dropped member goes. Only
+/// CycloneDX carries VEX in the document; SPDX's OpenVEX sidecar is not
+/// edited (`docs/user-guide/sbom-edit.md`, "Limits").
+#[test]
+fn us4_drop_scope_excluded_yields_valid_runtime_document() {
+    let closure = us4_closure();
+    let run = scan_with(NixStub { runtime: Some(curl_runtime()), ..base(&closure) });
+    assert_eq!(run.c216().expect("C216")["method"], "runtime-closure", "stderr:\n{}", run.scan.stderr);
+
+    let subject = "pkg:generic/waybill-fixture-app@1.0";
+    let dir = tempfile::tempdir().unwrap();
+    let mut dropped_by_format: Vec<(&str, BTreeSet<String>)> = Vec::new();
+    for (label, file, doc) in [
+        ("cdx", "closure.cdx.json", &run.scan.cdx),
+        ("spdx23", "closure.spdx.json", &run.scan.spdx23),
+        ("spdx3", "closure.spdx3.json", &run.scan.spdx3),
+    ] {
+        // CONTROLS on the input: it is valid, it names this subject, and it
+        // holds marked members, so every check below can fail.
+        assert_eq!(sbom_edit_support::schema_errors(doc), BTreeSet::new(), "{label}: the scan itself fails its schema");
+        assert_eq!(us4_subject(doc).as_deref(), Some(subject), "{label}: input subject");
+        assert_eq!(us4_dangling(doc), Vec::<String>::new(), "{label}: the scan itself has references to nothing");
+        let marked = us4_not_in_artifact(doc);
+        assert!(!marked.is_empty(), "{label}: the scan marked nothing, so the recipe would have nothing to drop");
+
+        let input = dir.path().join(file);
+        std::fs::write(&input, serde_json::to_string_pretty(doc).unwrap()).unwrap();
+        let e = sbom_edit_support::edit(&input, &["--drop", "scope=excluded"]);
+        e.assert_ok();
+        let out = e.json();
+
+        assert_eq!(
+            sbom_edit_support::schema_errors(&out),
+            BTreeSet::new(),
+            "{label}: the runtime-only document fails its schema"
+        );
+        if label == "spdx3" {
+            sbom_edit_support::spdx3_validate_or_skip(&e.path);
+        }
+        assert_eq!(us4_subject(&out).as_deref(), Some(subject), "{label}: the subject moved");
+        assert_eq!(us4_dangling(&out), Vec::<String>::new(), "{label}: references to nothing");
+        assert_eq!(us4_not_in_artifact(&out), BTreeSet::new(), "{label}: a not-in-artifact member remains");
+
+        let dropped: BTreeSet<String> = us4_purls(doc).difference(&us4_purls(&out)).cloned().collect();
+        assert_eq!(dropped, marked, "{label}: the recipe dropped something other than the marked set");
+        assert!(
+            e.stderr.contains(&format!("drop-components: matched {},", dropped.len())),
+            "{label}: the reported count disagrees with the {} PURLs removed: {}",
+            dropped.len(),
+            e.stderr
+        );
+        dropped_by_format.push((label, dropped));
+
+        if label == "cdx" {
+            // CONTROL: the scan wrote both backport pairs.
+            let both: BTreeSet<_> = us4_backport_pair(KEPT_CVE).union(&us4_backport_pair(DROPPED_CVE)).cloned().collect();
+            assert_eq!(us4_vex(doc), both, "input VEX");
+            assert_eq!(
+                us4_vex(&out),
+                us4_backport_pair(KEPT_CVE),
+                "FR-012: VEX about the kept member stays, VEX about the dropped one goes"
+            );
+            assert!(e.stderr.contains("vulnerability statement(s) removed"), "{}", e.stderr);
+        }
+    }
+
+    // The same PURLs leave every format, and they are the members outside
+    // the runtime closure (see `us1_runtime_members_unmarked_and_others_marked`).
+    let cdx = &dropped_by_format[0].1;
+    for (label, set) in &dropped_by_format[1..] {
+        assert_eq!(set, cdx, "{label} dropped a different PURL set from CycloneDX");
+    }
+    let names: BTreeSet<&str> = cdx
+        .iter()
+        .filter_map(|p| p.strip_prefix("pkg:generic/")?.split('@').next())
+        .collect();
+    assert_eq!(
+        names,
+        BTreeSet::from(["waybill-fixture-bootlib", "waybill-fixture-py", "waybill-fixture-xml"]),
+        "dropped: {cdx:?}"
+    );
 }

@@ -114,9 +114,26 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
 **Goal:** a documented recipe gives scanners a runtime-only document (FR-011, FR-012).
 **Independent test:** on the five wrapper flakes, grype on `--drop 'scope=excluded'` output reports 350 findings, a superset of sbomnix-runtime's 243.
 
-- [ ] T033 [P] [US4] Add `us4_drop_scope_excluded_yields_valid_runtime_document` to `closure_runtime_scope.rs`. For each format, check the result against its schema validator (`tests/common/cdx_schema.rs`, the SPDX 2.3 schema, `spdx3-validate` via `tests/common/spdx3_validate.rs` once #1424 lands), check that the subject is the evaluated package and that every relationship resolves. Also check (FR-012) that a VEX statement about a kept component survives the drop, and that one about a dropped component goes.
-- [ ] T034 [US4] Document the recipe in `docs/user-guide/sbom-edit.md` (a "Runtime-only view of a Nix closure" section) and add a short pointer from the Nix closure docs (grep `docs/` for `--nix-closure`).
-- [ ] T035 [US4] Run `quickstart.md`'s live check on the five wrapper flakes (`$CLAUDE_JOB_DIR/tmp/cmp/targets`, or regenerate them with `specs/1377-nix-subject-identity/measurements/gen-sboms.sh`). Score with `measurements/runtime.py` and record the result under `measurements/us4-scanner-check/`. Assert SC-001 (350 findings, none lost) and SC-002 (all 243 sbomnix-runtime findings present). If a number differs, explain each difference before claiming the criterion.
+- [X] T033 [P] [US4] Add `us4_drop_scope_excluded_yields_valid_runtime_document` to `closure_runtime_scope.rs`. For each format, check the result against its schema validator (`tests/common/cdx_schema.rs`, the SPDX 2.3 schema, `spdx3-validate` via `tests/common/spdx3_validate.rs` once #1424 lands), check that the subject is the evaluated package and that every relationship resolves. Also check (FR-012) that a VEX statement about a kept component survives the drop, and that one about a dropped component goes.
+
+  Done. It passed on first run: #1428 (VEX pruning) and US3 (`scope=excluded` in each format) already compose, so nothing needed implementing. The test therefore carries controls on the input, so it cannot pass vacuously:
+  - the scan is schema-valid, names the subject and has no dangling references;
+  - it holds marked members, and the dropped set must equal that marked set, which is exactly `bootlib`, `py` and `xml`;
+  - the input carries both CVE backport pairs.
+
+  Ran with `WAYBILL_REQUIRE_SPDX3_VALIDATOR=1`, so `spdx3-validate` ran rather than skipped. VEX is checked in CycloneDX only, the one format that carries it in the document; SPDX's OpenVEX sidecar is not edited (user guide, "Limits"). Two mutations, each restored with `cp` and confirmed with `cmp`:
+  - keeping a build statement whose subcomponents all went (`edit/cdx.rs`) fails the FR-012 assertion: `CVE-2026-90032 not_affected` survives;
+  - removing SPDX 2.3's `BUILD_TOOL_OF` read (`edit/spdx23.rs`) fails "spdx23: a not-in-artifact member remains".
+- [X] T034 [US4] Document the recipe in `docs/user-guide/sbom-edit.md` (a "Runtime-only view of a Nix closure" section) and add a short pointer from the Nix closure docs (grep `docs/` for `--nix-closure`).
+
+  Done. The pointer is in `docs/reference/nix-evaluation.md`, "What ships, and a runtime-only document".
+- [X] T035 [US4] Run `quickstart.md`'s live check on the five wrapper flakes (`$CLAUDE_JOB_DIR/tmp/cmp/targets`, or regenerate them with `specs/1377-nix-subject-identity/measurements/gen-sboms.sh`). Score with `measurements/runtime.py` and record the result under `measurements/us4-scanner-check/`. Assert SC-001 (350 findings, none lost) and SC-002 (all 243 sbomnix-runtime findings present). If a number differs, explain each difference before claiming the criterion.
+
+  Done (`measurements/us4-scanner-check/`). C216 on all five targets: `runtime-closure`, `store: local`, `verified: true`.
+  - **SC-001 holds:** 350 findings, the same (id, PURL) pairs as the committed truth, none lost and none added.
+  - **SC-002 holds:** all 243 sbomnix-runtime findings are present.
+  - **No finding-level drift:** the full documents give the same 1,301 findings as at `f891b4fe`.
+  - **Component-level differences, none carrying findings:** the flake input; `libSystem@B` and six `expand-response-params` derivations, which are `runtime.py` name-version artefacts; and 26 versionless compiler-supplied Hackage components on httpie, which are not closure members. Each is explained in the README.
 
 ## Phase 7: Polish & cross-cutting
 

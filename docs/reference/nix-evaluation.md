@@ -248,6 +248,18 @@ that apply a patch are. Measured, `jq` and `lua` are unreferenced in one
 project's closure and carry 6 of its 18 CVEs, so dropping them would leave
 those patches with no component to attach to.
 
+### What ships, and a runtime-only document (milestone 1423)
+
+Members outside the evaluated package's runtime closure carry the
+not-in-artifact mark: CycloneDX `scope: excluded`, SPDX 2.3 `BUILD_TOOL_OF`,
+SPDX 3 `usesTool` with `scope: build`. The document-scope
+`waybill:closure-scope-method` (C216) says whether the marks came from the
+runtime closure (`nix path-info -r`, exact for what the output references) or
+from an approximation. Vulnerability scanners ignore the mark, so to scan only
+what ships, drop the marked members first with
+`waybill sbom edit closure.cdx.json --drop 'scope=excluded' -o runtime.cdx.json`.
+See [Runtime-only view of a Nix closure](../user-guide/sbom-edit.md#runtime-only-view-of-a-nix-closure).
+
 ### The document's subject (milestone 1377)
 
 When the closure resolves, the derivation the evaluated attribute built is

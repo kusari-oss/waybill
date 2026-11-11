@@ -434,6 +434,7 @@ fn an_override_root_without_a_main_module_has_the_same_edges_in_every_format() {
         closure: &fixture("closure-tooling.json"),
         rows: Rows::Json(&rows),
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&args);
     assert_eq!(subjects(&s)[0].0, "waybill-fixture-override");
@@ -464,6 +465,7 @@ fn control_an_override_root_with_a_main_module_already_agreed() {
         closure: &fixture("closure-tooling.json"),
         rows: Rows::Json(&rows),
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&args);
     assert_eq!(subjects(&s)[0].0, "waybill-fixture-override");
