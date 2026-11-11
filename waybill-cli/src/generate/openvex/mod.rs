@@ -124,7 +124,32 @@ fn is_withheld_not_affected(
 /// different subjects. They make claims about one artifact, and a consumer
 /// weighing a withheld `not_affected` against the `affected` that displaced
 /// it is only comparing like with like if both name the same product.
+///
+/// #1436: the subject is the component the root selector elects, from the
+/// same inputs every format emitter passes it, so the VEX and the document
+/// cannot disagree about what "this build" is. A main-module lookup missed
+/// the milestone-1377 rung: on a wrapper flake the evaluated Nix package is
+/// the subject and there is no main module, so no statement was emitted.
+///
+/// When the selector elects no component (an operator override, a Maven
+/// coordinate, a synthetic placeholder) there is no component PURL to name,
+/// and the main module stands in as before: under an override every carrier
+/// aliases it to the root. Failing that, under an override, the evaluated
+/// package does, since it is what the override renames.
 fn root_component_purl(artifacts: &ScanArtifacts<'_>) -> Option<String> {
+    use crate::generate::root_selector::{evaluated_nix_package, select_root, ResolvedRootSubject};
+    let purl_at = |i: usize| artifacts.components.get(i).map(|c| c.purl.as_str().to_string());
+    let selection = select_root(
+        artifacts.components,
+        &artifacts.root_override,
+        artifacts.scan_target_coord,
+        artifacts.target_name,
+        "0.0.0",
+        artifacts.scan_target_kind,
+    );
+    if let ResolvedRootSubject::MainModule(i) = selection.subject {
+        return purl_at(i);
+    }
     artifacts
         .components
         .iter()
@@ -135,6 +160,10 @@ fn root_component_purl(artifacts: &ScanArtifacts<'_>) -> Option<String> {
                 == Some("main-module")
         })
         .map(|c| c.purl.as_str().to_string())
+        .or_else(|| {
+            evaluated_nix_package(artifacts.components, artifacts.scan_target_kind)
+                .and_then(purl_at)
+        })
 }
 
 /// Statements for what nixpkgs itself declares (spec US1).
@@ -335,7 +364,7 @@ pub(crate) fn vex_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatem
         Some(root) => declaration_statements(artifacts, &root),
         None => {
             // Every statement names the build as its product, so with no
-            // main-module component there is no subject to attach one to.
+            // subject component there is none to attach one to.
             // Say so: the scan summary reports the declarations it found,
             // and a document that then contains none of them looks like the
             // read failed. Measured on a bare Nix flake carrying no language
@@ -350,7 +379,7 @@ pub(crate) fn vex_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatem
                 tracing::warn!(
                     components_with_declarations = found,
                     "nixpkgs declarations found but not emitted as VEX: this scan has no \
-                     main-module component to name as the affected product. Supply \
+                     subject component to name as the affected product. Supply \
                      --root-name/--root-version, or scan a tree with a language manifest."
                 );
             }
@@ -999,6 +1028,59 @@ pub(crate) mod tests {
              itself is clean"
         );
         assert_eq!(not[0]["justification"], "vulnerable_code_not_present");
+    }
+
+    /// #1436 — a closure scan with no main module: the wrapper-flake shape.
+    /// The evaluated package carries the milestone-1377 tag.
+    fn wrapper_flake_scan() -> Vec<ResolvedComponent> {
+        let mut comps = backport_scan();
+        let evaluated = comps.iter_mut().find(|c| c.purl.as_str() == "pkg:generic/the-build@1.0").unwrap();
+        evaluated.extra_annotations.remove("waybill:component-role");
+        evaluated.extra_annotations.insert(
+            crate::generate::root_selector::NIX_EVALUATED_PACKAGE_KEY.to_string(),
+            serde_json::Value::Bool(true),
+        );
+        comps
+    }
+
+    fn closure_statements(
+        comps: &[ResolvedComponent],
+        root_override: crate::generate::RootComponentOverride,
+    ) -> Vec<serde_json::Value> {
+        let integ = empty_integrity();
+        let mut arts = mk_artifacts(comps, &integ);
+        arts.scan_target_kind = crate::generate::root_selector::ScanTargetKind::NixClosure;
+        arts.root_override = root_override;
+        let Some(artifact) = serialize_openvex(&arts, &mk_cfg()).unwrap() else {
+            return Vec::new();
+        };
+        let doc: serde_json::Value = serde_json::from_slice(&artifact.bytes).unwrap();
+        doc["statements"].as_array().unwrap().clone()
+    }
+
+    #[test]
+    fn a_closure_with_no_main_module_names_the_evaluated_package() {
+        let stmts = closure_statements(&wrapper_flake_scan(), Default::default());
+        assert_eq!(stmts.len(), 2, "the m1035 pair is emitted: {stmts:#?}");
+        let not = stmts.iter().find(|s| s["status"] == "not_affected").unwrap();
+        assert_eq!(not["products"][0]["@id"], "pkg:generic/the-build@1.0");
+        assert_eq!(not["products"][0]["subcomponents"][0]["@id"], "pkg:generic/unzip@6.0");
+    }
+
+    #[test]
+    fn under_an_override_the_evaluated_package_stands_in_for_a_missing_main_module() {
+        let over = crate::generate::RootComponentOverride {
+            name: Some("waybill-fixture-override".to_string()),
+            version: Some("9.9".to_string()),
+            ..Default::default()
+        };
+        let stmts = closure_statements(&wrapper_flake_scan(), over);
+        let not = stmts.iter().find(|s| s["status"] == "not_affected");
+        assert_eq!(
+            not.map(|s| s["products"][0]["@id"].clone()),
+            Some(serde_json::json!("pkg:generic/the-build@1.0")),
+            "{stmts:#?}"
+        );
     }
 
     #[test]

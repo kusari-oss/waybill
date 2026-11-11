@@ -114,6 +114,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   showed an `exploitable` entry whose detail said resolved (18 such entries
   on moat). The `affected` statement now says it is about the upstream
   version and points to the build's `not_affected` statement (#1421).
+- **A `--nix-closure` scan's VEX names the subject its document names.**
+  Backport statements found their "this build" subject only through a
+  main-module component, but since milestone 1377 a closure scan's subject
+  is the evaluated Nix package. A wrapper flake has no main module, so it
+  got no OpenVEX sidecar and no CycloneDX `vulnerabilities[]` at all, though
+  nixpkgs patches CVEs in its closure; and where a main module sat beside
+  the evaluated package, the statements named the main module while the
+  document named the package. The VEX subject is now the component the root
+  selector elects, from the same inputs the format emitters use. The
+  two-statement shape is unchanged; which shape grype honours is still open
+  (Refs #1436, #1421).
+
 - **Document subjects no longer carry a `waybill`-vendor CPE.** A subject
   without a CPE of its own (the synthetic placeholder, or one named with
   `--root-name`/`--root-purl`) was given `cpe:2.3:a:waybill:<name>:<version>`
