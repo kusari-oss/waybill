@@ -7018,6 +7018,16 @@ fn is_release_shaped(version: &str) -> bool {
     if version.is_empty() {
         return false;
     }
+    // #1283 — nixpkgs' `<release>-<patch level>` (glibc `2.40-66`): grype
+    // matches the whole string as a CPE version. Admitted only when the
+    // release is dotted digits and the patch level is digits, so none of
+    // the declined shapes above (`20251016-3.1`, `0-unstable-...`) qualify.
+    if let Some((release, patch)) = version.split_once('-') {
+        return release.contains('.')
+            && release.split('.').all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()))
+            && !patch.is_empty()
+            && patch.bytes().all(|b| b.is_ascii_digit());
+    }
     let mut chars = version.chars().peekable();
     // A leading digit is required: `boot` and `v1.2` are both out.
     if !chars.peek().is_some_and(char::is_ascii_digit) {
@@ -10644,6 +10654,30 @@ mod cpe_coverage_tests {
             "26.05pre-git",          // nixpkgs hooks
             "boot",                  // bootstrap stages
             "",
+        ] {
+            assert!(!is_release_shaped(v), "{v} must be declined");
+        }
+    }
+
+    /// #1283 — nixpkgs' glibc carries its patch level after a dash
+    /// (`2.40-66`: 2.40 with 66 backported patches). grype matched
+    /// `cpe:2.3:a:gnu:glibc:2.40-66` for all 36 glibc findings of
+    /// slack-web's recall truth (recall-truth run 43107760056), so this
+    /// shape is matchable, unlike the declined ones above. Only a dotted
+    /// release followed by one dash and digits is admitted.
+    #[test]
+    fn a_dotted_release_with_a_numeric_patch_level_is_accepted() {
+        for v in ["2.40-66", "2.42-51", "2.40-36"] {
+            assert!(is_release_shaped(v), "{v} must be accepted");
+        }
+        for v in [
+            "2.40-",       // no patch level
+            "2.40-rc1",    // not numeric
+            "2.40-66-1",   // two dashes
+            "2.40-6.1",    // dotted after the dash
+            "240-66",      // no dot before the dash
+            "1.0.2k-3",    // letter-suffixed release
+            "-66",         // nothing before the dash
         ] {
             assert!(!is_release_shaped(v), "{v} must be declined");
         }
