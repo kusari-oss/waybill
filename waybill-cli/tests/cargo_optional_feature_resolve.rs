@@ -7,10 +7,14 @@
 //! https://gist.github.com/nchelluri/8e74c2d7d3761c74be57dcecf5bc92df).
 //!
 //! Tests build synthetic Cargo workspaces via `tempfile::tempdir()` +
-//! shell out to `cargo generate-lockfile` to produce Cargo.lock, then
+//! shell out to `cargo fetch` to produce Cargo.lock, then
 //! invoke the waybill binary via `env!("CARGO_BIN_EXE_waybill")`.
 //! `cargo` binary is a hard dev prereq (matches m087 / m173 / m203
 //! precedent).
+//!
+//! Every dependency resolves from a local directory source standing in
+//! for crates.io (see [`vendor_registry`]), so neither `cargo fetch` nor
+//! waybill's `cargo metadata --offline` needs the network (#1417).
 
 use std::path::Path;
 use std::process::Command;
@@ -24,22 +28,77 @@ fn require_cargo() -> bool {
     Command::new("cargo").arg("--version").output().is_ok()
 }
 
-/// Create a minimal Cargo workspace at `ws_root` with the given
-/// Cargo.toml text. Runs `cargo fetch` (NOT `cargo generate-lockfile`)
-/// to produce Cargo.lock AND unpack `.crate` files into
-/// `$CARGO_HOME/registry/src/`. This is CRITICAL for cold-cache
-/// environments (fresh CI runners): `cargo metadata --offline`
-/// (invoked by waybill's classifier) reads dep manifests from
-/// unpacked crates in registry/src/. Bare `cargo generate-lockfile`
-/// fetches the index + creates Cargo.lock but does NOT unpack — so
-/// `cargo metadata --offline` fails with "failed to download …"
-/// even though Cargo.lock exists and the index has the crate.
+/// Replace crates.io with a local directory source holding an empty
+/// `1.0.0` library for every `[dependencies]` key in `manifests`.
 ///
-/// This mismatch caused m205's initial US1 test to pass locally
-/// (warm ~/.cargo/registry from years of use) and fail on CI (cold
-/// cache). Post-`cargo fetch`, cargo metadata --offline succeeds
-/// deterministically across all environments.
+/// The tests used real crates (`serde`, `regex`, `once_cell`) until
+/// #1417, so `cargo fetch` needed the crates.io index and every test
+/// here failed without network. What they test is how waybill combines
+/// manifest `optional = true` declarations with the activation set
+/// `cargo metadata` resolves, which depends on the dependency graph and
+/// not on what the crates contain. A directory source keeps that graph
+/// identical: Cargo.lock still records
+/// `source = "registry+https://github.com/rust-lang/crates.io-index"`,
+/// so waybill reads these entries exactly as it reads real ones. The
+/// stand-ins are `waybill_fixture_default_on` for `serde`,
+/// `waybill_fixture_opt_in` for `regex` and `waybill_fixture_shared`
+/// for `once_cell`; comments and messages below keep the old names.
+///
+/// The vendor directory and `.cargo/config.toml` live in `parent`, the
+/// directory *above* the scanned workspace. Cargo finds the config by
+/// walking up from its working directory, for `cargo fetch` here and
+/// for waybill's own `cargo metadata` subprocess, while the scan sees
+/// only the workspace itself, as before. Names use underscores: cargo
+/// reports `resolve.nodes[].deps[].name` as the library name, which is
+/// the hyphenated package name with `-` replaced by `_`.
+fn vendor_registry(parent: &Path, manifests: &[&str]) {
+    let vendor = parent.join("waybill-fixture-vendor");
+    for manifest in manifests {
+        let parsed: toml::Table = manifest.parse().unwrap();
+        let Some(deps) = parsed.get("dependencies").and_then(|d| d.as_table()) else {
+            continue;
+        };
+        for name in deps.keys() {
+            let dir = vendor.join(name);
+            std::fs::create_dir_all(dir.join("src")).unwrap();
+            std::fs::write(
+                dir.join("Cargo.toml"),
+                format!("[package]\nname = \"{name}\"\nversion = \"1.0.0\"\nedition = \"2021\"\n"),
+            )
+            .unwrap();
+            std::fs::write(dir.join("src/lib.rs"), "").unwrap();
+            // Cargo requires this file in a directory source. An empty
+            // `files` map and a null `package` checksum verify nothing,
+            // which is all a synthetic crate needs.
+            std::fs::write(dir.join(".cargo-checksum.json"), r#"{"files":{},"package":null}"#)
+                .unwrap();
+        }
+    }
+    std::fs::create_dir_all(parent.join(".cargo")).unwrap();
+    std::fs::write(
+        parent.join(".cargo/config.toml"),
+        format!(
+            "[source.crates-io]\nreplace-with = \"waybill-fixture-vendor\"\n\n\
+             [source.waybill-fixture-vendor]\ndirectory = '{}'\n",
+            vendor.display()
+        ),
+    )
+    .unwrap();
+}
+
+/// Create a minimal Cargo workspace at `ws_root` with the given
+/// Cargo.toml text, its dependencies vendored into `ws_root`'s parent
+/// by [`vendor_registry`]. Runs `cargo fetch` to produce Cargo.lock.
+///
+/// `cargo fetch` rather than `cargo generate-lockfile` dates from when
+/// these were real crates.io dependencies: `cargo metadata --offline`
+/// (invoked by waybill's classifier) reads dep manifests from unpacked
+/// crates, and only `fetch` unpacks them. That mismatch made m205's
+/// initial US1 test pass locally on a warm `~/.cargo/registry` and fail
+/// on a cold CI cache. With a directory source nothing is downloaded or
+/// unpacked, but `fetch` is kept as the step that is correct either way.
 fn build_synthetic_workspace(ws_root: &Path, cargo_toml: &str) {
+    vendor_registry(ws_root.parent().unwrap(), &[cargo_toml]);
     std::fs::create_dir_all(ws_root.join("src")).unwrap();
     std::fs::write(ws_root.join("Cargo.toml"), cargo_toml).unwrap();
     std::fs::write(ws_root.join("src/main.rs"), "fn main() {}\n").unwrap();
@@ -137,7 +196,7 @@ fn us1_default_feature_activated_optional_dep_is_runtime() {
         return;
     }
     let tempdir = tempfile::tempdir().unwrap();
-    let ws = tempdir.path();
+    let ws = &tempdir.path().join("ws");
     build_synthetic_workspace(
         ws,
         r#"[package]
@@ -146,17 +205,25 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde = { version = "1", optional = true }
+waybill_fixture_default_on = { version = "1", optional = true }
 
 [features]
-default = ["serde"]
+default = ["waybill_fixture_default_on"]
 "#,
     );
 
     let (cdx, stderr, ok) = scan_workspace_with_env(ws, None);
     assert!(ok, "scan should succeed. stderr:\n{stderr}");
+    // Runtime is also what the no-evidence fallback yields (#1272), so
+    // without this the assertions below pass when `cargo metadata`
+    // failed, e.g. because the vendored source stopped resolving.
+    assert!(
+        !stderr.contains("cargo metadata failed"),
+        "US1 is about the resolved-activation path; a fallback makes it vacuous. \
+         stderr:\n{stderr}"
+    );
 
-    let serde_comp = find_component_by_name(&cdx, "serde")
+    let serde_comp = find_component_by_name(&cdx, "waybill_fixture_default_on")
         .unwrap_or_else(|| panic!("serde component present. cdx: {cdx:#}"));
     // CDX 1.6 default scope is `runtime` when omitted. Post-m205,
     // feature-activated optional dep gets Runtime (either explicit
@@ -183,7 +250,7 @@ fn us2_truly_optional_dep_stays_optional() {
         return;
     }
     let tempdir = tempfile::tempdir().unwrap();
-    let ws = tempdir.path();
+    let ws = &tempdir.path().join("ws");
     build_synthetic_workspace(
         ws,
         r#"[package]
@@ -192,17 +259,17 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-regex = { version = "1", optional = true }
+waybill_fixture_opt_in = { version = "1", optional = true }
 
 [features]
-enable-regex = ["regex"]
+enable-opt-in = ["waybill_fixture_opt_in"]
 "#,
     );
 
     let (cdx, stderr, ok) = scan_workspace_with_env(ws, None);
     assert!(ok, "scan should succeed. stderr:\n{stderr}");
 
-    let regex_comp = find_component_by_name(&cdx, "regex")
+    let regex_comp = find_component_by_name(&cdx, "waybill_fixture_opt_in")
         .unwrap_or_else(|| panic!("regex component present. cdx: {cdx:#}"));
     assert_eq!(
         component_scope(regex_comp),
@@ -260,7 +327,7 @@ fn fr004_cargo_absent_warns_and_falls_back() {
         return;
     }
     let tempdir = tempfile::tempdir().unwrap();
-    let ws = tempdir.path();
+    let ws = &tempdir.path().join("ws");
     // Reuse US1's default-feature-activated shape so we can assert
     // safe over-inclusion (serde flips to Runtime under fallback).
     build_synthetic_workspace(
@@ -271,10 +338,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde = { version = "1", optional = true }
+waybill_fixture_default_on = { version = "1", optional = true }
 
 [features]
-default = ["serde"]
+default = ["waybill_fixture_default_on"]
 "#,
     );
 
@@ -323,7 +390,7 @@ default = ["serde"]
     // produced exactly that for three dependencies the binary ships.
     // Over-inclusion costs a false positive instead, which is the
     // direction FR-004 chose in prose and now also in code.
-    let serde_comp = find_component_by_name(&cdx, "serde")
+    let serde_comp = find_component_by_name(&cdx, "waybill_fixture_default_on")
         .unwrap_or_else(|| panic!("serde component present. cdx: {cdx:#}"));
     let scope = component_scope(serde_comp);
     assert!(
@@ -363,7 +430,7 @@ default = ["serde"]
 #[test]
 fn issue_771_offline_skips_cargo_metadata_subprocess() {
     let tempdir = tempfile::tempdir().unwrap();
-    let ws = tempdir.path();
+    let ws = &tempdir.path().join("ws");
     // Reuse US1's default-feature-activated shape.
     build_synthetic_workspace(
         ws,
@@ -373,10 +440,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde = { version = "1", optional = true }
+waybill_fixture_default_on = { version = "1", optional = true }
 
 [features]
-default = ["serde"]
+default = ["waybill_fixture_default_on"]
 "#,
     );
 
@@ -409,7 +476,7 @@ default = ["serde"]
     // FR-004 path where the same inversion already sat. #771's actual
     // subject — that the subprocess is skipped rather than run and
     // failed — is asserted by (a) and (b) above and is unaffected.
-    let serde_comp = find_component_by_name(&cdx, "serde")
+    let serde_comp = find_component_by_name(&cdx, "waybill_fixture_default_on")
         .unwrap_or_else(|| panic!("serde component present. cdx: {cdx:#}"));
     let scope = component_scope(serde_comp);
     assert!(
@@ -439,6 +506,8 @@ default = ["serde"]
 /// on [`build_synthetic_workspace`]: metadata reads dep manifests from
 /// unpacked crates under `registry/src/`.
 fn build_two_member_workspace(ws_root: &Path, member_a: &str, member_b: &str) {
+    vendor_registry(ws_root.parent().unwrap(), &[member_a, member_b]);
+    std::fs::create_dir_all(ws_root).unwrap();
     std::fs::write(
         ws_root.join("Cargo.toml"),
         "[workspace]\nmembers = [\"a\", \"b\"]\nresolver = \"2\"\n",
@@ -503,7 +572,7 @@ fn issue_1284_a_plain_declaration_in_another_member_keeps_it_runtime() {
         return;
     }
     let tempdir = tempfile::tempdir().unwrap();
-    let ws = tempdir.path();
+    let ws = &tempdir.path().join("ws");
     build_two_member_workspace(
         ws,
         // `once_cell` is optional here and gated behind a NON-default
@@ -514,10 +583,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-once_cell = { version = "1", optional = true }
+waybill_fixture_shared = { version = "1", optional = true }
 
 [features]
-cache = ["dep:once_cell"]
+cache = ["dep:waybill_fixture_shared"]
 "#,
         // …and unconditional here.
         r#"[package]
@@ -526,7 +595,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-once_cell = "1"
+waybill_fixture_shared = "1"
 "#,
     );
 
@@ -544,7 +613,7 @@ once_cell = "1"
          vacuous. stderr:\n{stderr}"
     );
 
-    let once_cell = find_component_by_name(&cdx, "once_cell")
+    let once_cell = find_component_by_name(&cdx, "waybill_fixture_shared")
         .unwrap_or_else(|| panic!("once_cell component present. cdx: {cdx:#}"));
     let scope = component_scope(once_cell);
     assert!(
