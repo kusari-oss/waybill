@@ -51,6 +51,7 @@ use super::{guard, ClassifiedClosure};
 use crate::scan_fs::package_db::nix::eval::invoke::run_bounded;
 use crate::scan_fs::package_db::nix::eval::preflight::IFD_SETTING;
 use crate::scan_fs::package_db::nix::eval::reason::DegradationReason;
+use crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified;
 
 /// The connect timeout passed on a remote query, in whole seconds (q5),
 /// unless less of the remote budget is left ([`connect_timeout_for`]).
@@ -130,10 +131,24 @@ pub(crate) const SELECTION_EXPR: &str = "d: if d.outputSpecified or false \
      else { source = \"outputs-to-install\"; outputs = d.meta.outputsToInstall or null; }";
 
 /// `nix eval --json` of [`SELECTION_EXPR`] over the scanned attribute, as
-/// pure as the closure query itself: import-from-derivation refused, no
-/// `--impure`.
-pub(crate) fn selection_argv(flakeref: &str) -> Vec<&str> {
-    vec!["eval", "--json", "--option", IFD_SETTING, "false", "--apply", SELECTION_EXPR, flakeref]
+/// pure as the closure query itself: no `--impure`, and the same verified
+/// import-from-derivation policy the closure was read under.
+///
+/// Milestone 1283 (research R1): under `--nix-allow-ifd` this call must
+/// allow IFD too. Refusing here on an IFD flake would read the closure and
+/// then fall back silently to the default output, leaving only C216
+/// `outputs-source: default-output` as a trace.
+pub(crate) fn selection_argv<'a>(flakeref: &'a str, ifd: &IfdPolicyVerified) -> Vec<&'a str> {
+    vec![
+        "eval",
+        "--json",
+        "--option",
+        IFD_SETTING,
+        ifd.policy().setting(),
+        "--apply",
+        SELECTION_EXPR,
+        flakeref,
+    ]
 }
 
 /// The selection [`SELECTION_EXPR`] printed, or `None` when it declares no
@@ -157,8 +172,12 @@ pub(crate) fn parse_selection(stdout: &str) -> Option<OutputSelection> {
 
 /// Evaluate [`SELECTION_EXPR`] over `flakeref`. `None` on any failure: the
 /// caller falls back to the default output, and records that it did.
-pub(crate) fn evaluate_selection(flakeref: &str, budget: Duration) -> Option<OutputSelection> {
-    let argv = selection_argv(flakeref);
+pub(crate) fn evaluate_selection(
+    flakeref: &str,
+    ifd: &IfdPolicyVerified,
+    budget: Duration,
+) -> Option<OutputSelection> {
+    let argv = selection_argv(flakeref, ifd);
     guard(&argv).ok()?;
     match run_bounded(&argv, budget) {
         Ok(o) if o.status_success => {
@@ -681,13 +700,14 @@ pub(crate) fn query_closure(
     closure_raw: &RawClosure,
     evaluated: Option<&str>,
     flakeref: &str,
+    ifd: &IfdPolicyVerified,
     budget: Duration,
     substituters: &[String],
 ) -> RuntimeQuery {
     let Some(evaluated) = evaluated else {
         return RuntimeQuery { outputs: None, result: Err(RuntimeUnavailable::NoEvaluatedPackage) };
     };
-    let declared = evaluate_selection(flakeref, budget);
+    let declared = evaluate_selection(flakeref, ifd, budget);
     let Some((selection, paths)) = selected_outputs(closure_raw, evaluated, declared) else {
         tracing::info!("nix-closure: the evaluated derivation declares no output path");
         return RuntimeQuery { outputs: None, result: Err(RuntimeUnavailable::QueryFailed) };
@@ -1025,9 +1045,33 @@ mod tests {
             local_argv(&["/nix/store/x"]),
             remote_argv("https://c", "2", &["/nix/store/x"]),
             verify_argv("https://c", "2", &["/nix/store/x"]),
-            selection_argv("/proj#packages.x86_64-linux.default"),
+            selection_argv(
+                "/proj#packages.x86_64-linux.default",
+                &IfdPolicyVerified::assumed_for_test(
+                    crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy::Allow,
+                ),
+            ),
         ] {
             assert!(argv_is_safe(&argv), "{argv:?}");
+        }
+    }
+
+    /// m1283 (T013a, research R1) — the selection evaluation carries the
+    /// verified policy's value, both ways. Refusing here under the opt-in
+    /// would read an IFD flake's closure and then quietly fall back to the
+    /// default output.
+    #[test]
+    fn the_selection_argv_carries_the_verified_policy() {
+        use crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy;
+        for (p, want) in [(IfdPolicy::Refuse, "false"), (IfdPolicy::Allow, "true")] {
+            let ifd = IfdPolicyVerified::assumed_for_test(p);
+            let argv = selection_argv("/proj#packages.x86_64-linux.default", &ifd);
+            assert_eq!(
+                argv.iter().position(|a| *a == IFD_SETTING).map(|i| argv[i + 1]),
+                Some(want),
+                "{argv:?}"
+            );
+            assert!(!argv.contains(&"--impure") && !argv.contains(&"--accept-flake-config"));
         }
     }
 

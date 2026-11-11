@@ -1010,6 +1010,8 @@ cdx_anno!(c214_cdx, "waybill:closure-contents", component);
 cdx_anno!(c215_cdx, "waybill:closure-binary-identity", component);
 // Milestone 1423 (#1423): C216 — how the closure scope marks were decided.
 cdx_anno!(c216_cdx, "waybill:closure-scope-method", document);
+// Milestone 1283 (#1283): C217 — the Nix evaluation policy.
+cdx_anno!(c217_cdx, "waybill:nix-evaluation-policy", document);
 cdx_anno!(c183_cdx, "waybill:patch-evidence-grade", document);
 cdx_anno!(c184_cdx, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.

@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::str::FromStr;
 
+use super::preflight::IfdPolicy;
+
 /// A Nix platform double — `x86_64-linux`, `aarch64-darwin`.
 ///
 /// A newtype rather than a `String` because it is load-bearing twice over.
@@ -82,9 +84,58 @@ impl IfdRefusalVerified {
     }
 }
 
+/// Milestone 1283 (#1283) — proof that the import-from-derivation
+/// *allowance* requested by `--nix-allow-ifd` was observed to be in effect.
+///
+/// The counterpart of [`IfdRefusalVerified`], with the same private
+/// constructor, for the same reason: an old nix accepts an unknown `--option`
+/// and ignores it, so requesting the allowance is not evidence of having it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct IfdAllowanceVerified(pub(super) ());
+
+impl IfdAllowanceVerified {
+    /// Mint the token. `pub(super)`, and by convention only `preflight` calls
+    /// it.
+    pub(super) fn attest() -> Self {
+        Self(())
+    }
+}
+
+/// Milestone 1283 — the import-from-derivation policy in effect, verified.
+///
+/// Every evaluating entry point takes this, so no evaluation can run on a
+/// policy the pre-flight did not confirm. Its variants hold tokens only
+/// `eval` can mint, so code outside it can hold one but not make one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum IfdPolicyVerified {
+    Refused(IfdRefusalVerified),
+    Allowed(IfdAllowanceVerified),
+}
+
+impl IfdPolicyVerified {
+    /// The policy that was verified, whose [`IfdPolicy::setting`] every
+    /// evaluating argv carries.
+    pub(crate) fn policy(&self) -> IfdPolicy {
+        match self {
+            Self::Refused(_) => IfdPolicy::Refuse,
+            Self::Allowed(_) => IfdPolicy::Allow,
+        }
+    }
+
+    /// A token for argv-shape tests outside `eval`, which cannot mint one.
+    /// Test builds only: production code obtains it from the pre-flight.
+    #[cfg(test)]
+    pub(crate) fn assumed_for_test(policy: IfdPolicy) -> Self {
+        match policy {
+            IfdPolicy::Refuse => Self::Refused(IfdRefusalVerified::attest()),
+            IfdPolicy::Allow => Self::Allowed(IfdAllowanceVerified::attest()),
+        }
+    }
+}
+
 /// What one successful evaluation produced.
 ///
-/// Holding [`IfdRefusalVerified`] by value rather than a `bool` is what makes
+/// Holding [`IfdPolicyVerified`] by value rather than a `bool` is what makes
 /// spec FR-008 enforceable at the type level: a caller cannot obtain an
 /// `EvaluationOutcome` without the pre-flight having succeeded first.
 #[derive(Debug, Clone)]
@@ -102,7 +153,7 @@ pub(crate) struct EvaluationOutcome {
 impl EvaluationOutcome {
     /// Build an outcome, consuming the pre-flight's proof.
     ///
-    /// Taking [`IfdRefusalVerified`] by value is what makes spec FR-008
+    /// Taking [`IfdPolicyVerified`] by value is what makes spec FR-008
     /// enforceable at the type level: there is no way to obtain an
     /// `EvaluationOutcome` without the pre-flight having succeeded, because
     /// there is no other way to mint the token. It is consumed rather than
@@ -112,7 +163,7 @@ impl EvaluationOutcome {
         revision: String,
         system: NixSystem,
         versions: BTreeMap<String, Option<String>>,
-        _ifd_refused: IfdRefusalVerified,
+        _ifd: IfdPolicyVerified,
     ) -> Self {
         Self {
             revision,

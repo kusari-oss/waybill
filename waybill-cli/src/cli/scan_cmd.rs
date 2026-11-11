@@ -4470,13 +4470,16 @@ pub async fn execute(
     // `--nix-eval-system` is an argument error rather than a degradation: the
     // operator mistyped an invocation, which is a different thing from the
     // environment being unable to satisfy a valid one.
+    // Milestone 1283 (#1283) — the import-from-derivation policy every Nix
+    // tier evaluates under, verified by each tier's pre-flight.
+    let ifd_policy = scan_fs::package_db::nix::eval::preflight::IfdPolicy::default();
     let nix_eval_cfg = if args.nix_eval {
         use scan_fs::package_db::nix::eval::TierConfig;
         let system = match args.nix_eval_system.as_deref() {
             Some(s) => Some(s.parse().map_err(|e| anyhow::anyhow!("--nix-eval-system: {e}"))?),
             None => None,
         };
-        Some(TierConfig::from_flags(system, args.nix_eval_timeout_secs))
+        Some(TierConfig::from_flags(system, args.nix_eval_timeout_secs, ifd_policy))
     } else {
         None
     };
@@ -4489,6 +4492,12 @@ pub async fn execute(
     // GHC boot libraries live inside the compiler derivation rather than
     // beside it. Measured — treating closure-absence as evidence a component
     // is spurious would discard the Haskell standard distribution.
+    // Milestone 1283 — the closure tier's C217 record, and the policy its
+    // pre-flight verified, which the declaration pass below inherits rather
+    // than re-verifying. `None` when no pre-flight ran.
+    let mut closure_policy: Option<scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy> =
+        None;
+    let mut closure_ifd: Option<scan_fs::package_db::nix::eval::result::IfdPolicyVerified> = None;
     let nix_closure = {
         use scan_fs::package_db::nix::closure;
         match closure::admission(args.nix_closure, offline) {
@@ -4505,14 +4514,25 @@ pub async fn execute(
                 let cfg = closure::ClosureConfig::from_flags(
                     args.nix_closure_attr.clone(),
                     None,
+                    ifd_policy,
                 );
                 // The platform must be explicit for evaluation to stay pure;
                 // `builtins.currentSystem` does not exist in pure mode.
                 let system = scan_fs::package_db::nix::eval::invoke::detect_host_system(
                     cfg.budget,
                 );
-                Some(match system {
-                    Ok(sys) => closure::resolve(&root_path, &sys, &cfg).map(|mut c| {
+                // The pre-flight gates everything below it; its record is
+                // kept whether it passes or not (C217).
+                let preflighted = system.and_then(|sys| {
+                    let pre = closure::preflight(&cfg);
+                    closure_policy = Some(match &pre {
+                        Ok(p) => closure::summary::NixEvaluationPolicy::verified(&p.ifd, &p.environment),
+                        Err(_) => closure::summary::NixEvaluationPolicy::unverified(cfg.ifd_policy),
+                    });
+                    pre.map(|p| (sys, p))
+                });
+                Some(match preflighted {
+                    Ok((sys, pre)) => closure::resolve(&root_path, &sys, &cfg, &pre).map(|mut c| {
                         tracing::info!(
                             attribute = %c.attribute,
                             derivations = c.raw.derivations.len(),
@@ -4531,13 +4551,14 @@ pub async fn execute(
                         // milestone (spec FR-006).
                         match nixpkgs_revision_for_licenses(&root_path) {
                             Some(rev) => {
-                                closure::attach_licenses(&mut c, &rev, &sys, cfg.budget);
+                                closure::attach_licenses(&mut c, &rev, &sys, cfg.budget, &pre.ifd);
                             }
                             None => tracing::info!(
                                 "nix-closure-licenses: no pinned nixpkgs revision in flake.lock; \
                                  emitting the closure without declared licenses"
                             ),
                         }
+                        closure_ifd = Some(pre.ifd);
                         c
                     }),
                     Err(reason) => Err(reason),
@@ -5228,8 +5249,8 @@ pub async fn execute(
     // still emits its components when this fails, because "the closure is
     // unknown" and "what nixpkgs says about it is unknown" are different
     // gaps and a consumer needs to tell them apart.
-    let nixpkgs_security_summary = match &nix_closure {
-        Some(Ok(classified)) if !args.no_nixpkgs_security => {
+    let nixpkgs_security_summary = match (&nix_closure, &closure_ifd) {
+        (Some(Ok(classified)), Some(ifd)) if !args.no_nixpkgs_security => {
             use scan_fs::package_db::nix::declarations;
             // Timed because the pass runs automatically: an operator who
             // finds a scan slower has to be able to see whether this is why,
@@ -5249,6 +5270,7 @@ pub async fn execute(
                     &root_path,
                     sys.as_str(),
                     std::time::Duration::from_secs(300),
+                    ifd,
                     &|pname| by_name.get(pname).cloned(),
                 )
             }) {
