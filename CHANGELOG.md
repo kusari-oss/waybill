@@ -110,6 +110,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   packages that declare several licenses, one of them a dual license.
   Its SPDX goldens change on the next corpus refresh. CycloneDX does not
   join; it already carries one entry per license (#1411).
+- **A project's own declared licenses keep an `OR` grouped too.** The gem,
+  maven, elixir, erlang and scala readers combine several declared licenses
+  into one expression before emission, and joined them the same unbracketed
+  way: a gemspec with `licenses = ["MIT OR Apache-2.0", "BSD-3-Clause"]`
+  emitted `MIT OR Apache-2.0 AND BSD-3-Clause` in all three formats. These
+  readers now share the bracketing join above and emit
+  `(MIT OR Apache-2.0) AND BSD-3-Clause` (in CycloneDX as an `expression`).
+  Composer's disjunctive join is unchanged; `AND` already binds tighter than
+  `OR` (#1431).
 - **A CycloneDX "or later" license is no longer emitted in `license.id`.**
   `Apache-2.0+` was written as `{"license":{"id":"Apache-2.0+"}}`, and an
   `EUPL-1.1+ AND MIT` was split with `EUPL-1.1+` in `license.id`. CycloneDX
