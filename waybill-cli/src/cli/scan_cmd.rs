@@ -4736,10 +4736,17 @@ pub async fn execute(
     // the same reason the record above is: its presence says the pass ran.
     let mut closure_contents: Option<ClosureContentsSummary> = None;
     match &nix_closure {
-        Some(Err(reason)) => tracing::info!(
+        // #1446 — WARN, for every reason including `offline-requested`:
+        // `nix_closure` is `Some` only when the operator passed
+        // `--nix-closure`, and a scan that exits 0 without the closure they
+        // asked for must say so above INFO.
+        Some(Err(reason)) => tracing::warn!(
             reason = reason.wire(),
             detail = %reason,
-            "nix-closure: degrading; the manifest-derived set is unaffected"
+            "nix-closure: degrading; --nix-closure was requested but no Nix closure \
+             components were added; the document contains only manifest-derived \
+             components.{}",
+            reason.explanation().map(|e| format!(" {e}")).unwrap_or_default()
         ),
         Some(Ok(classified)) => {
             let added = scan_fs::package_db::nix::closure::emit::components(classified);
