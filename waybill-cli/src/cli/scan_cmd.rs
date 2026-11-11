@@ -4489,11 +4489,6 @@ pub async fn execute(
     // The pass gates itself: a repository without both a nixpkgs-shaped
     // pinned input and at least one Haskell dependency does no work and
     // produces no annotation (SC-009).
-    // Milestone 1034 (#971 part A) — resolve the operator's `--nix-eval`
-    // choice once, before the pass that consumes it. An unparseable
-    // `--nix-eval-system` is an argument error rather than a degradation: the
-    // operator mistyped an invocation, which is a different thing from the
-    // environment being unable to satisfy a valid one.
     // Milestone 1283 (#1283) — the import-from-derivation policy every Nix
     // tier evaluates under, verified by each tier's pre-flight.
     let ifd_policy = if args.nix_allow_ifd {
@@ -4508,6 +4503,11 @@ pub async fn execute(
             "--nix-allow-ifd had no effect: --offline admits no Nix tier, so nothing was evaluated"
         );
     }
+    // Milestone 1034 (#971 part A) — resolve the operator's `--nix-eval`
+    // choice once, before the pass that consumes it. An unparseable
+    // `--nix-eval-system` is an argument error rather than a degradation: the
+    // operator mistyped an invocation, which is a different thing from the
+    // environment being unable to satisfy a valid one.
     let nix_eval_cfg = if args.nix_eval {
         use scan_fs::package_db::nix::eval::TierConfig;
         let system = match args.nix_eval_system.as_deref() {
@@ -4519,6 +4519,12 @@ pub async fn execute(
         None
     };
 
+    // Milestone 1283 — the closure tier's C217 record, and the policy its
+    // pre-flight verified, which the declaration pass below inherits rather
+    // than re-verifying. `None` when no pre-flight ran.
+    let mut closure_policy: Option<scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy> =
+        None;
+    let mut closure_ifd: Option<scan_fs::package_db::nix::eval::result::IfdPolicyVerified> = None;
     // Milestone 1035 (#1034, #1040) — the derivation closure.
     //
     // Runs after the manifest-derived set exists, because it supplements that
@@ -4527,12 +4533,6 @@ pub async fn execute(
     // GHC boot libraries live inside the compiler derivation rather than
     // beside it. Measured — treating closure-absence as evidence a component
     // is spurious would discard the Haskell standard distribution.
-    // Milestone 1283 — the closure tier's C217 record, and the policy its
-    // pre-flight verified, which the declaration pass below inherits rather
-    // than re-verifying. `None` when no pre-flight ran.
-    let mut closure_policy: Option<scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy> =
-        None;
-    let mut closure_ifd: Option<scan_fs::package_db::nix::eval::result::IfdPolicyVerified> = None;
     let nix_closure = {
         use scan_fs::package_db::nix::closure;
         match closure::admission(args.nix_closure, offline) {
