@@ -215,8 +215,11 @@ pub fn scan_target(target: &CorpusTarget) -> Result<EmittedSboms, CorpusInfraErr
         cmd.arg("--offline");
     }
     cmd.arg("sbom").arg("scan");
-    if let ScanMode::NixClosure { attr } = target.scan_mode {
+    if let ScanMode::NixClosure { attr, allow_ifd } = target.scan_mode {
         cmd.arg("--nix-closure").arg("--nix-closure-attr").arg(attr);
+        if allow_ifd {
+            cmd.arg("--nix-allow-ifd");
+        }
         cmd.arg("--no-deps-dev").arg("--no-clearly-defined");
     }
     match &target.source {

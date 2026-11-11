@@ -133,7 +133,13 @@ pub enum ScanMode {
     /// waybill's own online enrichment (`--no-deps-dev
     /// --no-clearly-defined`), so nix is the only process that could
     /// reach the network at all.
-    NixClosure { attr: &'static str },
+    ///
+    /// `allow_ifd` adds `--nix-allow-ifd` (feature 1283). Evaluating such a
+    /// flake builds derivations — cabal2nix runs, for callCabal2nix — so nix
+    /// may substitute or build during the scan itself, beyond what the
+    /// pre-warm put in the store. Only for flakes whose code is pinned and
+    /// public here, which is every corpus target by FR-003.
+    NixClosure { attr: &'static str, allow_ifd: bool },
 }
 
 pub enum SourceKind {
@@ -238,7 +244,7 @@ pub const TARGETS: &[CorpusTarget] = &[
                     declaration pass's coverage record (m1050)",
         reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
         expectations: super::expectations::nix_closure_moat_expectations,
-        scan_mode: ScanMode::NixClosure { attr: "default" },
+        scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: false },
     },
     // Milestone 1423 (T036, FR-016) — the live runtime-closure path.
     //
@@ -265,7 +271,68 @@ pub const TARGETS: &[CorpusTarget] = &[
                     runtime (m1423)",
         reader_ecosystems: &[EcosystemId::Nix],
         expectations: super::expectations::nix_closure_shellcheck_expectations,
-        scan_mode: ScanMode::NixClosure { attr: "default" },
+        scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: false },
+    },
+    // Feature 1283 (FR-014, SC-001–SC-003) — three Haskell projects whose
+    // flakes need import-from-derivation, so their closure is unreachable
+    // without `--nix-allow-ifd`. Measured on aarch64-darwin, refusing IFD:
+    // slack-web recalled 6 of 88 real vulnerabilities, openai 7 of 59, and
+    // slacklinker degraded (`import-from-derivation-required`); its output
+    // only builds on x86_64-linux, which is why truth for all three is
+    // produced there (`.github/workflows/recall-truth.yml`) and committed as
+    // `recall-truth.json` beside the goldens. Pins are the same commits the
+    // measurements used; see
+    // `specs/1283-nix-allow-ifd/measurements/recall/targets.tsv`, which the
+    // default lane checks against these entries.
+    CorpusTarget {
+        name: "nix-closure-slack-web",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/MercuryTechnologies/slack-web",
+        },
+        pinned: PinnedRef::Sha {
+            // HEAD of `master` as of 2026-10-13.
+            hex: "7b46273d3723ba37da26e4c4f7a3c5575ae9e837",
+        },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "--nix-closure with --nix-allow-ifd on a callCabal2nix flake (1283): \
+                    the closure is read, C217 records the allowance, and the runtime-only \
+                    view recalls >= 90% of the recall-truth findings",
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
+        expectations: super::expectations::nix_closure_slack_web_expectations,
+        scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: true },
+    },
+    CorpusTarget {
+        name: "nix-closure-openai",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/MercuryTechnologies/openai",
+        },
+        pinned: PinnedRef::Sha {
+            // HEAD of `main` as of 2026-08-25.
+            hex: "8a357137b9d3f1727b1dbb6ea3574e7b1b0fb4b7",
+        },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "--nix-closure with --nix-allow-ifd on an override overlay plus \
+                    packageSourceOverrides (1283); its truth is C libraries reached \
+                    through GHC's toolchain",
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
+        expectations: super::expectations::nix_closure_openai_expectations,
+        scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: true },
+    },
+    CorpusTarget {
+        name: "nix-closure-slacklinker",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/MercuryTechnologies/slacklinker",
+        },
+        pinned: PinnedRef::Sha {
+            // HEAD of `main` as of 2026-10-15.
+            hex: "72af26a71622bcf1eb4b84d017677be711c6fc7b",
+        },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "--nix-closure with --nix-allow-ifd on cabal2nix-via-IFD with an \
+                    overlay of pinned dependencies (1283); x86_64-linux only",
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
+        expectations: super::expectations::nix_closure_slacklinker_expectations,
+        scan_mode: ScanMode::NixClosure { attr: "default", allow_ifd: true },
     },
     // T022 (US2) — Rust source target:
     CorpusTarget {
@@ -741,6 +808,47 @@ fn every_target_has_committed_goldens() {
          docs/development/refreshing-corpus-goldens.md.",
         missing.len(),
         missing.join("\n  ")
+    );
+}
+
+/// Feature 1283 — `recall-truth.yml` reads its targets from
+/// `specs/1283-nix-allow-ifd/measurements/recall/targets.tsv`, and the
+/// truth it produces is only meaningful for the commit the corpus scans.
+/// A pin bumped here and not there would produce truth for the wrong
+/// commit; the nightly would catch it through `target-pin`, but only after
+/// a dispatch had been spent. This catches it at PR time, with no network.
+#[test]
+fn recall_targets_table_matches_manifest() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../specs/1283-nix-allow-ifd/measurements/recall/targets.tsv");
+    let text = std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("1283: cannot read {}: {e}", path.display()));
+    let mut table: Vec<(String, String, String, String)> = Vec::new();
+    for line in text.lines().filter(|l| !l.starts_with('#') && !l.trim().is_empty()) {
+        let cols: Vec<&str> = line.split('\t').collect();
+        assert_eq!(cols.len(), 4, "1283: targets.tsv row is not 4 tab-separated columns: {line:?}");
+        table.push((cols[0].into(), cols[1].into(), cols[2].into(), cols[3].into()));
+    }
+    let mut manifest: Vec<(String, String, String, String)> = Vec::new();
+    for t in TARGETS {
+        let ScanMode::NixClosure { attr, allow_ifd: true } = t.scan_mode else {
+            continue;
+        };
+        let SourceKind::Git { clone_url } = &t.source else {
+            panic!("1283: {} allows IFD but is not a git target", t.name);
+        };
+        let PinnedRef::Sha { hex } = &t.pinned else {
+            panic!("1283: {} allows IFD but is not pinned by SHA", t.name);
+        };
+        manifest.push((t.name.into(), (*clone_url).into(), (*hex).into(), attr.into()));
+    }
+    table.sort();
+    manifest.sort();
+    // Positive control: an empty pair of lists would compare equal.
+    assert_eq!(manifest.len(), 3, "1283: expected three IFD corpus targets, found {manifest:?}");
+    assert_eq!(
+        table, manifest,
+        "1283: targets.tsv and the manifest's allow_ifd targets disagree -- update both together"
     );
 }
 
