@@ -6,7 +6,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 `0.1.x` alpha.
 
 ## [Unreleased]
-
 ### Changed
 
 - **A recorded read set no longer carries opens that failed.** Capture
