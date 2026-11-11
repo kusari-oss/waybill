@@ -13,7 +13,7 @@ Code citations are from main@`1303ba82`. Measurements are in `measurements/`; ea
 | `nix/eval/invoke.rs:124` | `nix config show` (the refusal preflight) |
 | `nix/eval/invoke.rs:~306` | the m1034 version evaluation |
 | `nix/eval/licenses.rs:~212` | the m1281 meta/licence evaluation |
-| `nix/declarations/evaluate.rs:~141, ~237` | the m1050 nixpkgs security-declaration evaluation |
+| `nix/declarations/evaluate.rs:~141` | the m1050 nixpkgs security-declaration evaluation (`:237` turned out to be a copy inside a test module; both now share one `declarations_argv`, so there are 7 production constructions, not 8) |
 | `nix/closure/runtime.rs::evaluate_selection` (#1461, `:136`) | `nix eval --apply SELECTION_EXPR` (which output the attribute installs) |
 
 The 1423 runtime query itself (`path-info -r`) runs on output paths and does not evaluate, so it needs no setting. The #1461 selection evaluation does. It matters most because of how it fails: if it refuses IFD, it falls back to the default output, and the only trace is C216 `outputs-source: default-output`. On an IFD flake, the opt-in would read the closure but take the runtime scope from a possibly wrong output, and the scan would look successful.

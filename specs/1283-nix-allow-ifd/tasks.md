@@ -17,7 +17,7 @@
   - Extract the name-collision classifier from `recall.py` into `specs/1283-nix-allow-ifd/measurements/recall/classify.py`. It is the committed truth rule R7 cites.
   - Add a `README.md` there. It states how truth is defined: sbomnix runtime grype findings, minus name-collision false positives, plus HSEC advisories. It also gives the invocation.
   - Scripts run as `python3 -I -B`.
-- [ ] T002 Amend `specs/1283-nix-allow-ifd/spec.md`. FR-001, US3 scenario 2 and SC-004 say "unchanged / exactly as today", but C217 is new for every scan that admits a Nix tier (contract C217 "Rules").
+- [X] T002 Amend `specs/1283-nix-allow-ifd/spec.md`. FR-001, US3 scenario 2 and SC-004 say "unchanged / exactly as today", but C217 is new for every scan that admits a Nix tier (contract C217 "Rules").
   - FR-001 and SC-004: everything except C217 is unchanged, and goldens of scans without a Nix tier are byte-identical.
   - US3-2: the document records `refused` / `verified: true`.
   - FR-008: change "every `--nix-closure` document" to "every document from a scan where a Nix tier (`--nix-closure` or `--nix-eval`) ran". Under `--offline` no tier runs, and C190 `offline-requested` takes C217's place (contract C217 "Present when").
@@ -26,34 +26,34 @@
 
 ## Phase 2: Foundational (blocks all stories)
 
-- [ ] T003 Add `IfdPolicy { Refuse, Allow }` with `fn setting(&self) -> &'static str` (`"false"` / `"true"`) and `Default = Refuse` in `NIX/eval/preflight.rs` (data-model §IfdPolicy).
-- [ ] T004 Add `IfdAllowanceVerified(pub(super) ())` beside `IfdRefusalVerified` in `NIX/eval/result.rs`.
+- [X] T003 Add `IfdPolicy { Refuse, Allow }` with `fn setting(&self) -> &'static str` (`"false"` / `"true"`) and `Default = Refuse` in `NIX/eval/preflight.rs` (data-model §IfdPolicy).
+- [X] T004 Add `IfdAllowanceVerified(pub(super) ())` beside `IfdRefusalVerified` in `NIX/eval/result.rs`.
   - Add `enum IfdPolicyVerified { Refused(IfdRefusalVerified), Allowed(IfdAllowanceVerified) }`, constructible only inside `eval`.
   - Add a `fn policy(&self) -> IfdPolicy` accessor.
-- [ ] T005 Extend `DegradationReason` in `NIX/eval/reason.rs` with `IfdAllowanceUnverified(String)` → `ifd-allowance-unverified` and `ImportFromDerivationBuildFailed(String)` → `import-from-derivation-build-failed`.
+- [X] T005 Extend `DegradationReason` in `NIX/eval/reason.rs` with `IfdAllowanceUnverified(String)` → `ifd-allowance-unverified` and `ImportFromDerivationBuildFailed(String)` → `import-from-derivation-build-failed`.
   - Every `match` stays exhaustive (no `_ =>`).
   - Update the reason-string table test in that file.
-- [ ] T006 Unit tests first in `NIX/eval/preflight.rs` `mod tests`, written so they fail now:
+- [X] T006 Unit tests first in `NIX/eval/preflight.rs` `mod tests`, written so they fail now:
   - `verify_for(IfdPolicy::Allow, "allow-import-from-derivation = true\nsandbox = false\n")` → `Allowed`, with sandbox `Some("false")`.
   - The same policy with `= false` → `Err(IfdAllowanceUnverified)`.
   - `Refuse` with `= false` → `Refused`.
   - `Refuse` with `= true` → `Err(IfdRefusalUnverified)`.
   - A missing `sandbox` line → `None`.
   - `sandbox = relaxed` → `Some("relaxed")`.
-- [ ] T007 Implement T006 in `NIX/eval/preflight.rs`:
+- [X] T007 Implement T006 in `NIX/eval/preflight.rs`:
   - generalise `verify_from_config_output(stdout)` to `verify_for(policy, stdout) -> Result<(IfdPolicyVerified, NixEnvironment), DegradationReason>`;
   - add `struct NixEnvironment { sandbox: Option<String> }` (data-model §NixEnvironment);
   - keep the old function as a thin `Refuse` wrapper only if callers outside `eval` need it, otherwise remove it.
-- [ ] T008 Make `NIX/eval/invoke.rs:124` (`config show`) pass `policy.setting()` instead of `"false"`. Change `verify_ifd_refusal_with_config` to `verify_ifd_policy_with_config(policy, budget)`, returning `(IfdPolicyVerified, NixEnvironment)`. Make the same change to:
+- [X] T008 Make `NIX/eval/invoke.rs:124` (`config show`) pass `policy.setting()` instead of `"false"`. Change `verify_ifd_refusal_with_config` to `verify_ifd_policy_with_config(policy, budget)`, returning `(IfdPolicyVerified, NixEnvironment)`. Make the same change to:
   - the free function `verify_ifd_refusal` (`invoke.rs:107`, called at `:229`), which becomes `verify_ifd_policy(policy, budget)`;
   - the `Evaluator` trait method in `NIX/eval/mod.rs:120`, called at `:87`, together with its test impl at `:162`.
 
   `eval::run` takes the policy from its config and passes the verified value on.
-- [ ] T009 [P] Add the C217 value type `NixEvaluationPolicy { import_from_derivation: IfdPolicy, verified: bool, sandbox: Option<String> }` with sorted-key JSON serialisation `{"import-from-derivation","sandbox","schema":1,"verified"}`.
+- [X] T009 [P] Add the C217 value type `NixEvaluationPolicy { import_from_derivation: IfdPolicy, verified: bool, sandbox: Option<String> }` with sorted-key JSON serialisation `{"import-from-derivation","sandbox","schema":1,"verified"}`.
   - Place it in `NIX/closure/summary.rs`, beside the C216 value, and follow C216's encoding helper.
   - Unit test the exact string for allowed / refused / unverified / sandbox-null.
-- [ ] T010 [P] Add the C217 catalog row (KEEP-NO-NATIVE, citing research R4) to `docs/reference/sbom-format-mapping.md` after C216. Add the two new C190 reasons to the C190 row's closed list.
-- [ ] T011 Add C217 parity extractors in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs`, mirroring C216's three extractors and the `SymmetricEqual` registration. The lib-target catalog gate needs the doc row (T010) and the extractors in the same commit.
+- [X] T010 [P] Add the C217 catalog row (KEEP-NO-NATIVE, citing research R4) to `docs/reference/sbom-format-mapping.md` after C216. Add the two new C190 reasons to the C190 row's closed list.
+- [X] T011 Add C217 parity extractors in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs`, mirroring C216's three extractors and the `SymmetricEqual` registration. The lib-target catalog gate needs the doc row (T010) and the extractors in the same commit.
 
 **Checkpoint:** `cargo test -p waybill --lib nix::eval::preflight parity` passes, and every existing test is still green (default policy `Refuse`).
 
@@ -62,7 +62,7 @@
 **Goal:** with `--nix-allow-ifd`, every Nix evaluation allows IFD, verified. Default behaviour is unchanged.
 **Independent test:** a stub-nix scan with the flag records no IFD degradation and C216 is present; without the flag, today's `import-from-derivation-required` is produced.
 
-- [ ] T012 [US1] Write the integration tests first in a new `waybill-cli/tests/nix_allow_ifd.rs`, using `tests/common/nix_stub.rs` (follow `tests/nix_ifd_reason.rs` for stub setup):
+- [X] T012 [US1] Write the integration tests first in a new `waybill-cli/tests/nix_allow_ifd.rs`, using `tests/common/nix_stub.rs` (follow `tests/nix_ifd_reason.rs` for stub setup):
   - (a) the flag with stub config `= true` passes and the closure is read, with `--option allow-import-from-derivation true` in every recorded argv;
   - (b) without the flag, every recorded argv has `false` (FR-001);
   - (c) the flag with stub config still reporting `= false` → C190 `ifd-allowance-unverified`, and no evaluation argv recorded after the preflight;
@@ -72,30 +72,30 @@
   - (f′) the flag on, with the #1461 selection fixture (`closure-outputs.json`): the recorded `eval --apply` selection argv carries `allow-import-from-derivation true`, and C216 `outputs-source` is not `default-output`. Without the flag it carries `false`.
 
   Extend `nix_stub.rs` (with `..Default::default()` on the existing literals) for: a configurable `config show` IFD value and `sandbox` line, and an IFD-build-failure stderr.
-- [ ] T013 [US1] Thread `IfdPolicyVerified` through the closure tier in `NIX/closure/mod.rs`:
+- [X] T013 [US1] Thread `IfdPolicyVerified` through the closure tier in `NIX/closure/mod.rs`:
   - `resolve()` calls `verify_ifd_policy_with_config(cfg.ifd_policy, cfg.budget)?`;
   - `closure_argv` and `attributes_argv` take `&IfdPolicyVerified` and emit `policy().setting()`;
   - add `ifd_policy: IfdPolicy` to the closure config struct;
   - update the unit test at `closure/mod.rs:829` to cover both values.
-- [ ] T013a [US1] Do the same in `NIX/closure/runtime.rs::evaluate_selection` (from #1461, `:136`). `evaluate_selection` takes `&IfdPolicyVerified` and emits `policy().setting()`. `resolve()` passes the value it verified in T013, with no second preflight. Update the runtime.rs unit tests that assert the selection argv.
+- [X] T013a [US1] Do the same in `NIX/closure/runtime.rs::evaluate_selection` (from #1461, `:136`). `evaluate_selection` takes `&IfdPolicyVerified` and emits `policy().setting()`. `resolve()` passes the value it verified in T013, with no second preflight. Update the runtime.rs unit tests that assert the selection argv.
   - **Why it matters:** if this site still refuses, an IFD flake reads its closure and then quietly falls back to the default output (research R1).
   - **Precondition:** PR #1461 has landed and this branch has been rebased onto it. If it hasn't landed, stop and report rather than port the selection code.
-- [ ] T014 [P] [US1] Do the same in `NIX/eval/invoke.rs:~306`: the version eval argv uses the verified policy, and the eval entry point takes `IfdPolicyVerified`. Update the test at `invoke.rs:500`.
-- [ ] T015 [P] [US1] Do the same in `NIX/eval/licenses.rs:212` and its tests at `:365` and `:600`.
-- [ ] T016 [P] [US1] Do the same in `NIX/declarations/evaluate.rs:141` and `:237`. They receive the verified policy from their caller rather than re-verifying, unless the call path today verifies separately; if it does, keep that, and verify the same policy.
-- [ ] T017 [US1] Classify IFD build failures in `NIX/eval/stderr.rs::classify_failure`. When the policy is `Allow` and stderr shows a failed build of a `.drv` during evaluation, return `ImportFromDerivationBuildFailed(salient line)`. Add unit tests with captured stderr shapes. Take a real one from a deliberately broken local IFD expression and commit it under `specs/1283-nix-allow-ifd/measurements/ifd-eval/build-failed.err`.
-- [ ] T018 [US1] Add the flag in `waybill-cli/src/cli/scan_cmd.rs`:
+- [X] T014 [P] [US1] Do the same in `NIX/eval/invoke.rs:~306`: the version eval argv uses the verified policy, and the eval entry point takes `IfdPolicyVerified`. Update the test at `invoke.rs:500`.
+- [X] T015 [P] [US1] Do the same in `NIX/eval/licenses.rs:212` and its tests at `:365` and `:600`.
+- [X] T016 [P] [US1] Do the same in `NIX/declarations/evaluate.rs:141` and `:237`. They receive the verified policy from their caller rather than re-verifying, unless the call path today verifies separately; if it does, keep that, and verify the same policy.
+- [X] T017 [US1] Classify IFD build failures in `NIX/eval/stderr.rs::classify_failure`. When the policy is `Allow` and stderr shows a failed build of a `.drv` during evaluation, return `ImportFromDerivationBuildFailed(salient line)`. Add unit tests with captured stderr shapes. Take a real one from a deliberately broken local IFD expression and commit it under `specs/1283-nix-allow-ifd/measurements/ifd-eval/build-failed.err`.
+- [X] T018 [US1] Add the flag in `waybill-cli/src/cli/scan_cmd.rs`:
   - `#[arg(long = "nix-allow-ifd")] nix_allow_ifd: bool`, with an `ArgGroup` so it requires `nix_closure` or `nix_eval` (contract cli-nix-allow-ifd);
   - map it to `IfdPolicy` and pass it to the closure, eval, licence and declaration tiers;
   - under `--offline`, log at INFO that the flag had no effect.
-- [ ] T019 [US1] Add a grep guard test in `waybill-cli/tests/nix_allow_ifd.rs`, so the IFD value always comes from the policy (FR-002, R1):
+- [X] T019 [US1] Add a grep guard test in `waybill-cli/tests/nix_allow_ifd.rs`, so the IFD value always comes from the policy (FR-002, R1):
   - Read every `.rs` under `NIX/`, keeping only the text **before** the file's first `#[cfg(test)]` line. Live nix tests inside test modules, such as `eval/licenses.rs:~600`, keep their literals.
   - Join each `IFD_SETTING` occurrence with the next non-blank token, since argv vectors are often one element per line.
   - Assert that no occurrence is followed by a `"false"` or `"true"` string literal.
   - Assert that the number of `IFD_SETTING` uses in non-test code is at least 8, so the guard can't pass by finding none.
 
   Mutation check: re-introduce a literal at `closure/runtime.rs`, see the test fail, restore with `cp`.
-- [ ] T020 [US1] Run T012 (a)–(f) and confirm all pass. Run the existing `nix_ifd_reason.rs`, `nix_eval_tier.rs`, `nixpkgs_declarations.rs` and `closure_*.rs` tests unchanged.
+- [X] T020 [US1] Run T012 (a)–(f) and confirm all pass. Run the existing `nix_ifd_reason.rs`, `nix_eval_tier.rs`, `nixpkgs_declarations.rs` and `closure_*.rs` tests unchanged.
 
 **Checkpoint:** US1 works end to end with stub nix.
 
@@ -103,15 +103,15 @@
 
 **Independent test:** `--help`, the WARN and the docs each contain the untrusted-flake caution.
 
-- [ ] T021 [US2] Add tests to `waybill-cli/tests/nix_allow_ifd.rs`:
+- [X] T021 [US2] Add tests to `waybill-cli/tests/nix_allow_ifd.rs`:
   - (g) `waybill sbom scan --help` contains "--nix-allow-ifd", "untrusted flake" and "unsandboxed";
   - (h) the default policy, with IFD degradation → stderr WARN contains "--nix-allow-ifd" and "trust";
   - (i) the flag with stub `sandbox = false` → one WARN containing "sandbox is off", and the scan proceeds (closure read);
   - (j) the flag with `sandbox = true` → no sandbox WARN.
-- [ ] T022 [US2] Write the help text from contracts/cli-nix-allow-ifd.md on the T018 arg in `waybill-cli/src/cli/scan_cmd.rs`.
-- [ ] T023 [US2] Extend the degradation WARN at `waybill-cli/src/cli/scan_cmd.rs:~4754`. When the reason is `ImportFromDerivationRequired`, append "Pass --nix-allow-ifd to allow it, only for a flake you trust."
-- [ ] T024 [US2] Add the sandbox WARN in `waybill-cli/src/cli/scan_cmd.rs`, or wherever the preflight result is first available: once per scan, when the policy is `Allow` and `NixEnvironment.sandbox == Some("false")`.
-- [ ] T025 [P] [US2] Add an "Import-from-derivation" section to `docs/reference/nix-evaluation.md` (FR-007):
+- [X] T022 [US2] Write the help text from contracts/cli-nix-allow-ifd.md on the T018 arg in `waybill-cli/src/cli/scan_cmd.rs`.
+- [X] T023 [US2] Extend the degradation WARN at `waybill-cli/src/cli/scan_cmd.rs:~4754`. When the reason is `ImportFromDerivationRequired`, append "Pass --nix-allow-ifd to allow it, only for a flake you trust."
+- [X] T024 [US2] Add the sandbox WARN in `waybill-cli/src/cli/scan_cmd.rs`, or wherever the preflight result is first available: once per scan, when the policy is `Allow` and `NixEnvironment.sandbox == Some("false")`.
+- [X] T025 [P] [US2] Add an "Import-from-derivation" section to `docs/reference/nix-evaluation.md` (FR-007):
   - what IFD is;
   - why waybill refuses it by default;
   - the flag and its caution;
@@ -127,23 +127,23 @@
 
 **Independent test:** C217 is present with the expected value in all three formats, both with and without the flag.
 
-- [ ] T026 [US3] Add tests to `waybill-cli/tests/nix_allow_ifd.rs`:
+- [X] T026 [US3] Add tests to `waybill-cli/tests/nix_allow_ifd.rs`:
   - (k) the flag, verified, sandbox false → C217 `{"import-from-derivation":"allowed","sandbox":"false","schema":1,"verified":true}` in CDX `metadata.properties`, SPDX 2.3 document annotations and SPDX 3 document Annotation, and equal across the three formats;
   - (l) the default → `refused` / `verified: true`;
   - (m) the allowance unverified → `allowed` / `verified: false`, plus C190;
   - (n) no Nix tier requested → C217 absent;
   - (o) `--offline` with `--nix-closure` → C217 absent.
-- [ ] T027 [US3] Carry C217 from the preflight to the generators. Add `nix_evaluation_policy: Option<NixEvaluationPolicy>` beside the C216 field, following C216's path:
+- [X] T027 [US3] Carry C217 from the preflight to the generators. Add `nix_evaluation_policy: Option<NixEvaluationPolicy>` beside the C216 field, following C216's path:
   - `waybill-cli/src/generate/mod.rs`
   - `waybill-cli/src/generate/cyclonedx/builder.rs`
   - `waybill-cli/src/cli/scan_cmd.rs`
 
   Populate it whenever a Nix tier was admitted, including on degradation (`verified: false` when the preflight failed).
-- [ ] T028 [P] [US3] Emit C217 in `waybill-cli/src/generate/cyclonedx/metadata.rs` next to C216.
-- [ ] T029 [P] [US3] Emit C217 in `waybill-cli/src/generate/spdx/annotations.rs` next to C216.
-- [ ] T030 [P] [US3] Emit C217 in `waybill-cli/src/generate/spdx/v3_annotations.rs` next to C216, with a deterministic annotation IRI via the existing `hash_prefix` helper.
-- [ ] T031 [US3] Regenerate the six golden suites that contain Nix-tier fixtures with `WAYBILL_UPDATE_{CDX,SPDX,SPDX3}_GOLDENS=1`. Verify with a normalised, sorted diff that the only change is the added C217 line (SC-004/SC-005). Goldens of scans without a Nix tier must be byte-identical.
-- [ ] T032 [US3] Add an FR-009 test to `waybill-cli/tests/nix_allow_ifd.rs`. A stub flake that needs no IFD, scanned with and without the flag, yields documents equal after removing C217 from both: same components, relationships, scope, VEX.
+- [X] T028 [P] [US3] Emit C217 in `waybill-cli/src/generate/cyclonedx/metadata.rs` next to C216.
+- [X] T029 [P] [US3] Emit C217 in `waybill-cli/src/generate/spdx/annotations.rs` next to C216.
+- [X] T030 [P] [US3] Emit C217 in `waybill-cli/src/generate/spdx/v3_annotations.rs` next to C216, with a deterministic annotation IRI via the existing `hash_prefix` helper.
+- [X] T031 [US3] Regenerate the six golden suites that contain Nix-tier fixtures with `WAYBILL_UPDATE_{CDX,SPDX,SPDX3}_GOLDENS=1`. Verify with a normalised, sorted diff that the only change is the added C217 line (SC-004/SC-005). Goldens of scans without a Nix tier must be byte-identical.
+- [X] T032 [US3] Add an FR-009 test to `waybill-cli/tests/nix_allow_ifd.rs`. A stub flake that needs no IFD, scanned with and without the flag, yields documents equal after removing C217 from both: same components, relationships, scope, VEX.
 
 **Checkpoint:** US1–US3 complete; all hermetic tests pass.
 
@@ -176,7 +176,7 @@
 
 ## Phase 7: Polish
 
-- [ ] T040 [P] Add a CHANGELOG `[Unreleased]` entry in `CHANGELOG.md` (Added: `--nix-allow-ifd`, C217; Changed: the WARN names the flag). Use `Fixes #1283` in the PR.
+- [X] T040 [P] Add a CHANGELOG `[Unreleased]` entry in `CHANGELOG.md` (Added: `--nix-allow-ifd`, C217; Changed: the WARN names the flag). Use `Fixes #1283` in the PR.
 - [ ] T041 Live check on macOS per quickstart.md "Local live check":
   - scan slack-web and openai with the flag; record C216, C217 and the absence of C190;
   - run `measurements/recall/recall.py` against sbomnix runtime grype truth;
