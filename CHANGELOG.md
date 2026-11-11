@@ -69,8 +69,35 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   build. The destination now comes from the `sockaddr` the process
   passed, so both address families are observed. Documents for
   IPv6-connecting builds change (#1252).
+- **The import-from-derivation degradation WARN names the opt-in.** When
+  `--nix-closure` degrades with `import-from-derivation-required`, the
+  WARN now ends "Pass --nix-allow-ifd to allow it, only for a flake you
+  trust." (#1283).
 
 ### Added
+
+- **`--nix-allow-ifd`: opt-in import-from-derivation for the Nix tiers.**
+  With `--nix-closure` or `--nix-eval` (clap rejects it alone), every Nix
+  evaluation passes `allow-import-from-derivation true`, so flakes built
+  with `callCabal2nix`, `developPackage` or `packageSourceOverrides` get a
+  closure instead of degrading. **Nix builds derivations while evaluating
+  the flake; do not use it on an untrusted flake.** The allowance is
+  verified the way the refusal is, through `nix config show`, and nothing
+  is evaluated if nix does not report it (`ifd-allowance-unverified`). A
+  build that fails during evaluation is its own reason,
+  `import-from-derivation-build-failed`. Where nix's sandbox is off (the
+  macOS default) the scan WARNs once that those builds run unsandboxed,
+  and proceeds. `--accept-flake-config` and `--impure` stay refused.
+  Without the flag, behaviour is unchanged apart from the C217 record
+  below (#1283).
+- **C217 `waybill:nix-evaluation-policy`.** Every document from a scan
+  that admits a Nix tier records, at document scope in all three formats,
+  the import-from-derivation policy requested, whether a pre-flight
+  verified it, and nix's sandbox setting:
+  `{"import-from-derivation":"refused"|"allowed","sandbox":…,"schema":1,"verified":…}`.
+  Present on success and degradation alike; absent with no Nix tier and
+  under `--offline`. Documents of scans without a Nix tier are
+  byte-identical (#1283).
 
 - **`sbom edit` selector `scope=excluded`: components not in the
   artifact, the same set in all three formats.** It matches CycloneDX
