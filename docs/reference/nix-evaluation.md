@@ -134,6 +134,20 @@ No `nix` on `PATH`. Install Nix, or drop the flag.
 This `nix` will not honour `allow-import-from-derivation`. waybill
 declines to evaluate rather than evaluate unprotected. Upgrade Nix.
 
+### Case 4a — `ifd-allowance-unverified`
+
+`--nix-allow-ifd` was passed and `nix config show` did not report
+`allow-import-from-derivation = true`. waybill does not assume an opt-in
+applied any more than it assumes a refusal did, so nothing was evaluated.
+See [Import-from-derivation](#import-from-derivation---nix-allow-ifd).
+
+### Case 4b — `import-from-derivation-build-failed`
+
+`--nix-allow-ifd` allowed import-from-derivation and a derivation nix built
+during evaluation failed. The `detail` names the derivation. Distinct from
+`import-from-derivation-required`, where the policy refused: this flake's
+generated expression did not build on this host.
+
 ### Case 5 — `revision-unfetchable`
 
 The pinned revision could not be acquired, or `flake.lock` does not
@@ -689,6 +703,76 @@ Neither was a knowledge problem — both rules are documented above and were
 quoted while being violated. A diagnostic that shares the reader's code is a
 control that does not depend on remembering them.
 
+## Import-from-derivation (`--nix-allow-ifd`)
+
+**What it is.** Many Haskell flakes describe their package with cabal2nix at
+evaluation time (`callCabal2nix`, `developPackage`,
+`packageSourceOverrides`). To evaluate them, nix first **builds** a small
+derivation — the generated Nix expression — and imports its output, all
+during evaluation. That is import-from-derivation (IFD).
+
+**Why waybill refuses it by default.** A build during evaluation runs code
+from the scanned repository. waybill passes
+`allow-import-from-derivation false` to every Nix invocation and checks
+that nix applied it. Such a flake therefore degrades with
+`import-from-derivation-required`, and the WARN says so and names the
+opt-in. Measured on three of the four public project flakes in the recall
+corpus (`specs/1283-nix-allow-ifd/measurements/`): no closure, and 7% and
+12% recall of real vulnerabilities on the two measurable on macOS. Building
+the output beforehand does not help: slack-web's output was already in the
+store and evaluation was still refused.
+
+**The opt-in.** `--nix-allow-ifd`, with `--nix-closure` or `--nix-eval`
+(clap rejects it alone), passes `allow-import-from-derivation true` to
+every Nix evaluation those tiers make: the closure, the attribute listing,
+the output selection, the version, licence and declaration evaluations. It
+verifies the allowance exactly as it verifies the refusal; if nix does not
+report `= true`, nothing is evaluated (`ifd-allowance-unverified`). If an
+IFD build fails, the reason is `import-from-derivation-build-failed`. If
+it outlasts the budget, the reason is `budget-exceeded`.
+
+> **Do not use it on an untrusted flake.** Nix will build derivations while
+> evaluating it, running code the repository supplies.
+
+**The sandbox caveat.** Where nix's sandbox is off, those builds run
+unsandboxed with your user's access. Off is nix's macOS default. waybill
+reads `sandbox` from the same `nix config show` listing, and with the opt-in
+and `sandbox = false` it logs one WARN per scan:
+
+```text
+WARN --nix-allow-ifd: nix's sandbox is off; derivations built during evaluation run unsandboxed with your user's access.
+```
+
+It still proceeds. waybill records the sandbox setting and never changes it.
+
+**Nothing else is relaxed.** `--accept-flake-config` and `--impure` stay
+refused, so a flake's `nixConfig` substituters and keys are still ignored
+(slack-web's and slacklinker's request extra substituters). IFD derivations
+build from your configured substituters, or locally. They may fetch through
+nix, as any nix build does; that is the exposure the caution above
+describes.
+
+**The document says which.** Every scan that admits a Nix tier carries
+`waybill:nix-evaluation-policy` (C217) at document scope, on success and on
+degradation alike:
+
+```text
+{"import-from-derivation":"allowed","sandbox":"false","schema":1,"verified":true}
+```
+
+`import-from-derivation` is what was requested, `verified` whether a
+pre-flight confirmed nix applied it, and `sandbox` nix's own value, or
+`null` when nix reported none. Without the opt-in it reads `"refused"`.
+Two documents of one flake, with and without the opt-in, can differ
+greatly, so the record is how a reader tells which one they hold.
+
+**sbomnix differs.** sbomnix 1.9.0 never passes the setting, so it inherits
+nix's default, `allow-import-from-derivation = true`, and performs IFD
+silently (`specs/1283-nix-allow-ifd/measurements/sbomnix-and-host.txt`:
+no occurrence of the setting in its source, and `nix config show` reporting
+`true` and `sandbox = false` on the measured host). That is why it reads
+these flakes and waybill, by default, does not.
+
 ## Security guidance
 
 **Prefer a sandbox.** Either flag starts an evaluator on a tree you are
@@ -703,7 +787,10 @@ The two differ in what they evaluate, and it matters:
   instantiating a derivation requires it. Expressions authored in the
   repository run.
 
-Defences are on by default and not configurable:
+Defences are on by default. The one that can be relaxed is the
+import-from-derivation refusal, and only by `--nix-allow-ifd` (see
+[above](#import-from-derivation---nix-allow-ifd)); the rest are not
+configurable:
 
 - **Pure mode.** No `--impure` on the resolving call, so the host
   environment is unreadable (`builtins.getEnv "HOME"` returns `""`).
@@ -726,7 +813,9 @@ Defences are on by default and not configurable:
 
 Those defences apply to both flags. Import-from-derivation is refused on
 the closure call too, so the project's flake can be evaluated but cannot
-build anything or run a builder during evaluation.
+build anything or run a builder during evaluation — unless
+`--nix-allow-ifd` is passed, in which case it can, and the document says so
+(C217).
 
 An earlier version of this section described taking the derivation closure
 as a possible future step, and said that if it landed, repository-authored
@@ -737,5 +826,6 @@ two, and nixpkgs is still code waybill does not audit.
 
 ## Related
 
-- [SBOM format mapping](./sbom-format-mapping.md) — rows C177 through C185
+- [SBOM format mapping](./sbom-format-mapping.md) — rows C177 through C185,
+  and C217 (`waybill:nix-evaluation-policy`)
 - [Reading a Waybill SBOM](./reading-a-waybill-sbom.md)

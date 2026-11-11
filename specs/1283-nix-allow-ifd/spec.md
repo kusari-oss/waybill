@@ -69,7 +69,7 @@ A consumer reading a waybill document can tell whether IFD was allowed for the s
 **Acceptance Scenarios**:
 
 1. **Given** a scan with the opt-in, **When** the document is read, **Then** it records that IFD was allowed, in every format, carried in a construct that keeps parity across formats.
-2. **Given** a scan without it, **When** the document is read, **Then** it records that IFD was refused, exactly as today.
+2. **Given** a scan without it, **When** the document is read, **Then** it records that IFD was `refused`, with `verified: true` when today's refusal check succeeds.
 
 ### Edge Cases
 
@@ -86,7 +86,7 @@ A consumer reading a waybill document can tell whether IFD was allowed for the s
 
 ### Functional Requirements
 
-- **FR-001**: waybill MUST provide an opt-in, off by default, that allows import-from-derivation for the scan's Nix evaluations. Without it, behaviour MUST be byte-identical to today: IFD refused, and the refusal verified.
+- **FR-001**: waybill MUST provide an opt-in, off by default, that allows import-from-derivation for the scan's Nix evaluations. Without it, behaviour MUST be unchanged from today, IFD refused and the refusal verified, except for the FR-008 record, which every scan that runs a Nix tier now carries. Documents from scans without a Nix tier MUST be byte-identical.
 - **FR-002**: With the opt-in, every Nix invocation in the closure tier and the version-evaluation tier MUST allow IFD. No invocation may still refuse it, or a scan could half-succeed.
 - **FR-003**: With the opt-in, waybill MUST verify that nix actually applied the allowance, the same way it verifies the refusal today. If it can't be verified, it MUST degrade with a distinct recorded reason.
 - **FR-004**: The opt-in MUST NOT relax any other safety rule. `--accept-flake-config` and `--impure` remain refused, and flake-supplied substituters and trust keys remain ignored.
@@ -98,7 +98,7 @@ A consumer reading a waybill document can tell whether IFD was allowed for the s
   - the opt-in, with the risk statement;
   - the sandbox caveat;
   - that sbomnix 1.9.0 performs IFD silently by inheriting nix's default.
-- **FR-008**: Every `--nix-closure` document MUST record whether IFD was allowed or refused, and nix's reported sandbox setting. The record MUST appear in all three formats with parity. Before adding a field, the plan MUST audit C190, C204 and C216 for a fitting carrier (Principle V), and cite the result.
+- **FR-008**: Every document from a scan where a Nix tier (`--nix-closure` or `--nix-eval`) ran MUST record whether IFD was allowed or refused, and nix's reported sandbox setting. The record MUST appear in all three formats with parity. Under `--offline` no tier runs, and C190 `offline-requested` takes the record's place. Before adding a field, the plan MUST audit C190, C204 and C216 for a fitting carrier (Principle V), and cite the result.
 - **FR-009**: A scan with the opt-in on a flake that doesn't need IFD MUST produce the same components, relationships, scope and VEX as a scan without it. Only the FR-008 record may differ.
 - **FR-010**: When an IFD build fails, or exceeds the closure tier's budget, the degradation MUST be recorded with that reason, distinct from "IFD refused".
 - **FR-011**: The opt-in MUST be testable without network access and without real builds, using the existing stub-nix harness: allowance passed, allowance verified, allowance not verified, IFD build failure.
@@ -119,7 +119,7 @@ A consumer reading a waybill document can tell whether IFD was allowed for the s
 - **SC-001**: With the opt-in, slack-web's runtime-only view reaches ≥ 90% recall of real vulnerabilities, measured by the recall-corpus probe against the committed truth rule. It is 7% today.
 - **SC-002**: With the opt-in, openai reaches ≥ 90% under the same measure. It is 12% today.
 - **SC-003**: With the opt-in, slacklinker, measured on x86_64-linux where its build succeeds, reaches ≥ 90% under the same measure.
-- **SC-004**: Without the opt-in, every existing test, golden and corpus target is unchanged (FR-001).
+- **SC-004**: Without the opt-in, every existing test, golden and corpus target is unchanged except for the added FR-008 record on scans that run a Nix tier, and goldens of scans without a Nix tier are byte-identical (FR-001).
 - **SC-005**: On a flake that doesn't need IFD, documents produced with and without the opt-in differ only in the FR-008 record (FR-009).
 - **SC-006**: A reader of `--help`, the WARN, or the docs can find the untrusted-flake caution in each, in one place each.
 

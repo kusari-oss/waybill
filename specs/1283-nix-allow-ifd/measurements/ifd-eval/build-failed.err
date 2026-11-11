@@ -1,0 +1,17 @@
+building '/nix/store/zpyrgzf29hjbiswx2z7bqmpak5mq19q5-waybill-fixture-ifd-broken.drv'...
+error:
+       … while calling the 'import' builtin
+         at «string»:1:1:
+            1| import (derivation { name = "waybill-fixture-ifd-broken"; system = "aarch64-darwin"; builder = "/bin/sh"; args = [ "-c" "echo waybill-fixture-ifd deliberately fails >&2; exit 1" ]; })
+             | ^
+
+       … while realising the context of path '/nix/store/xnfxcfi0rr40ym055wjwcjs4h3i9f4li-waybill-fixture-ifd-broken'
+
+       error: Cannot build '/nix/store/zpyrgzf29hjbiswx2z7bqmpak5mq19q5-waybill-fixture-ifd-broken.drv'.
+       Reason: builder failed with exit code 1.
+       Output paths:
+         /nix/store/xnfxcfi0rr40ym055wjwcjs4h3i9f4li-waybill-fixture-ifd-broken
+       Last 1 log lines:
+       > waybill-fixture-ifd deliberately fails
+       For full logs, run:
+         nix log /nix/store/zpyrgzf29hjbiswx2z7bqmpak5mq19q5-waybill-fixture-ifd-broken.drv

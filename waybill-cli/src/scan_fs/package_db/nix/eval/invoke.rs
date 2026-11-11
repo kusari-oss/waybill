@@ -4,10 +4,10 @@ use std::io::Read;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-use super::preflight;
+use super::preflight::{self, IfdPolicy, NixEnvironment};
 use super::reason::DegradationReason;
 use super::stderr::{classify_failure, salient_stderr};
-use super::result::{IfdRefusalVerified, NixSystem};
+use super::result::{IfdPolicyVerified, NixSystem};
 
 /// How often the budget is checked while waiting.
 const POLL: Duration = Duration::from_millis(50);
@@ -100,28 +100,36 @@ pub(crate) fn run_bounded(
     })
 }
 
-/// Confirm the import-from-derivation refusal is in effect (spec FR-008).
+/// Confirm the requested import-from-derivation policy is in effect (spec
+/// FR-008; milestone 1283 FR-003).
 ///
 /// See [`super::preflight`] for why requesting the option is not evidence it
 /// applied.
-pub(crate) fn verify_ifd_refusal(
+pub(crate) fn verify_ifd_policy(
+    policy: IfdPolicy,
     budget: Duration,
-) -> Result<IfdRefusalVerified, DegradationReason> {
-    verify_ifd_refusal_with_config(budget).map(|(v, _)| v)
+) -> Result<(IfdPolicyVerified, NixEnvironment), DegradationReason> {
+    verify_ifd_policy_with_config(policy, budget).map(|(v, e, _)| (v, e))
 }
 
-/// [`verify_ifd_refusal`], also returning the full `nix config show` listing
+/// [`verify_ifd_policy`], also returning the full `nix config show` listing
 /// it read.
 ///
 /// Milestone 1423: the closure tier reads the configured `substituters` from
 /// the same listing rather than starting a second `nix` process for it
 /// (`specs/1423-nix-runtime-scope/measurements/nix-behaviour/q1-*`: the full
 /// listing carries `substituters = …` with `extra-substituters` merged in).
-pub(crate) fn verify_ifd_refusal_with_config(
+///
+/// Milestone 1283 (FR-013): this is where the policy and the sandbox are
+/// first known together, so the unsandboxed-build WARN is raised here,
+/// before anything is evaluated, and once per process however many tiers
+/// verify.
+pub(crate) fn verify_ifd_policy_with_config(
+    policy: IfdPolicy,
     budget: Duration,
-) -> Result<(IfdRefusalVerified, String), DegradationReason> {
+) -> Result<(IfdPolicyVerified, NixEnvironment, String), DegradationReason> {
     let out = run_bounded(
-        &["config", "show", "--option", preflight::IFD_SETTING, "false"],
+        &["config", "show", "--option", preflight::IFD_SETTING, policy.setting()],
         budget,
     )?;
     if !out.status_success {
@@ -130,8 +138,29 @@ pub(crate) fn verify_ifd_refusal_with_config(
             out.stderr.trim()
         )));
     }
-    let verified = preflight::verify_from_config_output(&out.stdout)?;
-    Ok((verified, out.stdout))
+    let (verified, environment) = preflight::verify_for(policy, &out.stdout)?;
+    warn_if_unsandboxed(&verified, &environment);
+    Ok((verified, environment, out.stdout))
+}
+
+/// Whether the FR-013 WARN has been logged by this process.
+static UNSANDBOXED_WARNED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// FR-013 — with import-from-derivation allowed and nix's sandbox off, the
+/// derivations nix builds during evaluation run with the user's access. The
+/// scan proceeds; the operator is told, once.
+fn warn_if_unsandboxed(verified: &IfdPolicyVerified, environment: &NixEnvironment) {
+    if verified.policy() != IfdPolicy::Allow || environment.sandbox.as_deref() != Some("false") {
+        return;
+    }
+    if UNSANDBOXED_WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
+    tracing::warn!(
+        "--nix-allow-ifd: nix's sandbox is off; derivations built during evaluation run \
+         unsandboxed with your user's access."
+    );
 }
 
 /// Ask Nix which platform this host is.
@@ -226,7 +255,7 @@ mod tests {
         // failing, either the setting was renamed upstream or this host's nix
         // predates it -- both of which the tier must notice rather than
         // evaluate through.
-        match verify_ifd_refusal(Duration::from_secs(30)) {
+        match verify_ifd_policy(IfdPolicy::Refuse, Duration::from_secs(30)) {
             Ok(_) => {}
             Err(e) => panic!("pre-flight failed on a host with nix present: {e}"),
         }
@@ -298,13 +327,13 @@ in builtins.listToAttrs (map (n: {{ name = n; value = ver n; }}) [ {list} ])"#
 ///
 /// One definition, used by the invocation and asserted on by tests — two would
 /// drift, and the drift would be invisible.
-fn resolving_argv(expr: &str) -> Vec<&str> {
+fn resolving_argv<'a>(expr: &'a str, ifd: &IfdPolicyVerified) -> Vec<&'a str> {
     vec![
         "eval",
         "--json",
         "--option",
         preflight::IFD_SETTING,
-        "false",
+        ifd.policy().setting(),
         "--expr",
         expr,
     ]
@@ -334,11 +363,12 @@ pub(crate) fn argv_is_safe(argv: &[&str]) -> bool {
 pub(crate) struct NixEvaluator;
 
 impl super::Evaluator for NixEvaluator {
-    fn verify_ifd_refusal(
+    fn verify_ifd_policy(
         &self,
+        policy: IfdPolicy,
         budget: Duration,
-    ) -> Result<IfdRefusalVerified, DegradationReason> {
-        verify_ifd_refusal(budget)
+    ) -> Result<(IfdPolicyVerified, NixEnvironment), DegradationReason> {
+        verify_ifd_policy(policy, budget)
     }
 
     fn detect_host_system(&self, budget: Duration) -> Result<NixSystem, DegradationReason> {
@@ -350,6 +380,7 @@ impl super::Evaluator for NixEvaluator {
         revision: &str,
         system: &NixSystem,
         names: &[String],
+        ifd: &IfdPolicyVerified,
         budget: Duration,
     ) -> Result<std::collections::BTreeMap<String, Option<String>>, DegradationReason> {
         let safe: Vec<&str> = names
@@ -377,7 +408,7 @@ impl super::Evaluator for NixEvaluator {
             });
         }
         let expr = versions_expr(revision, system, &safe);
-        let argv = resolving_argv(&expr);
+        let argv = resolving_argv(&expr, ifd);
         if !argv_is_safe(&argv) {
             // Unreachable unless someone edits `resolving_argv`. That is
             // exactly the edit this catches, and the consequence — a scanned
@@ -420,7 +451,7 @@ impl super::Evaluator for NixEvaluator {
             }
             // T020 / FR-005 — classify wherever the failure surfaces, so the
             // two paths cannot disagree about the same stderr (FR-008).
-            return Err(classify_failure(stderr));
+            return Err(classify_failure(stderr, ifd.policy()));
         }
         serde_json::from_str(&out.stdout)
             .map_err(|e| DegradationReason::EvaluationFailed(format!("unparseable json: {e}")))
@@ -480,7 +511,10 @@ mod expr_tests {
         // Measured against a fixture flake carrying that setting: refused by
         // our argv, built when `--accept-flake-config` was added. Real flakes
         // do carry it.
-        assert!(argv_is_safe(&resolving_argv("<expr>")));
+        for p in [IfdPolicy::Refuse, IfdPolicy::Allow] {
+            let ifd = IfdPolicyVerified::assumed_for_test(p);
+            assert!(argv_is_safe(&resolving_argv("<expr>", &ifd)), "{p:?}");
+        }
 
         // The guard has teeth in both directions.
         assert!(!argv_is_safe(&["eval", "--accept-flake-config"]));
@@ -492,17 +526,21 @@ mod expr_tests {
         // `xtask nix-oracle` passes `--impure`; it is a developer tool aimed at
         // known targets. Lifting its invocation would silently drop pure mode,
         // and every output would look identical.
-        let argv = resolving_argv("<expr>");
-        assert!(
-            !argv.contains(&"--impure"),
-            "the resolving call must stay pure: {argv:?}"
-        );
-        assert!(argv.contains(&"--option") && argv.contains(&preflight::IFD_SETTING));
-        assert_eq!(
-            argv.iter().position(|a| *a == preflight::IFD_SETTING).map(|i| argv[i + 1]),
-            Some("false"),
-            "the setting must be passed as false, not merely named"
-        );
+        // m1283 (T014): the value is the verified policy's, both ways.
+        for (p, want) in [(IfdPolicy::Refuse, "false"), (IfdPolicy::Allow, "true")] {
+            let ifd = IfdPolicyVerified::assumed_for_test(p);
+            let argv = resolving_argv("<expr>", &ifd);
+            assert!(
+                !argv.contains(&"--impure"),
+                "the resolving call must stay pure: {argv:?}"
+            );
+            assert!(argv.contains(&"--option") && argv.contains(&preflight::IFD_SETTING));
+            assert_eq!(
+                argv.iter().position(|a| *a == preflight::IFD_SETTING).map(|i| argv[i + 1]),
+                Some(want),
+                "the setting must be passed as the verified policy's value, not merely named"
+            );
+        }
     }
 
     #[test]

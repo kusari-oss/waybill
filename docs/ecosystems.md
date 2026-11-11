@@ -2532,8 +2532,17 @@ derivation, which is import-from-derivation — and the tier refuses that on
 purpose. Before 1274 a `callCabal2nix` flake and a genuinely broken one
 produced documents an operator could not tell apart, so a deliberate policy
 decision read as a bug in waybill. The new reason tells the operator what
-they would have to accept; the refusal itself is unchanged, and whether to
-offer an opt-in is still open (#1283 part 2).
+they would have to accept.
+
+Since milestone 1283 they can accept it: `--nix-allow-ifd` lets every Nix
+evaluation build derivations, verified like the refusal, and the WARN names
+the flag. **Use it only for a flake you trust**; where nix's sandbox is off
+(the macOS default) those builds run unsandboxed. Two reasons go with it:
+`ifd-allowance-unverified` (nix did not confirm the allowance, so nothing
+was evaluated) and `import-from-derivation-build-failed` (the build during
+evaluation failed). Every scan that runs a Nix tier records the policy in
+`waybill:nix-evaluation-policy`. See
+[Import-from-derivation](reference/nix-evaluation.md#import-from-derivation---nix-allow-ifd).
 
 Do not confuse it with `ifd-refusal-unverified`, which is close to its
 opposite: there the installed `nix` did not confirm

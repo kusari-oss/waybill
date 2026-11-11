@@ -31,15 +31,16 @@
 //! Spec FR-012 forbids a second, parallel set of safety controls. This module
 //! adds none: it borrows [`is_safe_attribute_name`], [`argv_is_safe`] and
 //! [`run_bounded`] from the m1034 tier, and the import-from-derivation
-//! refusal is **already verified once per closure run** by
-//! `closure::resolve`, so this path inherits it rather than re-issuing it.
+//! policy is **already verified once per closure run** by
+//! `closure::preflight`, so this path inherits it (as an
+//! `IfdPolicyVerified`) rather than re-issuing it.
 
 use std::time::Duration;
 
 use super::invoke::{argv_is_safe, is_safe_attribute_name, is_valid_revision, run_bounded};
 use super::preflight::IFD_SETTING;
 use super::reason::DegradationReason;
-use super::result::NixSystem;
+use super::result::{IfdPolicyVerified, NixSystem};
 
 /// The package roots searched for a name, in order.
 ///
@@ -204,13 +205,13 @@ in builtins.concatMap (n: builtins.concatMap (r: rowIn r n) roots) [ {list} ]"#
 ///
 /// One definition, asserted on by tests — two would drift, and the drift
 /// would be invisible in every emitted document.
-fn licenses_argv(expr: &str) -> Vec<&str> {
+fn licenses_argv<'a>(expr: &'a str, ifd: &IfdPolicyVerified) -> Vec<&'a str> {
     vec![
         "eval",
         "--json",
         "--option",
         IFD_SETTING,
-        "false",
+        ifd.policy().setting(),
         "--expr",
         expr,
     ]
@@ -222,10 +223,15 @@ fn licenses_argv(expr: &str) -> Vec<&str> {
 /// outcome and is **not** an error — the caller records coverage so that a
 /// closure whose members declare no licenses stays distinguishable from a
 /// lookup that returned nothing (spec FR-008).
+///
+/// Milestone 1283: `ifd` is the policy the closure's pre-flight verified,
+/// passed on rather than re-verified, so this call evaluates under exactly
+/// the policy the closure was read under.
 pub(crate) fn resolve_licenses(
     revision: &str,
     system: &NixSystem,
     names: &[String],
+    ifd: &IfdPolicyVerified,
     budget: Duration,
 ) -> Result<Vec<LicenseRow>, DegradationReason> {
     let safe: Vec<&str> = names
@@ -255,7 +261,7 @@ pub(crate) fn resolve_licenses(
     }
 
     let expr = licenses_expr(revision, system, &safe);
-    let argv = licenses_argv(&expr);
+    let argv = licenses_argv(&expr, ifd);
     if !argv_is_safe(&argv) {
         // Unreachable unless someone edits `licenses_argv`. That is exactly
         // the edit this catches, and the consequence — the scanned flake
@@ -345,26 +351,37 @@ mod tests {
             bad,
             &system(),
             &["hello".to_string()],
+            &refused(),
             Duration::from_secs(5),
         )
         .unwrap_err();
         assert_eq!(err.wire(), "revision-unfetchable");
     }
 
+    fn refused() -> IfdPolicyVerified {
+        IfdPolicyVerified::assumed_for_test(super::super::preflight::IfdPolicy::Refuse)
+    }
+
     /// T009 — FR-011 and FR-012. Both flags are one careless argument away,
     /// and neither failure is observable in an emitted document.
+    ///
+    /// m1283 (T015): the value is the verified policy's, in both directions,
+    /// and the opt-in relaxes nothing else (FR-004).
     #[test]
     fn the_license_argv_is_pure_and_never_hands_settings_to_the_flake() {
+        use super::super::preflight::IfdPolicy;
         let expr = licenses_expr(&"b".repeat(40), &system(), &["hello"]);
-        let argv = licenses_argv(&expr);
-        assert!(argv_is_safe(&argv), "license argv must stay pure: {argv:?}");
-        assert!(!argv.contains(&"--impure"));
-        assert!(!argv.contains(&"--accept-flake-config"));
-        assert!(
-            argv.windows(3)
-                .any(|w| w == ["--option", IFD_SETTING, "false"]),
-            "the import-from-derivation refusal must be requested on this call too"
-        );
+        for (p, want) in [(IfdPolicy::Refuse, "false"), (IfdPolicy::Allow, "true")] {
+            let ifd = IfdPolicyVerified::assumed_for_test(p);
+            let argv = licenses_argv(&expr, &ifd);
+            assert!(argv_is_safe(&argv), "license argv must stay pure: {argv:?}");
+            assert!(!argv.contains(&"--impure"));
+            assert!(!argv.contains(&"--accept-flake-config"));
+            assert!(
+                argv.windows(3).any(|w| w == ["--option", IFD_SETTING, want]),
+                "the verified import-from-derivation policy must be requested on this call too: {argv:?}"
+            );
+        }
     }
 
     /// T009 — names that could carry expression syntax are dropped before the
@@ -387,7 +404,8 @@ mod tests {
     #[test]
     fn an_empty_name_set_resolves_to_no_rows_without_evaluating() {
         let rows =
-            resolve_licenses(&"c".repeat(40), &system(), &[], Duration::from_secs(5)).unwrap();
+            resolve_licenses(&"c".repeat(40), &system(), &[], &refused(), Duration::from_secs(5))
+                .unwrap();
         assert!(rows.is_empty());
     }
 

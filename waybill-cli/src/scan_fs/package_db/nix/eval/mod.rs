@@ -61,31 +61,65 @@ pub(crate) struct TierConfig {
     pub(crate) system: Option<NixSystem>,
     /// Wall-clock budget for the resolving evaluation.
     pub(crate) budget: Duration,
+    /// Milestone 1283 — the import-from-derivation policy requested
+    /// (`--nix-allow-ifd`). Verified by gate 1 before anything is evaluated.
+    pub(crate) ifd_policy: preflight::IfdPolicy,
 }
 
 impl TierConfig {
-    pub(crate) fn from_flags(system: Option<NixSystem>, timeout_secs: Option<u64>) -> Self {
+    pub(crate) fn from_flags(
+        system: Option<NixSystem>,
+        timeout_secs: Option<u64>,
+        ifd_policy: preflight::IfdPolicy,
+    ) -> Self {
         Self {
             system,
             budget: Duration::from_secs(timeout_secs.unwrap_or(PROVISIONAL_BUDGET_SECS)),
+            ifd_policy,
         }
     }
 }
 
+/// What one run of the tier did: the C217 record of the policy it evaluated
+/// under, whatever the outcome, and the outcome.
+pub(crate) type TierRun = (
+    crate::scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy,
+    Result<EvaluationOutcome, DegradationReason>,
+);
+
 /// Run the tier for one pinned revision and a set of component names.
 ///
 /// The gates are ordered so the safety one comes first: nothing is evaluated
-/// until the import-from-derivation refusal is confirmed in effect. Every
-/// error return is a degradation the caller emits and continues from.
+/// until the requested import-from-derivation policy is confirmed in effect.
+/// Every error return is a degradation the caller emits and continues from.
+///
+/// Milestone 1283: the C217 record is returned beside the outcome rather than
+/// inside it, because it is emitted on degradation too.
 pub(crate) fn run(
     revision: &str,
     names: &[String],
     cfg: &TierConfig,
     evaluator: &dyn Evaluator,
-) -> Result<EvaluationOutcome, DegradationReason> {
+) -> TierRun {
+    use crate::scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy;
     // Gate 1 -- safety, before anything repository-controlled is touched.
-    let ifd_refused = evaluator.verify_ifd_refusal(cfg.budget)?;
+    match evaluator.verify_ifd_policy(cfg.ifd_policy, cfg.budget) {
+        Ok((ifd, env)) => (
+            NixEvaluationPolicy::verified(&ifd, &env),
+            run_verified(revision, names, cfg, evaluator, ifd),
+        ),
+        Err(reason) => (NixEvaluationPolicy::unverified(cfg.ifd_policy), Err(reason)),
+    }
+}
 
+/// Gates 2 and 3, reachable only with the gate-1 token in hand.
+fn run_verified(
+    revision: &str,
+    names: &[String],
+    cfg: &TierConfig,
+    evaluator: &dyn Evaluator,
+    ifd: result::IfdPolicyVerified,
+) -> Result<EvaluationOutcome, DegradationReason> {
     // Gate 2 -- the platform, which must be explicit for the resolving call
     // to stay pure.
     let system = match &cfg.system {
@@ -98,18 +132,18 @@ pub(crate) fn run(
             revision.to_string(),
             system,
             BTreeMap::new(),
-            ifd_refused,
+            ifd,
         ));
     }
 
     // Gate 3 -- the evaluation itself, pure and bounded.
-    let versions = evaluator.evaluate_versions(revision, &system, names, cfg.budget)?;
+    let versions = evaluator.evaluate_versions(revision, &system, names, &ifd, cfg.budget)?;
 
     Ok(EvaluationOutcome::new(
         revision.to_string(),
         system,
         versions,
-        ifd_refused,
+        ifd,
     ))
 }
 
@@ -117,10 +151,11 @@ pub(crate) fn run(
 /// is testable without a `nix` on the bench -- and so a test can assert the
 /// *order* of the gates, which is the property that matters most.
 pub(crate) trait Evaluator {
-    fn verify_ifd_refusal(
+    fn verify_ifd_policy(
         &self,
+        policy: preflight::IfdPolicy,
         budget: Duration,
-    ) -> Result<result::IfdRefusalVerified, DegradationReason>;
+    ) -> Result<(result::IfdPolicyVerified, preflight::NixEnvironment), DegradationReason>;
 
     fn detect_host_system(&self, budget: Duration) -> Result<NixSystem, DegradationReason>;
 
@@ -129,6 +164,7 @@ pub(crate) trait Evaluator {
         revision: &str,
         system: &NixSystem,
         names: &[String],
+        ifd: &result::IfdPolicyVerified,
         budget: Duration,
     ) -> Result<BTreeMap<String, Option<String>>, DegradationReason>;
 }
@@ -144,6 +180,8 @@ mod tests {
     struct SpyEvaluator {
         calls: RefCell<Vec<&'static str>>,
         fail_preflight: bool,
+        /// m1283 — the verified policy each evaluation received.
+        evaluated_under: RefCell<Vec<preflight::IfdPolicy>>,
     }
 
     impl SpyEvaluator {
@@ -151,6 +189,7 @@ mod tests {
             Self {
                 calls: RefCell::new(Vec::new()),
                 fail_preflight,
+                evaluated_under: RefCell::new(Vec::new()),
             }
         }
         fn calls(&self) -> Vec<&'static str> {
@@ -159,15 +198,20 @@ mod tests {
     }
 
     impl Evaluator for SpyEvaluator {
-        fn verify_ifd_refusal(
+        fn verify_ifd_policy(
             &self,
+            policy: preflight::IfdPolicy,
             _b: Duration,
-        ) -> Result<result::IfdRefusalVerified, DegradationReason> {
+        ) -> Result<(result::IfdPolicyVerified, preflight::NixEnvironment), DegradationReason>
+        {
             self.calls.borrow_mut().push("preflight");
             if self.fail_preflight {
                 Err(DegradationReason::IfdRefusalUnverified("spy".into()))
             } else {
-                Ok(result::IfdRefusalVerified::attest())
+                Ok((
+                    result::IfdPolicyVerified::assumed_for_test(policy),
+                    preflight::NixEnvironment { sandbox: Some("true".into()) },
+                ))
             }
         }
 
@@ -181,9 +225,11 @@ mod tests {
             _r: &str,
             _s: &NixSystem,
             names: &[String],
+            ifd: &result::IfdPolicyVerified,
             _b: Duration,
         ) -> Result<BTreeMap<String, Option<String>>, DegradationReason> {
             self.calls.borrow_mut().push("evaluate");
+            self.evaluated_under.borrow_mut().push(ifd.policy());
             Ok(names
                 .iter()
                 .map(|n| (n.clone(), Some("1.0.0".to_string())))
@@ -192,7 +238,7 @@ mod tests {
     }
 
     fn cfg() -> TierConfig {
-        TierConfig::from_flags(None, Some(30))
+        TierConfig::from_flags(None, Some(30), preflight::IfdPolicy::Refuse)
     }
 
     #[test]
@@ -201,21 +247,41 @@ mod tests {
         // afterwards would be indistinguishable in every output the tier
         // produces, and wrong.
         let spy = SpyEvaluator::new(false);
-        let out = run("a".repeat(40).as_str(), &["aeson".to_string()], &cfg(), &spy).unwrap();
+        let (record, out) = run("a".repeat(40).as_str(), &["aeson".to_string()], &cfg(), &spy);
+        let out = out.unwrap();
         assert_eq!(spy.calls(), vec!["preflight", "detect_system", "evaluate"]);
         assert_eq!(out.versions.len(), 1);
+        assert!(record.verified);
     }
 
     #[test]
     fn a_failed_preflight_stops_before_evaluating() {
         let spy = SpyEvaluator::new(true);
-        let err = run("a".repeat(40).as_str(), &["aeson".to_string()], &cfg(), &spy).unwrap_err();
+        let (record, out) = run("a".repeat(40).as_str(), &["aeson".to_string()], &cfg(), &spy);
+        let err = out.unwrap_err();
         assert_eq!(err.wire(), "ifd-refusal-unverified");
         assert_eq!(
             spy.calls(),
             vec!["preflight"],
             "nothing may run after the safety gate fails"
         );
+        // m1283 — C217 is recorded on degradation too, unverified.
+        assert!(!record.verified);
+        assert_eq!(record.sandbox, None);
+    }
+
+    /// m1283 (T008) — the policy from the config is the one verified and the
+    /// one every evaluation receives.
+    #[test]
+    fn the_requested_policy_is_verified_and_passed_on() {
+        let spy = SpyEvaluator::new(false);
+        let cfg = TierConfig::from_flags(None, Some(30), preflight::IfdPolicy::Allow);
+        let (record, out) = run("d".repeat(40).as_str(), &["aeson".to_string()], &cfg, &spy);
+        out.unwrap();
+        assert_eq!(*spy.evaluated_under.borrow(), vec![preflight::IfdPolicy::Allow]);
+        assert_eq!(record.import_from_derivation, preflight::IfdPolicy::Allow);
+        assert!(record.verified);
+        assert_eq!(record.sandbox.as_deref(), Some("true"));
     }
 
     #[test]
@@ -223,8 +289,12 @@ mod tests {
         // Detection is the one impure call; naming the platform must avoid it
         // entirely rather than detect-then-override.
         let spy = SpyEvaluator::new(false);
-        let cfg = TierConfig::from_flags(Some("aarch64-darwin".parse().unwrap()), Some(30));
-        let out = run("b".repeat(40).as_str(), &["text".to_string()], &cfg, &spy).unwrap();
+        let cfg = TierConfig::from_flags(
+            Some("aarch64-darwin".parse().unwrap()),
+            Some(30),
+            preflight::IfdPolicy::Refuse,
+        );
+        let out = run("b".repeat(40).as_str(), &["text".to_string()], &cfg, &spy).1.unwrap();
         assert_eq!(spy.calls(), vec!["preflight", "evaluate"]);
         assert_eq!(out.system.as_str(), "aarch64-darwin");
     }
@@ -232,7 +302,7 @@ mod tests {
     #[test]
     fn an_empty_name_set_still_passes_the_safety_gate_but_does_not_evaluate() {
         let spy = SpyEvaluator::new(false);
-        let out = run("c".repeat(40).as_str(), &[], &cfg(), &spy).unwrap();
+        let out = run("c".repeat(40).as_str(), &[], &cfg(), &spy).1.unwrap();
         assert_eq!(spy.calls(), vec!["preflight", "detect_system"]);
         assert!(out.versions.is_empty());
     }

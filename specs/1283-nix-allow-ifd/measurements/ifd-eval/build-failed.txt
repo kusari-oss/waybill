@@ -1,0 +1,3 @@
+nix (Determinate Nix 3.20.0) 2.34.6
+allowed: exit=1
+refused: exit=1

@@ -584,6 +584,10 @@ pub(crate) struct NixEvalSummary {
     /// Why the tier contributed nothing, when it did not. Wire form of
     /// `DegradationReason`, a closed set.
     pub(crate) degraded_reason: Option<String>,
+    /// Milestone 1283 — C217, the import-from-derivation policy the tier's
+    /// pre-flight verified (or could not). `None` when no pre-flight ran
+    /// (`--offline`).
+    pub(crate) policy: Option<crate::scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy>,
 }
 
 /// Rewrite dependency-edge endpoints after a pass changed component PURLs
@@ -908,7 +912,8 @@ pub(crate) fn enrich(
             .collect();
         nix_eval_asked = names.iter().cloned().collect();
         let evaluator = super::eval::invoke::NixEvaluator;
-        match super::eval::run(&pinned.revision, &names, cfg, &evaluator) {
+        let (policy, ran) = super::eval::run(&pinned.revision, &names, cfg, &evaluator);
+        match ran {
             Ok(outcome) => {
                 nix_eval_ran_early = true;
                 nix_eval_divergences = packages.apply_evaluated_versions(&outcome.versions);
@@ -917,6 +922,7 @@ pub(crate) fn enrich(
                     evaluated: outcome.versions.len(),
                     superseded: nix_eval_divergences.len(),
                     degraded_reason: None,
+                    policy: Some(policy),
                 });
                 tracing::info!(
                     // the outcome's own revision, not the caller's: this is
@@ -931,6 +937,7 @@ pub(crate) fn enrich(
             Err(reason) => {
                 nix_eval_summary = Some(NixEvalSummary {
                     degraded_reason: Some(reason.wire().to_string()),
+                    policy: Some(policy),
                     ..Default::default()
                 });
                 tracing::info!(
@@ -1301,7 +1308,10 @@ pub(crate) fn enrich(
                 .collect();
             if !unasked.is_empty() {
                 let evaluator = super::eval::invoke::NixEvaluator;
-                match super::eval::run(&pinned.revision, &unasked, cfg, &evaluator) {
+                // The first pass's C217 record stands: this pass evaluates
+                // only with its own verified token, under the same policy,
+                // and a failed pre-flight here evaluates nothing.
+                match super::eval::run(&pinned.revision, &unasked, cfg, &evaluator).1 {
                     Ok(outcome) => {
                         let mut corrected = 0usize;
                         for c in components.iter_mut().filter(|c| is_haskell(c)) {

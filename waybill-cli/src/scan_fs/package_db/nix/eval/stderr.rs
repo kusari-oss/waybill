@@ -8,6 +8,7 @@
 //! defect this module exists to make impossible: FR-008 requires one rule,
 //! and a copy is how a single rule becomes two that disagree.
 
+use super::preflight::IfdPolicy;
 use super::reason::DegradationReason;
 
 /// How much of the selected text to keep.
@@ -114,7 +115,24 @@ pub(crate) fn salient_stderr(stderr: &str) -> String {
 /// starts. The detail still comes from [`salient_stderr`], so the other
 /// error's line is retained — the operator sees both the classification and
 /// the text.
-pub(crate) fn classify_failure(stderr: &str) -> DegradationReason {
+///
+/// # Milestone 1283 (FR-010) — an allowed build that failed
+///
+/// Under `--nix-allow-ifd` nix builds during evaluation, and that build can
+/// fail. The calls classified here (`nix eval`, `nix derivation show`) build
+/// nothing except through import-from-derivation, so a failed `.drv` build in
+/// their stderr is the IFD build. Measured (`build-failed.sh`, nix 2.34.6):
+///
+/// ```text
+/// error: Cannot build '/nix/store/…-waybill-fixture-ifd-broken.drv'.
+///        Reason: builder failed with exit code 1.
+/// ```
+///
+/// Keyed on the **policy** as well as the text: without the opt-in no IFD
+/// build is attempted, so the same text there is not this reason. The refusal
+/// clause is checked first, and its line also reads `cannot build '….drv…'`,
+/// so the order is load-bearing.
+pub(crate) fn classify_failure(stderr: &str, policy: IfdPolicy) -> DegradationReason {
     let detail = salient_stderr(stderr);
     if stderr
         .lines()
@@ -122,7 +140,20 @@ pub(crate) fn classify_failure(stderr: &str) -> DegradationReason {
     {
         return DegradationReason::ImportFromDerivationRequired(detail);
     }
+    if policy == IfdPolicy::Allow && stderr.lines().any(is_failed_build_line) {
+        return DegradationReason::ImportFromDerivationBuildFailed(detail);
+    }
     DegradationReason::EvaluationFailed(detail)
+}
+
+/// An error line saying a derivation failed to build: nix 2.34's
+/// `Cannot build '….drv'.`, or the `builder for '….drv' failed` wording of
+/// earlier releases (the latter is inference, not a capture).
+fn is_failed_build_line(line: &str) -> bool {
+    let lower = line.to_ascii_lowercase();
+    is_error_line(line)
+        && lower.contains(".drv")
+        && (lower.contains("cannot build '") || lower.contains("builder for '"))
 }
 
 #[cfg(test)]
@@ -234,7 +265,7 @@ error: attribute 'waybillFixtureNoSuchAttribute' missing
 
     #[test]
     fn the_measured_refusal_classifies_as_a_refusal() {
-        let r = classify_failure(&measured_refusal());
+        let r = classify_failure(&measured_refusal(), IfdPolicy::Refuse);
         assert_eq!(r.wire(), "import-from-derivation-required");
     }
 
@@ -246,7 +277,7 @@ error: attribute 'waybillFixtureNoSuchAttribute' missing
             FALSE_POSITIVE.contains("allow-import-from-derivation"),
             "the premise: the setting's bare name IS present"
         );
-        let r = classify_failure(FALSE_POSITIVE);
+        let r = classify_failure(FALSE_POSITIVE, IfdPolicy::Refuse);
         assert_eq!(
             r.wire(),
             "evaluation-failed",
@@ -262,7 +293,7 @@ error: attribute 'waybillFixtureNoSuchAttribute' missing
             "because the option 'allow-import-from-derivation' is disabled",
             "because import-from-derivation is not permitted",
         );
-        let r = classify_failure(&reworded);
+        let r = classify_failure(&reworded, IfdPolicy::Refuse);
         assert_eq!(r.wire(), "evaluation-failed");
         // And the detail still reaches the line, so the operator is not left
         // with nothing when nix changes its wording.
@@ -284,7 +315,7 @@ error: attribute 'waybillFixtureNoSuchAttribute' missing
         let d = salient_stderr(&both);
         assert!(d.starts_with("error: attribute 'somethingElse' missing"), "{d:?}");
 
-        let r = classify_failure(&both);
+        let r = classify_failure(&both, IfdPolicy::Refuse);
         assert_eq!(r.wire(), "import-from-derivation-required", "the refusal wins");
         assert!(
             r.to_string().contains("somethingElse"),
@@ -297,6 +328,67 @@ error: attribute 'waybillFixtureNoSuchAttribute' missing
         // Belt and braces for FR-005a's error-line condition specifically:
         // the clause itself, on a non-error line.
         let s = format!("warning: nix would have said {IFD_REFUSED_CLAUSE}\nerror: unrelated\n");
-        assert_eq!(classify_failure(&s).wire(), "evaluation-failed");
+        assert_eq!(classify_failure(&s, IfdPolicy::Refuse).wire(), "evaluation-failed");
+    }
+
+    // ── T017 (#1283, FR-010) — an allowed IFD whose build failed ────────
+
+    /// nix's real stderr: IFD allowed, and the derivation built during
+    /// evaluation exited 1. Captured by
+    /// `specs/1283-nix-allow-ifd/measurements/ifd-eval/build-failed.sh`.
+    const BUILD_FAILED: &str = include_str!("../../../../../tests/fixtures/nix_ifd/ifd-build-failed.stderr");
+
+    #[test]
+    fn t017_an_allowed_ifd_whose_build_failed_is_its_own_reason() {
+        let r = classify_failure(BUILD_FAILED, IfdPolicy::Allow);
+        assert_eq!(r.wire(), "import-from-derivation-build-failed");
+        assert!(
+            r.to_string().contains("Cannot build '/nix/store/")
+                && r.to_string().contains("waybill-fixture-ifd-broken.drv"),
+            "the detail names the derivation that failed: {r}"
+        );
+    }
+
+    /// Without the opt-in no IFD build is attempted, so a build failure there
+    /// is not one: the classification is keyed on the policy, not the text.
+    #[test]
+    fn t017_the_same_stderr_under_a_refusal_is_not_an_ifd_build_failure() {
+        assert_eq!(
+            classify_failure(BUILD_FAILED, IfdPolicy::Refuse).wire(),
+            "evaluation-failed"
+        );
+    }
+
+    /// The refusal clause still wins under a refusal, and an allowed
+    /// evaluation never reports a refusal it did not make.
+    #[test]
+    fn t017_a_refusal_is_not_reported_as_a_build_failure() {
+        assert_eq!(
+            classify_failure(&measured_refusal(), IfdPolicy::Refuse).wire(),
+            "import-from-derivation-required"
+        );
+        assert_ne!(
+            classify_failure(&measured_refusal(), IfdPolicy::Allow).wire(),
+            "import-from-derivation-build-failed"
+        );
+    }
+
+    /// Unrelated failures keep the generic reason under the opt-in too.
+    #[test]
+    fn t017_an_unrelated_failure_under_the_opt_in_stays_generic() {
+        assert_eq!(classify_failure(FALSE_POSITIVE, IfdPolicy::Allow).wire(), "evaluation-failed");
+    }
+
+    /// nix's older wording, `builder for '….drv' failed with exit code 1`,
+    /// is the same event. **Inference, not a capture**: this is the shape
+    /// earlier nix releases print, written from memory; only the
+    /// `Cannot build` form above was measured (nix 2.34.6).
+    #[test]
+    fn t017_the_older_builder_failed_wording_is_recognised() {
+        let s = "error: builder for '/nix/store/aaa-cabal2nix-waybill-fixture.drv' failed with exit code 1\n";
+        assert_eq!(
+            classify_failure(s, IfdPolicy::Allow).wire(),
+            "import-from-derivation-build-failed"
+        );
     }
 }
