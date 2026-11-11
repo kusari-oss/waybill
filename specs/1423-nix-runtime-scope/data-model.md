@@ -6,7 +6,7 @@ All of this is in-process state for one scan, except what is emitted (C203, C216
 
 | field | type | meaning |
 |---|---|---|
-| `paths` | `BTreeSet<String>` | store basenames that nix reports as the runtime closure of the evaluated installable |
+| `paths` | `BTreeSet<String>` | store basenames that nix reports as the runtime closure of the evaluated derivation's default output path (research R2) |
 | `store` | `RuntimeStore` | `Local`, or `Substituter(url)`: the store that answered |
 | `verified` | `bool` | signature-verified against `trusted-public-keys`; always true for `Local` |
 
