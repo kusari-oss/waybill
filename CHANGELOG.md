@@ -132,6 +132,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A Haskell version from the pinned nixpkgs package set is no longer
+  emitted when the project's own requirement rules it out.** The package
+  set does not see a flake's overlays, so a project that pins another
+  release through one was reported at nixpkgs' version: on slacklinker,
+  `pkg:hackage/slack-web@2.2.0.0` beside its own
+  `waybill:requirement-ranges=[">= 2.3.0.0"]`, where Cabal configured
+  2.3.0.0, and `waybill:nixpkgs-haskell-resolution` said
+  `disagreements: 0`. When no declared range admits the package set's
+  version, the component is now versionless with
+  `waybill:haskell-version-unresolved-reason` =
+  `nixpkgs-version-violates-requirement`, the rejected version is kept in
+  `waybill:nixpkgs-version-disagreement` (`"emitted": null`), and the
+  resolution summary counts it as a disagreement. The rejected entry's
+  source hash and declared license are not attached either. On the
+  haskell-language-server corpus target six components change this way
+  (`lsp`, `lsp-types`, `lsp-test`, `hie-bios`, `hiedb`, `cabal-gild`),
+  each previously emitted at a version its own declared range excludes.
+  A dependency declared without a range, such as slacklinker's
+  `tmp-postgres`, is unchanged: nothing the scan can read contradicts it
+  (#1457).
 - **A `--nix-closure` CycloneDX document with re-identified Python
   members is schema-valid again.** Milestone 1366 recorded why a closure
   member's `pkg:pypi` identifier was derived by adding a
