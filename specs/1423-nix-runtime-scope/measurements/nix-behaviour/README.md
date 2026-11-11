@@ -33,6 +33,7 @@ Each `q<N>-*.sh` script writes raw stdout, stderr, exit code and wall time to `q
 | `q8-verify-cost.sh` → `q8-out/`, `q8-summary.txt` | T002 / R11: `nix store verify --no-contents -r` cost beside the query it follows, cold and warm |
 | `q9-installable.sh` → `q9-out/` | T001: path-info and verify given the **installable** rather than an outPath |
 | `q9-default-output.sh` + `q9-default-output.py` → `q9-out/d-*` | T001: whether the default output can be read from the closure itself |
+| `q11-outputs-to-install.sh` → `q11-out/`, `q11-out/summary.tsv` | #1458: which outputs an attribute installs (`outputSpecified`, `outputName`, `meta.outputsToInstall`), each output's `path-info -r` count, and the cost of the selection evaluation the fix adds |
 | `q10-linux-shellcheck.sh` → `q10-out/` | whether the x86_64-linux runtime closure of the shellcheck corpus target holds its static `ShellCheck-` build, against aarch64-darwin; and which Haskell builds the wrapper root consumes |
 
 `q6-out/*.drv-closure.json` total about 36 MB. They are `nix derivation show -r` output, and `q6-static-link.sh` regenerates any that are missing.
@@ -442,3 +443,23 @@ The Linux corpus regen of `nix-closure-shellcheck` (fixture `kusari-sandbox/wayb
 - On both systems the wrapper root consumes two Haskell-builder derivations through `inputs.drvs`: `ShellCheck-0.11.0`, named in no dependency field (only in `installPhase`), and `pandoc-cli-3.7.0.2`, named in `nativeBuildInputs`. pandoc renders the man page on the build machine and is not in the binary.
 
 **Consequence:** under the runtime closure, static linking is also seeded from the Haskell builds the evaluated root consumed through `inputs.drvs`, when the root is a wrapper rather than a Haskell build itself. A build the root names only in a build-machine field (`pandoc-cli`) is not one of them. Without that exclusion pandoc-cli and every library linked into it would be kept runtime, on both systems, and under the T042 walk guard as well.
+
+### Q11. Which outputs an attribute installs (#1458, 2026-11-11)
+
+The recall corpus found waybill's runtime closure for a `default = pkgs.postgrest` wrapper flake at 754 paths, the size of postgrest's `out` (library) closure, where the realised `bin` output's is 129. `q11-outputs-to-install.sh` reads, for postgrest, cachix, shellcheck and curl at `$R`: `outputs`, `outputName`, `outputSpecified`, `outPath`, `meta.outputsToInstall` (and whether its strings carry context), the installable's `nix derivation show` exit, and `nix path-info -r --store https://cache.nixos.org/` for every output and for the union of the outputs `meta.outputsToInstall` names. Every call carries `--max-jobs 0`; nothing was built. It also runs the fix's selection expression against each attribute, and three times against the recall-corpus postgrest wrapper flake (`packages.aarch64-darwin.default`) to time the extra evaluation. Run 2026-11-11 ~19:55 UTC on the host above, same nix. Raw output: `q11-out/`; table: `q11-out/summary.tsv`.
+
+| attr | `outputs` | `outputSpecified` / `outputName` | `outPath` is | `meta.outputsToInstall` | per-output `path-info -r` | `outputsToInstall` union |
+|---|---|---|---|---|---|---|
+| postgrest | out, doc, bin | true / bin | bin | bin | out 754, doc 185, bin 129 | 129 |
+| cachix | out, bin | true / bin | bin | bin | out 48, bin 47 | 47 |
+| shellcheck | bin, man, doc, out | false / bin | bin | bin, man, doc | bin 5, man 1, doc 1, out 6 | 7 |
+| curl | bin, dev, out, man, devdoc | false / bin | bin | bin, man | bin 20, dev 47, out 19, man 1, devdoc 1 | 21 |
+
+- **The cause of #1458 is output selection.** postgrest's and cachix's attributes are their `bin` outputs (`outputSpecified`), while their derivations' `outputs` start with `out`. The head of `outputs`, which US1 queried, is the library. Q9 d's "4 of 4 agree" held because none of shellcheck, curl, hlint or pandoc selects an output. The 754 and 48 paths match the issue's counts exactly.
+- **`curl.out`** is `outputSpecified` with `outputName = out`, while its `meta.outputsToInstall` still says `["bin","man"]`: `meta` is shared by every output. So the selected output has to take precedence over `meta.outputsToInstall`, as it does for nix's installables.
+- **curl's `meta.outputsToInstall` evaluates.** `nix eval --json` returns `["bin","man"]` (exit 0), strings without context. The installable form still fails (`nix derivation show $R#curl`: exit 1, `'legacyPackages.aarch64-darwin.curl.meta.outputsToInstall' is not a list of strings`, as in Q9 b), and succeeds with `--option eval-cache false` (exit 0). So that failure comes from nix's evaluation cache, not the value **(inference from those observations; the cache entry itself was not read)**.
+- **The selection expression** (`runtime::SELECTION_EXPR`) printed `output-specified ["bin"]` for postgrest and cachix, `outputs-to-install ["bin","man","doc"]` for shellcheck, `outputs-to-install ["bin","man"]` for curl, and `output-specified ["out"]` for `curl.out`.
+- **Cost:** 0.447 / 0.451 / 0.448 s for the selection evaluation of the postgrest wrapper flake, warm (n=3); 0.495 / 0.451 / 0.442 s for `.meta.outputsToInstall` alone.
+- `path-info -r` given several outputs returns the union of their closures in one call (`*.closure.to-install`).
+
+**Consequence:** the runtime query asks the evaluation which outputs the attribute installs (the selected output, else `meta.outputsToInstall`) and queries those outputs' paths, taken from the closure. It falls back to the default output, recorded in C216 `outputs-source`, when the selection is unavailable.

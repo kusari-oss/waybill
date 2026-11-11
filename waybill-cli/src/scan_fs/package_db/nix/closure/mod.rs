@@ -304,9 +304,9 @@ pub(crate) struct ClassifiedClosure {
     /// basename, read from the same evaluation as the licenses, and their
     /// coverage (C184 `identifiers`).
     pub(crate) identifiers: identifiers::DeclaredIdentifiers,
-    /// Milestone 1423 (#1423) — the evaluated output's runtime closure, or
-    /// why it could not be had. Queried by output path, never by installable
-    /// (`runtime` module docs).
+    /// Milestone 1423 (#1423) — the runtime closure of the outputs the
+    /// evaluated attribute installs (#1458), or why it could not be had.
+    /// Queried by output path, never by installable (`runtime` module docs).
     pub(crate) runtime: runtime::RuntimeOutcome,
 }
 
@@ -489,6 +489,7 @@ pub(crate) fn resolve(
     let runtime = Some(runtime::query_closure(
         &raw,
         graph.evaluated.as_deref(),
+        &flakeref,
         cfg.budget,
         &substituters,
     ));

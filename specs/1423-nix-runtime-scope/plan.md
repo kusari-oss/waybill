@@ -7,7 +7,7 @@
 
 Today a `--nix-closure` document's not-in-artifact marks come from a build-graph role. Scored against nix's runtime closure, they are 31% precise as a findings filter. This feature replaces them with:
 
-- **Runtime truth:** `nix path-info -r` of the evaluated derivation's default output path (research R2, revised in US1). It reads the local store first, then the substituters the user already trusts. Remote answers are signature-verified, and every query has a connect timeout and a single download attempt.
+- **Runtime truth:** `nix path-info -r` of the outputs the evaluated attribute installs, falling back to its default output path (research R2, revised in US1 and again for #1458). It reads the local store first, then the substituters the user already trusts. Remote answers are signature-verified, and every query has a connect timeout and a single download attempt.
 - **Static linking:** components linked into a runtime member also count as runtime. Go and Rust modules come from the milestone-1378 embedded readers. Haskell libraries come from the milestone-1275 declared edges, or, when those are unavailable, from derivation fields.
 - **Fallback:** when no store answers, a reachability walk from the evaluated package.
 
