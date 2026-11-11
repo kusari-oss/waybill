@@ -124,7 +124,8 @@ Paths are relative to the repository root. `closure/` means `waybill-cli/src/sca
 - [X] T037 Run the six golden-owning test suites with `WAYBILL_UPDATE_{CDX,SPDX,SPDX3}_GOLDENS=1`. Verify the churn with a normalized, sorted diff and confirm it is only C203 values on closure members and C216 on closure documents.
 
   Done: `cdx_regression`, `oci_pull_backward_compat`, `optional_dep_classification`, `pkg_alias_binding_us1`, `spdx_regression`, `spdx3_regression`, all `ok`. 34 golden files were rewritten (positive control: their mtimes moved) and `git status` shows none changed, so there was no churn to diff: no local golden carries a closure.
-- [ ] T038 Dispatch `public-corpus.yml` with `regen_goldens=true` for the branch. Commit the Linux moat golden: moat takes the walk on CI, and after T036 shellcheck takes the runtime closure. Run I10 on the result.
+- [X] T038 Dispatch `public-corpus.yml` with `regen_goldens=true` for the branch. Commit the Linux moat golden: moat takes the walk on CI, and after T036 shellcheck takes the runtime closure. Run I10 on the result.
+  Done: regen run 42957888154 (moat goldens, walk-derived scope; the m1278 expectation moved from scope to role + C203 source, `9d953a9b`); confirming run 42958633249 green, 138/138, moat goldens unchanged.
 - [X] T039 [P] Add CHANGELOG [Unreleased] entries in `CHANGELOG.md`:
   - Changed: closure scope comes from the runtime closure;
   - Added: C216, the C203 values and `scope=excluded`;
