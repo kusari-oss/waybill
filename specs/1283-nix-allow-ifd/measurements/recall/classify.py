@@ -46,7 +46,7 @@ right-product grype finding with no CPE (the proxy has nothing to match on),
 a disagreement with REVIEWED, or a link closure with no cabal metadata (an
 empty closure would silently drop every HSEC).
 """
-import argparse, collections, datetime, json, re, sys
+import argparse, collections, datetime, json, re, sys, unicodedata
 
 # Haskell packages that vendor C library sources (cmark-gfm-style). Membership is the rule; listed
 # here so the questionable bucket is explicit. Only names present in a closure can fire.
@@ -148,6 +148,14 @@ def reviewed_key(name, version):
     return f"zlib@{(version or '').split('.')[0]}" if n == "zlib" else n
 
 
+def ascii_excerpt(text, n=200):
+    """CVE text for a human reader, folded to ASCII. The file is committed,
+    and the repository's homoglyph check rejects the no-break spaces CVE
+    descriptions carry (it already flags three in ../stage2-classify.tsv)."""
+    folded = unicodedata.normalize("NFKC", text or "").replace("\n", " ")
+    return "".join(ch if ord(ch) < 128 else "?" for ch in folded)[:n]
+
+
 def vendor_product(cpe):
     """Fields 4-5 of a CPE 2.3 name: cpe:2.3:a:<vendor>:<product>:..."""
     p = cpe.split(":")
@@ -221,7 +229,7 @@ def truth(args):
             excluded[(r["canon"], r["nname"], r["version"] or "")] = {
                 "id": r["canon"], "name": r["name"], "version": r["version"] or "", "reason": reason,
                 "why": why, "cpe": sorted({vp for vp in (vendor_product(c) for c in r["cpes"]) if vp}),
-                "excerpt": r["desc"].replace("\n", " ")[:200]}
+                "excerpt": ascii_excerpt(r["desc"])}
 
     for r in osv_rows(args.osv):
         if (r["id"] or "").startswith("HSEC"):

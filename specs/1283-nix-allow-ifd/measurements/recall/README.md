@@ -60,6 +60,10 @@ A right-product grype finding with no CPE stops the build (exit 2): the proxy
 would have nothing to match it on, and dropping it would shrink the truth
 without saying so.
 
+`excluded[].excerpt` is folded to ASCII (NFKC, then `?` for anything left),
+because CVE descriptions carry no-break spaces and the repository's homoglyph
+check rejects them in committed files.
+
 ### What the nightly checks
 
 `expectations::recall_proxy` in `waybill-cli/tests/corpus_harness_195/`. For
