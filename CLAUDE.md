@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-10
+Auto-generated from all feature plans. Last updated: 2026-11-11
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -465,6 +465,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-10
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `go_binary::read_binary`, `binary::scan::scan_binary`, `binary::entry::cargo_auditable_packages_to_entries`, `binary::discover::discover_binaries`, `DepsDevSource::confirm` + `EnrichmentKey`, `serde`/`serde_json`, `tracing`, `clap`. **Zero new Cargo dependencies.** (1378-closure-binary-contents)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. (1423-nix-runtime-scope)
 - N/A. The runtime closure is in process for one scan; nothing persists beyond the emitted document. (1423-nix-runtime-scope)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only — `clap` (flag + `ArgGroup`), `serde`/`serde_json` (C217), `tracing` (WARNs), `anyhow`/`thiserror`; the `eval::invoke` helpers (`run_bounded`, `argv_is_safe`) and `eval::preflight`. **Zero new Cargo dependencies** (FR-012). (1283-nix-allow-ifd)
+- N/A. Everything is in-process per scan. (1283-nix-allow-ifd)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -697,9 +699,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1283-nix-allow-ifd: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only — `clap` (flag + `ArgGroup`), `serde`/`serde_json` (C217), `tracing` (WARNs), `anyhow`/`thiserror`; the `eval::invoke` helpers (`run_bounded`, `argv_is_safe`) and `eval::preflight`. **Zero new Cargo dependencies** (FR-012).
 - 1423-nix-runtime-scope: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only.
 - 1377-nix-subject-identity: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: `serde`/`serde_json`, `tracing`, `anyhow`. The host's `nix`, already required by `--nix-closure`. **Zero new Cargo dependencies.**
-- 1378-closure-binary-contents: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. + Existing only — `go_binary::read_binary`, `binary::scan::scan_binary`, `binary::entry::cargo_auditable_packages_to_entries`, `binary::discover::discover_binaries`, `DepsDevSource::confirm` + `EnrichmentKey`, `serde`/`serde_json`, `tracing`, `clap`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
