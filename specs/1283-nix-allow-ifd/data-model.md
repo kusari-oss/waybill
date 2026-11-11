@@ -5,7 +5,7 @@
 `enum IfdPolicy { Refuse, Allow }`
 
 - Default: `Refuse`. Set to `Allow` only by `--nix-allow-ifd`.
-- `fn setting(&self) -> &'static str`: `"false"` or `"true"`. This is the only source of the IFD argv value at all 7 call sites (research R1).
+- `fn setting(&self) -> &'static str`: `"false"` or `"true"`. This is the only source of the IFD argv value at all 8 call sites (research R1).
 
 ## IfdPolicyVerified (attested; only the preflight constructs it)
 
@@ -54,4 +54,13 @@ See `contracts/c217-nix-evaluation-policy.md`. Built from `IfdPolicy` and `NixEn
   }
   ```
 
-- Proxy match: a finding is recalled when the runtime-only view has a component with the same normalized name and version, plus either a CPE whose vendor:product equals `matcher.cpe` or a purl equal to `matcher.purl`.
+- **Proxy match:** a finding is recalled when the runtime-only view has a component that satisfies all three:
+  1. **Name.** Its normalized name equals the finding's. Normalization lowercases the name and strips a leading `python3-` / `python3.N-` (`norm_name` in `measurements/recall/recall.py`, copied from `specs/1377-nix-subject-identity/measurements/analyze.py`).
+  2. **Version.** Its `version` equals the finding's, as strings.
+  3. **Matcher.**
+     - `matcher.cpe`: the vendor:product (fields 4–5 of a CPE 2.3 name) of the component's `cpe` or of any `waybill:cpe-candidates` value equals `matcher.cpe`.
+     - `matcher.purl`: the component's purl equals it, ignoring qualifiers. For a purl matcher, step 1 is skipped and the purl decides.
+- **Runtime-only view:**
+  - Components are counted recursively: CycloneDX components nest, so walk `components[].components[]`.
+  - Components with CycloneDX `scope == "excluded"` are dropped.
+- **Truth:** finding IDs are canonicalized to the CVE alias when one exists (`canon` in `recall.py`), so a GHSA and its CVE count once.

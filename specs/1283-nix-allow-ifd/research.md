@@ -4,7 +4,7 @@ Code citations are from main@`1303ba82`. Measurements are in `measurements/`; ea
 
 ## R1 — Every place IFD is set
 
-**Finding:** seven call sites pass `--option allow-import-from-derivation false` (`eval::preflight::IFD_SETTING`):
+**Finding:** eight call sites pass `--option allow-import-from-derivation false` (`eval::preflight::IFD_SETTING`). Seven are on main@`1303ba82`. The eighth arrives with #1458 (PR #1461), which is stacked to land before this feature:
 
 | site | what it runs |
 |---|---|
@@ -14,10 +14,13 @@ Code citations are from main@`1303ba82`. Measurements are in `measurements/`; ea
 | `nix/eval/invoke.rs:~306` | the m1034 version evaluation |
 | `nix/eval/licenses.rs:~212` | the m1281 meta/licence evaluation |
 | `nix/declarations/evaluate.rs:~141, ~237` | the m1050 nixpkgs security-declaration evaluation |
+| `nix/closure/runtime.rs::evaluate_selection` (#1461, `:136`) | `nix eval --apply SELECTION_EXPR` (which output the attribute installs) |
 
-The 1423 runtime query (`closure/runtime.rs`) runs `path-info` on output paths and does not evaluate, so it needs no setting.
+The 1423 runtime query itself (`path-info -r`) runs on output paths and does not evaluate, so it needs no setting. The #1461 selection evaluation does. It matters most because of how it fails: if it refuses IFD, it falls back to the default output, and the only trace is C216 `outputs-source: default-output`. On an IFD flake, the opt-in would read the closure but take the runtime scope from a possibly wrong output, and the scan would look successful.
 
-**Decision:** replace the literal `"false"` at every site with a value taken from one `IfdPolicy`, passed down from `scan_cmd`. A grep test asserts that no `IFD_SETTING, "false"` literal remains outside the policy type (FR-002).
+**Version-evaluation entry point:** the version tier reaches nix through the `Evaluator` trait (`eval/mod.rs:87`, method `verify_ifd_refusal` at `:120`, test impl at `:162`). `invoke.rs:229` calls the free function of the same name. Both change shape.
+
+**Decision:** replace the literal `"false"` at every site with a value taken from one `IfdPolicy`, passed down from `scan_cmd`. A grep test asserts that no `IFD_SETTING, "false"` literal remains in non-test code (FR-002). Live nix tests inside `#[cfg(test)]` modules, such as `eval/licenses.rs:~600`, may keep a literal.
 
 **Rationale:** one source of truth. A missed site would leave a scan half-allowed: the closure readable, the licence eval refused.
 

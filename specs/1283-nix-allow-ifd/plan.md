@@ -22,9 +22,9 @@ Add `--nix-allow-ifd`, an opt-in that requires a Nix tier. With it, every Nix ev
 **Performance Goals**: Warm evaluation with IFD allowed is 0.25–1.18 s (research R3). Cold cost is bounded by the existing 300 s per-call budget.
 **Constraints**:
 - The opt-in relaxes nothing else (FR-004).
-- Default behaviour is byte-identical to today (FR-001).
+- Without the opt-in, behaviour is unchanged except for the new C217 record, which every scan that runs a Nix tier now carries (FR-001 as amended by T002). Documents with no Nix tier are byte-identical.
 - Network reach is unchanged, apart from what nix itself does when building IFD derivations; the docs state this.
-**Scale/Scope**: 7 Nix call sites (research R1), 1 new document row, 3 new corpus targets, 1 dispatch workflow.
+**Scale/Scope**: 8 Nix call sites (research R1; the eighth arrives with PR #1461, which must land first), 1 new document row, 3 new corpus targets, 1 dispatch workflow.
 
 ## Constitution Check
 
@@ -79,7 +79,7 @@ waybill-cli/tests/corpus_harness_195/{manifest,harness,expectations}.rs  # allow
 ## Phasing
 
 1. **Foundation:** `IfdPolicy` / `IfdPolicyVerified`, preflight generalisation, C190 reasons, C217 type, and the parity extractors.
-2. **US1:** thread the policy to all 7 sites; flag + `ArgGroup`; grep test.
+2. **US1:** thread the policy to all 8 sites; flag + `ArgGroup`; grep test.
 3. **US2:** help text, both WARNs, user-guide section.
 4. **US3:** emit C217 in all three formats.
 5. **Corpus:** `allow_ifd` targets, the recall proxy expectation, `recall-truth.yml`, and the baselines produced on Linux (truth, then goldens).

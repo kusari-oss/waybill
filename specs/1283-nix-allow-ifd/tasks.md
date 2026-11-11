@@ -20,6 +20,9 @@
 - [ ] T002 Amend `specs/1283-nix-allow-ifd/spec.md`. FR-001, US3 scenario 2 and SC-004 say "unchanged / exactly as today", but C217 is new for every scan that admits a Nix tier (contract C217 "Rules").
   - FR-001 and SC-004: everything except C217 is unchanged, and goldens of scans without a Nix tier are byte-identical.
   - US3-2: the document records `refused` / `verified: true`.
+  - FR-008: change "every `--nix-closure` document" to "every document from a scan where a Nix tier (`--nix-closure` or `--nix-eval`) ran". Under `--offline` no tier runs, and C190 `offline-requested` takes C217's place (contract C217 "Present when").
+
+  The plan's Constraints line was already brought into line with this.
 
 ## Phase 2: Foundational (blocks all stories)
 
@@ -41,7 +44,11 @@
   - generalise `verify_from_config_output(stdout)` to `verify_for(policy, stdout) -> Result<(IfdPolicyVerified, NixEnvironment), DegradationReason>`;
   - add `struct NixEnvironment { sandbox: Option<String> }` (data-model §NixEnvironment);
   - keep the old function as a thin `Refuse` wrapper only if callers outside `eval` need it, otherwise remove it.
-- [ ] T008 Make `NIX/eval/invoke.rs:124` (`config show`) pass `policy.setting()` instead of `"false"`. Change `verify_ifd_refusal_with_config` to `verify_ifd_policy_with_config(policy, budget)`, returning `(IfdPolicyVerified, NixEnvironment)`.
+- [ ] T008 Make `NIX/eval/invoke.rs:124` (`config show`) pass `policy.setting()` instead of `"false"`. Change `verify_ifd_refusal_with_config` to `verify_ifd_policy_with_config(policy, budget)`, returning `(IfdPolicyVerified, NixEnvironment)`. Make the same change to:
+  - the free function `verify_ifd_refusal` (`invoke.rs:107`, called at `:229`), which becomes `verify_ifd_policy(policy, budget)`;
+  - the `Evaluator` trait method in `NIX/eval/mod.rs:120`, called at `:87`, together with its test impl at `:162`.
+
+  `eval::run` takes the policy from its config and passes the verified value on.
 - [ ] T009 [P] Add the C217 value type `NixEvaluationPolicy { import_from_derivation: IfdPolicy, verified: bool, sandbox: Option<String> }` with sorted-key JSON serialisation `{"import-from-derivation","sandbox","schema":1,"verified"}`.
   - Place it in `NIX/closure/summary.rs`, beside the C216 value, and follow C216's encoding helper.
   - Unit test the exact string for allowed / refused / unverified / sandbox-null.
@@ -62,6 +69,7 @@
   - (d) the flag where the stub's `derivation show` fails with an IFD build error → C190 `import-from-derivation-build-failed`, distinct from `import-from-derivation-required`;
   - (e) `--nix-allow-ifd` with neither `--nix-closure` nor `--nix-eval` → clap rejects it (non-zero exit, "requires" in stderr);
   - (f) the flag on: no recorded argv contains `--accept-flake-config` or `--impure` (FR-004).
+  - (f′) the flag on, with the #1461 selection fixture (`closure-outputs.json`): the recorded `eval --apply` selection argv carries `allow-import-from-derivation true`, and C216 `outputs-source` is not `default-output`. Without the flag it carries `false`.
 
   Extend `nix_stub.rs` (with `..Default::default()` on the existing literals) for: a configurable `config show` IFD value and `sandbox` line, and an IFD-build-failure stderr.
 - [ ] T013 [US1] Thread `IfdPolicyVerified` through the closure tier in `NIX/closure/mod.rs`:
@@ -69,6 +77,9 @@
   - `closure_argv` and `attributes_argv` take `&IfdPolicyVerified` and emit `policy().setting()`;
   - add `ifd_policy: IfdPolicy` to the closure config struct;
   - update the unit test at `closure/mod.rs:829` to cover both values.
+- [ ] T013a [US1] Do the same in `NIX/closure/runtime.rs::evaluate_selection` (from #1461, `:136`). `evaluate_selection` takes `&IfdPolicyVerified` and emits `policy().setting()`. `resolve()` passes the value it verified in T013, with no second preflight. Update the runtime.rs unit tests that assert the selection argv.
+  - **Why it matters:** if this site still refuses, an IFD flake reads its closure and then quietly falls back to the default output (research R1).
+  - **Precondition:** PR #1461 has landed and this branch has been rebased onto it. If it hasn't landed, stop and report rather than port the selection code.
 - [ ] T014 [P] [US1] Do the same in `NIX/eval/invoke.rs:~306`: the version eval argv uses the verified policy, and the eval entry point takes `IfdPolicyVerified`. Update the test at `invoke.rs:500`.
 - [ ] T015 [P] [US1] Do the same in `NIX/eval/licenses.rs:212` and its tests at `:365` and `:600`.
 - [ ] T016 [P] [US1] Do the same in `NIX/declarations/evaluate.rs:141` and `:237`. They receive the verified policy from their caller rather than re-verifying, unless the call path today verifies separately; if it does, keep that, and verify the same policy.
@@ -77,7 +88,13 @@
   - `#[arg(long = "nix-allow-ifd")] nix_allow_ifd: bool`, with an `ArgGroup` so it requires `nix_closure` or `nix_eval` (contract cli-nix-allow-ifd);
   - map it to `IfdPolicy` and pass it to the closure, eval, licence and declaration tiers;
   - under `--offline`, log at INFO that the flag had no effect.
-- [ ] T019 [US1] Add a grep guard test in `waybill-cli/tests/nix_allow_ifd.rs`: read every `.rs` under `NIX/`, and assert that no non-test line matches `IFD_SETTING,\s*"false"` or `IFD_SETTING, "true"`, so the value always comes from the policy (FR-002, R1). Mutation check: re-introduce one literal, see the test fail, restore with `cp`.
+- [ ] T019 [US1] Add a grep guard test in `waybill-cli/tests/nix_allow_ifd.rs`, so the IFD value always comes from the policy (FR-002, R1):
+  - Read every `.rs` under `NIX/`, keeping only the text **before** the file's first `#[cfg(test)]` line. Live nix tests inside test modules, such as `eval/licenses.rs:~600`, keep their literals.
+  - Join each `IFD_SETTING` occurrence with the next non-blank token, since argv vectors are often one element per line.
+  - Assert that no occurrence is followed by a `"false"` or `"true"` string literal.
+  - Assert that the number of `IFD_SETTING` uses in non-test code is at least 8, so the guard can't pass by finding none.
+
+  Mutation check: re-introduce a literal at `closure/runtime.rs`, see the test fail, restore with `cp`.
 - [ ] T020 [US1] Run T012 (a)–(f) and confirm all pass. Run the existing `nix_ifd_reason.rs`, `nix_eval_tier.rs`, `nixpkgs_declarations.rs` and `closure_*.rs` tests unchanged.
 
 **Checkpoint:** US1 works end to end with stub nix.
@@ -142,8 +159,8 @@
   Copy the full SHAs from `specs/1283-nix-allow-ifd/measurements/stage2-target-shas.txt`.
 - [ ] T036 Add the recall proxy expectation in `waybill-cli/tests/corpus_harness_195/expectations.rs` (data-model §RecallTruth):
   - load `waybill-cli/tests/fixtures/public_corpus/<target>/recall-truth.json`;
-  - take the runtime-only view by excluding components whose C203/scope is `excluded`, matching `--drop scope=excluded`;
-  - count the truth findings matched by name, version and the CPE vendor:product or purl;
+  - take the runtime-only view: walk components recursively and drop CycloneDX `scope == "excluded"`, matching `--drop scope=excluded`;
+  - count the truth findings matched by the exact rule in data-model §RecallTruth "Proxy match": normalized name, exact version, then CPE vendor:product from `cpe` or `waybill:cpe-candidates`, or purl ignoring qualifiers;
   - assert the ratio ≥ 0.90, and on failure list the misses.
 
   Also assert: no C190 `import-from-derivation-required`; C217 `allowed` and `verified: true`; C216 present. Unit-test the matcher with a hand-made three-finding truth file (one CPE hit, one purl hit, one miss → 0.667).
@@ -171,6 +188,7 @@
 
 ## Dependencies
 
+- **External:** PR #1461 (#1458) must land, and this branch be rebased onto it, before T013a. The other tasks don't depend on it.
 - Setup (T001–T002) → Foundational (T003–T011) → US1 (T012–T020) → US2 and US3. US2 and US3 are independent of each other; both need T018's flag.
 - Corpus (T033–T039) needs US1 + US3 (expectations assert C217). T038 must precede T039: goldens are regenerated after the truth is committed, so the expectation can run.
 - Polish follows everything; T041 needs only US1 + US3.
@@ -178,7 +196,7 @@
 ## Parallel examples
 
 - Foundational: T009 ∥ T010 after T003–T008. T011 waits for T010.
-- US1: T014 ∥ T015 ∥ T016 after T013 (different files).
+- US1: T013a ∥ T014 ∥ T015 ∥ T016 after T013 (different files).
 - US2: T025 (docs) ∥ T022–T024 (code).
 - US3: T028 ∥ T029 ∥ T030 after T027.
 - Corpus: T037 (workflow) ∥ T033–T036 (harness).
