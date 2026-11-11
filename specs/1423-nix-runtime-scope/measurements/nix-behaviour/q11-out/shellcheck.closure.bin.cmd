@@ -1,0 +1,1 @@
+nix path-info --max-jobs 0 -r --store https://cache.nixos.org/ /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin

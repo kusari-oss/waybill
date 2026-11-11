@@ -1,0 +1,1 @@
+nix eval --max-jobs 0 --json --option allow-import-from-derivation false path:<recall-corpus>/wrappers/postgrest#packages.aarch64-darwin.default --apply d: if d.outputSpecified or false then { source = "output-specified"; outputs = [ d.outputName ]; } else { source = "outputs-to-install"; outputs = d.meta.outputsToInstall or null; }

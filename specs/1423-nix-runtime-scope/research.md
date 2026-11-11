@@ -17,7 +17,21 @@ Code citations come from a read-only map of `be8924f7` taken on 2026-11-10. Meas
 
 ## R2 — Obtaining the runtime closure
 
-**Decision (revised during US1, `measurements/nix-behaviour/q9-*`):** query the evaluated derivation's **default output path** (the head of its `outputs`), not the installable. Passing `<flakeref>#<attr>` failed three ways: with `--store <cache>` nix tries to upload the `.drv` and gets a 404; curl's installable does not evaluate at `a799d3e3`; and an installable selects `meta.outputsToInstall` (shellcheck: bin, man, doc), not `outPath`, which the committed truth used. The default output matched the evaluated `outPath` on 4 of 4 packages and needs no second evaluation. Untested inference: an attribute that explicitly selects a non-default output (`pkgs.curl.out`) is not seen this way. Calls go through `eval/invoke.rs::run_bounded` with the tier's budget and `guard()`.
+**Decision (revised again for #1458, `measurements/nix-behaviour/q11-*`):** query the store paths of the outputs the attribute **installs**, as one `path-info -r` over all of them, still never the installable. Which outputs those are comes from one pure `nix eval --json --option allow-import-from-derivation false <flakeref> --apply <expr>` (`runtime::SELECTION_EXPR`), using nix's own precedence: the selected output when the attribute is one (`outputSpecified` → `[outputName]`), else `meta.outputsToInstall`. Their paths come from the closure already read (`outputs.<name>.path`). When the selection fails, declares nothing, or names an output the evaluated derivation lacks, the default output below is queried and C216 records `outputs-source: default-output`. Measured on `a799d3e3`, aarch64-darwin:
+
+| attr | `outputs` | `outputSpecified` / `outputName` | `meta.outputsToInstall` | `path-info -r` per output (cache.nixos.org) | union of selected |
+|---|---|---|---|---|---|
+| postgrest | out, doc, bin | true / bin | bin | out 754, doc 185, bin 129 | 129 |
+| cachix | out, bin | true / bin | bin | out 48, bin 47 | 47 |
+| shellcheck | bin, man, doc, out | false / bin | bin, man, doc | bin 5, man 1, doc 1, out 6 | 7 |
+| curl | bin, dev, out, man, devdoc | false / bin | bin, man | bin 20, dev 47, out 19, man 1, devdoc 1 | 21 |
+
+- The US1 rule below picked `out` for postgrest and cachix: their attributes are their `bin` outputs, while their derivations' `outputs` start with `out`. The "4 of 4 agree" below held only because none of the four selected an output.
+- `curl.out` selects `out` (`outputSpecified`, `outputName = out`) while its `meta.outputsToInstall` still says `bin, man`: `meta` is shared by every output, which is why `outputSpecified` is consulted first.
+- curl's `meta.outputsToInstall` does evaluate: `nix eval --json` returns `["bin","man"]`, strings without context. The "is not a list of strings" failure (q9 b) is the installable form, and `nix derivation show --option eval-cache false <installable>` succeeds, so it comes from nix's evaluation cache, not from the value (inference from those two observations).
+- The selection costs one extra evaluation of the scanned attribute: 0.45–0.50 s on the postgrest wrapper flake, warm (n=3).
+
+*Superseded (US1, `measurements/nix-behaviour/q9-*`):* query the evaluated derivation's **default output path** (the head of its `outputs`), not the installable. Passing `<flakeref>#<attr>` failed three ways: with `--store <cache>` nix tries to upload the `.drv` and gets a 404; curl's installable does not evaluate at `a799d3e3`; and an installable selects `meta.outputsToInstall` (shellcheck: bin, man, doc), not `outPath`, which the committed truth used. The default output matched the evaluated `outPath` on 4 of 4 packages and needs no second evaluation. Untested inference: an attribute that explicitly selects a non-default output (`pkgs.curl.out`) is not seen this way. Calls go through `eval/invoke.rs::run_bounded` with the tier's budget and `guard()`.
 
 *Original plan, superseded:* run `nix path-info -r <flakeref>#<attr>`.
 

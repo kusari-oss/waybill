@@ -8,13 +8,24 @@
 //!
 //! # What is queried, and where
 //!
-//! The evaluated derivation's **default output path**, never the installable.
-//! Measured (`measurements/nix-behaviour/q9-*`): with `--store <binary cache>`
-//! an installable makes evaluation write the `.drv` to the cache and fail;
-//! curl's installable does not evaluate at all at the pinned revision; and an
-//! installable selects `meta.outputsToInstall` rather than `outPath`, which is
-//! what the committed runtime truth was taken from. A store path needs no
-//! evaluation, so no repository code runs for this query either.
+//! The store paths of the outputs the evaluated attribute **installs**, never
+//! the installable. Which outputs those are is asked of one small pure
+//! evaluation of the same attribute ([`SELECTION_EXPR`]), following nix's own
+//! rule: the selected output when the attribute is one (`outputSpecified`),
+//! else `meta.outputsToInstall`. Their paths come from the closure already
+//! read. When the selection cannot be had, the derivation's default output
+//! (the head of its `outputs`) is queried and C216 says so (#1458).
+//!
+//! Why not the head of `outputs` alone: `pkgs.postgrest` is postgrest's `bin`
+//! output, while its `outputs` start with `out`, the library, whose runtime
+//! closure is 754 paths against `bin`'s 129 (`measurements/nix-behaviour/
+//! q11-*`). Why not the installable: with `--store <binary cache>` it makes
+//! evaluation write the `.drv` to the cache and fail, and curl's installable
+//! fails at the pinned revision with `meta.outputsToInstall … is not a list of
+//! strings`, which q11 traced to nix's evaluation cache: `nix eval` reads the
+//! same list, and the installable succeeds with `eval-cache false` (q9, q11).
+//! A store path needs no evaluation, so the path queries run no repository
+//! code.
 //!
 //! The local store is asked first. Then each substituter the user's nix is
 //! already configured to trust, one `--store <url>` call each, because nix
@@ -38,6 +49,7 @@ use super::static_link::{static_link_set, DeclaredEdges, StaticLinkSource};
 use super::walk;
 use super::{guard, ClassifiedClosure};
 use crate::scan_fs::package_db::nix::eval::invoke::run_bounded;
+use crate::scan_fs::package_db::nix::eval::preflight::IFD_SETTING;
 use crate::scan_fs::package_db::nix::eval::reason::DegradationReason;
 
 /// The connect timeout passed on a remote query, in whole seconds (q5),
@@ -71,6 +83,145 @@ pub(crate) struct RuntimeClosure {
     pub(crate) store: RuntimeStore,
     /// Signature-verified. Always true: an unverified answer is never built.
     pub(crate) verified: bool,
+}
+
+/// How the queried outputs were chosen (C216 `outputs-source`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum OutputsSource {
+    /// The attribute is one output of its derivation (`outputSpecified`), as
+    /// `pkgs.postgrest` is its `bin`: that output (`outputName`).
+    OutputSpecified,
+    /// `meta.outputsToInstall`, as for shellcheck (`bin`, `man`, `doc`).
+    OutputsToInstall,
+    /// The fallback: the selection could not be evaluated, declared no
+    /// outputs, or named one the evaluated derivation does not have, so the
+    /// derivation's default output was queried. It may not be what the
+    /// attribute installs.
+    DefaultOutput,
+}
+
+impl OutputsSource {
+    pub(crate) fn wire(self) -> &'static str {
+        match self {
+            Self::OutputSpecified => "output-specified",
+            Self::OutputsToInstall => "outputs-to-install",
+            Self::DefaultOutput => "default-output",
+        }
+    }
+}
+
+/// The outputs whose runtime closure was asked for (C216 `outputs`), in the
+/// order the attribute names them, and how they were chosen.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct OutputSelection {
+    pub(crate) names: Vec<String>,
+    pub(crate) source: OutputsSource,
+}
+
+/// The expression applied to the evaluated attribute to learn which outputs
+/// it installs: nix's own order of precedence, an attribute that is one
+/// output first, then `meta.outputsToInstall`. Measured on nixpkgs
+/// `a799d3e3` (q11): postgrest and cachix → `output-specified` `["bin"]`;
+/// shellcheck → `outputs-to-install` `["bin","man","doc"]`; `curl.out` →
+/// `output-specified` `["out"]`, though its `meta.outputsToInstall` says
+/// `["bin","man"]`. ~0.45 s on the postgrest wrapper flake, warm.
+pub(crate) const SELECTION_EXPR: &str = "d: if d.outputSpecified or false \
+     then { source = \"output-specified\"; outputs = [ d.outputName ]; } \
+     else { source = \"outputs-to-install\"; outputs = d.meta.outputsToInstall or null; }";
+
+/// `nix eval --json` of [`SELECTION_EXPR`] over the scanned attribute, as
+/// pure as the closure query itself: import-from-derivation refused, no
+/// `--impure`.
+pub(crate) fn selection_argv(flakeref: &str) -> Vec<&str> {
+    vec!["eval", "--json", "--option", IFD_SETTING, "false", "--apply", SELECTION_EXPR, flakeref]
+}
+
+/// The selection [`SELECTION_EXPR`] printed, or `None` when it declares no
+/// outputs or is not the shape the expression produces.
+pub(crate) fn parse_selection(stdout: &str) -> Option<OutputSelection> {
+    let v: Value = serde_json::from_str(stdout.trim()).ok()?;
+    let source = match v.get("source")?.as_str()? {
+        "output-specified" => OutputsSource::OutputSpecified,
+        "outputs-to-install" => OutputsSource::OutputsToInstall,
+        _ => return None,
+    };
+    let mut names: Vec<String> = Vec::new();
+    for n in v.get("outputs")?.as_array()? {
+        let n = n.as_str()?.to_string();
+        if !names.contains(&n) {
+            names.push(n);
+        }
+    }
+    (!names.is_empty()).then_some(OutputSelection { names, source })
+}
+
+/// Evaluate [`SELECTION_EXPR`] over `flakeref`. `None` on any failure: the
+/// caller falls back to the default output, and records that it did.
+pub(crate) fn evaluate_selection(flakeref: &str, budget: Duration) -> Option<OutputSelection> {
+    let argv = selection_argv(flakeref);
+    guard(&argv).ok()?;
+    match run_bounded(&argv, budget) {
+        Ok(o) if o.status_success => {
+            let parsed = parse_selection(&o.stdout);
+            if parsed.is_none() {
+                tracing::info!("nix-closure: the attribute declares no outputs to install");
+            }
+            parsed
+        }
+        Ok(o) => {
+            tracing::info!(
+                stderr = %crate::scan_fs::package_db::nix::eval::stderr::salient_stderr(o.stderr.trim()),
+                "nix-closure: which outputs the attribute installs could not be evaluated"
+            );
+            None
+        }
+        Err(reason) => {
+            tracing::info!(
+                reason = reason.wire(),
+                "nix-closure: which outputs the attribute installs could not be evaluated"
+            );
+            None
+        }
+    }
+}
+
+/// The full store paths of the outputs to query, and the selection they
+/// came from: `declared` when the evaluated derivation has every output it
+/// names, else its default output, recorded as [`OutputsSource::DefaultOutput`].
+/// `None` when the derivation declares no usable output at all.
+pub(crate) fn selected_outputs(
+    raw: &RawClosure,
+    evaluated: &str,
+    declared: Option<OutputSelection>,
+) -> Option<(OutputSelection, Vec<String>)> {
+    let drv = raw.derivations.get(evaluated)?;
+    let full = |path: &str| -> String {
+        if path.starts_with('/') {
+            path.to_string()
+        } else {
+            // `outputs.*.path` is a bare basename in format version 4; nix
+            // itself honours `NIX_STORE_DIR`, so the full path does too.
+            super::contents::store_dir().join(path).display().to_string()
+        }
+    };
+    if let Some(sel) = declared {
+        let paths: Option<Vec<String>> =
+            sel.names.iter().map(|n| drv.output_path(n).map(full)).collect();
+        match paths {
+            Some(paths) => return Some((sel, paths)),
+            None => tracing::info!(
+                outputs = %sel.names.join(" "),
+                "nix-closure: the evaluated derivation lacks an output the attribute installs; \
+                 querying its default output"
+            ),
+        }
+    }
+    let name = drv.default_output_name()?;
+    let path = full(drv.output_path(name)?);
+    Some((
+        OutputSelection { names: vec![name.to_string()], source: OutputsSource::DefaultOutput },
+        vec![path],
+    ))
 }
 
 /// Why no runtime closure was obtained (C216 `unavailable-reason`).
@@ -171,6 +322,9 @@ pub(crate) struct ScopeMethodRecord {
     pub(crate) unmatched_runtime_paths: Option<usize>,
     /// `None` when no walk ran.
     pub(crate) walk_outcome: Option<WalkOutcome>,
+    /// #1458 — the outputs whose runtime closure was asked for. `None` when
+    /// no query was made (`no-evaluated-package`, or no output declared).
+    pub(crate) outputs: Option<OutputSelection>,
 }
 
 impl ScopeMethodRecord {
@@ -188,6 +342,7 @@ impl ScopeMethodRecord {
             static_link_source: Some(static_link_source),
             unmatched_runtime_paths: Some(unmatched_runtime_paths),
             walk_outcome: None,
+            outputs: None,
         }
     }
 
@@ -205,6 +360,7 @@ impl ScopeMethodRecord {
             static_link_source: Some(static_link_source),
             unmatched_runtime_paths: None,
             walk_outcome: Some(WalkOutcome::Used),
+            outputs: None,
         }
     }
 
@@ -226,6 +382,7 @@ impl ScopeMethodRecord {
             static_link_source,
             unmatched_runtime_paths: None,
             walk_outcome,
+            outputs: None,
         }
     }
 
@@ -237,6 +394,16 @@ impl ScopeMethodRecord {
         // `serde_json` preserves insertion order.
         let mut o = serde_json::Map::new();
         o.insert("method".into(), self.method.wire().into());
+        o.insert(
+            "outputs".into(),
+            self.outputs
+                .as_ref()
+                .map_or(Value::Null, |s| s.names.iter().map(|n| Value::from(n.as_str())).collect()),
+        );
+        o.insert(
+            "outputs-source".into(),
+            opt_str(self.outputs.as_ref().map(|s| s.source.wire())),
+        );
         o.insert("schema".into(), 1.into());
         // Always false: nothing here detects static C linking, and the
         // document says so rather than implying otherwise.
@@ -263,13 +430,16 @@ impl ScopeMethodRecord {
     }
 }
 
-/// `nix path-info -r <path>` against the default (local) store.
+/// `nix path-info -r <path>…` against the default (local) store. Given
+/// several outputs it lists the union of their closures (q11).
 ///
 /// No bounds: the default store is the daemon, which refuses
 /// `connect-timeout` and `download-attempts` from an untrusted user as
 /// restricted settings (q9), and the local store involves no network.
-pub(crate) fn local_argv(output: &str) -> Vec<&str> {
-    vec!["path-info", "-r", output]
+pub(crate) fn local_argv<'a>(outputs: &[&'a str]) -> Vec<&'a str> {
+    let mut argv = vec!["path-info", "-r"];
+    argv.extend_from_slice(outputs);
+    argv
 }
 
 /// The connect timeout for a substituter started with `remaining` of the
@@ -286,8 +456,8 @@ pub(crate) fn connect_timeout_for(remaining: Duration) -> Option<u64> {
 
 /// `nix path-info -r --store <url>` with the remote bounds. `connect_timeout`
 /// is whole seconds ([`connect_timeout_for`]).
-pub(crate) fn remote_argv<'a>(url: &'a str, connect_timeout: &'a str, output: &'a str) -> Vec<&'a str> {
-    vec![
+pub(crate) fn remote_argv<'a>(url: &'a str, connect_timeout: &'a str, outputs: &[&'a str]) -> Vec<&'a str> {
+    let mut argv = vec![
         "path-info",
         "-r",
         "--store",
@@ -298,15 +468,16 @@ pub(crate) fn remote_argv<'a>(url: &'a str, connect_timeout: &'a str, output: &'
         "--option",
         "download-attempts",
         REMOTE_DOWNLOAD_ATTEMPTS,
-        output,
-    ]
+    ];
+    argv.extend_from_slice(outputs);
+    argv
 }
 
 /// `nix store verify --no-contents -r --store <url>` with the remote bounds.
 ///
 /// `--no-contents` checks signatures only: it downloads no NARs.
-pub(crate) fn verify_argv<'a>(url: &'a str, connect_timeout: &'a str, output: &'a str) -> Vec<&'a str> {
-    vec![
+pub(crate) fn verify_argv<'a>(url: &'a str, connect_timeout: &'a str, outputs: &[&'a str]) -> Vec<&'a str> {
+    let mut argv = vec![
         "store",
         "verify",
         "--no-contents",
@@ -319,8 +490,9 @@ pub(crate) fn verify_argv<'a>(url: &'a str, connect_timeout: &'a str, output: &'
         "--option",
         "download-attempts",
         REMOTE_DOWNLOAD_ATTEMPTS,
-        output,
-    ]
+    ];
+    argv.extend_from_slice(outputs);
+    argv
 }
 
 /// Store basenames from `nix path-info -r`'s plain output: one full store
@@ -355,21 +527,6 @@ pub(crate) fn substituters_from_config(config: &str) -> Vec<String> {
                 .collect()
         })
         .unwrap_or_default()
-}
-
-/// The full store path of the evaluated derivation's default output.
-pub(crate) fn evaluated_output(raw: &RawClosure, evaluated: &str) -> Option<String> {
-    let path = raw.derivations.get(evaluated)?.default_output_path()?;
-    Some(if path.starts_with('/') {
-        path.to_string()
-    } else {
-        // `outputs.*.path` is a bare basename in format version 4; nix itself
-        // honours `NIX_STORE_DIR`, so the full path does too.
-        super::contents::store_dir()
-            .join(path)
-            .display()
-            .to_string()
-    })
 }
 
 /// One store's answer.
@@ -420,18 +577,19 @@ fn ask(run: &mut Runner<'_>, argv: &[&str], budget: Duration) -> Answer {
     }
 }
 
-/// Obtain the runtime closure of `output`: the local store first, then each
-/// substituter in turn. The first verified answer wins.
+/// Obtain the runtime closure of `outputs` (their union): the local store
+/// first, then each substituter in turn. The first verified answer wins. A
+/// store that lacks any one of the outputs is a miss.
 ///
 /// Order affects latency only. Store paths are content-addressed, so any
 /// trusted cache that holds the closure returns the same set (spec FR-004).
 pub(crate) fn query(
     budget: Duration,
-    output: &str,
+    outputs: &[&str],
     substituters: &[String],
 ) -> Result<RuntimeClosure, RuntimeUnavailable> {
     let started = Instant::now();
-    query_with(&mut run, &|| started.elapsed(), budget, REMOTE_BUDGET, output, substituters)
+    query_with(&mut run, &|| started.elapsed(), budget, REMOTE_BUDGET, outputs, substituters)
 }
 
 /// The total time the substituter queries may spend on unreachable caches
@@ -460,10 +618,10 @@ fn query_with(
     elapsed: &dyn Fn() -> Duration,
     budget: Duration,
     remote_budget: Duration,
-    output: &str,
+    outputs: &[&str],
     substituters: &[String],
 ) -> Result<RuntimeClosure, RuntimeUnavailable> {
-    let mut worst = match ask(run, &local_argv(output), budget) {
+    let mut worst = match ask(run, &local_argv(outputs), budget) {
         Answer::Hit(paths) => {
             return Ok(RuntimeClosure {
                 paths,
@@ -492,8 +650,8 @@ fn query_with(
         // alike: a verification follows a query that just reached the cache,
         // and is never skipped, since skipping it would discard the answer.
         let connect = connect.to_string();
-        let reason = match ask(run, &remote_argv(url, &connect, output), budget) {
-            Answer::Hit(paths) => match run(&verify_argv(url, &connect, output), budget) {
+        let reason = match ask(run, &remote_argv(url, &connect, outputs), budget) {
+            Answer::Hit(paths) => match run(&verify_argv(url, &connect, outputs), budget) {
                 Ok((true, _, _)) => {
                     return Ok(RuntimeClosure {
                         paths,
@@ -515,37 +673,49 @@ fn query_with(
     Err(worst)
 }
 
-/// Query the runtime closure of a classified closure's evaluated package.
+/// Query the runtime closure of the outputs the evaluated attribute
+/// installs. `flakeref` is the attribute the closure was taken of; it is
+/// evaluated once more, purely, to learn which outputs those are
+/// ([`evaluate_selection`]).
 pub(crate) fn query_closure(
     closure_raw: &RawClosure,
     evaluated: Option<&str>,
+    flakeref: &str,
     budget: Duration,
     substituters: &[String],
-) -> Result<RuntimeClosure, RuntimeUnavailable> {
+) -> RuntimeQuery {
     let Some(evaluated) = evaluated else {
-        return Err(RuntimeUnavailable::NoEvaluatedPackage);
+        return RuntimeQuery { outputs: None, result: Err(RuntimeUnavailable::NoEvaluatedPackage) };
     };
-    let Some(output) = evaluated_output(closure_raw, evaluated) else {
+    let declared = evaluate_selection(flakeref, budget);
+    let Some((selection, paths)) = selected_outputs(closure_raw, evaluated, declared) else {
         tracing::info!("nix-closure: the evaluated derivation declares no output path");
-        return Err(RuntimeUnavailable::QueryFailed);
+        return RuntimeQuery { outputs: None, result: Err(RuntimeUnavailable::QueryFailed) };
     };
     let started = std::time::Instant::now();
-    let result = query(budget, &output, substituters);
+    let path_refs: Vec<&str> = paths.iter().map(String::as_str).collect();
+    let result = query(budget, &path_refs, substituters);
+    let outputs = selection.names.join(" ");
+    let outputs_source = selection.source.wire();
     match &result {
         Ok(rc) => tracing::info!(
             store = rc.store.wire(),
             paths = rc.paths.len(),
+            outputs = %outputs,
+            outputs_source,
             elapsed_ms = started.elapsed().as_millis(),
             "nix-closure: runtime closure obtained"
         ),
         Err(reason) => tracing::info!(
             reason = reason.wire(),
             substituters = substituters.len(),
+            outputs = %outputs,
+            outputs_source,
             elapsed_ms = started.elapsed().as_millis(),
             "nix-closure: runtime closure unavailable"
         ),
     }
-    result
+    RuntimeQuery { outputs: Some(selection), result }
 }
 
 /// Runtime paths → the `.drv` keys that produce them, by output path.
@@ -619,14 +789,33 @@ pub(crate) fn evidence(
     relationships: &[Relationship],
     package_set_available: bool,
 ) -> (RuntimeEvidence, Option<ScopeMethodRecord>) {
+    let Some(query) = &closure.runtime else {
+        return (RuntimeEvidence::None, None);
+    };
+    let (evidence, mut record) =
+        decide(closure, &query.result, components, relationships, package_set_available);
+    // #1458 — which outputs were asked about is a fact of the query, whatever
+    // the scope pass then used.
+    if let Some(r) = record.as_mut() {
+        r.outputs = query.outputs.clone();
+    }
+    (evidence, record)
+}
+
+fn decide(
+    closure: &ClassifiedClosure,
+    result: &Result<RuntimeClosure, RuntimeUnavailable>,
+    components: &[ResolvedComponent],
+    relationships: &[Relationship],
+    package_set_available: bool,
+) -> (RuntimeEvidence, Option<ScopeMethodRecord>) {
     let raw = &closure.raw;
     let declared = || {
         package_set_available.then(|| DeclaredEdges::from_document(raw, components, relationships))
     };
     let key_of = |k: &String| raw.derivations.get(k).and_then(|d| key_of_derivation(d, k));
-    let rc = match &closure.runtime {
-        None => return (RuntimeEvidence::None, None),
-        Some(Err(reason)) => {
+    let rc = match result {
+        Err(reason) => {
             // Data-model rule 5: no single evaluated package means no root to
             // walk from, so the role rule decides and C216 says why. The
             // query reports `no-evaluated-package` for exactly this case.
@@ -692,7 +881,7 @@ pub(crate) fn evidence(
             let record = ScopeMethodRecord::reachability_walk(*reason, linked.source);
             return (RuntimeEvidence::Walk { reached }, Some(record));
         }
-        Some(Ok(rc)) => rc,
+        Ok(rc) => rc,
     };
     let (runtime_drvs, stray) = join(raw, &rc.paths);
     // Static linking is seeded from the runtime members and, when the
@@ -754,10 +943,19 @@ pub(crate) fn evidence(
     (RuntimeEvidence::Closure { runtime, static_linked }, Some(record))
 }
 
+/// The runtime query: which outputs it asked about, and what came back.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RuntimeQuery {
+    /// `None` when no output was queried (`no-evaluated-package`, or the
+    /// evaluated derivation declares no output path).
+    pub(crate) outputs: Option<OutputSelection>,
+    pub(crate) result: Result<RuntimeClosure, RuntimeUnavailable>,
+}
+
 /// The runtime query's outcome as `ClassifiedClosure` carries it. `None`
 /// means the query was never made, which only a closure built outside
 /// [`super::resolve`] (a test) can be.
-pub(crate) type RuntimeOutcome = Option<Result<RuntimeClosure, RuntimeUnavailable>>;
+pub(crate) type RuntimeOutcome = Option<RuntimeQuery>;
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
@@ -778,16 +976,27 @@ mod tests {
 
     #[test]
     fn remote_queries_are_bounded_and_target_one_store() {
-        let argv = remote_argv("https://cache.example", "2", "/nix/store/x-out");
+        let argv = remote_argv("https://cache.example", "2", &["/nix/store/x-out"]);
         let s = argv.join(" ");
         assert!(s.contains("--store https://cache.example"), "{s}");
         assert!(s.contains("--option connect-timeout 2"), "{s}");
         assert!(s.contains("--option download-attempts 1"), "{s}");
         assert_eq!(argv.iter().filter(|a| **a == "--store").count(), 1);
         assert_eq!(argv.last(), Some(&"/nix/store/x-out"));
-        let v = verify_argv("https://cache.example", "1", "/nix/store/x-out").join(" ");
+        let v = verify_argv("https://cache.example", "1", &["/nix/store/x-out"]).join(" ");
         assert!(v.starts_with("store verify --no-contents -r --store https://cache.example"), "{v}");
         assert!(v.contains("--option connect-timeout 1") && v.contains("--option download-attempts 1"));
+    }
+
+    /// #1458: several outputs go into one query, after every option, so the
+    /// union of their closures comes back from one store (q11).
+    #[test]
+    fn several_outputs_are_queried_together_after_the_options() {
+        let outs = ["/nix/store/a-bin", "/nix/store/a-man"];
+        assert_eq!(local_argv(&outs), vec!["path-info", "-r", "/nix/store/a-bin", "/nix/store/a-man"]);
+        for argv in [remote_argv("https://c", "2", &outs), verify_argv("https://c", "2", &outs)] {
+            assert_eq!(&argv[argv.len() - 2..], &outs[..], "{argv:?}");
+        }
     }
 
     /// q5c: nix takes whole seconds (a fraction silently becomes the 15 s
@@ -806,16 +1015,17 @@ mod tests {
 
     #[test]
     fn the_local_query_carries_no_store_and_no_restricted_options() {
-        let argv = local_argv("/nix/store/x-out");
+        let argv = local_argv(&["/nix/store/x-out"]);
         assert_eq!(argv, vec!["path-info", "-r", "/nix/store/x-out"]);
     }
 
     #[test]
     fn every_argv_passes_the_guard() {
         for argv in [
-            local_argv("/nix/store/x"),
-            remote_argv("https://c", "2", "/nix/store/x"),
-            verify_argv("https://c", "2", "/nix/store/x"),
+            local_argv(&["/nix/store/x"]),
+            remote_argv("https://c", "2", &["/nix/store/x"]),
+            verify_argv("https://c", "2", &["/nix/store/x"]),
+            selection_argv("/proj#packages.x86_64-linux.default"),
         ] {
             assert!(argv_is_safe(&argv), "{argv:?}");
         }
@@ -908,7 +1118,7 @@ mod tests {
             &|| clock.get(),
             Duration::from_secs(300),
             remote_budget,
-            "/nix/store/x-out",
+            &["/nix/store/x-out"],
             &urls,
         );
         (got, log.into_inner(), clock.get())
@@ -1025,12 +1235,81 @@ mod tests {
     #[test]
     fn the_default_output_is_the_head_of_the_outputs_attribute() {
         let raw = RawClosure::parse(CLOSURE).unwrap();
+        let app = &raw.derivations["d-app.drv"];
         assert_eq!(
-            raw.derivations["d-app.drv"].default_output_path(),
-            Some("h1-app-1-bin"),
+            app.default_output_name(),
+            Some("bin"),
             "`bin` heads `outputs`, though `out` sorts after it and exists"
         );
-        assert_eq!(raw.derivations["d-lib.drv"].default_output_path(), Some("h3-lib-2"));
+        assert_eq!(app.output_path("bin"), Some("h1-app-1-bin"));
+        assert_eq!(raw.derivations["d-lib.drv"].default_output_name(), Some("out"));
+    }
+
+    /// q11: what [`SELECTION_EXPR`] printed for each measured attribute.
+    #[test]
+    fn the_selection_parses_as_nix_printed_it() {
+        let sel = |names: &[&str], source| OutputSelection {
+            names: names.iter().map(|s| s.to_string()).collect(),
+            source,
+        };
+        assert_eq!(
+            parse_selection(r#"{"outputs":["bin"],"source":"output-specified"}"#),
+            Some(sel(&["bin"], OutputsSource::OutputSpecified))
+        );
+        assert_eq!(
+            parse_selection("{\"outputs\":[\"bin\",\"man\",\"doc\"],\"source\":\"outputs-to-install\"}\n"),
+            Some(sel(&["bin", "man", "doc"], OutputsSource::OutputsToInstall))
+        );
+        assert_eq!(
+            parse_selection(r#"{"outputs":["bin","bin"],"source":"outputs-to-install"}"#),
+            Some(sel(&["bin"], OutputsSource::OutputsToInstall)),
+            "a repeated name is one output"
+        );
+        for bad in [
+            r#"{"outputs":null,"source":"outputs-to-install"}"#,
+            r#"{"outputs":[],"source":"outputs-to-install"}"#,
+            r#"{"outputs":["bin",3],"source":"outputs-to-install"}"#,
+            r#"{"outputs":["bin"],"source":"something-else"}"#,
+            r#"["bin"]"#,
+            "",
+        ] {
+            assert_eq!(parse_selection(bad), None, "{bad}");
+        }
+    }
+
+    /// postgrest's shape: `outputs` is headed by `out`, the attribute is
+    /// `bin`. The selection decides; without one, or with a name the
+    /// derivation lacks, the head of `outputs` is used and says so.
+    #[test]
+    fn selected_outputs_follow_the_selection_and_fall_back_to_the_default() {
+        let raw = RawClosure::parse(
+            r#"{"derivations": {"d-pg.drv": {"env": {"pname":"pg","version":"1","outputs":"out doc bin"},
+               "outputs": {"bin": {"path":"/s/h-pg-bin"}, "doc": {"path":"/s/h-pg-doc"}, "out": {"path":"/s/h-pg"}}}}}"#,
+        )
+        .unwrap();
+        let declared = |names: &[&str], source| {
+            Some(OutputSelection { names: names.iter().map(|s| s.to_string()).collect(), source })
+        };
+        let (sel, paths) =
+            selected_outputs(&raw, "d-pg.drv", declared(&["bin"], OutputsSource::OutputSpecified)).unwrap();
+        assert_eq!((sel.names, sel.source), (vec!["bin".to_string()], OutputsSource::OutputSpecified));
+        assert_eq!(paths, vec!["/s/h-pg-bin"]);
+
+        let (sel, paths) = selected_outputs(
+            &raw,
+            "d-pg.drv",
+            declared(&["bin", "doc"], OutputsSource::OutputsToInstall),
+        )
+        .unwrap();
+        assert_eq!(sel.source, OutputsSource::OutputsToInstall);
+        assert_eq!(paths, vec!["/s/h-pg-bin", "/s/h-pg-doc"]);
+
+        for fallback in [None, declared(&["bin", "man"], OutputsSource::OutputsToInstall)] {
+            let (sel, paths) = selected_outputs(&raw, "d-pg.drv", fallback).unwrap();
+            assert_eq!((sel.names, sel.source), (vec!["out".to_string()], OutputsSource::DefaultOutput));
+            assert_eq!(paths, vec!["/s/h-pg"]);
+        }
+        assert_eq!(selected_outputs(&raw, "d-absent.drv", None), None);
     }
 
     #[test]
@@ -1040,16 +1319,20 @@ mod tests {
             store: RuntimeStore::Substituter("https://cache.example".into()),
             verified: true,
         };
-        let w = ScopeMethodRecord::runtime_closure(&rc, StaticLinkSource::DeclaredEdges, 3).wire();
+        let mut record = ScopeMethodRecord::runtime_closure(&rc, StaticLinkSource::DeclaredEdges, 3);
+        record.outputs = Some(OutputSelection {
+            names: vec!["bin".into(), "man".into()],
+            source: OutputsSource::OutputsToInstall,
+        });
         assert_eq!(
-            w,
-            r#"{"method":"runtime-closure","schema":1,"static-c-linking-detected":false,"static-link-source":"declared-edges","store":"https://cache.example","unavailable-reason":null,"unmatched-runtime-paths":3,"verified":true,"walk-outcome":null}"#
+            record.wire(),
+            r#"{"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"declared-edges","store":"https://cache.example","unavailable-reason":null,"unmatched-runtime-paths":3,"verified":true,"walk-outcome":null}"#
         );
         let w = ScopeMethodRecord::closure_role(RuntimeUnavailable::NoEvaluatedPackage, None, None)
             .wire();
         assert_eq!(
             w,
-            r#"{"method":"closure-role","schema":1,"static-c-linking-detected":false,"static-link-source":null,"store":null,"unavailable-reason":"no-evaluated-package","unmatched-runtime-paths":null,"verified":null,"walk-outcome":null}"#
+            r#"{"method":"closure-role","outputs":null,"outputs-source":null,"schema":1,"static-c-linking-detected":false,"static-link-source":null,"store":null,"unavailable-reason":"no-evaluated-package","unmatched-runtime-paths":null,"verified":null,"walk-outcome":null}"#
         );
         let w = ScopeMethodRecord::closure_role(
             RuntimeUnavailable::NotInAnyStore,

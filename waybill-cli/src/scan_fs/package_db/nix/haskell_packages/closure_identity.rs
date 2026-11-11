@@ -394,6 +394,82 @@ mod tests {
         assert!(rels.contains("waybill-fixture-text"), "got {rels:?}");
         assert!(rels.contains("waybill-fixture-base"), "got {rels:?}");
     }
+
+    /// #1459: a declared target names a Haskell package, so when a C library
+    /// shares the name, the edge binds to the `pkg:hackage` component in
+    /// either document order. Measured on nixpkgs `a799d3e3`: `tls -> zlib`
+    /// bound to `pkg:generic/zlib@1.3.2`, which `tls` does not depend on.
+    #[test]
+    fn a_declared_target_binds_to_the_haskell_namesake() {
+        let text = concat!(
+            "  waybill-fixture-tls = callPackage ({ mkDerivation }: mkDerivation {\n",
+            "      pname = \"waybill-fixture-tls\";\n",
+            "      version = \"2.1.8\";\n",
+            "      libraryHaskellDepends = [ waybill-fixture-zlib ];\n",
+            "      license = lib.licenses.bsd3;\n",
+            "  }) { };\n",
+        );
+        let set = super::super::package_set::parse(text);
+        let member = |purl: &str, name: &str, version: &str, confirmed: bool| {
+            let mut c = super::super::enrich_tests::comp(name);
+            c.purl = waybill_common::types::purl::Purl::new(purl).unwrap();
+            c.version = version.to_string();
+            if confirmed {
+                c.extra_annotations
+                    .insert(ANN_CLOSURE_IDENTITY.to_string(), serde_json::Value::from("confirmed"));
+            }
+            c
+        };
+        let tls = member("pkg:hackage/waybill-fixture-tls@2.1.8", "waybill-fixture-tls", "2.1.8", true);
+        let hs = member("pkg:hackage/waybill-fixture-zlib@0.7.1.1", "waybill-fixture-zlib", "0.7.1.1", true);
+        let c = member("pkg:generic/waybill-fixture-zlib@1.3.2", "waybill-fixture-zlib", "1.3.2", false);
+        let builds = |pairs: &[(&str, &str)]| -> std::collections::HashSet<(String, String)> {
+            pairs.iter().map(|(n, v)| (n.to_string(), v.to_string())).collect()
+        };
+        let target_of = |order: Vec<ResolvedComponent>, hs_builds: &std::collections::HashSet<(String, String)>| {
+            let mut components = order;
+            let mut relationships = Vec::new();
+            let mut summary = ClosureIdentitySummary::default();
+            emit_declared_edges(
+                &mut components,
+                &mut relationships,
+                Some(&set),
+                &BTreeSet::new(),
+                hs_builds,
+                &mut summary,
+            );
+            relationships
+                .iter()
+                .filter(|r| r.from == "pkg:hackage/waybill-fixture-tls@2.1.8")
+                .map(|r| r.to.clone())
+                .collect::<Vec<_>>()
+        };
+
+        let hs_zlib = builds(&[("waybill-fixture-tls", "2.1.8"), ("waybill-fixture-zlib", "0.7.1.1")]);
+        for order in [vec![tls.clone(), hs.clone(), c.clone()], vec![tls.clone(), c.clone(), hs.clone()]] {
+            assert_eq!(target_of(order, &hs_zlib), vec!["pkg:hackage/waybill-fixture-zlib@0.7.1.1"]);
+        }
+
+        // No Haskell build of the name in the closure: a `pkg:hackage`
+        // component (a manifest-declared one) still beats the C library.
+        let none = builds(&[("waybill-fixture-tls", "2.1.8")]);
+        let declared = member("pkg:hackage/waybill-fixture-zlib", "waybill-fixture-zlib", "", false);
+        for order in [vec![tls.clone(), declared.clone(), c.clone()], vec![tls.clone(), c.clone(), declared.clone()]] {
+            assert_eq!(target_of(order, &none), vec!["pkg:hackage/waybill-fixture-zlib"]);
+        }
+
+        // The `os-string` shape: a Haskell build the package set does not
+        // hold stays `pkg:generic`, beside a versionless manifest-declared
+        // `pkg:hackage` component. The build is what is linked, so it wins.
+        let generic_hs = member("pkg:generic/waybill-fixture-zlib@0.7.2", "waybill-fixture-zlib", "0.7.2", false);
+        let hs_generic = builds(&[("waybill-fixture-tls", "2.1.8"), ("waybill-fixture-zlib", "0.7.2")]);
+        for order in [
+            vec![tls.clone(), declared.clone(), generic_hs.clone()],
+            vec![tls.clone(), generic_hs.clone(), declared.clone()],
+        ] {
+            assert_eq!(target_of(order, &hs_generic), vec!["pkg:generic/waybill-fixture-zlib@0.7.2"]);
+        }
+    }
 }
 
 /// Milestone 1275 T009 — FR-006's agreement, measured against **this** code.
@@ -675,7 +751,12 @@ pub(crate) fn reclassify(
         );
     }
 
-    emit_declared_edges(components, relationships, set, boot, &mut summary);
+    let haskell_builds: std::collections::HashSet<(String, String)> = drvs_of
+        .iter()
+        .filter(|(_, drvs)| drvs.iter().any(|d| d.is_haskell_builder()))
+        .map(|((name, version), _)| (name.to_string(), version.clone()))
+        .collect();
+    emit_declared_edges(components, relationships, set, boot, &haskell_builds, &mut summary);
     summary
 }
 
@@ -684,11 +765,16 @@ pub(crate) fn reclassify(
 /// Runs after the rename, so every endpoint is a final identity and #980's
 /// failure mode cannot apply to these edges: they are built from the PURLs the
 /// document will carry rather than from ones a later pass rewrites.
+///
+/// `haskell_builds` is every closure `(pname, version)` with a derivation
+/// built by the Haskell generic builder, which is what a declared target binds
+/// to first when a name is shared (#1459).
 fn emit_declared_edges(
     components: &mut Vec<ResolvedComponent>,
     relationships: &mut Vec<waybill_common::resolution::Relationship>,
     set: Option<&PackageSet>,
     boot: &BTreeSet<String>,
+    haskell_builds: &std::collections::HashSet<(String, String)>,
     summary: &mut ClosureIdentitySummary,
 ) {
     let Some(set) = set else { return };
@@ -713,10 +799,36 @@ fn emit_declared_edges(
     // are present at a version the set does not declare, because the closure
     // carries what GHC actually shipped. Binding to the set's version would
     // point 59% of edges at components that do not exist.
-    let mut purl_of: std::collections::HashMap<String, String> = components
-        .iter()
-        .map(|c| (c.name.clone(), c.purl.as_str().to_string()))
-        .collect();
+    //
+    // #1459: a declared target names a Haskell package, so when components
+    // share the name, a Haskell build of it wins, then any other `pkg:hackage`
+    // component, then the rest. Without this the last component of the name
+    // won, and on nixpkgs `a799d3e3` `tls -> zlib` bound to
+    // `pkg:generic/zlib@1.3.2`, the C library, leaving Haskell `zlib`
+    // unreached by the static-link walk and marked on pandoc-cli, hledger and
+    // cachix. A Haskell build outranks `pkg:hackage` because a closure's
+    // Haskell build can stay `pkg:generic` (`os-string 2.0.10`, not in the
+    // package set) beside a versionless manifest-declared `pkg:hackage`
+    // component, and the build is what is linked. Within a rank the last still
+    // wins, as before.
+    let rank = |c: &ResolvedComponent| -> u8 {
+        if haskell_builds.contains(&(c.name.clone(), c.version.clone())) {
+            2
+        } else if c.purl.as_str().starts_with("pkg:hackage/") {
+            1
+        } else {
+            0
+        }
+    };
+    let mut best: std::collections::HashMap<String, (u8, String)> = std::collections::HashMap::new();
+    for c in components.iter() {
+        let r = rank(c);
+        if best.get(&c.name).is_none_or(|(held, _)| r >= *held) {
+            best.insert(c.name.clone(), (r, c.purl.as_str().to_string()));
+        }
+    }
+    let mut purl_of: std::collections::HashMap<String, String> =
+        best.into_iter().map(|(name, (_, purl))| (name, purl)).collect();
 
     let mut present: std::collections::HashSet<(String, String)> = relationships
         .iter()

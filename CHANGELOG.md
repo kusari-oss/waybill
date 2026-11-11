@@ -132,26 +132,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
-- **A Haskell version from the pinned nixpkgs package set is no longer
-  emitted when the project's own requirement rules it out.** The package
-  set does not see a flake's overlays, so a project that pins another
-  release through one was reported at nixpkgs' version: on slacklinker,
-  `pkg:hackage/slack-web@2.2.0.0` beside its own
-  `waybill:requirement-ranges=[">= 2.3.0.0"]`, where Cabal configured
-  2.3.0.0, and `waybill:nixpkgs-haskell-resolution` said
-  `disagreements: 0`. When no declared range admits the package set's
-  version, the component is now versionless with
-  `waybill:haskell-version-unresolved-reason` =
-  `nixpkgs-version-violates-requirement`, the rejected version is kept in
-  `waybill:nixpkgs-version-disagreement` (`"emitted": null`), and the
-  resolution summary counts it as a disagreement. The rejected entry's
-  source hash and declared license are not attached either. On the
-  haskell-language-server corpus target six components change this way
-  (`lsp`, `lsp-types`, `lsp-test`, `hie-bios`, `hiedb`, `cabal-gild`),
-  each previously emitted at a version its own declared range excludes.
-  A dependency declared without a range, such as slacklinker's
-  `tmp-postgres`, is unchanged: nothing the scan can read contradicts it
-  (#1457).
+- **A `--nix-closure` document's runtime closure is that of the output
+  the attribute installs.** The runtime query asked about the head of the
+  evaluated derivation's `outputs`. `pkgs.postgrest` and `pkgs.cachix` are
+  their `bin` outputs while their `outputs` start with `out`, the library,
+  so postgrest's runtime view kept the 754 paths of `out` where the
+  executable references 129, leaving c-ares and libxslt in it. The query now
+  takes the attribute's selected output, else its `meta.outputsToInstall`
+  (shellcheck: `bin`, `man`, `doc`, queried as one union), read from one
+  extra pure evaluation of the attribute (~0.45 s), and falls back to the
+  default output when that cannot be had. C216 gains `outputs` and
+  `outputs-source` (`output-specified`, `outputs-to-install` or
+  `default-output`), so a document says which outputs were used and when
+  the fallback was (#1458).
 - **A `--nix-closure` CycloneDX document with re-identified Python
   members is schema-valid again.** Milestone 1366 recorded why a closure
   member's `pkg:pypi` identifier was derived by adding a
@@ -173,6 +166,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   import-from-derivation case adds a sentence saying why it is refused.
   Whether import-from-derivation is allowed is unchanged, as is
   `waybill:nix-closure-degraded` (#1446).
+- **A Haskell library statically linked into a `--nix-closure` runtime
+  member is no longer marked excluded when it shares a name with a C
+  library, or when nixpkgs adds it for one platform.** Two causes, both
+  read off the nixpkgs `a799d3e3` aarch64-darwin documents. First, a
+  milestone-1275 declared edge bound its target by name to whichever
+  component of that name came last, so `tls -> zlib` pointed at the C
+  library `pkg:generic/zlib@1.3.2`, which `tls` does not depend on, and
+  the static-link walk never reached Haskell `zlib`. A declared target now
+  binds to the name's Haskell build, else to its `pkg:hackage` component,
+  and the walk follows only Haskell builds. Second, the declared relations are cabal2nix's
+  Linux resolution, so `fsnotify` declares `hinotify` while on darwin its
+  derivation propagates `hfsevents`. Below the root, the walk now follows
+  a library's `propagatedBuildInputs` as well as its declared relations;
+  a library propagates no test dependencies. pandoc-cli keeps Haskell
+  `lua` and `zlib`, hledger keeps `zlib`, and cachix keeps `zlib`, `zstd`
+  and `hfsevents`, each now C203 `statically-linked`. Their C namesakes'
+  marks are unchanged, and the three documents lose 17 declared edges
+  that pointed at a C library (#1459).
 - **Cargo: a default-enabled optional dependency with a hyphenated or
   renamed name is no longer marked excluded.** The set of dependencies
   `cargo metadata` resolves as activated was built from
@@ -205,6 +216,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   - The scan log reports `wrote SBOM artifact format=openvex` once. It
     used to report the sidecar twice, as `format=spdx-2.3-json` and
     `format=spdx-3-json`.
+- **A Haskell version from the pinned nixpkgs package set is no longer
+  emitted when the project's own requirement rules it out.** The package
+  set does not see a flake's overlays, so a project that pins another
+  release through one was reported at nixpkgs' version: on slacklinker,
+  `pkg:hackage/slack-web@2.2.0.0` beside its own
+  `waybill:requirement-ranges=[">= 2.3.0.0"]`, where Cabal configured
+  2.3.0.0, and `waybill:nixpkgs-haskell-resolution` said
+  `disagreements: 0`. When no declared range admits the package set's
+  version, the component is now versionless with
+  `waybill:haskell-version-unresolved-reason` =
+  `nixpkgs-version-violates-requirement`, the rejected version is kept in
+  `waybill:nixpkgs-version-disagreement` (`"emitted": null`), and the
+  resolution summary counts it as a disagreement. The rejected entry's
+  source hash and declared license are not attached either. On the
+  haskell-language-server corpus target six components change this way
+  (`lsp`, `lsp-types`, `lsp-test`, `hie-bios`, `hiedb`, `cabal-gild`),
+  each previously emitted at a version its own declared range excludes.
+  A dependency declared without a range, such as slacklinker's
+  `tmp-postgres`, is unchanged: nothing the scan can read contradicts it
+  (#1457).
 - **`sbom edit` can drop components that VEX names.** A CycloneDX build
   statement names the root in `affects[]` and the patched component in a
   `waybill:vex-subcomponent` property. Edit pruned the first and not the

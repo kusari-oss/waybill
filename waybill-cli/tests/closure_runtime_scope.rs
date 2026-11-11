@@ -19,9 +19,11 @@
 //! |---|---|---|
 //! | `closure-runtime.json` | curl / openssh | `xml` is an `artifact-input` the output does not reference (marked); `dnsroot` is `build-tooling` but referenced (unmarked); `bootlib` is a compiler-supplied boot library |
 //! | `closure-static.json` | shellcheck / ormolu | a static Haskell executable whose libraries are in its static build's `buildInputs` and propagate; `hspec` is a test-only dependency. The wrapper root names the static build only in `inputs.drvs`, so under US2 the walk reaches only the root |
+//! | `closure-static-namesake.json` | pandoc-cli / cachix (#1459) | a static Haskell executable linking Haskell `zlib`, which shares its name with a build-only C `zlib`, and `fsnotify`, whose derivation propagates `hfsevents` while the package set declares something else |
 //! | `closure-embedded.json` | gh | Go modules read from a runtime binary and from a build tool's binary |
 //! | `closure-walk.json` | US2 | `perl` is `both` but reached only through a reached member's `nativeBuildInputs`; `xml` is an `artifact-input` of the build tool only |
 //! | `closure-tworoots.json` | US2 | two unconsumed derivations, so no evaluated package to walk from |
+//! | `closure-outputs.json` | postgrest (#1458) | `closure-runtime.json` with the app's `outputs` headed by `out`, the library, while the attribute installs `bin`; each output gets its own `path-info` listing |
 //!
 //! US4 reuses `closure-runtime.json`, adding a CVE-named patch to one member
 //! the recipe keeps and one it drops (`us4_closure`).
@@ -322,6 +324,10 @@ fn us1_local_store_answer_records_store_local() {
         c216,
         serde_json::json!({
             "method": "runtime-closure",
+            // The stub refuses the output selection, so the default output
+            // was queried and the record says so (#1458).
+            "outputs": ["bin"],
+            "outputs-source": "default-output",
             "schema": 1,
             "static-c-linking-detected": false,
             "static-link-source": "none",
@@ -656,6 +662,77 @@ fn us1_linux_static_build_seed_uses_declared_edges() {
     assert_eq!(run.c216().unwrap()["static-link-source"], "declared-edges");
 }
 
+/// #1459's shape: the static build is in the runtime closure, as on
+/// aarch64-darwin; none of its libraries are.
+fn namesake_runtime() -> String {
+    listing(&["h-zapp-bin", "h-ZX"])
+}
+
+fn namesake_scan(closure: &str, packages: &str) -> Run {
+    scan_with(NixStub {
+        runtime: Some(namesake_runtime()),
+        package_set: Some((packages, "{ }\n")),
+        ..base(closure)
+    })
+}
+
+/// The component named `name` whose PURL starts with `prefix`, from CDX.
+fn cdx_by_purl<'a>(run: &'a Run, name: &str, prefix: &str) -> &'a Value {
+    run.cdx_components()
+        .into_iter()
+        .find(|c| c["name"] == name && c["purl"].as_str().is_some_and(|p| p.starts_with(prefix)))
+        .unwrap_or_else(|| panic!("no {prefix} component named {name}"))
+}
+
+/// #1459: a Haskell library linked into the static executable shares its name
+/// with a build-only C library. Measured on nixpkgs `a799d3e3`: Haskell
+/// `zlib` 0.7.1.1 was marked on pandoc-cli, hledger and cachix while its C
+/// namesake was not, because the declared edge `tls -> zlib` bound the name to
+/// `pkg:generic/zlib@1.3.2`. The Haskell library is runtime and
+/// `statically-linked`; the C library, which nothing at runtime references,
+/// stays marked.
+///
+/// CDX only for the two namesakes: the three-format helpers look a component
+/// up by name, which two components share here.
+#[test]
+fn us1_static_haskell_library_with_c_namesake_is_runtime() {
+    let closure = fixture("closure-static-namesake.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = namesake_scan(&closure, &packages);
+    assert_eq!(run.c216().unwrap()["static-link-source"], "declared-edges");
+
+    let hs = cdx_by_purl(&run, "waybill-fixture-zlib", "pkg:hackage/");
+    assert_eq!(hs["version"], "0.7.1.1");
+    assert_ne!(hs["scope"], "excluded", "linked into the binary; stderr:\n{}", run.scan.stderr);
+    assert_eq!(Run::cdx_prop(hs, C203), Some("statically-linked"));
+
+    let c = cdx_by_purl(&run, "waybill-fixture-zlib", "pkg:generic/");
+    assert_eq!(c["version"], "1.3.2");
+    assert_eq!(c["scope"], "excluded", "build-only C namesake; stderr:\n{}", run.scan.stderr);
+    assert_eq!(Run::cdx_prop(c, C203), Some("runtime-closure"));
+
+    // CONTROL: the declared edges still leave the test-only dependency out,
+    // so the fix did not turn the root's walk into the derivation fields.
+    assert!(run.marked().contains("waybill-fixture-hspec"));
+}
+
+/// #1459, cachix's `hfsevents`: the pinned package set's relations are
+/// cabal2nix's Linux resolution, so `fsnotify` declares `hinotify`, while on
+/// darwin its derivation propagates `hfsevents`, which is what is linked.
+/// Below the root, a library's `propagatedBuildInputs` holds no test
+/// dependencies (q6), so it is followed alongside the declared relations.
+#[test]
+fn us1_platform_conditional_haskell_dependency_is_runtime() {
+    let closure = fixture("closure-static-namesake.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = namesake_scan(&closure, &packages);
+    let marked = run.marked();
+    for n in ["waybill-fixture-fsnotify", "waybill-fixture-hfsevents"] {
+        assert!(!marked.contains(n), "{n} is linked; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+}
+
 // ---- US1: embedded modules (FR-002) ---------------------------------------
 
 fn uvarint(mut v: u64) -> Vec<u8> {
@@ -730,6 +807,149 @@ fn us1_embedded_go_module_inherits_runtime_host() {
     assert!(!marked.contains("waybill-fixture-lib"));
 }
 
+// ---- #1458: the outputs the attribute installs -----------------------------
+
+/// postgrest's shape (`measurements/nix-behaviour/q11-*`): the derivation's
+/// `outputs` starts with `out`, the library, whose closure holds what the
+/// installed `bin` does not reference (754 paths against 129).
+fn outputs_closure() -> String {
+    fixture("closure-outputs.json")
+}
+
+/// One listing per output of the app, as `nix path-info -r` gives it for
+/// that output alone: `out` (the library) references `xml` and `py`, `bin`
+/// does not.
+fn per_output<'a>() -> Vec<(&'a str, String)> {
+    vec![
+        ("h-app-lib", listing(&["h-app-lib", "h-ssl", "h-z", "h-xml", "h-py"])),
+        ("h-app-bin", listing(&["h-app-bin", "h-ssl", "h-z"])),
+        ("h-app-doc", listing(&["h-app-doc"])),
+    ]
+}
+
+/// The `path-info` invocations the scan made.
+fn path_info_calls(run: &Run) -> Vec<&str> {
+    run.nix_log().lines().filter(|l| l.starts_with("path-info")).collect()
+}
+
+/// #1458: the runtime closure is that of the output the attribute selects
+/// (postgrest is `outputSpecified`, `outputName = bin`), not the head of the
+/// derivation's `outputs`, and C216 records which output and why.
+#[test]
+fn runtime_closure_follows_the_selected_output_not_the_head_of_outputs() {
+    let closure = outputs_closure();
+    let run = scan_with(NixStub {
+        runtime_by_output: per_output(),
+        selection: Some(r#"{"outputs":["bin"],"source":"output-specified"}"#),
+        ..base(&closure)
+    });
+    assert_eq!(
+        run.c216().expect("C216"),
+        serde_json::json!({
+            "method": "runtime-closure",
+            "outputs": ["bin"],
+            "outputs-source": "output-specified",
+            "schema": 1,
+            "static-c-linking-detected": false,
+            "static-link-source": "none",
+            "store": "local",
+            "unavailable-reason": null,
+            "unmatched-runtime-paths": 0,
+            "verified": true,
+            "walk-outcome": null,
+        }),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    let calls = path_info_calls(&run);
+    assert_eq!(calls, vec!["path-info -r /nix/store/h-app-bin"], "{}", run.nix_log());
+    let marked = run.marked();
+    for n in ["waybill-fixture-xml", "waybill-fixture-py"] {
+        assert!(marked.contains(n), "{n}: only the library output references it; marked {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+    for n in ["waybill-fixture-ssl", "waybill-fixture-z"] {
+        assert!(!marked.contains(n), "{n}: the installed output references it");
+    }
+}
+
+/// #1458, shellcheck's shape: `meta.outputsToInstall` names several outputs,
+/// and the runtime closure is their union, asked in one query.
+#[test]
+fn runtime_closure_is_the_union_of_outputs_to_install() {
+    let closure = outputs_closure();
+    let run = scan_with(NixStub {
+        runtime_by_output: per_output(),
+        selection: Some(r#"{"outputs":["bin","doc"],"source":"outputs-to-install"}"#),
+        ..base(&closure)
+    });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["outputs"], serde_json::json!(["bin", "doc"]), "{c216}");
+    assert_eq!(c216["outputs-source"], "outputs-to-install", "{c216}");
+    assert_eq!(c216["unmatched-runtime-paths"], 0, "`doc` is the app's own output: {c216}");
+    assert_eq!(
+        path_info_calls(&run),
+        vec!["path-info -r /nix/store/h-app-bin /nix/store/h-app-doc"],
+        "{}",
+        run.nix_log()
+    );
+    assert!(run.marked().contains("waybill-fixture-xml"));
+}
+
+/// #1458: when the selection cannot be evaluated (as the installable form of
+/// curl's could not be, q9 b), the default output is queried and C216 says
+/// the fallback happened. Also the CONTROL for the two tests above: the same
+/// stub's listing for `out` leaves `xml` and `py` unmarked, so those tests
+/// could tell the selected output from the head of `outputs`.
+#[test]
+fn an_unevaluable_selection_falls_back_to_the_default_output_and_says_so() {
+    let closure = outputs_closure();
+    let run = scan_with(NixStub { runtime_by_output: per_output(), ..base(&closure) });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "runtime-closure", "{c216}");
+    assert_eq!(c216["outputs"], serde_json::json!(["out"]), "{c216}");
+    assert_eq!(c216["outputs-source"], "default-output", "{c216}");
+    assert!(run.nix_log().lines().any(|l| l.starts_with("eval") && l.contains("outputSpecified")));
+    assert_eq!(path_info_calls(&run), vec!["path-info -r /nix/store/h-app-lib"], "{}", run.nix_log());
+    let marked = run.marked();
+    for n in ["waybill-fixture-xml", "waybill-fixture-py"] {
+        assert!(!marked.contains(n), "{n}: the library output references it; marked {marked:?}");
+    }
+}
+
+/// #1458: a selection naming an output the evaluated derivation does not
+/// declare is not trusted for any of its names: the default output is used.
+#[test]
+fn a_selection_naming_an_unknown_output_falls_back() {
+    let closure = outputs_closure();
+    let run = scan_with(NixStub {
+        runtime_by_output: per_output(),
+        selection: Some(r#"{"outputs":["bin","man"],"source":"outputs-to-install"}"#),
+        ..base(&closure)
+    });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["outputs"], serde_json::json!(["out"]), "{c216}");
+    assert_eq!(c216["outputs-source"], "default-output", "{c216}");
+}
+
+/// #1458: the selection is evaluated as purely as the closure itself:
+/// import-from-derivation refused, no `--impure`, the same flakeref.
+#[test]
+fn the_selection_evaluation_is_pure_and_names_the_scanned_attribute() {
+    let closure = outputs_closure();
+    let run = scan_with(NixStub {
+        runtime_by_output: per_output(),
+        selection: Some(r#"{"outputs":["bin"],"source":"output-specified"}"#),
+        ..base(&closure)
+    });
+    let evals: Vec<&str> =
+        run.nix_log().lines().filter(|l| l.starts_with("eval") && l.contains("outputSpecified")).collect();
+    assert_eq!(evals.len(), 1, "{}", run.nix_log());
+    assert!(evals[0].contains("--option allow-import-from-derivation false"), "{}", evals[0]);
+    assert!(!evals[0].contains("--impure"), "{}", evals[0]);
+    assert!(evals[0].ends_with("#packages.aarch64-darwin.default"), "{}", evals[0]);
+}
+
 // ---- US2: the reachability walk (FR-005, FR-007) --------------------------
 
 /// FR-005 / FR-007: with no store holding the output, scope comes from the
@@ -742,6 +962,9 @@ fn us2_no_store_answer_uses_walk() {
         run.c216().expect("C216 on a closure document"),
         serde_json::json!({
             "method": "reachability-walk",
+            // Asked about, though no store held it.
+            "outputs": ["bin"],
+            "outputs-source": "default-output",
             "schema": 1,
             "static-c-linking-detected": false,
             "static-link-source": "none",
@@ -862,6 +1085,8 @@ fn us2_walk_that_reaches_only_the_root_is_not_used() {
         run.c216().expect("C216"),
         serde_json::json!({
             "method": "closure-role",
+            "outputs": ["bin"],
+            "outputs-source": "default-output",
             "schema": 1,
             "static-c-linking-detected": false,
             // The consumed static build's libraries are kept runtime (T042),
@@ -1008,6 +1233,8 @@ fn us2_no_evaluated_package_falls_back_to_closure_role() {
         run.c216().expect("C216"),
         serde_json::json!({
             "method": "closure-role",
+            "outputs": null,
+            "outputs-source": null,
             "schema": 1,
             "static-c-linking-detected": false,
             "static-link-source": null,
@@ -1021,6 +1248,7 @@ fn us2_no_evaluated_package_falls_back_to_closure_role() {
         run.scan.stderr
     );
     assert!(!run.nix_log().contains("path-info"), "{}", run.nix_log());
+    assert!(!run.nix_log().contains("outputSpecified"), "no output to select:\n{}", run.nix_log());
     let marked = run.marked();
     assert!(marked.contains("waybill-fixture-tool"), "build-tooling, marked by the role rule");
     assert!(!marked.contains("waybill-fixture-lib"), "artifact-input, left alone by the role rule");

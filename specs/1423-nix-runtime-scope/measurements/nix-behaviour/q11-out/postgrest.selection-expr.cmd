@@ -1,0 +1,1 @@
+nix eval --max-jobs 0 --json --option allow-import-from-derivation false github:NixOS/nixpkgs/a799d3e3886da994fa307f817a6bc705ae538eeb#postgrest --apply d: if d.outputSpecified or false then { source = "output-specified"; outputs = [ d.outputName ]; } else { source = "outputs-to-install"; outputs = d.meta.outputsToInstall or null; }
