@@ -90,6 +90,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   SPDX 2.3 and SPDX 3 carry; the derived PURL is still the identity
   entry's `concludedValue`. Consumers that read the old key should read
   the property (#1442).
+- **A `--nix-closure` scan that gets no closure now warns.** When the
+  closure tier degraded — for example on a `callCabal2nix` flake, which
+  needs import-from-derivation that waybill refuses — the scan exited 0
+  with a manifest-only document and logged the cause only at INFO. The
+  degradation is now logged at WARN for every reason, including
+  `offline-requested`, and says that no Nix closure components were added
+  and the document contains only manifest-derived components. The
+  import-from-derivation case adds a sentence saying why it is refused.
+  Whether import-from-derivation is allowed is unchanged, as is
+  `waybill:nix-closure-degraded` (#1446).
 - **Cargo: a default-enabled optional dependency with a hyphenated or
   renamed name is no longer marked excluded.** The set of dependencies
   `cargo metadata` resolves as activated was built from
