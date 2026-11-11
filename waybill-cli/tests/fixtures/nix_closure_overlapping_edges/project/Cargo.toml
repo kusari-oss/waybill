@@ -1,0 +1,10 @@
+[package]
+name = "waybill-fixture-app"
+version = "2.1.0"
+edition = "2021"
+
+[dependencies]
+waybill-fixture-lib = "1.0.0"
+
+[dev-dependencies]
+waybill-fixture-devlib = "0.3.0"
