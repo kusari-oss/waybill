@@ -9,6 +9,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **`--nix-closure` decides what is in the artifact from the runtime
+  closure.** A closure member is marked not-in-artifact (CycloneDX
+  `scope: excluded`, SPDX 2.3 `BUILD_TOOL_OF`, SPDX 3 `usesTool` scoped
+  `build`) when the evaluated output does not reference it. The output's
+  runtime closure comes from `nix path-info -r`, asked of the local store
+  first and then of each substituter the user's nix already trusts; a
+  substituter's answer is used only after `nix store verify` checks its
+  signatures, and remote queries are bounded (connect timeout, one
+  attempt, 5 s across substituters). Nothing is built or fetched.
+  Statically linked members stay runtime: Haskell libraries compiled into
+  a runtime executable, and Go modules and Rust crates read from a runtime
+  binary. Before, the mark came from the build-graph role, which credits a
+  library *any* derivation links: across five targets, 951 grype findings
+  sat on components outside the runtime closure and 175 of them were
+  marked. When no store holds the output, marks come from a reachability
+  walk from the evaluated package over the fields that link into it
+  (331/346 precision, 331/350 recall at the finding level on the same five
+  targets). The role rule remains only when neither can be used. Documents
+  built where the output is in no store, such as the Linux
+  nix-closure-moat corpus golden, now carry walk-derived marks (1423).
 - **`sbom edit --drop 'scope=development'` no longer matches a bare
   CycloneDX `scope: excluded`.** A component with `"scope": "excluded"`
   and no `waybill:lifecycle-scope` or `waybill:optional-derivation`
@@ -60,6 +80,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   the same 1,309 PURLs from each format. Before this change, the nearest
   selector, `scope=development,build,test`, took 1,320 from CycloneDX and
   11 from each SPDX document (1423).
+- **`waybill:closure-scope-method` (C216) says how a closure document's
+  marks were decided.** A document-scope JSON object: `method`
+  (`runtime-closure`, `reachability-walk` or `closure-role`), the store
+  that answered and whether it was verified, why the runtime closure was
+  unavailable, how statically linked libraries were found, and how many
+  runtime paths matched no component. `waybill:scope-classification-source`
+  (C203) gains `runtime-closure`, `statically-linked` and
+  `reachability-walk`, and under those it is on every closure member,
+  marked or not (1423).
 - **`--nix-closure` lists the Go modules and Rust crates compiled into a
   nix-built binary.** The closure tier enumerates derivations, and a Go or
   Rust program's dependencies are not derivations, so a closure scan of
