@@ -132,24 +132,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
-- **A Haskell library statically linked into a `--nix-closure` runtime
-  member is no longer marked excluded when it shares a name with a C
-  library, or when nixpkgs adds it for one platform.** Two causes, both
-  read off the nixpkgs `a799d3e3` aarch64-darwin documents. First, a
-  milestone-1275 declared edge bound its target by name to whichever
-  component of that name came last, so `tls -> zlib` pointed at the C
-  library `pkg:generic/zlib@1.3.2`, which `tls` does not depend on, and
-  the static-link walk never reached Haskell `zlib`. A declared target now
-  binds to the name's Haskell build, else to its `pkg:hackage` component,
-  and the walk follows only Haskell builds. Second, the declared relations are cabal2nix's
-  Linux resolution, so `fsnotify` declares `hinotify` while on darwin its
-  derivation propagates `hfsevents`. Below the root, the walk now follows
-  a library's `propagatedBuildInputs` as well as its declared relations;
-  a library propagates no test dependencies. pandoc-cli keeps Haskell
-  `lua` and `zlib`, hledger keeps `zlib`, and cachix keeps `zlib`, `zstd`
-  and `hfsevents`, each now C203 `statically-linked`. Their C namesakes'
-  marks are unchanged, and the three documents lose 17 declared edges
-  that pointed at a C library (#1459).
+- **A `--nix-closure` document's runtime closure is that of the output
+  the attribute installs.** The runtime query asked about the head of the
+  evaluated derivation's `outputs`. `pkgs.postgrest` and `pkgs.cachix` are
+  their `bin` outputs while their `outputs` start with `out`, the library,
+  so postgrest's runtime view kept the 754 paths of `out` where the
+  executable references 129, leaving c-ares and libxslt in it. The query now
+  takes the attribute's selected output, else its `meta.outputsToInstall`
+  (shellcheck: `bin`, `man`, `doc`, queried as one union), read from one
+  extra pure evaluation of the attribute (~0.45 s), and falls back to the
+  default output when that cannot be had. C216 gains `outputs` and
+  `outputs-source` (`output-specified`, `outputs-to-install` or
+  `default-output`), so a document says which outputs were used and when
+  the fallback was (#1458).
 - **A `--nix-closure` CycloneDX document with re-identified Python
   members is schema-valid again.** Milestone 1366 recorded why a closure
   member's `pkg:pypi` identifier was derived by adding a
@@ -171,6 +166,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   import-from-derivation case adds a sentence saying why it is refused.
   Whether import-from-derivation is allowed is unchanged, as is
   `waybill:nix-closure-degraded` (#1446).
+- **A Haskell library statically linked into a `--nix-closure` runtime
+  member is no longer marked excluded when it shares a name with a C
+  library, or when nixpkgs adds it for one platform.** Two causes, both
+  read off the nixpkgs `a799d3e3` aarch64-darwin documents. First, a
+  milestone-1275 declared edge bound its target by name to whichever
+  component of that name came last, so `tls -> zlib` pointed at the C
+  library `pkg:generic/zlib@1.3.2`, which `tls` does not depend on, and
+  the static-link walk never reached Haskell `zlib`. A declared target now
+  binds to the name's Haskell build, else to its `pkg:hackage` component,
+  and the walk follows only Haskell builds. Second, the declared relations are cabal2nix's
+  Linux resolution, so `fsnotify` declares `hinotify` while on darwin its
+  derivation propagates `hfsevents`. Below the root, the walk now follows
+  a library's `propagatedBuildInputs` as well as its declared relations;
+  a library propagates no test dependencies. pandoc-cli keeps Haskell
+  `lua` and `zlib`, hledger keeps `zlib`, and cachix keeps `zlib`, `zstd`
+  and `hfsevents`, each now C203 `statically-linked`. Their C namesakes'
+  marks are unchanged, and the three documents lose 17 declared edges
+  that pointed at a C library (#1459).
 - **Cargo: a default-enabled optional dependency with a hyphenated or
   renamed name is no longer marked excluded.** The set of dependencies
   `cargo metadata` resolves as activated was built from

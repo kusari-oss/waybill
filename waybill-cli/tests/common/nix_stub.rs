@@ -53,6 +53,15 @@ pub struct NixStub<'a> {
     /// Which store holds [`Self::runtime`]: `None` for the local store, or a
     /// substituter URL, in which case only `--store <url>` answers.
     pub runtime_store: Option<String>,
+    /// #1458 — per-output listings for the local store, as `(output store
+    /// basename, listing)`. When non-empty it replaces [`Self::runtime`]:
+    /// `path-info -r` prints the union of the listings of the outputs its
+    /// argv names, and misses when it names none of them.
+    pub runtime_by_output: Vec<(&'a str, String)>,
+    /// #1458 — what the output-selection evaluation (`outputSpecified` /
+    /// `meta.outputsToInstall`) prints. `None`: it fails, as an evaluation
+    /// error would.
+    pub selection: Option<&'a str>,
     /// The configured substituters, printed in `config show`'s full listing
     /// (`substituters = …`) and by `config show substituters`.
     pub substituters: Vec<String>,
@@ -76,6 +85,8 @@ impl Default for NixStub<'_> {
             attr: DEFAULT_ATTR,
             runtime: None,
             runtime_store: None,
+            runtime_by_output: Vec::new(),
+            selection: None,
             substituters: Vec::new(),
             verify_ok: true,
             package_set: None,
@@ -132,7 +143,20 @@ impl NixStub<'_> {
         let subs = self.substituters.join(" ");
         // nix's own wording for an output a store does not hold (q2 e).
         let miss = r#"eval "last=\${$#}"; echo "don't know how to build these paths:" >&2; echo "error: path '$last' is not valid" >&2; exit 1"#;
+        let by_output: String = self
+            .runtime_by_output
+            .iter()
+            .enumerate()
+            .map(|(i, (base, listing))| {
+                format!(
+                    "case \"$* \" in *\"/{base} \"*) hit=1; cat <<'RT{i}EOF'\n{listing}\nRT{i}EOF\n ;; esac\n"
+                )
+            })
+            .collect();
         let path_info = match (&self.runtime, &self.runtime_store) {
+            _ if !self.runtime_by_output.is_empty() => format!(
+                "case \"$*\" in *--store*) {miss} ;; esac\nhit=0\n{by_output}[ \"$hit\" = 1 ] || {{ {miss}; }}"
+            ),
             (None, _) => miss.to_string(),
             (Some(listing), None) => format!(
                 "case \"$*\" in *--store*) {miss} ;; *) cat <<'RTEOF'\n{listing}\nRTEOF\n ;; esac"
@@ -140,6 +164,10 @@ impl NixStub<'_> {
             (Some(listing), Some(url)) => format!(
                 "case \"$*\" in *\"--store {url} \"*) cat <<'RTEOF'\n{listing}\nRTEOF\n ;; *) {miss} ;; esac"
             ),
+        };
+        let selection = match self.selection {
+            Some(json) => format!("cat <<'SELEOF'\n{json}\nSELEOF\n"),
+            None => "echo 'error: stub refuses this evaluation' >&2; exit 1".to_string(),
         };
         let verify = if self.verify_ok {
             "exit 0".to_string()
@@ -155,6 +183,7 @@ case "$*" in
   "config show"*) echo 'allow-dirty = true'; echo 'allow-import-from-derivation = false'; echo 'substituters = {subs}' ;;
   "path-info"*) {path_info} ;;
   "store verify"*) {verify} ;;
+  "eval"*outputSpecified*) {selection} ;;
 {rows_case}
   "derivation show"*"#{attr}") cat <<'CLOSUREEOF'
 {closure}
