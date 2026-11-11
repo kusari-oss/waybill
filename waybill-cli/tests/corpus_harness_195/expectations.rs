@@ -456,10 +456,18 @@ pub fn nix_closure_moat_expectations(sboms: &EmittedSboms) -> Result<(), Asserti
 
     // SC-003. Six components carried CDX `scope: "excluded"` on the strength
     // of a role that was wrong, because the declaration referencing them
-    // lived in `structuredAttrs`. nix references all six into the artifact,
-    // so no format may now report them absent from it — and m1277's rule
-    // asserts no scope at all for `artifact-input` or `both`, because that is
-    // exactly the case waybill cannot call.
+    // lived in `structuredAttrs`. Reading that carrier makes their C182
+    // role `artifact-input` or `both`, and that role is what this guards.
+    //
+    // Milestone 1423 changed what scope means: it is decided by runtime
+    // evidence (the runtime closure, or on this target, whose output is in
+    // no store, the reachability walk), not by the role. "Some derivation in
+    // the closure takes it as an input" no longer implies "ships", so
+    // `tzdata` and `util-linux-minimal`, reached only through build-only
+    // members (python3, pytz, tcl) and through check-time inputs, are now
+    // correctly marked. The #1348 regression signal therefore moves from the
+    // scope to the role: if the reader stopped consulting `structuredAttrs`,
+    // these roles would fall back to `build-tooling` or `unreferenced`.
     for name in [
         "bash-interactive",
         "elfutils",
@@ -478,14 +486,33 @@ pub fn nix_closure_moat_expectations(sboms: &EmittedSboms) -> Result<(), Asserti
                 "a member nix references into the artifact vanished from the document",
             ));
         };
-        if c.get("scope").and_then(|v| v.as_str()) == Some("excluded") {
+        let prop = |key: &str| {
+            c["properties"].as_array().and_then(|ps| {
+                ps.iter()
+                    .find(|p| p["name"].as_str() == Some(key))
+                    .and_then(|p| p["value"].as_str())
+            })
+        };
+        let role = prop("waybill:closure-role");
+        if !matches!(role, Some("artifact-input" | "both")) {
             return Err(nix_fail(
-                "m1278-no-false-exclusion",
-                format!("`{name}` carries scope=excluded"),
-                "no scope: nix references it into the artifact, and the rule \
-                 declines to assert for that case",
+                "m1278-structured-attrs-role",
+                format!("`{name}` has closure-role {role:?}"),
+                "artifact-input or both: a declaration in structuredAttrs \
+                 references it as an input",
                 "the closure reader is back to reading only `env`, so the \
                  referencing declaration is invisible again (#1348)",
+            ));
+        }
+        let source = prop("waybill:scope-classification-source");
+        if !matches!(source, Some("runtime-closure" | "reachability-walk" | "statically-linked")) {
+            return Err(nix_fail(
+                "m1423-scope-from-runtime-evidence",
+                format!("`{name}` has scope-classification-source {source:?}"),
+                "runtime-closure, reachability-walk or statically-linked: \
+                 scope decided by runtime evidence, not by the role",
+                "the 1423 scope pass did not run, or fell back to the role \
+                 rule on a target whose walk should be usable",
             ));
         }
     }
