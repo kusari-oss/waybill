@@ -136,18 +136,17 @@ fn element_iri_for(kind: LicenseKind, expr: &str, doc_iri: &str) -> String {
 /// Reduce a `Vec<SpdxExpression>` to a single canonical-or-raw
 /// expression string, or `None` when the list is empty. Multiple
 /// declared expressions on a component (rare) are joined with
-/// ` AND ` and re-canonicalized; canonicalization failure preserves
-/// the raw joined string verbatim per FR-008 (no silent drop).
+/// ` AND `, compound operands bracketed (#1411), and re-canonicalized;
+/// canonicalization failure preserves the raw joined string verbatim
+/// per FR-008 (no silent drop).
 fn reduce_license_vec(items: &[SpdxExpression]) -> Option<String> {
     match items.len() {
         0 => None,
         1 => Some(canonicalize_or_raw(items[0].as_str())),
         _ => {
-            let joined = items
-                .iter()
-                .map(|e| e.as_str())
-                .collect::<Vec<_>>()
-                .join(" AND ");
+            let joined = waybill_common::types::license::conjoin_license_expressions(
+                &items.iter().map(|e| e.as_str()).collect::<Vec<_>>(),
+            );
             Some(canonicalize_or_raw(&joined))
         }
     }
@@ -335,6 +334,20 @@ mod tests {
             "creationInfo": CREATION_INFO_ID,
             "simplelicensing_licenseExpression": expr,
         })
+    }
+
+    /// #1411 — same join rule as the SPDX 2.3 emitter: a compound operand is
+    /// bracketed so AND's higher precedence cannot re-associate its OR.
+    #[test]
+    fn multiple_licenses_join_with_compound_operands_bracketed() {
+        let items = [
+            SpdxExpression::new("MIT OR Apache-2.0").unwrap(),
+            SpdxExpression::new("BSD-3-Clause").unwrap(),
+        ];
+        assert_eq!(
+            reduce_license_vec(&items).as_deref(),
+            Some("(MIT OR Apache-2.0) AND BSD-3-Clause")
+        );
     }
 
     #[test]

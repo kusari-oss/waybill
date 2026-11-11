@@ -51,7 +51,7 @@
 
 use std::path::Path;
 
-use waybill_common::types::license::SpdxExpression;
+use waybill_common::types::license::{conjoin_license_expressions, SpdxExpression};
 
 /// How a reader combines several declared licenses into one expression.
 ///
@@ -76,10 +76,18 @@ pub(crate) enum LicenseJoin {
 }
 
 impl LicenseJoin {
-    fn separator(self) -> &'static str {
+    /// Combine non-empty terms into one expression.
+    ///
+    /// A conjunction brackets any operand carrying its own `AND` / `OR`
+    /// (#1431): `AND` binds tighter than `OR`, so an unbracketed
+    /// `MIT OR Apache-2.0 AND BSD-3-Clause` reads as
+    /// `MIT OR (Apache-2.0 AND BSD-3-Clause)`. A disjunction needs no
+    /// brackets for the same reason — an `AND` operand already binds first,
+    /// and `OR` is associative.
+    fn join(self, terms: &[&str]) -> String {
         match self {
-            Self::Disjunction => " OR ",
-            Self::Conjunction => " AND ",
+            Self::Disjunction => terms.join(" OR "),
+            Self::Conjunction => conjoin_license_expressions(terms),
         }
     }
 }
@@ -190,7 +198,7 @@ pub(crate) fn resolve_many<S: AsRef<str>>(
     match terms.len() {
         0 => DeclaredLicense::Absent,
         1 => resolve(terms[0], manifest),
-        _ => resolve(&terms.join(join.separator()), manifest),
+        _ => resolve(&join.join(&terms), manifest),
     }
 }
 
@@ -345,6 +353,57 @@ mod tests {
         let or = resolve_many(&["MIT", "Apache-2.0"], LicenseJoin::Disjunction, &manifest());
         let and = resolve_many(&["MIT", "Apache-2.0"], LicenseJoin::Conjunction, &manifest());
         assert_ne!(or, and);
+    }
+
+    #[test]
+    fn issue_1431_conjunction_brackets_a_compound_operand() {
+        // Unbracketed, `MIT OR Apache-2.0 AND BSD-3-Clause` parses as
+        // `MIT OR (Apache-2.0 AND BSD-3-Clause)` — a different grant.
+        let got = resolve_many(
+            &["MIT OR Apache-2.0", "BSD-3-Clause"],
+            LicenseJoin::Conjunction,
+            &manifest(),
+        );
+        match got {
+            DeclaredLicense::Canonical(expr) => {
+                assert_eq!(expr.as_str(), "(MIT OR Apache-2.0) AND BSD-3-Clause");
+            }
+            other => panic!("expected Canonical, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn issue_1431_preserved_join_keeps_the_brackets() {
+        // A term that will not canonicalise still yields a grouping-correct
+        // string, so the extracted text records what the project declared.
+        let got = resolve_many(
+            &["MIT OR Apache-2.0", "Made Up License"],
+            LicenseJoin::Conjunction,
+            &manifest(),
+        );
+        match got {
+            DeclaredLicense::Preserved(expr) => {
+                assert_eq!(expr.as_str(), "(MIT OR Apache-2.0) AND Made Up License");
+            }
+            other => panic!("expected Preserved, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn issue_1431_disjunction_needs_no_brackets() {
+        // AND binds tighter than OR, so an OR-join of an AND operand already
+        // reads as intended; Composer's output is unchanged.
+        let got = resolve_many(
+            &["MIT AND Zlib", "Apache-2.0"],
+            LicenseJoin::Disjunction,
+            &manifest(),
+        );
+        match got {
+            DeclaredLicense::Canonical(expr) => {
+                assert_eq!(expr.as_str(), "MIT AND Zlib OR Apache-2.0");
+            }
+            other => panic!("expected Canonical, got {other:?}"),
+        }
     }
 
     #[test]

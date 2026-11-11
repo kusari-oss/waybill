@@ -307,7 +307,7 @@ pub fn spdx3_validate_or_skip(path: &Path) {
         eprintln!("WARN: spdx3-validate not found; skipping conformance gate");
         return;
     }
-    let out = Command::new(&validator)
+    let out = crate::common::spdx3_validate::command(&validator)
         .args(["--quiet", "-j"])
         .arg(path)
         .output()
