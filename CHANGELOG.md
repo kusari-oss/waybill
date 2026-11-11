@@ -98,6 +98,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   SPDX 2.3 and SPDX 3 documents already emit. They are not rewritten to an
   `-or-later` identifier: most licenses, `Apache-2.0` among them, have none,
   and the formats would disagree (#1410).
+- **`--nix-closure` scans are about 2.5× faster again.** Since #1415 the
+  closure tier reads the binaries in members' store outputs for embedded Go
+  and Rust dependencies. Its Go build-info fallback searched every byte of
+  every non-Go binary with a naive comparison, and that search was most of
+  the scan time. It now uses `memchr::memmem` (already in the dependency
+  tree). Measured on the openssh wrapper flake, debug build, 3 alternating
+  runs: 21.2 s to 8.4 s median, with identical output. On gh: 23.3 s to
+  10.9 s, with the same 657 components and 164 Go modules.
+
 - **Document subjects no longer carry a `waybill`-vendor CPE.** A subject
   without a CPE of its own (the synthetic placeholder, or one named with
   `--root-name`/`--root-purl`) was given `cpe:2.3:a:waybill:<name>:<version>`
