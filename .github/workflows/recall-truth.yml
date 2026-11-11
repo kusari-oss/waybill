@@ -260,9 +260,11 @@ jobs:
           set -uo pipefail
           o="out/$TARGET"
           date -u +%Y-%m-%dT%H:%M:%SZ > "$o/osv-query-time.txt"
-          "$OSV_BIN" scan source -L "$o/link.cdx.json" --format json > "$o/link.cdx.json.osv.json" 2> "$o/link.osv.err"
-          rc=$?
           # osv-scanner exits 1 when it FINDS vulnerabilities; above 1 is an error.
+          # Actions runs this with `bash -e`, so the status is captured with
+          # `|| rc=$?`; a bare `rc=$?` on the next line is never reached.
+          rc=0
+          "$OSV_BIN" scan source -L "$o/link.cdx.json" --format json > "$o/link.cdx.json.osv.json" 2> "$o/link.osv.err" || rc=$?
           if [ "$rc" -gt 1 ]; then
             cat "$o/link.osv.err"
             echo "::error::osv-scanner failed (exit $rc)"
