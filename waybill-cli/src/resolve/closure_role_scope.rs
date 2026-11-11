@@ -97,8 +97,11 @@ const EMBEDDED_BUILD_INFO: &str = "embedded-build-info";
 /// 1. the evaluated package is exempt;
 /// 2. a compiler-supplied boot library is exempt;
 /// 3. under [`RuntimeEvidence::Closure`]: in the runtime closure → runtime;
-///    else statically linked into a runtime member → runtime; else
-///    not-in-artifact — each recorded with its [`ScopeEvidence`];
+///    else statically linked → runtime; else not-in-artifact — each recorded
+///    with its [`ScopeEvidence`]. Statically linked means linked into a
+///    runtime member, or a Haskell build the evaluated wrapper root consumed
+///    (and what is linked into it), which x86_64-linux's runtime closure does
+///    not hold (q10);
 /// 4. under [`RuntimeEvidence::Walk`]: reached by the walk (or statically
 ///    linked into a reached member) → runtime; else not-in-artifact — both
 ///    recorded as `ReachabilityWalk`;

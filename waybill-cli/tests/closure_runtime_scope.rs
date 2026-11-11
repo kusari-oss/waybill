@@ -518,6 +518,140 @@ fn us1_test_only_haskell_dep_kept_runtime_without_declared_edges() {
     assert_eq!(c216["method"], "runtime-closure");
 }
 
+/// x86_64-linux's shape (`measurements/nix-behaviour/q10-*`): the wrapper's
+/// own output and the C libraries the GHC runtime links, but **not** the
+/// static Haskell build its binary was copied from. On aarch64-darwin the
+/// static build is in the runtime closure; on Linux it is not.
+fn linux_static_runtime() -> String {
+    listing(&["h-sc-bin", "h-gmp"])
+}
+
+/// `alex`: a Haskell derivation the static build uses as a build tool
+/// (`nativeBuildInputs`), which the root does not consume.
+fn with_alex(closure: String) -> String {
+    let closure = closure
+        .replacen(
+            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8\",\n        \"buildInputs\": \"/nix/store/h-aeson",
+            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8 /nix/store/h-alex\",\n        \"buildInputs\": \"/nix/store/h-aeson",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": { \"outputs\": [\"out\"] }\n        },",
+            "\"d-gmp.drv\": { \"outputs\": [\"out\"] },\n          \"d-alex.drv\": { \"outputs\": [\"out\"] }\n        },",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": {\n",
+            "\"d-alex.drv\": {\n      \"name\": \"waybill-fixture-alex-3.5.1.0\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-alex\",\n        \"version\": \"3.5.1.0\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\"\n      },\n      \"outputs\": { \"out\": { \"path\": \"h-alex\" } }\n    },\n    \"d-gmp.drv\": {\n",
+            1,
+        );
+    assert_eq!(closure.matches("h-alex").count(), 2, "the fixture edits applied");
+    assert_eq!(closure.matches("d-alex.drv").count(), 2, "the fixture edits applied");
+    closure
+}
+
+/// `pandoc`: a Haskell build the **root** consumes through `inputs.drvs` and
+/// names in `nativeBuildInputs`, with a Haskell library of its own. This is
+/// the measured wrapper's shape: nixpkgs' shellcheck consumes `pandoc-cli`,
+/// a Haskell generic-builder derivation, to render its man page
+/// (`measurements/nix-behaviour/q10-*`). It runs on the build machine and is
+/// not in the binary.
+fn with_pandoc(closure: String) -> String {
+    let closure = closure
+        .replacen(
+            "\"outputs\": \"bin out\",\n",
+            "\"outputs\": \"bin out\",\n        \"nativeBuildInputs\": \"/nix/store/h-pandoc\",\n",
+            1,
+        )
+        .replacen(
+            "\"drvs\": { \"d-SC.drv\": { \"outputs\": [\"out\"] } },",
+            "\"drvs\": { \"d-SC.drv\": { \"outputs\": [\"out\"] }, \"d-pandoc.drv\": { \"outputs\": [\"out\"] } },",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": {\n",
+            "\"d-pandoc.drv\": {\n      \"name\": \"waybill-fixture-pandoc-cli-3.7.0.2\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-pandoc-cli\",\n        \"version\": \"3.7.0.2\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\",\n        \"buildInputs\": \"/nix/store/h-pdlib\"\n      },\n      \"inputs\": { \"drvs\": { \"d-pdlib.drv\": { \"outputs\": [\"out\"] } }, \"srcs\": [] },\n      \"outputs\": { \"out\": { \"path\": \"h-pandoc\" } }\n    },\n    \"d-pdlib.drv\": {\n      \"name\": \"waybill-fixture-pdlib-3.7.0.2\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-pdlib\",\n        \"version\": \"3.7.0.2\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\"\n      },\n      \"outputs\": { \"out\": { \"path\": \"h-pdlib\" } }\n    },\n    \"d-gmp.drv\": {\n",
+            1,
+        );
+    assert_eq!(closure.matches("h-pandoc").count(), 2, "the fixture edits applied");
+    assert_eq!(closure.matches("d-pandoc.drv").count(), 2, "the fixture edits applied");
+    closure
+}
+
+/// SC-007 / FR-002 on x86_64-linux's shape. The runtime closure holds the
+/// wrapper and C libraries but not the static Haskell build, so nothing in it
+/// is a Haskell-builder member. The evaluated root is runtime by definition,
+/// and the static build it consumed through `inputs.drvs` is what its binary
+/// was copied from: that build, and the libraries linked into it, are
+/// runtime and `statically-linked`. Measured on the corpus before the fix:
+/// `static-link-source: none`, every library linked into shellcheck marked.
+///
+/// CONTROLS, in the same scan: `alex`, a Haskell `build-tooling` member the
+/// root does not consume, stays marked; `pandoc`, a Haskell build the root
+/// consumes as a build tool (`nativeBuildInputs`), stays marked, and so does
+/// its library.
+#[test]
+fn us1_linux_static_build_absent_from_runtime_closure_is_seeded_from_the_root() {
+    let closure = with_pandoc(with_alex(fixture("closure-static.json")));
+    let run = scan_with(NixStub { runtime: Some(linux_static_runtime()), ..base(&closure) });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "runtime-closure", "{c216}");
+    assert_ne!(c216["static-link-source"], "none", "{c216}");
+    assert_eq!(
+        c216["static-link-source"], "derivation-fields",
+        "no package set here, so the seeded build's own fields found its libraries: {c216}"
+    );
+
+    let marked = run.marked();
+    for n in std::iter::once("waybill-fixture-ShellCheck").chain(HASKELL_LIBS) {
+        assert!(
+            !marked.contains(n),
+            "{n} ships inside the wrapper's binary; marked: {marked:?}\nstderr:\n{}",
+            run.scan.stderr
+        );
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+    assert!(!marked.contains("waybill-fixture-gmp"), "in the runtime closure");
+    assert_eq!(run.c203("waybill-fixture-gmp").as_deref(), Some("runtime-closure"));
+
+    // CONTROL: not consumed by the root.
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-alex"), "waybill:closure-role"),
+        Some("build-tooling"),
+        "precondition: the control is in a tooling role"
+    );
+    assert!(marked.contains("waybill-fixture-alex"), "marked: {marked:?}");
+    assert_eq!(run.c203("waybill-fixture-alex").as_deref(), Some("runtime-closure"));
+    // CONTROL: consumed by the root, as a build tool.
+    for n in ["waybill-fixture-pandoc-cli", "waybill-fixture-pdlib"] {
+        assert!(marked.contains(n), "{n} runs on the build machine; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+}
+
+/// The same Linux shape with the pinned package set: the seeded static build
+/// is followed through its declared relations, which exclude the test-only
+/// dependency, and C216 says so.
+#[test]
+fn us1_linux_static_build_seed_uses_declared_edges() {
+    let closure = fixture("closure-static.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = scan_with(NixStub {
+        runtime: Some(linux_static_runtime()),
+        package_set: Some((&packages, "{ }\n")),
+        ..base(&closure)
+    });
+    let marked = run.marked();
+    for n in ["waybill-fixture-hspec", "waybill-fixture-hunit"] {
+        assert!(marked.contains(n), "{n} is test-only; stderr:\n{}", run.scan.stderr);
+    }
+    for n in ["waybill-fixture-ShellCheck", "waybill-fixture-aeson", "waybill-fixture-text", "waybill-fixture-fgl"] {
+        assert!(!marked.contains(n), "{n}; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+    assert_eq!(run.c216().unwrap()["static-link-source"], "declared-edges");
+}
+
 // ---- US1: embedded modules (FR-002) ---------------------------------------
 
 fn uvarint(mut v: u64) -> Vec<u8> {
@@ -751,24 +885,7 @@ fn us2_walk_that_reaches_only_the_root_is_not_used() {
 /// is `build-tooling` too, and stays marked by the role rule.
 #[test]
 fn us2_reached_only_root_keeps_the_consumed_static_build_runtime() {
-    let closure = fixture("closure-static.json")
-        .replacen(
-            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8\",\n        \"buildInputs\": \"/nix/store/h-aeson",
-            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8 /nix/store/h-alex\",\n        \"buildInputs\": \"/nix/store/h-aeson",
-            1,
-        )
-        .replacen(
-            "\"d-gmp.drv\": { \"outputs\": [\"out\"] }\n        },",
-            "\"d-gmp.drv\": { \"outputs\": [\"out\"] },\n          \"d-alex.drv\": { \"outputs\": [\"out\"] }\n        },",
-            1,
-        )
-        .replacen(
-            "\"d-gmp.drv\": {\n",
-            "\"d-alex.drv\": {\n      \"name\": \"waybill-fixture-alex-3.5.1.0\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-alex\",\n        \"version\": \"3.5.1.0\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\"\n      },\n      \"outputs\": { \"out\": { \"path\": \"h-alex\" } }\n    },\n    \"d-gmp.drv\": {\n",
-            1,
-        );
-    assert_eq!(closure.matches("h-alex").count(), 2, "the fixture edits applied");
-    assert_eq!(closure.matches("d-alex.drv").count(), 2, "the fixture edits applied");
+    let closure = with_alex(fixture("closure-static.json"));
     let run = scan_with(base(&closure));
     let c216 = run.c216().expect("C216");
     assert_eq!(c216["method"], "closure-role", "{c216}");
@@ -797,6 +914,30 @@ fn us2_reached_only_root_keeps_the_consumed_static_build_runtime() {
     // does not follow it, so the role rule decides (`artifact-input`, unmarked).
     assert!(!marked.contains("waybill-fixture-gmp"));
     assert_eq!(run.c203("waybill-fixture-gmp"), None);
+}
+
+/// T042, the build-tool side: a Haskell build the root consumes but names in
+/// `nativeBuildInputs` (nixpkgs' shellcheck consumes `pandoc-cli` that way,
+/// for its man page) is not in the binary. It is not kept runtime, and neither
+/// is what is linked into it; the role rule decides them. The static build is
+/// still consumed, so the walk is still set aside.
+#[test]
+fn us2_reached_only_root_does_not_keep_a_consumed_build_tool_runtime() {
+    let closure = with_pandoc(fixture("closure-static.json"));
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["walk-outcome"], "reached-only-root", "{c216}");
+    let marked = run.marked();
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-pandoc-cli"), "waybill:closure-role"),
+        Some("build-tooling"),
+        "precondition"
+    );
+    assert!(marked.contains("waybill-fixture-pandoc-cli"), "marked: {marked:?}");
+    assert_eq!(run.c203("waybill-fixture-pandoc-cli").as_deref(), Some("closure-role"));
+    assert_ne!(run.c203("waybill-fixture-pdlib").as_deref(), Some("statically-linked"));
+    // CONTROL: the static build is still kept runtime in the same scan.
+    assert_eq!(run.c203("waybill-fixture-ShellCheck").as_deref(), Some("statically-linked"));
 }
 
 /// CONTROL for `us2_walk_that_reaches_only_the_root_is_not_used`, changing

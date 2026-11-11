@@ -23,7 +23,7 @@ Built only when a store answers completely and, for remote stores, verification 
 
 | field | type | meaning |
 |---|---|---|
-| `members` | `BTreeSet<DrvKey>` | Haskell library derivations linked into a runtime member |
+| `members` | `BTreeSet<DrvKey>` | Haskell library derivations linked into a runtime member, or into a Haskell build the evaluated wrapper root consumed (research R4, correction) |
 | `source` | `StaticLinkSource` | `DeclaredEdges` (m1275, excludes tests) or `DerivationFields` (fallback, may include test deps) |
 
 Go and Rust modules are not in this set. They inherit from their host through the existing `embedded-build-info` relationships.
@@ -33,6 +33,8 @@ Go and Rust modules are not in this set. They inherit from their host through th
 `enum RuntimeEvidence { Closure { runtime: HashSet<MemberKey>, static_linked: HashSet<MemberKey> }, Walk { reached: HashSet<MemberKey> }, RoleWithLinked { linked: HashSet<MemberKey> }, None }`
 
 `RoleWithLinked` is a walk set aside as `reached-only-root` (rule 4): the role rule decides, except for `linked`, the consumed Haskell builds plus their statically linked libraries.
+
+`Closure.static_linked` is the static-link set seeded from the runtime members and, when the evaluated root is not itself a Haskell build, from the Haskell builds it consumed through `inputs.drvs` (`walk::consumed_haskell_builds`, which leaves out a build the root names only in a build-machine field), together with those seeded builds themselves when the runtime closure does not hold them. The runtime closure cannot be relied on to name the static build a wrapper's binary was copied from: aarch64-darwin's does, x86_64-linux's does not (`measurements/nix-behaviour/q10-*`).
 
 Built in `scan_cmd.rs` (via `closure/runtime.rs::evidence`) from `ClassifiedClosure` before `assign_role_scope`, keyed by component identity (`MemberKey`) rather than `.drv`, because build variants share a component. `None` is used when the closure tier degraded, and today's behaviour is unchanged in that case; it is also used for `no-evaluated-package` (rule 5).
 
@@ -54,9 +56,9 @@ For each closure member `c`, the first rule that applies wins:
 2. `c` is a compiler-supplied boot library in a tooling role → `ExemptCompilerSupplied`, as today.
 3. Under `RuntimeEvidence::Closure`:
    - `c`'s outputs intersect `runtime.paths` → runtime, `RuntimeClosure`;
-   - else `c ∈ static_link.members`, or `c` is an embedded module of a runtime host → runtime, `StaticallyLinked`;
+   - else `c ∈ static_link.members`, or `c` is a Haskell build the evaluated wrapper root consumed through `inputs.drvs` (other than as a build tool), or `c` is an embedded module of a runtime host → runtime, `StaticallyLinked`;
    - else → `NotInArtifact`, `RuntimeClosure`.
-4. Under `RuntimeEvidence::Walk`: `c ∈ reached` (or an embedded module of a reached host) → runtime, `ReachabilityWalk`; else `NotInArtifact`, `ReachabilityWalk`. A statically linked Haskell library is in `reached`, so it too carries `ReachabilityWalk`, never `StaticallyLinked`: its root is an approximation, and the document must not present it as proven (US2 scenario 2). The compiler-supplied exemption applies to any role, as under rule 3. A walk that reaches no member but the root, from a root that consumed a Haskell build through `inputs.drvs` (shellcheck's wrapper), is not used: `evidence` returns `RoleWithLinked`, so rule 5 applies, and C216 says `walk-outcome: reached-only-root`. The exception is the Haskell-builder derivation(s) the root consumed through `inputs.drvs` and the libraries linked into them (the static-link logic, from those builds): they are runtime with `StaticallyLinked` evidence, whatever their role, because their code ships inside the wrapper's binary and the fallback errs toward runtime, never toward dropping linked code (T042). The compiler-supplied exemption still wins inside that set. Everything else stays on the role rule.
+4. Under `RuntimeEvidence::Walk`: `c ∈ reached` (or an embedded module of a reached host) → runtime, `ReachabilityWalk`; else `NotInArtifact`, `ReachabilityWalk`. A statically linked Haskell library is in `reached`, so it too carries `ReachabilityWalk`, never `StaticallyLinked`: its root is an approximation, and the document must not present it as proven (US2 scenario 2). The compiler-supplied exemption applies to any role, as under rule 3. A walk that reaches no member but the root, from a root that consumed a Haskell build through `inputs.drvs` (shellcheck's wrapper), is not used: `evidence` returns `RoleWithLinked`, so rule 5 applies, and C216 says `walk-outcome: reached-only-root`. The exception is the Haskell-builder derivation(s) the root consumed through `inputs.drvs`, other than one it names only as a build tool, and the libraries linked into them (the static-link logic, from those builds): they are runtime with `StaticallyLinked` evidence, whatever their role, because their code ships inside the wrapper's binary and the fallback errs toward runtime, never toward dropping linked code (T042). The compiler-supplied exemption still wins inside that set. Everything else stays on the role rule.
 5. Under `RuntimeEvidence::None`: today's role rule, with `ClosureRole` evidence.
 
 "Runtime" means `artifact_presence = None` (nothing asserted absent). Any `NotInArtifact` that the contents pass or the role rule set earlier is cleared in that case. That is FR-001 in both directions.

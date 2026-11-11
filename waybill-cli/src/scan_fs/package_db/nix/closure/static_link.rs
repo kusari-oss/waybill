@@ -44,7 +44,9 @@ pub(crate) enum StaticLinkSource {
     /// The derivation-field fallback, which may include test-only
     /// dependencies of a root built with checks.
     DerivationFields,
-    /// The runtime closure holds no Haskell-builder member.
+    /// Nothing seeded static linking: the runtime closure holds no
+    /// Haskell-builder member, and the evaluated root consumed no Haskell
+    /// build ([`super::walk::consumed_haskell_builds`]).
     None,
 }
 
@@ -121,7 +123,10 @@ pub(crate) struct StaticLinkSet {
     pub(crate) source: StaticLinkSource,
 }
 
-/// Compute the statically linked set from the runtime members.
+/// Compute the statically linked set from `runtime_drvs`: the runtime
+/// members, plus any Haskell build the evaluated root consumed that the
+/// runtime closure does not hold (x86_64-linux's shellcheck, q10). The seeds
+/// themselves are not in the result.
 ///
 /// `declared` is `Some` when the pinned package set was available to the
 /// identity pass. A runtime Haskell member whose component the set did not

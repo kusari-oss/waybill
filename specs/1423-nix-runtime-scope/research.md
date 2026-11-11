@@ -65,7 +65,7 @@ Today the contents pass decides module presence from the host's *role* (`content
 
 How shellcheck's derivations are wired:
 - The top-level `shellcheck` derivation (`justStaticExecutables`) has empty `buildInputs`.
-- It reaches the static `ShellCheck` build through `inputs.drvs` and an `installPhase` path, and that build *is* in the runtime closure.
+- It reaches the static `ShellCheck` build through `inputs.drvs` and an `installPhase` path, and that build *is* in the runtime closure **on aarch64-darwin**. It is not on x86_64-linux; see the correction below.
 - The linked libraries sit in that build's `buildInputs`. Haskell libraries carry their own dependencies in `propagatedBuildInputs`.
 
 Two sources of edges:
@@ -87,6 +87,15 @@ Scores for the fallback (cabal metadata as truth; it also finds every package wh
 **Decision:** source (1) when available, source (2) otherwise. Source (2) over-includes test dependencies, which is the safe direction: linked code is never dropped. C216 records which source was used.
 
 Dynamically linked Haskell executables (hlint, hadolint) need neither source, because every library they declare is already in the runtime closure.
+
+**Correction (2026-11-11): the seed was measured on one system only.** Everything above about shellcheck's wiring was measured on aarch64-darwin, and the rule seeds from runtime members built with the Haskell generic builder. The x86_64-linux corpus regen of `nix-closure-shellcheck` came back with C216 `static-link-source: none` and every library linked into shellcheck marked excluded (SC-007 and FR-002 violated). `measurements/nix-behaviour/q10-linux-shellcheck.sh` asked cache.nixos.org for both systems' runtime closure of the fixture flake's default output (`q10-out/summary.txt`):
+
+- x86_64-linux, `/nix/store/2lfacwyvxpllrq9jpbyz7z4v4lc3wnr9-shellcheck-0.11.0-bin`: 27 paths, the wrapper's own output and C libraries (glibc, gmp-with-cxx, libffi, numactl, and elfutils with curl, openssl, krb5 and the rest of what it pulls in). **No `ShellCheck-` build.** Nothing in it is a Haskell-builder member, so nothing seeds the rule.
+- aarch64-darwin: 5 paths, including `ShellCheck-0.11.0`.
+
+**Decision:** under the runtime closure, static linking is also seeded from the Haskell-builder derivations the evaluated root consumed through `inputs.drvs` (`walk::consumed_haskell_builds`, the T042 helper), when the root is not itself a Haskell build. The root is runtime by definition, and its consumed static build is what its binary was copied from. The seeded builds and the libraries reached from them are runtime with C203 `statically-linked`, and C216 `static-link-source` names the source that found them. A Haskell root is already a seed through the runtime closure; its own `inputs.drvs` carries its test dependencies, which its declared edges exist to leave out, so it is not seeded from.
+
+The same probe found that the wrapper also consumes `pandoc-cli`, a Haskell generic-builder derivation, through `inputs.drvs` and `nativeBuildInputs`, on both systems: it renders the man page on the build machine. `consumed_haskell_builds` therefore leaves out a build the root names only in a build-machine field (`TOOLING_FIELDS`). Without that, pandoc-cli and every library linked into it would be kept runtime, on both systems, under the runtime closure and under the T042 walk guard alike.
 
 ## R5 — Recording the method (FR-007)
 

@@ -33,6 +33,7 @@ Each `q<N>-*.sh` script writes raw stdout, stderr, exit code and wall time to `q
 | `q8-verify-cost.sh` → `q8-out/`, `q8-summary.txt` | T002 / R11: `nix store verify --no-contents -r` cost beside the query it follows, cold and warm |
 | `q9-installable.sh` → `q9-out/` | T001: path-info and verify given the **installable** rather than an outPath |
 | `q9-default-output.sh` + `q9-default-output.py` → `q9-out/d-*` | T001: whether the default output can be read from the closure itself |
+| `q10-linux-shellcheck.sh` → `q10-out/` | whether the x86_64-linux runtime closure of the shellcheck corpus target holds its static `ShellCheck-` build, against aarch64-darwin; and which Haskell builds the wrapper root consumes |
 
 `q6-out/*.drv-closure.json` total about 36 MB. They are `nix derivation show -r` output, and `q6-static-link.sh` regenerates any that are missing.
 
@@ -427,3 +428,17 @@ Arithmetic over the Q8 and Q5 medians above, not a separate run.
 - **Per-path bound: met** for every closure measured in the order waybill runs the calls (verification follows the query, so its narinfos are warm). Only the 5-path shellcheck closure with both calls cold exceeds 0.1 s per path, and that is 0.53 s in total: a fixed cost, not a per-path one.
 - **Unreachable bound: met per substituter.** waybill asks each configured substituter in turn, so N unreachable substituters cost about N × 2.1 s before the fallback takes over: within 5 s for up to two, not for three or more **(inference from Q5's per-call figure; several unreachable substituters were not measured together)**. The verification call is never made against a store whose query failed.
 - **Unreachable bound across substituters (T041 and its follow-up).** waybill now keeps a 5 s remote budget. Before each substituter it computes what is left; with under 1 s left it starts no further one (`query-timed-out`), otherwise it passes `connect-timeout min(2, floor(remaining))` (Q5c: whole seconds only). At 2.1 s per unreachable cache that is two calls (4.2 s) and the third skipped, where the first T041 version, which only checked whether the budget was already spent, started the third at 4.2 s and ran to about 6.3 s. The bound is then the budget plus nix's overhead past its connect timeout on the last call (about 0.1 s in Q5) **(inference from Q5's per-call figure; tested with a stub runner and an injected clock, not against unreachable caches)**. The timeout covers the connect phase only, so a reachable cache's slow answer (hlint cold, about 11 s in Q3) is not cut short.
+
+### Q10. x86_64-linux's runtime closure does not hold the static build (2026-11-11)
+
+The Linux corpus regen of `nix-closure-shellcheck` (fixture `kusari-sandbox/waybill-fixture-nix-shellcheck@dc4e4509`, nixpkgs `a799d3e3`) emitted C216 `static-link-source: none` and marked every Haskell library linked into shellcheck excluded. The static-link rule seeds from runtime members built with the Haskell generic builder, and Q6 measured it only on aarch64-darwin. `q10-linux-shellcheck.sh` asks cache.nixos.org for the runtime closure of the fixture flake's `packages.<system>.default` default output on both systems, and lists the Haskell-builder derivations the wrapper root consumes through `inputs.drvs`. It builds nothing; evaluating the x86_64-linux derivation from darwin only instantiates `.drv` files. Run 2026-11-11 04:53 UTC on the host above, same nix. Raw output: `q10-out/`.
+
+| system | default output | runtime paths | `ShellCheck-` builds in it |
+|---|---|---|---|
+| x86_64-linux | `2lfacwyv…-shellcheck-0.11.0-bin` | 27 | **0** |
+| aarch64-darwin | `xpjnkisx…-shellcheck-0.11.0-bin` | 5 | 1 (`0qxyki0k…-ShellCheck-0.11.0`) |
+
+- On Linux the 27 paths are the wrapper's own output and C libraries: glibc, gmp-with-cxx, libffi, numactl, and elfutils with what it pulls in (curl, openssl, krb5, brotli, zstd, xz and others). That is consistent with the GHC runtime linking libdw on Linux **(inference; the binary's `DT_NEEDED` was not read)**. No Haskell-builder member is in it, so nothing seeds the rule.
+- On both systems the wrapper root consumes two Haskell-builder derivations through `inputs.drvs`: `ShellCheck-0.11.0`, named in no dependency field (only in `installPhase`), and `pandoc-cli-3.7.0.2`, named in `nativeBuildInputs`. pandoc renders the man page on the build machine and is not in the binary.
+
+**Consequence:** under the runtime closure, static linking is also seeded from the Haskell builds the evaluated root consumed through `inputs.drvs`, when the root is a wrapper rather than a Haskell build itself. A build the root names only in a build-machine field (`pandoc-cli`) is not one of them. Without that exclusion pandoc-cli and every library linked into it would be kept runtime, on both systems, and under the T042 walk guard as well.

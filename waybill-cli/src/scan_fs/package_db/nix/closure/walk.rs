@@ -37,11 +37,13 @@
 //! closure to the role rule, and C216 says `walk-outcome: reached-only-root`.
 //! The consumed Haskell builds and the libraries linked into them are the
 //! exception: their code ships inside the wrapper's binary, so they are kept
-//! runtime as statically linked (T042).
+//! runtime as statically linked (T042). The runtime-closure path seeds static
+//! linking from them too, because x86_64-linux's runtime closure of the
+//! wrapper does not hold the static build (q10).
 
 use std::collections::{BTreeSet, VecDeque};
 
-use super::classify::ARTIFACT_FIELDS;
+use super::classify::{ARTIFACT_FIELDS, TOOLING_FIELDS};
 use super::derivation::{store_basename, RawClosure};
 
 /// The `.drv` keys reachable from `root` over [`ARTIFACT_FIELDS`], `root`
@@ -82,19 +84,37 @@ pub(crate) fn reachable(raw: &RawClosure, root: &str) -> BTreeSet<String> {
 /// is its own, and that walk is exact on gh's findings (55 true, 0 false,
 /// `measurements/us2-walk-score/`).
 ///
-/// When the walk is set aside (`reached-only-root`), these are the static
-/// builds whose code ships inside the wrapper's binary, so they and the
-/// libraries linked into them are kept runtime (T042).
+/// These are the static builds whose code ships inside the wrapper's binary,
+/// so they and the libraries linked into them are kept runtime: when the walk
+/// is set aside (`reached-only-root`, T042), and under the runtime closure,
+/// which on x86_64-linux does not hold the static build at all
+/// (`specs/1423-nix-runtime-scope/measurements/nix-behaviour/q10-*`).
+///
+/// **A build the root names only as build-machine tooling
+/// ([`TOOLING_FIELDS`]) is not one of them.** nixpkgs' shellcheck wrapper
+/// consumes `pandoc-cli`, itself a Haskell generic-builder derivation, through
+/// `inputs.drvs` and `nativeBuildInputs`, to render its man page (q10). It
+/// runs on the build machine; counted here, it and every library linked into
+/// it would be kept runtime.
 pub(crate) fn consumed_haskell_builds(raw: &RawClosure, root: &str) -> BTreeSet<String> {
-    raw.derivations
-        .get(root)
-        .map(|d| {
-            d.input_drvs(&raw.derivations)
-                .filter(|k| raw.derivations.get(*k).is_some_and(|i| i.is_haskell_builder()))
-                .map(str::to_string)
-                .collect()
-        })
-        .unwrap_or_default()
+    let Some(d) = raw.derivations.get(root) else {
+        return BTreeSet::new();
+    };
+    let index = raw.output_index();
+    let named_in = |fields: &[&str]| -> BTreeSet<&str> {
+        fields
+            .iter()
+            .flat_map(|f| d.paths_in(f))
+            .filter_map(|p| index.get(store_basename(p)).copied())
+            .collect()
+    };
+    let artifact = named_in(ARTIFACT_FIELDS);
+    let tooling = named_in(TOOLING_FIELDS);
+    d.input_drvs(&raw.derivations)
+        .filter(|k| raw.derivations.get(*k).is_some_and(|i| i.is_haskell_builder()))
+        .filter(|k| artifact.contains(k) || !tooling.contains(k))
+        .map(str::to_string)
+        .collect()
 }
 
 #[cfg(test)]
@@ -183,5 +203,37 @@ mod tests {
             "control: not a Haskell build"
         );
         assert!(consumed_haskell_builds(&raw, "d-absent.drv").is_empty());
+    }
+
+    /// shellcheck's wrapper also consumes `pandoc-cli`, a Haskell build, as a
+    /// build tool (q10). Named in a tooling field only, it is not counted;
+    /// named in an artifact field as well, it is.
+    #[test]
+    fn a_haskell_build_the_root_names_only_as_tooling_is_not_consumed() {
+        let closure = |fields: &str| {
+            format!(
+                r#"{{"derivations": {{
+                  "d-wrap.drv": {{"env": {{"pname":"wrap","version":"1"{fields}}},
+                                 "inputs": {{"drvs": {{"d-hs.drv": {{"outputs":["out"]}},
+                                                      "d-doc.drv": {{"outputs":["out"]}}}}, "srcs": []}},
+                                 "outputs": {{"out": {{"path":"h-wrap"}}}}}},
+                  "d-hs.drv": {{"env": {{"pname":"hs","version":"1","setupCompilerEnvironmentPhase":"x"}},
+                               "outputs": {{"out": {{"path":"h-hs"}}}}}},
+                  "d-doc.drv": {{"env": {{"pname":"doc","version":"1","setupCompilerEnvironmentPhase":"x"}},
+                               "outputs": {{"out": {{"path":"h-doc"}}}}}}
+                }}}}"#
+            )
+        };
+        let raw = RawClosure::parse(&closure(r#","nativeBuildInputs":"/nix/store/h-doc""#)).unwrap();
+        assert_eq!(consumed_haskell_builds(&raw, "d-wrap.drv"), set(&["d-hs.drv"]));
+        let raw = RawClosure::parse(&closure(
+            r#","nativeBuildInputs":"/nix/store/h-doc","buildInputs":"/nix/store/h-doc""#,
+        ))
+        .unwrap();
+        assert_eq!(
+            consumed_haskell_builds(&raw, "d-wrap.drv"),
+            set(&["d-doc.drv", "d-hs.drv"]),
+            "control: also an artifact input, so counted"
+        );
     }
 }

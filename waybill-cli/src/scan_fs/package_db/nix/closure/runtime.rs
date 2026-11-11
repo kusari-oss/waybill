@@ -579,7 +579,11 @@ pub(crate) fn join(raw: &RawClosure, paths: &BTreeSet<String>) -> (BTreeSet<Stri
 /// closure, the identity ships.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum RuntimeEvidence {
-    /// Marks come from the runtime closure plus static linking.
+    /// Marks come from the runtime closure plus static linking. `static_linked`
+    /// holds the Haskell libraries linked into a runtime member, and the
+    /// Haskell builds a wrapper root consumed through `inputs.drvs` together
+    /// with what is linked into them, when the runtime closure does not
+    /// already hold those builds (x86_64-linux, q10).
     Closure {
         runtime: HashSet<MemberKey>,
         static_linked: HashSet<MemberKey>,
@@ -691,10 +695,34 @@ pub(crate) fn evidence(
         Some(Ok(rc)) => rc,
     };
     let (runtime_drvs, stray) = join(raw, &rc.paths);
-    let linked = static_link_set(raw, &runtime_drvs, declared().as_ref());
+    // Static linking is seeded from the runtime members and, when the
+    // evaluated root is a wrapper rather than a Haskell build itself, from the
+    // Haskell builds it consumed through `inputs.drvs`. The root is runtime by
+    // definition, and its consumed static build is what its binary was copied
+    // from. The runtime closure cannot be relied on to name that build: it
+    // does on aarch64-darwin, and on x86_64-linux it does not (q10), which
+    // left every library linked into shellcheck marked.
+    //
+    // A Haskell root is already a seed through the runtime closure, and its
+    // own `inputs.drvs` carries its test dependencies, which its declared
+    // edges exist to leave out.
+    let seeds: BTreeSet<String> = closure
+        .graph
+        .evaluated
+        .as_deref()
+        .filter(|r| !raw.derivations.get(*r).is_some_and(|d| d.is_haskell_builder()))
+        .map(|r| walk::consumed_haskell_builds(raw, r))
+        .unwrap_or_default();
+    let roots: BTreeSet<String> = runtime_drvs.union(&seeds).cloned().collect();
+    let linked = static_link_set(raw, &roots, declared().as_ref());
 
     let runtime: HashSet<MemberKey> = runtime_drvs.iter().filter_map(key_of).collect();
-    let static_linked: HashSet<MemberKey> = linked.members.iter().filter_map(key_of).collect();
+    let static_linked: HashSet<MemberKey> = linked
+        .members
+        .iter()
+        .chain(seeds.difference(&runtime_drvs))
+        .filter_map(key_of)
+        .collect();
 
     // FR-003 / C216 `unmatched-runtime-paths`: a runtime path no closure
     // output produced, or whose producer became no component. Counted, never
@@ -716,6 +744,7 @@ pub(crate) fn evidence(
     tracing::info!(
         runtime_paths = rc.paths.len(),
         runtime_members = runtime.len(),
+        seeded_from_root = seeds.difference(&runtime_drvs).count(),
         statically_linked = static_linked.len(),
         static_link_source = linked.source.wire(),
         unmatched,

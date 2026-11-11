@@ -65,7 +65,7 @@ pub(crate) const ARTIFACT_FIELDS: &[&str] = &[
 /// credited by the second hop's own declaration, at whatever depth it sits,
 /// and adding these attributes to the constant is the whole of the fix. A
 /// root-anchored walk would have needed a propagation phase; this does not.
-const TOOLING_FIELDS: &[&str] = &[
+pub(crate) const TOOLING_FIELDS: &[&str] = &[
     "nativeBuildInputs",
     "depsBuildBuild",
     "depsBuildHost",
