@@ -229,13 +229,18 @@ fn find_buildinfo_section(bytes: &[u8]) -> Option<usize> {
     None
 }
 
+/// First offset of `needle` in `haystack`.
+///
+/// `memchr::memmem` rather than `windows().position()`: the latter compares
+/// the needle at every byte, and the Tier 2 fallback runs it over the whole
+/// of every binary that is not Go. A `--nix-closure` scan reads the store
+/// outputs of hundreds of closure members (#1415), where that naive search
+/// was most of the scan's time (measured on openssh, see the PR).
 fn memmem(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     if needle.is_empty() || haystack.len() < needle.len() {
         return None;
     }
-    haystack
-        .windows(needle.len())
-        .position(|w| w == needle)
+    memchr::memmem::find(haystack, needle)
 }
 
 // ---------------------------------------------------------------------------
@@ -1106,6 +1111,26 @@ fn build_golang_purl(module: &str, version: &str) -> Option<Purl> {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// `memmem` keeps the contract of the naive search it replaced: the
+    /// FIRST offset, and `None` for an empty or oversized needle.
+    #[test]
+    fn memmem_returns_the_first_offset_and_handles_edges() {
+        let hay = b"xx\xff Go buildinf:yy\xff Go buildinf:";
+        assert_eq!(memmem(hay, BUILDINFO_MAGIC), Some(2));
+        assert_eq!(memmem(b"no marker here", BUILDINFO_MAGIC), None);
+        assert_eq!(memmem(hay, b""), None);
+        assert_eq!(memmem(b"ab", b"abc"), None);
+        assert_eq!(memmem(b"abc", b"abc"), Some(0));
+        // Across a large haystack, the same answer as the old search.
+        let mut big = vec![0u8; 1 << 20];
+        big[700_000..700_000 + BUILDINFO_MAGIC.len()].copy_from_slice(BUILDINFO_MAGIC);
+        let naive = big
+            .windows(BUILDINFO_MAGIC.len())
+            .position(|w| w == BUILDINFO_MAGIC);
+        assert_eq!(memmem(&big, BUILDINFO_MAGIC), naive);
+        assert_eq!(naive, Some(700_000));
+    }
 
     fn encode_uvarint(mut v: u64) -> Vec<u8> {
         let mut out = Vec::new();
