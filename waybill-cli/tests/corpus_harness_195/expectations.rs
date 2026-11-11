@@ -344,6 +344,71 @@ fn nix_fail(check_name: &'static str, observed: String, expected: &str, suggeste
     }
 }
 
+/// Milestone 1423 (T036, SC-007): scope from the runtime closure a
+/// substituter returns, and Haskell libraries kept runtime by static linking.
+///
+/// Structural only, like moat's: exact counts are the goldens' job, and this
+/// closure was measured on aarch64-darwin, not CI's x86_64-linux.
+pub fn nix_closure_shellcheck_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    let Some(method) = cdx_doc_property(&sboms.cdx, "waybill:closure-scope-method")
+        .and_then(|v| serde_json::from_str::<serde_json::Value>(&v).ok())
+    else {
+        return Err(nix_fail(
+            "m1423-scope-method-present",
+            "no waybill:closure-scope-method document property".to_string(),
+            "the C216 record",
+            "the closure tier did not run, or the scope pass stopped recording its method",
+        ));
+    };
+    if method["method"] != "runtime-closure" || method["verified"] != true {
+        return Err(nix_fail(
+            "m1423-runtime-closure-used",
+            method.to_string(),
+            "method runtime-closure, verified true: cache.nixos.org holds this output",
+            "the substituter query, its signature verification, or the join to members \
+             failed; read unavailable-reason",
+        ));
+    }
+    let comps: Vec<&serde_json::Value> = {
+        fn walk<'a>(cs: &'a serde_json::Value, out: &mut Vec<&'a serde_json::Value>) {
+            for c in cs.as_array().into_iter().flatten() {
+                out.push(c);
+                walk(&c["components"], out);
+            }
+        }
+        let mut v = Vec::new();
+        walk(&sboms.cdx["components"], &mut v);
+        v
+    };
+    fn source(c: &serde_json::Value) -> Option<&str> {
+        c["properties"].as_array().and_then(|ps| {
+            ps.iter()
+                .find(|p| p["name"] == "waybill:scope-classification-source")
+                .and_then(|p| p["value"].as_str())
+        })
+    }
+    let linked: Vec<&&serde_json::Value> =
+        comps.iter().filter(|c| source(c) == Some("statically-linked")).collect();
+    if linked.is_empty() {
+        return Err(nix_fail(
+            "m1423-static-link-present",
+            "0 statically-linked components".to_string(),
+            "the Haskell libraries linked into shellcheck (50 per the cabal metadata, \
+             measured on aarch64-darwin)",
+            "static-link detection stopped finding the static ShellCheck build's libraries",
+        ));
+    }
+    if let Some(c) = linked.iter().find(|c| c["scope"] == "excluded") {
+        return Err(nix_fail(
+            "m1423-static-link-not-excluded",
+            format!("`{}` is statically linked yet scope=excluded", c["name"]),
+            "no scope: its code ships inside the binary",
+            "the scope pass marked a member it also classified as statically linked",
+        ));
+    }
+    Ok(())
+}
+
 /// Structural invariants only; exact counts are the goldens' job, and the
 /// closure is per-system (CI's x86_64-linux closure is not the one measured
 /// on aarch64-darwin when the target was added).
