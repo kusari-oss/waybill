@@ -408,6 +408,13 @@ fn build_deps_dev_source(
 }
 
 #[derive(Args, Debug)]
+// Milestone 1283 — the Nix tiers `--nix-allow-ifd` applies to. `multiple`, so
+// the two tiers stay combinable.
+#[command(group(
+    clap::ArgGroup::new("nix_tier")
+        .args(["nix_closure", "nix_eval"])
+        .multiple(true)
+))]
 pub struct ScanArgs {
     /// Directory to walk for package artifacts.
     ///
@@ -750,6 +757,10 @@ pub struct ScanArgs {
         requires = "nix_closure"
     )]
     pub nix_closure_require_root_contents: bool,
+
+    /// Allow import-from-derivation during Nix evaluation (milestone 1283).
+    #[arg(long = "nix-allow-ifd", default_value_t = false, requires = "nix_tier")]
+    pub nix_allow_ifd: bool,
 
     /// The Nix platform to evaluate for, e.g. `x86_64-linux`.
     ///
@@ -4472,7 +4483,18 @@ pub async fn execute(
     // environment being unable to satisfy a valid one.
     // Milestone 1283 (#1283) — the import-from-derivation policy every Nix
     // tier evaluates under, verified by each tier's pre-flight.
-    let ifd_policy = scan_fs::package_db::nix::eval::preflight::IfdPolicy::default();
+    let ifd_policy = if args.nix_allow_ifd {
+        scan_fs::package_db::nix::eval::preflight::IfdPolicy::Allow
+    } else {
+        scan_fs::package_db::nix::eval::preflight::IfdPolicy::Refuse
+    };
+    if args.nix_allow_ifd && offline {
+        // Contract cli-nix-allow-ifd: accepted, but no tier runs offline, so
+        // nothing was evaluated with import-from-derivation allowed.
+        tracing::info!(
+            "--nix-allow-ifd had no effect: --offline admits no Nix tier, so nothing was evaluated"
+        );
+    }
     let nix_eval_cfg = if args.nix_eval {
         use scan_fs::package_db::nix::eval::TierConfig;
         let system = match args.nix_eval_system.as_deref() {
@@ -8552,6 +8574,7 @@ mod tests {
             nix_closure: false,
             nix_closure_attr: None,
             nix_closure_require_root_contents: false,
+            nix_allow_ifd: false,
             no_nixpkgs_haskell: false,
             no_nixpkgs_haskell_closure: false,
             no_nixpkgs_security: false,
