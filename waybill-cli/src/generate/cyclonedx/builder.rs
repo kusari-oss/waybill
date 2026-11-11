@@ -1453,19 +1453,17 @@ impl CycloneDxBuilder {
                 }
                 base.insert("purl".to_string(), json!(component.purl.as_str()));
                 base.insert("bom-ref".to_string(), json!(bom_ref));
-                // Milestone 1366 (#1365) — C207 rides CycloneDX's own
-                // `evidence.identity[]`, per Constitution Principle V's
-                // native-field precedence. The generic property emission for
-                // this key is suppressed below, so the signal has exactly one
-                // home per format; emitting both would state the fact twice
-                // and break the SymmetricEqual parity assertion.
+                // Milestone 1366 (#1365) — a derived identifier is recorded in
+                // CycloneDX's own `evidence.identity[]`, per Constitution
+                // Principle V's native-field precedence. The C207 evidence tag
+                // itself is the generic `waybill:closure-ecosystem-identity`
+                // property emitted below (#1442).
                 let derived_identity = component
                     .extra_annotations
                     .get(crate::scan_fs::package_db::nix::closure::ecosystem_identity::ANN_ECOSYSTEM_IDENTITY)
                     .and_then(|v| v.as_str())
-                    .map(|evidence| super::evidence::DerivedIdentity {
+                    .map(|_| super::evidence::DerivedIdentity {
                         concluded_value: component.purl.as_str(),
-                        evidence,
                     });
                 base.insert(
                     "evidence".to_string(),
@@ -1978,21 +1976,6 @@ impl CycloneDxBuilder {
                     // `c.evidence.source_file_paths` higher up in
                     // this function — re-emitting from the bag
                     // would double-stamp and produce value drift.
-                    continue;
-                }
-                if key
-                    == crate::scan_fs::package_db::nix::closure::ecosystem_identity::ANN_ECOSYSTEM_IDENTITY
-                {
-                    // Milestone 1366 (#1365): CycloneDX carries this natively
-                    // in `evidence.identity[]` just above, so re-emitting it
-                    // as a property would state the same fact twice in one
-                    // document and break C207's SymmetricEqual parity against
-                    // the SPDX annotation. SPDX 2.3 and SPDX 3 have no native
-                    // carrier and DO emit the annotation — the same split
-                    // `ANN_CLOSURE_PATCHES` has for `pedigree`, and the reason
-                    // this cannot use `is_field_owned_annotation_key`, which
-                    // both pass-throughs consult and which would drop it from
-                    // SPDX too.
                     continue;
                 }
                 if key == crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES {

@@ -11,13 +11,16 @@ use waybill_common::resolution::{FileOccurrence, ResolutionEvidence, ResolutionT
 /// short of proof"; 1.0 would say something the measurement does not support.
 const DERIVED_IDENTITY_CONFIDENCE: f64 = 0.8;
 
-/// A derived PURL and the evidence that supported deriving it (C207).
+/// A PURL derived by the milestone-1366 closure ecosystem identity pass.
+///
+/// Which evidence supported the derivation (C207) is not carried here: it is
+/// a `waybill:closure-ecosystem-identity` component property, because
+/// CycloneDX 1.6 closes `evidence.identity[].methods[]` to `technique`,
+/// `confidence` and `value` (#1442).
 #[derive(Debug, Clone, Copy)]
 pub struct DerivedIdentity<'a> {
     /// The PURL the pass concluded, e.g. `pkg:pypi/urllib3@2.6.3`.
     pub concluded_value: &'a str,
-    /// The wire form of the candidate evidence.
-    pub evidence: &'a str,
 }
 
 /// Confidence value used for the additional `methods[]` entries
@@ -120,19 +123,23 @@ pub fn build_evidence(
         }));
     }
 
-    // Milestone 1366 (#1365) — C207, natively.
+    // Milestone 1366 (#1365) — the derived identifier, natively.
     //
     // `component.evidence.identity[]` is CycloneDX 1.6's own construct for
     // "an identifier was CONCLUDED, by this technique, with this confidence",
-    // which is precisely what the nix closure's ecosystem identity pass does.
-    // Constitution Principle V requires the native field where one exists, so
-    // this is the signal's only home on the CDX path and the generic
-    // `extra_annotations` property is suppressed in `builder.rs`.
+    // which is precisely what the nix closure's ecosystem identity pass does,
+    // so Constitution Principle V puts the conclusion here.
     //
     // Note this reaches the OPPOSITE conclusion to C201's audit, which
     // rejected the same construct — correctly, because C201 records why an
     // identity was *rejected* and `identity[]` has no slot for that. Here a
     // value was concluded.
+    //
+    // #1442: the C207 evidence tag is NOT written into the method object. The
+    // schema closes it to `technique`, `confidence` and `value`, and `value`
+    // means the observed contents of the evidence, not waybill's closed-enum
+    // name for its kind. C207 is the `waybill:closure-ecosystem-identity`
+    // component property, the same row both SPDX formats carry.
     let identity_obj = match derived_identity {
         None => json!({
             "field": "purl",
@@ -143,7 +150,6 @@ pub fn build_evidence(
             methods.push(json!({
                 "technique": "manifest-analysis",
                 "confidence": DERIVED_IDENTITY_CONFIDENCE,
-                "waybill-closure-ecosystem-evidence": d.evidence,
             }));
             json!({
                 "field": "purl",

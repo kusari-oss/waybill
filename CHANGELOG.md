@@ -79,6 +79,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A `--nix-closure` CycloneDX document with re-identified Python
+  members is schema-valid again.** Milestone 1366 recorded why a closure
+  member's `pkg:pypi` identifier was derived by adding a
+  `waybill-closure-ecosystem-evidence` key to the member's
+  `evidence.identity[].methods[]` entry. CycloneDX 1.6 allows only
+  `technique`, `confidence` and `value` there, so each re-identified
+  component was a schema error: 75 on moat. The value now travels as the
+  `waybill:closure-ecosystem-identity` component property, the same row
+  SPDX 2.3 and SPDX 3 carry; the derived PURL is still the identity
+  entry's `concludedValue`. Consumers that read the old key should read
+  the property (#1442).
 - **Cargo: a default-enabled optional dependency with a hyphenated or
   renamed name is no longer marked excluded.** The set of dependencies
   `cargo metadata` resolves as activated was built from
