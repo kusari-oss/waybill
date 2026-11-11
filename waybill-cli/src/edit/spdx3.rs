@@ -122,6 +122,19 @@ impl SbomAdapter for Spdx3 {
                 }
             }
         }
+        // `root usesTool member`, scoped `build`: the member builds the
+        // artifact and is not in it (milestone 1277), the counterpart of
+        // CycloneDX's bare `scope: excluded` (milestone 1423).
+        let build_tools: BTreeSet<String> = self
+            .graph()
+            .iter()
+            .filter(|e| {
+                ty(e) == "LifecycleScopedRelationship"
+                    && e.get("relationshipType").and_then(Value::as_str) == Some("usesTool")
+                    && e.get("scope").and_then(Value::as_str) == Some("build")
+            })
+            .flat_map(|e| strs(e.get("to")))
+            .collect();
         self.graph()
             .iter()
             .filter(|e| is_component(e))
@@ -147,6 +160,9 @@ impl SbomAdapter for Spdx3 {
                     .collect();
                 if let Some(p) = e.get("software_primaryPurpose").and_then(Value::as_str) {
                     roles.insert(p.to_string());
+                }
+                if build_tools.contains(&id) {
+                    scopes.insert(Scope::NotInArtifact);
                 }
                 Some(ComponentView {
                     purl: e.get("software_packageUrl").and_then(Value::as_str).map(str::to_string),

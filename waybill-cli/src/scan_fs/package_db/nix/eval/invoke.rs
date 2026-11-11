@@ -107,6 +107,19 @@ pub(crate) fn run_bounded(
 pub(crate) fn verify_ifd_refusal(
     budget: Duration,
 ) -> Result<IfdRefusalVerified, DegradationReason> {
+    verify_ifd_refusal_with_config(budget).map(|(v, _)| v)
+}
+
+/// [`verify_ifd_refusal`], also returning the full `nix config show` listing
+/// it read.
+///
+/// Milestone 1423: the closure tier reads the configured `substituters` from
+/// the same listing rather than starting a second `nix` process for it
+/// (`specs/1423-nix-runtime-scope/measurements/nix-behaviour/q1-*`: the full
+/// listing carries `substituters = …` with `extra-substituters` merged in).
+pub(crate) fn verify_ifd_refusal_with_config(
+    budget: Duration,
+) -> Result<(IfdRefusalVerified, String), DegradationReason> {
     let out = run_bounded(
         &["config", "show", "--option", preflight::IFD_SETTING, "false"],
         budget,
@@ -117,7 +130,8 @@ pub(crate) fn verify_ifd_refusal(
             out.stderr.trim()
         )));
     }
-    preflight::verify_from_config_output(&out.stdout)
+    let verified = preflight::verify_from_config_output(&out.stdout)?;
+    Ok((verified, out.stdout))
 }
 
 /// Ask Nix which platform this host is.

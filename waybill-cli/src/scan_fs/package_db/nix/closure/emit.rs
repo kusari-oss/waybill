@@ -437,6 +437,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         let component = ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: name.to_string(),
             version: version.to_string(),
             purl,
@@ -680,6 +681,7 @@ mod tests {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let roles = classify(&raw);
         components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -762,6 +764,7 @@ mod tests {
         );
 
         let built = components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -820,6 +823,7 @@ mod tests {
         assert_eq!(roles["v2.drv"], DerivationRole::BuildTooling);
 
         let c = components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -877,6 +881,7 @@ mod tests {
         assert_eq!(roles["d-fix.drv"], DerivationRole::Unreferenced);
 
         let names: Vec<&str> = components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,

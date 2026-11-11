@@ -622,6 +622,7 @@ pub(crate) mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new(purl).unwrap(),
             name: "x".to_string(),
             version: "1".to_string(),

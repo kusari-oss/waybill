@@ -20,14 +20,14 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use waybill_common::resolution::{
-    ArtifactPresence, EnrichmentProvenance, Relationship, RelationshipType, ResolutionEvidence,
+    EnrichmentProvenance, Relationship, RelationshipType, ResolutionEvidence,
     ResolutionTechnique, ResolvedComponent,
 };
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
-use super::classify::DerivationRole;
-use super::derivation::{store_basename, RawDerivation};
+use super::derivation::store_basename;
 use super::emit;
+use super::member_key::{key_of_component, key_of_derivation, MemberKey};
 use super::ClassifiedClosure;
 use crate::scan_fs::binary::embedded::{self, SelfDescription, SelfEcosystem};
 use crate::scan_fs::package_db::PackageDbEntry;
@@ -288,46 +288,9 @@ impl ContentsOutcome {
     }
 }
 
-/// How a derivation and the component it became are matched.
-///
-/// A member that declares a `pname` is matched on `(name, version)`, the join
-/// the edge builder already uses and one that survives the identity passes
-/// rewriting a PURL. A `pname`-less member is matched on the hash-bearing
-/// PURL it was emitted under, because 56 of them are named `source` and share
-/// the pair.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-enum MemberKey {
-    Named(String, String),
-    Hashed(String),
-}
-
-fn key_of_derivation(drv: &RawDerivation, key: &str) -> Option<MemberKey> {
-    if emit::is_hash_keyed_member(drv) {
-        let (coordinate, _) = emit::coordinate(drv, key)?;
-        let purl = Purl::new(&coordinate).ok()?;
-        Some(MemberKey::Hashed(purl.as_str().to_string()))
-    } else {
-        Some(MemberKey::Named(
-            drv.pname()?.to_string(),
-            drv.version().unwrap_or_default().to_string(),
-        ))
-    }
-}
-
-fn key_of_component(c: &ResolvedComponent) -> Option<MemberKey> {
-    c.extra_annotations.get(emit::ANN_CLOSURE_ROLE)?;
-    if c.extra_annotations.contains_key(super::member::ANN_MEMBER_ROLE) {
-        Some(MemberKey::Hashed(c.purl.as_str().to_string()))
-    } else {
-        Some(MemberKey::Named(c.name.clone(), c.version.clone()))
-    }
-}
-
 #[derive(Default)]
 struct MemberOutputs {
     outputs: Vec<PathBuf>,
-    /// Any derivation behind this identity goes into the artifact.
-    ships: bool,
     is_root: bool,
 }
 
@@ -361,10 +324,6 @@ pub(crate) fn read(
         let slot = members.entry(mk).or_default();
         slot.outputs
             .extend(drv.output_paths().map(|p| store.join(store_basename(p))));
-        // The evaluated package is the artifact, whatever its role says
-        // about who references it (nothing does).
-        slot.ships |=
-            is_root || matches!(role, DerivationRole::ArtifactInput | DerivationRole::Both);
         slot.is_root |= is_root;
     }
 
@@ -395,8 +354,11 @@ pub(crate) fn read(
     };
     let mut root_label = None;
     let mut edges: BTreeSet<(usize, String)> = BTreeSet::new();
-    // module PURL → (entry, reached by a member that ships)
-    let mut recovered: BTreeMap<String, (PackageDbEntry, bool)> = BTreeMap::new();
+    // module PURL → entry. Whether a module is in the artifact is NOT
+    // decided here: milestone 1423 moved that to the scope pass, which reads
+    // the host → module edges below against the runtime closure, so exactly
+    // one place decides presence.
+    let mut recovered: BTreeMap<String, PackageDbEntry> = BTreeMap::new();
     let mut identities = Vec::new();
 
     // 3. Read.
@@ -425,10 +387,7 @@ pub(crate) fn read(
                 yielded = true;
                 let purl = entry.purl.as_str().to_string();
                 edges.insert((member, purl.clone()));
-                recovered
-                    .entry(purl)
-                    .and_modify(|(_, ships)| *ships |= m.ships)
-                    .or_insert((entry, m.ships));
+                recovered.entry(purl).or_insert(entry);
             }
         }
 
@@ -465,14 +424,14 @@ pub(crate) fn read(
     // 4. Recovered modules become components, unless the document already
     //    has one at that identifier — then only the edge is new.
     let mut new_components = Vec::new();
-    for (purl, (entry, ships)) in recovered {
+    for (purl, entry) in recovered {
         if let Some(kind) = module_ecosystem(&entry.purl) {
             *record.modules.entry(kind).or_default() += 1;
         }
         if existing_purls.contains_key(&purl) {
             continue;
         }
-        new_components.push(component_from_entry(&entry, ships));
+        new_components.push(component_from_entry(&entry));
     }
 
     debug_assert!(record.is_consistent(), "C213 counts must add up: {record:?}");
@@ -500,7 +459,7 @@ fn module_ecosystem(purl: &Purl) -> Option<&'static str> {
 /// standalone scan of the same binary would emit. A test pins the two
 /// together field by field, because a mirror is exactly the kind of second
 /// copy that drifts.
-fn component_from_entry(entry: &PackageDbEntry, ships: bool) -> ResolvedComponent {
+fn component_from_entry(entry: &PackageDbEntry) -> ResolvedComponent {
     ResolvedComponent {
         name: entry.name.clone(),
         version: entry.version.clone(),
@@ -551,10 +510,11 @@ fn component_from_entry(entry: &PackageDbEntry, ships: bool) -> ResolvedComponen
         ),
         extra_annotations: entry.extra_annotations.clone(),
         binary_role: entry.binary_role,
-        // FR-010 — a module reached only through build-only members is not
-        // in the artifact; one any shipped member reaches is left unclaimed,
-        // exactly as a shipped member itself is.
-        artifact_presence: (!ships).then_some(ArtifactPresence::NotInArtifact),
+        // Milestone 1423 — undecided here. The scope pass decides a module's
+        // presence from its hosts' (`closure_role_scope::assign_role_scope`),
+        // so exactly one place decides it.
+        artifact_presence: None,
+        scope_evidence: None,
     }
 }
 
@@ -702,6 +662,7 @@ mod tests {
         let roles = classify(&raw);
         let graph = super::super::graph::project(&raw, &emit::emitted_drv_keys(&raw, &roles));
         ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -943,15 +904,19 @@ mod tests {
             1,
             "one component however many members reach it"
         );
+        // Milestone 1423 (T019) — this pass no longer decides presence; the
+        // scope pass does, from the host → module edges asserted below. Both
+        // modules leave here undecided, and
+        // `closure_role_scope::tests::m1423_module_*` pins the decision.
         assert_eq!(
             presence("pkg:golang/example.test/waybill-fixture-shared@v1.0.0"),
             Some(None),
-            "a shipped member reaches it, so it is not marked absent"
+            "undecided here"
         );
         assert_eq!(
             presence("pkg:golang/example.test/waybill-fixture-toolonly@v0.1.0"),
-            Some(Some(ArtifactPresence::NotInArtifact)),
-            "only the build tool reaches it"
+            Some(None),
+            "undecided here, even though only the build tool reaches it"
         );
         let to_shared = out
             .relationships(&c)

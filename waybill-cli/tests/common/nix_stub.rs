@@ -45,6 +45,43 @@ pub struct NixStub<'a> {
     pub rows: Rows<'a>,
     /// The flakeref suffix (after `#`) whose `derivation show` succeeds.
     pub attr: &'a str,
+    /// Milestone 1423 — what `nix path-info -r` lists for the evaluated
+    /// output, one store path per line. `None`: every store answers
+    /// `path '…' is not valid` (exit 1), as nix does for an output no store
+    /// holds.
+    pub runtime: Option<String>,
+    /// Which store holds [`Self::runtime`]: `None` for the local store, or a
+    /// substituter URL, in which case only `--store <url>` answers.
+    pub runtime_store: Option<String>,
+    /// The configured substituters, printed in `config show`'s full listing
+    /// (`substituters = …`) and by `config show substituters`.
+    pub substituters: Vec<String>,
+    /// Whether `nix store verify` accepts the remote answer. `false` answers
+    /// as nix does for an untrusted signature (exit 2).
+    pub verify_ok: bool,
+    /// The seeded `hackage-packages.nix`, and the text of every
+    /// `configuration-ghc-*.nix`. `None` seeds the empty set `{ }`.
+    pub package_set: Option<(&'a str, &'a str)>,
+    /// `NIX_STORE_DIR` for the scan, so the contents pass reads synthesized
+    /// outputs instead of the host's store.
+    pub store_dir: Option<PathBuf>,
+}
+
+impl Default for NixStub<'_> {
+    fn default() -> Self {
+        Self {
+            project: PathBuf::new(),
+            closure: "",
+            rows: Rows::Json("[]"),
+            attr: DEFAULT_ATTR,
+            runtime: None,
+            runtime_store: None,
+            substituters: Vec::new(),
+            verify_ok: true,
+            package_set: None,
+            store_dir: None,
+        }
+    }
 }
 
 /// The three documents one scan wrote, plus what the binary printed.
@@ -60,14 +97,23 @@ pub struct Scan {
     _cache: tempfile::TempDir,
 }
 
-/// The nixpkgs cache the Haskell tiers read, seeded empty so no test fetches.
-fn seed_cache() -> tempfile::TempDir {
+/// The nixpkgs cache the Haskell tiers read, seeded so no test fetches:
+/// empty unless the test supplies a package set and compiler configuration.
+fn seed_cache(set: Option<(&str, &str)>) -> tempfile::TempDir {
+    // Every series the resolver may ask for when a supplied set is used, as
+    // `nix_closure_hackage_identity.rs` seeds it; the original five otherwise,
+    // so the suites written against this stub see exactly what they did.
+    let series: &[&str] = match set {
+        Some(_) => &["9.16.x", "9.14.x", "9.12.x", "9.10.x", "9.8.x", "9.6.x", "9.4.x", "9.0.x"],
+        None => &["9.4.x", "9.6.x", "9.8.x", "9.10.x", "9.12.x"],
+    };
+    let (packages, config) = set.unwrap_or(("{ }\n", "{ }\n"));
     let dir = tempfile::tempdir().expect("tempdir");
     let rev = dir.path().join(REV);
     std::fs::create_dir_all(&rev).expect("mkdir rev");
-    std::fs::write(rev.join("hackage-packages.nix"), "{ }\n").expect("write");
-    for s in ["9.4.x", "9.6.x", "9.8.x", "9.10.x", "9.12.x"] {
-        std::fs::write(rev.join(format!("configuration-ghc-{s}.nix")), "{ }\n").expect("write");
+    std::fs::write(rev.join("hackage-packages.nix"), packages).expect("write");
+    for s in series {
+        std::fs::write(rev.join(format!("configuration-ghc-{s}.nix")), config).expect("write");
     }
     dir
 }
@@ -83,12 +129,32 @@ impl NixStub<'_> {
         };
         let attr = self.attr;
         let closure = self.closure;
+        let subs = self.substituters.join(" ");
+        // nix's own wording for an output a store does not hold (q2 e).
+        let miss = r#"eval "last=\${$#}"; echo "don't know how to build these paths:" >&2; echo "error: path '$last' is not valid" >&2; exit 1"#;
+        let path_info = match (&self.runtime, &self.runtime_store) {
+            (None, _) => miss.to_string(),
+            (Some(listing), None) => format!(
+                "case \"$*\" in *--store*) {miss} ;; *) cat <<'RTEOF'\n{listing}\nRTEOF\n ;; esac"
+            ),
+            (Some(listing), Some(url)) => format!(
+                "case \"$*\" in *\"--store {url} \"*) cat <<'RTEOF'\n{listing}\nRTEOF\n ;; *) {miss} ;; esac"
+            ),
+        };
+        let verify = if self.verify_ok {
+            "exit 0".to_string()
+        } else {
+            r#"eval "last=\${$#}"; echo "path '$last' is untrusted" >&2; exit 2"#.to_string()
+        };
         format!(
             r##"#!/bin/sh
 echo "$*" >> '{log}'
 case "$*" in
   *builtins.currentSystem*) printf '%s' 'aarch64-darwin' ;;
-  "config show"*) echo 'allow-dirty = true'; echo 'allow-import-from-derivation = false' ;;
+  "config show substituters"*) echo '{subs}' ;;
+  "config show"*) echo 'allow-dirty = true'; echo 'allow-import-from-derivation = false'; echo 'substituters = {subs}' ;;
+  "path-info"*) {path_info} ;;
+  "store verify"*) {verify} ;;
 {rows_case}
   "derivation show"*"#{attr}") cat <<'CLOSUREEOF'
 {closure}
@@ -126,7 +192,7 @@ esac
     }
 
     fn run(&self, dir: tempfile::TempDir, out_dir: &Path, names: [&str; 3], extra: &[&str]) -> Scan {
-        let cache = seed_cache();
+        let cache = seed_cache(self.package_set);
         let bin = dir.path().join("bin");
         std::fs::create_dir_all(&bin).expect("mkdir bin");
         let nix = bin.join("nix");
@@ -140,7 +206,11 @@ esac
         let cdx_path = out_dir.join(names[0]);
         let spdx23_path = out_dir.join(names[1]);
         let spdx3_path = out_dir.join(names[2]);
-        let out = Command::new(env!("CARGO_BIN_EXE_waybill"))
+        let mut cmd = Command::new(env!("CARGO_BIN_EXE_waybill"));
+        if let Some(store) = &self.store_dir {
+            cmd.env("NIX_STORE_DIR", store);
+        }
+        let out = cmd
             .args(["sbom", "scan", "--path"])
             .arg(&self.project)
             .args([

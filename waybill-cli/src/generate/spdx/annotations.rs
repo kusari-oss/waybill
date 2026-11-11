@@ -1084,6 +1084,11 @@ pub fn annotate_document(
         if let Some(read) = summary.nix_closure_read_wire() {{
             push(&mut out, closure_summary::ANN_NIX_CLOSURE_READ, json!(read));
         }}
+        // Milestone 1423 (#1423): C216, same canonical string as the other
+        // two formats.
+        if let Some(method) = summary.closure_scope_method_wire() {{
+            push(&mut out, closure_summary::ANN_CLOSURE_SCOPE_METHOD, json!(method));
+        }}
     }}
 
     // Milestone 235 US4: C146 doc-scope Gradle-resolution-tier
@@ -1546,6 +1551,7 @@ mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new(purl).unwrap(),
             name: "demo".to_string(),
             version: "1".to_string(),

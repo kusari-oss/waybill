@@ -141,8 +141,13 @@ impl SbomAdapter for Cdx {
                 if !prop_values(c, "waybill:optional-derivation").is_empty() {
                     scopes.insert(Scope::Optional);
                 }
+                // `excluded` is also how CycloneDX carries a development, build,
+                // test or optional scope, and the lifecycle property read above
+                // says which. Only an `excluded` it does not explain means the
+                // component is not in the artifact (milestone 1423): a closure
+                // member, or a Go module `go mod why` proved unneeded.
                 if scopes.is_empty() && c.get("scope").and_then(Value::as_str) == Some("excluded") {
-                    scopes.insert(Scope::Development);
+                    scopes.insert(Scope::NotInArtifact);
                 }
                 let mut roles: BTreeSet<String> = prop_values(c, "waybill:component-role")
                     .into_iter()
@@ -542,9 +547,13 @@ mod tests {
 
     #[test]
     fn scope_comes_from_the_annotation_or_excluded() {
-        let a = Cdx::new(doc());
-        let d = a.components().into_iter().find(|c| c.id == "d").unwrap();
-        assert!(d.scopes.contains(&Scope::Development));
+        let mut v = doc();
+        v["components"][1]["scope"] = json!("excluded");
+        let a = Cdx::new(v);
+        let scopes = |id: &str| a.components().into_iter().find(|c| c.id == id).unwrap().scopes;
+        assert_eq!(scopes("d"), BTreeSet::from([Scope::Development]));
+        assert_eq!(scopes("c"), BTreeSet::from([Scope::NotInArtifact]));
+        assert!(scopes("b").is_empty());
     }
 
     #[test]

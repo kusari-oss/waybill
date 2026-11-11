@@ -1,0 +1,1343 @@
+//! Milestone 1423 (#1423) — a `--nix-closure` document's not-in-artifact
+//! marks come from the evaluated output's runtime closure, plus static
+//! linking, rather than from the build-graph role.
+//!
+//! Measured before this milestone: 951 grype findings sat on components
+//! outside the runtime closure across five targets, and only 175 of them were
+//! on marked components. The role is a property of the whole build graph, so
+//! a library *any* derivation links read as runtime (curl's closure presented
+//! python3, libxml2 and pcre2 that way).
+//!
+//! Every assertion is on the emitted documents, in all three formats, through
+//! the shared stub `nix` (`common/nix_stub.rs`), which answers
+//! `nix path-info -r` from a listing the test supplies and makes no network
+//! access. Every name is `waybill-fixture-*` (#285, #640).
+//!
+//! # Fixtures (`tests/fixtures/nix_closure_runtime/`)
+//!
+//! | file | shape | what it exercises |
+//! |---|---|---|
+//! | `closure-runtime.json` | curl / openssh | `xml` is an `artifact-input` the output does not reference (marked); `dnsroot` is `build-tooling` but referenced (unmarked); `bootlib` is a compiler-supplied boot library |
+//! | `closure-static.json` | shellcheck / ormolu | a static Haskell executable whose libraries are in its static build's `buildInputs` and propagate; `hspec` is a test-only dependency. The wrapper root names the static build only in `inputs.drvs`, so under US2 the walk reaches only the root |
+//! | `closure-embedded.json` | gh | Go modules read from a runtime binary and from a build tool's binary |
+//! | `closure-walk.json` | US2 | `perl` is `both` but reached only through a reached member's `nativeBuildInputs`; `xml` is an `artifact-input` of the build tool only |
+//! | `closure-tworoots.json` | US2 | two unconsumed derivations, so no evaluated package to walk from |
+//!
+//! US4 reuses `closure-runtime.json`, adding a CVE-named patch to one member
+//! the recipe keeps and one it drops (`us4_closure`).
+
+#![cfg(unix)]
+#![allow(clippy::unwrap_used)]
+
+mod common;
+mod sbom_edit_support;
+
+use std::collections::{BTreeSet, HashMap};
+use std::path::{Path, PathBuf};
+
+use common::nix_stub::{NixStub, Scan};
+use serde_json::Value;
+
+const C203: &str = "waybill:scope-classification-source";
+const C216: &str = "waybill:closure-scope-method";
+const SUBSTITUTER: &str = "https://cache.waybill-fixture.test";
+
+fn dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/nix_closure_runtime")
+}
+
+fn fixture(name: &str) -> String {
+    let path = dir().join(name);
+    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
+}
+
+/// A runtime listing in `nix path-info -r`'s plain form.
+fn listing(basenames: &[&str]) -> String {
+    basenames.iter().map(|b| format!("/nix/store/{b}")).collect::<Vec<_>>().join("\n")
+}
+
+/// curl's shape: the app's `bin` output, two libraries it links, the
+/// `build-tooling` member it references at runtime, and a darwin system path
+/// no closure member produces.
+fn curl_runtime() -> String {
+    listing(&["h-app-bin", "h-ssl", "h-z", "h-dns", "zz-libSystem-1"])
+}
+
+/// The compiler configuration: `bootlib` nulled, which is how milestone 926
+/// identifies a GHC boot library.
+const BOOT_CONFIG: &str = "self: super: {\n  waybill-fixture-bootlib = null;\n}\n";
+
+struct Run {
+    scan: Scan,
+}
+
+fn scan_with(stub: NixStub<'_>) -> Run {
+    Run { scan: stub.scan(&["--nix-closure", "--no-deps-dev"]) }
+}
+
+fn base<'a>(closure: &'a str) -> NixStub<'a> {
+    NixStub { project: dir().join("project"), closure, ..Default::default() }
+}
+
+// ---- reading the three documents ------------------------------------------
+
+impl Run {
+    fn cdx_components(&self) -> Vec<&Value> {
+        fn walk<'a>(v: &'a Value, out: &mut Vec<&'a Value>) {
+            if let Some(cs) = v["components"].as_array() {
+                for c in cs {
+                    out.push(c);
+                    walk(c, out);
+                }
+            }
+        }
+        let mut out = Vec::new();
+        walk(&self.scan.cdx, &mut out);
+        out
+    }
+
+    fn cdx(&self, name: &str) -> &Value {
+        self.cdx_components()
+            .into_iter()
+            .find(|c| c["name"] == name)
+            .unwrap_or_else(|| {
+                let names: Vec<String> = self
+                    .cdx_components()
+                    .iter()
+                    .filter_map(|c| c["name"].as_str().map(str::to_string))
+                    .collect();
+                panic!("no component named {name}; the document holds {names:?}")
+            })
+    }
+
+    /// Names CycloneDX marks `scope: excluded`.
+    fn cdx_marked(&self) -> BTreeSet<String> {
+        self.cdx_components()
+            .into_iter()
+            .filter(|c| c["scope"] == "excluded")
+            .filter_map(|c| c["name"].as_str().map(str::to_string))
+            .collect()
+    }
+
+    /// Names on the member side of every SPDX 2.3 `BUILD_TOOL_OF` edge.
+    fn spdx23_marked(&self) -> BTreeSet<String> {
+        let names: HashMap<&str, &str> = self.scan.spdx23["packages"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|p| Some((p["SPDXID"].as_str()?, p["name"].as_str()?)))
+            .collect();
+        self.scan.spdx23["relationships"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|r| r["relationshipType"] == "BUILD_TOOL_OF")
+            .filter_map(|r| names.get(r["spdxElementId"].as_str()?).map(|n| n.to_string()))
+            .collect()
+    }
+
+    /// Names on the `to` side of every SPDX 3 `usesTool` relationship scoped
+    /// `build`.
+    fn spdx3_marked(&self) -> BTreeSet<String> {
+        let graph = self.scan.spdx3["@graph"].as_array().unwrap();
+        let names: HashMap<&str, &str> = graph
+            .iter()
+            .filter_map(|e| Some((e["spdxId"].as_str()?, e["name"].as_str()?)))
+            .collect();
+        graph
+            .iter()
+            .filter(|e| e["type"] == "LifecycleScopedRelationship")
+            .filter(|e| e["relationshipType"] == "usesTool" && e["scope"] == "build")
+            .flat_map(|e| e["to"].as_array().cloned().unwrap_or_default())
+            .filter_map(|t| t.as_str().and_then(|t| names.get(t)).map(|n| n.to_string()))
+            .collect()
+    }
+
+    /// The marked set over the fixture's own closure members and modules,
+    /// asserted equal across the three formats (FR-009).
+    ///
+    /// Restricted to fixture names because the flake input itself (`nixpkgs`,
+    /// from `flake.lock`) carries CDX `scope: excluded` through a different
+    /// mechanism that SPDX does not express as a tool relationship; that is
+    /// #1428's population, not this feature's.
+    fn marked(&self) -> BTreeSet<String> {
+        let ours = |s: &BTreeSet<String>| -> BTreeSet<String> {
+            s.iter()
+                .filter(|n| n.starts_with("waybill-fixture-") || n.starts_with("example.test/"))
+                .cloned()
+                .collect()
+        };
+        let cdx = ours(&self.cdx_marked());
+        assert_eq!(ours(&self.spdx23_marked()), cdx, "SPDX 2.3 BUILD_TOOL_OF set vs CDX scope:excluded");
+        assert_eq!(ours(&self.spdx3_marked()), cdx, "SPDX 3 usesTool/build set vs CDX scope:excluded");
+        cdx
+    }
+
+    fn cdx_prop<'a>(c: &'a Value, key: &str) -> Option<&'a str> {
+        c["properties"]
+            .as_array()?
+            .iter()
+            .find(|p| p["name"] == key)
+            .and_then(|p| p["value"].as_str())
+    }
+
+    /// C203 per component name, in each format, asserted equal.
+    fn c203(&self, name: &str) -> Option<String> {
+        let cdx = Self::cdx_prop(self.cdx(name), C203).map(str::to_string);
+        let spdx23 = self.spdx23_envelope(name, C203);
+        let spdx3 = self.spdx3_envelope(name, C203);
+        assert_eq!(spdx23, cdx, "C203 on {name}: SPDX 2.3 vs CDX");
+        assert_eq!(spdx3, cdx, "C203 on {name}: SPDX 3 vs CDX");
+        cdx
+    }
+
+    fn spdx23_envelope(&self, name: &str, field: &str) -> Option<String> {
+        self.scan.spdx23["packages"]
+            .as_array()?
+            .iter()
+            .find(|p| p["name"] == name)?["annotations"]
+            .as_array()?
+            .iter()
+            .filter_map(|a| a["comment"].as_str())
+            .find_map(|raw| envelope(raw, field))
+    }
+
+    fn spdx3_envelope(&self, name: &str, field: &str) -> Option<String> {
+        let graph = self.scan.spdx3["@graph"].as_array()?;
+        let id = graph.iter().find(|e| e["name"] == name)?["spdxId"].as_str()?.to_string();
+        graph
+            .iter()
+            .filter(|e| e["type"] == "Annotation")
+            .filter(|e| e["subject"].as_str() == Some(id.as_str()))
+            .filter_map(|e| e["statement"].as_str())
+            .find_map(|raw| envelope(raw, field))
+    }
+
+    /// C216 in each format, asserted equal, parsed.
+    fn c216(&self) -> Option<Value> {
+        let cdx = self.scan.cdx["metadata"]["properties"]
+            .as_array()
+            .and_then(|ps| ps.iter().find(|p| p["name"] == C216))
+            .and_then(|p| p["value"].as_str())
+            .map(str::to_string);
+        let spdx23 = self.scan.spdx23["annotations"]
+            .as_array()
+            .and_then(|a| a.iter().filter_map(|x| x["comment"].as_str()).find_map(|r| envelope(r, C216)));
+        let spdx3 = self.scan.spdx3["@graph"].as_array().and_then(|g| {
+            g.iter()
+                .filter(|e| e["type"] == "Annotation")
+                .filter_map(|e| e["statement"].as_str())
+                .find_map(|r| envelope(r, C216))
+        });
+        assert_eq!(spdx23, cdx, "C216: SPDX 2.3 vs CDX");
+        assert_eq!(spdx3, cdx, "C216: SPDX 3 vs CDX");
+        cdx.map(|s| serde_json::from_str(&s).unwrap())
+    }
+
+    /// Every component carrying a closure role, by name.
+    fn closure_members(&self) -> BTreeSet<String> {
+        self.cdx_components()
+            .into_iter()
+            .filter(|c| Self::cdx_prop(c, "waybill:closure-role").is_some())
+            .filter_map(|c| c["name"].as_str().map(str::to_string))
+            .collect()
+    }
+
+    fn nix_log(&self) -> &str {
+        &self.scan.nix_log
+    }
+}
+
+/// The value of a milestone-071 annotation envelope, when it carries `field`.
+fn envelope(raw: &str, field: &str) -> Option<String> {
+    let v: Value = serde_json::from_str(raw).ok()?;
+    (v.get("field")?.as_str()? == field).then(|| v.get("value")?.as_str().map(str::to_string))?
+}
+
+fn names(v: &[&str]) -> BTreeSet<String> {
+    v.iter().map(|s| s.to_string()).collect()
+}
+
+// ---- US1: the runtime closure decides (FR-001, FR-003, FR-004, FR-007) ----
+
+/// FR-001 in all three formats: members outside the runtime closure are
+/// marked, members inside it are not, whatever their role.
+#[test]
+fn us1_runtime_members_unmarked_and_others_marked() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(NixStub { runtime: Some(curl_runtime()), ..base(&closure) });
+    assert_eq!(
+        run.marked(),
+        names(&[
+            // An `artifact-input` the output does not reference: python3,
+            // libxml2 and pcre2 on curl.
+            "waybill-fixture-xml",
+            "waybill-fixture-py",
+            // Not a Hackage component without the package set, so not
+            // compiler-supplied, and not referenced.
+            "waybill-fixture-bootlib",
+        ]),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    for n in ["waybill-fixture-ssl", "waybill-fixture-z", "waybill-fixture-xml", "waybill-fixture-py"] {
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+}
+
+/// FR-001 in both directions, on the shape of openssh's `dns-root-data`:
+/// the role says `build-tooling`, the runtime closure references it, and the
+/// runtime closure wins. The control is the same scan without a runtime
+/// answer, where the role rule still marks it.
+#[test]
+fn us1_build_tooling_member_inside_runtime_closure_is_unmarked() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(NixStub { runtime: Some(curl_runtime()), ..base(&closure) });
+    let dns = run.cdx("waybill-fixture-dnsroot");
+    assert_eq!(Run::cdx_prop(dns, "waybill:closure-role"), Some("build-tooling"));
+    assert!(!run.marked().contains("waybill-fixture-dnsroot"), "referenced, so it ships");
+    assert_eq!(run.c203("waybill-fixture-dnsroot").as_deref(), Some("runtime-closure"));
+
+    // CONTROL: no store holds the output, so the walk decides, and it reaches
+    // `dnsroot` only through `nativeBuildInputs`, so it marks it.
+    let control = scan_with(base(&closure));
+    assert_eq!(
+        control.c216().expect("C216")["unavailable-reason"],
+        "not-in-any-store",
+        "the stub answered `path '…' is not valid` from every store"
+    );
+    assert!(
+        control.marked().contains("waybill-fixture-dnsroot"),
+        "without a runtime answer the walk marks it -- otherwise this test \
+         could not tell the runtime closure clearing a mark from no mark at all"
+    );
+}
+
+#[test]
+fn us1_local_store_answer_records_store_local() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(NixStub { runtime: Some(curl_runtime()), ..base(&closure) });
+    let c216 = run.c216().expect("C216 present on a closure document");
+    assert_eq!(
+        c216,
+        serde_json::json!({
+            "method": "runtime-closure",
+            "schema": 1,
+            "static-c-linking-detected": false,
+            "static-link-source": "none",
+            "store": "local",
+            "unavailable-reason": null,
+            "unmatched-runtime-paths": 1,
+            "verified": true,
+            "walk-outcome": null,
+        })
+    );
+    assert!(
+        !run.nix_log().contains("store verify"),
+        "the local store holds only paths it built or verified; nothing to verify.\n{}",
+        run.nix_log()
+    );
+}
+
+#[test]
+fn us1_substituter_answer_is_verified_and_recorded() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(NixStub {
+        runtime: Some(curl_runtime()),
+        runtime_store: Some(SUBSTITUTER.to_string()),
+        substituters: vec![SUBSTITUTER.to_string()],
+        ..base(&closure)
+    });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "runtime-closure");
+    assert_eq!(c216["store"], SUBSTITUTER);
+    assert_eq!(c216["verified"], true);
+    assert!(run.nix_log().contains(&format!("store verify --no-contents -r --store {SUBSTITUTER}")));
+    assert!(run.marked().contains("waybill-fixture-xml"));
+    assert!(!run.marked().contains("waybill-fixture-dnsroot"));
+}
+
+/// FR-004: `nix path-info --store` does not check signatures, so an answer
+/// whose verification fails is never used.
+#[test]
+fn us1_unverified_substituter_answer_is_not_used() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(NixStub {
+        runtime: Some(curl_runtime()),
+        runtime_store: Some(SUBSTITUTER.to_string()),
+        substituters: vec![SUBSTITUTER.to_string()],
+        verify_ok: false,
+        ..base(&closure)
+    });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}");
+    assert_eq!(c216["unavailable-reason"], "verification-failed", "{c216}");
+    assert_eq!(c216["store"], Value::Null);
+    assert_eq!(c216["verified"], Value::Null);
+    assert!(
+        !run.marked().contains("waybill-fixture-xml"),
+        "the unverified listing must not decide anything: the runtime closure \
+         marks `xml`, and the walk reaches it through the app's `buildInputs`"
+    );
+    assert_eq!(run.c203("waybill-fixture-xml").as_deref(), Some("reachability-walk"));
+}
+
+/// FR-004 / SC-005: every remote query is bounded, so an unreachable cache
+/// costs ~2 s rather than nix's ~79 s default (q5).
+#[test]
+fn us1_remote_queries_carry_connect_timeout_and_one_attempt() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(NixStub {
+        runtime: Some(curl_runtime()),
+        runtime_store: Some(SUBSTITUTER.to_string()),
+        substituters: vec![SUBSTITUTER.to_string()],
+        ..base(&closure)
+    });
+    let remote: Vec<&str> =
+        run.nix_log().lines().filter(|l| l.contains("--store")).collect();
+    assert_eq!(remote.len(), 2, "one query and one verification:\n{}", run.nix_log());
+    for line in &remote {
+        assert!(line.contains("--option connect-timeout 2"), "{line}");
+        assert!(line.contains("--option download-attempts 1"), "{line}");
+    }
+    let local: Vec<&str> = run
+        .nix_log()
+        .lines()
+        .filter(|l| l.starts_with("path-info") && !l.contains("--store"))
+        .collect();
+    assert_eq!(local.len(), 1, "the local store is asked first, once");
+    assert!(
+        !local[0].contains("--option"),
+        "the daemon refuses these as restricted settings for an untrusted user (q9)"
+    );
+}
+
+/// FR-006: the exemptions survive, and the boot library is exempt even
+/// though the runtime closure does not reference it.
+#[test]
+fn us1_exempt_members_keep_exemptions() {
+    let closure = fixture("closure-runtime.json");
+    let packages = fixture("hackage-packages.nix");
+    // `project-boot` declares a Haskell dependency, which is what engages the
+    // enrichment that hands the boot set to the scope pass.
+    let run = scan_with(NixStub {
+        project: dir().join("project-boot"),
+        runtime: Some(curl_runtime()),
+        package_set: Some((&packages, BOOT_CONFIG)),
+        ..base(&closure)
+    });
+    assert_eq!(run.c203("waybill-fixture-app").as_deref(), Some("exempt-evaluated-package"));
+    assert_eq!(run.c203("waybill-fixture-bootlib").as_deref(), Some("exempt-compiler-supplied"));
+    let marked = run.marked();
+    assert!(!marked.contains("waybill-fixture-app"));
+    assert!(!marked.contains("waybill-fixture-bootlib"));
+    // CONTROL: the exemption is narrow -- the other unreferenced members are
+    // still marked in the same scan.
+    assert!(marked.contains("waybill-fixture-xml") && marked.contains("waybill-fixture-py"));
+}
+
+/// FR-008: every closure member carries exactly one C203 value, runtime
+/// members included, and the value never disagrees with the native mark.
+#[test]
+fn us1_every_closure_member_has_c203() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(NixStub { runtime: Some(curl_runtime()), ..base(&closure) });
+    let marked = run.marked();
+    let members = run.closure_members();
+    assert_eq!(members.len(), 7, "{members:?}");
+    for m in &members {
+        let v = run.c203(m).unwrap_or_else(|| panic!("{m} carries no C203"));
+        if v == "statically-linked" || v.starts_with("exempt-") {
+            assert!(!marked.contains(m), "{m} is {v} and marked");
+        }
+    }
+}
+
+// ---- US1: static linking (FR-002) -----------------------------------------
+
+fn static_runtime() -> String {
+    // The static build is in the runtime closure; none of its libraries are.
+    listing(&["h-sc-bin", "h-SC", "h-gmp"])
+}
+
+const HASKELL_LIBS: [&str; 5] = [
+    "waybill-fixture-aeson",
+    "waybill-fixture-text",
+    "waybill-fixture-fgl",
+    "waybill-fixture-hspec",
+    "waybill-fixture-hunit",
+];
+
+/// SC-007's first half, on the shellcheck shape: every library linked into
+/// the static executable is unmarked and says why.
+#[test]
+fn us1_static_haskell_libraries_are_runtime_and_statically_linked() {
+    let closure = fixture("closure-static.json");
+    let run = scan_with(NixStub { runtime: Some(static_runtime()), ..base(&closure) });
+    let marked = run.marked();
+    for lib in HASKELL_LIBS {
+        assert!(!marked.contains(lib), "{lib} is linked into a runtime member");
+        assert_eq!(run.c203(lib).as_deref(), Some("statically-linked"), "{lib}");
+    }
+    for n in ["waybill-fixture-ShellCheck", "waybill-fixture-gmp"] {
+        assert!(!marked.contains(n));
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+}
+
+/// SC-007's second half, on the ormolu shape: with the pinned package set,
+/// the declared edges exclude the test-only dependency, so it is marked.
+#[test]
+fn us1_test_only_haskell_dep_marked_with_declared_edges() {
+    let closure = fixture("closure-static.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = scan_with(NixStub {
+        runtime: Some(static_runtime()),
+        package_set: Some((&packages, "{ }\n")),
+        ..base(&closure)
+    });
+    let marked = run.marked();
+    for n in ["waybill-fixture-hspec", "waybill-fixture-hunit"] {
+        assert!(marked.contains(n), "{n} is test-only; stderr:\n{}", run.scan.stderr);
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+    for n in ["waybill-fixture-aeson", "waybill-fixture-text", "waybill-fixture-fgl"] {
+        assert!(!marked.contains(n), "{n} is a declared library dependency");
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+    assert_eq!(run.c216().unwrap()["static-link-source"], "declared-edges");
+}
+
+/// FR-002's fallback errs toward runtime: without the package set the
+/// derivation fields cannot tell the test-only dependency apart, so it stays
+/// runtime and the document says which source was used.
+#[test]
+fn us1_test_only_haskell_dep_kept_runtime_without_declared_edges() {
+    let closure = fixture("closure-static.json");
+    let run = scan_with(NixStub { runtime: Some(static_runtime()), ..base(&closure) });
+    assert!(!run.marked().contains("waybill-fixture-hspec"));
+    assert_eq!(run.c203("waybill-fixture-hspec").as_deref(), Some("statically-linked"));
+    let c216 = run.c216().unwrap();
+    assert_eq!(c216["static-link-source"], "derivation-fields", "{c216}");
+    assert_eq!(c216["method"], "runtime-closure");
+}
+
+/// x86_64-linux's shape (`measurements/nix-behaviour/q10-*`): the wrapper's
+/// own output and the C libraries the GHC runtime links, but **not** the
+/// static Haskell build its binary was copied from. On aarch64-darwin the
+/// static build is in the runtime closure; on Linux it is not.
+fn linux_static_runtime() -> String {
+    listing(&["h-sc-bin", "h-gmp"])
+}
+
+/// `alex`: a Haskell derivation the static build uses as a build tool
+/// (`nativeBuildInputs`), which the root does not consume.
+fn with_alex(closure: String) -> String {
+    let closure = closure
+        .replacen(
+            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8\",\n        \"buildInputs\": \"/nix/store/h-aeson",
+            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8 /nix/store/h-alex\",\n        \"buildInputs\": \"/nix/store/h-aeson",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": { \"outputs\": [\"out\"] }\n        },",
+            "\"d-gmp.drv\": { \"outputs\": [\"out\"] },\n          \"d-alex.drv\": { \"outputs\": [\"out\"] }\n        },",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": {\n",
+            "\"d-alex.drv\": {\n      \"name\": \"waybill-fixture-alex-3.5.1.0\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-alex\",\n        \"version\": \"3.5.1.0\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\"\n      },\n      \"outputs\": { \"out\": { \"path\": \"h-alex\" } }\n    },\n    \"d-gmp.drv\": {\n",
+            1,
+        );
+    assert_eq!(closure.matches("h-alex").count(), 2, "the fixture edits applied");
+    assert_eq!(closure.matches("d-alex.drv").count(), 2, "the fixture edits applied");
+    closure
+}
+
+/// `pandoc`: a Haskell build the **root** consumes through `inputs.drvs` and
+/// names in `nativeBuildInputs`, with a Haskell library of its own. This is
+/// the measured wrapper's shape: nixpkgs' shellcheck consumes `pandoc-cli`,
+/// a Haskell generic-builder derivation, to render its man page
+/// (`measurements/nix-behaviour/q10-*`). It runs on the build machine and is
+/// not in the binary.
+fn with_pandoc(closure: String) -> String {
+    let closure = closure
+        .replacen(
+            "\"outputs\": \"bin out\",\n",
+            "\"outputs\": \"bin out\",\n        \"nativeBuildInputs\": \"/nix/store/h-pandoc\",\n",
+            1,
+        )
+        .replacen(
+            "\"drvs\": { \"d-SC.drv\": { \"outputs\": [\"out\"] } },",
+            "\"drvs\": { \"d-SC.drv\": { \"outputs\": [\"out\"] }, \"d-pandoc.drv\": { \"outputs\": [\"out\"] } },",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": {\n",
+            "\"d-pandoc.drv\": {\n      \"name\": \"waybill-fixture-pandoc-cli-3.7.0.2\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-pandoc-cli\",\n        \"version\": \"3.7.0.2\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\",\n        \"buildInputs\": \"/nix/store/h-pdlib\"\n      },\n      \"inputs\": { \"drvs\": { \"d-pdlib.drv\": { \"outputs\": [\"out\"] } }, \"srcs\": [] },\n      \"outputs\": { \"out\": { \"path\": \"h-pandoc\" } }\n    },\n    \"d-pdlib.drv\": {\n      \"name\": \"waybill-fixture-pdlib-3.7.0.2\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-pdlib\",\n        \"version\": \"3.7.0.2\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\"\n      },\n      \"outputs\": { \"out\": { \"path\": \"h-pdlib\" } }\n    },\n    \"d-gmp.drv\": {\n",
+            1,
+        );
+    assert_eq!(closure.matches("h-pandoc").count(), 2, "the fixture edits applied");
+    assert_eq!(closure.matches("d-pandoc.drv").count(), 2, "the fixture edits applied");
+    closure
+}
+
+/// SC-007 / FR-002 on x86_64-linux's shape. The runtime closure holds the
+/// wrapper and C libraries but not the static Haskell build, so nothing in it
+/// is a Haskell-builder member. The evaluated root is runtime by definition,
+/// and the static build it consumed through `inputs.drvs` is what its binary
+/// was copied from: that build, and the libraries linked into it, are
+/// runtime and `statically-linked`. Measured on the corpus before the fix:
+/// `static-link-source: none`, every library linked into shellcheck marked.
+///
+/// CONTROLS, in the same scan: `alex`, a Haskell `build-tooling` member the
+/// root does not consume, stays marked; `pandoc`, a Haskell build the root
+/// consumes as a build tool (`nativeBuildInputs`), stays marked, and so does
+/// its library.
+#[test]
+fn us1_linux_static_build_absent_from_runtime_closure_is_seeded_from_the_root() {
+    let closure = with_pandoc(with_alex(fixture("closure-static.json")));
+    let run = scan_with(NixStub { runtime: Some(linux_static_runtime()), ..base(&closure) });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "runtime-closure", "{c216}");
+    assert_ne!(c216["static-link-source"], "none", "{c216}");
+    assert_eq!(
+        c216["static-link-source"], "derivation-fields",
+        "no package set here, so the seeded build's own fields found its libraries: {c216}"
+    );
+
+    let marked = run.marked();
+    for n in std::iter::once("waybill-fixture-ShellCheck").chain(HASKELL_LIBS) {
+        assert!(
+            !marked.contains(n),
+            "{n} ships inside the wrapper's binary; marked: {marked:?}\nstderr:\n{}",
+            run.scan.stderr
+        );
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+    assert!(!marked.contains("waybill-fixture-gmp"), "in the runtime closure");
+    assert_eq!(run.c203("waybill-fixture-gmp").as_deref(), Some("runtime-closure"));
+
+    // CONTROL: not consumed by the root.
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-alex"), "waybill:closure-role"),
+        Some("build-tooling"),
+        "precondition: the control is in a tooling role"
+    );
+    assert!(marked.contains("waybill-fixture-alex"), "marked: {marked:?}");
+    assert_eq!(run.c203("waybill-fixture-alex").as_deref(), Some("runtime-closure"));
+    // CONTROL: consumed by the root, as a build tool.
+    for n in ["waybill-fixture-pandoc-cli", "waybill-fixture-pdlib"] {
+        assert!(marked.contains(n), "{n} runs on the build machine; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+}
+
+/// The same Linux shape with the pinned package set: the seeded static build
+/// is followed through its declared relations, which exclude the test-only
+/// dependency, and C216 says so.
+#[test]
+fn us1_linux_static_build_seed_uses_declared_edges() {
+    let closure = fixture("closure-static.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = scan_with(NixStub {
+        runtime: Some(linux_static_runtime()),
+        package_set: Some((&packages, "{ }\n")),
+        ..base(&closure)
+    });
+    let marked = run.marked();
+    for n in ["waybill-fixture-hspec", "waybill-fixture-hunit"] {
+        assert!(marked.contains(n), "{n} is test-only; stderr:\n{}", run.scan.stderr);
+    }
+    for n in ["waybill-fixture-ShellCheck", "waybill-fixture-aeson", "waybill-fixture-text", "waybill-fixture-fgl"] {
+        assert!(!marked.contains(n), "{n}; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+    assert_eq!(run.c216().unwrap()["static-link-source"], "declared-edges");
+}
+
+// ---- US1: embedded modules (FR-002) ---------------------------------------
+
+fn uvarint(mut v: u64) -> Vec<u8> {
+    let mut out = Vec::new();
+    while v >= 0x80 {
+        out.push((v as u8) | 0x80);
+        v >>= 7;
+    }
+    out.push(v as u8);
+    out
+}
+
+/// A file the Go BuildInfo reader accepts, as `closure_binary_contents.rs`
+/// synthesizes it.
+fn go_binary(main: &str, deps: &[(&str, &str)]) -> Vec<u8> {
+    let mut mod_info = format!("path\t{main}/cmd\nmod\t{main}\t(devel)\t\n");
+    for (name, version) in deps {
+        mod_info.push_str(&format!("dep\t{name}\t{version}\th1:fixture=\n"));
+    }
+    let mut v = vec![0u8; 2048];
+    v[..4].copy_from_slice(b"\x7fELF");
+    v.extend_from_slice(b"\xff Go buildinf:");
+    v.push(8);
+    v.push(0x2);
+    v.extend_from_slice(&[0u8; 16]);
+    let build = b"go1.22.1";
+    v.extend(uvarint(build.len() as u64));
+    v.extend_from_slice(build);
+    v.extend(uvarint(mod_info.len() as u64));
+    v.extend_from_slice(mod_info.as_bytes());
+    v
+}
+
+fn put(store: &Path, output: &str, file: &str, bytes: &[u8]) {
+    let d = store.join(output).join("bin");
+    std::fs::create_dir_all(&d).unwrap();
+    std::fs::write(d.join(file), bytes).unwrap();
+}
+
+/// A module inherits its host binary's runtime status: unmarked and
+/// `statically-linked` in a runtime host, marked in a build tool.
+#[test]
+fn us1_embedded_go_module_inherits_runtime_host() {
+    let store = tempfile::tempdir().unwrap();
+    put(
+        store.path(),
+        "h0-waybill-fixture-app-1.2.3",
+        "app",
+        &go_binary("example.test/waybill-fixture-app", &[("example.test/waybill-fixture-goa", "v1.0.0")]),
+    );
+    put(
+        store.path(),
+        "h2-waybill-fixture-tool-3.0.0",
+        "tool",
+        &go_binary("example.test/waybill-fixture-tool", &[("example.test/waybill-fixture-toolmod", "v0.1.0")]),
+    );
+    let closure = fixture("closure-embedded.json");
+    let run = scan_with(NixStub {
+        runtime: Some(listing(&["h0-waybill-fixture-app-1.2.3", "h1-waybill-fixture-lib-2.0.0"])),
+        store_dir: Some(store.path().to_path_buf()),
+        ..base(&closure)
+    });
+    let marked = run.marked();
+    let goa = "example.test/waybill-fixture-goa";
+    let toolmod = "example.test/waybill-fixture-toolmod";
+    assert!(!marked.contains(goa), "compiled into the runtime app; stderr:\n{}", run.scan.stderr);
+    assert_eq!(run.c203(goa).as_deref(), Some("statically-linked"));
+    assert!(marked.contains(toolmod), "compiled into a build tool only");
+    assert_eq!(run.c203(toolmod).as_deref(), Some("runtime-closure"));
+    // The hosts themselves, for the record.
+    assert!(marked.contains("waybill-fixture-tool"));
+    assert!(!marked.contains("waybill-fixture-lib"));
+}
+
+// ---- US2: the reachability walk (FR-005, FR-007) --------------------------
+
+/// FR-005 / FR-007: with no store holding the output, scope comes from the
+/// walk, and the document says the marks are an approximation and why.
+#[test]
+fn us2_no_store_answer_uses_walk() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(base(&closure));
+    assert_eq!(
+        run.c216().expect("C216 on a closure document"),
+        serde_json::json!({
+            "method": "reachability-walk",
+            "schema": 1,
+            "static-c-linking-detected": false,
+            "static-link-source": "none",
+            "store": null,
+            "unavailable-reason": "not-in-any-store",
+            "unmatched-runtime-paths": null,
+            "verified": null,
+            "walk-outcome": "used",
+        }),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    // Every member the walk decided says so, marked or not; the evaluated
+    // package keeps its exemption.
+    for m in run.closure_members() {
+        let want = if m == "waybill-fixture-app" { "exempt-evaluated-package" } else { "reachability-walk" };
+        assert_eq!(run.c203(&m).as_deref(), Some(want), "{m}");
+    }
+}
+
+/// FR-005: every member the walk does not reach is marked, every member it
+/// reaches is not, in all three formats.
+#[test]
+fn us2_walk_marks_unreached_members() {
+    let closure = fixture("closure-walk.json");
+    let run = scan_with(base(&closure));
+    assert_eq!(
+        run.marked(),
+        names(&["waybill-fixture-perl", "waybill-fixture-tool", "waybill-fixture-xml"]),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    for n in ["waybill-fixture-ssl", "waybill-fixture-z"] {
+        assert_eq!(run.c203(n).as_deref(), Some("reachability-walk"), "{n}");
+    }
+    assert_eq!(run.c216().unwrap()["method"], "reachability-walk");
+}
+
+/// FR-005: the walk follows runtime-linking fields only. `perl` is linked by
+/// the build tool (so its role is `both`, which the role rule never marks)
+/// and is reached from the root only through `ssl`'s `nativeBuildInputs`. So
+/// is everything the tool links: `xml` is an `artifact-input` the role rule
+/// leaves alone.
+#[test]
+fn us2_walk_follows_only_runtime_linking_fields() {
+    let closure = fixture("closure-walk.json");
+    let run = scan_with(base(&closure));
+    let perl = run.cdx("waybill-fixture-perl");
+    assert_eq!(
+        Run::cdx_prop(perl, "waybill:closure-role"),
+        Some("both"),
+        "precondition: the role rule would leave perl unmarked"
+    );
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-xml"), "waybill:closure-role"),
+        Some("artifact-input")
+    );
+    let marked = run.marked();
+    assert!(marked.contains("waybill-fixture-perl"), "reached only through nativeBuildInputs");
+    assert!(marked.contains("waybill-fixture-xml"), "linked only by a build tool");
+    // CONTROL: the propagated edge is followed, so the walk is not simply
+    // stopping at the root's own fields.
+    assert!(!marked.contains("waybill-fixture-z"), "propagated by a reached member");
+}
+
+/// Embedded modules inherit a reached host's status under the walk, and are
+/// decided by it (data-model rule 4).
+#[test]
+fn us2_embedded_module_inherits_reached_host() {
+    let store = tempfile::tempdir().unwrap();
+    put(
+        store.path(),
+        "h0-waybill-fixture-app-1.2.3",
+        "app",
+        &go_binary("example.test/waybill-fixture-app", &[("example.test/waybill-fixture-goa", "v1.0.0")]),
+    );
+    put(
+        store.path(),
+        "h1-waybill-fixture-lib-2.0.0",
+        "lib",
+        &go_binary("example.test/waybill-fixture-lib", &[("example.test/waybill-fixture-libmod", "v1.1.0")]),
+    );
+    put(
+        store.path(),
+        "h2-waybill-fixture-tool-3.0.0",
+        "tool",
+        &go_binary("example.test/waybill-fixture-tool", &[("example.test/waybill-fixture-toolmod", "v0.1.0")]),
+    );
+    let closure = fixture("closure-embedded.json");
+    let run = scan_with(NixStub { store_dir: Some(store.path().to_path_buf()), ..base(&closure) });
+    let marked = run.marked();
+    let libmod = "example.test/waybill-fixture-libmod";
+    let toolmod = "example.test/waybill-fixture-toolmod";
+    assert!(!marked.contains(libmod), "compiled into a reached lib; stderr:\n{}", run.scan.stderr);
+    assert_eq!(run.c203(libmod).as_deref(), Some("reachability-walk"));
+    assert!(marked.contains(toolmod), "compiled into a build tool only");
+    assert_eq!(run.c203(toolmod).as_deref(), Some("reachability-walk"));
+    assert!(marked.contains("waybill-fixture-tool") && !marked.contains("waybill-fixture-lib"));
+}
+
+/// The spec's fallback "errs toward runtime, never toward dropping linked
+/// code". A `justStaticExecutables` wrapper (shellcheck's shape) names its
+/// static Haskell build only in `inputs.drvs` and an `installPhase` path,
+/// never in a dependency field, so the walk from it reaches nothing but the
+/// root. Used as is, it would mark every library compiled into the binary.
+/// Such a walk is not used: the role rule decides, and C216 says why.
+#[test]
+fn us2_walk_that_reaches_only_the_root_is_not_used() {
+    let closure = fixture("closure-static.json");
+    let run = scan_with(base(&closure));
+    // The marks first: they are the defect, and the record only reports it.
+    let marked = run.marked();
+    for lib in HASKELL_LIBS.iter().chain(&["waybill-fixture-gmp"]) {
+        assert!(!marked.contains(*lib), "{lib} is linked into the binary; marked: {marked:?}");
+        assert_ne!(run.c203(lib).as_deref(), Some("reachability-walk"), "{lib}");
+    }
+    assert_eq!(
+        run.c216().expect("C216"),
+        serde_json::json!({
+            "method": "closure-role",
+            "schema": 1,
+            "static-c-linking-detected": false,
+            // The consumed static build's libraries are kept runtime (T042),
+            // found through its derivation fields: no package set here.
+            "static-link-source": "derivation-fields",
+            "store": null,
+            "unavailable-reason": "not-in-any-store",
+            "unmatched-runtime-paths": null,
+            "verified": null,
+            "walk-outcome": "reached-only-root",
+        }),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+}
+
+/// T042: when the walk is set aside, the static Haskell build the wrapper
+/// consumes through `inputs.drvs`, and the libraries linked into it, are
+/// runtime. Their code ships inside the wrapper's binary, and the role rule
+/// alone would mark the build itself (`build-tooling`). Everything else stays
+/// on the role rule.
+///
+/// CONTROL, in the same scan: a Haskell derivation the static build uses only
+/// as a build tool (`nativeBuildInputs`), which the root does not consume. It
+/// is `build-tooling` too, and stays marked by the role rule.
+#[test]
+fn us2_reached_only_root_keeps_the_consumed_static_build_runtime() {
+    let closure = with_alex(fixture("closure-static.json"));
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "closure-role", "{c216}");
+    assert_eq!(c216["walk-outcome"], "reached-only-root", "{c216}");
+
+    let marked = run.marked();
+    for n in std::iter::once("waybill-fixture-ShellCheck").chain(HASKELL_LIBS) {
+        assert!(!marked.contains(n), "{n} ships inside the wrapper's binary; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-ShellCheck"), "waybill:closure-role"),
+        Some("build-tooling"),
+        "precondition: the role rule alone would mark the static build"
+    );
+
+    // CONTROL: not consumed by the root, so the role rule still decides.
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-alex"), "waybill:closure-role"),
+        Some("build-tooling"),
+        "precondition: the control is in a tooling role"
+    );
+    assert!(marked.contains("waybill-fixture-alex"), "marked: {marked:?}");
+    assert_eq!(run.c203("waybill-fixture-alex").as_deref(), Some("closure-role"));
+    // gmp is linked too, but is not a Haskell library: the static-link logic
+    // does not follow it, so the role rule decides (`artifact-input`, unmarked).
+    assert!(!marked.contains("waybill-fixture-gmp"));
+    assert_eq!(run.c203("waybill-fixture-gmp"), None);
+}
+
+/// T042, the build-tool side: a Haskell build the root consumes but names in
+/// `nativeBuildInputs` (nixpkgs' shellcheck consumes `pandoc-cli` that way,
+/// for its man page) is not in the binary. It is not kept runtime, and neither
+/// is what is linked into it; the role rule decides them. The static build is
+/// still consumed, so the walk is still set aside.
+#[test]
+fn us2_reached_only_root_does_not_keep_a_consumed_build_tool_runtime() {
+    let closure = with_pandoc(fixture("closure-static.json"));
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["walk-outcome"], "reached-only-root", "{c216}");
+    let marked = run.marked();
+    assert_eq!(
+        Run::cdx_prop(run.cdx("waybill-fixture-pandoc-cli"), "waybill:closure-role"),
+        Some("build-tooling"),
+        "precondition"
+    );
+    assert!(marked.contains("waybill-fixture-pandoc-cli"), "marked: {marked:?}");
+    assert_eq!(run.c203("waybill-fixture-pandoc-cli").as_deref(), Some("closure-role"));
+    assert_ne!(run.c203("waybill-fixture-pdlib").as_deref(), Some("statically-linked"));
+    // CONTROL: the static build is still kept runtime in the same scan.
+    assert_eq!(run.c203("waybill-fixture-ShellCheck").as_deref(), Some("statically-linked"));
+}
+
+/// CONTROL for `us2_walk_that_reaches_only_the_root_is_not_used`, changing
+/// one variable: the same closure with
+/// the wrapper also naming its static build in `buildInputs`. The walk now
+/// reaches past the root, so it is used, and the libraries are runtime by
+/// the walk rather than by the role rule.
+#[test]
+fn us2_walk_that_reaches_past_the_root_is_used() {
+    let closure = fixture("closure-static.json").replacen(
+        "\"installPhase\":",
+        "\"buildInputs\": \"/nix/store/h-SC\",\n        \"installPhase\":",
+        1,
+    );
+    assert!(closure.contains("\"buildInputs\": \"/nix/store/h-SC\""), "the fixture edit applied");
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}");
+    assert_eq!(c216["walk-outcome"], "used", "{c216}");
+    assert_eq!(c216["unavailable-reason"], "not-in-any-store", "{c216}");
+    let marked = run.marked();
+    for lib in HASKELL_LIBS {
+        assert!(!marked.contains(lib), "{lib}; marked: {marked:?}");
+        assert_eq!(run.c203(lib).as_deref(), Some("reachability-walk"), "{lib}");
+    }
+}
+
+/// CONTROL on the trigger, gh's shape: a walk that reaches only the root is
+/// still used when the root consumed no Haskell build. gh's walk reaches 1
+/// of 788 derivations and is exact on its findings (55 true, 0 false); the
+/// role rule leaves 185 false-runtime findings there
+/// (`specs/1423-nix-runtime-scope/measurements/us2-walk-score/`). One
+/// variable against `closure-walk.json`: the root no longer names `ssl` in
+/// `buildInputs`, only in `inputs.drvs`.
+#[test]
+fn us2_walk_reaching_only_a_non_wrapper_root_is_used() {
+    let closure = fixture("closure-walk.json").replacen("\"buildInputs\": \"/nix/store/w-ssl\",", "", 1);
+    assert!(!closure.contains("\"buildInputs\": \"/nix/store/w-ssl\""), "the fixture edit applied");
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}");
+    assert_eq!(c216["walk-outcome"], "used", "{c216}");
+    assert_eq!(
+        run.marked(),
+        names(&[
+            "waybill-fixture-perl",
+            "waybill-fixture-ssl",
+            "waybill-fixture-tool",
+            "waybill-fixture-xml",
+            "waybill-fixture-z",
+        ]),
+        "everything but the root is unreached, and marked"
+    );
+}
+
+/// Data-model rule 5: with no single evaluated package there is no root to
+/// walk from, so the role rule decides and C216 says why. No runtime query is
+/// made either: there is no output to ask about.
+#[test]
+fn us2_no_evaluated_package_falls_back_to_closure_role() {
+    let closure = fixture("closure-tworoots.json");
+    let run = scan_with(base(&closure));
+    assert_eq!(
+        run.c216().expect("C216"),
+        serde_json::json!({
+            "method": "closure-role",
+            "schema": 1,
+            "static-c-linking-detected": false,
+            "static-link-source": null,
+            "store": null,
+            "unavailable-reason": "no-evaluated-package",
+            "unmatched-runtime-paths": null,
+            "verified": null,
+            "walk-outcome": null,
+        }),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    assert!(!run.nix_log().contains("path-info"), "{}", run.nix_log());
+    let marked = run.marked();
+    assert!(marked.contains("waybill-fixture-tool"), "build-tooling, marked by the role rule");
+    assert!(!marked.contains("waybill-fixture-lib"), "artifact-input, left alone by the role rule");
+    assert_eq!(run.c203("waybill-fixture-tool").as_deref(), Some("closure-role"));
+    assert_eq!(run.c203("waybill-fixture-lib"), None, "the role rule decides nothing about it");
+}
+
+// ---- US4: the runtime-only recipe (FR-011, FR-012) ------------------------
+
+/// A CVE-named patch on a member the recipe keeps (`ssl`, in the runtime
+/// closure) and on one it drops (`xml`, an `artifact-input` the output does
+/// not reference). Each yields a CycloneDX backport pair (#1436): a
+/// `not_affected` statement naming the subject with the patched member as
+/// `waybill:vex-subcomponent`, and a version-scoped `exploitable` one.
+const KEPT_CVE: &str = "CVE-2026-90031";
+const DROPPED_CVE: &str = "CVE-2026-90032";
+
+fn us4_closure() -> String {
+    let mut c: Value = serde_json::from_str(&fixture("closure-runtime.json")).unwrap();
+    c["derivations"]["d-ssl.drv"]["env"]["patches"] = Value::String(format!("/nix/store/p1-{KEPT_CVE}.patch"));
+    c["derivations"]["d-xml.drv"]["env"]["patches"] = Value::String(format!("/nix/store/p2-{DROPPED_CVE}.patch"));
+    c.to_string()
+}
+
+fn cdx_walk<'a>(cs: &'a [Value], out: &mut Vec<&'a Value>) {
+    for c in cs {
+        out.push(c);
+        cdx_walk(c["components"].as_array().map(Vec::as_slice).unwrap_or(&[]), out);
+    }
+}
+
+/// Every CycloneDX component, nested ones included; with the subject first
+/// when `subject` is set.
+fn cdx_all(doc: &Value, subject: bool) -> Vec<&Value> {
+    let mut out = Vec::new();
+    if subject {
+        cdx_walk(std::slice::from_ref(&doc["metadata"]["component"]), &mut out);
+    }
+    cdx_walk(doc["components"].as_array().map(Vec::as_slice).unwrap_or(&[]), &mut out);
+    out
+}
+
+/// SPDX 2.3 package SPDXID → PURL.
+fn spdx23_purls(doc: &Value) -> HashMap<&str, &str> {
+    doc["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|p| {
+            let id = p["SPDXID"].as_str()?;
+            let r = p["externalRefs"].as_array()?.iter().find(|r| r["referenceType"] == "purl")?;
+            Some((id, r["referenceLocator"].as_str()?))
+        })
+        .collect()
+}
+
+/// SPDX 3 element IRI → PURL.
+fn spdx3_purls(doc: &Value) -> HashMap<&str, &str> {
+    doc["@graph"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|e| Some((e["spdxId"].as_str()?, e["software_packageUrl"].as_str()?)))
+        .collect()
+}
+
+/// Every component PURL, in any of the three formats.
+fn us4_purls(doc: &Value) -> BTreeSet<String> {
+    match sbom_edit_support::format_of(doc) {
+        "cdx" => cdx_all(doc, true).into_iter().filter_map(|c| c["purl"].as_str().map(str::to_string)).collect(),
+        "spdx23" => spdx23_purls(doc).into_values().map(str::to_string).collect(),
+        _ => spdx3_purls(doc).into_values().map(str::to_string).collect(),
+    }
+}
+
+/// The subject's PURL, as each format names it.
+fn us4_subject(doc: &Value) -> Option<String> {
+    match sbom_edit_support::format_of(doc) {
+        "cdx" => doc["metadata"]["component"]["purl"].as_str().map(str::to_string),
+        "spdx23" => spdx23_purls(doc).get(doc["documentDescribes"][0].as_str()?).map(|p| p.to_string()),
+        _ => {
+            let graph = doc["@graph"].as_array()?;
+            let root = graph.iter().find(|e| e["type"] == "SpdxDocument")?["rootElement"][0].as_str()?;
+            spdx3_purls(doc).get(root).map(|p| p.to_string())
+        }
+    }
+}
+
+/// Components carrying the not-in-artifact mark, by the contract's rule for
+/// each format (`contracts/sbom-edit-scope-excluded.md`), as PURLs.
+fn us4_not_in_artifact(doc: &Value) -> BTreeSet<String> {
+    match sbom_edit_support::format_of(doc) {
+        "cdx" => cdx_all(doc, false)
+            .into_iter()
+            .filter(|c| c["scope"] == "excluded")
+            .filter(|c| {
+                !c["properties"].as_array().into_iter().flatten().any(|p| {
+                    p["name"] == "waybill:lifecycle-scope" || p["name"] == "waybill:optional-derivation"
+                })
+            })
+            .filter_map(|c| c["purl"].as_str().map(str::to_string))
+            .collect(),
+        "spdx23" => {
+            let purl = spdx23_purls(doc);
+            doc["relationships"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|r| r["relationshipType"] == "BUILD_TOOL_OF")
+                .filter_map(|r| purl.get(r["spdxElementId"].as_str()?).map(|p| p.to_string()))
+                .collect()
+        }
+        _ => {
+            let purl = spdx3_purls(doc);
+            doc["@graph"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|e| e["type"] == "LifecycleScopedRelationship")
+                .filter(|e| e["relationshipType"] == "usesTool" && e["scope"] == "build")
+                .flat_map(|e| e["to"].as_array().into_iter().flatten())
+                .filter_map(|t| purl.get(t.as_str()?).map(|p| p.to_string()))
+                .collect()
+        }
+    }
+}
+
+/// Every reference a relationship, dependency or VEX statement makes that
+/// names nothing in the document.
+fn us4_dangling(doc: &Value) -> Vec<String> {
+    let mut dangling = Vec::new();
+    match sbom_edit_support::format_of(doc) {
+        "cdx" => {
+            let refs: BTreeSet<&str> = cdx_all(doc, true).into_iter().filter_map(|c| c["bom-ref"].as_str()).collect();
+            let mut check = |what: String, r: &str| {
+                if !refs.contains(r) {
+                    dangling.push(format!("{what}: {r}"));
+                }
+            };
+            for d in doc["dependencies"].as_array().into_iter().flatten() {
+                check("dependencies.ref".into(), d["ref"].as_str().unwrap_or_default());
+                for t in d["dependsOn"].as_array().into_iter().flatten() {
+                    check("dependencies.dependsOn".into(), t.as_str().unwrap_or_default());
+                }
+            }
+            for v in doc["vulnerabilities"].as_array().into_iter().flatten() {
+                for a in v["affects"].as_array().into_iter().flatten() {
+                    check(format!("{} affects", v["id"]), a["ref"].as_str().unwrap_or_default());
+                }
+                for p in v["properties"].as_array().into_iter().flatten() {
+                    if p["name"] == "waybill:vex-subcomponent" {
+                        check(format!("{} subcomponent", v["id"]), p["value"].as_str().unwrap_or_default());
+                    }
+                }
+            }
+        }
+        "spdx23" => {
+            let ids: BTreeSet<&str> = ["packages", "files"]
+                .iter()
+                .flat_map(|k| doc[*k].as_array().into_iter().flatten())
+                .filter_map(|p| p["SPDXID"].as_str())
+                .chain(["SPDXRef-DOCUMENT", "NOASSERTION", "NONE"])
+                .collect();
+            let resolves = |id: &str| ids.contains(id) || id.starts_with("DocumentRef-");
+            for r in doc["relationships"].as_array().into_iter().flatten() {
+                for k in ["spdxElementId", "relatedSpdxElement"] {
+                    let id = r[k].as_str().unwrap_or_default();
+                    if !resolves(id) {
+                        dangling.push(format!("{} {k}: {id}", r["relationshipType"]));
+                    }
+                }
+            }
+            for d in doc["documentDescribes"].as_array().into_iter().flatten() {
+                let id = d.as_str().unwrap_or_default();
+                if !resolves(id) {
+                    dangling.push(format!("documentDescribes: {id}"));
+                }
+            }
+        }
+        _ => {
+            let graph = doc["@graph"].as_array().map(Vec::as_slice).unwrap_or(&[]);
+            let mut ids: BTreeSet<&str> = graph.iter().filter_map(|e| e["spdxId"].as_str()).collect();
+            ids.extend(
+                graph
+                    .iter()
+                    .flat_map(|e| e["import"].as_array().into_iter().flatten())
+                    .filter_map(|m| m["externalSpdxId"].as_str()),
+            );
+            for e in graph {
+                let kind = e["type"].as_str().unwrap_or_default();
+                let mut named: Vec<&str> = Vec::new();
+                if kind.ends_with("Relationship") {
+                    named.extend(e["from"].as_str());
+                    named.extend(e["to"].as_array().into_iter().flatten().filter_map(Value::as_str));
+                    named.extend(e["security_assessedElement"].as_str());
+                }
+                if kind == "Annotation" {
+                    named.extend(e["subject"].as_str());
+                }
+                if kind == "SpdxDocument" || kind == "software_Sbom" {
+                    named.extend(e["rootElement"].as_array().into_iter().flatten().filter_map(Value::as_str));
+                }
+                for id in named {
+                    if !ids.contains(id) {
+                        dangling.push(format!("{kind} {}: {id}", e["relationshipType"]));
+                    }
+                }
+            }
+        }
+    }
+    dangling
+}
+
+/// The CycloneDX VEX statements as (id, analysis state).
+fn us4_vex(doc: &Value) -> BTreeSet<(String, String)> {
+    doc["vulnerabilities"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|v| {
+            let s = |x: &Value| x.as_str().unwrap_or_default().to_string();
+            (s(&v["id"]), s(&v["analysis"]["state"]))
+        })
+        .collect()
+}
+
+fn us4_backport_pair(cve: &str) -> BTreeSet<(String, String)> {
+    ["exploitable", "not_affected"].iter().map(|s| (cve.to_string(), s.to_string())).collect()
+}
+
+/// FR-011 / FR-012 / US4 scenario 1: the documented recipe,
+/// `sbom edit <doc> --drop 'scope=excluded'`, turns each of a closure scan's
+/// three documents into a valid runtime-only document. Each result validates
+/// against its schema (SPDX 3 also through `spdx3-validate` when installed),
+/// keeps the evaluated package as its subject, names nothing it no longer
+/// holds, and holds no not-in-artifact member. The three formats lose the
+/// same PURLs.
+///
+/// VEX about a kept member survives and VEX about a dropped member goes. Only
+/// CycloneDX carries VEX in the document; SPDX's OpenVEX sidecar is not
+/// edited (`docs/user-guide/sbom-edit.md`, "Limits").
+#[test]
+fn us4_drop_scope_excluded_yields_valid_runtime_document() {
+    let closure = us4_closure();
+    let run = scan_with(NixStub { runtime: Some(curl_runtime()), ..base(&closure) });
+    assert_eq!(run.c216().expect("C216")["method"], "runtime-closure", "stderr:\n{}", run.scan.stderr);
+
+    let subject = "pkg:generic/waybill-fixture-app@1.0";
+    let dir = tempfile::tempdir().unwrap();
+    let mut dropped_by_format: Vec<(&str, BTreeSet<String>)> = Vec::new();
+    for (label, file, doc) in [
+        ("cdx", "closure.cdx.json", &run.scan.cdx),
+        ("spdx23", "closure.spdx.json", &run.scan.spdx23),
+        ("spdx3", "closure.spdx3.json", &run.scan.spdx3),
+    ] {
+        // CONTROLS on the input: it is valid, it names this subject, and it
+        // holds marked members, so every check below can fail.
+        assert_eq!(sbom_edit_support::schema_errors(doc), BTreeSet::new(), "{label}: the scan itself fails its schema");
+        assert_eq!(us4_subject(doc).as_deref(), Some(subject), "{label}: input subject");
+        assert_eq!(us4_dangling(doc), Vec::<String>::new(), "{label}: the scan itself has references to nothing");
+        let marked = us4_not_in_artifact(doc);
+        assert!(!marked.is_empty(), "{label}: the scan marked nothing, so the recipe would have nothing to drop");
+
+        let input = dir.path().join(file);
+        std::fs::write(&input, serde_json::to_string_pretty(doc).unwrap()).unwrap();
+        let e = sbom_edit_support::edit(&input, &["--drop", "scope=excluded"]);
+        e.assert_ok();
+        let out = e.json();
+
+        assert_eq!(
+            sbom_edit_support::schema_errors(&out),
+            BTreeSet::new(),
+            "{label}: the runtime-only document fails its schema"
+        );
+        if label == "spdx3" {
+            sbom_edit_support::spdx3_validate_or_skip(&e.path);
+        }
+        assert_eq!(us4_subject(&out).as_deref(), Some(subject), "{label}: the subject moved");
+        assert_eq!(us4_dangling(&out), Vec::<String>::new(), "{label}: references to nothing");
+        assert_eq!(us4_not_in_artifact(&out), BTreeSet::new(), "{label}: a not-in-artifact member remains");
+
+        let dropped: BTreeSet<String> = us4_purls(doc).difference(&us4_purls(&out)).cloned().collect();
+        assert_eq!(dropped, marked, "{label}: the recipe dropped something other than the marked set");
+        assert!(
+            e.stderr.contains(&format!("drop-components: matched {},", dropped.len())),
+            "{label}: the reported count disagrees with the {} PURLs removed: {}",
+            dropped.len(),
+            e.stderr
+        );
+        dropped_by_format.push((label, dropped));
+
+        if label == "cdx" {
+            // CONTROL: the scan wrote both backport pairs.
+            let both: BTreeSet<_> = us4_backport_pair(KEPT_CVE).union(&us4_backport_pair(DROPPED_CVE)).cloned().collect();
+            assert_eq!(us4_vex(doc), both, "input VEX");
+            assert_eq!(
+                us4_vex(&out),
+                us4_backport_pair(KEPT_CVE),
+                "FR-012: VEX about the kept member stays, VEX about the dropped one goes"
+            );
+            assert!(e.stderr.contains("vulnerability statement(s) removed"), "{}", e.stderr);
+        }
+    }
+
+    // The same PURLs leave every format, and they are the members outside
+    // the runtime closure (see `us1_runtime_members_unmarked_and_others_marked`).
+    let cdx = &dropped_by_format[0].1;
+    for (label, set) in &dropped_by_format[1..] {
+        assert_eq!(set, cdx, "{label} dropped a different PURL set from CycloneDX");
+    }
+    let names: BTreeSet<&str> = cdx
+        .iter()
+        .filter_map(|p| p.strip_prefix("pkg:generic/")?.split('@').next())
+        .collect();
+    assert_eq!(
+        names,
+        BTreeSet::from(["waybill-fixture-bootlib", "waybill-fixture-py", "waybill-fixture-xml"]),
+        "dropped: {cdx:?}"
+    );
+}

@@ -1,0 +1,180 @@
+{
+ "curl": {
+  "components": 465,
+  "runtime": 19,
+  "how": {
+   "NV": 19
+  },
+  "rt_paths": 20,
+  "rt_paths_unmatched": [
+   "curl-8.20.0"
+  ],
+  "comp": {
+   "tp": 19,
+   "fp": 78,
+   "fn": 0,
+   "fp_by": {
+    "artifact-input/generic": 35,
+    "both/generic": 29,
+    "artifact-input/pypi": 12,
+    "both/pypi": 2
+   },
+   "fn_list": []
+  },
+  "finding": {
+   "tp": 100,
+   "fp": 85,
+   "fn": 0,
+   "total": 211
+  }
+ },
+ "openssh": {
+  "components": 457,
+  "runtime": 11,
+  "how": {
+   "NV": 11
+  },
+  "rt_paths": 11,
+  "rt_paths_unmatched": [],
+  "comp": {
+   "tp": 10,
+   "fp": 82,
+   "fn": 1,
+   "fp_by": {
+    "artifact-input/generic": 41,
+    "both/generic": 28,
+    "artifact-input/pypi": 11,
+    "both/pypi": 2
+   },
+   "fn_list": [
+    "dns-root-data@2025-04-14 (build-tooling/generic)"
+   ]
+  },
+  "finding": {
+   "tp": 70,
+   "fp": 139,
+   "fn": 0,
+   "total": 237
+  }
+ },
+ "httpie": {
+  "components": 2510,
+  "runtime": 60,
+  "how": {
+   "NV": 60
+  },
+  "rt_paths": 66,
+  "rt_paths_unmatched": [
+   "cctools-1010.6-libtool",
+   "clang-21.1.8-lib",
+   "compiler-rt-libc-21.1.8",
+   "ld64-956.6-lib",
+   "libSystem-B",
+   "libiconv-113",
+   "libresolv-93",
+   "libsbuf-14.1.0",
+   "llvm-21.1.8-lib",
+   "ncurses-6.6",
+   "ncurses-6.6-man",
+   "xcbuild-0.1.1-unstable-2019-11-20"
+  ],
+  "comp": {
+   "tp": 44,
+   "fp": 973,
+   "fn": 16,
+   "fp_by": {
+    "artifact-input/hackage": 321,
+    "both/generic": 39,
+    "artifact-input/generic": 153,
+    "artifact-input/pypi": 80,
+    "both/pypi": 32,
+    "both/hackage": 2,
+    "no-role/hackage": 26,
+    "no-role/cargo": 320
+   },
+   "fn_list": [
+    "apple-sdk@14.4 (build-tooling/generic)",
+    "cctools-binutils-darwin@1010.6 (build-tooling/generic)",
+    "clang@21.1.8 (build-tooling/generic)",
+    "clang-wrapper@21.1.8 (build-tooling/generic)",
+    "cups-headers@2.4.19 (build-tooling/generic)",
+    "expand-response-params@None (build-tooling/generic)",
+    "expand-response-params@None (build-tooling/generic)",
+    "expand-response-params@None (build-tooling/generic)",
+    "expand-response-params@None (build-tooling/generic)",
+    "expand-response-params@None (build-tooling/generic)",
+    "expand-response-params@None (build-tooling/generic)",
+    "expand-response-params@None (build-tooling/generic)",
+    "gnugrep@3.12 (build-tooling/generic)",
+    "mailcap@2.1.54 (build-tooling/generic)",
+    "nss-cacert@3.123 (build-tooling/generic)",
+    "xcbuild@0.1.1-unstable-2019-11-20 (build-tooling/generic)"
+   ]
+  },
+  "finding": {
+   "tp": 119,
+   "fp": 181,
+   "fn": 0,
+   "total": 355
+  }
+ },
+ "gh": {
+  "components": 657,
+  "runtime": 168,
+  "how": {
+   "NV": 5,
+   "EMB": 163
+  },
+  "rt_paths": 5,
+  "rt_paths_unmatched": [],
+  "comp": {
+   "tp": 166,
+   "fp": 98,
+   "fn": 2,
+   "fp_by": {
+    "artifact-input/generic": 53,
+    "both/generic": 31,
+    "artifact-input/pypi": 12,
+    "both/pypi": 2
+   },
+   "fn_list": [
+    "iana-etc@20251215 (build-tooling/generic)",
+    "mailcap@2.1.54 (build-tooling/generic)"
+   ]
+  },
+  "finding": {
+   "tp": 55,
+   "fp": 185,
+   "fn": 0,
+   "total": 266
+  }
+ },
+ "ripgrep": {
+  "components": 985,
+  "runtime": 44,
+  "how": {
+   "NV": 3,
+   "EMB": 41
+  },
+  "rt_paths": 3,
+  "rt_paths_unmatched": [],
+  "comp": {
+   "tp": 44,
+   "fp": 120,
+   "fn": 0,
+   "fp_by": {
+    "artifact-input/generic": 50,
+    "both/generic": 35,
+    "artifact-input/pypi": 26,
+    "both/pypi": 9
+   },
+   "fn_list": []
+  },
+  "finding": {
+   "tp": 6,
+   "fp": 186,
+   "fn": 0,
+   "total": 232
+  }
+ }
+}

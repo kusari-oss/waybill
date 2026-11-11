@@ -129,12 +129,19 @@ fn remove_envelopes(obj: &mut Value, namespace: &str) -> usize {
 impl SbomAdapter for Spdx23 {
     fn components(&self) -> Vec<ComponentView> {
         let mut rel_scopes: BTreeMap<String, BTreeSet<Scope>> = BTreeMap::new();
+        // `member BUILD_TOOL_OF root`: the member builds the artifact and is
+        // not in it (milestone 1277), the counterpart of CycloneDX's bare
+        // `scope: excluded` (milestone 1423).
+        let mut build_tools: BTreeSet<&str> = BTreeSet::new();
         for r in self.relationships() {
             if let (Some(a), Some(t), Some(b)) = (
                 r.get("spdxElementId").and_then(Value::as_str),
                 r.get("relationshipType").and_then(Value::as_str),
                 r.get("relatedSpdxElement").and_then(Value::as_str),
             ) {
+                if t == "BUILD_TOOL_OF" {
+                    build_tools.insert(a);
+                }
                 if let Some((_, to, s)) = dependency_edge(a, t, b) {
                     if s != Scope::Runtime {
                         rel_scopes.entry(to.to_string()).or_default().insert(s);
@@ -161,6 +168,9 @@ impl SbomAdapter for Spdx23 {
                     .collect();
                 if let Some(t) = p.get("primaryPackagePurpose").and_then(Value::as_str) {
                     roles.insert(t.to_ascii_lowercase());
+                }
+                if build_tools.contains(id.as_str()) {
+                    scopes.insert(Scope::NotInArtifact);
                 }
                 Some(ComponentView {
                     purl: purl_of_package(p),

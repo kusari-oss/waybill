@@ -55,6 +55,7 @@ fn scan_into(out: &Path, stem: &str) -> Scan {
         closure: &closure,
         rows: Rows::Json(&rows),
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan_to(out, stem, &["--nix-closure"])
 }

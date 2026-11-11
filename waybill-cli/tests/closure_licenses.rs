@@ -178,6 +178,7 @@ fn scan_with(closure_json: &str, rows: &str, extra: &[&str]) -> Scan {
         closure: closure_json,
         rows: if rows.is_empty() { Rows::Fail } else { Rows::Json(rows) },
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(extra)
 }

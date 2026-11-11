@@ -38,7 +38,37 @@ use super::super::{CellOutcome, Violation};
 use super::{cdx_component_ref, cdx_components, cdx_is_non_runtime, cdx_prop};
 
 pub const KIND_TOOLING_WITHOUT_MARKER: &str = "closure-tooling-without-non-runtime-marker";
-pub const KINDS: &[&str] = &[KIND_TOOLING_WITHOUT_MARKER];
+/// Milestone 1423 — a member C203 says is statically linked into a runtime
+/// member, which nonetheless carries a not-in-artifact mark.
+pub const KIND_LINKED_BUT_MARKED: &str = "closure-statically-linked-but-marked";
+pub const KINDS: &[&str] = &[KIND_TOOLING_WITHOUT_MARKER, KIND_LINKED_BUT_MARKED];
+
+/// How a member's C203 value says it was decided (milestone 1423,
+/// `specs/1423-nix-runtime-scope/contracts/c203-values.md`).
+enum Decided {
+    /// An exemption: nothing to check.
+    Exempt,
+    /// The runtime closure or the walk decided it, in whichever direction.
+    /// The native mark says which, and nothing else in the document says
+    /// otherwise, so there is nothing further to compare it against.
+    ByEvidence,
+    /// Statically linked into a runtime member: must carry no mark.
+    StaticallyLinked,
+    /// The milestone-1277 role rule, which is also every pre-1423 document.
+    ByRole,
+}
+
+/// Matched exhaustively over the closed C203 enum, for #892's reason. An
+/// unrecognised value falls to the role rule, which is the stricter reading.
+fn decided(component: &serde_json::Value) -> Decided {
+    match cdx_prop(component, "waybill:scope-classification-source") {
+        Some("exempt-compiler-supplied" | "exempt-evaluated-package") => Decided::Exempt,
+        Some("runtime-closure" | "reachability-walk") => Decided::ByEvidence,
+        Some("statically-linked") => Decided::StaticallyLinked,
+        Some("closure-role" | "closure-role+lifecycle-propagation") | None => Decided::ByRole,
+        Some(_) => Decided::ByRole,
+    }
+}
 
 /// Roles whose members do not go into the artifact.
 ///
@@ -93,48 +123,70 @@ fn carries_non_runtime_marker(component: &serde_json::Value) -> bool {
 pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
     let components = cdx_components(&sboms.cdx);
 
+    // Milestone 1423: every closure member, not only the non-shipping roles.
+    // Under the runtime closure a `build-tooling` member the output references
+    // (openssh's `dns-root-data`) is legitimately unmarked, and an
+    // `artifact-input` member it does not reference is legitimately marked,
+    // so the role alone no longer says what the mark must be. C203 does.
     let population: Vec<&serde_json::Value> = components
         .iter()
-        .filter(|c| {
-            cdx_prop(c, "waybill:closure-role").is_some_and(role_does_not_ship)
-        })
+        .filter(|c| cdx_prop(c, "waybill:closure-role").is_some())
         .collect();
 
     if population.is_empty() {
         return CellOutcome::NotApplicable {
-            reason: "no closure members in a non-shipping role in this document".to_string(),
+            reason: "no closure members in this document".to_string(),
         };
     }
 
-    let offenders: HashSet<&str> = population
-        .iter()
-        // Carrying the marker satisfies the row, in **either** spelling.
-        .filter(|c| !carries_non_runtime_marker(c))
-        // Being exempt satisfies it too, and says so. This is the arm that
-        // makes the row checkable at all.
-        .filter(|c| {
-            !matches!(
-                cdx_prop(c, "waybill:scope-classification-source"),
-                // Milestone 1377: the evaluated package is the artifact.
-                Some("exempt-compiler-supplied" | "exempt-evaluated-package")
-            )
-        })
-        .filter_map(|c| cdx_component_ref(c))
-        .collect();
-
-    if offenders.is_empty() {
-        return CellOutcome::Pass;
+    let mut unmarked_tooling: HashSet<&str> = HashSet::new();
+    let mut linked_but_marked: HashSet<&str> = HashSet::new();
+    for c in &population {
+        let marked = carries_non_runtime_marker(c);
+        match decided(c) {
+            // Being exempt satisfies the row, and says so. This is the arm
+            // that makes the row checkable at all.
+            Decided::Exempt | Decided::ByEvidence => {}
+            // The converse check: linked into a runtime member, so a mark
+            // would contradict the document's own evidence.
+            Decided::StaticallyLinked => {
+                if marked {
+                    linked_but_marked.extend(cdx_component_ref(c));
+                }
+            }
+            // Today's rule, which pre-1423 documents still meet.
+            Decided::ByRole => {
+                let role = cdx_prop(c, "waybill:closure-role").unwrap_or_default();
+                if role_does_not_ship(role) && !marked {
+                    unmarked_tooling.extend(cdx_component_ref(c));
+                }
+            }
+        }
     }
 
-    let mut refs: Vec<String> = offenders.into_iter().map(str::to_string).collect();
-    refs.sort();
-    CellOutcome::Fail(vec![Violation {
-        kind: KIND_TOOLING_WITHOUT_MARKER,
-        count: refs.len(),
-        // Sorted, so the example is stable across runs rather than whichever
-        // the hash set yielded first.
-        example: refs.first().cloned(),
-    }])
+    let mut violations = Vec::new();
+    for (kind, set) in [
+        (KIND_TOOLING_WITHOUT_MARKER, unmarked_tooling),
+        (KIND_LINKED_BUT_MARKED, linked_but_marked),
+    ] {
+        if set.is_empty() {
+            continue;
+        }
+        let mut refs: Vec<String> = set.into_iter().map(str::to_string).collect();
+        refs.sort();
+        violations.push(Violation {
+            kind,
+            count: refs.len(),
+            // Sorted, so the example is stable across runs rather than
+            // whichever the hash set yielded first.
+            example: refs.first().cloned(),
+        });
+    }
+    if violations.is_empty() {
+        CellOutcome::Pass
+    } else {
+        CellOutcome::Fail(violations)
+    }
 }
 
 #[cfg(test)]
@@ -309,18 +361,104 @@ mod tests {
         }
     }
 
-    /// FR-002's half of the population rule: these two roles are not in it,
-    /// so an absent marker is correct and the row reports n/a.
+    /// FR-002's half of the role rule: these two roles need no marker, so an
+    /// absent one is correct. Milestone 1423 widened the population to every
+    /// closure member, so the document now passes rather than reporting n/a.
     #[test]
-    fn i10_artifact_roles_are_not_in_the_population() {
+    fn i10_artifact_roles_need_no_marker_under_the_role_rule() {
         for role in ["artifact-input", "both"] {
             assert!(
-                matches!(
-                    check(&sboms(doc(role, false, false))),
-                    CellOutcome::NotApplicable { .. }
-                ),
-                "{role} must not be in the population"
+                matches!(check(&sboms(doc(role, false, false))), CellOutcome::Pass),
+                "{role} needs no marker"
             );
+        }
+    }
+
+    // ---- milestone 1423: the evidence values (contracts/c203-values.md) ----
+
+    fn with_source(role: &str, marker: bool, source: &str) -> serde_json::Value {
+        let mut d = doc(role, marker, false);
+        d["components"][0]["properties"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "name": "waybill:scope-classification-source", "value": source
+            }));
+        d
+    }
+
+    /// openssh's `dns-root-data`: a tooling role the output references. The
+    /// runtime closure decided it, so no mark is correct.
+    #[test]
+    fn i10_an_unmarked_tooling_member_the_runtime_closure_decided_passes() {
+        for source in ["runtime-closure", "reachability-walk"] {
+            assert!(
+                matches!(check(&sboms(with_source("build-tooling", false, source))), CellOutcome::Pass),
+                "{source}"
+            );
+        }
+    }
+
+    /// curl's libxml2: an `artifact-input` the output does not reference.
+    #[test]
+    fn i10_a_marked_artifact_member_the_runtime_closure_decided_passes() {
+        for source in ["runtime-closure", "reachability-walk"] {
+            assert!(
+                matches!(check(&sboms(with_source("artifact-input", true, source))), CellOutcome::Pass),
+                "{source}"
+            );
+        }
+    }
+
+    #[test]
+    fn i10_a_statically_linked_member_passes_unmarked() {
+        assert!(matches!(
+            check(&sboms(with_source("artifact-input", false, "statically-linked"))),
+            CellOutcome::Pass
+        ));
+    }
+
+    /// The converse check. A member C203 says is linked into a runtime
+    /// member, yet marked not-in-artifact, contradicts the document's own
+    /// evidence.
+    #[test]
+    fn i10_a_statically_linked_member_that_is_marked_fails() {
+        match check(&sboms(with_source("artifact-input", true, "statically-linked"))) {
+            CellOutcome::Fail(v) => {
+                assert_eq!(v.len(), 1);
+                assert_eq!(v[0].kind, KIND_LINKED_BUT_MARKED);
+                assert_eq!(v[0].example.as_deref(), Some("pkg:generic/tool@1.0.0"));
+            }
+            other => panic!("expected a failure, got {other:?}"),
+        }
+    }
+
+    /// A pre-1423 document: C203 `closure-role` on marked tooling members,
+    /// nothing on the rest. It still passes, and losing a mark still fails.
+    #[test]
+    fn i10_a_pre_1423_document_still_passes_under_the_role_rule() {
+        let d = serde_json::json!({
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.6",
+            "metadata": { "component": { "bom-ref": "pkg:generic/app@1.0.0" } },
+            "components": [
+                { "bom-ref": "pkg:generic/tool@1.0.0", "name": "tool", "type": "library",
+                  "scope": "excluded",
+                  "properties": [
+                    { "name": "waybill:closure-role", "value": "build-tooling" },
+                    { "name": "waybill:scope-classification-source", "value": "closure-role" } ] },
+                { "bom-ref": "pkg:generic/lib@1.0.0", "name": "lib", "type": "library",
+                  "properties": [ { "name": "waybill:closure-role", "value": "artifact-input" } ] },
+            ],
+            "dependencies": [],
+        });
+        assert!(matches!(check(&sboms(d.clone())), CellOutcome::Pass));
+        // CONTROL: the same document with the tooling member's mark removed.
+        let mut lost = d;
+        lost["components"][0].as_object_mut().unwrap().remove("scope");
+        match check(&sboms(lost)) {
+            CellOutcome::Fail(v) => assert_eq!(v[0].kind, KIND_TOOLING_WITHOUT_MARKER),
+            other => panic!("expected a failure, got {other:?}"),
         }
     }
 
@@ -345,15 +483,17 @@ mod tests {
         ));
     }
 
-    /// An unrecognised role is not evidence either way, so it is out of the
-    /// population — matching the emitter's own fail-closed classifier. #892
-    /// is why this is pinned: a membership test over an enum silently
-    /// absorbed a variant added later and survived about two years.
+    /// An unrecognised role is not evidence either way, so the role rule
+    /// demands no marker of it — matching the emitter's own fail-closed
+    /// classifier. #892 is why this is pinned: a membership test over an
+    /// enum silently absorbed a variant added later and survived about two
+    /// years. (Milestone 1423 widened the population to every closure member,
+    /// so this passes rather than reporting n/a.)
     #[test]
-    fn i10_an_unknown_role_is_not_in_the_population() {
+    fn i10_an_unknown_role_demands_no_marker() {
         assert!(matches!(
             check(&sboms(doc("some-new-role", false, false))),
-            CellOutcome::NotApplicable { .. }
+            CellOutcome::Pass
         ));
     }
 }

@@ -1,0 +1,1 @@
+vxrqivf2qkjbrglzi13ssg4h20g58vb1-shellcheck-0.11.0.drv outputs-attr=['bin', 'man', 'doc', 'out'] head=bin head-path=xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin outPath=xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin agree=True

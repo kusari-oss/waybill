@@ -1,0 +1,824 @@
+{
+ "targets": {
+  "curl": {
+   "c203_values": {
+    "-": 96,
+    "closure-role": 367,
+    "exempt-evaluated-package": 1
+   },
+   "c216": null,
+   "counts": {
+    "findings": 211,
+    "reach_fp": 15,
+    "reach_tn": 96,
+    "reach_tp": 100,
+    "walk_fp": 85,
+    "walk_tn": 26,
+    "walk_tp": 100
+   },
+   "disagreements_with_reach": [
+    {
+     "c203": "-",
+     "component": "bison@3.8.2",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "coreutils@9.11",
+     "findings": 3,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libarchive@3.8.7",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "lua@5.2.4",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "lxml@6.0.2",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "pcre2@10.46",
+     "findings": 6,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "perl@5.42.0",
+     "findings": 5,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "python3@3.13.13",
+     "findings": 35,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "setuptools@80.10.1",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "sqlite@3.51.2",
+     "findings": 13,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "wheel@0.46.1",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    }
+   ]
+  },
+  "gh": {
+   "c203_values": {
+    "-": 100,
+    "closure-role": 392,
+    "exempt-evaluated-package": 1
+   },
+   "c216": null,
+   "counts": {
+    "findings": 266,
+    "reach_tn": 211,
+    "reach_tp": 55,
+    "walk_fp": 185,
+    "walk_tn": 26,
+    "walk_tp": 55
+   },
+   "disagreements_with_reach": [
+    {
+     "c203": "-",
+     "component": "bison@3.8.2",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "brotli@1.2.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "c-ares@1.34.6",
+     "findings": 3,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "coreutils@9.11",
+     "findings": 3,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "curl@8.20.0",
+     "findings": 46,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libarchive@3.8.7",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libssh2@1.11.1",
+     "findings": 10,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libxml2@2.15.2",
+     "findings": 10,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libxslt@1.1.45",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "lua@5.2.4",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "lxml@6.0.2",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "nghttp2@1.69.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "openssl@3.6.2",
+     "findings": 41,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "pcre2@10.46",
+     "findings": 6,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "perl@5.42.0",
+     "findings": 5,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "python3@3.13.13",
+     "findings": 35,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "setuptools@80.10.1",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "sqlite@3.51.2",
+     "findings": 13,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "wheel@0.46.1",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "zlib@1.3.2",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    }
+   ]
+  },
+  "httpie": {
+   "c203_values": {
+    "-": 670,
+    "closure-role": 1492,
+    "exempt-evaluated-package": 1
+   },
+   "c216": null,
+   "counts": {
+    "findings": 355,
+    "reach_fn": 19,
+    "reach_tn": 236,
+    "reach_tp": 100,
+    "walk_fp": 181,
+    "walk_tn": 55,
+    "walk_tp": 119
+   },
+   "disagreements_with_reach": [
+    {
+     "c203": "-",
+     "component": "bison@3.8.2",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "brotli@1.2.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "brotlicffi@1.2.0.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "c-ares@1.34.6",
+     "findings": 3,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "coreutils@9.11",
+     "findings": 3,
+     "truth": "truth-runtime",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "cryptography@48.0.0",
+     "findings": 4,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "curl@8.20.0",
+     "findings": 46,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "filelock@3.20.3",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "flask@3.1.2",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "gix-fs@0.19.1",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "gix-pack@0.66.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "gix-packetline@0.21.1",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "gix-sec@0.13.1",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "gix-transport@0.54.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "gix@0.79.0",
+     "findings": 4,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "gnutls@3.8.13",
+     "findings": 8,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libarchive@3.8.7",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libssh2@1.11.1",
+     "findings": 10,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libxml2@2.15.2",
+     "findings": 10,
+     "truth": "truth-runtime",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libxslt@1.1.45",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "lua@5.2.4",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "lxml@6.0.2",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "mistune@3.2.0",
+     "findings": 17,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "nghttp2@1.69.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "p11-kit@0.26.2",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "pcre2@10.46",
+     "findings": 6,
+     "truth": "truth-runtime",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "perl@5.42.0",
+     "findings": 5,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "pillow@12.2.0",
+     "findings": 54,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "pyasn1@0.6.3",
+     "findings": 7,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "rand@0.9.2",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "tar@0.4.45",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "werkzeug@3.1.6",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "wheel@0.46.1",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    }
+   ]
+  },
+  "openssh": {
+   "c203_values": {
+    "-": 91,
+    "closure-role": 364,
+    "exempt-evaluated-package": 1
+   },
+   "c216": null,
+   "counts": {
+    "findings": 237,
+    "reach_tn": 167,
+    "reach_tp": 70,
+    "walk_fp": 139,
+    "walk_tn": 28,
+    "walk_tp": 70
+   },
+   "disagreements_with_reach": [
+    {
+     "c203": "-",
+     "component": "bison@3.8.2",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "c-ares@1.34.6",
+     "findings": 3,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "coreutils@9.11",
+     "findings": 3,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "curl@8.20.0",
+     "findings": 46,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libarchive@3.8.7",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libssh2@1.11.1",
+     "findings": 10,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libxml2@2.15.2",
+     "findings": 10,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "lua@5.2.4",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "nghttp2@1.69.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "pcre2@10.46",
+     "findings": 6,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "perl@5.42.0",
+     "findings": 5,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "python3@3.13.13",
+     "findings": 35,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "setuptools@80.10.1",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "sqlite@3.51.2",
+     "findings": 13,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "wheel@0.46.1",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    }
+   ]
+  },
+  "ripgrep": {
+   "c203_values": {
+    "-": 122,
+    "closure-role": 820,
+    "exempt-evaluated-package": 1
+   },
+   "c216": null,
+   "counts": {
+    "findings": 232,
+    "reach_tn": 226,
+    "reach_tp": 6,
+    "walk_fp": 186,
+    "walk_tn": 40,
+    "walk_tp": 6
+   },
+   "disagreements_with_reach": [
+    {
+     "c203": "-",
+     "component": "bison@3.8.2",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "brotli@1.2.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "c-ares@1.34.6",
+     "findings": 3,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "certifi@2026.01.04",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "coreutils@9.11",
+     "findings": 3,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "curl@8.20.0",
+     "findings": 46,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "idna@3.13",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libarchive@3.8.7",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libssh2@1.11.1",
+     "findings": 10,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libxml2@2.15.2",
+     "findings": 10,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "libxslt@1.1.45",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "lua@5.2.4",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "lxml@6.0.2",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "nghttp2@1.69.0",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "openssl@3.6.2",
+     "findings": 41,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "perl@5.42.0",
+     "findings": 5,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "python3@3.13.13",
+     "findings": 35,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "setuptools@80.10.1",
+     "findings": 2,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "sqlite@3.51.2",
+     "findings": 13,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "urllib3@2.6.3",
+     "findings": 5,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "wheel@0.46.1",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    },
+    {
+     "c203": "-",
+     "component": "zlib@1.3.2",
+     "findings": 1,
+     "truth": "truth-build",
+     "walk": "walk-runtime"
+    }
+   ]
+  }
+ },
+ "total": {
+  "findings": 1301,
+  "reach": {
+   "fn": 19,
+   "fp": 15,
+   "marked_runtime": 346,
+   "precision": 0.9566473988439307,
+   "recall": 0.9457142857142857,
+   "tp": 331
+  },
+  "truth_runtime_findings": 350,
+  "walk": {
+   "fn": 0,
+   "fp": 776,
+   "marked_runtime": 1126,
+   "precision": 0.3108348134991119,
+   "recall": 1.0,
+   "tp": 350,
+   "unjoined_findings": 0
+  }
+ }
+}

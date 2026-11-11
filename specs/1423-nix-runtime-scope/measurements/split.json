@@ -1,0 +1,426 @@
+{
+ "curl": {
+  "total": 211,
+  "rows": {
+   "rt/rt/role=artifact-input": 13,
+   "rt/rt/role=both": 87,
+   "build/build/excluded": 26,
+   "build/build/role=both": 62,
+   "build/build/role=artifact-input": 23
+  },
+  "detail": {
+   "rt/rt/role=artifact-input": {
+    "brotli@1.2.0 [generic]": 1,
+    "libssh2@1.11.1 [generic]": 10,
+    "zlib@1.3.2 [generic]": 1,
+    "nghttp2@1.69.0 [generic]": 1
+   },
+   "rt/rt/role=both": {
+    "openssl@3.6.2 [generic]": 41,
+    "curl@8.20.0 [generic]": 46
+   },
+   "build/build/excluded": {
+    "cpio@2.15 [generic]": 2,
+    "jq@1.8.1 [generic]": 16,
+    "gzip@1.14 [generic]": 2,
+    "gawk@5.4.0 [generic]": 4,
+    "patch@2.8 [generic]": 2
+   },
+   "build/build/role=both": {
+    "sqlite@3.51.2 [generic]": 13,
+    "perl@5.42.0 [generic]": 5,
+    "python3@3.13.13 [generic]": 35,
+    "libxslt@1.1.45 [generic]": 2,
+    "setuptools@80.10.1 [pypi]": 2,
+    "coreutils@9.11 [generic]": 3,
+    "bison@3.8.2 [generic]": 2
+   },
+   "build/build/role=artifact-input": {
+    "c-ares@1.34.6 [generic]": 3,
+    "lua@5.2.4 [generic]": 1,
+    "libxml2@2.15.2 [generic]": 10,
+    "wheel@0.46.1 [pypi]": 1,
+    "pcre2@10.46 [generic]": 6,
+    "lxml@6.0.2 [pypi]": 1,
+    "libarchive@3.8.7 [generic]": 1
+   }
+  },
+  "comp": {
+   "tp": 19,
+   "fp": 78,
+   "fn": 0,
+   "tn": 368,
+   "fp_by_mark": {
+    "role=artifact-input/generic": 35,
+    "role=both/generic": 29,
+    "role=artifact-input/pypi": 12,
+    "role=both/pypi": 2
+   },
+   "fn_list": []
+  }
+ },
+ "openssh": {
+  "total": 237,
+  "rows": {
+   "rt/rt/role=unreferenced": 28,
+   "rt/rt/role=both": 41,
+   "build/build/role=artifact-input": 33,
+   "build/build/excluded": 28,
+   "build/build/role=both": 106,
+   "rt/rt/role=artifact-input": 1
+  },
+  "detail": {
+   "rt/rt/role=unreferenced": {
+    "openssh@10.3p1 [generic]": 28
+   },
+   "rt/rt/role=both": {
+    "openssl@3.6.2 [generic]": 41
+   },
+   "build/build/role=artifact-input": {
+    "libssh2@1.11.1 [generic]": 10,
+    "c-ares@1.34.6 [generic]": 3,
+    "lua@5.2.4 [generic]": 1,
+    "libxml2@2.15.2 [generic]": 10,
+    "wheel@0.46.1 [pypi]": 1,
+    "pcre2@10.46 [generic]": 6,
+    "nghttp2@1.69.0 [generic]": 1,
+    "libarchive@3.8.7 [generic]": 1
+   },
+   "build/build/excluded": {
+    "cpio@2.15 [generic]": 2,
+    "jq@1.8.1 [generic]": 16,
+    "gzip@1.14 [generic]": 2,
+    "libxslt@1.1.45 [generic]": 2,
+    "gawk@5.4.0 [generic]": 4,
+    "patch@2.8 [generic]": 2
+   },
+   "build/build/role=both": {
+    "sqlite@3.51.2 [generic]": 13,
+    "curl@8.20.0 [generic]": 46,
+    "perl@5.42.0 [generic]": 5,
+    "python3@3.13.13 [generic]": 35,
+    "setuptools@80.10.1 [pypi]": 2,
+    "coreutils@9.11 [generic]": 3,
+    "bison@3.8.2 [generic]": 2
+   },
+   "rt/rt/role=artifact-input": {
+    "zlib@1.3.2 [generic]": 1
+   }
+  },
+  "comp": {
+   "tp": 10,
+   "fp": 82,
+   "fn": 1,
+   "tn": 364,
+   "fp_by_mark": {
+    "role=artifact-input/generic": 41,
+    "role=both/generic": 28,
+    "role=artifact-input/pypi": 11,
+    "role=both/pypi": 2
+   },
+   "fn_list": [
+    "dns-root-data@2025-04-14 excluded"
+   ]
+  }
+ },
+ "httpie": {
+  "total": 355,
+  "rows": {
+   "build/build/role=both": 119,
+   "build/build/role=artifact-input": 51,
+   "rt/rt/role=both": 106,
+   "build/build/excluded": 55,
+   "rt/rt/role=artifact-input": 13,
+   "build/build/unmarked": 11
+  },
+  "detail": {
+   "build/build/role=both": {
+    "brotli@1.2.0 [pypi]": 1,
+    "pillow@12.2.0 [pypi]": 54,
+    "curl@8.20.0 [generic]": 46,
+    "perl@5.42.0 [generic]": 5,
+    "libxslt@1.1.45 [generic]": 2,
+    "wheel@0.46.1 [pypi]": 1,
+    "lxml@6.0.2 [pypi]": 1,
+    "cryptography@48.0.0 [pypi]": 4,
+    "werkzeug@3.1.6 [pypi]": 1,
+    "filelock@3.20.3 [pypi]": 2,
+    "bison@3.8.2 [generic]": 2
+   },
+   "build/build/role=artifact-input": {
+    "brotlicffi@1.2.0.0 [pypi]": 1,
+    "libssh2@1.11.1 [generic]": 10,
+    "gnutls@3.8.13 [generic]": 8,
+    "c-ares@1.34.6 [generic]": 3,
+    "lua@5.2.4 [generic]": 1,
+    "mistune@3.2.0 [pypi]": 17,
+    "pyasn1@0.6.3 [pypi]": 7,
+    "nghttp2@1.69.0 [generic]": 1,
+    "flask@3.1.2 [pypi]": 1,
+    "libarchive@3.8.7 [generic]": 1,
+    "p11-kit@0.26.2 [generic]": 1
+   },
+   "rt/rt/role=both": {
+    "openssl@3.6.2 [generic]": 41,
+    "sqlite@3.51.2 [generic]": 13,
+    "python3@3.13.13 [generic]": 35,
+    "libxml2@2.15.2 [generic]": 10,
+    "zlib@1.3.2 [generic]": 1,
+    "setuptools@80.10.1 [pypi]": 2,
+    "coreutils@9.11 [generic]": 3,
+    "certifi@2026.01.04 [pypi]": 1
+   },
+   "build/build/excluded": {
+    "cpio@2.15 [generic]": 2,
+    "jq@1.8.1 [generic]": 16,
+    "mako@1.3.10 [pypi]": 3,
+    "gzip@1.14 [generic]": 2,
+    "virtualenv@20.36.1 [pypi]": 19,
+    "gawk@5.4.0 [generic]": 4,
+    "time@0.3.44 [cargo]": 1,
+    "pip@25.3 [pypi]": 5,
+    "sh@2.2.2 [pypi]": 1,
+    "patch@2.8 [generic]": 2
+   },
+   "rt/rt/role=artifact-input": {
+    "urllib3@2.6.3 [pypi]": 5,
+    "pcre2@10.46 [generic]": 6,
+    "multidict@6.7.1 [pypi]": 1,
+    "idna@3.13 [pypi]": 1
+   },
+   "build/build/unmarked": {
+    "gix@0.79.0 [cargo]": 4,
+    "gix-fs@0.19.1 [cargo]": 1,
+    "gix-sec@0.13.1 [cargo]": 1,
+    "gix-pack@0.66.0 [cargo]": 1,
+    "gix-packetline@0.21.1 [cargo]": 1,
+    "gix-transport@0.54.0 [cargo]": 1,
+    "tar@0.4.45 [cargo]": 1,
+    "rand@0.9.2 [cargo]": 1
+   }
+  },
+  "comp": {
+   "tp": 44,
+   "fp": 973,
+   "fn": 16,
+   "tn": 1477,
+   "fp_by_mark": {
+    "role=artifact-input/hackage": 321,
+    "role=both/generic": 39,
+    "role=artifact-input/generic": 153,
+    "role=artifact-input/pypi": 80,
+    "role=both/pypi": 32,
+    "role=both/hackage": 2,
+    "unmarked/hackage": 26,
+    "unmarked/cargo": 320
+   },
+   "fn_list": [
+    "apple-sdk@14.4 excluded",
+    "cctools-binutils-darwin@1010.6 excluded",
+    "clang@21.1.8 excluded",
+    "clang-wrapper@21.1.8 excluded",
+    "cups-headers@2.4.19 excluded",
+    "expand-response-params@None excluded",
+    "expand-response-params@None excluded",
+    "expand-response-params@None excluded",
+    "expand-response-params@None excluded",
+    "expand-response-params@None excluded",
+    "expand-response-params@None excluded",
+    "expand-response-params@None excluded",
+    "gnugrep@3.12 excluded",
+    "mailcap@2.1.54 excluded",
+    "nss-cacert@3.123 excluded",
+    "xcbuild@0.1.1-unstable-2019-11-20 excluded"
+   ]
+  }
+ },
+ "gh": {
+  "total": 266,
+  "rows": {
+   "build/build/role=artifact-input": 36,
+   "build/build/role=both": 149,
+   "build/build/excluded": 26,
+   "build/rt/unmarked": 55
+  },
+  "detail": {
+   "build/build/role=artifact-input": {
+    "brotli@1.2.0 [generic]": 1,
+    "libssh2@1.11.1 [generic]": 10,
+    "c-ares@1.34.6 [generic]": 3,
+    "lua@5.2.4 [generic]": 1,
+    "libxml2@2.15.2 [generic]": 10,
+    "zlib@1.3.2 [generic]": 1,
+    "wheel@0.46.1 [pypi]": 1,
+    "pcre2@10.46 [generic]": 6,
+    "lxml@6.0.2 [pypi]": 1,
+    "nghttp2@1.69.0 [generic]": 1,
+    "libarchive@3.8.7 [generic]": 1
+   },
+   "build/build/role=both": {
+    "openssl@3.6.2 [generic]": 41,
+    "sqlite@3.51.2 [generic]": 13,
+    "curl@8.20.0 [generic]": 46,
+    "perl@5.42.0 [generic]": 5,
+    "python3@3.13.13 [generic]": 35,
+    "libxslt@1.1.45 [generic]": 2,
+    "setuptools@80.10.1 [pypi]": 2,
+    "coreutils@9.11 [generic]": 3,
+    "bison@3.8.2 [generic]": 2
+   },
+   "build/build/excluded": {
+    "cpio@2.15 [generic]": 2,
+    "jq@1.8.1 [generic]": 16,
+    "gzip@1.14 [generic]": 2,
+    "gawk@5.4.0 [generic]": 4,
+    "patch@2.8 [generic]": 2
+   },
+   "build/rt/unmarked": {
+    "stdlib@v1.26.3 [golang]": 27,
+    "golang.org/x/net@v0.55.0 [golang]": 8,
+    "google.golang.org/grpc@v1.81.1 [golang]": 4,
+    "github.com/klauspost/compress@v1.18.6 [golang]": 2,
+    "github.com/sigstore/timestamp-authority/v2@v2.0.6 [golang]": 1,
+    "golang.org/x/crypto@v0.52.0 [golang]": 4,
+    "golang.org/x/text@v0.37.0 [golang]": 2,
+    "github.com/sigstore/rekor@v1.5.0 [golang]": 1,
+    "golang.org/x/mod@v0.36.0 [golang]": 2,
+    "go.opentelemetry.io/otel@v1.43.0 [golang]": 1,
+    "github.com/sigstore/sigstore-go@v1.1.4 [golang]": 2,
+    "github.com/in-toto/in-toto-golang@v0.9.0 [golang]": 1
+   }
+  },
+  "comp": {
+   "tp": 166,
+   "fp": 98,
+   "fn": 2,
+   "tn": 391,
+   "fp_by_mark": {
+    "role=artifact-input/generic": 53,
+    "role=both/generic": 31,
+    "role=artifact-input/pypi": 12,
+    "role=both/pypi": 2
+   },
+   "fn_list": [
+    "iana-etc@20251215 excluded",
+    "mailcap@2.1.54 excluded"
+   ]
+  }
+ },
+ "ripgrep": {
+  "total": 232,
+  "rows": {
+   "build/build/role=artifact-input": 35,
+   "build/build/role=both": 151,
+   "build/build/excluded": 40,
+   "rt/rt/role=artifact-input": 6
+  },
+  "detail": {
+   "build/build/role=artifact-input": {
+    "brotli@1.2.0 [generic]": 1,
+    "libssh2@1.11.1 [generic]": 10,
+    "c-ares@1.34.6 [generic]": 3,
+    "lua@5.2.4 [generic]": 1,
+    "urllib3@2.6.3 [pypi]": 5,
+    "libxml2@2.15.2 [generic]": 10,
+    "wheel@0.46.1 [pypi]": 1,
+    "idna@3.13 [pypi]": 1,
+    "nghttp2@1.69.0 [generic]": 1,
+    "libarchive@3.8.7 [generic]": 1,
+    "certifi@2026.01.04 [pypi]": 1
+   },
+   "build/build/role=both": {
+    "openssl@3.6.2 [generic]": 41,
+    "sqlite@3.51.2 [generic]": 13,
+    "curl@8.20.0 [generic]": 46,
+    "perl@5.42.0 [generic]": 5,
+    "python3@3.13.13 [generic]": 35,
+    "zlib@1.3.2 [generic]": 1,
+    "libxslt@1.1.45 [generic]": 2,
+    "setuptools@80.10.1 [pypi]": 2,
+    "lxml@6.0.2 [pypi]": 1,
+    "coreutils@9.11 [generic]": 3,
+    "bison@3.8.2 [generic]": 2
+   },
+   "build/build/excluded": {
+    "cpio@2.15 [generic]": 2,
+    "jq@1.8.1 [generic]": 16,
+    "gix@0.79.0 [cargo]": 4,
+    "gzip@1.14 [generic]": 2,
+    "gix-fs@0.19.1 [cargo]": 1,
+    "gawk@5.4.0 [generic]": 4,
+    "time@0.3.44 [cargo]": 1,
+    "filelock@3.20.3 [pypi]": 2,
+    "gix-sec@0.13.1 [cargo]": 1,
+    "patch@2.8 [generic]": 2,
+    "gix-pack@0.66.0 [cargo]": 1,
+    "gix-packetline@0.21.1 [cargo]": 1,
+    "gix-transport@0.54.0 [cargo]": 1,
+    "tar@0.4.45 [cargo]": 1,
+    "rand@0.9.2 [cargo]": 1
+   },
+   "rt/rt/role=artifact-input": {
+    "pcre2@10.46 [generic]": 6
+   }
+  },
+  "comp": {
+   "tp": 23,
+   "fp": 141,
+   "fn": 0,
+   "tn": 821,
+   "fp_by_mark": {
+    "role=artifact-input/generic": 50,
+    "role=both/generic": 35,
+    "role=artifact-input/pypi": 26,
+    "role=both/pypi": 9,
+    "unmarked/cargo": 21
+   },
+   "fn_list": []
+  }
+ },
+ "moat": {
+  "total": 220,
+  "rows": {
+   "n/a/n/a/role=artifact-input": 42,
+   "n/a/n/a/role=both": 150,
+   "n/a/n/a/excluded": 28
+  },
+  "detail": {
+   "n/a/n/a/role=artifact-input": {
+    "brotli@1.2.0 [generic]": 1,
+    "libssh2@1.11.1 [generic]": 10,
+    "c-ares@1.34.6 [generic]": 3,
+    "lua@5.2.4 [generic]": 1,
+    "urllib3@2.6.3 [pypi]": 5,
+    "libxml2@2.15.2 [generic]": 10,
+    "zlib@1.3.2 [generic]": 1,
+    "wheel@0.46.1 [pypi]": 1,
+    "pcre2@10.46 [generic]": 6,
+    "idna@3.13 [pypi]": 1,
+    "nghttp2@1.69.0 [generic]": 1,
+    "libarchive@3.8.7 [generic]": 1,
+    "certifi@2026.01.04 [pypi]": 1
+   },
+   "n/a/n/a/role=both": {
+    "openssl@3.6.2 [generic]": 41,
+    "sqlite@3.51.2 [generic]": 13,
+    "curl@8.20.0 [generic]": 46,
+    "perl@5.42.0 [generic]": 5,
+    "python3@3.13.13 [generic]": 35,
+    "libxslt@1.1.45 [generic]": 2,
+    "setuptools@80.10.1 [pypi]": 2,
+    "lxml@6.0.2 [pypi]": 1,
+    "coreutils@9.11 [generic]": 3,
+    "bison@3.8.2 [generic]": 2
+   },
+   "n/a/n/a/excluded": {
+    "cpio@2.15 [generic]": 2,
+    "jq@1.8.1 [generic]": 16,
+    "gzip@1.14 [generic]": 2,
+    "gawk@5.4.0 [generic]": 4,
+    "filelock@3.20.3 [pypi]": 2,
+    "patch@2.8 [generic]": 2
+   }
+  },
+  "comp": null
+ }
+}

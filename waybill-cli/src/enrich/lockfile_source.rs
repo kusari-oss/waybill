@@ -279,6 +279,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new(&purl_str).expect("valid purl"),
             name: name.to_string(),
             version: version.to_string(),

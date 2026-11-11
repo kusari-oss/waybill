@@ -1,0 +1,4 @@
+{
+ "defaultValue": 15,
+ "description": "\nThe timeout (in seconds) for establishing connections in the\nbinary cache substituter. It corresponds to `curl`\u2019s\n`--connect-timeout` option. A value of 0 means no limit.\n\n"
+}

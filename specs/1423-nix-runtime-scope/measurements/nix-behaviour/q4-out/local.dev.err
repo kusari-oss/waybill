@@ -1,0 +1,23 @@
+these 21 paths will be fetched (2.6 MiB download, 9.9 MiB unpacked):
+  /nix/store/73r9mbvmqzmzpcmb66pr78lx28q697h0-brotli-1.2.0
+  /nix/store/qvykrmzwy61rwdhmsm1wny62ws3cjjv2-brotli-1.2.0-dev
+  /nix/store/kx8sk9nzfvx931a26jabjwl5vfh5d471-c-ares-1.34.6
+  /nix/store/z43571apx58qpq4kdz207f4vcbbzd6nj-curl-8.20.0-dev
+  /nix/store/lzzppwcl4xmynbm8qb2m1bi4v2y2lb9q-krb5-1.22.1
+  /nix/store/76w2z3mgdn9581iz9xp6082v0s3mqaly-krb5-1.22.1-dev
+  /nix/store/sxiwgn8ar997lzwnib0i3vjgg4wv2c8k-libev-4.33
+  /nix/store/nmbr6davp2a9inrgfgflgjy1q1f0rf9z-libidn2-2.3.8-bin
+  /nix/store/vhymvrily4x201i0zljynkjcayc6mn31-libidn2-2.3.8-dev
+  /nix/store/89nqvjnr2q20ypbc95l5ag249av97l9f-libpsl-0.21.5-dev
+  /nix/store/isi43z7q4ssdxp6zyll3l6l8mpj5ljry-libssh2-1.11.1-dev
+  /nix/store/dgf4llnb646kab23lgvaxjb99pd3cg6j-nghttp2-1.69.0
+  /nix/store/myf75wyk65bxqxmhxzm5zhwnlcg9ffy9-nghttp2-1.69.0-dev
+  /nix/store/xs0bjk196ifjrcym0cpzh99a0gpn125y-nghttp3-1.15.0-dev
+  /nix/store/814y8m5jqsvhxkvslz1xpnhmlz3zysvr-ngtcp2-1.22.1-dev
+  /nix/store/r51ad62j4z7xzqa2svcb6d1b443kphzr-openssl-3.6.2-bin
+  /nix/store/8g69q86jfk5rpa34gny4rh057h5yb1nw-openssl-3.6.2-dev
+  /nix/store/qa3fdfbs0ypr76higqa87rc169fnq2gx-zlib-1.3.2-dev
+  /nix/store/c2sl2xgzjv2d6n2j0d2v7wadsnxf2s48-zlib-1.3.2-static
+  /nix/store/lj773k1dkd7rrnrf0f05v43kwwbzlv4j-zstd-1.5.7-bin
+  /nix/store/jg2ki5fvwby45jdv5qmwmn6808gfvvks-zstd-1.5.7-dev
+error: path '/nix/store/z43571apx58qpq4kdz207f4vcbbzd6nj-curl-8.20.0-dev' is not valid

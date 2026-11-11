@@ -1,0 +1,5 @@
+warning: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Timeout was reached (28) Connection timed out after 2001 milliseconds; retrying in 340 ms (attempt 1/5)
+warning: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Timeout was reached (28) Connection timed out after 2001 milliseconds; retrying in 512 ms (attempt 2/5)
+warning: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Timeout was reached (28) Connection timed out after 2001 milliseconds; retrying in 1155 ms (attempt 3/5)
+warning: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Timeout was reached (28) Connection timed out after 2001 milliseconds; retrying in 2131 ms (attempt 4/5)
+error: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Timeout was reached (28) Connection timed out after 2001 milliseconds

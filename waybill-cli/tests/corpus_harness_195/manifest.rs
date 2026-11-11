@@ -240,6 +240,33 @@ pub const TARGETS: &[CorpusTarget] = &[
         expectations: super::expectations::nix_closure_moat_expectations,
         scan_mode: ScanMode::NixClosure { attr: "default" },
     },
+    // Milestone 1423 (T036, FR-016) — the live runtime-closure path.
+    //
+    // moat's output is in no store on CI, so it only ever exercises the
+    // reachability walk. This wrapper flake exposes nixpkgs' `shellcheck`
+    // at the same pinned revision (`a799d3e3`): a statically linked Haskell
+    // executable whose output cache.nixos.org holds, so the scan's scope
+    // comes from the runtime closure the substituter returns, signature-
+    // verified, and its Haskell libraries are runtime only by static
+    // linking (SC-007). Measured on aarch64-darwin: 5 runtime paths, none
+    // of them a Haskell library; 50 libraries linked per the cabal metadata.
+    CorpusTarget {
+        name: "nix-closure-shellcheck",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/kusari-sandbox/waybill-fixture-nix-shellcheck",
+        },
+        pinned: PinnedRef::Sha {
+            // Initial commit, 2026-11-11: flake.nix + flake.lock pinning nixpkgs a799d3e3.
+            hex: "dc4e4509686df76a2e060a019097e2b7a8167073",
+        },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "--nix-closure scope from the runtime closure a substituter returns, \
+                    signature-verified, with statically linked Haskell libraries kept \
+                    runtime (m1423)",
+        reader_ecosystems: &[EcosystemId::Nix],
+        expectations: super::expectations::nix_closure_shellcheck_expectations,
+        scan_mode: ScanMode::NixClosure { attr: "default" },
+    },
     // T022 (US2) — Rust source target:
     CorpusTarget {
         name: "rust-ripgrep",

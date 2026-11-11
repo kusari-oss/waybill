@@ -344,6 +344,71 @@ fn nix_fail(check_name: &'static str, observed: String, expected: &str, suggeste
     }
 }
 
+/// Milestone 1423 (T036, SC-007): scope from the runtime closure a
+/// substituter returns, and Haskell libraries kept runtime by static linking.
+///
+/// Structural only, like moat's: exact counts are the goldens' job, and this
+/// closure was measured on aarch64-darwin, not CI's x86_64-linux.
+pub fn nix_closure_shellcheck_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    let Some(method) = cdx_doc_property(&sboms.cdx, "waybill:closure-scope-method")
+        .and_then(|v| serde_json::from_str::<serde_json::Value>(&v).ok())
+    else {
+        return Err(nix_fail(
+            "m1423-scope-method-present",
+            "no waybill:closure-scope-method document property".to_string(),
+            "the C216 record",
+            "the closure tier did not run, or the scope pass stopped recording its method",
+        ));
+    };
+    if method["method"] != "runtime-closure" || method["verified"] != true {
+        return Err(nix_fail(
+            "m1423-runtime-closure-used",
+            method.to_string(),
+            "method runtime-closure, verified true: cache.nixos.org holds this output",
+            "the substituter query, its signature verification, or the join to members \
+             failed; read unavailable-reason",
+        ));
+    }
+    let comps: Vec<&serde_json::Value> = {
+        fn walk<'a>(cs: &'a serde_json::Value, out: &mut Vec<&'a serde_json::Value>) {
+            for c in cs.as_array().into_iter().flatten() {
+                out.push(c);
+                walk(&c["components"], out);
+            }
+        }
+        let mut v = Vec::new();
+        walk(&sboms.cdx["components"], &mut v);
+        v
+    };
+    fn source(c: &serde_json::Value) -> Option<&str> {
+        c["properties"].as_array().and_then(|ps| {
+            ps.iter()
+                .find(|p| p["name"] == "waybill:scope-classification-source")
+                .and_then(|p| p["value"].as_str())
+        })
+    }
+    let linked: Vec<&&serde_json::Value> =
+        comps.iter().filter(|c| source(c) == Some("statically-linked")).collect();
+    if linked.is_empty() {
+        return Err(nix_fail(
+            "m1423-static-link-present",
+            "0 statically-linked components".to_string(),
+            "the Haskell libraries linked into shellcheck (50 per the cabal metadata, \
+             measured on aarch64-darwin)",
+            "static-link detection stopped finding the static ShellCheck build's libraries",
+        ));
+    }
+    if let Some(c) = linked.iter().find(|c| c["scope"] == "excluded") {
+        return Err(nix_fail(
+            "m1423-static-link-not-excluded",
+            format!("`{}` is statically linked yet scope=excluded", c["name"]),
+            "no scope: its code ships inside the binary",
+            "the scope pass marked a member it also classified as statically linked",
+        ));
+    }
+    Ok(())
+}
+
 /// Structural invariants only; exact counts are the goldens' job, and the
 /// closure is per-system (CI's x86_64-linux closure is not the one measured
 /// on aarch64-darwin when the target was added).
@@ -456,10 +521,18 @@ pub fn nix_closure_moat_expectations(sboms: &EmittedSboms) -> Result<(), Asserti
 
     // SC-003. Six components carried CDX `scope: "excluded"` on the strength
     // of a role that was wrong, because the declaration referencing them
-    // lived in `structuredAttrs`. nix references all six into the artifact,
-    // so no format may now report them absent from it — and m1277's rule
-    // asserts no scope at all for `artifact-input` or `both`, because that is
-    // exactly the case waybill cannot call.
+    // lived in `structuredAttrs`. Reading that carrier makes their C182
+    // role `artifact-input` or `both`, and that role is what this guards.
+    //
+    // Milestone 1423 changed what scope means: it is decided by runtime
+    // evidence (the runtime closure, or on this target, whose output is in
+    // no store, the reachability walk), not by the role. "Some derivation in
+    // the closure takes it as an input" no longer implies "ships", so
+    // `tzdata` and `util-linux-minimal`, reached only through build-only
+    // members (python3, pytz, tcl) and through check-time inputs, are now
+    // correctly marked. The #1348 regression signal therefore moves from the
+    // scope to the role: if the reader stopped consulting `structuredAttrs`,
+    // these roles would fall back to `build-tooling` or `unreferenced`.
     for name in [
         "bash-interactive",
         "elfutils",
@@ -478,14 +551,33 @@ pub fn nix_closure_moat_expectations(sboms: &EmittedSboms) -> Result<(), Asserti
                 "a member nix references into the artifact vanished from the document",
             ));
         };
-        if c.get("scope").and_then(|v| v.as_str()) == Some("excluded") {
+        let prop = |key: &str| {
+            c["properties"].as_array().and_then(|ps| {
+                ps.iter()
+                    .find(|p| p["name"].as_str() == Some(key))
+                    .and_then(|p| p["value"].as_str())
+            })
+        };
+        let role = prop("waybill:closure-role");
+        if !matches!(role, Some("artifact-input" | "both")) {
             return Err(nix_fail(
-                "m1278-no-false-exclusion",
-                format!("`{name}` carries scope=excluded"),
-                "no scope: nix references it into the artifact, and the rule \
-                 declines to assert for that case",
+                "m1278-structured-attrs-role",
+                format!("`{name}` has closure-role {role:?}"),
+                "artifact-input or both: a declaration in structuredAttrs \
+                 references it as an input",
                 "the closure reader is back to reading only `env`, so the \
                  referencing declaration is invisible again (#1348)",
+            ));
+        }
+        let source = prop("waybill:scope-classification-source");
+        if !matches!(source, Some("runtime-closure" | "reachability-walk" | "statically-linked")) {
+            return Err(nix_fail(
+                "m1423-scope-from-runtime-evidence",
+                format!("`{name}` has scope-classification-source {source:?}"),
+                "runtime-closure, reachability-walk or statically-linked: \
+                 scope decided by runtime evidence, not by the role",
+                "the 1423 scope pass did not run, or fell back to the role \
+                 rule on a target whose walk should be usable",
             ));
         }
     }

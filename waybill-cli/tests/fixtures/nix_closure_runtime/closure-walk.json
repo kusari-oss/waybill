@@ -1,0 +1,71 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-app-1.0.drv": {
+      "name": "waybill-fixture-app-1.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "1.0",
+        "outputs": "out",
+        "buildInputs": "/nix/store/w-ssl",
+        "nativeBuildInputs": "/nix/store/w-tool"
+      },
+      "inputs": {
+        "drvs": {
+          "w-ssl.drv": { "outputs": ["out"] },
+          "w-tool.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "w-app" } }
+    },
+    "w-ssl.drv": {
+      "name": "waybill-fixture-ssl-3.0",
+      "env": {
+        "pname": "waybill-fixture-ssl",
+        "version": "3.0",
+        "propagatedBuildInputs": "/nix/store/w-z",
+        "nativeBuildInputs": "/nix/store/w-perl"
+      },
+      "inputs": {
+        "drvs": {
+          "w-z.drv": { "outputs": ["out"] },
+          "w-perl.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "w-ssl" } }
+    },
+    "w-z.drv": {
+      "name": "waybill-fixture-z-1.3",
+      "env": { "pname": "waybill-fixture-z", "version": "1.3" },
+      "outputs": { "out": { "path": "w-z" } }
+    },
+    "w-tool.drv": {
+      "name": "waybill-fixture-tool-1.0",
+      "env": {
+        "pname": "waybill-fixture-tool",
+        "version": "1.0",
+        "buildInputs": "/nix/store/w-xml /nix/store/w-perl"
+      },
+      "inputs": {
+        "drvs": {
+          "w-xml.drv": { "outputs": ["out"] },
+          "w-perl.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "w-tool" } }
+    },
+    "w-xml.drv": {
+      "name": "waybill-fixture-xml-2.13",
+      "env": { "pname": "waybill-fixture-xml", "version": "2.13" },
+      "outputs": { "out": { "path": "w-xml" } }
+    },
+    "w-perl.drv": {
+      "name": "waybill-fixture-perl-5.42",
+      "env": { "pname": "waybill-fixture-perl", "version": "5.42" },
+      "outputs": { "out": { "path": "w-perl" } }
+    }
+  },
+  "version": 4
+}

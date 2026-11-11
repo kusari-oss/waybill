@@ -66,6 +66,8 @@ impl Stub {
     }
 
     fn script(&self, stderr_file: &Path) -> String {
+        // m1423 (T006): the `path-info` arm is intended. No store holds the
+        // evaluated output, so the scope pass takes its fallback path.
         format!(
             "#!/bin/sh\ncase \"$*\" in\n\
              \x20 *builtins.currentSystem*) printf '%s' '{SYSTEM}' ;;\n\
@@ -73,6 +75,7 @@ impl Stub {
              \x20 *\"#packages.{SYSTEM}\") echo '[\"default\"]' ;;\n\
              \x20 *\"#packages\") echo '[\"{SYSTEM}\"]' ;;\n\
              \x20 \"derivation show\"*) cat '{err}' >&2; exit 1 ;;\n\
+             \x20 \"path-info\"*) echo \"error: path '/nix/store/stub' is not valid\" >&2; exit 1 ;;\n\
              \x20 *) echo 'stub nix: unhandled invocation' >&2; exit 1 ;;\n\
              esac\n",
             ifd = if self.ifd_supported {

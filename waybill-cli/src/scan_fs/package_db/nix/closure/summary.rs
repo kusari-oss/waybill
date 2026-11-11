@@ -28,6 +28,9 @@ pub const ANN_NIX_CLOSURE: &str = "waybill:nix-closure";
 /// would have to special-case.
 pub const ANN_NIX_CLOSURE_READ: &str = "waybill:nix-closure-read";
 
+/// C216 — how the closure scope marks were decided (milestone 1423).
+pub const ANN_CLOSURE_SCOPE_METHOD: &str = "waybill:closure-scope-method";
+
 /// What one closure query contributed, as emitted at document scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NixClosureSummary {
@@ -90,6 +93,10 @@ pub struct NixClosureSummary {
     /// an exception. Stating the figure is what makes the orphan accounting
     /// readable rather than alarming.
     pub edge_ineligible_components: usize,
+    /// Milestone 1423 (#1423) — C216, how the document's scope marks were
+    /// decided. Set by the scan after the scope pass runs; `None` until then,
+    /// and never emitted as a placeholder.
+    pub(crate) scope_method: Option<super::runtime::ScopeMethodRecord>,
 }
 
 impl NixClosureSummary {
@@ -155,7 +162,15 @@ impl NixClosureSummary {
             member_role_counts,
             components_without_member_role: without_member_role,
             edge_ineligible_components: edge_ineligible,
+            scope_method: None,
         }
+    }
+
+    /// The C216 wire value — a JSON object with sorted keys and `schema: 1`,
+    /// identical in all three formats — or `None` when the scope pass did not
+    /// record a method.
+    pub fn closure_scope_method_wire(&self) -> Option<String> {
+        self.scope_method.as_ref().map(super::runtime::ScopeMethodRecord::wire)
     }
 
     /// The C184 wire value, identical in all three formats.
@@ -320,6 +335,7 @@ mod tests {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let roles = classify(&raw);
         let closure = ClassifiedClosure {
+            runtime: None,
             attribute: "packages.x86_64-linux.thing".into(),
             raw,
             roles,
@@ -370,6 +386,7 @@ mod tests {
         let raw = RawClosure::parse(NO_CVE).unwrap();
         let roles = classify(&raw);
         let closure = ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,

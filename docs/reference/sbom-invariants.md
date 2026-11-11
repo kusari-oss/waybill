@@ -86,7 +86,7 @@ For the per-annotation wire shapes these invariants read, see
 | I7 | A component not reachable from the subject by any dependency edge carries a marker explaining why | subject resolvable and at least one non-subject component | `unreachable-and-unexplained` | Active |
 | I8 | A component with no version carries an annotation explaining why it has none | at least one component has an absent or empty version | `versionless-and-unexplained` | Active |
 | I9 | A component the compiler supplies carries no non-runtime scope | at least one component is marked compiler-supplied | `compiler-supplied-non-runtime` | Active |
-| I10 | A closure member whose role says it does not ship carries a non-runtime marker, or says it was exempted | at least one component carries a non-shipping closure role | `closure-tooling-without-non-runtime-marker` | Active |
+| I10 | A closure member's non-runtime marker agrees with the evidence that decided it, or the member says it was exempted | at least one component carries a closure role | `closure-tooling-without-non-runtime-marker`, `closure-statically-linked-but-marked` | Active |
 
 ### I10
 
@@ -144,6 +144,27 @@ non-shipping closure role → carries one, unless compiler-supplied. The
 exemption is the seam where all three meet, which is why each states it.
 I3's own entry records getting a boundary wrong once, when a loose one put
 two instances of a single defect class under the wrong number.
+
+**Milestone 1423 (#1423): the evidence, not the role.** With the runtime
+closure available, a member's mark comes from that closure plus static
+linking rather than from its role, so the role alone no longer says what
+the mark must be: openssh's `dns-root-data` is `build-tooling` and ships,
+and curl's libxml2 is `artifact-input` and does not. C203 says how each
+member was decided, and the row reads it:
+
+- **Population**: every component carrying C182, in any role.
+- `exempt-compiler-supplied`, `exempt-evaluated-package`: pass.
+- `runtime-closure`, `reachability-walk`: pass, marked or not. The native
+  mark says which way the evidence went, and nothing else in the document
+  contradicts it.
+- `statically-linked`: must be **unmarked**; a mark is
+  `closure-statically-linked-but-marked` (the converse check).
+- `closure-role`, `closure-role+lifecycle-propagation`, or no C203 at all:
+  the milestone-1277 rule above, unchanged, so a pre-1423 document still
+  passes. An unrecognised C203 value falls here too, as the stricter
+  reading.
+
+The row reports n/a only where no component carries a closure role at all.
 
 ### I1
 

@@ -72,6 +72,9 @@ impl Stub {
         s.push_str(&listing("packages", self.packages));
         s.push_str(&listing("darwinConfigurations", self.darwin));
         s.push_str(&listing("nixosConfigurations", self.nixos));
+        // m1423 (T006): intended. No store holds the evaluated output, so the
+        // scope pass takes its fallback path rather than the runtime closure.
+        s.push_str("  \"path-info\"*) echo \"error: path '/nix/store/stub' is not valid\" >&2; exit 1 ;;\n");
         // Anything else (other tiers' nix calls) fails cleanly (analysis U2).
         s.push_str("  *) echo 'stub nix: unhandled invocation' >&2; exit 1 ;;\nesac\n");
         s

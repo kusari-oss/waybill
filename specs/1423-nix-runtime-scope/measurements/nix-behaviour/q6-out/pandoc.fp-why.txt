@@ -1,0 +1,2 @@
+attoparsec-aeson-2.2.2.0: in propagatedBuildInputs of aeson-pretty-0.8.10
+cmdargs-0.10.22: in propagatedBuildInputs of aeson-pretty-0.8.10

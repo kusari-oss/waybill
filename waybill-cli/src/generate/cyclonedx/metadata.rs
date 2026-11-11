@@ -1154,6 +1154,13 @@ pub fn build_metadata(
                 "value": read,
             }));
         }
+        // Milestone 1423 (#1423): C216, how the scope marks were decided.
+        if let Some(method) = summary.closure_scope_method_wire() {
+            properties.push(json!({
+                "name": closure_summary::ANN_CLOSURE_SCOPE_METHOD,
+                "value": method,
+            }));
+        }
     }
 
     // Milestone 665 T021: doc-scope `waybill:binary-scan-suppressed`
@@ -2422,6 +2429,7 @@ mod tests {
         let mk = |purl: &str, tier: &str| ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new(purl).expect("valid purl"),
             name: "x".to_string(),
             version: "1.0".to_string(),
@@ -2507,6 +2515,7 @@ mod tests {
         let c = ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new("pkg:generic/weird@1.0").expect("valid purl"),
             name: "weird".to_string(),
             version: "1.0".to_string(),

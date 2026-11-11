@@ -42,6 +42,7 @@ fn scan(extra: &[&str]) -> Scan {
         closure: &closure,
         rows: Rows::Json("[]"),
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&args)
 }
