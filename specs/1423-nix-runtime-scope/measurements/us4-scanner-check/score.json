@@ -1,0 +1,804 @@
+{
+ "targets": {
+  "curl": {
+   "c216": {
+    "method": "runtime-closure",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": "local",
+    "unavailable-reason": null,
+    "unmatched-runtime-paths": 0,
+    "verified": true,
+    "walk-outcome": null
+   },
+   "components": {
+    "full": 465,
+    "kept_not_in_truth": [
+     [
+      "pkg:github/nixos/nixpkgs@a799d3e3886da994fa307f817a6bc705ae538eeb",
+      null
+     ]
+    ],
+    "runtime": 20,
+    "truth_not_kept": [],
+    "truth_runtime": 19
+   },
+   "edit_stderr": [
+    "drop-components: matched 445, changed 445",
+    "19 dependency list(s) bridged across dropped components; graph completeness downgraded",
+    "34 vulnerability statement(s) removed: every component they assessed was dropped"
+   ],
+   "findings": {
+    "full": 211,
+    "full_vs_original": {
+     "added": [],
+     "lost": []
+    },
+    "original_full": 211,
+    "runtime": 100,
+    "runtime_vs_truth": {
+     "added": [],
+     "lost": []
+    },
+    "sbomnix_missing_from_runtime": [],
+    "sbomnix_runtime": 100,
+    "truth": 100
+   },
+   "formats": {
+    "dropped": {
+     "cdx": 445,
+     "spdx": 445,
+     "spdx3": 445
+    },
+    "not_in_artifact_left": {
+     "cdx": [],
+     "spdx": [],
+     "spdx3": []
+    },
+    "same_purls_dropped": true
+   },
+   "runtime_findings": [
+    "CVE-2025-15661\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-10536\tpkg:generic/curl@8.20.0",
+    "CVE-2026-107928\tpkg:generic/curl@8.20.0",
+    "CVE-2026-107929\tpkg:generic/curl@8.20.0",
+    "CVE-2026-111497\tpkg:generic/brotli@1.2.0",
+    "CVE-2026-11352\tpkg:generic/curl@8.20.0",
+    "CVE-2026-11564\tpkg:generic/curl@8.20.0",
+    "CVE-2026-11586\tpkg:generic/curl@8.20.0",
+    "CVE-2026-11856\tpkg:generic/curl@8.20.0",
+    "CVE-2026-12064\tpkg:generic/curl@8.20.0",
+    "CVE-2026-13608\tpkg:generic/curl@8.20.0",
+    "CVE-2026-14456\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-14457\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-18798\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-18924\tpkg:generic/curl@8.20.0",
+    "CVE-2026-19931\tpkg:generic/curl@8.20.0",
+    "CVE-2026-34180\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34181\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34182\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34183\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-35188\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-35189\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-35191\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42764\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42765\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42766\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42767\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42768\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42769\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42770\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42772\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-45445\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-45446\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-45447\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54872\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54873\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54874\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54875\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54876\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-55199\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-55200\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-58050\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-58051\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-58055\tpkg:generic/nghttp2@1.69.0",
+    "CVE-2026-63072\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63073\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63074\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63075\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63076\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-66032\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-66033\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-66034\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-66035\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-72897\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-7383\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75803\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75804\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75805\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75806\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-7598\tpkg:generic/libssh2@1.11.1",
+    "CVE-2026-77696\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-80229\tpkg:generic/curl@8.20.0",
+    "CVE-2026-80230\tpkg:generic/curl@8.20.0",
+    "CVE-2026-80231\tpkg:generic/curl@8.20.0",
+    "CVE-2026-80255\tpkg:generic/curl@8.20.0",
+    "CVE-2026-82208\tpkg:generic/curl@8.20.0",
+    "CVE-2026-82209\tpkg:generic/curl@8.20.0",
+    "CVE-2026-8286\tpkg:generic/curl@8.20.0",
+    "CVE-2026-8458\tpkg:generic/curl@8.20.0",
+    "CVE-2026-84782\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-84784\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-85091\tpkg:generic/zlib@1.3.2",
+    "CVE-2026-86409\tpkg:generic/curl@8.20.0",
+    "CVE-2026-86410\tpkg:generic/curl@8.20.0",
+    "CVE-2026-86412\tpkg:generic/curl@8.20.0",
+    "CVE-2026-86414\tpkg:generic/curl@8.20.0",
+    "CVE-2026-87862\tpkg:generic/curl@8.20.0",
+    "CVE-2026-87863\tpkg:generic/curl@8.20.0",
+    "CVE-2026-87864\tpkg:generic/curl@8.20.0",
+    "CVE-2026-87865\tpkg:generic/curl@8.20.0",
+    "CVE-2026-87866\tpkg:generic/curl@8.20.0",
+    "CVE-2026-8924\tpkg:generic/curl@8.20.0",
+    "CVE-2026-8925\tpkg:generic/curl@8.20.0",
+    "CVE-2026-8926\tpkg:generic/curl@8.20.0",
+    "CVE-2026-8927\tpkg:generic/curl@8.20.0",
+    "CVE-2026-8932\tpkg:generic/curl@8.20.0",
+    "CVE-2026-9076\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-9079\tpkg:generic/curl@8.20.0",
+    "CVE-2026-9080\tpkg:generic/curl@8.20.0",
+    "CVE-2026-92386\tpkg:generic/curl@8.20.0",
+    "CVE-2026-92387\tpkg:generic/curl@8.20.0",
+    "CVE-2026-92388\tpkg:generic/curl@8.20.0",
+    "CVE-2026-92389\tpkg:generic/curl@8.20.0",
+    "CVE-2026-92390\tpkg:generic/curl@8.20.0",
+    "CVE-2026-92391\tpkg:generic/curl@8.20.0",
+    "CVE-2026-92392\tpkg:generic/curl@8.20.0",
+    "CVE-2026-94266\tpkg:generic/curl@8.20.0",
+    "CVE-2026-9545\tpkg:generic/curl@8.20.0",
+    "CVE-2026-9546\tpkg:generic/curl@8.20.0",
+    "CVE-2026-9547\tpkg:generic/curl@8.20.0"
+   ],
+   "subject": {
+    "full": "pkg:generic/curl@8.20.0",
+    "runtime": "pkg:generic/curl@8.20.0"
+   }
+  },
+  "gh": {
+   "c216": {
+    "method": "runtime-closure",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": "local",
+    "unavailable-reason": null,
+    "unmatched-runtime-paths": 0,
+    "verified": true,
+    "walk-outcome": null
+   },
+   "components": {
+    "full": 657,
+    "kept_not_in_truth": [
+     [
+      "pkg:github/nixos/nixpkgs@a799d3e3886da994fa307f817a6bc705ae538eeb",
+      null
+     ]
+    ],
+    "runtime": 169,
+    "truth_not_kept": [],
+    "truth_runtime": 168
+   },
+   "edit_stderr": [
+    "drop-components: matched 488, changed 488",
+    "5 dependency list(s) bridged across dropped components; graph completeness downgraded",
+    "36 vulnerability statement(s) removed: every component they assessed was dropped"
+   ],
+   "findings": {
+    "full": 266,
+    "full_vs_original": {
+     "added": [],
+     "lost": []
+    },
+    "original_full": 266,
+    "runtime": 55,
+    "runtime_vs_truth": {
+     "added": [],
+     "lost": []
+    },
+    "sbomnix_missing_from_runtime": [],
+    "sbomnix_runtime": 0,
+    "truth": 55
+   },
+   "formats": {
+    "dropped": {
+     "cdx": 488,
+     "spdx": 488,
+     "spdx3": 488
+    },
+    "not_in_artifact_left": {
+     "cdx": [],
+     "spdx": [],
+     "spdx3": []
+    },
+    "same_purls_dropped": true
+   },
+   "runtime_findings": [
+    "GHSA-259r-337f-4rfw\tpkg:golang/github.com/klauspost/compress@v1.18.6",
+    "GHSA-2v4p-qf9q-27wj\tpkg:golang/google.golang.org/grpc@v1.81.1",
+    "GHSA-47q9-m4ww-924m\tpkg:golang/github.com/sigstore/rekor@v1.5.0",
+    "GHSA-9c54-x2g4-v92j\tpkg:golang/github.com/sigstore/timestamp-authority/v2@v2.0.6",
+    "GHSA-9vcr-p3rj-q5q6\tpkg:golang/github.com/sigstore/sigstore-go@v1.1.4",
+    "GHSA-hrxh-6v49-42gf\tpkg:golang/google.golang.org/grpc@v1.81.1",
+    "GHSA-pmwq-pjrm-6p5r\tpkg:golang/github.com/in-toto/in-toto-golang@v0.9.0",
+    "GHSA-qc2q-p7wx-3px3\tpkg:golang/google.golang.org/grpc@v1.81.1",
+    "GHSA-vp52-pcj8-j9qc\tpkg:golang/google.golang.org/grpc@v1.81.1",
+    "GHSA-wqqc-jjcq-vfxm\tpkg:golang/github.com/sigstore/sigstore-go@v1.1.4",
+    "GO-2026-4970\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-5026\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-5037\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-5038\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-5039\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-5158\tpkg:golang/go.opentelemetry.io/otel@v1.43.0",
+    "GO-2026-5856\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-5932\tpkg:golang/golang.org/x/crypto@v0.52.0",
+    "GO-2026-5942\tpkg:golang/golang.org/x/net@v0.55.0",
+    "GO-2026-5942\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-5970\tpkg:golang/golang.org/x/text@v0.37.0",
+    "GO-2026-5972\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6088\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6089\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6090\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6091\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6179\tpkg:golang/golang.org/x/mod@v0.36.0",
+    "GO-2026-6180\tpkg:golang/golang.org/x/mod@v0.36.0",
+    "GO-2026-6218\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6303\tpkg:golang/golang.org/x/crypto@v0.52.0",
+    "GO-2026-6354\tpkg:golang/golang.org/x/crypto@v0.52.0",
+    "GO-2026-6355\tpkg:golang/golang.org/x/crypto@v0.52.0",
+    "GO-2026-6599\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6600\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6603\tpkg:golang/golang.org/x/net@v0.55.0",
+    "GO-2026-6603\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6604\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6605\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6607\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6608\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6609\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6610\tpkg:golang/golang.org/x/net@v0.55.0",
+    "GO-2026-6610\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6611\tpkg:golang/golang.org/x/net@v0.55.0",
+    "GO-2026-6611\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6612\tpkg:golang/golang.org/x/net@v0.55.0",
+    "GO-2026-6612\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6613\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6617\tpkg:golang/golang.org/x/net@v0.55.0",
+    "GO-2026-6617\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6629\tpkg:golang/golang.org/x/text@v0.37.0",
+    "GO-2026-6809\tpkg:golang/stdlib@v1.26.3",
+    "GO-2026-6860\tpkg:golang/golang.org/x/net@v0.55.0",
+    "GO-2026-6865\tpkg:golang/github.com/klauspost/compress@v1.18.6",
+    "GO-2026-6866\tpkg:golang/golang.org/x/net@v0.55.0"
+   ],
+   "subject": {
+    "full": "pkg:golang/github.com/cli/cli/v2@v2.93.0",
+    "runtime": "pkg:golang/github.com/cli/cli/v2@v2.93.0"
+   }
+  },
+  "httpie": {
+   "c216": {
+    "method": "runtime-closure",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": "local",
+    "unavailable-reason": null,
+    "unmatched-runtime-paths": 0,
+    "verified": true,
+    "walk-outcome": null
+   },
+   "components": {
+    "full": 2510,
+    "kept_not_in_truth": [
+     [
+      "pkg:generic/libSystem@B",
+      "runtime-closure"
+     ],
+     [
+      "pkg:github/nixos/nixpkgs@a799d3e3886da994fa307f817a6bc705ae538eeb",
+      null
+     ],
+     [
+      "pkg:hackage/Cabal",
+      null
+     ],
+     [
+      "pkg:hackage/Cabal-syntax",
+      null
+     ],
+     [
+      "pkg:hackage/array",
+      null
+     ],
+     [
+      "pkg:hackage/base",
+      null
+     ],
+     [
+      "pkg:hackage/binary",
+      null
+     ],
+     [
+      "pkg:hackage/bytestring",
+      null
+     ],
+     [
+      "pkg:hackage/containers",
+      null
+     ],
+     [
+      "pkg:hackage/deepseq",
+      null
+     ],
+     [
+      "pkg:hackage/directory",
+      null
+     ],
+     [
+      "pkg:hackage/exceptions",
+      null
+     ],
+     [
+      "pkg:hackage/filepath",
+      null
+     ],
+     [
+      "pkg:hackage/ghc-bignum",
+      null
+     ],
+     [
+      "pkg:hackage/ghc-boot",
+      null
+     ],
+     [
+      "pkg:hackage/ghc-heap",
+      null
+     ],
+     [
+      "pkg:hackage/ghc-prim",
+      null
+     ],
+     [
+      "pkg:hackage/integer-gmp",
+      null
+     ],
+     [
+      "pkg:hackage/mtl",
+      null
+     ],
+     [
+      "pkg:hackage/parsec",
+      null
+     ],
+     [
+      "pkg:hackage/pretty",
+      null
+     ],
+     [
+      "pkg:hackage/process",
+      null
+     ],
+     [
+      "pkg:hackage/stm",
+      null
+     ],
+     [
+      "pkg:hackage/template-haskell",
+      null
+     ],
+     [
+      "pkg:hackage/text",
+      null
+     ],
+     [
+      "pkg:hackage/time",
+      null
+     ],
+     [
+      "pkg:hackage/transformers",
+      null
+     ],
+     [
+      "pkg:hackage/unix",
+      null
+     ]
+    ],
+    "runtime": 82,
+    "truth_not_kept": [
+     "pkg:generic/expand-response-params-2lk64f86ksdf657pl6431is5lhwnsq9m",
+     "pkg:generic/expand-response-params-bpd8krq9b6b554fb7iiqq7ml0n13lxdz",
+     "pkg:generic/expand-response-params-v3qz0gyspcm6dmcrsg2xx2j8y22kgy5c",
+     "pkg:generic/expand-response-params-v8qw8a29bgpickn94a588cwjnzbswlxv",
+     "pkg:generic/expand-response-params-x5bmg2ma1plp0v6mvkm4lr516jy4arz9",
+     "pkg:generic/expand-response-params-zkqp0a24wl4ljik3w9rp9r5gw680k5qh"
+    ],
+    "truth_runtime": 60
+   },
+   "edit_stderr": [
+    "drop-components: matched 2428, changed 2428",
+    "54 dependency list(s) bridged across dropped components; graph completeness downgraded",
+    "46 vulnerability statement(s) removed: every component they assessed was dropped"
+   ],
+   "findings": {
+    "full": 355,
+    "full_vs_original": {
+     "added": [],
+     "lost": []
+    },
+    "original_full": 355,
+    "runtime": 119,
+    "runtime_vs_truth": {
+     "added": [],
+     "lost": []
+    },
+    "sbomnix_missing_from_runtime": [],
+    "sbomnix_runtime": 109,
+    "truth": 119
+   },
+   "formats": {
+    "dropped": {
+     "cdx": 2428,
+     "spdx": 2428,
+     "spdx3": 2428
+    },
+    "not_in_artifact_left": {
+     "cdx": [],
+     "spdx": [],
+     "spdx3": []
+    },
+    "same_purls_dropped": true
+   },
+   "runtime_findings": [
+    "CVE-2016-2781\tpkg:generic/coreutils@9.11",
+    "CVE-2024-3220\tpkg:generic/python3@3.13.13",
+    "CVE-2025-15366\tpkg:generic/python3@3.13.13",
+    "CVE-2025-15367\tpkg:generic/python3@3.13.13",
+    "CVE-2026-0864\tpkg:generic/python3@3.13.13",
+    "CVE-2026-103995\tpkg:generic/python3@3.13.13",
+    "CVE-2026-114583\tpkg:generic/python3@3.13.13",
+    "CVE-2026-115557\tpkg:generic/python3@3.13.13",
+    "CVE-2026-116566\tpkg:generic/python3@3.13.13",
+    "CVE-2026-11822\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-11824\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119371\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119372\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119373\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119374\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119375\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119376\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119377\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119378\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119379\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-11940\tpkg:generic/python3@3.13.13",
+    "CVE-2026-119586\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-119591\tpkg:generic/sqlite@3.51.2",
+    "CVE-2026-11972\tpkg:generic/python3@3.13.13",
+    "CVE-2026-11979\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-12003\tpkg:generic/python3@3.13.13",
+    "CVE-2026-12345\tpkg:generic/python3@3.13.13",
+    "CVE-2026-14456\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-14457\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-1502\tpkg:generic/python3@3.13.13",
+    "CVE-2026-15308\tpkg:generic/python3@3.13.13",
+    "CVE-2026-15310\tpkg:generic/python3@3.13.13",
+    "CVE-2026-15806\tpkg:generic/python3@3.13.13",
+    "CVE-2026-17084\tpkg:generic/python3@3.13.13",
+    "CVE-2026-18503\tpkg:generic/python3@3.13.13",
+    "CVE-2026-18798\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-19445\tpkg:generic/python3@3.13.13",
+    "CVE-2026-19553\tpkg:generic/python3@3.13.13",
+    "CVE-2026-19672\tpkg:generic/python3@3.13.13",
+    "CVE-2026-3087\tpkg:generic/python3@3.13.13",
+    "CVE-2026-3276\tpkg:generic/python3@3.13.13",
+    "CVE-2026-3298\tpkg:generic/python3@3.13.13",
+    "CVE-2026-34180\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34181\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34182\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34183\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-35188\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-35189\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-35191\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42764\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42765\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42766\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42767\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42768\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42769\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42770\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42772\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-4360\tpkg:generic/python3@3.13.13",
+    "CVE-2026-45445\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-45446\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-45447\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-4786\tpkg:generic/python3@3.13.13",
+    "CVE-2026-54872\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54873\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54874\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54875\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54876\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-56391\tpkg:generic/coreutils@9.11",
+    "CVE-2026-56392\tpkg:generic/coreutils@9.11",
+    "CVE-2026-6019\tpkg:generic/python3@3.13.13",
+    "CVE-2026-6100\tpkg:generic/python3@3.13.13",
+    "CVE-2026-63072\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63073\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63074\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63075\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63076\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-6732\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-6879\tpkg:generic/python3@3.13.13",
+    "CVE-2026-7210\tpkg:generic/python3@3.13.13",
+    "CVE-2026-72897\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-7383\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75803\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75804\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75805\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75806\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-77696\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-7774\tpkg:generic/python3@3.13.13",
+    "CVE-2026-82049\tpkg:generic/python3@3.13.13",
+    "CVE-2026-8328\tpkg:generic/python3@3.13.13",
+    "CVE-2026-84782\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-84784\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-85091\tpkg:generic/zlib@1.3.2",
+    "CVE-2026-86137\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-86138\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-86139\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-86140\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-86141\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-86142\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-86143\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-86144\tpkg:generic/libxml2@2.15.2",
+    "CVE-2026-87910\tpkg:generic/python3@3.13.13",
+    "CVE-2026-89156\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89157\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89158\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89160\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89161\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89162\tpkg:generic/pcre2@10.46",
+    "CVE-2026-9076\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-9669\tpkg:generic/python3@3.13.13",
+    "GHSA-54p9-h82j-f925\tpkg:pypi/multidict@6.7.1",
+    "GHSA-65pc-fj4g-8rjx\tpkg:pypi/idna@3.13",
+    "GHSA-6q48-6c7w-9gw2\tpkg:pypi/certifi@2026.01.04",
+    "GHSA-8988-9cw3-xx77\tpkg:pypi/urllib3@2.6.3",
+    "GHSA-gh4c-6fx4-qh6g\tpkg:pypi/urllib3@2.6.3",
+    "GHSA-h35f-9h28-mq5c\tpkg:pypi/setuptools@80.10.1",
+    "GHSA-mf9v-mfxr-j63j\tpkg:pypi/urllib3@2.6.3",
+    "GHSA-qccp-gfcp-xxvc\tpkg:pypi/urllib3@2.6.3",
+    "GHSA-vxq7-64xx-v4gw\tpkg:pypi/urllib3@2.6.3",
+    "GHSA-xmj3-9gf7-h52w\tpkg:pypi/setuptools@80.10.1"
+   ],
+   "subject": {
+    "full": "pkg:pypi/httpie@3.2.4",
+    "runtime": "pkg:pypi/httpie@3.2.4"
+   }
+  },
+  "openssh": {
+   "c216": {
+    "method": "runtime-closure",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": "local",
+    "unavailable-reason": null,
+    "unmatched-runtime-paths": 0,
+    "verified": true,
+    "walk-outcome": null
+   },
+   "components": {
+    "full": 457,
+    "kept_not_in_truth": [
+     [
+      "pkg:github/nixos/nixpkgs@a799d3e3886da994fa307f817a6bc705ae538eeb",
+      null
+     ]
+    ],
+    "runtime": 12,
+    "truth_not_kept": [],
+    "truth_runtime": 11
+   },
+   "edit_stderr": [
+    "drop-components: matched 445, changed 445",
+    "11 dependency list(s) bridged across dropped components; graph completeness downgraded",
+    "36 vulnerability statement(s) removed: every component they assessed was dropped"
+   ],
+   "findings": {
+    "full": 237,
+    "full_vs_original": {
+     "added": [],
+     "lost": []
+    },
+    "original_full": 237,
+    "runtime": 70,
+    "runtime_vs_truth": {
+     "added": [],
+     "lost": []
+    },
+    "sbomnix_missing_from_runtime": [],
+    "sbomnix_runtime": 28,
+    "truth": 70
+   },
+   "formats": {
+    "dropped": {
+     "cdx": 445,
+     "spdx": 445,
+     "spdx3": 445
+    },
+    "not_in_artifact_left": {
+     "cdx": [],
+     "spdx": [],
+     "spdx3": []
+    },
+    "same_purls_dropped": true
+   },
+   "runtime_findings": [
+    "CVE-2007-2768\tpkg:generic/openssh@10.3p1",
+    "CVE-2008-3844\tpkg:generic/openssh@10.3p1",
+    "CVE-2014-9278\tpkg:generic/openssh@10.3p1",
+    "CVE-2023-51767\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-106552\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-106553\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-106555\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-106582\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-106583\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-106584\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-106585\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-106586\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-106587\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-14456\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-14457\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-18798\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34180\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34181\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34182\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-34183\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-3497\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-35188\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-35189\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-35191\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42764\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42765\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42766\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42767\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42768\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42769\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42770\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-42772\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-45445\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-45446\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-45447\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54872\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54873\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54874\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54875\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-54876\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-55653\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-55654\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-55655\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-59995\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-59996\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-59997\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-59998\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-59999\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-60000\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-60001\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-60002\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-63072\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63073\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63074\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63075\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-63076\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-72897\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-73281\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-73282\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-73283\tpkg:generic/openssh@10.3p1",
+    "CVE-2026-7383\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75803\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75804\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75805\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-75806\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-77696\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-84782\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-84784\tpkg:generic/openssl@3.6.2",
+    "CVE-2026-85091\tpkg:generic/zlib@1.3.2",
+    "CVE-2026-9076\tpkg:generic/openssl@3.6.2"
+   ],
+   "subject": {
+    "full": "pkg:generic/openssh@10.3p1",
+    "runtime": "pkg:generic/openssh@10.3p1"
+   }
+  },
+  "ripgrep": {
+   "c216": {
+    "method": "runtime-closure",
+    "schema": 1,
+    "static-c-linking-detected": false,
+    "static-link-source": "none",
+    "store": "local",
+    "unavailable-reason": null,
+    "unmatched-runtime-paths": 0,
+    "verified": true,
+    "walk-outcome": null
+   },
+   "components": {
+    "full": 985,
+    "kept_not_in_truth": [
+     [
+      "pkg:github/nixos/nixpkgs@a799d3e3886da994fa307f817a6bc705ae538eeb",
+      null
+     ]
+    ],
+    "runtime": 45,
+    "truth_not_kept": [],
+    "truth_runtime": 44
+   },
+   "edit_stderr": [
+    "drop-components: matched 940, changed 940",
+    "3 dependency list(s) bridged across dropped components; graph completeness downgraded",
+    "36 vulnerability statement(s) removed: every component they assessed was dropped"
+   ],
+   "findings": {
+    "full": 232,
+    "full_vs_original": {
+     "added": [],
+     "lost": []
+    },
+    "original_full": 232,
+    "runtime": 6,
+    "runtime_vs_truth": {
+     "added": [],
+     "lost": []
+    },
+    "sbomnix_missing_from_runtime": [],
+    "sbomnix_runtime": 6,
+    "truth": 6
+   },
+   "formats": {
+    "dropped": {
+     "cdx": 940,
+     "spdx": 940,
+     "spdx3": 940
+    },
+    "not_in_artifact_left": {
+     "cdx": [],
+     "spdx": [],
+     "spdx3": []
+    },
+    "same_purls_dropped": true
+   },
+   "runtime_findings": [
+    "CVE-2026-89156\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89157\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89158\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89160\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89161\tpkg:generic/pcre2@10.46",
+    "CVE-2026-89162\tpkg:generic/pcre2@10.46"
+   ],
+   "subject": {
+    "full": "pkg:cargo/ripgrep@15.1.0",
+    "runtime": "pkg:cargo/ripgrep@15.1.0"
+   }
+  }
+ },
+ "total": {
+  "full": 1301,
+  "original_full": 1301,
+  "runtime": 350,
+  "runtime_added_vs_truth": 0,
+  "runtime_lost_vs_truth": 0,
+  "sbomnix_missing": 0,
+  "sbomnix_runtime": 243,
+  "truth": 350
+ }
+}
