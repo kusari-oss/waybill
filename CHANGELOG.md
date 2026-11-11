@@ -125,6 +125,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   selector elects, from the same inputs the format emitters use. The
   two-statement shape is unchanged; which shape grype honours is still open
   (Refs #1436, #1421).
+- **An SPDX 3 override root over a Nix closure depends on what the other
+  formats say it does.** With `--root-name` on a `--nix-closure` scan whose
+  evaluated package is not a manifest main module, the SPDX 3 root carried
+  `usesTool` edges to the closure's build tooling and no `dependsOn` at all.
+  The root fallback that gives such a root its graph-root components counted
+  `usesTool` as "the root already has edges" and stood down; CycloneDX and
+  SPDX 2.3 had no such edge in the way. It now counts only `dependsOn`. On
+  the shellcheck flake (aarch64-darwin) the root's dependency edges were
+  CycloneDX 169, SPDX 2.3 169, SPDX 3 0; all three are now 169, over the
+  same components (#1438).
 
 - **Document subjects no longer carry a `waybill`-vendor CPE.** A subject
   without a CPE of its own (the synthetic placeholder, or one named with
