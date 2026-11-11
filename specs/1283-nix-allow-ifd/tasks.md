@@ -12,7 +12,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Promote the recall probe into the feature directory.
+- [X] T001 Promote the recall probe into the feature directory.
   - Copy `$CLAUDE_JOB_DIR/tmp/recall-corpus/scripts/{recall.py,survey.py,scan.sh,realise.sh}` into `specs/1283-nix-allow-ifd/measurements/recall/`.
   - Extract the name-collision classifier from `recall.py` into `specs/1283-nix-allow-ifd/measurements/recall/classify.py`. It is the committed truth rule R7 cites.
   - Add a `README.md` there. It states how truth is defined: sbomnix runtime grype findings, minus name-collision false positives, plus HSEC advisories. It also gives the invocation.
@@ -149,22 +149,22 @@
 
 ## Phase 6: Nightly corpus targets and recall (FR-014, SC-001–SC-003)
 
-- [ ] T033 Change `ScanMode::NixClosure { attr }` to `{ attr, allow_ifd: bool }` in `waybill-cli/tests/corpus_harness_195/manifest.rs`. Set `allow_ifd: false` on the existing targets (`manifest.rs:241`, `:268`). Update the pattern matches in `harness.rs:218` and `cache.rs:377`.
-- [ ] T034 Add `--nix-allow-ifd` to the scan argv when `allow_ifd` is true in `waybill-cli/tests/corpus_harness_195/harness.rs`.
-- [ ] T035 Add three targets in `waybill-cli/tests/corpus_harness_195/manifest.rs`, each `NixClosure { attr: "default", allow_ifd: true }`, Linux-only like moat:
+- [X] T033 Change `ScanMode::NixClosure { attr }` to `{ attr, allow_ifd: bool }` in `waybill-cli/tests/corpus_harness_195/manifest.rs`. Set `allow_ifd: false` on the existing targets (`manifest.rs:241`, `:268`). Update the pattern matches in `harness.rs:218` and `cache.rs:377`.
+- [X] T034 Add `--nix-allow-ifd` to the scan argv when `allow_ifd` is true in `waybill-cli/tests/corpus_harness_195/harness.rs`.
+- [X] T035 Add three targets in `waybill-cli/tests/corpus_harness_195/manifest.rs`, each `NixClosure { attr: "default", allow_ifd: true }`, Linux-only like moat:
   - `nix-closure-slack-web` (MercuryTechnologies/slack-web@7b46273d)
   - `nix-closure-openai` (@8a357137)
   - `nix-closure-slacklinker` (@72af26a7)
 
   Copy the full SHAs from `specs/1283-nix-allow-ifd/measurements/stage2-target-shas.txt`.
-- [ ] T036 Add the recall proxy expectation in `waybill-cli/tests/corpus_harness_195/expectations.rs` (data-model §RecallTruth):
+- [X] T036 Add the recall proxy expectation in `waybill-cli/tests/corpus_harness_195/expectations.rs` (data-model §RecallTruth):
   - load `waybill-cli/tests/fixtures/public_corpus/<target>/recall-truth.json`;
   - take the runtime-only view: walk components recursively and drop CycloneDX `scope == "excluded"`, matching `--drop scope=excluded`;
   - count the truth findings matched by the exact rule in data-model §RecallTruth "Proxy match": normalized name, exact version, then CPE vendor:product from `cpe` or `waybill:cpe-candidates`, or purl ignoring qualifiers;
   - assert the ratio ≥ 0.90, and on failure list the misses.
 
   Also assert: no C190 `import-from-derivation-required`; C217 `allowed` and `verified: true`; C216 present. Unit-test the matcher with a hand-made three-finding truth file (one CPE hit, one purl hit, one miss → 0.667).
-- [ ] T037 [P] Create `.github/workflows/recall-truth.yml`, `workflow_dispatch` only, on x86_64-linux, with input `targets`.
+- [X] T037 [P] Create `.github/workflows/recall-truth.yml`, `workflow_dispatch` only, on x86_64-linux, with input `targets`.
   - Install nix through the action public-corpus.yml already pins.
   - Realise each target at its pinned SHA.
   - Run `nix run nixpkgs/<pinned rev>#sbomnix` (runtime), grype (pinned version, pinned DB) on its CycloneDX, and osv-scanner for HSEC.

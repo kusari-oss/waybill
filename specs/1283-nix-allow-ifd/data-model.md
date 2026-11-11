@@ -62,5 +62,6 @@ See `contracts/c217-nix-evaluation-policy.md`. Built from `IfdPolicy` and `NixEn
      - `matcher.purl`: the component's purl equals it, ignoring qualifiers. For a purl matcher, step 1 is skipped and the purl decides.
 - **Runtime-only view:**
   - Components are counted recursively: CycloneDX components nest, so walk `components[].components[]`.
-  - Components with CycloneDX `scope == "excluded"` are dropped.
+  - Every component with CycloneDX `scope == "excluded"` is dropped, along with everything nested under it.
+  - This is stricter than `sbom edit --drop scope=excluded`, which keeps an excluded component whose lifecycle-scope property explains the exclusion. The stricter view can only remove matches, never add them. A pass under the proxy therefore implies a pass for what a user gets from `sbom edit`, but not the reverse.
 - **Truth:** finding IDs are canonicalized to the CVE alias when one exists (`canon` in `recall.py`), so a GHSA and its CVE count once.
