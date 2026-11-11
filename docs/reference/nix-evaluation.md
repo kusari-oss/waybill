@@ -250,8 +250,9 @@ those patches with no component to attach to.
 
 ### What ships, and a runtime-only document (milestone 1423)
 
-Members outside the evaluated package's runtime closure carry the
-not-in-artifact mark: CycloneDX `scope: excluded`, SPDX 2.3 `BUILD_TOOL_OF`,
+Members outside the runtime closure of the outputs the evaluated attribute
+installs (its selected output, else `meta.outputsToInstall`, else its
+default output; C216 `outputs` says which) carry the not-in-artifact mark: CycloneDX `scope: excluded`, SPDX 2.3 `BUILD_TOOL_OF`,
 SPDX 3 `usesTool` with `scope: build`. The document-scope
 `waybill:closure-scope-method` (C216) says whether the marks came from the
 runtime closure (`nix path-info -r`, exact for what the output references) or
@@ -259,6 +260,14 @@ from an approximation. Vulnerability scanners ignore the mark, so to scan only
 what ships, drop the marked members first with
 `waybill sbom edit closure.cdx.json --drop 'scope=excluded' -o runtime.cdx.json`.
 See [Runtime-only view of a Nix closure](../user-guide/sbom-edit.md#runtime-only-view-of-a-nix-closure).
+
+A statically linked Haskell library is kept as runtime even though no output
+references its path. The walk starts at the root's declared Haskell
+dependencies; a declared target binds to the Haskell build of that name, so
+Haskell `zlib` is never confused with C `zlib`. Below the root, each
+library's `propagatedBuildInputs` is followed too. Those carry no test
+dependencies, and they hold the platform-conditional ones (`hfsevents` on
+darwin) that the Linux-resolved package-set relations lack (#1459).
 
 ### The document's subject (milestone 1377)
 

@@ -1,0 +1,65 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-app-1.0.drv": {
+      "name": "waybill-fixture-app-1.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "1.0",
+        "outputs": "out doc bin",
+        "buildInputs": "/nix/store/h-ssl /nix/store/h-z /nix/store/h-xml",
+        "nativeBuildInputs": "/nix/store/h-py /nix/store/h-dns /nix/store/h-boot"
+      },
+      "inputs": {
+        "drvs": {
+          "d-ssl.drv": { "outputs": ["out"] },
+          "d-z.drv": { "outputs": ["out"] },
+          "d-xml.drv": { "outputs": ["out"] },
+          "d-py.drv": { "outputs": ["out"] },
+          "d-dns.drv": { "outputs": ["out"] },
+          "d-boot.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "bin": { "path": "h-app-bin" },
+        "doc": { "path": "h-app-doc" },
+        "out": { "path": "h-app-lib" }
+      }
+    },
+    "d-ssl.drv": {
+      "name": "waybill-fixture-ssl-3.0",
+      "env": { "pname": "waybill-fixture-ssl", "version": "3.0" },
+      "outputs": { "out": { "path": "h-ssl" } }
+    },
+    "d-z.drv": {
+      "name": "waybill-fixture-z-1.3",
+      "env": { "pname": "waybill-fixture-z", "version": "1.3" },
+      "outputs": { "out": { "path": "h-z" } }
+    },
+    "d-xml.drv": {
+      "name": "waybill-fixture-xml-2.13",
+      "env": { "pname": "waybill-fixture-xml", "version": "2.13" },
+      "outputs": { "out": { "path": "h-xml" } }
+    },
+    "d-py.drv": {
+      "name": "waybill-fixture-py-3.12",
+      "env": { "pname": "waybill-fixture-py", "version": "3.12" },
+      "outputs": { "out": { "path": "h-py" } }
+    },
+    "d-dns.drv": {
+      "name": "waybill-fixture-dnsroot-2024",
+      "env": { "pname": "waybill-fixture-dnsroot", "version": "2024" },
+      "outputs": { "out": { "path": "h-dns" } }
+    },
+    "d-boot.drv": {
+      "name": "waybill-fixture-bootlib-1.1.1",
+      "env": {
+        "pname": "waybill-fixture-bootlib",
+        "version": "1.1.1",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-boot" } }
+    }
+  },
+  "version": 4
+}

@@ -1662,7 +1662,7 @@
       "version": "0.1.12"
     },
     {
-      "bom-ref": "pkg:hackage/cabal-gild@1.6.0.4",
+      "bom-ref": "pkg:hackage/cabal-gild",
       "evidence": {
         "identity": [
           {
@@ -1683,20 +1683,6 @@
           }
         ]
       },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "9771f5fca9775de86bc9f1eb179e564716ae5ae4b9eb14e783ed7a0e2d0604de"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "MIT"
-          }
-        }
-      ],
       "name": "cabal-gild",
       "properties": [
         {
@@ -1717,7 +1703,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "source"
+          "value": "design"
         },
         {
           "name": "waybill:evidence-kind",
@@ -1728,22 +1714,29 @@
           "value": "cabal-gild"
         },
         {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "nixpkgs-version-violates-requirement"
+        },
+        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
+          "name": "waybill:nixpkgs-version-disagreement",
+          "value": "{\"emitted\":null,\"nixpkgs\":\"1.6.0.4\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\">= 1.3 && < 1.3.2\"],\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
-      "purl": "pkg:hackage/cabal-gild@1.6.0.4",
+      "purl": "pkg:hackage/cabal-gild",
       "scope": "excluded",
-      "type": "library",
-      "version": "1.6.0.4"
+      "type": "library"
     },
     {
       "bom-ref": "pkg:hackage/case-insensitive@1.2.1.0",
@@ -4465,7 +4458,7 @@
       "version": "2.15.0.0"
     },
     {
-      "bom-ref": "pkg:hackage/hie-bios@0.17.0",
+      "bom-ref": "pkg:hackage/hie-bios",
       "evidence": {
         "identity": [
           {
@@ -4490,20 +4483,6 @@
           }
         ]
       },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "d1a7096f013557bca277b518d5fcf303853dd68b80aa6d1fb476fe71e464f335"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "BSD-3-Clause"
-          }
-        }
-      ],
       "name": "hie-bios",
       "properties": [
         {
@@ -4520,31 +4499,38 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "source"
+          "value": "design"
         },
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
         },
         {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "nixpkgs-version-violates-requirement"
+        },
+        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
+          "name": "waybill:nixpkgs-version-disagreement",
+          "value": "{\"emitted\":null,\"nixpkgs\":\"0.17.0\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\"^>= 0.21.0\"],\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\".\",\"ghcide\"]"
         }
       ],
-      "purl": "pkg:hackage/hie-bios@0.17.0",
-      "type": "library",
-      "version": "0.17.0"
+      "purl": "pkg:hackage/hie-bios",
+      "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/hiedb@0.7.0.0",
+      "bom-ref": "pkg:hackage/hiedb",
       "evidence": {
         "identity": [
           {
@@ -4569,20 +4555,6 @@
           }
         ]
       },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "96968942c30fe0ec44422c74817973a5374327ccaca59c0e78bf3dcac9970a56"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "BSD-3-Clause"
-          }
-        }
-      ],
       "name": "hiedb",
       "properties": [
         {
@@ -4599,28 +4571,35 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "source"
+          "value": "design"
         },
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
         },
         {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "nixpkgs-version-violates-requirement"
+        },
+        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
+          "name": "waybill:nixpkgs-version-disagreement",
+          "value": "{\"emitted\":null,\"nixpkgs\":\"0.7.0.0\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\"^>= 0.8.0.0\"],\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\".\",\"ghcide\"]"
         }
       ],
-      "purl": "pkg:hackage/hiedb@0.7.0.0",
-      "type": "library",
-      "version": "0.7.0.0"
+      "purl": "pkg:hackage/hiedb",
+      "type": "library"
     },
     {
       "bom-ref": "pkg:hackage/hlint@3.10",
@@ -5677,7 +5656,7 @@
       "version": "1.0.5.7"
     },
     {
-      "bom-ref": "pkg:hackage/lsp@2.7.0.1",
+      "bom-ref": "pkg:hackage/lsp",
       "evidence": {
         "identity": [
           {
@@ -5710,20 +5689,6 @@
           }
         ]
       },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "fc5ca60593791c2cdf1ce8bbe80498bfabdc525c7583634d795fc677376073fc"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "MIT"
-          }
-        }
-      ],
       "name": "lsp",
       "properties": [
         {
@@ -5740,31 +5705,38 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "source"
+          "value": "design"
         },
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
         },
         {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "nixpkgs-version-violates-requirement"
+        },
+        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
+          "name": "waybill:nixpkgs-version-disagreement",
+          "value": "{\"emitted\":null,\"nixpkgs\":\"2.7.0.1\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\">=2.8\",\"^>= 2.8\",\"^>=2.8\"],\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\".\",\"ghcide\",\"hls-plugin-api\",\"hls-test-utils\"]"
         }
       ],
-      "purl": "pkg:hackage/lsp@2.7.0.1",
-      "type": "library",
-      "version": "2.7.0.1"
+      "purl": "pkg:hackage/lsp",
+      "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/lsp-test@0.17.1.1",
+      "bom-ref": "pkg:hackage/lsp-test",
       "evidence": {
         "identity": [
           {
@@ -5789,20 +5761,6 @@
           }
         ]
       },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "4ab54f65f3ba50f661017691aecfb5644e1181a4e62b222cdc9d6142761f6ad5"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "BSD-3-Clause"
-          }
-        }
-      ],
       "name": "lsp-test",
       "properties": [
         {
@@ -5819,31 +5777,38 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "source"
+          "value": "design"
         },
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
         },
         {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "nixpkgs-version-violates-requirement"
+        },
+        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
+          "name": "waybill:nixpkgs-version-disagreement",
+          "value": "{\"emitted\":null,\"nixpkgs\":\"0.17.1.1\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\"^>= 0.18\",\"^>=0.18\",\"^>=0.18.0\"],\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\".\",\"hls-test-utils\"]"
         }
       ],
-      "purl": "pkg:hackage/lsp-test@0.17.1.1",
-      "type": "library",
-      "version": "0.17.1.1"
+      "purl": "pkg:hackage/lsp-test",
+      "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/lsp-types@2.3.0.1",
+      "bom-ref": "pkg:hackage/lsp-types",
       "evidence": {
         "identity": [
           {
@@ -5876,20 +5841,6 @@
           }
         ]
       },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "c6529b295fde341235d6051144af101a13154f762dc4153abe5ccb18eb38f879"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "MIT"
-          }
-        }
-      ],
       "name": "lsp-types",
       "properties": [
         {
@@ -5906,28 +5857,35 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "source"
+          "value": "design"
         },
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
         },
         {
+          "name": "waybill:haskell-version-unresolved-reason",
+          "value": "nixpkgs-version-violates-requirement"
+        },
+        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
+          "name": "waybill:nixpkgs-version-disagreement",
+          "value": "{\"emitted\":null,\"nixpkgs\":\"2.3.0.1\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\"^>=2.4\"],\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\".\",\"ghcide\",\"hls-plugin-api\",\"hls-test-utils\"]"
         }
       ],
-      "purl": "pkg:hackage/lsp-types@2.3.0.1",
-      "type": "library",
-      "version": "2.3.0.1"
+      "purl": "pkg:hackage/lsp-types",
+      "type": "library"
     },
     {
       "bom-ref": "pkg:hackage/markdown-unlit@0.6.0",
@@ -23845,7 +23803,7 @@
         "pkg:hackage/text",
         "pkg:hackage/transformers"
       ],
-      "ref": "pkg:hackage/cabal-gild@1.6.0.4"
+      "ref": "pkg:hackage/cabal-gild"
     },
     {
       "dependsOn": [
@@ -24879,16 +24837,16 @@
         "pkg:hackage/gitrev@1.3.1",
         "pkg:hackage/haddock-library",
         "pkg:hackage/hashable@1.5.1.0",
-        "pkg:hackage/hie-bios@0.17.0",
-        "pkg:hackage/hiedb@0.7.0.0",
+        "pkg:hackage/hie-bios",
+        "pkg:hackage/hiedb",
         "pkg:hackage/hls-graph@2.15.0.0",
         "pkg:hackage/hls-plugin-api@2.15.0.0",
         "pkg:hackage/implicit-hie@0.1.4.0",
         "pkg:hackage/lens-aeson@1.2.3",
         "pkg:hackage/lens@5.3.6",
         "pkg:hackage/list-t@1.0.5.7",
-        "pkg:hackage/lsp-types@2.3.0.1",
-        "pkg:hackage/lsp@2.7.0.1",
+        "pkg:hackage/lsp",
+        "pkg:hackage/lsp-types",
         "pkg:hackage/mtl",
         "pkg:hackage/opentelemetry@0.8.0",
         "pkg:hackage/optparse-applicative@0.18.1.0",
@@ -24981,7 +24939,7 @@
         "pkg:hackage/bytestring",
         "pkg:hackage/cabal-add@0.2",
         "pkg:hackage/cabal-fmt@0.1.12",
-        "pkg:hackage/cabal-gild@1.6.0.4",
+        "pkg:hackage/cabal-gild",
         "pkg:hackage/containers",
         "pkg:hackage/data-default@0.8.0.2",
         "pkg:hackage/deepseq",
@@ -25004,8 +24962,8 @@
         "pkg:hackage/ghcide@2.15.0.0",
         "pkg:hackage/githash@0.1.7.0",
         "pkg:hackage/hashable@1.5.1.0",
-        "pkg:hackage/hie-bios@0.17.0",
-        "pkg:hackage/hiedb@0.7.0.0",
+        "pkg:hackage/hie-bios",
+        "pkg:hackage/hiedb",
         "pkg:hackage/hlint@3.10",
         "pkg:hackage/hls-graph@2.15.0.0",
         "pkg:hackage/hls-plugin-api@2.15.0.0",
@@ -25014,9 +24972,9 @@
         "pkg:hackage/lens-aeson@1.2.3",
         "pkg:hackage/lens@5.3.6",
         "pkg:hackage/list-t@1.0.5.7",
-        "pkg:hackage/lsp-test@0.17.1.1",
-        "pkg:hackage/lsp-types@2.3.0.1",
-        "pkg:hackage/lsp@2.7.0.1",
+        "pkg:hackage/lsp",
+        "pkg:hackage/lsp-test",
+        "pkg:hackage/lsp-types",
         "pkg:hackage/markdown-unlit@0.6.0",
         "pkg:hackage/megaparsec@9.7.0",
         "pkg:hackage/mod@0.2.1.0",
@@ -25127,7 +25085,7 @@
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/yaml@0.11.11.2"
       ],
-      "ref": "pkg:hackage/hie-bios@0.17.0"
+      "ref": "pkg:hackage/hie-bios"
     },
     {
       "dependsOn": [
@@ -25164,7 +25122,7 @@
         "pkg:hackage/terminal-size@0.3.4",
         "pkg:hackage/text"
       ],
-      "ref": "pkg:hackage/hiedb@0.7.0.0"
+      "ref": "pkg:hackage/hiedb"
     },
     {
       "dependsOn": [
@@ -25255,8 +25213,8 @@
         "pkg:hackage/hw-fingertree@0.1.2.1",
         "pkg:hackage/lens-aeson@1.2.3",
         "pkg:hackage/lens@5.3.6",
-        "pkg:hackage/lsp-types@2.3.0.1",
-        "pkg:hackage/lsp@2.7.0.1",
+        "pkg:hackage/lsp",
+        "pkg:hackage/lsp-types",
         "pkg:hackage/megaparsec@9.7.0",
         "pkg:hackage/mtl",
         "pkg:hackage/opentelemetry@0.8.0",
@@ -25294,9 +25252,9 @@
         "pkg:hackage/ghcide@2.15.0.0",
         "pkg:hackage/hls-plugin-api@2.15.0.0",
         "pkg:hackage/lens@5.3.6",
-        "pkg:hackage/lsp-test@0.17.1.1",
-        "pkg:hackage/lsp-types@2.3.0.1",
-        "pkg:hackage/lsp@2.7.0.1",
+        "pkg:hackage/lsp",
+        "pkg:hackage/lsp-test",
+        "pkg:hackage/lsp-types",
         "pkg:hackage/primitive@0.9.1.0",
         "pkg:hackage/safe-exceptions@0.1.7.4",
         "pkg:hackage/string-interpolate@0.3.4.0",
@@ -25648,6 +25606,37 @@
     },
     {
       "dependsOn": [
+        "pkg:hackage/aeson@2.2.4.1",
+        "pkg:hackage/async@2.2.6",
+        "pkg:hackage/attoparsec@0.14.4",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/co-log-core@0.3.2.6",
+        "pkg:hackage/containers",
+        "pkg:hackage/data-default@0.8.0.2",
+        "pkg:hackage/directory",
+        "pkg:hackage/exceptions",
+        "pkg:hackage/extra@1.8.1",
+        "pkg:hackage/filepath",
+        "pkg:hackage/hashable@1.5.1.0",
+        "pkg:hackage/lens-aeson@1.2.3",
+        "pkg:hackage/lens@5.3.6",
+        "pkg:hackage/lsp-types",
+        "pkg:hackage/mtl",
+        "pkg:hackage/prettyprinter@1.7.1",
+        "pkg:hackage/sorted-list@0.2.3.1",
+        "pkg:hackage/stm",
+        "pkg:hackage/text",
+        "pkg:hackage/text-rope@0.3",
+        "pkg:hackage/transformers",
+        "pkg:hackage/unliftio-core@0.2.1.0",
+        "pkg:hackage/unliftio@0.2.25.1",
+        "pkg:hackage/unordered-containers@0.2.20.1"
+      ],
+      "ref": "pkg:hackage/lsp"
+    },
+    {
+      "dependsOn": [
         "pkg:hackage/Diff@1.0.2",
         "pkg:hackage/Glob@0.10.2",
         "pkg:hackage/aeson-pretty@0.8.10",
@@ -25667,8 +25656,8 @@
         "pkg:hackage/filepath",
         "pkg:hackage/lens-aeson@1.2.3",
         "pkg:hackage/lens@5.3.6",
-        "pkg:hackage/lsp-types@2.3.0.1",
-        "pkg:hackage/lsp@2.7.0.1",
+        "pkg:hackage/lsp",
+        "pkg:hackage/lsp-types",
         "pkg:hackage/mtl",
         "pkg:hackage/parser-combinators@1.3.1",
         "pkg:hackage/process",
@@ -25678,7 +25667,7 @@
         "pkg:hackage/transformers",
         "pkg:hackage/unix"
       ],
-      "ref": "pkg:hackage/lsp-test@0.17.1.1"
+      "ref": "pkg:hackage/lsp-test"
     },
     {
       "dependsOn": [
@@ -25713,38 +25702,7 @@
         "pkg:hackage/text",
         "pkg:hackage/witherable@0.5"
       ],
-      "ref": "pkg:hackage/lsp-types@2.3.0.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/aeson@2.2.4.1",
-        "pkg:hackage/async@2.2.6",
-        "pkg:hackage/attoparsec@0.14.4",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/co-log-core@0.3.2.6",
-        "pkg:hackage/containers",
-        "pkg:hackage/data-default@0.8.0.2",
-        "pkg:hackage/directory",
-        "pkg:hackage/exceptions",
-        "pkg:hackage/extra@1.8.1",
-        "pkg:hackage/filepath",
-        "pkg:hackage/hashable@1.5.1.0",
-        "pkg:hackage/lens-aeson@1.2.3",
-        "pkg:hackage/lens@5.3.6",
-        "pkg:hackage/lsp-types@2.3.0.1",
-        "pkg:hackage/mtl",
-        "pkg:hackage/prettyprinter@1.7.1",
-        "pkg:hackage/sorted-list@0.2.3.1",
-        "pkg:hackage/stm",
-        "pkg:hackage/text",
-        "pkg:hackage/text-rope@0.3",
-        "pkg:hackage/transformers",
-        "pkg:hackage/unliftio-core@0.2.1.0",
-        "pkg:hackage/unliftio@0.2.25.1",
-        "pkg:hackage/unordered-containers@0.2.20.1"
-      ],
-      "ref": "pkg:hackage/lsp@2.7.0.1"
+      "ref": "pkg:hackage/lsp-types"
     },
     {
       "dependsOn": [
@@ -27437,7 +27395,7 @@
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",
-        "value": "{\"disagreements\":5,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":97,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24}}"
+        "value": "{\"disagreements\":11,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":91,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24,\"nixpkgs-version-violates-requirement\":6}}"
       },
       {
         "name": "waybill:scope-exemptions",

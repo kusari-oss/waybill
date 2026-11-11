@@ -448,6 +448,7 @@ dependency carries `waybill:haskell-version-unresolved-reason`:
 | `source-unsupported` | the lock pins a bare git URL or tarball | pin a forge-hosted nixpkgs, or supply versions via `--supplement-cdx` |
 | `no-exact-revision` | the lock pins a branch or tag, not a revision | re-lock so the input pins a revision |
 | `offline` | `--offline` was passed | none |
+| `nixpkgs-version-violates-requirement` | the revision has a version, but no range the project declares for the dependency admits it | supply the version via a freeze file or `--supplement-cdx`; the rejected version is in `waybill:nixpkgs-version-disagreement` |
 
 `compiler-supplied` is not a failure. GHC boot libraries — `base`, `text`,
 `bytestring` and friends — ship with the compiler and have no version in the
@@ -490,6 +491,18 @@ pinned nixpkgs, the freeze file's version is what waybill emits. When the two
 disagree the difference is recorded in `waybill:nixpkgs-version-disagreement`
 rather than silently resolved — which is exactly the question someone
 comparing a Nix build to a cabal build is asking.
+
+**A version the project's own requirement rules out is not emitted** (#1457).
+The package set is read from the pinned revision and does not see a flake's
+overlays, so a project that pins another release through one — for example
+`packagesFromDirectory { directory = ./nix/deps; }` — builds a version the
+package set does not carry. When no requirement range the project declares
+for a dependency admits the package set's version, the dependency stays
+versionless with `nixpkgs-version-violates-requirement`, the rejected version
+is recorded in `waybill:nixpkgs-version-disagreement` with `"emitted": null`,
+and `waybill:nixpkgs-haskell-resolution` counts it under `disagreements`. An
+overlay that pins a version the declared range still admits is not detected:
+reading overlays needs evaluation (#1283).
 
 #### The transitive runtime closure
 

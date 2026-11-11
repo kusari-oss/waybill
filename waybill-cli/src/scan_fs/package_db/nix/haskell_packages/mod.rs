@@ -25,6 +25,7 @@ pub(crate) mod cache;
 pub(crate) mod fetch;
 pub(crate) mod nix_base32;
 pub(crate) mod package_set;
+pub(crate) mod version_range;
 
 use std::collections::BTreeSet;
 
@@ -110,6 +111,11 @@ pub(crate) enum UnresolvedReason {
     NoExactRevision,
     /// The operator requested offline operation (FR-009).
     Offline,
+    /// #1457 — the package set has a version, and the project's own declared
+    /// requirement rules it out. The package set does not see a flake's
+    /// overlays, so this is what a project pinning another release through
+    /// one looks like. Never a whole-pass degradation: it is per dependency.
+    NixpkgsVersionViolatesRequirement,
 }
 
 impl UnresolvedReason {
@@ -121,6 +127,9 @@ impl UnresolvedReason {
             UnresolvedReason::SourceUnsupported => "source-unsupported",
             UnresolvedReason::NoExactRevision => "no-exact-revision",
             UnresolvedReason::Offline => "offline",
+            UnresolvedReason::NixpkgsVersionViolatesRequirement => {
+                "nixpkgs-version-violates-requirement"
+            }
         }
     }
 }
@@ -438,6 +447,7 @@ mod tests {
             (SourceUnsupported, "source-unsupported"),
             (NoExactRevision, "no-exact-revision"),
             (Offline, "offline"),
+            (NixpkgsVersionViolatesRequirement, "nixpkgs-version-violates-requirement"),
         ] {
             assert_eq!(r.as_str(), s);
         }
@@ -504,7 +514,8 @@ pub(crate) struct EnrichmentSummary {
     pub(crate) degraded_reason: Option<String>,
     /// Components whose locally-established version differs from the pinned
     /// revision's (FR-013). The local value is kept; the difference is
-    /// recorded.
+    /// recorded. Since #1457 also components whose declared requirement
+    /// rules out the pinned revision's version, which is then withheld.
     pub(crate) disagreements: usize,
     /// Milestone 985 (#962) — what the transitive runtime closure did, and
     /// the edges it produced. `None` when the closure did not run.
@@ -1015,6 +1026,35 @@ pub(crate) fn enrich(
 
     for c in components.iter_mut().filter(|c| is_enrichable(c)) {
         match classify(&c.name, &packages, &boot, &aliases, &pinned.revision) {
+            // #1457: the package set does not see the flake's overlays, so
+            // its version can be one the project's own declaration rules
+            // out. Emitting it beside that declaration makes the document
+            // contradict itself, so the version is withheld and the
+            // disagreement counted. The rejected version is kept in C172 so
+            // the evidence is not discarded along with the claim.
+            ResolutionOutcome::Resolved { version, revision, .. }
+                if version_range::contradicts(&c.requirement_ranges, &version) =>
+            {
+                let reason = UnresolvedReason::NixpkgsVersionViolatesRequirement;
+                summary.note_unresolved(&reason);
+                summary.disagreements += 1;
+                c.extra_annotations.insert(
+                    ANN_UNRESOLVED_REASON.to_string(),
+                    serde_json::Value::String(reason.as_str().to_string()),
+                );
+                c.extra_annotations.insert(
+                    ANN_VERSION_DISAGREEMENT.to_string(),
+                    serde_json::json!({
+                        "emitted": serde_json::Value::Null,
+                        "nixpkgs": version,
+                        "requirement-ranges": c.requirement_ranges,
+                        "revision": revision,
+                        "note": "the pinned revision's version does not satisfy \
+                                 the project's declared requirement, so it was \
+                                 not emitted; a flake overlay may pin another",
+                    }),
+                );
+            }
             ResolutionOutcome::Resolved {
                 version,
                 source_hash,
@@ -2331,6 +2371,68 @@ mod enrich_tests {
         let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
 
         assert_eq!(s.disagreements, 0);
+        assert!(!comps[0].extra_annotations.contains_key(ANN_VERSION_DISAGREEMENT));
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    fn ranged(name: &str, range: &str) -> ResolvedComponent {
+        let mut c = comp(name);
+        c.requirement_ranges = vec![range.to_string()];
+        c
+    }
+
+    /// #1457: the package set carries 1.2.3 and the project requires
+    /// `>= 1.3`. The package set's version is not what was built (an overlay
+    /// pinned another), so it must not be presented as fact.
+    #[test]
+    fn m1457_a_version_the_requirement_rules_out_is_withheld() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![ranged("waybill-fixture-liba", ">= 1.3")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert!(comps[0].version.is_empty(), "1.2.3 violates >= 1.3");
+        assert_eq!(comps[0].purl.as_str(), "pkg:hackage/waybill-fixture-liba");
+        assert!(comps[0].hashes.is_empty(), "nor may its hash be attached");
+        assert!(!comps[0].extra_annotations.contains_key(ANN_RESOLVED_VIA));
+        assert_eq!(
+            comps[0].extra_annotations.get(ANN_UNRESOLVED_REASON),
+            Some(&serde_json::Value::String(
+                "nixpkgs-version-violates-requirement".into()
+            ))
+        );
+        let rec = comps[0]
+            .extra_annotations
+            .get(ANN_VERSION_DISAGREEMENT)
+            .expect("the rejected version must be recorded");
+        assert!(rec["emitted"].is_null(), "nothing was emitted: {rec}");
+        assert_eq!(rec["nixpkgs"].as_str(), Some("1.2.3"));
+        assert_eq!(rec["requirement-ranges"], serde_json::json!([">= 1.3"]));
+        assert_eq!(s.resolved, 0);
+        assert_eq!(s.disagreements, 1);
+        assert_eq!(s.unresolved.get("nixpkgs-version-violates-requirement"), Some(&1));
+        assert!(s.renames.is_empty(), "the identity did not change");
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// Control: a range the package set's version satisfies changes nothing.
+    #[test]
+    fn m1457_a_version_the_requirement_admits_resolves_as_before() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![ranged("waybill-fixture-liba", ">= 1.2 && < 2")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(comps[0].version, "1.2.3");
+        assert_eq!(s.resolved, 1);
+        assert_eq!(s.disagreements, 0);
+        assert!(!comps[0].extra_annotations.contains_key(ANN_UNRESOLVED_REASON));
         assert!(!comps[0].extra_annotations.contains_key(ANN_VERSION_DISAGREEMENT));
         std::env::remove_var(cache::CACHE_ENV);
     }

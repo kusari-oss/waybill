@@ -133,8 +133,9 @@ pub(crate) struct StaticLinkSet {
 /// confirm has no declared relations, so the fallback applies to it; the
 /// source is then `derivation-fields`, because that root's walk may include
 /// its test-only dependencies. Below a root, a library is followed through its
-/// declared relations when confirmed and through `propagatedBuildInputs`
-/// otherwise; neither carries test dependencies at a library (q6).
+/// `propagatedBuildInputs` and, when confirmed, its declared relations too;
+/// neither carries test dependencies at a library (q6), and the declared
+/// relations alone miss a platform-conditional dependency (#1459).
 pub(crate) fn static_link_set(
     raw: &RawClosure,
     runtime_drvs: &BTreeSet<String>,
@@ -154,12 +155,15 @@ pub(crate) fn static_link_set(
             })
             .unwrap_or_default()
     };
+    // Haskell builds only, as with the derivation fields: the set is the
+    // Haskell libraries linked in, and a declared target bound to a C library
+    // of the same name (#1459) is not one of them.
     let declared_out = |k: &str| -> Option<Vec<String>> {
         let d = declared?;
         d.confirmed.contains(k).then(|| {
             d.edges
                 .get(k)
-                .map(|t| t.iter().cloned().collect())
+                .map(|t| t.iter().filter(|t| is_hs(t)).cloned().collect())
                 .unwrap_or_default()
         })
     };
@@ -181,15 +185,20 @@ pub(crate) fn static_link_set(
             }
         }
     }
+    // Below a root, a library's `propagatedBuildInputs` is followed even when
+    // it is confirmed. The declared relations are cabal2nix's Linux
+    // resolution, so on darwin `fsnotify` declares `hinotify` while its
+    // derivation propagates `hfsevents`, which is what is linked (#1459,
+    // cachix). A library propagates no test dependencies (q6), so the union
+    // errs toward runtime only by what a library propagates beyond its link
+    // dependencies (aeson-pretty's executable-only ones, R4).
     let mut members = BTreeSet::new();
     while let Some(n) = stack.pop() {
         if !members.insert(n.clone()) {
             continue;
         }
-        match declared_out(&n) {
-            Some(targets) => stack.extend(targets),
-            None => stack.extend(field(&n, "propagatedBuildInputs")),
-        }
+        stack.extend(declared_out(&n).unwrap_or_default());
+        stack.extend(field(&n, "propagatedBuildInputs"));
     }
     StaticLinkSet {
         members,
@@ -271,10 +280,26 @@ mod tests {
         assert_eq!(s.source, StaticLinkSource::DerivationFields);
         assert!(s.members.contains("d-test.drv"));
         assert!(
-            !s.members.contains("d-dep.drv"),
-            "below the root, a confirmed library is followed through its declared \
-             relations, and `lib` declares none"
+            s.members.contains("d-dep.drv"),
+            "below the root, a confirmed library that declares nothing is still \
+             followed through what its derivation propagates (#1459: the declared \
+             relations are Linux's, and darwin's `fsnotify` propagates `hfsevents`)"
         );
+    }
+
+    /// #1459: a declared target bound to a non-Haskell derivation (a C library
+    /// sharing a Haskell library's name) is not a statically linked Haskell
+    /// library, so it never enters the set.
+    #[test]
+    fn a_declared_target_that_is_not_a_haskell_build_is_not_followed() {
+        let raw = RawClosure::parse(CLOSURE).unwrap();
+        let declared = DeclaredEdges {
+            confirmed: set(&["d-root.drv"]),
+            edges: BTreeMap::from([("d-root.drv".to_string(), set(&["d-lib.drv", "d-zlib.drv"]))]),
+        };
+        let s = static_link_set(&raw, &set(&["d-root.drv"]), Some(&declared));
+        assert_eq!(s.source, StaticLinkSource::DeclaredEdges);
+        assert_eq!(s.members, set(&["d-dep.drv", "d-lib.drv"]));
     }
 
     #[test]

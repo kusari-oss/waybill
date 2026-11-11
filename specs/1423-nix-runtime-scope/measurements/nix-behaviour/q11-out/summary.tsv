@@ -1,0 +1,40 @@
+attr	outputs	outputName	outPath-output	meta.outputsToInstall	to-install-has-context	installable-drv-show-exit
+postgrest	["out","doc","bin"]	bin	bin	["bin"]	[false]	0
+cachix	["out","bin"]	bin	bin	["bin"]	[false]	0
+shellcheck	["bin","man","doc","out"]	bin	bin	["bin","man","doc"]	[false,false,false]	0
+curl	["bin","dev","out","man","devdoc"]	bin	bin	["bin","man"]	[false,false]	1
+
+attr	output	path-info -r exit	paths
+postgrest	bin	0	129
+postgrest	doc	0	185
+postgrest	out	0	754
+postgrest	to-install	0	129
+cachix	bin	0	47
+cachix	out	0	48
+cachix	to-install	0	47
+shellcheck	bin	0	5
+shellcheck	doc	0	1
+shellcheck	man	0	1
+shellcheck	out	0	6
+shellcheck	to-install	0	7
+curl	bin	0	20
+curl	dev	0	47
+curl	devdoc	0	1
+curl	man	0	1
+curl	out	0	19
+curl	to-install	0	21
+
+curl.out selection: {"outputName":"out","outputSpecified":true,"outputsToInstall":["bin","man"]}
+curl installable, eval-cache off: exit 0 
+
+selection expression
+postgrest	exit 0	{"outputs":["bin"],"source":"output-specified"}
+cachix	exit 0	{"outputs":["bin"],"source":"output-specified"}
+shellcheck	exit 0	{"outputs":["bin","man","doc"],"source":"outputs-to-install"}
+curl	exit 0	{"outputs":["bin","man"],"source":"outputs-to-install"}
+curl.out	exit 0	{"outputs":["out"],"source":"output-specified"}
+
+extra eval on the postgrest wrapper, .meta.outputsToInstall (s): 0.495 0.451 0.442 
+result: ["bin"]
+extra eval on the postgrest wrapper, selection expression (s): 0.447 0.451 0.448 
+result: {"outputs":["bin"],"source":"output-specified"}
