@@ -133,28 +133,51 @@ fn with_nix_closure_the_pass_runs_or_degrades_but_never_fails_the_scan() {
     );
 }
 
-/// T027 / FR-017, SC-008 — no vulnerability arrays in any emitted SBOM.
+/// T027 / FR-017, SC-008, as milestone 1068 restated it — no vulnerability
+/// *match* in any emitted SBOM.
+///
+/// Milestone 1050 required `vulnerabilities[]` to stay empty. Milestone 1068
+/// (#1039) then carried waybill's own VEX statements into it, deliberately,
+/// while keeping the rule that waybill does not match components against an
+/// advisory database. This test kept asserting "empty" only because the
+/// fixture has no main module, so until #1436 no VEX subject was found and no
+/// statement was emitted. What must hold is that every entry is one of
+/// waybill's graded VEX statements, and that a build claim names the
+/// document's subject.
 ///
 /// The golden check cannot catch this: goldens are generated with the flag
 /// off, and the requirement is about the flag-on path.
 #[test]
-fn no_emitted_sbom_gains_a_vulnerabilities_array() {
+fn every_vulnerabilities_entry_is_a_graded_vex_statement() {
     if !nix_available() {
         eprintln!("skipping: no `nix` on PATH");
         return;
     }
     let (bytes, _) = run_scan(&["--nix-closure"]);
     let cdx = parse(&bytes);
-    // The key itself is part of the CycloneDX shape and predates this
-    // milestone; what must stay empty is its contents. An entry here would
-    // be a vulnerability claim in a composition snapshot.
-    let entries = cdx["vulnerabilities"].as_array().map(Vec::len).unwrap_or(0);
-    assert_eq!(
-        entries, 0,
-        "this milestone added {entries} vulnerability entries to an SBOM; \
-         those claims belong in VEX, where they can be superseded without \
-         rewriting the composition"
-    );
+    let entries = cdx["vulnerabilities"].as_array().cloned().unwrap_or_default();
+    // CONTROL: the pinned closure applies CVE-named patches, so there are
+    // statements to check. Without this the loop below could pass over an
+    // empty array, which is what this test did before #1436.
+    assert!(!entries.is_empty(), "no VEX statement reached vulnerabilities[]");
+    let subject = cdx["metadata"]["component"]["bom-ref"].as_str().unwrap_or_default();
+    for e in &entries {
+        let detail = e["analysis"]["detail"].as_str().unwrap_or_default();
+        assert!(
+            detail.contains("filename-derived") || detail.contains("nixpkgs-declared"),
+            "an entry carries no evidence grade, so it is not one of waybill's \
+             VEX statements: {e:#}"
+        );
+        if e["analysis"]["state"] == "not_affected" {
+            let refs: Vec<&str> = e["affects"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|a| a["ref"].as_str())
+                .collect();
+            assert_eq!(refs, vec![subject], "a build claim names the document subject: {e:#}");
+        }
+    }
 }
 
 /// T048 — the document-scope signals reach every format, or none does.

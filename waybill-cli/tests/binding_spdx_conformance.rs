@@ -163,7 +163,7 @@ fn spdx3_binding_is_descendant_of_and_conformant() {
         eprintln!("WARN: spdx3-validate not found; skipping its conformance gate");
         return;
     }
-    let out = Command::new(&validator).args(["--quiet", "-j"]).arg(&spdx3_path).output().unwrap();
+    let out = common::spdx3_validate::command(&validator).args(["--quiet", "-j"]).arg(&spdx3_path).output().unwrap();
     let text = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
     assert!(
         out.status.success() && !text.contains("Violation of type"),

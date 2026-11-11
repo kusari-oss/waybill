@@ -53,16 +53,25 @@ AND; values within a term combine with OR.
 | `ecosystem` | the PURL type: `npm`, `cargo`, `deb`, … |
 | `scope` | `runtime`, `development`, `build`, `test`, `optional` |
 | `tier` | the component's tier: `source`, `design`, `analyzed`, …, or `file` |
-| `role` | the component's role or type |
+| `role` | the component's role (`waybill:component-role`), its type, or its closure role (`waybill:closure-role`: `artifact-input`, `build-tooling`, `both`, `unreferenced`) |
 | `name` | the name, as a glob, or `re:<regex>` |
 
-Examples: `scope=development,test`, `ecosystem=npm;name=@acme/*`, `tier=file`.
+Examples: `scope=development,test`, `ecosystem=npm;name=@acme/*`, `tier=file`,
+`role=build-tooling`.
+
+`--exclude-scope` belongs to `sbom scan` and is refused here. Use
+`--drop 'scope=…'` instead.
 
 Dropping a component removes everything that refers to it:
 
 - its dependency edges;
 - annotations and relationships about it;
-- licence and vulnerability entries that only it used.
+- licence and vulnerability entries that only it used;
+- vulnerability statements about it. A CycloneDX build statement names the
+  root in `affects[]` and the patched component in a
+  `waybill:vex-subcomponent` property; once its last subcomponent is dropped,
+  the statement goes too, since the root alone would be a different claim.
+  The count is reported on stderr.
 
 Its dependents are connected to its dependencies, so nothing reachable before
 becomes unreachable. A bridged edge keeps a non-runtime scope: a dependency

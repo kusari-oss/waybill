@@ -102,7 +102,10 @@ pub async fn execute(
         SbomSubcommand::TraceBinding(args) => {
             super::trace_binding_cmd::execute(args).await
         }
-        SbomSubcommand::Edit(args) => super::edit::execute(args).await,
+        SbomSubcommand::Edit(args) => {
+            super::edit::refuse_exclude_scope(&exclude_scope)?;
+            super::edit::execute(args).await
+        }
         SbomSubcommand::VerifyChain(args) => super::verify_chain::execute(args).await,
     }
 }
