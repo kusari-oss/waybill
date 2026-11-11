@@ -6,6 +6,7 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 `0.1.x` alpha.
 
 ## [Unreleased]
+
 ### Changed
 
 - **A recorded read set no longer carries opens that failed.** Capture
@@ -78,41 +79,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
-- **SPDX 2.3 no longer emits a relationship twice when two sources observe
-  the same edge.** The `--nix-closure` build graph (milestone 1280) adds an
-  edge for every pair it records, including pairs the project's manifest,
-  the pinned package set (m1275) or the m985 runtime closure already
-  contributed. CycloneDX and SPDX 3 collapse such pairs into a set; SPDX 2.3
-  wrote one row per edge. On moat that was 331 duplicate relationships
-  (7,631 emitted, 7,300 distinct), and the root's direct dependencies read
-  40 in SPDX 2.3 against 28 in CycloneDX and SPDX 3. SPDX 2.3 now
-  deduplicates once all relationships are assembled. Where one
-  dependent→dependency pair carries both `DEPENDS_ON` and a typed
-  `*_DEPENDENCY_OF`, `DEPENDS_ON` is kept, because a dependency needed at
-  runtime is needed. SPDX 3 applies the same rule: a target listed in a
-  component's unscoped `dependsOn` is removed from its scoped ones, which
-  had counted six pairs twice on the haskell-language-server corpus target
-  (#1444).
-- **The OpenVEX sidecar is valid OpenVEX 0.2.0, has its own name, and is
-  logged as itself** (#1443).
-  - Every `affected` statement now carries the `action_statement` the
-    schema requires. On moat the sidecar failed the vendored schema 18
-    times, once per `affected` statement. A backport's statement says to
-    use a build that applies the nixpkgs backport, that this build does,
-    and that the backport is matched to the CVE by filename alone. A
-    nixpkgs declaration's says to remove the package or move to a nixpkgs
-    revision that no longer declares the CVE. CycloneDX carries the same
-    text as `recommendation` on the matching `exploitable` entry.
-  - The sidecar is named after the SPDX document instead of always
-    `waybill.openvex.json`, so two scans into one directory no longer
-    overwrite each other's: `out/app.spdx.json` gets
-    `out/app.openvex.json`. The default path is unchanged. With both SPDX
-    formats, one sidecar is written, named after the SPDX 2.3 document,
-    and both documents reference it. `--output openvex=<path>` still
-    overrides, and is now accepted with SPDX 3 alone.
-  - The scan log reports `wrote SBOM artifact format=openvex` once. It
-    used to report the sidecar twice, as `format=spdx-2.3-json` and
-    `format=spdx-3-json`.
 - **A `--nix-closure` CycloneDX document with re-identified Python
   members is schema-valid again.** Milestone 1366 recorded why a closure
   member's `pkg:pypi` identifier was derived by adding a
@@ -146,6 +112,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   whose hyphenated name matched a declared-optional one. The set is now
   read from each dependency's package id and keyed by `(name, version)`,
   so two versions of one crate are also classified separately (#1429).
+- **The OpenVEX sidecar is valid OpenVEX 0.2.0, has its own name, and is
+  logged as itself** (#1443).
+  - Every `affected` statement now carries the `action_statement` the
+    schema requires. On moat the sidecar failed the vendored schema 18
+    times, once per `affected` statement. A backport's statement says to
+    use a build that applies the nixpkgs backport, that this build does,
+    and that the backport is matched to the CVE by filename alone. A
+    nixpkgs declaration's says to remove the package or move to a nixpkgs
+    revision that no longer declares the CVE. CycloneDX carries the same
+    text as `recommendation` on the matching `exploitable` entry.
+  - The sidecar is named after the SPDX document instead of always
+    `waybill.openvex.json`, so two scans into one directory no longer
+    overwrite each other's: `out/app.spdx.json` gets
+    `out/app.openvex.json`. The default path is unchanged. With both SPDX
+    formats, one sidecar is written, named after the SPDX 2.3 document,
+    and both documents reference it. `--output openvex=<path>` still
+    overrides, and is now accepted with SPDX 3 alone.
+  - The scan log reports `wrote SBOM artifact format=openvex` once. It
+    used to report the sidecar twice, as `format=spdx-2.3-json` and
+    `format=spdx-3-json`.
 - **`sbom edit` can drop components that VEX names.** A CycloneDX build
   statement names the root in `affects[]` and the patched component in a
   `waybill:vex-subcomponent` property. Edit pruned the first and not the
@@ -161,6 +147,21 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 - **`sbom edit` refuses `--exclude-scope`.** The global flag is read only by
   `sbom scan`, so on `edit` it was accepted and ignored. Edit now refuses it
   and names the equivalent `--drop 'scope=…'` (#1422).
+- **SPDX 2.3 no longer emits a relationship twice when two sources observe
+  the same edge.** The `--nix-closure` build graph (milestone 1280) adds an
+  edge for every pair it records, including pairs the project's manifest,
+  the pinned package set (m1275) or the m985 runtime closure already
+  contributed. CycloneDX and SPDX 3 collapse such pairs into a set; SPDX 2.3
+  wrote one row per edge. On moat that was 331 duplicate relationships
+  (7,631 emitted, 7,300 distinct), and the root's direct dependencies read
+  40 in SPDX 2.3 against 28 in CycloneDX and SPDX 3. SPDX 2.3 now
+  deduplicates once all relationships are assembled. Where one
+  dependent→dependency pair carries both `DEPENDS_ON` and a typed
+  `*_DEPENDENCY_OF`, `DEPENDS_ON` is kept, because a dependency needed at
+  runtime is needed. SPDX 3 applies the same rule: a target listed in a
+  component's unscoped `dependsOn` is removed from its scoped ones, which
+  had counted six pairs twice on the haskell-language-server corpus target
+  (#1444).
 - **`sbom edit --drop role=` matches the closure role.** Closure members
   carry their role in `waybill:closure-role` (`artifact-input`,
   `build-tooling`, `both`, `unreferenced`), which the selector did not read.
