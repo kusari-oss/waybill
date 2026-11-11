@@ -164,6 +164,72 @@ fn cdx_vulnerabilities_on_dropped_components_go_with_them() {
     assert_eq!(vulns[0]["affects"], json!([{"ref": id("express")}]));
 }
 
+/// #1422. A build statement (m1035 backport VEX) names the root in
+/// `affects[]` and the patched component in `waybill:vex-subcomponent`.
+/// Dropping that component used to fail the leftover-identifier check and
+/// write nothing.
+#[test]
+fn cdx_vex_subcomponents_on_dropped_components_go_with_them() {
+    let mut doc = read_json(&fixture("full.cdx.json"));
+    let refs: Vec<(String, String)> = components(&doc);
+    let id = |n: &str| refs.iter().find(|(_, name)| name == n).map(|(i, _)| i.clone()).unwrap();
+    let root = doc.pointer("/metadata/component/bom-ref").and_then(Value::as_str).unwrap().to_string();
+    let sub = |n: &str| json!({"name": "waybill:vex-subcomponent", "value": id(n)});
+    doc["vulnerabilities"] = json!([
+        {"id": "CVE-2026-0003", "affects": [{"ref": root}], "properties": [sub("jest-lite")]},
+        {"id": "CVE-2026-0004", "affects": [{"ref": root}], "properties": [sub("express"), sub("pretty-format-lite")]},
+    ]);
+    let dir = tempfile::tempdir().unwrap();
+    let input = dir.path().join("in.cdx.json");
+    std::fs::write(&input, serde_json::to_string_pretty(&doc).unwrap()).unwrap();
+    let e = edit(&input, &["--drop", "scope=development"]);
+    e.assert_ok();
+    assert!(e.stderr.contains("1 vulnerability statement(s) removed"), "{}", e.stderr);
+    let out = e.json();
+    let vulns = out.get("vulnerabilities").and_then(Value::as_array).cloned().unwrap_or_default();
+    let ids: Vec<&str> = vulns.iter().filter_map(|v| v.get("id").and_then(Value::as_str)).collect();
+    assert_eq!(ids, ["CVE-2026-0004"]);
+    assert_eq!(vulns[0]["properties"], json!([sub("express")]));
+    assert_conforms_like(&doc, &out, "cdx");
+}
+
+/// #1422. `--exclude-scope` is a global flag only `sbom scan` reads. On
+/// `edit` it used to parse and then do nothing.
+#[test]
+fn exclude_scope_is_refused_with_the_drop_equivalent() {
+    for extra in [&[][..], &["--drop", "name=no-such-package"][..]] {
+        let mut args = vec!["--exclude-scope", "dev,build"];
+        args.extend_from_slice(extra);
+        let e = edit(&fixture("full.cdx.json"), &args);
+        assert!(!e.status.success(), "accepted with {extra:?}");
+        assert!(e.stderr.contains("--exclude-scope"), "{}", e.stderr);
+        assert!(e.stderr.contains("--drop 'scope=development,build'"), "{}", e.stderr);
+        assert!(!e.path.exists(), "output written on failure");
+    }
+}
+
+/// #1422. `role=` matches `waybill:closure-role`, which closure members
+/// carry instead of `waybill:component-role`.
+#[test]
+fn role_selects_the_closure_role() {
+    let mut doc = read_json(&fixture("full.cdx.json"));
+    let target = components(&doc).into_iter().find(|(_, n)| n == "lodash").map(|(i, _)| i).unwrap();
+    for c in doc["components"].as_array_mut().unwrap() {
+        if c.get("bom-ref").and_then(Value::as_str) == Some(target.as_str()) {
+            let mut props = c.get("properties").and_then(Value::as_array).cloned().unwrap_or_default();
+            props.push(json!({"name": "waybill:closure-role", "value": "build-tooling"}));
+            c["properties"] = Value::Array(props);
+        }
+    }
+    let dir = tempfile::tempdir().unwrap();
+    let input = dir.path().join("in.cdx.json");
+    std::fs::write(&input, serde_json::to_string_pretty(&doc).unwrap()).unwrap();
+    let e = edit(&input, &["--drop", "role=build-tooling"]);
+    e.assert_ok();
+    assert!(e.stderr.contains("drop-components: matched 1, changed 1"), "{}", e.stderr);
+    assert!(!names(&e.json()).contains("lodash"));
+}
+
 #[test]
 fn refuses_to_drop_the_root_and_writes_nothing() {
     for (label, file) in FORMATS {

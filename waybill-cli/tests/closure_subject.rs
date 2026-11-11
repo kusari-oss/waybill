@@ -331,6 +331,148 @@ fn an_operator_override_still_decides_the_subject() {
     assert_eq!(cdx.1, "9.9");
 }
 
+/// The root's outgoing dependency edges in each format, counted the way the
+/// corpus harness's layer-3 check counts them: CycloneDX `dependsOn`; SPDX 2.3
+/// `root DEPENDS_ON x` plus the reverse scoped spellings `x <SCOPE>_DEPENDENCY_OF
+/// root`; SPDX 3 `dependsOn` targets from the `rootElement`. `usesTool` is
+/// not a dependency edge and is not counted.
+fn root_out_edges(s: &Scan) -> [usize; 3] {
+    let root = s.cdx["metadata"]["component"]["bom-ref"].as_str().unwrap();
+    let cdx = s.cdx["dependencies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|d| d["ref"] == root)
+        .map(|d| d["dependsOn"].as_array().map_or(0, Vec::len))
+        .sum();
+
+    let described: Vec<&str> = s.spdx23["documentDescribes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
+    let spdx23 = s.spdx23["relationships"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|r| {
+            let from = r["spdxElementId"].as_str().unwrap_or_default();
+            let to = r["relatedSpdxElement"].as_str().unwrap_or_default();
+            match r["relationshipType"].as_str().unwrap_or_default() {
+                "DEPENDS_ON" => described.contains(&from),
+                t if t.ends_with("_DEPENDENCY_OF") => described.contains(&to),
+                _ => false,
+            }
+        })
+        .count();
+
+    let graph = s.spdx3["@graph"].as_array().unwrap();
+    let roots: Vec<&str> = graph
+        .iter()
+        .filter(|e| e["type"] == "SpdxDocument")
+        .flat_map(|e| e["rootElement"].as_array().unwrap().iter().filter_map(Value::as_str))
+        .collect();
+    let spdx3 = graph
+        .iter()
+        .filter(|e| e["relationshipType"] == "dependsOn")
+        .filter(|e| e["from"].as_str().is_some_and(|f| roots.contains(&f)))
+        .map(|e| match &e["to"] {
+            Value::Array(a) => a.len(),
+            Value::String(_) => 1,
+            _ => 0,
+        })
+        .sum();
+    [cdx, spdx23, spdx3]
+}
+
+/// SPDX 3 `usesTool` relationships from the `rootElement`.
+fn spdx3_root_uses_tool(s: &Scan) -> usize {
+    let graph = s.spdx3["@graph"].as_array().unwrap();
+    let root = graph
+        .iter()
+        .find(|e| e["type"] == "SpdxDocument")
+        .and_then(|d| d["rootElement"][0].as_str())
+        .unwrap();
+    graph
+        .iter()
+        .filter(|e| e["relationshipType"] == "usesTool" && e["from"] == root)
+        .count()
+}
+
+/// `project()` without its cabal package: the flake alone, so the scan
+/// finds no main module and the evaluated package is the only candidate
+/// subject. The `nix-closure-shellcheck` corpus shape.
+fn flake_only_project() -> tempfile::TempDir {
+    let dir = tempfile::tempdir().unwrap();
+    for f in ["flake.nix", "flake.lock"] {
+        std::fs::copy(project().join(f), dir.path().join(f)).unwrap();
+    }
+    dir
+}
+
+const OVERRIDE: &[&str] = &[
+    "--root-name",
+    "waybill-fixture-override",
+    "--root-version",
+    "9.9",
+];
+
+/// #1438 — with `--root-name` and no main module, the operator's root
+/// depends on the same components in all three formats. The root
+/// `usesTool` the build-tooling member; SPDX 3 read that as "the root
+/// already has outgoing edges" and skipped the fallback CycloneDX and SPDX
+/// 2.3 apply, so its root depended on nothing.
+#[test]
+fn an_override_root_without_a_main_module_has_the_same_edges_in_every_format() {
+    let dir = flake_only_project();
+    let rows = fixture("rows.json");
+    let mut args = vec!["--nix-closure"];
+    args.extend_from_slice(OVERRIDE);
+    let s = NixStub {
+        project: dir.path().to_path_buf(),
+        closure: &fixture("closure-tooling.json"),
+        rows: Rows::Json(&rows),
+        attr: DEFAULT_ATTR,
+    }
+    .scan(&args);
+    assert_eq!(subjects(&s)[0].0, "waybill-fixture-override");
+    assert!(
+        spdx3_root_uses_tool(&s) > 0,
+        "the fixture must put a usesTool edge on the root, or this test exercises nothing"
+    );
+    let [cdx, spdx23, spdx3] = root_out_edges(&s);
+    assert!(cdx > 0, "CycloneDX root has no dependsOn");
+    assert_eq!(
+        [cdx, spdx23, spdx3],
+        [cdx; 3],
+        "root out-edges CycloneDX / SPDX 2.3 / SPDX 3"
+    );
+}
+
+/// Control for the test above, one variable changed: the project keeps its
+/// cabal main module. The override root is then anchored to that module
+/// (milestone 860) and the formats already agreed, with the same `usesTool`
+/// edge on the SPDX 3 root.
+#[test]
+fn control_an_override_root_with_a_main_module_already_agreed() {
+    let rows = fixture("rows.json");
+    let mut args = vec!["--nix-closure"];
+    args.extend_from_slice(OVERRIDE);
+    let s = NixStub {
+        project: project(),
+        closure: &fixture("closure-tooling.json"),
+        rows: Rows::Json(&rows),
+        attr: DEFAULT_ATTR,
+    }
+    .scan(&args);
+    assert_eq!(subjects(&s)[0].0, "waybill-fixture-override");
+    assert!(spdx3_root_uses_tool(&s) > 0);
+    let [cdx, spdx23, spdx3] = root_out_edges(&s);
+    assert!(cdx > 0, "CycloneDX root has no dependsOn");
+    assert_eq!([cdx, spdx23, spdx3], [cdx; 3]);
+}
+
 /// The selection tag drives the ladder and never reaches a document.
 #[test]
 fn the_internal_tag_appears_in_no_output() {

@@ -162,7 +162,10 @@ impl SbomAdapter for Spdx23 {
                 if scopes.is_empty() {
                     scopes = rel_scopes.get(&id).cloned().unwrap_or_default();
                 }
-                let mut roles: BTreeSet<String> = annotation_strings(p, "waybill:component-role").into_iter().collect();
+                let mut roles: BTreeSet<String> = annotation_strings(p, "waybill:component-role")
+                    .into_iter()
+                    .chain(annotation_strings(p, "waybill:closure-role"))
+                    .collect();
                 if let Some(t) = p.get("primaryPackagePurpose").and_then(Value::as_str) {
                     roles.insert(t.to_ascii_lowercase());
                 }
@@ -252,7 +255,7 @@ impl SbomAdapter for Spdx23 {
                 infos.retain(|i| i.get("licenseId").and_then(Value::as_str).is_none_or(|l| text.contains(l)));
             }
         }
-        DropOutcome { removed, changed }
+        DropOutcome { removed, changed, ..DropOutcome::default() }
     }
 
     fn remove_annotations(&mut self, namespace: &str) -> usize {
@@ -458,6 +461,15 @@ mod tests {
         assert!(rels.iter().any(|r| r["spdxElementId"] == "SPDXRef-app" && r["relatedSpdxElement"] == "SPDXRef-c"));
         assert!(a.doc()["hasExtractedLicensingInfos"].as_array().unwrap().is_empty());
         assert!(a.dangling_references().is_empty());
+    }
+
+    /// #1422. Closure members carry their role in `waybill:closure-role`.
+    #[test]
+    fn closure_role_is_a_role() {
+        let mut d = doc();
+        d["packages"][2]["annotations"] = json!([{"comment": envelope("waybill:closure-role", json!("both"))}]);
+        let c = Spdx23::new(d).components().into_iter().find(|c| c.id == "SPDXRef-c").unwrap();
+        assert!(c.roles.contains("both"), "{:?}", c.roles);
     }
 
     #[test]

@@ -2019,7 +2019,10 @@ AND, and values within a term with OR. The keys are:
   SPDX 2.3 `BUILD_TOOL_OF`, or a `to` of an SPDX 3 `usesTool` relationship with
   `scope: build`. See the [editing guide](sbom-edit.md#dropping-components---drop-selector);
 - `tier`: the `waybill:sbom-tier`, or `file` for file components;
-- `role`;
+- `role`: the `waybill:component-role` (`main-module`, …), the component
+  type, or, on a `--nix-closure` document, the `waybill:closure-role`
+  (`artifact-input`, `build-tooling`, `both`, `unreferenced`). Each value
+  matches only itself: `role=build-tooling` does not select `both`;
 - `name`: glob, or `re:<regex>`.
 
 Globs treat `/` as an ordinary character, so `name=@acme/*` matches scoped
@@ -2034,6 +2037,17 @@ A dropped component's dependents depend on its dependencies afterwards. Their
 dependency lists are marked incomplete: a CycloneDX `incomplete` composition,
 SPDX 3 `completeness: incomplete`, and `waybill:graph-completeness` set to
 `unknown` in all three formats.
+
+Vulnerability statements about a dropped component go with it. In CycloneDX,
+its `vulnerabilities[].affects[]` entries and `waybill:vex-subcomponent`
+properties are removed, and a vulnerability left with no `affects[]`, or a
+build statement left with no subcomponent, is removed. In SPDX 3, a
+`security_*VulnAssessmentRelationship` whose `to` is emptied or whose
+`security_assessedElement` was dropped is removed. stderr reports how many
+statements went.
+
+`--exclude-scope` is a `sbom scan` flag. `sbom edit` refuses it and names the
+`--drop 'scope=…'` that removes the same scopes from an emitted document.
 
 ### `--drop-annotations <NAMESPACE>`
 

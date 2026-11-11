@@ -48,6 +48,8 @@ use std::process::Command;
 
 use serde_json::Value;
 
+mod common;
+
 /// The revision the fixture `flake.lock` pins.
 const REV: &str = "a799d3e3886da994fa307f817a6bc705ae538eeb";
 
@@ -1011,7 +1013,7 @@ fn m1277_spdx3_validate_accepts_the_tool_relationships() {
         );
         return;
     }
-    let output = Command::new(&bin)
+    let output = common::spdx3_validate::command(&bin)
         .arg("--quiet")
         .arg("-j")
         .arg(&out)

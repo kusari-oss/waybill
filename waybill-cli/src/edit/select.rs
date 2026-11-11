@@ -4,7 +4,8 @@
 //! with AND; values within a term combine with OR. Keys:
 //! `purl` (glob), `ecosystem` (PURL type), `scope`
 //! (`runtime|development|build|test|optional|excluded`), `tier`, `role`, `name`
-//! (glob, or a regex prefixed `re:`).
+//! (glob, or a regex prefixed `re:`). `role` matches `waybill:component-role`,
+//! the closure role `waybill:closure-role`, and the component type.
 
 use std::collections::BTreeSet;
 use std::fmt;
@@ -281,6 +282,16 @@ mod tests {
         assert!("role=library".parse::<Selector>().unwrap().matches(&c));
         assert!("name=@acme/*".parse::<Selector>().unwrap().matches(&c));
         assert!("name=re:^@acme/internal-".parse::<Selector>().unwrap().matches(&c));
+    }
+
+    /// #1422: `role=` selects closure roles, which the adapters fold into
+    /// the same set as `waybill:component-role` and the component type.
+    #[test]
+    fn role_selects_closure_roles() {
+        let mut c = view("waybill-fixture-cc", "pkg:generic/waybill-fixture-cc@1", &[]);
+        c.roles = BTreeSet::from(["library".to_string(), "build-tooling".to_string()]);
+        assert!("role=build-tooling".parse::<Selector>().unwrap().matches(&c));
+        assert!(!"role=artifact-input,both".parse::<Selector>().unwrap().matches(&c));
     }
 
     #[test]
