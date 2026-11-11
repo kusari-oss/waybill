@@ -147,6 +147,21 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 - **`sbom edit` refuses `--exclude-scope`.** The global flag is read only by
   `sbom scan`, so on `edit` it was accepted and ignored. Edit now refuses it
   and names the equivalent `--drop 'scope=…'` (#1422).
+- **SPDX 2.3 no longer emits a relationship twice when two sources observe
+  the same edge.** The `--nix-closure` build graph (milestone 1280) adds an
+  edge for every pair it records, including pairs the project's manifest,
+  the pinned package set (m1275) or the m985 runtime closure already
+  contributed. CycloneDX and SPDX 3 collapse such pairs into a set; SPDX 2.3
+  wrote one row per edge. On moat that was 331 duplicate relationships
+  (7,631 emitted, 7,300 distinct), and the root's direct dependencies read
+  40 in SPDX 2.3 against 28 in CycloneDX and SPDX 3. SPDX 2.3 now
+  deduplicates once all relationships are assembled. Where one
+  dependent→dependency pair carries both `DEPENDS_ON` and a typed
+  `*_DEPENDENCY_OF`, `DEPENDS_ON` is kept, because a dependency needed at
+  runtime is needed. SPDX 3 applies the same rule: a target listed in a
+  component's unscoped `dependsOn` is removed from its scoped ones, which
+  had counted six pairs twice on the haskell-language-server corpus target
+  (#1444).
 - **`sbom edit --drop role=` matches the closure role.** Closure members
   carry their role in `waybill:closure-role` (`artifact-input`,
   `build-tooling`, `both`, `unreferenced`), which the selector did not read.

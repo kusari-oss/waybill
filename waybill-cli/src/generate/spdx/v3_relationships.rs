@@ -121,6 +121,25 @@ pub(crate) fn group_dependency_relationships(
             .or_default()
             .extend(targets.iter().filter_map(|t| t.as_str()).map(str::to_string));
     }
+    // #1444 — a target the unscoped set already holds leaves every scoped set
+    // from the same `from`: a dependency needed at runtime is needed, whatever
+    // else it is used for. CycloneDX carries one edge for the pair, and SPDX
+    // 2.3 applies the same rule in `sort_and_dedup_relationships`; without it
+    // the pair was counted once per scope.
+    let mut unscoped: BTreeMap<String, std::collections::BTreeSet<String>> = BTreeMap::new();
+    for ((from, _, scope), targets) in &sets {
+        if scope.is_none() {
+            unscoped.entry(from.clone()).or_default().extend(targets.iter().cloned());
+        }
+    }
+    sets.retain(|(from, _, scope), targets| {
+        if scope.is_some() {
+            if let Some(runtime) = unscoped.get(from) {
+                targets.retain(|t| !runtime.contains(t));
+            }
+        }
+        !targets.is_empty()
+    });
 
     let mut has_dependencies: std::collections::BTreeSet<String> = Default::default();
     for ((from, element_type, scope), targets) in sets {
@@ -559,6 +578,28 @@ mod m1069_tests {
         assert_eq!(dev["type"], "LifecycleScopedRelationship");
         assert_eq!(dev["to"], json!(["spdx:X"]));
         assert_eq!(dev["completeness"], "complete");
+    }
+
+    /// #1444 — a target in both the unscoped set and a scoped one is a
+    /// runtime dependency, counted once; a scoped set left empty is dropped.
+    #[test]
+    fn a_runtime_target_leaves_the_scoped_sets() {
+        let out = group(
+            vec![
+                dep("spdx:A", "spdx:B"),
+                scoped("spdx:A", "spdx:B", "development"),
+                scoped("spdx:A", "spdx:X", "development"),
+                scoped("spdx:A", "spdx:B", "test"),
+            ],
+            &claims(),
+            None,
+        );
+        let a = deps_from(&out, "spdx:A");
+        assert_eq!(a.len(), 2, "{a:#?}");
+        let plain = a.iter().find(|e| e.get("scope").is_none()).unwrap();
+        assert_eq!(plain["to"], json!(["spdx:B"]));
+        let dev = a.iter().find(|e| e["scope"] == "development").unwrap();
+        assert_eq!(dev["to"], json!(["spdx:X"]));
     }
 
     #[test]
