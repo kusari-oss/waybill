@@ -127,6 +127,26 @@ honest disclosure is this declaration plus the PURL that already separates
 them.
 """
 
+[[declaration]]
+invariant = "I2"
+target = "nix-closure-shellcheck"
+kind = "duplicate-library-identity"
+count_at_declaration = 26
+reason = """
+The same milestone-1282 shape as `nix-closure-moat` above, on shellcheck's
+x86_64-linux closure: members that declare no `pname` keep their own `name`
+(FR-016) and have no `version`, so `(name, version, type)` collides -- 26
+groups, 165 components, the largest being 57 `source` members and eight each
+of `libtcc1.a` and `libtcc1.a-builder`.
+
+Measured on the regenerated golden (milestone 1423, T036): 0 groups repeat a
+`purl`, because the identity hash is in the PURL's name segment, and all 165
+components carry `waybill:closure-member-role`. The document distinguishes
+them; I2 reports the name-and-version collision a consumer aggregating that
+way would hit, which is true. The reasoning for declaring rather than
+rewriting is moat's, unchanged.
+"""
+
 # ---------------------------------------------------------------------
 # I3 — non-runtime scope is not propagated transitively.
 #
