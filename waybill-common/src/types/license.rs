@@ -160,19 +160,22 @@ impl SpdxExpression {
         &self.0
     }
 
-    /// If the stored expression is a single SPDX identifier (no AND /
-    /// OR / WITH operators, no parentheses, no ref prefix), return it
-    /// verbatim. Otherwise return `None`.
+    /// If the stored expression is exactly one identifier on the SPDX
+    /// License List (no AND / OR / WITH operators, no parentheses, no
+    /// ref prefix, no `+` suffix), return it verbatim. Otherwise return
+    /// `None`.
     ///
     /// Used by the CycloneDX serializer to decide between the
     /// `license.id` shape (required for single SPDX identifiers per
     /// sbomqs's `comp_with_valid_licenses` check) and the
     /// `license.expression` shape (for compound expressions).
+    /// CycloneDX 1.6 constrains `license.id` to the SPDX License List
+    /// enum, so `Some` must only ever carry a listed identifier.
     ///
     /// Examples:
     /// - `"MIT"` → `Some("MIT")`
-    /// - `"Apache-2.0+"` → `Some("Apache-2.0+")` (trailing `+` is
-    ///   part of the identifier, not an operator)
+    /// - `"Apache-2.0+"` → `None` (#1410: `+` is the SPDX "or later"
+    ///   operator, and no `Apache-2.0+` identifier is listed)
     /// - `"MIT OR Apache-2.0"` → `None`
     /// - `"GPL-2.0-or-later WITH Classpath-exception-2.0"` → `None`
     /// - `"LicenseRef-foo"` → `None` (license refs aren't canonical IDs)
@@ -192,10 +195,16 @@ impl SpdxExpression {
         if trimmed.contains(char::is_whitespace) || trimmed.contains('(') {
             return None;
         }
-        // Validate against the SPDX list via the spdx crate. `+` suffix
-        // is part of the identifier and accepted. An unknown identifier
-        // returns None (falls through to the expression shape).
+        // Validate against the SPDX list via the spdx crate. An unknown
+        // identifier returns None (falls through to the expression shape).
         if spdx::Expression::parse(trimmed).is_err() {
+            return None;
+        }
+        // #1410: the parser accepts `Apache-2.0+` as `Apache-2.0` with
+        // the or-later operator, and `spdx::license_id` strips the `+`
+        // before its lookup. Only a value that is itself the listed
+        // name may take the `license.id` slot.
+        if !spdx::license_id(trimmed).is_some_and(|l| l.name == trimmed) {
             return None;
         }
         // Additional guard: the parsed expression must be a single
@@ -230,6 +239,57 @@ impl From<SpdxExpression> for String {
     fn from(e: SpdxExpression) -> String {
         e.0
     }
+}
+
+/// Join several license expressions into one conjunction, bracketing
+/// each operand that carries its own `AND` / `OR` (#1411).
+///
+/// SPDX gives `AND` higher precedence than `OR`, so a verbatim join of
+/// `["MIT OR Apache-2.0", "BSD-3-Clause"]` reads as
+/// `MIT OR (Apache-2.0 AND BSD-3-Clause)` — a different statement.
+/// Bracketed, it is `(MIT OR Apache-2.0) AND BSD-3-Clause`.
+///
+/// `WITH` alone does not trigger brackets: it binds tighter than both
+/// `AND` and `OR`. An operand already enclosed by one outer bracket
+/// pair is left as is. Operands need not parse; free text that fails
+/// canonicalization is bracketed by the same rule, so its extracted
+/// text keeps the grouping too.
+pub fn conjoin_license_expressions<S: AsRef<str>>(items: &[S]) -> String {
+    items
+        .iter()
+        .map(|item| {
+            let s = item.as_ref().trim();
+            let has_operator = s.split_whitespace().any(|t| t == "AND" || t == "OR");
+            if items.len() > 1 && has_operator && !is_enclosed_in_one_bracket_pair(s) {
+                format!("({s})")
+            } else {
+                s.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" AND ")
+}
+
+/// Whether `s` is `( … )` with the first `(` closed by the final `)`.
+/// `(A) OR (B)` starts and ends with brackets but is not enclosed.
+fn is_enclosed_in_one_bracket_pair(s: &str) -> bool {
+    if !(s.starts_with('(') && s.ends_with(')')) {
+        return false;
+    }
+    let mut depth = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '(' => depth += 1,
+            ')' => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return i == s.len() - 1;
+                }
+            }
+            _ => {}
+        }
+    }
+    false
 }
 
 /// Milestone 202 (FR-002, closes #579) — shared license-operand sanitizer.
@@ -373,11 +433,88 @@ mod tests {
     }
 
     #[test]
-    fn as_spdx_id_accepts_trailing_plus() {
-        // `+` suffix is part of the identifier (means "this version
-        // or later"), not an operator.
-        let l = SpdxExpression::new("Apache-2.0+").unwrap();
-        assert_eq!(l.as_spdx_id(), Some("Apache-2.0+"));
+    fn as_spdx_id_rejects_trailing_plus() {
+        // #1410: `+` is the SPDX "or later" operator. The License List
+        // has no `+` forms, and CycloneDX `license.id` is constrained to
+        // that list, so a `+` value must not be presented as an id.
+        for s in ["Apache-2.0+", "EUPL-1.1+", "MIT+", "GPL-2.0+", "LGPL-2.1+"] {
+            let l = SpdxExpression::new(s).unwrap();
+            assert_eq!(l.as_spdx_id(), None, "{s} is not a listed identifier");
+        }
+    }
+
+    #[test]
+    fn as_spdx_id_only_returns_identifiers_on_the_spdx_list() {
+        for s in [
+            "MIT",
+            "Apache-2.0",
+            "GPL-2.0",
+            "GPL-2.0-or-later",
+            "Apache-2.0+",
+            "EUPL-1.1+",
+            "mit",
+            "apache-2.0",
+            "GPLv2",
+        ] {
+            let l = SpdxExpression::new(s).unwrap();
+            if let Some(id) = l.as_spdx_id() {
+                assert!(
+                    spdx::license_id(id).is_some_and(|lic| lic.name == id),
+                    "{s:?} yielded {id:?}, which is not an SPDX License List identifier"
+                );
+            }
+        }
+    }
+
+    // --- conjoin_license_expressions (#1411) ----------------------------
+
+    #[test]
+    fn conjoin_brackets_an_or_operand_so_precedence_is_preserved() {
+        assert_eq!(
+            conjoin_license_expressions(&["MIT OR Apache-2.0", "BSD-3-Clause"]),
+            "(MIT OR Apache-2.0) AND BSD-3-Clause"
+        );
+    }
+
+    #[test]
+    fn conjoin_leaves_single_identifiers_and_with_clauses_bare() {
+        assert_eq!(conjoin_license_expressions(&["MIT", "Apache-2.0"]), "MIT AND Apache-2.0");
+        assert_eq!(
+            conjoin_license_expressions(&["GPL-2.0-only WITH Classpath-exception-2.0", "MIT"]),
+            "GPL-2.0-only WITH Classpath-exception-2.0 AND MIT"
+        );
+    }
+
+    #[test]
+    fn conjoin_does_not_bracket_a_lone_item() {
+        assert_eq!(conjoin_license_expressions(&["MIT OR Apache-2.0"]), "MIT OR Apache-2.0");
+    }
+
+    #[test]
+    fn conjoin_does_not_double_bracket_an_enclosed_operand() {
+        assert_eq!(
+            conjoin_license_expressions(&["(MIT OR Apache-2.0)", "BSD-3-Clause"]),
+            "(MIT OR Apache-2.0) AND BSD-3-Clause"
+        );
+        // Starts and ends with a bracket, but is not enclosed by one pair.
+        assert_eq!(
+            conjoin_license_expressions(&["(MIT AND Zlib) OR (Apache-2.0)", "ISC"]),
+            "((MIT AND Zlib) OR (Apache-2.0)) AND ISC"
+        );
+    }
+
+    #[test]
+    fn conjoined_result_parses_with_the_intended_grouping() {
+        let joined = conjoin_license_expressions(&["MIT OR Apache-2.0", "BSD-3-Clause"]);
+        let expr = spdx::Expression::parse(&joined).unwrap();
+        // `(MIT OR Apache-2.0) AND BSD-3-Clause` is satisfied by MIT plus
+        // BSD-3-Clause; the unbracketed form would accept MIT alone.
+        let only_mit = |r: &spdx::LicenseReq| {
+            matches!(r.license, spdx::LicenseItem::Spdx { id, .. } if id.name == "MIT")
+        };
+        assert!(!expr.evaluate(only_mit));
+        let unbracketed = spdx::Expression::parse("MIT OR Apache-2.0 AND BSD-3-Clause").unwrap();
+        assert!(unbracketed.evaluate(only_mit), "control: the old join changes meaning");
     }
 
     #[test]
