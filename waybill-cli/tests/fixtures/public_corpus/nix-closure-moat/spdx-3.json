@@ -49,7 +49,7 @@
           "contentType": "application/openvex+json",
           "externalRefType": "vulnerabilityExploitabilityAssessment",
           "locator": [
-            "waybill.openvex.json"
+            "nix-closure-moat.openvex.json"
           ],
           "type": "ExternalRef"
         }

@@ -112,6 +112,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   whose hyphenated name matched a declared-optional one. The set is now
   read from each dependency's package id and keyed by `(name, version)`,
   so two versions of one crate are also classified separately (#1429).
+- **The OpenVEX sidecar is valid OpenVEX 0.2.0, has its own name, and is
+  logged as itself** (#1443).
+  - Every `affected` statement now carries the `action_statement` the
+    schema requires. On moat the sidecar failed the vendored schema 18
+    times, once per `affected` statement. A backport's statement says to
+    use a build that applies the nixpkgs backport, that this build does,
+    and that the backport is matched to the CVE by filename alone. A
+    nixpkgs declaration's says to remove the package or move to a nixpkgs
+    revision that no longer declares the CVE. CycloneDX carries the same
+    text as `recommendation` on the matching `exploitable` entry.
+  - The sidecar is named after the SPDX document instead of always
+    `waybill.openvex.json`, so two scans into one directory no longer
+    overwrite each other's: `out/app.spdx.json` gets
+    `out/app.openvex.json`. The default path is unchanged. With both SPDX
+    formats, one sidecar is written, named after the SPDX 2.3 document,
+    and both documents reference it. `--output openvex=<path>` still
+    overrides, and is now accepted with SPDX 3 alone.
+  - The scan log reports `wrote SBOM artifact format=openvex` once. It
+    used to report the sidecar twice, as `format=spdx-2.3-json` and
+    `format=spdx-3-json`.
 - **`sbom edit` can drop components that VEX names.** A CycloneDX build
   statement names the root in `affects[]` and the patched component in a
   `waybill:vex-subcomponent` property. Edit pruned the first and not the
