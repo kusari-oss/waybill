@@ -179,6 +179,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   them patched by nixpkgs, and loses none elsewhere. Python packages,
   hooks and `python3-<v>-env` environments are deliberately not matched
   (#1395).
+- **Seven more C libraries in Nix closures are matchable by CPE.** nixpkgs
+  declares no vendor for `unbound`, `libssh`, `libsndfile`, `fontforge`,
+  `cjson`, `giflib` or `libass`, so none carried a CPE. The curated table
+  now maps each exact name to the pair NVD files it under (`nlnetlabs:unbound`,
+  `libssh:libssh`, `libsndfile_project:libsndfile`, `fontforge:fontforge`,
+  `davegamble:cjson` and `cjson_project:cjson`, `giflib_project:giflib`,
+  `libass_project:libass`). On a `--nix-closure` scan of httpie, grype now
+  reports 79 more findings, the same ones it reports from sbomnix's document,
+  and loses none on any of six targets; one of the 79 is patched by nixpkgs.
+  `warp` and `cmark-gfm` get no row: in these closures they are Hackage
+  packages, and NVD's entries under those names are Cloudflare WARP and
+  GitHub's C library. Evidence in `specs/nix-curated-cpe-gaps/`.
 - **Closure members with a compound nixpkgs license are licensed.** The
   `--nix-closure` license lookup understood a single license, a string or
   a list, but not the trees `lib.licenses.AND`/`OR`/`WITH`/`PLUS` build, so

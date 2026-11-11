@@ -1,0 +1,9 @@
+httpie	fontforge	20251009	CVE-2025-15279	PATCHED-BY-NIX
+httpie	cjson	not-patched	4
+httpie	fontforge	not-patched	3
+httpie	fontforge	patched	1
+httpie	giflib	not-patched	3
+httpie	libass	not-patched	2
+httpie	libsndfile	not-patched	6
+httpie	libssh	not-patched	11
+httpie	unbound	not-patched	49
