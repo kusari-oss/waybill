@@ -93,6 +93,10 @@ pub enum CorpusInfraError {
     /// the nix store before the scan, so the scan would fetch them itself —
     /// the network activity the pre-warm exists to keep out of the scan.
     NixFlakeArchive { target: &'static str, stderr: String },
+    /// An `allow_ifd` `ScanMode::NixClosure` target's output could not be
+    /// built before the scan, so waybill would have no runtime closure to read
+    /// and the recall floor would score the reachability walk instead.
+    NixRealise { target: &'static str, stderr: String },
 }
 
 impl std::fmt::Display for CorpusInfraError {
@@ -123,6 +127,12 @@ impl std::fmt::Display for CorpusInfraError {
                 writeln!(f, "invariant: nix-flake-archive")?;
                 writeln!(f, "target:    {target}")?;
                 writeln!(f, "next:      check `nix` is on PATH and the target's flake inputs are still fetchable")?;
+                writeln!(f, "underlying error: {}", truncate_stderr(stderr))?;
+            }
+            CorpusInfraError::NixRealise { target, stderr } => {
+                writeln!(f, "invariant: nix-realise")?;
+                writeln!(f, "target:    {target}")?;
+                writeln!(f, "next:      build the pinned output by hand (`nix build --no-link .#<attr>` in the cached repo) and read nix's error")?;
                 writeln!(f, "underlying error: {}", truncate_stderr(stderr))?;
             }
             CorpusInfraError::OciPull { target, stderr } => {
