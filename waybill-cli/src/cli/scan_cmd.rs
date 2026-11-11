@@ -695,7 +695,8 @@ pub struct ScanArgs {
     ///
     /// Defences are milestone 1034's, unchanged and now load-bearing:
     /// pure mode, import-from-derivation refused and the refusal
-    /// verified, no `--accept-flake-config`, and a wall-clock budget.
+    /// verified (unless `--nix-allow-ifd`), no `--accept-flake-config`,
+    /// and a wall-clock budget.
     ///
     /// Default (flag omitted): no `nix` process is started at all.
     ///
@@ -758,7 +759,19 @@ pub struct ScanArgs {
     )]
     pub nix_closure_require_root_contents: bool,
 
-    /// Allow import-from-derivation during Nix evaluation (milestone 1283).
+    /// Allow import-from-derivation during Nix evaluation. Nix will BUILD
+    /// derivations while evaluating the flake (e.g. callCabal2nix). Do not use
+    /// on an untrusted flake. Where nix's sandbox is off (the macOS default)
+    /// those builds run unsandboxed.
+    ///
+    /// Requires `--nix-closure` or `--nix-eval`. Every Nix evaluation then
+    /// passes `allow-import-from-derivation true`, and waybill confirms nix
+    /// applied it before evaluating anything; if it cannot, the tier degrades
+    /// (`ifd-allowance-unverified`). Nothing else is relaxed:
+    /// `--accept-flake-config` and `--impure` stay refused, so a flake's own
+    /// substituters and keys are still ignored. The document records the
+    /// policy and nix's sandbox setting (`waybill:nix-evaluation-policy`).
+    /// Milestone 1283.
     #[arg(long = "nix-allow-ifd", default_value_t = false, requires = "nix_tier")]
     pub nix_allow_ifd: bool,
 

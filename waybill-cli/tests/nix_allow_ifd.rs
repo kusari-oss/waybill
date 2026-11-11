@@ -299,6 +299,84 @@ fn t012f_prime_the_output_selection_allows_ifd_under_the_opt_in() {
 }
 
 // ───────────────────────────────────────────────────────────────────────
+// T021 (g) — FR-005: --help states the trade where the decision is made
+// ───────────────────────────────────────────────────────────────────────
+
+#[test]
+fn t021g_help_names_the_flag_and_its_cautions() {
+    let o = Command::new(env!("CARGO_BIN_EXE_waybill"))
+        .args(["sbom", "scan", "--help"])
+        .output()
+        .unwrap();
+    assert!(o.status.success());
+    let help = String::from_utf8_lossy(&o.stdout);
+    // The flag's own entry: from the line that starts with it, up to the next
+    // line that starts another option. Other entries mention the flag too.
+    let lines: Vec<&str> = help.lines().collect();
+    let at = lines
+        .iter()
+        .position(|l| l.trim_start().starts_with("--nix-allow-ifd"))
+        .unwrap_or_else(|| panic!("flag absent:\n{help}"));
+    let entry: String = std::iter::once(lines[at])
+        .chain(lines[at + 1..].iter().copied().take_while(|l| !l.trim_start().starts_with('-')))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let entry = entry.split_whitespace().collect::<Vec<_>>().join(" ");
+    for needle in ["BUILD", "untrusted flake", "unsandboxed"] {
+        assert!(entry.contains(needle), "{needle:?} missing from the flag's help: {entry}");
+    }
+}
+
+/// The WARN lines a scan logged.
+fn warns(s: &Scan) -> Vec<&str> {
+    s.stderr.lines().filter(|l| l.contains("WARN")).collect()
+}
+
+// ───────────────────────────────────────────────────────────────────────
+// T021 (h) — FR-006: the refusal's WARN names the opt-in, with the caution
+// ───────────────────────────────────────────────────────────────────────
+
+#[test]
+fn t021h_the_ifd_degradation_warn_names_the_flag() {
+    let closure = fixture("closure-runtime.json");
+    let s = scan(&ifd_flake(&closure), &[]);
+    let line = warns(&s)
+        .into_iter()
+        .find(|l| l.contains("import-from-derivation-required"))
+        .unwrap_or_else(|| panic!("no degradation WARN:\n{}", s.stderr));
+    assert!(line.contains("--nix-allow-ifd"), "{line}");
+    assert!(line.contains("trust"), "{line}");
+}
+
+// ───────────────────────────────────────────────────────────────────────
+// T021 (i), (j) — FR-013: an unsandboxed allowance warns once, and proceeds
+// ───────────────────────────────────────────────────────────────────────
+
+#[test]
+fn t021i_sandbox_off_under_the_opt_in_warns_once_and_proceeds() {
+    let closure = fixture("closure-runtime.json");
+    let s = scan(&NixStub { sandbox: Some("false"), ..ifd_flake(&closure) }, &["--nix-allow-ifd"]);
+    let sandbox: Vec<&str> =
+        warns(&s).into_iter().filter(|l| l.contains("sandbox is off")).collect();
+    assert_eq!(sandbox.len(), 1, "exactly one sandbox WARN:\n{}", s.stderr);
+    assert!(sandbox[0].contains("--nix-allow-ifd"), "{}", sandbox[0]);
+    assert!(doc_row(&s, C184).is_some(), "the scan proceeds and reads the closure");
+    assert_eq!(reason(&s), None);
+}
+
+#[test]
+fn t021j_no_sandbox_warn_when_the_sandbox_is_on_or_ifd_refused() {
+    let closure = fixture("closure-runtime.json");
+    let s = scan(&NixStub { sandbox: Some("true"), ..ifd_flake(&closure) }, &["--nix-allow-ifd"]);
+    assert!(doc_row(&s, C184).is_some(), "CONTROL: the tier ran: {}", s.stderr);
+    assert!(!s.stderr.contains("sandbox is off"), "{}", s.stderr);
+    // Without the opt-in nothing is built, so an off sandbox is not news.
+    let s = scan(&NixStub { sandbox: Some("false"), ..base(&closure) }, &[]);
+    assert!(doc_row(&s, C184).is_some(), "CONTROL: the tier ran: {}", s.stderr);
+    assert!(!s.stderr.contains("sandbox is off"), "{}", s.stderr);
+}
+
+// ───────────────────────────────────────────────────────────────────────
 // T019 — FR-002, R1: the IFD value always comes from the policy
 // ───────────────────────────────────────────────────────────────────────
 

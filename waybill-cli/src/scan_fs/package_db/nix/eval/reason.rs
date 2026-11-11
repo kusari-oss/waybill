@@ -194,9 +194,13 @@ impl DegradationReason {
     /// [`Display`]: std::fmt::Display
     pub(crate) fn explanation(&self) -> Option<&'static str> {
         match self {
+            // Milestone 1283 (FR-006): the second sentence names the opt-in
+            // and repeats the untrusted-flake caution where the operator
+            // decides.
             Self::ImportFromDerivationRequired(_) => Some(
                 "The flake evaluates through import-from-derivation (e.g. callCabal2nix), \
-                 which waybill refuses because it would build during evaluation.",
+                 which waybill refuses because it would build during evaluation. \
+                 Pass --nix-allow-ifd to allow it, only for a flake you trust.",
             ),
             Self::OfflineRequested
             | Self::ToolAbsent
@@ -412,6 +416,8 @@ mod tests {
         let ifd = DegradationReason::ImportFromDerivationRequired("d".into());
         let e = ifd.explanation().unwrap();
         assert!(e.contains("callCabal2nix") && e.contains("would build during evaluation"), "{e}");
+        // m1283 (FR-006): names the opt-in, with the caution.
+        assert!(e.contains("--nix-allow-ifd") && e.contains("only for a flake you trust"), "{e}");
         for r in [
             DegradationReason::OfflineRequested,
             DegradationReason::IfdRefusalUnverified("d".into()),

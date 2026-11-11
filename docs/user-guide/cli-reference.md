@@ -764,6 +764,7 @@ Exactly one of `--path` or `--image` is required.
 | `--no-binary-scan <MODE>` | enum (`go`, `all`) | (unset) | Skip binary-scanning reader(s). `all` drops the entire binary tier for max speed; `go` is a component filter (deprecated as perf lever post-[#781](https://github.com/kusari-oss/waybill/issues/781)). Also via `WAYBILL_NO_BINARY_SCAN=<MODE>`. See [`--no-binary-scan`](#--no-binary-scan-mode). |
 | `--include-vendored` | bool | off | Emit CMake `add_subdirectory(third_party/\|vendor/...)` entries. |
 | `--no-deep-hash` | bool | off | Skip per-file SHA-256 of installed-package contents. |
+| `--nix-allow-ifd` | bool | off | Allow import-from-derivation in Nix evaluation. Nix **builds** derivations while evaluating the flake; do not use on an untrusted flake. Requires `--nix-closure` or `--nix-eval`. See [`--nix-allow-ifd`](#--nix-allow-ifd). |
 | `--json` | bool | off | Print a JSON summary to stdout. |
 | `--clearly-defined` | bool | off | Enable ClearlyDefined concluded-license enrichment. Off by default since [#930](https://github.com/kusari-oss/waybill/issues/930). |
 | `--no-clearly-defined` | bool | off | No-op since #930 (ClearlyDefined is already off); still accepted. Conflicts with `--clearly-defined`. |
@@ -1139,6 +1140,31 @@ package; component-level identity only, no per-file occurrences).
 Default-on hashing reads every file referenced by dpkg's `.list` manifest —
 proportional to installed size (~3-5 s on `debian:bookworm-slim`, ~30 s on
 full `debian`).
+
+### `--nix-allow-ifd`
+
+Allow import-from-derivation (IFD) during Nix evaluation, for the
+`--nix-closure` and `--nix-eval` tiers. Flakes built with `callCabal2nix`,
+`developPackage` or `packageSourceOverrides` need it: without it they
+degrade with `import-from-derivation-required`, and the WARN names this
+flag.
+
+**Nix will BUILD derivations while evaluating the flake. Do not use it on
+an untrusted flake.** Where nix's sandbox is off (the macOS default) those
+builds run unsandboxed, and the scan logs a WARN saying so.
+
+waybill verifies nix applied the setting before evaluating anything, and
+degrades with `ifd-allowance-unverified` if it did not. Nothing else is
+relaxed: `--accept-flake-config` and `--impure` stay refused. The document
+records the policy and nix's sandbox setting in
+`waybill:nix-evaluation-policy`. Without `--nix-closure` or `--nix-eval` the
+flag is rejected; under `--offline` it is accepted and has no effect.
+
+```bash
+waybill sbom scan --path . --nix-closure --nix-allow-ifd --output app.cdx.json
+```
+
+See [Nix evaluation — Import-from-derivation](../reference/nix-evaluation.md#import-from-derivation---nix-allow-ifd).
 
 ### `--json`
 
