@@ -377,6 +377,218 @@ fn t021j_no_sandbox_warn_when_the_sandbox_is_on_or_ifd_refused() {
 }
 
 // ───────────────────────────────────────────────────────────────────────
+// T026 — US3, FR-008: the document says how it was produced (C217)
+// ───────────────────────────────────────────────────────────────────────
+
+/// C217, equal across the three formats (asserted by `doc_row`).
+fn c217(s: &Scan) -> Option<String> {
+    doc_row(s, C217)
+}
+
+#[test]
+fn t026k_the_opt_in_verified_with_the_sandbox_off_is_recorded_exactly() {
+    let closure = fixture("closure-runtime.json");
+    let s = scan(&NixStub { sandbox: Some("false"), ..ifd_flake(&closure) }, &["--nix-allow-ifd"]);
+    assert_eq!(
+        c217(&s).as_deref(),
+        Some(r#"{"import-from-derivation":"allowed","sandbox":"false","schema":1,"verified":true}"#),
+        "stderr:\n{}",
+        s.stderr
+    );
+}
+
+#[test]
+fn t026l_the_default_records_a_verified_refusal() {
+    let closure = fixture("closure-runtime.json");
+    let s = scan(&NixStub { sandbox: Some("true"), ..base(&closure) }, &[]);
+    assert_eq!(
+        c217(&s).as_deref(),
+        Some(r#"{"import-from-derivation":"refused","sandbox":"true","schema":1,"verified":true}"#)
+    );
+    // Recorded on degradation too: the IFD flake without the opt-in.
+    let s = scan(&ifd_flake(&closure), &[]);
+    assert_eq!(reason(&s).as_deref(), Some("import-from-derivation-required"));
+    assert_eq!(
+        c217(&s).as_deref(),
+        Some(r#"{"import-from-derivation":"refused","sandbox":null,"schema":1,"verified":true}"#)
+    );
+}
+
+#[test]
+fn t026m_an_unverified_allowance_is_recorded_as_such_beside_c190() {
+    let closure = fixture("closure-runtime.json");
+    let s = scan(
+        &NixStub { ifd_reported: Some("false"), sandbox: Some("false"), ..ifd_flake(&closure) },
+        &["--nix-allow-ifd"],
+    );
+    assert_eq!(reason(&s).as_deref(), Some("ifd-allowance-unverified"));
+    assert_eq!(
+        c217(&s).as_deref(),
+        Some(r#"{"import-from-derivation":"allowed","sandbox":null,"schema":1,"verified":false}"#)
+    );
+}
+
+#[test]
+fn t026n_no_nix_tier_no_record() {
+    let closure = fixture("closure-runtime.json");
+    let s = base(&closure).scan(&["--no-deps-dev"]);
+    assert_eq!(c217(&s), None);
+    assert!(s.nix_log.is_empty(), "CONTROL: no nix process ran: {}", s.nix_log);
+}
+
+#[test]
+fn t026o_offline_no_record_and_c190_says_why() {
+    let closure = fixture("closure-runtime.json");
+    let s = scan(&base(&closure), &["--offline"]);
+    assert_eq!(reason(&s).as_deref(), Some("offline-requested"));
+    assert_eq!(c217(&s), None);
+}
+
+/// `--nix-eval` alone admits a Nix tier too, so the record is present.
+#[test]
+fn t026p_the_eval_tier_alone_carries_the_record() {
+    let closure = fixture("closure-runtime.json");
+    let s = base(&closure).scan(&["--no-deps-dev", "--nix-eval"]);
+    let v: Value = serde_json::from_str(&c217(&s).expect("C217 with --nix-eval")).unwrap();
+    assert_eq!(v["import-from-derivation"], "refused");
+    assert_eq!(v["schema"], 1);
+}
+
+// ───────────────────────────────────────────────────────────────────────
+// T032 — FR-009, SC-005: on a flake that needs no IFD, the opt-in changes
+// nothing but C217
+// ───────────────────────────────────────────────────────────────────────
+
+/// The parts of the three documents FR-009 names — components (scope
+/// included), relationships and VEX — with C217 removed. Document identity
+/// (serial number, timestamps, namespaces, element IRIs) differs per run
+/// and is not compared.
+fn fr009_view(s: &Scan) -> Value {
+    let mut cdx_props: Vec<Value> = s.cdx["metadata"]["properties"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|p| p["name"] != C217)
+        .collect();
+    cdx_props.sort_by_key(|p| p.to_string());
+    let spdx23_doc_annotations: Vec<String> = {
+        let mut v: Vec<String> = s.spdx23["annotations"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|a| a["comment"].as_str())
+            .filter(|c| envelope(c, C217).is_none())
+            .map(str::to_string)
+            .collect();
+        v.sort();
+        v
+    };
+    let spdx3_packages: Vec<String> = {
+        let mut v: Vec<String> = s.spdx3["@graph"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|e| e["type"] == "software_Package")
+            .map(|e| {
+                format!(
+                    "{}@{} {}",
+                    e["name"].as_str().unwrap_or(""),
+                    e["software_packageVersion"].as_str().unwrap_or(""),
+                    e["software_packageUrl"].as_str().unwrap_or("")
+                )
+            })
+            .collect();
+        v.sort();
+        v
+    };
+    let spdx3_relationships = s.spdx3["@graph"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|e| e["type"] == "Relationship" || e["type"] == "LifecycleScopedRelationship")
+        .count();
+    let spdx3_annotations: Vec<String> = {
+        let mut v: Vec<String> = s.spdx3["@graph"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|e| e["type"] == "Annotation")
+            .filter_map(|e| e["statement"].as_str())
+            .filter(|r| envelope(r, C217).is_none())
+            .map(str::to_string)
+            .collect();
+        v.sort();
+        v
+    };
+    let mut view = serde_json::json!({
+        "cdx-components": s.cdx["components"],
+        "cdx-dependencies": s.cdx["dependencies"],
+        "cdx-vulnerabilities": s.cdx["vulnerabilities"],
+        "cdx-metadata-properties": cdx_props,
+        "spdx23-packages": s.spdx23["packages"],
+        "spdx23-relationships": s.spdx23["relationships"],
+        "spdx23-annotations": spdx23_doc_annotations,
+        "spdx3-packages": spdx3_packages,
+        "spdx3-relationships": spdx3_relationships,
+        "spdx3-annotations": spdx3_annotations,
+    });
+    scrub_dates(&mut view);
+    view
+}
+
+/// SPDX 2.3 package annotations carry the wall-clock second they were made,
+/// so two scans straddling a second boundary differ there and nowhere else.
+fn scrub_dates(v: &mut Value) {
+    match v {
+        Value::Object(m) => {
+            m.remove("annotationDate");
+            m.values_mut().for_each(scrub_dates);
+        }
+        Value::Array(a) => a.iter_mut().for_each(scrub_dates),
+        _ => {}
+    }
+}
+
+#[test]
+fn t032_on_a_flake_needing_no_ifd_only_c217_differs() {
+    let closure = fixture("closure-runtime.json");
+    let listing = ["h-app-bin", "h-ssl", "h-z", "h-dns"]
+        .iter()
+        .map(|b| format!("/nix/store/{b}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let stub = NixStub { runtime: Some(listing), sandbox: Some("true"), ..base(&closure) };
+    let without = scan(&stub, &[]);
+    let with = scan(&stub, &["--nix-allow-ifd"]);
+    // CONTROL: both read the closure, and C217 is the one difference meant.
+    assert!(doc_row(&without, C184).is_some() && doc_row(&with, C184).is_some());
+    assert_ne!(c217(&without), c217(&with), "C217 records the difference");
+    assert!(
+        without.cdx["components"].as_array().is_some_and(|c| !c.is_empty()),
+        "CONTROL: there are components to compare"
+    );
+    let (a, b) = (fr009_view(&without), fr009_view(&with));
+    let mut differing = Vec::new();
+    for (k, va) in a.as_object().unwrap() {
+        let vb = &b[k];
+        if va != vb {
+            let first = match (va.as_array(), vb.as_array()) {
+                (Some(x), Some(y)) => x
+                    .iter()
+                    .zip(y)
+                    .find(|(p, q)| p != q)
+                    .map(|(p, q)| format!("\n  without: {p}\n  with:    {q}"))
+                    .unwrap_or_else(|| format!(" (lengths {} vs {})", x.len(), y.len())),
+                _ => format!("\n  without: {va}\n  with:    {vb}"),
+            };
+            differing.push(format!("{k}:{first}"));
+        }
+    }
+    assert!(differing.is_empty(), "FR-009: the opt-in changed more than C217:\n{}", differing.join("\n"));
+}
+
+// ───────────────────────────────────────────────────────────────────────
 // T019 — FR-002, R1: the IFD value always comes from the policy
 // ───────────────────────────────────────────────────────────────────────
 

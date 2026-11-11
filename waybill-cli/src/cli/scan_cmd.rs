@@ -5651,6 +5651,27 @@ pub async fn execute(
         _ => None,
     };
     let nix_closure_degraded: Option<&str> = nix_closure_degraded_json.as_deref();
+    // C217 (m1283, #1283) — the import-from-derivation policy the Nix
+    // evaluations ran under. Present whenever a Nix tier was admitted, on
+    // success and degradation alike; absent with no tier and under
+    // `--offline`, where C190/C180 say `offline-requested`. Each tier's
+    // pre-flight reports its own record; a tier that was admitted but whose
+    // pre-flight never completed (nix absent, or `--nix-eval` with nothing to
+    // evaluate) contributes an unverified one only when no tier verified.
+    let nix_evaluation_policy_json: Option<String> =
+        ((args.nix_closure || args.nix_eval) && !offline).then(|| {
+            use scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy;
+            let eval_policy = nixpkgs_haskell_summary
+                .as_ref()
+                .and_then(|s| s.nix_eval.as_ref())
+                .and_then(|n| n.policy.clone());
+            match (closure_policy.clone(), eval_policy) {
+                (Some(a), Some(b)) => a.merge(b),
+                (Some(a), None) | (None, Some(a)) => a,
+                (None, None) => NixEvaluationPolicy::unverified(ifd_policy),
+            }
+            .wire()
+        });
     // C208 (m1366, #1365) — rendered beside C190 because the two answer
     // adjacent questions about the same tier: C190 says the closure was not
     // taken, C208 says what the ecosystem identity pass did with the one that
@@ -5697,6 +5718,7 @@ pub async fn execute(
         closure_ecosystem_identity: closure_ecosystem_identity_value,
         cpe_coverage: Some(cpe_coverage_json.as_str()),
         closure_graph_admission: closure_graph_admission_json.as_deref(),
+        nix_evaluation_policy: nix_evaluation_policy_json.as_deref(),
         nix_closure_contents: closure_contents.as_ref().map(|c| c.wire.as_str()),
         nix_closure_contents_unread: closure_contents.as_ref().is_some_and(|c| c.unread),
         // C192 (m1067): answers served from the disk cache count as online.
