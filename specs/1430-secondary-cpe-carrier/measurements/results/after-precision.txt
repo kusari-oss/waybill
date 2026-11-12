@@ -1,0 +1,31 @@
+target   scanner tool       | findings patched(FP)   FP% | runtime: findings patched
+curl     grype  sbomnix-bt |      218          19    9% |               100       1
+curl     grype  waybill    |      226          19    8% |               100       1
+curl     trivy  waybill    |        4           0    0% |                 0       0
+curl     osv    waybill    |        4           0    0% |                 0       0
+openssh  grype  sbomnix-bt |      246          19    8% |                71       0
+openssh  grype  waybill    |      252          19    8% |                70       0
+openssh  trivy  waybill    |        3           0    0% |                 0       0
+openssh  osv    waybill    |        3           0    0% |                 0       0
+httpie   grype  sbomnix-bt |      343          20    6% |               111       0
+httpie   grype  waybill    |      370          19    5% |               119       0
+httpie   trivy  waybill    |      141           0    0% |                10       0
+httpie   osv    waybill    |      165           0    0% |                12       0
+gh       grype  sbomnix-bt |      218          19    9% |                 0       0
+gh       grype  waybill    |      281          19    7% |                 0       0
+gh       trivy  waybill    |       57           0    0% |                 0       0
+gh       osv    waybill    |       61           0    0% |                 0       0
+ripgrep  grype  sbomnix-bt |      218          19    9% |                 6       0
+ripgrep  grype  waybill    |      247          19    8% |                 6       0
+ripgrep  trivy  waybill    |       26           0    0% |                 0       0
+ripgrep  osv    waybill    |       43           0    0% |                 0       0
+moat     grype  sbomnix-bt |      232          19    8% |                 0       0
+moat     grype  waybill    |      235          19    8% |                 0       0
+moat     trivy  waybill    |       13           0    0% |                 0       0
+moat     osv    waybill    |       17           0    0% |                 0       0
+
+TOTALS (sum over targets; shared build-closure findings counted once per target)
+  sbomnix-bt grype  findings= 1475 patched-FP= 115 (8%)  runtime findings= 288 runtime patched-FP=1
+  waybill    grype  findings= 1611 patched-FP= 114 (7%)  runtime findings= 295 runtime patched-FP=1
+  waybill    trivy  findings=  244 patched-FP=   0 (0%)  runtime findings=  10 runtime patched-FP=0
+  waybill    osv    findings=  293 patched-FP=   0 (0%)  runtime findings=  12 runtime patched-FP=0

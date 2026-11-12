@@ -124,7 +124,7 @@ pub fn build_external_identifiers_for(component: &ResolvedComponent) -> Vec<Valu
 /// `parts[2..7]` (5 slots including `update`), which rejected every
 /// synthesized CPE whose update slot was `*`. The fix checks only
 /// `parts[2..6]` so the implementation matches this doc comment.
-fn is_fully_resolved_cpe23(cpe: &str) -> bool {
+pub(crate) fn is_fully_resolved_cpe23(cpe: &str) -> bool {
     let parts: Vec<&str> = cpe.split(':').collect();
     // Need at least the prefix `cpe:2.3:` plus 4 required attribute
     // slots (part/vendor/product/version).

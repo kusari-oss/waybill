@@ -134,6 +134,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   unzip's findings with waybill's VEX fall from 3 to 1, the remaining
   CVE-2018-1000035 having no patch.
 
+- **grype now sees a curated CPE row's second vendor.** CycloneDX
+  `component.cpe` holds one CPE, so the further vendors of a curated row
+  (`unzip` is `info-zip`, then `unzip_project`) reached CycloneDX only in
+  `waybill:cpe-candidates`, which no scanner reads, and SPDX 2.3 only as the
+  same annotation.
+  NVD files every unzip CVE grype knows under `unzip_project`. On a
+  `pkg:generic` component, each further curated CPE is now a `syft:cpe23`
+  property in CycloneDX, the one carrier beside `component.cpe` that grype
+  0.120.0 reads (`evidence.identity[]` was measured and is not read), and a
+  further `cpe23Type` reference in SPDX 2.3. On six Nix closures grype gains
+  15 findings per target (14 on `unzip 6.0`, 1 on `flex 2.6.4`) and loses
+  none; Trivy and osv-scanner are unchanged. 13 of the 15 name CVEs nixpkgs
+  patches, and sbomnix's document reports the same 13. With #1436's VEX in
+  place, grype suppresses 11 of them (measured 2026-11-12 on curl, openssh,
+  httpie, gh and ripgrep: `unzip` 14 → 3). The other two, CVE-2022-0529 and
+  CVE-2022-0530, are patched by a file named in lower case, which waybill now
+  reads too (#1487), leaving only CVE-2018-1000035, which has no patch. Other ecosystems' extra candidates are vendor guesses
+  and are not exposed. Measurements in `specs/1430-secondary-cpe-carrier/`
+  (#1430).
+
 - **Only the compiler's own copy of a GHC boot library is exempt from scope
   (#1478).** Both scope passes used to exempt any `pkg:hackage` component
   whose *name* is a boot library. nixpkgs also builds some of those names

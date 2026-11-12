@@ -1,0 +1,4 @@
+Schema:    v6.1.10
+Built:     2026-11-08T06:19:57Z
+From:      https://grype.anchore.io/databases/v6/vulnerability-db_v6.1.10_2026-11-08T00:22:04Z_1794118797.tar.zst?checksum=sha256%3Adcca24722e16c2bcf4a542a3f7fdd2147baf9215c17b973f5a7d4243fbddacea
+Status:    valid
