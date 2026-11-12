@@ -23,7 +23,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Write the probe `scripts/ghc-boot-libraries.py`, per `contracts/boot-library-table.md`.
+- [X] T001 Write the probe `scripts/ghc-boot-libraries.py`, per `contracts/boot-library-table.md`.
   - Use Python stdlib only, run with `python3 -I -B`. Put downloads in a `tempfile.mkdtemp()` directory, never the repo.
   - Pin Stack's `global-hints.yaml` to a stackage-content commit SHA recorded in the output header.
   - Parse each release's "Included libraries" table with `html.parser`.
@@ -31,7 +31,7 @@
   - Exit non-zero on any notes-vs-Stack disagreement that has no override.
   - Mark `Win32` `windows` and every other library `all`.
   - Emit the TSV sorted by `(ghc as a version tuple, library as bytes)`.
-- [ ] T002 Run the probe and commit its output as `HP/ghc_boot_libraries.tsv`.
+- [X] T002 Run the probe and commit its output as `HP/ghc_boot_libraries.tsv`.
   - Record the row count and the release count in `specs/966-ghc-boot-versions/measurements/table-generation.txt`. Expect 36 releases, consistent with the 1,407-row Stack snapshot plus any notes-only libraries.
   - Spot-check against `measurements/global-hints-2026-11-12.yaml`:
     - 9.6.6 `base` 4.18.2.1;
@@ -41,7 +41,7 @@
 
 ## Phase 2: Foundational (blocks every story)
 
-- [ ] T003 [P] Write unit tests for the table in `HP/boot_table.rs`, under `#[cfg(test)]` with `#[cfg_attr(test, allow(clippy::unwrap_used))]`. They cover:
+- [X] T003 [P] Write unit tests for the table in `HP/boot_table.rs`, under `#[cfg(test)]` with `#[cfg_attr(test, allow(clippy::unwrap_used))]`. They cover:
   - every line of the embedded TSV parses;
   - no `(ghc, library)` pair appears twice;
   - every release has `base`;
@@ -50,7 +50,7 @@
   - `ships("9.10.3", "x86_64-windows")` includes `Win32`;
   - `ships("99.0.1", …)` is `None`;
   - the TSV header carries `# observed:`, `# sources:` and `# regenerate:` lines (spec US3 acceptance 2).
-- [ ] T004 Implement `HP/boot_table.rs`, per data-model.md `BootLibraryTable`.
+- [X] T004 Implement `HP/boot_table.rs`, per data-model.md `BootLibraryTable`.
   - Embed the TSV with `include_str!` and load it once into a `OnceLock`.
   - Add `TableSource` and `Platform` enums, and `ships(release, system)`, `version_of(release, name, system)` and `observed()` (the header date).
   - A malformed line is a test failure, never a runtime panic: the loader skips it and counts it, and T003 asserts the count is 0.

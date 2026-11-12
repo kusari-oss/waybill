@@ -19,6 +19,7 @@
 //!   (FR-014c).
 
 pub(crate) mod boot_libraries;
+pub(crate) mod boot_table;
 pub(crate) mod closure;
 pub(crate) mod closure_identity;
 pub(crate) mod cache;

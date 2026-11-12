@@ -1,0 +1,25 @@
+# T002: table generation, 2026-11-12, aarch64-darwin
+$ python3 -I -B scripts/ghc-boot-libraries.py > waybill-cli/src/scan_fs/package_db/nix/haskell_packages/ghc_boot_libraries.tsv   (exit 0, 6.7 s wall)
+
+Stack pin: stackage-content e677b42ee39c72ea19975674db996d7a37c23e4a (latest commit touching stack/global-hints.yaml);
+its global-hints.yaml is byte-identical (cmp) to measurements/global-hints-2026-11-12.yaml.
+
+releases (distinct ghc column values): 36
+rows: 1407
+rows by source:
+   1 ghc-release-tag
+ 943 release-notes
+ 463 stack-global-hints
+rows by platform:
+1371 all
+  36 windows
+releases with a release-notes table: 26
+
+Spot checks (expected per tasks.md T002):
+9.6.6	base	4.18.2.1	release-notes	all
+9.10.3	base	4.20.2.0	release-notes	all
+9.10.3	process	1.6.26.1	release-notes	all
+9.12.3	process	1.6.26.1	ghc-release-tag	all
+
+Rows per corpus compiler: 9.2.4=36 9.6.6=38 9.8.4=38 9.10.3=43
+Notes-only libraries (rows from release-notes absent from Stack): 0 -- the 1,407 rows equal the Stack snapshot's 1,407.
