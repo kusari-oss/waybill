@@ -433,8 +433,15 @@ fn us1_remote_queries_carry_connect_timeout_and_one_attempt() {
     );
 }
 
-/// FR-006: the exemptions survive, and the boot library is exempt even
-/// though the runtime closure does not reference it.
+/// FR-006: the evaluated package's exemption survives the runtime closure.
+///
+/// `bootlib` was the second exemption here until #1478. It is a closure
+/// derivation with a nulled name, and a separate derivation is never GHC's
+/// own copy (that ships inside the compiler's derivation): on the corpus the
+/// shape is `os-string@2.0.10` built from Hackage beside GHC's
+/// `os-string@2.0.7`. So the runtime closure, which does not reference it,
+/// decides it like any other member. GHC's copy, carrying C218, stays exempt;
+/// `resolve/closure_role_scope.rs` asserts that.
 #[test]
 fn us1_exempt_members_keep_exemptions() {
     let closure = fixture("closure-runtime.json");
@@ -448,10 +455,13 @@ fn us1_exempt_members_keep_exemptions() {
         ..base(&closure)
     });
     assert_eq!(run.c203("waybill-fixture-app").as_deref(), Some("exempt-evaluated-package"));
-    assert_eq!(run.c203("waybill-fixture-bootlib").as_deref(), Some("exempt-compiler-supplied"));
+    assert_eq!(run.c203("waybill-fixture-bootlib").as_deref(), Some("runtime-closure"));
     let marked = run.marked();
     assert!(!marked.contains("waybill-fixture-app"));
-    assert!(!marked.contains("waybill-fixture-bootlib"));
+    assert!(
+        marked.contains("waybill-fixture-bootlib"),
+        "a closure build of a boot-library name is not the compiler's copy (#1478)"
+    );
     // CONTROL: the exemption is narrow -- the other unreferenced members are
     // still marked in the same scan.
     assert!(marked.contains("waybill-fixture-xml") && marked.contains("waybill-fixture-py"));
