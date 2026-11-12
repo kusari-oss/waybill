@@ -1,0 +1,45 @@
+# 2026-11-12: curated rows for the packages behind sbomnix's remaining findings
+# (docs/audits/2026-11-12-nix-vs-sbomnix.md, 'The 11 findings only sbomnix has').
+# Candidate pairs are the CPEs grype 0.120.0 matched on sbomnix 1.9.0's documents.
+# Not added: intel:openmp (nixpkgs openmp is LLVM's; a name collision), lapack_project:lapack
+# (nixpkgs 'lapack' is a provider wrapper versioned '3'; the match is an open range).
+
+## scripts/probe-cpe-dictionary.sh <pairs>   (dictionary entries)
+nlnetlabs:ldns	64
+rubygems:rubygems	188
+pixman:pixman	39
+cairographics:cairo	51
+harfbuzz_project:harfbuzz	205
+xiph:speex	45
+libtiff:libtiff	113
+gnome:glib	593
+openssl:openssl	387   (positive control)
+waybill-fixture-vendor:waybill-fixture-product	0   (negative control)
+
+## scripts/probe-cpe-dictionary.sh --cves  (advisories filed under the pair)
+libtiff:libtiff	262
+libtiff_project:libtiff	0
+cairographics:cairo	10
+redhat:cairo	1
+openssl:openssl	330   (positive control)
+waybill-fixture-vendor:waybill-fixture-product	0   (negative control)
+
+## specs/1375-generic-cpe-table/measurements/cpe-titles.py <products>  (every vendor filing the product, with title)
+=== ldns (64 entries) ===
+    nlnetlabs                    nlnetlabs  ldns 1.4.1
+=== rubygems (188 entries) ===
+    rubygems                     RubyGems RubyGems 1.8.22
+=== pixman (39 entries) ===
+    pixman                       Pixman
+=== cairo (53 entries) ===
+    redhat                       Red Hat Cairo
+    cairographics                Cairographics Cairo
+=== harfbuzz (205 entries) ===
+    harfbuzz_project             Harfbuzz Project Harfbuzz 1.0.5
+=== speex (45 entries) ===
+    xiph                         Xiph Speex 1.2
+=== libtiff (115 entries) ===
+    libtiff                      LibTIFF 3.4
+    libtiff_project              Libtiff Project Libtiff 4.0.6
+=== glib (593 entries) ===
+    gnome                        GNOME Glib 2.16.4

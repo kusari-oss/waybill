@@ -1,0 +1,18 @@
+=== ldns (64 entries) ===
+    nlnetlabs                    nlnetlabs  ldns 1.4.1
+=== rubygems (188 entries) ===
+    rubygems                     RubyGems RubyGems 1.8.22
+=== pixman (39 entries) ===
+    pixman                       Pixman
+=== cairo (53 entries) ===
+    redhat                       Red Hat Cairo
+    cairographics                Cairographics Cairo
+=== harfbuzz (205 entries) ===
+    harfbuzz_project             Harfbuzz Project Harfbuzz 1.0.5
+=== speex (45 entries) ===
+    xiph                         Xiph Speex 1.2
+=== libtiff (115 entries) ===
+    libtiff                      LibTIFF 3.4
+    libtiff_project              Libtiff Project Libtiff 4.0.6
+=== glib (593 entries) ===
+    gnome                        GNOME Glib 2.16.4

@@ -9,6 +9,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **Curated CPE rows for ldns, rubygems, pixman, cairo, harfbuzz, speex,
+  libtiff and glib.** These were the packages behind the findings sbomnix
+  1.9.0 reported and waybill did not, in the 2026-11-12 comparison
+  (`docs/audits/2026-11-12-nix-vs-sbomnix.md`). Each pair was probed against
+  NVD's dictionary and title-checked
+  (`specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt`).
+  `redhat:cairo` and `libtiff_project:libtiff` exist too, and are deliberately
+  not emitted. On five nixpkgs wrapper flakes, grype 0.120.0 now reports all 9
+  of those CVEs (openssh +1, httpie +8), with nothing lost and no other change.
+  Two sbomnix-only findings remain, and neither is a gap: `intel:openmp` is
+  Intel's product (nixpkgs' `openmp` is LLVM's), and `lapack@3` is nixpkgs'
+  provider wrapper matched by an open range.
+
 - **GHC boot libraries carry the version their compiler shipped (#966).**
   Under `--nix-closure`, `base`, `process`, `bytestring`, `Cabal` and the
   rest of what GHC ships inside the compiler used to be versionless
