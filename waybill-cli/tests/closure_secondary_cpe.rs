@@ -62,6 +62,7 @@ fn scan() -> Scan {
         closure: CLOSURE,
         rows: Rows::Fail,
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&["--nix-closure", "--no-deps-dev", "--no-clearly-defined"])
 }
