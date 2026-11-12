@@ -18,11 +18,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   selection itself was already per root: a root the pinned package set
   confirmed is followed through its declared relations, which leave test
   dependencies out, whatever its neighbours are; only an unconfirmed root
-  reads its derivation fields. What was closure-wide was the label, so
-  moat, whose project is not in nixpkgs, read `derivation-fields` while its
-  confirmed libraries' declared relations decided. The issue inferred the
-  selection itself was closure-wide; the code since #1423 shows it was not,
-  and a new two-root test pins that. Additive: `schema` stays `1`.
+  reads its derivation fields. What was closure-wide was the label: the
+  nix-closure-moat golden read `derivation-fields` while 91 of its 124
+  Haskell roots were decided by declared relations; it now reads `mixed`
+  with `{"declared-edges": 91, "derivation-fields": 33}`, and openai
+  reads `mixed` with 1 and 150. The issue inferred the selection itself
+  was closure-wide; the code since #1423 shows it was not, and a new
+  two-root test pins that. Additive: `schema` stays `1`, and no mark
+  changes.
 
 ### Fixed
 
@@ -45,7 +48,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   was not measured. C216 gains `c-runtime-libraries`, which
   says so: `libc-only` under the walk, `not-assessed` when no walked member
   names a C compiler and under `closure-role`, null under `runtime-closure`
-  (`specs/1423-nix-runtime-scope/measurements/c-runtime/`).
+  (`specs/1423-nix-runtime-scope/measurements/c-runtime/`). On the
+  nix-closure-moat golden, the one corpus target scanned by the walk,
+  `glibc 2.42-61` loses its mark in all three formats and nothing else
+  changes.
 
 ## [0.15.0] - 2026-11-11
 
