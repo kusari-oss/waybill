@@ -1,0 +1,1 @@
+2026-11-12T07:30:05.677600Z  INFO waybill::scan_fs::package_db::nix::closure::runtime: nix-closure: lib/links references outcome="assessed" set_aside=101 elapsed_ms=1798

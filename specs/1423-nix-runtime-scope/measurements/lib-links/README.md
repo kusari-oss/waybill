@@ -87,8 +87,9 @@ Result, combined with the documentation rule:
 
 Both scans ran as the corpus harness runs them
 (`../doc-outputs/moat-scan.sh`), each followed by
-`sbom edit --drop 'scope=excluded'`. Before: the documentation rule only
-(#1475). After: this branch. Outputs are in `out/scan-{before,after}.txt` and
+`sbom edit --drop 'scope=excluded'`. Before: release build of `db3b1dc4`,
+#1475's head, with the documentation rule only. After: release build of
+this branch. Outputs are in `out/scan-{before,after}.txt` and
 `out/marked-{before,after}.txt`.
 
 | | before | after |
