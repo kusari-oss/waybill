@@ -129,6 +129,9 @@ CLOSUREEOF
   *"#packages.aarch64-darwin") echo '["default"]' ;;
   *"#packages") echo '["aarch64-darwin"]' ;;
   "derivation show"*) echo "error: flake 'stub' does not provide attribute" >&2; exit 1 ;;
+  # m1423 (T006): intended. No store holds the evaluated output, so the scope
+  # pass takes its fallback path rather than the runtime closure.
+  "path-info"*) echo "error: path '/nix/store/stub' is not valid" >&2; exit 1 ;;
   *) echo 'stub nix: unhandled invocation' >&2; exit 1 ;;
 esac
 "##,
@@ -642,4 +645,160 @@ fn i1395_only_the_interpreter_gets_the_cpython_cpe() {
         subject["name"],
         subject["cpe"]
     );
+}
+
+// ---------------------------------------------------------------------
+// nix-curated-cpe-gaps — C libraries nixpkgs declares no vendor for
+// ---------------------------------------------------------------------
+
+/// A closure shaped like httpie's and moat's at `a799d3e3`: three C libraries
+/// the curated table now maps, beside two Haskell packages whose names NVD
+/// files for unrelated software, and a Python binding named after one of the
+/// libraries.
+///
+/// The library names are real because the table is keyed on them; every
+/// *version* is synthetic. `warp` is fetched from `mirror://hackage/`, as
+/// nixpkgs' is, and the seeded package set is empty, so the closure tier
+/// emits `warp` and `cmark-gfm` as `pkg:generic` — the arm a wrong row would
+/// reach.
+const CLOSURE_C_LIBRARIES: &str = r#"{
+  "derivations": {
+    "d-root.drv": {
+      "name": "waybill-fixture-capp-0.1.0",
+      "env": {
+        "pname": "waybill-fixture-capp",
+        "version": "0.1.0",
+        "buildInputs": "/nix/store/h1-unbound /nix/store/h2-libssh /nix/store/h3-cjson /nix/store/h4-warp /nix/store/h5-cmark /nix/store/h6-pyunbound"
+      },
+      "outputs": { "out": { "path": "h0-root" } }
+    },
+    "d-unbound.drv": {
+      "name": "unbound-9.9.9",
+      "env": { "pname": "unbound", "version": "9.9.9" },
+      "outputs": { "out": { "path": "h1-unbound" } }
+    },
+    "d-libssh.drv": {
+      "name": "libssh-9.9.9",
+      "env": { "pname": "libssh", "version": "9.9.9" },
+      "outputs": { "out": { "path": "h2-libssh" } }
+    },
+    "d-cjson.drv": {
+      "name": "cjson-9.9.9",
+      "env": { "pname": "cjson", "version": "9.9.9" },
+      "outputs": { "out": { "path": "h3-cjson" } }
+    },
+    "d-warp.drv": {
+      "name": "warp-9.9.9",
+      "env": { "pname": "warp", "version": "9.9.9", "src": "/nix/store/h7-warp-src" },
+      "outputs": { "out": { "path": "h4-warp" } }
+    },
+    "d-warp-src.drv": {
+      "name": "warp-9.9.9.tar.gz",
+      "env": { "urls": "mirror://hackage/warp-9.9.9.tar.gz" },
+      "outputs": {
+        "out": {
+          "path": "h7-warp-src",
+          "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        }
+      }
+    },
+    "d-cmark.drv": {
+      "name": "cmark-gfm-9.9.9",
+      "env": { "pname": "cmark-gfm", "version": "9.9.9" },
+      "outputs": { "out": { "path": "h5-cmark" } }
+    },
+    "d-pyunbound.drv": {
+      "name": "python3.13-unbound-9.9.9",
+      "env": { "pname": "python3.13-unbound", "version": "9.9.9" },
+      "outputs": { "out": { "path": "h6-pyunbound" } }
+    }
+  },
+  "version": 4
+}"#;
+
+/// Each library carries NVD's pair for it, in all three formats, recorded as
+/// coming from the curated table; cJSON carries its second vendor as a
+/// candidate.
+#[test]
+fn nix_gap_closure_c_libraries_carry_nvds_cpe() {
+    let s = scan_closure(CLOSURE_C_LIBRARIES);
+    // CONTROL: the closure was read, or the assertions below say nothing.
+    assert!(
+        s.doc_prop("waybill:nix-closure").is_some(),
+        "C184 absent — the closure tier degraded, so nothing below is evidence"
+    );
+
+    let refs = s.spdx23_cpe_refs();
+    let spdx3 = serde_json::to_string(&s.spdx3).unwrap();
+    for (name, want) in [
+        ("unbound", "cpe:2.3:a:nlnetlabs:unbound:9.9.9:*:*:*:*:*:*:*"),
+        ("libssh", "cpe:2.3:a:libssh:libssh:9.9.9:*:*:*:*:*:*:*"),
+        ("cjson", "cpe:2.3:a:davegamble:cjson:9.9.9:*:*:*:*:*:*:*"),
+    ] {
+        let c = s
+            .component(name)
+            .unwrap_or_else(|| panic!("{name} must be emitted"));
+        assert_eq!(c["cpe"].as_str(), Some(want), "{name}: CycloneDX `component.cpe`");
+        assert_eq!(
+            c["purl"].as_str(),
+            Some(format!("pkg:generic/{name}@9.9.9").as_str()),
+            "{name}: the PURL is unchanged"
+        );
+        let sources: Vec<&str> = c["evidence"]["identity"]
+            .as_array()
+            .map(|a| {
+                a.iter()
+                    .filter(|i| i["field"].as_str() == Some("cpe"))
+                    .filter_map(|i| i["methods"][0]["value"].as_str())
+                    .collect()
+            })
+            .unwrap_or_default();
+        assert_eq!(sources, vec!["waybill curated CPE table"], "{name}");
+        assert!(refs.iter().any(|r| r == want), "{name}: SPDX 2.3 cpe23Type; got {refs:?}");
+        assert!(spdx3.contains(want), "{name}: SPDX 3 must carry {want}");
+    }
+
+    let cjson_candidates = s
+        .component("cjson")
+        .and_then(|c| c["properties"].as_array())
+        .and_then(|ps| {
+            ps.iter()
+                .find(|p| p["name"].as_str() == Some("waybill:cpe-candidates"))
+                .and_then(|p| p["value"].as_str())
+        })
+        .unwrap_or_default();
+    assert!(
+        cjson_candidates.contains("cpe:2.3:a:cjson_project:cjson:9.9.9:"),
+        "cJSON's second NVD vendor must be a candidate; got {cjson_candidates:?}"
+    );
+}
+
+/// The Haskell packages NVD files other software under, and a binding named
+/// after a library, carry no CPE. sbomnix 1.9.0 gives the first two
+/// `cloudflare:warp` and `github:cmark-gfm`.
+#[test]
+fn nix_gap_haskell_packages_and_bindings_get_no_cpe() {
+    let s = scan_closure(CLOSURE_C_LIBRARIES);
+    let cpes = s.cpes();
+    // CONTROL: the libraries carry theirs, so the population is not empty.
+    assert!(
+        cpes.iter().any(|(n, _)| n == "unbound"),
+        "unbound must carry a CPE, or this passes over an empty set: {cpes:?}"
+    );
+    for name in ["warp", "cmark-gfm", "python3.13-unbound"] {
+        let c = s
+            .component(name)
+            .unwrap_or_else(|| panic!("{name} must be emitted, or its absence proves nothing"));
+        assert!(
+            c["cpe"].is_null(),
+            "{name} ({:?}) gained {:?}; NVD's entries under that name are other software",
+            c["purl"],
+            c["cpe"]
+        );
+    }
+    let unbound: Vec<&(String, String)> = cpes
+        .iter()
+        .filter(|(_, c)| c.contains(":unbound:"))
+        .collect();
+    assert_eq!(unbound.len(), 1, "exactly one component is Unbound; got {unbound:?}");
 }

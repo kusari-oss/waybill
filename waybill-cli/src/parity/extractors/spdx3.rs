@@ -785,6 +785,14 @@ spdx3_anno!(c212_spdx3, "waybill:cpe-provenance", component);
 spdx3_anno!(c213_spdx3, "waybill:nix-closure-contents", document);
 spdx3_anno!(c214_spdx3, "waybill:closure-contents", component);
 spdx3_anno!(c215_spdx3, "waybill:closure-binary-identity", component);
+// Milestone 1423 (#1423): C216 — how the closure scope marks were decided.
+spdx3_anno!(c216_spdx3, "waybill:closure-scope-method", document);
+// Milestone 1283 (#1283): C217 — the Nix evaluation policy.
+spdx3_anno!(c217_spdx3, "waybill:nix-evaluation-policy", document);
+// Milestone 966 (#966): C218 — the compiler release a boot library's version
+// came from; C219 — which GHCs the closure named and whether the table has each.
+spdx3_anno!(c218_spdx3, "waybill:boot-library-compiler", component);
+spdx3_anno!(c219_spdx3, "waybill:ghc-boot-libraries", document);
 spdx3_anno!(c183_spdx3, "waybill:patch-evidence-grade", document);
 spdx3_anno!(c184_spdx3, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.
@@ -799,6 +807,7 @@ spdx3_anno!(c189_spdx3, "waybill:nixpkgs-declaration-grade", document);
 spdx3_anno!(c191_spdx3, "waybill:deps-dev-outcome", component);
 spdx3_anno!(c192_spdx3, "waybill:deps-dev-outcomes", document);
 spdx3_anno!(c193_spdx3, "waybill:vex-claims-omitted", document);
+spdx3_anno!(c220_spdx3, "waybill:vex-claims-unscoped", document);
 spdx3_anno!(c42_spdx3, "waybill:lifecycle-scope", component);
 spdx3_anno!(c194_spdx3_raw, "waybill:derivation", document);
 spdx3_anno!(c195_spdx3, "waybill:go-mod-why", document);

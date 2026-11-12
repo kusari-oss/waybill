@@ -1,0 +1,5 @@
+bin /nix/store/56qb7awbplza7z35iz4k8gyr2fjk2acw-curl-8.20.0-bin
+dev /nix/store/z43571apx58qpq4kdz207f4vcbbzd6nj-curl-8.20.0-dev
+out /nix/store/5ksfjgx970dszhbjn6kcbcf07yn52s1i-curl-8.20.0
+man /nix/store/8kl0c1xmasvhrn76cjmdmkk5qcq6spkn-curl-8.20.0-man
+devdoc /nix/store/rasyzrv7w7430kfk4jppr9xa56dzr487-curl-8.20.0-devdoc

@@ -88,23 +88,43 @@
   "documentNamespace": "<masked>",
   "hasExtractedLicensingInfos": [
     {
+      "extractedText": "GPL-3.0-or-later AND FSFULLR AND (GPL-3.0-or-later AND FSFULLR) AND LGPL-2.1-or-later AND GPL-3.0-or-later WITH autoconf exception AND GPL-3.0-or-later WITH texinfo exception AND LGPL-2.0-or-later AND GPL-2.0-or-later AND X11 AND FSFAP AND GFDL-NIV-1.3 AND LGPL-3.0-or-later AND (LGPL-3.0-or-later OR GPL-2.0-or-later) AND public-domain",
+      "licenseId": "LicenseRef-2CX65ZO5QQCR7TK2",
+      "name": "waybill-extracted-license"
+    },
+    {
+      "extractedText": "(Sleepycat AND BSD-3-Clause) AND Sleepycat AND BSD-3-Clause AND Ms-PL AND (GPL OR Artistic) AND X11 AND MIT-old AND TCL-like AND BSD-3-clause-fjord AND GPL-3.0-only AND Zlib AND (Artistic OR BSD-3-Clause) AND GPL",
+      "licenseId": "LicenseRef-2ZDZ7B4MLIZ5PXVD",
+      "name": "waybill-extracted-license"
+    },
+    {
       "extractedText": "LGPL-2.1-or-later AND CC0-1.0 AND GPL-2.0-only WITH Linux-syscall-note exception AND MIT AND public-domain AND GPL-2.0-or-later",
       "licenseId": "LicenseRef-477CEDDOQEPENORU",
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "GPL-3.0-or-later AND permissive AND LGPL-2.1-or-later AND LGPL-3.0-or-later OR GPL-2.0-or-later AND MIT AND GPL-3.0-or-later OR BSD-3-Clause AND LGPL-3.0-or-later AND RFC-Reference AND TinySCHEME AND CC0-1.0 AND BSD-3-Clause AND GPL-2.0-or-later",
-      "licenseId": "LicenseRef-6CWJVPOAKFN7V2NW",
+      "extractedText": "(Artistic OR GPL-1.0-or-later) AND Artistic AND GPL-1.0-or-later",
+      "licenseId": "LicenseRef-5QPGGEGWEA4GNMSQ",
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "GPL-2.0-only AND GPL-2.0-or-later AND 0BSD AND MIT AND BSD-3-Clause-Variant AND BSD-3-Clause AND BSD-4-Clause-CMU AND LGPL-2.0-only AND Apache-2.0 AND ISC AND GPL OR MIT-US-export AND Kazlib AND Latex2e AND GPL-2.0-or-later WITH Texinfo exception",
-      "licenseId": "LicenseRef-7Q6OYO4VNKM6ZN2L",
+      "extractedText": "LGPL-2.1-or-later AND LGPL-2.0-or-later AND LGPL-2.1+-with-link-exception AND LGPL-3.0-or-later AND GPL-2.0-or-later AND GPL-2+-with-link-exception AND (LGPL-2.1-or-later AND GPL-2.0-only) AND GPL-3.0-or-later AND FSFAP AND Carnegie AND (Carnegie AND LGPL-2.1-or-later) AND (Inner-Net AND LGPL-2.1-or-later) AND MIT-like-Lord AND BSD-like-Spencer AND PCRE AND BSD-3-clause-Carnegie AND Unicode-DFS-2016 AND BSL-1.0 AND SunPro AND (LGPL-2.1-or-later AND SunPro) AND CORE-MATH AND BSD-3-clause-Berkeley AND (BSD-3-clause-Berkeley AND BSD-3-clause-WIDE) AND (BSD-3-clause-Berkeley AND LGPL-2.1-or-later) AND (BSD-2-Clause OR GPL-2.0-only) AND BSD-3-clause-Oracle AND (BSD-3-clause-Berkeley AND DEC) AND (BSD-3-clause-Berkeley AND DEC AND IBM AND ISC) AND (BSD-3-clause-Berkeley AND DEC AND ISC) AND (BSD-3-clause-Berkeley AND DEC AND ISC AND LGPL-2.1-or-later) AND (BSD-3-clause-Berkeley AND DEC AND LGPL-2.1-or-later) AND (BSD-3-clause-Berkeley AND ISC) AND (BSD-3-clause-Berkeley AND LGPL-2.1-or-later AND Univ-Coimbra) AND (IBM AND ISC) AND ISC AND (ISC AND LGPL-2.1-or-later) AND public-domain AND BSD-2-Clause AND BSD-3-clause-WIDE AND Univ-Coimbra AND DEC AND GPL-2.0-only AND IBM AND Inner-Net",
+      "licenseId": "LicenseRef-6OWDBRKZ53O6DNWB",
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "GPL-3.0-or-later OR Less AND GPL-3.0-or-later AND Less AND GPL-3.0-or-later OR Less, AND X11 AND X11 AND Spencer-86 AND public-domain",
-      "licenseId": "LicenseRef-ANOXQXDYPPHXZPUA",
+      "extractedText": "(BSD-3-Clause OR GPL) AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-3.0-only AND GPL-3.0-or-later WITH Bison exception AND BSD-tcp_wrappers AND LGPL-2.0-or-later AND public-domain AND Beerware",
+      "licenseId": "LicenseRef-7GCBIHCLS5MBGTUD",
+      "name": "waybill-extracted-license"
+    },
+    {
+      "extractedText": "GPL-3.0-or-later AND (GPL-3.0-or-later AND BSD-4-clause-UC) AND BSD-4-clause-UC AND (GPL-3.0-or-later AND ISC) AND ISC AND FSFULLR AND GFDL-NIV-1.3",
+      "licenseId": "LicenseRef-7GJCZD75HKW47C5L",
+      "name": "waybill-extracted-license"
+    },
+    {
+      "extractedText": "PostgreSQL AND (PostgreSQL AND Custom-regex AND Tcl) AND Custom-pg_dump AND BSD-3-Clause AND Custom-Unicode AND double-metaphone AND nagaysau-ishii AND BSD-2-Clause AND Custom-regex AND Tcl",
+      "licenseId": "LicenseRef-AJFVBFIXIED3A6RW",
       "name": "waybill-extracted-license"
     },
     {
@@ -118,8 +138,28 @@
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "LGPL-3.0-or-later OR GPL-2.0-or-later AND LGPL-2.0-or-later AND MIT AND GPL-2.0-or-later AND GPL-3.0-or-later WITH Autoconf exception AND public-domain AND GPL-2.0-only AND GAP AND LGPL-3.0-or-later",
-      "licenseId": "LicenseRef-EBX67NJHKAYNTEVK",
+      "extractedText": "(GPL-2.0-or-later OR LGPL-3.0-or-later) AND GPL-3.0-or-later AND GPL-3.0-or-later WITH Bison exception AND GPL-2.0-or-later AND LGPL-3.0-or-later",
+      "licenseId": "LicenseRef-DDR3JUBRWFWBTLJ7",
+      "name": "waybill-extracted-license"
+    },
+    {
+      "extractedText": "GPL-3.0-or-later AND X11 AND GFDL-NIV-1.3+ AND (GPL-3.0-or-later AND ISC) AND ISC AND BSD-4-clause-UC AND BSL-1 AND pcre",
+      "licenseId": "LicenseRef-DO5TGDMJ6TXFL4HH",
+      "name": "waybill-extracted-license"
+    },
+    {
+      "extractedText": "BSD-3-Clause AND BSD-3-clause-Regents AND (BSD-3-clause-Regents AND BSD-2-clause-NetBSD) AND BSD-3-clause-author AND BSD-3-clause-John-Birrell AND BSD-5-clause-Peter-Wemm AND BSD-2-clause-NetBSD AND BSD-2-Clause AND BSD-2-clause-verbatim AND BSD-2-clause-author AND ISC AND ISC-Original AND MIT AND public-domain AND Beerware",
+      "licenseId": "LicenseRef-DPM3NLPLMGWLZBRU",
+      "name": "waybill-extracted-license"
+    },
+    {
+      "extractedText": "BSD-3-Clause-Attribution AND BSD-3-Clause AND BSD-2-Clause AND GPL-3.0-or-later AND GPL-3.0-only AND BSD-4-clause-UC AND RSA-MD AND (BSD-3-Clause-Attribution AND IBM-as-is) AND (BSD-3-clause-JANET AND BSD-3-Clause-Attribution) AND (BSD-3-clause-PADL AND MIT-OpenVision) AND MIT-OpenVision AND OpenLDAP AND (FSFULLR AND MIT-CMU) AND (BSD-3-Clause-Attribution AND MIT-Export) AND (BSD-2-Clause AND MIT-CMU) AND BSD-2.2-clause AND FSFULLR AND MIT-Export AND MIT-CMU AND BSD-3-clause-JANET AND BSD-3-clause-PADL AND IBM-as-is",
+      "licenseId": "LicenseRef-DZ4XUCLCEKDCGPDC",
+      "name": "waybill-extracted-license"
+    },
+    {
+      "extractedText": "(GFDL-NIV-1.3+ OR GFDL-NIV-1.3+) AND GPL-3.0-or-later AND FSFAP AND GFDL-NIV-1.3+ AND GPL-2.0-or-later WITH Autoconf-data exception AND GPL-3.0-or-later WITH Autoconf-data exception AND FSFULLR AND GPL-2.0-or-later AND X11 AND public-domain AND LGPL-2.1-or-later AND GPL WITH automake exception AND LGPL-2.0-or-later AND LGPL-3.0-or-later AND (BSD-3-Clause OR GPL-3.0-or-later) AND GPL-3.0-or-later WITH Bison-2.2 exception AND LGPL-3.0-only AND (FSFULLR OR GPL OR LGPL) AND (ISC OR LGPL-2.1-or-later) AND (BSD-3-Clause OR LGPL-3.0-or-later) AND (BSD-3-Clause OR LGPL-2.1-or-later) AND BSD-3-Clause AND GPL AND ISC AND LGPL",
+      "licenseId": "LicenseRef-E4C7BAGWTBEAMILP",
       "name": "waybill-extracted-license"
     },
     {
@@ -138,13 +178,13 @@
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "BSD-3-Clause AND FSFULLR AND GPL-2.0-or-later WITH Autoconf-data exception AND GPL-3.0-or-later WITH Autoconf-data exception AND X11 AND ISC AND customFSFULLRWD AND LGPL-2.1-or-later AND Apache-2.0 AND customFSFUL AND FSFAP",
-      "licenseId": "LicenseRef-FNYMQNOL6RDHW43M",
+      "extractedText": "OpenLDAP-2.8 AND (FSF-unlimited AND GPL-2.0-or-later WITH Autoconf exception) AND GPL-3.0-or-later WITH Autoconf exception AND FSF-unlimited AND (GPL-2.0-or-later WITH Libtool exception AND GPL-3.0-or-later WITH Libtool exception AND GPL-3.0-or-later) AND GPL-2.0-or-later WITH Autoconf exception AND GPL-2.0-or-later AND (OpenLDAP-2.8 AND UMich AND F5) AND (OpenLDAP-2.8 AND UMich) AND (OpenLDAP-2.8 AND JCG AND UMich) AND (OpenLDAP-2.8 AND FSF-unlimited AND GPL-2.0-or-later WITH Libtool exception) AND (FSF-unlimited AND GPL-2.0-or-later WITH Libtool exception) AND (FSF-unlimited AND OpenLDAP-2.8) AND MIT-XC AND NeoSoft-permissive AND BSD-3-Clause AND (OpenLDAP-2.8 AND BSD-3-Clause) AND (OpenLDAP-2.8 AND Beerware) AND public-domain AND (OpenLDAP-2.8 AND BSD-4-clause-California) AND (OpenLDAP-2.8 AND BSD-3-clause-variant) AND (OpenLDAP-2.8 AND Expat-ISC) AND (OpenLDAP-2.8 AND Expat-UNM) AND (OpenLDAP-2.8 AND MIT) AND BSD-3-clause-California AND F5 AND GPL-2.0-or-later WITH Libtool exception AND GPL-3.0-or-later AND GPL-3.0-or-later WITH Libtool exception AND JCG AND UMich AND Beerware AND BSD-3-clause-variant AND Expat-ISC AND Expat-UNM AND MIT AND BSD-4-clause-California",
+      "licenseId": "LicenseRef-FH6FTND4FP67IBCE",
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "GPL-3.0-or-later AND LGPL-3.0-or-later OR GPL-2.0-or-later AND MIT AND Unicode AND GPL-2.0-or-later AND LGPL-3.0-or-later",
-      "licenseId": "LicenseRef-GLBBFM5PJFPZT3MC",
+      "extractedText": "BSD-3-Clause AND FSFULLR AND GPL-2.0-or-later WITH Autoconf-data exception AND GPL-3.0-or-later WITH Autoconf-data exception AND X11 AND ISC AND customFSFULLRWD AND LGPL-2.1-or-later AND Apache-2.0 AND customFSFUL AND FSFAP",
+      "licenseId": "LicenseRef-FNYMQNOL6RDHW43M",
       "name": "waybill-extracted-license"
     },
     {
@@ -153,13 +193,23 @@
       "name": "waybill-extracted-license"
     },
     {
+      "extractedText": "GPL-3.0-or-later AND (LGPL-3.0-or-later OR GPL-2.0-or-later) AND MIT AND Unicode AND GPL-2.0-or-later AND LGPL-3.0-or-later",
+      "licenseId": "LicenseRef-HUWGMAYUYBYLLAIR",
+      "name": "waybill-extracted-license"
+    },
+    {
+      "extractedText": "LGPL-2.1-or-later AND (LGPL-2.1-or-later OR BSD-3-Clause) AND g10-permissive AND GPL-3.0-or-later AND BSD-3-Clause",
+      "licenseId": "LicenseRef-I2EA4DPB7PVILCG5",
+      "name": "waybill-extracted-license"
+    },
+    {
       "extractedText": "GPL-2.0-or-later AND verbatim",
       "licenseId": "LicenseRef-J25GTUYKB232UQRL",
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "OpenLDAP-2.8 AND FSF-unlimited AND GPL-2.0-or-later WITH Autoconf exception AND GPL-3.0-or-later WITH Autoconf exception AND FSF-unlimited AND GPL-2.0-or-later WITH Libtool exception AND GPL-3.0-or-later WITH Libtool exception AND GPL-3.0-or-later AND GPL-2.0-or-later WITH Autoconf exception AND GPL-2.0-or-later AND OpenLDAP-2.8 AND UMich AND F5 AND OpenLDAP-2.8 AND UMich AND OpenLDAP-2.8 AND JCG AND UMich AND OpenLDAP-2.8 AND FSF-unlimited AND GPL-2.0-or-later WITH Libtool exception AND FSF-unlimited AND GPL-2.0-or-later WITH Libtool exception AND FSF-unlimited AND OpenLDAP-2.8 AND MIT-XC AND NeoSoft-permissive AND BSD-3-Clause AND OpenLDAP-2.8 AND BSD-3-Clause AND OpenLDAP-2.8 AND Beerware AND public-domain AND OpenLDAP-2.8 AND BSD-4-clause-California AND OpenLDAP-2.8 AND BSD-3-clause-variant AND OpenLDAP-2.8 AND Expat-ISC AND OpenLDAP-2.8 AND Expat-UNM AND OpenLDAP-2.8 AND MIT AND BSD-3-clause-California AND F5 AND GPL-2.0-or-later WITH Libtool exception AND GPL-3.0-or-later AND GPL-3.0-or-later WITH Libtool exception AND JCG AND UMich AND Beerware AND BSD-3-clause-variant AND Expat-ISC AND Expat-UNM AND MIT AND BSD-4-clause-California",
-      "licenseId": "LicenseRef-JK36H2YQ754QS6LP",
+      "extractedText": "GPL-3.0-or-later AND LGPL-3.0-or-later AND LGPL-2.0-or-later AND GFDL-1.3+ AND (GFDL-1.2+ OR GPL-3.0-or-later OR LGPL-3.0-only) AND LGPL-2.1-or-later AND LGPL-3.0-only AND (LGPL-2.0-or-later OR LGPL-3.0-or-later) AND (BSD-3-Clause OR LGPL-3.0-or-later) AND (BSD-3-Clause OR LGPL-2.1-or-later) AND (ISC OR LGPL-2.1-or-later) AND Unicode-DFS-2016 AND public-domain AND FreeSoftware AND GPL-2.0-or-later AND GPL-2.0-or-later WITH distribution exception AND (GPL-2.0-or-later WITH distribution exception, MIT AND GPL-2.0-or-later) AND X11 AND BSD-3-Clause AND gfdl-1.2+ AND gfdl-1.3+ AND ISC",
+      "licenseId": "LicenseRef-J4BNWHF7BROIFPOY",
       "name": "waybill-extracted-license"
     },
     {
@@ -168,13 +218,8 @@
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "BSD-3-Clause-Attribution AND BSD-3-Clause AND BSD-2-Clause AND GPL-3.0-or-later AND GPL-3.0-only AND BSD-4-clause-UC AND RSA-MD AND BSD-3-Clause-Attribution AND IBM-as-is AND BSD-3-clause-JANET AND BSD-3-Clause-Attribution AND BSD-3-clause-PADL AND MIT-OpenVision AND MIT-OpenVision AND OpenLDAP AND FSFULLR AND MIT-CMU AND BSD-3-Clause-Attribution AND MIT-Export AND BSD-2-Clause AND MIT-CMU AND BSD-2.2-clause AND FSFULLR AND MIT-Export AND MIT-CMU AND BSD-3-clause-JANET AND BSD-3-clause-PADL AND IBM-as-is",
-      "licenseId": "LicenseRef-KORRTCF577NE6K42",
-      "name": "waybill-extracted-license"
-    },
-    {
-      "extractedText": "GPL-3.0-or-later AND LGPL-3.0-or-later AND LGPL-2.0-or-later AND GFDL-1.3+ AND GFDL-1.2+ OR GPL-3.0-or-later OR LGPL-3.0-only AND LGPL-2.1-or-later AND LGPL-3.0-only AND LGPL-2.0-or-later OR LGPL-3.0-or-later AND BSD-3-Clause OR LGPL-3.0-or-later AND BSD-3-Clause OR LGPL-2.1-or-later AND ISC OR LGPL-2.1-or-later AND Unicode-DFS-2016 AND public-domain AND FreeSoftware AND GPL-2.0-or-later AND GPL-2.0-or-later WITH distribution exception AND GPL-2.0-or-later WITH distribution exception, MIT AND GPL-2.0-or-later AND X11 AND BSD-3-Clause AND gfdl-1.2+ AND gfdl-1.3+ AND ISC",
-      "licenseId": "LicenseRef-LUT4V7ZTPEE7I7GN",
+      "extractedText": "GPL-2.0-only AND GPL-2.0-or-later AND 0BSD AND MIT AND BSD-3-Clause-Variant AND BSD-3-Clause AND BSD-4-Clause-CMU AND LGPL-2.0-only AND Apache-2.0 AND ISC AND (GPL OR MIT-US-export) AND Kazlib AND Latex2e AND GPL-2.0-or-later WITH Texinfo exception",
+      "licenseId": "LicenseRef-LKSXNRIKCCUAYQ5N",
       "name": "waybill-extracted-license"
     },
     {
@@ -183,28 +228,18 @@
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "GPL-2.0-or-later OR LGPL-3.0-or-later AND GPL-3.0-or-later AND GPL-3.0-or-later WITH Bison exception AND GPL-2.0-or-later AND LGPL-3.0-or-later",
-      "licenseId": "LicenseRef-M4NRPF4FUIBAZYNF",
-      "name": "waybill-extracted-license"
-    },
-    {
       "extractedText": "APACHE-2-LLVM-EXCEPTIONS AND MIT AND BSD-3-Clause AND solar-public-domain AND Python",
       "licenseId": "LicenseRef-MJL4RLFWXWW3YOCZ",
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "MIT AND X11 AND GPL-2.0-or-later AND GPL-3.0-or-later AND MPL-1.1 OR GPL-2.0-or-later OR LGPL-2.1-or-later AND public-domain AND GPL",
-      "licenseId": "LicenseRef-N5ADCP4JECH5NXD7",
+      "extractedText": "GPL-3.0-or-later AND permissive AND LGPL-2.1-or-later AND (LGPL-3.0-or-later OR GPL-2.0-or-later) AND MIT AND (GPL-3.0-or-later OR BSD-3-Clause) AND LGPL-3.0-or-later AND RFC-Reference AND TinySCHEME AND CC0-1.0 AND BSD-3-Clause AND GPL-2.0-or-later",
+      "licenseId": "LicenseRef-MNIYF3SWQSBW7JRR",
       "name": "waybill-extracted-license"
     },
     {
       "extractedText": "public-domain",
       "licenseId": "LicenseRef-N74WUICGP5YP5OX5",
-      "name": "waybill-extracted-license"
-    },
-    {
-      "extractedText": "GPL-3.0-or-later AND X11 AND GFDL-NIV-1.3+ AND GPL-3.0-or-later AND ISC AND ISC AND BSD-4-clause-UC AND BSL-1 AND pcre",
-      "licenseId": "LicenseRef-NKCC6PCZURXYKVLL",
       "name": "waybill-extracted-license"
     },
     {
@@ -223,28 +258,13 @@
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "Apache-2.0 AND Artistic OR GPL-1.0-or-later AND Artistic AND GPL-1.0-or-later",
-      "licenseId": "LicenseRef-QJT66QY4DRBOGEEI",
-      "name": "waybill-extracted-license"
-    },
-    {
-      "extractedText": "LGPL-2.1-or-later AND LGPL-2.0-or-later AND LGPL-2.1+-with-link-exception AND LGPL-3.0-or-later AND GPL-2.0-or-later AND GPL-2+-with-link-exception AND LGPL-2.1-or-later AND GPL-2.0-only AND GPL-3.0-or-later AND FSFAP AND Carnegie AND Carnegie AND LGPL-2.1-or-later AND Inner-Net AND LGPL-2.1-or-later AND MIT-like-Lord AND BSD-like-Spencer AND PCRE AND BSD-3-clause-Carnegie AND Unicode-DFS-2016 AND BSL-1.0 AND SunPro AND LGPL-2.1-or-later AND SunPro AND CORE-MATH AND BSD-3-clause-Berkeley AND BSD-3-clause-Berkeley AND BSD-3-clause-WIDE AND BSD-3-clause-Berkeley AND LGPL-2.1-or-later AND BSD-2-Clause OR GPL-2.0-only AND BSD-3-clause-Oracle AND BSD-3-clause-Berkeley AND DEC AND BSD-3-clause-Berkeley AND DEC AND IBM AND ISC AND BSD-3-clause-Berkeley AND DEC AND ISC AND BSD-3-clause-Berkeley AND DEC AND ISC AND LGPL-2.1-or-later AND BSD-3-clause-Berkeley AND DEC AND LGPL-2.1-or-later AND BSD-3-clause-Berkeley AND ISC AND BSD-3-clause-Berkeley AND LGPL-2.1-or-later AND Univ-Coimbra AND IBM AND ISC AND ISC AND ISC AND LGPL-2.1-or-later AND public-domain AND BSD-2-Clause AND BSD-3-clause-WIDE AND Univ-Coimbra AND DEC AND GPL-2.0-only AND IBM AND Inner-Net",
-      "licenseId": "LicenseRef-RHDXRPDMHY6H2HJT",
-      "name": "waybill-extracted-license"
-    },
-    {
-      "extractedText": "GPL-3.0-or-later AND GPL-3.0-or-later AND BSD-4-clause-UC AND BSD-4-clause-UC AND GPL-3.0-or-later AND ISC AND ISC AND FSFULLR AND GFDL-NIV-1.3",
-      "licenseId": "LicenseRef-RI3BMCUDSSG6DDZD",
+      "extractedText": "MIT AND X11 AND GPL-2.0-or-later AND GPL-3.0-or-later AND (MPL-1.1 OR GPL-2.0-or-later OR LGPL-2.1-or-later) AND public-domain AND GPL",
+      "licenseId": "LicenseRef-PYXCZOUFQ3RIYDP3",
       "name": "waybill-extracted-license"
     },
     {
       "extractedText": "GPL-2.0-or-later AND All-permissive AND configure AND installsh",
       "licenseId": "LicenseRef-RM6RNKPJ57Z2B4V3",
-      "name": "waybill-extracted-license"
-    },
-    {
-      "extractedText": "Sleepycat AND BSD-3-Clause AND Sleepycat AND BSD-3-Clause AND Ms-PL AND GPL OR Artistic AND X11 AND MIT-old AND TCL-like AND BSD-3-clause-fjord AND GPL-3.0-only AND Zlib AND Artistic OR BSD-3-Clause AND GPL",
-      "licenseId": "LicenseRef-RRLESWPWNO2R2MQU",
       "name": "waybill-extracted-license"
     },
     {
@@ -258,18 +278,13 @@
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "GPL-1.0-or-later OR Artistic AND MIT AND REGCOMP, AND GPL-1.0-or-later OR Artistic AND GPL-3+-WITH-BISON-EXCEPTION AND Unicode AND GPL-1.0-or-later OR Artistic, AND Unicode AND BZIP AND ZLIB AND Artistic AND GPL-2.0-or-later OR Artistic AND MIT OR GPL-1.0-or-later OR Artistic AND FSFAP AND BSD-3-clause-with-weird-numbering AND CC0-1.0 AND Artistic OR GPL-1.0-or-later AND TEXT-TABS AND GPL-1.0-or-later OR Artistic, AND BSD-4-clause-POWERDOG AND GPL-1.0-or-later OR Artistic, AND BSD-3-clause-GENERIC AND BSD-3-Clause AND SDBM-PUBLIC-DOMAIN AND DONT-CHANGE-THE-GPL AND GPL-1.0-or-later OR Artistic OR Artistic-dist AND Artistic-dist AND Artistic OR GPL-1.0-or-later OR Artistic-dist AND GPL-1.0-or-later OR Artistic, AND MIT AND LGPL-2.1-only AND GPL-1.0-or-later AND GPL-2.0-or-later AND Artistic-2 AND BSD-4-clause-POWERDOG AND BSD-3-clause-GENERIC AND REGCOMP",
-      "licenseId": "LicenseRef-THG5W5JIEVLPKSXY",
+      "extractedText": "(GPL-1.0-or-later OR Artistic) AND MIT AND (REGCOMP, AND GPL-1.0-or-later OR Artistic) AND GPL-3+-WITH-BISON-EXCEPTION AND Unicode AND (GPL-1.0-or-later OR Artistic, AND Unicode) AND BZIP AND ZLIB AND Artistic AND (GPL-2.0-or-later OR Artistic) AND (MIT OR GPL-1.0-or-later OR Artistic) AND FSFAP AND BSD-3-clause-with-weird-numbering AND CC0-1.0 AND (Artistic OR GPL-1.0-or-later) AND TEXT-TABS AND (GPL-1.0-or-later OR Artistic, AND BSD-4-clause-POWERDOG) AND (GPL-1.0-or-later OR Artistic, AND BSD-3-clause-GENERIC) AND BSD-3-Clause AND SDBM-PUBLIC-DOMAIN AND DONT-CHANGE-THE-GPL AND (GPL-1.0-or-later OR Artistic OR Artistic-dist) AND Artistic-dist AND (Artistic OR GPL-1.0-or-later OR Artistic-dist) AND (GPL-1.0-or-later OR Artistic, AND MIT) AND LGPL-2.1-only AND GPL-1.0-or-later AND GPL-2.0-or-later AND Artistic-2 AND BSD-4-clause-POWERDOG AND BSD-3-clause-GENERIC AND REGCOMP",
+      "licenseId": "LicenseRef-TFJSLK4UFMEUPNPF",
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "PostgreSQL AND PostgreSQL AND Custom-regex AND Tcl AND Custom-pg_dump AND BSD-3-Clause AND Custom-Unicode AND double-metaphone AND nagaysau-ishii AND BSD-2-Clause AND Custom-regex AND Tcl",
-      "licenseId": "LicenseRef-THRHKFDTY52C66NA",
-      "name": "waybill-extracted-license"
-    },
-    {
-      "extractedText": "GPL-3.0-or-later AND GPL-3.0-or-later WITH Bison exception AND GPL-2.0-or-later AND GFDL-NIV-1.3 AND Latex2e AND BSD-4-clause-UC AND MIT-like AND BSD-4-clause-UC AND MIT-like AND permissive",
-      "licenseId": "LicenseRef-TXYHYMU4MS2LCZIJ",
+      "extractedText": "GPL-3.0-or-later AND GPL-3.0-or-later WITH Bison exception AND GPL-2.0-or-later AND GFDL-NIV-1.3 AND Latex2e AND (BSD-4-clause-UC AND MIT-like) AND BSD-4-clause-UC AND MIT-like AND permissive",
+      "licenseId": "LicenseRef-TK2W5HWMXYOO3T2B",
       "name": "waybill-extracted-license"
     },
     {
@@ -278,13 +293,8 @@
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "GPL-3.0-or-later AND FSFULLR AND GPL-3.0-or-later AND FSFULLR AND LGPL-2.1-or-later AND GPL-3.0-or-later WITH autoconf exception AND GPL-3.0-or-later WITH texinfo exception AND LGPL-2.0-or-later AND GPL-2.0-or-later AND X11 AND FSFAP AND GFDL-NIV-1.3 AND LGPL-3.0-or-later AND LGPL-3.0-or-later OR GPL-2.0-or-later AND public-domain",
-      "licenseId": "LicenseRef-UTMIWIK7ZUBIYXRW",
-      "name": "waybill-extracted-license"
-    },
-    {
-      "extractedText": "GFDL-NIV-1.3+ OR GFDL-NIV-1.3+ AND GPL-3.0-or-later AND FSFAP AND GFDL-NIV-1.3+ AND GPL-2.0-or-later WITH Autoconf-data exception AND GPL-3.0-or-later WITH Autoconf-data exception AND FSFULLR AND GPL-2.0-or-later AND X11 AND public-domain AND LGPL-2.1-or-later AND GPL WITH automake exception AND LGPL-2.0-or-later AND LGPL-3.0-or-later AND BSD-3-Clause OR GPL-3.0-or-later AND GPL-3.0-or-later WITH Bison-2.2 exception AND LGPL-3.0-only AND FSFULLR OR GPL OR LGPL AND ISC OR LGPL-2.1-or-later AND BSD-3-Clause OR LGPL-3.0-or-later AND BSD-3-Clause OR LGPL-2.1-or-later AND BSD-3-Clause AND GPL AND ISC AND LGPL",
-      "licenseId": "LicenseRef-UVTWF3DBOTKOKQWT",
+      "extractedText": "(LGPL-3.0-or-later OR GPL-2.0-or-later) AND LGPL-2.0-or-later AND MIT AND GPL-2.0-or-later AND GPL-3.0-or-later WITH Autoconf exception AND public-domain AND GPL-2.0-only AND GAP AND LGPL-3.0-or-later",
+      "licenseId": "LicenseRef-VOREVPOIQQ3U45K2",
       "name": "waybill-extracted-license"
     },
     {
@@ -313,28 +323,18 @@
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "Artistic OR GPL-1.0-or-later AND Artistic AND GPL-1.0-or-later",
-      "licenseId": "LicenseRef-WOGE2RCZLD3AAZHV",
-      "name": "waybill-extracted-license"
-    },
-    {
       "extractedText": "GPL-2.0-or-later AND GPL-2.0-only AND GPL-3.0-or-later AND LGPL-2.1-or-later AND public-domain AND BSD-4-Clause AND MIT AND ISC AND BSD-3-Clause AND BSLA AND LGPL-2.0-or-later AND LGPL AND BSD-2-Clause AND LGPL-3.0-or-later",
       "licenseId": "LicenseRef-WTDR5VQSOZTRWHQV",
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "LGPL-2.1-or-later AND LGPL-2.1-or-later OR BSD-3-Clause AND g10-permissive AND GPL-3.0-or-later AND BSD-3-Clause",
-      "licenseId": "LicenseRef-X4S3RBZNMH5D74K6",
+      "extractedText": "Apache-2.0 AND (Artistic OR GPL-1.0-or-later) AND Artistic AND GPL-1.0-or-later",
+      "licenseId": "LicenseRef-XN5A5P33PTMKGOOL",
       "name": "waybill-extracted-license"
     },
     {
-      "extractedText": "BSD-3-Clause OR GPL AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-3.0-only AND GPL-3.0-or-later WITH Bison exception AND BSD-tcp_wrappers AND LGPL-2.0-or-later AND public-domain AND Beerware",
-      "licenseId": "LicenseRef-ZGEOBK7CDOEZKRKQ",
-      "name": "waybill-extracted-license"
-    },
-    {
-      "extractedText": "BSD-3-Clause AND BSD-3-clause-Regents AND BSD-3-clause-Regents AND BSD-2-clause-NetBSD AND BSD-3-clause-author AND BSD-3-clause-John-Birrell AND BSD-5-clause-Peter-Wemm AND BSD-2-clause-NetBSD AND BSD-2-Clause AND BSD-2-clause-verbatim AND BSD-2-clause-author AND ISC AND ISC-Original AND MIT AND public-domain AND Beerware",
-      "licenseId": "LicenseRef-ZJ7QTDZHJXF7Y5EZ",
+      "extractedText": "(GPL-3.0-or-later OR Less) AND GPL-3.0-or-later AND Less AND (GPL-3.0-or-later OR Less, AND X11) AND X11 AND Spencer-86 AND public-domain",
+      "licenseId": "LicenseRef-ZL3ZRO3K657FBBIK",
       "name": "waybill-extracted-license"
     },
     {
@@ -751,8 +751,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-TXYHYMU4MS2LCZIJ",
-      "licenseDeclared": "LicenseRef-TXYHYMU4MS2LCZIJ",
+      "licenseConcluded": "LicenseRef-TK2W5HWMXYOO3T2B",
+      "licenseDeclared": "LicenseRef-TK2W5HWMXYOO3T2B",
       "name": "bash",
       "supplier": "Organization: Matthias Klose <doko@debian.org>",
       "versionInfo": "5.2.37-2+b9"
@@ -907,8 +907,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-RI3BMCUDSSG6DDZD",
-      "licenseDeclared": "LicenseRef-RI3BMCUDSSG6DDZD",
+      "licenseConcluded": "LicenseRef-7GJCZD75HKW47C5L",
+      "licenseDeclared": "LicenseRef-7GJCZD75HKW47C5L",
       "name": "coreutils",
       "supplier": "Organization: Michael Stone <mstone@debian.org>",
       "versionInfo": "9.7-3"
@@ -1297,8 +1297,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-UTMIWIK7ZUBIYXRW",
-      "licenseDeclared": "LicenseRef-UTMIWIK7ZUBIYXRW",
+      "licenseConcluded": "LicenseRef-2CX65ZO5QQCR7TK2",
+      "licenseDeclared": "LicenseRef-2CX65ZO5QQCR7TK2",
       "name": "diffutils",
       "supplier": "Organization: Santiago Vila <sanvila@debian.org>",
       "versionInfo": "3.10-4"
@@ -1375,8 +1375,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-6CWJVPOAKFN7V2NW",
-      "licenseDeclared": "LicenseRef-6CWJVPOAKFN7V2NW",
+      "licenseConcluded": "LicenseRef-MNIYF3SWQSBW7JRR",
+      "licenseDeclared": "LicenseRef-MNIYF3SWQSBW7JRR",
       "name": "dirmngr",
       "supplier": "Organization: Debian GnuPG Maintainers <pkg-gnupg-maint@lists.alioth.debian.org>",
       "versionInfo": "2.4.7-21+deb13u1+b4"
@@ -1531,8 +1531,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-UVTWF3DBOTKOKQWT",
-      "licenseDeclared": "LicenseRef-UVTWF3DBOTKOKQWT",
+      "licenseConcluded": "LicenseRef-E4C7BAGWTBEAMILP",
+      "licenseDeclared": "LicenseRef-E4C7BAGWTBEAMILP",
       "name": "findutils",
       "supplier": "Organization: Andreas Metzler <ametzler@debian.org>",
       "versionInfo": "4.10.0-3"
@@ -1687,8 +1687,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-6CWJVPOAKFN7V2NW",
-      "licenseDeclared": "LicenseRef-6CWJVPOAKFN7V2NW",
+      "licenseConcluded": "LicenseRef-MNIYF3SWQSBW7JRR",
+      "licenseDeclared": "LicenseRef-MNIYF3SWQSBW7JRR",
       "name": "gnupg-l10n",
       "supplier": "Organization: Debian GnuPG Maintainers <pkg-gnupg-maint@lists.alioth.debian.org>",
       "versionInfo": "2.4.7-21+deb13u1"
@@ -1765,8 +1765,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-6CWJVPOAKFN7V2NW",
-      "licenseDeclared": "LicenseRef-6CWJVPOAKFN7V2NW",
+      "licenseConcluded": "LicenseRef-MNIYF3SWQSBW7JRR",
+      "licenseDeclared": "LicenseRef-MNIYF3SWQSBW7JRR",
       "name": "gnupg",
       "supplier": "Organization: Debian GnuPG Maintainers <pkg-gnupg-maint@lists.alioth.debian.org>",
       "versionInfo": "2.4.7-21+deb13u1"
@@ -1849,8 +1849,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-6CWJVPOAKFN7V2NW",
-      "licenseDeclared": "LicenseRef-6CWJVPOAKFN7V2NW",
+      "licenseConcluded": "LicenseRef-MNIYF3SWQSBW7JRR",
+      "licenseDeclared": "LicenseRef-MNIYF3SWQSBW7JRR",
       "name": "gpg-agent",
       "supplier": "Organization: Debian GnuPG Maintainers <pkg-gnupg-maint@lists.alioth.debian.org>",
       "versionInfo": "2.4.7-21+deb13u1+b4"
@@ -1927,8 +1927,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-6CWJVPOAKFN7V2NW",
-      "licenseDeclared": "LicenseRef-6CWJVPOAKFN7V2NW",
+      "licenseConcluded": "LicenseRef-MNIYF3SWQSBW7JRR",
+      "licenseDeclared": "LicenseRef-MNIYF3SWQSBW7JRR",
       "name": "gpg",
       "supplier": "Organization: Debian GnuPG Maintainers <pkg-gnupg-maint@lists.alioth.debian.org>",
       "versionInfo": "2.4.7-21+deb13u1+b4"
@@ -2005,8 +2005,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-6CWJVPOAKFN7V2NW",
-      "licenseDeclared": "LicenseRef-6CWJVPOAKFN7V2NW",
+      "licenseConcluded": "LicenseRef-MNIYF3SWQSBW7JRR",
+      "licenseDeclared": "LicenseRef-MNIYF3SWQSBW7JRR",
       "name": "gpgconf",
       "supplier": "Organization: Debian GnuPG Maintainers <pkg-gnupg-maint@lists.alioth.debian.org>",
       "versionInfo": "2.4.7-21+deb13u1+b4"
@@ -2083,8 +2083,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-6CWJVPOAKFN7V2NW",
-      "licenseDeclared": "LicenseRef-6CWJVPOAKFN7V2NW",
+      "licenseConcluded": "LicenseRef-MNIYF3SWQSBW7JRR",
+      "licenseDeclared": "LicenseRef-MNIYF3SWQSBW7JRR",
       "name": "gpgsm",
       "supplier": "Organization: Debian GnuPG Maintainers <pkg-gnupg-maint@lists.alioth.debian.org>",
       "versionInfo": "2.4.7-21+deb13u1+b4"
@@ -2473,8 +2473,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-ANOXQXDYPPHXZPUA",
-      "licenseDeclared": "LicenseRef-ANOXQXDYPPHXZPUA",
+      "licenseConcluded": "LicenseRef-ZL3ZRO3K657FBBIK",
+      "licenseDeclared": "LicenseRef-ZL3ZRO3K657FBBIK",
       "name": "less",
       "supplier": "Organization: Milan Kupcevic <milan@debian.org>",
       "versionInfo": "668-1"
@@ -3097,8 +3097,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-ZJ7QTDZHJXF7Y5EZ",
-      "licenseDeclared": "LicenseRef-ZJ7QTDZHJXF7Y5EZ",
+      "licenseConcluded": "LicenseRef-DPM3NLPLMGWLZBRU",
+      "licenseDeclared": "LicenseRef-DPM3NLPLMGWLZBRU",
       "name": "libbsd0",
       "supplier": "Organization: Guillem Jover <guillem@debian.org>",
       "versionInfo": "0.12.2-2"
@@ -3253,8 +3253,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-RHDXRPDMHY6H2HJT",
-      "licenseDeclared": "LicenseRef-RHDXRPDMHY6H2HJT",
+      "licenseConcluded": "LicenseRef-6OWDBRKZ53O6DNWB",
+      "licenseDeclared": "LicenseRef-6OWDBRKZ53O6DNWB",
       "name": "libc-bin",
       "supplier": "Organization: GNU Libc Maintainers <debian-glibc@lists.debian.org>",
       "versionInfo": "2.41-12+deb13u3"
@@ -3331,8 +3331,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-RHDXRPDMHY6H2HJT",
-      "licenseDeclared": "LicenseRef-RHDXRPDMHY6H2HJT",
+      "licenseConcluded": "LicenseRef-6OWDBRKZ53O6DNWB",
+      "licenseDeclared": "LicenseRef-6OWDBRKZ53O6DNWB",
       "name": "libc-l10n",
       "supplier": "Organization: GNU Libc Maintainers <debian-glibc@lists.debian.org>",
       "versionInfo": "2.41-12+deb13u3"
@@ -3409,8 +3409,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-RHDXRPDMHY6H2HJT",
-      "licenseDeclared": "LicenseRef-RHDXRPDMHY6H2HJT",
+      "licenseConcluded": "LicenseRef-6OWDBRKZ53O6DNWB",
+      "licenseDeclared": "LicenseRef-6OWDBRKZ53O6DNWB",
       "name": "libc6",
       "supplier": "Organization: GNU Libc Maintainers <debian-glibc@lists.debian.org>",
       "versionInfo": "2.41-12+deb13u3"
@@ -3565,8 +3565,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "BSD-3-Clause OR GPL-2.0-only AND BSD-3-Clause OR GPL-2.0-or-later AND BSD-3-Clause AND GPL-2.0-only AND GPL-2.0-or-later",
-      "licenseDeclared": "BSD-3-Clause OR GPL-2.0-only AND BSD-3-Clause OR GPL-2.0-or-later AND BSD-3-Clause AND GPL-2.0-only AND GPL-2.0-or-later",
+      "licenseConcluded": "(BSD-3-Clause OR GPL-2.0-only) AND (BSD-3-Clause OR GPL-2.0-or-later) AND BSD-3-Clause AND GPL-2.0-only AND GPL-2.0-or-later",
+      "licenseDeclared": "(BSD-3-Clause OR GPL-2.0-only) AND (BSD-3-Clause OR GPL-2.0-or-later) AND BSD-3-Clause AND GPL-2.0-only AND GPL-2.0-or-later",
       "name": "libcap2",
       "supplier": "Organization: Christian Kastner <ckk@debian.org>",
       "versionInfo": "2.75-10+deb13u1+b1"
@@ -3643,8 +3643,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-7Q6OYO4VNKM6ZN2L",
-      "licenseDeclared": "LicenseRef-7Q6OYO4VNKM6ZN2L",
+      "licenseConcluded": "LicenseRef-LKSXNRIKCCUAYQ5N",
+      "licenseDeclared": "LicenseRef-LKSXNRIKCCUAYQ5N",
       "name": "libcom-err2",
       "supplier": "Organization: Theodore Y. Ts'o <tytso@mit.edu>",
       "versionInfo": "1.47.2-3+b11"
@@ -3799,8 +3799,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-RRLESWPWNO2R2MQU",
-      "licenseDeclared": "LicenseRef-RRLESWPWNO2R2MQU",
+      "licenseConcluded": "LicenseRef-2ZDZ7B4MLIZ5PXVD",
+      "licenseDeclared": "LicenseRef-2ZDZ7B4MLIZ5PXVD",
       "name": "libdb5.3t64",
       "supplier": "Organization: Debian QA Group <packages@qa.debian.org>",
       "versionInfo": "5.3.28+dfsg2-9"
@@ -4033,8 +4033,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-N5ADCP4JECH5NXD7",
-      "licenseDeclared": "LicenseRef-N5ADCP4JECH5NXD7",
+      "licenseConcluded": "LicenseRef-PYXCZOUFQ3RIYDP3",
+      "licenseDeclared": "LicenseRef-PYXCZOUFQ3RIYDP3",
       "name": "libffi8",
       "supplier": "Organization: Debian GCC Maintainers <debian-gcc@lists.debian.org>",
       "versionInfo": "3.4.8-2"
@@ -4423,8 +4423,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-M4NRPF4FUIBAZYNF",
-      "licenseDeclared": "LicenseRef-M4NRPF4FUIBAZYNF",
+      "licenseConcluded": "LicenseRef-DDR3JUBRWFWBTLJ7",
+      "licenseDeclared": "LicenseRef-DDR3JUBRWFWBTLJ7",
       "name": "libgmp10",
       "supplier": "Organization: Debian Science Maintainers <debian-science-maintainers@lists.alioth.debian.org>",
       "versionInfo": "6.3.0+dfsg-3"
@@ -4579,8 +4579,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-X4S3RBZNMH5D74K6",
-      "licenseDeclared": "LicenseRef-X4S3RBZNMH5D74K6",
+      "licenseConcluded": "LicenseRef-I2EA4DPB7PVILCG5",
+      "licenseDeclared": "LicenseRef-I2EA4DPB7PVILCG5",
       "name": "libgpg-error0",
       "supplier": "Organization: Debian GnuPG Maintainers <pkg-gnupg-maint@lists.alioth.debian.org>",
       "versionInfo": "1.51-4"
@@ -4735,8 +4735,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-EBX67NJHKAYNTEVK",
-      "licenseDeclared": "LicenseRef-EBX67NJHKAYNTEVK",
+      "licenseConcluded": "LicenseRef-VOREVPOIQQ3U45K2",
+      "licenseDeclared": "LicenseRef-VOREVPOIQQ3U45K2",
       "name": "libhogweed6t64",
       "supplier": "Organization: Magnus Holmgren <holmgren@debian.org>",
       "versionInfo": "3.10.1-1"
@@ -4891,8 +4891,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-GLBBFM5PJFPZT3MC",
-      "licenseDeclared": "LicenseRef-GLBBFM5PJFPZT3MC",
+      "licenseConcluded": "LicenseRef-HUWGMAYUYBYLLAIR",
+      "licenseDeclared": "LicenseRef-HUWGMAYUYBYLLAIR",
       "name": "libidn2-0",
       "supplier": "Organization: Debian Libidn team <help-libidn@gnu.org>",
       "versionInfo": "2.3.8-2"
@@ -4969,8 +4969,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-WOGE2RCZLD3AAZHV",
-      "licenseDeclared": "LicenseRef-WOGE2RCZLD3AAZHV",
+      "licenseConcluded": "LicenseRef-5QPGGEGWEA4GNMSQ",
+      "licenseDeclared": "LicenseRef-5QPGGEGWEA4GNMSQ",
       "name": "libjson-perl",
       "supplier": "Organization: Debian Perl Group <pkg-perl-maintainers@lists.alioth.debian.org>",
       "versionInfo": "4.10000-1"
@@ -5515,8 +5515,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-JK36H2YQ754QS6LP",
-      "licenseDeclared": "LicenseRef-JK36H2YQ754QS6LP",
+      "licenseConcluded": "LicenseRef-FH6FTND4FP67IBCE",
+      "licenseDeclared": "LicenseRef-FH6FTND4FP67IBCE",
       "name": "libldap2",
       "supplier": "Organization: Debian OpenLDAP Maintainers <pkg-openldap-devel@lists.alioth.debian.org>",
       "versionInfo": "2.6.10+dfsg-1"
@@ -5671,8 +5671,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "GPL-2.0-or-later AND BSD-2-Clause AND BSD-2-Clause OR GPL-2.0-or-later",
-      "licenseDeclared": "GPL-2.0-or-later AND BSD-2-Clause AND BSD-2-Clause OR GPL-2.0-or-later",
+      "licenseConcluded": "GPL-2.0-or-later AND BSD-2-Clause AND (BSD-2-Clause OR GPL-2.0-or-later)",
+      "licenseDeclared": "GPL-2.0-or-later AND BSD-2-Clause AND (BSD-2-Clause OR GPL-2.0-or-later)",
       "name": "liblz4-1",
       "supplier": "Organization: Nobuhiro Iwamatsu <iwamatsu@debian.org>",
       "versionInfo": "1.10.0-4"
@@ -6061,8 +6061,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-EBX67NJHKAYNTEVK",
-      "licenseDeclared": "LicenseRef-EBX67NJHKAYNTEVK",
+      "licenseConcluded": "LicenseRef-VOREVPOIQQ3U45K2",
+      "licenseDeclared": "LicenseRef-VOREVPOIQQ3U45K2",
       "name": "libnettle8t64",
       "supplier": "Organization: Magnus Holmgren <holmgren@debian.org>",
       "versionInfo": "3.10.1-1"
@@ -6373,8 +6373,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-ZGEOBK7CDOEZKRKQ",
-      "licenseDeclared": "LicenseRef-ZGEOBK7CDOEZKRKQ",
+      "licenseConcluded": "LicenseRef-7GCBIHCLS5MBGTUD",
+      "licenseDeclared": "LicenseRef-7GCBIHCLS5MBGTUD",
       "name": "libpam-modules-bin",
       "supplier": "Organization: Sam Hartman <hartmans@debian.org>",
       "versionInfo": "1.7.0-5"
@@ -6451,8 +6451,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-ZGEOBK7CDOEZKRKQ",
-      "licenseDeclared": "LicenseRef-ZGEOBK7CDOEZKRKQ",
+      "licenseConcluded": "LicenseRef-7GCBIHCLS5MBGTUD",
+      "licenseDeclared": "LicenseRef-7GCBIHCLS5MBGTUD",
       "name": "libpam-modules",
       "supplier": "Organization: Sam Hartman <hartmans@debian.org>",
       "versionInfo": "1.7.0-5"
@@ -6535,8 +6535,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-ZGEOBK7CDOEZKRKQ",
-      "licenseDeclared": "LicenseRef-ZGEOBK7CDOEZKRKQ",
+      "licenseConcluded": "LicenseRef-7GCBIHCLS5MBGTUD",
+      "licenseDeclared": "LicenseRef-7GCBIHCLS5MBGTUD",
       "name": "libpam-runtime",
       "supplier": "Organization: Sam Hartman <hartmans@debian.org>",
       "versionInfo": "1.7.0-5"
@@ -6619,8 +6619,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-ZGEOBK7CDOEZKRKQ",
-      "licenseDeclared": "LicenseRef-ZGEOBK7CDOEZKRKQ",
+      "licenseConcluded": "LicenseRef-7GCBIHCLS5MBGTUD",
+      "licenseDeclared": "LicenseRef-7GCBIHCLS5MBGTUD",
       "name": "libpam0g",
       "supplier": "Organization: Sam Hartman <hartmans@debian.org>",
       "versionInfo": "1.7.0-5"
@@ -6775,8 +6775,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-THG5W5JIEVLPKSXY",
-      "licenseDeclared": "LicenseRef-THG5W5JIEVLPKSXY",
+      "licenseConcluded": "LicenseRef-TFJSLK4UFMEUPNPF",
+      "licenseDeclared": "LicenseRef-TFJSLK4UFMEUPNPF",
       "name": "libperl5.40",
       "supplier": "Organization: Niko Tyni <ntyni@debian.org>",
       "versionInfo": "5.40.1-6"
@@ -6853,8 +6853,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-THRHKFDTY52C66NA",
-      "licenseDeclared": "LicenseRef-THRHKFDTY52C66NA",
+      "licenseConcluded": "LicenseRef-AJFVBFIXIED3A6RW",
+      "licenseDeclared": "LicenseRef-AJFVBFIXIED3A6RW",
       "name": "libpq5",
       "supplier": "Organization: Debian PostgreSQL Maintainers <team+postgresql@tracker.debian.org>",
       "versionInfo": "18.4-1.pgdg13+1"
@@ -7087,8 +7087,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-KORRTCF577NE6K42",
-      "licenseDeclared": "LicenseRef-KORRTCF577NE6K42",
+      "licenseConcluded": "LicenseRef-DZ4XUCLCEKDCGPDC",
+      "licenseDeclared": "LicenseRef-DZ4XUCLCEKDCGPDC",
       "name": "libsasl2-2",
       "supplier": "Organization: Debian Cyrus Team <team+cyrus@tracker.debian.org>",
       "versionInfo": "2.1.28+dfsg1-9"
@@ -7165,8 +7165,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-KORRTCF577NE6K42",
-      "licenseDeclared": "LicenseRef-KORRTCF577NE6K42",
+      "licenseConcluded": "LicenseRef-DZ4XUCLCEKDCGPDC",
+      "licenseDeclared": "LicenseRef-DZ4XUCLCEKDCGPDC",
       "name": "libsasl2-modules-db",
       "supplier": "Organization: Debian Cyrus Team <team+cyrus@tracker.debian.org>",
       "versionInfo": "2.1.28+dfsg1-9"
@@ -7789,8 +7789,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-QJT66QY4DRBOGEEI",
-      "licenseDeclared": "LicenseRef-QJT66QY4DRBOGEEI",
+      "licenseConcluded": "LicenseRef-XN5A5P33PTMKGOOL",
+      "licenseDeclared": "LicenseRef-XN5A5P33PTMKGOOL",
       "name": "libssl3t64",
       "supplier": "Organization: Debian OpenSSL Team <pkg-openssl-devel@alioth-lists.debian.net>",
       "versionInfo": "3.5.6-1~deb13u2"
@@ -8107,8 +8107,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-WOGE2RCZLD3AAZHV",
-      "licenseDeclared": "LicenseRef-WOGE2RCZLD3AAZHV",
+      "licenseConcluded": "LicenseRef-5QPGGEGWEA4GNMSQ",
+      "licenseDeclared": "LicenseRef-5QPGGEGWEA4GNMSQ",
       "name": "libtext-charwidth-perl",
       "supplier": "Organization: Debian Perl Group <pkg-perl-maintainers@lists.alioth.debian.org>",
       "versionInfo": "0.04-11+b4"
@@ -8185,8 +8185,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-WOGE2RCZLD3AAZHV",
-      "licenseDeclared": "LicenseRef-WOGE2RCZLD3AAZHV",
+      "licenseConcluded": "LicenseRef-5QPGGEGWEA4GNMSQ",
+      "licenseDeclared": "LicenseRef-5QPGGEGWEA4GNMSQ",
       "name": "libtext-wrapi18n-perl",
       "supplier": "Organization: Debian Perl Group <pkg-perl-maintainers@lists.alioth.debian.org>",
       "versionInfo": "0.06-10"
@@ -8419,8 +8419,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-LUT4V7ZTPEE7I7GN",
-      "licenseDeclared": "LicenseRef-LUT4V7ZTPEE7I7GN",
+      "licenseConcluded": "LicenseRef-J4BNWHF7BROIFPOY",
+      "licenseDeclared": "LicenseRef-J4BNWHF7BROIFPOY",
       "name": "libunistring5",
       "supplier": "Organization: Jörg Frings-Fürst <debian@jff.email>",
       "versionInfo": "1.3-2"
@@ -8731,8 +8731,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "BSD-2-Clause AND GPL-2.0-or-later AND BSD-2-Clause OR GPL-2.0-or-later",
-      "licenseDeclared": "BSD-2-Clause AND GPL-2.0-or-later AND BSD-2-Clause OR GPL-2.0-or-later",
+      "licenseConcluded": "BSD-2-Clause AND GPL-2.0-or-later AND (BSD-2-Clause OR GPL-2.0-or-later)",
+      "licenseDeclared": "BSD-2-Clause AND GPL-2.0-or-later AND (BSD-2-Clause OR GPL-2.0-or-later)",
       "name": "libxxhash0",
       "supplier": "Organization: Josue Ortega <josue@debian.org>",
       "versionInfo": "0.8.3-2"
@@ -8887,8 +8887,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "BSD-3-Clause OR GPL-2.0-only AND Zlib AND MIT AND GPL-2.0-only AND BSD-3-Clause",
-      "licenseDeclared": "BSD-3-Clause OR GPL-2.0-only AND Zlib AND MIT AND GPL-2.0-only AND BSD-3-Clause",
+      "licenseConcluded": "(BSD-3-Clause OR GPL-2.0-only) AND Zlib AND MIT AND GPL-2.0-only AND BSD-3-Clause",
+      "licenseDeclared": "(BSD-3-Clause OR GPL-2.0-only) AND Zlib AND MIT AND GPL-2.0-only AND BSD-3-Clause",
       "name": "libzstd1",
       "supplier": "Organization: RPM packaging team <team+pkg-rpm@tracker.debian.org>",
       "versionInfo": "1.5.7+dfsg-1"
@@ -8971,8 +8971,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-RHDXRPDMHY6H2HJT",
-      "licenseDeclared": "LicenseRef-RHDXRPDMHY6H2HJT",
+      "licenseConcluded": "LicenseRef-6OWDBRKZ53O6DNWB",
+      "licenseDeclared": "LicenseRef-6OWDBRKZ53O6DNWB",
       "name": "locales",
       "supplier": "Organization: GNU Libc Maintainers <debian-glibc@lists.debian.org>",
       "versionInfo": "2.41-12+deb13u3"
@@ -9595,8 +9595,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-QJT66QY4DRBOGEEI",
-      "licenseDeclared": "LicenseRef-QJT66QY4DRBOGEEI",
+      "licenseConcluded": "LicenseRef-XN5A5P33PTMKGOOL",
+      "licenseDeclared": "LicenseRef-XN5A5P33PTMKGOOL",
       "name": "openssl-provider-legacy",
       "supplier": "Organization: Debian OpenSSL Team <pkg-openssl-devel@alioth-lists.debian.net>",
       "versionInfo": "3.5.6-1~deb13u2"
@@ -9673,8 +9673,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-QJT66QY4DRBOGEEI",
-      "licenseDeclared": "LicenseRef-QJT66QY4DRBOGEEI",
+      "licenseConcluded": "LicenseRef-XN5A5P33PTMKGOOL",
+      "licenseDeclared": "LicenseRef-XN5A5P33PTMKGOOL",
       "name": "openssl",
       "supplier": "Organization: Debian OpenSSL Team <pkg-openssl-devel@alioth-lists.debian.net>",
       "versionInfo": "3.5.6-1~deb13u2"
@@ -9829,8 +9829,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-THG5W5JIEVLPKSXY",
-      "licenseDeclared": "LicenseRef-THG5W5JIEVLPKSXY",
+      "licenseConcluded": "LicenseRef-TFJSLK4UFMEUPNPF",
+      "licenseDeclared": "LicenseRef-TFJSLK4UFMEUPNPF",
       "name": "perl-base",
       "supplier": "Organization: Niko Tyni <ntyni@debian.org>",
       "versionInfo": "5.40.1-6"
@@ -9907,8 +9907,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-THG5W5JIEVLPKSXY",
-      "licenseDeclared": "LicenseRef-THG5W5JIEVLPKSXY",
+      "licenseConcluded": "LicenseRef-TFJSLK4UFMEUPNPF",
+      "licenseDeclared": "LicenseRef-TFJSLK4UFMEUPNPF",
       "name": "perl-modules-5.40",
       "supplier": "Organization: Niko Tyni <ntyni@debian.org>",
       "versionInfo": "5.40.1-6"
@@ -9985,8 +9985,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-THG5W5JIEVLPKSXY",
-      "licenseDeclared": "LicenseRef-THG5W5JIEVLPKSXY",
+      "licenseConcluded": "LicenseRef-TFJSLK4UFMEUPNPF",
+      "licenseDeclared": "LicenseRef-TFJSLK4UFMEUPNPF",
       "name": "perl",
       "supplier": "Organization: Niko Tyni <ntyni@debian.org>",
       "versionInfo": "5.40.1-6"
@@ -10063,8 +10063,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "GPL-2.0-or-later AND GPL-2.0-only AND X11 AND LGPL-3.0-or-later OR GPL-2.0-or-later AND LGPL-3.0-or-later",
-      "licenseDeclared": "GPL-2.0-or-later AND GPL-2.0-only AND X11 AND LGPL-3.0-or-later OR GPL-2.0-or-later AND LGPL-3.0-or-later",
+      "licenseConcluded": "GPL-2.0-or-later AND GPL-2.0-only AND X11 AND (LGPL-3.0-or-later OR GPL-2.0-or-later) AND LGPL-3.0-or-later",
+      "licenseDeclared": "GPL-2.0-or-later AND GPL-2.0-only AND X11 AND (LGPL-3.0-or-later OR GPL-2.0-or-later) AND LGPL-3.0-or-later",
       "name": "pinentry-curses",
       "supplier": "Organization: Debian GnuPG Maintainers <pkg-gnupg-maint@lists.alioth.debian.org>",
       "versionInfo": "1.3.1-2"
@@ -10147,8 +10147,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-THRHKFDTY52C66NA",
-      "licenseDeclared": "LicenseRef-THRHKFDTY52C66NA",
+      "licenseConcluded": "LicenseRef-AJFVBFIXIED3A6RW",
+      "licenseDeclared": "LicenseRef-AJFVBFIXIED3A6RW",
       "name": "postgresql-16",
       "supplier": "Organization: Debian PostgreSQL Maintainers <team+postgresql@tracker.debian.org>",
       "versionInfo": "16.14-1.pgdg13+1"
@@ -10225,8 +10225,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-THRHKFDTY52C66NA",
-      "licenseDeclared": "LicenseRef-THRHKFDTY52C66NA",
+      "licenseConcluded": "LicenseRef-AJFVBFIXIED3A6RW",
+      "licenseDeclared": "LicenseRef-AJFVBFIXIED3A6RW",
       "name": "postgresql-client-16",
       "supplier": "Organization: Debian PostgreSQL Maintainers <team+postgresql@tracker.debian.org>",
       "versionInfo": "16.14-1.pgdg13+1"
@@ -10621,8 +10621,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "LicenseRef-NKCC6PCZURXYKVLL",
-      "licenseDeclared": "LicenseRef-NKCC6PCZURXYKVLL",
+      "licenseConcluded": "LicenseRef-DO5TGDMJ6TXFL4HH",
+      "licenseDeclared": "LicenseRef-DO5TGDMJ6TXFL4HH",
       "name": "sed",
       "supplier": "Organization: Clint Adams <clint@debian.org>",
       "versionInfo": "4.9-2+deb13u1"
@@ -11497,8 +11497,8 @@
         }
       ],
       "filesAnalyzed": false,
-      "licenseConcluded": "BSD-3-Clause OR GPL-2.0-only AND Zlib AND MIT AND GPL-2.0-only AND BSD-3-Clause",
-      "licenseDeclared": "BSD-3-Clause OR GPL-2.0-only AND Zlib AND MIT AND GPL-2.0-only AND BSD-3-Clause",
+      "licenseConcluded": "(BSD-3-Clause OR GPL-2.0-only) AND Zlib AND MIT AND GPL-2.0-only AND BSD-3-Clause",
+      "licenseDeclared": "(BSD-3-Clause OR GPL-2.0-only) AND Zlib AND MIT AND GPL-2.0-only AND BSD-3-Clause",
       "name": "zstd",
       "supplier": "Organization: RPM packaging team <team+pkg-rpm@tracker.debian.org>",
       "versionInfo": "1.5.7+dfsg-1"
@@ -17856,22 +17856,12 @@
       "spdxElementId": "SPDXRef-Package-DJCSHQIGR3HYZWXP"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-B55SENM7OJXJ27WJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-DJCSHQIGR3HYZWXP"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-ZR3OTAO3SIIUQJMD",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-DWJ42GC55NLOF3J6"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ENC3NA5OP4SX463G",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EBHFAGYNWA6SHUSV"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-X3NH6IKPBK5RJOYV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-EBHFAGYNWA6SHUSV"
     },
@@ -17936,32 +17926,12 @@
       "spdxElementId": "SPDXRef-Package-FQI5ENKIO7MPVHTT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-42AALSRWI64SRS3Y",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FQI5ENKIO7MPVHTT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-4JDKBRDKRE7BIZXP",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FQI5ENKIO7MPVHTT"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-4JDKBRDKRE7BIZXP",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-FQI5ENKIO7MPVHTT"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ADV62PBT36RGDNIJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FQI5ENKIO7MPVHTT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ADV62PBT36RGDNIJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FQI5ENKIO7MPVHTT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-HNDJNFYGC4ND27OD",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-FQI5ENKIO7MPVHTT"
     },

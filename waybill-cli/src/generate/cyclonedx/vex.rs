@@ -3,7 +3,8 @@
 //! Carries the VEX statements waybill makes about a scan, the same ones the
 //! OpenVEX sidecar carries beside SPDX (`openvex::vex_statements`), in
 //! CycloneDX's own vocabulary. Today they come from two sources: graded
-//! nixpkgs backports (m1035) and nixpkgs' own security declarations (m1050).
+//! nixpkgs backports (m1035, one `resolved` per component and CVE since
+//! m1436) and nixpkgs' own security declarations (m1050).
 //! waybill does not match components against advisory databases, so an empty
 //! array is not a claim that nothing is vulnerable
 //! (`docs/architecture/enrichment.md`).
@@ -95,8 +96,11 @@ impl BomRefIndex {
 /// A version statement's products go in `affects[]`. A build statement's
 /// product is the root, in `affects[]`, and its subcomponents go in
 /// `waybill:vex-subcomponent` properties: `affects[]` items allow only `ref`
-/// and `versions`, and putting the component there would assert the version
-/// itself is not affected, collapsing the two claims a backport keeps apart.
+/// and `versions`, and putting the component there would make a claim about
+/// the build a claim about the version. Since milestone 1436 a closure
+/// backport is a version-shaped statement — one `fixed` on the component's
+/// build-qualified PURL — so its entry is `resolved` on the component's own
+/// `bom-ref`; only nixpkgs declarations are build statements.
 pub fn build_vulnerabilities(statements: &[OpenVexStatement], refs: &BomRefIndex) -> (Value, usize) {
     let mut entries = Vec::new();
     let mut omitted = 0usize;
@@ -198,7 +202,7 @@ mod m1068_tests {
     use waybill_common::resolution::ResolvedComponent;
     use crate::generate::openvex::tests::{
         backport_scan, contested_scan, declared_summary, empty_integrity, mk_artifacts, mk_cfg,
-        mk_component,
+        mk_component, UNZIP_Q,
     };
     use crate::generate::{ScanArtifacts, SbomSerializer};
 
@@ -286,10 +290,11 @@ mod m1068_tests {
         assert_eq!(cdx_justification(J::VulnerableCodeCannotBeControlledByAdversary), None);
     }
 
-    /// T005 — a backport is two entries with distinct subjects, each with
-    /// its grade; a declaration names the build. Shares the mutator's keys.
+    /// T005, milestone 1436 (FR-005, SC-003) — a backport is one entry, on
+    /// the component's own build-qualified bom-ref, in state `resolved`, with
+    /// the grade; never `exploitable`, and no subcomponent property.
     #[test]
-    fn a_backport_is_two_entries_with_distinct_subjects() {
+    fn a_backport_is_one_resolved_entry_on_the_component() {
         let comps = backport_scan();
         let integ = empty_integrity();
         let arts = mk_artifacts(&comps, &integ);
@@ -299,26 +304,40 @@ mod m1068_tests {
             .map(|s| s["impact_statement"].as_str().unwrap().to_string())
             .collect();
         let v = vulns(&doc);
-        assert_eq!(v.len(), 2, "{v:#?}");
-        let unzip = ref_for(&doc, "pkg:generic/unzip@6.0");
+        assert_eq!(v.len(), 1, "{v:#?}");
+        let unzip = ref_for(&doc, UNZIP_Q);
+        assert_eq!(unzip, UNZIP_Q, "the bom-ref is the qualified PURL");
 
-        let affected = v.iter().find(|e| e["analysis"]["state"] == "exploitable").unwrap();
-        assert_eq!(affected["id"], "CVE-2019-13232");
-        assert_eq!(affected["affects"], json!([{ "ref": unzip }]));
-        assert!(subcomponents(affected).is_empty());
+        let e = &v[0];
+        assert_eq!(e["id"], "CVE-2019-13232");
+        assert_eq!(e["analysis"]["state"], "resolved");
+        assert_eq!(e["affects"], json!([{ "ref": unzip }]));
+        assert!(subcomponents(e).is_empty(), "{e:#}");
+        assert!(e["analysis"]["justification"].is_null() && e["recommendation"].is_null(), "{e:#}");
+        assert!(notes.contains(e["analysis"]["detail"].as_str().unwrap()), "{e:#}");
+        assert!(e["analysis"]["detail"].as_str().unwrap().contains("filename-derived"));
+        // Research R5: the pedigree holds no diff or commit, so the stronger
+        // state would claim evidence the document does not carry.
+        assert_ne!(e["analysis"]["state"], "resolved_with_pedigree");
+        // The keys the `sbom enrich` mutator also writes.
+        assert!(e["id"].is_string() && e["analysis"]["state"].is_string());
+        assert!(e["affects"].as_array().unwrap().iter().all(|a| a["ref"].is_string()));
+    }
 
-        let build = v.iter().find(|e| e["analysis"]["state"] == "not_affected").unwrap();
-        assert_eq!(build["analysis"]["justification"], "code_not_present");
-        assert_eq!(build["affects"], json!([{ "ref": root_ref(&doc) }]));
-        assert_eq!(subcomponents(build), vec![unzip]);
-
-        for e in &v {
-            assert!(notes.contains(e["analysis"]["detail"].as_str().unwrap()), "{e:#}");
-            assert!(e["analysis"]["state"] != "resolved_with_pedigree" && e["analysis"]["state"] != "resolved");
-            // The keys the `sbom enrich` mutator also writes.
-            assert!(e["id"].is_string() && e["analysis"]["state"].is_string());
-            assert!(e["affects"].as_array().unwrap().iter().all(|a| a["ref"].is_string()));
-        }
+    /// SC-003 (#1421) — the document never marks a patched component
+    /// exploitable for a CVE its own patches resolve.
+    #[test]
+    fn a_patched_component_is_never_marked_exploitable() {
+        let comps = backport_scan();
+        let integ = empty_integrity();
+        let doc = cdx(&mk_artifacts(&comps, &integ));
+        // CONTROL: there is an entry to look at.
+        assert!(!vulns(&doc).is_empty());
+        assert!(
+            vulns(&doc).iter().all(|e| e["analysis"]["state"] != "exploitable"),
+            "{:#?}",
+            vulns(&doc)
+        );
     }
 
     #[test]
@@ -403,13 +422,49 @@ mod m1068_tests {
         arts.nixpkgs_security_summary = Some(&s);
         let (c, o) = claim_sets(&arts);
         assert!(!o.is_empty());
-        assert_eq!(c, o, "a declaration withholding the patch-derived not_affected");
+        assert_eq!(c, o, "a declaration withholding the patch-derived fixed");
     }
 
-    /// T007.1 — under a root override the build entries name the override
-    /// root, and nothing is lost.
+    /// #1443 — the sidecar's `action_statement` is CycloneDX's
+    /// `recommendation`, on the same entries and nowhere else.
     #[test]
-    fn a_root_override_keeps_the_build_statement_on_the_new_root() {
+    fn the_action_statement_is_the_recommendation() {
+        let integ = empty_integrity();
+        let (comps, s) = contested_scan();
+        let backport = backport_scan();
+        let mut contested = mk_artifacts(&comps, &integ);
+        contested.nixpkgs_security_summary = Some(&s);
+        // Milestone 1436: a backport's `fixed` carries no action, so its
+        // document carries no recommendation; the declaration's `affected`
+        // still does.
+        for (label, arts, expect_actions) in [
+            ("backport", mk_artifacts(&backport, &integ), false),
+            ("contested", contested, true),
+        ] {
+            let actions: BTreeSet<(String, String)> = sidecar(&arts)
+                .iter()
+                .filter_map(|st| {
+                    let a = st["action_statement"].as_str()?;
+                    Some((st["vulnerability"]["name"].as_str().unwrap().to_string(), a.to_string()))
+                })
+                .collect();
+            let recommendations: BTreeSet<(String, String)> = vulns(&cdx(&arts))
+                .iter()
+                .filter_map(|e| {
+                    let r = e["recommendation"].as_str()?;
+                    assert_eq!(e["analysis"]["state"], "exploitable", "{label}: {e:#}");
+                    Some((e["id"].as_str().unwrap().to_string(), r.to_string()))
+                })
+                .collect();
+            assert_eq!(!actions.is_empty(), expect_actions, "{label}: {actions:?}");
+            assert_eq!(recommendations, actions, "{label}");
+        }
+    }
+
+    /// T007.1 — under a root override a backport entry still names its
+    /// component, and nothing is lost.
+    #[test]
+    fn a_root_override_keeps_the_backport_entry_on_its_component() {
         let comps = backport_scan();
         let integ = empty_integrity();
         let mut arts = mk_artifacts(&comps, &integ);
@@ -419,11 +474,10 @@ mod m1068_tests {
             ..Default::default()
         };
         let doc = cdx(&arts);
-        let build = vulns(&doc)
-            .into_iter()
-            .find(|e| e["analysis"]["state"] == "not_affected")
-            .unwrap();
-        assert_eq!(build["affects"], json!([{ "ref": root_ref(&doc) }]));
+        let v = vulns(&doc);
+        assert_eq!(v.len(), 1, "{v:#?}");
+        assert_eq!(v[0]["analysis"]["state"], "resolved");
+        assert_eq!(v[0]["affects"], json!([{ "ref": ref_for(&doc, UNZIP_Q) }]));
         assert_eq!(property(&doc, "waybill:vex-claims-omitted"), None);
     }
 
@@ -487,13 +541,13 @@ mod m1068_tests {
         comps.push(parent);
         let integ = empty_integrity();
         let doc = cdx(&mk_artifacts(&comps, &integ));
-        let unzip = ref_for(&doc, "pkg:generic/unzip@6.0");
+        let unzip = ref_for(&doc, UNZIP_Q);
         assert!(unzip.contains('#'), "expected a nested bom-ref, got {unzip}");
-        let affected = vulns(&doc)
+        let resolved = vulns(&doc)
             .into_iter()
-            .find(|e| e["analysis"]["state"] == "exploitable")
+            .find(|e| e["analysis"]["state"] == "resolved")
             .unwrap();
-        assert_eq!(affected["affects"], json!([{ "ref": unzip }]));
+        assert_eq!(resolved["affects"], json!([{ "ref": unzip }]));
     }
 
     /// T007.4 — a split document reaches the same path with its own
@@ -511,6 +565,35 @@ mod m1068_tests {
         let doc = cdx(&narrowed);
         assert!(vulns(&doc).is_empty());
         assert_eq!(property(&doc, "waybill:vex-claims-omitted").as_deref(), Some("1"));
+    }
+
+    /// #1436 — a `--split` document carries the backport claims of the
+    /// components it holds, and only those.
+    ///
+    /// A backport claim is derived from its component, so a document that
+    /// does not hold the component never has the claim to drop: it is not
+    /// counted in C193 there (unlike a declaration, which names the build
+    /// and so is about every document). That was milestone 1035's behaviour
+    /// as well; the claim moves with its component.
+    #[test]
+    fn a_split_document_carries_the_backport_claims_of_what_it_holds() {
+        let comps = backport_scan();
+        let integ = empty_integrity();
+        let arts = mk_artifacts(&comps, &integ);
+
+        let only_root = [comps[1].clone()];
+        let without = arts.narrow(&only_root, &[]);
+        let doc = cdx(&without);
+        assert!(vulns(&doc).is_empty(), "{:#?}", vulns(&doc));
+        assert_eq!(property(&doc, "waybill:vex-claims-omitted"), None);
+
+        let only_unzip = [comps[0].clone()];
+        let with = arts.narrow(&only_unzip, &[]);
+        let doc = cdx(&with);
+        assert_eq!(vulns(&doc).len(), 1);
+        assert_eq!(vulns(&doc)[0]["affects"], json!([{ "ref": UNZIP_Q }]));
+        assert_eq!(vulns(&doc)[0]["analysis"]["state"], "resolved");
+        assert_eq!(property(&doc, "waybill:vex-claims-omitted"), None);
     }
 
     /// T017 (US3, FR-010) — a scan with no statements is unchanged: an empty

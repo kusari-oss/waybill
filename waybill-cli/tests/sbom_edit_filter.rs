@@ -164,6 +164,72 @@ fn cdx_vulnerabilities_on_dropped_components_go_with_them() {
     assert_eq!(vulns[0]["affects"], json!([{"ref": id("express")}]));
 }
 
+/// #1422. A build statement (m1035 backport VEX) names the root in
+/// `affects[]` and the patched component in `waybill:vex-subcomponent`.
+/// Dropping that component used to fail the leftover-identifier check and
+/// write nothing.
+#[test]
+fn cdx_vex_subcomponents_on_dropped_components_go_with_them() {
+    let mut doc = read_json(&fixture("full.cdx.json"));
+    let refs: Vec<(String, String)> = components(&doc);
+    let id = |n: &str| refs.iter().find(|(_, name)| name == n).map(|(i, _)| i.clone()).unwrap();
+    let root = doc.pointer("/metadata/component/bom-ref").and_then(Value::as_str).unwrap().to_string();
+    let sub = |n: &str| json!({"name": "waybill:vex-subcomponent", "value": id(n)});
+    doc["vulnerabilities"] = json!([
+        {"id": "CVE-2026-0003", "affects": [{"ref": root}], "properties": [sub("jest-lite")]},
+        {"id": "CVE-2026-0004", "affects": [{"ref": root}], "properties": [sub("express"), sub("pretty-format-lite")]},
+    ]);
+    let dir = tempfile::tempdir().unwrap();
+    let input = dir.path().join("in.cdx.json");
+    std::fs::write(&input, serde_json::to_string_pretty(&doc).unwrap()).unwrap();
+    let e = edit(&input, &["--drop", "scope=development"]);
+    e.assert_ok();
+    assert!(e.stderr.contains("1 vulnerability statement(s) removed"), "{}", e.stderr);
+    let out = e.json();
+    let vulns = out.get("vulnerabilities").and_then(Value::as_array).cloned().unwrap_or_default();
+    let ids: Vec<&str> = vulns.iter().filter_map(|v| v.get("id").and_then(Value::as_str)).collect();
+    assert_eq!(ids, ["CVE-2026-0004"]);
+    assert_eq!(vulns[0]["properties"], json!([sub("express")]));
+    assert_conforms_like(&doc, &out, "cdx");
+}
+
+/// #1422. `--exclude-scope` is a global flag only `sbom scan` reads. On
+/// `edit` it used to parse and then do nothing.
+#[test]
+fn exclude_scope_is_refused_with_the_drop_equivalent() {
+    for extra in [&[][..], &["--drop", "name=no-such-package"][..]] {
+        let mut args = vec!["--exclude-scope", "dev,build"];
+        args.extend_from_slice(extra);
+        let e = edit(&fixture("full.cdx.json"), &args);
+        assert!(!e.status.success(), "accepted with {extra:?}");
+        assert!(e.stderr.contains("--exclude-scope"), "{}", e.stderr);
+        assert!(e.stderr.contains("--drop 'scope=development,build'"), "{}", e.stderr);
+        assert!(!e.path.exists(), "output written on failure");
+    }
+}
+
+/// #1422. `role=` matches `waybill:closure-role`, which closure members
+/// carry instead of `waybill:component-role`.
+#[test]
+fn role_selects_the_closure_role() {
+    let mut doc = read_json(&fixture("full.cdx.json"));
+    let target = components(&doc).into_iter().find(|(_, n)| n == "lodash").map(|(i, _)| i).unwrap();
+    for c in doc["components"].as_array_mut().unwrap() {
+        if c.get("bom-ref").and_then(Value::as_str) == Some(target.as_str()) {
+            let mut props = c.get("properties").and_then(Value::as_array).cloned().unwrap_or_default();
+            props.push(json!({"name": "waybill:closure-role", "value": "build-tooling"}));
+            c["properties"] = Value::Array(props);
+        }
+    }
+    let dir = tempfile::tempdir().unwrap();
+    let input = dir.path().join("in.cdx.json");
+    std::fs::write(&input, serde_json::to_string_pretty(&doc).unwrap()).unwrap();
+    let e = edit(&input, &["--drop", "role=build-tooling"]);
+    e.assert_ok();
+    assert!(e.stderr.contains("drop-components: matched 1, changed 1"), "{}", e.stderr);
+    assert!(!names(&e.json()).contains("lodash"));
+}
+
 #[test]
 fn refuses_to_drop_the_root_and_writes_nothing() {
     for (label, file) in FORMATS {
@@ -224,6 +290,273 @@ fn corpus_golden_drops_development_and_test_cleanly() {
             assert!(!text.contains(&format!("\"{p}\"")), "{file}: {p} still present");
         }
         assert_conforms_like(&input, &e.json(), file);
+        if file == "spdx-3.json" {
+            spdx3_validate_or_skip(&e.path);
+        }
+    }
+}
+
+// ---------------------------------------------------------------- 1423 US3
+
+type StrSet = std::collections::BTreeSet<String>;
+
+/// Every component PURL in a document, in any of the three formats.
+/// CycloneDX components nest (a binary's compiled-in modules sit under it),
+/// so that walk is recursive.
+fn purls(doc: &Value) -> StrSet {
+    fn cdx_walk(cs: &[Value], out: &mut StrSet) {
+        for c in cs {
+            if let Some(p) = c.get("purl").and_then(Value::as_str) {
+                out.insert(p.to_string());
+            }
+            cdx_walk(c.get("components").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]), out);
+        }
+    }
+    let mut out = StrSet::new();
+    match format_of(doc) {
+        "cdx" => {
+            if let Some(root) = doc.pointer("/metadata/component") {
+                cdx_walk(std::slice::from_ref(root), &mut out);
+            }
+            cdx_walk(doc.get("components").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]), &mut out);
+        }
+        "spdx23" => {
+            for p in doc.get("packages").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]) {
+                for r in p.get("externalRefs").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]) {
+                    if r.get("referenceType").and_then(Value::as_str) == Some("purl") {
+                        if let Some(l) = r.get("referenceLocator").and_then(Value::as_str) {
+                            out.insert(l.to_string());
+                        }
+                    }
+                }
+            }
+        }
+        _ => {
+            for e in doc.get("@graph").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]) {
+                if let Some(p) = e.get("software_packageUrl").and_then(Value::as_str) {
+                    out.insert(p.to_string());
+                }
+            }
+        }
+    }
+    out
+}
+
+/// The PURLs `--drop <selector>` removed from a document: the input's set
+/// minus the output's. Also checks the count the edit reports, so that two
+/// components sharing a PURL cannot hide a disagreement.
+fn dropped_purls(input: &Value, selector: &str, label: &str) -> StrSet {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join(format!("in.{label}"));
+    std::fs::write(&path, serde_json::to_string_pretty(input).unwrap()).unwrap();
+    let e = edit(&path, &["--drop", selector]);
+    e.assert_ok();
+    let dropped: StrSet = purls(input).difference(&purls(&e.json())).cloned().collect();
+    assert!(
+        e.stderr.contains(&format!("drop-components: matched {},", dropped.len())),
+        "{label}: `{selector}` reported a count other than the {} PURLs it removed: {}",
+        dropped.len(),
+        e.stderr
+    );
+    dropped
+}
+
+/// A closure with one member of each kind that decides the native mark:
+/// `us3lib` is linked into the artifact (`buildInputs`), `us3tool` only builds
+/// it (`nativeBuildInputs`), and `us3patch` is referenced by nothing and is
+/// emitted only because it carries `patches`. The last two are not in the
+/// artifact, and each format marks them natively: CycloneDX `scope:
+/// excluded`, SPDX 2.3 `BUILD_TOOL_OF`, SPDX 3 `usesTool` with `scope: build`.
+#[cfg(unix)]
+const US3_CLOSURE: &str = r#"{
+  "derivations": {
+    "d-root.drv": {
+      "name": "waybill-fixture-us3root-0.1.0",
+      "env": {
+        "pname": "waybill-fixture-us3root",
+        "version": "0.1.0",
+        "buildInputs": "/nix/store/h1-us3lib",
+        "nativeBuildInputs": "/nix/store/h2-us3tool"
+      },
+      "outputs": { "out": { "path": "h0-us3root" } }
+    },
+    "d-us3lib.drv": {
+      "name": "waybill-fixture-us3lib-1.0.0",
+      "env": { "pname": "waybill-fixture-us3lib", "version": "1.0.0" },
+      "outputs": { "out": { "path": "h1-us3lib" } }
+    },
+    "d-us3tool.drv": {
+      "name": "waybill-fixture-us3tool-2.0.0",
+      "env": { "pname": "waybill-fixture-us3tool", "version": "2.0.0" },
+      "outputs": { "out": { "path": "h2-us3tool" } }
+    },
+    "d-us3patch.drv": {
+      "name": "waybill-fixture-us3patch-3.0.0",
+      "env": {
+        "pname": "waybill-fixture-us3patch",
+        "version": "3.0.0",
+        "patches": "/nix/store/p1-fix.patch"
+      },
+      "outputs": { "out": { "path": "h3-us3patch" } }
+    }
+  },
+  "version": 3
+}"#;
+
+/// SC-004 / FR-010: one closure scan, edited three times with the same
+/// selector, loses the same PURLs from each document. Before 1423 the
+/// selector did not exist, and the nearest one, `scope=development`, took
+/// the excluded members from CycloneDX and none from SPDX.
+#[cfg(unix)]
+#[test]
+fn us3_scope_excluded_selects_same_set_in_three_formats() {
+    use common::nix_stub::{NixStub, Rows, DEFAULT_ATTR};
+    let project = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/closure_role_scope/project");
+    let scan = NixStub { project, closure: US3_CLOSURE, rows: Rows::Json("[]"), attr: DEFAULT_ATTR, ..Default::default() }.scan(&["--nix-closure"]);
+    let sets: Vec<(&str, StrSet)> = [("cdx", &scan.cdx), ("spdx23", &scan.spdx23), ("spdx3", &scan.spdx3)]
+        .into_iter()
+        .map(|(label, doc)| (label, dropped_purls(doc, "scope=excluded", label)))
+        .collect();
+    let cdx = &sets[0].1;
+    let has = |n: &str| cdx.iter().any(|p| p.contains(n));
+    assert!(has("waybill-fixture-us3tool"), "the build tool was not selected: {cdx:?}");
+    assert!(has("waybill-fixture-us3patch"), "the unreferenced patch-applier was not selected: {cdx:?}");
+    assert!(!has("waybill-fixture-us3lib"), "a member linked into the artifact was selected: {cdx:?}");
+    assert!(!has("waybill-fixture-us3root"), "the evaluated package was selected: {cdx:?}");
+    for (label, set) in &sets[1..] {
+        assert_eq!(set, cdx, "{label} selects a different set from CycloneDX");
+    }
+}
+
+/// A CycloneDX `scope: excluded` with no lifecycle property is how a closure
+/// member not in the artifact, and a Go module `go mod why` proved unneeded,
+/// are written. It used to be read as `development`; it is now `excluded`,
+/// and `development` still means what the lifecycle property says.
+#[test]
+fn us3_scope_development_no_longer_matches_bare_excluded() {
+    let mut doc = read_json(&fixture("full.cdx.json"));
+    let express = doc["components"].as_array_mut().unwrap().iter_mut().find(|c| c["name"] == "express").unwrap();
+    express["scope"] = json!("excluded");
+    express["properties"] = json!([{"name": "waybill:build-inclusion", "value": "not-needed"}]);
+    let express_purl = express["purl"].as_str().unwrap().to_string();
+    let name_of = |p: &String| {
+        doc["components"].as_array().unwrap().iter().find(|c| c["purl"].as_str() == Some(p)).unwrap()["name"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
+
+    let dev = dropped_purls(&doc, "scope=development", "cdx");
+    assert!(!dev.contains(&express_purl), "a bare `scope: excluded` still reads as development");
+    let dev_names: StrSet = dev.iter().map(name_of).collect();
+    assert_eq!(dev_names, ["jest-lite", "pretty-format-lite"].map(String::from).into(), "development changed");
+
+    let excluded = dropped_purls(&doc, "scope=excluded", "cdx");
+    assert_eq!(excluded, [express_purl].into(), "`scope=excluded` must take exactly the bare-excluded component");
+}
+
+/// SC-006 / US3 scenario 2: on documents whose components carry real
+/// lifecycle scopes, `scope=development` selects what it selected before
+/// 1423 — pinned from the pre-1423 binary: the fixture's dev chain, and the
+/// 16 development components of the npm-express goldens — in every format.
+/// The confusion must not run the other way either. CycloneDX writes those
+/// development components as `scope: excluded` too, and `scope=excluded`
+/// takes none of them, as it takes none from SPDX.
+#[test]
+fn us3_real_lifecycle_scopes_unchanged() {
+    let fixture_dev: StrSet = ["jest-lite", "pretty-format-lite"].map(String::from).into();
+    for (label, file) in FORMATS {
+        let input = read_json(&fixture(file));
+        let out = edit(&fixture(file), &["--drop", "scope=development"]).assert_ok().json();
+        let dropped: StrSet = names(&input).difference(&names(&out)).cloned().collect();
+        assert_eq!(dropped, fixture_dev, "{label}: `scope=development` changed");
+        assert!(dropped_purls(&input, "scope=excluded", label).is_empty(), "{label}: development read as excluded");
+    }
+
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/public_corpus/npm-express");
+    let cdx = read_json(&dir.join("cdx.json"));
+    let dev_purls: StrSet = cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|c| {
+            c["properties"].as_array().is_some_and(|ps| {
+                ps.iter().any(|p| p["name"] == "waybill:lifecycle-scope" && p["value"] == "development")
+            })
+        })
+        .filter_map(|c| c["purl"].as_str().map(str::to_string))
+        .collect();
+    assert_eq!(dev_purls.len(), 16, "the golden's development population moved; re-pin this test");
+    for file in ["cdx.json", "spdx-2.3.json", "spdx-3.json"] {
+        let input = read_json(&dir.join(file));
+        assert_eq!(dropped_purls(&input, "scope=development", file), dev_purls, "{file}: `scope=development` changed");
+        assert!(dropped_purls(&input, "scope=excluded", file).is_empty(), "{file}: development read as excluded");
+    }
+}
+
+// ---------------------------------------------------------------- #1454
+
+/// The document's references to its OpenVEX sidecar: SPDX 2.3
+/// `externalDocumentRefs[]` entries naming one, SPDX 3 `SpdxDocument`
+/// `externalRef[]` entries of type `vulnerabilityExploitabilityAssessment`.
+fn openvex_refs(doc: &Value) -> Vec<String> {
+    match format_of(doc) {
+        "spdx23" => doc["externalDocumentRefs"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|r| r["spdxDocument"].as_str())
+            .filter(|d| d.ends_with(".openvex.json"))
+            .map(str::to_string)
+            .collect(),
+        _ => doc["@graph"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|e| e["type"] == "SpdxDocument")
+            .flat_map(|e| e["externalRef"].as_array().cloned().unwrap_or_default())
+            .filter(|r| r["externalRefType"] == "vulnerabilityExploitabilityAssessment")
+            .flat_map(|r| r["locator"].as_array().cloned().unwrap_or_default())
+            .filter_map(|l| l.as_str().map(str::to_string))
+            .collect(),
+    }
+}
+
+/// #1454: the runtime-only recipe on the nix-closure-moat golden. The edited
+/// SPDX documents used to keep pointing at the original sidecar, with its
+/// SHA-256, after the edit dropped every component its statements assess;
+/// the CycloneDX edit drops the same statements from the document. An edit
+/// that drops components no longer references a sidecar it did not edit, and
+/// says so. One that touches no component keeps the reference: the sidecar
+/// still describes that document.
+#[test]
+fn i1454_an_edit_that_drops_components_drops_the_openvex_reference() {
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/public_corpus/nix-closure-moat");
+    let work = tempfile::tempdir().unwrap();
+    for file in ["spdx-2.3.json", "spdx-3.json"] {
+        let mut input = read_json(&dir.join(file));
+        unmask(&mut input);
+        // CONTROL: the golden references its sidecar, or absence below is
+        // not the edit's doing.
+        assert_eq!(openvex_refs(&input), vec!["nix-closure-moat.openvex.json".to_string()], "{file}");
+        let path = work.path().join(file);
+        std::fs::write(&path, serde_json::to_string_pretty(&input).unwrap()).unwrap();
+
+        let kept = edit(&path, &["--drop-annotations", "waybill:graph-"]);
+        kept.assert_ok();
+        assert_eq!(openvex_refs(&kept.json()), openvex_refs(&input), "{file}: no component changed");
+        assert!(!kept.stderr.contains("OpenVEX"), "{file}: {}", kept.stderr);
+
+        let e = edit(&path, &["--drop", "scope=excluded"]);
+        e.assert_ok();
+        assert!(e.stderr.contains("drop-components: matched "), "{file}: {}", e.stderr);
+        assert_eq!(openvex_refs(&e.json()), Vec::<String>::new(), "{file}: still references the original sidecar");
+        assert!(
+            e.stderr.contains("OpenVEX sidecar reference removed: nix-closure-moat.openvex.json"),
+            "{file}: the edit report must say the reference went: {}",
+            e.stderr
+        );
+        assert!(schema_errors(&e.json()).is_empty(), "{file}: {:#?}", schema_errors(&e.json()));
         if file == "spdx-3.json" {
             spdx3_validate_or_skip(&e.path);
         }

@@ -1,0 +1,612 @@
+/nix/store/i91rdxnpdryxhbhpqq2vbknlaaikks8x-moat-0.1
+├───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+├───lib/links/libHShaddock-library-1.11.0-CA5ceFiujz13YLVzlpxphc-ghc9.10.3.dylib -> /nix/store/3ka4xlp5l7zqg96c85jmikxlzpdmgki1-haddock-library-1.11.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShaddock-library-1.11.0-CA5ceFiujz13YLVzlpxphc-ghc9.10.3.dylib
+│   nix-support/propagated-build-inputs: …988l-cmark-gfm-0.2.6 /nix/store/3ka4xlp5l7zqg96c85jmikxlzpdmgki1-haddock-library-1.11.0 /nix/sto…
+│   → /nix/store/3ka4xlp5l7zqg96c85jmikxlzpdmgki1-haddock-library-1.11.0
+│   ├───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │   → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   └───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │       → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   ├───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │   │   → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   │   └───lib/links/libHSgeneric-deriving-1.14.7-8oaFSexyNZq3Bccptaye1N-ghc9.10.3.dylib -> /nix/store/0fsm5g1677yy7b6l6qdy4x1qd0hjcjgr-generic-deriving-1.14.7/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSgeneric-deriving-1.14.7-8oaFSexyNZq3Bccptaye1N-ghc9.10.3.dylib
+│   │       → /nix/store/0fsm5g1677yy7b6l6qdy4x1qd0hjcjgr-generic-deriving-1.14.7
+│   │       └───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │           → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   ├───lib/links/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib -> /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib
+│   │   → /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7
+│   │   └───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │       → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   ├───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │   │   → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   └───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │       nix-support/propagated-build-inputs: …rrkdfgxz-assoc-1.1.1 /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10 /nix/store/jr4mg…
+│   │       → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │       └───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │           nix-support/propagated-build-inputs: …/nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3 /nix/store/9…
+│   │           → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   ├───lib/links/libHSwitherable-0.5-Cd5PuUopcrOEzTpOUJNnIE-ghc9.10.3.dylib -> /nix/store/5c938cq9mw90jwjpqgnas5i3im1707sz-witherable-0.5/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSwitherable-0.5-Cd5PuUopcrOEzTpOUJNnIE-ghc9.10.3.dylib
+│   │   → /nix/store/5c938cq9mw90jwjpqgnas5i3im1707sz-witherable-0.5
+│   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …/nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4 /nix/store/2…
+│   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …-containers-0.2.20.1 /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0 …
+│   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   └───lib/links/libHSdoctest-0.24.3-I2tE28c8apfAeiW4FTKuGz-ghc9.10.3.dylib -> /nix/store/k1rip0llvb2hd2cy18sk9c25q9k6zjk7-doctest-0.24.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdoctest-0.24.3-I2tE28c8apfAeiW4FTKuGz-ghc9.10.3.dylib
+│   │   │       → /nix/store/k1rip0llvb2hd2cy18sk9c25q9k6zjk7-doctest-0.24.3
+│   │   │       ├───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │   │       │   → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   │   │       └───lib/links/libHSstringbuilder-0.5.1-HUSp4EdTKy35Nuxr3qNdN-ghc9.10.3.dylib -> /nix/store/whnwm0cvafrx9117ixk1yv2k7xzhhiy0-stringbuilder-0.5.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSstringbuilder-0.5.1-HUSp4EdTKy35Nuxr3qNdN-ghc9.10.3.dylib
+│   │   │           → /nix/store/whnwm0cvafrx9117ixk1yv2k7xzhhiy0-stringbuilder-0.5.1
+│   │   │           └───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │   │               → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   │   ├───lib/links/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib -> /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib
+│   │   │   → /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …q-uuid-types-1.0.6.1 /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0 …
+│   │   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   │   ├───lib/links/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib -> /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …zknbl8lk-these-1.2.1 /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9 /nix/store/wx…
+│   │   │   │   → /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9
+│   │   │   │   └───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │       nix-support/propagated-build-inputs: …/nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4 /nix/store/2…
+│   │   │   │       → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …x7-time-compat-1.9.9 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 /…
+│   │   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   │   │   └───lib/links/libHSnothunks-0.3.1-CRZFI6QnrwKDSjJoq3tKCL-ghc9.10.3.dylib -> /nix/store/y7l1c3s0a7nyl7ygrjr069215l6y4pbr-nothunks-0.3.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSnothunks-0.3.1-CRZFI6QnrwKDSjJoq3tKCL-ghc9.10.3.dylib
+│   │   │   │       → /nix/store/y7l1c3s0a7nyl7ygrjr069215l6y4pbr-nothunks-0.3.1
+│   │   │   │       └───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   │           lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   │           nix-support/propagated-build-inputs: …/nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0 /nix/store/2c1m…
+│   │   │   │           → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   │   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│   │   │       nix-support/propagated-build-inputs: …-QuickCheck-2.15.0.1 /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1 /nix/store/h…
+│   │   │       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+│   │   │       ├───lib/links/libHSlogict-0.8.2.0-G7F07Bc3On99NZFcTtOaxm-ghc9.10.3.dylib -> /nix/store/vnyaarglkmys33nqhcvk9kxhv77h4s7m-logict-0.8.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSlogict-0.8.2.0-G7F07Bc3On99NZFcTtOaxm-ghc9.10.3.dylib
+│   │   │       │   → /nix/store/vnyaarglkmys33nqhcvk9kxhv77h4s7m-logict-0.8.2.0
+│   │   │       │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │       │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │       │   └───lib/links/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib -> /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib
+│   │   │       │       → /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6
+│   │   │       │       └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │       │           nix-support/propagated-build-inputs: …y91-hashable-1.5.1.0 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 …
+│   │   │       │           → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │       ├───lib/links/libHStasty-smallcheck-0.8.2-9SKWlrtNMMv21Y6K6qn4fF-ghc9.10.3.dylib -> /nix/store/0zskf4cfhx5rq981al5pm052d5ap3d4q-tasty-smallcheck-0.8.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStasty-smallcheck-0.8.2-9SKWlrtNMMv21Y6K6qn4fF-ghc9.10.3.dylib
+│   │   │       │   → /nix/store/0zskf4cfhx5rq981al5pm052d5ap3d4q-tasty-smallcheck-0.8.2
+│   │   │       │   ├───lib/links/libHSlogict-0.8.2.0-G7F07Bc3On99NZFcTtOaxm-ghc9.10.3.dylib -> /nix/store/vnyaarglkmys33nqhcvk9kxhv77h4s7m-logict-0.8.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSlogict-0.8.2.0-G7F07Bc3On99NZFcTtOaxm-ghc9.10.3.dylib
+│   │   │       │   │   → /nix/store/vnyaarglkmys33nqhcvk9kxhv77h4s7m-logict-0.8.2.0
+│   │   │       │   └───lib/links/libHSsmallcheck-1.2.1.1-5lqdd7ZMfEEItloNEBA98w-ghc9.10.3.dylib -> /nix/store/434jgkh9p6q4ahgbhbkv30601xb42d95-smallcheck-1.2.1.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsmallcheck-1.2.1.1-5lqdd7ZMfEEItloNEBA98w-ghc9.10.3.dylib
+│   │   │       │       nix-support/propagated-build-inputs: …applicative-0.18.1.0 /nix/store/434jgkh9p6q4ahgbhbkv30601xb42d95-smallcheck-1.2.1.1 /nix/store/j…
+│   │   │       │       → /nix/store/434jgkh9p6q4ahgbhbkv30601xb42d95-smallcheck-1.2.1.1
+│   │   │       │       └───lib/links/libHSlogict-0.8.2.0-G7F07Bc3On99NZFcTtOaxm-ghc9.10.3.dylib -> /nix/store/vnyaarglkmys33nqhcvk9kxhv77h4s7m-logict-0.8.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSlogict-0.8.2.0-G7F07Bc3On99NZFcTtOaxm-ghc9.10.3.dylib
+│   │   │       │           nix-support/propagated-build-inputs: …/nix/store/vnyaarglkmys33nqhcvk9kxhv77h4s7m-logict-0.8.2.0 …
+│   │   │       │           → /nix/store/vnyaarglkmys33nqhcvk9kxhv77h4s7m-logict-0.8.2.0
+│   │   │       └───lib/links/libHSsmallcheck-1.2.1.1-5lqdd7ZMfEEItloNEBA98w-ghc9.10.3.dylib -> /nix/store/434jgkh9p6q4ahgbhbkv30601xb42d95-smallcheck-1.2.1.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsmallcheck-1.2.1.1-5lqdd7ZMfEEItloNEBA98w-ghc9.10.3.dylib
+│   │   │           → /nix/store/434jgkh9p6q4ahgbhbkv30601xb42d95-smallcheck-1.2.1.1
+│   │   ├───lib/links/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib -> /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …ed-traversable-0.1.4 /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0…
+│   │   │   → /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …-containers-0.2.20.1 /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0 …
+│   │   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   │   ├───lib/links/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib -> /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33
+│   │   │   ├───lib/links/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib -> /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9
+│   │   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …04ami5l-tagged-0.8.9 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 /…
+│   │   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│   │   │       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+│   │   ├───lib/links/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib -> /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib
+│   │   │   → /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9
+│   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …le-instances-0.1.2.1 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 /…
+│   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│   │       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+│   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   ├───lib/links/libHStext-iso8601-0.1.1.1-AXlmsJpFTxSIca4jJQESi8-ghc9.10.3.dylib -> /nix/store/a0fqqc3xb1054cwsyli64bm725r4v5av-text-iso8601-0.1.1.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStext-iso8601-0.1.1.1-AXlmsJpFTxSIca4jJQESi8-ghc9.10.3.dylib
+│   │   → /nix/store/a0fqqc3xb1054cwsyli64bm725r4v5av-text-iso8601-0.1.1.1
+│   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   ├───lib/links/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib -> /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib
+│   │   │   → /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33
+│   │   ├───lib/links/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib -> /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …ger-conversion-0.1.1 /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9 …
+│   │   │   → /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9
+│   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│   │       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+│   ├───lib/links/libHSparsers-0.12.12-5AGZn6nExqRmdaNIbN5vF-ghc9.10.3.dylib -> /nix/store/c96ndyqh06crf690d65mjay1zgb6w9jw-parsers-0.12.12/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSparsers-0.12.12-5AGZn6nExqRmdaNIbN5vF-ghc9.10.3.dylib
+│   │   → /nix/store/c96ndyqh06crf690d65mjay1zgb6w9jw-parsers-0.12.12
+│   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   ├───lib/links/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib -> /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib
+│   │   │   → /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33
+│   │   ├───lib/links/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib -> /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib
+│   │   │   → /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9
+│   │   ├───lib/links/libHSattoparsec-0.14.4-6umqXtlGhkP2VfT9zeF8eA-attoparsec-internal-ghc9.10.3.dylib -> /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSattoparsec-0.14.4-6umqXtlGhkP2VfT9zeF8eA-attoparsec-internal-ghc9.10.3.dylib
+│   │   │   lib/links/libHSattoparsec-0.14.4-FE25zZuY36e1nrHJr8281F-ghc9.10.3.dylib -> /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSattoparsec-0.14.4-FE25zZuY36e1nrHJr8281F-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …/nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4 /nix/store/2x…
+│   │   │   → /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4
+│   │   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   │   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│   │   │       nix-support/propagated-build-inputs: …/nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1 …
+│   │   │       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+│   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …6-scientific-0.3.8.1 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 …
+│   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   ├───lib/links/libHScharset-0.3.12-HRyIKBESH2TLfusE6bU74W-ghc9.10.3.dylib -> /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScharset-0.3.12-HRyIKBESH2TLfusE6bU74W-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …b0-attoparsec-0.14.4 /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12 /nix/store/2kld4…
+│   │   │   → /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12
+│   │   │   └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │       nix-support/propagated-build-inputs: …/nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 …
+│   │   │       → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│   │       nix-support/propagated-build-inputs: …mmq4x-charset-0.3.12 /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1 /nix/store/w…
+│   │       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+│   ├───lib/links/libHSsemialign-1.3.1.1-LdmB9SE0ZBvANF3h0UFPWU-ghc9.10.3.dylib -> /nix/store/cv96mpj8mwyv3p6k3izamspgizp26kv0-semialign-1.3.1.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemialign-1.3.1.1-LdmB9SE0ZBvANF3h0UFPWU-ghc9.10.3.dylib
+│   │   → /nix/store/cv96mpj8mwyv3p6k3izamspgizp26kv0-semialign-1.3.1.1
+│   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …-containers-0.2.20.1 /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0 …
+│   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   ├───lib/links/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib -> /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …ed-traversable-0.1.4 /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0…
+│   │   │   → /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1
+│   │   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …le-instances-0.1.2.1 /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2 /nix/store/…
+│   │   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …/nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4 /nix/store/x…
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …m-base-orphans-0.9.4 /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3 /nix/store/sn8…
+│   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …my8-bifunctors-5.6.3 /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10 /nix/store/j6j30…
+│   │   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │       nix-support/propagated-build-inputs: …formers-compat-0.7.2 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 …
+│   │   │       → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │       nix-support/propagated-build-inputs: …zknbl8lk-these-1.2.1 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 /…
+│   │       → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   ├───lib/links/libHStree-diff-0.3.4-LcqyvbidxLSG23QlHJlfcB-ghc9.10.3.dylib -> /nix/store/hpxca5yk089ilxsrpfmwafjfmm94ibdy-tree-diff-0.3.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStree-diff-0.3.4-LcqyvbidxLSG23QlHJlfcB-ghc9.10.3.dylib
+│   │   → /nix/store/hpxca5yk089ilxsrpfmwafjfmm94ibdy-tree-diff-0.3.4
+│   │   ├───lib/links/libHSinvariant-0.6.5-Lk2jk4cJEFOKXIlD9Z0cpv-ghc9.10.3.dylib -> /nix/store/8bmd0aq0xmn1vhn94j7790mkph0kjbvh-invariant-0.6.5/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSinvariant-0.6.5-Lk2jk4cJEFOKXIlD9Z0cpv-ghc9.10.3.dylib
+│   │   │   → /nix/store/8bmd0aq0xmn1vhn94j7790mkph0kjbvh-invariant-0.6.5
+│   │   │   ├───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …/nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3 /nix/store/sn8…
+│   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   ├───lib/links/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib -> /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …-contravariant-1.5.6 /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3 /nix/store/jr…
+│   │   │   │   → /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3
+│   │   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …/nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4 /nix/store/x…
+│   │   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …-contravariant-1.5.6 /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3 /nix/store/j…
+│   │   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …m-base-orphans-0.9.4 /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3 /nix/store/sn8…
+│   │   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   │   └───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │       nix-support/propagated-build-inputs: …my8-bifunctors-5.6.3 /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10 /nix/store/j6j30…
+│   │   │   │       → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …my8-bifunctors-5.6.3 /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10 /nix/store/j6j30…
+│   │   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │       nix-support/propagated-build-inputs: …-abstraction-0.7.2.0 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 …
+│   │   │       → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   ├───lib/links/libHSreflection-2.1.9-EzGGfy0HYwY6BevxZ8kL83-ghc9.10.3.dylib -> /nix/store/ak913nzya43sgp9ay40isaq4xip3igjk-reflection-2.1.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSreflection-2.1.9-EzGGfy0HYwY6BevxZ8kL83-ghc9.10.3.dylib
+│   │   │   → /nix/store/ak913nzya43sgp9ay40isaq4xip3igjk-reflection-2.1.9
+│   │   │   └───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │   │       → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   ├───lib/links/libHStyped-process-0.2.13.0-DxT4tZA7qCdADJVYrAoi6C-ghc9.10.3.dylib -> /nix/store/j6y4dfsm83fhcbh8f20qa3fr1gkr4ybd-typed-process-0.2.13.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStyped-process-0.2.13.0-DxT4tZA7qCdADJVYrAoi6C-ghc9.10.3.dylib
+│   │   │   → /nix/store/j6y4dfsm83fhcbh8f20qa3fr1gkr4ybd-typed-process-0.2.13.0
+│   │   │   ├───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   │   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │   └───lib/links/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib -> /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib
+│   │   │       nix-support/propagated-build-inputs: …/nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6 /nix/store/fj70dkva…
+│   │   │       → /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6
+│   │   ├───lib/links/libHSadjunctions-4.4.4-6wQFgbPC88w1r4zPtwh73G-ghc9.10.3.dylib -> /nix/store/jkn0ayh0j8svwcf67fkzzjzkn4pq4ggz-adjunctions-4.4.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSadjunctions-4.4.4-6wQFgbPC88w1r4zPtwh73G-ghc9.10.3.dylib
+│   │   │   → /nix/store/jkn0ayh0j8svwcf67fkzzjzkn4pq4ggz-adjunctions-4.4.4
+│   │   │   ├───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …a1dc7-comonad-5.0.10 /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3 /nix/store/q…
+│   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   ├───lib/links/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib -> /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1
+│   │   │   │   └───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │       nix-support/propagated-build-inputs: …/nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4 /nix/store/1…
+│   │   │   │       → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib -> /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …7w72awszagf-free-5.2 /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3 /nix/store/r9…
+│   │   │   │   → /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3
+│   │   │   ├───lib/links/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib -> /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …g-distributive-0.6.3 /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2 /nix/store/npm8bmc4cvj…
+│   │   │   │   → /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2
+│   │   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …a1dc7-comonad-5.0.10 /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3 /nix/store/9…
+│   │   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   │   ├───lib/links/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib -> /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …-abstraction-0.7.2.0 /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1 …
+│   │   │   │   │   → /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1
+│   │   │   │   ├───lib/links/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib -> /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …ed-traversable-0.1.4 /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3 /nix/store/r9…
+│   │   │   │   │   → /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3
+│   │   │   │   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …k3-profunctors-5.6.3 /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2 /nix/store/…
+│   │   │   │   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   │   │   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …/nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10 /nix/store/l6rc5…
+│   │   │   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   │   └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   │       → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …k3-profunctors-5.6.3 /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2 /nix/store/…
+│   │   │   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   │   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …/nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10 /nix/store/l6rc5…
+│   │   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │       → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   ├───lib/links/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib -> /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib
+│   │   │   → /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7
+│   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   ├───lib/links/libHSreducers-3.12.5-FvJYHJ7aLud400XQjjJ4xn-ghc9.10.3.dylib -> /nix/store/1kv2hz72f8dkmx1r6l67h61vcnaa6552-reducers-3.12.5/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSreducers-3.12.5-FvJYHJ7aLud400XQjjJ4xn-ghc9.10.3.dylib
+│   │   │   → /nix/store/1kv2hz72f8dkmx1r6l67h61vcnaa6552-reducers-3.12.5
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …y91-hashable-1.5.1.0 /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2 /nix/store/…
+│   │   │   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   │   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │       nix-support/propagated-build-inputs: …-semigroupoids-6.0.2 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 …
+│   │   │       → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   ├───lib/links/libHStasty-golden-2.3.6-CzR1bb82zR7BUgC5gGqRw6-ghc9.10.3.dylib -> /nix/store/3qddvcz41ajypa3f8x6wxjicqq49h7wf-tasty-golden-2.3.6/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStasty-golden-2.3.6-CzR1bb82zR7BUgC5gGqRw6-ghc9.10.3.dylib
+│   │   │   → /nix/store/3qddvcz41ajypa3f8x6wxjicqq49h7wf-tasty-golden-2.3.6
+│   │   │   ├───lib/links/libHStyped-process-0.2.13.0-DxT4tZA7qCdADJVYrAoi6C-ghc9.10.3.dylib -> /nix/store/j6y4dfsm83fhcbh8f20qa3fr1gkr4ybd-typed-process-0.2.13.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStyped-process-0.2.13.0-DxT4tZA7qCdADJVYrAoi6C-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …j462iz-temporary-1.3 /nix/store/j6y4dfsm83fhcbh8f20qa3fr1gkr4ybd-typed-process-0.2.13.0 …
+│   │   │   │   → /nix/store/j6y4dfsm83fhcbh8f20qa3fr1gkr4ybd-typed-process-0.2.13.0
+│   │   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │   └───lib/links/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib -> /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib
+│   │   │       → /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6
+│   │   ├───lib/links/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib -> /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib
+│   │   │   → /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1
+│   │   ├───lib/links/libHSwitherable-0.5-Cd5PuUopcrOEzTpOUJNnIE-ghc9.10.3.dylib -> /nix/store/5c938cq9mw90jwjpqgnas5i3im1707sz-witherable-0.5/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSwitherable-0.5-Cd5PuUopcrOEzTpOUJNnIE-ghc9.10.3.dylib
+│   │   │   → /nix/store/5c938cq9mw90jwjpqgnas5i3im1707sz-witherable-0.5
+│   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …q-uuid-types-1.0.6.1 /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0 …
+│   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   ├───lib/links/libHSkan-extensions-5.2.8-lLiuaDmBnQJgMizXnDeOn-ghc9.10.3.dylib -> /nix/store/95cyjc9wlvrybvz6xkgrzgf0dpdkw4z8-kan-extensions-5.2.8/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSkan-extensions-5.2.8-lLiuaDmBnQJgMizXnDeOn-ghc9.10.3.dylib
+│   │   │   → /nix/store/95cyjc9wlvrybvz6xkgrzgf0dpdkw4z8-kan-extensions-5.2.8
+│   │   │   ├───lib/links/libHSinvariant-0.6.5-Lk2jk4cJEFOKXIlD9Z0cpv-ghc9.10.3.dylib -> /nix/store/8bmd0aq0xmn1vhn94j7790mkph0kjbvh-invariant-0.6.5/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSinvariant-0.6.5-Lk2jk4cJEFOKXIlD9Z0cpv-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …7w72awszagf-free-5.2 /nix/store/8bmd0aq0xmn1vhn94j7790mkph0kjbvh-invariant-0.6.5 /nix/store/npm8…
+│   │   │   │   → /nix/store/8bmd0aq0xmn1vhn94j7790mkph0kjbvh-invariant-0.6.5
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSadjunctions-4.4.4-6wQFgbPC88w1r4zPtwh73G-ghc9.10.3.dylib -> /nix/store/jkn0ayh0j8svwcf67fkzzjzkn4pq4ggz-adjunctions-4.4.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSadjunctions-4.4.4-6wQFgbPC88w1r4zPtwh73G-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …/nix/store/jkn0ayh0j8svwcf67fkzzjzkn4pq4ggz-adjunctions-4.4.4 /nix/store/sn…
+│   │   │   │   → /nix/store/jkn0ayh0j8svwcf67fkzzjzkn4pq4ggz-adjunctions-4.4.4
+│   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …-contravariant-1.5.6 /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3 /nix/store/q…
+│   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   ├───lib/links/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib -> /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1
+│   │   │   ├───lib/links/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib -> /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …jbvh-invariant-0.6.5 /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3 /nix/store/r9…
+│   │   │   │   → /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3
+│   │   │   ├───lib/links/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib -> /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …g-distributive-0.6.3 /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2 /nix/store/8bmd0aq0xmn…
+│   │   │   │   → /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2
+│   │   │   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …k3-profunctors-5.6.3 /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2 …
+│   │   │   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   │   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …gz-adjunctions-4.4.4 /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10 /nix/store/j6j30…
+│   │   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │       → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   ├───lib/links/libHStrifecta-2.1.4-Dmvs2dJzJPT9oRdH6SdD5o-ghc9.10.3.dylib -> /nix/store/9kj1nmk2s94zchmfakqp73rrbw128fks-trifecta-2.1.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStrifecta-2.1.4-Dmvs2dJzJPT9oRdH6SdD5o-ghc9.10.3.dylib
+│   │   │   → /nix/store/9kj1nmk2s94zchmfakqp73rrbw128fks-trifecta-2.1.4
+│   │   │   ├───lib/links/libHSinvariant-0.6.5-Lk2jk4cJEFOKXIlD9Z0cpv-ghc9.10.3.dylib -> /nix/store/8bmd0aq0xmn1vhn94j7790mkph0kjbvh-invariant-0.6.5/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSinvariant-0.6.5-Lk2jk4cJEFOKXIlD9Z0cpv-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/8bmd0aq0xmn1vhn94j7790mkph0kjbvh-invariant-0.6.5
+│   │   │   ├───lib/links/libHSreflection-2.1.9-EzGGfy0HYwY6BevxZ8kL83-ghc9.10.3.dylib -> /nix/store/ak913nzya43sgp9ay40isaq4xip3igjk-reflection-2.1.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSreflection-2.1.9-EzGGfy0HYwY6BevxZ8kL83-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/ak913nzya43sgp9ay40isaq4xip3igjk-reflection-2.1.9
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHSadjunctions-4.4.4-6wQFgbPC88w1r4zPtwh73G-ghc9.10.3.dylib -> /nix/store/jkn0ayh0j8svwcf67fkzzjzkn4pq4ggz-adjunctions-4.4.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSadjunctions-4.4.4-6wQFgbPC88w1r4zPtwh73G-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/jkn0ayh0j8svwcf67fkzzjzkn4pq4ggz-adjunctions-4.4.4
+│   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   ├───lib/links/libHSreducers-3.12.5-FvJYHJ7aLud400XQjjJ4xn-ghc9.10.3.dylib -> /nix/store/1kv2hz72f8dkmx1r6l67h61vcnaa6552-reducers-3.12.5/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSreducers-3.12.5-FvJYHJ7aLud400XQjjJ4xn-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …k3-profunctors-5.6.3 /nix/store/1kv2hz72f8dkmx1r6l67h61vcnaa6552-reducers-3.12.5 /nix/store/wx8b…
+│   │   │   │   → /nix/store/1kv2hz72f8dkmx1r6l67h61vcnaa6552-reducers-3.12.5
+│   │   │   ├───lib/links/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib -> /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1
+│   │   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   │   ├───lib/links/libHSkan-extensions-5.2.8-lLiuaDmBnQJgMizXnDeOn-ghc9.10.3.dylib -> /nix/store/95cyjc9wlvrybvz6xkgrzgf0dpdkw4z8-kan-extensions-5.2.8/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSkan-extensions-5.2.8-lLiuaDmBnQJgMizXnDeOn-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/95cyjc9wlvrybvz6xkgrzgf0dpdkw4z8-kan-extensions-5.2.8
+│   │   │   ├───lib/links/libHSparsers-0.12.12-5AGZn6nExqRmdaNIbN5vF-ghc9.10.3.dylib -> /nix/store/c96ndyqh06crf690d65mjay1zgb6w9jw-parsers-0.12.12/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSparsers-0.12.12-5AGZn6nExqRmdaNIbN5vF-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …7c7abx44i-lens-5.3.6 /nix/store/c96ndyqh06crf690d65mjay1zgb6w9jw-parsers-0.12.12 /nix/store/ylyi…
+│   │   │   │   → /nix/store/c96ndyqh06crf690d65mjay1zgb6w9jw-parsers-0.12.12
+│   │   │   ├───lib/links/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib -> /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1
+│   │   │   ├───lib/links/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib -> /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …-ansi-terminal-1.1.3 /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3 /nix/store/1k…
+│   │   │   │   → /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3
+│   │   │   ├───lib/links/libHSlens-5.3.6-A9OJukQ6IMHJxaibvHXHiN-ghc9.10.3.dylib -> /nix/store/plfd6agmprr742m66z4masg7c7abx44i-lens-5.3.6/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSlens-5.3.6-A9OJukQ6IMHJxaibvHXHiN-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …ed-traversable-0.1.4 /nix/store/plfd6agmprr742m66z4masg7c7abx44i-lens-5.3.6 /nix/store/c96ndyqh0…
+│   │   │   │   → /nix/store/plfd6agmprr742m66z4masg7c7abx44i-lens-5.3.6
+│   │   │   │   ├───lib/links/libHSinvariant-0.6.5-Lk2jk4cJEFOKXIlD9Z0cpv-ghc9.10.3.dylib -> /nix/store/8bmd0aq0xmn1vhn94j7790mkph0kjbvh-invariant-0.6.5/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSinvariant-0.6.5-Lk2jk4cJEFOKXIlD9Z0cpv-ghc9.10.3.dylib
+│   │   │   │   │   → /nix/store/8bmd0aq0xmn1vhn94j7790mkph0kjbvh-invariant-0.6.5
+│   │   │   │   ├───lib/links/libHSreflection-2.1.9-EzGGfy0HYwY6BevxZ8kL83-ghc9.10.3.dylib -> /nix/store/ak913nzya43sgp9ay40isaq4xip3igjk-reflection-2.1.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSreflection-2.1.9-EzGGfy0HYwY6BevxZ8kL83-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …k3-profunctors-5.6.3 /nix/store/ak913nzya43sgp9ay40isaq4xip3igjk-reflection-2.1.9 /nix/store/r93…
+│   │   │   │   │   → /nix/store/ak913nzya43sgp9ay40isaq4xip3igjk-reflection-2.1.9
+│   │   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …rrkdfgxz-assoc-1.1.1 /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4 /nix/store/x…
+│   │   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   │   ├───lib/links/libHSadjunctions-4.4.4-6wQFgbPC88w1r4zPtwh73G-ghc9.10.3.dylib -> /nix/store/jkn0ayh0j8svwcf67fkzzjzkn4pq4ggz-adjunctions-4.4.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSadjunctions-4.4.4-6wQFgbPC88w1r4zPtwh73G-ghc9.10.3.dylib
+│   │   │   │   │   → /nix/store/jkn0ayh0j8svwcf67fkzzjzkn4pq4ggz-adjunctions-4.4.4
+│   │   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …-contravariant-1.5.6 /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3 /nix/store/q…
+│   │   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …m-base-orphans-0.9.4 /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3 /nix/store/4nh…
+│   │   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   │   ├───lib/links/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib -> /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStransformers-base-0.4.6.1-8BE6w54QTZE7Io30ftunuG-ghc9.10.3.dylib
+│   │   │   │   │   → /nix/store/5bqi9r60ah3qi22b5zwbzrrnybi4glx0-transformers-base-0.4.6.1
+│   │   │   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …-containers-0.2.20.1 /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0 …
+│   │   │   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   │   │   ├───lib/links/libHSkan-extensions-5.2.8-lLiuaDmBnQJgMizXnDeOn-ghc9.10.3.dylib -> /nix/store/95cyjc9wlvrybvz6xkgrzgf0dpdkw4z8-kan-extensions-5.2.8/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSkan-extensions-5.2.8-lLiuaDmBnQJgMizXnDeOn-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …le-instances-0.1.2.1 /nix/store/95cyjc9wlvrybvz6xkgrzgf0dpdkw4z8-kan-extensions-5.2.8 /nix/store…
+│   │   │   │   │   → /nix/store/95cyjc9wlvrybvz6xkgrzgf0dpdkw4z8-kan-extensions-5.2.8
+│   │   │   │   ├───lib/links/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib -> /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …ed-traversable-0.1.4 /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0…
+│   │   │   │   │   → /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1
+│   │   │   │   ├───lib/links/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib -> /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …glw-parallel-3.2.2.0 /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3 /nix/store/ak…
+│   │   │   │   │   → /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3
+│   │   │   │   ├───lib/links/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib -> /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …g-distributive-0.6.3 /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2 /nix/store/20lhxs9q2ah…
+│   │   │   │   │   → /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2
+│   │   │   │   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …gjk-reflection-2.1.9 /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2 /nix/store/…
+│   │   │   │   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   │   │   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │   │   nix-support/propagated-build-inputs: …33i-call-stack-0.4.0 /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10 /nix/store/j6j30…
+│   │   │   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   │   └───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   │       nix-support/propagated-build-inputs: …zknbl8lk-these-1.2.1 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 /…
+│   │   │   │       → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │   ├───lib/links/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib -> /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2
+│   │   │   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   │   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …mmq4x-charset-0.3.12 /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10 /nix/store/1i7sc…
+│   │   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   ├───lib/links/libHSattoparsec-0.14.4-6umqXtlGhkP2VfT9zeF8eA-attoparsec-internal-ghc9.10.3.dylib -> /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSattoparsec-0.14.4-6umqXtlGhkP2VfT9zeF8eA-attoparsec-internal-ghc9.10.3.dylib
+│   │   │   │   lib/links/libHSattoparsec-0.14.4-FE25zZuY36e1nrHJr8281F-ghc9.10.3.dylib -> /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSattoparsec-0.14.4-FE25zZuY36e1nrHJr8281F-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4
+│   │   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …6552-reducers-3.12.5 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 /…
+│   │   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │   ├───lib/links/libHScharset-0.3.12-HRyIKBESH2TLfusE6bU74W-ghc9.10.3.dylib -> /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScharset-0.3.12-HRyIKBESH2TLfusE6bU74W-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …blaze-markup-0.8.3.0 /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12 /nix/store/sn8bj…
+│   │   │   │   → /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12
+│   │   │   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│   │   │       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+│   │   ├───lib/links/libHStext-iso8601-0.1.1.1-AXlmsJpFTxSIca4jJQESi8-ghc9.10.3.dylib -> /nix/store/a0fqqc3xb1054cwsyli64bm725r4v5av-text-iso8601-0.1.1.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStext-iso8601-0.1.1.1-AXlmsJpFTxSIca4jJQESi8-ghc9.10.3.dylib
+│   │   │   → /nix/store/a0fqqc3xb1054cwsyli64bm725r4v5av-text-iso8601-0.1.1.1
+│   │   ├───lib/links/libHSparsers-0.12.12-5AGZn6nExqRmdaNIbN5vF-ghc9.10.3.dylib -> /nix/store/c96ndyqh06crf690d65mjay1zgb6w9jw-parsers-0.12.12/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSparsers-0.12.12-5AGZn6nExqRmdaNIbN5vF-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …y91-hashable-1.5.1.0 /nix/store/c96ndyqh06crf690d65mjay1zgb6w9jw-parsers-0.12.12 /nix/store/3qif…
+│   │   │   → /nix/store/c96ndyqh06crf690d65mjay1zgb6w9jw-parsers-0.12.12
+│   │   ├───lib/links/libHSsemialign-1.3.1.1-LdmB9SE0ZBvANF3h0UFPWU-ghc9.10.3.dylib -> /nix/store/cv96mpj8mwyv3p6k3izamspgizp26kv0-semialign-1.3.1.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemialign-1.3.1.1-LdmB9SE0ZBvANF3h0UFPWU-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …6-scientific-0.3.8.1 /nix/store/cv96mpj8mwyv3p6k3izamspgizp26kv0-semialign-1.3.1.1 /nix/store/i2…
+│   │   │   → /nix/store/cv96mpj8mwyv3p6k3izamspgizp26kv0-semialign-1.3.1.1
+│   │   ├───lib/links/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib -> /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib
+│   │   │   → /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1
+│   │   ├───lib/links/libHSnetwork-uri-2.6.4.2-M7izdSqyPUTRMMImAiRf-ghc9.10.3.dylib -> /nix/store/n8p5wn8kv73xv02ikirf7fnn7i4qd37s-network-uri-2.6.4.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSnetwork-uri-2.6.4.2-M7izdSqyPUTRMMImAiRf-ghc9.10.3.dylib
+│   │   │   → /nix/store/n8p5wn8kv73xv02ikirf7fnn7i4qd37s-network-uri-2.6.4.2
+│   │   │   └───lib/links/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib -> /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib
+│   │   │       nix-support/propagated-build-inputs: …/nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7 …
+│   │   │       → /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7
+│   │   ├───lib/links/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib -> /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSprofunctors-5.6.3-41K1mgVlzB4DpaJmImcN7V-ghc9.10.3.dylib
+│   │   │   → /nix/store/npm8bmc4cvj7csxn12a73a5yjhbdhck3-profunctors-5.6.3
+│   │   ├───lib/links/libHSlens-5.3.6-A9OJukQ6IMHJxaibvHXHiN-ghc9.10.3.dylib -> /nix/store/plfd6agmprr742m66z4masg7c7abx44i-lens-5.3.6/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSlens-5.3.6-A9OJukQ6IMHJxaibvHXHiN-ghc9.10.3.dylib
+│   │   │   → /nix/store/plfd6agmprr742m66z4masg7c7abx44i-lens-5.3.6
+│   │   ├───lib/links/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib -> /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSfree-5.2-8iGW1Vchdt5Elj839HJ05t-ghc9.10.3.dylib
+│   │   │   → /nix/store/qa5dw8g19vnw89534b41f7w72awszagf-free-5.2
+│   │   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   │   ├───lib/links/libHSaeson-2.2.4.1-NQ4HYX6Wd2H2KWSK5cg0l-ghc9.10.3.dylib -> /nix/store/rc1w9kn1vrvnfq8d4jlbs68amwlrzfhq-aeson-2.2.4.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSaeson-2.2.4.1-NQ4HYX6Wd2H2KWSK5cg0l-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …/nix/store/rc1w9kn1vrvnfq8d4jlbs68amwlrzfhq-aeson-2.2.4.1 /nix/store/xlbcl0…
+│   │   │   → /nix/store/rc1w9kn1vrvnfq8d4jlbs68amwlrzfhq-aeson-2.2.4.1
+│   │   │   ├───lib/links/libHSgeneric-deriving-1.14.7-8oaFSexyNZq3Bccptaye1N-ghc9.10.3.dylib -> /nix/store/0fsm5g1677yy7b6l6qdy4x1qd0hjcjgr-generic-deriving-1.14.7/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSgeneric-deriving-1.14.7-8oaFSexyNZq3Bccptaye1N-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/0fsm5g1677yy7b6l6qdy4x1qd0hjcjgr-generic-deriving-1.14.7
+│   │   │   ├───lib/links/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib -> /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbase-orphans-0.9.4-DWwuCJDBMG8LRjgvENAXLx-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/f3yycpvasi40kw00vfhg8ci5jscncmgm-base-orphans-0.9.4
+│   │   │   ├───lib/links/libHStyped-process-0.2.13.0-DxT4tZA7qCdADJVYrAoi6C-ghc9.10.3.dylib -> /nix/store/j6y4dfsm83fhcbh8f20qa3fr1gkr4ybd-typed-process-0.2.13.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStyped-process-0.2.13.0-DxT4tZA7qCdADJVYrAoi6C-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/j6y4dfsm83fhcbh8f20qa3fr1gkr4ybd-typed-process-0.2.13.0
+│   │   │   ├───lib/links/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib -> /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSdistributive-0.6.3-8YjN8tEw1Lv9jbWFDJ1kKV-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/l6rc50hyghxqg0xril9xjmvb5avl6yrg-distributive-0.6.3
+│   │   │   ├───lib/links/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib -> /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7
+│   │   │   ├───lib/links/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib -> /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSbifunctors-5.6.3-7SSeaFO6c2vI5P4vRNJ9C4-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/x8fdjpiyybzhq3rjkcskn0584qdpfmy8-bifunctors-5.6.3
+│   │   │   ├───lib/links/libHStasty-golden-2.3.6-CzR1bb82zR7BUgC5gGqRw6-ghc9.10.3.dylib -> /nix/store/3qddvcz41ajypa3f8x6wxjicqq49h7wf-tasty-golden-2.3.6/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStasty-golden-2.3.6-CzR1bb82zR7BUgC5gGqRw6-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/3qddvcz41ajypa3f8x6wxjicqq49h7wf-tasty-golden-2.3.6
+│   │   │   ├───lib/links/libHSwitherable-0.5-Cd5PuUopcrOEzTpOUJNnIE-ghc9.10.3.dylib -> /nix/store/5c938cq9mw90jwjpqgnas5i3im1707sz-witherable-0.5/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSwitherable-0.5-Cd5PuUopcrOEzTpOUJNnIE-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …23js-vector-0.13.2.0 /nix/store/5c938cq9mw90jwjpqgnas5i3im1707sz-witherable-0.5 …
+│   │   │   │   → /nix/store/5c938cq9mw90jwjpqgnas5i3im1707sz-witherable-0.5
+│   │   │   ├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   │   │   │   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …q-uuid-types-1.0.6.1 /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0 /nix/store/5c93…
+│   │   │   │   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+│   │   │   ├───lib/links/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib -> /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSquickcheck-instances-0.3.33-9T0JrAClzaN8LV01DchTzZ-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/6qh4firh7lqdinxphvg4vzr04hp1xq2x-quickcheck-instances-0.3.33
+│   │   │   ├───lib/links/libHStext-iso8601-0.1.1.1-AXlmsJpFTxSIca4jJQESi8-ghc9.10.3.dylib -> /nix/store/a0fqqc3xb1054cwsyli64bm725r4v5av-text-iso8601-0.1.1.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStext-iso8601-0.1.1.1-AXlmsJpFTxSIca4jJQESi8-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …04ami5l-tagged-0.8.9 /nix/store/a0fqqc3xb1054cwsyli64bm725r4v5av-text-iso8601-0.1.1.1 /nix/store…
+│   │   │   │   → /nix/store/a0fqqc3xb1054cwsyli64bm725r4v5av-text-iso8601-0.1.1.1
+│   │   │   ├───lib/links/libHSsemialign-1.3.1.1-LdmB9SE0ZBvANF3h0UFPWU-ghc9.10.3.dylib -> /nix/store/cv96mpj8mwyv3p6k3izamspgizp26kv0-semialign-1.3.1.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemialign-1.3.1.1-LdmB9SE0ZBvANF3h0UFPWU-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …6-scientific-0.3.8.1 /nix/store/cv96mpj8mwyv3p6k3izamspgizp26kv0-semialign-1.3.1.1 /nix/store/i2…
+│   │   │   │   → /nix/store/cv96mpj8mwyv3p6k3izamspgizp26kv0-semialign-1.3.1.1
+│   │   │   ├───lib/links/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib -> /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1
+│   │   │   ├───lib/links/libHSnetwork-uri-2.6.4.2-M7izdSqyPUTRMMImAiRf-ghc9.10.3.dylib -> /nix/store/n8p5wn8kv73xv02ikirf7fnn7i4qd37s-network-uri-2.6.4.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSnetwork-uri-2.6.4.2-M7izdSqyPUTRMMImAiRf-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …ger-logarithms-1.0.5 /nix/store/n8p5wn8kv73xv02ikirf7fnn7i4qd37s-network-uri-2.6.4.2 /nix/store/…
+│   │   │   │   → /nix/store/n8p5wn8kv73xv02ikirf7fnn7i4qd37s-network-uri-2.6.4.2
+│   │   │   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   │   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   │   ├───lib/links/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib -> /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …zknbl8lk-these-1.2.1 /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9 /nix/store/wx…
+│   │   │   │   → /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9
+│   │   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   │   nix-support/propagated-build-inputs: …x7-time-compat-1.9.9 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 /…
+│   │   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   │   ├───lib/links/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib -> /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib
+│   │   │   │   → /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6
+│   │   │   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│   │   │       nix-support/propagated-build-inputs: …-QuickCheck-2.15.0.1 /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1 /nix/store/c…
+│   │   │       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+│   │   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   │   ├───lib/links/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib -> /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib
+│   │   │   → /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9
+│   │   ├───lib/links/libHSattoparsec-0.14.4-6umqXtlGhkP2VfT9zeF8eA-attoparsec-internal-ghc9.10.3.dylib -> /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSattoparsec-0.14.4-6umqXtlGhkP2VfT9zeF8eA-attoparsec-internal-ghc9.10.3.dylib
+│   │   │   lib/links/libHSattoparsec-0.14.4-FE25zZuY36e1nrHJr8281F-ghc9.10.3.dylib -> /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSattoparsec-0.14.4-FE25zZuY36e1nrHJr8281F-ghc9.10.3.dylib
+│   │   │   → /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4
+│   │   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   │   nix-support/propagated-build-inputs: …zknbl8lk-these-1.2.1 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 /…
+│   │   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   │   ├───lib/links/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib -> /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSasync-2.2.6-1LXeqZ5HzCs2AiA4h0HzaZ-ghc9.10.3.dylib
+│   │   │   → /nix/store/1yr33hlay15kzgghfzgvz1lk4gmsccwp-async-2.2.6
+│   │   ├───lib/links/libHScharset-0.3.12-HRyIKBESH2TLfusE6bU74W-ghc9.10.3.dylib -> /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScharset-0.3.12-HRyIKBESH2TLfusE6bU74W-ghc9.10.3.dylib
+│   │   │   → /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12
+│   │   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│   │       nix-support/propagated-build-inputs: …-QuickCheck-2.15.0.1 /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1 /nix/store/c…
+│   │       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+│   ├───lib/links/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib -> /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSindexed-traversable-instances-0.1.2.1-GgTLhjvglTQ9EDotxbzxdv-ghc9.10.3.dylib
+│   │   → /nix/store/knirrkqcwgqczh33k50hq8j39imr0kwc-indexed-traversable-instances-0.1.2.1
+│   ├───lib/links/libHSnetwork-uri-2.6.4.2-M7izdSqyPUTRMMImAiRf-ghc9.10.3.dylib -> /nix/store/n8p5wn8kv73xv02ikirf7fnn7i4qd37s-network-uri-2.6.4.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSnetwork-uri-2.6.4.2-M7izdSqyPUTRMMImAiRf-ghc9.10.3.dylib
+│   │   → /nix/store/n8p5wn8kv73xv02ikirf7fnn7i4qd37s-network-uri-2.6.4.2
+│   ├───lib/links/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib -> /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSsemigroupoids-6.0.2-7aOxCy6ThF77Rmt28Ksjwk-ghc9.10.3.dylib
+│   │   → /nix/store/r93v8d2412rnm68qdkphwq7zn4h2i027-semigroupoids-6.0.2
+│   ├───lib/links/libHSaeson-2.2.4.1-NQ4HYX6Wd2H2KWSK5cg0l-ghc9.10.3.dylib -> /nix/store/rc1w9kn1vrvnfq8d4jlbs68amwlrzfhq-aeson-2.2.4.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSaeson-2.2.4.1-NQ4HYX6Wd2H2KWSK5cg0l-ghc9.10.3.dylib
+│   │   → /nix/store/rc1w9kn1vrvnfq8d4jlbs68amwlrzfhq-aeson-2.2.4.1
+│   ├───lib/links/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib -> /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScomonad-5.0.10-xKZyg6ukflBkHGsEg1cfG-ghc9.10.3.dylib
+│   │   → /nix/store/sn8bj3rrnwby4h9xgdc9gzw52a6a1dc7-comonad-5.0.10
+│   ├───lib/links/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib -> /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHStime-compat-1.9.9-1vASTk6FHOH4Ctuu9XDlSs-ghc9.10.3.dylib
+│   │   → /nix/store/vhpszb332pd93jf2ry091nzkhgdgqax7-time-compat-1.9.9
+│   ├───lib/links/libHSattoparsec-0.14.4-6umqXtlGhkP2VfT9zeF8eA-attoparsec-internal-ghc9.10.3.dylib -> /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSattoparsec-0.14.4-6umqXtlGhkP2VfT9zeF8eA-attoparsec-internal-ghc9.10.3.dylib
+│   │   lib/links/libHSattoparsec-0.14.4-FE25zZuY36e1nrHJr8281F-ghc9.10.3.dylib -> /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSattoparsec-0.14.4-FE25zZuY36e1nrHJr8281F-ghc9.10.3.dylib
+│   │   → /nix/store/imn3a9x2fvaz8g7zf2qm5x7lfysj93b0-attoparsec-0.14.4
+│   ├───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+│   │   → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1
+│   ├───lib/links/libHScharset-0.3.12-HRyIKBESH2TLfusE6bU74W-ghc9.10.3.dylib -> /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHScharset-0.3.12-HRyIKBESH2TLfusE6bU74W-ghc9.10.3.dylib
+│   │   → /nix/store/2xkhn4yay7v6ld9132l3byagmlhmmq4x-charset-0.3.12
+│   └───lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib -> /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib
+│       → /nix/store/2kld4xqhx79i8plrlfxbcx00j072asg6-scientific-0.3.8.1
+├───lib/links/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib -> /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSth-compat-0.1.7-FTbBPjjm46aAtsEqIE4BQR-ghc9.10.3.dylib
+│   nix-support/propagated-build-inputs: …-abstraction-0.7.2.0 /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7 /nix/store/wx8b…
+│   → /nix/store/nzic59dqrabpslbd7d90jxxn65r0sdl5-th-compat-0.1.7
+├───lib/links/libHShspec-golden-0.2.2.0-3fD78fov41e6e1zwCDVgbS-ghc9.10.3.dylib -> /nix/store/xh9svb5wdwpahck3mjbixb5bsi6bsdcd-hspec-golden-0.2.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-golden-0.2.2.0-3fD78fov41e6e1zwCDVgbS-ghc9.10.3.dylib
+│   → /nix/store/xh9svb5wdwpahck3mjbixb5bsi6bsdcd-hspec-golden-0.2.2.0
+│   └───lib/links/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib -> /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHShspec-2.11.17-2S7L5Quo2rd3fQ7Q2YvX5z-ghc9.10.3.dylib
+│       → /nix/store/n0mppb0j2an4ljh0x9cd35g0y9ggqak8-hspec-2.11.17
+├───lib/links/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib
+│   lib/links/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib -> /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib
+│   nix-support/propagated-build-inputs: …q-uuid-types-1.0.6.1 /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0 …
+│   → /nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0
+└───lib/links/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib -> /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSunordered-containers-0.2.20.1-8vsijYVvr1c4wL4iL1azF6-ghc9.10.3.dylib
+    nix-support/propagated-build-inputs: …sdl5-th-compat-0.1.7 /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1 /…
+    → /nix/store/wx8bsjdgzjgczs1iinhlndwc13d209wr-unordered-containers-0.2.20.1

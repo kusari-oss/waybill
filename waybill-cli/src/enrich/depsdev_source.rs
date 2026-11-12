@@ -1039,6 +1039,7 @@ pub(crate) mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: purl.name().to_string(),
             version: purl.version().unwrap_or("0.0.0").to_string(),
             purl,
@@ -1563,8 +1564,13 @@ mod batch_tests {
             .filter(|r| r.url.path().ends_with("/versionbatch"))
             .count();
         assert_eq!(posts, 9, "one request per chunk");
+        // The bound is set below what sequential execution can achieve
+        // (nine 300 ms responses cannot finish in under 2.7 s), not near the
+        // ideal ~0.6 s. 1.5 s failed on loaded hosts with correct code
+        // (1.81 s on a macos-latest runner, 1.91 s in a local pre-PR gate),
+        // while 2.4 s still fails any sequential implementation.
         assert!(
-            elapsed < std::time::Duration::from_millis(1500),
+            elapsed < std::time::Duration::from_millis(2400),
             "nine 300 ms chunks took {elapsed:?}; sequential is >= 2.7 s",
         );
     }

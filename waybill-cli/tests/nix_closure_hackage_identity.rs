@@ -57,7 +57,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-aeson",
         "version": "2.2.4.1",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h1-aeson" } }
     },
@@ -66,7 +66,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-text",
         "version": "2.0.2",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h2-text" } }
     },
@@ -107,7 +107,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-ghcshell",
         "version": "7.7.7",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h8-ghcshell" } }
     },
@@ -116,7 +116,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-oddlic",
         "version": "3.1.4",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h7-oddlic" } }
     }
@@ -231,6 +231,9 @@ CLOSUREEOF
   *"#packages.aarch64-darwin") echo '["default"]' ;;
   *"#packages") echo '["aarch64-darwin"]' ;;
   "derivation show"*) echo "error: flake 'stub' does not provide attribute" >&2; exit 1 ;;
+  # m1423 (T006): intended. No store holds the evaluated output, so the scope
+  # pass takes its fallback path rather than the runtime closure.
+  "path-info"*) echo "error: path '/nix/store/stub' is not valid" >&2; exit 1 ;;
   *) echo 'stub nix: unhandled invocation' >&2; exit 1 ;;
 esac
 "##,

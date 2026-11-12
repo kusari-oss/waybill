@@ -28,6 +28,86 @@ pub const ANN_NIX_CLOSURE: &str = "waybill:nix-closure";
 /// would have to special-case.
 pub const ANN_NIX_CLOSURE_READ: &str = "waybill:nix-closure-read";
 
+/// C216 — how the closure scope marks were decided (milestone 1423).
+pub const ANN_CLOSURE_SCOPE_METHOD: &str = "waybill:closure-scope-method";
+
+/// C217 — the import-from-derivation policy Nix evaluations ran under, and
+/// nix's sandbox setting (milestone 1283).
+pub const ANN_NIX_EVALUATION_POLICY: &str = "waybill:nix-evaluation-policy";
+
+/// Milestone 1283 (#1283) — C217, how this scan's Nix evaluations were
+/// configured.
+///
+/// Emitted whenever a Nix tier (`--nix-closure` or `--nix-eval`) was admitted,
+/// on success and on degradation alike, which is why it is its own value
+/// rather than a field of C216 (absent on degradation) or C190 (absent on
+/// success) — research R4.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct NixEvaluationPolicy {
+    /// What was *requested*: `Allow` only with `--nix-allow-ifd`.
+    pub(crate) import_from_derivation: crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy,
+    /// True only when a pre-flight confirmed nix reports the requested value.
+    pub(crate) verified: bool,
+    /// nix's reported `sandbox` value, verbatim; `None` when nix reported none
+    /// or no pre-flight completed.
+    pub(crate) sandbox: Option<String>,
+}
+
+impl NixEvaluationPolicy {
+    /// The record for a pre-flight that confirmed the policy. Taking the
+    /// token is what keeps `verified: true` from being written by hand.
+    pub(crate) fn verified(
+        ifd: &crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified,
+        environment: &crate::scan_fs::package_db::nix::eval::preflight::NixEnvironment,
+    ) -> Self {
+        Self {
+            import_from_derivation: ifd.policy(),
+            verified: true,
+            sandbox: environment.sandbox.clone(),
+        }
+    }
+
+    /// The record for a tier that was admitted and whose pre-flight did not
+    /// confirm the requested policy, or never ran.
+    pub(crate) fn unverified(
+        requested: crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy,
+    ) -> Self {
+        Self {
+            import_from_derivation: requested,
+            verified: false,
+            sandbox: None,
+        }
+    }
+
+    /// Two tiers' records, as one. Verified only if both were, so a document
+    /// never claims more than the weaker tier established.
+    pub(crate) fn merge(self, other: Self) -> Self {
+        Self {
+            import_from_derivation: self.import_from_derivation,
+            verified: self.verified && other.verified,
+            sandbox: self.sandbox.or(other.sandbox),
+        }
+    }
+
+    /// The C217 wire value: a JSON object with sorted keys, identical in all
+    /// three formats. Inserted in sorted order, as C216's is, so the bytes do
+    /// not depend on whether `serde_json` preserves insertion order.
+    pub(crate) fn wire(&self) -> String {
+        let mut o = serde_json::Map::new();
+        o.insert(
+            "import-from-derivation".into(),
+            self.import_from_derivation.wire().into(),
+        );
+        o.insert(
+            "sandbox".into(),
+            self.sandbox.as_deref().map_or(Value::Null, Value::from),
+        );
+        o.insert("schema".into(), 1.into());
+        o.insert("verified".into(), self.verified.into());
+        Value::Object(o).to_string()
+    }
+}
+
 /// What one closure query contributed, as emitted at document scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NixClosureSummary {
@@ -47,7 +127,8 @@ pub struct NixClosureSummary {
     pub distinct_cves: usize,
     /// What the reader saw but did not consult (#1348).
     pub read_outcome: super::derivation::ReadOutcome,
-    /// Dependency edges the closure contributed (milestone 1280, FR-008).
+    /// Dependency edges the closure contributed (milestone 1280, FR-008): the
+    /// distinct pairs in the document, not the `.drv`-keyed projection (#1445).
     ///
     /// Recorded so a closure that contributed **no** edges is distinguishable
     /// from one that was never read. Before milestone 1280 this was always
@@ -90,6 +171,10 @@ pub struct NixClosureSummary {
     /// an exception. Stating the figure is what makes the orphan accounting
     /// readable rather than alarming.
     pub edge_ineligible_components: usize,
+    /// Milestone 1423 (#1423) — C216, how the document's scope marks were
+    /// decided. Set by the scan after the scope pass runs; `None` until then,
+    /// and never emitted as a placeholder.
+    pub(crate) scope_method: Option<super::runtime::ScopeMethodRecord>,
 }
 
 impl NixClosureSummary {
@@ -98,19 +183,72 @@ impl NixClosureSummary {
         // total drift, and the drift would be invisible: both would still
         // produce a plausible number.
         let totals = super::patches::totals(patched);
-        // Built once and measured twice. Calling `emit::components` again for
-        // the member-role counts would be a second traversal that could
-        // disagree with the first, and the disagreement would be invisible:
-        // both numbers would look plausible.
+        let mut summary = Self {
+            attribute: closure.attribute.clone(),
+            derivations: closure.raw.derivations.len(),
+            role_counts: closure.role_counts(),
+            components_emitted: 0,
+            patches: totals.patches,
+            patches_without_cve: totals.without_cve,
+            distinct_cves: totals.distinct_cves,
+            read_outcome: closure.read_outcome.clone(),
+            edges: 0,
+            license_coverage: closure.license_coverage.clone(),
+            identifier_coverage: closure.identifiers.coverage.clone(),
+            licenses_degraded: closure.degraded_licenses.as_ref().map(|r| r.wire().to_string()),
+            member_role_counts: Default::default(),
+            components_without_member_role: 0,
+            edge_ineligible_components: 0,
+            scope_method: None,
+        };
+        // Provisional: what the closure alone would contribute, before it
+        // meets any other reader's components. The scan replaces these with
+        // [`Self::count_emitted`] over the final document; a caller holding
+        // only the closure gets the same measure over what it has.
         let components = emit::components(closure);
+        let (edges, _) = super::graph::relationships(&closure.graph, &closure.raw, &components);
+        summary.count_emitted(&components, &edges);
+        summary
+    }
+
+    /// Take `components-emitted`, its member-role breakdown and `edges` from
+    /// the components and relationships a document will be written from
+    /// (#1445).
+    ///
+    /// Called by the scan after every pass that can add, merge, rename or
+    /// remove a closure member, so each figure is checkable against the
+    /// document it is emitted in. Taken earlier they were not: `edges` was the
+    /// `.drv`-keyed projection, counted before build variants of one package
+    /// collapse onto one component (moat: 7,978 projected, 6,167 contributed),
+    /// and `--exclude-scope` removes members after the record used to be
+    /// built.
+    ///
+    /// - A closure member is a component carrying the C182 role, whether the
+    ///   closure appended it or merged it into another reader's component.
+    /// - An edge is a distinct `(from, to)` pair of a relationship the closure
+    ///   graph contributed whose endpoints are both components. A pair another
+    ///   reader also contributed is counted: it is in the document. Edges from
+    ///   other sources -- manifests, the identity pass's declared edges, the
+    ///   contents pass, the subject anchoring the emitters add -- are not, so
+    ///   a document's dependency total is at least this and usually more.
+    pub(crate) fn count_emitted(
+        &mut self,
+        components: &[waybill_common::resolution::ResolvedComponent],
+        relationships: &[waybill_common::resolution::Relationship],
+    ) {
         let mut member_role_counts: std::collections::BTreeMap<&'static str, usize> =
             super::member::MemberRole::ALL
                 .iter()
                 .map(|r| (r.wire(), 0usize))
                 .collect();
+        let mut members = 0usize;
         let mut without_member_role = 0usize;
         let mut edge_ineligible = 0usize;
-        for c in &components {
+        for c in components
+            .iter()
+            .filter(|c| c.extra_annotations.contains_key(emit::ANN_CLOSURE_ROLE))
+        {
+            members += 1;
             match c
                 .extra_annotations
                 .get(super::member::ANN_MEMBER_ROLE)
@@ -134,28 +272,26 @@ impl NixClosureSummary {
                 None => without_member_role += 1,
             }
         }
-        Self {
-            attribute: closure.attribute.clone(),
-            derivations: closure.raw.derivations.len(),
-            role_counts: closure.role_counts(),
-            components_emitted: components.len(),
-            patches: totals.patches,
-            patches_without_cve: totals.without_cve,
-            distinct_cves: totals.distinct_cves,
-            read_outcome: closure.read_outcome.clone(),
-            // The projected, `.drv`-keyed count. Deliberately not the
-            // post-join relationship count: that depends on the final
-            // component set, which does not exist when this summary is built,
-            // and a figure that changes depending on when you ask is worse
-            // than one that is explicit about what it counts.
-            edges: closure.graph.edges.len(),
-            license_coverage: closure.license_coverage.clone(),
-            identifier_coverage: closure.identifiers.coverage.clone(),
-            licenses_degraded: closure.degraded_licenses.as_ref().map(|r| r.wire().to_string()),
-            member_role_counts,
-            components_without_member_role: without_member_role,
-            edge_ineligible_components: edge_ineligible,
-        }
+        let present: std::collections::HashSet<&str> =
+            components.iter().map(|c| c.purl.as_str()).collect();
+        let edges: std::collections::BTreeSet<(&str, &str)> = relationships
+            .iter()
+            .filter(|r| super::graph::is_closure_edge(r))
+            .filter(|r| present.contains(r.from.as_str()) && present.contains(r.to.as_str()))
+            .map(|r| (r.from.as_str(), r.to.as_str()))
+            .collect();
+        self.components_emitted = members;
+        self.member_role_counts = member_role_counts;
+        self.components_without_member_role = without_member_role;
+        self.edge_ineligible_components = edge_ineligible;
+        self.edges = edges.len();
+    }
+
+    /// The C216 wire value — a JSON object with sorted keys and `schema: 1`,
+    /// identical in all three formats — or `None` when the scope pass did not
+    /// record a method.
+    pub fn closure_scope_method_wire(&self) -> Option<String> {
+        self.scope_method.as_ref().map(super::runtime::ScopeMethodRecord::wire)
     }
 
     /// The C184 wire value, identical in all three formats.
@@ -320,6 +456,7 @@ mod tests {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let roles = classify(&raw);
         let closure = ClassifiedClosure {
+            runtime: None,
             attribute: "packages.x86_64-linux.thing".into(),
             raw,
             roles,
@@ -370,6 +507,7 @@ mod tests {
         let raw = RawClosure::parse(NO_CVE).unwrap();
         let roles = classify(&raw);
         let closure = ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -402,5 +540,62 @@ mod tests {
         assert_eq!(s.role_counts.get("artifact-input").copied(), Some(1));
         // `app` is the root and Unreferenced; `lib` is an artifact input.
         assert_eq!(s.components_emitted, 1);
+    }
+
+    // ── T009 (#1283) — C217's exact bytes ───────────────────────────────
+
+    use crate::scan_fs::package_db::nix::eval::preflight::{IfdPolicy, NixEnvironment};
+    use crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified;
+
+    fn env(sandbox: Option<&str>) -> NixEnvironment {
+        NixEnvironment { sandbox: sandbox.map(str::to_string) }
+    }
+
+    #[test]
+    fn t009_c217_allowed_and_verified() {
+        let v = IfdPolicyVerified::assumed_for_test(IfdPolicy::Allow);
+        assert_eq!(
+            NixEvaluationPolicy::verified(&v, &env(Some("false"))).wire(),
+            r#"{"import-from-derivation":"allowed","sandbox":"false","schema":1,"verified":true}"#
+        );
+    }
+
+    #[test]
+    fn t009_c217_refused_and_verified() {
+        let v = IfdPolicyVerified::assumed_for_test(IfdPolicy::Refuse);
+        assert_eq!(
+            NixEvaluationPolicy::verified(&v, &env(Some("true"))).wire(),
+            r#"{"import-from-derivation":"refused","sandbox":"true","schema":1,"verified":true}"#
+        );
+    }
+
+    #[test]
+    fn t009_c217_unverified_carries_the_request_and_no_sandbox() {
+        assert_eq!(
+            NixEvaluationPolicy::unverified(IfdPolicy::Allow).wire(),
+            r#"{"import-from-derivation":"allowed","sandbox":null,"schema":1,"verified":false}"#
+        );
+    }
+
+    #[test]
+    fn t009_c217_sandbox_unreported_is_null_not_absent() {
+        let v = IfdPolicyVerified::assumed_for_test(IfdPolicy::Refuse);
+        let w = NixEvaluationPolicy::verified(&v, &env(None)).wire();
+        assert_eq!(
+            w,
+            r#"{"import-from-derivation":"refused","sandbox":null,"schema":1,"verified":true}"#
+        );
+        let parsed: serde_json::Value = serde_json::from_str(&w).unwrap();
+        assert_eq!(parsed.as_object().unwrap().len(), 4, "every key, always: {w}");
+    }
+
+    #[test]
+    fn t009_c217_merge_is_verified_only_if_both_were() {
+        let v = IfdPolicyVerified::assumed_for_test(IfdPolicy::Allow);
+        let ok = NixEvaluationPolicy::verified(&v, &env(Some("false")));
+        let merged = ok.clone().merge(NixEvaluationPolicy::unverified(IfdPolicy::Allow));
+        assert!(!merged.verified);
+        assert_eq!(merged.sandbox.as_deref(), Some("false"));
+        assert!(ok.clone().merge(ok).verified);
     }
 }

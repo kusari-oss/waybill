@@ -594,6 +594,7 @@ mod tests {
         waybill_common::resolution::ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: p.name().to_string(),
             version: p.version().unwrap_or("0.0.0").to_string(),
             purl: p,

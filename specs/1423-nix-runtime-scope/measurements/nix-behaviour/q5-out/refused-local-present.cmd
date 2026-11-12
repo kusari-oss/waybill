@@ -1,0 +1,1 @@
+env HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 nix path-info -r /nix/store/56qb7awbplza7z35iz4k8gyr2fjk2acw-curl-8.20.0-bin

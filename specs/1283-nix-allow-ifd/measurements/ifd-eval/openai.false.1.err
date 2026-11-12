@@ -1,0 +1,18 @@
+error:
+       … while evaluating the attribute 'haskellPackagesCustom.openai'
+         at /Users/mlieberman/.claude-swap-backup/sessions/1-mike_kusari.dev/jobs/e93b0155/tmp/recall-corpus/stage2/targets/openai/flake.nix:62:19:
+           61|                 (hself: hsuper: {
+           62|                   openai = hlib.dontCheck hsuper.openai;
+             |                   ^
+           63|                 })
+
+       … in the left operand of the update (//) operator
+         at «github:NixOS/nixpkgs/2c15aa5»/pkgs/development/haskell-modules/lib/compose.nix:40:7:
+           39|     mkDerivation = drv: (args.mkDerivation drv).override f;
+           40|   })) // {
+             |       ^
+           41|     overrideScope = scope: overrideCabal f (drv.overrideScope scope);
+
+       (stack trace truncated; use '--show-trace' to show the full, detailed trace)
+
+       error: cannot build '/nix/store/x8rchca8s5xxah1zkq0ysdzidsdb78f2-cabal2nix-openai.drv^out' during evaluation because the option 'allow-import-from-derivation' is disabled

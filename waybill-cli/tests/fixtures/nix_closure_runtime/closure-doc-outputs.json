@@ -1,0 +1,125 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-app-1.0.drv": {
+      "name": "waybill-fixture-app-1.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "1.0",
+        "outputs": "bin out doc",
+        "buildInputs": "/nix/store/h-ssl /nix/store/h-z /nix/store/h-xml /nix/store/h-api-doc /nix/store/h-testfw",
+        "nativeBuildInputs": "/nix/store/h-groff /nix/store/h-texinfo"
+      },
+      "inputs": {
+        "drvs": {
+          "d-ssl.drv": { "outputs": ["out"] },
+          "d-z.drv": { "outputs": ["out"] },
+          "d-xml.drv": { "outputs": ["out"] },
+          "d-apidoc.drv": { "outputs": ["out"] },
+          "d-testfw.drv": { "outputs": ["out"] },
+          "d-groff.drv": { "outputs": ["out"] },
+          "d-texinfo.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "bin": { "path": "h-app-bin" },
+        "doc": { "path": "h-app-doc" },
+        "out": { "path": "h-app" }
+      }
+    },
+    "d-ssl.drv": {
+      "name": "waybill-fixture-ssl-3.0",
+      "env": {
+        "pname": "waybill-fixture-ssl",
+        "version": "3.0",
+        "outputs": "out doc",
+        "buildInputs": "/nix/store/h-shared",
+        "nativeBuildInputs": "/nix/store/h-shell"
+      },
+      "inputs": {
+        "drvs": {
+          "d-shared.drv": { "outputs": ["out"] },
+          "d-shell.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "doc": { "path": "h-ssl-doc" }, "out": { "path": "h-ssl" } }
+    },
+    "d-shared.drv": {
+      "name": "waybill-fixture-shared-1.0",
+      "env": { "pname": "waybill-fixture-shared", "version": "1.0" },
+      "outputs": { "out": { "path": "h-shared" } }
+    },
+    "d-testfw.drv": {
+      "name": "waybill-fixture-testfw-2.11",
+      "env": { "pname": "waybill-fixture-testfw", "version": "2.11", "outputs": "out doc" },
+      "outputs": { "doc": { "path": "h-testfw-doc" }, "out": { "path": "h-testfw" } }
+    },
+    "d-shell.drv": {
+      "name": "waybill-fixture-shell-5.3",
+      "env": {
+        "pname": "waybill-fixture-shell",
+        "version": "5.3",
+        "buildInputs": "/nix/store/h-readline"
+      },
+      "inputs": { "drvs": { "d-readline.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "h-shell" } }
+    },
+    "d-readline.drv": {
+      "name": "waybill-fixture-readline-8.3",
+      "env": { "pname": "waybill-fixture-readline", "version": "8.3" },
+      "outputs": { "out": { "path": "h-readline" } }
+    },
+    "d-z.drv": {
+      "name": "waybill-fixture-z-1.3",
+      "env": { "pname": "waybill-fixture-z", "version": "1.3", "outputs": "out man info" },
+      "outputs": {
+        "info": { "path": "h-z-info" },
+        "man": { "path": "h-z-man" },
+        "out": { "path": "h-z" }
+      }
+    },
+    "d-groff.drv": {
+      "name": "waybill-fixture-groff-1.23",
+      "env": { "pname": "waybill-fixture-groff", "version": "1.23" },
+      "outputs": { "out": { "path": "h-groff" } }
+    },
+    "d-texinfo.drv": {
+      "name": "waybill-fixture-texinfo-7.1",
+      "env": { "pname": "waybill-fixture-texinfo", "version": "7.1" },
+      "outputs": { "out": { "path": "h-texinfo" } }
+    },
+    "d-xml.drv": {
+      "name": "waybill-fixture-xml-2.13",
+      "env": {
+        "pname": "waybill-fixture-xml",
+        "version": "2.13",
+        "outputs": "out devdoc",
+        "nativeBuildInputs": "/nix/store/h-gtkdoc"
+      },
+      "inputs": { "drvs": { "d-gtkdoc.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "devdoc": { "path": "h-xml-devdoc" }, "out": { "path": "h-xml" } }
+    },
+    "d-gtkdoc.drv": {
+      "name": "waybill-fixture-gtkdoc-1.34",
+      "env": { "pname": "waybill-fixture-gtkdoc", "version": "1.34" },
+      "outputs": { "out": { "path": "h-gtkdoc" } }
+    },
+    "d-apidoc.drv": {
+      "name": "waybill-fixture-api-doc-1.0",
+      "env": {
+        "pname": "waybill-fixture-api-doc",
+        "version": "1.0",
+        "buildInputs": "/nix/store/h-apidep"
+      },
+      "inputs": { "drvs": { "d-apidep.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "h-api-doc" } }
+    },
+    "d-apidep.drv": {
+      "name": "waybill-fixture-apidep-1.0",
+      "env": { "pname": "waybill-fixture-apidep", "version": "1.0" },
+      "outputs": { "out": { "path": "h-apidep" } }
+    }
+  },
+  "version": 4
+}

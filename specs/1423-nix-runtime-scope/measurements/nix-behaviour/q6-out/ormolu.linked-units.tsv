@@ -1,0 +1,49 @@
+ansi-terminal-1.1.5	47
+ansi-terminal-types-1.1.3	1124
+array-0.5.8.0	876
+async-2.2.6	500
+base (boot, unversioned)	5764
+binary-0.8.9.3	1467
+bytestring-0.12.2.0	2507
+Cabal-syntax-3.14.2.0	39640
+choice-0.2.4.2	183
+colour-2.3.7	845
+containers-0.7	5502
+deepseq-1.5.0.0	643
+Diff-1.0.2	165
+directory-1.3.8.5	1392
+dirty (boot, unversioned)	3
+exceptions-0.10.9	603
+filepath-1.5.4.0	481
+ghc-bignum (boot, unversioned)	1140
+ghc-boot-th-9.10.3	23
+ghc-internal (boot, unversioned)	30859
+ghc-lib-parser-9.12.3.20251228	130153
+ghc-prim (boot, unversioned)	8314
+hashable-1.5.1.0	887
+hsbase (boot, unversioned)	4
+integer-logarithms-1.0.5	83
+megaparsec-9.7.0	2701
+MemoTrie-0.6.11	560
+mtl-2.3.1	683
+newtype-generics-0.6.2	166
+optparse-applicative-0.18.1.0	2488
+ormolu-0.8.0.2	4688
+os-string-2.0.7	1157
+parsec-3.1.18.0	998
+pretty-1.1.3.6	798
+prettyprinter-1.7.1	984
+prettyprinter-ansi-terminal-1.1.3	457
+primitive-0.9.1.0	683
+process-1.6.26.1	579
+safe-exceptions-0.1.7.4	298
+scientific-0.3.8.1	443
+stg (boot, unversioned)	81
+syb-0.7.2.4	355
+template-haskell (boot, unversioned)	8686
+text-2.1.3	2664
+time-1.12.2	2745
+transformers-0.6.1.1	2720
+unix-2.8.7.0	2574
+unliftio-0.2.25.1	476
+unliftio-core-0.2.1.0	51

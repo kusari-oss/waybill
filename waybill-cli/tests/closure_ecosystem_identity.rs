@@ -14,16 +14,24 @@
 //! 200 and 404 on demand — and without those, a green run of THIS file would
 //! say nothing at all about whether confirmation works.
 //!
+//! The one exception is the #1442 section at the end, which needs a document
+//! that actually carries C207. It enables deps.dev but answers every candidate
+//! from a disk cache seeded in a temp directory, so the scan confirms without
+//! reaching the network.
+//!
 //! The fixture is JSON handed to a stub `nix`. **It is never evaluated by a
 //! real one**: on 2026-11-04 that rewrote a committed `flake.lock` and broke
 //! 11 tests in an unrelated file.
 #![cfg(unix)]
 #![allow(clippy::unwrap_used)]
 
+mod common;
+
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 
 /// The revision the fixture `flake.lock` pins.
 const REV: &str = "a799d3e3886da994fa307f817a6bc705ae538eeb";
@@ -94,6 +102,9 @@ CLOSUREEOF
   *"#packages.aarch64-darwin") echo '["default"]' ;;
   *"#packages") echo '["aarch64-darwin"]' ;;
   "derivation show"*) echo "error: flake 'stub' does not provide attribute" >&2; exit 1 ;;
+  # m1423 (T006): intended. No store holds the evaluated output, so the scope
+  # pass takes its fallback path rather than the runtime closure.
+  "path-info"*) echo "error: path '/nix/store/stub' is not valid" >&2; exit 1 ;;
   *) echo 'stub nix: unhandled invocation' >&2; exit 1 ;;
 esac
 "##,
@@ -158,11 +169,15 @@ impl Scan {
                 })
             })
         });
+        // The native half of a derivation: a concluded PURL in
+        // `evidence.identity[]`, which only the m1366 pass writes.
         let in_cdx_native = self.cdx["components"].as_array().is_some_and(|a| {
             a.iter().any(|c| {
-                serde_json::to_string(&c["evidence"])
-                    .unwrap_or_default()
-                    .contains("waybill-closure-ecosystem-evidence")
+                c["evidence"]["identity"].as_array().is_some_and(|ids| {
+                    ids.iter().any(|i| {
+                        i["field"].as_str() == Some("purl") && i.get("concludedValue").is_some()
+                    })
+                })
             })
         });
         // Exact field match, never a substring: `C207` is a strict PREFIX of
@@ -207,6 +222,58 @@ fn envelope_value(comment: &str, name: &str) -> Option<String> {
 }
 
 fn scan_closure(closure: &str) -> Scan {
+    scan_closure_with(closure, Confirmation::Disabled)
+}
+
+/// How a scan reaches confirmation.
+enum Confirmation {
+    /// `--no-deps-dev`: the corpus path, and this file's default.
+    Disabled,
+    /// deps.dev enabled, but answered entirely from a disk cache seeded in
+    /// this directory, so the scan confirms without reaching the network.
+    SeededCache(tempfile::TempDir),
+}
+
+/// A deps.dev disk cache that answers the fixture's three candidates: alpha
+/// and gamma exist, nonesuch is a recorded absence.
+///
+/// The entry layout is the one `enrich::deps_dev_disk_cache` writes. It is
+/// restated here because an integration test cannot reach that module, and a
+/// wrong restatement cannot pass silently: a missed key falls through to the
+/// live registry, which holds none of these synthetic names, so nothing
+/// confirms and the CONTROL in every test that uses this seed goes red.
+fn seeded_deps_dev_cache() -> tempfile::TempDir {
+    let dir = tempfile::tempdir().unwrap();
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    for (name, version, present) in [
+        ("waybill-fixture-alpha", "1.2.3", true),
+        ("waybill-fixture-gamma", "0.4", true),
+        ("waybill-fixture-nonesuch", "9.9.9", false),
+    ] {
+        let key = format!("pypi\u{1f}{name}\u{1f}{version}");
+        let digest = Sha256::digest(key.as_bytes());
+        let file: String = digest.iter().take(16).map(|b| format!("{b:02x}")).collect();
+        let record = if present {
+            serde_json::json!({ "licenses": [], "links": [] })
+        } else {
+            Value::Null
+        };
+        let entry = serde_json::json!({
+            "v": 1,
+            "key": key,
+            "fetched_at": now,
+            "max_age_secs": 86_400,
+            "record": record,
+        });
+        std::fs::write(dir.path().join(format!("{file}.json")), entry.to_string()).unwrap();
+    }
+    dir
+}
+
+fn scan_closure_with(closure: &str, confirmation: Confirmation) -> Scan {
     let dir = tempfile::tempdir().unwrap();
     let cache = seed_cache();
     let bin = dir.path().join("bin");
@@ -221,16 +288,37 @@ fn scan_closure(closure: &str) -> Scan {
     let cdx_path = dir.path().join("out.cdx.json");
     let spdx23_path = dir.path().join("out.spdx23.json");
     let spdx3_path = dir.path().join("out.spdx3.json");
-    let out = Command::new(binary_path())
+    let mut cmd = Command::new(binary_path());
+    cmd.args([
+        "sbom",
+        "scan",
+        "--path",
+        project().to_str().unwrap(),
+        "--no-deep-hash",
+        "--nix-closure",
+    ]);
+    match &confirmation {
+        // Hermetic, and the corpus path. See this file's header.
+        Confirmation::Disabled => {
+            cmd.arg("--no-deps-dev");
+        }
+        Confirmation::SeededCache(cache_dir) => {
+            // Every request the cache does not answer goes to a proxy nothing
+            // listens on. A miss therefore fails at the transport, leaves the
+            // candidate unchecked and trips the CONTROL, instead of quietly
+            // reaching the live registry.
+            const DEAD_PROXY: &str = "http://127.0.0.1:1";
+            cmd.env("WAYBILL_DEPS_DEV_CACHE_DIR", cache_dir.path())
+                .env_remove("WAYBILL_DEPS_DEV_NO_CACHE")
+                .env("HTTPS_PROXY", DEAD_PROXY)
+                .env("HTTP_PROXY", DEAD_PROXY)
+                .env("ALL_PROXY", DEAD_PROXY)
+                .env_remove("NO_PROXY")
+                .env_remove("no_proxy");
+        }
+    }
+    let out = cmd
         .args([
-            "sbom",
-            "scan",
-            "--path",
-            project().to_str().unwrap(),
-            "--no-deep-hash",
-            "--nix-closure",
-            // Hermetic, and the corpus path. See this file's header.
-            "--no-deps-dev",
             "--no-clearly-defined",
             "--format",
             "cyclonedx-json",
@@ -394,4 +482,172 @@ fn m1366_with_confirmation_disabled_no_component_is_re_identified() {
         !s.any_c207(),
         "the disclosure must be absent wherever no identity was derived"
     );
+}
+
+// ---------------------------------------------------------------------
+// #1442 — a document carrying C207 is schema-valid CycloneDX 1.6
+// ---------------------------------------------------------------------
+
+fn confirmed_scan() -> Scan {
+    let s = scan_closure_with(
+        &closure_json(),
+        Confirmation::SeededCache(seeded_deps_dev_cache()),
+    );
+    // CONTROL. Every assertion in this section is about components that were
+    // re-identified. If the seeded cache missed, nothing confirmed and a
+    // schema check would pass over a document with no C207 in it — which is
+    // exactly the document the existing schema tests already validate, and
+    // how #1442 shipped.
+    let purls = s.purls();
+    for want in [
+        "pkg:pypi/waybill-fixture-alpha@1.2.3",
+        "pkg:pypi/waybill-fixture-gamma@0.4",
+    ] {
+        assert!(
+            purls.contains(&want),
+            "{want} absent, so confirmation did not run and nothing below is \
+             evidence; got {purls:?}"
+        );
+    }
+    assert!(
+        purls.contains(&"pkg:generic/waybill-fixture-nonesuch@9.9.9"),
+        "the recorded absence must decline nonesuch; got {purls:?}"
+    );
+    s
+}
+
+/// The CDX component carrying `purl`, wherever it nests.
+fn cdx_component<'a>(doc: &'a Value, purl: &str) -> Option<&'a Value> {
+    fn walk<'a>(cs: &'a Value, purl: &str) -> Option<&'a Value> {
+        for c in cs.as_array()? {
+            if c["purl"].as_str() == Some(purl) {
+                return Some(c);
+            }
+            if let Some(found) = walk(&c["components"], purl) {
+                return Some(found);
+            }
+        }
+        None
+    }
+    walk(&doc["components"], purl)
+}
+
+fn cdx_property(component: &Value, name: &str) -> Option<String> {
+    component["properties"]
+        .as_array()?
+        .iter()
+        .find(|p| p["name"].as_str() == Some(name))
+        .and_then(|p| p["value"].as_str())
+        .map(str::to_string)
+}
+
+/// #1442. Before the fix the C207 method object carried a key CycloneDX 1.6
+/// does not allow, and every confirmed component made the document invalid.
+#[test]
+fn m1442_a_closure_scan_carrying_c207_is_schema_valid_cyclonedx() {
+    let s = confirmed_scan();
+    let errors = common::cdx_schema::cdx_validation_errors(&s.cdx);
+    assert!(
+        errors.is_empty(),
+        "{} CycloneDX 1.6 schema error(s):\n{}",
+        errors.len(),
+        errors.join("\n")
+    );
+}
+
+/// #1442. Moving the carrier must not lose the value: C207 is on exactly the
+/// confirmed components, in CDX as in both SPDX formats.
+#[test]
+fn m1442_c207_is_still_carried_on_each_confirmed_component() {
+    let s = confirmed_scan();
+    for purl in [
+        "pkg:pypi/waybill-fixture-alpha@1.2.3",
+        "pkg:pypi/waybill-fixture-gamma@0.4",
+    ] {
+        let c = cdx_component(&s.cdx, purl).unwrap_or_else(|| panic!("{purl} not in CDX"));
+        assert_eq!(
+            cdx_property(c, C207).as_deref(),
+            Some("versioned-interpreter-prefix"),
+            "{purl} lost its C207 disclosure: {c}"
+        );
+        // The derived identifier stays recorded natively.
+        let concluded: Vec<&str> = c["evidence"]["identity"]
+            .as_array()
+            .map(|a| {
+                a.iter()
+                    .filter(|i| i["field"].as_str() == Some("purl"))
+                    .filter_map(|i| i["concludedValue"].as_str())
+                    .collect()
+            })
+            .unwrap_or_default();
+        assert_eq!(concluded, vec![purl], "{c}");
+    }
+    let declined = cdx_component(&s.cdx, "pkg:generic/waybill-fixture-nonesuch@9.9.9")
+        .expect("nonesuch not in CDX");
+    assert_eq!(cdx_property(declined, C207), None, "{declined}");
+
+    let spdx23 = s.spdx23["annotations"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .chain(
+            s.spdx23["packages"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .flat_map(|p| p["annotations"].as_array().into_iter().flatten()),
+        )
+        .filter(|a| {
+            a["comment"]
+                .as_str()
+                .and_then(|c| envelope_value(c, C207))
+                .is_some()
+        })
+        .count();
+    let spdx3 = s.spdx3["@graph"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|el| {
+            el["statement"]
+                .as_str()
+                .and_then(|c| envelope_value(c, C207))
+                .is_some()
+        })
+        .count();
+    assert_eq!((spdx23, spdx3), (2, 2), "SPDX 2.3 / SPDX 3 C207 counts");
+}
+
+/// #1442. The project's own parity check reads C207 from the new CDX carrier
+/// and finds it equal to both SPDX formats.
+#[test]
+fn m1442_parity_check_reports_c207_present_in_every_format() {
+    let s = confirmed_scan();
+    let dir = tempfile::tempdir().unwrap();
+    for (f, v) in [
+        ("waybill.cdx.json", &s.cdx),
+        ("waybill.spdx.json", &s.spdx23),
+        ("waybill.spdx3.json", &s.spdx3),
+    ] {
+        std::fs::write(dir.path().join(f), v.to_string()).unwrap();
+    }
+    let out = Command::new(binary_path())
+        .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
+        .arg(dir.path())
+        .output()
+        .unwrap();
+    let report: Value = serde_json::from_slice(&out.stdout)
+        .unwrap_or_else(|e| panic!("{e}: {}", String::from_utf8_lossy(&out.stderr)));
+    let row = report["rows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|r| r["row_id"] == "C207")
+        .expect("a C207 row");
+    // A set of values: both confirmed components carry the one value.
+    for f in ["cdx", "spdx23", "spdx3"] {
+        assert_eq!(row[f]["kind"], "present", "{row}");
+        assert_eq!(row[f]["value_count"], 1, "{row}");
+    }
+    assert_eq!(row["universal_parity"], true, "{row}");
 }

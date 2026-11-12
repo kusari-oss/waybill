@@ -1,0 +1,1457 @@
+{
+ "openai": {
+  "C190": {
+   "detail": "       error: cannot build '/nix/store/x8rchca8s5xxah1zkq0ysdzidsdb78f2-cabal2nix-openai.drv^out' during evaluation because the option 'allow-import-from-derivation' is disabled",
+   "reason": "import-from-derivation-required"
+  },
+  "C216": null,
+  "WR_miss_counts": {
+   "no closure (degraded)": 51,
+   "no closure (degraded) [same-name component is a different package]": 1
+  },
+  "WR_misses": {
+   "no closure (degraded)": [
+    {
+     "key": [
+      "CVE-2024-12797",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2024-13176",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2024-56171",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2024-9143",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-15467",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-15468",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-24928",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-27113",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-32414",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-32415",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-49794",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-49795",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-49796",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-6021",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-6170",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-66199",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-68160",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-69418",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-69419",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-69420",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-69421",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-7425",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-8732",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-9230",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-9231",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-0989",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-0990",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-0992",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-11979",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-22795",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-22796",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-28387",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-28388",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-28389",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-28390",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-31789",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-31790",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-6732",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86137",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86138",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86139",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86140",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86141",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86142",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86143",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86144",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89156",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89157",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89158",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89160",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89161",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    }
+   ],
+   "no closure (degraded) [same-name component is a different package]": [
+    {
+     "key": [
+      "CVE-2026-27171",
+      "zlib"
+     ],
+     "truth_versions": [
+      "1.3.1"
+     ],
+     "waybill": [
+      {
+       "cpe": null,
+       "purl": "pkg:hackage/zlib@0.6.3.0",
+       "scope": null,
+       "version": "0.6.3.0"
+      }
+     ]
+    }
+   ]
+  },
+  "WR_outside_truth": [],
+  "WR_recall": "7/59",
+  "WR_recalled": [
+   {
+    "arm_version": "1.7.7",
+    "key": [
+     "CVE-2026-9648",
+     "crypton-x509"
+    ],
+    "truth_versions": [
+     "1.7.7"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "1.6.12",
+    "key": [
+     "CVE-2026-9648",
+     "crypton-x509-validation"
+    ],
+    "truth_versions": [
+     "1.6.12"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.34",
+    "key": [
+     "HSEC-2025-0002",
+     "crypton"
+    ],
+    "truth_versions": [
+     "0.34"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "1.6.9",
+    "key": [
+     "HSEC-2025-0006",
+     "crypton-x509-store"
+    ],
+    "truth_versions": [
+     "1.6.9"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "2.1.2.1",
+    "key": [
+     "HSEC-2026-0007",
+     "aeson"
+    ],
+    "truth_versions": [
+     "2.1.2.1"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.3.7.0",
+    "key": [
+     "HSEC-2026-0011",
+     "scientific"
+    ],
+    "truth_versions": [
+     "0.3.7.0"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "3.3.31",
+    "key": [
+     "HSEC-2026-0013",
+     "warp"
+    ],
+    "truth_versions": [
+     "3.3.31"
+    ],
+    "via": "osv"
+   }
+  ],
+  "W_hackage_vs_S": {
+   "W versionless": 1,
+   "absent from S": 21,
+   "agree": 151
+  },
+  "W_hackage_vs_S_differ": [],
+  "W_miss_counts": {
+   "no closure (degraded)": 51,
+   "no closure (degraded) [same-name component is a different package]": 1
+  },
+  "W_misses": {
+   "no closure (degraded)": [
+    {
+     "key": [
+      "CVE-2024-12797",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2024-13176",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2024-56171",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2024-9143",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-15467",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-15468",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-24928",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-27113",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-32414",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-32415",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-49794",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-49795",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-49796",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-6021",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-6170",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-66199",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-68160",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-69418",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-69419",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-69420",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-69421",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-7425",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-8732",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-9230",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2025-9231",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-0989",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-0990",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-0992",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-11979",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-22795",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-22796",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-28387",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-28388",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-28389",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-28390",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-31789",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-31790",
+      "openssl"
+     ],
+     "truth_versions": [
+      "3.3.2"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-6732",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86137",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86138",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86139",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86140",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86141",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86142",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86143",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-86144",
+      "libxml2"
+     ],
+     "truth_versions": [
+      "2.13.4"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89156",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89157",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89158",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89160",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    },
+    {
+     "key": [
+      "CVE-2026-89161",
+      "pcre2"
+     ],
+     "truth_versions": [
+      "10.44"
+     ],
+     "waybill": null
+    }
+   ],
+   "no closure (degraded) [same-name component is a different package]": [
+    {
+     "key": [
+      "CVE-2026-27171",
+      "zlib"
+     ],
+     "truth_versions": [
+      "1.3.1"
+     ],
+     "waybill": [
+      {
+       "cpe": null,
+       "purl": "pkg:hackage/zlib@0.6.3.0",
+       "scope": null,
+       "version": "0.6.3.0"
+      }
+     ]
+    }
+   ]
+  },
+  "W_outside_truth": [],
+  "W_recall": "7/59",
+  "W_recalled": [
+   {
+    "arm_version": "1.7.7",
+    "key": [
+     "CVE-2026-9648",
+     "crypton-x509"
+    ],
+    "truth_versions": [
+     "1.7.7"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "1.6.12",
+    "key": [
+     "CVE-2026-9648",
+     "crypton-x509-validation"
+    ],
+    "truth_versions": [
+     "1.6.12"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.34",
+    "key": [
+     "HSEC-2025-0002",
+     "crypton"
+    ],
+    "truth_versions": [
+     "0.34"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "1.6.9",
+    "key": [
+     "HSEC-2025-0006",
+     "crypton-x509-store"
+    ],
+    "truth_versions": [
+     "1.6.9"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "2.1.2.1",
+    "key": [
+     "HSEC-2026-0007",
+     "aeson"
+    ],
+    "truth_versions": [
+     "2.1.2.1"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.3.7.0",
+    "key": [
+     "HSEC-2026-0011",
+     "scientific"
+    ],
+    "truth_versions": [
+     "0.3.7.0"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "3.3.31",
+    "key": [
+     "HSEC-2026-0013",
+     "warp"
+    ],
+    "truth_versions": [
+     "3.3.31"
+    ],
+    "via": "osv"
+   }
+  ],
+  "arms_present": {
+   "S": true,
+   "W": true,
+   "WR": true
+  },
+  "collisions_excluded": 22,
+  "components": {
+   "S": 266,
+   "W": 177,
+   "WR": 177
+  },
+  "questionable": [],
+  "truth_by_source": {
+   "a:grype-S": 52,
+   "b:hsec-W+b:hsec-WR": 7
+  },
+  "truth_size": 59
+ },
+ "slacklinker": {
+  "C190": {
+   "detail": "       error: cannot build '/nix/store/0csa73m62lp3cyfwsxcmncmrq1yhbjmr-cabal2nix-slacklinker.drv^out' during evaluation because the option 'allow-import-from-derivation' is disabled",
+   "reason": "import-from-derivation-required"
+  },
+  "C216": null,
+  "WR_miss_counts": {},
+  "WR_misses": {},
+  "WR_outside_truth": [],
+  "WR_recall": "7/7",
+  "WR_recalled": [
+   {
+    "arm_version": "1.7.7",
+    "key": [
+     "CVE-2026-9648",
+     "crypton-x509"
+    ],
+    "truth_versions": [
+     "1.7.7"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "1.6.14",
+    "key": [
+     "CVE-2026-9648",
+     "crypton-x509-validation"
+    ],
+    "truth_versions": [
+     "1.6.14"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.30",
+    "key": [
+     "HSEC-2025-0002",
+     "cryptonite"
+    ],
+    "truth_versions": [
+     "0.30"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "2.2.3.0",
+    "key": [
+     "HSEC-2026-0007",
+     "aeson"
+    ],
+    "truth_versions": [
+     "2.2.3.0"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.1.1",
+    "key": [
+     "HSEC-2026-0007",
+     "text-iso8601"
+    ],
+    "truth_versions": [
+     "0.1.1"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.3.8.1",
+    "key": [
+     "HSEC-2026-0011",
+     "scientific"
+    ],
+    "truth_versions": [
+     "0.3.8.1"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "3.4.9",
+    "key": [
+     "HSEC-2026-0013",
+     "warp"
+    ],
+    "truth_versions": [
+     "3.4.9"
+    ],
+    "via": "osv"
+   }
+  ],
+  "W_miss_counts": {},
+  "W_misses": {},
+  "W_outside_truth": [],
+  "W_recall": "7/7",
+  "W_recalled": [
+   {
+    "arm_version": "1.7.7",
+    "key": [
+     "CVE-2026-9648",
+     "crypton-x509"
+    ],
+    "truth_versions": [
+     "1.7.7"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "1.6.14",
+    "key": [
+     "CVE-2026-9648",
+     "crypton-x509-validation"
+    ],
+    "truth_versions": [
+     "1.6.14"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.30",
+    "key": [
+     "HSEC-2025-0002",
+     "cryptonite"
+    ],
+    "truth_versions": [
+     "0.30"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "2.2.3.0",
+    "key": [
+     "HSEC-2026-0007",
+     "aeson"
+    ],
+    "truth_versions": [
+     "2.2.3.0"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.1.1",
+    "key": [
+     "HSEC-2026-0007",
+     "text-iso8601"
+    ],
+    "truth_versions": [
+     "0.1.1"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "0.3.8.1",
+    "key": [
+     "HSEC-2026-0011",
+     "scientific"
+    ],
+    "truth_versions": [
+     "0.3.8.1"
+    ],
+    "via": "osv"
+   },
+   {
+    "arm_version": "3.4.9",
+    "key": [
+     "HSEC-2026-0013",
+     "warp"
+    ],
+    "truth_versions": [
+     "3.4.9"
+    ],
+    "via": "osv"
+   }
+  ],
+  "arms_present": {
+   "S": false,
+   "W": true,
+   "WR": true
+  },
+  "collisions_excluded": 0,
+  "components": {
+   "S": null,
+   "W": 294,
+   "WR": 294
+  },
+  "questionable": [],
+  "truth_by_source": {
+   "b:hsec-W+b:hsec-WR": 7
+  },
+  "truth_size": 7
+ }
+}

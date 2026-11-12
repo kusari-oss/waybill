@@ -270,6 +270,34 @@ fn corpus_nix_closure_moat() {
     run_target("nix-closure-moat");
 }
 
+// Milestone 1423 — the runtime-closure path against cache.nixos.org.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_nix_closure_shellcheck() {
+    run_target("nix-closure-shellcheck");
+}
+
+// Feature 1283 — import-from-derivation allowed (`--nix-allow-ifd`), scored
+// against the committed `recall-truth.json`. Linux-only like moat: the truth
+// and the goldens are x86_64-linux, and slacklinker does not build on darwin.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_nix_closure_slack_web() {
+    run_target("nix-closure-slack-web");
+}
+
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_nix_closure_openai() {
+    run_target("nix-closure-openai");
+}
+
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_nix_closure_slacklinker() {
+    run_target("nix-closure-slacklinker");
+}
+
 #[test]
 #[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
 fn corpus_rust_ripgrep() {

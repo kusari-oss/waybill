@@ -246,14 +246,13 @@ fn reduce_license_vec(
         return (SpdxLicenseField::NoAssertion, None);
     }
 
-    // Join raw expressions verbatim by ` AND ` — this is the single
-    // string that either becomes the canonical `Expression` (if all
-    // terms canonicalize) or the `LicenseRef` + `extractedText`.
-    let joined_raw = items
-        .iter()
-        .map(|e| e.as_str())
-        .collect::<Vec<_>>()
-        .join(" AND ");
+    // Join by ` AND `, bracketing any compound operand (#1411) — this
+    // is the single string that either becomes the canonical
+    // `Expression` (if all terms canonicalize) or the `LicenseRef` +
+    // `extractedText`.
+    let joined_raw = waybill_common::types::license::conjoin_license_expressions(
+        &items.iter().map(|e| e.as_str()).collect::<Vec<_>>(),
+    );
 
     match SpdxExpression::try_canonical(&joined_raw) {
         Ok(canon) => (
@@ -730,6 +729,36 @@ mod tests {
     use waybill_common::types::hash::ContentHash;
     use waybill_common::types::purl::Purl;
 
+    /// #1411 — a compound operand is bracketed before the ` AND ` join, so an
+    /// OR inside it is not re-associated by AND's higher precedence.
+    #[test]
+    fn multiple_licenses_join_with_compound_operands_bracketed() {
+        let items = [
+            SpdxExpression::new("MIT OR Apache-2.0").unwrap(),
+            SpdxExpression::new("BSD-3-Clause").unwrap(),
+        ];
+        let (field, extracted) = reduce_license_vec(&items);
+        assert_eq!(
+            field,
+            SpdxLicenseField::Expression("(MIT OR Apache-2.0) AND BSD-3-Clause".to_string())
+        );
+        assert!(extracted.is_none());
+    }
+
+    /// #1411 — the LicenseRef path's `extractedText` keeps the grouping too.
+    #[test]
+    fn multiple_licenses_brackets_survive_into_extracted_text() {
+        let items = [
+            SpdxExpression::new("MIT OR Made Up License").unwrap(),
+            SpdxExpression::new("BSD-3-Clause").unwrap(),
+        ];
+        let (_, extracted) = reduce_license_vec(&items);
+        assert_eq!(
+            extracted.unwrap().extracted_text,
+            "(MIT OR Made Up License) AND BSD-3-Clause"
+        );
+    }
+
     /// Milestone 1377 T024 — the CPE reference carries exactly one of the two
     /// provenance comments on a closure component, and none otherwise.
     #[test]
@@ -780,6 +809,7 @@ mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new(purl).unwrap(),
             name: name.to_string(),
             version: version.to_string(),
@@ -887,6 +917,8 @@ mod tests {
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,
+            nix_evaluation_policy: None,
+            ghc_boot_libraries: None,
             nix_closure_contents: None,
             nix_closure_contents_unread: false,
             deps_dev_online: false,

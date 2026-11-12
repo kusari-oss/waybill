@@ -76,6 +76,14 @@ fn retain_components(arr: &mut Value, ids: &BTreeSet<String>) -> usize {
     removed
 }
 
+/// The component a `waybill:vex-subcomponent` property on a vulnerability
+/// names (a build statement's patched component, milestone 1068).
+fn vex_subcomponent(p: &Value) -> Option<&str> {
+    (p.get("name").and_then(Value::as_str) == Some("waybill:vex-subcomponent"))
+        .then(|| p.get("value").and_then(Value::as_str))
+        .flatten()
+}
+
 fn strip_ids(arr: Option<&mut Value>, ids: &BTreeSet<String>) {
     if let Some(a) = arr.and_then(Value::as_array_mut) {
         a.retain(|v| v.as_str().is_none_or(|s| !ids.contains(s)));
@@ -133,10 +141,18 @@ impl SbomAdapter for Cdx {
                 if !prop_values(c, "waybill:optional-derivation").is_empty() {
                     scopes.insert(Scope::Optional);
                 }
+                // `excluded` is also how CycloneDX carries a development, build,
+                // test or optional scope, and the lifecycle property read above
+                // says which. Only an `excluded` it does not explain means the
+                // component is not in the artifact (milestone 1423): a closure
+                // member, or a Go module `go mod why` proved unneeded.
                 if scopes.is_empty() && c.get("scope").and_then(Value::as_str) == Some("excluded") {
-                    scopes.insert(Scope::Development);
+                    scopes.insert(Scope::NotInArtifact);
                 }
-                let mut roles: BTreeSet<String> = prop_values(c, "waybill:component-role").into_iter().collect();
+                let mut roles: BTreeSet<String> = prop_values(c, "waybill:component-role")
+                    .into_iter()
+                    .chain(prop_values(c, "waybill:closure-role"))
+                    .collect();
                 if let Some(t) = c.get("type").and_then(Value::as_str) {
                     roles.insert(t.to_string());
                 }
@@ -220,16 +236,37 @@ impl SbomAdapter for Cdx {
                 }
             }
         }
-        // Vulnerabilities: trim affects; a vulnerability that affects nothing goes.
+        // Vulnerabilities: trim affects and subcomponents. A vulnerability
+        // that affects nothing goes, and so does a build statement whose
+        // every subcomponent went: its root alone would be a different claim
+        // (`generate/cyclonedx/vex.rs` names the root only when a
+        // subcomponent is carried).
+        let mut vulnerability_statements_removed = 0;
         if let Some(vulns) = self.doc.get_mut("vulnerabilities").and_then(Value::as_array_mut) {
+            let before = vulns.len();
             vulns.retain_mut(|v| {
-                let Some(affects) = v.get_mut("affects").and_then(Value::as_array_mut) else { return true };
-                let had = !affects.is_empty();
-                affects.retain(|a| a.get("ref").and_then(Value::as_str).is_none_or(|r| !ids.contains(r)));
-                !(had && affects.is_empty())
+                let mut keep = true;
+                if let Some(affects) = v.get_mut("affects").and_then(Value::as_array_mut) {
+                    let had = !affects.is_empty();
+                    affects.retain(|a| a.get("ref").and_then(Value::as_str).is_none_or(|r| !ids.contains(r)));
+                    keep &= !(had && affects.is_empty());
+                }
+                if let Some(props) = v.get_mut("properties").and_then(Value::as_array_mut) {
+                    let had = props.iter().any(|p| vex_subcomponent(p).is_some());
+                    let count = props.len();
+                    props.retain(|p| vex_subcomponent(p).is_none_or(|r| !ids.contains(r)));
+                    keep &= !(had && !props.iter().any(|p| vex_subcomponent(p).is_some()));
+                    if props.is_empty() && count > 0 {
+                        if let Some(m) = v.as_object_mut() {
+                            m.remove("properties");
+                        }
+                    }
+                }
+                keep
             });
+            vulnerability_statements_removed = before - vulns.len();
         }
-        DropOutcome { removed, changed }
+        DropOutcome { removed, changed, vulnerability_statements_removed }
     }
 
     fn remove_annotations(&mut self, namespace: &str) -> usize {
@@ -291,6 +328,11 @@ impl SbomAdapter for Cdx {
             for a in v.get("affects").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]) {
                 if let Some(r) = a.get("ref") {
                     check("vulnerabilities[].affects[].ref", r);
+                }
+            }
+            for p in v.get("properties").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]) {
+                if vex_subcomponent(p).is_some() {
+                    check("vulnerabilities[].properties[waybill:vex-subcomponent]", &p["value"]);
                 }
             }
         }
@@ -454,13 +496,64 @@ mod tests {
         assert_eq!(d["compositions"][0]["dependencies"], json!(["c"]));
         assert_eq!(d["compositions"][1], json!({"aggregate": "incomplete", "dependencies": ["app"]}));
         assert!(a.dangling_references().is_empty());
+        assert_eq!(out.vulnerability_statements_removed, 1);
+    }
+
+    fn sub(r: &str) -> Value {
+        json!({"name": "waybill:vex-subcomponent", "value": r})
+    }
+
+    /// #1422. A build statement names the root in `affects[]` and the
+    /// patched component in a `waybill:vex-subcomponent` property
+    /// (`generate/cyclonedx/vex.rs`). Dropping the component must remove
+    /// the property, and a statement left with no subcomponent goes: the
+    /// root alone would be a different claim.
+    #[test]
+    fn dropped_vex_subcomponents_are_pruned_and_empty_statements_go() {
+        let mut d = doc();
+        d["vulnerabilities"] = json!([
+            {"id": "CVE-3", "affects": [{"ref": "app"}], "properties": [sub("d")]},
+            {"id": "CVE-4", "affects": [{"ref": "app"}], "properties": [sub("c"), sub("d")]},
+            {"id": "CVE-5", "affects": [{"ref": "d"}]},
+            {"id": "CVE-6", "affects": [{"ref": "c"}]}
+        ]);
+        let mut a = Cdx::new(d);
+        let out = a.drop_components(&BTreeSet::from(["d".to_string()]));
+        assert_eq!(out.vulnerability_statements_removed, 2);
+        let ids: Vec<&str> = a.doc()["vulnerabilities"].as_array().unwrap().iter().filter_map(|v| v["id"].as_str()).collect();
+        assert_eq!(ids, ["CVE-4", "CVE-6"]);
+        assert_eq!(a.doc()["vulnerabilities"][0]["properties"], json!([sub("c")]));
+        assert!(a.dangling_references().is_empty());
+    }
+
+    #[test]
+    fn a_vex_subcomponent_naming_nothing_is_dangling() {
+        let mut d = doc();
+        d["vulnerabilities"] = json!([{"id": "CVE-3", "affects": [{"ref": "app"}], "properties": [sub("gone")]}]);
+        assert_eq!(
+            Cdx::new(d).dangling_references(),
+            vec!["vulnerabilities[].properties[waybill:vex-subcomponent] -> gone".to_string()]
+        );
+    }
+
+    /// #1422. Closure members carry their role in `waybill:closure-role`.
+    #[test]
+    fn closure_role_is_a_role() {
+        let mut d = doc();
+        d["components"][1]["properties"] = json!([{"name": "waybill:closure-role", "value": "build-tooling"}]);
+        let c = Cdx::new(d).components().into_iter().find(|c| c.id == "c").unwrap();
+        assert!(c.roles.contains("build-tooling"), "{:?}", c.roles);
     }
 
     #[test]
     fn scope_comes_from_the_annotation_or_excluded() {
-        let a = Cdx::new(doc());
-        let d = a.components().into_iter().find(|c| c.id == "d").unwrap();
-        assert!(d.scopes.contains(&Scope::Development));
+        let mut v = doc();
+        v["components"][1]["scope"] = json!("excluded");
+        let a = Cdx::new(v);
+        let scopes = |id: &str| a.components().into_iter().find(|c| c.id == id).unwrap().scopes;
+        assert_eq!(scopes("d"), BTreeSet::from([Scope::Development]));
+        assert_eq!(scopes("c"), BTreeSet::from([Scope::NotInArtifact]));
+        assert!(scopes("b").is_empty());
     }
 
     #[test]

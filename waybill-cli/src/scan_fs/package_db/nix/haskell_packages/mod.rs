@@ -19,12 +19,15 @@
 //!   (FR-014c).
 
 pub(crate) mod boot_libraries;
+pub(crate) mod boot_table;
 pub(crate) mod closure;
+pub(crate) mod closure_compilers;
 pub(crate) mod closure_identity;
 pub(crate) mod cache;
 pub(crate) mod fetch;
 pub(crate) mod nix_base32;
 pub(crate) mod package_set;
+pub(crate) mod version_range;
 
 use std::collections::BTreeSet;
 
@@ -110,6 +113,11 @@ pub(crate) enum UnresolvedReason {
     NoExactRevision,
     /// The operator requested offline operation (FR-009).
     Offline,
+    /// #1457 — the package set has a version, and the project's own declared
+    /// requirement rules it out. The package set does not see a flake's
+    /// overlays, so this is what a project pinning another release through
+    /// one looks like. Never a whole-pass degradation: it is per dependency.
+    NixpkgsVersionViolatesRequirement,
 }
 
 impl UnresolvedReason {
@@ -121,6 +129,9 @@ impl UnresolvedReason {
             UnresolvedReason::SourceUnsupported => "source-unsupported",
             UnresolvedReason::NoExactRevision => "no-exact-revision",
             UnresolvedReason::Offline => "offline",
+            UnresolvedReason::NixpkgsVersionViolatesRequirement => {
+                "nixpkgs-version-violates-requirement"
+            }
         }
     }
 }
@@ -438,6 +449,7 @@ mod tests {
             (SourceUnsupported, "source-unsupported"),
             (NoExactRevision, "no-exact-revision"),
             (Offline, "offline"),
+            (NixpkgsVersionViolatesRequirement, "nixpkgs-version-violates-requirement"),
         ] {
             assert_eq!(r.as_str(), s);
         }
@@ -465,6 +477,9 @@ pub(crate) const ANN_COMPONENT_ORIGIN: &str = "waybill:nixpkgs-component-origin"
 pub(crate) const ANN_UNRESOLVED_REASON: &str = "waybill:haskell-version-unresolved-reason";
 pub(crate) const ANN_CANDIDATE_COMPILERS: &str = "waybill:nixpkgs-candidate-compilers";
 pub(crate) const ANN_VERSION_DISAGREEMENT: &str = "waybill:nixpkgs-version-disagreement";
+/// C218 (milestone 966) — the compiler release whose shipped version a boot
+/// library carries, as the closure names it (`ghc-9.10.3`).
+pub(crate) const ANN_BOOT_LIBRARY_COMPILER: &str = "waybill:boot-library-compiler";
 
 /// Options the operator controls.
 #[derive(Debug, Clone)]
@@ -485,6 +500,14 @@ pub(crate) struct ResolveOptions {
     /// `None` is the default and means no `nix` process is started at all
     /// (spec FR-002), which is what makes the flag-off path byte-identical.
     pub(crate) nix_eval: Option<super::eval::TierConfig>,
+    /// Milestone 966 (#966) — the GHCs the derivation closure names, when
+    /// `--nix-closure` ran.
+    ///
+    /// With a project compiler the boot-library table has, the
+    /// compiler-supplied set is that release's libraries (FR-006) and each
+    /// one takes the release's version (FR-005). `None` — no closure — is the
+    /// union rule, byte-identical to before (FR-011).
+    pub(crate) compilers: Option<closure_compilers::ClosureCompilers>,
 }
 
 // The FR-019 budget is not carried here: it belongs to the retrieval
@@ -504,7 +527,8 @@ pub(crate) struct EnrichmentSummary {
     pub(crate) degraded_reason: Option<String>,
     /// Components whose locally-established version differs from the pinned
     /// revision's (FR-013). The local value is kept; the difference is
-    /// recorded.
+    /// recorded. Since #1457 also components whose declared requirement
+    /// rules out the pinned revision's version, which is then withheld.
     pub(crate) disagreements: usize,
     /// Milestone 985 (#962) — what the transitive runtime closure did, and
     /// the edges it produced. `None` when the closure did not run.
@@ -558,6 +582,13 @@ pub(crate) struct EnrichmentSummary {
     /// `to_document_value` — it is 19,437 entries of input, not a record of
     /// what the pass did.
     pub(crate) package_set: Option<package_set::PackageSet>,
+    /// Milestone 966 (T015) — boot libraries that took the closure compiler's
+    /// version from the boot-library table.
+    ///
+    /// Counted apart from `resolved`, which means "resolved from the pinned
+    /// nixpkgs", so C174's meaning does not shift. Logged, not rendered: the
+    /// components themselves carry C218.
+    pub(crate) resolved_from_compiler: usize,
 }
 
 /// What the evaluation tier did for one scan.
@@ -573,6 +604,10 @@ pub(crate) struct NixEvalSummary {
     /// Why the tier contributed nothing, when it did not. Wire form of
     /// `DegradationReason`, a closed set.
     pub(crate) degraded_reason: Option<String>,
+    /// Milestone 1283 — C217, the import-from-derivation policy the tier's
+    /// pre-flight verified (or could not). `None` when no pre-flight ran
+    /// (`--offline`).
+    pub(crate) policy: Option<crate::scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy>,
 }
 
 /// Rewrite dependency-edge endpoints after a pass changed component PURLs
@@ -897,7 +932,8 @@ pub(crate) fn enrich(
             .collect();
         nix_eval_asked = names.iter().cloned().collect();
         let evaluator = super::eval::invoke::NixEvaluator;
-        match super::eval::run(&pinned.revision, &names, cfg, &evaluator) {
+        let (policy, ran) = super::eval::run(&pinned.revision, &names, cfg, &evaluator);
+        match ran {
             Ok(outcome) => {
                 nix_eval_ran_early = true;
                 nix_eval_divergences = packages.apply_evaluated_versions(&outcome.versions);
@@ -906,6 +942,7 @@ pub(crate) fn enrich(
                     evaluated: outcome.versions.len(),
                     superseded: nix_eval_divergences.len(),
                     degraded_reason: None,
+                    policy: Some(policy),
                 });
                 tracing::info!(
                     // the outcome's own revision, not the caller's: this is
@@ -920,6 +957,7 @@ pub(crate) fn enrich(
             Err(reason) => {
                 nix_eval_summary = Some(NixEvalSummary {
                     degraded_reason: Some(reason.wire().to_string()),
+                    policy: Some(policy),
                     ..Default::default()
                 });
                 tracing::info!(
@@ -977,6 +1015,26 @@ pub(crate) fn enrich(
             }
         };
 
+    // Milestone 966 (FR-006) — with the project's compiler known from the
+    // closure and present in the boot-library table, the compiler-supplied
+    // set is exactly what that release ships, not the union over candidate
+    // series: on a 9.6.6 closure `os-string`, nulled only by the 9.10+
+    // configurations, is then resolved like any other dependency. `aliases`
+    // and the offline-degradation rule above still come from the
+    // configurations. Absent from the table, the union stands (FR-008).
+    let project_compiler: Option<(closure_compilers::GhcRelease, String)> = opts
+        .compilers
+        .as_ref()
+        .and_then(|cc| cc.project_in_table().map(|g| (g.clone(), cc.system.clone())));
+    let boot = match &project_compiler {
+        Some((g, _)) => boot_table::table().names(&g.version).unwrap_or(boot),
+        None => boot,
+    };
+    let compiler_version = |name: &str| -> Option<(&closure_compilers::GhcRelease, &'static str)> {
+        let (g, system) = project_compiler.as_ref()?;
+        boot_table::table().version_of(&g.version, name, system).map(|v| (g, v))
+    };
+
     let nix_eval_ran = nix_eval_ran_early;
     let mut summary = EnrichmentSummary {
         revision: Some(pinned.revision.clone()),
@@ -1014,7 +1072,44 @@ pub(crate) fn enrich(
     }
 
     for c in components.iter_mut().filter(|c| is_enrichable(c)) {
+        // Milestone 966 (FR-005) — the compiler that built the scanned output
+        // ships this library; its version is the table's. Ahead of
+        // `classify`, which could only say "compiler-supplied".
+        if let Some((g, v)) = compiler_version(&c.name) {
+            apply_compiler_version(c, g, v, &mut summary.renames);
+            summary.resolved_from_compiler += 1;
+            continue;
+        }
         match classify(&c.name, &packages, &boot, &aliases, &pinned.revision) {
+            // #1457: the package set does not see the flake's overlays, so
+            // its version can be one the project's own declaration rules
+            // out. Emitting it beside that declaration makes the document
+            // contradict itself, so the version is withheld and the
+            // disagreement counted. The rejected version is kept in C172 so
+            // the evidence is not discarded along with the claim.
+            ResolutionOutcome::Resolved { version, revision, .. }
+                if version_range::contradicts(&c.requirement_ranges, &version) =>
+            {
+                let reason = UnresolvedReason::NixpkgsVersionViolatesRequirement;
+                summary.note_unresolved(&reason);
+                summary.disagreements += 1;
+                c.extra_annotations.insert(
+                    ANN_UNRESOLVED_REASON.to_string(),
+                    serde_json::Value::String(reason.as_str().to_string()),
+                );
+                c.extra_annotations.insert(
+                    ANN_VERSION_DISAGREEMENT.to_string(),
+                    serde_json::json!({
+                        "emitted": serde_json::Value::Null,
+                        "nixpkgs": version,
+                        "requirement-ranges": c.requirement_ranges,
+                        "revision": revision,
+                        "note": "the pinned revision's version does not satisfy \
+                                 the project's declared requirement, so it was \
+                                 not emitted; a flake overlay may pin another",
+                    }),
+                );
+            }
             ResolutionOutcome::Resolved {
                 version,
                 source_hash,
@@ -1110,6 +1205,15 @@ pub(crate) fn enrich(
             // (FR-006a).
             if !existing.contains(&member.name) {
                 let mut c = new_closure_component(&member.name);
+                // Milestone 966 — a boot library the walk reached carries the
+                // project compiler's version too (FR-005: every boot-library
+                // component).
+                if let Some((g, v)) = compiler_version(&c.name) {
+                    apply_compiler_version(&mut c, g, v, &mut summary.renames);
+                    summary.resolved_from_compiler += 1;
+                    components.push(c);
+                    continue;
+                }
                 // #984: the closure resolves aliased names too, so a
                 // transitively-reached package whose bare name exists only
                 // via the compiler configuration gets its version rather
@@ -1261,7 +1365,10 @@ pub(crate) fn enrich(
                 .collect();
             if !unasked.is_empty() {
                 let evaluator = super::eval::invoke::NixEvaluator;
-                match super::eval::run(&pinned.revision, &unasked, cfg, &evaluator) {
+                // The first pass's C217 record stands: this pass evaluates
+                // only with its own verified token, under the same policy,
+                // and a failed pre-flight here evaluates nothing.
+                match super::eval::run(&pinned.revision, &unasked, cfg, &evaluator).1 {
                     Ok(outcome) => {
                         let mut corrected = 0usize;
                         for c in components.iter_mut().filter(|c| is_haskell(c)) {
@@ -1313,6 +1420,14 @@ pub(crate) fn enrich(
     // propagation, which cannot re-derive it: it runs for scans with no
     // `--nix-closure`, where nothing else reads the compiler configurations.
     summary.boot_libraries = Some(boot.clone());
+    if let Some((g, _)) = &project_compiler {
+        tracing::info!(
+            compiler = %g.label,
+            boot_libraries = boot.len(),
+            versioned = summary.resolved_from_compiler,
+            "nixpkgs-haskell: boot libraries versioned from the closure's compiler"
+        );
+    }
 
     // Milestone 1275 — hand the parsed set on rather than making the
     // closure-identity pass re-read it. Moved, not cloned, and set here
@@ -1341,6 +1456,7 @@ fn new_closure_component(name: &str) -> ResolvedComponent {
     ResolvedComponent {
         build_inclusion: None,
         artifact_presence: None,
+        scope_evidence: None,
         name: name.to_string(),
         version: String::new(),
         purl,
@@ -1626,6 +1742,33 @@ fn apply_resolved(
             "matched-by": matched_by.as_str(),
             "pin-state": pin_state,
         }),
+    );
+}
+
+/// Milestone 966 — give a boot library the version its compiler shipped.
+///
+/// Not [`apply_resolved`]: that records a nixpkgs resolution (C176, the
+/// source hash and license of a package-set entry, and the `source` tier),
+/// and none of that is true here. The version comes from the compiler
+/// release, which C218 names; the tier stays what the reader said, because
+/// it records where the dependency was declared (clarified 2026-11-12).
+///
+/// C170 and C171 are never written on this path, and the reader's C151
+/// ("no freeze file") is withdrawn because the version it was missing is now
+/// present, for the reason `apply_resolved` gives.
+pub(crate) fn apply_compiler_version(
+    c: &mut ResolvedComponent,
+    compiler: &closure_compilers::GhcRelease,
+    version: &str,
+    renames: &mut Vec<(String, String)>,
+) {
+    correct_version_in_place(c, version, renames);
+    c.extra_annotations.remove("waybill:unresolved-reason");
+    c.extra_annotations.remove(ANN_UNRESOLVED_REASON);
+    c.extra_annotations.remove(ANN_CANDIDATE_COMPILERS);
+    c.extra_annotations.insert(
+        ANN_BOOT_LIBRARY_COMPILER.to_string(),
+        serde_json::Value::String(compiler.label.clone()),
     );
 }
 
@@ -2010,6 +2153,7 @@ mod enrich_tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: name.to_string(),
             version: String::new(),
             purl,
@@ -2092,6 +2236,7 @@ mod enrich_tests {
             // These tests exercise the file-parsing ladder; the eval tier is
             // off, which is also the default and the byte-identical path.
             nix_eval: None,
+            compilers: None,
         }
     }
 
@@ -2329,6 +2474,68 @@ mod enrich_tests {
         let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
 
         assert_eq!(s.disagreements, 0);
+        assert!(!comps[0].extra_annotations.contains_key(ANN_VERSION_DISAGREEMENT));
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    fn ranged(name: &str, range: &str) -> ResolvedComponent {
+        let mut c = comp(name);
+        c.requirement_ranges = vec![range.to_string()];
+        c
+    }
+
+    /// #1457: the package set carries 1.2.3 and the project requires
+    /// `>= 1.3`. The package set's version is not what was built (an overlay
+    /// pinned another), so it must not be presented as fact.
+    #[test]
+    fn m1457_a_version_the_requirement_rules_out_is_withheld() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![ranged("waybill-fixture-liba", ">= 1.3")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert!(comps[0].version.is_empty(), "1.2.3 violates >= 1.3");
+        assert_eq!(comps[0].purl.as_str(), "pkg:hackage/waybill-fixture-liba");
+        assert!(comps[0].hashes.is_empty(), "nor may its hash be attached");
+        assert!(!comps[0].extra_annotations.contains_key(ANN_RESOLVED_VIA));
+        assert_eq!(
+            comps[0].extra_annotations.get(ANN_UNRESOLVED_REASON),
+            Some(&serde_json::Value::String(
+                "nixpkgs-version-violates-requirement".into()
+            ))
+        );
+        let rec = comps[0]
+            .extra_annotations
+            .get(ANN_VERSION_DISAGREEMENT)
+            .expect("the rejected version must be recorded");
+        assert!(rec["emitted"].is_null(), "nothing was emitted: {rec}");
+        assert_eq!(rec["nixpkgs"].as_str(), Some("1.2.3"));
+        assert_eq!(rec["requirement-ranges"], serde_json::json!([">= 1.3"]));
+        assert_eq!(s.resolved, 0);
+        assert_eq!(s.disagreements, 1);
+        assert_eq!(s.unresolved.get("nixpkgs-version-violates-requirement"), Some(&1));
+        assert!(s.renames.is_empty(), "the identity did not change");
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// Control: a range the package set's version satisfies changes nothing.
+    #[test]
+    fn m1457_a_version_the_requirement_admits_resolves_as_before() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![ranged("waybill-fixture-liba", ">= 1.2 && < 2")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(comps[0].version, "1.2.3");
+        assert_eq!(s.resolved, 1);
+        assert_eq!(s.disagreements, 0);
+        assert!(!comps[0].extra_annotations.contains_key(ANN_UNRESOLVED_REASON));
         assert!(!comps[0].extra_annotations.contains_key(ANN_VERSION_DISAGREEMENT));
         std::env::remove_var(cache::CACHE_ENV);
     }

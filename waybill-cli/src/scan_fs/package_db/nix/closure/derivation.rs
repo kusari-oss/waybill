@@ -105,7 +105,7 @@ impl RawDerivation {
     /// defined default rather than an observed preference — which is why
     /// [`Self::carrier_disagreements`] exists to report it if it ever happens
     /// instead of letting the choice pass silently.
-    fn attr_str(&self, field: &str) -> Option<&str> {
+    pub(crate) fn attr_str(&self, field: &str) -> Option<&str> {
         if let Some(v) = self.env.get(field) {
             return Some(v.as_str());
         }
@@ -172,6 +172,63 @@ impl RawDerivation {
     /// zero.
     pub(crate) fn output_paths(&self) -> impl Iterator<Item = &str> {
         self.outputs.values().filter_map(|o| o.path.as_deref())
+    }
+
+    /// The derivation's default output: the first entry of its `outputs`
+    /// attribute, without which `out`, then a sole output.
+    ///
+    /// Milestone 1423. `nix derivation show` keys its `outputs` object
+    /// alphabetically, so the order survives only in the attribute (`env`, or
+    /// the typed carrier under structured attributes). It is the output an
+    /// attribute's `outPath` names **only when the attribute selects no
+    /// output**: shellcheck, curl, hlint and pandoc agree (q9), but
+    /// `pkgs.postgrest` and `pkgs.cachix` are their `bin` outputs
+    /// (`outputSpecified`), while their `outputs` start with `out` (q11,
+    /// #1458). The runtime query therefore asks the evaluation which outputs
+    /// the attribute installs, and uses this only as the fallback.
+    pub(crate) fn default_output_name(&self) -> Option<&str> {
+        self.paths_in("outputs")
+            .next()
+            .filter(|head| self.outputs.contains_key(*head))
+            .or_else(|| self.outputs.contains_key("out").then_some("out"))
+            .or_else(|| {
+                (self.outputs.len() == 1)
+                    .then(|| self.outputs.keys().next().map(String::as_str))
+                    .flatten()
+            })
+    }
+
+    /// The path of the named output, when the derivation declares it.
+    pub(crate) fn output_path(&self, name: &str) -> Option<&str> {
+        self.outputs.get(name)?.path.as_deref()
+    }
+
+    /// Whether nixpkgs' Haskell generic builder built this derivation.
+    ///
+    /// Milestone 1423. The generic builder, and nothing else in nixpkgs,
+    /// defines `setupCompilerEnvironmentPhase`; this is the test the
+    /// static-linking rule was scored with
+    /// (`specs/1423-nix-runtime-scope/measurements/nix-behaviour/q6-rule.py`).
+    pub(crate) fn is_haskell_builder(&self) -> bool {
+        self.attr_str("setupCompilerEnvironmentPhase").is_some()
+    }
+
+    /// Whether the generic builder's install phase registers this
+    /// derivation as a package, which only its `isLibrary` branch does
+    /// (`Setup register --gen-pkg-config`); an executable-only build, such as
+    /// `justStaticExecutables` makes, runs `Setup install` or `Setup copy`
+    /// alone (#1283).
+    ///
+    /// The static-link fallback needs this beside "propagates something":
+    /// a library whose dependencies are all boot packages propagates nothing,
+    /// and `hashable-1.5.1.0` at the pinned revision is one, with its test
+    /// suite in `buildInputs`
+    /// (`specs/1283-nix-allow-ifd/measurements/invariants/`).
+    pub(crate) fn registers_haskell_package(&self) -> bool {
+        self.is_haskell_builder()
+            && self
+                .attr_str("installPhase")
+                .is_some_and(|p| p.contains("register --gen-pkg-config"))
     }
 
     /// Store paths listed in a field, from whichever carrier holds it.

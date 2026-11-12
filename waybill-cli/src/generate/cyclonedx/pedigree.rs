@@ -63,6 +63,7 @@ mod tests {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let roles = classify(&raw);
         emit::components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,

@@ -51,18 +51,49 @@ AND; values within a term combine with OR.
 |---|---|
 | `purl` | the PURL, as a glob |
 | `ecosystem` | the PURL type: `npm`, `cargo`, `deb`, … |
-| `scope` | `runtime`, `development`, `build`, `test`, `optional` |
+| `scope` | `runtime`, `development`, `build`, `test`, `optional`, `excluded` |
 | `tier` | the component's tier: `source`, `design`, `analyzed`, …, or `file` |
-| `role` | the component's role or type |
+| `role` | the component's role (`waybill:component-role`), its type, or its closure role (`waybill:closure-role`: `artifact-input`, `build-tooling`, `both`, `unreferenced`) |
 | `name` | the name, as a glob, or `re:<regex>` |
 
-Examples: `scope=development,test`, `ecosystem=npm;name=@acme/*`, `tier=file`.
+Examples: `scope=development,test`, `ecosystem=npm;name=@acme/*`, `tier=file`,
+`role=build-tooling`.
+
+`--exclude-scope` belongs to `sbom scan` and is refused here. Use
+`--drop 'scope=…'` instead.
+
+`scope=excluded` matches components that are not in the artifact at all, as
+opposed to dependencies with a non-runtime lifecycle scope. Each format has a
+native mark for this:
+
+| Format | A component matches `scope=excluded` when |
+|---|---|
+| CycloneDX | it has `"scope": "excluded"` and no `waybill:lifecycle-scope` or `waybill:optional-derivation` property |
+| SPDX 2.3 | it is the `spdxElementId` of a `BUILD_TOOL_OF` relationship |
+| SPDX 3 | it is a `to` of a `LifecycleScopedRelationship` with `relationshipType: usesTool` and `scope: build` |
+
+The marked components are the members of a `--nix-closure` scan that only
+build the artifact, and, in CycloneDX only, Go modules that `go mod why`
+proved unneeded (`waybill:build-inclusion: not-needed`). CycloneDX also writes
+development, build, test and optional dependencies as `"scope": "excluded"`.
+For those, the lifecycle property says which scope they have, so they match
+that scope and not `excluded`. The one case this cannot express is a component
+that has a lifecycle scope and is also not in the artifact. CycloneDX has a
+single field for both, so `scope=excluded` misses that component in CycloneDX
+and matches it in SPDX.
 
 Dropping a component removes everything that refers to it:
 
 - its dependency edges;
 - annotations and relationships about it;
-- licence and vulnerability entries that only it used.
+- licence and vulnerability entries that only it used;
+- vulnerability statements about it. A CycloneDX build statement names the
+  root in `affects[]` and the patched component in a
+  `waybill:vex-subcomponent` property; once its last subcomponent is dropped,
+  the statement goes too, since the root alone would be a different claim.
+  The count is reported on stderr.
+- in SPDX, the reference to the scan's OpenVEX sidecar. See
+  [VEX in SPDX](#vex-in-spdx).
 
 Its dependents are connected to its dependencies, so nothing reachable before
 becomes unreachable. A bridged edge keeps a non-runtime scope: a dependency
@@ -77,6 +108,114 @@ so:
 
 A selector that matches the document's root is refused: the result would
 describe nothing.
+
+### Runtime-only view of a Nix closure
+
+A `--nix-closure` document lists the whole build closure: the evaluated
+package, what ships with it, and every compiler, build tool and script used
+to build it. Members that don't ship carry the not-in-artifact mark, so one
+command derives the runtime-only document:
+
+```bash
+waybill sbom edit closure.cdx.json   --drop 'scope=excluded' -o runtime.cdx.json
+waybill sbom edit closure.spdx.json  --drop 'scope=excluded' -o runtime.spdx.json
+waybill sbom edit closure.spdx3.json --drop 'scope=excluded' -o runtime.spdx3.json
+```
+
+The three commands drop the same PURLs.
+
+**Why the drop is needed.** grype, Trivy and osv-scanner don't read
+CycloneDX `scope`, so a mark alone changes no scanner result: every build
+tool in the full document is scanned as if it shipped. On the five wrapper
+flakes measured (curl, openssh, httpie, gh, ripgrep), grype reports 1,301
+findings on the full documents and 350 on the runtime-only ones. Those 350
+are exactly the findings on components in each package's runtime closure:
+none lost, none added (`specs/1423-nix-runtime-scope/measurements/us4-scanner-check/`).
+
+The edit removes VEX statements about the dropped members and keeps the
+rest; stderr reports how many went. For SPDX, the scan writes VEX to an
+OpenVEX sidecar, which `sbom edit` does not change; the edited SPDX
+documents stop referencing it (see [VEX in SPDX](#vex-in-spdx)).
+
+**How exact the marks are.** The document-scope `waybill:closure-scope-method`
+annotation (catalogue row C216) says how the marks were decided:
+
+```bash
+jq -r '.metadata.properties[] | select(.name == "waybill:closure-scope-method") | .value' closure.cdx.json
+# {"c-runtime-libraries":null,
+#  "doc-only-excluded":{"members":0,"output-names":["devdoc","doc","info","man"],"paths":0},
+#  "lib-links-excluded":{"members":0,"not-assessed":null,"paths":0,"rule":"unloaded-lib-links"},
+#  "method":"runtime-closure","outputs":["bin"],
+#  "outputs-source":"output-specified","schema":1,"static-c-linking-detected":false,
+#  "static-link-roots":{"declared-edges":0,"derivation-fields":0},
+#  "static-link-source":"none","store":"local","unavailable-reason":null,
+#  "unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}
+```
+
+`outputs` names the outputs whose runtime closure was used: the ones the
+attribute installs, as `nix build` would realise them. `outputs-source:
+default-output` means waybill could not learn which those are and used the
+derivation's default output instead, which for a package such as postgrest is
+its library rather than its executable.
+
+| `method` | Where the marks come from | How far to trust them |
+|---|---|---|
+| `runtime-closure` | The runtime closure of the outputs the attribute installs (`outputs`), `nix path-info -r`, from the local store or a substituter your nix already trusts (`store`). A substituter's answer is signature-checked first (`verified`). | Exact for what the output references. Go modules, Rust crates and Haskell libraries compiled into a runtime member are kept, with `waybill:scope-classification-source` `statically-linked`. A member the output references only through documentation outputs (`doc`, `devdoc`, `man`, `info`), such as the shell a compiler's `-doc` output references, is marked: `doc-only-excluded` counts those members and the paths set aside (#1455). On darwin, so is a member referenced only through another member's `lib/links` symlink folder when no shipping Mach-O file loads it: `lib-links-excluded` counts those, or says why the rule was not assessed (`remote-store` for a substituter's answer). |
+| `reachability-walk` | No store held the output (`unavailable-reason` says why), so waybill walked from the evaluated package over runtime-linking dependency fields. | An approximation. On the five flakes above it kept 346 findings, 331 of them runtime, and missed 19 runtime ones (`measurements/us2-walk-score/`). It keeps the C library its members' compiler links, which no dependency field names; `c-runtime-libraries: libc-only` says the compiler's own runtime libraries (gcc's `lib` output) and what that libc references were not assessed, and on Linux those stay marked (#1467). |
+| `closure-role` | Neither source was usable; each member's build-graph role decides. | The weakest. Before milestone 1423 every closure document was marked this way, and as a findings filter it was 31.1% precise on the same five flakes (`measurements/README.md`). |
+
+With no `waybill:closure-scope-method` at all, the closure tier did not run
+(for example under `--offline`), nothing is marked, and the recipe drops
+nothing.
+
+Two things none of the methods detect:
+
+- **Static C linking** (`pkgsStatic`, vendored `.a` archives). A C library
+  linked statically leaves no store reference, so it is marked like any other
+  build input. `static-c-linking-detected: false` says so.
+- **Components that are not closure members.** The flake's own inputs, such
+  as `pkg:github/nixos/nixpkgs`, are source references with lifecycle scope
+  `build`. They carry no not-in-artifact mark, so the recipe keeps them.
+
+**The CycloneDX limit.** CycloneDX has one field for both "not in the
+artifact" and "a non-runtime lifecycle scope" (see the table above). A closure
+member that is not in the artifact and also has a lifecycle scope, for
+example one a lifecycle pass scoped as development, is written as
+`scope: excluded` with a `waybill:lifecycle-scope` property, which reads as
+the lifecycle scope. `scope=excluded` matches it in SPDX but not in CycloneDX,
+so the CycloneDX runtime-only document keeps it. On the five flakes above
+this did not occur: all three formats dropped the same PURLs. Run the recipe
+on an SPDX document as well when you need to be sure.
+
+### VEX in SPDX
+
+`sbom scan` writes an SPDX document's VEX to an OpenVEX sidecar and
+references it from the document: an SPDX 2.3 `externalDocumentRefs[]`
+entry, `DocumentRef-OpenVEX`, with the sidecar's SHA-256, and an SPDX 3
+`externalRef` of type `vulnerabilityExploitabilityAssessment`.
+
+`sbom edit` edits one document and never the sidecar. The sidecar names
+components by PURL, so once an edit drops a component, or a `names` or
+`hosts` redaction replaces a value, the sidecar may assess components the
+edited document no longer holds, or name them as the edit no longer does.
+The edit then removes the reference and says so on stderr:
+
+```text
+OpenVEX sidecar reference removed: closure.openvex.json (sbom edit does not edit the sidecar, …)
+```
+
+Kept, the reference would point a consumer at statements about components
+that are gone, and the SPDX 2.3 checksum would still verify, lending them the
+document's integrity. An edit that only drops annotations or redacts paths
+keeps the reference, since the sidecar still describes the same components.
+
+This matches CycloneDX when every statement is about dropped components, as
+in the runtime-only recipe on a closure whose patches are all in build
+tools: CycloneDX's embedded VEX goes to zero, and neither SPDX document
+references any. When some statements are about components the edit kept,
+CycloneDX keeps them and the SPDX documents have none. Use the CycloneDX
+derivative for VEX in that case, or edit the sidecar yourself and reference
+it again.
 
 ### Dropping annotations: `--drop-annotations <namespace>`
 
@@ -216,9 +355,10 @@ The exit status is non-zero if any check failed or mismatched.
 ## Limits
 
 - **One document per invocation.** The OpenVEX sidecar a scan writes next
-  to an SPDX document (`waybill.openvex.json`) is not edited. It names
-  components by PURL, so edit or withhold it separately when you drop or
-  redact components.
+  to an SPDX document (`<name>.openvex.json`) is not edited. An edit that
+  drops components or redacts names or hosts removes the document's
+  reference to it ([VEX in SPDX](#vex-in-spdx)); edit or withhold the sidecar
+  separately.
 - **SPDX 2.3 key order.** waybill writes SPDX 2.3 in field order, not sorted.
   An edited SPDX 2.3 document is written with sorted keys: the same JSON,
   reordered. CycloneDX and SPDX 3 keep their bytes outside what changed.

@@ -129,12 +129,19 @@ fn remove_envelopes(obj: &mut Value, namespace: &str) -> usize {
 impl SbomAdapter for Spdx23 {
     fn components(&self) -> Vec<ComponentView> {
         let mut rel_scopes: BTreeMap<String, BTreeSet<Scope>> = BTreeMap::new();
+        // `member BUILD_TOOL_OF root`: the member builds the artifact and is
+        // not in it (milestone 1277), the counterpart of CycloneDX's bare
+        // `scope: excluded` (milestone 1423).
+        let mut build_tools: BTreeSet<&str> = BTreeSet::new();
         for r in self.relationships() {
             if let (Some(a), Some(t), Some(b)) = (
                 r.get("spdxElementId").and_then(Value::as_str),
                 r.get("relationshipType").and_then(Value::as_str),
                 r.get("relatedSpdxElement").and_then(Value::as_str),
             ) {
+                if t == "BUILD_TOOL_OF" {
+                    build_tools.insert(a);
+                }
                 if let Some((_, to, s)) = dependency_edge(a, t, b) {
                     if s != Scope::Runtime {
                         rel_scopes.entry(to.to_string()).or_default().insert(s);
@@ -155,9 +162,15 @@ impl SbomAdapter for Spdx23 {
                 if scopes.is_empty() {
                     scopes = rel_scopes.get(&id).cloned().unwrap_or_default();
                 }
-                let mut roles: BTreeSet<String> = annotation_strings(p, "waybill:component-role").into_iter().collect();
+                let mut roles: BTreeSet<String> = annotation_strings(p, "waybill:component-role")
+                    .into_iter()
+                    .chain(annotation_strings(p, "waybill:closure-role"))
+                    .collect();
                 if let Some(t) = p.get("primaryPackagePurpose").and_then(Value::as_str) {
                     roles.insert(t.to_ascii_lowercase());
+                }
+                if build_tools.contains(id.as_str()) {
+                    scopes.insert(Scope::NotInArtifact);
                 }
                 Some(ComponentView {
                     purl: purl_of_package(p),
@@ -242,7 +255,7 @@ impl SbomAdapter for Spdx23 {
                 infos.retain(|i| i.get("licenseId").and_then(Value::as_str).is_none_or(|l| text.contains(l)));
             }
         }
-        DropOutcome { removed, changed }
+        DropOutcome { removed, changed, ..DropOutcome::default() }
     }
 
     fn remove_annotations(&mut self, namespace: &str) -> usize {
@@ -341,6 +354,29 @@ impl SbomAdapter for Spdx23 {
             .find(|p| p.get("SPDXID").and_then(Value::as_str) == Some(id))
             .and_then(purl_of_package)
             .and_then(|p| purl_path(&p))
+    }
+
+    /// The `externalDocumentRefs[]` entry `sbom scan` writes for its sidecar,
+    /// `DocumentRef-OpenVEX`. No relationship names it, so nothing dangles.
+    fn remove_openvex_references(&mut self) -> Vec<String> {
+        let Some(refs) = self.doc.get_mut("externalDocumentRefs").and_then(Value::as_array_mut) else {
+            return Vec::new();
+        };
+        let mut removed = Vec::new();
+        refs.retain(|r| {
+            let openvex = r.get("externalDocumentId").and_then(Value::as_str)
+                == Some(crate::generate::openvex::SPDX23_DOCUMENT_REF);
+            if openvex {
+                removed.push(r.get("spdxDocument").and_then(Value::as_str).unwrap_or_default().to_string());
+            }
+            !openvex
+        });
+        if refs.is_empty() {
+            if let Some(obj) = self.doc.as_object_mut() {
+                obj.remove("externalDocumentRefs");
+            }
+        }
+        removed
     }
 
     fn derivation_record(&self) -> Option<Value> {
@@ -448,6 +484,15 @@ mod tests {
         assert!(rels.iter().any(|r| r["spdxElementId"] == "SPDXRef-app" && r["relatedSpdxElement"] == "SPDXRef-c"));
         assert!(a.doc()["hasExtractedLicensingInfos"].as_array().unwrap().is_empty());
         assert!(a.dangling_references().is_empty());
+    }
+
+    /// #1422. Closure members carry their role in `waybill:closure-role`.
+    #[test]
+    fn closure_role_is_a_role() {
+        let mut d = doc();
+        d["packages"][2]["annotations"] = json!([{"comment": envelope("waybill:closure-role", json!("both"))}]);
+        let c = Spdx23::new(d).components().into_iter().find(|c| c.id == "SPDXRef-c").unwrap();
+        assert!(c.roles.contains("both"), "{:?}", c.roles);
     }
 
     #[test]

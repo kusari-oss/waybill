@@ -3,8 +3,9 @@
 //! Text form: `;`-separated `key=value[,value...]` terms. Terms combine
 //! with AND; values within a term combine with OR. Keys:
 //! `purl` (glob), `ecosystem` (PURL type), `scope`
-//! (`runtime|development|build|test|optional`), `tier`, `role`, `name` (glob, or a
-//! regex prefixed `re:`).
+//! (`runtime|development|build|test|optional|excluded`), `tier`, `role`, `name`
+//! (glob, or a regex prefixed `re:`). `role` matches `waybill:component-role`,
+//! the closure role `waybill:closure-role`, and the component type.
 
 use std::collections::BTreeSet;
 use std::fmt;
@@ -23,6 +24,11 @@ pub enum Scope {
     Test,
     /// An optional dependency (waybill's `LifecycleScope::Optional`).
     Optional,
+    /// Not in the artifact at all (milestone 1423, selector value
+    /// `excluded`): CycloneDX `scope: excluded` that no lifecycle scope
+    /// explains, SPDX 2.3 `BUILD_TOOL_OF`, SPDX 3 `usesTool` with `scope:
+    /// build`. A component property, never an edge scope.
+    NotInArtifact,
 }
 
 impl Scope {
@@ -33,6 +39,7 @@ impl Scope {
             "build" => Some(Self::Build),
             "test" => Some(Self::Test),
             "optional" => Some(Self::Optional),
+            "excluded" => Some(Self::NotInArtifact),
             _ => None,
         }
     }
@@ -44,6 +51,7 @@ impl Scope {
             Self::Build => "build",
             Self::Test => "test",
             Self::Optional => "optional",
+            Self::NotInArtifact => "excluded",
         }
     }
 
@@ -192,7 +200,7 @@ impl FromStr for Selector {
                     for v in values {
                         sel.scope.insert(
                             Scope::parse(v).ok_or_else(|| {
-                                format!("unknown scope `{v}` (runtime, development, build, test)")
+                                format!("unknown scope `{v}` (runtime, development, build, test, optional, excluded)")
                             })?,
                         );
                     }
@@ -276,6 +284,16 @@ mod tests {
         assert!("name=re:^@acme/internal-".parse::<Selector>().unwrap().matches(&c));
     }
 
+    /// #1422: `role=` selects closure roles, which the adapters fold into
+    /// the same set as `waybill:component-role` and the component type.
+    #[test]
+    fn role_selects_closure_roles() {
+        let mut c = view("waybill-fixture-cc", "pkg:generic/waybill-fixture-cc@1", &[]);
+        c.roles = BTreeSet::from(["library".to_string(), "build-tooling".to_string()]);
+        assert!("role=build-tooling".parse::<Selector>().unwrap().matches(&c));
+        assert!(!"role=artifact-input,both".parse::<Selector>().unwrap().matches(&c));
+    }
+
     #[test]
     fn terms_and_values_or() {
         let dev = view("jest-lite", "pkg:npm/jest-lite@1.0.0", &[Scope::Development]);
@@ -284,6 +302,19 @@ mod tests {
         assert!(s.matches(&dev) && !s.matches(&run));
         let s: Selector = "ecosystem=npm;scope=development".parse().unwrap();
         assert!(s.matches(&dev) && !s.matches(&run));
+    }
+
+    #[test]
+    fn excluded_is_its_own_scope() {
+        let absent = view("tool", "pkg:nix/tool@1", &[Scope::NotInArtifact]);
+        let dev = view("jest-lite", "pkg:npm/jest-lite@1.0.0", &[Scope::Development]);
+        let s: Selector = "scope=excluded".parse().unwrap();
+        assert!(s.matches(&absent) && !s.matches(&dev));
+        for other in ["runtime", "development", "build", "test", "optional"] {
+            let s: Selector = format!("scope={other}").parse().unwrap();
+            assert!(!s.matches(&absent), "`scope={other}` took a not-in-artifact component");
+        }
+        assert_eq!(Scope::parse(Scope::NotInArtifact.as_str()), Some(Scope::NotInArtifact));
     }
 
     #[test]

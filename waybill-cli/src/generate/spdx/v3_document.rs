@@ -391,7 +391,7 @@ pub fn build_document(
             {
                 "type": "ExternalRef",
                 "externalRefType": "vulnerabilityExploitabilityAssessment",
-                "contentType": "application/openvex+json",
+                "contentType": crate::generate::openvex::CONTENT_TYPE,
                 "locator": [locator],
                 "comment": "OpenVEX 0.2.0 sidecar produced by waybill",
             }
@@ -783,8 +783,18 @@ pub fn build_document(
                 })
                 .filter_map(|c| package_iri_by_purl.get(c.purl.as_str()).map(String::as_str))
                 .collect();
+            //
+            // #1438 — and only `dependsOn`. Milestone 1277 puts
+            // `root usesTool <member>` into `all_relationships` before this
+            // point; it is not a dependency edge, and counting it switched
+            // the fallback off for every override root over a closure with
+            // build tooling (shellcheck: 934 `usesTool`, 0 `dependsOn`, where
+            // CycloneDX and SPDX 2.3 had 169). SPDX 2.3 never tripped on it
+            // because its spelling, `<member> BUILD_TOOL_OF root`, is not
+            // sourced at the root.
             let root_targets: std::collections::BTreeSet<String> = all_relationships
                 .iter()
+                .filter(|r| r["relationshipType"].as_str() == Some("dependsOn"))
                 .filter(|r| r["from"].as_str() == Some(synth_iri.as_str()))
                 .flat_map(|r| match &r["to"] {
                     serde_json::Value::Array(a) => a

@@ -1,0 +1,1 @@
+error: unable to download 'https://cache.nixos.org/xpjnkisx2dqf83l5pbwlfzk43hl4inbg.narinfo': Could not connect to server (7) Failed to connect to cache.nixos.org port 443 via 127.0.0.1 after 0 ms: Could not connect to server

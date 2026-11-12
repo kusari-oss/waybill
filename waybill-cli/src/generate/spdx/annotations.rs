@@ -575,6 +575,11 @@ pub fn annotate_document(
     if omitted > 0 {
         push(&mut out, "waybill:vex-claims-omitted", json!(omitted.to_string()));
     }
+    // C220 (m1436, #1436) — backport claims no statement could be scoped to.
+    let unscoped = crate::generate::openvex::claims::unscoped_claims(artifacts.components);
+    if unscoped > 0 {
+        push(&mut out, "waybill:vex-claims-unscoped", json!(unscoped.to_string()));
+    }
 
     if artifacts.deps_dev_online {
         if let Some(v) = crate::enrich::deps_dev_outcome::document_value(artifacts.components) {
@@ -642,6 +647,24 @@ pub fn annotate_document(
     // C210 (m1372, #1366) — the build-graph admission record.
     if let Some(record) = artifacts.closure_graph_admission {
         push(&mut out, "waybill:closure-graph-admission", json!(record));
+    }
+    // C217 (m1283, #1283) — the Nix evaluation policy, same canonical string
+    // as the other two formats.
+    // C219 (m966, #966) — the GHC boot-library record, same canonical string
+    // as the other two formats.
+    if let Some(record) = artifacts.ghc_boot_libraries {
+        push(
+            &mut out,
+            crate::scan_fs::package_db::nix::haskell_packages::closure_compilers::ANN_GHC_BOOT_LIBRARIES,
+            json!(record),
+        );
+    }
+    if let Some(record) = artifacts.nix_evaluation_policy {
+        push(
+            &mut out,
+            crate::scan_fs::package_db::nix::closure::summary::ANN_NIX_EVALUATION_POLICY,
+            json!(record),
+        );
     }
     // C213 (m1378, #1396) — which closure members had their outputs read.
     if let Some(record) = artifacts.nix_closure_contents {
@@ -1083,6 +1106,11 @@ pub fn annotate_document(
         // would cost the cross-format equal-content check.
         if let Some(read) = summary.nix_closure_read_wire() {{
             push(&mut out, closure_summary::ANN_NIX_CLOSURE_READ, json!(read));
+        }}
+        // Milestone 1423 (#1423): C216, same canonical string as the other
+        // two formats.
+        if let Some(method) = summary.closure_scope_method_wire() {{
+            push(&mut out, closure_summary::ANN_CLOSURE_SCOPE_METHOD, json!(method));
         }}
     }}
 
@@ -1546,6 +1574,7 @@ mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new(purl).unwrap(),
             name: "demo".to_string(),
             version: "1".to_string(),

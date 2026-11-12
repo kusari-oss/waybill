@@ -1,0 +1,47 @@
+derivations matching '^(hspec|tasty|QuickCheck|test-framework|HUnit|doctest|ChasingBottoms|quickcheck|smallcheck)': 23
+ChasingBottoms-1.3.1.17 out: moat-0.1[out] -> unordered-containers-0.2.20.1[out] -> ChasingBottoms-1.3.1.17[out]  | non-doc referrers: 1
+ChasingBottoms-1.3.1.17 doc: reached only through a documentation output
+HUnit-1.6.2.0 doc: reached only through a documentation output
+HUnit-1.6.2.0 out: moat-0.1[out] -> HUnit-1.6.2.0[out]  | non-doc referrers: 34
+QuickCheck-2.15.0.1 doc: reached only through a documentation output
+QuickCheck-2.15.0.1 out: moat-0.1[out] -> QuickCheck-2.15.0.1[out]  | non-doc referrers: 50
+doctest-0.24.3 out: moat-0.1[out] -> vector-0.13.2.0[out] -> doctest-0.24.3[out]  | non-doc referrers: 1
+doctest-0.24.3 doc: reached only through a documentation output
+hspec-2.11.17 doc: reached only through a documentation output
+hspec-2.11.17 out: moat-0.1[out] -> hspec-2.11.17[out]  | non-doc referrers: 14
+hspec-core-2.11.17 doc: reached only through a documentation output
+hspec-core-2.11.17 out: moat-0.1[out] -> hspec-core-2.11.17[out]  | non-doc referrers: 15
+hspec-discover-2.11.17 out: moat-0.1[out] -> hspec-discover-2.11.17[out]  | non-doc referrers: 15
+hspec-discover-2.11.17 doc: reached only through a documentation output
+hspec-expectations-0.8.4 doc: reached only through a documentation output
+hspec-expectations-0.8.4 out: moat-0.1[out] -> hspec-expectations-0.8.4[out]  | non-doc referrers: 18
+hspec-golden-0.2.2.0 doc: reached only through a documentation output
+hspec-golden-0.2.2.0 out: moat-0.1[out] -> hspec-golden-0.2.2.0[out]  | non-doc referrers: 1
+hspec-meta-2.11.17 doc: reached only through a documentation output
+hspec-meta-2.11.17 out: moat-0.1[out] -> hspec-discover-2.11.17[out] -> hspec-meta-2.11.17[out]  | non-doc referrers: 1
+quickcheck-instances-0.3.33 doc: reached only through a documentation output
+quickcheck-instances-0.3.33 out: moat-0.1[out] -> haddock-library-1.11.0[out] -> witherable-0.5[out] -> quickcheck-instances-0.3.33[out]  | non-doc referrers: 5
+quickcheck-io-0.2.0 out: moat-0.1[out] -> quickcheck-io-0.2.0[out]  | non-doc referrers: 18
+quickcheck-io-0.2.0 doc: reached only through a documentation output
+quickcheck-unicode-1.0.1.0 out: moat-0.1[out] -> haddock-library-1.11.0[out] -> attoparsec-0.14.4[out] -> quickcheck-unicode-1.0.1.0[out]  | non-doc referrers: 1
+quickcheck-unicode-1.0.1.0 doc: reached only through a documentation output
+smallcheck-1.2.1.1 doc: reached only through a documentation output
+smallcheck-1.2.1.1 out: moat-0.1[out] -> haddock-library-1.11.0[out] -> scientific-0.3.8.1[out] -> smallcheck-1.2.1.1[out]  | non-doc referrers: 2
+tasty-1.5.4 doc: reached only through a documentation output
+tasty-1.5.4 out: moat-0.1[out] -> tasty-1.5.4[out]  | non-doc referrers: 33
+tasty-golden-2.3.6 out: moat-0.1[out] -> haddock-library-1.11.0[out] -> tree-diff-0.3.4[out] -> tasty-golden-2.3.6[out]  | non-doc referrers: 2
+tasty-golden-2.3.6 doc: reached only through a documentation output
+tasty-hunit-0.10.2 doc: reached only through a documentation output
+tasty-hunit-0.10.2 out: moat-0.1[out] -> hashable-1.5.1.0[out] -> tasty-hunit-0.10.2[out]  | non-doc referrers: 17
+tasty-inspection-testing-0.2.1 doc: reached only through a documentation output
+tasty-inspection-testing-0.2.1 out: moat-0.1[out] -> vector-0.13.2.0[out] -> tasty-inspection-testing-0.2.1[out]  | non-doc referrers: 1
+tasty-quickcheck-0.11.1 doc: reached only through a documentation output
+tasty-quickcheck-0.11.1 out: moat-0.1[out] -> hashable-1.5.1.0[out] -> tasty-quickcheck-0.11.1[out]  | non-doc referrers: 17
+tasty-smallcheck-0.8.2 out: moat-0.1[out] -> haddock-library-1.11.0[out] -> scientific-0.3.8.1[out] -> tasty-smallcheck-0.8.2[out]  | non-doc referrers: 1
+tasty-smallcheck-0.8.2 doc: reached only through a documentation output
+test-framework-0.8.2.3 doc: reached only through a documentation output
+test-framework-0.8.2.3 out: moat-0.1[out] -> case-insensitive-1.2.1.0[out] -> test-framework-0.8.2.3[out]  | non-doc referrers: 10
+test-framework-hunit-0.3.0.3 out: moat-0.1[out] -> case-insensitive-1.2.1.0[out] -> test-framework-hunit-0.3.0.3[out]  | non-doc referrers: 7
+test-framework-hunit-0.3.0.3 doc: reached only through a documentation output
+test-framework-quickcheck2-0.3.0.7 out: moat-0.1[out] -> haddock-library-1.11.0[out] -> tree-diff-0.3.4[out] -> fingertree-0.1.6.3[out] -> test-framework-quickcheck2-0.3.0.7[out]  | non-doc referrers: 6
+test-framework-quickcheck2-0.3.0.7 doc: reached only through a documentation output

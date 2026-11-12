@@ -4,61 +4,61 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"excluded_files\\\":0,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":0,\\\"with_candidates\\\":0}\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.14.0",
+      "annotator": "Tool: waybill-0.15.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}"
     }
   ],
@@ -66,19 +66,19 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: no lifecycle phases observed. Per-component scope detail in waybill:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: waybill-0.14.0",
+      "Tool: waybill-0.15.0",
       "Organization: waybill contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-4NBSIEDEOJE7AXLP"
+    "SPDXRef-DocumentRoot-QCM5LF7BW3WSKBWL"
   ],
-  "documentNamespace": "https://waybill.kusari.dev/spdx/ZAICWFSY4XQYOGGML67RMGCZJBUWQZSM",
+  "documentNamespace": "https://waybill.kusari.dev/spdx/F62VYJ3SNK26G6TZAEP4VYD2LOHD5MRQ",
   "name": "Waybill source scan (identity unavailable)",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-4NBSIEDEOJE7AXLP",
+      "SPDXID": "SPDXRef-DocumentRoot-QCM5LF7BW3WSKBWL",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -97,7 +97,7 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-4NBSIEDEOJE7AXLP",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-QCM5LF7BW3WSKBWL",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     }

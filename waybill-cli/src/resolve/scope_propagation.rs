@@ -228,9 +228,24 @@ fn compiler_supplied<'a>(
     }
     components
         .iter()
-        .filter(|c| is_haskell_purl(c.purl.as_str()) && boot.contains(c.name.as_str()))
+        .filter(|c| {
+            is_haskell_purl(c.purl.as_str()) && boot.contains(c.name.as_str()) && is_the_compilers_copy(c)
+        })
         .map(|c| c.purl.as_str())
         .collect()
+}
+
+/// Whether a boot-library-named component is the compiler's own copy:
+/// versionless, or versioned from the compiler (C218, #966). A versioned
+/// Hackage build of the same name (`os-string@2.0.10` beside GHC's
+/// `os-string@2.0.7`) is an ordinary member, and exempting it overrides the
+/// evidence that scoped it (#1478). Duplicated in `closure_role_scope` for the
+/// reason `is_haskell_purl` is.
+fn is_the_compilers_copy(c: &ResolvedComponent) -> bool {
+    !c.purl.as_str().contains('@')
+        || c.extra_annotations.contains_key(
+            crate::scan_fs::package_db::nix::haskell_packages::ANN_BOOT_LIBRARY_COMPILER,
+        )
 }
 
 /// Whether a PURL names a Hackage package.
@@ -466,10 +481,99 @@ pub(crate) fn propagate_non_runtime_scope(
     summary
 }
 
+/// #1283 (invariant I9) — withdraw a non-runtime scope a reader assigned
+/// directly to a package the pinned compiler supplies.
+///
+/// Milestone 1276 made such a package immune to *inheriting* a scope and left
+/// the direct origin without a suppression path, because its population was
+/// zero; invariant I9 was written to say where the mark should be suppressed
+/// when one appeared. On the 1283 corpus run it was one: slack-web's test
+/// suite declares `template-haskell`, so the Haskell reader scoped it
+/// `development`, and CycloneDX called a package GHC ships in every build
+/// `excluded`. The reasoning is the propagation's own (see
+/// [`compiler_supplied`]): CycloneDX 1.6 makes `excluded` and `optional` false
+/// of an installed package, whichever stanza named it.
+///
+/// Runs **before** the propagation, so a withdrawn mark seeds nothing. The
+/// scope becomes absent, not `Runtime`, matching the boot libraries that
+/// never carried one (C2). The reader-side edge typing has already run, so
+/// the edges into the component are returned to `DependsOn`; otherwise SPDX
+/// 2.3 would keep `DEV_DEPENDENCY_OF` beside a CycloneDX `required`, and the
+/// formats would disagree about one component.
+///
+/// The same `boot` set as the propagation's immunity and the closure-role
+/// exemption, read from the pinned revision's compiler configuration; empty
+/// when unknown, which withdraws nothing (FR-005). Returns how many marks it
+/// withdrew.
+pub(crate) fn withdraw_compiler_supplied_scope(
+    components: &mut [ResolvedComponent],
+    relationships: &mut [Relationship],
+    boot_libraries: &HashSet<String>,
+) -> usize {
+    let exempt: HashSet<String> = compiler_supplied(components, boot_libraries)
+        .into_iter()
+        .map(str::to_string)
+        .collect();
+    let mut withdrawn: HashSet<String> = HashSet::new();
+    for c in components.iter_mut() {
+        if exempt.contains(c.purl.as_str()) && c.lifecycle_scope.is_some_and(|s| s.is_non_runtime()) {
+            c.lifecycle_scope = None;
+            // C62 describes a scope; with none there is nothing to derive.
+            c.extra_annotations.remove(ANN_SCOPE_DERIVATION);
+            withdrawn.insert(c.purl.as_str().to_string());
+        }
+    }
+    if withdrawn.is_empty() {
+        return 0;
+    }
+    retype_edges_into_withdrawn(relationships, &withdrawn);
+    tracing::info!(
+        withdrawn = withdrawn.len(),
+        "withdrew a reader-assigned non-runtime scope from packages the compiler supplies",
+    );
+    withdrawn.len()
+}
+
+/// Return every scope-typed edge into a component whose non-runtime scope was
+/// withdrawn to `DependsOn`.
+///
+/// The reader-side edge typing (`apply_lifecycle_scope_to_edges`) typed them
+/// from the scope being withdrawn; left alone, SPDX 2.3 would keep
+/// `DEV_DEPENDENCY_OF` beside a CycloneDX `required`. Shared by the #1283
+/// compiler-supplied withdrawal and the #1465 runtime-evidence one.
+pub(crate) fn retype_edges_into_withdrawn(
+    relationships: &mut [Relationship],
+    withdrawn: &HashSet<String>,
+) {
+    use waybill_common::resolution::RelationshipType;
+    for r in relationships.iter_mut().filter(|r| withdrawn.contains(&r.to)) {
+        if matches!(
+            r.relationship_type,
+            RelationshipType::DevDependsOn
+                | RelationshipType::BuildDependsOn
+                | RelationshipType::TestDependsOn
+                | RelationshipType::OptionalDependsOn
+        ) {
+            r.relationship_type = RelationshipType::DependsOn;
+        }
+    }
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// GHC's own copy of a boot library, as real documents carry it since
+    /// #966: versioned from the compiler, with C218 naming it. A versioned
+    /// boot name WITHOUT C218 is a separate Hackage build (#1478).
+    fn compilers_copy(mut c: ResolvedComponent) -> ResolvedComponent {
+        c.extra_annotations.insert(
+            crate::scan_fs::package_db::nix::haskell_packages::ANN_BOOT_LIBRARY_COMPILER.to_string(),
+            serde_json::Value::from("ghc-9.10.3"),
+        );
+        c
+    }
     use crate::generate::graph_completeness::test_support::{mk_component, mk_rel};
     use waybill_common::resolution::{EnrichmentProvenance, RelationshipType};
 
@@ -502,7 +606,7 @@ mod tests {
         let mut comps = vec![
             mk_component("pkg:hackage/root@1.0.0"),
             scoped("pkg:hackage/testdep@1.0.0", LifecycleScope::Test),
-            mk_component("pkg:hackage/pretty@1.1.3.6"),
+            compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6")),
         ];
         let rels = vec![
             mk_rel("pkg:hackage/root@1.0.0", "pkg:hackage/testdep@1.0.0"),
@@ -536,7 +640,7 @@ mod tests {
         let mut comps = vec![
             mk_component("pkg:hackage/root@1.0.0"),
             scoped("pkg:hackage/testdep@1.0.0", LifecycleScope::Test),
-            mk_component("pkg:hackage/pretty@1.1.3.6"),
+            compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6")),
         ];
         let rels = vec![
             mk_rel("pkg:hackage/root@1.0.0", "pkg:hackage/testdep@1.0.0"),
@@ -604,7 +708,7 @@ mod tests {
     #[test]
     fn m1276_the_exempt_class_is_the_class_c170_describes() {
         let comps = vec![
-            mk_component("pkg:hackage/pretty@1.1.3.6"),
+            compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6")),
             mk_component("pkg:hackage/aeson@2.2.4.1"),
             mk_component("pkg:npm/pretty@2.0.0"),
         ];
@@ -654,7 +758,7 @@ mod tests {
 
     #[test]
     fn m1276_a_nulled_hackage_package_is_compiler_supplied() {
-        let comps = vec![mk_component("pkg:hackage/pretty@1.1.3.6")];
+        let comps = vec![compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6"))];
         let exempt = compiler_supplied(&comps, &boot_set(&["pretty"]));
         assert_eq!(exempt.len(), 1);
         assert!(exempt.contains("pkg:hackage/pretty@1.1.3.6"));
@@ -689,7 +793,7 @@ mod tests {
         // FR-005. The compiler configuration could not be read, so nothing is
         // known to be compiler-supplied. Unearned immunity is the dangerous
         // default, and this is the arm that refuses it.
-        let comps = vec![mk_component("pkg:hackage/pretty@1.1.3.6")];
+        let comps = vec![compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6"))];
         assert!(compiler_supplied(&comps, &HashSet::new()).is_empty());
     }
 
@@ -1291,5 +1395,84 @@ mod tests {
             Some("test-only-closure"),
             "and so does the reader's C62 value — overwriting it with              `transitive` would relabel a Go test-closure inference as              this pass's work"
         );
+    }
+
+    // ---- #1283 (invariant I9): a reader's own mark on a compiler-supplied package ----
+
+    fn typed(from: &str, to: &str, ty: RelationshipType) -> Relationship {
+        let mut r = mk_rel(from, to);
+        r.relationship_type = ty;
+        r
+    }
+
+    const HS_ROOT: &str = "pkg:hackage/root@1.0.0";
+    const TH: &str = "pkg:hackage/template-haskell";
+    const HSPEC: &str = "pkg:hackage/hspec@2.11.9";
+
+    /// slack-web's shape: its test suite declares `template-haskell` and
+    /// `hspec`, and only the first is supplied by the compiler.
+    fn test_suite_declares_boot_library() -> (Vec<ResolvedComponent>, Vec<Relationship>) {
+        (
+            vec![
+                mk_component(HS_ROOT),
+                scoped(TH, LifecycleScope::Development),
+                scoped(HSPEC, LifecycleScope::Development),
+            ],
+            vec![
+                typed(HS_ROOT, TH, RelationshipType::DevDependsOn),
+                typed(HS_ROOT, HSPEC, RelationshipType::DevDependsOn),
+            ],
+        )
+    }
+
+    #[test]
+    fn m1283_a_reader_scope_on_a_compiler_supplied_package_is_withdrawn() {
+        let (mut comps, mut rels) = test_suite_declares_boot_library();
+        let n = withdraw_compiler_supplied_scope(&mut comps, &mut rels, &boot_set(&["template-haskell"]));
+        assert_eq!(n, 1);
+        assert_eq!(scope_of(&comps, TH), None, "absent, like every boot library (C2)");
+        assert_eq!(
+            rels[0].relationship_type,
+            RelationshipType::DependsOn,
+            "the edge the reader typed agrees with the component, or SPDX 2.3 \
+             keeps DEV_DEPENDENCY_OF beside a CycloneDX `required`"
+        );
+        // CONTROL: a test dependency the compiler does not supply keeps both.
+        assert_eq!(scope_of(&comps, HSPEC), Some(LifecycleScope::Development));
+        assert_eq!(rels[1].relationship_type, RelationshipType::DevDependsOn);
+    }
+
+    /// FR-005: an unknown compiler configuration withdraws nothing.
+    #[test]
+    fn m1283_an_unknown_boot_set_withdraws_nothing() {
+        let (mut comps, mut rels) = test_suite_declares_boot_library();
+        assert_eq!(withdraw_compiler_supplied_scope(&mut comps, &mut rels, &boot_set(&[])), 0);
+        assert_eq!(scope_of(&comps, TH), Some(LifecycleScope::Development));
+        assert_eq!(rels[0].relationship_type, RelationshipType::DevDependsOn);
+    }
+
+    /// A boot library's name outside Hackage is a different package (C4).
+    #[test]
+    fn m1283_a_boot_name_outside_hackage_is_not_withdrawn() {
+        let npm = "pkg:npm/template-haskell@1.0.0";
+        let mut comps = vec![mk_component(HS_ROOT), scoped(npm, LifecycleScope::Development)];
+        let mut rels = vec![typed(HS_ROOT, npm, RelationshipType::DevDependsOn)];
+        assert_eq!(
+            withdraw_compiler_supplied_scope(&mut comps, &mut rels, &boot_set(&["template-haskell"])),
+            0
+        );
+        assert_eq!(scope_of(&comps, npm), Some(LifecycleScope::Development));
+    }
+
+    /// #1478, the propagation side: only the compiler's copy is immune.
+    #[test]
+    fn m1478_a_versioned_hackage_build_of_a_boot_name_is_not_immune() {
+        let comps = vec![
+            compilers_copy(mk_component("pkg:hackage/os-string@2.0.7")),
+            mk_component("pkg:hackage/os-string@2.0.10"),
+        ];
+        let exempt = compiler_supplied(&comps, &boot_set(&["os-string"]));
+        assert!(exempt.contains("pkg:hackage/os-string@2.0.7"), "{exempt:?}");
+        assert!(!exempt.contains("pkg:hackage/os-string@2.0.10"), "{exempt:?}");
     }
 }

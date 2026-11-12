@@ -39,7 +39,9 @@
 #![allow(dead_code)]
 
 pub mod cdx_schema;
+pub mod endpoints;
 pub mod normalize;
+pub mod spdx3_validate;
 // Unix-only: the stub is a `#!/bin/sh` script made executable with
 // `PermissionsExt`, and every suite that uses it is `#![cfg(unix)]`.
 #[cfg(unix)]

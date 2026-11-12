@@ -80,7 +80,10 @@ pub struct EditArgs {
     /// Drop the components matching a selector, bridging their dependents
     /// to their dependencies. Selector: `;`-separated `key=v1,v2` terms
     /// (AND across terms, OR within one); keys purl, ecosystem, scope,
-    /// tier, role, name. Repeatable; operations apply in command-line order.
+    /// tier, role, name. `role` matches `waybill:component-role`, the
+    /// closure role `waybill:closure-role` (artifact-input, build-tooling,
+    /// both, unreferenced) and the component type. Repeatable; operations
+    /// apply in command-line order.
     #[arg(long = "drop", value_name = "SELECTOR", value_parser = parse_drop, action = clap::ArgAction::Append)]
     pub drop: Vec<Sequenced>,
 
@@ -178,6 +181,28 @@ fn read_key(path: &Path) -> anyhow::Result<Vec<u8>> {
     Ok(key)
 }
 
+/// `--exclude-scope` is a global flag that only `sbom scan` reads (#1422).
+/// Edit refuses it rather than treating it as a `--drop`: operations apply
+/// in command-line order and a global flag has no place in that order, and
+/// edit bridges a dropped component's edges where scan's filter removes
+/// them, so one flag name would mean two different things.
+pub fn refuse_exclude_scope(scopes: &[waybill_common::resolution::LifecycleScope]) -> anyhow::Result<()> {
+    if scopes.is_empty() {
+        return Ok(());
+    }
+    let mut values: Vec<&str> = Vec::new();
+    for s in scopes {
+        if !values.contains(&s.as_str()) {
+            values.push(s.as_str());
+        }
+    }
+    anyhow::bail!(
+        "--exclude-scope applies to `sbom scan` only and is not read by `sbom edit`; \
+         to drop those scopes from an emitted SBOM, use --drop 'scope={}'",
+        values.join(",")
+    )
+}
+
 pub async fn execute(args: EditArgs) -> anyhow::Result<ExitCode> {
     let ops = args.ops();
     if ops.is_empty() {
@@ -208,6 +233,19 @@ pub async fn execute(args: EditArgs) -> anyhow::Result<ExitCode> {
         eprintln!(
             "{} dependency list(s) bridged across dropped components; graph completeness downgraded",
             outcome.report.dependency_lists_changed
+        );
+    }
+    if outcome.report.vulnerability_statements_removed > 0 {
+        eprintln!(
+            "{} vulnerability statement(s) removed: every component they assessed was dropped",
+            outcome.report.vulnerability_statements_removed
+        );
+    }
+
+    for sidecar in &outcome.report.openvex_references_removed {
+        eprintln!(
+            "OpenVEX sidecar reference removed: {sidecar} (sbom edit does not edit the sidecar, \
+             which may assess components this edit dropped or name ones it redacted)"
         );
     }
 
@@ -304,6 +342,21 @@ mod tests {
         .unwrap();
         let cats: Vec<&str> = h.args.ops().iter().map(EditOp::category).collect();
         assert_eq!(cats, ["redact-paths", "drop-components", "drop-annotations", "drop-components"]);
+    }
+
+    /// #1422: the refusal names the `--drop` that does what was meant, in
+    /// edit's scope vocabulary.
+    #[test]
+    fn exclude_scope_is_refused_with_its_drop_equivalent() {
+        use waybill_common::resolution::LifecycleScope;
+        assert!(refuse_exclude_scope(&[]).is_ok());
+        let err = refuse_exclude_scope(&[LifecycleScope::Development, LifecycleScope::Test, LifecycleScope::Development])
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("--drop 'scope=development,test'"), "{err}");
+        for s in LifecycleScope::ALL {
+            assert!(crate::edit::select::Scope::parse(s.as_str()).is_some(), "{} is not an edit scope", s.as_str());
+        }
     }
 
     #[test]

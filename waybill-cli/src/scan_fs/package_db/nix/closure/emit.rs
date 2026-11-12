@@ -64,6 +64,98 @@ pub(crate) const ANN_CLOSURE_PATCHES: &str = "waybill:closure-patches";
 /// being `Unreferenced`, which is what makes it emitted in the first place.
 pub(crate) const ANN_CLOSURE_UNCLASSIFIED_REFS: &str = "waybill:closure-unclassified-refs";
 
+/// Milestone 1436 — internal: the build identity of a component whose
+/// patches resolve a CVE, and which of those CVEs a VEX claim may be made
+/// for.
+///
+/// An object `{"nix_drv": "<h1>[,<h2>…]", "claims": [cve…], "unscoped":
+/// [cve…], "variants_without_patches": n}`. Filtered from every format by `is_internal_emission_key`: the
+/// identity is already in the PURL, the claims are in the VEX, and the
+/// unscoped count is C220, so emitting this as well would publish each fact
+/// twice. It rides on the component, rather than in a side table, so that a
+/// merge into another reader's component (`merge_closure_components` folds
+/// closure annotations in) and every projection carry it for free.
+pub(crate) const ANN_BACKPORT_IDENTITY: &str = "waybill:nix-backport-identity";
+
+/// The PURL qualifier key that scopes a backport claim to this build
+/// (research R1).
+pub(crate) const NIX_DRV_QUALIFIER: &str = "nix_drv";
+
+/// The `nix_drv` value a component's internal backport identity records.
+fn recorded_nix_drv(c: &ResolvedComponent) -> Option<&str> {
+    c.extra_annotations
+        .get(ANN_BACKPORT_IDENTITY)
+        .and_then(|v| v.get(NIX_DRV_QUALIFIER))
+        .and_then(|v| v.as_str())
+        .filter(|v| !v.is_empty())
+}
+
+/// `purl` with every qualifier and any subpath removed. A backport claim and
+/// a nixpkgs declaration are compared on this (research R10), so a claim is
+/// matched to its component whichever passes added or kept the qualifier.
+pub(crate) fn without_qualifiers(purl: &str) -> &str {
+    let end = purl.find(['?', '#']).unwrap_or(purl.len());
+    &purl[..end]
+}
+
+/// `purl` with `nix_drv=<value>` among its qualifiers, any previous
+/// `nix_drv` replaced. `Purl::new` validates the result and sorts the
+/// qualifiers, so the value is canonical whichever qualifiers were present.
+fn with_nix_drv(purl: &Purl, value: &str) -> Option<Purl> {
+    let raw = purl.as_str();
+    let (head, subpath) = match raw.find('#') {
+        Some(i) => (&raw[..i], &raw[i..]),
+        None => (raw, ""),
+    };
+    let (base, quals) = match head.split_once('?') {
+        Some((b, q)) => (b, q),
+        None => (head, ""),
+    };
+    let mut pairs: Vec<String> = quals
+        .split('&')
+        .filter(|p| !p.is_empty())
+        .filter(|p| p.split_once('=').map(|(k, _)| k) != Some(NIX_DRV_QUALIFIER))
+        .map(str::to_string)
+        .collect();
+    pairs.push(format!("{NIX_DRV_QUALIFIER}={value}"));
+    Purl::new(&format!("{base}?{}{subpath}", pairs.join("&"))).ok()
+}
+
+/// Give every component that records a backport identity its `nix_drv`
+/// qualifier (spec FR-001), and return the `(old, new)` PURL of each one
+/// changed.
+///
+/// Idempotent. Called by [`components`] as it emits, and again by the scan
+/// immediately before the closure's edges are built, because three passes
+/// between the two rebuild a component's PURL from its parts — the
+/// milestone-1275, -1366 and -1378 identity passes — and a merge into
+/// another reader's component keeps that component's PURL. The caller
+/// rewrites relationship endpoints with the returned pairs through
+/// `apply_renames` (#980): a PURL is identity, and changing one an edge
+/// already names would orphan the edge.
+pub(crate) fn qualify_backport_identities(
+    components: &mut [ResolvedComponent],
+) -> Vec<(String, String)> {
+    let mut renames = Vec::new();
+    for c in components.iter_mut() {
+        let Some(value) = recorded_nix_drv(c).map(str::to_string) else {
+            continue;
+        };
+        let Some(qualified) = with_nix_drv(&c.purl, &value) else {
+            tracing::warn!(
+                purl = %c.purl.as_str(),
+                "nix-closure: a backport identity yields no valid PURL; leaving it unqualified"
+            );
+            continue;
+        };
+        if qualified != c.purl {
+            renames.push((c.purl.as_str().to_string(), qualified.as_str().to_string()));
+            c.purl = qualified;
+        }
+    }
+    renames
+}
+
 /// Roles that become components on the strength of the role alone.
 ///
 /// `Unreferenced` is excluded here, but that is not the whole rule — see
@@ -402,6 +494,11 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
     // closure does not say which one was evaluated, and no subject is named.
     let root_key = closure.graph.evaluated.as_deref();
     let mut root_identity: Option<MergeKey> = None;
+    // Milestone 1436 — every derivation merged into each identity, so the
+    // backport census below can say how many build variants a component
+    // stands for, including ones that apply no patch.
+    let mut drvs_for: std::collections::BTreeMap<MergeKey, std::collections::BTreeSet<&str>> =
+        std::collections::BTreeMap::new();
     for (key, drv) in &closure.raw.derivations {
         let Some(role) = closure.roles.get(key).copied() else {
             continue;
@@ -437,6 +534,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         let component = ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: name.to_string(),
             version: version.to_string(),
             purl,
@@ -504,6 +602,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                 .or_default()
                 .extend(attributes.iter().cloned());
         }
+        drvs_for.entry(merge_key.clone()).or_default().insert(key.as_str());
         merged
             .entry(merge_key)
             // The variants are otherwise identical — same name, version and
@@ -529,7 +628,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
             .map(|r| ((r.component.as_str(), r.version.as_deref().unwrap_or("")), r))
             .collect();
 
-    merged
+    let mut out = merged
         .into_iter()
         .map(|(identity, (role, member_role, mut component))| {
             // FR-001 / FR-009 — the licenses land in the component's own
@@ -648,10 +747,107 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                         ),
                     );
                 }
+                // Milestone 1436 (FR-001, research R4) — a component whose
+                // patches resolve a CVE carries the identity of every
+                // patching build it stands for. One with patches that name
+                // no CVE keeps its PURL byte-identical (clarification 2).
+                if !record.distinct_cves().is_empty() {
+                    // Emitted derivations merged here that apply no patch.
+                    // Recorded so the census can report them: measured 0 on
+                    // five nixpkgs targets (#1436 T001), and a claim is not
+                    // about a build no patch reached.
+                    let unpatched = drvs_for.get(&identity).map_or(0, |ds| {
+                        ds.iter().filter(|d| !record.variants.contains_key(**d)).count()
+                    });
+                    component.extra_annotations.insert(
+                        ANN_BACKPORT_IDENTITY.to_string(),
+                        serde_json::json!({
+                            NIX_DRV_QUALIFIER: record.drv_hashes().join(","),
+                            "claims": record.every_variant_resolves(),
+                            "unscoped": record.unscoped_cves(),
+                            "variants_without_patches": unpatched,
+                        }),
+                    );
+                }
             }
             component
         })
+        .collect::<Vec<_>>();
+    qualify_backport_identities(&mut out);
+    out
+}
+
+/// The claims a component's backport identity records (CVEs every patching
+/// variant resolves), or none.
+pub(crate) fn backport_claims(c: &ResolvedComponent) -> Vec<&str> {
+    backport_list(c, "claims")
+}
+
+/// The CVEs only some of a component's patching variants resolve: C220's
+/// population on this component.
+pub(crate) fn backport_unscoped(c: &ResolvedComponent) -> Vec<&str> {
+    backport_list(c, "unscoped")
+}
+
+fn backport_list<'a>(c: &'a ResolvedComponent, field: &str) -> Vec<&'a str> {
+    c.extra_annotations
+        .get(ANN_BACKPORT_IDENTITY)
+        .and_then(|v| v.get(field))
+        .and_then(|v| v.as_array())
+        .into_iter()
+        .flatten()
+        .filter_map(|v| v.as_str())
         .collect()
+}
+
+/// Whether `c`'s PURL carries the `nix_drv` value its backport identity
+/// records. A claim is made only then (FR-002): a PURL that could not be
+/// qualified would put a build-scoped claim on every build of the version.
+pub(crate) fn carries_build_identity(c: &ResolvedComponent) -> bool {
+    recorded_nix_drv(c).is_some_and(|value| {
+        let p = c.purl.as_str();
+        let quals = p.split_once('?').map_or("", |(_, q)| q);
+        let quals = quals.split('#').next().unwrap_or("");
+        quals
+            .split('&')
+            .any(|kv| kv.split_once('=') == Some((NIX_DRV_QUALIFIER, value)))
+    })
+}
+
+/// #1436 T001 — the census research R4 left to measure, over the components
+/// a scan will emit: (a) components with a resolved CVE, (b) how many of
+/// those merge more than one patching derivation, and (c) the (component,
+/// CVE) pairs not every variant resolves, which is C220. Silent when (a) is
+/// zero, so a scan without a backport logs nothing new.
+pub(crate) fn log_backport_census(components: &[ResolvedComponent]) {
+    let (mut a, mut b, mut pairs, mut c, mut unpatched) = (0usize, 0usize, 0usize, 0usize, 0u64);
+    for comp in components {
+        let Some(identity) = comp.extra_annotations.get(ANN_BACKPORT_IDENTITY) else {
+            continue;
+        };
+        a += 1;
+        if recorded_nix_drv(comp).is_some_and(|v| v.contains(',')) {
+            b += 1;
+        }
+        let claims = backport_claims(comp).len();
+        let unscoped = backport_unscoped(comp).len();
+        pairs += claims + unscoped;
+        c += unscoped;
+        unpatched += identity
+            .get("variants_without_patches")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0);
+    }
+    if a > 0 {
+        tracing::info!(
+            components = a,
+            multi_variant = b,
+            pairs,
+            unscoped_pairs = c,
+            variants_without_patches = unpatched,
+            "nix-closure: backport identity"
+        );
+    }
 }
 
 #[cfg(test)]
@@ -680,6 +876,7 @@ mod tests {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let roles = classify(&raw);
         components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -762,6 +959,7 @@ mod tests {
         );
 
         let built = components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -820,6 +1018,7 @@ mod tests {
         assert_eq!(roles["v2.drv"], DerivationRole::BuildTooling);
 
         let c = components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -877,6 +1076,7 @@ mod tests {
         assert_eq!(roles["d-fix.drv"], DerivationRole::Unreferenced);
 
         let names: Vec<&str> = components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -907,6 +1107,118 @@ mod tests {
         let named = |n: &str| built.iter().any(|c| c.name == n);
         assert!(!named("orph"));
         assert!(!named("app"));
+    }
+
+    /// #1436 — two build variants of one identity, both patching a CVE, a
+    /// component whose patch names none, and an unpatched component.
+    const H1: &str = "0b1d6zkr6zq8m4rv7ah3ylnrwfkdsxfh";
+    const H2: &str = "9s0k1rfm4y0gn1p6dq8jrx5fhkw2lc3v";
+
+    fn backport_closure() -> String {
+        format!(
+            r#"{{
+          "derivations": {{
+            "/nix/store/{H2}-waybill-fixture-zip-6.0.drv": {{ "env": {{"pname":"waybill-fixture-zip","version":"6.0",
+                    "patches":"/nix/store/h-CVE-2099-0001.patch"}}, "outputs":{{"out":{{"path":"/nix/store/o2-zip"}}}} }},
+            "/nix/store/{H1}-waybill-fixture-zip-6.0.drv": {{ "env": {{"pname":"waybill-fixture-zip","version":"6.0",
+                    "patches":"/nix/store/h-CVE-2099-0001.patch"}}, "outputs":{{"out":{{"path":"/nix/store/o1-zip"}}}} }},
+            "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-waybill-fixture-plain-1.0.drv": {{ "env": {{"pname":"waybill-fixture-plain","version":"1.0",
+                    "patches":"/nix/store/h-gcc-15.patch"}}, "outputs":{{"out":{{"path":"/nix/store/o3-plain"}}}} }},
+            "/nix/store/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-waybill-fixture-lib-1.0.drv": {{ "env": {{"pname":"waybill-fixture-lib","version":"1.0"}},
+                    "outputs":{{"out":{{"path":"/nix/store/o4-lib"}}}} }},
+            "/nix/store/cccccccccccccccccccccccccccccccc-waybill-fixture-app-1.0.drv": {{ "env": {{"pname":"waybill-fixture-app","version":"1.0",
+                    "buildInputs":"/nix/store/o4-lib"}}, "outputs":{{"out":{{"path":"/nix/store/o5-app"}}}} }}
+          }},
+          "version": 3
+        }}"#
+        )
+    }
+
+    fn backport_components() -> Vec<ResolvedComponent> {
+        let raw = RawClosure::parse(&backport_closure()).unwrap();
+        let roles = classify(&raw);
+        components(&ClassifiedClosure {
+            runtime: None,
+            attribute: "default".into(),
+            raw,
+            roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
+            read_outcome: Default::default(),
+            graph: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
+            identifiers: Default::default(),
+        })
+    }
+
+    fn purl_of(c: &[ResolvedComponent], name: &str) -> String {
+        c.iter()
+            .find(|x| x.name == name)
+            .map(|x| x.purl.as_str().to_string())
+            .unwrap_or_else(|| panic!("no {name}: {:?}", c.iter().map(|x| &x.name).collect::<Vec<_>>()))
+    }
+
+    #[test]
+    fn m1436_a_cve_resolving_component_names_every_patching_variant() {
+        let c = backport_components();
+        assert_eq!(
+            purl_of(&c, "waybill-fixture-zip"),
+            format!("pkg:generic/waybill-fixture-zip@6.0?nix_drv={H1},{H2}"),
+            "sorted, comma-joined, one per patching variant"
+        );
+        let zip = c.iter().find(|x| x.name == "waybill-fixture-zip").unwrap();
+        assert!(carries_build_identity(zip));
+        assert_eq!(backport_claims(zip), ["CVE-2099-0001"]);
+        assert!(backport_unscoped(zip).is_empty());
+    }
+
+    #[test]
+    fn m1436_patches_naming_no_cve_leave_the_purl_byte_identical() {
+        // Clarification 2: the qualifier exists only to scope a claim, so a
+        // component with no claim to scope keeps its PURL.
+        let c = backport_components();
+        // CONTROL: the component applies a patch, so it is not unqualified
+        // merely for having none.
+        let plain = c.iter().find(|x| x.name == "waybill-fixture-plain").unwrap();
+        assert!(plain.extra_annotations.contains_key(ANN_CLOSURE_PATCHES));
+        assert_eq!(plain.purl.as_str(), "pkg:generic/waybill-fixture-plain@1.0");
+        assert!(!plain.extra_annotations.contains_key(ANN_BACKPORT_IDENTITY));
+        assert_eq!(purl_of(&c, "waybill-fixture-lib"), "pkg:generic/waybill-fixture-lib@1.0");
+    }
+
+    #[test]
+    fn m1436_the_same_closure_gives_the_same_purl() {
+        // US3-1: the identity is a function of the closure alone.
+        let a: Vec<String> = backport_components().iter().map(|c| c.purl.as_str().to_string()).collect();
+        let b: Vec<String> = backport_components().iter().map(|c| c.purl.as_str().to_string()).collect();
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn m1436_qualifying_is_idempotent_and_survives_a_rename() {
+        // A later identity pass rebuilds the PURL from its parts, dropping
+        // the qualifier; the scan restores it, and the pair it returns is
+        // what moves the edges (#980).
+        let mut c = backport_components();
+        assert!(qualify_backport_identities(&mut c).is_empty(), "already qualified");
+        let zip = c.iter_mut().find(|x| x.name == "waybill-fixture-zip").unwrap();
+        zip.purl = Purl::new("pkg:hackage/waybill-fixture-zip@6.0?arch=x").unwrap();
+        let renames = qualify_backport_identities(&mut c);
+        let expected = format!("pkg:hackage/waybill-fixture-zip@6.0?arch=x&nix_drv={H1},{H2}");
+        assert_eq!(
+            renames,
+            vec![("pkg:hackage/waybill-fixture-zip@6.0?arch=x".to_string(), expected.clone())]
+        );
+        assert_eq!(purl_of(&c, "waybill-fixture-zip"), expected);
+        assert!(qualify_backport_identities(&mut c).is_empty());
+    }
+
+    #[test]
+    fn m1436_without_qualifiers_strips_every_qualifier_and_subpath() {
+        assert_eq!(without_qualifiers("pkg:generic/a@1?nix_drv=x,y&b=c#sub"), "pkg:generic/a@1");
+        assert_eq!(without_qualifiers("pkg:generic/a@1"), "pkg:generic/a@1");
     }
 
     #[test]

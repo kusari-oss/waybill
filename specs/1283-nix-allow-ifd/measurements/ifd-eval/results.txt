@@ -1,0 +1,12 @@
+slack-web ifd=false run=1 exit=1 secs=0.91 derivations=0
+slack-web ifd=false run=2 exit=1 secs=0.74 derivations=0
+slack-web ifd=false run=3 exit=1 secs=0.77 derivations=0
+slack-web ifd=true run=1 exit=0 secs=1.12 derivations=1535
+slack-web ifd=true run=2 exit=0 secs=0.25 derivations=1535
+slack-web ifd=true run=3 exit=0 secs=0.30 derivations=1535
+openai ifd=false run=1 exit=1 secs=0.93 derivations=0
+openai ifd=false run=2 exit=1 secs=0.82 derivations=0
+openai ifd=false run=3 exit=1 secs=0.80 derivations=0
+openai ifd=true run=1 exit=0 secs=1.18 derivations=1830
+openai ifd=true run=2 exit=0 secs=0.25 derivations=1830
+openai ifd=true run=3 exit=0 secs=0.29 derivations=1830

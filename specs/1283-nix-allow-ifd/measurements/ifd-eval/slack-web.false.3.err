@@ -1,0 +1,24 @@
+warning: ignoring untrusted flake configuration setting 'allow-import-from-derivation'.
+Pass '--accept-flake-config' to trust it
+warning: ignoring untrusted flake configuration setting 'extra-substituters'.
+Pass '--accept-flake-config' to trust it
+warning: ignoring untrusted flake configuration setting 'extra-trusted-public-keys'.
+Pass '--accept-flake-config' to trust it
+error:
+       … while evaluating the attribute 'haskell.packages.ghc910.slack-web'
+         at /Users/mlieberman/.claude-swap-backup/sessions/1-mike_kusari.dev/jobs/e93b0155/tmp/nixhs-assess/slack-web/flake.nix:104:13:
+          103|           {
+          104|             slack-web = hprev.callCabal2nix "slack-web" ./. { };
+             |             ^
+          105|           });
+
+       … in the left operand of the update (//) operator
+         at «github:nixos/nixpkgs/5ae3b07»/pkgs/development/haskell-modules/lib/compose.nix:48:5:
+           47|     ))
+           48|     // {
+             |     ^
+           49|       overrideScope = scope: overrideCabal f (drv.overrideScope scope);
+
+       (stack trace truncated; use '--show-trace' to show the full, detailed trace)
+
+       error: cannot build '/nix/store/qgwj0dbr1rsxd78iqxzxrlk1q4aibgip-cabal2nix-slack-web.drv^out' during evaluation because the option 'allow-import-from-derivation' is disabled

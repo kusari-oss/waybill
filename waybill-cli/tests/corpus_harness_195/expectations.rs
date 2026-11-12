@@ -344,6 +344,71 @@ fn nix_fail(check_name: &'static str, observed: String, expected: &str, suggeste
     }
 }
 
+/// Milestone 1423 (T036, SC-007): scope from the runtime closure a
+/// substituter returns, and Haskell libraries kept runtime by static linking.
+///
+/// Structural only, like moat's: exact counts are the goldens' job, and this
+/// closure was measured on aarch64-darwin, not CI's x86_64-linux.
+pub fn nix_closure_shellcheck_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    let Some(method) = cdx_doc_property(&sboms.cdx, "waybill:closure-scope-method")
+        .and_then(|v| serde_json::from_str::<serde_json::Value>(&v).ok())
+    else {
+        return Err(nix_fail(
+            "m1423-scope-method-present",
+            "no waybill:closure-scope-method document property".to_string(),
+            "the C216 record",
+            "the closure tier did not run, or the scope pass stopped recording its method",
+        ));
+    };
+    if method["method"] != "runtime-closure" || method["verified"] != true {
+        return Err(nix_fail(
+            "m1423-runtime-closure-used",
+            method.to_string(),
+            "method runtime-closure, verified true: cache.nixos.org holds this output",
+            "the substituter query, its signature verification, or the join to members \
+             failed; read unavailable-reason",
+        ));
+    }
+    let comps: Vec<&serde_json::Value> = {
+        fn walk<'a>(cs: &'a serde_json::Value, out: &mut Vec<&'a serde_json::Value>) {
+            for c in cs.as_array().into_iter().flatten() {
+                out.push(c);
+                walk(&c["components"], out);
+            }
+        }
+        let mut v = Vec::new();
+        walk(&sboms.cdx["components"], &mut v);
+        v
+    };
+    fn source(c: &serde_json::Value) -> Option<&str> {
+        c["properties"].as_array().and_then(|ps| {
+            ps.iter()
+                .find(|p| p["name"] == "waybill:scope-classification-source")
+                .and_then(|p| p["value"].as_str())
+        })
+    }
+    let linked: Vec<&&serde_json::Value> =
+        comps.iter().filter(|c| source(c) == Some("statically-linked")).collect();
+    if linked.is_empty() {
+        return Err(nix_fail(
+            "m1423-static-link-present",
+            "0 statically-linked components".to_string(),
+            "the Haskell libraries linked into shellcheck (50 per the cabal metadata, \
+             measured on aarch64-darwin)",
+            "static-link detection stopped finding the static ShellCheck build's libraries",
+        ));
+    }
+    if let Some(c) = linked.iter().find(|c| c["scope"] == "excluded") {
+        return Err(nix_fail(
+            "m1423-static-link-not-excluded",
+            format!("`{}` is statically linked yet scope=excluded", c["name"]),
+            "no scope: its code ships inside the binary",
+            "the scope pass marked a member it also classified as statically linked",
+        ));
+    }
+    Ok(())
+}
+
 /// Structural invariants only; exact counts are the goldens' job, and the
 /// closure is per-system (CI's x86_64-linux closure is not the one measured
 /// on aarch64-darwin when the target was added).
@@ -456,10 +521,18 @@ pub fn nix_closure_moat_expectations(sboms: &EmittedSboms) -> Result<(), Asserti
 
     // SC-003. Six components carried CDX `scope: "excluded"` on the strength
     // of a role that was wrong, because the declaration referencing them
-    // lived in `structuredAttrs`. nix references all six into the artifact,
-    // so no format may now report them absent from it — and m1277's rule
-    // asserts no scope at all for `artifact-input` or `both`, because that is
-    // exactly the case waybill cannot call.
+    // lived in `structuredAttrs`. Reading that carrier makes their C182
+    // role `artifact-input` or `both`, and that role is what this guards.
+    //
+    // Milestone 1423 changed what scope means: it is decided by runtime
+    // evidence (the runtime closure, or on this target, whose output is in
+    // no store, the reachability walk), not by the role. "Some derivation in
+    // the closure takes it as an input" no longer implies "ships", so
+    // `tzdata` and `util-linux-minimal`, reached only through build-only
+    // members (python3, pytz, tcl) and through check-time inputs, are now
+    // correctly marked. The #1348 regression signal therefore moves from the
+    // scope to the role: if the reader stopped consulting `structuredAttrs`,
+    // these roles would fall back to `build-tooling` or `unreferenced`.
     for name in [
         "bash-interactive",
         "elfutils",
@@ -478,14 +551,33 @@ pub fn nix_closure_moat_expectations(sboms: &EmittedSboms) -> Result<(), Asserti
                 "a member nix references into the artifact vanished from the document",
             ));
         };
-        if c.get("scope").and_then(|v| v.as_str()) == Some("excluded") {
+        let prop = |key: &str| {
+            c["properties"].as_array().and_then(|ps| {
+                ps.iter()
+                    .find(|p| p["name"].as_str() == Some(key))
+                    .and_then(|p| p["value"].as_str())
+            })
+        };
+        let role = prop("waybill:closure-role");
+        if !matches!(role, Some("artifact-input" | "both")) {
             return Err(nix_fail(
-                "m1278-no-false-exclusion",
-                format!("`{name}` carries scope=excluded"),
-                "no scope: nix references it into the artifact, and the rule \
-                 declines to assert for that case",
+                "m1278-structured-attrs-role",
+                format!("`{name}` has closure-role {role:?}"),
+                "artifact-input or both: a declaration in structuredAttrs \
+                 references it as an input",
                 "the closure reader is back to reading only `env`, so the \
                  referencing declaration is invisible again (#1348)",
+            ));
+        }
+        let source = prop("waybill:scope-classification-source");
+        if !matches!(source, Some("runtime-closure" | "reachability-walk" | "statically-linked")) {
+            return Err(nix_fail(
+                "m1423-scope-from-runtime-evidence",
+                format!("`{name}` has scope-classification-source {source:?}"),
+                "runtime-closure, reachability-walk or statically-linked: \
+                 scope decided by runtime evidence, not by the role",
+                "the 1423 scope pass did not run, or fell back to the role \
+                 rule on a target whose walk should be usable",
             ));
         }
     }
@@ -2232,5 +2324,511 @@ mod i3_tests {
         assert_eq!(err.check_name, "l3-root-out-edge-count-agrees-across-formats");
         assert!(err.observed.contains("CycloneDX=0"), "{}", err.observed);
         assert!(err.observed.contains("SPDX 2.3=1"), "{}", err.observed);
+    }
+}
+
+// -----------------------------------------------------------------------
+// Feature 1283 — the IFD targets: the document records the allowance, and
+// the runtime-only view recalls the committed truth (research R7,
+// data-model §RecallTruth "Proxy match").
+// -----------------------------------------------------------------------
+
+pub fn nix_closure_slack_web_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    nix_closure_ifd_expectations(sboms, "nix-closure-slack-web")
+}
+
+pub fn nix_closure_openai_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    nix_closure_ifd_expectations(sboms, "nix-closure-openai")
+}
+
+pub fn nix_closure_slacklinker_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    nix_closure_ifd_expectations(sboms, "nix-closure-slacklinker")
+}
+
+/// Recall must reach this share of the truth (SC-001–SC-003).
+const RECALL_FLOOR_NUM: usize = 9;
+const RECALL_FLOOR_DEN: usize = 10;
+
+fn nix_closure_ifd_expectations(sboms: &EmittedSboms, target: &str) -> Result<(), AssertionFailure> {
+    ifd_document_checks(&sboms.cdx)?;
+    let pin = super::manifest::TARGETS
+        .iter()
+        .find(|t| t.name == target)
+        .and_then(|t| match &t.pinned {
+            super::manifest::PinnedRef::Sha { hex } => Some(*hex),
+            super::manifest::PinnedRef::Digest { .. } => None,
+        })
+        .ok_or_else(|| {
+            nix_fail(
+                "1283-recall-target-known",
+                format!("no SHA-pinned manifest target named {target}"),
+                "the expectation to be wired to a SHA-pinned target of the same name",
+                "the expectation function and the manifest entry disagree on the target name",
+            )
+        })?;
+    check_recall(&sboms.cdx, target, pin, &recall_truth_path(target))
+}
+
+/// C190 absent, C217 `allowed` and verified, C216 present. Without these the
+/// recall number below would be measuring a degraded scan.
+fn ifd_document_checks(cdx: &serde_json::Value) -> Result<(), AssertionFailure> {
+    if let Some(c190) = cdx_doc_property(cdx, "waybill:nix-closure-degraded") {
+        return Err(nix_fail(
+            "1283-no-nix-degradation",
+            c190,
+            "no waybill:nix-closure-degraded: with --nix-allow-ifd the closure tier reads this flake",
+            "read the C190 reason: import-from-derivation-required means the flag did not reach a \
+             call site; ifd-allowance-unverified means nix did not report the setting; \
+             import-from-derivation-build-failed means the IFD build itself failed",
+        ));
+    }
+    let policy = cdx_doc_property(cdx, "waybill:nix-evaluation-policy");
+    let parsed = policy
+        .as_deref()
+        .and_then(|v| serde_json::from_str::<serde_json::Value>(v).ok());
+    let ok = parsed.as_ref().is_some_and(|p| {
+        p["import-from-derivation"] == "allowed" && p["verified"] == true
+    });
+    if !ok {
+        return Err(nix_fail(
+            "1283-ifd-allowed-and-verified",
+            policy.unwrap_or_else(|| "no waybill:nix-evaluation-policy document property".to_string()),
+            "C217 with import-from-derivation `allowed` and verified true",
+            "the harness did not pass --nix-allow-ifd, or the preflight could not verify it",
+        ));
+    }
+    if cdx_doc_property(cdx, "waybill:closure-scope-method").is_none() {
+        return Err(nix_fail(
+            "1283-scope-method-present",
+            "no waybill:closure-scope-method document property".to_string(),
+            "the C216 record",
+            "the closure tier did not run to its scope pass",
+        ));
+    }
+    Ok(())
+}
+
+fn recall_truth_path(target: &str) -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/public_corpus")
+        .join(target)
+        .join("recall-truth.json")
+}
+
+/// Score `cdx` against the truth at `path`. A truth file that is absent,
+/// unreadable, for another commit or empty FAILS: a recall check that did
+/// not run must not read as one that passed.
+fn check_recall(
+    cdx: &serde_json::Value,
+    target: &str,
+    pin: &str,
+    path: &std::path::Path,
+) -> Result<(), AssertionFailure> {
+    let text = match std::fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(e) => {
+            return Err(nix_fail(
+                "1283-recall-truth-present",
+                format!("cannot read {}: {e}", path.display()),
+                &format!(
+                    "a committed recall-truth.json for {target}. Produce it with \
+                     `gh workflow run recall-truth.yml --ref <branch> -f targets={target}`, \
+                     review the artifact's excluded list, and commit its recall-truth.json \
+                     to waybill-cli/tests/fixtures/public_corpus/{target}/"
+                ),
+                "dispatch recall-truth.yml (specs/1283-nix-allow-ifd/measurements/recall/README.md); \
+                 this check fails rather than skips without it",
+            ));
+        }
+    };
+    let truth: serde_json::Value = serde_json::from_str(&text).map_err(|e| {
+        nix_fail(
+            "1283-recall-truth-parses",
+            format!("{}: {e}", path.display()),
+            "a JSON recall-truth file (data-model §RecallTruth)",
+            "re-download the recall-truth.yml artifact",
+        )
+    })?;
+    if truth["target-pin"].as_str() != Some(pin) {
+        return Err(nix_fail(
+            "1283-recall-truth-matches-pin",
+            format!("truth target-pin {}, manifest pin {pin}", truth["target-pin"]),
+            "the truth produced for the commit this target scans",
+            "the pin moved: re-dispatch recall-truth.yml and commit the new truth",
+        ));
+    }
+    let outcome = recall_proxy(cdx, &truth).map_err(|e| {
+        nix_fail(
+            "1283-recall-truth-well-formed",
+            e,
+            "schema 1, a non-empty findings list, every finding with a cpe or purl matcher",
+            "re-run classify.py through recall-truth.yml",
+        )
+    })?;
+    if outcome.recalled * RECALL_FLOOR_DEN < outcome.total * RECALL_FLOOR_NUM {
+        return Err(nix_fail(
+            "1283-runtime-recall-floor",
+            format!(
+                "{target}: recalled {} of {} ({:.3}); misses:\n  {}",
+                outcome.recalled,
+                outcome.total,
+                outcome.ratio(),
+                outcome.misses.join("\n  ")
+            ),
+            "at least 0.90 of the truth findings matched by a runtime component",
+            "each miss names what the document has under that name; a version mismatch or a \
+             missing CPE is an identity regression, `scope=excluded` a scope one",
+        ));
+    }
+    Ok(())
+}
+
+#[derive(Debug)]
+struct RecallOutcome {
+    total: usize,
+    recalled: usize,
+    misses: Vec<String>,
+}
+
+impl RecallOutcome {
+    fn ratio(&self) -> f64 {
+        if self.total == 0 {
+            0.0
+        } else {
+            self.recalled as f64 / self.total as f64
+        }
+    }
+}
+
+/// Lower-case and strip a leading `python3-` / `python3.N-` — `norm_name` in
+/// `specs/1283-nix-allow-ifd/measurements/recall/classify.py`.
+fn recall_norm_name(n: &str) -> String {
+    let lower = n.to_lowercase();
+    if let Some(rest) = lower.strip_prefix("python3") {
+        if let Some(after) = rest.strip_prefix('-') {
+            return after.to_string();
+        }
+        if let Some(minor) = rest.strip_prefix('.') {
+            let digits = minor.bytes().take_while(u8::is_ascii_digit).count();
+            if digits > 0 {
+                if let Some(after) = minor[digits..].strip_prefix('-') {
+                    return after.to_string();
+                }
+            }
+        }
+    }
+    lower
+}
+
+/// `vendor:product`, fields 4–5 of a CPE 2.3 formatted string.
+fn cpe_vendor_product(cpe: &str) -> Option<String> {
+    let f: Vec<&str> = cpe.split(':').collect();
+    if f.len() > 4 && f[0] == "cpe" && f[1] == "2.3" {
+        Some(format!("{}:{}", f[3], f[4]))
+    } else {
+        None
+    }
+}
+
+fn purl_without_qualifiers(p: &str) -> &str {
+    let end = p.find(['?', '#']).unwrap_or(p.len());
+    &p[..end]
+}
+
+/// Every CycloneDX component, recursively; with `runtime_only`, a component
+/// with `scope: excluded` is dropped together with what nests under it.
+fn walk_components(cdx: &serde_json::Value, runtime_only: bool) -> Vec<&serde_json::Value> {
+    fn walk<'a>(cs: &'a serde_json::Value, runtime_only: bool, out: &mut Vec<&'a serde_json::Value>) {
+        for c in cs.as_array().into_iter().flatten() {
+            if runtime_only && c["scope"] == "excluded" {
+                continue;
+            }
+            out.push(c);
+            walk(&c["components"], runtime_only, out);
+        }
+    }
+    let mut out = Vec::new();
+    walk(&cdx["components"], runtime_only, &mut out);
+    out
+}
+
+/// The vendor:product pairs a component offers: its `cpe`, and every
+/// `waybill:cpe-candidates` value (a JSON array in a string, or one CPE).
+fn component_vendor_products(c: &serde_json::Value) -> std::collections::BTreeSet<String> {
+    let mut cpes: Vec<String> = c["cpe"].as_str().map(str::to_string).into_iter().collect();
+    for p in c["properties"].as_array().into_iter().flatten() {
+        if p["name"] != "waybill:cpe-candidates" {
+            continue;
+        }
+        let Some(v) = p["value"].as_str() else { continue };
+        match serde_json::from_str::<Vec<String>>(v) {
+            Ok(list) => cpes.extend(list),
+            Err(_) => cpes.push(v.to_string()),
+        }
+    }
+    cpes.iter().filter_map(|c| cpe_vendor_product(c)).collect()
+}
+
+/// A matcher value: one string, or a list of strings, any of which matches.
+fn one_or_many(v: &serde_json::Value) -> Result<Vec<String>, String> {
+    match v {
+        serde_json::Value::Null => Ok(Vec::new()),
+        serde_json::Value::String(s) => Ok(vec![s.clone()]),
+        serde_json::Value::Array(a) => a
+            .iter()
+            .map(|x| x.as_str().map(str::to_string).ok_or_else(|| format!("non-string matcher entry {x}")))
+            .collect(),
+        other => Err(format!("matcher value {other} is neither a string nor a list")),
+    }
+}
+
+/// The share of truth findings the runtime-only view satisfies, per
+/// data-model §RecallTruth "Proxy match":
+///
+/// - **cpe** — a component whose normalized name and exact version equal the
+///   finding's, offering a CPE with the matcher's vendor:product;
+/// - **purl** — a component whose purl equals the matcher's, qualifiers
+///   ignored (the name step is skipped; the purl decides).
+///
+/// Either satisfies a finding that carries both.
+fn recall_proxy(cdx: &serde_json::Value, truth: &serde_json::Value) -> Result<RecallOutcome, String> {
+    if truth["schema"] != 1 {
+        return Err(format!("unsupported schema {}", truth["schema"]));
+    }
+    let findings = truth["findings"].as_array().ok_or("no findings array")?;
+    if findings.is_empty() {
+        return Err("the findings list is empty, so recall would compare nothing".to_string());
+    }
+    let runtime = walk_components(cdx, true);
+    let everything = walk_components(cdx, false);
+    let mut recalled = 0;
+    let mut misses = Vec::new();
+    for f in findings {
+        let (Some(id), Some(name), Some(version)) =
+            (f["id"].as_str(), f["name"].as_str(), f["version"].as_str())
+        else {
+            return Err(format!("finding without id, name and version: {f}"));
+        };
+        let cpes = one_or_many(&f["matcher"]["cpe"])?;
+        let purls = one_or_many(&f["matcher"]["purl"])?;
+        if cpes.is_empty() && purls.is_empty() {
+            return Err(format!("finding {id} {name}@{version} has neither a cpe nor a purl matcher"));
+        }
+        let want_name = recall_norm_name(name);
+        let by_cpe = |c: &&serde_json::Value| {
+            !cpes.is_empty()
+                && c["name"].as_str().is_some_and(|n| recall_norm_name(n) == want_name)
+                && c["version"].as_str() == Some(version)
+                && {
+                    let offered = component_vendor_products(c);
+                    cpes.iter().any(|m| offered.contains(m))
+                }
+        };
+        let by_purl = |c: &&serde_json::Value| {
+            c["purl"].as_str().is_some_and(|p| {
+                purls.iter().any(|m| purl_without_qualifiers(m) == purl_without_qualifiers(p))
+            })
+        };
+        if runtime.iter().any(|c| by_cpe(c) || by_purl(c)) {
+            recalled += 1;
+            continue;
+        }
+        // Say what the document has instead, so the cause is in the report.
+        let same_name: Vec<&&serde_json::Value> = everything
+            .iter()
+            .filter(|c| c["name"].as_str().is_some_and(|n| recall_norm_name(n) == want_name))
+            .collect();
+        let seen = if same_name.is_empty() {
+            "no component of that name".to_string()
+        } else {
+            let mut d: Vec<String> = same_name
+                .iter()
+                .map(|c| {
+                    format!(
+                        "{}@{} scope={} cpes={:?}",
+                        c["name"].as_str().unwrap_or("?"),
+                        c["version"].as_str().unwrap_or("<none>"),
+                        c["scope"].as_str().unwrap_or("-"),
+                        component_vendor_products(c)
+                    )
+                })
+                .collect();
+            d.sort();
+            d.dedup();
+            d.join("; ")
+        };
+        misses.push(format!("{id} {name}@{version} matcher={} -- document has: {seen}", f["matcher"]));
+    }
+    Ok(RecallOutcome { total: findings.len(), recalled, misses })
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod recall_proxy_tests {
+    use super::*;
+    use serde_json::json;
+
+    /// One CPE hit (openssl, through a candidate CPE), one purl hit (aeson,
+    /// nested and carrying qualifiers), one miss (zlib, present only with
+    /// `scope: excluded`).
+    const TRUTH: &str = r#"{
+      "schema": 1,
+      "produced": "2026-11-11",
+      "tools": {"grype": "0.120.0"},
+      "target-pin": "7b46273d3723ba37da26e4c4f7a3c5575ae9e837",
+      "findings": [
+        {"id": "CVE-2026-0001", "name": "openssl", "version": "3.6.0", "matcher": {"cpe": "openssl:openssl"}},
+        {"id": "HSEC-2026-0007", "name": "aeson", "version": "2.2.3.0", "matcher": {"purl": "pkg:hackage/aeson@2.2.3.0"}},
+        {"id": "CVE-2026-0002", "name": "zlib", "version": "1.3.1", "matcher": {"cpe": "zlib:zlib"}}
+      ],
+      "excluded": []
+    }"#;
+
+    fn cdx() -> serde_json::Value {
+        json!({
+            "bomFormat": "CycloneDX",
+            "components": [
+                {"name": "openssl", "version": "3.6.0", "purl": "pkg:nix/openssl@3.6.0",
+                 "properties": [{"name": "waybill:cpe-candidates",
+                                 "value": "[\"cpe:2.3:a:openssl_project:openssl:3.6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:openssl:openssl:3.6.0:*:*:*:*:*:*:*\"]"}]},
+                {"name": "slack-web", "version": "2.3.0.0", "purl": "pkg:hackage/slack-web@2.3.0.0",
+                 "components": [
+                     {"name": "aeson", "version": "2.2.3.0",
+                      "purl": "pkg:hackage/aeson@2.2.3.0?repository_url=https://hackage.haskell.org"}
+                 ]},
+                {"name": "zlib", "version": "1.3.1", "scope": "excluded",
+                 "cpe": "cpe:2.3:a:zlib:zlib:1.3.1:*:*:*:*:*:*:*"}
+            ]
+        })
+    }
+
+    fn truth_file() -> (tempfile::TempDir, std::path::PathBuf) {
+        let d = tempfile::tempdir().unwrap();
+        let p = d.path().join("recall-truth.json");
+        std::fs::write(&p, TRUTH).unwrap();
+        (d, p)
+    }
+
+    #[test]
+    fn three_finding_truth_recalls_two_of_three() {
+        let (_d, p) = truth_file();
+        let truth: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&p).unwrap()).unwrap();
+        let o = recall_proxy(&cdx(), &truth).unwrap();
+        assert_eq!((o.recalled, o.total), (2, 3), "{o:?}");
+        assert!((o.ratio() - 0.667).abs() < 0.001, "{}", o.ratio());
+        assert_eq!(o.misses.len(), 1, "{o:?}");
+        assert!(o.misses[0].starts_with("CVE-2026-0002 zlib@1.3.1"), "{}", o.misses[0]);
+        assert!(o.misses[0].contains("scope=excluded"), "{}", o.misses[0]);
+    }
+
+    #[test]
+    fn below_the_floor_fails_and_lists_the_miss() {
+        let (_d, p) = truth_file();
+        let err = check_recall(&cdx(), "nix-closure-slack-web", "7b46273d3723ba37da26e4c4f7a3c5575ae9e837", &p)
+            .unwrap_err();
+        assert_eq!(err.check_name, "1283-runtime-recall-floor");
+        assert!(err.observed.contains("recalled 2 of 3"), "{}", err.observed);
+        assert!(err.observed.contains("CVE-2026-0002 zlib@1.3.1"), "{}", err.observed);
+    }
+
+    #[test]
+    fn at_the_floor_passes() {
+        // Ten findings, nine of them the openssl one: 9/10 is exactly 0.90.
+        let mut t: serde_json::Value = serde_json::from_str(TRUTH).unwrap();
+        let hit = t["findings"][0].clone();
+        let miss = t["findings"][2].clone();
+        let mut fs = vec![miss];
+        fs.extend(std::iter::repeat_n(hit, 9));
+        t["findings"] = json!(fs);
+        let d = tempfile::tempdir().unwrap();
+        let p = d.path().join("recall-truth.json");
+        std::fs::write(&p, t.to_string()).unwrap();
+        check_recall(&cdx(), "nix-closure-slack-web", "7b46273d3723ba37da26e4c4f7a3c5575ae9e837", &p).unwrap();
+    }
+
+    #[test]
+    fn an_absent_truth_file_fails_naming_the_dispatch() {
+        let d = tempfile::tempdir().unwrap();
+        let err = check_recall(&cdx(), "nix-closure-openai", "x", &d.path().join("recall-truth.json"))
+            .unwrap_err();
+        assert_eq!(err.check_name, "1283-recall-truth-present");
+        assert!(
+            err.expected.contains("gh workflow run recall-truth.yml")
+                && err.expected.contains("-f targets=nix-closure-openai"),
+            "{}",
+            err.expected
+        );
+    }
+
+    #[test]
+    fn truth_for_another_commit_fails() {
+        let (_d, p) = truth_file();
+        let err = check_recall(&cdx(), "nix-closure-slack-web", "0000000000000000000000000000000000000000", &p)
+            .unwrap_err();
+        assert_eq!(err.check_name, "1283-recall-truth-matches-pin");
+    }
+
+    #[test]
+    fn an_empty_truth_is_an_error_not_a_pass() {
+        let t = json!({"schema": 1, "target-pin": "x", "findings": []});
+        assert!(recall_proxy(&cdx(), &t).unwrap_err().contains("empty"));
+    }
+
+    #[test]
+    fn the_cpe_matcher_needs_name_and_version_but_the_purl_matcher_does_not() {
+        let t = |m: serde_json::Value, name: &str, version: &str| {
+            json!({"schema": 1, "findings": [{"id": "X", "name": name, "version": version, "matcher": m}]})
+        };
+        let c = cdx();
+        // Right vendor:product, wrong version: no.
+        let o = recall_proxy(&c, &t(json!({"cpe": "openssl:openssl"}), "openssl", "3.5.0")).unwrap();
+        assert_eq!(o.recalled, 0);
+        // Right name and version, wrong vendor:product: no.
+        let o = recall_proxy(&c, &t(json!({"cpe": "zlib:zlib"}), "openssl", "3.6.0")).unwrap();
+        assert_eq!(o.recalled, 0);
+        // Purl decides, whatever the finding's name says.
+        let o = recall_proxy(&c, &t(json!({"purl": "pkg:hackage/aeson@2.2.3.0"}), "Aeson-renamed", "0")).unwrap();
+        assert_eq!(o.recalled, 1);
+        // A list matcher: any member matches.
+        let o = recall_proxy(&c, &t(json!({"cpe": ["nope:nope", "openssl:openssl"]}), "openssl", "3.6.0")).unwrap();
+        assert_eq!(o.recalled, 1);
+    }
+
+    #[test]
+    fn names_normalize_like_classify_py() {
+        assert_eq!(recall_norm_name("Python3.12-Requests"), "requests");
+        assert_eq!(recall_norm_name("python3-six"), "six");
+        assert_eq!(recall_norm_name("python3x-six"), "python3x-six");
+        assert_eq!(recall_norm_name("python3.-six"), "python3.-six");
+        assert_eq!(recall_norm_name("OpenSSL"), "openssl");
+    }
+
+    #[test]
+    fn document_checks_need_c217_allowed_verified_and_no_c190() {
+        let doc = |props: serde_json::Value| json!({"metadata": {"properties": props}, "components": []});
+        let c216 = json!({"name": "waybill:closure-scope-method", "value": "{\"method\":\"runtime-closure\"}"});
+        let c217 = |ifd: &str, verified: bool| {
+            json!({"name": "waybill:nix-evaluation-policy",
+                   "value": json!({"import-from-derivation": ifd, "sandbox": "true", "schema": 1, "verified": verified}).to_string()})
+        };
+        ifd_document_checks(&doc(json!([c216, c217("allowed", true)]))).unwrap();
+        assert_eq!(
+            ifd_document_checks(&doc(json!([c216, c217("refused", true)]))).unwrap_err().check_name,
+            "1283-ifd-allowed-and-verified"
+        );
+        assert_eq!(
+            ifd_document_checks(&doc(json!([c216, c217("allowed", false)]))).unwrap_err().check_name,
+            "1283-ifd-allowed-and-verified"
+        );
+        assert_eq!(
+            ifd_document_checks(&doc(json!([c217("allowed", true)]))).unwrap_err().check_name,
+            "1283-scope-method-present"
+        );
+        let c190 = json!({"name": "waybill:nix-closure-degraded",
+                          "value": "{\"reason\":\"import-from-derivation-required\"}"});
+        assert_eq!(
+            ifd_document_checks(&doc(json!([c216, c217("allowed", true), c190]))).unwrap_err().check_name,
+            "1283-no-nix-degradation"
+        );
     }
 }

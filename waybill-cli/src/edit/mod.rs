@@ -83,6 +83,12 @@ pub struct EditReport {
     pub ops: Vec<OpReport>,
     /// Components whose dependency list changed (bridging or removal).
     pub dependency_lists_changed: usize,
+    /// Vulnerability statements removed because every component they
+    /// assessed was dropped.
+    pub vulnerability_statements_removed: usize,
+    /// The OpenVEX sidecars whose reference the edit removed (#1454), as the
+    /// document named them.
+    pub openvex_references_removed: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -134,6 +140,10 @@ pub struct DropOutcome {
     /// Components whose dependency list gained bridged edges or lost
     /// members; their completeness claims are downgraded.
     pub changed: BTreeSet<String>,
+    /// Vulnerability statements removed because every component they
+    /// assessed was dropped (CycloneDX `vulnerabilities[]` entries, SPDX 3
+    /// `security_*VulnAssessmentRelationship` elements).
+    pub vulnerability_statements_removed: usize,
 }
 
 /// One format's editor over the document's own JSON.
@@ -192,6 +202,12 @@ pub trait SbomAdapter {
     /// The original's own derivation record, if it was itself derived.
     fn derivation_record(&self) -> Option<Value>;
     fn attach_derivation(&mut self, record: &Value, original_sha256: &str);
+    /// Remove the document's references to an OpenVEX sidecar, returning
+    /// what they named (#1454). Only SPDX has one: CycloneDX carries its VEX
+    /// in the document, where dropping a component prunes it.
+    fn remove_openvex_references(&mut self) -> Vec<String> {
+        Vec::new()
+    }
     /// Remove the original's own signature, or the reference to it, from
     /// the document: it signs bytes that no longer exist, and its material
     /// moves into the derivation record. Only CycloneDX carries one.
@@ -287,6 +303,7 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
     let mut dropped: BTreeSet<String> = BTreeSet::new();
     let mut redactor = Redactor::new(opts.redact_key.clone());
     let mut changed_lists: BTreeSet<String> = BTreeSet::new();
+    let mut renamed_components = false;
 
     for op in ops {
         let op_report = match op {
@@ -305,6 +322,7 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
                 }
                 let outcome = adapter.drop_components(&selected);
                 changed_lists.extend(outcome.changed);
+                report.vulnerability_statements_removed += outcome.vulnerability_statements_removed;
                 dropped.extend(selected.iter().cloned());
                 OpReport {
                     category: op.category().to_string(),
@@ -326,6 +344,8 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
                 }
                 let (matched, changed) =
                     redactor.apply(adapter.as_mut(), *class, *mode, pattern.as_deref())?;
+                renamed_components |=
+                    changed > 0 && matches!(class, RedactClass::Names | RedactClass::Hosts);
                 OpReport {
                     category: op.category().to_string(),
                     matched,
@@ -334,6 +354,17 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
             }
         };
         report.ops.push(op_report);
+    }
+
+    // #1454 — an OpenVEX sidecar names components by PURL, and this command
+    // edits one document, never the sidecar. Once components are dropped, or
+    // a name or host they are identified by is replaced, the sidecar may
+    // assess components the document no longer holds, so the reference goes:
+    // kept, it would point a consumer at statements about them, and SPDX
+    // 2.3's checksum would still verify. The CycloneDX side drops the same
+    // statements from the document.
+    if !dropped.is_empty() || renamed_components {
+        report.openvex_references_removed = adapter.remove_openvex_references();
     }
 
     // Dropped ids are gone from bridged lists already; any list that changed
@@ -352,10 +383,9 @@ pub fn run(input: &[u8], ops: &[EditOp], opts: &EditOptions) -> Result<EditOutco
             dangling.len()
         );
     }
-    let flat = serde_json::to_string(adapter.doc()).context("serialising edited document")?;
     for id in &dropped {
-        if flat.contains(&serde_json::to_string(id)?) {
-            bail!("a dropped component's identifier is still referenced in the output; nothing written");
+        if let Some(path) = find_string(adapter.doc(), id) {
+            bail!("dropped component `{id}` is still referenced at {path}; nothing written");
         }
     }
     redactor.check_no_leaks(adapter.as_mut())?;
@@ -430,6 +460,28 @@ pub(crate) fn bridge(edges: &Edges, dropped: &BTreeSet<String>) -> (Edges, BTree
         out.insert(from.clone(), list);
     }
     (out, changed)
+}
+
+/// The JSON Pointer of a string value or object key equal to `needle`: the
+/// same matches the serialised-text search this replaced, with a location.
+pub(crate) fn find_string(v: &Value, needle: &str) -> Option<String> {
+    fn escape(token: &str) -> String {
+        token.replace('~', "~0").replace('/', "~1")
+    }
+    match v {
+        Value::String(s) if s == needle => Some(String::new()),
+        Value::Array(a) => a
+            .iter()
+            .enumerate()
+            .find_map(|(i, x)| find_string(x, needle).map(|rest| format!("/{i}{rest}"))),
+        Value::Object(m) => m.iter().find_map(|(k, x)| {
+            if k == needle {
+                return Some(format!("/{}", escape(k)));
+            }
+            find_string(x, needle).map(|rest| format!("/{}{rest}", escape(k)))
+        }),
+        _ => None,
+    }
 }
 
 /// The `field` of a `waybill-annotation/v1` envelope, if `s` is one.
@@ -522,6 +574,156 @@ mod tests {
         assert_eq!(op.category(), "drop-components");
         let op: EditOp = serde_json::from_value(json!({"action":"redact","class":"names","mode":"pseudonymise","pattern":"@acme/*"})).unwrap();
         assert_eq!(op.category(), "redact-names");
+    }
+
+    fn cdx_doc(extra_meta_props: Value, vulnerabilities: Value) -> Vec<u8> {
+        let mut props = vec![json!({"name": "waybill:generation-context", "value": "filesystem-scan"})];
+        props.extend(extra_meta_props.as_array().cloned().unwrap_or_default());
+        serde_json::to_vec(&json!({
+            "bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1,
+            "metadata": {"component": {"bom-ref": "waybill-fixture-app", "name": "waybill-fixture-app", "type": "application"},
+                         "properties": props},
+            "components": [
+                {"bom-ref": "pkg:generic/waybill-fixture-lib@1", "name": "waybill-fixture-lib", "purl": "pkg:generic/waybill-fixture-lib@1"},
+                {"bom-ref": "pkg:generic/waybill-fixture-tool@1", "name": "waybill-fixture-tool", "purl": "pkg:generic/waybill-fixture-tool@1"}
+            ],
+            "dependencies": [
+                {"ref": "waybill-fixture-app", "dependsOn": ["pkg:generic/waybill-fixture-lib@1"]},
+                {"ref": "pkg:generic/waybill-fixture-lib@1", "dependsOn": []},
+                {"ref": "pkg:generic/waybill-fixture-tool@1", "dependsOn": []}
+            ],
+            "vulnerabilities": vulnerabilities
+        }))
+        .unwrap()
+    }
+
+    fn drop_tool() -> Vec<EditOp> {
+        vec![EditOp::DropComponents { selector: "name=waybill-fixture-tool".parse().unwrap() }]
+    }
+
+    /// #1422: a document whose VEX names a dropped component is editable,
+    /// and the report says how many statements went with it.
+    #[test]
+    fn vex_on_a_dropped_component_is_pruned_and_counted() {
+        let input = cdx_doc(
+            json!([]),
+            json!([{"id": "CVE-2026-0001", "affects": [{"ref": "waybill-fixture-app"}],
+                    "properties": [{"name": "waybill:vex-subcomponent", "value": "pkg:generic/waybill-fixture-tool@1"}]}]),
+        );
+        let out = run(&input, &drop_tool(), &EditOptions::default()).unwrap();
+        assert_eq!(out.report.vulnerability_statements_removed, 1);
+        let doc: Value = serde_json::from_slice(&out.bytes).unwrap();
+        assert_eq!(doc["vulnerabilities"], json!([]));
+    }
+
+    fn spdx23_with_openvex() -> Vec<u8> {
+        let tool_purl = "pkg:generic/waybill-fixture-tool@1";
+        serde_json::to_vec(&json!({
+            "spdxVersion": "SPDX-2.3", "SPDXID": "SPDXRef-DOCUMENT",
+            "documentNamespace": "https://example.invalid/waybill-fixture-doc",
+            "documentDescribes": ["SPDXRef-app"],
+            "externalDocumentRefs": [{
+                "externalDocumentId": "DocumentRef-OpenVEX",
+                "spdxDocument": "waybill-fixture.openvex.json",
+                "checksum": {"algorithm": "SHA256", "checksumValue": "0".repeat(64)}
+            }],
+            "annotations": [{"comment": envelope("waybill:generation-context", json!("filesystem-scan"))}],
+            "packages": [
+                {"SPDXID": "SPDXRef-app", "name": "waybill-fixture-app"},
+                {"SPDXID": "SPDXRef-tool", "name": "waybill-fixture-tool",
+                 "externalRefs": [{"referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": tool_purl}],
+                 "annotations": [{"comment": envelope("waybill:source-files", json!("[\"src/waybill-fixture/a.rs\"]"))}]}
+            ],
+            "relationships": [
+                {"spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-app"},
+                {"spdxElementId": "SPDXRef-app", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-tool"}
+            ]
+        }))
+        .unwrap()
+    }
+
+    /// #1454: which edits invalidate the OpenVEX sidecar reference. The
+    /// sidecar names components by PURL, so dropping one, or replacing the
+    /// name it is identified by, does; dropping annotations or redacting
+    /// paths does not.
+    #[test]
+    fn the_openvex_reference_goes_when_components_are_dropped_or_renamed() {
+        let names = EditOp::Redact { class: RedactClass::Names, mode: RedactMode::Remove, pattern: Some("waybill-fixture-tool".into()) };
+        let paths = EditOp::Redact { class: RedactClass::Paths, mode: RedactMode::Remove, pattern: None };
+        let annotations = EditOp::DropAnnotations { namespace: "waybill:source-".into() };
+        let cases: [(&str, Vec<EditOp>, bool); 4] = [
+            ("drop", drop_tool(), true),
+            ("redact names", vec![names], true),
+            ("redact paths", vec![paths], false),
+            ("drop annotations", vec![annotations], false),
+        ];
+        for (label, ops, removes) in cases {
+            let out = run(&spdx23_with_openvex(), &ops, &EditOptions::default()).unwrap();
+            // CONTROL: the operation changed something, so a kept reference
+            // is a decision and not an edit that did nothing.
+            assert!(out.report.ops[0].changed > 0, "{label}: {:?}", out.report.ops);
+            let doc: Value = serde_json::from_slice(&out.bytes).unwrap();
+            let ids: Vec<&str> = doc["externalDocumentRefs"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|r| r["externalDocumentId"].as_str())
+                .collect();
+            assert_eq!(!ids.contains(&"DocumentRef-OpenVEX"), removes, "{label}: {ids:?}");
+            let reported = if removes { vec!["waybill-fixture.openvex.json".to_string()] } else { Vec::new() };
+            assert_eq!(out.report.openvex_references_removed, reported, "{label}");
+            // The derivation's own reference is unaffected either way.
+            assert!(ids.iter().any(|i| i.starts_with("DocumentRef-original")), "{label}: {ids:?}");
+        }
+    }
+
+    /// #1454, SPDX 3: the sidecar is an `externalRef` on the `SpdxDocument`.
+    #[test]
+    fn the_spdx3_openvex_reference_goes_when_components_are_dropped() {
+        let input = serde_json::to_vec(&json!({
+            "@context": "https://spdx.org/rdf/3.0.1/spdx-context.jsonld",
+            "@graph": [
+                {"type": "SpdxDocument", "spdxId": "https://example.invalid/waybill-fixture-doc",
+                 "rootElement": ["urn:app"],
+                 "externalRef": [{"type": "ExternalRef", "externalRefType": "vulnerabilityExploitabilityAssessment",
+                                  "contentType": "application/openvex+json", "locator": ["waybill-fixture.openvex.json"]}]},
+                {"type": "software_Package", "spdxId": "urn:app", "name": "waybill-fixture-app"},
+                {"type": "software_Package", "spdxId": "urn:tool", "name": "waybill-fixture-tool",
+                 "software_packageUrl": "pkg:generic/waybill-fixture-tool@1"},
+                {"type": "Relationship", "spdxId": "urn:rel", "from": "urn:app", "relationshipType": "dependsOn", "to": ["urn:tool"]},
+                {"type": "Annotation", "spdxId": "urn:anno", "subject": "https://example.invalid/waybill-fixture-doc",
+                 "statement": envelope("waybill:generation-context", json!("filesystem-scan"))}
+            ]
+        }))
+        .unwrap();
+        let out = run(&input, &drop_tool(), &EditOptions::default()).unwrap();
+        // CONTROL: the tool really went.
+        assert_eq!(out.report.ops[0].changed, 1, "{:?}", out.report.ops);
+        assert_eq!(out.report.openvex_references_removed, vec!["waybill-fixture.openvex.json".to_string()]);
+        let doc: Value = serde_json::from_slice(&out.bytes).unwrap();
+        let spdx_doc = doc["@graph"].as_array().unwrap().iter().find(|e| e["type"] == "SpdxDocument").unwrap();
+        assert!(spdx_doc.get("externalRef").is_none(), "{spdx_doc}");
+    }
+
+    /// #1422: the fail-closed check names what it found and where.
+    #[test]
+    fn a_leftover_reference_is_named_with_its_path() {
+        let input = cdx_doc(
+            json!([{"name": "waybill:fixture-pointer", "value": "pkg:generic/waybill-fixture-tool@1"}]),
+            json!([]),
+        );
+        let err = run(&input, &drop_tool(), &EditOptions::default()).err().unwrap().to_string();
+        assert!(err.contains("`pkg:generic/waybill-fixture-tool@1`"), "{err}");
+        assert!(err.contains("/metadata/properties/1/value"), "{err}");
+    }
+
+    #[test]
+    fn reference_paths_are_json_pointers_and_find_keys_too() {
+        let v = json!({"a": [{"x": "id"}], "m": {"id": 1}, "s": "id/x~y"});
+        assert_eq!(find_string(&v, "id").as_deref(), Some("/a/0/x"));
+        assert_eq!(find_string(&json!({"m": {"id": 1}}), "id").as_deref(), Some("/m/id"));
+        assert_eq!(find_string(&json!({"a/b~": "id"}), "id").as_deref(), Some("/a~1b~0"));
+        assert_eq!(find_string(&v, "absent"), None);
     }
 
     #[test]

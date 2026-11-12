@@ -373,8 +373,51 @@ impl CorpusCacheDir {
 /// before its scan, so the scan — which runs without `--offline`, because the
 /// tier refuses it — finds everything local and nix has nothing to fetch.
 /// No-op for every other target.
+///
+/// An `allow_ifd` target is **built** instead (`nix build --no-link`), for two
+/// measured reasons (#1283, public-corpus run 43109906381):
+///
+/// - Its output is in no binary cache, so without a local build waybill cannot
+///   read the runtime closure and falls back to the reachability walk. The walk
+///   marked glibc, binutils and gcc as build tooling, recall fell to 77% and
+///   82%, and the truth it is scored against was taken from a built output.
+/// - `nix flake archive` fetches every locked input, including ones the output
+///   never uses. openai's `all-cabal-hashes` input no longer matches its locked
+///   narHash, so archiving failed although building succeeds.
+///
+/// The build allows import-from-derivation, as the scan does, and keeps
+/// refusing flake-supplied configuration. Measured on the recall-truth run
+/// (43107760056): 93 s for slack-web, 579 s for openai, 423 s for slacklinker.
 fn prewarm_nix_closure(target: &CorpusTarget, repo_dir: &Path) -> Result<(), CorpusInfraError> {
-    if !matches!(target.scan_mode, super::manifest::ScanMode::NixClosure { .. }) {
+    let super::manifest::ScanMode::NixClosure { attr, allow_ifd } = target.scan_mode else {
+        return Ok(());
+    };
+    if allow_ifd {
+        let installable = format!(".#{attr}");
+        let output = std::process::Command::new("nix")
+            .args([
+                "build",
+                "--no-link",
+                "--option",
+                "allow-import-from-derivation",
+                "true",
+                "--option",
+                "accept-flake-config",
+                "false",
+                &installable,
+            ])
+            .current_dir(repo_dir)
+            .output()
+            .map_err(|e| CorpusInfraError::NixRealise {
+                target: target.name,
+                stderr: format!("spawn failed: {e}"),
+            })?;
+        if !output.status.success() {
+            return Err(CorpusInfraError::NixRealise {
+                target: target.name,
+                stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+            });
+        }
         return Ok(());
     }
     let output = std::process::Command::new("nix")

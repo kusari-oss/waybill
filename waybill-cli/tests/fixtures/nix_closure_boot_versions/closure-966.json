@@ -1,0 +1,45 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-app966-0.1.0.drv": {
+      "name": "waybill-fixture-app966-0.1.0",
+      "env": {
+        "pname": "waybill-fixture-app966",
+        "version": "0.1.0",
+        "system": "x86_64-linux",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/ccc-ghc-9.6.6 /nix/store/h-ostring /nix/store/h-process"
+      },
+      "inputs": {
+        "drvs": {
+          "d-ostring.drv": { "outputs": ["out"] },
+          "d-process.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "h-app966" } }
+    },
+    "d-ostring.drv": {
+      "name": "os-string-0.0.0.966",
+      "env": {
+        "pname": "os-string",
+        "version": "0.0.0.966",
+        "system": "x86_64-linux",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/ccc-ghc-9.6.6"
+      },
+      "outputs": { "out": { "path": "h-ostring" } }
+    },
+    "d-process.drv": {
+      "name": "process-@PROCESS_9_6_6@",
+      "env": {
+        "pname": "process",
+        "version": "@PROCESS_9_6_6@",
+        "system": "x86_64-linux",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/ccc-ghc-9.6.6"
+      },
+      "outputs": { "out": { "path": "h-process" } }
+    }
+  },
+  "version": 4
+}

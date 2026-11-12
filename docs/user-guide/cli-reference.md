@@ -764,6 +764,7 @@ Exactly one of `--path` or `--image` is required.
 | `--no-binary-scan <MODE>` | enum (`go`, `all`) | (unset) | Skip binary-scanning reader(s). `all` drops the entire binary tier for max speed; `go` is a component filter (deprecated as perf lever post-[#781](https://github.com/kusari-oss/waybill/issues/781)). Also via `WAYBILL_NO_BINARY_SCAN=<MODE>`. See [`--no-binary-scan`](#--no-binary-scan-mode). |
 | `--include-vendored` | bool | off | Emit CMake `add_subdirectory(third_party/\|vendor/...)` entries. |
 | `--no-deep-hash` | bool | off | Skip per-file SHA-256 of installed-package contents. |
+| `--nix-allow-ifd` | bool | off | Allow import-from-derivation in Nix evaluation. Nix **builds** derivations while evaluating the flake; do not use on an untrusted flake. Requires `--nix-closure` or `--nix-eval`. See [`--nix-allow-ifd`](#--nix-allow-ifd). |
 | `--json` | bool | off | Print a JSON summary to stdout. |
 | `--clearly-defined` | bool | off | Enable ClearlyDefined concluded-license enrichment. Off by default since [#930](https://github.com/kusari-oss/waybill/issues/930). |
 | `--no-clearly-defined` | bool | off | No-op since #930 (ClearlyDefined is already off); still accepted. Conflicts with `--clearly-defined`. |
@@ -1139,6 +1140,31 @@ package; component-level identity only, no per-file occurrences).
 Default-on hashing reads every file referenced by dpkg's `.list` manifest —
 proportional to installed size (~3-5 s on `debian:bookworm-slim`, ~30 s on
 full `debian`).
+
+### `--nix-allow-ifd`
+
+Allow import-from-derivation (IFD) during Nix evaluation, for the
+`--nix-closure` and `--nix-eval` tiers. Flakes built with `callCabal2nix`,
+`developPackage` or `packageSourceOverrides` need it: without it they
+degrade with `import-from-derivation-required`, and the WARN names this
+flag.
+
+**Nix will BUILD derivations while evaluating the flake. Do not use it on
+an untrusted flake.** Where nix's sandbox is off (the macOS default) those
+builds run unsandboxed, and the scan logs a WARN saying so.
+
+waybill verifies nix applied the setting before evaluating anything, and
+degrades with `ifd-allowance-unverified` if it did not. Nothing else is
+relaxed: `--accept-flake-config` and `--impure` stay refused. The document
+records the policy and nix's sandbox setting in
+`waybill:nix-evaluation-policy`. Without `--nix-closure` or `--nix-eval` the
+flag is rejected; under `--offline` it is accepted and has no effect.
+
+```bash
+waybill sbom scan --path . --nix-closure --nix-allow-ifd --output app.cdx.json
+```
+
+See [Nix evaluation — Import-from-derivation](../reference/nix-evaluation.md#import-from-derivation---nix-allow-ifd).
 
 ### `--json`
 
@@ -2013,9 +2039,16 @@ AND, and values within a term with OR. The keys are:
 
 - `purl`: glob;
 - `ecosystem`: PURL type;
-- `scope`: `runtime`, `development`, `build`, `test` or `optional`;
+- `scope`: `runtime`, `development`, `build`, `test`, `optional` or
+  `excluded`. `excluded` matches components that are not in the artifact:
+  CycloneDX `"scope": "excluded"` with no lifecycle property, the source of an
+  SPDX 2.3 `BUILD_TOOL_OF`, or a `to` of an SPDX 3 `usesTool` relationship with
+  `scope: build`. See the [editing guide](sbom-edit.md#dropping-components---drop-selector);
 - `tier`: the `waybill:sbom-tier`, or `file` for file components;
-- `role`;
+- `role`: the `waybill:component-role` (`main-module`, …), the component
+  type, or, on a `--nix-closure` document, the `waybill:closure-role`
+  (`artifact-input`, `build-tooling`, `both`, `unreferenced`). Each value
+  matches only itself: `role=build-tooling` does not select `both`;
 - `name`: glob, or `re:<regex>`.
 
 Globs treat `/` as an ordinary character, so `name=@acme/*` matches scoped
@@ -2030,6 +2063,17 @@ A dropped component's dependents depend on its dependencies afterwards. Their
 dependency lists are marked incomplete: a CycloneDX `incomplete` composition,
 SPDX 3 `completeness: incomplete`, and `waybill:graph-completeness` set to
 `unknown` in all three formats.
+
+Vulnerability statements about a dropped component go with it. In CycloneDX,
+its `vulnerabilities[].affects[]` entries and `waybill:vex-subcomponent`
+properties are removed, and a vulnerability left with no `affects[]`, or a
+build statement left with no subcomponent, is removed. In SPDX 3, a
+`security_*VulnAssessmentRelationship` whose `to` is emptied or whose
+`security_assessedElement` was dropped is removed. stderr reports how many
+statements went.
+
+`--exclude-scope` is a `sbom scan` flag. `sbom edit` refuses it and names the
+`--drop 'scope=…'` that removes the same scopes from an emitted document.
 
 ### `--drop-annotations <NAMESPACE>`
 
@@ -2443,11 +2487,30 @@ Default is `cyclonedx-json`. Duplicates dedupe silently.
 | `spdx-3-json` | Stable. SPDX 3.0.1 JSON-LD. Production-grade output with native-field + annotation parity vs. CDX and SPDX 2.3. | `waybill.spdx3.json` |
 | `spdx-3-json-experimental` *(deprecated)* | Byte-identical to `spdx-3-json`; emits a stderr deprecation notice. | `waybill.spdx3-experimental.json` |
 
-**OpenVEX sidecar** — when the scan produces VEX statements AND SPDX 2.3
-output is requested, waybill co-emits an OpenVEX 0.2.0 JSON file alongside
-the SPDX file. The SPDX document carries a `DocumentRef-OpenVEX` entry in
-`externalDocumentRefs` with a SHA-256 of the sidecar bytes. Use
-`--output openvex=<path>` to retarget the sidecar.
+**OpenVEX sidecar** — when the scan produces VEX statements and an SPDX
+format is requested, waybill writes one OpenVEX 0.2.0 JSON file beside the
+SPDX document, named after it: the SPDX path loses `.json` and then a
+`.spdx` or `.spdx3` marker, and gains `.openvex.json`. So
+`out/app.spdx.json` gets `out/app.openvex.json`, `scan1.json` gets
+`scan1.openvex.json`, and the default `waybill.spdx.json` gets
+`waybill.openvex.json`. When both SPDX formats are requested, the SPDX 2.3
+path names it and both documents reference the one file. The SPDX 2.3
+document carries a `DocumentRef-OpenVEX` entry in `externalDocumentRefs`
+with a SHA-256 of the sidecar bytes; the SPDX 3 document carries an
+`externalRef` locator. Use `--output openvex=<path>` to choose the path
+yourself. The scan log reports it as `wrote SBOM artifact format=openvex`.
+
+**Nix closure backports** — under `--nix-closure`, a component whose nixpkgs
+patches resolve a CVE gets a `nix_drv=<derivation hashes>` qualifier on its
+PURL, naming the builds it stands for, and one `fixed` statement per CVE on
+that qualified PURL (CycloneDX: one `resolved` entry on its `bom-ref`).
+Scanners apply a statement only on its product PURL, so the claim covers this
+build and not every build of the version, and a scanner given the sidecar
+drops those findings (`grype sbom:app.cdx.json --vex app.openvex.json`).
+Advisory matching ignores the qualifier, so without VEX the findings are
+unchanged. The upstream version's own status stays in
+`pedigree.patches[].resolves`. See
+[Nix evaluation](../reference/nix-evaluation.md#the-nix_drv-qualifier).
 
 See [Generation](../architecture/generation.md) for the per-format builder
 architecture and [SBOM format mapping](../reference/sbom-format-mapping.md)

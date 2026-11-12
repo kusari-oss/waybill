@@ -1,0 +1,2 @@
+haskell-builder input bnf0b028lhpskp6g1hi351qagjcf764j-pandoc-cli-3.7.0.2.drv  named-in-tooling-field=True named-in-artifact-field=False
+haskell-builder input zqlbsxi4w1dgldjiyxvi3vvq1bk6m0d4-ShellCheck-0.11.0.drv  named-in-tooling-field=False named-in-artifact-field=False

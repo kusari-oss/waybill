@@ -1,0 +1,16 @@
+yaml                   x86_64-linux    direct refs= 60 test-framework direct refs=1 ['QuickCheck-2.15.0.1']
+                                       closure=183 test-framework paths in closure=4
+yaml                   aarch64-darwin  direct refs= 85 test-framework direct refs=9 ['HUnit-1.6.2.0', 'QuickCheck-2.15.0.1', 'hspec-2.11.17', 'hspec-core-2.11.17', 'hspec-discover-2.11.17', 'hspec-expectations-0.8.4', 'mockery-0.3.5', 'quickcheck-io-0.2.0', 'tasty-1.5.4']
+                                       closure=287 test-framework paths in closure=54
+unordered-containers   x86_64-linux    direct refs= 10 test-framework direct refs=0 []
+                                       closure= 74 test-framework paths in closure=0
+unordered-containers   aarch64-darwin  direct refs= 39 test-framework direct refs=6 ['ChasingBottoms-1.3.1.17', 'HUnit-1.6.2.0', 'QuickCheck-2.15.0.1', 'tasty-1.5.4', 'tasty-hunit-0.10.2', 'tasty-quickcheck-0.11.1']
+                                       closure=138 test-framework paths in closure=34
+case-insensitive       x86_64-linux    direct refs= 10 test-framework direct refs=0 []
+                                       closure= 74 test-framework paths in closure=0
+case-insensitive       aarch64-darwin  direct refs= 33 test-framework direct refs=3 ['HUnit-1.6.2.0', 'test-framework-0.8.2.3', 'test-framework-hunit-0.3.0.3']
+                                       closure=105 test-framework paths in closure=16
+hlint                  x86_64-linux    direct refs= 79 test-framework direct refs=1 ['QuickCheck-2.15.0.1']
+                                       closure=220 test-framework paths in closure=4
+hlint                  aarch64-darwin  direct refs= 89 test-framework direct refs=2 ['QuickCheck-2.15.0.1', 'tasty-1.5.4']
+                                       closure=322 test-framework paths in closure=54

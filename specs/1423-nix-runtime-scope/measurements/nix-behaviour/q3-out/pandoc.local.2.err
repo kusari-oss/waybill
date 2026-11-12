@@ -1,0 +1,4 @@
+these 2 paths will be fetched (28.0 MiB download, 227.1 MiB unpacked):
+  /nix/store/w0i5xm1250c1qnpsl6yzpry9xbhsy84j-lua-5.4.7
+  /nix/store/ar933a2f5cg1m5znqr49948zwi1slh8q-pandoc-cli-3.7.0.2
+error: path '/nix/store/ar933a2f5cg1m5znqr49948zwi1slh8q-pandoc-cli-3.7.0.2' is not valid

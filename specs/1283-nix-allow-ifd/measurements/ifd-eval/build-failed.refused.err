@@ -1,0 +1,9 @@
+error:
+       … while calling the 'import' builtin
+         at «string»:1:1:
+            1| import (derivation { name = "waybill-fixture-ifd-broken"; system = "aarch64-darwin"; builder = "/bin/sh"; args = [ "-c" "echo waybill-fixture-ifd deliberately fails >&2; exit 1" ]; })
+             | ^
+
+       … while realising the context of path '/nix/store/xnfxcfi0rr40ym055wjwcjs4h3i9f4li-waybill-fixture-ifd-broken'
+
+       error: cannot build '/nix/store/zpyrgzf29hjbiswx2z7bqmpak5mq19q5-waybill-fixture-ifd-broken.drv^out' during evaluation because the option 'allow-import-from-derivation' is disabled

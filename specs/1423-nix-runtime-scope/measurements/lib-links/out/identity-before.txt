@@ -1,0 +1,163 @@
+adjunctions 4.4.4	confirmed
+aeson 2.2.4.1	confirmed
+alex 3.5.4.2	confirmed
+ansi-terminal 1.1.5	none
+ansi-terminal-types 1.1.3	none
+ansi-wl-pprint 1.0.2	confirmed
+array 	none
+assoc 1.1.1	confirmed
+async 2.2.6	confirmed
+attoparsec 0.14.4	confirmed
+base 	none
+base-compat 0.14.1	confirmed
+base-orphans 0.9.4	confirmed
+base16-bytestring 1.0.2.0	confirmed
+base64-bytestring 1.2.1.0	confirmed
+bifunctors 5.6.3	confirmed
+binary 	none
+blaze-builder 0.4.4.1	confirmed
+blaze-html 0.9.2.0	confirmed
+blaze-markup 0.8.3.0	confirmed
+bytestring 	none
+Cabal 	none
+Cabal-syntax 	none
+call-stack 0.4.0	none
+case-insensitive 1.2.1.0	none
+character-ps 0.1	confirmed
+charset 0.3.12	confirmed
+ChasingBottoms 1.3.1.17	confirmed
+clock 0.8.4	confirmed
+cmark-gfm 0.2.6	none
+code-page 0.2.1	confirmed
+colour 2.3.7	none
+comonad 5.0.10	confirmed
+containers 	none
+contravariant 1.5.6	confirmed
+cryptohash-sha256 0.11.102.1	confirmed
+data-fix 0.3.4	confirmed
+deepseq 	none
+Diff 1.0.2	confirmed
+directory 	none
+distributive 0.6.3	confirmed
+dlist 1.0	confirmed
+doctest 0.24.3	confirmed
+exceptions 	none
+extra 1.8.1	confirmed
+filepath 	none
+filepattern 0.1.3	confirmed
+fingertree 0.1.6.3	confirmed
+free 5.2	confirmed
+generic-deriving 1.14.7	confirmed
+generically 0.1.1	confirmed
+ghc-heap 	none
+ghc-paths 0.1.0.12	confirmed
+ghc-prim 	none
+haddock-library 1.11.0	none
+happy 2.1.7	confirmed
+happy-lib 2.1.7	confirmed
+hashable 1.5.1.0	none
+haskell-lexer 1.2.1	none
+heaps 0.4.1	confirmed
+hostname 1.0	confirmed
+hscolour 1.25	confirmed
+hspec 2.11.17	none
+hspec-core 2.11.17	none
+hspec-discover 2.11.17	none
+hspec-expectations 0.8.4	none
+hspec-golden 0.2.2.0	none
+hspec-meta 2.11.17	confirmed
+HUnit 1.6.2.0	none
+indexed-traversable 0.1.4	confirmed
+indexed-traversable-instances 0.1.2.1	confirmed
+inspection-testing 0.6.3	confirmed
+integer-conversion 0.1.1	confirmed
+integer-logarithms 1.0.5	confirmed
+invariant 0.6.5	confirmed
+jailbreak-cabal 1.4.1	confirmed
+js-dgtable 0.5.2	confirmed
+js-flot 0.8.3	confirmed
+js-jquery 3.7.1	confirmed
+kan-extensions 5.2.8	confirmed
+lens 5.3.6	confirmed
+logging-facade 0.3.1	confirmed
+logict 0.8.2.0	confirmed
+moat 0.1	none
+mockery 0.3.5	confirmed
+mtl 	none
+nanospec 0.2.2	confirmed
+network-uri 2.6.4.2	confirmed
+nothunks 0.3.1	confirmed
+old-locale 1.0.0.7	confirmed
+old-time 1.1.1.0	confirmed
+OneTuple 0.4.2.1	confirmed
+optparse-applicative 0.18.1.0	none
+os-string 	none
+parallel 3.2.2.0	confirmed
+parsec 	none
+parsers 0.12.12	confirmed
+pretty 	none
+prettyprinter 1.7.1	none
+prettyprinter-ansi-terminal 1.1.3	none
+prettyprinter-compat-ansi-wl-pprint 1.0.2	confirmed
+primitive 0.9.1.0	none
+process 	none
+profunctors 5.6.3	confirmed
+QuickCheck 2.15.0.1	none
+quickcheck-instances 0.3.33	confirmed
+quickcheck-io 0.2.0	none
+quickcheck-unicode 1.0.1.0	confirmed
+random 1.2.1.3	none
+readme 0.1.0.0	none
+reducers 3.12.5	confirmed
+reflection 2.1.9	confirmed
+regex-base 0.94.0.3	confirmed
+regex-posix 0.96.0.2	confirmed
+scientific 0.3.8.1	confirmed
+semialign 1.3.1.1	confirmed
+semigroupoids 6.0.2	confirmed
+shake 0.19.9	confirmed
+silently 1.2.5.4	confirmed
+simple-reflect 0.3.3	confirmed
+smallcheck 1.2.1.1	confirmed
+splitmix 0.1.3.2	none
+StateVar 1.2.2	confirmed
+stm 	none
+strict 0.5.1	confirmed
+stringbuilder 0.5.1	confirmed
+syb 0.7.2.4	confirmed
+tagged 0.8.9	none
+tasty 1.5.4	none
+tasty-golden 2.3.6	confirmed
+tasty-hunit 0.10.2	confirmed
+tasty-inspection-testing 0.2.1	confirmed
+tasty-quickcheck 0.11.1	confirmed
+tasty-smallcheck 0.8.2	confirmed
+template-haskell 	none
+temporary 1.3	confirmed
+test-framework 0.8.2.3	confirmed
+test-framework-hunit 0.3.0.3	confirmed
+test-framework-quickcheck2 0.3.0.7	confirmed
+text 	none
+text-iso8601 0.1.1.1	confirmed
+text-short 0.1.6.1	confirmed
+th-abstraction 0.7.2.0	none
+th-compat 0.1.7	none
+these 1.2.1	confirmed
+time 	none
+time-compat 1.9.9	confirmed
+transformers 	none
+transformers-base 0.4.6.1	confirmed
+transformers-compat 0.7.2	none
+tree-diff 0.3.4	confirmed
+trifecta 2.1.4	confirmed
+typed-process 0.2.13.0	confirmed
+unix 	none
+unliftio-core 0.2.1.0	confirmed
+unordered-containers 0.2.20.1	none
+utf8-string 1.0.2	confirmed
+uuid-types 1.0.6.1	none
+vector 0.13.2.0	none
+vector-stream 0.1.0.1	none
+wherefrom-compat 0.1.1.1	confirmed
+witherable 0.5	confirmed
+xml 1.3.14	confirmed

@@ -1,0 +1,13 @@
+attr                     mode            min  median     max  exits  paths
+shellcheck               local         0.086   0.089   0.134  1      [0]
+shellcheck               cache-warm    0.057   0.059   0.062  0      [5]
+shellcheck               cache-cold    0.262   0.270   0.308  0      [5]
+curl                     local         0.080   0.088   0.094  0      [20]
+curl                     cache-warm    0.058   0.059   0.065  0      [20]
+curl                     cache-cold    0.749   0.760   0.827  0      [20]
+haskellPackages.hlint    local         0.098   0.141   0.422  1      [0]
+haskellPackages.hlint    cache-warm    0.069   0.087   0.174  0      [322]
+haskellPackages.hlint    cache-cold    9.982  11.006  11.925  0      [322]
+pandoc                   local         0.071   0.082   0.083  1      [0]
+pandoc                   cache-warm    0.053   0.053   0.056  0      [8]
+pandoc                   cache-cold    0.350   0.361   0.380  0      [8]

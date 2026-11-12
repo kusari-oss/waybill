@@ -202,6 +202,7 @@ mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: p.name().to_string(),
             version: p.version().unwrap_or("").to_string(),
             purl: p,

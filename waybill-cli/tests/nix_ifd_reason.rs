@@ -66,6 +66,8 @@ impl Stub {
     }
 
     fn script(&self, stderr_file: &Path) -> String {
+        // m1423 (T006): the `path-info` arm is intended. No store holds the
+        // evaluated output, so the scope pass takes its fallback path.
         format!(
             "#!/bin/sh\ncase \"$*\" in\n\
              \x20 *builtins.currentSystem*) printf '%s' '{SYSTEM}' ;;\n\
@@ -73,6 +75,7 @@ impl Stub {
              \x20 *\"#packages.{SYSTEM}\") echo '[\"default\"]' ;;\n\
              \x20 *\"#packages\") echo '[\"{SYSTEM}\"]' ;;\n\
              \x20 \"derivation show\"*) cat '{err}' >&2; exit 1 ;;\n\
+             \x20 \"path-info\"*) echo \"error: path '/nix/store/stub' is not valid\" >&2; exit 1 ;;\n\
              \x20 *) echo 'stub nix: unhandled invocation' >&2; exit 1 ;;\n\
              esac\n",
             ifd = if self.ifd_supported {
@@ -319,7 +322,7 @@ fn m1274_us1_the_reason_is_logged_too() {
     );
     assert!(
         s.stderr.contains("nix-closure: degrading"),
-        "and still says the manifest-derived set is unaffected: {}",
+        "and still names the degradation: {}",
         s.stderr
     );
 }
@@ -337,4 +340,72 @@ fn m1274_us1_the_document_value_is_an_object_in_all_three_formats() {
     assert_eq!(obj.len(), 2, "reason and detail, nothing else: {v}");
     assert!(obj["reason"].is_string() && obj["detail"].is_string());
     assert!(!v.to_string().contains("null"), "omitted, never null: {v}");
+}
+
+// ───────────────────────────────────────────────────────────────────────
+// #1446 — a requested closure that degrades says so at WARN
+// ───────────────────────────────────────────────────────────────────────
+
+/// The phrase that states the consequence. Asserted verbatim: the point of
+/// the line is that an operator who asked for a closure reads, in words,
+/// that they did not get one.
+const CONSEQUENCE: &str =
+    "no Nix closure components were added; the document contains only manifest-derived components";
+
+/// The one WARN line the degraded tier emits, if any.
+fn closure_warn_line(stderr: &str) -> Option<&str> {
+    stderr
+        .lines()
+        .find(|l| l.contains("WARN") && l.contains("nix-closure: degrading"))
+}
+
+/// Measured on `slack-web` (#1446): `--nix-closure` degraded on
+/// import-from-derivation, the scan exited 0 with the manifest-only document,
+/// and the only log line was INFO.
+#[test]
+fn issue_1446_a_requested_closure_that_degrades_warns() {
+    let s = run(&Stub::failing_with(measured_stderr("cabal2nix-refusal.stderr")), &[]);
+    let line = closure_warn_line(&s.stderr)
+        .unwrap_or_else(|| panic!("no WARN line for the degraded closure:\n{}", s.stderr));
+    assert!(line.contains("import-from-derivation-required"), "names the reason: {line}");
+    assert!(line.contains(CONSEQUENCE), "states the consequence: {line}");
+    assert!(
+        line.contains("callCabal2nix") && line.contains("would build during evaluation"),
+        "explains what import-from-derivation means here: {line}"
+    );
+}
+
+/// Control for the level chosen for `--offline`: WARN, because the scan still
+/// did not do what `--nix-closure` asked. The import-from-derivation sentence
+/// is reason-specific and must not appear here.
+#[test]
+fn issue_1446_offline_keeps_the_chosen_level() {
+    let s = run(&Stub::failing_with(measured_stderr("cabal2nix-refusal.stderr")), &["--offline"]);
+    let line = closure_warn_line(&s.stderr)
+        .unwrap_or_else(|| panic!("no WARN line for the offline refusal:\n{}", s.stderr));
+    assert!(line.contains("offline-requested"), "{line}");
+    assert!(line.contains(CONSEQUENCE), "{line}");
+    assert!(!line.contains("callCabal2nix"), "reason-specific text leaked: {line}");
+}
+
+/// Control: without `--nix-closure` nothing was asked for, so nothing warns.
+#[test]
+fn issue_1446_no_warning_when_the_closure_was_not_requested() {
+    let root = flake_root();
+    let out = tempfile::tempdir().unwrap();
+    let o = Command::new(binary_path())
+        .args(["sbom", "scan", "--no-deep-hash", "--offline", "--path"])
+        .arg(root.path())
+        .arg("--output")
+        .arg(out.path().join("o.cdx.json"))
+        .env("RUST_LOG", "info")
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&o.stderr);
+    assert!(o.status.success(), "{stderr}");
+    assert!(stderr.contains("scan complete"), "the scan ran and logged: {stderr}");
+    assert!(
+        !stderr.contains("nix-closure: degrading"),
+        "an unrequested closure is not a degradation: {stderr}"
+    );
 }

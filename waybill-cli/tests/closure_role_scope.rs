@@ -21,7 +21,7 @@
 //! | `roledual` | both fields | `both` | FR-002: must be left alone |
 //! | `roletool` | `nativeBuildInputs` | `build-tooling` | FR-001, the plain case |
 //! | `roletoolhask` | `nativeBuildInputs` | `build-tooling` | FR-005's **control**: Hackage, GHC-built, *not* nulled, so it must still be classified |
-//! | `roletoolboot` | `nativeBuildInputs` | `build-tooling` | FR-005: Hackage, GHC-built, **nulled**, so exempt |
+//! | `roletoolboot` | `nativeBuildInputs` | `build-tooling` | #1478: Hackage, GHC-built, with a **nulled** name. A closure derivation is never GHC's own copy (that lives inside the compiler's derivation), so it is classified like `roletoolhask`. FR-005's exemption fires only on the compiler's copy; the unit tests in `resolve/closure_role_scope.rs` cover it |
 //! | `roletest` | `buildInputs`, and only a `buildable: False` stanza declares it | `artifact-input` | FR-002's real shape: already `excluded` from the m1269 propagation, and must stay so |
 //! | `rolepatch` | nothing | `unreferenced` | FR-004 — and it carries `patches`, without which it is not emitted at all |
 //!
@@ -48,6 +48,8 @@ use std::process::Command;
 
 use serde_json::Value;
 
+mod common;
+
 /// The revision the fixture `flake.lock` pins.
 const REV: &str = "a799d3e3886da994fa307f817a6bc705ae538eeb";
 
@@ -68,7 +70,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roletext",
         "version": "2.0.2",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h1-roletext" } }
     },
@@ -86,7 +88,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roletoolhask",
         "version": "3.3.3",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h3-roletoolhask" } }
     },
@@ -95,7 +97,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roletoolboot",
         "version": "2.2.2",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h4-roletoolboot" } }
     },
@@ -104,7 +106,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roledual",
         "version": "4.4.4",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h5-roledual" } }
     },
@@ -113,7 +115,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roletest",
         "version": "6.6.6",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h7-roletest" } }
     },
@@ -215,6 +217,9 @@ CLOSUREEOF
   *"#packages.aarch64-darwin") echo '["default"]' ;;
   *"#packages") echo '["aarch64-darwin"]' ;;
   "derivation show"*) echo "error: flake 'stub' does not provide attribute" >&2; exit 1 ;;
+  # m1423 (T006): intended. No store holds the evaluated output, so the scope
+  # pass takes its fallback path rather than the runtime closure.
+  "path-info"*) echo "error: path '/nix/store/stub' is not valid" >&2; exit 1 ;;
   *) echo 'stub nix: unhandled invocation' >&2; exit 1 ;;
 esac
 "##,
@@ -663,17 +668,25 @@ fn m1277_a_component_with_no_closure_role_is_not_touched() {
 /// Milestone 1275's F7 is why this is built this way: the test its spec
 /// called most important was protected by two independent rules at once, so
 /// it could not fail, and nobody noticed for a milestone.
+///
+/// #1478 corrected the premise. `roletoolboot` is a closure derivation, and a
+/// separate derivation is never GHC's own copy of a boot library: that ships
+/// inside the compiler's derivation. On the corpus the shape is real
+/// (`os-string@2.0.10` built from Hackage beside GHC's `os-string@2.0.7`),
+/// and exempting it overrode the evidence that scoped it. So the nulled name
+/// no longer exempts it, and it must be classified exactly like its control.
+/// The exemption's positive case, GHC's copy carrying C218, is a unit test.
 #[test]
-fn m1277_the_exemption_fires_on_the_nulled_member_and_only_on_it() {
+fn m1478_a_closure_build_of_a_nulled_name_is_classified_like_any_member() {
     let s = scan();
 
     assert_eq!(s.role("waybill-fixture-roletoolboot"), Some("build-tooling"));
     assert_eq!(
         s.scope("waybill-fixture-roletoolboot"),
-        None,
-        "the compiler supplies this package in every build, so no format may \
-         report it absent from the artifact (FR-005); invariant I9 asserts the same"
+        Some("excluded"),
+        "a closure build of a boot-library name is not the compiler's copy (#1478)"
     );
+    assert_eq!(s.source("waybill-fixture-roletoolboot"), Some("closure-role"));
 
     assert_eq!(s.role("waybill-fixture-roletoolhask"), Some("build-tooling"));
     assert_eq!(
@@ -733,19 +746,12 @@ fn m1277_the_classification_source_has_three_states_and_absence_is_one() {
 
     // (3) absent — and for four distinct reasons, each of which would be a
     // separate defect if the record appeared.
-    // (4) exempt — reported as itself, not as absence. "The rule exempted
-    // this" and "the rule did not reach this" are different facts, and
-    // absence can only mean one of them. Invariant I10 reads exactly this
-    // value to tell a deliberate omission from a defect.
-    assert_eq!(
-        s.source("waybill-fixture-roletoolboot"),
-        Some("exempt-compiler-supplied")
-    );
-    assert_eq!(
-        s.scope("waybill-fixture-roletoolboot"),
-        None,
-        "and it still carries no scope -- the record says why, it does not undo it"
-    );
+    // (4) exempt -- reported as itself, not as absence. Since #1478 no
+    // closure derivation is the compiler's copy, so this fixture has no
+    // exempt member; the state is asserted by the unit tests in
+    // `resolve/closure_role_scope.rs` (`m1478_*`). `roletoolboot`, a closure
+    // build of a nulled name, takes state (1).
+    assert_eq!(s.source("waybill-fixture-roletoolboot"), Some("closure-role"));
     assert_eq!(
         s.source("waybill-fixture-roletest"),
         None,
@@ -804,21 +810,22 @@ fn m1277_the_classification_source_agrees_across_all_three_formats() {
         "waybill-fixture-roletool",
         "waybill-fixture-rolepatch",
         "waybill-fixture-roletoolhask",
+        "waybill-fixture-roletoolboot",
     ] {
         let cdx = s.cdx_source(name);
         assert!(cdx.is_some(), "{name} carries no C203 in CycloneDX");
         assert_eq!(cdx, s.spdx23_source(name), "{name}: CDX vs SPDX 2.3");
         assert_eq!(cdx, s.spdx3_source(name), "{name}: CDX vs SPDX 3");
     }
-    // And the exempt member's record agrees across the three too — it is
-    // the value most likely to be emitted in one format and forgotten in
-    // another, because it was added after the first two emitters were
-    // already written and passing.
+    // The exempt value's cross-format agreement was asserted here on
+    // `roletoolboot` until #1478 made that member an ordinary closure build.
+    // Every C203 value goes through the same emitters and the same
+    // `SymmetricEqual` extractor, which the loop above exercises.
     for f in ["cdx", "spdx23", "spdx3"] {
         assert_eq!(
             s.source_in(f, "waybill-fixture-roletoolboot").as_deref(),
-            Some("exempt-compiler-supplied"),
-            "the exempt member's record must agree in {f} too"
+            Some("closure-role"),
+            "{f}"
         );
     }
 }
@@ -893,6 +900,8 @@ fn m1277_both_spdx_formats_name_the_same_build_tools() {
         "waybill-fixture-roletool",
         "waybill-fixture-rolepatch",
         "waybill-fixture-roletoolhask",
+        // #1478: a closure build of a nulled name is a build tool like any other.
+        "waybill-fixture-roletoolboot",
     ]
     .iter()
     .map(|n| (*n).to_string())
@@ -910,36 +919,21 @@ fn m1277_both_spdx_formats_name_the_same_build_tools() {
     );
 }
 
-/// FR-014. The exemption governs every format, not only CycloneDX.
-///
-/// This is the assertion that would catch an implementation honouring the
-/// exemption where it was first written and forgetting it in the two
-/// emitters added later — which is the likeliest way this feature breaks,
-/// since the exemption lives in the resolve stage and the emitters read a
-/// field they could each have interpreted for themselves.
+/// FR-014, turned round by #1478. Every format must agree, and the likeliest
+/// way that breaks is one emitter interpreting the resolve stage's field for
+/// itself. This was the check that the exemption held in all three; since
+/// #1478 the member it used is classified, so the same three emitters are
+/// checked the other way: none of them may still honour the old exemption.
 #[test]
-fn m1277_the_exemption_governs_all_three_formats() {
+fn m1478_a_closure_build_of_a_nulled_name_is_a_build_tool_in_all_three_formats() {
     let s = scan();
-    let exempt = "waybill-fixture-roletoolboot";
+    let name = "waybill-fixture-roletoolboot";
 
-    assert_eq!(s.scope(exempt), None, "CycloneDX");
-    assert!(
-        !s.spdx23_build_tools().contains(exempt),
-        "SPDX 2.3 named the exempt member as a build tool"
-    );
-    assert!(
-        !s.spdx3_build_tools().contains(exempt),
-        "SPDX 3 named the exempt member as a build tool"
-    );
-    // The exemption is *recorded* in all three formats, and recorded as an
-    // exemption rather than as silence — otherwise a reader cannot tell this
-    // member from one the rule failed to reach, and neither can I10.
+    assert_eq!(s.scope(name), Some("excluded"), "CycloneDX");
+    assert!(s.spdx23_build_tools().contains(name), "SPDX 2.3 BUILD_TOOL_OF");
+    assert!(s.spdx3_build_tools().contains(name), "SPDX 3 usesTool");
     for f in ["cdx", "spdx23", "spdx3"] {
-        assert_eq!(
-            s.source_in(f, exempt).as_deref(),
-            Some("exempt-compiler-supplied"),
-            "{f} must say why the member carries no marker"
-        );
+        assert_eq!(s.source_in(f, name).as_deref(), Some("closure-role"), "{f}");
     }
 }
 
@@ -985,7 +979,7 @@ fn m1277_spdx3_validate_accepts_the_tool_relationships() {
     // nothing about FR-013.
     assert_eq!(
         s.spdx3_build_tools().len(),
-        3,
+        4,
         "no tool relationships to validate -- this gate would have passed on an empty document"
     );
 
@@ -1008,7 +1002,7 @@ fn m1277_spdx3_validate_accepts_the_tool_relationships() {
         );
         return;
     }
-    let output = Command::new(&bin)
+    let output = common::spdx3_validate::command(&bin)
         .arg("--quiet")
         .arg("-j")
         .arg(&out)
@@ -1119,7 +1113,7 @@ fn m1277_the_tool_edges_do_not_disturb_cross_format_dependency_parity() {
 
     // And the tool edges are genuinely present, so the agreement above is
     // not the agreement of two documents that both lack them.
-    assert_eq!(s.spdx23_build_tools().len(), 3);
+    assert_eq!(s.spdx23_build_tools().len(), 4);
 }
 
 /// The control research R1's design decision actually rests on, and which
@@ -1149,6 +1143,7 @@ fn m1277_the_classification_survives_exclude_scope_build() {
         "waybill-fixture-roletool",
         "waybill-fixture-rolepatch",
         "waybill-fixture-roletoolhask",
+        "waybill-fixture-roletoolboot",
     ] {
         assert!(
             s.component(name).is_some(),
@@ -1163,11 +1158,8 @@ fn m1277_the_classification_survives_exclude_scope_build() {
         );
     }
 
-    // The exempt member survives too, with its record intact.
-    assert_eq!(
-        s.source("waybill-fixture-roletoolboot"),
-        Some("exempt-compiler-supplied")
-    );
+    // `roletoolboot` was checked here as the exempt member; since #1478 it is
+    // a classified build tool, and the loop above covers it.
 
     // And the control on the control: a component the propagation scoped
     // `build` IS droppable, which is what makes the flag meaningful and
@@ -1177,5 +1169,57 @@ fn m1277_the_classification_survives_exclude_scope_build() {
         "`--exclude-scope build` must still drop a component the propagation \
          scoped `build` -- if nothing is dropped, the flag was not applied and \
          the assertions above prove nothing"
+    );
+}
+
+/// #1445 — C184's component counts describe the document after every pass
+/// that can remove a closure member, `--exclude-scope` included.
+///
+/// `waybill-fixture-roletest` is a closure member the milestone-1269
+/// propagation scopes `optional`, so `--exclude-scope optional`
+/// removes it after the closure record has been built.
+#[test]
+fn i1445_c184_component_counts_follow_exclude_scope() {
+    let s = scan_with(&["--exclude-scope", "optional"]);
+    // CONTROL: a closure member really was removed, or the count below is
+    // compared against a document the flag did not change.
+    assert!(
+        s.component("waybill-fixture-roletest").is_none(),
+        "`--exclude-scope optional` must drop roletest for this test to mean anything"
+    );
+    assert!(
+        scan().component("waybill-fixture-roletest").is_some(),
+        "roletest must be present without the flag"
+    );
+
+    let raw = s.cdx["metadata"]["properties"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["name"] == "waybill:nix-closure")
+        .expect("C184 absent: the closure tier degraded")["value"]
+        .as_str()
+        .unwrap();
+    let rec: Value = serde_json::from_str(raw).unwrap();
+    let mut members: Vec<&Value> = s
+        .components()
+        .iter()
+        .filter(|c| prop(c, "waybill:closure-role").is_some())
+        .collect();
+    if prop(&s.cdx["metadata"]["component"], "waybill:closure-role").is_some() {
+        members.push(&s.cdx["metadata"]["component"]);
+    }
+    let with_member_role =
+        members.iter().filter(|c| prop(c, "waybill:closure-member-role").is_some()).count();
+
+    assert_eq!(
+        rec["components-emitted"].as_u64(),
+        Some(members.len() as u64),
+        "components-emitted must count the closure members this document holds: {rec}"
+    );
+    assert_eq!(
+        rec["components-without-member-role"].as_u64(),
+        Some((members.len() - with_member_role) as u64),
+        "{rec}"
     );
 }

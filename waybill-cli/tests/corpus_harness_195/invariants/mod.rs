@@ -187,13 +187,13 @@ pub static REGISTRY: &[Invariant] = &[
     },
     Invariant {
         id: "I10",
-        statement: "A closure member whose role says it does not ship carries a non-runtime marker, \
-                    or says it was exempted",
+        statement: "A closure member's non-runtime marker agrees with the evidence that decided it, \
+                    or the member says it was exempted",
         // Reports n/a rather than passing vacuously on the 16 corpus targets
         // that emit no closure roles at all. A row that passes where it
         // cannot apply is indistinguishable from one that passes where it
         // can.
-        precondition: "at least one component carries a non-shipping closure role",
+        precondition: "at least one component carries a closure role",
         kinds: checks::closure_role_scope::KINDS,
         checker: checks::closure_role_scope::check,
     },

@@ -127,6 +127,91 @@ honest disclosure is this declaration plus the PURL that already separates
 them.
 """
 
+[[declaration]]
+invariant = "I2"
+target = "nix-closure-openai"
+kind = "duplicate-library-identity"
+count_at_declaration = 21
+reason = """
+The same milestone-1282 shape as `nix-closure-moat` above, on openai's
+x86_64-linux closure, evaluated with `--nix-allow-ifd` (#1283): members that
+declare no `pname` keep their own `name` (FR-016) and have no `version`, so
+`(name, version, type)` collides -- 21 groups, 92 components, the largest being
+39 `source` members, seven `update-autotools-gnu-config-scripts-hook` and five
+`nuke-references`.
+
+Measured on the documents the 1283 corpus run emitted, before any golden
+existed: 0 groups repeat a `purl`, because the identity hash is in the PURL's
+name segment, and all 92 components carry `waybill:closure-member-role` (41
+source, 47 fragment, 2 package, 2 scaffolding). The document distinguishes
+them; I2 reports the name-and-version collision a consumer aggregating that
+way would hit, which is true. The reasoning for declaring rather than
+rewriting is moat's, unchanged.
+"""
+
+[[declaration]]
+invariant = "I2"
+target = "nix-closure-shellcheck"
+kind = "duplicate-library-identity"
+count_at_declaration = 26
+reason = """
+The same milestone-1282 shape as `nix-closure-moat` above, on shellcheck's
+x86_64-linux closure: members that declare no `pname` keep their own `name`
+(FR-016) and have no `version`, so `(name, version, type)` collides -- 26
+groups, 165 components, the largest being 57 `source` members and eight each
+of `libtcc1.a` and `libtcc1.a-builder`.
+
+Measured on the regenerated golden (milestone 1423, T036): 0 groups repeat a
+`purl`, because the identity hash is in the PURL's name segment, and all 165
+components carry `waybill:closure-member-role`. The document distinguishes
+them; I2 reports the name-and-version collision a consumer aggregating that
+way would hit, which is true. The reasoning for declaring rather than
+rewriting is moat's, unchanged.
+"""
+
+[[declaration]]
+invariant = "I2"
+target = "nix-closure-slack-web"
+kind = "duplicate-library-identity"
+count_at_declaration = 20
+reason = """
+The same milestone-1282 shape as `nix-closure-moat` above, on slack-web's
+x86_64-linux closure, evaluated with `--nix-allow-ifd` (#1283): members that
+declare no `pname` keep their own `name` (FR-016) and have no `version`, so
+`(name, version, type)` collides -- 20 groups, 106 components, the largest being
+57 `source` members, seven `update-autotools-gnu-config-scripts-hook` and five
+`nuke-references`.
+
+Measured on the documents the 1283 corpus run emitted, before any golden
+existed: 0 groups repeat a `purl`, because the identity hash is in the PURL's
+name segment, and all 106 components carry `waybill:closure-member-role` (57
+source, 45 fragment, 2 package, 2 scaffolding). The document distinguishes
+them; I2 reports the name-and-version collision a consumer aggregating that
+way would hit, which is true. The reasoning for declaring rather than
+rewriting is moat's, unchanged.
+"""
+
+[[declaration]]
+invariant = "I2"
+target = "nix-closure-slacklinker"
+kind = "duplicate-library-identity"
+count_at_declaration = 29
+reason = """
+The same milestone-1282 shape as `nix-closure-moat` above, on slacklinker's
+x86_64-linux closure, evaluated with `--nix-allow-ifd` (#1283): members that
+declare no `pname` keep their own `name` (FR-016) and have no `version`, so
+`(name, version, type)` collides -- 29 groups, 195 components, the largest being
+76 `source` members and eight each of `crt`, `crt-builder` and `libc.a`.
+
+Measured on the documents the 1283 corpus run emitted, before any golden
+existed: 0 groups repeat a `purl`, because the identity hash is in the PURL's
+name segment, and all 195 components carry `waybill:closure-member-role` (79
+source, 65 fragment, 40 scaffolding, 11 package). The document distinguishes
+them; I2 reports the name-and-version collision a consumer aggregating that
+way would hit, which is true. The reasoning for declaring rather than
+rewriting is moat's, unchanged.
+"""
+
 # ---------------------------------------------------------------------
 # I3 — non-runtime scope is not propagated transitively.
 #
@@ -158,6 +243,15 @@ them.
 # `--offline`. I3 is still exercised by `python-flask` and
 # `nix-closure-moat`. That the only cargo target no longer exercises it
 # is a consequence of #1272 and an argument for #1284.
+#
+# #1283: the moat entry below was declared at a count of 1 and had grown
+# to 16 without the lane noticing, because the count is never compared.
+# The 15 additions were source tarballs, `.cabal` revisions and patches of
+# test libraries, every one already `scope: "excluded"` from the
+# not-in-artifact pass; the checker read only C42, so it reported them as
+# unmarked. It now reads the native marker too, the entry is back to the
+# one component it was written for, and the three IFD targets that
+# reported 31, 15 and 2 of the same shape need no entry.
 # ---------------------------------------------------------------------
 
 [[declaration]]

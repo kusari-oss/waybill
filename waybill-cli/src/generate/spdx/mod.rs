@@ -218,7 +218,7 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
             );
             doc.external_document_refs.push(
                 document::SpdxExternalDocumentRef {
-                    id: "DocumentRef-OpenVEX".to_string(),
+                    id: crate::generate::openvex::SPDX23_DOCUMENT_REF.to_string(),
                     spdx_document: sidecar_path,
                     checksum: packages::SpdxChecksum {
                         algorithm: packages::SpdxChecksumAlgorithm::SHA256,
@@ -271,8 +271,8 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
 
         // Last thing before serialization, so every producer above is
         // covered — build_relationships, the document.rs file/view edges and
-        // the m072 DESCENDANT_OF edge alike.
-        relationships::sort_relationships(&mut doc.relationships);
+        // the m072 DESCENDANT_OF edge alike. Deduplicates too (#1444).
+        relationships::sort_and_dedup_relationships(&mut doc.relationships);
 
         let json_str = serde_json::to_string_pretty(&doc)
             .context("serializing SPDX 2.3 document to JSON")?;
@@ -321,6 +321,7 @@ mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new(purl).unwrap(),
             name: "x".to_string(),
             version: "1".to_string(),
@@ -437,6 +438,8 @@ mod tests {
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,
+            nix_evaluation_policy: None,
+            ghc_boot_libraries: None,
             nix_closure_contents: None,
             nix_closure_contents_unread: false,
             deps_dev_online: false,

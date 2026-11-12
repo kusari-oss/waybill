@@ -134,6 +134,20 @@ No `nix` on `PATH`. Install Nix, or drop the flag.
 This `nix` will not honour `allow-import-from-derivation`. waybill
 declines to evaluate rather than evaluate unprotected. Upgrade Nix.
 
+### Case 4a — `ifd-allowance-unverified`
+
+`--nix-allow-ifd` was passed and `nix config show` did not report
+`allow-import-from-derivation = true`. waybill does not assume an opt-in
+applied any more than it assumes a refusal did, so nothing was evaluated.
+See [Import-from-derivation](#import-from-derivation---nix-allow-ifd).
+
+### Case 4b — `import-from-derivation-build-failed`
+
+`--nix-allow-ifd` allowed import-from-derivation and a derivation nix built
+during evaluation failed. The `detail` names the derivation. Distinct from
+`import-from-derivation-required`, where the policy refused: this flake's
+generated expression did not build on this host.
+
 ### Case 5 — `revision-unfetchable`
 
 The pinned revision could not be acquired, or `flake.lock` does not
@@ -247,6 +261,86 @@ Members referenced by neither are not emitted, with one exception: those
 that apply a patch are. Measured, `jq` and `lua` are unreferenced in one
 project's closure and carry 6 of its 18 CVEs, so dropping them would leave
 those patches with no component to attach to.
+
+### What ships, and a runtime-only document (milestone 1423)
+
+Members outside the runtime closure of the outputs the evaluated attribute
+installs (its selected output, else `meta.outputsToInstall`, else its
+default output; C216 `outputs` says which) carry the not-in-artifact mark: CycloneDX `scope: excluded`, SPDX 2.3 `BUILD_TOOL_OF`,
+SPDX 3 `usesTool` with `scope: build`. The document-scope
+`waybill:closure-scope-method` (C216) says whether the marks came from the
+runtime closure (`nix path-info -r`, exact for what the output references) or
+from an approximation. Vulnerability scanners ignore the mark, so to scan only
+what ships, drop the marked members first with
+`waybill sbom edit closure.cdx.json --drop 'scope=excluded' -o runtime.cdx.json`.
+See [Runtime-only view of a Nix closure](../user-guide/sbom-edit.md#runtime-only-view-of-a-nix-closure).
+
+A statically linked Haskell library is kept as runtime even though no output
+references its path. The walk starts at the root's declared Haskell
+dependencies; a declared target binds to the Haskell build of that name, so
+Haskell `zlib` is never confused with C `zlib`. Below the root, each
+library's `propagatedBuildInputs` is followed too. Those carry no test
+dependencies, and they hold the platform-conditional ones (`hfsevents` on
+darwin) that the Linux-resolved package-set relations lack (#1459).
+
+A declared target never binds to a closure member that declares no `pname`
+(C206), whatever that member is called. A live-bootstrap fragment named
+`time` is not the boot library `time`: a boot library the closure holds no
+Haskell component for binds to its compiler-supplied `pkg:hackage/<name>`
+component, and any other such target gets no edge. Those members are also
+never merged into another reader's component of the same name (#1466).
+
+### GHC boot-library versions (milestone 966)
+
+GHC ships `base`, `process`, `bytestring`, `Cabal` and about 40 more
+libraries inside the compiler. nixpkgs binds them to `null`, so the package
+set has no version for them. Without a closure they stay versionless and
+`compiler-supplied` (C170). Their versions change between patch releases:
+`base` and `process` differ in every GHC series with more than one release.
+So the version can only be known from the exact compiler.
+
+The closure names that compiler. Each Haskell member's `nativeBuildInputs`
+holds a `ghc-X.Y.Z` (or bootstrap `ghc-binary-X.Y.Z`) store path. waybill
+looks the release up in a committed, dated table
+(`haskell_packages/ghc_boot_libraries.tsv`, produced by
+`scripts/ghc-boot-libraries.py`):
+
+- **Primary source:** GHC's release notes ("Included libraries").
+- **Gap filler:** Stack's `global-hints.yaml`, for the libraries the notes
+  omit.
+- **Disagreements:** settled from GHC's own release tag.
+
+A test checks the table against every GHC package database it can find, and
+CI requires it on Linux.
+
+- **Declared by the project:** the version shipped by the compiler that
+  built the evaluated output. The tier stays `design`.
+- **Declared by a closure member:** the version shipped by the compiler that
+  built that member. A member built once by the bootstrap GHC and once by
+  the project's GHC depends on both versions. Where the two compilers ship
+  different versions, the document holds one component per version.
+- **Provenance:** C218 `waybill:boot-library-compiler` on each such
+  component names the compiler. Document row C219
+  `waybill:ghc-boot-libraries` lists every compiler found, whether the table
+  had it, the system, and the table's date.
+- **Compiler not in the table:** a release newer than the table leaves
+  today's `compiler-supplied` behaviour, and C219 records it as
+  `absent-from-table`.
+- **Windows-only libraries:** `Win32` is never versioned on a non-Windows
+  system.
+
+```sh
+jq -r '.metadata.properties[] | select(.name=="waybill:ghc-boot-libraries") | .value' app.cdx.json
+# {"compilers":{"ghc-9.10.3":"in-table","ghc-binary-9.8.4":"in-table"},"project":"ghc-9.10.3",
+#  "schema":1,"system":"x86_64-linux","table":"2026-11-12"}
+```
+
+This is what lets a vulnerability scanner see them. On the five Haskell
+closure corpus targets, osv-scanner 2.7.0 newly reports HSEC-2023-0007 on
+`base` and HSEC-2026-0006 on the `Cabal` GHC ships, and loses no finding.
+On openai it also reports HSEC-2024-0003, which affects `process` on
+Windows only. That match is correct for the version; whether it applies is
+a VEX question.
 
 ### The document's subject (milestone 1377)
 
@@ -424,11 +518,57 @@ Neither SPDX version has an equivalent, so both carry the same array in a
 `waybill:closure-patches` annotation. That is the one place the three
 formats differ in capability rather than in spelling.
 
-A backport also produces **two** OpenVEX statements, never one: `affected`
-for the component version as published, and `not_affected` for the build
-this document describes, with the component named as a subcomponent. Both
-carry the evidence grade. A lone `not_affected` would let a consumer
-suppress a real finding on the weaker half of the evidence.
+A backport also produces **one** VEX statement per CVE it resolves: status
+`fixed`, whose product is the patched component's own PURL with a
+build-identity qualifier (milestone 1436, #1436).
+
+### The `nix_drv` qualifier
+
+A component whose patches resolve a CVE carries
+`?nix_drv=<hash>[,<hash>…]` on its PURL:
+
+```
+pkg:generic/unzip@6.0?nix_drv=l3jnrx992av3mhj5fna6064jfhncas5k,pfs456lvwjqfb35s5ypvnbkrdy01v3i6
+```
+
+- **What it identifies.** The value is the store hash of every derivation
+  (`.drv`) merged into the component that applies patches, sorted and
+  comma-joined. nixpkgs often builds one `(name, version)` more than once —
+  `unzip 6.0` is two derivations in a real closure — and waybill emits them
+  as one component, so the identity names each build it stands for. The
+  same derivations always give the same value. It is the derivation's hash,
+  not a checksum of an artifact, which is why the key is not PURL's
+  `checksum`.
+- **Why it exists.** Scanners apply a VEX statement only when its product is
+  the scanned package's own PURL; grype never reads a subcomponent or the
+  document's subject. A claim on plain `pkg:generic/unzip@6.0` would cover
+  every unzip 6.0 anywhere, patched or not. The qualifier scopes the claim
+  to these builds. Measured with grype 0.120.0: it suppresses every patched
+  finding, and none on an unqualified unzip 6.0.
+- **It does not change matching.** grype and osv-scanner ignore qualifiers
+  when matching advisories, so a qualified document reports the same
+  findings as an unqualified one when no VEX is supplied (measured: grype
+  0.120.0, osv-scanner 2.7.0). Every other advisory still matches.
+- **Only where a claim needs it.** A component with no CVE-resolving patch —
+  including one whose patches name no CVE — keeps its PURL byte-identical.
+  The qualified PURL is the same string in CycloneDX `purl` and `bom-ref`,
+  SPDX 2.3 `externalRefs`, SPDX 3 `software_packageUrl` and the OpenVEX
+  product.
+
+A CVE is claimed only when **every** patching build of the component
+resolves it, because a claim true of one build is false of the component.
+One that only some builds resolve gets no statement, stays in
+`pedigree.patches[].resolves`, and is counted at document scope in
+`waybill:vex-claims-unscoped` (emitted only when greater than zero).
+
+The version-level claim — "this version as published is affected" — is not
+a VEX statement. It is what `pedigree.patches[].resolves` already says.
+Milestone 1035 emitted it as an `affected` beside a build-scoped
+`not_affected` that named the build as product and the component as a
+subcomponent. That pair suppressed nothing in grype, which never reads a
+subcomponent; and an `affected` and a `not_affected` that both match one
+PURL are honoured by at most one of grype and Trivy, which break the tie in
+opposite directions. So the pair was replaced.
 
 ### Where the VEX appears
 
@@ -436,26 +576,28 @@ The same statements reach both output families (milestone 1068):
 
 - **CycloneDX**: natively, in `vulnerabilities[]`, whether or not SPDX is
   also requested.
-  - **Version statement.** `affected` becomes `analysis.state: exploitable`, with the
-    component's `bom-ref` in `affects[]`.
-  - **Build statement.** `not_affected` becomes `not_affected` / `code_not_present`,
-    with the document root in `affects[]` and the component named in a
-    `waybill:vex-subcomponent` property. Reading the subcomponent as the
-    affected party would turn "this build is not affected" into "this version
-    is not affected", which is the claim the pair exists to keep apart.
+  - **Backport.** `fixed` becomes `analysis.state: resolved`, one entry per
+    (component, CVE), with the component's qualified `bom-ref` in
+    `affects[]`. No entry marks a patched component `exploitable` for a CVE
+    its own patches resolve.
+  - **nixpkgs declaration.** `affected` becomes `exploitable`, with the
+    document root in `affects[]` and the declared component in a
+    `waybill:vex-subcomponent` property (see below).
   - **Evidence grade.** `analysis.detail` carries it. No statement is mapped to
-    `resolved_with_pedigree`: a filename-graded patch is not verifiable
-    remediation.
+    `resolved_with_pedigree`: the schema defines it as remediation evidenced
+    by commit history or diffs in the pedigree, and waybill's patch entries
+    carry neither.
 - **SPDX 2.3 and SPDX 3**: in the OpenVEX sidecar the SPDX document
   references.
 
 A document that does not contain a statement's component (a `--split`
-document, `--tier`, a root override) does not carry that claim, and counts
-it in `waybill:vex-claims-omitted`. The sidecar still names it by PURL.
+document, a root override that drops it) does not carry that claim, and
+counts it in `waybill:vex-claims-omitted`. The sidecar still names it by PURL.
 
 ```sh
 jq -c '.vulnerabilities[] | {id, state: .analysis.state, affects: [.affects[].ref],
        sub: [.properties[]? | select(.name=="waybill:vex-subcomponent") | .value]}' out.cdx.json
+grype sbom:out.cdx.json --vex out.openvex.json   # backported CVEs drop out
 ```
 
 **An empty `vulnerabilities[]` is not a claim that nothing is vulnerable.**
@@ -612,11 +754,13 @@ declarations are unaffected.
 ### When nixpkgs and a patch disagree
 
 If nixpkgs declares a CVE that a patch on the same component also names, the
-declaration wins: the `affected` is emitted and the patch-derived
-`not_affected` is withheld. A maintainer stating a version is vulnerable
-outranks a CVE read out of a filename, and a `not_affected` against an
-explicit contrary declaration would let a consumer dismiss a real finding on
-the weaker evidence.
+declaration wins: the `affected` is emitted and the patch-derived `fixed` is
+withheld. A maintainer stating a version is vulnerable outranks a CVE read out
+of a filename, and a `fixed` against an explicit contrary declaration would
+let a consumer dismiss a real finding on the weaker evidence. The two are
+matched on the component's PURL with qualifiers removed, and the claim is
+withheld even when the declaration itself cannot be emitted for want of a
+document subject.
 
 Nothing is lost. The patch stays in the component's `pedigree.patches[]`, so
 the build's patching is still visible; what is withheld is the suppression,
@@ -668,6 +812,76 @@ Neither was a knowledge problem — both rules are documented above and were
 quoted while being violated. A diagnostic that shares the reader's code is a
 control that does not depend on remembering them.
 
+## Import-from-derivation (`--nix-allow-ifd`)
+
+**What it is.** Many Haskell flakes describe their package with cabal2nix at
+evaluation time (`callCabal2nix`, `developPackage`,
+`packageSourceOverrides`). To evaluate them, nix first **builds** a small
+derivation — the generated Nix expression — and imports its output, all
+during evaluation. That is import-from-derivation (IFD).
+
+**Why waybill refuses it by default.** A build during evaluation runs code
+from the scanned repository. waybill passes
+`allow-import-from-derivation false` to every Nix invocation and checks
+that nix applied it. Such a flake therefore degrades with
+`import-from-derivation-required`, and the WARN says so and names the
+opt-in. Measured on three of the four public project flakes in the recall
+corpus (`specs/1283-nix-allow-ifd/measurements/`): no closure, and 7% and
+12% recall of real vulnerabilities on the two measurable on macOS. Building
+the output beforehand does not help: slack-web's output was already in the
+store and evaluation was still refused.
+
+**The opt-in.** `--nix-allow-ifd`, with `--nix-closure` or `--nix-eval`
+(clap rejects it alone), passes `allow-import-from-derivation true` to
+every Nix evaluation those tiers make: the closure, the attribute listing,
+the output selection, the version, licence and declaration evaluations. It
+verifies the allowance exactly as it verifies the refusal; if nix does not
+report `= true`, nothing is evaluated (`ifd-allowance-unverified`). If an
+IFD build fails, the reason is `import-from-derivation-build-failed`. If
+it outlasts the budget, the reason is `budget-exceeded`.
+
+> **Do not use it on an untrusted flake.** Nix will build derivations while
+> evaluating it, running code the repository supplies.
+
+**The sandbox caveat.** Where nix's sandbox is off, those builds run
+unsandboxed with your user's access. Off is nix's macOS default. waybill
+reads `sandbox` from the same `nix config show` listing, and with the opt-in
+and `sandbox = false` it logs one WARN per scan:
+
+```text
+WARN --nix-allow-ifd: nix's sandbox is off; derivations built during evaluation run unsandboxed with your user's access.
+```
+
+It still proceeds. waybill records the sandbox setting and never changes it.
+
+**Nothing else is relaxed.** `--accept-flake-config` and `--impure` stay
+refused, so a flake's `nixConfig` substituters and keys are still ignored
+(slack-web's and slacklinker's request extra substituters). IFD derivations
+build from your configured substituters, or locally. They may fetch through
+nix, as any nix build does; that is the exposure the caution above
+describes.
+
+**The document says which.** Every scan that admits a Nix tier carries
+`waybill:nix-evaluation-policy` (C217) at document scope, on success and on
+degradation alike:
+
+```text
+{"import-from-derivation":"allowed","sandbox":"false","schema":1,"verified":true}
+```
+
+`import-from-derivation` is what was requested, `verified` whether a
+pre-flight confirmed nix applied it, and `sandbox` nix's own value, or
+`null` when nix reported none. Without the opt-in it reads `"refused"`.
+Two documents of one flake, with and without the opt-in, can differ
+greatly, so the record is how a reader tells which one they hold.
+
+**sbomnix differs.** sbomnix 1.9.0 never passes the setting, so it inherits
+nix's default, `allow-import-from-derivation = true`, and performs IFD
+silently (`specs/1283-nix-allow-ifd/measurements/sbomnix-and-host.txt`:
+no occurrence of the setting in its source, and `nix config show` reporting
+`true` and `sandbox = false` on the measured host). That is why it reads
+these flakes and waybill, by default, does not.
+
 ## Security guidance
 
 **Prefer a sandbox.** Either flag starts an evaluator on a tree you are
@@ -682,7 +896,10 @@ The two differ in what they evaluate, and it matters:
   instantiating a derivation requires it. Expressions authored in the
   repository run.
 
-Defences are on by default and not configurable:
+Defences are on by default. The one that can be relaxed is the
+import-from-derivation refusal, and only by `--nix-allow-ifd` (see
+[above](#import-from-derivation---nix-allow-ifd)); the rest are not
+configurable:
 
 - **Pure mode.** No `--impure` on the resolving call, so the host
   environment is unreadable (`builtins.getEnv "HOME"` returns `""`).
@@ -705,7 +922,9 @@ Defences are on by default and not configurable:
 
 Those defences apply to both flags. Import-from-derivation is refused on
 the closure call too, so the project's flake can be evaluated but cannot
-build anything or run a builder during evaluation.
+build anything or run a builder during evaluation — unless
+`--nix-allow-ifd` is passed, in which case it can, and the document says so
+(C217).
 
 An earlier version of this section described taking the derivation closure
 as a possible future step, and said that if it landed, repository-authored
@@ -716,5 +935,6 @@ two, and nixpkgs is still code waybill does not audit.
 
 ## Related
 
-- [SBOM format mapping](./sbom-format-mapping.md) — rows C177 through C185
+- [SBOM format mapping](./sbom-format-mapping.md) — rows C177 through C185,
+  and C217 (`waybill:nix-evaluation-policy`)
 - [Reading a Waybill SBOM](./reading-a-waybill-sbom.md)

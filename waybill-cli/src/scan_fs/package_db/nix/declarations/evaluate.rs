@@ -13,6 +13,7 @@ use crate::scan_fs::package_db::nix::eval::invoke::{
 };
 use crate::scan_fs::package_db::nix::eval::preflight::IFD_SETTING;
 use crate::scan_fs::package_db::nix::eval::reason::DegradationReason;
+use crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified;
 
 /// What the package set said about one name.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -96,11 +97,30 @@ in builtins.listToAttrs (map (n: {{ name = n; value = all n; }}) [ {list} ])"#
     )
 }
 
+/// The argv for the declaration call. One definition, used by the invocation
+/// and asserted on by tests.
+///
+/// Milestone 1283: the import-from-derivation value is the verified policy
+/// the closure was read under, received from the caller rather than
+/// re-verified.
+pub(crate) fn declarations_argv<'a>(expr: &'a str, ifd: &IfdPolicyVerified) -> Vec<&'a str> {
+    vec![
+        "eval",
+        "--json",
+        "--option",
+        IFD_SETTING,
+        ifd.policy().setting(),
+        "--expr",
+        expr,
+    ]
+}
+
 /// Ask the pinned package set about every name, in one invocation.
 pub(crate) fn evaluate(
     revision: &str,
     system: &str,
     names: &[String],
+    ifd: &IfdPolicyVerified,
     budget: Duration,
 ) -> Result<BTreeMap<String, Vec<Candidate>>, DegradationReason> {
     // The revision is interpolated into a Nix string literal, so an
@@ -134,15 +154,7 @@ pub(crate) fn evaluate(
     // Evaluating nixpkgs at the revision `flake.lock` pins reaches the same
     // package set through a *locked* flakeref, which is pure. Same answer,
     // same posture as milestone 1034, no new exposure.
-    let argv = vec![
-        "eval",
-        "--json",
-        "--option",
-        IFD_SETTING,
-        "false",
-        "--expr",
-        expr.as_str(),
-    ];
+    let argv = declarations_argv(&expr, ifd);
     if !argv_is_safe(&argv) {
         return Err(DegradationReason::ToolUnusable(
             "declaration argv contains a flag that would weaken evaluation".to_string(),
@@ -234,16 +246,25 @@ mod tests {
         // project's flake by path, and milestone 1034's argv guard rejected
         // it — which is the guard working, not an obstacle to route around.
         let expr = build_expr("0123456789abcdef0123456789abcdef01234567", "x86_64-linux", &["a".into()]);
-        let argv = vec!["eval", "--json", "--option", IFD_SETTING, "false", "--expr", expr.as_str()];
-        assert!(argv_is_safe(&argv), "argv must pass the m1034 guard");
-        assert!(!argv.contains(&"--impure"));
+        // m1283 (T016): both policies, and the value is the policy's.
+        use crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy;
+        for (p, want) in [(IfdPolicy::Refuse, "false"), (IfdPolicy::Allow, "true")] {
+            let ifd = IfdPolicyVerified::assumed_for_test(p);
+            let argv = declarations_argv(&expr, &ifd);
+            assert!(argv_is_safe(&argv), "argv must pass the m1034 guard");
+            assert!(!argv.contains(&"--impure"));
+            assert!(argv.windows(3).any(|w| w == ["--option", IFD_SETTING, want]), "{argv:?}");
+        }
     }
 
     #[test]
     fn a_revision_that_is_not_a_git_object_id_is_refused() {
         // The revision is interpolated into a Nix string literal; a value
         // containing a quote would close it and evaluate what follows.
-        let e = evaluate(r#"abc"; x = "#, "x86_64-linux", &["a".into()], Duration::from_secs(1));
+        let ifd = IfdPolicyVerified::assumed_for_test(
+            crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy::Refuse,
+        );
+        let e = evaluate(r#"abc"; x = "#, "x86_64-linux", &["a".into()], &ifd, Duration::from_secs(1));
         assert!(
             matches!(e, Err(DegradationReason::RevisionUnfetchable { .. })),
             "{e:?}"

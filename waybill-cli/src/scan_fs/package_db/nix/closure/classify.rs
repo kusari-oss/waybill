@@ -35,7 +35,11 @@ use super::derivation::{store_basename, RawClosure};
 /// distinguishable things. A fifth role value is the follow-up if a genuinely
 /// cross closure makes that expensive — it would change the C182 closed enum,
 /// every consumer of it, invariant I10's population and C203's vocabulary.
-const ARTIFACT_FIELDS: &[&str] = &[
+///
+/// Milestone 1423 — also the edge set of the reachability walk
+/// ([`super::walk`]), which follows these from the evaluated package. One
+/// constant for both, so the walk cannot drift from the role it replaces.
+pub(crate) const ARTIFACT_FIELDS: &[&str] = &[
     "buildInputs",
     "propagatedBuildInputs",
     "depsHostHost",
@@ -61,7 +65,7 @@ const ARTIFACT_FIELDS: &[&str] = &[
 /// credited by the second hop's own declaration, at whatever depth it sits,
 /// and adding these attributes to the constant is the whole of the fix. A
 /// root-anchored walk would have needed a propagation phase; this does not.
-const TOOLING_FIELDS: &[&str] = &[
+pub(crate) const TOOLING_FIELDS: &[&str] = &[
     "nativeBuildInputs",
     "depsBuildBuild",
     "depsBuildHost",
@@ -708,6 +712,7 @@ mod tests {
         // tallies are per-derivation and the emitted set is per-identity —
         // asserting on the former would not notice the merge breaking.
         let emitted = super::super::emit::components(&super::super::ClassifiedClosure {
+            runtime: None,
             attribute: "default".to_string(),
             raw: closure,
             roles,

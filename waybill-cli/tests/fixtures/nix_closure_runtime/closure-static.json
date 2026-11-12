@@ -1,0 +1,101 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-shellcheck-0.11.0.drv": {
+      "name": "waybill-fixture-shellcheck-0.11.0",
+      "env": {
+        "pname": "waybill-fixture-shellcheck",
+        "version": "0.11.0",
+        "outputs": "bin out",
+        "installPhase": "install -Dm755 /nix/store/h-SC/bin/shellcheck $bin/bin/shellcheck"
+      },
+      "inputs": {
+        "drvs": { "d-SC.drv": { "outputs": ["out"] } },
+        "srcs": []
+      },
+      "outputs": {
+        "bin": { "path": "h-sc-bin" },
+        "out": { "path": "h-sc" }
+      }
+    },
+    "d-SC.drv": {
+      "name": "waybill-fixture-ShellCheck-0.11.0",
+      "env": {
+        "pname": "waybill-fixture-ShellCheck",
+        "version": "0.11.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "buildInputs": "/nix/store/h-aeson /nix/store/h-fgl /nix/store/h-hspec /nix/store/h-gmp"
+      },
+      "inputs": {
+        "drvs": {
+          "d-aeson.drv": { "outputs": ["out"] },
+          "d-fgl.drv": { "outputs": ["out"] },
+          "d-hspec.drv": { "outputs": ["out"] },
+          "d-gmp.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "h-SC" } }
+    },
+    "d-aeson.drv": {
+      "name": "waybill-fixture-aeson-2.2.4.1",
+      "env": {
+        "pname": "waybill-fixture-aeson",
+        "version": "2.2.4.1",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "propagatedBuildInputs": "/nix/store/h-text"
+      },
+      "inputs": { "drvs": { "d-text.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "h-aeson" } }
+    },
+    "d-text.drv": {
+      "name": "waybill-fixture-text-2.0.2",
+      "env": {
+        "pname": "waybill-fixture-text",
+        "version": "2.0.2",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
+      },
+      "outputs": { "out": { "path": "h-text" } }
+    },
+    "d-fgl.drv": {
+      "name": "waybill-fixture-fgl-5.8.2",
+      "env": {
+        "pname": "waybill-fixture-fgl",
+        "version": "5.8.2",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
+      },
+      "outputs": { "out": { "path": "h-fgl" } }
+    },
+    "d-hspec.drv": {
+      "name": "waybill-fixture-hspec-2.11.9",
+      "env": {
+        "pname": "waybill-fixture-hspec",
+        "version": "2.11.9",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "propagatedBuildInputs": "/nix/store/h-hunit"
+      },
+      "inputs": { "drvs": { "d-hunit.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "h-hspec" } }
+    },
+    "d-hunit.drv": {
+      "name": "waybill-fixture-hunit-1.6.2",
+      "env": {
+        "pname": "waybill-fixture-hunit",
+        "version": "1.6.2",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
+      },
+      "outputs": { "out": { "path": "h-hunit" } }
+    },
+    "d-gmp.drv": {
+      "name": "waybill-fixture-gmp-6.3.0",
+      "env": { "pname": "waybill-fixture-gmp", "version": "6.3.0" },
+      "outputs": { "out": { "path": "h-gmp" } }
+    }
+  },
+  "version": 4
+}

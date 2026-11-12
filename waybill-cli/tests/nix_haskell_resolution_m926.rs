@@ -101,6 +101,11 @@ const PACKAGES: &str = r#"
       version = "2.0.10";
       sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
   }) { };
+  waybill-fixture-dep = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-dep";
+      version = "2.2.0.0";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+  }) { };
 "#;
 
 /// #984: the real configuration both nulls boot libraries AND rebinds bare
@@ -1155,4 +1160,89 @@ fn m926_two_scans_of_one_revision_are_byte_identical() {
     let b = scan(&fixture("resolvable"), Some(cache.path()), &[]);
 
     assert_eq!(canonical(&a.cdx), canonical(&b.cdx));
+}
+
+// ---------------------------------------------------------------------------
+// #1457 — a package-set version the project's own requirement rules out
+// ---------------------------------------------------------------------------
+
+/// C174's value, parsed.
+fn resolution_record(d: &serde_json::Value) -> serde_json::Value {
+    let raw = d["metadata"]["properties"]
+        .as_array()
+        .expect("document-scope properties")
+        .iter()
+        .find(|p| p["name"].as_str() == Some("waybill:nixpkgs-haskell-resolution"))
+        .and_then(|p| p["value"].as_str())
+        .expect("C174 must be present when the pass ran")
+        .to_string();
+    serde_json::from_str(&raw).expect("C174 value is JSON")
+}
+
+/// #1457: the package set carries `waybill-fixture-dep` 2.2.0.0 and the
+/// project requires `>= 2.3`. Emitting 2.2.0.0 next to that range makes the
+/// document contradict itself, so the component is emitted versionless, the
+/// reason says why, and the summary counts the disagreement.
+#[test]
+fn m1457_a_version_the_requirement_rules_out_is_not_emitted() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("requirement_violated"), Some(cache.path()), &[]);
+
+    let c = cdx_component(&d.cdx, "waybill-fixture-dep").expect("still a component");
+    assert!(
+        c["version"].as_str().unwrap_or("").is_empty(),
+        "2.2.0.0 violates >= 2.3 and must not be emitted: {c}"
+    );
+    assert_eq!(c["purl"].as_str(), Some("pkg:hackage/waybill-fixture-dep"));
+    assert!(
+        !serde_json::to_string(&d.cdx).unwrap().contains("waybill-fixture-dep@2.2.0.0"),
+        "no identifier anywhere may carry the rejected version"
+    );
+    assert_eq!(
+        cdx_prop(&d.cdx, "waybill-fixture-dep", "waybill:requirement-ranges").as_deref(),
+        Some(r#"[">= 2.3"]"#),
+        "the range the decision was made against is still emitted"
+    );
+    assert_eq!(
+        cdx_prop(&d.cdx, "waybill-fixture-dep", "waybill:haskell-version-unresolved-reason")
+            .as_deref(),
+        Some("nixpkgs-version-violates-requirement")
+    );
+    let rec: serde_json::Value = serde_json::from_str(
+        &cdx_prop(&d.cdx, "waybill-fixture-dep", "waybill:nixpkgs-version-disagreement")
+            .expect("the rejected nixpkgs version is recorded"),
+    )
+    .unwrap();
+    assert!(rec["emitted"].is_null(), "{rec}");
+    assert_eq!(rec["nixpkgs"].as_str(), Some("2.2.0.0"));
+
+    let v = resolution_record(&d.cdx);
+    assert_eq!(v["disagreements"].as_u64(), Some(1), "{v}");
+    assert_eq!(v["unresolved"]["nixpkgs-version-violates-requirement"].as_u64(), Some(1), "{v}");
+
+    // The in-document control resolves as before.
+    let liba = cdx_component(&d.cdx, "waybill-fixture-liba").unwrap();
+    assert_eq!(liba["version"].as_str(), Some("1.2.3"));
+
+    // Both rows reach the other two formats.
+    for doc in [&d.spdx2, &d.spdx3] {
+        assert!(mentions(doc, "nixpkgs-version-violates-requirement"));
+        assert!(!serde_json::to_string(doc).unwrap().contains("waybill-fixture-dep@2.2.0.0"));
+    }
+}
+
+/// #1457 control: the same project with a range 2.2.0.0 satisfies resolves
+/// exactly as before #1457 — versioned, no reason, no disagreement.
+#[test]
+fn m1457_a_version_the_requirement_admits_is_emitted_as_before() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("requirement_satisfied"), Some(cache.path()), &[]);
+
+    let c = cdx_component(&d.cdx, "waybill-fixture-dep").expect("present");
+    assert_eq!(c["version"].as_str(), Some("2.2.0.0"));
+    assert!(cdx_prop(&d.cdx, "waybill-fixture-dep", "waybill:haskell-version-unresolved-reason")
+        .is_none());
+    assert!(cdx_prop(&d.cdx, "waybill-fixture-dep", "waybill:nixpkgs-version-disagreement")
+        .is_none());
+    assert_eq!(resolution_record(&d.cdx)["disagreements"].as_u64(), Some(0));
 }

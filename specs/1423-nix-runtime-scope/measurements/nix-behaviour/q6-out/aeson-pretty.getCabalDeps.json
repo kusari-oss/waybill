@@ -1,0 +1,1 @@
+{"executableHaskellDepends":["aeson","attoparsec","attoparsec-aeson",null,null,"cmdargs"],"libraryHaskellDepends":["aeson",null,"base-compat",null,"scientific",null,"unordered-containers","vector"],"testHaskellDepends":[]}

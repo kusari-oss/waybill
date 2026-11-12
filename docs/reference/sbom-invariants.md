@@ -27,10 +27,16 @@ locally satisfiable while jointly incoherent.
 transitively, the propagation's compiler-supplied immunity has stopped
 working — that is the population milestone 1276 fixed, measured at 10
 components across two targets, all of them `transitive`. If it was
-assigned directly by a reader, this is the origin milestone 1276
-deliberately did not build a suppression path for, on the grounds that
-its population was zero; the fix is to decide where the mark should be
-suppressed rather than to relax this row.
+assigned directly by a reader, the withdrawal #1283 added has not reached
+it: milestone 1276 deliberately built no suppression path for that origin
+while its population was zero, and the 1283 corpus run found one
+(slack-web's test suite declares `template-haskell`).
+`resolve::scope_propagation::withdraw_compiler_supplied_scope` now removes a
+reader's non-runtime scope from a package the pinned compiler supplies,
+before the propagation runs, and returns the edges into it to `DependsOn` so
+SPDX 2.3 agrees with CycloneDX. It reads the same boot set as the
+propagation, so a component this row still reports is one that set does not
+contain, or one whose PURL is not `pkg:hackage`.
 
 **What it does not catch**: a component that is runtime-present for some
 other reason — an OS package in a rootfs scan, a language stdlib
@@ -86,7 +92,7 @@ For the per-annotation wire shapes these invariants read, see
 | I7 | A component not reachable from the subject by any dependency edge carries a marker explaining why | subject resolvable and at least one non-subject component | `unreachable-and-unexplained` | Active |
 | I8 | A component with no version carries an annotation explaining why it has none | at least one component has an absent or empty version | `versionless-and-unexplained` | Active |
 | I9 | A component the compiler supplies carries no non-runtime scope | at least one component is marked compiler-supplied | `compiler-supplied-non-runtime` | Active |
-| I10 | A closure member whose role says it does not ship carries a non-runtime marker, or says it was exempted | at least one component carries a non-shipping closure role | `closure-tooling-without-non-runtime-marker` | Active |
+| I10 | A closure member's non-runtime marker agrees with the evidence that decided it, or the member says it was exempted | at least one component carries a closure role | `closure-tooling-without-non-runtime-marker`, `closure-statically-linked-but-marked`, `closure-runtime-member-but-marked` | Active |
 
 ### I10
 
@@ -145,6 +151,55 @@ exemption is the seam where all three meet, which is why each states it.
 I3's own entry records getting a boundary wrong once, when a loose one put
 two instances of a single defect class under the wrong number.
 
+**Milestone 1423 (#1423): the evidence, not the role.** With the runtime
+closure available, a member's mark comes from that closure plus static
+linking rather than from its role, so the role alone no longer says what
+the mark must be: openssh's `dns-root-data` is `build-tooling` and ships,
+and curl's libxml2 is `artifact-input` and does not. C203 says how each
+member was decided, and the row reads it:
+
+- **Population**: every component carrying C182, in any role.
+- `exempt-compiler-supplied`, `exempt-evaluated-package`: pass.
+- `runtime-closure`: marked or not, according to whether the closure holds
+  the member. A member the closure holds must be **unmarked**; a mark is
+  `closure-runtime-member-but-marked` (#1465, below).
+- `reachability-walk`: pass, marked or not. The walk approximates the runtime
+  closure and is not evidence that a member ships, so a reader's scope on a
+  member it reached contradicts nothing.
+- `statically-linked`: must be **unmarked**; a mark is
+  `closure-statically-linked-but-marked` (the converse check).
+- `closure-role`, `closure-role+lifecycle-propagation`, or no C203 at all:
+  the milestone-1277 rule above, unchanged, so a pre-1423 document still
+  passes. An unrecognised C203 value falls here too, as the stricter
+  reading.
+
+The row reports n/a only where no component carries a closure role at all.
+
+**#1465: runtime evidence wins.** A member the runtime closure holds, or that
+is statically linked into what ships, carries no not-in-artifact mark in any
+format, whatever lifecycle scope a reader gave it. Before #1465 the closure
+left such a member unmarked and a reader's scope marked it anyway:
+slack-web's test suite declares QuickCheck and th-compat, the Haskell reader
+scoped both `development`, and aeson propagates both into the runtime
+closure, so CycloneDX called them `excluded`. This row passed them, because
+`runtime-closure` passed marked or not.
+
+*How the document tells "the closure holds it" apart.* Not from CycloneDX:
+`scope: excluded` is one field written by two marks, the closure's verdict
+and a reader's lifecycle scope, so QuickCheck (inside the closure) and
+`hspec` (outside it) were the same component there — C203
+`runtime-closure`, C42 `development`, `scope: excluded`. SPDX 2.3 keeps them
+apart. `BUILD_TOOL_OF` is emitted from the closure's verdict alone, and the
+lifecycle scope rides the dependency-edge types instead: `hspec` has a
+`BUILD_TOOL_OF` edge, QuickCheck and th-compat had none. So a `runtime-closure`
+member with no `BUILD_TOOL_OF` in SPDX 2.3 is one the closure holds, and a
+mark on it (C42 or the native `scope`, the same test as every other arm) is
+`closure-runtime-member-but-marked`. Measured on the committed slack-web
+golden before the fix: exactly those two, and no other member of the five
+Nix targets. A member SPDX 2.3 does not hold is not judged, and the arm
+relies on SPDX 2.3's full relationship vocabulary — the default, and what the
+corpus emits; `--spdx2-relationship-compat basic` drops `BUILD_TOOL_OF`.
+
 ### I1
 
 **Catches**: a file being described as something another component
@@ -193,6 +248,21 @@ the edge whose scope was not propagated. Scope propagation is milestone
 052's `apply_lifecycle_scope_to_edges` plus milestones 179-184 per
 ecosystem; a gap is usually one ecosystem's classifier not having been
 extended.
+
+**What counts as the marker (#1283).** Two different readings, kept apart
+on purpose. Which *edges* are non-runtime — and so which components are in
+the population — is read from C42 `waybill:lifecycle-scope` alone. Whether a
+component in the population *carries* a marker reads C42 or the native
+CycloneDX `scope` (`excluded` or `optional`), the same test I10 applies. The
+not-in-artifact marker of milestones 1277 and 1423 is the native field alone,
+set without C42 so that `--include-dev` cannot hide it. Reading C42 only,
+this row reported 48 components on the three IFD targets and 15 on
+`nix-closure-moat` that every format already marked: source tarballs,
+`.cabal` revisions and patches of test libraries, reached from them through
+build-graph edges. moat's declaration had absorbed its 15 without anyone
+seeing, because a declaration's count is never compared. Widening the
+population as well would change which components the row covers, so that
+half stays as it was.
 
 **Boundary with I7**: this invariant is about components that *are*
 reachable, by a path that is entirely non-runtime. I7 is about

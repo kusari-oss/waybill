@@ -40,6 +40,7 @@ fn scan_with(rows: Rows<'_>, project: PathBuf, extra: &[&str]) -> Scan {
         closure: &fixture("closure.json"),
         rows,
         attr: DEFAULT_ATTR,
+        ..Default::default()
     }
     .scan(&args)
 }

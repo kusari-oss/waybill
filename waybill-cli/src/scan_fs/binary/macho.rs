@@ -232,6 +232,98 @@ pub fn parse_lc_rpath(bytes: &[u8]) -> Vec<String> {
     paths
 }
 
+/// The load commands that make dyld load a dylib: `LC_LOAD_DYLIB`,
+/// `LC_LOAD_WEAK_DYLIB`, `LC_REEXPORT_DYLIB`, `LC_LAZY_LOAD_DYLIB` and
+/// `LC_LOAD_UPWARD_DYLIB` (`<mach-o/loader.h>`).
+const LC_LOAD_DYLIB_KINDS: [u32; 5] = [
+    0x0c,
+    0x18 | LC_REQ_DYLD,
+    0x1f | LC_REQ_DYLD,
+    0x20,
+    0x23 | LC_REQ_DYLD,
+];
+
+/// Whether `bytes` starts with a thin Mach-O magic, in either byte order or
+/// word size.
+pub fn is_thin_macho(bytes: &[u8]) -> bool {
+    bytes
+        .get(0..4)
+        .and_then(|b| b.try_into().ok())
+        .map(u32::from_le_bytes)
+        .is_some_and(|m| matches!(m, MH_MAGIC_64 | MH_CIGAM_64 | MH_MAGIC_32 | MH_CIGAM_32))
+}
+
+/// The install names a thin Mach-O image loads, in load-command order, as
+/// `otool -L` lists them (without the image's own `LC_ID_DYLIB`). `None`
+/// when `bytes` is not a thin Mach-O or its load commands are malformed: a
+/// caller that must not under-report what is loaded can tell "loads nothing"
+/// (`Some(vec![])`) from "could not tell".
+///
+/// `bytes` needs to hold only the header and the load commands.
+pub fn parse_load_dylibs(bytes: &[u8]) -> Option<Vec<String>> {
+    let header = decode_header(bytes)?;
+    let mut names: Vec<String> = Vec::new();
+    let mut malformed = false;
+    let mut cursor = header.cmds_start;
+    let cmds_end = header.cmds_start + header.sizeofcmds as usize;
+    for _ in 0..header.ncmds {
+        let cmd = read_u32(bytes, cursor, header.little_endian)?;
+        let size = read_u32(bytes, cursor + 4, header.little_endian)? as usize;
+        if size < 8 || cursor + size > cmds_end {
+            return None;
+        }
+        if LC_LOAD_DYLIB_KINDS.contains(&cmd) {
+            let cmd_bytes = &bytes[cursor..cursor + size];
+            match read_u32(cmd_bytes, 8, header.little_endian).map(|o| o as usize) {
+                Some(off) if off < cmd_bytes.len() => {
+                    let s = &cmd_bytes[off..];
+                    let end = s.iter().position(|&b| b == 0).unwrap_or(s.len());
+                    match std::str::from_utf8(&s[..end]) {
+                        Ok(name) => names.push(name.to_string()),
+                        Err(_) => malformed = true,
+                    }
+                }
+                _ => malformed = true,
+            }
+        }
+        cursor += size;
+    }
+    (!malformed).then_some(names)
+}
+
+/// The `(offset, size)` of each architecture slice of a universal (fat)
+/// Mach-O, or `None` when `bytes` is not one. A Java class file shares the
+/// `0xcafebabe` magic; its version field reads as an architecture count far
+/// above any real one, so a count over 32 is not a fat header.
+pub fn fat_slices(bytes: &[u8]) -> Option<Vec<(u64, u64)>> {
+    let be = |off: usize| -> Option<u32> {
+        bytes.get(off..off + 4).and_then(|b| b.try_into().ok()).map(u32::from_be_bytes)
+    };
+    let be64 = |off: usize| -> Option<u64> {
+        bytes.get(off..off + 8).and_then(|b| b.try_into().ok()).map(u64::from_be_bytes)
+    };
+    let wide = match be(0)? {
+        0xcafe_babe => false,
+        0xcafe_babf => true,
+        _ => return None,
+    };
+    let n = be(4)? as usize;
+    if n == 0 || n > 32 {
+        return None;
+    }
+    let (stride, mut slices) = (if wide { 32 } else { 20 }, Vec::with_capacity(n));
+    for i in 0..n {
+        let at = 8 + i * stride;
+        let (offset, size) = if wide {
+            (be64(at + 8)?, be64(at + 16)?)
+        } else {
+            (u64::from(be(at + 8)?), u64::from(be(at + 12)?))
+        };
+        slices.push((offset, size));
+    }
+    Some(slices)
+}
+
 /// Parse the minimum-OS version from `LC_BUILD_VERSION` (preferred)
 /// or one of the legacy `LC_VERSION_MIN_*` commands. Returns
 /// `<platform>:<version>` (e.g. `"macos:14.0"`, `"ios:17.5"`),

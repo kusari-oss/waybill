@@ -36,6 +36,16 @@ fn is_dep(e: &Value) -> bool {
     DEP_TYPES.contains(&ty(e)) && e.get("relationshipType").and_then(Value::as_str) == Some("dependsOn")
 }
 
+/// The element a vulnerability assessment is about, when narrower than its `to`.
+const ASSESSED: &str = "security_assessedElement";
+
+/// A vulnerability statement: any `security_*VulnAssessmentRelationship`,
+/// VEX (`security_Vex*`) or a score (`security_Cvss*`, `security_Epss*`, ...).
+fn is_assessment(e: &Value) -> bool {
+    let t = ty(e);
+    t.starts_with("security_") && t.ends_with("VulnAssessmentRelationship")
+}
+
 fn scope_of(e: &Value) -> Scope {
     e.get("scope").and_then(Value::as_str).and_then(Scope::parse).unwrap_or(Scope::Runtime)
 }
@@ -112,6 +122,19 @@ impl SbomAdapter for Spdx3 {
                 }
             }
         }
+        // `root usesTool member`, scoped `build`: the member builds the
+        // artifact and is not in it (milestone 1277), the counterpart of
+        // CycloneDX's bare `scope: excluded` (milestone 1423).
+        let build_tools: BTreeSet<String> = self
+            .graph()
+            .iter()
+            .filter(|e| {
+                ty(e) == "LifecycleScopedRelationship"
+                    && e.get("relationshipType").and_then(Value::as_str) == Some("usesTool")
+                    && e.get("scope").and_then(Value::as_str) == Some("build")
+            })
+            .flat_map(|e| strs(e.get("to")))
+            .collect();
         self.graph()
             .iter()
             .filter(|e| is_component(e))
@@ -130,9 +153,16 @@ impl SbomAdapter for Spdx3 {
                 if scopes.is_empty() {
                     scopes = rel_scopes.get(&id).cloned().unwrap_or_default();
                 }
-                let mut roles: BTreeSet<String> = self.annotations_about(&id, "waybill:component-role").into_iter().collect();
+                let mut roles: BTreeSet<String> = self
+                    .annotations_about(&id, "waybill:component-role")
+                    .into_iter()
+                    .chain(self.annotations_about(&id, "waybill:closure-role"))
+                    .collect();
                 if let Some(p) = e.get("software_primaryPurpose").and_then(Value::as_str) {
                     roles.insert(p.to_string());
+                }
+                if build_tools.contains(&id) {
+                    scopes.insert(Scope::NotInArtifact);
                 }
                 Some(ComponentView {
                     purl: e.get("software_packageUrl").and_then(Value::as_str).map(str::to_string),
@@ -187,9 +217,13 @@ impl SbomAdapter for Spdx3 {
         }
 
         let graph = self.graph_mut();
+        let assessments_before = graph.iter().filter(|e| is_assessment(e)).count();
         let before = graph.len();
         graph.retain(|e| sid(e).is_none_or(|i| !ids.contains(i)));
         let removed = before - graph.len();
+        // An assessment of a dropped element goes: assessing only the
+        // product it was found in would be a different claim.
+        graph.retain(|e| !is_assessment(e) || e.get(ASSESSED).and_then(Value::as_str).is_none_or(|a| !ids.contains(a)));
 
         for e in graph.iter_mut() {
             // Trim references to dropped elements.
@@ -260,10 +294,14 @@ impl SbomAdapter for Spdx3 {
             }
         }
         graph.retain(|e| {
-            let orphanable = ty(e) == "simplelicensing_LicenseExpression" || ty(e).starts_with("security_");
+            // Not the assessments themselves: nothing refers to a
+            // relationship, so they would all go (#1422).
+            let orphanable = ty(e) == "simplelicensing_LicenseExpression"
+                || (ty(e).starts_with("security_") && !is_assessment(e));
             !orphanable || sid(e).is_some_and(|i| referenced.contains(i))
         });
-        DropOutcome { removed, changed }
+        let vulnerability_statements_removed = assessments_before - graph.iter().filter(|e| is_assessment(e)).count();
+        DropOutcome { removed, changed, vulnerability_statements_removed }
     }
 
     fn remove_annotations(&mut self, namespace: &str) -> usize {
@@ -318,6 +356,9 @@ impl SbomAdapter for Spdx3 {
             if ty(e) == "Annotation" {
                 refs.extend(e.get("subject").and_then(Value::as_str).map(|s| ("subject", s.to_string())));
             }
+            if is_assessment(e) {
+                refs.extend(e.get(ASSESSED).and_then(Value::as_str).map(|s| (ASSESSED, s.to_string())));
+            }
             for k in ["rootElement", "element"] {
                 refs.extend(strs(e.get(k)).into_iter().map(|t| (k, t)));
             }
@@ -360,6 +401,31 @@ impl SbomAdapter for Spdx3 {
             .find(|e| sid(e) == Some(id))
             .and_then(|e| e.get("software_packageUrl").and_then(Value::as_str))
             .and_then(purl_path)
+    }
+
+    /// The `SpdxDocument`'s `externalRef[]` entries `sbom scan` writes for its
+    /// sidecar: `vulnerabilityExploitabilityAssessment` with the OpenVEX
+    /// content type. They carry a locator only, so there is no hash to update.
+    fn remove_openvex_references(&mut self) -> Vec<String> {
+        let mut removed = Vec::new();
+        for e in self.graph_mut().iter_mut().filter(|e| ty(e) == "SpdxDocument") {
+            let Some(refs) = e.get_mut("externalRef").and_then(Value::as_array_mut) else { continue };
+            refs.retain(|r| {
+                let openvex = r.get("externalRefType").and_then(Value::as_str)
+                    == Some("vulnerabilityExploitabilityAssessment")
+                    && r.get("contentType").and_then(Value::as_str) == Some(crate::generate::openvex::CONTENT_TYPE);
+                if openvex {
+                    removed.extend(strs(r.get("locator")));
+                }
+                !openvex
+            });
+            if refs.is_empty() {
+                if let Some(obj) = e.as_object_mut() {
+                    obj.remove("externalRef");
+                }
+            }
+        }
+        removed
     }
 
     fn derivation_record(&self) -> Option<Value> {
@@ -476,6 +542,56 @@ mod tests {
         assert_eq!(r1["completeness"], json!("incomplete"));
         assert!(!g.iter().any(|e| e["spdxId"] == "L" || e["spdxId"] == "a1" || e["spdxId"] == "r2" || e["spdxId"] == "r3"));
         assert!(a.dangling_references().is_empty());
+    }
+
+    fn with_vex() -> Value {
+        let mut d = doc();
+        let g = d["@graph"].as_array_mut().unwrap();
+        g.push(json!({"type": "security_Vulnerability", "spdxId": "V", "creationInfo": "_:c"}));
+        g.push(json!({"type": "security_VexFixedVulnAssessmentRelationship", "spdxId": "vx1", "from": "V",
+                      "relationshipType": "fixedIn", "to": ["app"], "security_assessedElement": "d", "creationInfo": "_:c"}));
+        g.push(json!({"type": "security_VexAffectedVulnAssessmentRelationship", "spdxId": "vx2", "from": "V",
+                      "relationshipType": "affects", "to": ["c"], "creationInfo": "_:c"}));
+        d
+    }
+
+    /// #1422. An assessment whose `security_assessedElement` was dropped
+    /// goes, like a CycloneDX statement whose subcomponent was: assessing
+    /// only the product would be a different claim.
+    #[test]
+    fn a_vex_assessment_of_a_dropped_element_goes() {
+        let mut a = Spdx3::new(with_vex());
+        let out = a.drop_components(&BTreeSet::from(["d".to_string()]));
+        assert_eq!(out.vulnerability_statements_removed, 1);
+        let g = a.doc()["@graph"].as_array().unwrap();
+        assert!(!g.iter().any(|e| e["spdxId"] == "vx1"));
+        assert!(g.iter().any(|e| e["spdxId"] == "vx2") && g.iter().any(|e| e["spdxId"] == "V"));
+        assert!(a.dangling_references().is_empty());
+
+        // Its last assessment gone, the vulnerability goes too.
+        let out = a.drop_components(&BTreeSet::from(["c".to_string()]));
+        assert_eq!(out.vulnerability_statements_removed, 1);
+        let g = a.doc()["@graph"].as_array().unwrap();
+        assert!(!g.iter().any(|e| e["spdxId"] == "vx2" || e["spdxId"] == "V"));
+    }
+
+    #[test]
+    fn an_assessed_element_naming_nothing_is_dangling() {
+        let mut d = with_vex();
+        d["@graph"].as_array_mut().unwrap().retain(|e| e["spdxId"] != "d");
+        let dangling = Spdx3::new(d).dangling_references();
+        let want = "security_VexFixedVulnAssessmentRelationship security_assessedElement -> d".to_string();
+        assert!(dangling.contains(&want), "{dangling:?}");
+    }
+
+    /// #1422. Closure members carry their role in `waybill:closure-role`.
+    #[test]
+    fn closure_role_is_a_role() {
+        let mut d = doc();
+        d["@graph"].as_array_mut().unwrap().push(json!({"type": "Annotation", "spdxId": "a2", "subject": "c",
+            "statement": envelope("waybill:closure-role", json!("artifact-input")), "creationInfo": "_:c"}));
+        let c = Spdx3::new(d).components().into_iter().find(|c| c.id == "c").unwrap();
+        assert!(c.roles.contains("artifact-input"), "{:?}", c.roles);
     }
 
     #[test]

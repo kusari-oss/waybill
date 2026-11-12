@@ -82,6 +82,9 @@ CLOSUREEOF
   *"#packages.aarch64-darwin") echo '["default"]' ;;
   *"#packages") echo '["aarch64-darwin"]' ;;
   "derivation show"*) echo "error: flake 'stub' does not provide attribute" >&2; exit 1 ;;
+  # m1423 (T006): intended. No store holds the evaluated output, so the scope
+  # pass takes its fallback path rather than the runtime closure.
+  "path-info"*) echo "error: path '/nix/store/stub' is not valid" >&2; exit 1 ;;
   *) echo 'stub nix: unhandled invocation' >&2; exit 1 ;;
 esac
 "##,
@@ -943,4 +946,88 @@ fn m1280_t056_the_native_completeness_carriers_agree() {
              rather than a format difference"
         );
     }
+}
+
+impl Scan {
+    /// The C184 record, parsed.
+    fn closure_record(&self) -> Value {
+        let raw = self.cdx["metadata"]["properties"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|p| p["name"] == "waybill:nix-closure")
+            .expect("C184 absent: the closure tier degraded, so nothing below is evidence")["value"]
+            .as_str()
+            .unwrap();
+        serde_json::from_str(raw).unwrap()
+    }
+
+    /// The ref of every component carrying the C182 closure role, the
+    /// subject and nested components included.
+    fn closure_refs(&self) -> std::collections::BTreeSet<String> {
+        let has_role = |c: &Value| {
+            c["properties"]
+                .as_array()
+                .is_some_and(|ps| ps.iter().any(|p| p["name"] == ROLE))
+        };
+        let mut out = std::collections::BTreeSet::new();
+        let mut stack: Vec<&Value> = self.components().iter().collect();
+        stack.push(&self.cdx["metadata"]["component"]);
+        while let Some(c) = stack.pop() {
+            if has_role(c) {
+                if let Some(r) = c["bom-ref"].as_str() {
+                    out.insert(r.to_string());
+                }
+            }
+            // CycloneDX components nest.
+            stack.extend(c["components"].as_array().into_iter().flatten());
+        }
+        out
+    }
+}
+
+/// #1445 — C184's `components-emitted` and `edges` describe the document they
+/// are emitted in.
+///
+/// `edges` was the `.drv`-keyed projection, counted before build variants of
+/// one package collapse onto one component; on moat it read 7,978 where the
+/// closure contributed 6,167 dependency pairs. `variants.json` is that shape
+/// in miniature: four `.drv` edges (`root -> varA`, `root -> varB`,
+/// `varA -> pkgc`, `varB -> pkgc`) that become two pairs once `varA` and
+/// `varB` are one component.
+///
+/// The project's manifest edges name no closure member, so on this fixture
+/// the closure's contribution is exactly the pairs between closure members.
+#[test]
+fn i1445_c184_counts_are_what_the_document_holds() {
+    let s = scan_closure(&closure("variants.json"));
+    let rec = s.closure_record();
+    let members = s.closure_refs();
+    let pairs: std::collections::BTreeSet<(String, String)> = s
+        .cdx_edges()
+        .into_iter()
+        .filter(|(f, t)| members.contains(f) && members.contains(t))
+        .collect();
+
+    // CONTROL: the document holds components that are not closure members,
+    // so the first assertion distinguishes "the closure's components" from
+    // "every component".
+    assert!(
+        s.components().len() > members.len(),
+        "every component is a closure member, so this cannot tell the two apart: {members:?}"
+    );
+
+    assert_eq!(
+        rec["components-emitted"].as_u64(),
+        Some(members.len() as u64),
+        "components-emitted must count the closure members the document holds: {rec}"
+    );
+    assert_eq!(
+        rec["edges"].as_u64(),
+        Some(pairs.len() as u64),
+        "edges must count the dependency pairs the closure contributed to the \
+         document, not the `.drv` edges before variants merge. pairs={pairs:?} {rec}"
+    );
+    // Pinned, so the equality above cannot hold over two empty sets.
+    assert_eq!(pairs.len(), 2, "{pairs:?}");
 }

@@ -173,6 +173,20 @@ pub struct ScanArtifacts<'a> {
     /// admission signal did. Both counts are **derivations**. Emitted only
     /// where a closure was recorded, like C204 and C208.
     pub closure_graph_admission: Option<&'a str>,
+    /// Milestone 1283 (#1283; C217) — the import-from-derivation policy the
+    /// scan's Nix evaluations ran under, whether a pre-flight verified it,
+    /// and nix's sandbox setting, as a JSON object encoded for the wire.
+    /// `Some` whenever a Nix tier (`--nix-closure` or `--nix-eval`) was
+    /// admitted, degraded or not; `None` with no tier and under `--offline`,
+    /// which is what leaves every other document untouched.
+    pub nix_evaluation_policy: Option<&'a str>,
+    /// Milestone 966 (#966; C219) — which GHCs the derivation closure named,
+    /// whether the boot-library table has each, the closure's system and the
+    /// table's observation date, as a JSON object encoded for the wire.
+    /// `Some` iff `--nix-closure` produced a closure and Haskell is in play
+    /// (the nixpkgs-Haskell pass ran, or the closure names a GHC); `None`
+    /// otherwise, which leaves every other document untouched.
+    pub ghc_boot_libraries: Option<&'a str>,
     /// Milestone 1378 (#1396; C213) — how many closure members had their
     /// outputs read for embedded build information. Emitted wherever a
     /// closure was recorded, including when nothing was read: "493 members,

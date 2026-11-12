@@ -205,6 +205,10 @@ pub struct CycloneDxBuilder {
     cpe_coverage: Option<String>,
     /// C210 (m1372) — the build-graph admission record, pre-rendered.
     closure_graph_admission: Option<String>,
+    /// Milestone 1283 (C217).
+    nix_evaluation_policy: Option<String>,
+    /// Milestone 966 (C219).
+    ghc_boot_libraries: Option<String>,
     /// C213 (m1378) — the closure contents read record, pre-rendered, and
     /// whether it has unread members.
     nix_closure_contents: Option<String>,
@@ -292,6 +296,8 @@ impl CycloneDxBuilder {
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,
+            nix_evaluation_policy: None,
+            ghc_boot_libraries: None,
             nix_closure_contents: None,
             nix_closure_contents_unread: false,
             go_mod_why: None,
@@ -376,6 +382,18 @@ impl CycloneDxBuilder {
     }
 
     /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
+    /// Milestone 1283 (C217) — the Nix evaluation policy record.
+    pub fn with_nix_evaluation_policy(mut self, value: Option<String>) -> Self {
+        self.nix_evaluation_policy = value;
+        self
+    }
+
+    /// Milestone 966 (C219) — the GHC boot-library record.
+    pub fn with_ghc_boot_libraries(mut self, value: Option<String>) -> Self {
+        self.ghc_boot_libraries = value;
+        self
+    }
+
     pub fn with_closure_graph_admission(mut self, value: Option<String>) -> Self {
         self.closure_graph_admission = value;
         self
@@ -998,6 +1016,12 @@ impl CycloneDxBuilder {
         )
         .filter(|n| *n > 0)
         .map(|n| n.to_string());
+        // C220 (m1436) — counted over the components this document emits, as
+        // the SPDX emitters count theirs.
+        let vex_claims_unscoped: Option<String> =
+            Some(crate::generate::openvex::claims::unscoped_claims(effective_components))
+                .filter(|n| *n > 0)
+                .map(|n| n.to_string());
         let deps_dev_outcomes: Option<String> = if self.deps_dev_online {
             crate::enrich::deps_dev_outcome::document_value(effective_components)
         } else {
@@ -1057,6 +1081,8 @@ impl CycloneDxBuilder {
                 closure_ecosystem_identity: self.closure_ecosystem_identity.as_deref(),
                 cpe_coverage: self.cpe_coverage.as_deref(),
                 closure_graph_admission: self.closure_graph_admission.as_deref(),
+                nix_evaluation_policy: self.nix_evaluation_policy.as_deref(),
+                ghc_boot_libraries: self.ghc_boot_libraries.as_deref(),
                 nix_closure_contents: self.nix_closure_contents.as_deref(),
                 go_mod_why: self.go_mod_why,
                 deps_dev_outcomes: deps_dev_outcomes.as_deref(),
@@ -1064,6 +1090,7 @@ impl CycloneDxBuilder {
                 nix_eval_system: self.nix_eval_system.as_deref(),
                 nixpkgs_haskell_closure: self.nixpkgs_haskell_closure.as_deref(),
                 scope_exemptions: self.scope_exemptions.as_deref(),
+                vex_claims_unscoped: vex_claims_unscoped.as_deref(),
             },
         );
         // Milestone 076 — track per-component identifier matches so
@@ -1453,19 +1480,17 @@ impl CycloneDxBuilder {
                 }
                 base.insert("purl".to_string(), json!(component.purl.as_str()));
                 base.insert("bom-ref".to_string(), json!(bom_ref));
-                // Milestone 1366 (#1365) — C207 rides CycloneDX's own
-                // `evidence.identity[]`, per Constitution Principle V's
-                // native-field precedence. The generic property emission for
-                // this key is suppressed below, so the signal has exactly one
-                // home per format; emitting both would state the fact twice
-                // and break the SymmetricEqual parity assertion.
+                // Milestone 1366 (#1365) — a derived identifier is recorded in
+                // CycloneDX's own `evidence.identity[]`, per Constitution
+                // Principle V's native-field precedence. The C207 evidence tag
+                // itself is the generic `waybill:closure-ecosystem-identity`
+                // property emitted below (#1442).
                 let derived_identity = component
                     .extra_annotations
                     .get(crate::scan_fs::package_db::nix::closure::ecosystem_identity::ANN_ECOSYSTEM_IDENTITY)
                     .and_then(|v| v.as_str())
-                    .map(|evidence| super::evidence::DerivedIdentity {
+                    .map(|_| super::evidence::DerivedIdentity {
                         concluded_value: component.purl.as_str(),
-                        evidence,
                     });
                 base.insert(
                     "evidence".to_string(),
@@ -1985,21 +2010,6 @@ impl CycloneDxBuilder {
                     // would double-stamp and produce value drift.
                     continue;
                 }
-                if key
-                    == crate::scan_fs::package_db::nix::closure::ecosystem_identity::ANN_ECOSYSTEM_IDENTITY
-                {
-                    // Milestone 1366 (#1365): CycloneDX carries this natively
-                    // in `evidence.identity[]` just above, so re-emitting it
-                    // as a property would state the same fact twice in one
-                    // document and break C207's SymmetricEqual parity against
-                    // the SPDX annotation. SPDX 2.3 and SPDX 3 have no native
-                    // carrier and DO emit the annotation — the same split
-                    // `ANN_CLOSURE_PATCHES` has for `pedigree`, and the reason
-                    // this cannot use `is_field_owned_annotation_key`, which
-                    // both pass-throughs consult and which would drop it from
-                    // SPDX too.
-                    continue;
-                }
                 if key == crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES {
                     // Milestone 1035: CycloneDX carries these in native
                     // `pedigree.patches[]` just above, so re-emitting the
@@ -2222,6 +2232,7 @@ mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new(&purl_str).expect("valid purl"),
             name: name.to_string(),
             version: version.to_string(),

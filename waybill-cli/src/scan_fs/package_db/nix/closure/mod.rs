@@ -29,16 +29,33 @@ pub(crate) mod identifiers;
 /// `pname`. Distinct from [`classify`], which assigns the C182 role to every
 /// derivation; see that module's own doc comment for why they are separate.
 pub(crate) mod member;
+/// Milestone 1423 — the derivation ↔ component join, shared by `contents` and
+/// the scope pass.
+pub(crate) mod member_key;
 pub(crate) mod patches;
+/// Milestone 1423 (#1423) — the evaluated output's runtime closure.
+pub(crate) mod runtime;
+/// Milestone 1423 (#1423) — Haskell libraries statically linked into a
+/// runtime member.
+pub(crate) mod static_link;
 pub(crate) mod summary;
+/// Milestone 1423 (#1423), US2 — the reachability walk used when no store
+/// holds the evaluated output.
+pub(crate) mod walk;
 
 use std::path::Path;
 use std::time::Duration;
 
 pub(crate) mod licenses;
+// #1455 (second rule) — references that exist only through darwin's
+// `lib/links` folder.
+pub(crate) mod lib_links;
 
-use super::eval::invoke::{argv_is_safe, is_safe_attribute_name, run_bounded, verify_ifd_refusal};
-use super::eval::preflight::IFD_SETTING;
+use super::eval::invoke::{
+    argv_is_safe, is_safe_attribute_name, run_bounded, verify_ifd_policy_with_config,
+};
+use super::eval::preflight::{IfdPolicy, NixEnvironment, IFD_SETTING};
+use super::eval::result::IfdPolicyVerified;
 use super::eval::reason::DegradationReason;
 use super::eval::stderr::{classify_failure, salient_stderr};
 use super::eval::result::NixSystem;
@@ -196,15 +213,24 @@ pub(crate) struct ClosureConfig {
     /// What `--nix-closure-attr` named, classified (m1066).
     pub(crate) attribute: AttrRequest,
     pub(crate) budget: Duration,
+    /// Milestone 1283 — the import-from-derivation policy requested
+    /// (`--nix-allow-ifd`), verified by [`preflight`] before anything the
+    /// repository controls is evaluated.
+    pub(crate) ifd_policy: IfdPolicy,
 }
 
 impl ClosureConfig {
-    pub(crate) fn from_flags(attribute: Option<String>, budget_secs: Option<u64>) -> Self {
+    pub(crate) fn from_flags(
+        attribute: Option<String>,
+        budget_secs: Option<u64>,
+        ifd_policy: IfdPolicy,
+    ) -> Self {
         Self {
             attribute: classify_attr(attribute.as_deref()),
             budget: Duration::from_secs(
                 budget_secs.unwrap_or(PROVISIONAL_CLOSURE_BUDGET_SECS),
             ),
+            ifd_policy,
         }
     }
 }
@@ -291,6 +317,10 @@ pub(crate) struct ClassifiedClosure {
     /// basename, read from the same evaluation as the licenses, and their
     /// coverage (C184 `identifiers`).
     pub(crate) identifiers: identifiers::DeclaredIdentifiers,
+    /// Milestone 1423 (#1423) — the runtime closure of the outputs the
+    /// evaluated attribute installs (#1458), or why it could not be had.
+    /// Queried by output path, never by installable (`runtime` module docs).
+    pub(crate) runtime: runtime::RuntimeOutcome,
 }
 
 impl ClassifiedClosure {
@@ -312,26 +342,26 @@ impl ClassifiedClosure {
 /// The flake is addressed through the **CLI flakeref form**. That is not a
 /// style choice: `builtins.getFlake` on a local path requires `--impure`
 /// (measured, research R4), and `--impure` is refused by `argv_is_safe`.
-fn closure_argv(flakeref: &str) -> Vec<&str> {
+fn closure_argv<'a>(flakeref: &'a str, ifd: &IfdPolicyVerified) -> Vec<&'a str> {
     vec![
         "derivation",
         "show",
         "-r",
         "--option",
         IFD_SETTING,
-        "false",
+        ifd.policy().setting(),
         flakeref,
     ]
 }
 
 /// Build the argv that lists the attributes under `packages.<system>`.
-fn attributes_argv(flakeref: &str) -> Vec<&str> {
+fn attributes_argv<'a>(flakeref: &'a str, ifd: &IfdPolicyVerified) -> Vec<&'a str> {
     vec![
         "eval",
         "--json",
         "--option",
         IFD_SETTING,
-        "false",
+        ifd.policy().setting(),
         "--apply",
         "builtins.attrNames",
         flakeref,
@@ -359,6 +389,41 @@ pub(crate) fn admission(enabled: bool, offline: bool) -> Result<(), Option<Degra
     Ok(())
 }
 
+/// What the closure tier's pre-flight established: the verified
+/// import-from-derivation policy every evaluation in this run passes on, what
+/// it observed of nix's environment, and the configured substituters.
+///
+/// Milestone 1283. [`resolve`] takes it by reference, so a closure cannot be
+/// taken without a pre-flight having succeeded, and the licence and
+/// declaration evaluations that follow receive the same verified policy
+/// rather than re-verifying (one set of controls, m1281 FR-012).
+#[derive(Debug, Clone)]
+pub(crate) struct Preflighted {
+    pub(crate) ifd: IfdPolicyVerified,
+    pub(crate) environment: NixEnvironment,
+    substituters: Vec<String>,
+}
+
+/// #1114 — safety first, before anything the scanned repository controls is
+/// listed or evaluated, exactly as the m1034 tier gates. Requesting a value
+/// for `allow-import-from-derivation` is not evidence it applied: a nix
+/// without the setting accepts the option, ignores it and exits 0.
+///
+/// Milestone 1423 (T014): the same listing carries the configured
+/// `substituters` (q1), so the runtime query reads them from here rather than
+/// starting another `nix` process.
+///
+/// Milestone 1283: verifies the *requested* policy, which is `Allow` only
+/// under `--nix-allow-ifd`.
+pub(crate) fn preflight(cfg: &ClosureConfig) -> Result<Preflighted, DegradationReason> {
+    let (ifd, environment, config) = verify_ifd_policy_with_config(cfg.ifd_policy, cfg.budget)?;
+    Ok(Preflighted {
+        ifd,
+        environment,
+        substituters: runtime::substituters_from_config(&config),
+    })
+}
+
 /// Take and classify the closure of one flake attribute.
 ///
 /// Every failure degrades. The closure supplements the manifest-derived set
@@ -367,21 +432,19 @@ pub(crate) fn resolve(
     project: &Path,
     system: &NixSystem,
     cfg: &ClosureConfig,
+    pre: &Preflighted,
 ) -> Result<ClassifiedClosure, DegradationReason> {
-    // #1114 — safety first, before anything the scanned repository controls
-    // is listed or evaluated, exactly as the m1034 tier gates. Requesting
-    // `allow-import-from-derivation false` is not evidence it applied: a nix
-    // without the setting accepts the option, ignores it and exits 0.
-    verify_ifd_refusal(cfg.budget)?;
+    let ifd = &pre.ifd;
+    let substituters = &pre.substituters;
 
     let root = project.display().to_string();
     let (attribute, flakeref) = match &cfg.attribute {
-        AttrRequest::PackageName(n) => package_target(&root, system, n, cfg)?,
-        AttrRequest::Auto => auto_target(&root, system, cfg)?,
+        AttrRequest::PackageName(n) => package_target(&root, system, n, cfg, ifd)?,
+        AttrRequest::Auto => auto_target(&root, system, cfg, ifd)?,
         AttrRequest::FullPath(p) => full_path_target(&root, p)?,
     };
 
-    let argv = closure_argv(&flakeref);
+    let argv = closure_argv(&flakeref, ifd);
     guard(&argv)?;
     let out = run_bounded(&argv, cfg.budget)?;
     if !out.status_success {
@@ -405,7 +468,7 @@ pub(crate) fn resolve(
         // applied here. Measured on the probe: the operator read
         // `evaluation-failed` with a git warning attached, for a refusal nix
         // had explained in full.
-        return Err(classify_failure(out.stderr.trim()));
+        return Err(classify_failure(out.stderr.trim(), ifd.policy()));
     }
 
     let raw = RawClosure::parse(&out.stdout).map_err(|e| {
@@ -462,7 +525,18 @@ pub(crate) fn resolve(
         visits = graph.visits,
         "nix-closure: dependency graph projected"
     );
+    // Milestone 1423 (#1423) — what ships. Never fails the closure: an
+    // unavailable runtime closure is recorded and the scope pass falls back.
+    let runtime = Some(runtime::query_closure(
+        &raw,
+        graph.evaluated.as_deref(),
+        &flakeref,
+        ifd,
+        cfg.budget,
+        substituters,
+    ));
     Ok(ClassifiedClosure {
+        runtime,
         graph_admitted,
         graph_admission,
         attribute,
@@ -485,15 +559,17 @@ pub(crate) fn resolve(
 /// closure exactly as it arrived, so the document is still emitted with its
 /// full component set and only the licenses are missing (spec FR-006).
 ///
-/// The import-from-derivation refusal is **not** re-verified here. [`resolve`]
-/// verifies it once per closure run before anything the repository controls is
-/// evaluated, and this call inherits that; re-issuing it would be the second,
-/// parallel set of controls FR-012 forbids.
+/// The import-from-derivation policy is **not** re-verified here.
+/// [`preflight`] verifies it once per closure run before anything the
+/// repository controls is evaluated, and this call inherits that through
+/// `ifd`; re-issuing it would be the second, parallel set of controls FR-012
+/// forbids.
 pub(crate) fn attach_licenses(
     closure: &mut ClassifiedClosure,
     revision: &str,
     system: &NixSystem,
     budget: std::time::Duration,
+    ifd: &IfdPolicyVerified,
 ) {
     // The names scope the evaluation; the store path is the join. A name that
     // resolves to the wrong attribute costs a lookup, never a wrong license
@@ -535,7 +611,7 @@ pub(crate) fn attach_licenses(
         return;
     }
 
-    let rows = match super::eval::licenses::resolve_licenses(revision, system, &names, budget) {
+    let rows = match super::eval::licenses::resolve_licenses(revision, system, &names, ifd, budget) {
         Ok(rows) => rows,
         Err(reason) => {
             // Recorded on the closure, not only logged: an operator reading
@@ -601,11 +677,12 @@ fn package_target(
     system: &NixSystem,
     name: &str,
     cfg: &ClosureConfig,
+    ifd: &IfdPolicyVerified,
 ) -> Result<(String, String), DegradationReason> {
     let base = format!("{root}#packages.{}", system.as_str());
     // Which attributes exist? Answers FR-015b's "name what IS available"
     // without a second failure mode when the attribute is simply missing.
-    let Some(available) = list_attributes(&base, cfg)? else {
+    let Some(available) = list_attributes(&base, cfg, ifd)? else {
         return Err(DegradationReason::NoEvaluableAttribute);
     };
     if !available.iter().any(|a| a == name) {
@@ -639,18 +716,20 @@ fn auto_target(
     root: &str,
     system: &NixSystem,
     cfg: &ClosureConfig,
+    ifd: &IfdPolicyVerified,
 ) -> Result<(String, String), DegradationReason> {
-    let packages_output_present = list_attributes(&format!("{root}#packages"), cfg)?.is_some();
+    let packages_output_present =
+        list_attributes(&format!("{root}#packages"), cfg, ifd)?.is_some();
     let (darwin, nixos) = if packages_output_present {
         (None, None)
     } else {
         (
-            list_attributes(&format!("{root}#darwinConfigurations"), cfg)?,
-            list_attributes(&format!("{root}#nixosConfigurations"), cfg)?,
+            list_attributes(&format!("{root}#darwinConfigurations"), cfg, ifd)?,
+            list_attributes(&format!("{root}#nixosConfigurations"), cfg, ifd)?,
         )
     };
     match select(packages_output_present, darwin, nixos) {
-        Selection::PackageDefault => package_target(root, system, "default", cfg),
+        Selection::PackageDefault => package_target(root, system, "default", cfg, ifd),
         Selection::Configuration(c) => {
             let path = c.system_path();
             tracing::info!(attribute = %path, "nix-closure: the flake's only system configuration");
@@ -666,8 +745,9 @@ fn auto_target(
 fn list_attributes(
     flakeref: &str,
     cfg: &ClosureConfig,
+    ifd: &IfdPolicyVerified,
 ) -> Result<Option<Vec<String>>, DegradationReason> {
-    let argv = attributes_argv(flakeref);
+    let argv = attributes_argv(flakeref, ifd);
     guard(&argv)?;
     let listed = run_bounded(&argv, cfg.budget)?;
     if !listed.status_success {
@@ -793,30 +873,43 @@ mod tests {
 
     #[test]
     fn the_closure_argv_stays_pure_and_refuses_ifd() {
-        let argv = closure_argv("/proj#packages.x86_64-linux.default");
-        assert!(argv_is_safe(&argv), "closure argv must stay pure: {argv:?}");
-        assert!(argv.contains(&IFD_SETTING));
-        assert_eq!(
-            argv.iter().position(|a| *a == IFD_SETTING).map(|i| argv[i + 1]),
-            Some("false"),
-            "the setting must be passed as false, not merely named"
-        );
-        assert!(
-            !argv.contains(&"--impure"),
-            "getFlake on a local path needs --impure; the CLI flakeref form \
-             exists precisely to avoid it"
-        );
+        // m1283 (T013): the value is the verified policy's, both ways, and
+        // allowing import-from-derivation relaxes nothing else (FR-004).
+        for (p, want) in [(IfdPolicy::Refuse, "false"), (IfdPolicy::Allow, "true")] {
+            let ifd = IfdPolicyVerified::assumed_for_test(p);
+            for argv in [
+                closure_argv("/proj#packages.x86_64-linux.default", &ifd),
+                attributes_argv("/proj#packages.x86_64-linux", &ifd),
+            ] {
+                assert!(argv_is_safe(&argv), "closure argv must stay pure: {argv:?}");
+                assert!(argv.contains(&IFD_SETTING));
+                assert_eq!(
+                    argv.iter().position(|a| *a == IFD_SETTING).map(|i| argv[i + 1]),
+                    Some(want),
+                    "the setting must be passed as the verified policy's value, not merely named"
+                );
+                assert!(
+                    !argv.contains(&"--impure"),
+                    "getFlake on a local path needs --impure; the CLI flakeref form \
+                     exists precisely to avoid it"
+                );
+            }
+        }
+    }
+
+    fn refused() -> IfdPolicyVerified {
+        IfdPolicyVerified::assumed_for_test(IfdPolicy::Refuse)
     }
 
     #[test]
     fn the_attribute_listing_argv_is_guarded_too() {
         // Both invocations touch the project's flake, so both need the guard.
-        assert!(argv_is_safe(&attributes_argv("/proj#packages.x86_64-linux")));
+        assert!(argv_is_safe(&attributes_argv("/proj#packages.x86_64-linux", &refused())));
     }
 
     #[test]
     fn the_guard_rejects_what_it_exists_to_reject() {
-        assert!(guard(&closure_argv("/p#a")).is_ok());
+        assert!(guard(&closure_argv("/p#a", &refused())).is_ok());
         assert!(guard(&["derivation", "show", "--accept-flake-config"]).is_err());
         assert!(guard(&["derivation", "show", "--impure"]).is_err());
     }
@@ -848,13 +941,13 @@ mod tests {
     fn auto_unless_overridden() {
         // m1066: an absent flag is `Auto`, distinct from an explicit `default`,
         // so auto-selection never overrides what an operator asked for.
-        assert_eq!(ClosureConfig::from_flags(None, None).attribute, AttrRequest::Auto);
+        assert_eq!(ClosureConfig::from_flags(None, None, IfdPolicy::Refuse).attribute, AttrRequest::Auto);
         assert_eq!(
-            ClosureConfig::from_flags(Some("default".into()), None).attribute,
+            ClosureConfig::from_flags(Some("default".into()), None, IfdPolicy::Refuse).attribute,
             AttrRequest::PackageName("default".into())
         );
         assert_eq!(
-            ClosureConfig::from_flags(Some("pkg-ghc96".into()), None).attribute,
+            ClosureConfig::from_flags(Some("pkg-ghc96".into()), None, IfdPolicy::Refuse).attribute,
             AttrRequest::PackageName("pkg-ghc96".into())
         );
     }

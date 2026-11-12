@@ -419,7 +419,7 @@ pub(crate) fn withheld_pairs(
     components: &[waybill_common::resolution::ResolvedComponent],
     findings: &[DeclaredFinding],
 ) -> std::collections::BTreeSet<(String, String)> {
-    use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES;
+    use crate::scan_fs::package_db::nix::closure::emit::{without_qualifiers, ANN_CLOSURE_PATCHES};
     use crate::scan_fs::package_db::nix::closure::patches::EvidenceGrade;
 
     // The rule derives from the grade ordering rather than restating it. If
@@ -454,16 +454,22 @@ pub(crate) fn withheld_pairs(
             .flatten()
             .filter_map(|i| i.get("id").and_then(|v| v.as_str()))
         {
-            patched.insert((c.purl.as_str().to_string(), id.to_string()));
+            patched.insert((without_qualifiers(c.purl.as_str()).to_string(), id.to_string()));
         }
     }
 
     // The intersection. A declaration about one component and a patch about
     // another are unrelated claims (FR-014) and neither displaces the other.
+    //
+    // Milestone 1436 (research R10) — compared without qualifiers: a patched
+    // component's PURL carries its build identity (`nix_drv`), and whether a
+    // finding's PURL does depends only on when it was looked up.
     findings
         .iter()
         .map(|f| (f.component_purl.clone(), f.vulnerability.clone()))
-        .filter(|k| patched.contains(k))
+        .filter(|(purl, cve)| {
+            patched.contains(&(without_qualifiers(purl).to_string(), cve.clone()))
+        })
         .collect()
 }
 
@@ -478,6 +484,7 @@ pub(crate) fn run(
     project_root: &std::path::Path,
     system: &str,
     budget: std::time::Duration,
+    ifd: &crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified,
     purl_of: &dyn Fn(&str) -> Option<String>,
 ) -> Result<
     (
@@ -531,7 +538,7 @@ pub(crate) fn run(
         })?;
 
     let names: Vec<String> = members.keys().cloned().collect();
-    let candidates = evaluate::evaluate(&revision, system, &names, budget)?;
+    let candidates = evaluate::evaluate(&revision, system, &names, ifd, budget)?;
     let resolutions = resolve::resolve_all(&members, &candidates);
     let summary = NixpkgsSecuritySummary::build_with_purls(&resolutions, purl_of);
     // Returned rather than stamped here: the prose annotation mutates the
@@ -637,6 +644,9 @@ mod tests {
             &revision,
             system.as_str(),
             &names,
+            &crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified::assumed_for_test(
+                crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy::Refuse,
+            ),
             std::time::Duration::from_secs(300),
         )
         .expect("evaluation");
@@ -705,6 +715,7 @@ mod tests {
         .expect("seed closure parses");
         let roles = classify(&raw);
         let mut c = emit::components(&ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,

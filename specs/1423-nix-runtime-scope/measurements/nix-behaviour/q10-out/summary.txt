@@ -1,0 +1,22 @@
+2026-11-11T04:53:02Z
+nix (Determinate Nix 3.20.0) 2.34.6
+flake github:kusari-sandbox/waybill-fixture-nix-shellcheck/dc4e4509686df76a2e060a019097e2b7a8167073
+
+== x86_64-linux
+outPath /nix/store/2lfacwyvxpllrq9jpbyz7z4v4lc3wnr9-shellcheck-0.11.0-bin
+path-info exit 0
+runtime paths 27
+ShellCheck- Haskell builds in runtime closure: 0
+root's Haskell-builder inputs.drvs:
+haskell-builder input bnf0b028lhpskp6g1hi351qagjcf764j-pandoc-cli-3.7.0.2.drv  named-in-tooling-field=True named-in-artifact-field=False
+haskell-builder input zqlbsxi4w1dgldjiyxvi3vvq1bk6m0d4-ShellCheck-0.11.0.drv  named-in-tooling-field=False named-in-artifact-field=False
+
+== aarch64-darwin
+outPath /nix/store/xpjnkisx2dqf83l5pbwlfzk43hl4inbg-shellcheck-0.11.0-bin
+path-info exit 0
+runtime paths 5
+ShellCheck- Haskell builds in runtime closure: 1
+/nix/store/0qxyki0kvcyfyw3384882d0hs0yrd942-ShellCheck-0.11.0
+root's Haskell-builder inputs.drvs:
+haskell-builder input hfd56va7g6wl11ds2i9j6d2zjpv64sjp-pandoc-cli-3.7.0.2.drv  named-in-tooling-field=True named-in-artifact-field=False
+haskell-builder input zkqbza9w6nck3qb5g77897mjhvwldpxp-ShellCheck-0.11.0.drv  named-in-tooling-field=False named-in-artifact-field=False

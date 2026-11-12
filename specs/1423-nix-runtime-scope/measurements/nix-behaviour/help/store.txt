@@ -1,0 +1,98 @@
+Name
+
+nix store - manipulate a Nix store
+
+Synopsis
+
+nix store [option...] subcommand
+
+where subcommand is one of the following:
+
+  · nix store add - Add a file or directory to the Nix
+    store 
+  · nix store add-file - Deprecated. Use nix store add
+    --mode flat instead. 
+  · nix store add-path - Deprecated alias to nix store add.
+  · nix store cat - print the contents of a file in the Nix
+    store on stdout 
+  · nix store copy-log - copy build logs between Nix stores
+  · nix store copy-sigs - copy store path signatures from
+    substituters 
+  · nix store delete - delete paths from the Nix store 
+  · nix store diff-closures - show what packages and
+    versions were added and removed between two closures 
+  · nix store dump-path - serialise a store path to stdout
+    in NAR format 
+  · nix store gc - perform garbage collection on a Nix
+    store 
+  · nix store info - test whether a store can be accessed 
+  · nix store ls - show information about a path in the Nix
+    store 
+  · nix store make-content-addressed - rewrite a path or
+    closure to content-addressed form 
+  · nix store optimise - replace identical files in the
+    store by hard links 
+  · nix store path-from-hash-part - get a store path from
+    its hash part 
+  · nix store prefetch-file - download a file into the Nix
+    store 
+  · nix store repair - repair store paths 
+  · nix store roots-daemon - run a daemon that returns
+    garbage collector roots on request 
+  · nix store sign - sign store paths with a local key 
+  · nix store verify - verify the integrity of store paths 
+
+Options
+
+## Logging-related options
+
+  · --debug
+    
+    Set the logging verbosity level to 'debug'.
+
+  · --log-format format
+    
+    Set the format of log output; one of raw, internal-json,
+    bar or bar-with-logs.
+
+  · --print-build-logs / -L
+    
+    Print full build logs on standard error.
+
+  · --quiet
+    
+    Decrease the logging verbosity level.
+
+  · --verbose / -v
+    
+    Increase the logging verbosity level.
+
+## Miscellaneous global options
+
+  · --help
+    
+    Show usage information.
+
+  · --offline
+    
+    Disable substituters and consider all previously
+    downloaded files up-to-date.
+
+  · --option name value
+    
+    Set the Nix configuration setting name to value
+    (overriding nix.conf).
+
+  · --refresh
+    
+    Consider all previously downloaded files out-of-date.
+
+  · --version
+    
+    Show version information.
+
+  │ Note
+  │ 
+  │ See man nix.conf for overriding configuration settings
+  │ with command line flags.
+

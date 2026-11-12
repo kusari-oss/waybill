@@ -1,0 +1,8 @@
+test frameworks, full document / runtime view:
+cdx    23 / 9
+spdx   23 / 1
+spdx3  23 / 1
+kept in the SPDX 2.3 runtime view:
+  tasty
+packages, full / runtime view (spdx): 843 / 82
+C216: {"c-runtime-libraries":null,"doc-only-excluded":{"members":2,"output-names":["devdoc","doc","info","man"],"paths":126},"lib-links-excluded":{"members":101,"not-assessed":null,"paths":101,"rule":"unloaded-lib-links"},"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":23},"static-link-source":"derivation-fields","store":"local","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}

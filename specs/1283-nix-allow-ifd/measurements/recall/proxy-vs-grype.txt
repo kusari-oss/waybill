@@ -1,0 +1,35 @@
+# T042: real grype on waybill's runtime-only view vs recall-truth.json
+# date: 2026-11-11  host: aarch64-darwin (scanning CI-produced documents; nothing built)
+# waybill documents: the committed corpus goldens at 1283-nix-allow-ifd 3d94ec92
+#   (public-corpus run 43128351280, x86_64-linux, --nix-closure --nix-allow-ifd, output built)
+# runtime-only view: waybill sbom edit <cdx.json> --drop 'scope=excluded'
+# grype 0.120.0 (/nix/store/7r24kzxg8in0g0vydh63z6ybrm5p7cmy-grype-0.120.0), DB v6.1.10 built 2026-11-08T06:19:57Z,
+#   sha256 dcca2472...dacea (the pin recall-truth.yml uses); auto-update off
+# osv-scanner 2.7.0 (Homebrew) on the same runtime-only document, for HSEC
+# both through classify.py truth with the truth run's link-closure.json (recall-truth run 43107760056)
+# key: (canonical id, lowercase name, version)
+
+slack-web: truth 300, recalled by real grype 300, collisions excluded on waybill's side: 0
+  missed: 0
+  found only on waybill's view:
+    CVE-2016-2781 coreutils 9.8
+    CVE-2026-111497 brotli 1.1.0
+    CVE-2026-34743 xz 5.8.1
+    CVE-2026-40170 ngtcp2 1.17.0
+    CVE-2026-56391 coreutils 9.8
+openai: truth 268, recalled by real grype 268, collisions excluded on waybill's side: 0
+  missed: 0
+  found only on waybill's view:
+    CVE-2016-2781 coreutils 9.5
+    CVE-2025-31115 xz 5.6.3
+    CVE-2026-111497 brotli 1.1.0
+    CVE-2026-34743 xz 5.6.3
+    CVE-2026-56391 coreutils 9.5
+slacklinker: truth 157, recalled by real grype 157, collisions excluded on waybill's side: 0
+  missed: 0
+  found only on waybill's view:
+    CVE-2026-40170 ngtcp2 1.19.0
+
+Agreement with the T036 proxy: the proxy passed (>= 0.90) on all three in run 43128351280;
+real grype recalls 100%. The proxy is the stricter of the two (data-model: it drops every
+excluded component and its subtree), so it under- rather than over-states recall here.

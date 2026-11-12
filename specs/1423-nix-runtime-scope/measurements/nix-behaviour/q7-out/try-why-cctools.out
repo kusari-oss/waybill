@@ -1,0 +1,4 @@
+/nix/store/bghsgjl73fagxyrq45iassnfikh33x7r-hlint-3.10
+└───/nix/store/f8bybrcsifh30k70svzih0adh2030wq5-ghc-9.10.3[0m
+    └───/nix/store/z61v8rpy6ammvikrpcihn3ij8rrqk0bz-cctools-binutils-darwin-1010.6[0m
+        └───/nix/store/zfqw29ad23h86p8242ma5jp26z5nk00a-cctools-1010.6[0m

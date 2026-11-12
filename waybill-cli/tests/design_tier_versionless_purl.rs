@@ -271,7 +271,7 @@ fn spdx3_validate_or_skip(spdx3_path: &Path) {
         );
         return;
     }
-    let output = Command::new(&bin_path)
+    let output = common::spdx3_validate::command(&bin_path)
         .arg("--quiet")
         .arg("-j")
         .arg(spdx3_path)

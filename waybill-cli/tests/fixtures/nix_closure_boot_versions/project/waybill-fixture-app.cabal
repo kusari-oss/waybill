@@ -1,0 +1,10 @@
+cabal-version:      2.4
+name:               waybill-fixture-app
+version:            0.1.0
+
+-- #966. Three GHC boot libraries by name only: their versions come from the
+-- embedded boot-library table at run time, never from a committed file.
+-- `Win32` is listed by every source but shipped only by a Windows GHC.
+library
+    build-depends:    base, process, Win32, waybill-fixture-lib
+    default-language: Haskell2010

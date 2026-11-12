@@ -86,6 +86,9 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("automake", &[("gnu", "automake")]),
     ("bash", &[("gnu", "bash")]),
     ("bc", &[("gnu", "bc")]),
+    // GNU Binutils — reached in a Linux Nix closure through GHC's toolchain
+    // (#1283; 21 of slack-web's 300 truth findings).
+    ("binutils", &[("gnu", "binutils")]),
     ("bison", &[("gnu", "bison")]),
     // `andybalholm` also files `brotli` — a Go port. Deliberately not
     // emitted; this row is Google's implementation.
@@ -94,6 +97,15 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // crate. Deliberately not emitted; this row is the C program.
     ("bzip2", &[("bzip", "bzip2")]),
     ("c-ares", &[("c-ares", "c-ares"), ("c-ares_project", "c-ares")]),
+    // cJSON, fontforge, giflib, libass, libsndfile, libssh and unbound
+    // (`specs/nix-curated-cpe-gaps/`): C libraries in Nix closures for which
+    // nixpkgs declares a product and no vendor, so no CPE arrives from
+    // `meta.identifiers`. Exact names only, like every row here.
+    //
+    // NVD moved cJSON from `cjson_project` to `davegamble` (48 of 49
+    // `cjson_project` entries deprecated), but 3 CVEs still cite
+    // `cjson_project`, so both are emitted, `davegamble` first.
+    ("cjson", &[("davegamble", "cjson"), ("cjson_project", "cjson")]),
     // `arm` also files a `clang` product (ARM Clang) — a different
     // compiler, deliberately not emitted.
     ("clang", &[("llvm", "clang")]),
@@ -114,11 +126,26 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // `apache` also files `flex` — Apache Flex, the Flash framework.
     // Deliberately not emitted; this row is the lexical analyzer.
     ("flex", &[("flex_project", "flex"), ("westes", "flex")]),
+    // `fontforge_project` also files `fontforge`: every entry deprecated, 0
+    // CVEs. Not emitted. nixpkgs' date version (`20251009`) is NVD's
+    // version encoding verbatim.
+    ("fontforge", &[("fontforge", "fontforge")]),
     // `fossies` is a source-archive site, not GNU — and it is the only
     // vendor NVD has for gawk. The attribution is upstream's to explain;
     // a scanner keyed on CPEs would use it.
     ("gawk", &[("fossies", "gawk")]),
+    // GCC — the compiler runtime (libgcc_s) a Linux closure keeps (#1283).
+    // `groups_communities_and_co_project` also files a `gcc` product
+    // ("Groups, Communities and Co (GCC)") — a different product,
+    // deliberately not emitted.
+    ("gcc", &[("gnu", "gcc")]),
     ("gettext", &[("gnu", "gettext")]),
+    ("giflib", &[("giflib_project", "giflib")]),
+    // The GNU C Library — every dynamically linked Linux output loads it, and
+    // nixpkgs revisions before meta.identifiers declare no CPE for it (#1283:
+    // 36 of slack-web's 300 truth findings).
+    // `gentoo` also files `glibc` (Gentoo's package); not emitted.
+    ("glibc", &[("gnu", "glibc")]),
     // GnuTLS — NVD canonical.
     ("gnutls", &[("gnu", "gnutls")]),
     ("gzip", &[("gnu", "gzip")]),
@@ -127,18 +154,24 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // ships it too.
     ("less", &[("greenwoodsoftware", "less"), ("gnu", "less")]),
     ("libarchive", &[("libarchive", "libarchive"), ("freebsd", "libarchive")]),
+    ("libass", &[("libass_project", "libass")]),
     ("libedit", &[("libedit_project", "libedit")]),
     ("libffi", &[("libffi_project", "libffi")]),
     // `gnu` also files a `libidn2` product, but its title reads
     // "GNU libidn 0.3" — that is libidn v1, a different library.
     // Deliberately not emitted.
     ("libidn2", &[("libidn2_project", "libidn2")]),
+    ("libmicrohttpd", &[("gnu", "libmicrohttpd")]),
     // LibreSSL — `openbsd:libressl` (LibreSSL is an OpenBSD project).
     // A second `libressl:libressl` candidate was emitted here until
     // #1246: the vendor does not exist. All 110 libressl entries in
     // NVD's dictionary are `openbsd:libressl` and none use a `libressl`
     // vendor, so the candidate could only ever return zero.
     ("libressl", &[("openbsd", "libressl")]),
+    // `gentoo` also files `libsndfile`: two deprecated entries. Not emitted.
+    ("libsndfile", &[("libsndfile_project", "libsndfile")]),
+    // libssh, not libssh2 (its own row below). Exact names only.
+    ("libssh", &[("libssh", "libssh")]),
     ("libssh2", &[("libssh2", "libssh2")]),
     ("libtool", &[("gnu", "libtool")]),
     ("libunistring", &[("gnu", "libunistring")]),
@@ -170,6 +203,7 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("openjdk", &[("oracle", "openjdk")]),
     // OpenSSL — every CVE since 2014 uses `openssl:openssl`.
     ("openssl", &[("openssl", "openssl")]),
+    ("p11-kit", &[("p11-kit_project", "p11-kit")]),
     // `tanium` also files `patch` (Tanium Patch, endpoint management) —
     // a different product, deliberately not emitted.
     ("patch", &[("gnu", "patch")]),
@@ -201,6 +235,9 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("sqlite", &[("sqlite", "sqlite")]),
     ("tcl", &[("tcl", "tcl")]),
     ("texinfo", &[("gnu", "texinfo")]),
+    // Unbound, NLnet Labs' DNS resolver. `unbound_project` is one deprecated
+    // entry with 0 CVEs; not emitted.
+    ("unbound", &[("nlnetlabs", "unbound")]),
     ("unzip", &[("info-zip", "unzip"), ("unzip_project", "unzip")]),
     ("xz", &[("tukaani", "xz"), ("xz_project", "xz")]),
     // zlib — NVD canonical.
@@ -232,7 +269,22 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
 ///   matches nothing. Rejected in the conservative direction: a missing CPE
 ///   understates, a wrong one asserts.
 ///
-/// `m1375_the_rejected_names_emit_no_cpe` enforces this. The test says what;
+/// Two more, rejected by `specs/nix-curated-cpe-gaps/` (2026-11-10), where
+/// sbomnix 1.9.0 emits both and grype reports 13 and 10 findings from them.
+/// In the measured closures each is a Haskell package, fetched from
+/// `mirror://hackage/`, and the closure tier emits it as `pkg:generic` when
+/// the pinned Hackage package set is unavailable:
+///
+/// - **`warp`** — Haskell's WAI web server. NVD's only `warp` is
+///   `cloudflare:warp`, "Cloudflare WARP for Windows", 80 entries.
+///
+/// - **`cmark-gfm`** — the Hackage binding, version `0.2.6`. NVD's
+///   `github:cmark-gfm` is GitHub's C library, versioned `0.29.0.gfm.N`, and
+///   `0.2.6` orders below every one of them. nixpkgs' C `cmark-gfm` has the
+///   same pname, so a row cannot tell the two apart by name.
+///
+/// `m1375_the_rejected_names_emit_no_cpe` and
+/// `nix_gap_bindings_and_prefixed_names_get_no_cpe` enforce these. The tests say what;
 /// this comment says why; neither substitutes for the other.
 /// What NVD's CPE dictionary held for every pair in
 /// `GENERIC_LIBRARY_CPES`, as `(vendor, product, entries)`.
@@ -263,25 +315,41 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("c-ares", "c-ares", 67),
     ("c-ares_project", "c-ares", 39),
     ("christos_zoulas", "file", 20),
+    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
+    ("cjson_project", "cjson", 49),
     ("curl", "curl", 2),
+    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
+    ("davegamble", "cjson", 49),
     ("file_project", "file", 85),
     ("flex_project", "flex", 35),
+    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
+    ("fontforge", "fontforge", 32),
     ("fossies", "gawk", 15),
     ("freebsd", "libarchive", 2),
     ("gentoo", "file", 1),
+    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
+    ("giflib_project", "giflib", 40),
     ("gnu", "automake", 51),
     ("gnu", "bash", 92),
     ("gnu", "bc", 8),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("gnu", "binutils", 81),
     ("gnu", "bison", 70),
     ("gnu", "coreutils", 71),
     ("gnu", "cpio", 16),
     ("gnu", "diffutils", 12),
     ("gnu", "ed", 3),
     ("gnu", "findutils", 6),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("gnu", "gcc", 128),
     ("gnu", "gettext", 47),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("gnu", "glibc", 196),
     ("gnu", "gnutls", 366),
     ("gnu", "gzip", 26),
     ("gnu", "less", 5),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("gnu", "libmicrohttpd", 61),
     ("gnu", "libtool", 14),
     ("gnu", "libunistring", 13),
     ("gnu", "ncurses", 21),
@@ -295,10 +363,15 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("jq_project", "jq", 1),
     ("jqlang", "jq", 25),
     ("libarchive", "libarchive", 53),
+    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
+    ("libass_project", "libass", 4),
     ("libedit_project", "libedit", 2),
     ("libexpat", "expat", 25),
     ("libffi_project", "libffi", 9),
     ("libidn2_project", "libidn2", 23),
+    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
+    ("libsndfile_project", "libsndfile", 39),
+    ("libssh", "libssh", 53),
     ("libssh2", "libssh2", 41),
     ("libuv", "libuv", 152),
     ("libuv_project", "libuv", 1),
@@ -309,11 +382,15 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("lzo_project", "lzo", 11),
     ("ncurses_project", "ncurses", 49),
     ("nghttp2", "nghttp2", 134),
+    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
+    ("nlnetlabs", "unbound", 206),
     ("nodejs", "node.js", 1714),
     ("oniguruma_project", "oniguruma", 38),
     ("openbsd", "libressl", 110),
     ("openssl", "openssl", 368),
     ("oracle", "openjdk", 241),
+    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
+    ("p11-kit_project", "p11-kit", 93),
     ("pcre", "pcre", 91),
     ("pcre", "pcre2", 25),
     ("perl", "perl", 614),
@@ -603,6 +680,7 @@ mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: purl.name().to_string(),
             version: purl.version().unwrap_or("0.0.0").to_string(),
             purl,
@@ -1095,6 +1173,8 @@ mod tests {
                 "../../../specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt"
             ),
             include_str!("../../../specs/1395-nix-python-cpe/measurements/nvd-titles.txt"),
+            include_str!("../../../specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt"),
+            include_str!("../../../specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt"),
         );
 
         // CONTROL: the files parsed to something. Without this every
@@ -1295,6 +1375,92 @@ mod tests {
             assert!(
                 synthesize_cpes(&c).is_empty(),
                 "{name} gained a CPE; only the interpreter is CPython (#1395)"
+            );
+        }
+    }
+
+    /// The C libraries a Nix closure carries that nixpkgs declares no vendor
+    /// for, mapped to the pair NVD files them under. Versions are nixpkgs' at
+    /// `a799d3e3`, each of which is itself a dictionary entry except
+    /// libssh 0.12.0 and libass 0.17.4 (newer than NVD's latest entry, same
+    /// dotted shape). See `specs/nix-curated-cpe-gaps/`.
+    #[test]
+    fn nix_gap_closure_c_libraries_map_to_nvds_pair() {
+        for (name, version, want) in [
+            ("cjson", "1.7.19", &[
+                "cpe:2.3:a:davegamble:cjson:1.7.19:*:*:*:*:*:*:*",
+                "cpe:2.3:a:cjson_project:cjson:1.7.19:*:*:*:*:*:*:*",
+            ][..]),
+            ("fontforge", "20251009", &["cpe:2.3:a:fontforge:fontforge:20251009:*:*:*:*:*:*:*"][..]),
+            ("giflib", "5.2.2", &["cpe:2.3:a:giflib_project:giflib:5.2.2:*:*:*:*:*:*:*"][..]),
+            ("libass", "0.17.4", &["cpe:2.3:a:libass_project:libass:0.17.4:*:*:*:*:*:*:*"][..]),
+            (
+                "libsndfile",
+                "1.2.2",
+                &["cpe:2.3:a:libsndfile_project:libsndfile:1.2.2:*:*:*:*:*:*:*"][..],
+            ),
+            ("libssh", "0.12.0", &["cpe:2.3:a:libssh:libssh:0.12.0:*:*:*:*:*:*:*"][..]),
+            ("unbound", "1.25.0", &["cpe:2.3:a:nlnetlabs:unbound:1.25.0:*:*:*:*:*:*:*"][..]),
+        ] {
+            let c = make_component(&format!("pkg:generic/{name}@{version}"));
+            assert_eq!(synthesize_cpes(&c), want, "{name}");
+        }
+    }
+
+    /// The rejections, and the names next to the rows that are not them.
+    ///
+    /// `warp` and `cmark-gfm` are in these closures only as Hackage packages
+    /// (`mirror://hackage/warp-3.4.9.tar.gz`), and when the pinned package
+    /// set is unavailable the closure tier emits them as `pkg:generic`, which
+    /// is the arm this table serves. NVD's only `warp` is Cloudflare WARP; its
+    /// `cmark-gfm` is GitHub's C library, versioned `0.29.0.gfm.N`, against
+    /// which a binding's `0.2.6` orders below every fixed version. A row for
+    /// either would assert software is present that is not, which is what
+    /// sbomnix 1.9.0 does for both.
+    ///
+    /// The rest are the prefixed and binding names a closure carries beside
+    /// the libraries: none is the library, so the rows are exact names.
+    #[test]
+    fn nix_gap_bindings_and_prefixed_names_get_no_cpe() {
+        // CONTROL: the rows exist, or every assertion below is vacuous.
+        for control in ["pkg:generic/unbound@1.25.0", "pkg:generic/libssh@0.12.0"] {
+            assert!(
+                !synthesize_cpes(&make_component(control)).is_empty(),
+                "the control {control} must produce a candidate, or the rejections \
+                 below are vacuous"
+            );
+        }
+
+        for purl in [
+            "pkg:generic/warp@3.4.9",
+            "pkg:hackage/warp@3.4.9",
+            "pkg:generic/cmark-gfm@0.2.6",
+            "pkg:hackage/cmark-gfm@0.2.6",
+            "pkg:generic/cmark-gfm@0.29.0.gfm.13",
+            "pkg:hackage/libssh@0.12.0",
+            "pkg:hackage/unbound@1.25.0",
+            "pkg:generic/python3.13-unbound@1.25.0",
+            "pkg:generic/python3.13-cjson@1.7.19",
+            "pkg:generic/perl5.40.0-waybill-fixture-libssh@0.12.0",
+            "pkg:generic/libssh-waybill-fixture@0.12.0",
+            "pkg:generic/unbound-full@1.25.0",
+            "pkg:generic/giflib-tools@5.2.2",
+            "pkg:generic/libsndfile1@1.2.2",
+            "pkg:generic/cjson-1.7.19.tar.gz@1.7.19",
+            "pkg:generic/fontforge-gtk@20251009",
+            "pkg:generic/libass2@0.17.4",
+        ] {
+            let c = make_component(purl);
+            assert!(
+                synthesize_cpes(&c).is_empty(),
+                "{purl} gained a CPE; the rows are exact library names, and \
+                 warp/cmark-gfm were rejected (specs/nix-curated-cpe-gaps/)"
+            );
+        }
+        for name in ["warp", "cmark-gfm"] {
+            assert!(
+                !GENERIC_LIBRARY_CPES.iter().any(|(s, _)| *s == name),
+                "{name} was added to the table; specs/nix-curated-cpe-gaps/ rejected it"
             );
         }
     }

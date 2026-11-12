@@ -31,10 +31,11 @@ const DEFAULT_FORMAT: &str = "cyclonedx-json";
 /// a clear error.
 const OPENVEX_PSEUDO_FORMAT: &str = "openvex";
 
-/// Format ids that trigger OpenVEX sidecar emission. Today only
-/// the stable SPDX 2.3 serializer does so; SPDX 3.0.1-experimental
-/// may opt in in a future milestone, at which point this list grows.
-const OPENVEX_EMITTING_FORMATS: &[&str] = &["spdx-2.3-json"];
+/// Format ids whose serializers co-emit the OpenVEX sidecar, in the order
+/// that picks which document names it (#1443): one sidecar per run, named
+/// after the first of these the run requests. Both SPDX serializers emit it.
+const OPENVEX_EMITTING_FORMATS: &[&str] =
+    &["spdx-2.3-json", "spdx-3-json", "spdx-3-json-experimental"];
 
 /// Enrichment source identifiers for `--enrich-sources`. Selected via
 /// comma-separated list; when provided, only the listed sources run.
@@ -407,6 +408,13 @@ fn build_deps_dev_source(
 }
 
 #[derive(Args, Debug)]
+// Milestone 1283 — the Nix tiers `--nix-allow-ifd` applies to. `multiple`, so
+// the two tiers stay combinable.
+#[command(group(
+    clap::ArgGroup::new("nix_tier")
+        .args(["nix_closure", "nix_eval"])
+        .multiple(true)
+))]
 pub struct ScanArgs {
     /// Directory to walk for package artifacts.
     ///
@@ -687,7 +695,8 @@ pub struct ScanArgs {
     ///
     /// Defences are milestone 1034's, unchanged and now load-bearing:
     /// pure mode, import-from-derivation refused and the refusal
-    /// verified, no `--accept-flake-config`, and a wall-clock budget.
+    /// verified (unless `--nix-allow-ifd`), no `--accept-flake-config`,
+    /// and a wall-clock budget.
     ///
     /// Default (flag omitted): no `nix` process is started at all.
     ///
@@ -749,6 +758,22 @@ pub struct ScanArgs {
         requires = "nix_closure"
     )]
     pub nix_closure_require_root_contents: bool,
+
+    /// Allow import-from-derivation during Nix evaluation. Nix will BUILD
+    /// derivations while evaluating the flake (e.g. callCabal2nix). Do not use
+    /// on an untrusted flake. Where nix's sandbox is off (the macOS default)
+    /// those builds run unsandboxed.
+    ///
+    /// Requires `--nix-closure` or `--nix-eval`. Every Nix evaluation then
+    /// passes `allow-import-from-derivation true`, and waybill confirms nix
+    /// applied it before evaluating anything; if it cannot, the tier degrades
+    /// (`ifd-allowance-unverified`). Nothing else is relaxed:
+    /// `--accept-flake-config` and `--impure` stay refused, so a flake's own
+    /// substituters and keys are still ignored. The document records the
+    /// policy and nix's sandbox setting (`waybill:nix-evaluation-policy`).
+    /// Milestone 1283.
+    #[arg(long = "nix-allow-ifd", default_value_t = false, requires = "nix_tier")]
+    pub nix_allow_ifd: bool,
 
     /// The Nix platform to evaluate for, e.g. `x86_64-linux`.
     ///
@@ -2744,6 +2769,31 @@ fn resolve_dispatch(
         overrides.insert(fmt, path);
     }
 
+    // #1443: without `--output openvex=`, name the sidecar after the SPDX
+    // document it accompanies. A fixed name meant two scans into one
+    // directory overwrote each other's. Resolved here, as an override, so
+    // the writer, every SPDX document's reference and the collision check
+    // below all read the one path.
+    if !overrides.contains_key(OPENVEX_PSEUDO_FORMAT) {
+        let anchor = OPENVEX_EMITTING_FORMATS
+            .iter()
+            .find(|f| formats.iter().any(|r| r == *f));
+        if let Some(fmt) = anchor {
+            let doc = overrides.get(*fmt).cloned().unwrap_or_else(|| {
+                PathBuf::from(
+                    registry
+                        .get(fmt)
+                        .expect("format id validated above")
+                        .default_filename(),
+                )
+            });
+            overrides.insert(
+                OPENVEX_PSEUDO_FORMAT.to_string(),
+                crate::generate::openvex::sidecar_path_for(&doc),
+            );
+        }
+    }
+
     // Path-collision check: two formats (default or overridden) must
     // not resolve to the same filesystem path. Done here so the error
     // fires before any scan work runs.
@@ -2765,12 +2815,9 @@ fn resolve_dispatch(
             );
         }
     }
-    // Also check the OpenVEX override against format outputs, since
-    // the sidecar lands beside the SPDX file. No default path to
-    // check when the override isn't set — the sidecar's default is
-    // `waybill.openvex.json`, which can't collide with any
-    // registered format's default (cdx / spdx filenames are
-    // distinct from openvex's).
+    // Also check the OpenVEX path against format outputs, whether given or
+    // derived above: the sidecar would overwrite the document it collides
+    // with.
     if let Some(openvex_path) = overrides.get(OPENVEX_PSEUDO_FORMAT) {
         let canonical = canonicalize_for_collision(openvex_path);
         if let Some(prev) = resolved_paths.insert(canonical.clone(), OPENVEX_PSEUDO_FORMAT.to_string()) {
@@ -4442,6 +4489,20 @@ pub async fn execute(
     // The pass gates itself: a repository without both a nixpkgs-shaped
     // pinned input and at least one Haskell dependency does no work and
     // produces no annotation (SC-009).
+    // Milestone 1283 (#1283) — the import-from-derivation policy every Nix
+    // tier evaluates under, verified by each tier's pre-flight.
+    let ifd_policy = if args.nix_allow_ifd {
+        scan_fs::package_db::nix::eval::preflight::IfdPolicy::Allow
+    } else {
+        scan_fs::package_db::nix::eval::preflight::IfdPolicy::Refuse
+    };
+    if args.nix_allow_ifd && offline {
+        // Contract cli-nix-allow-ifd: accepted, but no tier runs offline, so
+        // nothing was evaluated with import-from-derivation allowed.
+        tracing::info!(
+            "--nix-allow-ifd had no effect: --offline admits no Nix tier, so nothing was evaluated"
+        );
+    }
     // Milestone 1034 (#971 part A) — resolve the operator's `--nix-eval`
     // choice once, before the pass that consumes it. An unparseable
     // `--nix-eval-system` is an argument error rather than a degradation: the
@@ -4453,11 +4514,20 @@ pub async fn execute(
             Some(s) => Some(s.parse().map_err(|e| anyhow::anyhow!("--nix-eval-system: {e}"))?),
             None => None,
         };
-        Some(TierConfig::from_flags(system, args.nix_eval_timeout_secs))
+        Some(TierConfig::from_flags(system, args.nix_eval_timeout_secs, ifd_policy))
     } else {
         None
     };
 
+    // Milestone 1283 — the closure tier's C217 record, and the policy its
+    // pre-flight verified, which the declaration pass below inherits rather
+    // than re-verifying. `None` when no pre-flight ran.
+    let mut closure_policy: Option<scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy> =
+        None;
+    let mut closure_ifd: Option<scan_fs::package_db::nix::eval::result::IfdPolicyVerified> = None;
+    // Milestone 966 — the system the closure was evaluated for, the fallback
+    // for a closure whose evaluated derivation records none (research R4).
+    let mut closure_system: Option<String> = None;
     // Milestone 1035 (#1034, #1040) — the derivation closure.
     //
     // Runs after the manifest-derived set exists, because it supplements that
@@ -4482,14 +4552,26 @@ pub async fn execute(
                 let cfg = closure::ClosureConfig::from_flags(
                     args.nix_closure_attr.clone(),
                     None,
+                    ifd_policy,
                 );
                 // The platform must be explicit for evaluation to stay pure;
                 // `builtins.currentSystem` does not exist in pure mode.
                 let system = scan_fs::package_db::nix::eval::invoke::detect_host_system(
                     cfg.budget,
                 );
-                Some(match system {
-                    Ok(sys) => closure::resolve(&root_path, &sys, &cfg).map(|mut c| {
+                closure_system = system.as_ref().ok().map(|s| s.as_str().to_string());
+                // The pre-flight gates everything below it; its record is
+                // kept whether it passes or not (C217).
+                let preflighted = system.and_then(|sys| {
+                    let pre = closure::preflight(&cfg);
+                    closure_policy = Some(match &pre {
+                        Ok(p) => closure::summary::NixEvaluationPolicy::verified(&p.ifd, &p.environment),
+                        Err(_) => closure::summary::NixEvaluationPolicy::unverified(cfg.ifd_policy),
+                    });
+                    pre.map(|p| (sys, p))
+                });
+                Some(match preflighted {
+                    Ok((sys, pre)) => closure::resolve(&root_path, &sys, &cfg, &pre).map(|mut c| {
                         tracing::info!(
                             attribute = %c.attribute,
                             derivations = c.raw.derivations.len(),
@@ -4508,19 +4590,42 @@ pub async fn execute(
                         // milestone (spec FR-006).
                         match nixpkgs_revision_for_licenses(&root_path) {
                             Some(rev) => {
-                                closure::attach_licenses(&mut c, &rev, &sys, cfg.budget);
+                                closure::attach_licenses(&mut c, &rev, &sys, cfg.budget, &pre.ifd);
                             }
                             None => tracing::info!(
                                 "nix-closure-licenses: no pinned nixpkgs revision in flake.lock; \
                                  emitting the closure without declared licenses"
                             ),
                         }
+                        closure_ifd = Some(pre.ifd);
                         c
                     }),
                     Err(reason) => Err(reason),
                 })
             }
         }
+    };
+    // Milestone 966 (#966) — which GHC built what, read from the closure
+    // before the Haskell enrichment so it classifies with the exact
+    // compiler (research R1). `None` without a closure, which keeps every
+    // such scan byte-identical (FR-011).
+    let closure_compilers: Option<
+        scan_fs::package_db::nix::haskell_packages::closure_compilers::ClosureCompilers,
+    > = match &nix_closure {
+        Some(Ok(c)) => {
+            let cc = scan_fs::package_db::nix::haskell_packages::closure_compilers::ClosureCompilers::from_closure(
+                c,
+                closure_system.as_deref().unwrap_or_default(),
+            );
+            tracing::info!(
+                project = cc.project.as_ref().map(|g| g.label.as_str()).unwrap_or("none"),
+                compilers = cc.seen.len(),
+                system = %cc.system,
+                "nix-closure: GHC compilers identified"
+            );
+            Some(cc)
+        }
+        _ => None,
     };
     let nixpkgs_haskell_summary = {
         use scan_fs::package_db::nix::haskell_packages as nhp;
@@ -4536,6 +4641,7 @@ pub async fn execute(
                 // opted in, and `None` means no `nix` process is started at
                 // all -- which is what keeps the default path byte-identical.
                 nix_eval: nix_eval_cfg.clone(),
+                compilers: closure_compilers.clone(),
             },
             &source,
         )
@@ -4712,11 +4818,26 @@ pub async fn execute(
     // Milestone 1378 (#1396; C213) — what the contents pass read. Hoisted for
     // the same reason the record above is: its presence says the pass ran.
     let mut closure_contents: Option<ClosureContentsSummary> = None;
+    // Milestone 1423 (#1423) — whether the milestone-1275 identity pass had
+    // the pinned package set, which decides whether its declared edges can
+    // say which Haskell libraries are statically linked; and C216, which the
+    // scope pass below decides.
+    let mut closure_package_set_available = false;
+    let mut closure_scope_method: Option<
+        scan_fs::package_db::nix::closure::runtime::ScopeMethodRecord,
+    >;
     match &nix_closure {
-        Some(Err(reason)) => tracing::info!(
+        // #1446 — WARN, for every reason including `offline-requested`:
+        // `nix_closure` is `Some` only when the operator passed
+        // `--nix-closure`, and a scan that exits 0 without the closure they
+        // asked for must say so above INFO.
+        Some(Err(reason)) => tracing::warn!(
             reason = reason.wire(),
             detail = %reason,
-            "nix-closure: degrading; the manifest-derived set is unaffected"
+            "nix-closure: degrading; --nix-closure was requested but no Nix closure \
+             components were added; the document contains only manifest-derived \
+             components.{}",
+            reason.explanation().map(|e| format!(" {e}")).unwrap_or_default()
         ),
         Some(Ok(classified)) => {
             let added = scan_fs::package_db::nix::closure::emit::components(classified);
@@ -4777,24 +4898,39 @@ pub async fn execute(
             // FR-012c's targets are GHC boot libraries, identified from the
             // revision's own configuration rather than from a maintained list
             // (m926). Cache-only, like the package set above.
-            let boot = match nhp::load_package_set(&root_path, true, &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs)) {
-                nhp::PackageSetLoad::Loaded(l) => nhp::boot_set(
-                    &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs),
-                    &l.location,
-                    &l.pinned.revision,
-                    &root_path,
-                    true,
-                )
-                .map(|b| b.boot)
-                .unwrap_or_default(),
-                _ => Default::default(),
+            //
+            // Milestone 966 (FR-006, T022) — with the project compiler in the
+            // boot-library table, the set is that release's libraries, the
+            // same set `enrich` classified with; computed from the table
+            // directly so a closure-only scan, where `enrich` declined, gets
+            // it too. Otherwise the union, as before.
+            let exact_boot = closure_compilers.as_ref().and_then(|cc| {
+                let g = cc.project_in_table()?;
+                nhp::boot_table::table().names(&g.version)
+            });
+            let boot = match exact_boot {
+                Some(b) => b,
+                None => match nhp::load_package_set(&root_path, true, &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs)) {
+                    nhp::PackageSetLoad::Loaded(l) => nhp::boot_set(
+                        &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs),
+                        &l.location,
+                        &l.pinned.revision,
+                        &root_path,
+                        true,
+                    )
+                    .map(|b| b.boot)
+                    .unwrap_or_default(),
+                    _ => Default::default(),
+                },
             };
+            closure_package_set_available = loaded_set.is_some();
             let identity = nhp::closure_identity::reclassify(
                 &mut components,
                 &mut relationships,
                 classified,
                 loaded_set.as_ref(),
                 &boot,
+                closure_compilers.as_ref(),
             );
             tracing::info!(
                 confirmed = identity.confirmed(),
@@ -4852,6 +4988,30 @@ pub async fn execute(
             // Before this, the tier emitted components and no dependency edges
             // at all, so every closure component was an orphan by
             // construction -- measured, 352 of 406 on the pinned golden.
+            //
+            // #1436 (FR-001, research R6) — restore the `nix_drv` qualifier on
+            // every CVE-resolving backport first. `emit::components` applied
+            // it, but the three identity passes above rebuild a PURL from its
+            // parts, and a member merged into another reader's component
+            // takes that component's PURL. Done here, the closure edges below
+            // are built from the qualified PURL; edges that already name the
+            // old one (the manifest's, the contents pass's) are moved with it.
+            let qualified =
+                scan_fs::package_db::nix::closure::emit::qualify_backport_identities(
+                    &mut components,
+                );
+            if !qualified.is_empty() {
+                let moved = scan_fs::package_db::nix::haskell_packages::apply_renames(
+                    &qualified,
+                    &mut relationships,
+                );
+                tracing::info!(
+                    components = qualified.len(),
+                    rewritten_endpoints = moved,
+                    "nix-closure: build identity restored on backported components"
+                );
+            }
+            scan_fs::package_db::nix::closure::emit::log_backport_census(&components);
             let (edges, unanchored) = scan_fs::package_db::nix::closure::graph::relationships(
                 &classified.graph,
                 &classified.raw,
@@ -5036,6 +5196,14 @@ pub async fn execute(
             .and_then(|s| s.boot_libraries.clone())
             .map(|b| b.into_iter().collect())
             .unwrap_or_default();
+        // #1283 (invariant I9) — the direct origin milestone 1276 left open: a
+        // reader's own non-runtime scope on a package the compiler supplies.
+        // Before the propagation, so the withdrawn mark seeds nothing.
+        crate::resolve::scope_propagation::withdraw_compiler_supplied_scope(
+            &mut components,
+            &mut relationships,
+            &boot_libraries,
+        );
         let scope_propagation_summary =
             crate::resolve::scope_propagation::propagate_non_runtime_scope(
                 &mut components,
@@ -5108,10 +5276,51 @@ pub async fn execute(
         // two is enumerated in `contracts/role-scope.md`; none requires a
         // precedence rule. Should a future mechanism assert `required`, that
         // stops being true.
+        //
+        // Milestone 1423 (#1423, T017) — the evidence the pass decides from:
+        // the evaluated output's runtime closure plus what is statically
+        // linked into it, read against the document as it stands now (after
+        // the identity, contents and edge passes), so the declared edges and
+        // the host → module edges are final. With no runtime closure the
+        // reachability walk from the evaluated package decides (US2); with no
+        // single evaluated package the role rule decides, exactly as before.
+        // C216 records which, and why.
+        let (runtime_evidence, scope_method) = match &nix_closure {
+            Some(Ok(classified)) => scan_fs::package_db::nix::closure::runtime::evidence(
+                classified,
+                &components,
+                &relationships,
+                closure_package_set_available,
+            ),
+            _ => (
+                scan_fs::package_db::nix::closure::runtime::RuntimeEvidence::None,
+                None,
+            ),
+        };
+        closure_scope_method = scope_method;
         let role_scope_summary = crate::resolve::closure_role_scope::assign_role_scope(
             &mut components,
             &boot_libraries,
+            &runtime_evidence,
+            &relationships,
         );
+        // #1465 — runtime evidence wins: a member the runtime closure holds,
+        // or that is statically linked into it, no longer carries a reader's
+        // non-runtime scope. After the pass above, whose verdict it reads, and
+        // before `--exclude-scope`, which would otherwise drop what ships.
+        // This is the precedence rule the paragraph above anticipated: runtime
+        // evidence is the one mechanism that asserts presence.
+        crate::resolve::closure_role_scope::withdraw_scope_runtime_evidence_contradicts(
+            &mut components,
+            &mut relationships,
+        );
+        // #1455 — the members marked only because the runtime closure holds
+        // them through documentation outputs alone, counted by the pass after
+        // the exemptions and static linking had their say.
+        if let Some(record) = closure_scope_method.as_mut() {
+            record.set_doc_only_members(role_scope_summary.doc_only_excluded);
+            record.set_lib_links_members(role_scope_summary.lib_links_excluded);
+        }
         if role_scope_summary.roles_seen > 0 {
             tracing::info!(
                 roles_seen = role_scope_summary.roles_seen,
@@ -5119,19 +5328,26 @@ pub async fn execute(
                 build_tooling = role_scope_summary.assigned_build_tooling,
                 unreferenced = role_scope_summary.assigned_unreferenced,
                 exempt_compiler_supplied = role_scope_summary.exempt_compiler_supplied,
-                "nix-closure: role-derived artifact-presence classification"
+                decided_runtime = role_scope_summary.decided_runtime,
+                statically_linked = role_scope_summary.statically_linked,
+                decided_not_in_artifact = role_scope_summary.decided_not_in_artifact,
+                doc_only_excluded = role_scope_summary.doc_only_excluded,
+                lib_links_excluded = role_scope_summary.lib_links_excluded,
+                "nix-closure: artifact-presence classification"
             );
         }
     }
     // The document-scope record (FR-018). Built only on the success path, so
     // a degraded tier emits no counts rather than zeros -- a zero would read
     // as "the closure held nothing", which is a different claim.
-    let nix_closure_summary = match &nix_closure {
+    let mut nix_closure_summary = match &nix_closure {
         Some(Ok(classified)) => {
             use scan_fs::package_db::nix::closure;
             let patched = closure::patches::attribute(&classified.raw);
-            let summary =
+            let mut summary =
                 closure::summary::NixClosureSummary::build(classified, &patched);
+            // Milestone 1423 — C216, decided by the scope pass above.
+            summary.scope_method = closure_scope_method.take();
             tracing::info!(
                 patches = summary.patches,
                 without_cve = summary.patches_without_cve,
@@ -5160,8 +5376,8 @@ pub async fn execute(
     // still emits its components when this fails, because "the closure is
     // unknown" and "what nixpkgs says about it is unknown" are different
     // gaps and a consumer needs to tell them apart.
-    let nixpkgs_security_summary = match &nix_closure {
-        Some(Ok(classified)) if !args.no_nixpkgs_security => {
+    let nixpkgs_security_summary = match (&nix_closure, &closure_ifd) {
+        (Some(Ok(classified)), Some(ifd)) if !args.no_nixpkgs_security => {
             use scan_fs::package_db::nix::declarations;
             // Timed because the pass runs automatically: an operator who
             // finds a scan slower has to be able to see whether this is why,
@@ -5181,6 +5397,7 @@ pub async fn execute(
                     &root_path,
                     sys.as_str(),
                     std::time::Duration::from_secs(300),
+                    ifd,
                     &|pname| by_name.get(pname).cloned(),
                 )
             }) {
@@ -5403,6 +5620,13 @@ pub async fn execute(
     // they are returned so the unit tests can assert on them.
     let _ = apply_exclude_scope_filter(&mut components, &mut relationships, &exclude_scope);
 
+    // #1445 — C184's component and edge counts, taken from the set the
+    // document is written from. Here, below the last pass that removes a
+    // component, for the reason the m776 count below gives.
+    if let Some(summary) = nix_closure_summary.as_mut() {
+        summary.count_emitted(&components, &relationships);
+    }
+
     // Milestone 776 (FR-014a + FR-014b + SC-009a): source-provenance
     // reference summary.
     //
@@ -5526,6 +5750,42 @@ pub async fn execute(
         _ => None,
     };
     let nix_closure_degraded: Option<&str> = nix_closure_degraded_json.as_deref();
+    // C217 (m1283, #1283) — the import-from-derivation policy the Nix
+    // evaluations ran under. Present whenever a Nix tier was admitted, on
+    // success and degradation alike; absent with no tier and under
+    // `--offline`, where C190/C180 say `offline-requested`. Each tier's
+    // pre-flight reports its own record; a tier that was admitted but whose
+    // pre-flight never completed (nix absent, or `--nix-eval` with nothing to
+    // evaluate) contributes an unverified one only when no tier verified.
+    let nix_evaluation_policy_json: Option<String> =
+        ((args.nix_closure || args.nix_eval) && !offline).then(|| {
+            use scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy;
+            let eval_policy = nixpkgs_haskell_summary
+                .as_ref()
+                .and_then(|s| s.nix_eval.as_ref())
+                .and_then(|n| n.policy.clone());
+            match (closure_policy.clone(), eval_policy) {
+                (Some(a), Some(b)) => a.merge(b),
+                (Some(a), None) | (None, Some(a)) => a,
+                (None, None) => NixEvaluationPolicy::unverified(ifd_policy),
+            }
+            .wire()
+        });
+    // C219 (m966, #966) — which GHCs the closure named, whether the
+    // boot-library table has each, and the table's date. Applicable iff the
+    // closure tier ran and Haskell is in play: the nixpkgs-Haskell pass ran
+    // (C174), or the closure names at least one GHC (a closure-only scan,
+    // where that pass declines). Absent otherwise, so documents without a
+    // closure, or with one that holds no Haskell, are byte-identical
+    // (FR-011). Built from `closure_compilers`, never from the enrichment
+    // summary, which a closure-only scan does not have.
+    let ghc_boot_libraries_json: Option<String> = closure_compilers
+        .as_ref()
+        .filter(|cc| nixpkgs_haskell_summary.is_some() || !cc.seen.is_empty())
+        .map(|cc| {
+            let table = scan_fs::package_db::nix::haskell_packages::boot_table::table();
+            cc.document_value(table.observed()).to_string()
+        });
     // C208 (m1366, #1365) — rendered beside C190 because the two answer
     // adjacent questions about the same tier: C190 says the closure was not
     // taken, C208 says what the ecosystem identity pass did with the one that
@@ -5572,6 +5832,8 @@ pub async fn execute(
         closure_ecosystem_identity: closure_ecosystem_identity_value,
         cpe_coverage: Some(cpe_coverage_json.as_str()),
         closure_graph_admission: closure_graph_admission_json.as_deref(),
+        nix_evaluation_policy: nix_evaluation_policy_json.as_deref(),
+        ghc_boot_libraries: ghc_boot_libraries_json.as_deref(),
         nix_closure_contents: closure_contents.as_ref().map(|c| c.wire.as_str()),
         nix_closure_contents_unread: closure_contents.as_ref().is_some_and(|c| c.unread),
         // C192 (m1067): answers served from the disk cache count as online.
@@ -5873,6 +6135,7 @@ pub async fn execute(
     // about one file).
     let mut primary_output_path: Option<PathBuf> = None;
     let mut primary_format: Option<String> = None;
+    let mut openvex_written: Option<PathBuf> = None;
     for fmt in &plan.formats {
         let serializer = registry
             .get(fmt)
@@ -5894,9 +6157,12 @@ pub async fn execute(
             //       `--output openvex=<path>` pseudo-format override.
             //   (3) Any other side artifact (none today; future
             //       formats may add more) → keep its relative_path.
-            let target = if artifact.relative_path
-                == Path::new(serializer.default_filename())
-            {
+            let is_primary =
+                artifact.relative_path == Path::new(serializer.default_filename());
+            let is_openvex = !is_primary
+                && artifact.relative_path
+                    == Path::new(crate::generate::openvex::OPENVEX_DEFAULT_FILENAME);
+            let target = if is_primary {
                 let t = plan
                     .overrides
                     .get(fmt)
@@ -5904,11 +6170,7 @@ pub async fn execute(
                     .unwrap_or_else(|| artifact.relative_path.clone());
                 primary_dir = t.parent().map(Path::to_path_buf);
                 t
-            } else if artifact.relative_path
-                == Path::new(
-                    crate::generate::openvex::OPENVEX_DEFAULT_FILENAME,
-                )
-            {
+            } else if is_openvex {
                 openvex_sidecar_target(
                     plan.overrides.get(OPENVEX_PSEUDO_FORMAT),
                     primary_dir.as_deref(),
@@ -5916,6 +6178,16 @@ pub async fn execute(
             } else {
                 artifact.relative_path.clone()
             };
+            // #1443: each SPDX serializer returns the same sidecar, built from
+            // the same scan, and every document references the one path. Write
+            // and report it once.
+            if is_openvex {
+                if openvex_written.as_ref() == Some(&target) {
+                    continue;
+                }
+                openvex_written = Some(target.clone());
+            }
+            let artifact_format = if is_openvex { OPENVEX_PSEUDO_FORMAT } else { fmt.as_str() };
             // Milestone 221 US2a — inject the signing hook at the
             // write boundary. Three cases:
             //   (a) Unsigned mode: write bytes as-emitted (FR-009
@@ -5994,7 +6266,7 @@ pub async fn execute(
                 primary_format = Some(fmt.clone());
             }
             tracing::info!(
-                format = %fmt,
+                format = %artifact_format,
                 path = %target.display(),
                 bytes = final_bytes.len(),
                 "wrote SBOM artifact"
@@ -6861,6 +7133,16 @@ fn is_release_shaped(version: &str) -> bool {
     if version.is_empty() {
         return false;
     }
+    // #1283 — nixpkgs' `<release>-<patch level>` (glibc `2.40-66`): grype
+    // matches the whole string as a CPE version. Admitted only when the
+    // release is dotted digits and the patch level is digits, so none of
+    // the declined shapes above (`20251016-3.1`, `0-unstable-...`) qualify.
+    if let Some((release, patch)) = version.split_once('-') {
+        return release.contains('.')
+            && release.split('.').all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()))
+            && !patch.is_empty()
+            && patch.bytes().all(|b| b.is_ascii_digit());
+    }
     let mut chars = version.chars().peekable();
     // A leading digit is required: `boot` and `v1.2` are both out.
     if !chars.peek().is_some_and(char::is_ascii_digit) {
@@ -7163,7 +7445,20 @@ fn merge_closure_components(
     let mut appended_identities: std::collections::HashSet<(String, String)> =
         std::collections::HashSet::new();
     for mut c in added {
-        match index.get(&(c.name.clone(), c.version.clone())) {
+        // #1466, milestone 1282 FR-011 — a member that declares no `pname`
+        // (C206) never deduplicates against another reader's component. Its
+        // `(name, version)` is its derivation's bare name and an empty
+        // version, which is exactly the shape a versionless boot library
+        // takes: on nixpkgs `a799d3e3` the live-bootstrap C fragment `time`
+        // merged into the manifest's `pkg:hackage/time`, which then described
+        // itself as a build-tooling fragment.
+        let nameless = c
+            .extra_annotations
+            .contains_key(scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE);
+        let existing = (!nameless)
+            .then(|| index.get(&(c.name.clone(), c.version.clone())))
+            .flatten();
+        match existing {
             Some(&i) => {
                 // Milestone 1281 (#1346), FR-004 — reconcile declared
                 // licenses without replacing an existing declaration.
@@ -7991,6 +8286,70 @@ mod tests {
         assert!(!plan.formats.iter().any(|f| f == "openvex"));
     }
 
+    /// #1443 — without `--output openvex=`, the sidecar is named after the
+    /// SPDX document it accompanies, so scans written into one directory
+    /// under different names keep their own sidecars. One sidecar per run:
+    /// the SPDX 2.3 document names it when both SPDX formats are requested.
+    #[test]
+    fn the_sidecar_path_derives_from_the_spdx_output() {
+        let all3: &[&str] = &["cyclonedx-json", "spdx-2.3-json", "spdx-3-json"];
+        let cases: &[(&[&str], &[&str], &str)] = &[
+            // Default paths keep the historical name.
+            (&["spdx-2.3-json"], &[], "waybill.openvex.json"),
+            (&["spdx-3-json"], &[], "waybill.openvex.json"),
+            (all3, &[], "waybill.openvex.json"),
+            // A bare --output for one SPDX format.
+            (&["spdx-2.3-json"], &["out/a.spdx.json"], "out/a.openvex.json"),
+            (&["spdx-3-json"], &["out/a.spdx3.json"], "out/a.openvex.json"),
+            (&["spdx-2.3-json"], &["scan1.json"], "scan1.openvex.json"),
+            (&["spdx-2.3-json"], &["out/a.spdx23.json"], "out/a.spdx23.openvex.json"),
+            // Several formats: SPDX 2.3 anchors, whatever the --format order.
+            (
+                &["spdx-3-json", "cyclonedx-json", "spdx-2.3-json"],
+                &["cyclonedx-json=o/x.cdx.json", "spdx-2.3-json=o/x.spdx.json", "spdx-3-json=p/y.spdx3.json"],
+                "o/x.openvex.json",
+            ),
+            // SPDX 2.3 at its default while SPDX 3 is placed elsewhere.
+            (all3, &["spdx-3-json=p/y.spdx3.json"], "waybill.openvex.json"),
+            (&["cyclonedx-json", "spdx-3-json"], &["spdx-3-json=p/y.spdx3.json"], "p/y.openvex.json"),
+            // An explicit openvex path wins.
+            (&["spdx-2.3-json"], &["spdx-2.3-json=o/x.spdx.json", "openvex=v.json"], "v.json"),
+            (&["spdx-3-json"], &["openvex=v.json"], "v.json"),
+        ];
+        for (formats, outputs, expected) in cases {
+            let formats: Vec<String> = formats.iter().map(|s| s.to_string()).collect();
+            let outputs: Vec<String> = outputs.iter().map(|s| s.to_string()).collect();
+            let plan = resolve_dispatch(&reg(), &formats, &outputs)
+                .unwrap_or_else(|e| panic!("{formats:?} {outputs:?}: {e}"));
+            assert_eq!(
+                plan.overrides.get(OPENVEX_PSEUDO_FORMAT),
+                Some(&PathBuf::from(expected)),
+                "{formats:?} {outputs:?}",
+            );
+            assert!(!plan.formats.iter().any(|f| f == OPENVEX_PSEUDO_FORMAT));
+        }
+    }
+
+    #[test]
+    fn a_run_without_spdx_has_no_sidecar_path() {
+        let plan = resolve_dispatch(&reg(), &["cyclonedx-json".into()], &["x.cdx.json".into()]).unwrap();
+        assert!(!plan.overrides.contains_key(OPENVEX_PSEUDO_FORMAT), "{:?}", plan.overrides);
+    }
+
+    /// The derived path is checked for collisions like an explicit one: the
+    /// sidecar would otherwise overwrite another format's document.
+    #[test]
+    fn a_derived_sidecar_path_colliding_with_a_format_output_rejects() {
+        let err = resolve_dispatch(
+            &reg(),
+            &["cyclonedx-json".into(), "spdx-2.3-json".into()],
+            &["cyclonedx-json=o/x.openvex.json".into(), "spdx-2.3-json=o/x.spdx.json".into()],
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(err.contains("collision"), "got: {err}");
+    }
+
     #[test]
     fn openvex_override_collides_with_cdx_path() {
         let err = resolve_dispatch(
@@ -8388,6 +8747,7 @@ mod tests {
             nix_closure: false,
             nix_closure_attr: None,
             nix_closure_require_root_contents: false,
+            nix_allow_ifd: false,
             no_nixpkgs_haskell: false,
             no_nixpkgs_haskell_closure: false,
             no_nixpkgs_security: false,
@@ -9178,6 +9538,95 @@ mod tests {
         );
     }
 
+    /// #1436 T007 (research R6) — a patched closure member that another
+    /// reader also emitted still merges into it, and the merged component
+    /// takes the build identity, with its existing edges moved.
+    ///
+    /// The sequence is `execute`'s: merge, then restore the qualifier, then
+    /// `apply_renames` on the relationships that already exist.
+    #[test]
+    fn m1436_a_patched_member_merges_and_the_merged_component_is_qualified() {
+        use crate::scan_fs::package_db::nix::closure::emit::{
+            qualify_backport_identities, ANN_BACKPORT_IDENTITY, ANN_CLOSURE_PATCHES,
+        };
+        use waybill_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
+        const DRV: &str = "0b1d6zkr6zq8m4rv7ah3ylnrwfkdsxfh";
+
+        let mut components = vec![
+            make_component("pkg:hackage/waybill-fixture-app@1.0"),
+            make_component("pkg:hackage/waybill-fixture-zip@6.0"),
+        ];
+        let mut relationships = vec![Relationship {
+            from: "pkg:hackage/waybill-fixture-app@1.0".to_string(),
+            to: "pkg:hackage/waybill-fixture-zip@6.0".to_string(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance {
+                source: "cabal".to_string(),
+                data_type: "dependency".to_string(),
+            },
+        }];
+        let mut member = make_component(&format!("pkg:generic/waybill-fixture-zip@6.0?nix_drv={DRV}"));
+        member.extra_annotations.insert(
+            ANN_CLOSURE_PATCHES.to_string(),
+            serde_json::Value::String(
+                r#"[{"type":"backport","resolves":[{"type":"security","id":"CVE-2099-0001"}]}]"#.to_string(),
+            ),
+        );
+        member.extra_annotations.insert(
+            ANN_BACKPORT_IDENTITY.to_string(),
+            serde_json::json!({"nix_drv": DRV, "claims": ["CVE-2099-0001"], "unscoped": []}),
+        );
+
+        let (merged, appended, _) = merge_closure_components(&mut components, vec![member]);
+        // CONTROL: it merged, rather than being appended beside the reader's.
+        assert_eq!((merged, appended), (1, 0));
+
+        let renames = qualify_backport_identities(&mut components);
+        let moved =
+            crate::scan_fs::package_db::nix::haskell_packages::apply_renames(&renames, &mut relationships);
+        let qualified = format!("pkg:hackage/waybill-fixture-zip@6.0?nix_drv={DRV}");
+        assert_eq!(components[1].purl.as_str(), qualified, "the reader's PURL type is kept");
+        assert_eq!(moved, 1);
+        assert_eq!(relationships[0].to, qualified, "the existing edge follows (#980)");
+        // Every endpoint is still a component.
+        let purls: std::collections::HashSet<&str> =
+            components.iter().map(|c| c.purl.as_str()).collect();
+        for r in &relationships {
+            assert!(purls.contains(r.from.as_str()) && purls.contains(r.to.as_str()), "{r:?}");
+        }
+    }
+
+    /// #1466, milestone 1282 FR-011 — a member that declares no `pname` is
+    /// appended beside a component of the same `(name, version)`, never folded
+    /// into it.
+    #[test]
+    fn m1466_a_nameless_member_is_appended_beside_its_namesake() {
+        use crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE;
+        let named = |purl: &str| {
+            let mut c = make_component(purl);
+            c.name = "waybill-fixture-clock".to_string();
+            c.version = String::new();
+            c
+        };
+        let mut existing = vec![named("pkg:hackage/waybill-fixture-clock")];
+        let mut fragment = named("pkg:generic/waybill-fixture-clock-c10ck");
+        fragment
+            .extra_annotations
+            .insert(ANN_MEMBER_ROLE.to_string(), serde_json::Value::from("fragment"));
+        let (merged, appended, _) = merge_closure_components(&mut existing, vec![fragment]);
+        assert_eq!((merged, appended), (0, 1));
+        assert!(!existing[0].extra_annotations.contains_key(ANN_MEMBER_ROLE));
+
+        // CONTROL: the same pair without the role still merges, so the
+        // exclusion is the role and not the PURL or the empty version.
+        let mut existing = vec![named("pkg:hackage/waybill-fixture-clock")];
+        let (merged, appended, _) = merge_closure_components(
+            &mut existing,
+            vec![named("pkg:generic/waybill-fixture-clock-c10ck")],
+        );
+        assert_eq!((merged, appended), (1, 0));
+    }
+
     /// Milestone 1377 FR-013 — a closure member carrying a nixpkgs-declared
     /// CPE, as `closure::emit` builds one.
     fn m1377_declared(purl: &str, cpe: &str, overrode: Option<&str>) -> ResolvedComponent {
@@ -9276,6 +9725,7 @@ mod tests {
         ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             name: purl.name().to_string(),
             version: purl.version().unwrap_or("0.0.0").to_string(),
             purl,
@@ -10088,6 +10538,7 @@ mod closure_ecosystem_identity_tests {
         let raw = RawClosure::parse(&fixture()).unwrap();
         let roles = classify(&raw);
         let classified = scan_fs::package_db::nix::closure::ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,
@@ -10420,6 +10871,30 @@ mod cpe_coverage_tests {
             "26.05pre-git",          // nixpkgs hooks
             "boot",                  // bootstrap stages
             "",
+        ] {
+            assert!(!is_release_shaped(v), "{v} must be declined");
+        }
+    }
+
+    /// #1283 — nixpkgs' glibc carries its patch level after a dash
+    /// (`2.40-66`: 2.40 with 66 backported patches). grype matched
+    /// `cpe:2.3:a:gnu:glibc:2.40-66` for all 36 glibc findings of
+    /// slack-web's recall truth (recall-truth run 43107760056), so this
+    /// shape is matchable, unlike the declined ones above. Only a dotted
+    /// release followed by one dash and digits is admitted.
+    #[test]
+    fn a_dotted_release_with_a_numeric_patch_level_is_accepted() {
+        for v in ["2.40-66", "2.42-51", "2.40-36"] {
+            assert!(is_release_shaped(v), "{v} must be accepted");
+        }
+        for v in [
+            "2.40-",       // no patch level
+            "2.40-rc1",    // not numeric
+            "2.40-66-1",   // two dashes
+            "2.40-6.1",    // dotted after the dash
+            "240-66",      // no dot before the dash
+            "1.0.2k-3",    // letter-suffixed release
+            "-66",         // nothing before the dash
         ] {
             assert!(!is_release_shaped(v), "{v} must be declined");
         }
@@ -10930,6 +11405,7 @@ mod cpe_coverage_tests {
             lifecycle_scope: None,
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             requirement_ranges: vec![],
             source_type: None,
             sbom_tier: None,
@@ -10990,6 +11466,7 @@ mod closure_contents_tests {
             &scan_fs::package_db::nix::closure::emit::emitted_drv_keys(&raw, &roles),
         );
         let classified = scan_fs::package_db::nix::closure::ClassifiedClosure {
+            runtime: None,
             attribute: "default".into(),
             raw,
             roles,

@@ -1,0 +1,183 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-app-1.0.drv": {
+      "name": "waybill-fixture-app-1.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "1.0",
+        "outputs": "out",
+        "stdenv": "/nix/store/l-stdenv",
+        "buildInputs": "/nix/store/l-ssl",
+        "nativeBuildInputs": "/nix/store/l-tool"
+      },
+      "inputs": {
+        "drvs": {
+          "l-stdenv.drv": { "outputs": ["out"] },
+          "l-ssl.drv": { "outputs": ["out"] },
+          "l-tool.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "l-app" } }
+    },
+    "l-ssl.drv": {
+      "name": "waybill-fixture-ssl-3.0",
+      "env": {
+        "pname": "waybill-fixture-ssl",
+        "version": "3.0",
+        "stdenv": "/nix/store/l-stdenv",
+        "propagatedBuildInputs": "/nix/store/l-unistring"
+      },
+      "inputs": {
+        "drvs": {
+          "l-stdenv.drv": { "outputs": ["out"] },
+          "l-unistring.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "l-ssl" } }
+    },
+    "l-unistring.drv": {
+      "name": "waybill-fixture-unistring-1.4",
+      "env": {
+        "pname": "waybill-fixture-unistring",
+        "version": "1.4",
+        "stdenv": "/nix/store/l-stage2stdenv"
+      },
+      "inputs": { "drvs": { "l-stage2stdenv.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "l-unistring" } }
+    },
+    "l-stage2stdenv.drv": {
+      "name": "waybill-fixture-stage2stdenv",
+      "env": {
+        "name": "waybill-fixture-stage2stdenv",
+        "defaultNativeBuildInputs": "/nix/store/l-stage2cc"
+      },
+      "inputs": { "drvs": { "l-stage2cc.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "l-stage2stdenv" } }
+    },
+    "l-stage2cc.drv": {
+      "name": "waybill-fixture-stage2cc-15.2.0",
+      "env": {
+        "pname": "waybill-fixture-stage2cc",
+        "version": "15.2.0",
+        "wrapperName": "CC_WRAPPER",
+        "libc_lib": "/nix/store/l-stage0libc"
+      },
+      "inputs": { "drvs": { "l-stage0libc.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "l-stage2cc" } }
+    },
+    "l-stage0libc.drv": {
+      "name": "waybill-fixture-stage0libc-2.42",
+      "env": { "pname": "waybill-fixture-stage0libc", "version": "2.42" },
+      "outputs": { "out": { "path": "l-stage0libc" } }
+    },
+    "l-stdenv.drv": {
+      "name": "waybill-fixture-stdenv",
+      "env": {
+        "name": "waybill-fixture-stdenv",
+        "defaultNativeBuildInputs": "/nix/store/l-patchelf /nix/store/l-cc"
+      },
+      "inputs": {
+        "drvs": {
+          "l-patchelf.drv": { "outputs": ["out"] },
+          "l-cc.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "l-stdenv" } }
+    },
+    "l-patchelf.drv": {
+      "name": "waybill-fixture-patchelf-0.15",
+      "env": { "pname": "waybill-fixture-patchelf", "version": "0.15" },
+      "outputs": { "out": { "path": "l-patchelf" } }
+    },
+    "l-cc.drv": {
+      "name": "waybill-fixture-cc-wrapper-15.2.0",
+      "env": {
+        "pname": "waybill-fixture-cc-wrapper",
+        "version": "15.2.0",
+        "wrapperName": "CC_WRAPPER",
+        "cc": "/nix/store/l-gcc",
+        "libc_lib": "/nix/store/l-libc",
+        "libc_dev": "/nix/store/l-libc-dev",
+        "libc_bin": "/nix/store/l-libc-bin"
+      },
+      "inputs": {
+        "drvs": {
+          "l-gcc.drv": { "outputs": ["out"] },
+          "l-libc.drv": { "outputs": ["out", "dev", "bin"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "l-cc" } }
+    },
+    "l-gcc.drv": {
+      "name": "waybill-fixture-gcc-15.2.0",
+      "env": { "pname": "waybill-fixture-gcc", "version": "15.2.0" },
+      "outputs": { "out": { "path": "l-gcc" } }
+    },
+    "l-libc.drv": {
+      "name": "waybill-fixture-libc-2.42",
+      "env": {
+        "pname": "waybill-fixture-libc",
+        "version": "2.42",
+        "outputs": "out bin dev",
+        "buildInputs": "/nix/store/l-headers"
+      },
+      "inputs": {
+        "drvs": {
+          "l-headers.drv": { "outputs": ["out"] },
+          "l-stage0libc.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": {
+        "out": { "path": "l-libc" },
+        "bin": { "path": "l-libc-bin" },
+        "dev": { "path": "l-libc-dev" }
+      }
+    },
+    "l-headers.drv": {
+      "name": "waybill-fixture-headers-6.18",
+      "env": { "pname": "waybill-fixture-headers", "version": "6.18" },
+      "outputs": { "out": { "path": "l-headers" } }
+    },
+    "l-tool.drv": {
+      "name": "waybill-fixture-tool-1.0",
+      "env": {
+        "pname": "waybill-fixture-tool",
+        "version": "1.0",
+        "stdenv": "/nix/store/l-bootstdenv"
+      },
+      "inputs": { "drvs": { "l-bootstdenv.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "l-tool" } }
+    },
+    "l-bootstdenv.drv": {
+      "name": "waybill-fixture-bootstdenv",
+      "env": {
+        "name": "waybill-fixture-bootstdenv",
+        "defaultNativeBuildInputs": "/nix/store/l-bootcc"
+      },
+      "inputs": { "drvs": { "l-bootcc.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "l-bootstdenv" } }
+    },
+    "l-bootcc.drv": {
+      "name": "waybill-fixture-bootcc-15.2.0",
+      "env": {
+        "pname": "waybill-fixture-bootcc",
+        "version": "15.2.0",
+        "wrapperName": "CC_WRAPPER",
+        "libc_lib": "/nix/store/l-bootlibc"
+      },
+      "inputs": { "drvs": { "l-bootlibc.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "l-bootcc" } }
+    },
+    "l-bootlibc.drv": {
+      "name": "waybill-fixture-bootlibc-2.42",
+      "env": { "pname": "waybill-fixture-bootlibc", "version": "2.42" },
+      "outputs": { "out": { "path": "l-bootlibc" } }
+    }
+  },
+  "version": 4
+}

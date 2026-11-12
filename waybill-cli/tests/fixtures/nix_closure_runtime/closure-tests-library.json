@@ -1,0 +1,114 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-testproj-0.1.0.drv": {
+      "name": "waybill-fixture-testproj-0.1.0",
+      "env": {
+        "pname": "waybill-fixture-testproj",
+        "version": "0.1.0",
+        "outputs": "out",
+        "doCheck": "1",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "propagatedBuildInputs": "/nix/store/h-aeson",
+        "buildInputs": "/nix/store/h-hspec"
+      },
+      "inputs": {
+        "drvs": {
+          "d-aeson.drv": { "outputs": ["out"] },
+          "d-hspec.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "h-proj" } }
+    },
+    "d-aeson.drv": {
+      "name": "waybill-fixture-aeson-2.2.4.1",
+      "env": {
+        "pname": "waybill-fixture-aeson",
+        "version": "2.2.4.1",
+        "doCheck": "1",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "propagatedBuildInputs": "/nix/store/h-text",
+        "buildInputs": "/nix/store/h-qc"
+      },
+      "inputs": {
+        "drvs": {
+          "d-text.drv": { "outputs": ["out"] },
+          "d-qc.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "h-aeson" } }
+    },
+    "d-qc.drv": {
+      "name": "waybill-fixture-quickcheck-2.15.0.1",
+      "env": {
+        "pname": "waybill-fixture-quickcheck",
+        "version": "2.15.0.1",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
+      },
+      "outputs": { "out": { "path": "h-qc" } }
+    },
+    "d-text.drv": {
+      "name": "waybill-fixture-text-2.0.2",
+      "env": {
+        "pname": "waybill-fixture-text",
+        "version": "2.0.2",
+        "doCheck": "1",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "buildInputs": "/nix/store/h-tasty",
+        "installPhase": "runHook preInstall\n./Setup copy\nlocal packageConfDir=\"$out/lib/ghc-9.4.8/lib/package.conf.d\"\nlocal packageConfFile=\"$packageConfDir/waybill-fixture-text-2.0.2.conf\"\nmkdir -p \"$packageConfDir\"\n./Setup register --gen-pkg-config=$packageConfFile\nrunHook postInstall\n"
+      },
+      "inputs": { "drvs": { "d-tasty.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "h-text" } }
+    },
+    "d-hspec.drv": {
+      "name": "waybill-fixture-hspec-2.11.9",
+      "env": {
+        "pname": "waybill-fixture-hspec",
+        "version": "2.11.9",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "propagatedBuildInputs": "/nix/store/h-hunit"
+      },
+      "inputs": { "drvs": { "d-hunit.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "h-hspec" } }
+    },
+    "d-hunit.drv": {
+      "name": "waybill-fixture-hunit-1.6.2",
+      "env": {
+        "pname": "waybill-fixture-hunit",
+        "version": "1.6.2",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
+      },
+      "outputs": { "out": { "path": "h-hunit" } }
+    },
+    "d-tasty.drv": {
+      "name": "waybill-fixture-tasty-1.5.4",
+      "env": {
+        "pname": "waybill-fixture-tasty",
+        "version": "1.5.4",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "propagatedBuildInputs": "/nix/store/h-ansi"
+      },
+      "inputs": { "drvs": { "d-ansi.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "h-tasty" } }
+    },
+    "d-ansi.drv": {
+      "name": "waybill-fixture-ansi-1.1.3",
+      "env": {
+        "pname": "waybill-fixture-ansi",
+        "version": "1.1.3",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
+      },
+      "outputs": { "out": { "path": "h-ansi" } }
+    }
+  },
+  "version": 4
+}

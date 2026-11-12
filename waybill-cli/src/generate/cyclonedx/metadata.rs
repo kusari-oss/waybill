@@ -207,6 +207,10 @@ pub struct MetadataExtras<'a> {
     pub cpe_coverage: Option<&'a str>,
     /// C210 (m1372, #1366) — the build-graph admission record.
     pub closure_graph_admission: Option<&'a str>,
+    /// Milestone 1283 (C217) — the Nix evaluation policy.
+    pub nix_evaluation_policy: Option<&'a str>,
+    /// Milestone 966 (C219) — the GHC boot-library record.
+    pub ghc_boot_libraries: Option<&'a str>,
     /// C213 (m1378, #1396) — the closure contents read record.
     pub nix_closure_contents: Option<&'a str>,
     /// C195/C196 (#1154) — the `go mod why` pass's outcome.
@@ -225,6 +229,8 @@ pub struct MetadataExtras<'a> {
     pub nixpkgs_haskell_closure: Option<&'a str>,
     /// Milestone 1276 (#1340) — the scope-exemption record.
     pub scope_exemptions: Option<&'a str>,
+    /// C220 (m1436) — backport claims no statement could be scoped to.
+    pub vex_claims_unscoped: Option<&'a str>,
 }
 /// Build the CycloneDX `metadata` section.
 ///
@@ -291,6 +297,8 @@ pub fn build_metadata(
         closure_ecosystem_identity,
         cpe_coverage,
         closure_graph_admission,
+        nix_evaluation_policy,
+        ghc_boot_libraries,
         nix_closure_contents,
         go_mod_why,
         deps_dev_outcomes,
@@ -298,6 +306,7 @@ pub fn build_metadata(
         nix_eval_system,
         nixpkgs_haskell_closure,
         scope_exemptions,
+        vex_claims_unscoped,
     } = extras;
 
     let version = crate::version::VERSION;
@@ -400,6 +409,16 @@ pub fn build_metadata(
         }));
     }
 
+    // C220 (m1436, #1436) — backport claims left without a statement because
+    // not every build variant of the component resolves the CVE. Present
+    // only when there is one.
+    if let Some(n) = vex_claims_unscoped {
+        properties.push(json!({
+            "name": "waybill:vex-claims-unscoped",
+            "value": n,
+        }));
+    }
+
     // Milestone 133 US4 (Constitution Strict Boundary §5): when
     // the operator opted into `--file-inventory=full` (the explicit
     // dedupe-bypass override), the document MUST carry a marker so
@@ -447,6 +466,22 @@ pub fn build_metadata(
     // C210 (m1372, #1366) — what the build-graph admission signal did.
     if let Some(record) = closure_graph_admission {
         properties.push(json!({ "name": "waybill:closure-graph-admission", "value": record }));
+    }
+    // C217 (m1283, #1283) — the import-from-derivation policy the Nix
+    // evaluations ran under, verified or not, and nix's sandbox setting.
+    // C219 (m966, #966) — which GHCs the closure named and whether the
+    // boot-library table has each.
+    if let Some(record) = ghc_boot_libraries {
+        properties.push(json!({
+            "name": crate::scan_fs::package_db::nix::haskell_packages::closure_compilers::ANN_GHC_BOOT_LIBRARIES,
+            "value": record,
+        }));
+    }
+    if let Some(record) = nix_evaluation_policy {
+        properties.push(json!({
+            "name": crate::scan_fs::package_db::nix::closure::summary::ANN_NIX_EVALUATION_POLICY,
+            "value": record,
+        }));
     }
     // C213 (m1378, #1396) — which closure members had their outputs read.
     if let Some(record) = nix_closure_contents {
@@ -1152,6 +1187,13 @@ pub fn build_metadata(
             properties.push(json!({
                 "name": closure_summary::ANN_NIX_CLOSURE_READ,
                 "value": read,
+            }));
+        }
+        // Milestone 1423 (#1423): C216, how the scope marks were decided.
+        if let Some(method) = summary.closure_scope_method_wire() {
+            properties.push(json!({
+                "name": closure_summary::ANN_CLOSURE_SCOPE_METHOD,
+                "value": method,
             }));
         }
     }
@@ -2426,6 +2468,7 @@ mod tests {
         let mk = |purl: &str, tier: &str| ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new(purl).expect("valid purl"),
             name: "x".to_string(),
             version: "1.0".to_string(),
@@ -2511,6 +2554,7 @@ mod tests {
         let c = ResolvedComponent {
             build_inclusion: None,
             artifact_presence: None,
+            scope_evidence: None,
             purl: Purl::new("pkg:generic/weird@1.0").expect("valid purl"),
             name: "weird".to_string(),
             version: "1.0".to_string(),

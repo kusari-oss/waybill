@@ -50,6 +50,17 @@ pub(crate) enum DegradationReason {
     #[error("could not confirm `allow-import-from-derivation = false` is in effect: {0}")]
     IfdRefusalUnverified(String),
 
+    /// Milestone 1283 (#1283) — `--nix-allow-ifd` was passed and nix did not
+    /// report `allow-import-from-derivation = true`.
+    ///
+    /// The mirror of [`Self::IfdRefusalUnverified`]: requesting the
+    /// allowance is not evidence it applied, so nothing is evaluated. Its own
+    /// variant because the remedy differs — here the operator's nix (or a
+    /// configuration that outranks the command line) is declining what they
+    /// opted into.
+    #[error("could not confirm `allow-import-from-derivation = true` is in effect: {0}")]
+    IfdAllowanceUnverified(String),
+
     /// The pinned nixpkgs revision could not be acquired.
     #[error("could not acquire nixpkgs revision {revision}: {detail}")]
     RevisionUnfetchable { revision: String, detail: String },
@@ -96,6 +107,18 @@ pub(crate) enum DegradationReason {
     #[error("evaluation requires import-from-derivation, which is refused: {0}")]
     ImportFromDerivationRequired(String),
 
+    /// Milestone 1283 (#1283) — import-from-derivation was allowed
+    /// (`--nix-allow-ifd`), and a derivation nix built during evaluation
+    /// failed.
+    ///
+    /// Distinct from [`Self::ImportFromDerivationRequired`], which is the
+    /// policy refusing, and from [`Self::EvaluationFailed`]: the flake's own
+    /// generated expression did not build, which is a property of the flake
+    /// on this host (slacklinker's build fails `disallowedReferences` on
+    /// darwin), not of waybill's policy (spec FR-010).
+    #[error("a derivation built during evaluation (import-from-derivation) failed: {0}")]
+    ImportFromDerivationBuildFailed(String),
+
     /// `nix` ran and exited non-zero.
     #[error("`nix eval` failed: {0}")]
     EvaluationFailed(String),
@@ -122,10 +145,12 @@ impl DegradationReason {
             Self::ToolAbsent => "tool-absent",
             Self::ToolUnusable(_) => "tool-unusable",
             Self::IfdRefusalUnverified(_) => "ifd-refusal-unverified",
+            Self::IfdAllowanceUnverified(_) => "ifd-allowance-unverified",
             Self::RevisionUnfetchable { .. } => "revision-unfetchable",
             Self::NoEvaluableAttribute => "no-evaluable-attribute",
             Self::AmbiguousSystemConfiguration { .. } => "several-system-configurations",
             Self::ImportFromDerivationRequired(_) => "import-from-derivation-required",
+            Self::ImportFromDerivationBuildFailed(_) => "import-from-derivation-build-failed",
             Self::EvaluationFailed(_) => "evaluation-failed",
             Self::BudgetExceeded { .. } => "budget-exceeded",
         }
@@ -152,9 +177,42 @@ impl DegradationReason {
             Self::AmbiguousSystemConfiguration { .. } | Self::BudgetExceeded { .. } => None,
             Self::ToolUnusable(d)
             | Self::IfdRefusalUnverified(d)
+            | Self::IfdAllowanceUnverified(d)
             | Self::ImportFromDerivationRequired(d)
+            | Self::ImportFromDerivationBuildFailed(d)
             | Self::EvaluationFailed(d) => Some(d.as_str()),
             Self::RevisionUnfetchable { detail, .. } => Some(detail.as_str()),
+        }
+    }
+
+    /// A sentence for the operator log saying what this reason means for
+    /// them, where the wire string and [`Display`] do not already.
+    ///
+    /// #1446. Log-only: C190 is unchanged. Exhaustive for the same reason
+    /// [`Self::detail`] is.
+    ///
+    /// [`Display`]: std::fmt::Display
+    pub(crate) fn explanation(&self) -> Option<&'static str> {
+        match self {
+            // Milestone 1283 (FR-006): the second sentence names the opt-in
+            // and repeats the untrusted-flake caution where the operator
+            // decides.
+            Self::ImportFromDerivationRequired(_) => Some(
+                "The flake evaluates through import-from-derivation (e.g. callCabal2nix), \
+                 which waybill refuses because it would build during evaluation. \
+                 Pass --nix-allow-ifd to allow it, only for a flake you trust.",
+            ),
+            Self::OfflineRequested
+            | Self::ToolAbsent
+            | Self::ToolUnusable(_)
+            | Self::IfdRefusalUnverified(_)
+            | Self::IfdAllowanceUnverified(_)
+            | Self::RevisionUnfetchable { .. }
+            | Self::NoEvaluableAttribute
+            | Self::AmbiguousSystemConfiguration { .. }
+            | Self::ImportFromDerivationBuildFailed(_)
+            | Self::EvaluationFailed(_)
+            | Self::BudgetExceeded { .. } => None,
         }
     }
 
@@ -207,16 +265,22 @@ mod tests {
             DegradationReason::ImportFromDerivationRequired("x".into()),
             DegradationReason::EvaluationFailed("x".into()),
             DegradationReason::BudgetExceeded { budget_secs: 1 },
+            DegradationReason::IfdAllowanceUnverified("x".into()),
+            DegradationReason::ImportFromDerivationBuildFailed("x".into()),
         ];
         let wires: Vec<_> = all.iter().map(|r| r.wire()).collect();
         // m1034 FR-013's eight, plus m1066's `several-system-configurations`,
-        // plus m1274's `import-from-derivation-required`.
-        assert_eq!(wires.len(), 10, "the closed set has exactly ten reasons");
+        // plus m1274's `import-from-derivation-required`, plus m1283's
+        // `ifd-allowance-unverified` and `import-from-derivation-build-failed`.
+        assert_eq!(wires.len(), 12, "the closed set has exactly twelve reasons");
 
         let mut sorted = wires.clone();
         sorted.sort_unstable();
         sorted.dedup();
-        assert_eq!(sorted.len(), 10, "wire forms must be distinct: {wires:?}");
+        assert_eq!(sorted.len(), 12, "wire forms must be distinct: {wires:?}");
+        // m1283 — named, not counted: a consumer branches on these strings.
+        assert!(wires.contains(&"ifd-allowance-unverified"), "{wires:?}");
+        assert!(wires.contains(&"import-from-derivation-build-failed"), "{wires:?}");
 
         for w in &wires {
             assert!(
@@ -317,7 +381,9 @@ mod tests {
         let with = [
             DegradationReason::ToolUnusable("d".into()),
             DegradationReason::IfdRefusalUnverified("d".into()),
+            DegradationReason::IfdAllowanceUnverified("d".into()),
             DegradationReason::ImportFromDerivationRequired("d".into()),
+            DegradationReason::ImportFromDerivationBuildFailed("d".into()),
             DegradationReason::EvaluationFailed("d".into()),
             DegradationReason::RevisionUnfetchable {
                 revision: "abc".into(),
@@ -340,7 +406,27 @@ mod tests {
         for r in &without {
             assert_eq!(r.detail(), None, "{}", r.wire());
         }
-        assert_eq!(with.len() + without.len(), 10, "all ten variants are covered");
+        assert_eq!(with.len() + without.len(), 12, "all twelve variants are covered");
+    }
+
+    /// #1446 — only the import-from-derivation refusal needs a sentence its
+    /// wire string and Display do not already give.
+    #[test]
+    fn only_the_ifd_refusal_carries_an_explanation() {
+        let ifd = DegradationReason::ImportFromDerivationRequired("d".into());
+        let e = ifd.explanation().unwrap();
+        assert!(e.contains("callCabal2nix") && e.contains("would build during evaluation"), "{e}");
+        // m1283 (FR-006): names the opt-in, with the caution.
+        assert!(e.contains("--nix-allow-ifd") && e.contains("only for a flake you trust"), "{e}");
+        for r in [
+            DegradationReason::OfflineRequested,
+            DegradationReason::IfdRefusalUnverified("d".into()),
+            DegradationReason::IfdAllowanceUnverified("d".into()),
+            DegradationReason::ImportFromDerivationBuildFailed("d".into()),
+            DegradationReason::EvaluationFailed("d".into()),
+        ] {
+            assert_eq!(r.explanation(), None, "{}", r.wire());
+        }
     }
 
     #[test]

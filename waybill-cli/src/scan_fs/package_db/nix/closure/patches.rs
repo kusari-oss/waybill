@@ -10,7 +10,7 @@
 //! The join is mechanical, not heuristic: a derivation's own `patches` field
 //! lists the store paths it applies.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;
 
 use regex::Regex;
@@ -108,7 +108,17 @@ pub(crate) struct PatchRecord {
 pub(crate) struct ComponentPatches {
     pub(crate) component: String,
     pub(crate) version: Option<String>,
+    /// The union over every build variant, which is what `pedigree` carries.
     pub(crate) patches: Vec<PatchRecord>,
+    /// Milestone 1436 (research R4, R11) — each patching derivation merged
+    /// into this identity, by `.drv` key, with the CVEs its **own** patches
+    /// resolve.
+    ///
+    /// Kept beside the union because the union cannot answer the question a
+    /// VEX claim has to: does every build this component stands for carry
+    /// the fix? `unzip 6.0` is two derivations in a real closure, and a claim
+    /// true of one of them is false of the component.
+    pub(crate) variants: BTreeMap<String, BTreeSet<String>>,
 }
 
 impl ComponentPatches {
@@ -118,6 +128,52 @@ impl ComponentPatches {
             .flat_map(|p| p.resolves.iter())
             .map(|c| c.id.as_str())
             .collect()
+    }
+
+    /// The CVEs **every** patching derivation resolves (research R4) — the
+    /// only ones a claim about this component can be made for.
+    pub(crate) fn every_variant_resolves(&self) -> BTreeSet<&str> {
+        let mut variants = self.variants.values();
+        let Some(first) = variants.next() else {
+            return BTreeSet::new();
+        };
+        let mut common: BTreeSet<&str> = first.iter().map(String::as_str).collect();
+        for v in variants {
+            common.retain(|cve| v.contains(*cve));
+        }
+        common
+    }
+
+    /// The CVEs some variants resolve and others do not: C220's population.
+    pub(crate) fn unscoped_cves(&self) -> BTreeSet<&str> {
+        let every = self.every_variant_resolves();
+        self.distinct_cves()
+            .into_iter()
+            .filter(|cve| !every.contains(cve))
+            .collect()
+    }
+
+    /// The `nix_drv` qualifier's parts: the store hash of each patching
+    /// derivation, sorted and de-duplicated (research R1, R4).
+    ///
+    /// A key that carries no store hash (never so on a real closure, whose
+    /// keys are store paths) contributes its basename without `.drv`, so the
+    /// value is still deterministic and still names that build rather than
+    /// silently dropping it from the identity.
+    pub(crate) fn drv_hashes(&self) -> Vec<String> {
+        let mut out: Vec<String> = self
+            .variants
+            .keys()
+            .map(|key| {
+                let base = store_basename(key);
+                super::lib_links::store_hash(base)
+                    .unwrap_or_else(|| base.strip_suffix(".drv").unwrap_or(base))
+                    .to_string()
+            })
+            .collect();
+        out.sort();
+        out.dedup();
+        out
     }
 }
 
@@ -153,7 +209,7 @@ pub(crate) fn attribute(closure: &RawClosure) -> Vec<ComponentPatches> {
     let index = closure.output_index();
     let mut out = Vec::new();
 
-    for drv in closure.derivations.values() {
+    for (key, drv) in &closure.derivations {
         let paths: Vec<&str> = drv.paths_in("patches").collect();
         if paths.is_empty() {
             continue;
@@ -179,10 +235,15 @@ pub(crate) fn attribute(closure: &RawClosure) -> Vec<ComponentPatches> {
                 }
             })
             .collect();
+        let resolved: BTreeSet<String> = patches
+            .iter()
+            .flat_map(|p| p.resolves.iter().map(|c| c.id.clone()))
+            .collect();
         out.push(ComponentPatches {
             component: component.to_string(),
             version: drv.version().map(str::to_string),
             patches,
+            variants: BTreeMap::from([(key.clone(), resolved)]),
         });
     }
     merge_by_identity(out)
@@ -229,24 +290,29 @@ pub(crate) fn patches_json(record: &ComponentPatches) -> serde_json::Value {
 /// The patch sets are unioned rather than one being dropped: the variants
 /// happened to agree in the measured case, but nothing guarantees that, and
 /// silently keeping whichever came first would lose the difference.
+///
+/// Milestone 1436 (research R11) — the union no longer loses which
+/// derivation carried what: `variants` keeps each one's resolved CVEs.
 fn merge_by_identity(all: Vec<ComponentPatches>) -> Vec<ComponentPatches> {
-    use std::collections::BTreeMap;
-    let mut merged: BTreeMap<(String, Option<String>), Vec<PatchRecord>> = BTreeMap::new();
+    type Merged = (Vec<PatchRecord>, BTreeMap<String, BTreeSet<String>>);
+    let mut merged: BTreeMap<(String, Option<String>), Merged> = BTreeMap::new();
     for cp in all {
-        merged
-            .entry((cp.component, cp.version))
-            .or_default()
-            .extend(cp.patches);
+        let slot = merged.entry((cp.component, cp.version)).or_default();
+        slot.0.extend(cp.patches);
+        for (key, cves) in cp.variants {
+            slot.1.entry(key).or_default().extend(cves);
+        }
     }
     merged
         .into_iter()
-        .map(|((component, version), mut patches)| {
+        .map(|((component, version), (mut patches, variants))| {
             patches.sort_by(|a, b| a.name.cmp(&b.name));
             patches.dedup_by(|a, b| a.name == b.name);
             ComponentPatches {
                 component,
                 version,
                 patches,
+                variants,
             }
         })
         .collect()
@@ -461,6 +527,72 @@ mod tests {
         // Union, not first-wins: the second variant's extra patch survives.
         assert_eq!(all[0].patches.len(), 2, "{:?}", all[0].patches);
         assert_eq!(all[0].distinct_cves().len(), 1, "the shared CVE is not doubled");
+    }
+
+    /// Two build variants of one identity, as `nix derivation show` keys
+    /// them: real 32-character store hashes, so `drv_hashes` is exercised on
+    /// the shape a real closure has rather than on the fallback.
+    const H1: &str = "0b1d6zkr6zq8m4rv7ah3ylnrwfkdsxfh";
+    const H2: &str = "9s0k1rfm4y0gn1p6dq8jrx5fhkw2lc3v";
+
+    fn two_variants(second_patches: &str) -> Vec<ComponentPatches> {
+        let closure = format!(
+            r#"{{
+          "derivations": {{
+            "/nix/store/{H2}-waybill-fixture-zip-6.0.drv": {{ "env": {{"pname":"waybill-fixture-zip","version":"6.0",
+                                "patches":"{second_patches}"}},
+                        "outputs":{{"out":{{"path":"o2"}}}} }},
+            "/nix/store/{H1}-waybill-fixture-zip-6.0.drv": {{ "env": {{"pname":"waybill-fixture-zip","version":"6.0",
+                                "patches":"/nix/store/h-CVE-2099-0001.patch /nix/store/h-CVE-2099-0004.patch"}},
+                        "outputs":{{"out":{{"path":"o1"}}}} }}
+          }},
+          "version": 3
+        }}"#
+        );
+        attribute(&RawClosure::parse(&closure).unwrap())
+    }
+
+    #[test]
+    fn m1436_merged_variants_keep_each_derivation_and_its_cves() {
+        let all = two_variants("/nix/store/h-CVE-2099-0001.patch /nix/store/h-CVE-2099-0004.patch");
+        // CONTROL: the two variants merged into one identity.
+        assert_eq!(all.len(), 1);
+        let r = &all[0];
+        assert_eq!(r.variants.len(), 2, "both derivation keys kept: {:?}", r.variants);
+        for cves in r.variants.values() {
+            let got: Vec<&str> = cves.iter().map(String::as_str).collect();
+            assert_eq!(got, ["CVE-2099-0001", "CVE-2099-0004"]);
+        }
+        // Sorted by hash, not by `.drv` key order or insertion order.
+        assert_eq!(r.drv_hashes(), vec![H1.to_string(), H2.to_string()]);
+        assert_eq!(
+            r.every_variant_resolves().into_iter().collect::<Vec<_>>(),
+            ["CVE-2099-0001", "CVE-2099-0004"]
+        );
+        assert!(r.unscoped_cves().is_empty());
+        // The union pedigree carries is unchanged by keeping the variants.
+        assert_eq!(r.patches.len(), 2);
+    }
+
+    #[test]
+    fn m1436_a_cve_only_one_variant_resolves_is_in_the_union_only() {
+        let all = two_variants("/nix/store/h-CVE-2099-0001.patch");
+        let r = &all[0];
+        assert!(r.distinct_cves().contains("CVE-2099-0004"), "union: {:?}", r.distinct_cves());
+        assert_eq!(
+            r.every_variant_resolves().into_iter().collect::<Vec<_>>(),
+            ["CVE-2099-0001"]
+        );
+        assert_eq!(r.unscoped_cves().into_iter().collect::<Vec<_>>(), ["CVE-2099-0004"]);
+    }
+
+    #[test]
+    fn m1436_a_single_derivation_is_one_key() {
+        let all = attributed();
+        assert_eq!(all[0].variants.len(), 1);
+        // The fixture's key carries no store hash, so the fallback names it.
+        assert_eq!(all[0].drv_hashes(), vec!["d-unzip".to_string()]);
+        assert_eq!(all[0].every_variant_resolves(), all[0].distinct_cves());
     }
 
     #[test]

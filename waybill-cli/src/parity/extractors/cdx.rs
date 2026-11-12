@@ -1001,45 +1001,12 @@ cdx_anno!(c182_cdx, "waybill:closure-role", component);
 // C206 (m1282) — which of four kinds a `pname`-less closure member is.
 cdx_anno!(c206_cdx, "waybill:closure-member-role", component);
 
-/// C207 (m1366, #1365) — the derived-identity disclosure.
-///
-/// CycloneDX carries this **natively**, in `evidence.identity[].methods[]`,
-/// per Constitution Principle V's native-field precedence; the generic
-/// `extra_annotations` property is suppressed on the CDX path so the signal
-/// has one home per format. The SPDX sides have no native carrier and read
-/// the annotation, and both normalise to this same value set — which is what
-/// makes the row SymmetricEqual across three different spellings.
-///
-/// Shaped on `c56_cdx`, which does the same thing for
-/// `waybill-source-mechanism`. Unlike C56 this does **not** skip the first
-/// method: C56's first entry is the winning reader and the row is about the
-/// losers, while here every entry carrying the key is a disclosure.
-pub(super) fn c207_cdx(doc: &Value) -> BTreeSet<String> {
-    let mut out = BTreeSet::new();
-    for component in walk_cdx_components_and_main_module(doc) {
-        let Some(identities) = component
-            .get("evidence")
-            .and_then(|e| e.get("identity"))
-            .and_then(|i| i.as_array())
-        else {
-            continue;
-        };
-        for identity in identities {
-            let Some(methods) = identity.get("methods").and_then(|m| m.as_array()) else {
-                continue;
-            };
-            for method in methods {
-                if let Some(v) = method
-                    .get("waybill-closure-ecosystem-evidence")
-                    .and_then(|v| v.as_str())
-                {
-                    out.insert(v.to_string());
-                }
-            }
-        }
-    }
-    out
-}
+// C207 (m1366, #1365) — the derived-identity disclosure. A component property
+// since #1442: m1366 wrote it as an extension key on
+// `evidence.identity[].methods[]`, which CycloneDX 1.6 closes to `technique`,
+// `confidence` and `value`, so every confirmed component made the document
+// schema-invalid. The derived PURL itself is still `identity[].concludedValue`.
+cdx_anno!(c207_cdx, "waybill:closure-ecosystem-identity", component);
 
 cdx_anno!(
     c208_cdx,
@@ -1054,6 +1021,14 @@ cdx_anno!(c212_cdx, "waybill:cpe-provenance", component);
 cdx_anno!(c213_cdx, "waybill:nix-closure-contents", document);
 cdx_anno!(c214_cdx, "waybill:closure-contents", component);
 cdx_anno!(c215_cdx, "waybill:closure-binary-identity", component);
+// Milestone 1423 (#1423): C216 — how the closure scope marks were decided.
+cdx_anno!(c216_cdx, "waybill:closure-scope-method", document);
+// Milestone 1283 (#1283): C217 — the Nix evaluation policy.
+cdx_anno!(c217_cdx, "waybill:nix-evaluation-policy", document);
+// Milestone 966 (#966): C218 — the compiler release a boot library's version
+// came from; C219 — which GHCs the closure named and whether the table has each.
+cdx_anno!(c218_cdx, "waybill:boot-library-compiler", component);
+cdx_anno!(c219_cdx, "waybill:ghc-boot-libraries", document);
 cdx_anno!(c183_cdx, "waybill:patch-evidence-grade", document);
 cdx_anno!(c184_cdx, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.
@@ -1067,6 +1042,7 @@ cdx_anno!(c189_cdx, "waybill:nixpkgs-declaration-grade", document);
 cdx_anno!(c191_cdx, "waybill:deps-dev-outcome", component);
 cdx_anno!(c192_cdx, "waybill:deps-dev-outcomes", document);
 cdx_anno!(c193_cdx, "waybill:vex-claims-omitted", document);
+cdx_anno!(c220_cdx, "waybill:vex-claims-unscoped", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

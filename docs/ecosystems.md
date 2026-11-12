@@ -92,7 +92,7 @@ attached?
 | [golang](#golang) | Rare | `go.mod` present but no `go.sum` — resolver falls back to design-tier for the missing modules. Ordinarily go.sum is authoritative. | `pkg:golang/<module>@<version>` (if pseudo-version can be inferred) or versionless | No |
 | [haskell](#haskell) | Yes — automatic | No `cabal.project.freeze` / `stack.yaml.lock` covering a `*.cabal` `build-depends:` entry; the declared constraint emits at design-tier with `waybill:requirement-range`. | `pkg:hackage/<name>` (versionless) or `pkg:hackage/<name>@<version>` | No |
 | [maven](#maven) | Yes — automatic | `pom.xml` declares a dep with no `<version>` element (typically inherited-scope declarations that would resolve via `mvn` subprocess — waybill doesn't shell to mvn), OR version contains `${…}` property syntax and the property isn't in the parsed POM chain. | `pkg:maven/<group>/<name>` (versionless) or `@<literal-${…}>` legacy | No |
-| [nix](#nix) | No — always source | Flake inputs and closure members are store-resolved, so a component only exists once nix has it; `sbom_tier` is set to `source` at emission. | `pkg:generic/<name>@<version>`, plus `pkg:github/` / `pkg:gitlab/` for flake inputs. Since m1275 a closure member whose `(name, version)` is an exact pair in the pinned Haskell package set **and** whose derivation was built by a GHC carries `pkg:hackage/<name>@<version>` instead | No |
+| [nix](#nix) | No — always source | Flake inputs and closure members are store-resolved, so a component only exists once nix has it; `sbom_tier` is set to `source` at emission. | `pkg:generic/<name>@<version>`, plus `pkg:github/` / `pkg:gitlab/` for flake inputs. Since m1275 a closure member whose `(name, version)` is an exact pair in the pinned Haskell package set (under the default attribute or, since #1282, its versioned alias `<name>_<version>`) **and** whose derivation was built by a GHC carries `pkg:hackage/<name>@<version>` instead | No |
 | [npm](#npm) | Yes — automatic | `package.json` declares a dep but no lockfile (`package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` / `bun.lock`) covers it. | `pkg:npm/<name>@<declared-range>` or versionless | No |
 | [nuget](#nuget) | Yes — automatic (post [#653](https://github.com/kusari-oss/waybill/pull/656)) | 4-step resolution ladder exhausted: no `packages.lock.json`, no CPM entry in `Directory.Packages.props`, no inline `Version=`, no matching `<PackageVersion>` in `Directory.Build.props`/`targets`. | `pkg:nuget/<name>` (versionless) | **Yes** — the only reader today emitting `waybill:unresolved-reason` |
 | [pip](#pip) | Yes — automatic | `requirements.txt` declares a dep with no matching resolved lockfile (`uv.lock` / `pip-tools` / `poetry.lock`), OR extras cause an unresolved constraint. | `pkg:pypi/<name>` or `pkg:pypi/<name>@<constraint>` | No |
@@ -448,6 +448,7 @@ dependency carries `waybill:haskell-version-unresolved-reason`:
 | `source-unsupported` | the lock pins a bare git URL or tarball | pin a forge-hosted nixpkgs, or supply versions via `--supplement-cdx` |
 | `no-exact-revision` | the lock pins a branch or tag, not a revision | re-lock so the input pins a revision |
 | `offline` | `--offline` was passed | none |
+| `nixpkgs-version-violates-requirement` | the revision has a version, but no range the project declares for the dependency admits it | supply the version via a freeze file or `--supplement-cdx`; the rejected version is in `waybill:nixpkgs-version-disagreement` |
 
 `compiler-supplied` is not a failure. GHC boot libraries — `base`, `text`,
 `bytestring` and friends — ship with the compiler and have no version in the
@@ -490,6 +491,18 @@ pinned nixpkgs, the freeze file's version is what waybill emits. When the two
 disagree the difference is recorded in `waybill:nixpkgs-version-disagreement`
 rather than silently resolved — which is exactly the question someone
 comparing a Nix build to a cabal build is asking.
+
+**A version the project's own requirement rules out is not emitted** (#1457).
+The package set is read from the pinned revision and does not see a flake's
+overlays, so a project that pins another release through one — for example
+`packagesFromDirectory { directory = ./nix/deps; }` — builds a version the
+package set does not carry. When no requirement range the project declares
+for a dependency admits the package set's version, the dependency stays
+versionless with `nixpkgs-version-violates-requirement`, the rejected version
+is recorded in `waybill:nixpkgs-version-disagreement` with `"emitted": null`,
+and `waybill:nixpkgs-haskell-resolution` counts it under `disagreements`. An
+overlay that pins a version the declared range still admits is not detected:
+reading overlays needs evaluation (#1283).
 
 #### The transitive runtime closure
 
@@ -2519,8 +2532,17 @@ derivation, which is import-from-derivation — and the tier refuses that on
 purpose. Before 1274 a `callCabal2nix` flake and a genuinely broken one
 produced documents an operator could not tell apart, so a deliberate policy
 decision read as a bug in waybill. The new reason tells the operator what
-they would have to accept; the refusal itself is unchanged, and whether to
-offer an opt-in is still open (#1283 part 2).
+they would have to accept.
+
+Since milestone 1283 they can accept it: `--nix-allow-ifd` lets every Nix
+evaluation build derivations, verified like the refusal, and the WARN names
+the flag. **Use it only for a flake you trust**; where nix's sandbox is off
+(the macOS default) those builds run unsandboxed. Two reasons go with it:
+`ifd-allowance-unverified` (nix did not confirm the allowance, so nothing
+was evaluated) and `import-from-derivation-build-failed` (the build during
+evaluation failed). Every scan that runs a Nix tier records the policy in
+`waybill:nix-evaluation-policy`. See
+[Import-from-derivation](reference/nix-evaluation.md#import-from-derivation---nix-allow-ifd).
 
 Do not confuse it with `ifd-refusal-unverified`, which is close to its
 opposite: there the installed `nix` did not confirm

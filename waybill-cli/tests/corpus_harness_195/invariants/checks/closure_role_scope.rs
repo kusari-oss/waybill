@@ -31,14 +31,58 @@
 //! own: `exempt-compiler-supplied`. The requirement came out of writing this
 //! row, not out of the spec — with the exemption collapsed into absence, a
 //! deliberate omission and a missed component are the same document.
+//!
+//! **#1465: runtime evidence wins.** A `runtime-closure` member the closure
+//! holds carries no mark, whatever scope a reader gave it. CycloneDX alone
+//! cannot tell such a member from one the closure marked, so this arm reads
+//! the closure's verdict from SPDX 2.3 (see [`spdx23_closure_verdict`]).
 
 use std::collections::HashSet;
 
 use super::super::{CellOutcome, Violation};
-use super::{cdx_component_ref, cdx_components, cdx_is_non_runtime, cdx_prop};
+use super::{cdx_component_ref, cdx_components, cdx_prop};
 
 pub const KIND_TOOLING_WITHOUT_MARKER: &str = "closure-tooling-without-non-runtime-marker";
-pub const KINDS: &[&str] = &[KIND_TOOLING_WITHOUT_MARKER];
+/// Milestone 1423 — a member C203 says is statically linked into a runtime
+/// member, which nonetheless carries a not-in-artifact mark.
+pub const KIND_LINKED_BUT_MARKED: &str = "closure-statically-linked-but-marked";
+/// #1465 — a member the runtime closure holds, which nonetheless carries a
+/// non-runtime mark (a reader's lifecycle scope, which runtime evidence
+/// overrides).
+pub const KIND_RUNTIME_BUT_MARKED: &str = "closure-runtime-member-but-marked";
+pub const KINDS: &[&str] =
+    &[KIND_TOOLING_WITHOUT_MARKER, KIND_LINKED_BUT_MARKED, KIND_RUNTIME_BUT_MARKED];
+
+/// How a member's C203 value says it was decided (milestone 1423,
+/// `specs/1423-nix-runtime-scope/contracts/c203-values.md`).
+enum Decided {
+    /// An exemption: nothing to check.
+    Exempt,
+    /// The runtime closure decided it, in whichever direction. Inside the
+    /// closure it must carry no mark (#1465); outside, a mark is correct.
+    RuntimeClosure,
+    /// The walk decided it, in whichever direction. The walk approximates the
+    /// runtime closure and is not evidence that a member ships, so a reader's
+    /// scope on a member it reached is not contradicted by anything.
+    ByWalk,
+    /// Statically linked into a runtime member: must carry no mark.
+    StaticallyLinked,
+    /// The milestone-1277 role rule, which is also every pre-1423 document.
+    ByRole,
+}
+
+/// Matched exhaustively over the closed C203 enum, for #892's reason. An
+/// unrecognised value falls to the role rule, which is the stricter reading.
+fn decided(component: &serde_json::Value) -> Decided {
+    match cdx_prop(component, "waybill:scope-classification-source") {
+        Some("exempt-compiler-supplied" | "exempt-evaluated-package") => Decided::Exempt,
+        Some("runtime-closure") => Decided::RuntimeClosure,
+        Some("reachability-walk") => Decided::ByWalk,
+        Some("statically-linked") => Decided::StaticallyLinked,
+        Some("closure-role" | "closure-role+lifecycle-propagation") | None => Decided::ByRole,
+        Some(_) => Decided::ByRole,
+    }
+}
 
 /// Roles whose members do not go into the artifact.
 ///
@@ -58,83 +102,138 @@ fn role_does_not_ship(role: &str) -> bool {
     }
 }
 
-/// Whether the component carries a non-runtime marker, in either spelling.
+/// Whether the component carries a non-runtime marker, in either spelling
+/// ([`super::cdx_carries_non_runtime_marker`]).
 ///
-/// **Both, and the distinction is load-bearing.** The shared
-/// `cdx_is_non_runtime` helper reads only C42 `waybill:lifecycle-scope`,
-/// which is correct for the rows that use it — but milestone 1277's marker
-/// is the **native** CycloneDX `scope` field, set deliberately without C42
-/// so that the emission stays outside the `--include-dev` gate and
-/// `--exclude-scope build` cannot delete the components (spec research
-/// R1–R2). A row reading C42 alone would report 95 of this feature's 97
-/// classified components as offenders *after* a correct refresh.
-///
-/// Measured: that is exactly what the first draft of this row did, and the
-/// prediction against the committed goldens is what caught it before the
-/// refresh rather than after.
-///
-/// The shared helper is deliberately **not** widened. I3 uses it to define
-/// its own population, and adding the native field there would change which
-/// components I3 covers — a different row's behaviour, altered as a side
-/// effect of this one. Milestone 1277 adds no C42, so I3's population is
-/// unaffected by this feature either way.
+/// A row reading C42 alone would report 95 of milestone 1277's 97 classified
+/// components as offenders *after* a correct refresh. Measured: that is
+/// exactly what the first draft of this row did, and the prediction against
+/// the committed goldens is what caught it before the refresh rather than
+/// after. #1283 moved the helper to `checks` so that I3's marker test reads
+/// the same two spellings; I3's *population* still reads C42 alone.
 fn carries_non_runtime_marker(component: &serde_json::Value) -> bool {
-    if cdx_is_non_runtime(component) {
-        return true;
-    }
-    // The native field. `required` is the schema's default and says the
-    // opposite, so only the two non-runtime values count.
-    matches!(
-        component.get("scope").and_then(|s| s.as_str()),
-        Some("excluded") | Some("optional")
-    )
+    super::cdx_carries_non_runtime_marker(component)
+}
+
+/// The closure's own not-in-artifact verdict, read from SPDX 2.3: the PURLs
+/// of the packages on the member side of a `BUILD_TOOL_OF` edge, and the
+/// PURLs of every package the document holds.
+///
+/// **Why SPDX 2.3, and not CycloneDX.** CycloneDX has one field for two
+/// marks: `scope: excluded` is set by the closure's verdict
+/// (`artifact_presence`) and, separately, by a reader's lifecycle scope. A
+/// member inside the runtime closure carrying a reader's `development`
+/// (#1465's QuickCheck) and a test dependency outside it carrying the same
+/// (`hspec`) are therefore the same CycloneDX component: C203
+/// `runtime-closure`, C42 `development`, `scope: excluded`. Measured on the
+/// committed slack-web golden before #1465. SPDX 2.3 keeps the two apart:
+/// `BUILD_TOOL_OF` is emitted from the closure's verdict alone
+/// (`generate/spdx/relationships.rs`), and the lifecycle scope rides the
+/// dependency-edge types instead. hspec has a `BUILD_TOOL_OF` edge there;
+/// QuickCheck and th-compat had none.
+///
+/// This depends on SPDX 2.3's full relationship vocabulary, which is the
+/// default and what the corpus harness emits; `--spdx2-relationship-compat
+/// basic` drops `BUILD_TOOL_OF` entirely.
+fn spdx23_closure_verdict(spdx: &serde_json::Value) -> (HashSet<&str>, HashSet<&str>) {
+    let id_to_purl = super::spdx_id_to_purl(spdx);
+    let marked = spdx
+        .get("relationships")
+        .and_then(|r| r.as_array())
+        .map(|rels| {
+            rels.iter()
+                .filter(|r| r.get("relationshipType").and_then(|t| t.as_str()) == Some("BUILD_TOOL_OF"))
+                .filter_map(|r| r.get("spdxElementId")?.as_str())
+                .filter_map(|id| id_to_purl.get(id).copied())
+                .collect()
+        })
+        .unwrap_or_default();
+    (marked, id_to_purl.values().copied().collect())
 }
 
 pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
     let components = cdx_components(&sboms.cdx);
+    let (closure_marked, spdx23_purls) = spdx23_closure_verdict(&sboms.spdx_2_3);
 
+    // Milestone 1423: every closure member, not only the non-shipping roles.
+    // Under the runtime closure a `build-tooling` member the output references
+    // (openssh's `dns-root-data`) is legitimately unmarked, and an
+    // `artifact-input` member it does not reference is legitimately marked,
+    // so the role alone no longer says what the mark must be. C203 does.
     let population: Vec<&serde_json::Value> = components
         .iter()
-        .filter(|c| {
-            cdx_prop(c, "waybill:closure-role").is_some_and(role_does_not_ship)
-        })
+        .filter(|c| cdx_prop(c, "waybill:closure-role").is_some())
         .collect();
 
     if population.is_empty() {
         return CellOutcome::NotApplicable {
-            reason: "no closure members in a non-shipping role in this document".to_string(),
+            reason: "no closure members in this document".to_string(),
         };
     }
 
-    let offenders: HashSet<&str> = population
-        .iter()
-        // Carrying the marker satisfies the row, in **either** spelling.
-        .filter(|c| !carries_non_runtime_marker(c))
-        // Being exempt satisfies it too, and says so. This is the arm that
-        // makes the row checkable at all.
-        .filter(|c| {
-            !matches!(
-                cdx_prop(c, "waybill:scope-classification-source"),
-                // Milestone 1377: the evaluated package is the artifact.
-                Some("exempt-compiler-supplied" | "exempt-evaluated-package")
-            )
-        })
-        .filter_map(|c| cdx_component_ref(c))
-        .collect();
-
-    if offenders.is_empty() {
-        return CellOutcome::Pass;
+    let mut unmarked_tooling: HashSet<&str> = HashSet::new();
+    let mut linked_but_marked: HashSet<&str> = HashSet::new();
+    let mut runtime_but_marked: HashSet<&str> = HashSet::new();
+    for c in &population {
+        let marked = carries_non_runtime_marker(c);
+        match decided(c) {
+            // Being exempt satisfies the row, and says so. This is the arm
+            // that makes the row checkable at all.
+            Decided::Exempt | Decided::ByWalk => {}
+            // #1465: the closure holds it — SPDX 2.3 carries no
+            // `BUILD_TOOL_OF` for it — so a mark can only be a reader's scope,
+            // which runtime evidence overrides. A member SPDX 2.3 does not
+            // hold is not judged: the document cannot say which way the
+            // closure went.
+            Decided::RuntimeClosure => {
+                let purl = c.get("purl").and_then(|p| p.as_str());
+                let closure_holds = purl
+                    .is_some_and(|p| spdx23_purls.contains(p) && !closure_marked.contains(p));
+                if marked && closure_holds {
+                    runtime_but_marked.extend(cdx_component_ref(c));
+                }
+            }
+            // The converse check: linked into a runtime member, so a mark
+            // would contradict the document's own evidence.
+            Decided::StaticallyLinked => {
+                if marked {
+                    linked_but_marked.extend(cdx_component_ref(c));
+                }
+            }
+            // Today's rule, which pre-1423 documents still meet.
+            Decided::ByRole => {
+                let role = cdx_prop(c, "waybill:closure-role").unwrap_or_default();
+                if role_does_not_ship(role) && !marked {
+                    unmarked_tooling.extend(cdx_component_ref(c));
+                }
+            }
+        }
     }
 
-    let mut refs: Vec<String> = offenders.into_iter().map(str::to_string).collect();
-    refs.sort();
-    CellOutcome::Fail(vec![Violation {
-        kind: KIND_TOOLING_WITHOUT_MARKER,
-        count: refs.len(),
-        // Sorted, so the example is stable across runs rather than whichever
-        // the hash set yielded first.
-        example: refs.first().cloned(),
-    }])
+    let mut violations = Vec::new();
+    for (kind, set) in [
+        (KIND_TOOLING_WITHOUT_MARKER, unmarked_tooling),
+        (KIND_LINKED_BUT_MARKED, linked_but_marked),
+        (KIND_RUNTIME_BUT_MARKED, runtime_but_marked),
+    ] {
+        if set.is_empty() {
+            continue;
+        }
+        let mut refs: Vec<String> = set.into_iter().map(str::to_string).collect();
+        refs.sort();
+        violations.push(Violation {
+            kind,
+            count: refs.len(),
+            // Sorted, so the example is stable across runs rather than
+            // whichever the hash set yielded first.
+            example: refs.first().cloned(),
+        });
+    }
+    if violations.is_empty() {
+        CellOutcome::Pass
+    } else {
+        CellOutcome::Fail(violations)
+    }
 }
 
 #[cfg(test)]
@@ -189,7 +288,8 @@ mod tests {
             cdx,
             spdx_2_3: serde_json::json!({}),
             spdx_3: serde_json::json!({}),
-            // This row reads only the CycloneDX document.
+            // No SPDX 2.3 packages: the #1465 arm judges nothing unless a
+            // test supplies one (`with_spdx23`).
             paths: crate::corpus_harness_195::harness::EmittedPaths {
                 cdx: PathBuf::new(),
                 spdx_2_3: PathBuf::new(),
@@ -309,18 +409,178 @@ mod tests {
         }
     }
 
-    /// FR-002's half of the population rule: these two roles are not in it,
-    /// so an absent marker is correct and the row reports n/a.
+    /// FR-002's half of the role rule: these two roles need no marker, so an
+    /// absent one is correct. Milestone 1423 widened the population to every
+    /// closure member, so the document now passes rather than reporting n/a.
     #[test]
-    fn i10_artifact_roles_are_not_in_the_population() {
+    fn i10_artifact_roles_need_no_marker_under_the_role_rule() {
         for role in ["artifact-input", "both"] {
             assert!(
-                matches!(
-                    check(&sboms(doc(role, false, false))),
-                    CellOutcome::NotApplicable { .. }
-                ),
-                "{role} must not be in the population"
+                matches!(check(&sboms(doc(role, false, false))), CellOutcome::Pass),
+                "{role} needs no marker"
             );
+        }
+    }
+
+    // ---- milestone 1423: the evidence values (contracts/c203-values.md) ----
+
+    fn with_source(role: &str, marker: bool, source: &str) -> serde_json::Value {
+        let mut d = doc(role, marker, false);
+        d["components"][0]["properties"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "name": "waybill:scope-classification-source", "value": source
+            }));
+        d
+    }
+
+    /// openssh's `dns-root-data`: a tooling role the output references. The
+    /// runtime closure decided it, so no mark is correct.
+    #[test]
+    fn i10_an_unmarked_tooling_member_the_runtime_closure_decided_passes() {
+        for source in ["runtime-closure", "reachability-walk"] {
+            assert!(
+                matches!(check(&sboms(with_source("build-tooling", false, source))), CellOutcome::Pass),
+                "{source}"
+            );
+        }
+    }
+
+    /// The SPDX 2.3 twin of [`doc`]'s member, `pkg:generic/tool@1.0.0`.
+    /// `build_tool_of` is the closure's own not-in-artifact verdict.
+    fn spdx23(build_tool_of: bool) -> serde_json::Value {
+        let mut rels = vec![serde_json::json!({
+            "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES",
+            "relatedSpdxElement": "SPDXRef-app" })];
+        if build_tool_of {
+            rels.push(serde_json::json!({
+                "spdxElementId": "SPDXRef-tool", "relationshipType": "BUILD_TOOL_OF",
+                "relatedSpdxElement": "SPDXRef-app" }));
+        }
+        let pkg = |id: &str, purl: &str| {
+            serde_json::json!({ "SPDXID": id, "externalRefs": [
+                { "referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl",
+                  "referenceLocator": purl } ] })
+        };
+        serde_json::json!({
+            "packages": [pkg("SPDXRef-app", "pkg:generic/app@1.0.0"), pkg("SPDXRef-tool", "pkg:generic/tool@1.0.0")],
+            "relationships": rels,
+        })
+    }
+
+    fn with_spdx23(cdx: serde_json::Value, spdx: serde_json::Value) -> EmittedSboms {
+        let mut s = sboms(cdx);
+        s.spdx_2_3 = spdx;
+        s
+    }
+
+    /// curl's libxml2: an `artifact-input` the output does not reference. The
+    /// closure marked it, so SPDX 2.3 carries its `BUILD_TOOL_OF`.
+    #[test]
+    fn i10_a_marked_artifact_member_the_runtime_closure_decided_passes() {
+        for source in ["runtime-closure", "reachability-walk"] {
+            assert!(
+                matches!(
+                    check(&with_spdx23(with_source("artifact-input", true, source), spdx23(true))),
+                    CellOutcome::Pass
+                ),
+                "{source}"
+            );
+        }
+    }
+
+    /// #1465 — slack-web's QuickCheck: the runtime closure holds it (no
+    /// `BUILD_TOOL_OF` in SPDX 2.3), yet it carries a mark, from a reader's
+    /// `development`. Runtime evidence wins, so the mark is a defect.
+    #[test]
+    fn i10_a_runtime_closure_member_the_closure_holds_that_is_marked_fails() {
+        match check(&with_spdx23(with_source("artifact-input", true, "runtime-closure"), spdx23(false))) {
+            CellOutcome::Fail(v) => {
+                assert_eq!(v.len(), 1);
+                assert_eq!(v[0].kind, KIND_RUNTIME_BUT_MARKED);
+                assert_eq!(v[0].count, 1);
+                assert_eq!(v[0].example.as_deref(), Some("pkg:generic/tool@1.0.0"));
+            }
+            other => panic!("expected a failure, got {other:?}"),
+        }
+        // CONTROL: unmarked, the same member passes.
+        assert!(matches!(
+            check(&with_spdx23(with_source("artifact-input", false, "runtime-closure"), spdx23(false))),
+            CellOutcome::Pass
+        ));
+    }
+
+    /// The walk is not evidence of shipping (#1465 scopes the rule to
+    /// `runtime-closure` and `statically-linked`), so a reader's mark on a
+    /// member it reached contradicts nothing.
+    #[test]
+    fn i10_a_marked_member_the_walk_reached_passes() {
+        assert!(matches!(
+            check(&with_spdx23(with_source("artifact-input", true, "reachability-walk"), spdx23(false))),
+            CellOutcome::Pass
+        ));
+    }
+
+    /// A member SPDX 2.3 does not hold is not judged: the document cannot say
+    /// which way the closure went.
+    #[test]
+    fn i10_a_runtime_closure_member_missing_from_spdx23_is_not_judged() {
+        assert!(matches!(
+            check(&sboms(with_source("artifact-input", true, "runtime-closure"))),
+            CellOutcome::Pass
+        ));
+    }
+
+    #[test]
+    fn i10_a_statically_linked_member_passes_unmarked() {
+        assert!(matches!(
+            check(&sboms(with_source("artifact-input", false, "statically-linked"))),
+            CellOutcome::Pass
+        ));
+    }
+
+    /// The converse check. A member C203 says is linked into a runtime
+    /// member, yet marked not-in-artifact, contradicts the document's own
+    /// evidence.
+    #[test]
+    fn i10_a_statically_linked_member_that_is_marked_fails() {
+        match check(&sboms(with_source("artifact-input", true, "statically-linked"))) {
+            CellOutcome::Fail(v) => {
+                assert_eq!(v.len(), 1);
+                assert_eq!(v[0].kind, KIND_LINKED_BUT_MARKED);
+                assert_eq!(v[0].example.as_deref(), Some("pkg:generic/tool@1.0.0"));
+            }
+            other => panic!("expected a failure, got {other:?}"),
+        }
+    }
+
+    /// A pre-1423 document: C203 `closure-role` on marked tooling members,
+    /// nothing on the rest. It still passes, and losing a mark still fails.
+    #[test]
+    fn i10_a_pre_1423_document_still_passes_under_the_role_rule() {
+        let d = serde_json::json!({
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.6",
+            "metadata": { "component": { "bom-ref": "pkg:generic/app@1.0.0" } },
+            "components": [
+                { "bom-ref": "pkg:generic/tool@1.0.0", "name": "tool", "type": "library",
+                  "scope": "excluded",
+                  "properties": [
+                    { "name": "waybill:closure-role", "value": "build-tooling" },
+                    { "name": "waybill:scope-classification-source", "value": "closure-role" } ] },
+                { "bom-ref": "pkg:generic/lib@1.0.0", "name": "lib", "type": "library",
+                  "properties": [ { "name": "waybill:closure-role", "value": "artifact-input" } ] },
+            ],
+            "dependencies": [],
+        });
+        assert!(matches!(check(&sboms(d.clone())), CellOutcome::Pass));
+        // CONTROL: the same document with the tooling member's mark removed.
+        let mut lost = d;
+        lost["components"][0].as_object_mut().unwrap().remove("scope");
+        match check(&sboms(lost)) {
+            CellOutcome::Fail(v) => assert_eq!(v[0].kind, KIND_TOOLING_WITHOUT_MARKER),
+            other => panic!("expected a failure, got {other:?}"),
         }
     }
 
@@ -345,15 +605,17 @@ mod tests {
         ));
     }
 
-    /// An unrecognised role is not evidence either way, so it is out of the
-    /// population — matching the emitter's own fail-closed classifier. #892
-    /// is why this is pinned: a membership test over an enum silently
-    /// absorbed a variant added later and survived about two years.
+    /// An unrecognised role is not evidence either way, so the role rule
+    /// demands no marker of it — matching the emitter's own fail-closed
+    /// classifier. #892 is why this is pinned: a membership test over an
+    /// enum silently absorbed a variant added later and survived about two
+    /// years. (Milestone 1423 widened the population to every closure member,
+    /// so this passes rather than reporting n/a.)
     #[test]
-    fn i10_an_unknown_role_is_not_in_the_population() {
+    fn i10_an_unknown_role_demands_no_marker() {
         assert!(matches!(
             check(&sboms(doc("some-new-role", false, false))),
-            CellOutcome::NotApplicable { .. }
+            CellOutcome::Pass
         ));
     }
 }
