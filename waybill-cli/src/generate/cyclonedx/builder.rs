@@ -1016,6 +1016,12 @@ impl CycloneDxBuilder {
         )
         .filter(|n| *n > 0)
         .map(|n| n.to_string());
+        // C220 (m1436) — counted over the components this document emits, as
+        // the SPDX emitters count theirs.
+        let vex_claims_unscoped: Option<String> =
+            Some(crate::generate::openvex::claims::unscoped_claims(effective_components))
+                .filter(|n| *n > 0)
+                .map(|n| n.to_string());
         let deps_dev_outcomes: Option<String> = if self.deps_dev_online {
             crate::enrich::deps_dev_outcome::document_value(effective_components)
         } else {
@@ -1084,6 +1090,7 @@ impl CycloneDxBuilder {
                 nix_eval_system: self.nix_eval_system.as_deref(),
                 nixpkgs_haskell_closure: self.nixpkgs_haskell_closure.as_deref(),
                 scope_exemptions: self.scope_exemptions.as_deref(),
+                vex_claims_unscoped: vex_claims_unscoped.as_deref(),
             },
         );
         // Milestone 076 — track per-component identifier matches so

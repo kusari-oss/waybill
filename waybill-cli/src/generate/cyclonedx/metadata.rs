@@ -229,6 +229,8 @@ pub struct MetadataExtras<'a> {
     pub nixpkgs_haskell_closure: Option<&'a str>,
     /// Milestone 1276 (#1340) — the scope-exemption record.
     pub scope_exemptions: Option<&'a str>,
+    /// C220 (m1436) — backport claims no statement could be scoped to.
+    pub vex_claims_unscoped: Option<&'a str>,
 }
 /// Build the CycloneDX `metadata` section.
 ///
@@ -304,6 +306,7 @@ pub fn build_metadata(
         nix_eval_system,
         nixpkgs_haskell_closure,
         scope_exemptions,
+        vex_claims_unscoped,
     } = extras;
 
     let version = crate::version::VERSION;
@@ -402,6 +405,16 @@ pub fn build_metadata(
     if let Some(n) = vex_claims_omitted {
         properties.push(json!({
             "name": "waybill:vex-claims-omitted",
+            "value": n,
+        }));
+    }
+
+    // C220 (m1436, #1436) — backport claims left without a statement because
+    // not every build variant of the component resolves the CVE. Present
+    // only when there is one.
+    if let Some(n) = vex_claims_unscoped {
+        properties.push(json!({
+            "name": "waybill:vex-claims-unscoped",
             "value": n,
         }));
     }

@@ -1029,6 +1029,7 @@ cdx_anno!(c189_cdx, "waybill:nixpkgs-declaration-grade", document);
 cdx_anno!(c191_cdx, "waybill:deps-dev-outcome", component);
 cdx_anno!(c192_cdx, "waybill:deps-dev-outcomes", document);
 cdx_anno!(c193_cdx, "waybill:vex-claims-omitted", document);
+cdx_anno!(c220_cdx, "waybill:vex-claims-unscoped", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

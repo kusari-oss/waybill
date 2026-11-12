@@ -2500,6 +2500,18 @@ with a SHA-256 of the sidecar bytes; the SPDX 3 document carries an
 `externalRef` locator. Use `--output openvex=<path>` to choose the path
 yourself. The scan log reports it as `wrote SBOM artifact format=openvex`.
 
+**Nix closure backports** — under `--nix-closure`, a component whose nixpkgs
+patches resolve a CVE gets a `nix_drv=<derivation hashes>` qualifier on its
+PURL, naming the builds it stands for, and one `fixed` statement per CVE on
+that qualified PURL (CycloneDX: one `resolved` entry on its `bom-ref`).
+Scanners apply a statement only on its product PURL, so the claim covers this
+build and not every build of the version, and a scanner given the sidecar
+drops those findings (`grype sbom:app.cdx.json --vex app.openvex.json`).
+Advisory matching ignores the qualifier, so without VEX the findings are
+unchanged. The upstream version's own status stays in
+`pedigree.patches[].resolves`. See
+[Nix evaluation](../reference/nix-evaluation.md#the-nix_drv-qualifier).
+
 See [Generation](../architecture/generation.md) for the per-format builder
 architecture and [SBOM format mapping](../reference/sbom-format-mapping.md)
 for the cross-format data-placement map.
