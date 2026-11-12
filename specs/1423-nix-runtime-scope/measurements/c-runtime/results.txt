@@ -1,0 +1,268 @@
+### curl x86_64-linux: main walk vs truth
+truth C216: ['{"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"method":"reachability-walk","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1067 runtime(truth)=19 runtime(other)=23 tp=16 false-excluded=3 false-runtime=7
+  FALSE-EXCLUDED gcc 15.2.0 other: reachability-walk
+  FALSE-EXCLUDED glibc 2.42-61 other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+  FALSE-RUNTIME  c-ares 1.34.6 other: reachability-walk
+  FALSE-RUNTIME  find-xml-catalogs-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  libedit 20251016-3.1 other: reachability-walk
+  FALSE-RUNTIME  libev 4.33 other: reachability-walk
+  FALSE-RUNTIME  libxml2 2.15.2 other: reachability-walk
+  FALSE-RUNTIME  libxslt 1.1.45 other: reachability-walk
+  FALSE-RUNTIME  ncurses 6.6 other: reachability-walk
+
+### curl x86_64-linux: fixed walk vs truth
+truth C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1067 runtime(truth)=19 runtime(other)=24 tp=17 false-excluded=2 false-runtime=7
+  FALSE-EXCLUDED gcc 15.2.0 other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+  FALSE-RUNTIME  c-ares 1.34.6 other: reachability-walk
+  FALSE-RUNTIME  find-xml-catalogs-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  libedit 20251016-3.1 other: reachability-walk
+  FALSE-RUNTIME  libev 4.33 other: reachability-walk
+  FALSE-RUNTIME  libxml2 2.15.2 other: reachability-walk
+  FALSE-RUNTIME  libxslt 1.1.45 other: reachability-walk
+  FALSE-RUNTIME  ncurses 6.6 other: reachability-walk
+
+### curl x86_64-linux: main walk -> fixed walk
+truth C216: ['{"method":"reachability-walk","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1067 runtime(truth)=23 runtime(other)=24 tp=23 false-excluded=0 false-runtime=1
+  FALSE-RUNTIME  glibc 2.42-61 other: reachability-walk
+
+### curl x86_64-linux: main truth -> fixed truth
+truth C216: ['{"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+members=1067 runtime(truth)=19 runtime(other)=19 tp=19 false-excluded=0 false-runtime=0
+
+### openssh x86_64-linux: main walk vs truth
+truth C216: ['{"method":"runtime-closure","outputs":["out","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"method":"reachability-walk","outputs":["out","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1270 runtime(truth)=22 runtime(other)=61 tp=16 false-excluded=6 false-runtime=45
+  FALSE-EXCLUDED dns-root-data 2025-04-14 other: reachability-walk
+  FALSE-EXCLUDED gcc 15.2.0 other: reachability-walk
+  FALSE-EXCLUDED glibc 2.42-61 other: reachability-walk
+  FALSE-EXCLUDED libidn2 2.3.8 other: reachability-walk
+  FALSE-EXCLUDED libunistring 1.4.2 other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+  FALSE-RUNTIME  bash 5.3p9 other: reachability-walk
+  FALSE-RUNTIME  bash-interactive 5.3p9 other: reachability-walk
+  FALSE-RUNTIME  bluez-headers 5.86 other: reachability-walk
+  FALSE-RUNTIME  bzip2 1.0.8 other: reachability-walk
+  FALSE-RUNTIME  cmocka 2.0.1 other: reachability-walk
+  FALSE-RUNTIME  dbus 1.16.2 other: reachability-walk
+  FALSE-RUNTIME  dejagnu 1.6.3 other: reachability-walk
+  FALSE-RUNTIME  die-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  docbook-xml 4.3 other: reachability-walk
+  FALSE-RUNTIME  docbook-xsl-nons 1.79.2 other: reachability-walk
+  FALSE-RUNTIME  expat 2.8.0 other: reachability-walk
+  FALSE-RUNTIME  expect 5.45.4 other: reachability-walk
+  FALSE-RUNTIME  find-xml-catalogs-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  gdbm 1.26 other: reachability-walk
+  FALSE-RUNTIME  gtk-doc 1.35.1 other: reachability-walk
+  FALSE-RUNTIME  kmod 31 other: reachability-walk
+  FALSE-RUNTIME  libapparmor 4.1.7 other: reachability-walk
+  FALSE-RUNTIME  libffi 3.5.2 other: reachability-walk
+  FALSE-RUNTIME  libice 1.1.2 other: reachability-walk
+  FALSE-RUNTIME  libpthread-stubs 0.5 other: reachability-walk
+  FALSE-RUNTIME  libsm 1.2.6 other: reachability-walk
+  FALSE-RUNTIME  libx11 1.8.13 other: reachability-walk
+  FALSE-RUNTIME  libxau 1.0.12 other: reachability-walk
+  FALSE-RUNTIME  libxcb 1.17.0 other: reachability-walk
+  FALSE-RUNTIME  libxdmcp 1.1.5 other: reachability-walk
+  FALSE-RUNTIME  libxml2 2.15.2 other: reachability-walk
+  FALSE-RUNTIME  libxslt 1.1.45 other: reachability-walk
+  FALSE-RUNTIME  linux-headers 6.18.7 other: reachability-walk
+  FALSE-RUNTIME  lxml 6.0.2 other: reachability-walk
+  FALSE-RUNTIME  make-binary-wrapper-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  mpdecimal 4.0.1 other: reachability-walk
+  FALSE-RUNTIME  perl 5.42.0 other: reachability-walk
+  FALSE-RUNTIME  pygments 2.20.0 other: reachability-walk
+  FALSE-RUNTIME  python3 3.13.13 other: reachability-walk
+  FALSE-RUNTIME  readline 8.3p3 other: reachability-walk
+  FALSE-RUNTIME  sqlite 3.51.2 other: reachability-walk
+  FALSE-RUNTIME  systemd-minimal 260.1 other: reachability-walk
+  FALSE-RUNTIME  tcl 8.6.16 other: reachability-walk
+  FALSE-RUNTIME  tcl-package-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  tzdata 2026b other: reachability-walk
+  FALSE-RUNTIME  xcb-proto 1.17.0 other: reachability-walk
+  FALSE-RUNTIME  xorgproto 2025.1 other: reachability-walk
+  FALSE-RUNTIME  xtrans 1.6.0 other: reachability-walk
+  FALSE-RUNTIME  xz 5.8.3 other: reachability-walk
+  FALSE-RUNTIME  zstd 1.5.7 other: reachability-walk
+
+### openssh x86_64-linux: fixed walk vs truth
+truth C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["out","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["out","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1270 runtime(truth)=22 runtime(other)=62 tp=17 false-excluded=5 false-runtime=45
+  FALSE-EXCLUDED dns-root-data 2025-04-14 other: reachability-walk
+  FALSE-EXCLUDED gcc 15.2.0 other: reachability-walk
+  FALSE-EXCLUDED libidn2 2.3.8 other: reachability-walk
+  FALSE-EXCLUDED libunistring 1.4.2 other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+  FALSE-RUNTIME  bash 5.3p9 other: reachability-walk
+  FALSE-RUNTIME  bash-interactive 5.3p9 other: reachability-walk
+  FALSE-RUNTIME  bluez-headers 5.86 other: reachability-walk
+  FALSE-RUNTIME  bzip2 1.0.8 other: reachability-walk
+  FALSE-RUNTIME  cmocka 2.0.1 other: reachability-walk
+  FALSE-RUNTIME  dbus 1.16.2 other: reachability-walk
+  FALSE-RUNTIME  dejagnu 1.6.3 other: reachability-walk
+  FALSE-RUNTIME  die-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  docbook-xml 4.3 other: reachability-walk
+  FALSE-RUNTIME  docbook-xsl-nons 1.79.2 other: reachability-walk
+  FALSE-RUNTIME  expat 2.8.0 other: reachability-walk
+  FALSE-RUNTIME  expect 5.45.4 other: reachability-walk
+  FALSE-RUNTIME  find-xml-catalogs-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  gdbm 1.26 other: reachability-walk
+  FALSE-RUNTIME  gtk-doc 1.35.1 other: reachability-walk
+  FALSE-RUNTIME  kmod 31 other: reachability-walk
+  FALSE-RUNTIME  libapparmor 4.1.7 other: reachability-walk
+  FALSE-RUNTIME  libffi 3.5.2 other: reachability-walk
+  FALSE-RUNTIME  libice 1.1.2 other: reachability-walk
+  FALSE-RUNTIME  libpthread-stubs 0.5 other: reachability-walk
+  FALSE-RUNTIME  libsm 1.2.6 other: reachability-walk
+  FALSE-RUNTIME  libx11 1.8.13 other: reachability-walk
+  FALSE-RUNTIME  libxau 1.0.12 other: reachability-walk
+  FALSE-RUNTIME  libxcb 1.17.0 other: reachability-walk
+  FALSE-RUNTIME  libxdmcp 1.1.5 other: reachability-walk
+  FALSE-RUNTIME  libxml2 2.15.2 other: reachability-walk
+  FALSE-RUNTIME  libxslt 1.1.45 other: reachability-walk
+  FALSE-RUNTIME  linux-headers 6.18.7 other: reachability-walk
+  FALSE-RUNTIME  lxml 6.0.2 other: reachability-walk
+  FALSE-RUNTIME  make-binary-wrapper-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  mpdecimal 4.0.1 other: reachability-walk
+  FALSE-RUNTIME  perl 5.42.0 other: reachability-walk
+  FALSE-RUNTIME  pygments 2.20.0 other: reachability-walk
+  FALSE-RUNTIME  python3 3.13.13 other: reachability-walk
+  FALSE-RUNTIME  readline 8.3p3 other: reachability-walk
+  FALSE-RUNTIME  sqlite 3.51.2 other: reachability-walk
+  FALSE-RUNTIME  systemd-minimal 260.1 other: reachability-walk
+  FALSE-RUNTIME  tcl 8.6.16 other: reachability-walk
+  FALSE-RUNTIME  tcl-package-hook 26.05pre-git other: reachability-walk
+  FALSE-RUNTIME  tzdata 2026b other: reachability-walk
+  FALSE-RUNTIME  xcb-proto 1.17.0 other: reachability-walk
+  FALSE-RUNTIME  xorgproto 2025.1 other: reachability-walk
+  FALSE-RUNTIME  xtrans 1.6.0 other: reachability-walk
+  FALSE-RUNTIME  xz 5.8.3 other: reachability-walk
+  FALSE-RUNTIME  zstd 1.5.7 other: reachability-walk
+
+### openssh x86_64-linux: main walk -> fixed walk
+truth C216: ['{"method":"reachability-walk","outputs":["out","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["out","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1270 runtime(truth)=61 runtime(other)=62 tp=61 false-excluded=0 false-runtime=1
+  FALSE-RUNTIME  glibc 2.42-61 other: reachability-walk
+
+### openssh x86_64-linux: main truth -> fixed truth
+truth C216: ['{"method":"runtime-closure","outputs":["out","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["out","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+members=1270 runtime(truth)=22 runtime(other)=22 tp=22 false-excluded=0 false-runtime=0
+
+### httpie x86_64-linux: main walk vs truth
+truth C216: ['{"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=3084 runtime(truth)=37 runtime(other)=33 tp=30 false-excluded=7 false-runtime=3
+  FALSE-EXCLUDED gcc 15.2.0 other: reachability-walk
+  FALSE-EXCLUDED glibc 2.42-61 other: reachability-walk
+  FALSE-EXCLUDED libidn2 2.3.8 other: reachability-walk
+  FALSE-EXCLUDED libunistring 1.4.2 other: reachability-walk
+  FALSE-EXCLUDED mailcap 2.1.54 other: reachability-walk
+  FALSE-EXCLUDED nss-cacert 3.123 other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+  FALSE-RUNTIME  bluez-headers 5.86 other: reachability-walk
+  FALSE-RUNTIME  libcap-ng 0.9.3 other: reachability-walk
+  FALSE-RUNTIME  libxcrypt 4.5.2 other: reachability-walk
+
+### httpie x86_64-linux: fixed walk vs truth
+truth C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=3084 runtime(truth)=37 runtime(other)=34 tp=31 false-excluded=6 false-runtime=3
+  FALSE-EXCLUDED gcc 15.2.0 other: reachability-walk
+  FALSE-EXCLUDED libidn2 2.3.8 other: reachability-walk
+  FALSE-EXCLUDED libunistring 1.4.2 other: reachability-walk
+  FALSE-EXCLUDED mailcap 2.1.54 other: reachability-walk
+  FALSE-EXCLUDED nss-cacert 3.123 other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+  FALSE-RUNTIME  bluez-headers 5.86 other: reachability-walk
+  FALSE-RUNTIME  libcap-ng 0.9.3 other: reachability-walk
+  FALSE-RUNTIME  libxcrypt 4.5.2 other: reachability-walk
+
+### httpie x86_64-linux: main walk -> fixed walk
+truth C216: ['{"method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=3084 runtime(truth)=33 runtime(other)=34 tp=33 false-excluded=0 false-runtime=1
+  FALSE-RUNTIME  glibc 2.42-61 other: reachability-walk
+
+### httpie x86_64-linux: main truth -> fixed truth
+truth C216: ['{"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+members=3084 runtime(truth)=37 runtime(other)=37 tp=37 false-excluded=0 false-runtime=0
+
+### gh x86_64-linux: main walk vs truth
+truth C216: ['{"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1098 runtime(truth)=9 runtime(other)=1 tp=1 false-excluded=8 false-runtime=0
+  FALSE-EXCLUDED bash 5.3p9 other: reachability-walk
+  FALSE-EXCLUDED glibc 2.42-61 other: reachability-walk
+  FALSE-EXCLUDED iana-etc 20251215 other: reachability-walk
+  FALSE-EXCLUDED libidn2 2.3.8 other: reachability-walk
+  FALSE-EXCLUDED libunistring 1.4.2 other: reachability-walk
+  FALSE-EXCLUDED mailcap 2.1.54 other: reachability-walk
+  FALSE-EXCLUDED tzdata 2026b other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+
+### gh x86_64-linux: fixed walk vs truth
+truth C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1098 runtime(truth)=9 runtime(other)=2 tp=2 false-excluded=7 false-runtime=0
+  FALSE-EXCLUDED bash 5.3p9 other: reachability-walk
+  FALSE-EXCLUDED iana-etc 20251215 other: reachability-walk
+  FALSE-EXCLUDED libidn2 2.3.8 other: reachability-walk
+  FALSE-EXCLUDED libunistring 1.4.2 other: reachability-walk
+  FALSE-EXCLUDED mailcap 2.1.54 other: reachability-walk
+  FALSE-EXCLUDED tzdata 2026b other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+
+### gh x86_64-linux: main walk -> fixed walk
+truth C216: ['{"method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1098 runtime(truth)=1 runtime(other)=2 tp=1 false-excluded=0 false-runtime=1
+  FALSE-RUNTIME  glibc 2.42-61 other: reachability-walk
+
+### gh x86_64-linux: main truth -> fixed truth
+truth C216: ['{"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+members=1098 runtime(truth)=9 runtime(other)=9 tp=9 false-excluded=0 false-runtime=0
+
+### ripgrep x86_64-linux: main walk vs truth
+truth C216: ['{"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1221 runtime(truth)=7 runtime(other)=2 tp=2 false-excluded=5 false-runtime=0
+  FALSE-EXCLUDED gcc 15.2.0 other: reachability-walk
+  FALSE-EXCLUDED glibc 2.42-61 other: reachability-walk
+  FALSE-EXCLUDED libidn2 2.3.8 other: reachability-walk
+  FALSE-EXCLUDED libunistring 1.4.2 other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+
+### ripgrep x86_64-linux: fixed walk vs truth
+truth C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1221 runtime(truth)=7 runtime(other)=3 tp=3 false-excluded=4 false-runtime=0
+  FALSE-EXCLUDED gcc 15.2.0 other: reachability-walk
+  FALSE-EXCLUDED libidn2 2.3.8 other: reachability-walk
+  FALSE-EXCLUDED libunistring 1.4.2 other: reachability-walk
+  FALSE-EXCLUDED xgcc 15.2.0 other: reachability-walk
+
+### ripgrep x86_64-linux: main walk -> fixed walk
+truth C216: ['{"method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+other C216: ['{"c-runtime-libraries":"libc-only","method":"reachability-walk","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":null,"unavailable-reason":"not-in-any-store","unmatched-runtime-paths":null,"verified":null,"walk-outcome":"used"}']
+members=1221 runtime(truth)=2 runtime(other)=3 tp=2 false-excluded=0 false-runtime=1
+  FALSE-RUNTIME  glibc 2.42-61 other: reachability-walk
+
+### ripgrep x86_64-linux: main truth -> fixed truth
+truth C216: ['{"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+other C216: ['{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":0,"derivation-fields":0},"static-link-source":"none","store":"https://cache.nixos.org/","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}']
+members=1221 runtime(truth)=7 runtime(other)=7 tp=7 false-excluded=0 false-runtime=0
+

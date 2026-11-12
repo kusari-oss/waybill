@@ -142,8 +142,9 @@ annotation (catalogue row C216) says how the marks were decided:
 
 ```bash
 jq -r '.metadata.properties[] | select(.name == "waybill:closure-scope-method") | .value' closure.cdx.json
-# {"method":"runtime-closure","outputs":["bin"],"outputs-source":"output-specified",
-#  "schema":1,"static-c-linking-detected":false,
+# {"c-runtime-libraries":null,"method":"runtime-closure","outputs":["bin"],
+#  "outputs-source":"output-specified","schema":1,"static-c-linking-detected":false,
+#  "static-link-roots":{"declared-edges":0,"derivation-fields":0},
 #  "static-link-source":"none","store":"local","unavailable-reason":null,
 #  "unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}
 ```
@@ -157,7 +158,7 @@ its library rather than its executable.
 | `method` | Where the marks come from | How far to trust them |
 |---|---|---|
 | `runtime-closure` | The runtime closure of the outputs the attribute installs (`outputs`), `nix path-info -r`, from the local store or a substituter your nix already trusts (`store`). A substituter's answer is signature-checked first (`verified`). | Exact for what the output references. Go modules, Rust crates and Haskell libraries compiled into a runtime member are kept, with `waybill:scope-classification-source` `statically-linked`. |
-| `reachability-walk` | No store held the output (`unavailable-reason` says why), so waybill walked from the evaluated package over runtime-linking dependency fields. | An approximation. On the five flakes above it kept 346 findings, 331 of them runtime, and missed 19 runtime ones (`measurements/us2-walk-score/`). |
+| `reachability-walk` | No store held the output (`unavailable-reason` says why), so waybill walked from the evaluated package over runtime-linking dependency fields. | An approximation. On the five flakes above it kept 346 findings, 331 of them runtime, and missed 19 runtime ones (`measurements/us2-walk-score/`). It keeps the C library its members' compiler links, which no dependency field names; `c-runtime-libraries: libc-only` says the compiler's own runtime libraries (gcc's `lib` output) and what that libc references were not assessed, and on Linux those stay marked (#1467). |
 | `closure-role` | Neither source was usable; each member's build-graph role decides. | The weakest. Before milestone 1423 every closure document was marked this way, and as a findings filter it was 31.1% precise on the same five flakes (`measurements/README.md`). |
 
 With no `waybill:closure-scope-method` at all, the closure tier did not run

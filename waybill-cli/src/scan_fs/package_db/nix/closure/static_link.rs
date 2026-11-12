@@ -72,6 +72,10 @@ pub(crate) enum StaticLinkSource {
     /// The derivation-field fallback, which may include test-only
     /// dependencies of a root built with checks.
     DerivationFields,
+    /// #1456: some roots by each. The source is chosen per root, so a
+    /// project the package set does not hold falls back alone; its
+    /// confirmed neighbours keep their declared relations.
+    Mixed,
     /// Nothing seeded static linking: the runtime closure holds no
     /// Haskell-builder member, and the evaluated root consumed no Haskell
     /// build ([`super::walk::consumed_haskell_builds`]).
@@ -83,7 +87,33 @@ impl StaticLinkSource {
         match self {
             Self::DeclaredEdges => "declared-edges",
             Self::DerivationFields => "derivation-fields",
+            Self::Mixed => "mixed",
             Self::None => "none",
+        }
+    }
+}
+
+/// #1456 — how many static-link roots each source decided (C216
+/// `static-link-roots`). A root is a runtime Haskell member, or a Haskell
+/// build the evaluated wrapper consumed.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) struct StaticLinkRoots {
+    /// Roots the pinned package set confirmed, followed through their
+    /// declared relations.
+    pub(crate) declared_edges: usize,
+    /// Roots it did not confirm, or every root when it was unavailable,
+    /// followed through their derivation fields.
+    pub(crate) derivation_fields: usize,
+}
+
+impl StaticLinkRoots {
+    /// The C216 `static-link-source` these counts amount to.
+    pub(crate) fn source(self) -> StaticLinkSource {
+        match (self.declared_edges, self.derivation_fields) {
+            (0, 0) => StaticLinkSource::None,
+            (_, 0) => StaticLinkSource::DeclaredEdges,
+            (0, _) => StaticLinkSource::DerivationFields,
+            _ => StaticLinkSource::Mixed,
         }
     }
 }
@@ -211,7 +241,13 @@ impl ManifestTestDeps {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct StaticLinkSet {
     pub(crate) members: BTreeSet<String>,
-    pub(crate) source: StaticLinkSource,
+    pub(crate) roots: StaticLinkRoots,
+}
+
+impl StaticLinkSet {
+    pub(crate) fn source(&self) -> StaticLinkSource {
+        self.roots.source()
+    }
 }
 
 /// Compute the statically linked set from `runtime_drvs`: the runtime
@@ -220,10 +256,12 @@ pub(crate) struct StaticLinkSet {
 /// themselves are not in the result.
 ///
 /// `declared` is `Some` when the pinned package set was available to the
-/// identity pass. A runtime Haskell member whose component the set did not
-/// confirm has no declared relations, so the fallback applies to it; the
-/// source is then `derivation-fields`, because that root's walk may include
-/// its test-only dependencies. Below a root, a library is followed through its
+/// identity pass. The source is chosen per root: a runtime Haskell member
+/// whose component the set did not confirm has no declared relations, so the
+/// fallback applies to that root alone, and a confirmed root keeps its
+/// declared relations whatever its neighbours are (#1456). The result counts
+/// the roots each source decided, so C216 can say `mixed` rather than name
+/// one source for the whole closure. Below a root, a library is followed through its
 /// `propagatedBuildInputs` and, when confirmed, its declared relations too;
 /// neither carries test dependencies at a library (q6), and the declared
 /// relations alone miss a platform-conditional dependency (#1459).
@@ -266,18 +304,21 @@ pub(crate) fn static_link_set(
 
     let roots: Vec<&String> = runtime_drvs.iter().filter(|k| is_hs(k)).collect();
     if roots.is_empty() {
-        return StaticLinkSet { members: BTreeSet::new(), source: StaticLinkSource::None };
+        return StaticLinkSet { members: BTreeSet::new(), roots: StaticLinkRoots::default() };
     }
 
     let pname_of = |k: &str| raw.derivations.get(k).and_then(|d| d.pname());
 
-    let mut any_root_by_fields = false;
+    let mut counts = StaticLinkRoots::default();
     let mut stack: Vec<String> = Vec::new();
     for r in &roots {
         match declared_out(r) {
-            Some(targets) => stack.extend(targets),
+            Some(targets) => {
+                counts.declared_edges += 1;
+                stack.extend(targets);
+            }
             None => {
-                any_root_by_fields = true;
+                counts.derivation_fields += 1;
                 let propagated = field(r, "propagatedBuildInputs");
                 // #1283: a library propagates everything it links, and its
                 // `buildInputs` is its test suite. One whose dependencies
@@ -310,14 +351,7 @@ pub(crate) fn static_link_set(
         stack.extend(declared_out(&n).unwrap_or_default());
         stack.extend(field(&n, "propagatedBuildInputs"));
     }
-    StaticLinkSet {
-        members,
-        source: if declared.is_none() || any_root_by_fields {
-            StaticLinkSource::DerivationFields
-        } else {
-            StaticLinkSource::DeclaredEdges
-        },
-    }
+    StaticLinkSet { members, roots: counts }
 }
 
 #[cfg(test)]
@@ -353,7 +387,12 @@ mod tests {
         "d-bootonly.drv": {"env": {"pname":"bootonly","version":"1","setupCompilerEnvironmentPhase":"x",
                                "installPhase":"./Setup copy\n./Setup register --gen-pkg-config=$f",
                                "buildInputs":"/nix/store/h-test"},
-                       "outputs": {"out": {"path":"h-bootonly"}}}
+                       "outputs": {"out": {"path":"h-bootonly"}}},
+        "d-exe2.drv": {"env": {"pname":"exe2","version":"1","setupCompilerEnvironmentPhase":"x",
+                               "buildInputs":"/nix/store/h-other"},
+                       "outputs": {"out": {"path":"h-exe2"}}},
+        "d-other.drv": {"env": {"pname":"other","version":"1","setupCompilerEnvironmentPhase":"x"},
+                       "outputs": {"out": {"path":"h-other"}}}
       }
     }"#;
 
@@ -376,7 +415,7 @@ mod tests {
     fn a_library_root_follows_what_it_propagates_and_not_its_test_suite() {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let s = static_link_set(&raw, &set(&["d-libroot.drv"]), None, &no_manifest());
-        assert_eq!(s.source, StaticLinkSource::DerivationFields);
+        assert_eq!(s.source(), StaticLinkSource::DerivationFields);
         assert_eq!(s.members, set(&["d-dep.drv", "d-lib.drv"]));
     }
 
@@ -397,7 +436,7 @@ mod tests {
     fn an_executable_root_skips_what_its_manifest_declares_for_tests() {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let s = static_link_set(&raw, &set(&["d-root.drv"]), None, &manifest("d-root.drv", &["test"]));
-        assert_eq!(s.source, StaticLinkSource::DerivationFields);
+        assert_eq!(s.source(), StaticLinkSource::DerivationFields);
         assert_eq!(s.members, set(&["d-dep.drv", "d-lib.drv"]));
     }
 
@@ -453,7 +492,7 @@ mod tests {
     fn derivation_fields_follow_the_root_then_propagation_and_include_test_deps() {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let s = static_link_set(&raw, &set(&["d-root.drv"]), None, &no_manifest());
-        assert_eq!(s.source, StaticLinkSource::DerivationFields);
+        assert_eq!(s.source(), StaticLinkSource::DerivationFields);
         assert_eq!(
             s.members,
             set(&["d-dep.drv", "d-lib.drv", "d-test.drv", "d-testdep.drv"]),
@@ -474,7 +513,7 @@ mod tests {
             ]),
         };
         let s = static_link_set(&raw, &set(&["d-root.drv"]), Some(&declared), &no_manifest());
-        assert_eq!(s.source, StaticLinkSource::DeclaredEdges);
+        assert_eq!(s.source(), StaticLinkSource::DeclaredEdges);
         assert_eq!(s.members, set(&["d-dep.drv", "d-lib.drv"]));
     }
 
@@ -483,7 +522,7 @@ mod tests {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let declared = DeclaredEdges { confirmed: set(&["d-lib.drv"]), edges: BTreeMap::new() };
         let s = static_link_set(&raw, &set(&["d-root.drv"]), Some(&declared), &no_manifest());
-        assert_eq!(s.source, StaticLinkSource::DerivationFields);
+        assert_eq!(s.source(), StaticLinkSource::DerivationFields);
         assert!(s.members.contains("d-test.drv"));
         assert!(
             s.members.contains("d-dep.drv"),
@@ -504,7 +543,7 @@ mod tests {
             edges: BTreeMap::from([("d-root.drv".to_string(), set(&["d-lib.drv", "d-zlib.drv"]))]),
         };
         let s = static_link_set(&raw, &set(&["d-root.drv"]), Some(&declared), &no_manifest());
-        assert_eq!(s.source, StaticLinkSource::DeclaredEdges);
+        assert_eq!(s.source(), StaticLinkSource::DeclaredEdges);
         assert_eq!(s.members, set(&["d-dep.drv", "d-lib.drv"]));
     }
 
@@ -512,7 +551,41 @@ mod tests {
     fn no_runtime_haskell_member_means_none() {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let s = static_link_set(&raw, &set(&["d-zlib.drv"]), None, &no_manifest());
-        assert_eq!(s.source, StaticLinkSource::None);
+        assert_eq!(s.source(), StaticLinkSource::None);
+        assert_eq!(s.roots, StaticLinkRoots { declared_edges: 0, derivation_fields: 0 });
         assert!(s.members.is_empty());
+    }
+
+    /// #1456, moat's shape: the project is not in the package set, every
+    /// other runtime Haskell member is. The source is chosen per root, so
+    /// the confirmed root's test-only `buildInputs` entry (`test`, which its
+    /// declared relations leave out) stays out of the set while the
+    /// unconfirmed root still falls back to its own fields. The record says
+    /// both happened, with how many roots each.
+    #[test]
+    fn the_source_is_chosen_per_root_and_a_mix_says_so() {
+        let raw = RawClosure::parse(CLOSURE).unwrap();
+        let declared = DeclaredEdges {
+            confirmed: set(&["d-root.drv", "d-lib.drv", "d-dep.drv"]),
+            edges: BTreeMap::from([
+                ("d-root.drv".to_string(), set(&["d-lib.drv"])),
+                ("d-lib.drv".to_string(), set(&["d-dep.drv"])),
+            ]),
+        };
+        let s = static_link_set(
+            &raw,
+            &set(&["d-root.drv", "d-exe2.drv"]),
+            Some(&declared),
+            &no_manifest(),
+        );
+        assert_eq!(
+            s.members,
+            set(&["d-dep.drv", "d-lib.drv", "d-other.drv"]),
+            "the confirmed root's test dependency is not read from its fields \
+             because the other root is unconfirmed"
+        );
+        assert_eq!(s.roots, StaticLinkRoots { declared_edges: 1, derivation_fields: 1 });
+        assert_eq!(s.source(), StaticLinkSource::Mixed);
+        assert_eq!(s.source().wire(), "mixed");
     }
 }
