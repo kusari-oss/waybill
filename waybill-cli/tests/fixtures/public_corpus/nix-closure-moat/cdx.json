@@ -68,7 +68,7 @@
       "version": "a799d3e3886da994fa307f817a6bc705ae538eeb"
     },
     {
-      "bom-ref": "pkg:hackage/base",
+      "bom-ref": "pkg:hackage/base@4.20.2.0",
       "evidence": {
         "identity": [
           {
@@ -116,35 +116,28 @@
           "value": "cabal-pkg-descriptor"
         },
         {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
           "name": "waybill:ghc-stdlib",
           "value": "true"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
-        },
-        {
-          "name": "waybill:nixpkgs-candidate-compilers",
-          "value": "9.10.x,9.4.x,9.6.x"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\",\"examples/readme\"]"
         }
       ],
-      "purl": "pkg:hackage/base",
-      "type": "library"
+      "purl": "pkg:hackage/base@4.20.2.0",
+      "type": "library",
+      "version": "4.20.2.0"
     },
     {
-      "bom-ref": "pkg:hackage/bytestring",
+      "bom-ref": "pkg:hackage/bytestring@0.12.2.0",
       "evidence": {
         "identity": [
           {
@@ -188,32 +181,25 @@
           "value": "hpack-manifest"
         },
         {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
           "name": "waybill:ghc-stdlib",
           "value": "true"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
-        },
-        {
-          "name": "waybill:nixpkgs-candidate-compilers",
-          "value": "9.10.x,9.4.x,9.6.x"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
-      "purl": "pkg:hackage/bytestring",
-      "type": "library"
+      "purl": "pkg:hackage/bytestring@0.12.2.0",
+      "type": "library",
+      "version": "0.12.2.0"
     },
     {
       "bom-ref": "pkg:hackage/case-insensitive@1.2.1.0",
@@ -390,7 +376,7 @@
       "version": "0.2.6"
     },
     {
-      "bom-ref": "pkg:hackage/containers",
+      "bom-ref": "pkg:hackage/containers@0.7",
       "evidence": {
         "identity": [
           {
@@ -434,32 +420,25 @@
           "value": "hpack-manifest"
         },
         {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
           "name": "waybill:ghc-stdlib",
           "value": "true"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
-        },
-        {
-          "name": "waybill:nixpkgs-candidate-compilers",
-          "value": "9.10.x,9.4.x,9.6.x"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
-      "purl": "pkg:hackage/containers",
-      "type": "library"
+      "purl": "pkg:hackage/containers@0.7",
+      "type": "library",
+      "version": "0.7"
     },
     {
       "bom-ref": "pkg:hackage/haddock-library@1.11.0",
@@ -890,7 +869,7 @@
       "version": "0.1"
     },
     {
-      "bom-ref": "pkg:hackage/mtl",
+      "bom-ref": "pkg:hackage/mtl@2.3.1",
       "evidence": {
         "identity": [
           {
@@ -934,32 +913,25 @@
           "value": "hpack-manifest"
         },
         {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
           "name": "waybill:ghc-stdlib",
           "value": "true"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
-        },
-        {
-          "name": "waybill:nixpkgs-candidate-compilers",
-          "value": "9.10.x,9.4.x,9.6.x"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
-      "purl": "pkg:hackage/mtl",
-      "type": "library"
+      "purl": "pkg:hackage/mtl@2.3.1",
+      "type": "library",
+      "version": "2.3.1"
     },
     {
       "bom-ref": "pkg:hackage/primitive@0.9.1.0",
@@ -1106,7 +1078,7 @@
       "version": "0.1.0.0"
     },
     {
-      "bom-ref": "pkg:hackage/template-haskell",
+      "bom-ref": "pkg:hackage/template-haskell@2.22.0.0",
       "evidence": {
         "identity": [
           {
@@ -1150,35 +1122,28 @@
           "value": "hpack-manifest"
         },
         {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
           "name": "waybill:ghc-stdlib",
           "value": "true"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
-        },
-        {
-          "name": "waybill:nixpkgs-candidate-compilers",
-          "value": "9.10.x,9.4.x,9.6.x"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
-      "purl": "pkg:hackage/template-haskell",
-      "type": "library"
+      "purl": "pkg:hackage/template-haskell@2.22.0.0",
+      "type": "library",
+      "version": "2.22.0.0"
     },
     {
-      "bom-ref": "pkg:hackage/text",
+      "bom-ref": "pkg:hackage/text@2.1.3",
       "evidence": {
         "identity": [
           {
@@ -1222,32 +1187,25 @@
           "value": "hpack-manifest"
         },
         {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
           "name": "waybill:ghc-stdlib",
           "value": "true"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
-        },
-        {
-          "name": "waybill:nixpkgs-candidate-compilers",
-          "value": "9.10.x,9.4.x,9.6.x"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
-      "purl": "pkg:hackage/text",
-      "type": "library"
+      "purl": "pkg:hackage/text@2.1.3",
+      "type": "library",
+      "version": "2.1.3"
     },
     {
       "bom-ref": "pkg:hackage/th-abstraction@0.7.2.0",
@@ -1424,7 +1382,7 @@
       "version": "0.1.7"
     },
     {
-      "bom-ref": "pkg:hackage/time",
+      "bom-ref": "pkg:hackage/time@1.12.2",
       "evidence": {
         "identity": [
           {
@@ -1468,32 +1426,25 @@
           "value": "hpack-manifest"
         },
         {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        },
+        {
           "name": "waybill:ghc-stdlib",
           "value": "true"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
-        },
-        {
-          "name": "waybill:nixpkgs-candidate-compilers",
-          "value": "9.10.x,9.4.x,9.6.x"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "declared"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
-      "purl": "pkg:hackage/time",
-      "type": "library"
+      "purl": "pkg:hackage/time@1.12.2",
+      "type": "library",
+      "version": "1.12.2"
     },
     {
       "bom-ref": "pkg:hackage/unordered-containers@0.2.20.1",
@@ -2019,7 +1970,7 @@
       "version": "1.1.3"
     },
     {
-      "bom-ref": "pkg:hackage/array",
+      "bom-ref": "pkg:hackage/array@0.5.8.0",
       "evidence": {
         "identity": [
           {
@@ -2041,19 +1992,20 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/array",
-      "type": "library"
+      "purl": "pkg:hackage/array@0.5.8.0",
+      "type": "library",
+      "version": "0.5.8.0"
     },
     {
-      "bom-ref": "pkg:hackage/binary",
+      "bom-ref": "pkg:hackage/binary@0.8.9.3",
       "evidence": {
         "identity": [
           {
@@ -2075,16 +2027,17 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/binary",
-      "type": "library"
+      "purl": "pkg:hackage/binary@0.8.9.3",
+      "type": "library",
+      "version": "0.8.9.3"
     },
     {
       "bom-ref": "pkg:hackage/call-stack@0.4.0",
@@ -2225,7 +2178,7 @@
       "version": "2.3.7"
     },
     {
-      "bom-ref": "pkg:hackage/deepseq",
+      "bom-ref": "pkg:hackage/deepseq@1.5.0.0",
       "evidence": {
         "identity": [
           {
@@ -2247,19 +2200,20 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/deepseq",
-      "type": "library"
+      "purl": "pkg:hackage/deepseq@1.5.0.0",
+      "type": "library",
+      "version": "1.5.0.0"
     },
     {
-      "bom-ref": "pkg:hackage/directory",
+      "bom-ref": "pkg:hackage/directory@1.3.8.5",
       "evidence": {
         "identity": [
           {
@@ -2281,19 +2235,20 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/directory",
-      "type": "library"
+      "purl": "pkg:hackage/directory@1.3.8.5",
+      "type": "library",
+      "version": "1.3.8.5"
     },
     {
-      "bom-ref": "pkg:hackage/filepath",
+      "bom-ref": "pkg:hackage/filepath@1.5.4.0",
       "evidence": {
         "identity": [
           {
@@ -2315,19 +2270,20 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/filepath",
-      "type": "library"
+      "purl": "pkg:hackage/filepath@1.5.4.0",
+      "type": "library",
+      "version": "1.5.4.0"
     },
     {
-      "bom-ref": "pkg:hackage/ghc-prim",
+      "bom-ref": "pkg:hackage/ghc-prim@0.12.0",
       "evidence": {
         "identity": [
           {
@@ -2349,16 +2305,17 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/ghc-prim",
-      "type": "library"
+      "purl": "pkg:hackage/ghc-prim@0.12.0",
+      "type": "library",
+      "version": "0.12.0"
     },
     {
       "bom-ref": "pkg:hackage/hashable@1.5.1.0",
@@ -2700,7 +2657,7 @@
       "version": "0.18.1.0"
     },
     {
-      "bom-ref": "pkg:hackage/os-string",
+      "bom-ref": "pkg:hackage/os-string@2.0.7",
       "evidence": {
         "identity": [
           {
@@ -2722,19 +2679,20 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/os-string",
-      "type": "library"
+      "purl": "pkg:hackage/os-string@2.0.7",
+      "type": "library",
+      "version": "2.0.7"
     },
     {
-      "bom-ref": "pkg:hackage/parsec",
+      "bom-ref": "pkg:hackage/parsec@3.1.18.0",
       "evidence": {
         "identity": [
           {
@@ -2756,16 +2714,17 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/parsec",
-      "type": "library"
+      "purl": "pkg:hackage/parsec@3.1.18.0",
+      "type": "library",
+      "version": "3.1.18.0"
     },
     {
       "bom-ref": "pkg:hackage/prettyprinter@1.7.1",
@@ -2890,7 +2849,7 @@
       "version": "1.1.3"
     },
     {
-      "bom-ref": "pkg:hackage/process",
+      "bom-ref": "pkg:hackage/process@1.6.26.1",
       "evidence": {
         "identity": [
           {
@@ -2912,16 +2871,17 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/process",
-      "type": "library"
+      "purl": "pkg:hackage/process@1.6.26.1",
+      "type": "library",
+      "version": "1.6.26.1"
     },
     {
       "bom-ref": "pkg:hackage/quickcheck-io@0.2.0",
@@ -3116,7 +3076,7 @@
       "version": "0.1.3.2"
     },
     {
-      "bom-ref": "pkg:hackage/stm",
+      "bom-ref": "pkg:hackage/stm@2.5.3.1",
       "evidence": {
         "identity": [
           {
@@ -3138,16 +3098,17 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/stm",
-      "type": "library"
+      "purl": "pkg:hackage/stm@2.5.3.1",
+      "type": "library",
+      "version": "2.5.3.1"
     },
     {
       "bom-ref": "pkg:hackage/tagged@0.8.9",
@@ -3272,7 +3233,7 @@
       "version": "1.5.4"
     },
     {
-      "bom-ref": "pkg:hackage/transformers",
+      "bom-ref": "pkg:hackage/transformers@0.6.1.1",
       "evidence": {
         "identity": [
           {
@@ -3294,16 +3255,17 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/transformers",
-      "type": "library"
+      "purl": "pkg:hackage/transformers@0.6.1.1",
+      "type": "library",
+      "version": "0.6.1.1"
     },
     {
       "bom-ref": "pkg:hackage/transformers-compat@0.7.2",
@@ -3367,7 +3329,7 @@
       "version": "0.7.2"
     },
     {
-      "bom-ref": "pkg:hackage/unix",
+      "bom-ref": "pkg:hackage/unix@2.8.7.0",
       "evidence": {
         "identity": [
           {
@@ -3389,16 +3351,17 @@
           "value": "design"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
-      "purl": "pkg:hackage/unix",
-      "type": "library"
+      "purl": "pkg:hackage/unix@2.8.7.0",
+      "type": "library",
+      "version": "2.8.7.0"
     },
     {
       "bom-ref": "pkg:hackage/vector-stream@0.1.0.1",
@@ -31507,6 +31470,10 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/ghc@9.10.3",
@@ -87468,7 +87435,7 @@
       "version": "1.5.7"
     },
     {
-      "bom-ref": "pkg:hackage/pretty",
+      "bom-ref": "pkg:hackage/pretty@1.1.3.6",
       "evidence": {
         "identity": [
           {
@@ -87490,15 +87457,16 @@
           "value": "build"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         }
       ],
-      "purl": "pkg:hackage/pretty",
-      "type": "library"
+      "purl": "pkg:hackage/pretty@1.1.3.6",
+      "type": "library",
+      "version": "1.1.3.6"
     },
     {
-      "bom-ref": "pkg:hackage/exceptions",
+      "bom-ref": "pkg:hackage/exceptions@0.10.9",
       "evidence": {
         "identity": [
           {
@@ -87520,15 +87488,264 @@
           "value": "build"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         }
       ],
-      "purl": "pkg:hackage/exceptions",
-      "type": "library"
+      "purl": "pkg:hackage/exceptions@0.10.9",
+      "type": "library",
+      "version": "0.10.9"
     },
     {
-      "bom-ref": "pkg:hackage/Cabal",
+      "bom-ref": "pkg:hackage/base@4.19.2.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "base",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/base@4.19.2.0",
+      "type": "library",
+      "version": "4.19.2.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/containers@0.6.8",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "containers",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/containers@0.6.8",
+      "type": "library",
+      "version": "0.6.8"
+    },
+    {
+      "bom-ref": "pkg:hackage/bytestring@0.12.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "bytestring",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/bytestring@0.12.1.0",
+      "type": "library",
+      "version": "0.12.1.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/ghc@9.10.3",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "ghc",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
+        }
+      ],
+      "purl": "pkg:hackage/ghc@9.10.3",
+      "type": "library",
+      "version": "9.10.3"
+    },
+    {
+      "bom-ref": "pkg:hackage/filepath@1.4.301.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "filepath",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/filepath@1.4.301.0",
+      "type": "library",
+      "version": "1.4.301.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/process@1.6.25.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "process",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/process@1.6.25.0",
+      "type": "library",
+      "version": "1.6.25.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/unix@2.8.6.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "unix",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/unix@2.8.6.0",
+      "type": "library",
+      "version": "2.8.6.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/transformers@0.6.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "transformers",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/transformers@0.6.1.0",
+      "type": "library",
+      "version": "0.6.1.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/Cabal@3.12.1.0",
       "evidence": {
         "identity": [
           {
@@ -87550,15 +87767,16 @@
           "value": "build"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         }
       ],
-      "purl": "pkg:hackage/Cabal",
-      "type": "library"
+      "purl": "pkg:hackage/Cabal@3.12.1.0",
+      "type": "library",
+      "version": "3.12.1.0"
     },
     {
-      "bom-ref": "pkg:hackage/Cabal-syntax",
+      "bom-ref": "pkg:hackage/Cabal-syntax@3.12.1.0",
       "evidence": {
         "identity": [
           {
@@ -87580,15 +87798,16 @@
           "value": "build"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         }
       ],
-      "purl": "pkg:hackage/Cabal-syntax",
-      "type": "library"
+      "purl": "pkg:hackage/Cabal-syntax@3.12.1.0",
+      "type": "library",
+      "version": "3.12.1.0"
     },
     {
-      "bom-ref": "pkg:hackage/ghc-heap",
+      "bom-ref": "pkg:hackage/ghc-heap@9.10.3",
       "evidence": {
         "identity": [
           {
@@ -87610,12 +87829,137 @@
           "value": "build"
         },
         {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "compiler-supplied"
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-9.10.3"
         }
       ],
-      "purl": "pkg:hackage/ghc-heap",
-      "type": "library"
+      "purl": "pkg:hackage/ghc-heap@9.10.3",
+      "type": "library",
+      "version": "9.10.3"
+    },
+    {
+      "bom-ref": "pkg:hackage/deepseq@1.5.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "deepseq",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/deepseq@1.5.1.0",
+      "type": "library",
+      "version": "1.5.1.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/exceptions@0.10.7",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "exceptions",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/exceptions@0.10.7",
+      "type": "library",
+      "version": "0.10.7"
+    },
+    {
+      "bom-ref": "pkg:hackage/template-haskell@2.21.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "template-haskell",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/template-haskell@2.21.0.0",
+      "type": "library",
+      "version": "2.21.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/binary@0.8.9.1",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "binary",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:boot-library-compiler",
+          "value": "ghc-binary-9.8.4"
+        }
+      ],
+      "purl": "pkg:hackage/binary@0.8.9.1",
+      "type": "library",
+      "version": "0.8.9.1"
     }
   ],
   "compositions": [
@@ -91695,31 +92039,7 @@
       "ref": "pkg:generic/ghc-toolchain@9.10.3"
     },
     {
-      "dependsOn": [
-        "pkg:generic/autoreconf-hook@26.05pre-git",
-        "pkg:generic/bash-interactive@5.3p9",
-        "pkg:generic/bash@5.3p9",
-        "pkg:generic/binutils-wrapper@2.46",
-        "pkg:generic/binutils@2.46",
-        "pkg:generic/elfutils@0.194",
-        "pkg:generic/gcc-wrapper@15.2.0",
-        "pkg:generic/ghc-9.10.3-source-a66mxycf307g3ginfwim1hx4xwk90m13",
-        "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/ghc-settings-edit@0.1.0",
-        "pkg:generic/glibc-locales@2.42-61",
-        "pkg:generic/gmp-with-cxx@6.3.0",
-        "pkg:generic/hadrian@9.10.3",
-        "pkg:generic/libffi@3.5.2",
-        "pkg:generic/ncurses@6.6",
-        "pkg:generic/numactl@2.0.18",
-        "pkg:generic/perl@5.42.0",
-        "pkg:generic/python3@3.13.13",
-        "pkg:generic/sphinx@9.1.0",
-        "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/alex@3.5.4.2",
-        "pkg:hackage/happy@2.1.7",
-        "pkg:hackage/hscolour@1.25"
-      ],
+      "dependsOn": [],
       "ref": "pkg:generic/ghc@9.10.3"
     },
     {
@@ -99387,11 +99707,11 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/Cabal"
+      "ref": "pkg:hackage/Cabal-syntax@3.12.1.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/Cabal-syntax"
+      "ref": "pkg:hackage/Cabal@3.12.1.0"
     },
     {
       "dependsOn": [
@@ -99399,14 +99719,14 @@
         "pkg:generic/ChasingBottoms-1.3.1.17.tar.gz-sha256.hr3rC.sIsVSEwe5B1HVru.pjikGVfMioBhwSz22cNqrIxw.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/mtl",
+        "pkg:hackage/mtl@2.3.1",
         "pkg:hackage/random@1.2.1.3",
         "pkg:hackage/syb@0.7.2.4"
       ],
@@ -99417,14 +99737,14 @@
         "pkg:generic/Diff-1.0.2.tar.gz-sha256.hzX4m09Xr9.sLBp1Ja6.pJR.p8v.s7ipjYttjS0viO541TYU.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/pretty",
+        "pkg:hackage/pretty@1.1.3.6",
         "pkg:hackage/test-framework-quickcheck2@0.3.0.7",
         "pkg:hackage/test-framework@0.8.2.3"
       ],
@@ -99435,12 +99755,12 @@
         "pkg:generic/HUnit-1.6.2.0.tar.gz-sha256.hsLdTiHH.swFhIb8AHQIhtLzFy.pPpoaZNr.soOl4QvXRKs.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/call-stack@0.4.0",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/HUnit@1.6.2.0"
@@ -99450,14 +99770,14 @@
         "pkg:generic/OneTuple-0.4.2.1.tar.gz-sha256.hxQQTJVHpyPWv5sjI1b8e0gj02piwy0r1lAC9m9g24D4.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/ghc-prim",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/template-haskell"
+        "pkg:hackage/template-haskell@2.22.0.0"
       ],
       "ref": "pkg:hackage/OneTuple@0.4.2.1"
     },
@@ -99467,17 +99787,17 @@
         "pkg:generic/QuickCheck-2.15.0.1.tar.gz-sha256.ho7IhbduvSB28gkFLYSD4tybZads.sC1HyCnpFQl7zbn8.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/random@1.2.1.3",
         "pkg:hackage/splitmix@0.1.3.2",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/transformers"
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/QuickCheck@2.15.0.1"
     },
@@ -99486,13 +99806,13 @@
         "pkg:generic/StateVar-1.2.2.tar.gz-sha256.hXks52jlWVqWYJ7AoBQiq.sccDNXmLUOXW.sVJZYCYlGCU.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/stm",
-        "pkg:hackage/transformers"
+        "pkg:hackage/stm@2.5.3.1",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/StateVar@1.2.2"
     },
@@ -99501,22 +99821,22 @@
         "pkg:generic/adjunctions-4.4.4.tar.gz-sha256.hIUCNm9PHQzG1V86GKB5ZL1ZGbhnSp.pPzfkBlIDpmMUU.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/comonad@5.0.10",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
         "pkg:hackage/distributive@0.6.3",
         "pkg:hackage/free@5.2",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
-        "pkg:hackage/mtl",
+        "pkg:hackage/mtl@2.3.1",
         "pkg:hackage/profunctors@5.6.3",
         "pkg:hackage/semigroupoids@6.0.2",
         "pkg:hackage/tagged@0.8.9",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/adjunctions@4.4.4"
     },
@@ -99525,25 +99845,25 @@
         "pkg:generic/aeson-2.2.4.1.tar.gz-sha256.hQHHxqnz0.p.pbIiH0k7S.p9V7J0QRSZSwNWFs5iC3wC.pmA.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/Diff@1.0.2",
         "pkg:hackage/OneTuple@0.4.2.1",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
         "pkg:hackage/base-compat@0.14.1",
         "pkg:hackage/base-orphans@0.9.4",
         "pkg:hackage/base16-bytestring@1.0.2.0",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
         "pkg:hackage/character-ps@0.1",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
         "pkg:hackage/data-fix@0.3.4",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/deepseq@1.5.0.0",
         "pkg:hackage/dlist@1.0",
-        "pkg:hackage/exceptions",
+        "pkg:hackage/exceptions@0.10.9",
         "pkg:hackage/generic-deriving@1.14.7",
         "pkg:hackage/generically@0.1.1",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/indexed-traversable@0.1.4",
@@ -99560,14 +99880,14 @@
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/text",
+        "pkg:hackage/template-haskell@2.22.0.0",
         "pkg:hackage/text-iso8601@0.1.1.1",
         "pkg:hackage/text-short@0.1.6.1",
+        "pkg:hackage/text@2.1.3",
         "pkg:hackage/th-abstraction@0.7.2.0",
         "pkg:hackage/these@1.2.1",
-        "pkg:hackage/time",
         "pkg:hackage/time-compat@1.9.9",
+        "pkg:hackage/time@1.12.2",
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/uuid-types@1.0.6.1",
         "pkg:hackage/vector@0.13.2.0",
@@ -99583,10 +99903,10 @@
         "pkg:generic/ghc-binary@9.8.4",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/directory",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/containers@0.6.8",
+        "pkg:hackage/directory@1.3.8.5",
         "pkg:hackage/happy@2.1.7"
       ],
       "ref": "pkg:hackage/alex@3.5.4.2"
@@ -99596,11 +99916,11 @@
         "pkg:generic/ansi-terminal-types-1.1.3.tar.gz-sha256.hn8nOIVfxiJvZmk0iyfHGRYlZC.pD3l8Pv5xyPoXoRpok.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/colour@2.3.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/ansi-terminal-types@1.1.3"
@@ -99610,12 +99930,12 @@
         "pkg:generic/ansi-terminal-1.1.5.tar.gz-sha256.hnPCDzvLiuoikJfEyyKgr.ppMetLDDgjKyAX.pPzqLiMHM.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/ansi-terminal-types@1.1.3",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/colour@2.3.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/ansi-terminal@1.1.5"
@@ -99625,10 +99945,10 @@
         "pkg:generic/ansi-wl-pprint-1.0.2.tar.gz-sha256.hI04YE6F45UZtEhY14ZDm.szPqbwnEUSATiCTV3navJ0c.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/prettyprinter-compat-ansi-wl-pprint@1.0.2"
       ],
@@ -99636,7 +99956,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/array"
+      "ref": "pkg:hackage/array@0.5.8.0"
     },
     {
       "dependsOn": [
@@ -99644,10 +99964,10 @@
         "pkg:generic/assoc-1.1.1.tar.gz-sha256.hIxFJt.s7wn13ZWvUSKGFeOyltvQ.pq3soFPgZEpLE7D.sY.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/assoc@1.1.1"
@@ -99657,14 +99977,14 @@
         "pkg:generic/async-2.2.6.tar.gz-sha256.hFIVxvBiAAxASQdpsSRMdBzJOY6iO0oOoTe8ulpRZlhk.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/stm",
+        "pkg:hackage/stm@2.5.3.1",
         "pkg:hackage/test-framework-hunit@0.3.0.3",
         "pkg:hackage/test-framework@0.8.2.3",
         "pkg:hackage/unordered-containers@0.2.20.1"
@@ -99677,43 +99997,39 @@
         "pkg:generic/attoparsec-0.14.4.tar.gz-sha256.hPzN.s5YYkVl3hJCb2B8I.pYMewnIa04638gnyhiMmXnmw.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/ghc-prim",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/quickcheck-unicode@1.0.1.0",
         "pkg:hackage/scientific@0.3.8.1",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers",
+        "pkg:hackage/text@2.1.3",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/vector@0.13.2.0"
       ],
       "ref": "pkg:hackage/attoparsec@0.14.4"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:hackage/base"
     },
     {
       "dependsOn": [
         "pkg:generic/base-compat-0.14.1.tar.gz-sha256.hdOZVVB5kXo.sHqt4eahtpc1Yb4LypNpvBYjqjRQGaNek.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/ghc-prim",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/unix"
+        "pkg:hackage/unix@2.8.7.0"
       ],
       "ref": "pkg:hackage/base-compat@0.14.1"
     },
@@ -99722,11 +100038,11 @@
         "pkg:generic/base-orphans-0.9.4.tar.gz-sha256.hCMwoOjE1D3vSiypdMa9pPuM38lk9PnIimZty3UlUxys.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17"
@@ -99740,13 +100056,15 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.1.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/test-framework-hunit@0.3.0.3",
         "pkg:hackage/test-framework-quickcheck2@0.3.0.7",
@@ -99760,13 +100078,13 @@
         "pkg:generic/base64-bytestring-1.2.1.0.tar.gz-sha256.h.p.sjtMO3eJx62BTUgIUMdjxsFX5WlavMf4urPa9.scSck.e",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/test-framework-hunit@0.3.0.3",
         "pkg:hackage/test-framework-quickcheck2@0.3.0.7",
@@ -99775,49 +100093,61 @@
       "ref": "pkg:hackage/base64-bytestring@1.2.1.0"
     },
     {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base@4.19.2.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base@4.20.2.0"
+    },
+    {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/bifunctors-5.6.3-r1.cabal-sha256.hWPHWbbce2d1wZI6soaCYayk1Szpptb.sXKc4aiWdmRm4.e",
         "pkg:generic/bifunctors-5.6.3.tar.gz-sha256.hrXo1fwIvTHgMUFBA1z8cBqT9aXtKC6thI7vXO1XYEVw.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/assoc@1.1.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/comonad@5.0.10",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
         "pkg:hackage/tagged@0.8.9",
-        "pkg:hackage/template-haskell",
+        "pkg:hackage/template-haskell@2.22.0.0",
         "pkg:hackage/th-abstraction@0.7.2.0"
       ],
       "ref": "pkg:hackage/bifunctors@5.6.3"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/binary"
+      "ref": "pkg:hackage/binary@0.8.9.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/binary@0.8.9.3"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/blaze-builder-0.4.4.1.tar.gz-sha256.hlx02BCisl6.paTlXk8sI2SfbO3Azl1ulNUg5mPzPqURM.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/test-framework-hunit@0.3.0.3",
         "pkg:hackage/test-framework-quickcheck2@0.3.0.7",
         "pkg:hackage/test-framework@0.8.2.3",
-        "pkg:hackage/text",
+        "pkg:hackage/text@2.1.3",
         "pkg:hackage/utf8-string@1.0.2"
       ],
       "ref": "pkg:hackage/blaze-builder@0.4.4.1"
@@ -99828,20 +100158,20 @@
         "pkg:generic/blaze-html-0.9.2.0-r1.cabal-sha256.hhcQvhPTq0sSIRPvghlBprdO7O7MyLThgfpPVUVpMnFg.e",
         "pkg:generic/blaze-html-0.9.2.0.tar.gz-sha256.hZVQu8592RKPXavyt65dtPjNMaUdRa3MT.sLWRZc6hYI8.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/blaze-builder@0.4.4.1",
         "pkg:hackage/blaze-markup@0.8.3.0",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/test-framework-hunit@0.3.0.3",
         "pkg:hackage/test-framework-quickcheck2@0.3.0.7",
         "pkg:hackage/test-framework@0.8.2.3",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/blaze-html@0.9.2.0"
     },
@@ -99851,25 +100181,29 @@
         "pkg:generic/blaze-markup-0.8.3.0-r2.cabal-sha256.hAn8hi4HSinwKM7k9RWxOWqktFF6dzuFINPutc6Oa1.pQ.e",
         "pkg:generic/blaze-markup-0.8.3.0.tar.gz-sha256.hhgasi0off48bvAdwsnUum2.pIzMn73LszqiBXfQ5ZMOg.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/blaze-builder@0.4.4.1",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/blaze-markup@0.8.3.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/bytestring"
+      "ref": "pkg:hackage/bytestring@0.12.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/bytestring@0.12.2.0"
     },
     {
       "dependsOn": [
@@ -99877,10 +100211,10 @@
         "pkg:generic/call-stack-0.4.0.tar.gz-sha256.hQwvPijQE9.pVTGVc8C4B7E1aUbwyPKJuz2a.pyecY2uHs.e",
         "pkg:generic/call-stack-tests-normalize-pkg-name.patch-sha256.hxkdjf8zXW.pUMxot2Z8WYYmvAJsT.pVGKXWGt19mZZwCg.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/nanospec@0.2.2"
       ],
@@ -99891,18 +100225,18 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/case-insensitive-1.2.1.0.tar.gz-sha256.hKW3BfgxfPfs9gs7YPkycRMM47N50myeLbq5RLx0E5AY.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/test-framework-hunit@0.3.0.3",
         "pkg:hackage/test-framework@0.8.2.3",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/case-insensitive@1.2.1.0"
     },
@@ -99911,10 +100245,10 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/character-ps-0.1.tar.gz-sha256.hIt5x.seOLI20.pkWioMrXh510ftPQChme990eztMjBUpw.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/character-ps@0.1"
@@ -99924,13 +100258,13 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/charset-0.3.12.tar.gz-sha256.hHOjG1ESunVaFCZ.shGP2idExKYDdVlQfYIT.s2ht.sKci0.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/unordered-containers@0.2.20.1"
       ],
@@ -99944,7 +100278,7 @@
         "pkg:generic/ghc-binary@9.8.4",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/clock@0.8.4"
@@ -99955,14 +100289,14 @@
         "pkg:generic/cmark-gfm-0.2.6-r1.cabal-sha256.hhnK5OI9d36js5pHlm0Jy.poB6Ld8GmJcM1zr5vruYBY0.e",
         "pkg:generic/cmark-gfm-0.2.6.tar.gz-sha256.hlYz7O9VLG.sqeHi2c0XSOdsENKzCjzO6rP2qFIgXBqGk.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/cmark-gfm@0.2.6"
     },
@@ -99971,10 +100305,10 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/code-page-0.2.1.tar.gz-sha256.hsvkOGcYe2Kb.scpX38SPUqZE8eQ1M8sYCm8KZKT.sbKqo.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/code-page@0.2.1"
@@ -99984,10 +100318,10 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/colour-2.3.7.tar.gz-sha256.hHzsQVWdavk4zYoAMyb96ubkt.sfIaH2yCslJhEnC.ploA.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/colour@2.3.7"
@@ -99997,35 +100331,39 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/comonad-5.0.10.tar.gz-sha256.h6XOd8r9ZRJWAYqTqc73jvzXAh5zuCUTt9.sBb6.smT.pcE.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
         "pkg:hackage/distributive@0.6.3",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/indexed-traversable@0.1.4",
         "pkg:hackage/tagged@0.8.9",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/comonad@5.0.10"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/containers"
+      "ref": "pkg:hackage/containers@0.6.8"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/containers@0.7"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/contravariant-1.5.6.tar.gz-sha256.hZfMmA1TuX9Hyx.s.sFTP.pZ0it5TCVPBTc0l5rTeCDm7.pM.e",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/StateVar@1.2.2",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/contravariant@1.5.6"
     },
@@ -100038,8 +100376,8 @@
         "pkg:generic/ghc-binary@9.8.4",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/bytestring@0.12.1.0",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/cryptohash-sha256@0.11.102.1"
@@ -100050,11 +100388,11 @@
         "pkg:generic/coreutils@9.11",
         "pkg:generic/data-fix-0.3.4-r2.cabal-sha256.hIANgxJzIHPi4u99Jr9Su4D.s.s0J0zlbCAp.pfGX88B0xM.e",
         "pkg:generic/data-fix-0.3.4.tar.gz-sha256.hjfBS0YwEernpIAU2qHmbWvOZfr7Luwkac4S2voQWqzc.e",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25"
       ],
@@ -100062,27 +100400,31 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/deepseq"
+      "ref": "pkg:hackage/deepseq@1.5.0.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/directory"
+      "ref": "pkg:hackage/deepseq@1.5.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/directory@1.3.8.5"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/distributive-0.6.3.tar.gz-sha256.hrusCiiPbn5sHPiSmvXZrebnVjCtAewa.sMylsJ.pkmS6o.e",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/generic-deriving@1.14.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
         "pkg:hackage/tagged@0.8.9",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/distributive@0.6.3"
     },
@@ -100092,12 +100434,12 @@
         "pkg:generic/coreutils@9.11",
         "pkg:generic/dlist-1.0-r2.cabal-sha256.hhUcnWUxagWqz0Q8VsbxP7a.peP30e9Reiu5AR8puiYdI.e",
         "pkg:generic/dlist-1.0.tar.gz-sha256.hFz1jcyi7Fz.sMNl8w0p.s0qUKSoeDlVYrrPfwR3oFRARU.e",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/dlist@1.0"
@@ -100107,36 +100449,40 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/doctest-0.24.3.tar.gz-sha256.hZSQPDxGFauWM9e6rjW3fJKJq3ArNlcmGYApGjnQrEjg.e",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/code-page@0.2.1",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/directory",
-        "pkg:hackage/exceptions",
-        "pkg:hackage/filepath",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/exceptions@0.10.9",
+        "pkg:hackage/filepath@1.5.4.0",
         "pkg:hackage/ghc-paths@0.1.0.12",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-core@2.11.17",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
         "pkg:hackage/mockery@0.3.5",
-        "pkg:hackage/process",
+        "pkg:hackage/process@1.6.26.1",
         "pkg:hackage/silently@1.2.5.4",
         "pkg:hackage/stringbuilder@0.5.1",
         "pkg:hackage/syb@0.7.2.4",
         "pkg:hackage/temporary@1.3",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/doctest@0.24.3"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/exceptions"
+      "ref": "pkg:hackage/exceptions@0.10.7"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/exceptions@0.10.9"
     },
     {
       "dependsOn": [
@@ -100146,20 +100492,24 @@
         "pkg:generic/ghc-binary@9.8.4",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/clock@0.8.4",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/filepath@1.4.301.0",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/process",
-        "pkg:hackage/time",
-        "pkg:hackage/unix"
+        "pkg:hackage/process@1.6.25.0",
+        "pkg:hackage/time@1.12.2",
+        "pkg:hackage/unix@2.8.6.0"
       ],
       "ref": "pkg:hackage/extra@1.8.1"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/filepath"
+      "ref": "pkg:hackage/filepath@1.4.301.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/filepath@1.5.4.0"
     },
     {
       "dependsOn": [
@@ -100169,10 +100519,10 @@
         "pkg:generic/ghc-binary@9.8.4",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/directory",
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/directory@1.3.8.5",
         "pkg:hackage/extra@1.8.1",
-        "pkg:hackage/filepath",
+        "pkg:hackage/filepath@1.4.301.0",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/filepattern@0.1.3"
@@ -100182,13 +100532,13 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/fingertree-0.1.6.3.tar.gz-sha256.hh.pCuX9jf5XEZuKaikfZrKql1H.pPG3.p.s3996H2fzborg.e",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/test-framework-hunit@0.3.0.3",
         "pkg:hackage/test-framework-quickcheck2@0.3.0.7",
@@ -100202,23 +100552,23 @@
         "pkg:generic/coreutils@9.11",
         "pkg:generic/free-5.2-r8.cabal-sha256.hOcoBZF98Lwj.s1kImiRxRS9ySSofaSPgV.pf53wuCsEWQ.e",
         "pkg:generic/free-5.2.tar.gz-sha256.hcoZ.sfIkXMmN2Vzbo05XpQpHxqupibssdZz1yzpC5T4k.e",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/comonad@5.0.10",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
         "pkg:hackage/distributive@0.6.3",
-        "pkg:hackage/exceptions",
+        "pkg:hackage/exceptions@0.10.9",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/indexed-traversable@0.1.4",
-        "pkg:hackage/mtl",
+        "pkg:hackage/mtl@2.3.1",
         "pkg:hackage/profunctors@5.6.3",
         "pkg:hackage/semigroupoids@6.0.2",
-        "pkg:hackage/template-haskell",
+        "pkg:hackage/template-haskell@2.22.0.0",
         "pkg:hackage/th-abstraction@0.7.2.0",
-        "pkg:hackage/transformers",
-        "pkg:hackage/transformers-base@0.4.6.1"
+        "pkg:hackage/transformers-base@0.4.6.1",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/free@5.2"
     },
@@ -100227,15 +100577,15 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/generic-deriving-1.14.7.tar.gz-sha256.hyRYgpckVm7163eGDUg6sIsLQb04Hbf.sk4LhlAZHl2Mo.e",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
-        "pkg:hackage/template-haskell",
+        "pkg:hackage/template-haskell@2.22.0.0",
         "pkg:hackage/th-abstraction@0.7.2.0"
       ],
       "ref": "pkg:hackage/generic-deriving@1.14.7"
@@ -100246,17 +100596,17 @@
         "pkg:generic/coreutils@9.11",
         "pkg:generic/generically-0.1.1-r5.cabal-sha256.hf.pQVI01FXrWEAkd4mayWnkY3TQuqsJ6N3TGfY5Sko2k.e",
         "pkg:generic/generically-0.1.1.tar.gz-sha256.hBMWkNr7EsEH3GnM.sVqG9f0NfY93o0.ptcH0jVW028Q88.e",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/generically@0.1.1"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/ghc-heap"
+      "ref": "pkg:hackage/ghc-heap@9.10.3"
     },
     {
       "dependsOn": [
@@ -100264,38 +100614,66 @@
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ghc-paths-0.1.0.12-r8.cabal-sha256.hQk1QoqOMb.sW4RU7eXaf7RupTcMLZ4YhsSApRQiPAsPo.e",
         "pkg:generic/ghc-paths-0.1.0.12.tar.gz-sha256.hbsvmdtBzyweYnGHOTFcJxOZ8vv3S1VpAlfk4i2.sixIQ.e",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/ghc-paths@0.1.0.12"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/ghc-prim"
+      "ref": "pkg:hackage/ghc-prim@0.12.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:generic/autoreconf-hook@26.05pre-git",
+        "pkg:generic/bash-interactive@5.3p9",
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/binutils-wrapper@2.46",
+        "pkg:generic/binutils@2.46",
+        "pkg:generic/elfutils@0.194",
+        "pkg:generic/gcc-wrapper@15.2.0",
+        "pkg:generic/ghc-9.10.3-source-a66mxycf307g3ginfwim1hx4xwk90m13",
+        "pkg:generic/ghc-binary@9.8.4",
+        "pkg:generic/ghc-settings-edit@0.1.0",
+        "pkg:generic/glibc-locales@2.42-61",
+        "pkg:generic/gmp-with-cxx@6.3.0",
+        "pkg:generic/hadrian@9.10.3",
+        "pkg:generic/libffi@3.5.2",
+        "pkg:generic/ncurses@6.6",
+        "pkg:generic/numactl@2.0.18",
+        "pkg:generic/perl@5.42.0",
+        "pkg:generic/python3@3.13.13",
+        "pkg:generic/sphinx@9.1.0",
+        "pkg:generic/stdenv-linux@26.05pre-git",
+        "pkg:hackage/alex@3.5.4.2",
+        "pkg:hackage/happy@2.1.7",
+        "pkg:hackage/hscolour@1.25"
+      ],
+      "ref": "pkg:hackage/ghc@9.10.3"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/haddock-library-1.11.0-r5.cabal-sha256.h0Y.pqMir4A0.pDhSXTH5t1kc76R8YzCnqJCfhHz1cwKL4.e",
         "pkg:generic/haddock-library-1.11.0.tar.gz-sha256.hfAdeyaN4sKLZ1gXnITUgHmx.s8xZWTyyXQRNYL0O.pogo.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
         "pkg:hackage/base-compat@0.14.1",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
         "pkg:hackage/jailbreak-cabal@1.4.1",
         "pkg:hackage/optparse-applicative@0.18.1.0",
-        "pkg:hackage/parsec",
-        "pkg:hackage/text",
+        "pkg:hackage/parsec@3.1.18.0",
+        "pkg:hackage/text@2.1.3",
         "pkg:hackage/tree-diff@0.3.4"
       ],
       "ref": "pkg:hackage/haddock-library@1.11.0"
@@ -100308,12 +100686,12 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/happy-lib-2.1.7.tar.gz-sha256.h9iWyxKPytfr6PFYPqHV1AsyN6D2ahMJpL8lDOAkA8mk.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/containers@0.6.8",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/mtl",
-        "pkg:hackage/transformers"
+        "pkg:hackage/mtl@2.3.1",
+        "pkg:hackage/transformers@0.6.1.0"
       ],
       "ref": "pkg:hackage/happy-lib@2.1.7"
     },
@@ -100326,11 +100704,11 @@
         "pkg:generic/happy-2.1.7.tar.gz-sha256.hnjkPCrCC0R1GWY9iFbL26CUwWXIYYPgQgkCQkVMtfio.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/which@2.23",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/containers@0.6.8",
         "pkg:hackage/happy-lib@2.1.7",
-        "pkg:hackage/mtl"
+        "pkg:hackage/mtl@2.3.1"
       ],
       "ref": "pkg:hackage/happy@2.1.7"
     },
@@ -100339,24 +100717,24 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/hashable-1.5.1.0.tar.gz-sha256.h7Qt8EM6Syf.skVCDa3DjG0520hv82M.s8TVnzJ9195sRI.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/filepath",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/os-string",
         "pkg:hackage/os-string@2.0.10",
+        "pkg:hackage/os-string@2.0.7",
         "pkg:hackage/primitive@0.9.1.0",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/hashable@1.5.1.0"
     },
@@ -100364,11 +100742,11 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/haskell-lexer-1.2.1.tar.gz-sha256.hnXbhUoEGsbMubkZSZOOTgcpLRQtypLUzHn5RJ2QKGkE.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/haskell-lexer@1.2.1"
@@ -100381,7 +100759,7 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/heaps-0.4.1.tar.gz-sha256.hh2OkZjotCzyRJAClR9Zq4RtGqVRAO2dHJyFI6VCqA4I.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/heaps@0.4.1"
@@ -100390,11 +100768,11 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/hostname-1.0.tar.gz-sha256.hm0PasbbaUh81aFsgVV2gBzjI4TbrlyRYx4YkJAapz1w.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/hostname@1.0"
@@ -100404,12 +100782,14 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/hscolour-1.25.tar.gz-sha256.hVM4w2lVZnocv042SeqUYNp4pcbKErMZ.p0MqsauFMx3w.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/containers"
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.6.8",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3"
       ],
       "ref": "pkg:hackage/hscolour@1.25"
     },
@@ -100417,29 +100797,29 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/hspec-core-2.11.17.tar.gz-sha256.hhLUXalJcsN.pYBwRAIBIggUUXtdUeb9FaUsC8edo7ioU.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/ansi-terminal@1.1.5",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/call-stack@0.4.0",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/haskell-lexer@1.2.1",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-expectations@0.8.4",
-        "pkg:hackage/process",
+        "pkg:hackage/process@1.6.26.1",
         "pkg:hackage/quickcheck-io@0.2.0",
         "pkg:hackage/random@1.2.1.3",
-        "pkg:hackage/stm",
-        "pkg:hackage/time",
-        "pkg:hackage/transformers"
+        "pkg:hackage/stm@2.5.3.1",
+        "pkg:hackage/time@1.12.2",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/hspec-core@2.11.17"
     },
@@ -100447,14 +100827,14 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/hspec-discover-2.11.17.tar.gz-sha256.hNWydjfeN8wMzSL5hfd9AiRSkHdh8ErXteHsEgPrORlI.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-meta@2.11.17",
         "pkg:hackage/mockery@0.3.5"
@@ -100465,14 +100845,14 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/hspec-expectations-0.8.4-r2.cabal-sha256.hQjfwlKeTEgL.sV6xkdVQrCzFLUKcCRVDituuHz7DU.s5M.e",
         "pkg:generic/hspec-expectations-0.8.4.tar.gz-sha256.he43efiMOz9qQyV.sYBHiyRKReaGAvs91KdvRxBhm.pIf8.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/call-stack@0.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/nanospec@0.2.2"
       ],
@@ -100482,15 +100862,15 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/hspec-golden-0.2.2.0-r1.cabal-sha256.hirXA4qqsQ6nvLrkz2n1lbpmXNQikFbuEn0qxgLF3wR4.e",
         "pkg:generic/hspec-golden-0.2.2.0.tar.gz-sha256.hevEcb1zK.pnYtYBudA6FhVJLUjRFJF2eQB.smNjihN9vI.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/ansi-terminal@1.1.5",
-        "pkg:hackage/base",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-core@2.11.17",
         "pkg:hackage/hspec-discover@2.11.17",
@@ -100504,29 +100884,29 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/hspec-meta-2.11.17.tar.gz-sha256.hUu410bf6utu8W54PzndRIMpRY3BA3G1WqwQHnRshpnw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/ansi-terminal@1.1.5",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/call-stack@0.4.0",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/haskell-lexer@1.2.1",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-expectations@0.8.4",
-        "pkg:hackage/process",
+        "pkg:hackage/process@1.6.26.1",
         "pkg:hackage/quickcheck-io@0.2.0",
         "pkg:hackage/random@1.2.1.3",
-        "pkg:hackage/stm",
-        "pkg:hackage/time",
-        "pkg:hackage/transformers"
+        "pkg:hackage/stm@2.5.3.1",
+        "pkg:hackage/time@1.12.2",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/hspec-meta@2.11.17"
     },
@@ -100534,12 +100914,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/hspec-2.11.17.tar.gz-sha256.hOeTIw7sr4IpMYXR93.sA2XGoH78YYWzqAp7iPu2vsl1Y.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-core@2.11.17",
         "pkg:hackage/hspec-discover@2.11.17",
@@ -100551,13 +100931,13 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/indexed-traversable-instances-0.1.2.1.tar.gz-sha256.h5p1B8jqVRjwuA67gM3Sk9InHL3vyNb4lFJnEzKlBH.pw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/OneTuple@0.4.2.1",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/indexed-traversable@0.1.4",
         "pkg:hackage/quickcheck-instances@0.3.33",
@@ -100573,16 +100953,16 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/indexed-traversable-0.1.4-r2.cabal-sha256.hirrAuSeVSJA51zEgUNE5N1em9nhZ.s2pPNiImChuTG84.e",
         "pkg:generic/indexed-traversable-0.1.4.tar.gz-sha256.hWL4Jr9861aJcKqDSp9.pA1gLfCfTnbTq.sK3zbDnXQOyI.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/indexed-traversable@0.1.4"
     },
@@ -100590,15 +100970,15 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/inspection-testing-0.6.3.tar.gz-sha256.heEW6kDblFS6oPiF0RmEG.pEeoTA0m5S4.s1UuHi7Hw5RI.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/transformers"
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/inspection-testing@0.6.3"
     },
@@ -100606,19 +100986,19 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/integer-conversion-0.1.1-r2.cabal-sha256.hEj0bCIQE8JdlAMaNgQWXiqLjKQjOVQjjKuvSN.sBEfJ8.e",
         "pkg:generic/integer-conversion-0.1.1.tar.gz-sha256.hwYFkoEgHMxD2NT68ZMkDe1KkuCmZY84F4Ce89g4iFVo.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/primitive@0.9.1.0",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/integer-conversion@0.1.1"
     },
@@ -100626,12 +101006,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/integer-logarithms-1.0.5.tar.gz-sha256.hZt.s28fd4.sh7GiROf4SXNTmqVZDc0xlHIker6LFBmlFk.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/integer-logarithms@1.0.5"
@@ -100640,27 +101020,27 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/invariant-0.6.5.tar.gz-sha256.hYmvex8kl.pw8ViW3Md2mSywCl.sPmSEVKME.pdTXnI5bjo.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/StateVar@1.2.2",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/bifunctors@5.6.3",
         "pkg:hackage/comonad@5.0.10",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
         "pkg:hackage/contravariant@1.5.6",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
         "pkg:hackage/profunctors@5.6.3",
-        "pkg:hackage/stm",
+        "pkg:hackage/stm@2.5.3.1",
         "pkg:hackage/tagged@0.8.9",
-        "pkg:hackage/template-haskell",
+        "pkg:hackage/template-haskell@2.22.0.0",
         "pkg:hackage/th-abstraction@0.7.2.0",
-        "pkg:hackage/transformers",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/unordered-containers@0.2.20.1"
       ],
       "ref": "pkg:hackage/invariant@0.6.5"
@@ -100669,13 +101049,13 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/jailbreak-cabal-1.4.1.tar.gz-sha256.hvVDyM4.pdMPB5XgyXBWPurGw1xT51qS5GMrqYVBEw1GA.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/Cabal",
-        "pkg:hackage/Cabal-syntax",
-        "pkg:hackage/base"
+        "pkg:hackage/Cabal-syntax@3.12.1.0",
+        "pkg:hackage/Cabal@3.12.1.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3"
       ],
       "ref": "pkg:hackage/jailbreak-cabal@1.4.1"
     },
@@ -100687,7 +101067,7 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/js-dgtable-0.5.2.tar.gz-sha256.h4o3WW.p6Ag7FyEBNOIuAcY0ncM8O3vRdwWXPNAU6fIKw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/js-dgtable@0.5.2"
@@ -100700,7 +101080,7 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/js-flot-0.8.3.tar.gz-sha256.hG6LyprjYXadsQfUmyYkDy7EH.pGQuUGwHLB5.pPCD.pXno.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/js-flot@0.8.3"
@@ -100713,7 +101093,7 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/js-jquery-3.7.1.tar.gz-sha256.hoIf6AaHFL1OG1D9TVfZIQcWktWtTcgCQ1mtaoAv.psQY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.19.2.0",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/js-jquery@3.7.1"
@@ -100722,23 +101102,23 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/kan-extensions-5.2.8.tar.gz-sha256.h922qRKgNQjyEnV.p1UuKiCx4vR7Y4yImjTLGlvRqwjSE.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/adjunctions@4.4.4",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/comonad@5.0.10",
         "pkg:hackage/contravariant@1.5.6",
         "pkg:hackage/distributive@0.6.3",
-        "pkg:hackage/exceptions",
+        "pkg:hackage/exceptions@0.10.9",
         "pkg:hackage/free@5.2",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/invariant@0.6.5",
-        "pkg:hackage/mtl",
+        "pkg:hackage/mtl@2.3.1",
         "pkg:hackage/profunctors@5.6.3",
         "pkg:hackage/semigroupoids@6.0.2",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/kan-extensions@5.2.8"
     },
@@ -100746,31 +101126,31 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/lens-5.3.6.tar.gz-sha256.h00Xc8f2k1KEnuE1CY4ti94PPUnUL2P0UqxY3UQwQI8I.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/array",
+        "pkg:hackage/array@0.5.8.0",
         "pkg:hackage/assoc@1.1.1",
-        "pkg:hackage/base",
         "pkg:hackage/base-orphans@0.9.4",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/bifunctors@5.6.3",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/bytestring@0.12.2.0",
         "pkg:hackage/call-stack@0.4.0",
         "pkg:hackage/comonad@5.0.10",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
         "pkg:hackage/contravariant@1.5.6",
         "pkg:hackage/distributive@0.6.3",
-        "pkg:hackage/exceptions",
-        "pkg:hackage/filepath",
+        "pkg:hackage/exceptions@0.10.9",
+        "pkg:hackage/filepath@1.5.4.0",
         "pkg:hackage/free@5.2",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/indexed-traversable-instances@0.1.2.1",
         "pkg:hackage/indexed-traversable@0.1.4",
         "pkg:hackage/kan-extensions@5.2.8",
-        "pkg:hackage/mtl",
+        "pkg:hackage/mtl@2.3.1",
         "pkg:hackage/parallel@3.2.2.0",
         "pkg:hackage/profunctors@5.6.3",
         "pkg:hackage/reflection@2.1.9",
@@ -100781,11 +101161,11 @@
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/text",
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/text@2.1.3",
         "pkg:hackage/th-abstraction@0.7.2.0",
         "pkg:hackage/these@1.2.1",
-        "pkg:hackage/transformers",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/vector@0.13.2.0"
       ],
@@ -100795,14 +101175,14 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/logging-facade-0.3.1.tar.gz-sha256.hKxazNTt3xquSqC3D8EckRHpn8Cx21QwnQXfYd44UwWY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/call-stack@0.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/logging-facade@0.3.1"
     },
@@ -100810,18 +101190,18 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/logict-0.8.2.0.tar.gz-sha256.hGJrm.pByOaNlOz4zmRAlU48fKPyN5c.p9mAIlu6PxGq.p8.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/async@2.2.6",
-        "pkg:hackage/base",
-        "pkg:hackage/exceptions",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/exceptions@0.10.9",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/mtl",
+        "pkg:hackage/mtl@2.3.1",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/logict@0.8.2.0"
     },
@@ -100829,27 +101209,27 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:github/nixos/nixpkgs@a799d3e3886da994fa307f817a6bc705ae538eeb",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
         "pkg:hackage/case-insensitive@1.2.1.0",
         "pkg:hackage/cmark-gfm@0.2.6",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/haddock-library@1.11.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec-golden@0.2.2.0",
         "pkg:hackage/hspec@2.11.17",
-        "pkg:hackage/mtl",
+        "pkg:hackage/mtl@2.3.1",
         "pkg:hackage/primitive@0.9.1.0",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/text",
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/text@2.1.3",
         "pkg:hackage/th-abstraction@0.7.2.0",
         "pkg:hackage/th-compat@0.1.7",
-        "pkg:hackage/time",
+        "pkg:hackage/time@1.12.2",
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/uuid-types@1.0.6.1",
         "pkg:hackage/vector@0.13.2.0"
@@ -100860,15 +101240,15 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/mockery-0.3.5.tar.gz-sha256.ht6HtrNPTLcfw4oxnh3IJ08o1UdHaGG9kRfgl80d91yc.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
         "pkg:hackage/base-compat@0.14.1",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/logging-facade@0.3.1",
         "pkg:hackage/temporary@1.3"
@@ -100877,17 +101257,17 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/mtl"
+      "ref": "pkg:hackage/mtl@2.3.1"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/nanospec-0.2.2.tar.gz-sha256.hzxTMwrKWyRAADNw.ptRs3OJs.puUE5OEuVVdt5uBKFleU.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/nanospec@0.2.2"
@@ -100896,21 +101276,21 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/network-uri-2.6.4.2-r1.cabal-sha256.hb.s.p1c3OWK1ZRotuLCvcyCYs78CmnztdqmFVhXeICZYg.e",
         "pkg:generic/network-uri-2.6.4.2.tar.gz-sha256.hnBiJcxJuiTJQuIHyDogR3KBsIjwjQCsG96Hy6ZV5cig.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/parsec",
+        "pkg:hackage/parsec@3.1.18.0",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/template-haskell",
+        "pkg:hackage/template-haskell@2.22.0.0",
         "pkg:hackage/th-compat@0.1.7"
       ],
       "ref": "pkg:hackage/network-uri@2.6.4.2"
@@ -100919,19 +101299,19 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/nothunks-0.3.1-r2.cabal-sha256.hg.pylmy1nocaN9eeiDd2wmMos34Le5DHjOKTDs68nPWw.e",
         "pkg:generic/nothunks-0.3.1.tar.gz-sha256.hN4P5Uv5EjtND9U.sBh7G3wGJEODjO9xxUnpGCe8l.pl10.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/ghc-heap",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc-heap@9.10.3",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/stm",
-        "pkg:hackage/text",
-        "pkg:hackage/time",
+        "pkg:hackage/stm@2.5.3.1",
+        "pkg:hackage/text@2.1.3",
+        "pkg:hackage/time@1.12.2",
         "pkg:hackage/vector@0.13.2.0",
         "pkg:hackage/wherefrom-compat@0.1.1.1"
       ],
@@ -100941,12 +101321,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/old-locale-1.0.0.7-r2.cabal-sha256.h.ppmL4sfgDNJqbpB1vqeQyq85Msqj6Ul61pvCA4DdaRE.e",
         "pkg:generic/old-locale-1.0.0.7.tar.gz-sha256.h26.pL9riI.p5iEVwUHkpaiPD9A7i9EnfcxL39.sHeGNe1A.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/old-locale@1.0.0.7"
@@ -100955,11 +101335,11 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/old-time-1.1.1.0.tar.gz-sha256.hLEQNO8JoDe.sLN5pLXmRpxd.sx00ADdKrGBSPO94w9lqs.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/old-locale@1.0.0.7",
         "pkg:hackage/tasty-hunit@0.10.2",
@@ -100971,27 +101351,23 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/optparse-applicative-0.18.1-allow-QuickCheck-2.15.patch-sha256.h198TfBUR3ygPpvKPvtH69UmbMmoRagmzr9UURPr6Kj4.e",
         "pkg:generic/optparse-applicative-0.18.1.0-r1.cabal-sha256.h8wlzhhrH5.pv.sBf.pMfD0eTSg6HzhQ4cwUEGsGk.pwbbYI.e",
         "pkg:generic/optparse-applicative-0.18.1.0.tar.gz-sha256.hY4EatP0m6Cm4hoNkMlqIvjrMeYGfW7UAWy3TuWHsxJE.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/prettyprinter-ansi-terminal@1.1.3",
         "pkg:hackage/prettyprinter@1.7.1",
-        "pkg:hackage/process",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers",
-        "pkg:hackage/transformers-compat@0.7.2"
+        "pkg:hackage/process@1.6.26.1",
+        "pkg:hackage/text@2.1.3",
+        "pkg:hackage/transformers-compat@0.7.2",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/optparse-applicative@0.18.1.0"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:hackage/os-string"
     },
     {
       "dependsOn": [
@@ -101001,80 +101377,84 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/os-string-2.0.10.tar.gz-sha256.h9oK4phIaCfyCDOadmeM7.ppsalZUFZj7y.st6.pe5XHWqU.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/exceptions",
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/bytestring@0.12.1.0",
+        "pkg:hackage/deepseq@1.5.1.0",
+        "pkg:hackage/exceptions@0.10.7",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/template-haskell"
+        "pkg:hackage/template-haskell@2.21.0.0"
       ],
       "ref": "pkg:hackage/os-string@2.0.10"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/os-string@2.0.7"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/parallel-3.2.2.0-r10.cabal-sha256.hPfRuwkfhK15AagrblXcpRDGySBSzDfQgVR0Xb9ESqWY.e",
         "pkg:generic/parallel-3.2.2.0.tar.gz-sha256.hFwRTpxoqizHMpjElUz93cdfevrY5cAvavdd5w02KbvY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/ghc-prim",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/parallel@3.2.2.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/parsec"
+      "ref": "pkg:hackage/parsec@3.1.18.0"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/parsers-0.12.12-r1.cabal-sha256.hxrUOF.pn1SeCYCq0qskYlHPhIt7xI68Y7jpRhvpQuxoc.e",
         "pkg:generic/parsers-0.12.12.tar.gz-sha256.h3Z5Ti3qecypaQkHW3gHSmK.s0uxmpWC6UZO5LpmDGJrw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/attoparsec@0.14.4",
-        "pkg:hackage/base",
-        "pkg:hackage/binary",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/binary@0.8.9.3",
         "pkg:hackage/charset@0.3.12",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/mtl",
-        "pkg:hackage/parsec",
+        "pkg:hackage/mtl@2.3.1",
+        "pkg:hackage/parsec@3.1.18.0",
         "pkg:hackage/quickcheck-instances@0.3.33",
         "pkg:hackage/scientific@0.3.8.1",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers",
+        "pkg:hackage/text@2.1.3",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/unordered-containers@0.2.20.1"
       ],
       "ref": "pkg:hackage/parsers@0.12.12"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/pretty"
+      "ref": "pkg:hackage/pretty@1.1.3.6"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/prettyprinter-ansi-terminal-1.1.3.tar.gz-sha256.hgTc5MIrWBQYgV4mU7.s4hBYoXCjQXFqz1JXP65CtbHbM.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/ansi-terminal@1.1.5",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/prettyprinter@1.7.1",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/prettyprinter-ansi-terminal@1.1.3"
     },
@@ -101082,15 +101462,15 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/prettyprinter-compat-ansi-wl-pprint-1.0.2.tar.gz-sha256.hBbJyUfGLke.p.sFMaHwoUTI7kgMiIDN80Eqx90GoQBnlU.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/prettyprinter-ansi-terminal@1.1.3",
         "pkg:hackage/prettyprinter@1.7.1",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/prettyprinter-compat-ansi-wl-pprint@1.0.2"
     },
@@ -101098,13 +101478,13 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/prettyprinter-1.7.1.tar.gz-sha256.hXm6mkDEU.phGPzDWWM9.p37N3suSwGyFPQKne3KyUfC0U.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/prettyprinter@1.7.1"
     },
@@ -101113,40 +101493,44 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/primitive-0.9.1.0-r1.cabal-sha256.hdWsiLHFbxu9bqB.pmnNuqIMXFO.ptvFvF0uLrMk6bSOfA.e",
         "pkg:generic/primitive-0.9.1.0.tar.gz-sha256.hRLTeQYE8e8Xbilf4fDYSoGm2UIaUYmi6FlCXJS69PXY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/transformers"
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/primitive@0.9.1.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/process"
+      "ref": "pkg:hackage/process@1.6.25.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/process@1.6.26.1"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/profunctors-5.6.3.tar.gz-sha256.hucb0JzaNLoEeTEi1kAUhhnJFj9LwCgLL77i.pnHUcDvM.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
         "pkg:hackage/base-orphans@0.9.4",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/bifunctors@5.6.3",
         "pkg:hackage/comonad@5.0.10",
         "pkg:hackage/contravariant@1.5.6",
         "pkg:hackage/distributive@0.6.3",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/tagged@0.8.9",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/profunctors@5.6.3"
     },
@@ -101154,19 +101538,19 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/quickcheck-instances-0.3.33-r1.cabal-sha256.hcJ.pxJ5nxtbABEhUBaNu1c2jObHQewB8jz0T553Q.pbPY.e",
         "pkg:generic/quickcheck-instances-0.3.33.tar.gz-sha256.haAPNVHsCe8q3sCmmmthCjiivhCt3CRE.ptqQ6svLwiGY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/OneTuple@0.4.2.1",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
         "pkg:hackage/case-insensitive@1.2.1.0",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
         "pkg:hackage/data-fix@0.3.4",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/integer-logarithms@1.0.5",
@@ -101176,11 +101560,11 @@
         "pkg:hackage/splitmix@0.1.3.2",
         "pkg:hackage/strict@0.5.1",
         "pkg:hackage/tagged@0.8.9",
-        "pkg:hackage/text",
         "pkg:hackage/text-short@0.1.6.1",
+        "pkg:hackage/text@2.1.3",
         "pkg:hackage/these@1.2.1",
         "pkg:hackage/time-compat@1.9.9",
-        "pkg:hackage/transformers",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/uuid-types@1.0.6.1",
         "pkg:hackage/vector@0.13.2.0"
@@ -101191,13 +101575,13 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/quickcheck-io-0.2.0.tar.gz-sha256.h.p3eRGdef4I.s01QL7aGmnDJqNX9iuCVn2BcPJN.p.sZZCI.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/quickcheck-io@0.2.0"
@@ -101206,12 +101590,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/quickcheck-unicode-1.0.1.0.tar.gz-sha256.hEyAF6n7f816VE5w2IypwaYzQ9PTXnfqk5m.p89VfQg2g.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/quickcheck-unicode@1.0.1.0"
@@ -101221,22 +101605,22 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/random-1.2.1.3.tar.gz-sha256.h6cgZJqfR5AMo9kX3NZKzHvycYxWJZpp.sEwaHucwwUdw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/mtl",
+        "pkg:hackage/mtl@2.3.1",
         "pkg:hackage/splitmix@0.1.3.2"
       ],
       "ref": "pkg:hackage/random@1.2.1.3"
     },
     {
       "dependsOn": [
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/moat@0.1"
       ],
       "ref": "pkg:hackage/readme@0.1.0.0"
@@ -101245,21 +101629,21 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/reducers-3.12.5-r1.cabal-sha256.haDsMsF1bsN.s31.pHWJvgSRb2BsMXwFBRlfr0hMEaRPho.e",
         "pkg:generic/reducers-3.12.5.tar.gz-sha256.hEJVh1My81mKD4FMYIUjG.sMxyvh0NgLDp5rBK2ZPPghw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
         "pkg:hackage/fingertree@0.1.6.3",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/semigroupoids@6.0.2",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers",
+        "pkg:hackage/text@2.1.3",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/unordered-containers@0.2.20.1"
       ],
       "ref": "pkg:hackage/reducers@3.12.5"
@@ -101268,17 +101652,17 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/reflection-2.1.9-r1.cabal-sha256.h6vKNyYhHGKMG7R4MIVoks2xouKo75CVhf2bYhtQ.s4eA.e",
         "pkg:generic/reflection-2.1.9.tar.gz-sha256.hxqfV5BrQ7hoFxmCs9P00sh84Mw7sFl0ka3.s.ss5jln7M.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
-        "pkg:hackage/template-haskell"
+        "pkg:hackage/template-haskell@2.22.0.0"
       ],
       "ref": "pkg:hackage/reflection@2.1.9"
     },
@@ -101286,16 +101670,16 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/regex-base-0.94.0.3.tar.gz-sha256.h6Mot7lmMeQ3RwcQ1m90eSV2biB9aofU5wi8N1VY3R78.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/regex-base@0.94.0.3"
     },
@@ -101303,14 +101687,14 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/regex-posix-0.96.0.2.tar.gz-sha256.hflcEYMNcXe7FTRukYwXdtGecfUquhPYx3Qxh2q6qgVA.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/regex-base@0.94.0.3"
       ],
@@ -101320,16 +101704,16 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/scientific-0.3.8.1.tar.gz-sha256.hrTeBvhSd.sHk25i65w6143tDpmFtNrhbS9i2bqVfM3P4.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/binary",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/binary@0.8.9.3",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/integer-logarithms@1.0.5",
@@ -101339,8 +101723,8 @@
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty-smallcheck@0.8.2",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/text"
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/scientific@0.3.8.1"
     },
@@ -101348,12 +101732,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/semialign-1.3.1.1.tar.gz-sha256.hjOH3Ln8llCLDr3KZbiZWykpdaYKMrZAFulcblEdgegg.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/indexed-traversable-instances@0.1.2.1",
@@ -101370,23 +101754,23 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/semigroupoids-6.0.2-r1.cabal-sha256.hUsWjRv33Q4Bhj2f.seEmJ75B4SY273.sCeTY4v7SAgLiw.e",
         "pkg:generic/semigroupoids-6.0.2.tar.gz-sha256.h5IJY5JVCJF72xY1.sQZqD0dGrkbAT2Sw7XIx8BI2qoS4.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
         "pkg:hackage/base-orphans@0.9.4",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/bifunctors@5.6.3",
         "pkg:hackage/comonad@5.0.10",
-        "pkg:hackage/containers",
+        "pkg:hackage/containers@0.7",
         "pkg:hackage/contravariant@1.5.6",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/tagged@0.8.9",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/transformers",
+        "pkg:hackage/template-haskell@2.22.0.0",
         "pkg:hackage/transformers-compat@0.7.2",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/unordered-containers@0.2.20.1"
       ],
       "ref": "pkg:hackage/semigroupoids@6.0.2"
@@ -101399,13 +101783,13 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/shake-0.19.9.tar.gz-sha256.hQXbW44w7eBPwGfI3dGbZ8B24QgVu7BzaqKI7gM7dy4o.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/binary",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/directory",
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/binary@0.8.9.1",
+        "pkg:hackage/bytestring@0.12.1.0",
+        "pkg:hackage/deepseq@1.5.1.0",
+        "pkg:hackage/directory@1.3.8.5",
         "pkg:hackage/extra@1.8.1",
-        "pkg:hackage/filepath",
+        "pkg:hackage/filepath@1.4.301.0",
         "pkg:hackage/filepattern@0.1.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/heaps@0.4.1",
@@ -101414,11 +101798,11 @@
         "pkg:hackage/js-flot@0.8.3",
         "pkg:hackage/js-jquery@3.7.1",
         "pkg:hackage/primitive@0.9.1.0",
-        "pkg:hackage/process",
+        "pkg:hackage/process@1.6.25.0",
         "pkg:hackage/random@1.2.1.3",
-        "pkg:hackage/time",
-        "pkg:hackage/transformers",
-        "pkg:hackage/unix",
+        "pkg:hackage/time@1.12.2",
+        "pkg:hackage/transformers@0.6.1.0",
+        "pkg:hackage/unix@2.8.6.0",
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/utf8-string@1.0.2"
       ],
@@ -101428,13 +101812,13 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/silently-1.2.5.4.tar.gz-sha256.hXiNgiWXBAEsAfcdxYEmYrm2lLBV3IwC.s3eMNi1ISdG4.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/directory",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/nanospec@0.2.2",
         "pkg:hackage/temporary@1.3"
@@ -101445,11 +101829,11 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/simple-reflect-0.3.3.tar.gz-sha256.hB4JeoEwTUpgAjPCAEz47.sI4Ey6zSRxnEasaiykrP2ys.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/simple-reflect@0.3.3"
@@ -101458,15 +101842,15 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/smallcheck-1.2.1.1.tar.gz-sha256.h4EMiUAQHGEDRoT86LW.p6U3FEGI55lal4q4IIbOFY.sh8.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/logict@0.8.2.0",
-        "pkg:hackage/mtl",
-        "pkg:hackage/pretty"
+        "pkg:hackage/mtl@2.3.1",
+        "pkg:hackage/pretty@1.1.3.6"
       ],
       "ref": "pkg:hackage/smallcheck@1.2.1.1"
     },
@@ -101475,40 +101859,40 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/splitmix-0.1.3.2.tar.gz-sha256.hph1OizD1oWUm19MRcbZ0rnkk0iB.sN4Bg0TNjvYeU3ow.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/splitmix@0.1.3.2"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/stm"
+      "ref": "pkg:hackage/stm@2.5.3.1"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/strict-0.5.1-r1.cabal-sha256.hWMNzt8d0jLtKWmyMFQc.smaHBCpqbtolKwz9Dpc25AfI.e",
         "pkg:generic/strict-0.5.1.tar.gz-sha256.hd3GSgMKoYxLnSCJ7.pnMu6q4OffSNV6zDwuW3sHr.pL4s.e",
         "pkg:hackage/assoc@1.1.1",
-        "pkg:hackage/base",
-        "pkg:hackage/binary",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/ghc-prim",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/binary@0.8.9.3",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/text",
+        "pkg:hackage/text@2.1.3",
         "pkg:hackage/these@1.2.1",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/strict@0.5.1"
     },
@@ -101516,12 +101900,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/stringbuilder-0.5.1.tar.gz-sha256.h2Hi9xNqAbbzlq2hO8T0mNMF8FbmR0O07slozHrpmA7o.e",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec@2.11.17"
       ],
@@ -101531,11 +101915,11 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/syb-0.7.2.4.tar.gz-sha256.h7HweiCLWKrkQOGNhzc7kCiKibNNEw0dB.pt2YIwIpHmA.e",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty@1.5.4"
@@ -101546,15 +101930,15 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tagged-0.8.9.tar.gz-sha256.hbarYjrtBS6alVtKJjSy.pdlDkJ2AQ46bu2Tna9UuVZ4Q.e",
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/transformers"
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/tagged@0.8.9"
     },
@@ -101562,22 +101946,22 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tasty-golden-2.3.6.tar.gz-sha256.hjzd.so6IXAMEPiJXgGrn.pPbaqFiQp.pK5Y.sADy05HXCrw.e",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/optparse-applicative@0.18.1.0",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty@1.5.4",
         "pkg:hackage/temporary@1.3",
-        "pkg:hackage/text",
+        "pkg:hackage/text@2.1.3",
         "pkg:hackage/typed-process@0.2.13.0"
       ],
       "ref": "pkg:hackage/tasty-golden@2.3.6"
@@ -101586,12 +101970,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tasty-hunit-0.10.2.tar.gz-sha256.hWvAfp8HvmLMk2gYuNveZhqixuD.swz2.sVP5XZdrQeA.sY.e",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/call-stack@0.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/tasty@1.5.4"
       ],
@@ -101601,16 +101985,16 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tasty-inspection-testing-0.2.1-r3.cabal-sha256.h2.pSbBm.pcpAgR3bcCMqEptTxL.sCAXY2CMt3ItIDCafL8.e",
         "pkg:generic/tasty-inspection-testing-0.2.1.tar.gz-sha256.hXrF1ZZ5.pXApBQ7FFOgZ5OLlOCSbKsEgi5LPhuiztgnI.e",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/inspection-testing@0.6.3",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/template-haskell"
+        "pkg:hackage/template-haskell@2.22.0.0"
       ],
       "ref": "pkg:hackage/tasty-inspection-testing@0.2.1"
     },
@@ -101618,13 +102002,13 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tasty-quickcheck-0.11.1-r5.cabal-sha256.hEuprb.pzMwUa2mqw8SBD9XRNVZCRenAcI35skBxqLBYg.e",
         "pkg:generic/tasty-quickcheck-0.11.1.tar.gz-sha256.h49TedFXtNC.pIdNhGht74l7ijFs4ZhGHaGBBtih9jJGo.e",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/optparse-applicative@0.18.1.0",
         "pkg:hackage/random@1.2.1.3",
@@ -101637,12 +102021,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tasty-smallcheck-0.8.2-r1.cabal-sha256.hsO6yQaTTRAHbwjeQtWmJpgibm5stwH97DuznxIWCYwA.e",
         "pkg:generic/tasty-smallcheck-0.8.2.tar.gz-sha256.h1cvXoqcQDkr9OqrAGo.pht4FPsHTZOu.sxtRJAtoflTzM.e",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/optparse-applicative@0.18.1.0",
         "pkg:hackage/smallcheck@1.2.1.1",
@@ -101655,42 +102039,46 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tasty-1.5.4.tar.gz-sha256.hx2EgFBvWHEQYs.p1e.sF.sjCUGG1Hz.pEte.pVSMgE59Sxsc.e",
         "pkg:hackage/ansi-terminal@1.1.5",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/optparse-applicative@0.18.1.0",
-        "pkg:hackage/stm",
+        "pkg:hackage/stm@2.5.3.1",
         "pkg:hackage/tagged@0.8.9",
-        "pkg:hackage/transformers",
-        "pkg:hackage/unix"
+        "pkg:hackage/transformers@0.6.1.1",
+        "pkg:hackage/unix@2.8.7.0"
       ],
       "ref": "pkg:hackage/tasty@1.5.4"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/template-haskell"
+      "ref": "pkg:hackage/template-haskell@2.21.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/template-haskell@2.22.0.0"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/temporary-1.3.tar.gz-sha256.hjEQpk2lLX.syoI86GSvlb0oQftSZO5RHGHPSMxx2HmJA.e",
-        "pkg:hackage/base",
-        "pkg:hackage/directory",
-        "pkg:hackage/exceptions",
-        "pkg:hackage/filepath",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/directory@1.3.8.5",
+        "pkg:hackage/exceptions@0.10.9",
+        "pkg:hackage/filepath@1.5.4.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/random@1.2.1.3",
-        "pkg:hackage/transformers",
-        "pkg:hackage/unix"
+        "pkg:hackage/transformers@0.6.1.1",
+        "pkg:hackage/unix@2.8.7.0"
       ],
       "ref": "pkg:hackage/temporary@1.3"
     },
@@ -101698,12 +102086,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/test-framework-hunit-0.3.0.3.tar.gz-sha256.hZnsGg2zU5S969i4QPzO8UbhMrLhBnL8dDHkmHNnUu0Y.e",
         "pkg:hackage/HUnit@1.6.2.0",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/test-framework@0.8.2.3"
       ],
@@ -101713,12 +102101,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/test-framework-quickcheck2-0.3.0.7.tar.gz-sha256.hfn0MTr9Lkh.sjUCDiUbekLFmnvkCk.s4wXCuZtOmad95U.e",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/random@1.2.1.3",
         "pkg:hackage/test-framework@0.8.2.3"
@@ -101729,46 +102117,42 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/test-framework-0.8.2.3.tar.gz-sha256.hMQp4bJAMOp6OodikRwifXBHYswKNIhgqI7NL9uHHxV4.e",
         "pkg:hackage/ansi-terminal@1.1.5",
         "pkg:hackage/ansi-wl-pprint@1.0.2",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hostname@1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/random@1.2.1.3",
         "pkg:hackage/regex-posix@0.96.0.2",
-        "pkg:hackage/time",
+        "pkg:hackage/time@1.12.2",
         "pkg:hackage/xml@1.3.14"
       ],
       "ref": "pkg:hackage/test-framework@0.8.2.3"
     },
     {
-      "dependsOn": [],
-      "ref": "pkg:hackage/text"
-    },
-    {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/text-iso8601-0.1.1.1.tar.gz-sha256.hYDto0RNek3Pt8sIKmT6iJrnx.ssERicGyuKZHJizriz4.e",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/integer-conversion@0.1.1",
         "pkg:hackage/quickcheck-instances@0.3.33",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/text",
-        "pkg:hackage/time",
-        "pkg:hackage/time-compat@1.9.9"
+        "pkg:hackage/text@2.1.3",
+        "pkg:hackage/time-compat@1.9.9",
+        "pkg:hackage/time@1.12.2"
       ],
       "ref": "pkg:hackage/text-iso8601@0.1.1.1"
     },
@@ -101776,37 +102160,41 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/text-short-0.1.6.1.tar.gz-sha256.hg2afQCNUJ0.p83HUSZEOvczJnuVXkUfcsDG2Gro2odBY.e",
-        "pkg:hackage/base",
-        "pkg:hackage/binary",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/ghc-prim",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/binary@0.8.9.3",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/text"
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/text-short@0.1.6.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/text@2.1.3"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/th-abstraction-0.7.2.0.tar.gz-sha256.hlGZUvNjqLf99AFgGGGGoyJi.pmt3yDJLTz6U7Z55zdiI.e",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/template-haskell"
+        "pkg:hackage/template-haskell@2.22.0.0"
       ],
       "ref": "pkg:hackage/th-abstraction@0.7.2.0"
     },
@@ -101814,15 +102202,15 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/th-compat-0.1.7.tar.gz-sha256.hnibxIjDTiuVtz5T4wTl5ncO3N280NNNc50hHoKJP1f8.e",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
-        "pkg:hackage/template-haskell"
+        "pkg:hackage/template-haskell@2.22.0.0"
       ],
       "ref": "pkg:hackage/th-compat@0.1.7"
     },
@@ -101830,67 +102218,63 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/these-1.2.1-r3.cabal-sha256.huhrsmlAusrP5DvJU9CBGijxOW5t.pgyTj3ccDUUPJJkA.e",
         "pkg:generic/these-1.2.1.tar.gz-sha256.hF9bZMzZe2r.pAGhaELBQDvdN8xTAPqi.sMqYDezasi5N4.e",
         "pkg:hackage/assoc@1.1.1",
-        "pkg:hackage/base",
-        "pkg:hackage/binary",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/binary@0.8.9.3",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/these@1.2.1"
     },
     {
-      "dependsOn": [],
-      "ref": "pkg:hackage/time"
-    },
-    {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/time-compat-1.9.9-r1.cabal-sha256.hDCkeDDyH7giyUXEHtikBsQKgQNyGIDtTvfB6lv9WMuA.e",
         "pkg:generic/time-compat-1.9.9.tar.gz-sha256.hkPrd7VPPnBWFXuv4CelTavj4XQDjK4L3yLUG0vrffCU.e",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
         "pkg:hackage/base-orphans@0.9.4",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/random@1.2.1.3",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/time"
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/time@1.12.2"
       ],
       "ref": "pkg:hackage/time-compat@1.9.9"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/transformers"
+      "ref": "pkg:hackage/time@1.12.2"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/transformers-base-0.4.6.1.tar.gz-sha256.htD3js7nWWNUE6KAwk1ZgLdxTyNrT.sbvDNZq8tUObQdg.e",
-        "pkg:hackage/base",
         "pkg:hackage/base-orphans@0.9.4",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/stm",
-        "pkg:hackage/transformers",
-        "pkg:hackage/transformers-compat@0.7.2"
+        "pkg:hackage/stm@2.5.3.1",
+        "pkg:hackage/transformers-compat@0.7.2",
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/transformers-base@0.4.6.1"
     },
@@ -101898,22 +102282,29 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/transformers-compat-0.7.2.tar.gz-sha256.htixzBMnzy8lGPQc5qoXLlInyF.poJK51iXUF1FPvMnWo.e",
-        "pkg:hackage/base",
-        "pkg:hackage/ghc-prim",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/transformers-compat@0.7.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/transformers@0.6.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/transformers@0.6.1.1"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tree-diff-0.3.4-r2.cabal-sha256.hUKFkGee4Lxc5jVY5znRDdwS5ml0TI1BefceOgZoVZsE.e",
@@ -101922,15 +102313,16 @@
         "pkg:hackage/aeson@2.2.4.1",
         "pkg:hackage/ansi-terminal@1.1.5",
         "pkg:hackage/ansi-wl-pprint@1.0.2",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/parsec",
+        "pkg:hackage/parsec@3.1.18.0",
         "pkg:hackage/parsers@0.12.12",
-        "pkg:hackage/pretty",
+        "pkg:hackage/pretty@1.1.3.6",
         "pkg:hackage/primitive@0.9.1.0",
         "pkg:hackage/scientific@0.3.8.1",
         "pkg:hackage/semialign@1.3.1.1",
@@ -101939,9 +102331,9 @@
         "pkg:hackage/tasty-golden@2.3.6",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/text",
+        "pkg:hackage/text@2.1.3",
         "pkg:hackage/these@1.2.1",
-        "pkg:hackage/time",
+        "pkg:hackage/time@1.12.2",
         "pkg:hackage/trifecta@2.1.4",
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/uuid-types@1.0.6.1",
@@ -101953,36 +102345,36 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/trifecta-2.1.4-r2.cabal-sha256.hzyzR2CmUY.p.p9foW3b.s7Vndwz0ZkSoqGGLV3p.sGnpweQ.e",
         "pkg:generic/trifecta-2.1.4.tar.gz-sha256.h1NhCr9saMzCHRzjFhzNtC1N0HTeRgRImm7Uf8YbcnCg.e",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/ansi-terminal@1.1.5",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
+        "pkg:hackage/array@0.5.8.0",
+        "pkg:hackage/base@4.20.2.0",
         "pkg:hackage/blaze-builder@0.4.4.1",
         "pkg:hackage/blaze-html@0.9.2.0",
         "pkg:hackage/blaze-markup@0.8.3.0",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/bytestring@0.12.2.0",
         "pkg:hackage/charset@0.3.12",
         "pkg:hackage/comonad@5.0.10",
-        "pkg:hackage/containers",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/deepseq@1.5.0.0",
         "pkg:hackage/fingertree@0.1.6.3",
-        "pkg:hackage/ghc-prim",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/indexed-traversable@0.1.4",
         "pkg:hackage/lens@5.3.6",
-        "pkg:hackage/mtl",
+        "pkg:hackage/mtl@2.3.1",
         "pkg:hackage/parsers@0.12.12",
         "pkg:hackage/prettyprinter-ansi-terminal@1.1.3",
         "pkg:hackage/prettyprinter@1.7.1",
         "pkg:hackage/profunctors@5.6.3",
         "pkg:hackage/reducers@3.12.5",
-        "pkg:hackage/transformers",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/utf8-string@1.0.2"
       ],
@@ -101992,42 +102384,46 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/typed-process-0.2.13.0.tar.gz-sha256.hlACWYBO1Qd8uVKyNV8OmcPwoveK.ph3Z86Y8Tu.pKqQ6A.e",
         "pkg:hackage/async@2.2.6",
-        "pkg:hackage/base",
         "pkg:hackage/base64-bytestring@1.2.1.0",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-discover@2.11.17",
         "pkg:hackage/hspec@2.11.17",
-        "pkg:hackage/process",
-        "pkg:hackage/stm",
+        "pkg:hackage/process@1.6.26.1",
+        "pkg:hackage/stm@2.5.3.1",
         "pkg:hackage/temporary@1.3",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers",
+        "pkg:hackage/text@2.1.3",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/unliftio-core@0.2.1.0"
       ],
       "ref": "pkg:hackage/typed-process@0.2.13.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/unix"
+      "ref": "pkg:hackage/unix@2.8.6.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/unix@2.8.7.0"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/unliftio-core-0.2.1.0-r4.cabal-sha256.h9qJzb4WLU5DZOE3KQ9PqTZbpyhchd5F5HKSVG6boByo.e",
         "pkg:generic/unliftio-core-0.2.1.0.tar.gz-sha256.hmThMuo1W2dYbheOKMTqT6823i.pZWY2fwkw71gFl.s4.pM.e",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/transformers"
+        "pkg:hackage/transformers@0.6.1.1"
       ],
       "ref": "pkg:hackage/unliftio-core@0.2.1.0"
     },
@@ -102036,15 +102432,15 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/unordered-containers-0.2.20.1.tar.gz-sha256.hcIpgUT1tph4JtguaSGEGr3A6iJtbQ0cqJ8O2C.sNSRqs.e",
         "pkg:hackage/ChasingBottoms@1.3.1.17",
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/nothunks@0.3.1",
@@ -102052,7 +102448,7 @@
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/template-haskell"
+        "pkg:hackage/template-haskell@2.22.0.0"
       ],
       "ref": "pkg:hackage/unordered-containers@0.2.20.1"
     },
@@ -102061,13 +102457,15 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/utf8-string-1.0.2.tar.gz-sha256.h7kjeradgA3ByjEFWywAkQd53DQEhrjOmgTmp7ZwZsJo.e",
         "pkg:hackage/HUnit@1.6.2.0",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.19.2.0",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.1.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/utf8-string@1.0.2"
@@ -102076,23 +102474,23 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/uuid-types-1.0.6.1.tar.gz-sha256.hnwDyeLlxEQS2rMFATZ8NRcEYO0mHz5wHQDvrwFwMMCQ.e",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
-        "pkg:hackage/binary",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/binary@0.8.9.3",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/random@1.2.1.3",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/text"
+        "pkg:hackage/template-haskell@2.22.0.0",
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/uuid-types@1.0.6.1"
     },
@@ -102100,13 +102498,13 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/vector-stream-0.1.0.1-r4.cabal-sha256.hSDvm3xPHIWmpF2QFiWZvn.pznvqn6E.szUHQUtqzfqKJ4.e",
         "pkg:generic/vector-stream-0.1.0.1.tar.gz-sha256.h0PUHM0vepUMaLwf1Jal.sKedlIsMiEPXebVorTx1Cv3w.e",
-        "pkg:hackage/base",
-        "pkg:hackage/ghc-prim",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc-prim@0.12.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25"
       ],
       "ref": "pkg:hackage/vector-stream@0.1.0.1"
@@ -102115,16 +102513,16 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/vector-0.13.2.0-r2.cabal-sha256.hmsM4yNpS2KN9sIQ0ykSA.svLOpPmqwkD0.pZS7Rn9SdbQ.e",
         "pkg:generic/vector-0.13.2.0.tar.gz-sha256.hKPIDx4bL.pKxtw.s6jN47DbzQXPVBftKHdYPyEGK2RxCM.e",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
         "pkg:hackage/base-orphans@0.9.4",
-        "pkg:hackage/deepseq",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/deepseq@1.5.0.0",
         "pkg:hackage/doctest@0.24.3",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/primitive@0.9.1.0",
         "pkg:hackage/random@1.2.1.3",
@@ -102140,12 +102538,12 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wherefrom-compat-0.1.1.1-r4.cabal-sha256.hCSyLB3Iw81nMxIT1gAV.sLE2kV1SM48tGjVOWQ3jHT.sk.e",
         "pkg:generic/wherefrom-compat-0.1.1.1.tar.gz-sha256.hwePiLpcwpoOn.p8RQtZRNl9w0ZQr4qMcgABcNVsqes4g.e",
-        "pkg:hackage/base",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty@1.5.4"
@@ -102156,15 +102554,15 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/witherable-0.5-r2.cabal-sha256.hpWAEMd9dKX8JjDIsf7wuzoBORK3guyAiqDjeJGBNYnU.e",
         "pkg:generic/witherable-0.5.tar.gz-sha256.hSENMweRlsTy8ATOpDD7A2CfJO3fOlYB.s4KOLZfSRjNE.e",
         "pkg:hackage/QuickCheck@2.15.0.1",
-        "pkg:hackage/base",
         "pkg:hackage/base-orphans@0.9.4",
-        "pkg:hackage/containers",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/containers@0.7",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/indexed-traversable-instances@0.1.2.1",
@@ -102172,7 +102570,7 @@
         "pkg:hackage/quickcheck-instances@0.3.33",
         "pkg:hackage/tasty-quickcheck@0.11.1",
         "pkg:hackage/tasty@1.5.4",
-        "pkg:hackage/transformers",
+        "pkg:hackage/transformers@0.6.1.1",
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/vector@0.13.2.0"
       ],
@@ -102182,15 +102580,15 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
-        "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/xml-1.3.14-r2.cabal-sha256.hx6M9N8lox2lyOTGjPk55Xwqt2my2LnBz3tii21JQnZU.e",
         "pkg:generic/xml-1.3.14.tar.gz-sha256.hMtGhqfIaWRdthGl.slq46E6AZhCDj5PHEirurfSQlAT0.e",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
+        "pkg:hackage/base@4.20.2.0",
+        "pkg:hackage/bytestring@0.12.2.0",
+        "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
-        "pkg:hackage/text"
+        "pkg:hackage/text@2.1.3"
       ],
       "ref": "pkg:hackage/xml@1.3.14"
     }
@@ -102244,11 +102642,15 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":164,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":294,\"with_candidates\":71}"
+        "value": "{\"addressable_without_cpe\":176,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":294,\"with_candidates\":71}"
       },
       {
         "name": "waybill:closure-graph-admission",
         "value": "{\"admitted\":171,\"relabelled\":1143,\"schema\":\"waybill-closure-graph-admission/v1\"}"
+      },
+      {
+        "name": "waybill:ghc-boot-libraries",
+        "value": "{\"compilers\":{\"ghc-9.10.3\":\"in-table\",\"ghc-binary-9.8.4\":\"in-table\"},\"project\":\"ghc-9.10.3\",\"schema\":1,\"system\":\"x86_64-linux\",\"table\":\"2026-11-12\"}"
       },
       {
         "name": "waybill:nix-evaluation-policy",
@@ -102264,15 +102666,15 @@
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",
-        "value": "{\"disagreements\":0,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":12,\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"unresolved\":{\"compiler-supplied\":7}}"
+        "value": "{\"disagreements\":0,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":12,\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"unresolved\":{}}"
       },
       {
         "name": "waybill:scope-exemptions",
-        "value": "{\"compiler-supplied\":25}"
+        "value": "{\"compiler-supplied\":37}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",
-        "value": "{\"declared\":21,\"relations-walked\":139,\"transitive\":32,\"unresolved\":{\"compiler-supplied\":12}}"
+        "value": "{\"declared\":21,\"relations-walked\":139,\"transitive\":32,\"unresolved\":{}}"
       },
       {
         "name": "waybill:file-inventory-skipped-build-dirs",
@@ -102304,7 +102706,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 571 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
+        "value": "orphaned-components-detected: 572 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
