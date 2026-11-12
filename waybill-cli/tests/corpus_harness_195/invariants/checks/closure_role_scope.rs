@@ -35,7 +35,7 @@
 use std::collections::HashSet;
 
 use super::super::{CellOutcome, Violation};
-use super::{cdx_component_ref, cdx_components, cdx_is_non_runtime, cdx_prop};
+use super::{cdx_component_ref, cdx_components, cdx_prop};
 
 pub const KIND_TOOLING_WITHOUT_MARKER: &str = "closure-tooling-without-non-runtime-marker";
 /// Milestone 1423 — a member C203 says is statically linked into a runtime
@@ -88,36 +88,17 @@ fn role_does_not_ship(role: &str) -> bool {
     }
 }
 
-/// Whether the component carries a non-runtime marker, in either spelling.
+/// Whether the component carries a non-runtime marker, in either spelling
+/// ([`super::cdx_carries_non_runtime_marker`]).
 ///
-/// **Both, and the distinction is load-bearing.** The shared
-/// `cdx_is_non_runtime` helper reads only C42 `waybill:lifecycle-scope`,
-/// which is correct for the rows that use it — but milestone 1277's marker
-/// is the **native** CycloneDX `scope` field, set deliberately without C42
-/// so that the emission stays outside the `--include-dev` gate and
-/// `--exclude-scope build` cannot delete the components (spec research
-/// R1–R2). A row reading C42 alone would report 95 of this feature's 97
-/// classified components as offenders *after* a correct refresh.
-///
-/// Measured: that is exactly what the first draft of this row did, and the
-/// prediction against the committed goldens is what caught it before the
-/// refresh rather than after.
-///
-/// The shared helper is deliberately **not** widened. I3 uses it to define
-/// its own population, and adding the native field there would change which
-/// components I3 covers — a different row's behaviour, altered as a side
-/// effect of this one. Milestone 1277 adds no C42, so I3's population is
-/// unaffected by this feature either way.
+/// A row reading C42 alone would report 95 of milestone 1277's 97 classified
+/// components as offenders *after* a correct refresh. Measured: that is
+/// exactly what the first draft of this row did, and the prediction against
+/// the committed goldens is what caught it before the refresh rather than
+/// after. #1283 moved the helper to `checks` so that I3's marker test reads
+/// the same two spellings; I3's *population* still reads C42 alone.
 fn carries_non_runtime_marker(component: &serde_json::Value) -> bool {
-    if cdx_is_non_runtime(component) {
-        return true;
-    }
-    // The native field. `required` is the schema's default and says the
-    // opposite, so only the two non-runtime values count.
-    matches!(
-        component.get("scope").and_then(|s| s.as_str()),
-        Some("excluded") | Some("optional")
-    )
+    super::cdx_carries_non_runtime_marker(component)
 }
 
 pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {

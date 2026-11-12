@@ -213,6 +213,24 @@ impl RawDerivation {
         self.attr_str("setupCompilerEnvironmentPhase").is_some()
     }
 
+    /// Whether the generic builder's install phase registers this
+    /// derivation as a package, which only its `isLibrary` branch does
+    /// (`Setup register --gen-pkg-config`); an executable-only build, such as
+    /// `justStaticExecutables` makes, runs `Setup install` or `Setup copy`
+    /// alone (#1283).
+    ///
+    /// The static-link fallback needs this beside "propagates something":
+    /// a library whose dependencies are all boot packages propagates nothing,
+    /// and `hashable-1.5.1.0` at the pinned revision is one, with its test
+    /// suite in `buildInputs`
+    /// (`specs/1283-nix-allow-ifd/measurements/invariants/`).
+    pub(crate) fn registers_haskell_package(&self) -> bool {
+        self.is_haskell_builder()
+            && self
+                .attr_str("installPhase")
+                .is_some_and(|p| p.contains("register --gen-pkg-config"))
+    }
+
     /// Store paths listed in a field, from whichever carrier holds it.
     ///
     /// The resolution rule, per

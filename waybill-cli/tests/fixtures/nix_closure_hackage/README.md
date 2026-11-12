@@ -9,6 +9,7 @@ in `flake.lock` — the revision the suite seeds into a temporary
 |---|---|
 | `project/` | has a `.cabal` with a declared dependency, so `haskell_packages::enrich` engages and hands its parsed package set to the identity pass. The common path. |
 | `closure_only/` | no `.cabal`. `is_enrichable` finds nothing, so `enrich` returns `None` before loading anything — the case research R2 says must still work, and the one the pass would skip if it inherited that gate. |
+| `test_suite_boot/` | only the test suite declares a boot library, so the Haskell reader scopes a package the compiler supplies `development` (#1283, invariant I9). |
 
 Every name is `waybill-fixture-*`. Real coordinates in fixtures trip Kusari
 Inspector's advisory scan (#285, #640), so the collision case — which is

@@ -168,6 +168,42 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A Haskell project's test suite is no longer reported as statically
+  linked into its `--nix-closure` artifact.** The static-link fallback
+  followed `buildInputs` at every runtime Haskell member the package set
+  did not confirm, and with `doCheck` the generic builder puts a package's
+  test-suite dependencies there. On the three import-from-derivation
+  corpus targets this gave 26 test frameworks (HUnit, hspec, tasty-hunit
+  and their closures) C203 `statically-linked` while the project's own
+  manifest scoped them `development`: CycloneDX said `excluded`, SPDX 2.3
+  carried no `BUILD_TOOL_OF`, so the not-in-artifact selection differed by
+  format, and invariant I10 reported `closure-statically-linked-but-marked`.
+  A library propagates everything it links, so a library's `buildInputs` is
+  no longer followed (measured on six libraries at the pinned revision:
+  every link dependency propagated, the test suite in `buildInputs`). A
+  library is recognised by what it propagates or, since one whose
+  dependencies are all boot packages propagates nothing (`hashable`), by
+  its install phase registering a package. At an
+  executable-only build, which lists both together, the dependencies the
+  scanned project's manifest declares for its test suite are skipped by
+  name. Both are now decided by the runtime closure, which does not hold
+  them, and marked in all three formats; the libraries an executable links
+  are unchanged (#1283).
+- **A package the compiler supplies is no longer marked non-runtime because
+  a test suite declares it.** Milestone 1276 kept such a package from
+  inheriting a non-runtime scope but left a reader's own mark in place, and
+  slack-web's test suite declares `template-haskell`: CycloneDX called a
+  package GHC ships in every build `excluded`, which invariant I9 reports.
+  The mark is now withdrawn before the propagation runs, and the edges into
+  the package return to `DEPENDS_ON`, so SPDX 2.3 agrees (#1283).
+- **Invariant I3 reads the not-in-artifact marker.** It accepted only C42
+  `waybill:lifecycle-scope` as a non-runtime marker, and the
+  not-in-artifact marker is the native CycloneDX `scope` alone. It
+  reported 48 components on the import-from-derivation targets, and 15 on
+  `nix-closure-moat` whose declaration had absorbed them, that every format
+  already marked: source tarballs, `.cabal` revisions and patches of test
+  libraries. Which edges are non-runtime is still read from C42 alone
+  (#1283).
 - **A `--nix-closure` document's runtime closure is that of the output
   the attribute installs.** The runtime query asked about the head of the
   evaluated derivation's `outputs`. `pkgs.postgrest` and `pkgs.cachix` are

@@ -237,3 +237,74 @@ fn t021_a_scan_that_exempts_nothing_records_zero() {
         cdx_doc_prop(&inapplicable.cdx, ROW)
     );
 }
+
+fn cdx_component<'a>(d: &'a Docs, name: &str) -> &'a Value {
+    d.cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == name)
+        .unwrap_or_else(|| panic!("no CDX component named {name}"))
+}
+
+fn cdx_prop<'a>(c: &'a Value, name: &str) -> Option<&'a str> {
+    c["properties"].as_array()?.iter().find(|p| p["name"] == name)?["value"].as_str()
+}
+
+/// The SPDX 2.3 relationship types that name `name`'s package as the
+/// dependency, sorted.
+fn spdx23_types_into(d: &Value, name: &str) -> Vec<String> {
+    let id = d["packages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["name"] == name)
+        .and_then(|p| p["SPDXID"].as_str())
+        .unwrap_or_else(|| panic!("no SPDX 2.3 package named {name}"))
+        .to_string();
+    let mut out: Vec<String> = d["relationships"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|r| {
+            let ty = r["relationshipType"].as_str()?;
+            let into = (ty == "DEPENDS_ON" && r["relatedSpdxElement"] == id.as_str())
+                || (ty.ends_with("_DEPENDENCY_OF") && r["spdxElementId"] == id.as_str());
+            into.then(|| ty.to_string())
+        })
+        .collect();
+    out.sort();
+    out
+}
+
+/// #1283 — invariant I9's direct-mark origin, which milestone 1276 left
+/// without a suppression path because its population was zero. On the 1283
+/// corpus run it was one: slack-web's test suite declares `template-haskell`,
+/// the Haskell reader scoped it `development`, and the document reported a
+/// package the compiler ships in every build as absent from the artifact.
+///
+/// The mark is withdrawn wherever the reader set it, in all three formats,
+/// so CycloneDX `scope` and the SPDX 2.3 relationship type agree. The control
+/// is a test dependency the compiler does not supply, declared by the same
+/// stanza, which keeps its scope.
+#[test]
+fn t022_a_boot_library_only_a_test_suite_declares_is_not_marked_non_runtime() {
+    let cache = seed_cache();
+    let d = scan_with(&fixture("test_suite_boot"), Some(cache.path()));
+
+    let boot = cdx_component(&d, "waybill-fixture-bootlib");
+    assert_eq!(
+        cdx_prop(boot, "waybill:haskell-version-unresolved-reason"),
+        Some("compiler-supplied"),
+        "the population I9 reads; without it this test checks nothing"
+    );
+    assert_eq!(cdx_prop(boot, "waybill:lifecycle-scope"), None, "{boot}");
+    assert_ne!(boot["scope"], "excluded", "{boot}");
+    assert_eq!(spdx23_types_into(&d.spdx23, "waybill-fixture-bootlib"), ["DEPENDS_ON"]);
+
+    // CONTROL: the rule is narrow.
+    let test_dep = cdx_component(&d, "waybill-fixture-hspec");
+    assert_eq!(cdx_prop(test_dep, "waybill:lifecycle-scope"), Some("development"));
+    assert_eq!(test_dep["scope"], "excluded");
+    assert_eq!(spdx23_types_into(&d.spdx23, "waybill-fixture-hspec"), ["DEV_DEPENDENCY_OF"]);
+}

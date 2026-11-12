@@ -120,6 +120,32 @@ pub fn cdx_is_non_runtime(component: &serde_json::Value) -> bool {
         .unwrap_or(false)
 }
 
+/// Whether the component carries a non-runtime marker, in either spelling:
+/// C42 `waybill:lifecycle-scope`, or the **native** CycloneDX `scope`.
+///
+/// **Both, and the distinction is load-bearing.** Milestone 1277's
+/// not-in-artifact marker is the native field, set deliberately without C42
+/// so that the emission stays outside the `--include-dev` gate and
+/// `--exclude-scope build` cannot delete the components (spec research
+/// R1–R2). A row reading C42 alone reports a component every format already
+/// marks as though it read as runtime.
+///
+/// [`cdx_is_non_runtime`] is deliberately **not** widened: I3 uses it to
+/// decide which *edges* are non-runtime, and adding the native field there
+/// would change which components I3 covers. Only the question "does this
+/// component carry a marker" reads both spellings.
+pub fn cdx_carries_non_runtime_marker(component: &serde_json::Value) -> bool {
+    if cdx_is_non_runtime(component) {
+        return true;
+    }
+    // `required` is the schema's default and says the opposite, so only the
+    // two non-runtime values count.
+    matches!(
+        component.get("scope").and_then(|s| s.as_str()),
+        Some("excluded") | Some("optional")
+    )
+}
+
 pub fn cdx_is_file_tier(component: &serde_json::Value) -> bool {
     cdx_prop(component, "waybill:component-tier") == Some("file")
         || component.get("type").and_then(|t| t.as_str()) == Some("file")

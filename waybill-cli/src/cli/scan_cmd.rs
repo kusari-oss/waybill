@@ -5131,6 +5131,14 @@ pub async fn execute(
             .and_then(|s| s.boot_libraries.clone())
             .map(|b| b.into_iter().collect())
             .unwrap_or_default();
+        // #1283 (invariant I9) — the direct origin milestone 1276 left open: a
+        // reader's own non-runtime scope on a package the compiler supplies.
+        // Before the propagation, so the withdrawn mark seeds nothing.
+        crate::resolve::scope_propagation::withdraw_compiler_supplied_scope(
+            &mut components,
+            &mut relationships,
+            &boot_libraries,
+        );
         let scope_propagation_summary =
             crate::resolve::scope_propagation::propagate_non_runtime_scope(
                 &mut components,

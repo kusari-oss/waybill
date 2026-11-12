@@ -27,10 +27,16 @@ locally satisfiable while jointly incoherent.
 transitively, the propagation's compiler-supplied immunity has stopped
 working — that is the population milestone 1276 fixed, measured at 10
 components across two targets, all of them `transitive`. If it was
-assigned directly by a reader, this is the origin milestone 1276
-deliberately did not build a suppression path for, on the grounds that
-its population was zero; the fix is to decide where the mark should be
-suppressed rather than to relax this row.
+assigned directly by a reader, the withdrawal #1283 added has not reached
+it: milestone 1276 deliberately built no suppression path for that origin
+while its population was zero, and the 1283 corpus run found one
+(slack-web's test suite declares `template-haskell`).
+`resolve::scope_propagation::withdraw_compiler_supplied_scope` now removes a
+reader's non-runtime scope from a package the pinned compiler supplies,
+before the propagation runs, and returns the edges into it to `DependsOn` so
+SPDX 2.3 agrees with CycloneDX. It reads the same boot set as the
+propagation, so a component this row still reports is one that set does not
+contain, or one whose PURL is not `pkg:hackage`.
 
 **What it does not catch**: a component that is runtime-present for some
 other reason — an OS package in a rootfs scan, a language stdlib
@@ -214,6 +220,21 @@ the edge whose scope was not propagated. Scope propagation is milestone
 052's `apply_lifecycle_scope_to_edges` plus milestones 179-184 per
 ecosystem; a gap is usually one ecosystem's classifier not having been
 extended.
+
+**What counts as the marker (#1283).** Two different readings, kept apart
+on purpose. Which *edges* are non-runtime — and so which components are in
+the population — is read from C42 `waybill:lifecycle-scope` alone. Whether a
+component in the population *carries* a marker reads C42 or the native
+CycloneDX `scope` (`excluded` or `optional`), the same test I10 applies. The
+not-in-artifact marker of milestones 1277 and 1423 is the native field alone,
+set without C42 so that `--include-dev` cannot hide it. Reading C42 only,
+this row reported 48 components on the three IFD targets and 15 on
+`nix-closure-moat` that every format already marked: source tarballs,
+`.cabal` revisions and patches of test libraries, reached from them through
+build-graph edges. moat's declaration had absorbed its 15 without anyone
+seeing, because a declaration's count is never compared. Widening the
+population as well would change which components the row covers, so that
+half stays as it was.
 
 **Boundary with I7**: this invariant is about components that *are*
 reachable, by a path that is entirely non-runtime. I7 is about

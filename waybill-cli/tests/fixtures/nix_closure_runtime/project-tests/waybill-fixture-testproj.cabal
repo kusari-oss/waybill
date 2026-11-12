@@ -1,0 +1,26 @@
+cabal-version: 2.4
+name:          waybill-fixture-testproj
+version:       0.1.0
+license:       MIT
+
+-- Milestone 1283 — a project with a test suite, the shape of the three IFD
+-- corpus targets (slack-web, slacklinker, openai).
+--
+-- `waybill-fixture-aeson` is a library dependency; `waybill-fixture-hspec` is
+-- declared only by the test suite, so the Haskell reader scopes it
+-- `development`. nixpkgs builds the package with `doCheck`, which puts the
+-- test suite's dependencies in the derivation's `buildInputs`: that is the
+-- field the static-link fallback read as linked code.
+
+library
+  build-depends:    base, waybill-fixture-aeson
+  exposed-modules:  Lib
+  hs-source-dirs:   src
+  default-language: Haskell2010
+
+test-suite spec
+  type:             exitcode-stdio-1.0
+  main-is:          Spec.hs
+  hs-source-dirs:   test
+  default-language: Haskell2010
+  build-depends:    base, waybill-fixture-testproj, waybill-fixture-hspec

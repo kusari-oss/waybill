@@ -1,0 +1,63 @@
+== haskellPackages.aeson (x86_64-linux) p4j815qj3mxaf1sd34gzp0lgs9x57zvg-aeson-2.2.4.1.drv
+doCheck: '1'
+installPhase registers a package: True
+link deps (lib+exe, getCabalDeps) (24): OneTuple QuickCheck character-ps data-fix dlist hashable indexed-traversable integer-conversion integer-logarithms network-uri primitive scientific semialign strict tagged text-iso8601 text-short th-abstraction these time-compat unordered-containers uuid-types vector witherable
+propagatedBuildInputs (24): OneTuple QuickCheck character-ps data-fix dlist hashable indexed-traversable integer-conversion integer-logarithms network-uri primitive scientific semialign strict tagged text-iso8601 text-short th-abstraction these time-compat unordered-containers uuid-types vector witherable
+buildInputs (28): Diff OneTuple QuickCheck base-compat base-orphans base16-bytestring data-fix dlist generic-deriving generically hashable indexed-traversable integer-logarithms network-uri quickcheck-instances scientific strict tagged tasty tasty-golden tasty-hunit tasty-quickcheck text-short these time-compat unordered-containers uuid-types vector
+link deps in neither field: -
+link deps only in buildInputs: -
+buildInputs that are not link deps: Diff base-compat base-orphans base16-bytestring generic-deriving generically quickcheck-instances tasty tasty-golden tasty-hunit tasty-quickcheck
+== haskellPackages.warp (x86_64-linux) 7n7ll97dgislz0ind7hlfc10k1glgza0-warp-3.4.9.drv
+doCheck: '1'
+installPhase registers a package: True
+link deps (lib+exe, getCabalDeps) (18): async auto-update bsb-http-chunked case-insensitive crypton-x509 hashable http-date http-types http2 iproute network recv simple-sendfile streaming-commons time-manager vault wai word8
+propagatedBuildInputs (18): async auto-update bsb-http-chunked case-insensitive crypton-x509 hashable http-date http-types http2 iproute network recv simple-sendfile streaming-commons time-manager vault wai word8
+buildInputs (21): QuickCheck async auto-update bsb-http-chunked case-insensitive crypton-x509 hashable hspec http-client http-date http-types http2 iproute network recv simple-sendfile streaming-commons time-manager vault wai word8
+link deps in neither field: -
+link deps only in buildInputs: -
+buildInputs that are not link deps: QuickCheck hspec http-client
+== haskellPackages.servant-server (x86_64-linux) 7jkfzhvb8m5k0qpzprg2gy1gph4487jx-servant-server-0.20.3.0.drv
+doCheck: '1'
+installPhase registers a package: True
+link deps (lib+exe, getCabalDeps) (18): aeson base-compat base64-bytestring constraints http-api-data http-media http-types monad-control network resourcet servant sop-core tagged transformers-base wai wai-app-static warp word8
+propagatedBuildInputs (18): aeson base-compat base64-bytestring constraints http-api-data http-media http-types monad-control network resourcet servant sop-core tagged transformers-base wai wai-app-static warp word8
+buildInputs (13): aeson base-compat base64-bytestring hspec hspec-wai http-types resourcet safe servant should-not-typecheck temporary wai wai-extra
+link deps in neither field: -
+link deps only in buildInputs: -
+buildInputs that are not link deps: hspec hspec-wai safe should-not-typecheck temporary wai-extra
+== haskellPackages.hspec-core (x86_64-linux) kv7rxybm8ngywipqqxcdl3ijghrgk4xi-hspec-core-2.11.17.drv
+doCheck: ''
+installPhase registers a package: True
+link deps (lib+exe, getCabalDeps) (8): HUnit QuickCheck ansi-terminal call-stack haskell-lexer hspec-expectations quickcheck-io random
+propagatedBuildInputs (8): HUnit QuickCheck ansi-terminal call-stack haskell-lexer hspec-expectations quickcheck-io random
+buildInputs (0): 
+link deps in neither field: -
+link deps only in buildInputs: -
+buildInputs that are not link deps: -
+== haskellPackages.tasty-hunit (x86_64-linux) nd7s0k5bf2klssimirnah0yyj38r1hxs-tasty-hunit-0.10.2.drv
+doCheck: '1'
+installPhase registers a package: True
+link deps (lib+exe, getCabalDeps) (2): call-stack tasty
+propagatedBuildInputs (2): call-stack tasty
+buildInputs (0): 
+link deps in neither field: -
+link deps only in buildInputs: -
+buildInputs that are not link deps: -
+== haskellPackages.hashable (x86_64-linux) lnjnx10bhk6f9s48d8dc78ij1k6xf8ny-hashable-1.5.1.0.drv
+doCheck: '1'
+installPhase registers a package: True
+link deps (lib+exe, getCabalDeps) (0): 
+propagatedBuildInputs (0): 
+buildInputs (5): QuickCheck primitive tasty tasty-hunit tasty-quickcheck
+link deps in neither field: -
+link deps only in buildInputs: -
+buildInputs that are not link deps: QuickCheck primitive tasty tasty-hunit tasty-quickcheck
+== justStaticExecutables ShellCheck (x86_64-linux) zqlbsxi4w1dgldjiyxvi3vvq1bk6m0d4-ShellCheck-0.11.0.drv
+doCheck: '1'
+installPhase registers a package: False
+link deps (lib+exe, getCabalDeps) (5): Diff QuickCheck aeson fgl regex-tdfa
+propagatedBuildInputs (0): 
+buildInputs (5): Diff QuickCheck aeson fgl regex-tdfa
+link deps in neither field: -
+link deps only in buildInputs: Diff QuickCheck aeson fgl regex-tdfa
+buildInputs that are not link deps: -

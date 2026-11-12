@@ -466,6 +466,70 @@ pub(crate) fn propagate_non_runtime_scope(
     summary
 }
 
+/// #1283 (invariant I9) — withdraw a non-runtime scope a reader assigned
+/// directly to a package the pinned compiler supplies.
+///
+/// Milestone 1276 made such a package immune to *inheriting* a scope and left
+/// the direct origin without a suppression path, because its population was
+/// zero; invariant I9 was written to say where the mark should be suppressed
+/// when one appeared. On the 1283 corpus run it was one: slack-web's test
+/// suite declares `template-haskell`, so the Haskell reader scoped it
+/// `development`, and CycloneDX called a package GHC ships in every build
+/// `excluded`. The reasoning is the propagation's own (see
+/// [`compiler_supplied`]): CycloneDX 1.6 makes `excluded` and `optional` false
+/// of an installed package, whichever stanza named it.
+///
+/// Runs **before** the propagation, so a withdrawn mark seeds nothing. The
+/// scope becomes absent, not `Runtime`, matching the boot libraries that
+/// never carried one (C2). The reader-side edge typing has already run, so
+/// the edges into the component are returned to `DependsOn`; otherwise SPDX
+/// 2.3 would keep `DEV_DEPENDENCY_OF` beside a CycloneDX `required`, and the
+/// formats would disagree about one component.
+///
+/// The same `boot` set as the propagation's immunity and the closure-role
+/// exemption, read from the pinned revision's compiler configuration; empty
+/// when unknown, which withdraws nothing (FR-005). Returns how many marks it
+/// withdrew.
+pub(crate) fn withdraw_compiler_supplied_scope(
+    components: &mut [ResolvedComponent],
+    relationships: &mut [Relationship],
+    boot_libraries: &HashSet<String>,
+) -> usize {
+    let exempt: HashSet<String> = compiler_supplied(components, boot_libraries)
+        .into_iter()
+        .map(str::to_string)
+        .collect();
+    let mut withdrawn: HashSet<String> = HashSet::new();
+    for c in components.iter_mut() {
+        if exempt.contains(c.purl.as_str()) && c.lifecycle_scope.is_some_and(|s| s.is_non_runtime()) {
+            c.lifecycle_scope = None;
+            // C62 describes a scope; with none there is nothing to derive.
+            c.extra_annotations.remove(ANN_SCOPE_DERIVATION);
+            withdrawn.insert(c.purl.as_str().to_string());
+        }
+    }
+    if withdrawn.is_empty() {
+        return 0;
+    }
+    use waybill_common::resolution::RelationshipType;
+    for r in relationships.iter_mut().filter(|r| withdrawn.contains(&r.to)) {
+        if matches!(
+            r.relationship_type,
+            RelationshipType::DevDependsOn
+                | RelationshipType::BuildDependsOn
+                | RelationshipType::TestDependsOn
+                | RelationshipType::OptionalDependsOn
+        ) {
+            r.relationship_type = RelationshipType::DependsOn;
+        }
+    }
+    tracing::info!(
+        withdrawn = withdrawn.len(),
+        "withdrew a reader-assigned non-runtime scope from packages the compiler supplies",
+    );
+    withdrawn.len()
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -1291,5 +1355,72 @@ mod tests {
             Some("test-only-closure"),
             "and so does the reader's C62 value — overwriting it with              `transitive` would relabel a Go test-closure inference as              this pass's work"
         );
+    }
+
+    // ---- #1283 (invariant I9): a reader's own mark on a compiler-supplied package ----
+
+    fn typed(from: &str, to: &str, ty: RelationshipType) -> Relationship {
+        let mut r = mk_rel(from, to);
+        r.relationship_type = ty;
+        r
+    }
+
+    const HS_ROOT: &str = "pkg:hackage/root@1.0.0";
+    const TH: &str = "pkg:hackage/template-haskell";
+    const HSPEC: &str = "pkg:hackage/hspec@2.11.9";
+
+    /// slack-web's shape: its test suite declares `template-haskell` and
+    /// `hspec`, and only the first is supplied by the compiler.
+    fn test_suite_declares_boot_library() -> (Vec<ResolvedComponent>, Vec<Relationship>) {
+        (
+            vec![
+                mk_component(HS_ROOT),
+                scoped(TH, LifecycleScope::Development),
+                scoped(HSPEC, LifecycleScope::Development),
+            ],
+            vec![
+                typed(HS_ROOT, TH, RelationshipType::DevDependsOn),
+                typed(HS_ROOT, HSPEC, RelationshipType::DevDependsOn),
+            ],
+        )
+    }
+
+    #[test]
+    fn m1283_a_reader_scope_on_a_compiler_supplied_package_is_withdrawn() {
+        let (mut comps, mut rels) = test_suite_declares_boot_library();
+        let n = withdraw_compiler_supplied_scope(&mut comps, &mut rels, &boot_set(&["template-haskell"]));
+        assert_eq!(n, 1);
+        assert_eq!(scope_of(&comps, TH), None, "absent, like every boot library (C2)");
+        assert_eq!(
+            rels[0].relationship_type,
+            RelationshipType::DependsOn,
+            "the edge the reader typed agrees with the component, or SPDX 2.3 \
+             keeps DEV_DEPENDENCY_OF beside a CycloneDX `required`"
+        );
+        // CONTROL: a test dependency the compiler does not supply keeps both.
+        assert_eq!(scope_of(&comps, HSPEC), Some(LifecycleScope::Development));
+        assert_eq!(rels[1].relationship_type, RelationshipType::DevDependsOn);
+    }
+
+    /// FR-005: an unknown compiler configuration withdraws nothing.
+    #[test]
+    fn m1283_an_unknown_boot_set_withdraws_nothing() {
+        let (mut comps, mut rels) = test_suite_declares_boot_library();
+        assert_eq!(withdraw_compiler_supplied_scope(&mut comps, &mut rels, &boot_set(&[])), 0);
+        assert_eq!(scope_of(&comps, TH), Some(LifecycleScope::Development));
+        assert_eq!(rels[0].relationship_type, RelationshipType::DevDependsOn);
+    }
+
+    /// A boot library's name outside Hackage is a different package (C4).
+    #[test]
+    fn m1283_a_boot_name_outside_hackage_is_not_withdrawn() {
+        let npm = "pkg:npm/template-haskell@1.0.0";
+        let mut comps = vec![mk_component(HS_ROOT), scoped(npm, LifecycleScope::Development)];
+        let mut rels = vec![typed(HS_ROOT, npm, RelationshipType::DevDependsOn)];
+        assert_eq!(
+            withdraw_compiler_supplied_scope(&mut comps, &mut rels, &boot_set(&["template-haskell"])),
+            0
+        );
+        assert_eq!(scope_of(&comps, npm), Some(LifecycleScope::Development));
     }
 }

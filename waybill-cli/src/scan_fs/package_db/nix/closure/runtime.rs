@@ -45,7 +45,7 @@ use waybill_common::resolution::{Relationship, ResolvedComponent};
 
 use super::derivation::{store_basename, RawClosure};
 use super::member_key::{key_of_component, key_of_derivation, MemberKey};
-use super::static_link::{static_link_set, DeclaredEdges, StaticLinkSource};
+use super::static_link::{static_link_set, DeclaredEdges, ManifestTestDeps, StaticLinkSource};
 use super::walk;
 use super::{guard, ClassifiedClosure};
 use crate::scan_fs::package_db::nix::eval::invoke::run_bounded;
@@ -833,6 +833,9 @@ fn decide(
     let declared = || {
         package_set_available.then(|| DeclaredEdges::from_document(raw, components, relationships))
     };
+    // #1283 — what the scanned project's manifest declares for its tests,
+    // which the static-link fallback must not read as linked code.
+    let test_deps = ManifestTestDeps::from_document(raw, components, relationships);
     let key_of = |k: &String| raw.derivations.get(k).and_then(|d| key_of_derivation(d, k));
     let rc = match result {
         Err(reason) => {
@@ -849,7 +852,7 @@ fn decide(
             };
             // Rule 4 (FR-005): the walk, never the role rule...
             let walked = walk::reachable(raw, root);
-            let linked = static_link_set(raw, &walked, declared().as_ref());
+            let linked = static_link_set(raw, &walked, declared().as_ref(), &test_deps);
             let reached: HashSet<MemberKey> =
                 walked.iter().chain(&linked.members).filter_map(key_of).collect();
             // ...unless it reached no member but the root, from a root that
@@ -869,7 +872,7 @@ fn decide(
             let root_key = key_of(&root.to_string());
             let consumed = walk::consumed_haskell_builds(raw, root);
             if reached.iter().all(|k| Some(k) == root_key.as_ref()) && !consumed.is_empty() {
-                let linked_libs = static_link_set(raw, &consumed, declared().as_ref());
+                let linked_libs = static_link_set(raw, &consumed, declared().as_ref(), &test_deps);
                 let linked: HashSet<MemberKey> =
                     consumed.iter().chain(&linked_libs.members).filter_map(key_of).collect();
                 tracing::info!(
@@ -923,7 +926,7 @@ fn decide(
         .map(|r| walk::consumed_haskell_builds(raw, r))
         .unwrap_or_default();
     let roots: BTreeSet<String> = runtime_drvs.union(&seeds).cloned().collect();
-    let linked = static_link_set(raw, &roots, declared().as_ref());
+    let linked = static_link_set(raw, &roots, declared().as_ref(), &test_deps);
 
     let runtime: HashSet<MemberKey> = runtime_drvs.iter().filter_map(key_of).collect();
     let static_linked: HashSet<MemberKey> = linked
