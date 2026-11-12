@@ -391,7 +391,7 @@ pub fn build_document(
             {
                 "type": "ExternalRef",
                 "externalRefType": "vulnerabilityExploitabilityAssessment",
-                "contentType": "application/openvex+json",
+                "contentType": crate::generate::openvex::CONTENT_TYPE,
                 "locator": [locator],
                 "comment": "OpenVEX 0.2.0 sidecar produced by waybill",
             }

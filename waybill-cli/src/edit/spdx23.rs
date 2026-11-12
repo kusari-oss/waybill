@@ -356,6 +356,29 @@ impl SbomAdapter for Spdx23 {
             .and_then(|p| purl_path(&p))
     }
 
+    /// The `externalDocumentRefs[]` entry `sbom scan` writes for its sidecar,
+    /// `DocumentRef-OpenVEX`. No relationship names it, so nothing dangles.
+    fn remove_openvex_references(&mut self) -> Vec<String> {
+        let Some(refs) = self.doc.get_mut("externalDocumentRefs").and_then(Value::as_array_mut) else {
+            return Vec::new();
+        };
+        let mut removed = Vec::new();
+        refs.retain(|r| {
+            let openvex = r.get("externalDocumentId").and_then(Value::as_str)
+                == Some(crate::generate::openvex::SPDX23_DOCUMENT_REF);
+            if openvex {
+                removed.push(r.get("spdxDocument").and_then(Value::as_str).unwrap_or_default().to_string());
+            }
+            !openvex
+        });
+        if refs.is_empty() {
+            if let Some(obj) = self.doc.as_object_mut() {
+                obj.remove("externalDocumentRefs");
+            }
+        }
+        removed
+    }
+
     fn derivation_record(&self) -> Option<Value> {
         annotation_strings(&self.doc, "waybill:derivation").first().and_then(|s| serde_json::from_str(s).ok())
     }

@@ -1184,3 +1184,55 @@ fn m1277_the_classification_survives_exclude_scope_build() {
          the assertions above prove nothing"
     );
 }
+
+/// #1445 — C184's component counts describe the document after every pass
+/// that can remove a closure member, `--exclude-scope` included.
+///
+/// `waybill-fixture-roletest` is a closure member the milestone-1269
+/// propagation scopes `optional`, so `--exclude-scope optional`
+/// removes it after the closure record has been built.
+#[test]
+fn i1445_c184_component_counts_follow_exclude_scope() {
+    let s = scan_with(&["--exclude-scope", "optional"]);
+    // CONTROL: a closure member really was removed, or the count below is
+    // compared against a document the flag did not change.
+    assert!(
+        s.component("waybill-fixture-roletest").is_none(),
+        "`--exclude-scope optional` must drop roletest for this test to mean anything"
+    );
+    assert!(
+        scan().component("waybill-fixture-roletest").is_some(),
+        "roletest must be present without the flag"
+    );
+
+    let raw = s.cdx["metadata"]["properties"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["name"] == "waybill:nix-closure")
+        .expect("C184 absent: the closure tier degraded")["value"]
+        .as_str()
+        .unwrap();
+    let rec: Value = serde_json::from_str(raw).unwrap();
+    let mut members: Vec<&Value> = s
+        .components()
+        .iter()
+        .filter(|c| prop(c, "waybill:closure-role").is_some())
+        .collect();
+    if prop(&s.cdx["metadata"]["component"], "waybill:closure-role").is_some() {
+        members.push(&s.cdx["metadata"]["component"]);
+    }
+    let with_member_role =
+        members.iter().filter(|c| prop(c, "waybill:closure-member-role").is_some()).count();
+
+    assert_eq!(
+        rec["components-emitted"].as_u64(),
+        Some(members.len() as u64),
+        "components-emitted must count the closure members this document holds: {rec}"
+    );
+    assert_eq!(
+        rec["components-without-member-role"].as_u64(),
+        Some((members.len() - with_member_role) as u64),
+        "{rec}"
+    );
+}

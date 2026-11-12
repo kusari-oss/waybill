@@ -5256,7 +5256,7 @@ pub async fn execute(
     // The document-scope record (FR-018). Built only on the success path, so
     // a degraded tier emits no counts rather than zeros -- a zero would read
     // as "the closure held nothing", which is a different claim.
-    let nix_closure_summary = match &nix_closure {
+    let mut nix_closure_summary = match &nix_closure {
         Some(Ok(classified)) => {
             use scan_fs::package_db::nix::closure;
             let patched = closure::patches::attribute(&classified.raw);
@@ -5535,6 +5535,13 @@ pub async fn execute(
     // The counts are logged by the callee and not otherwise consumed;
     // they are returned so the unit tests can assert on them.
     let _ = apply_exclude_scope_filter(&mut components, &mut relationships, &exclude_scope);
+
+    // #1445 — C184's component and edge counts, taken from the set the
+    // document is written from. Here, below the last pass that removes a
+    // component, for the reason the m776 count below gives.
+    if let Some(summary) = nix_closure_summary.as_mut() {
+        summary.count_emitted(&components, &relationships);
+    }
 
     // Milestone 776 (FR-014a + FR-014b + SC-009a): source-provenance
     // reference summary.

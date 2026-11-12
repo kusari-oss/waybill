@@ -403,6 +403,31 @@ impl SbomAdapter for Spdx3 {
             .and_then(purl_path)
     }
 
+    /// The `SpdxDocument`'s `externalRef[]` entries `sbom scan` writes for its
+    /// sidecar: `vulnerabilityExploitabilityAssessment` with the OpenVEX
+    /// content type. They carry a locator only, so there is no hash to update.
+    fn remove_openvex_references(&mut self) -> Vec<String> {
+        let mut removed = Vec::new();
+        for e in self.graph_mut().iter_mut().filter(|e| ty(e) == "SpdxDocument") {
+            let Some(refs) = e.get_mut("externalRef").and_then(Value::as_array_mut) else { continue };
+            refs.retain(|r| {
+                let openvex = r.get("externalRefType").and_then(Value::as_str)
+                    == Some("vulnerabilityExploitabilityAssessment")
+                    && r.get("contentType").and_then(Value::as_str) == Some(crate::generate::openvex::CONTENT_TYPE);
+                if openvex {
+                    removed.extend(strs(r.get("locator")));
+                }
+                !openvex
+            });
+            if refs.is_empty() {
+                if let Some(obj) = e.as_object_mut() {
+                    obj.remove("externalRef");
+                }
+            }
+        }
+        removed
+    }
+
     fn derivation_record(&self) -> Option<Value> {
         let doc = self.doc_iri()?;
         self.annotations_about(&doc, "waybill:derivation").first().and_then(|s| serde_json::from_str(s).ok())
