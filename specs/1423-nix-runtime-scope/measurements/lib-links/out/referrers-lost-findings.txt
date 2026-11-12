@@ -1,0 +1,18 @@
+== aeson-2.2.4.1
+  <- haddock-library-1.11.0: lib/links only: ['lib/links/libHSaeson-2.2.4.1-NQ4HYX6Wd2H2KWSK5cg0l-ghc9.10.3.dylib']
+  <- tree-diff-0.3.4: ELSEWHERE: ['lib/links/libHSaeson-2.2.4.1-NQ4HYX6Wd2H2KWSK5cg0l-ghc9.10.3.dylib', 'nix-support/propagated-build-inputs']
+== scientific-0.3.8.1
+  <- haddock-library-1.11.0: lib/links only: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib']
+  <- witherable-0.5: lib/links only: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib']
+  <- quickcheck-instances-0.3.33: ELSEWHERE: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib', 'nix-support/propagated-build-inputs']
+  <- trifecta-2.1.4: lib/links only: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib']
+  <- text-iso8601-0.1.1.1: lib/links only: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib']
+  <- parsers-0.12.12: ELSEWHERE: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib', 'nix-support/propagated-build-inputs']
+  <- tree-diff-0.3.4: ELSEWHERE: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib', 'nix-support/propagated-build-inputs']
+  <- attoparsec-0.14.4: ELSEWHERE: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib', 'nix-support/propagated-build-inputs']
+  <- indexed-traversable-instances-0.1.2.1: lib/links only: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib']
+  <- aeson-2.2.4.1: ELSEWHERE: ['lib/links/libHSscientific-0.3.8.1-HtngNjFEpxV2us6TvSAXhC-ghc9.10.3.dylib', 'nix-support/propagated-build-inputs']
+== text-iso8601-0.1.1.1
+  <- haddock-library-1.11.0: lib/links only: ['lib/links/libHStext-iso8601-0.1.1.1-AXlmsJpFTxSIca4jJQESi8-ghc9.10.3.dylib']
+  <- tree-diff-0.3.4: lib/links only: ['lib/links/libHStext-iso8601-0.1.1.1-AXlmsJpFTxSIca4jJQESi8-ghc9.10.3.dylib']
+  <- aeson-2.2.4.1: ELSEWHERE: ['lib/links/libHStext-iso8601-0.1.1.1-AXlmsJpFTxSIca4jJQESi8-ghc9.10.3.dylib', 'nix-support/propagated-build-inputs']

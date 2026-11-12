@@ -28,6 +28,7 @@
 //! | `closure-tests-library.json` | slack-web / openai (#1283) | the evaluated package is the project (`project-tests`), a library built with its test suite: `hspec` is in its `buildInputs`, its library dependency `aeson` in `propagatedBuildInputs`; `aeson`'s own test dependency is in `aeson`'s `buildInputs`, and `text`, which propagates nothing (hashable's shape), has `tasty` in its own |
 //! | `closure-doc-outputs.json` | hlint / moat on aarch64-darwin (#1455) | members whose only runtime paths are their own `doc` or `devdoc` output, or a path only a `doc`, `man`, `info` or `devdoc` output references; a member referenced by a documentation output and by an `out`; a package named `-doc` whose output is `out` |
 //! | `closure-lib-links.json` | moat on aarch64-darwin (#1455, second rule) | an app whose `lib/links` farm points at a library its dylib loads, one loaded only by that library (dyld's load-chain rpaths), one named in `propagated-build-inputs`, and a test framework (with its own farm) that only the farm names; the files are built by `lib_links_store` |
+//! | `closure-lib-links-haskell.json` | #1479 review | `closure-lib-links.json` with the app and `decl` as Haskell libraries, so the static-link set, seeded from the shipping app, follows its `propagatedBuildInputs` |
 //! | `closure-tests-executable.json` | slacklinker (#1283) | the same project as an executable-only build: `aeson` and `hspec` share `buildInputs`, and `hspec` was built at a version the package set disagrees with |
 //!
 //! US4 reuses `closure-runtime.json`, adding a CVE-named patch to one member
@@ -1973,6 +1974,39 @@ fn a_lib_links_entry_nothing_loads_does_not_ship_its_target() {
         }),
         "{c216}"
     );
+}
+
+/// The recall guard (#1479 review): moat is a library, so its own library
+/// dependencies ship by being linked into whatever consumes it, not by its
+/// dylib loading them. Here the app is a Haskell library whose derivation
+/// propagates `decl`, but nothing in the store names `decl` outside the app's
+/// `lib/links` and nothing loads it. The `lib/links` rule sets its path
+/// aside, and the static-link set, seeded from the shipping library, keeps
+/// it runtime as statically linked. On moat every package in its
+/// `package.conf.d` library closure ships (`measurements/lib-links/`).
+#[test]
+fn a_shipping_librarys_own_library_dependency_stays_runtime() {
+    let store = lib_links_store(&[]);
+    std::fs::remove_file(store.path().join(LL_APP).join("nix-support/propagated-build-inputs"))
+        .unwrap();
+    let closure = fixture("closure-lib-links-haskell.json");
+    let run = scan_with(NixStub {
+        runtime: Some(lib_links_listing()),
+        runtime_refs: LL_REFS.to_vec(),
+        store_dir: Some(store.path().to_path_buf()),
+        ..base(&closure)
+    });
+    assert_eq!(
+        run.marked(),
+        names(&["waybill-fixture-testfw", "waybill-fixture-testdep"]),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    assert_eq!(run.c203("waybill-fixture-decl").as_deref(), Some("statically-linked"));
+    let c216 = run.c216().expect("C216");
+    // `decl`'s path was set aside; the member was not, so it is not counted.
+    assert_eq!(c216["lib-links-excluded"]["members"], 2, "{c216}");
+    assert_eq!(c216["lib-links-excluded"]["paths"], 3, "{c216}");
 }
 
 /// The hard constraint: a dylib that a Mach-O file in a shipped output loads

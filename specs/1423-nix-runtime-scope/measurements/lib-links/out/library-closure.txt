@@ -1,0 +1,39 @@
+root units: ['moat-0.1-BxNZTK1X7cIKpGF3vGxmQD']
+library closure: 36 units (0 with no conf in the closure: [])
+  array                        0.5.8.0    ghc-9.10.3                               kept
+  base                         4.20.2.0   ghc-9.10.3                               kept
+  binary                       0.8.9.3    ghc-9.10.3                               kept
+  bytestring                   0.12.2.0   ghc-9.10.3                               kept
+  case-insensitive             1.2.1.0    case-insensitive-1.2.1.0                 kept
+  cmark-gfm                    0.2.6      cmark-gfm-0.2.6                          kept
+  containers                   0.7        ghc-9.10.3                               kept
+  deepseq                      1.5.0.0    ghc-9.10.3                               kept
+  exceptions                   0.10.9     ghc-9.10.3                               kept
+  filepath                     1.5.4.0    ghc-9.10.3                               kept
+  ghc-bignum                   1.3        ghc-9.10.3                               kept
+  ghc-boot-th                  9.10.3     ghc-9.10.3                               kept
+  ghc-internal                 9.1003.0   ghc-9.10.3                               kept
+  ghc-prim                     0.12.0     ghc-9.10.3                               kept
+  haddock-library              1.11.0     haddock-library-1.11.0                   kept
+  hashable                     1.5.1.0    hashable-1.5.1.0                         kept
+  mtl                          2.3.1      ghc-9.10.3                               kept
+  os-string                    2.0.7      ghc-9.10.3                               kept
+  parsec                       3.1.18.0   ghc-9.10.3                               kept
+  pretty                       1.1.3.6    ghc-9.10.3                               kept
+  primitive                    0.9.1.0    primitive-0.9.1.0                        kept
+  random                       1.2.1.3    random-1.2.1.3                           kept
+  rts                          1.0.2      ghc-9.10.3                               kept
+  splitmix                     0.1.3.2    splitmix-0.1.3.2                         kept
+  stm                          2.5.3.1    ghc-9.10.3                               kept
+  template-haskell             2.22.0.0   ghc-9.10.3                               kept
+  text                         2.1.3      ghc-9.10.3                               kept
+  th-abstraction               0.7.2.0    th-abstraction-0.7.2.0                   kept
+  th-compat                    0.1.7      th-compat-0.1.7                          kept
+  time                         1.12.2     ghc-9.10.3                               kept
+  transformers                 0.6.1.1    ghc-9.10.3                               kept
+  unordered-containers         0.2.20.1   unordered-containers-0.2.20.1            kept
+  uuid-types                   1.0.6.1    uuid-types-1.0.6.1                       kept
+  vector                       0.13.2.0   vector-0.13.2.0                          kept
+  vector-stream                0.1.0.1    vector-stream-0.1.0.1                    kept
+
+set aside among them: 0

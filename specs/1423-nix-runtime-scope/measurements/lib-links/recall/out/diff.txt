@@ -1,0 +1,10 @@
+findings before: 64  after: 61
+  grype: before 61, after 61
+  osv: before 3, after 0
+
+present before, absent after: 3
+  osv   HSEC-2026-0007         (HSEC-2026-0007) aeson 2.2.4.1
+  osv   HSEC-2026-0007         (HSEC-2026-0007) text-iso8601 0.1.1.1
+  osv   HSEC-2026-0011         (HSEC-2026-0011) scientific 0.3.8.1
+
+absent before, present after: 0

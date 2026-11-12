@@ -28,7 +28,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   test-framework packages. tasty stays, because vector's `out` installs a
   `benchmarks-O2` internal library whose dylib loads it. Every store path
   dyld loads from moat's dylib is kept
-  (`specs/1423-nix-runtime-scope/measurements/lib-links/`).
+  (`specs/1423-nix-runtime-scope/measurements/lib-links/`). None of the
+  newly marked members is in moat's library closure (the `depends` of its
+  `package.conf.d` entry, followed transitively), nor in any shipping
+  library's closure. On the runtime-only view, grype 0.120.0 finds the same
+  61 findings before and after. osv-scanner 2.7.0's 3 findings (HSEC-2026-0007
+  on aeson and text-iso8601, HSEC-2026-0011 on scientific) go, because those
+  packages are haddock-library's test-suite dependencies and nothing that
+  ships links or loads them.
 
 - **A member reached only through documentation outputs does not ship
   (#1455).** Under the runtime closure, a `--nix-closure` member whose

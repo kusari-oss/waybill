@@ -127,6 +127,96 @@ archives, and reported `not-assessed: unparsed-mach-o`. Archive slices load
 nothing at run time, so they are now skipped. A slice that is a Mach-O image
 still has to parse.
 
+## Recall: does the rule drop anything that ships? (#1479 review)
+
+moat is a library, so its Haskell dependencies ship by being linked into
+whatever consumes it, not by its dylib loading them. Three checks.
+
+**1. The newly marked members, by category** (`categorize.py` →
+`out/categories.txt`), against the compiled packages' own
+`package.conf.d` entries (`depends:`, the unit ids GHC links consumers
+against; `libclosure.py` → `out/library-closure.txt`):
+
+| category | members |
+|---|---|
+| test frameworks | 22 |
+| in moat's library closure (36 packages, moat included) | **0** |
+| in any shipping output's library closure (66 packages) | **0** |
+| Haskell, reached only through link farms, in no shipping library's `depends` closure | 79 |
+| no `package.conf.d` entry in the runtime closure | 1 (`os-string 2.0.10`, kept before only as statically linked into a member now set aside) |
+
+There are no C libraries among them. Every one of the 35 packages in moat's
+library closure is still runtime. 22 are GHC boot libraries in ghc's own
+store path. The other 13 are case-insensitive, cmark-gfm, haddock-library,
+hashable, primitive, random, splitmix, th-abstraction, th-compat,
+unordered-containers, uuid-types, vector and vector-stream.
+dyld, starting from every Mach-O file in the 68 kept outputs, loads 54 store
+paths, all kept (`out/dyld-all-kept.txt`).
+
+**moat's `package.conf.d` entry** names its Haskell dependencies by unit id
+only, with no store path. The store paths it does name are moat itself,
+moat's `-doc` output, and C libraries (libffi, gmp, ncurses, libiconv,
+libcxx, compiler-rt, libresolv, libsbuf, libutil) in `library-dirs` and
+`include-dirs`. moat's store references to its Haskell dependencies come from
+`lib/links` and `nix-support/propagated-build-inputs`. The second of these is
+outside `lib/links`, so those references stand. That is what keeps vector,
+primitive and the rest.
+
+If a library's `out` lacked that file, the static-link set would still keep
+its library dependencies. That set is seeded from the shipping Haskell
+members, and for a library it follows `propagatedBuildInputs`.
+`a_shipping_librarys_own_library_dependency_stays_runtime` pins this: with
+`propagated-build-inputs` removed, the dependency's path is set aside and the
+member stays runtime as `statically-linked`. With seeding from the shipping
+members disabled, the test fails.
+
+**2. Scanner findings on the runtime-only view** (`recall/scan.sh`,
+`recall/diff.py`, `recall/out/diff.txt`). The view is
+`waybill sbom edit <cdx> --drop 'scope=excluded'`. The scanners are grype
+0.120.0 with `GRYPE_DB_AUTO_UPDATE=false` (DB built 2026-11-08) and
+osv-scanner 2.7.0. Findings are canonicalised with `canon` from
+`specs/1283-nix-allow-ifd/measurements/recall/classify.py`.
+
+| | before (`db3b1dc4`) | after |
+|---|---|---|
+| grype findings | 61 | 61 |
+| osv-scanner findings | 3 | 0 |
+
+Present before and absent after:
+
+| scanner | id | package |
+|---|---|---|
+| osv | HSEC-2026-0007 | aeson 2.2.4.1 |
+| osv | HSEC-2026-0007 | text-iso8601 0.1.1.1 |
+| osv | HSEC-2026-0011 | scientific 0.3.8.1 |
+
+None of the three ships (`out/referrers-lost-findings.txt`):
+
+- Of the outputs that still ship, only haddock-library refers to them, and only through `lib/links`.
+- haddock-library's library `depends` is base, containers, parsec and text, so these are its test-suite dependencies.
+- Every other referrer is itself set aside.
+- No Mach-O file in a kept output loads them.
+
+No finding on a shipping package is lost.
+
+**3. Static-link roots, 91/33 → 0/23.** Before the rule, the static-link
+roots were the 124 Haskell members in the runtime closure:
+
+- 91 were confirmed by the package set and followed through declared edges;
+- 33 were not confirmed and fell back to derivation fields.
+
+The rule sets aside 101 of them, the 91 confirmed ones among them
+(`out/identity-before.txt`: of the 101, 91 `confirmed` and 10 with no
+identity row). The 23 that ship were unconfirmed before too, so they used
+derivation fields before and after. Nothing switched method.
+
+For a library root the fallback follows `propagatedBuildInputs` only, never
+its `buildInputs` test suite (#1283), so no test dependency is re-admitted.
+After the rule, no member is runtime solely because it is statically linked.
+Before, one was: `os-string 2.0.10`, through a root now set aside. Why
+moat's own library dependencies are not identity-confirmed is a property of
+the identity pass that #1472 is changing; it is not this rule.
+
 ## Where the rule is not assessed
 
 - **A substituter answered.** Its files are not in the local store, so which
