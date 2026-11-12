@@ -172,7 +172,7 @@
 
   Follow `feedback_github_actions_security`: SHA-pinned actions, `permissions: contents: read`, no untrusted `${{ }}` interpolation into `run:`.
 - [X] T038 Dispatch `recall-truth.yml` on this branch (operator action; prepare the exact `gh workflow run` command in the PR description). Review the artifact's excluded list against classify.py, and commit `waybill-cli/tests/fixtures/public_corpus/nix-closure-{slack-web,openai,slacklinker}/recall-truth.json`.
-- [ ] T039 Dispatch `public-corpus.yml` with `regen_goldens=true` (operator action). Commit the three new targets' goldens plus the C217 line on the existing nix-closure goldens (moat, shellcheck). Read the diffs: only C217 on existing targets.
+- [X] T039 Dispatch `public-corpus.yml` with `regen_goldens=true` (operator action). Commit the three new targets' goldens plus the C217 line on the existing nix-closure goldens (moat, shellcheck). Read the diffs: only C217 on existing targets.
 
 ## Phase 7: Polish
 
