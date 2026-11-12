@@ -74,6 +74,60 @@ pub(crate) fn reachable(raw: &RawClosure, root: &str) -> BTreeSet<String> {
     seen
 }
 
+/// #1467 — the C libraries the compilers of `members` link: for each member,
+/// its `stdenv`'s C compiler wrapper (an entry of the stdenv's
+/// `defaultNativeBuildInputs`), and that wrapper's `libc_lib`, as `.drv`
+/// keys.
+///
+/// No dependency field names the C library. A member is linked against it
+/// because its stdenv's compiler wrapper passes that libc's dynamic loader
+/// and library directory to every link, and the derivation graph records
+/// exactly that chain: on x86_64-linux at nixpkgs `a799d3e3`, a member's
+/// `stdenv` → `stdenv-linux` → `gcc-wrapper-15.2.0` → `libc_lib` =
+/// `glibc-2.42-61`; on aarch64-darwin the same chain ends at `libSystem-B`.
+/// Measured on curl, openssh, httpie, gh and ripgrep, x86_64-linux: the
+/// runtime closure holds glibc for all five, and the walk marked it in all
+/// five (`specs/1423-nix-runtime-scope/measurements/c-runtime/`).
+///
+/// Only `libc_lib`: the wrapper's `cc` is the compiler, `libc_dev` its
+/// headers, and what the libc itself references (glibc's `xgcc` libgcc and
+/// `libidn2`, named only in `makeFlags` and `postPatch`) is not in a
+/// dependency field either. Those are not assessed, and C216
+/// `c-runtime-libraries` says so. A member built with a stdenv that has no C
+/// compiler (`stdenvNoCC`) names none. A libc that another libc found here
+/// was built from is the bootstrap libc that one replaced, and is dropped.
+///
+/// It errs toward runtime: a member with no dynamically linked output still
+/// names its compiler's libc.
+pub(crate) fn compiler_libcs(raw: &RawClosure, members: &BTreeSet<String>) -> BTreeSet<String> {
+    let index = raw.output_index();
+    let resolve = |p: &str| index.get(store_basename(p)).copied();
+    let named = |k: &str, field: &str| -> Vec<&str> {
+        raw.derivations
+            .get(k)
+            .map(|d| d.paths_in(field).filter_map(resolve).collect())
+            .unwrap_or_default()
+    };
+    let stdenvs: BTreeSet<&str> = members.iter().flat_map(|m| named(m, "stdenv")).collect();
+    let libcs: BTreeSet<&str> = stdenvs
+        .iter()
+        .flat_map(|s| named(s, "defaultNativeBuildInputs"))
+        .flat_map(|w| named(w, "libc_lib"))
+        .collect();
+    // A libc another of them was built from is the bootstrap one it replaced.
+    // nixpkgs reuses a few early-stage builds in the final package set
+    // (curl's `libunistring` is built by `bootstrap-stage2-stdenv-linux`,
+    // whose compiler names `bootstrap-stage0-glibc-minimal-bootstrap`), and
+    // the final `glibc-2.42-61` is built from that same bootstrap libc. No
+    // runtime closure of the five measured targets holds it.
+    let replaced: BTreeSet<&str> = libcs
+        .iter()
+        .filter_map(|l| raw.derivations.get(*l))
+        .flat_map(|d| d.input_drvs(&raw.derivations))
+        .collect();
+    libcs.into_iter().filter(|l| !replaced.contains(l)).map(str::to_string).collect()
+}
+
 /// The Haskell-builder derivations `root` consumed through `inputs.drvs`: when
 /// non-empty, the sign of a wrapper around a static Haskell build.
 ///
@@ -203,6 +257,80 @@ mod tests {
             "control: not a Haskell build"
         );
         assert!(consumed_haskell_builds(&raw, "d-absent.drv").is_empty());
+    }
+
+    /// #1467, the x86_64-linux shape measured on nixpkgs `a799d3e3`: glibc
+    /// reaches a member only through its `stdenv`, whose
+    /// `defaultNativeBuildInputs` carry the C compiler wrapper, whose
+    /// `libc_lib` is glibc's library output. No dependency field names it.
+    /// Only `libc_lib` is followed: the compiler (`cc`), the headers
+    /// (`libc_dev`) and what the libc itself lists stay out, and so does the
+    /// libc of a stdenv only an unreached member was built with.
+    #[test]
+    fn the_libc_a_members_compiler_links_is_found_through_its_stdenv() {
+        let raw = RawClosure::parse(
+            r#"{"derivations": {
+              "d-app.drv":  {"env": {"pname":"app","version":"1","stdenv":"/nix/store/h-std"},
+                             "outputs": {"out": {"path":"h-app"}}},
+              "d-std.drv":  {"env": {"name":"stdenv-linux",
+                                     "defaultNativeBuildInputs":"/nix/store/h-patchelf /nix/store/h-cc"},
+                             "outputs": {"out": {"path":"h-std"}}},
+              "d-cc.drv":   {"env": {"pname":"cc-wrapper","version":"1","wrapperName":"CC_WRAPPER",
+                                     "cc":"/nix/store/h-gcc","libc_lib":"/nix/store/h-libc",
+                                     "libc_dev":"/nix/store/h-libc-dev"},
+                             "outputs": {"out": {"path":"h-cc"}}},
+              "d-libc.drv": {"env": {"pname":"libc","version":"2","buildInputs":"/nix/store/h-headers"},
+                             "inputs": {"drvs": {"d-stage0libc.drv": {"outputs":["out"]}}, "srcs": []},
+                             "outputs": {"out": {"path":"h-libc"}, "dev": {"path":"h-libc-dev"}}},
+              "d-unistring.drv": {"env": {"pname":"unistring","version":"1","stdenv":"/nix/store/h-stage2std"},
+                             "outputs": {"out": {"path":"h-unistring"}}},
+              "d-stage2std.drv": {"env": {"name":"bootstrap-stage2-stdenv-linux",
+                                          "defaultNativeBuildInputs":"/nix/store/h-stage2cc"},
+                             "outputs": {"out": {"path":"h-stage2std"}}},
+              "d-stage2cc.drv": {"env": {"pname":"stage2cc","version":"1","libc_lib":"/nix/store/h-stage0libc"},
+                             "outputs": {"out": {"path":"h-stage2cc"}}},
+              "d-stage0libc.drv": {"env": {"pname":"stage0libc","version":"1"},
+                             "outputs": {"out": {"path":"h-stage0libc"}}},
+              "d-headers.drv": {"env": {"pname":"headers","version":"6"}, "outputs": {"out": {"path":"h-headers"}}},
+              "d-gcc.drv":  {"env": {"pname":"gcc","version":"15"}, "outputs": {"out": {"path":"h-gcc"}}},
+              "d-patchelf.drv": {"env": {"pname":"patchelf","version":"1"}, "outputs": {"out": {"path":"h-patchelf"}}},
+              "d-tool.drv": {"env": {"pname":"tool","version":"1","stdenv":"/nix/store/h-bootstd"},
+                             "outputs": {"out": {"path":"h-tool"}}},
+              "d-bootstd.drv": {"env": {"name":"bootstrap-stdenv-linux","defaultNativeBuildInputs":"/nix/store/h-bootcc"},
+                             "outputs": {"out": {"path":"h-bootstd"}}},
+              "d-bootcc.drv": {"env": {"pname":"bootcc","version":"1","libc_lib":"/nix/store/h-bootlibc"},
+                             "outputs": {"out": {"path":"h-bootcc"}}},
+              "d-bootlibc.drv": {"env": {"pname":"bootlibc","version":"1"}, "outputs": {"out": {"path":"h-bootlibc"}}},
+              "d-nocc.drv": {"env": {"pname":"nocc","version":"1","stdenv":"/nix/store/h-stdnocc"},
+                             "outputs": {"out": {"path":"h-nocc"}}},
+              "d-stdnocc.drv": {"env": {"name":"stdenv-linux","defaultNativeBuildInputs":"/nix/store/h-patchelf"},
+                             "outputs": {"out": {"path":"h-stdnocc"}}}
+            }}"#,
+        )
+        .unwrap();
+        assert_eq!(compiler_libcs(&raw, &set(&["d-app.drv"])), set(&["d-libc.drv"]));
+        assert_eq!(
+            compiler_libcs(&raw, &set(&["d-tool.drv"])),
+            set(&["d-bootlibc.drv"]),
+            "control: another member's compiler names another libc"
+        );
+        assert!(
+            compiler_libcs(&raw, &set(&["d-nocc.drv"])).is_empty(),
+            "control: a stdenv without a C compiler names no libc"
+        );
+        assert!(compiler_libcs(&raw, &set(&["d-absent.drv"])).is_empty());
+        // curl's `libunistring`: an early bootstrap stage's build, whose
+        // compiler links the bootstrap libc the final libc was built from.
+        assert_eq!(
+            compiler_libcs(&raw, &set(&["d-app.drv", "d-unistring.drv"])),
+            set(&["d-libc.drv"]),
+            "the bootstrap libc is replaced by the libc built from it"
+        );
+        assert_eq!(
+            compiler_libcs(&raw, &set(&["d-unistring.drv"])),
+            set(&["d-stage0libc.drv"]),
+            "control: alone, nothing replaces it"
+        );
     }
 
     /// shellcheck's wrapper also consumes `pandoc-cli`, a Haskell build, as a
