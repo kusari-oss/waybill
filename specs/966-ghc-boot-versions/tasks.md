@@ -88,7 +88,7 @@
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] Create the fixture `T/fixtures/nix_closure_boot_versions/` (`closure.json`, `hackage-packages.nix`, `configuration-ghc-9.10.x.nix`, `flake.lock`, `flake.nix`, and the project `.cabal`). Model it on `T/fixtures/nix_closure_hackage_alias/` and the seeding in `T/nix_closure_hackage_identity.rs:206`.
+- [X] T011 [P] [US1] Create the fixture `T/fixtures/nix_closure_boot_versions/` (`closure.json`, `hackage-packages.nix`, `configuration-ghc-9.10.x.nix`, `flake.lock`, `flake.nix`, and the project `.cabal`). Model it on `T/fixtures/nix_closure_hackage_alias/` and the seeding in `T/nix_closure_hackage_identity.rs:206`.
   - The project `waybill-fixture-app`, built with `/nix/store/<hash>-ghc-9.10.3` in `nativeBuildInputs`, declares `base`, `process`, `Win32` and `waybill-fixture-lib`.
   - The member `waybill-fixture-lib` is built by `ghc-9.10.3` and declares `base`.
   - The member `waybill-fixture-boottool` is built by `ghc-binary-9.8.4` and declares `base`, plus one library whose 9.8.4 and 9.10.3 versions are identical in the TSV (choose it from T002's output and name it in a comment).
@@ -98,14 +98,14 @@
     - `closure_only/`: no `.cabal` in the scanned tree, so `enrich` declines, as on shellcheck. Its confirmed members declare `base`, so the versioning comes entirely from the closure tier.
   - Every derivation sets `env.system = "x86_64-linux"`.
   - Names only for boot libraries (fixture rule).
-- [ ] T012 [P] [US1] Write `T/nix_closure_boot_versions.rs` tests using `T/common/nix_stub.rs` and the fixture, each asserting all three formats where the row is emitted:
+- [X] T012 [P] [US1] Write `T/nix_closure_boot_versions.rs` tests using `T/common/nix_stub.rs` and the fixture, each asserting all three formats where the row is emitted:
   - `design_tier_base_takes_the_project_compilers_version`: version, PURL, C218 `ghc-9.10.3`, `sbom-tier` still `design`, and no C170, C171 or C151.
   - `bootstrap_member_edge_points_at_its_own_compilers_base`: two `base` components at the 9.10.3 and 9.8.4 versions. `waybill-fixture-boottool`'s edge goes to the 9.8.4 one, and every 9.10.3-built member's edge goes to the 9.10.3 one.
   - `a_library_both_compilers_ship_identically_is_one_component`.
   - `win32_is_never_versioned_on_linux`: on an `x86_64-linux` closure, `Win32` carries no version and no C218.
   - `no_versionless_twin_remains`: no `pkg:hackage/base` without a version beside a C218 one (FR-010), and no relationship endpoint missing from the components (#980).
   - `closure_only_scan_versions_boot_libraries`: on the `closure_only/` fixture, the closure-tier `base` carries the 9.10.3 version and C218, with no C174 in the document.
-- [ ] T013 [P] [US1] Write parity tests for C218 in `waybill-cli/src/parity/extractors/` (cdx, spdx2, spdx3 test modules), following an existing per-component row's tests, e.g. C201 `waybill:closure-identity`.
+- [X] T013 [P] [US1] Write parity tests for C218 in `waybill-cli/src/parity/extractors/` (cdx, spdx2, spdx3 test modules), following an existing per-component row's tests, e.g. C201 `waybill:closure-identity`.
 
 ### Implementation for User Story 1
 
@@ -118,7 +118,7 @@
   - If no component holds that PURL, create one with `compiler_supplied_component` (`:1073`), extended to take `Option<(&GhcRelease, &str version)>`. When given one, it sets the version and C218 and omits C170.
   - Rank-2 targets, and members with no compiler or one absent from the table, keep today's path exactly.
 - [X] T017 [US1] Thread `&ClosureCompilers` and the table into `closure_identity::reclassify` (`HP/closure_identity.rs:825`) and on to `emit_declared_edges`. Update the call at `waybill-cli/src/cli/scan_cmd.rs:4887`. When `None`, behaviour is today's.
-- [ ] T018 [US1] Add C218 extractors in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs` (`SymmetricEqual`, per-component), and the catalog row C218 in `docs/reference/sbom-format-mapping.md`, from `contracts/c218-boot-library-compiler.md` with research R6's audit text. Both land together (memory: the mapping-row gate lives in the lib target).
+- [X] T018 [US1] Add C218 extractors in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs` (`SymmetricEqual`, per-component), and the catalog row C218 in `docs/reference/sbom-format-mapping.md`, from `contracts/c218-boot-library-compiler.md` with research R6's audit text. Both land together (memory: the mapping-row gate lives in the lib target).
 
 **Checkpoint:** T012's US1 tests pass and the T013 parity tests pass. Scans without a closure are unchanged (`cargo test -p waybill --test nix_haskell_resolution_m926` still passes).
 
@@ -132,8 +132,8 @@
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Add `T/fixtures/nix_closure_boot_versions/os_string_966/`. The project is built by `ghc-9.6.6`, declares `os-string`, and has a `hackage-packages.nix` entry giving `os-string` a version. The `configuration-ghc-9.10.x.nix` there nulls `os-string`, reproducing m926's union over candidate series.
-- [ ] T020 [P] [US2] Add tests to `T/nix_closure_boot_versions.rs`:
+- [X] T019 [P] [US2] Add `T/fixtures/nix_closure_boot_versions/os_string_966/`. The project is built by `ghc-9.6.6`, declares `os-string`, and has a `hackage-packages.nix` entry giving `os-string` a version. The `configuration-ghc-9.10.x.nix` there nulls `os-string`, reproducing m926's union over candidate series.
+- [X] T020 [P] [US2] Add tests to `T/nix_closure_boot_versions.rs`:
   - `os_string_is_not_compiler_supplied_on_966`: it resolves to the package-set version, with no C218 and no C170.
   - `the_scope_exemption_uses_the_exact_set`: checked per component, not by count. C202 counts the components the scope rule exempted, not the size of the boot set. `os-string` must carry no C203 `exempt-compiler-supplied`, and a library in `ships(9.6.6)` that the project reaches through a non-runtime path still does.
   - `without_a_closure_the_union_rule_still_applies`: the `no_closure/` fixture shows `os-string` as `compiler-supplied`, as on main.
@@ -158,26 +158,26 @@
 
 ### Tests for User Story 3
 
-- [ ] T023 [P] [US3] Add tests to `T/nix_closure_boot_versions.rs`:
+- [X] T023 [P] [US3] Add tests to `T/nix_closure_boot_versions.rs`:
   - `an_unknown_compiler_changes_nothing_and_says_so`: C219 shape exactly per `contracts/c219-ghc-boot-libraries.md`, with keys sorted.
   - `c219_names_both_compilers_and_the_table_date`: on the main fixture, both compilers are present, `project` is `ghc-9.10.3`, and `table` equals the TSV header date.
   - `no_c219_without_a_closure`.
   - `no_c219_on_a_closure_without_haskell`: reuse an existing non-Haskell closure fixture, such as `T/fixtures/nix_closure_runtime/`.
   - `c219_present_on_a_closure_only_scan`: the `closure_only/` fixture has no C174, but C219 is present and its `compilers` keys equal the document's C218 values.
-- [ ] T024 [P] [US3] Write C219 parity tests in the extractor test modules (document scope; follow C202's or C217's tests).
+- [X] T024 [P] [US3] Write C219 parity tests in the extractor test modules (document scope; follow C202's or C217's tests).
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Build the C219 value in `HP/closure_compilers.rs`: `fn document_value(&self, table_date) -> serde_json::Value`, with sorted keys, `schema: 1`, `in-table` / `absent-from-table` per `seen`, and `project` label or `null`.
+- [X] T025 [US3] Build the C219 value in `HP/closure_compilers.rs`: `fn document_value(&self, table_date) -> serde_json::Value`, with sorted keys, `schema: 1`, `in-table` / `absent-from-table` per `seen`, and `project` label or `null`.
   - Build it in `waybill-cli/src/cli/scan_cmd.rs` from the `ClosureCompilers` kept in T010, **not** on `enrich`'s summary, which doesn't exist on a closure-only scan.
   - Emit it iff the closure tier ran and either `enrich` returned a summary (C174) or the identity pass examined at least one member (C201). That is the gate in `contracts/c219-ghc-boot-libraries.md`.
-- [ ] T026 [US3] Emit C219 at document scope:
+- [X] T026 [US3] Emit C219 at document scope:
   - CDX `metadata.properties[]` in `waybill-cli/src/generate/cyclonedx/metadata.rs`;
   - SPDX 2.3 document `annotations[]` in `waybill-cli/src/generate/spdx/annotations.rs`;
   - SPDX 3 document `Annotation` in `waybill-cli/src/generate/spdx/v3_annotations.rs`.
 
   Wire the value through the same summary struct C202 and C217 use (`scan_cmd.rs:~5763` and `:~5819`).
-- [ ] T027 [US3] Add C219 extractors in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs` (document scope, `SymmetricEqual`), and the catalog row C219 in `docs/reference/sbom-format-mapping.md`, from `contracts/c219-ghc-boot-libraries.md`. Add one sentence to C170's row: on a closure scan with the compiler in the table, a boot library carries C218 instead.
+- [X] T027 [US3] Add C219 extractors in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs` (document scope, `SymmetricEqual`), and the catalog row C219 in `docs/reference/sbom-format-mapping.md`, from `contracts/c219-ghc-boot-libraries.md`. Add one sentence to C170's row: on a closure scan with the compiler in the table, a boot library carries C218 instead.
 
 **Checkpoint:** all of `T/nix_closure_boot_versions.rs` passes.
 

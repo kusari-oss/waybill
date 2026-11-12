@@ -4,7 +4,9 @@
 
 **Carriers:** CycloneDX `metadata.properties[]`; SPDX 2.3 document `annotations[]`; SPDX 3 document `Annotation`. **Parity:** `SymmetricEqual`, with an extractor in each format.
 
-**Present when:** the closure tier ran (C184 present) **and** Haskell was in play. That means either the m926 pass ran (C174 present), **or** the m1275 identity pass examined Haskell members (C201 present).
+**Present when:** the closure tier ran (C184 present) **and** Haskell was in play. That means either the m926 pass ran (C174 present), **or** the closure names at least one GHC (a member's `nativeBuildInputs` holds a `ghc-X.Y.Z` or `ghc-binary-X.Y.Z` store path).
+
+*Corrected at implementation (966-impl):* the second branch originally read "the m1275 identity pass examined Haskell members (C201 present)". C201 is not Haskell-specific: `closure_identity::reclassify` annotates every closure-appended `pkg:generic` member, and with no package set every member gets `package-set-unavailable`, so C201 is present on a closure with no Haskell at all and could not keep those documents byte-identical. "The closure names a GHC" is the fact the C201 proxy stood for.
 
 The second branch exists for closure-only scans. On shellcheck's golden, m926 never runs (no C174), yet the identity pass annotates 2,045 components and every versionless boot component there is closure-emitted.
 

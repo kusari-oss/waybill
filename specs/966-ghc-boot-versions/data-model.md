@@ -68,4 +68,4 @@ For a confirmed member `m` and a declared target `t`:
 
 - No document holds both `pkg:hackage/<n>` (versionless) and a C218-bearing `pkg:hackage/<n>@<v>` produced from the same compiler (FR-010).
 - Every C218-bearing component's version equals `version_of(C218 release, name, system)`.
-- C219 is present iff the closure tier ran **and** either m926 ran (C174) or the identity pass examined Haskell members (C201). The latter covers closure-only scans, where `enrich` declines. Its `compilers` keys equal the C218 values in the document, plus any `absent-from-table` compiler.
+- C219 is present iff the closure tier ran **and** either m926 ran (C174) or the closure names at least one GHC (`seen` non-empty). The latter covers closure-only scans, where `enrich` declines. (Corrected at implementation: the C201 proxy is present on non-Haskell closures too; see the C219 contract.) Its `compilers` keys equal the C218 values in the document, plus any `absent-from-table` compiler.

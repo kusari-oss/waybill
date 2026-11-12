@@ -209,6 +209,8 @@ pub struct MetadataExtras<'a> {
     pub closure_graph_admission: Option<&'a str>,
     /// Milestone 1283 (C217) — the Nix evaluation policy.
     pub nix_evaluation_policy: Option<&'a str>,
+    /// Milestone 966 (C219) — the GHC boot-library record.
+    pub ghc_boot_libraries: Option<&'a str>,
     /// C213 (m1378, #1396) — the closure contents read record.
     pub nix_closure_contents: Option<&'a str>,
     /// C195/C196 (#1154) — the `go mod why` pass's outcome.
@@ -294,6 +296,7 @@ pub fn build_metadata(
         cpe_coverage,
         closure_graph_admission,
         nix_evaluation_policy,
+        ghc_boot_libraries,
         nix_closure_contents,
         go_mod_why,
         deps_dev_outcomes,
@@ -453,6 +456,14 @@ pub fn build_metadata(
     }
     // C217 (m1283, #1283) — the import-from-derivation policy the Nix
     // evaluations ran under, verified or not, and nix's sandbox setting.
+    // C219 (m966, #966) — which GHCs the closure named and whether the
+    // boot-library table has each.
+    if let Some(record) = ghc_boot_libraries {
+        properties.push(json!({
+            "name": crate::scan_fs::package_db::nix::haskell_packages::closure_compilers::ANN_GHC_BOOT_LIBRARIES,
+            "value": record,
+        }));
+    }
     if let Some(record) = nix_evaluation_policy {
         properties.push(json!({
             "name": crate::scan_fs::package_db::nix::closure::summary::ANN_NIX_EVALUATION_POLICY,

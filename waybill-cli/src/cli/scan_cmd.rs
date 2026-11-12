@@ -5747,6 +5747,21 @@ pub async fn execute(
             }
             .wire()
         });
+    // C219 (m966, #966) — which GHCs the closure named, whether the
+    // boot-library table has each, and the table's date. Applicable iff the
+    // closure tier ran and Haskell is in play: the nixpkgs-Haskell pass ran
+    // (C174), or the closure names at least one GHC (a closure-only scan,
+    // where that pass declines). Absent otherwise, so documents without a
+    // closure, or with one that holds no Haskell, are byte-identical
+    // (FR-011). Built from `closure_compilers`, never from the enrichment
+    // summary, which a closure-only scan does not have.
+    let ghc_boot_libraries_json: Option<String> = closure_compilers
+        .as_ref()
+        .filter(|cc| nixpkgs_haskell_summary.is_some() || !cc.seen.is_empty())
+        .map(|cc| {
+            let table = scan_fs::package_db::nix::haskell_packages::boot_table::table();
+            cc.document_value(table.observed()).to_string()
+        });
     // C208 (m1366, #1365) — rendered beside C190 because the two answer
     // adjacent questions about the same tier: C190 says the closure was not
     // taken, C208 says what the ecosystem identity pass did with the one that
@@ -5794,6 +5809,7 @@ pub async fn execute(
         cpe_coverage: Some(cpe_coverage_json.as_str()),
         closure_graph_admission: closure_graph_admission_json.as_deref(),
         nix_evaluation_policy: nix_evaluation_policy_json.as_deref(),
+        ghc_boot_libraries: ghc_boot_libraries_json.as_deref(),
         nix_closure_contents: closure_contents.as_ref().map(|c| c.wire.as_str()),
         nix_closure_contents_unread: closure_contents.as_ref().is_some_and(|c| c.unread),
         // C192 (m1067): answers served from the disk cache count as online.

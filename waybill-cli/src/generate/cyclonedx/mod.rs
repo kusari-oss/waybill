@@ -188,6 +188,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_cpe_coverage(scan.cpe_coverage.map(str::to_string))
             .with_closure_graph_admission(scan.closure_graph_admission.map(str::to_string))
             .with_nix_evaluation_policy(scan.nix_evaluation_policy.map(str::to_string))
+            .with_ghc_boot_libraries(scan.ghc_boot_libraries.map(str::to_string))
             .with_nix_closure_contents(
                 scan.nix_closure_contents.map(str::to_string),
                 scan.nix_closure_contents_unread,

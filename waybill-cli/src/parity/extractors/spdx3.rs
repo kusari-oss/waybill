@@ -789,6 +789,10 @@ spdx3_anno!(c215_spdx3, "waybill:closure-binary-identity", component);
 spdx3_anno!(c216_spdx3, "waybill:closure-scope-method", document);
 // Milestone 1283 (#1283): C217 — the Nix evaluation policy.
 spdx3_anno!(c217_spdx3, "waybill:nix-evaluation-policy", document);
+// Milestone 966 (#966): C218 — the compiler release a boot library's version
+// came from; C219 — which GHCs the closure named and whether the table has each.
+spdx3_anno!(c218_spdx3, "waybill:boot-library-compiler", component);
+spdx3_anno!(c219_spdx3, "waybill:ghc-boot-libraries", document);
 spdx3_anno!(c183_spdx3, "waybill:patch-evidence-grade", document);
 spdx3_anno!(c184_spdx3, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.

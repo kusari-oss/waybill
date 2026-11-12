@@ -207,6 +207,8 @@ pub struct CycloneDxBuilder {
     closure_graph_admission: Option<String>,
     /// Milestone 1283 (C217).
     nix_evaluation_policy: Option<String>,
+    /// Milestone 966 (C219).
+    ghc_boot_libraries: Option<String>,
     /// C213 (m1378) — the closure contents read record, pre-rendered, and
     /// whether it has unread members.
     nix_closure_contents: Option<String>,
@@ -295,6 +297,7 @@ impl CycloneDxBuilder {
             cpe_coverage: None,
             closure_graph_admission: None,
             nix_evaluation_policy: None,
+            ghc_boot_libraries: None,
             nix_closure_contents: None,
             nix_closure_contents_unread: false,
             go_mod_why: None,
@@ -382,6 +385,12 @@ impl CycloneDxBuilder {
     /// Milestone 1283 (C217) — the Nix evaluation policy record.
     pub fn with_nix_evaluation_policy(mut self, value: Option<String>) -> Self {
         self.nix_evaluation_policy = value;
+        self
+    }
+
+    /// Milestone 966 (C219) — the GHC boot-library record.
+    pub fn with_ghc_boot_libraries(mut self, value: Option<String>) -> Self {
+        self.ghc_boot_libraries = value;
         self
     }
 
@@ -1067,6 +1076,7 @@ impl CycloneDxBuilder {
                 cpe_coverage: self.cpe_coverage.as_deref(),
                 closure_graph_admission: self.closure_graph_admission.as_deref(),
                 nix_evaluation_policy: self.nix_evaluation_policy.as_deref(),
+                ghc_boot_libraries: self.ghc_boot_libraries.as_deref(),
                 nix_closure_contents: self.nix_closure_contents.as_deref(),
                 go_mod_why: self.go_mod_why,
                 deps_dev_outcomes: deps_dev_outcomes.as_deref(),

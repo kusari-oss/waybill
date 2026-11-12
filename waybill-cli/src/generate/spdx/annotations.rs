@@ -645,6 +645,15 @@ pub fn annotate_document(
     }
     // C217 (m1283, #1283) — the Nix evaluation policy, same canonical string
     // as the other two formats.
+    // C219 (m966, #966) — the GHC boot-library record, same canonical string
+    // as the other two formats.
+    if let Some(record) = artifacts.ghc_boot_libraries {
+        push(
+            &mut out,
+            crate::scan_fs::package_db::nix::haskell_packages::closure_compilers::ANN_GHC_BOOT_LIBRARIES,
+            json!(record),
+        );
+    }
     if let Some(record) = artifacts.nix_evaluation_policy {
         push(
             &mut out,

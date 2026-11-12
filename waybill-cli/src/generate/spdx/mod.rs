@@ -439,6 +439,7 @@ mod tests {
             cpe_coverage: None,
             closure_graph_admission: None,
             nix_evaluation_policy: None,
+            ghc_boot_libraries: None,
             nix_closure_contents: None,
             nix_closure_contents_unread: false,
             deps_dev_online: false,
