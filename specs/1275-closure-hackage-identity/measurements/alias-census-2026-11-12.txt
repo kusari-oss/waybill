@@ -1,0 +1,44 @@
+# alias-census.sh, 2026-11-12, aarch64-darwin, against the per-revision cache (~/.cache/waybill/nixpkgs).
+# The four revisions are the ones the nix-closure corpus goldens pin: a799d3e3 (moat, shellcheck),
+# 2c15aa59 (openai), 5ae3b07d (slack-web), 5b2c2d84 (slacklinker).
+# ./alias-census.sh a799d3e3886da994fa307f817a6bc705ae538eeb 2c15aa59df0017ca140d9ba302412298ab4bf22a 5ae3b07d8d6527c42f17c876e404993199144b6a 5b2c2d84341b2afb5647081c1386a80d7a8d8605
+== a799d3e3886da994fa307f817a6bc705ae538eeb
+attributes:                                   19429
+distinct attribute names:                     19429
+without a pname / without a version:          0 / 0
+versioned aliases (attribute != pname):       417
+neither <pname> nor <pname>_<version>:        0
+(pname, version) held by more than one:       0
+== 2c15aa59df0017ca140d9ba302412298ab4bf22a
+attributes:                                   18336
+distinct attribute names:                     18336
+without a pname / without a version:          0 / 0
+versioned aliases (attribute != pname):       411
+neither <pname> nor <pname>_<version>:        0
+(pname, version) held by more than one:       0
+== 5ae3b07d8d6527c42f17c876e404993199144b6a
+attributes:                                   18654
+distinct attribute names:                     18654
+without a pname / without a version:          0 / 0
+versioned aliases (attribute != pname):       236
+neither <pname> nor <pname>_<version>:        0
+(pname, version) held by more than one:       0
+== 5b2c2d84341b2afb5647081c1386a80d7a8d8605
+attributes:                                   19173
+distinct attribute names:                     19173
+without a pname / without a version:          0 / 0
+versioned aliases (attribute != pname):       358
+neither <pname> nor <pname>_<version>:        0
+(pname, version) held by more than one:       0
+
+# Positive control: WAYBILL_NIXPKGS_CACHE=alias-census-control ./alias-census.sh waybill-fixture-rev
+# (one attribute of neither shape, one pair held twice, one head split across two lines)
+== waybill-fixture-rev
+attributes:                                   5
+distinct attribute names:                     5
+without a pname / without a version:          0 / 0
+versioned aliases (attribute != pname):       3
+neither <pname> nor <pname>_<version>:        1
+    waybill-fixture-odd_dev	waybill-fixture-odd	3.0
+(pname, version) held by more than one:       1
+    waybill-fixture-dup	1.0

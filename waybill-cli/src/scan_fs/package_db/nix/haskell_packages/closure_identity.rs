@@ -46,6 +46,7 @@ use waybill_common::resolution::ResolvedComponent;
 use super::package_set::{PackageSet, PackageSetEntry};
 use crate::scan_fs::package_db::nix::closure::derivation::RawDerivation;
 use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_ROLE;
+use crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE;
 use crate::scan_fs::package_db::nix::closure::ClassifiedClosure;
 
 /// The C201 annotation: what this pass concluded about one closure member.
@@ -59,8 +60,9 @@ pub(crate) const ANN_CLOSURE_IDENTITY: &str = "waybill:closure-identity";
 /// #892). Every variant maps to exactly one C201 wire value.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum HackageIdentity {
-    /// FR-001 — the default attribute's version equals the closure's, and the
-    /// derivation was built by a GHC. Both signals, per FR-005.
+    /// FR-001 — an attribute holds the closure's exact `(name, version)`, the
+    /// default `<name>` or its versioned alias (see [`exact_attribute`]), and
+    /// the derivation was built by a GHC. Both signals, per FR-005.
     Confirmed {
         /// The attribute that matched. Carried because the caller needs the
         /// entry's license, hash and declared relations, and re-deriving the
@@ -68,15 +70,16 @@ pub(crate) enum HackageIdentity {
         /// from the one the decision was made on.
         attribute: String,
     },
-    /// FR-004 — the name is in the set under a different version. The
-    /// collision population: `bash 5.3p9` against Hackage's `bash 0.1.8`.
-    /// Measured 26 of 276.
+    /// FR-004 — the default attribute holds a different version and no
+    /// versioned alias holds this one. The collision population: `bash 5.3p9`
+    /// against Hackage's `bash 0.1.8`. Measured 26 of 276.
     VersionDisagrees,
     /// The exact pair matched but the derivation was not built by a GHC, so
     /// the two signals disagree. Measured 0 of 60 — kept because a variant
     /// that cannot occur today is cheaper than discovering it occurred.
     SignalsDisagree,
-    /// The pinned set has no attribute of that name at all. 190 of 276.
+    /// The pinned set has no default attribute of that name and no versioned
+    /// alias for this version. 190 of 276.
     NotInPackageSet,
     /// nix recorded no version, so no pair could be formed. 14 of 276.
     /// Distinct from a failed lookup: the lookup was *impossible*, which calls
@@ -172,24 +175,44 @@ pub(crate) fn decide(
         // `NoVersionRecorded`, not a version disagreement.
         return HackageIdentity::NoVersionRecorded;
     }
-    // R4: the DEFAULT attribute only, via a single `get(name)`. nixpkgs
-    // encodes multiple versions as distinct attributes (`hashable`,
-    // `hashable_1_4_7_0`), and a reverse `pname -> attributes` index would
-    // match exactly one more component on the measured fixture while
-    // introducing a new ambiguity when two aliases carry the same version.
-    // Measured cost of this choice: 1 of 60 (`hashable 1.4.7.0`).
-    let Some(entry) = set.get(name) else {
-        return HackageIdentity::NotInPackageSet;
-    };
-    if entry.version != version {
+    let Some((attribute, _)) = exact_attribute(set, name, version) else {
         // FR-004: matching on name alone is forbidden. This is the arm that
         // keeps `pkg:hackage/bash@5.3p9` out of the document.
-        return HackageIdentity::VersionDisagrees;
-    }
+        return if set.get(name).is_some() {
+            HackageIdentity::VersionDisagrees
+        } else {
+            HackageIdentity::NotInPackageSet
+        };
+    };
     if !drvs.iter().copied().any(built_by_ghc) {
         return HackageIdentity::SignalsDisagree;
     }
-    HackageIdentity::Confirmed { attribute: name.to_string() }
+    HackageIdentity::Confirmed { attribute }
+}
+
+/// The attribute of the pinned set that holds exactly `(name, version)`, and
+/// its entry.
+///
+/// The default attribute `<name>` first, then the versioned alias
+/// `<name>_<version with . -> _>`, the name nixpkgs gives every alternative
+/// version (`hashable_1_4_7_0`). R4 originally read the default only; #1282
+/// superseded that on 2026-11-12. The compiler-supplied packages have no
+/// default attribute, so `Cabal 3.14.2.0` on haskell-language-server's closure
+/// stayed `pkg:generic` beside its own `Cabal_3_14_2_0`. Measured over four
+/// pinned revisions, every attribute is `<pname>` or `<pname>_<version>` and
+/// no `(pname, version)` is held by two attributes, so the alias is a function
+/// of the pair: there is no index to build and nothing to choose between.
+pub(crate) fn exact_attribute<'s>(
+    set: &'s PackageSet,
+    name: &str,
+    version: &str,
+) -> Option<(String, &'s PackageSetEntry)> {
+    if let Some(entry) = set.get(name).filter(|e| e.version == version) {
+        return Some((name.to_string(), entry));
+    }
+    let alias = format!("{name}_{}", version.replace('.', "_"));
+    let entry = set.get(&alias).filter(|e| e.version == version)?;
+    Some((alias, entry))
 }
 
 /// The declared runtime dependencies of a confirmed member, as attribute
@@ -357,6 +380,78 @@ mod tests {
         assert_eq!(id.wire(), "package-set-unavailable");
     }
 
+    /// `(attribute, pname, version)` triples, for sets holding versioned
+    /// aliases the way `hackage-packages.nix` names them.
+    fn set_with_attributes(rows: &[(&str, &str, &str)]) -> PackageSet {
+        let text = rows
+            .iter()
+            .map(|(a, n, v)| {
+                format!(
+                    "  {a} = callPackage (\n    ({{ mkDerivation }}:\n     mkDerivation {{\n       pname = \"{n}\";\n       version = \"{v}\";\n       license = lib.licenses.mit;\n     }}) {{}}) {{}};\n"
+                )
+            })
+            .collect::<String>();
+        super::super::package_set::parse(&text)
+    }
+
+    // ---- versioned aliases (#1282) ----
+
+    #[test]
+    fn an_alias_only_exact_pair_is_confirmed_under_the_alias() {
+        // `Cabal`'s shape: no default attribute, two aliases.
+        let set = set_with_attributes(&[
+            ("waybill-fixture-cabal_3_12_1_0", "waybill-fixture-cabal", "3.12.1.0"),
+            ("waybill-fixture-cabal_3_14_2_0", "waybill-fixture-cabal", "3.14.2.0"),
+        ]);
+        let d = drv_with_native(&["/nix/store/x-ghc-9.10.3"]);
+        assert_eq!(
+            decide("waybill-fixture-cabal", "3.14.2.0", Some(&set), &[&d]),
+            HackageIdentity::Confirmed { attribute: "waybill-fixture-cabal_3_14_2_0".into() }
+        );
+    }
+
+    #[test]
+    fn the_default_attribute_is_read_when_it_holds_the_version() {
+        let set = set_with_attributes(&[
+            ("waybill-fixture-hashable", "waybill-fixture-hashable", "1.5.1.0"),
+            ("waybill-fixture-hashable_1_4_7_0", "waybill-fixture-hashable", "1.4.7.0"),
+        ]);
+        let d = drv_with_native(&["/nix/store/x-ghc-9.10.3"]);
+        assert_eq!(
+            decide("waybill-fixture-hashable", "1.5.1.0", Some(&set), &[&d]).attribute(),
+            Some("waybill-fixture-hashable")
+        );
+        assert_eq!(
+            decide("waybill-fixture-hashable", "1.4.7.0", Some(&set), &[&d]).attribute(),
+            Some("waybill-fixture-hashable_1_4_7_0")
+        );
+    }
+
+    #[test]
+    fn an_alias_never_relaxes_the_version_or_ghc_rule() {
+        let set = set_with_attributes(&[
+            ("waybill-fixture-ext", "waybill-fixture-ext", "0.1.0.2"),
+            ("waybill-fixture-ext_0_1_1_0", "waybill-fixture-ext", "0.1.1.0"),
+            ("waybill-fixture-stale_1_0_0", "waybill-fixture-stale", "1.0.0"),
+        ]);
+        let ghc = drv_with_native(&["/nix/store/x-ghc-9.10.3"]);
+        let gcc = drv_with_native(&["/nix/store/x-gcc-13.2.0"]);
+        // FR-004: a default and an alias at other versions are not a pair.
+        assert_eq!(
+            decide("waybill-fixture-ext", "0.2.0.0", Some(&set), &[&ghc]),
+            HackageIdentity::VersionDisagrees
+        );
+        assert_eq!(
+            decide("waybill-fixture-stale", "9.9.9", Some(&set), &[&ghc]),
+            HackageIdentity::NotInPackageSet
+        );
+        // FR-005: an alias pair still needs the GHC signal.
+        assert_eq!(
+            decide("waybill-fixture-ext", "0.1.1.0", Some(&set), &[&gcc]),
+            HackageIdentity::SignalsDisagree
+        );
+    }
+
     #[test]
     fn every_variant_has_a_distinct_wire_value() {
         // FR-007 is only satisfied if the five non-confirmed outcomes are
@@ -470,6 +565,60 @@ mod tests {
             assert_eq!(target_of(order, &hs_generic), vec!["pkg:generic/waybill-fixture-zlib@0.7.2"]);
         }
     }
+
+    /// #1466: a member that declares no `pname` (C206) is never a declared
+    /// target, whatever it is called. On nixpkgs `a799d3e3` the live-bootstrap
+    /// fragment `time` took 24 edges meant for the GHC boot library. Without
+    /// it, a boot target gets FR-012c's compiler-supplied component and any
+    /// other target is omitted and counted.
+    #[test]
+    fn a_declared_target_never_binds_to_a_nameless_member() {
+        let text = concat!(
+            "  waybill-fixture-lib = callPackage ({ mkDerivation }: mkDerivation {\n",
+            "      pname = \"waybill-fixture-lib\";\n",
+            "      version = \"1.0.0\";\n",
+            "      libraryHaskellDepends = [ waybill-fixture-clock ];\n",
+            "      license = lib.licenses.bsd3;\n",
+            "  }) { };\n",
+        );
+        let set = super::super::package_set::parse(text);
+        let mut lib = super::super::enrich_tests::comp("waybill-fixture-lib");
+        lib.purl = waybill_common::types::purl::Purl::new("pkg:hackage/waybill-fixture-lib@1.0.0").unwrap();
+        lib.version = "1.0.0".to_string();
+        lib.extra_annotations
+            .insert(ANN_CLOSURE_IDENTITY.to_string(), serde_json::Value::from("confirmed"));
+        let mut fragment = super::super::enrich_tests::comp("waybill-fixture-clock");
+        fragment.purl = waybill_common::types::purl::Purl::new("pkg:generic/waybill-fixture-clock-c10ck").unwrap();
+        fragment.version = String::new();
+        fragment
+            .extra_annotations
+            .insert(ANN_MEMBER_ROLE.to_string(), serde_json::Value::from("fragment"));
+
+        let run = |boot: &BTreeSet<String>| {
+            let mut components = vec![lib.clone(), fragment.clone()];
+            let mut relationships = Vec::new();
+            let mut summary = ClosureIdentitySummary::default();
+            emit_declared_edges(
+                &mut components,
+                &mut relationships,
+                Some(&set),
+                boot,
+                &Default::default(),
+                &mut summary,
+            );
+            let targets: Vec<String> = relationships.iter().map(|r| r.to.clone()).collect();
+            (targets, summary)
+        };
+
+        let boot: BTreeSet<String> = ["waybill-fixture-clock".to_string()].into();
+        let (targets, summary) = run(&boot);
+        assert_eq!(targets, vec!["pkg:hackage/waybill-fixture-clock"]);
+        assert_eq!(summary.boot_targets, 1);
+
+        let (targets, summary) = run(&BTreeSet::new());
+        assert!(targets.is_empty(), "bound to {targets:?}");
+        assert_eq!(summary.dangling_non_boot, 1, "the omission is counted");
+    }
 }
 
 /// Milestone 1275 T009 — FR-006's agreement, measured against **this** code.
@@ -564,8 +713,7 @@ mod t009_agreement_probe {
             let id = decide(name, version, Some(&set), drvs);
             *tally.entry(id.wire()).or_default() += 1;
             let ghc = drvs.iter().copied().any(built_by_ghc);
-            let exact = !version.is_empty()
-                && set.get(name).map(|e| e.version == *version).unwrap_or(false);
+            let exact = !version.is_empty() && exact_attribute(&set, name, version).is_some();
             if exact && !ghc {
                 exact_but_not_ghc.push(format!("{name} {version}"));
             }
@@ -577,7 +725,7 @@ mod t009_agreement_probe {
         let exact_total = by_identity
             .iter()
             .filter(|((n, v), _)| {
-                !v.is_empty() && set.get(n).map(|e| e.version == *v).unwrap_or(false)
+                !v.is_empty() && exact_attribute(&set, n, v).is_some()
             })
             .count();
 
@@ -780,7 +928,7 @@ fn emit_declared_edges(
     let Some(set) = set else { return };
 
     // Which members this pass confirmed, and their final PURLs.
-    let confirmed: Vec<(String, String)> = components
+    let confirmed: Vec<(String, String, String)> = components
         .iter()
         .filter(|c| {
             c.extra_annotations
@@ -788,7 +936,7 @@ fn emit_declared_edges(
                 .and_then(|v| v.as_str())
                 == Some("confirmed")
         })
-        .map(|c| (c.name.clone(), c.purl.as_str().to_string()))
+        .map(|c| (c.name.clone(), c.version.clone(), c.purl.as_str().to_string()))
         .collect();
     if confirmed.is_empty() {
         return;
@@ -822,6 +970,17 @@ fn emit_declared_edges(
     };
     let mut best: std::collections::HashMap<String, (u8, String)> = std::collections::HashMap::new();
     for c in components.iter() {
+        // #1466 — a closure member that declares no `pname` (C206) is never a
+        // candidate. Its name is whatever its derivation is called, and on
+        // nixpkgs `a799d3e3` a live-bootstrap C fragment is called `time`:
+        // 24 libraries declaring the boot library bound to it. A Haskell
+        // build always declares its `pname`, so no such member can be the
+        // package a declared target names. Excluded, a boot target falls
+        // through to FR-012c's compiler-supplied component and any other
+        // target to the counted omission, exactly as when the name is absent.
+        if c.extra_annotations.contains_key(ANN_MEMBER_ROLE) {
+            continue;
+        }
         let r = rank(c);
         if best.get(&c.name).is_none_or(|(held, _)| r >= *held) {
             best.insert(c.name.clone(), (r, c.purl.as_str().to_string()));
@@ -838,8 +997,11 @@ fn emit_declared_edges(
         .map(|r| (r.from.clone(), r.to.clone()))
         .collect();
 
-    for (name, from_purl) in &confirmed {
-        let Some(entry) = set.get(name) else { continue };
+    for (name, version, from_purl) in &confirmed {
+        // The attribute `decide` matched, which for an alias-held version is
+        // `<name>_<version>`: the default attribute's relations describe
+        // another release (#1282).
+        let Some((_, entry)) = exact_attribute(set, name, version) else { continue };
         for target in declared_relations(entry) {
             let to_purl = match purl_of.get(&target) {
                 Some(p) => p.clone(),

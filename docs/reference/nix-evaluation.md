@@ -283,6 +283,13 @@ library's `propagatedBuildInputs` is followed too. Those carry no test
 dependencies, and they hold the platform-conditional ones (`hfsevents` on
 darwin) that the Linux-resolved package-set relations lack (#1459).
 
+A declared target never binds to a closure member that declares no `pname`
+(C206), whatever that member is called. A live-bootstrap fragment named
+`time` is not the boot library `time`: a boot library the closure holds no
+Haskell component for binds to its compiler-supplied `pkg:hackage/<name>`
+component, and any other such target gets no edge. Those members are also
+never merged into another reader's component of the same name (#1466).
+
 ### The document's subject (milestone 1377)
 
 When the closure resolves, the derivation the evaluated attribute built is

@@ -1,0 +1,108 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-app-0.1.0.drv": {
+      "name": "waybill-fixture-app-0.1.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "0.1.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8",
+        "buildInputs": "/nix/store/h-cabal /nix/store/h-syntax /nix/store/h-hashable /nix/store/h-text /nix/store/h-old /nix/store/h-ext /nix/store/h-stale /nix/store/h-cnative"
+      },
+      "inputs": {
+        "drvs": {
+          "d-cabal.drv": { "outputs": ["out"] },
+          "d-syntax.drv": { "outputs": ["out"] },
+          "d-hashable.drv": { "outputs": ["out"] },
+          "d-text.drv": { "outputs": ["out"] },
+          "d-old.drv": { "outputs": ["out"] },
+          "d-ext.drv": { "outputs": ["out"] },
+          "d-stale.drv": { "outputs": ["out"] },
+          "d-cnative.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "h-app" } }
+    },
+    "d-cabal.drv": {
+      "name": "waybill-fixture-cabal-3.14.2.0",
+      "env": {
+        "pname": "waybill-fixture-cabal",
+        "version": "3.14.2.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-cabal" } }
+    },
+    "d-syntax.drv": {
+      "name": "waybill-fixture-syntax-3.14.2.0",
+      "env": {
+        "pname": "waybill-fixture-syntax",
+        "version": "3.14.2.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-syntax" } }
+    },
+    "d-hashable.drv": {
+      "name": "waybill-fixture-hashable-1.5.1.0",
+      "env": {
+        "pname": "waybill-fixture-hashable",
+        "version": "1.5.1.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-hashable" } }
+    },
+    "d-text.drv": {
+      "name": "waybill-fixture-text-2.0.2",
+      "env": {
+        "pname": "waybill-fixture-text",
+        "version": "2.0.2",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-text" } }
+    },
+    "d-old.drv": {
+      "name": "waybill-fixture-old-1.0",
+      "env": {
+        "pname": "waybill-fixture-old",
+        "version": "1.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-old" } }
+    },
+    "d-ext.drv": {
+      "name": "waybill-fixture-ext-0.1.1.0",
+      "env": {
+        "pname": "waybill-fixture-ext",
+        "version": "0.1.1.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-ext" } }
+    },
+    "d-stale.drv": {
+      "name": "waybill-fixture-stale-9.9.9",
+      "env": {
+        "pname": "waybill-fixture-stale",
+        "version": "9.9.9",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+      },
+      "outputs": { "out": { "path": "h-stale" } }
+    },
+    "d-cnative.drv": {
+      "name": "waybill-fixture-cnative-2.0.0",
+      "env": {
+        "pname": "waybill-fixture-cnative",
+        "version": "2.0.0",
+        "nativeBuildInputs": "/nix/store/yyy-gcc-13.2.0"
+      },
+      "outputs": { "out": { "path": "h-cnative" } }
+    }
+  },
+  "version": 4
+}

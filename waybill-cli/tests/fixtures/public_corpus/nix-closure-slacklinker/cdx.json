@@ -5617,10 +5617,6 @@
           "value": "[\"package.yaml\"]"
         },
         {
-          "name": "waybill:scope-classification-source",
-          "value": "exempt-compiler-supplied"
-        },
-        {
           "name": "waybill:source-type",
           "value": "hackage-cabal-design"
         },
@@ -5631,18 +5627,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:closure-admission",
-          "value": "build-graph"
-        },
-        {
-          "name": "waybill:closure-member-role",
-          "value": "fragment"
-        },
-        {
-          "name": "waybill:closure-role",
-          "value": "build-tooling"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -89791,7 +89775,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:generic/os-string@2.0.10",
+      "bom-ref": "pkg:hackage/os-string@2.0.10",
       "evidence": {
         "identity": [
           {
@@ -89806,11 +89790,17 @@
           }
         ]
       },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f682b8a6121a09fc820ce69d99e33bfa9b1a959505663ef2fedebe7b95c75aa5"
+        }
+      ],
       "name": "os-string",
       "properties": [
         {
           "name": "waybill:scope-classification-source",
-          "value": "runtime-closure"
+          "value": "exempt-compiler-supplied"
         },
         {
           "name": "waybill:sbom-tier",
@@ -89822,15 +89812,14 @@
         },
         {
           "name": "waybill:closure-identity",
-          "value": "not-in-package-set"
+          "value": "confirmed"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
         }
       ],
-      "purl": "pkg:generic/os-string@2.0.10",
-      "scope": "excluded",
+      "purl": "pkg:hackage/os-string@2.0.10",
       "type": "library",
       "version": "2.0.10"
     },
@@ -119414,6 +119403,61 @@
         }
       ],
       "purl": "pkg:generic/thread-utils-finalizers-0.1.1.0.tar.gz-sha256.hAytb1O9vlr7qgeHT.sGdGYpd3QNs5hjlP5L2WdY4P2Ss.e",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/time-c2p74ajc9zfg6dvmv48f4v1xkr82j7ij",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "time",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "runtime-closure"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-admission",
+          "value": "build-graph"
+        },
+        {
+          "name": "waybill:closure-contents",
+          "value": "absent"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "no-version-recorded"
+        },
+        {
+          "name": "waybill:closure-member-role",
+          "value": "fragment"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "closure-member-not-an-edge-endpoint"
+        }
+      ],
+      "purl": "pkg:generic/time-c2p74ajc9zfg6dvmv48f4v1xkr82j7ij",
       "scope": "excluded",
       "type": "library"
     },
@@ -179749,18 +179793,6 @@
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
-        "pkg:generic/coreutils@9.10",
-        "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/glibc-locales@2.42-51",
-        "pkg:generic/os-string-2.0.10.tar.gz-sha256.h9oK4phIaCfyCDOadmeM7.ppsalZUFZj7y.st6.pe5XHWqU.e",
-        "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:hackage/hscolour@1.25"
-      ],
-      "ref": "pkg:generic/os-string@2.0.10"
-    },
-    {
-      "dependsOn": [
-        "pkg:generic/bash@5.3p9",
         "pkg:generic/docbook-xml@4.3",
         "pkg:generic/docbook-xsl-nons@1.79.2",
         "pkg:generic/gettext@0.26",
@@ -184149,6 +184181,10 @@
       "ref": "pkg:generic/time-builder-1vkbzh19qql99n9jv0c0ffqgyzjqlwhy"
     },
     {
+      "dependsOn": [],
+      "ref": "pkg:generic/time-c2p74ajc9zfg6dvmv48f4v1xkr82j7ij"
+    },
+    {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/curl@8.18.0",
@@ -188228,7 +188264,6 @@
         "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-51",
         "pkg:generic/hashable-1.5.1.0.tar.gz-sha256.h7Qt8EM6Syf.skVCDa3DjG0520hv82M.s8TVnzJ9195sRI.e",
-        "pkg:generic/os-string@2.0.10",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/base",
@@ -188238,6 +188273,7 @@
         "pkg:hackage/filepath",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/os-string",
+        "pkg:hackage/os-string@2.0.10",
         "pkg:hackage/primitive@0.9.1.0",
         "pkg:hackage/tasty-hunit@0.10.2",
         "pkg:hackage/tasty-quickcheck@0.11.1",
@@ -190301,6 +190337,23 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/os-string"
+    },
+    {
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/coreutils@9.10",
+        "pkg:generic/ghc-binary@9.8.4",
+        "pkg:generic/glibc-locales@2.42-51",
+        "pkg:generic/os-string-2.0.10.tar.gz-sha256.h9oK4phIaCfyCDOadmeM7.ppsalZUFZj7y.st6.pe5XHWqU.e",
+        "pkg:generic/stdenv-linux@26.05pre-git",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/deepseq",
+        "pkg:hackage/exceptions",
+        "pkg:hackage/hscolour@1.25",
+        "pkg:hackage/template-haskell"
+      ],
+      "ref": "pkg:hackage/os-string@2.0.10"
     },
     {
       "dependsOn": [
@@ -193972,7 +194025,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":406,\"excluded_files\":7,\"excluded_members\":1518,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":393,\"with_candidates\":611}"
+        "value": "{\"addressable_without_cpe\":408,\"excluded_files\":7,\"excluded_members\":1518,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":392,\"with_candidates\":611}"
       },
       {
         "name": "waybill:closure-graph-admission",
@@ -193984,7 +194037,7 @@
       },
       {
         "name": "waybill:nix-closure-contents",
-        "value": "{\"absent\":1036,\"failed\":0,\"members\":2350,\"modules\":{\"cargo\":540,\"golang\":0},\"no-outputs\":903,\"partial\":116,\"read\":295,\"root\":\"read\",\"schema\":\"waybill-nix-closure-contents/v1\",\"yielded\":3}"
+        "value": "{\"absent\":1037,\"failed\":0,\"members\":2351,\"modules\":{\"cargo\":540,\"golang\":0},\"no-outputs\":903,\"partial\":116,\"read\":295,\"root\":\"read\",\"schema\":\"waybill-nix-closure-contents/v1\",\"yielded\":3}"
       },
       {
         "name": "waybill:closure-ecosystem-identity-outcome",
@@ -193996,7 +194049,7 @@
       },
       {
         "name": "waybill:scope-exemptions",
-        "value": "{\"compiler-supplied\":27}"
+        "value": "{\"compiler-supplied\":28}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",
@@ -194028,7 +194081,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 606 component(s) not reachable from root; transitive-edges-unresolvable: cargo, hackage"
+        "value": "orphaned-components-detected: 607 component(s) not reachable from root; transitive-edges-unresolvable: cargo, hackage"
       },
       {
         "name": "waybill:workspaces-detected",

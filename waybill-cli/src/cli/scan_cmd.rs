@@ -7364,7 +7364,20 @@ fn merge_closure_components(
     let mut appended_identities: std::collections::HashSet<(String, String)> =
         std::collections::HashSet::new();
     for mut c in added {
-        match index.get(&(c.name.clone(), c.version.clone())) {
+        // #1466, milestone 1282 FR-011 — a member that declares no `pname`
+        // (C206) never deduplicates against another reader's component. Its
+        // `(name, version)` is its derivation's bare name and an empty
+        // version, which is exactly the shape a versionless boot library
+        // takes: on nixpkgs `a799d3e3` the live-bootstrap C fragment `time`
+        // merged into the manifest's `pkg:hackage/time`, which then described
+        // itself as a build-tooling fragment.
+        let nameless = c
+            .extra_annotations
+            .contains_key(scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE);
+        let existing = (!nameless)
+            .then(|| index.get(&(c.name.clone(), c.version.clone())))
+            .flatten();
+        match existing {
             Some(&i) => {
                 // Milestone 1281 (#1346), FR-004 — reconcile declared
                 // licenses without replacing an existing declaration.
@@ -9442,6 +9455,37 @@ mod tests {
             vec!["MIT"],
             "dropping it here would discard the only license available"
         );
+    }
+
+    /// #1466, milestone 1282 FR-011 — a member that declares no `pname` is
+    /// appended beside a component of the same `(name, version)`, never folded
+    /// into it.
+    #[test]
+    fn m1466_a_nameless_member_is_appended_beside_its_namesake() {
+        use crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE;
+        let named = |purl: &str| {
+            let mut c = make_component(purl);
+            c.name = "waybill-fixture-clock".to_string();
+            c.version = String::new();
+            c
+        };
+        let mut existing = vec![named("pkg:hackage/waybill-fixture-clock")];
+        let mut fragment = named("pkg:generic/waybill-fixture-clock-c10ck");
+        fragment
+            .extra_annotations
+            .insert(ANN_MEMBER_ROLE.to_string(), serde_json::Value::from("fragment"));
+        let (merged, appended, _) = merge_closure_components(&mut existing, vec![fragment]);
+        assert_eq!((merged, appended), (0, 1));
+        assert!(!existing[0].extra_annotations.contains_key(ANN_MEMBER_ROLE));
+
+        // CONTROL: the same pair without the role still merges, so the
+        // exclusion is the role and not the PURL or the empty version.
+        let mut existing = vec![named("pkg:hackage/waybill-fixture-clock")];
+        let (merged, appended, _) = merge_closure_components(
+            &mut existing,
+            vec![named("pkg:generic/waybill-fixture-clock-c10ck")],
+        );
+        assert_eq!((merged, appended), (1, 0));
     }
 
     /// Milestone 1377 FR-013 — a closure member carrying a nixpkgs-declared
