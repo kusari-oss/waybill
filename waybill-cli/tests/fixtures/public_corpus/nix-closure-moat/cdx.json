@@ -84397,9 +84397,14 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/vector-268p0jcm6cm8y48mzwfm47ylrz61ldg5",
+      "scope": "excluded",
       "type": "library"
     },
     {
@@ -99414,7 +99419,6 @@
         "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/vector-268p0jcm6cm8y48mzwfm47ylrz61ldg5",
         "pkg:hackage/Diff@1.0.2",
         "pkg:hackage/OneTuple@0.4.2.1",
         "pkg:hackage/QuickCheck@2.15.0.1",
@@ -100442,7 +100446,6 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/indexed-traversable-instances-0.1.2.1.tar.gz-sha256.h5p1B8jqVRjwuA67gM3Sk9InHL3vyNb4lFJnEzKlBH.pw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/vector-268p0jcm6cm8y48mzwfm47ylrz61ldg5",
         "pkg:hackage/OneTuple@0.4.2.1",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/base",
@@ -100638,7 +100641,6 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/lens-5.3.6.tar.gz-sha256.h00Xc8f2k1KEnuE1CY4ti94PPUnUL2P0UqxY3UQwQI8I.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/vector-268p0jcm6cm8y48mzwfm47ylrz61ldg5",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/array",
         "pkg:hackage/assoc@1.1.1",
@@ -100813,7 +100815,6 @@
         "pkg:generic/nothunks-0.3.1-r2.cabal-sha256.hg.pylmy1nocaN9eeiDd2wmMos34Le5DHjOKTDs68nPWw.e",
         "pkg:generic/nothunks-0.3.1.tar.gz-sha256.hN4P5Uv5EjtND9U.sBh7G3wGJEODjO9xxUnpGCe8l.pl10.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/vector-268p0jcm6cm8y48mzwfm47ylrz61ldg5",
         "pkg:hackage/base",
         "pkg:hackage/bytestring",
         "pkg:hackage/containers",
@@ -101032,7 +101033,6 @@
         "pkg:generic/quickcheck-instances-0.3.33-r1.cabal-sha256.hcJ.pxJ5nxtbABEhUBaNu1c2jObHQewB8jz0T553Q.pbPY.e",
         "pkg:generic/quickcheck-instances-0.3.33.tar.gz-sha256.haAPNVHsCe8q3sCmmmthCjiivhCt3CRE.ptqQ6svLwiGY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/vector-268p0jcm6cm8y48mzwfm47ylrz61ldg5",
         "pkg:hackage/OneTuple@0.4.2.1",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/array",
@@ -101226,7 +101226,6 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/semialign-1.3.1.1.tar.gz-sha256.hjOH3Ln8llCLDr3KZbiZWykpdaYKMrZAFulcblEdgegg.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/vector-268p0jcm6cm8y48mzwfm47ylrz61ldg5",
         "pkg:hackage/base",
         "pkg:hackage/containers",
         "pkg:hackage/hashable@1.5.1.0",
@@ -101793,7 +101792,6 @@
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tree-diff-0.3.4-r2.cabal-sha256.hUKFkGee4Lxc5jVY5znRDdwS5ml0TI1BefceOgZoVZsE.e",
         "pkg:generic/tree-diff-0.3.4.tar.gz-sha256.hXproBCB99iXPKDhZN6NRUrEmBd1O01DER8ktsFT2Djs.e",
-        "pkg:generic/vector-268p0jcm6cm8y48mzwfm47ylrz61ldg5",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/aeson@2.2.4.1",
         "pkg:hackage/ansi-terminal@1.1.5",
@@ -102035,7 +102033,6 @@
         "pkg:generic/ghc@9.10.3",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/vector-268p0jcm6cm8y48mzwfm47ylrz61ldg5",
         "pkg:generic/witherable-0.5-r2.cabal-sha256.hpWAEMd9dKX8JjDIsf7wuzoBORK3guyAiqDjeJGBNYnU.e",
         "pkg:generic/witherable-0.5.tar.gz-sha256.hSENMweRlsTy8ATOpDD7A2CfJO3fOlYB.s4KOLZfSRjNE.e",
         "pkg:hackage/QuickCheck@2.15.0.1",
@@ -102177,7 +102174,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 569 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
+        "value": "orphaned-components-detected: 570 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
