@@ -553,16 +553,46 @@ fn is_haskell_purl(purl: &str) -> bool {
 }
 
 /// Whether the pinned revision's compiler supplies this component.
+///
+/// A boot-library **name** is not enough (#1478). nixpkgs also builds some of
+/// those names from Hackage as ordinary members: `os-string@2.0.8` on
+/// nix-closure-slack-web and `@2.0.10` on slacklinker and moat sit beside the
+/// compiler's own `os-string@2.0.7`. Exempting them overrode the runtime
+/// closure's evidence, which #1465 made authoritative. The compiler's copy is
+/// the one that says so: it carries C218 (its version came from the
+/// compiler, #966), or it has no version at all (no compiler was identified).
 fn compiler_supplied(component: &ResolvedComponent, boot: &HashSet<String>) -> bool {
     !boot.is_empty()
         && is_haskell_purl(component.purl.as_str())
         && boot.contains(component.name.as_str())
+        && is_the_compilers_copy(component)
+}
+
+/// A versionless PURL, or one versioned from the compiler (C218). The PURL,
+/// not `version`, because it is the identity a scanner matches. Duplicated in
+/// `scope_propagation` for the reason `is_haskell_purl` is.
+fn is_the_compilers_copy(component: &ResolvedComponent) -> bool {
+    !component.purl.as_str().contains('@')
+        || component.extra_annotations.contains_key(
+            crate::scan_fs::package_db::nix::haskell_packages::ANN_BOOT_LIBRARY_COMPILER,
+        )
 }
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// GHC's own copy of a boot library, as real documents carry it since
+    /// #966: versioned from the compiler, with C218 naming it. A versioned
+    /// boot name WITHOUT C218 is a separate Hackage build (#1478).
+    fn compilers_copy(mut c: ResolvedComponent) -> ResolvedComponent {
+        c.extra_annotations.insert(
+            crate::scan_fs::package_db::nix::haskell_packages::ANN_BOOT_LIBRARY_COMPILER.to_string(),
+            serde_json::Value::from("ghc-9.10.3"),
+        );
+        c
+    }
     use crate::generate::graph_completeness::test_support::mk_component;
 
     /// A component carrying `role`, or no role at all when `role` is `None`.
@@ -720,7 +750,7 @@ mod tests {
     /// build, so no format may report it absent — even in a tooling role.
     #[test]
     fn m1277_a_compiler_supplied_member_in_a_tooling_role_is_exempt() {
-        let mut c = vec![component("pkg:hackage/containers@0.6.7", Some("build-tooling"))];
+        let mut c = vec![compilers_copy(component("pkg:hackage/containers@0.6.7", Some("build-tooling")))];
         let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
         let s = role_only(&mut c, &boot);
         let p = presence(&c, "pkg:hackage/containers@0.6.7");
@@ -753,7 +783,7 @@ mod tests {
     /// its own most-important test (F7 there).
     #[test]
     fn m1277_an_exempt_member_keeps_its_closure_role_annotation() {
-        let mut c = vec![component("pkg:hackage/containers@0.6.7", Some("build-tooling"))];
+        let mut c = vec![compilers_copy(component("pkg:hackage/containers@0.6.7", Some("build-tooling")))];
         let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
         role_only(&mut c, &boot);
         assert_eq!(
@@ -769,7 +799,7 @@ mod tests {
     #[test]
     fn m1277_a_non_compiler_supplied_member_in_the_same_role_is_still_classified() {
         let mut c = vec![
-            component("pkg:hackage/containers@0.6.7", Some("build-tooling")),
+            compilers_copy(component("pkg:hackage/containers@0.6.7", Some("build-tooling"))),
             component("pkg:hackage/happy@2.1.7", Some("build-tooling")),
         ];
         let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
@@ -795,7 +825,7 @@ mod tests {
     /// and silently disable the feature.
     #[test]
     fn m1277_an_empty_boot_set_exempts_nothing() {
-        let mut c = vec![component("pkg:hackage/containers@0.6.7", Some("build-tooling"))];
+        let mut c = vec![compilers_copy(component("pkg:hackage/containers@0.6.7", Some("build-tooling")))];
         let s = role_only(&mut c, &HashSet::new());
         assert_eq!(
             presence(&c, "pkg:hackage/containers@0.6.7"),
@@ -923,7 +953,7 @@ mod tests {
         let mut c = vec![
             component("pkg:hackage/waybill-fixture-ShellCheck@0.11.0", Some("build-tooling")),
             component("pkg:hackage/waybill-fixture-aeson@2.2", Some("artifact-input")),
-            component("pkg:hackage/containers@0.6.7", Some("artifact-input")),
+            compilers_copy(component("pkg:hackage/containers@0.6.7", Some("artifact-input"))),
             component("pkg:hackage/waybill-fixture-alex@3.5", Some("build-tooling")),
         ];
         c[0].artifact_presence = Some(ArtifactPresence::NotInArtifact);
@@ -972,7 +1002,7 @@ mod tests {
             // An artifact-input boot library outside the runtime closure: the
             // static-executable shape, where GHC's boot packages are linked
             // from the compiler's own store path.
-            component("pkg:hackage/containers@0.6.7", Some("artifact-input")),
+            compilers_copy(component("pkg:hackage/containers@0.6.7", Some("artifact-input"))),
         ];
         let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
         assign_role_scope(&mut c, &boot, &closure_evidence(&[], &[]), &[]);
@@ -1230,5 +1260,40 @@ mod tests {
         let s = role_only(&mut c, &HashSet::new());
         assert_eq!(presence(&c, "pkg:generic/odd@1.0.0"), None);
         assert_eq!(s.assigned(), 0);
+    }
+
+    /// #1478: a versioned build of a boot-library name is an ordinary member.
+    /// nixpkgs builds `os-string@2.0.10` from Hackage beside GHC's own
+    /// `os-string@2.0.7`; only the compiler's copy is exempt, so the build's
+    /// tooling role is classified like any other member's.
+    #[test]
+    fn m1478_a_versioned_hackage_build_of_a_boot_name_is_not_exempt() {
+        let mut c = vec![
+            compilers_copy(component("pkg:hackage/os-string@2.0.7", Some("build-tooling"))),
+            component("pkg:hackage/os-string@2.0.10", Some("build-tooling")),
+        ];
+        let boot: HashSet<String> = ["os-string".to_string()].into_iter().collect();
+        let s = role_only(&mut c, &boot);
+        assert_eq!(
+            presence(&c, "pkg:hackage/os-string@2.0.7"),
+            Some(ArtifactPresence::ExemptCompilerSupplied)
+        );
+        let built = presence(&c, "pkg:hackage/os-string@2.0.10");
+        assert_ne!(built, Some(ArtifactPresence::ExemptCompilerSupplied), "{built:?}");
+        assert!(built.is_some_and(|p| p.is_absent_from_artifact()), "{built:?}");
+        assert_eq!(s.exempt_compiler_supplied, 1);
+    }
+
+    /// The versionless shape (no compiler identified) is still the
+    /// compiler's copy.
+    #[test]
+    fn m1478_a_versionless_boot_name_is_still_exempt() {
+        let mut c = vec![component("pkg:hackage/containers", Some("build-tooling"))];
+        let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
+        role_only(&mut c, &boot);
+        assert_eq!(
+            presence(&c, "pkg:hackage/containers"),
+            Some(ArtifactPresence::ExemptCompilerSupplied)
+        );
     }
 }
