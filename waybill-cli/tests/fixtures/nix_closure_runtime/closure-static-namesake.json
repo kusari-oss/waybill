@@ -23,7 +23,7 @@
         "pname": "waybill-fixture-zexe",
         "version": "1.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8 /nix/store/h-czlib",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1 /nix/store/h-czlib",
         "buildInputs": "/nix/store/h-hszlib /nix/store/h-fsn /nix/store/h-hspec"
       },
       "inputs": {
@@ -43,7 +43,7 @@
         "pname": "waybill-fixture-zlib",
         "version": "0.7.1.1",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-hszlib" } }
     },
@@ -58,7 +58,7 @@
         "pname": "waybill-fixture-fsnotify",
         "version": "0.4.4.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
         "propagatedBuildInputs": "/nix/store/h-hfsev"
       },
       "inputs": { "drvs": { "d-hfsev.drv": { "outputs": ["out"] } }, "srcs": [] },
@@ -70,7 +70,7 @@
         "pname": "waybill-fixture-hfsevents",
         "version": "0.1.8",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-hfsev" } }
     },
@@ -80,7 +80,7 @@
         "pname": "waybill-fixture-hspec",
         "version": "2.11.9",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-hspec" } }
     }

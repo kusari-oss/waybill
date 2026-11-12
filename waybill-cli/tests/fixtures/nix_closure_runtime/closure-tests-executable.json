@@ -8,7 +8,7 @@
         "outputs": "out",
         "doCheck": "1",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
         "buildInputs": "/nix/store/h-aeson /nix/store/h-hspec /nix/store/h-gmp"
       },
       "inputs": {
@@ -27,7 +27,7 @@
         "pname": "waybill-fixture-aeson",
         "version": "2.2.4.1",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
         "propagatedBuildInputs": "/nix/store/h-text"
       },
       "inputs": { "drvs": { "d-text.drv": { "outputs": ["out"] } }, "srcs": [] },
@@ -39,7 +39,7 @@
         "pname": "waybill-fixture-text",
         "version": "2.0.2",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-text" } }
     },
@@ -49,7 +49,7 @@
         "pname": "waybill-fixture-hspec",
         "version": "2.11.10",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
         "propagatedBuildInputs": "/nix/store/h-hunit"
       },
       "inputs": { "drvs": { "d-hunit.drv": { "outputs": ["out"] } }, "srcs": [] },
@@ -61,7 +61,7 @@
         "pname": "waybill-fixture-hunit",
         "version": "1.6.2",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-hunit" } }
     },

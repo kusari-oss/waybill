@@ -556,8 +556,8 @@ fn linux_static_runtime() -> String {
 fn with_alex(closure: String) -> String {
     let closure = closure
         .replacen(
-            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8\",\n        \"buildInputs\": \"/nix/store/h-aeson",
-            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8 /nix/store/h-alex\",\n        \"buildInputs\": \"/nix/store/h-aeson",
+            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-99.0.1\",\n        \"buildInputs\": \"/nix/store/h-aeson",
+            "\"nativeBuildInputs\": \"/nix/store/zzz-ghc-99.0.1 /nix/store/h-alex\",\n        \"buildInputs\": \"/nix/store/h-aeson",
             1,
         )
         .replacen(
@@ -689,7 +689,7 @@ fn with_unlisted(closure: String) -> String {
         )
         .replacen(
             "\"d-gmp.drv\": {\n",
-            "\"d-unl.drv\": {\n      \"name\": \"waybill-fixture-unlisted-1.0\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-unlisted\",\n        \"version\": \"1.0\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\",\n        \"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8\",\n        \"buildInputs\": \"/nix/store/h-fgl\"\n      },\n      \"outputs\": { \"out\": { \"path\": \"h-unl\" } }\n    },\n    \"d-gmp.drv\": {\n",
+            "\"d-unl.drv\": {\n      \"name\": \"waybill-fixture-unlisted-1.0\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-unlisted\",\n        \"version\": \"1.0\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\",\n        \"nativeBuildInputs\": \"/nix/store/zzz-ghc-99.0.1\",\n        \"buildInputs\": \"/nix/store/h-fgl\"\n      },\n      \"outputs\": { \"out\": { \"path\": \"h-unl\" } }\n    },\n    \"d-gmp.drv\": {\n",
             1,
         );
     assert_eq!(closure.matches("d-unl.drv").count(), 2, "the fixture edits applied");

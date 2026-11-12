@@ -477,6 +477,9 @@ pub(crate) const ANN_COMPONENT_ORIGIN: &str = "waybill:nixpkgs-component-origin"
 pub(crate) const ANN_UNRESOLVED_REASON: &str = "waybill:haskell-version-unresolved-reason";
 pub(crate) const ANN_CANDIDATE_COMPILERS: &str = "waybill:nixpkgs-candidate-compilers";
 pub(crate) const ANN_VERSION_DISAGREEMENT: &str = "waybill:nixpkgs-version-disagreement";
+/// C218 (milestone 966) — the compiler release whose shipped version a boot
+/// library carries, as the closure names it (`ghc-9.10.3`).
+pub(crate) const ANN_BOOT_LIBRARY_COMPILER: &str = "waybill:boot-library-compiler";
 
 /// Options the operator controls.
 #[derive(Debug, Clone)]
@@ -497,9 +500,6 @@ pub(crate) struct ResolveOptions {
     /// `None` is the default and means no `nix` process is started at all
     /// (spec FR-002), which is what makes the flag-off path byte-identical.
     pub(crate) nix_eval: Option<super::eval::TierConfig>,
-}
-
-// The FR-019 budget is not carried here: it belongs to the retrieval
     /// Milestone 966 (#966) — the GHCs the derivation closure names, when
     /// `--nix-closure` ran.
     ///
@@ -508,6 +508,9 @@ pub(crate) struct ResolveOptions {
     /// one takes the release's version (FR-005). `None` — no closure — is the
     /// union rule, byte-identical to before (FR-011).
     pub(crate) compilers: Option<closure_compilers::ClosureCompilers>,
+}
+
+// The FR-019 budget is not carried here: it belongs to the retrieval
 // boundary, and `HttpSource` already owns it. Duplicating it would create two
 // places to change and one of them would drift.
 
@@ -579,6 +582,13 @@ pub(crate) struct EnrichmentSummary {
     /// `to_document_value` — it is 19,437 entries of input, not a record of
     /// what the pass did.
     pub(crate) package_set: Option<package_set::PackageSet>,
+    /// Milestone 966 (T015) — boot libraries that took the closure compiler's
+    /// version from the boot-library table.
+    ///
+    /// Counted apart from `resolved`, which means "resolved from the pinned
+    /// nixpkgs", so C174's meaning does not shift. Logged, not rendered: the
+    /// components themselves carry C218.
+    pub(crate) resolved_from_compiler: usize,
 }
 
 /// What the evaluation tier did for one scan.
@@ -1005,6 +1015,26 @@ pub(crate) fn enrich(
             }
         };
 
+    // Milestone 966 (FR-006) — with the project's compiler known from the
+    // closure and present in the boot-library table, the compiler-supplied
+    // set is exactly what that release ships, not the union over candidate
+    // series: on a 9.6.6 closure `os-string`, nulled only by the 9.10+
+    // configurations, is then resolved like any other dependency. `aliases`
+    // and the offline-degradation rule above still come from the
+    // configurations. Absent from the table, the union stands (FR-008).
+    let project_compiler: Option<(closure_compilers::GhcRelease, String)> = opts
+        .compilers
+        .as_ref()
+        .and_then(|cc| cc.project_in_table().map(|g| (g.clone(), cc.system.clone())));
+    let boot = match &project_compiler {
+        Some((g, _)) => boot_table::table().names(&g.version).unwrap_or(boot),
+        None => boot,
+    };
+    let compiler_version = |name: &str| -> Option<(&closure_compilers::GhcRelease, &'static str)> {
+        let (g, system) = project_compiler.as_ref()?;
+        boot_table::table().version_of(&g.version, name, system).map(|v| (g, v))
+    };
+
     let nix_eval_ran = nix_eval_ran_early;
     let mut summary = EnrichmentSummary {
         revision: Some(pinned.revision.clone()),
@@ -1042,6 +1072,14 @@ pub(crate) fn enrich(
     }
 
     for c in components.iter_mut().filter(|c| is_enrichable(c)) {
+        // Milestone 966 (FR-005) — the compiler that built the scanned output
+        // ships this library; its version is the table's. Ahead of
+        // `classify`, which could only say "compiler-supplied".
+        if let Some((g, v)) = compiler_version(&c.name) {
+            apply_compiler_version(c, g, v, &mut summary.renames);
+            summary.resolved_from_compiler += 1;
+            continue;
+        }
         match classify(&c.name, &packages, &boot, &aliases, &pinned.revision) {
             // #1457: the package set does not see the flake's overlays, so
             // its version can be one the project's own declaration rules
@@ -1167,6 +1205,15 @@ pub(crate) fn enrich(
             // (FR-006a).
             if !existing.contains(&member.name) {
                 let mut c = new_closure_component(&member.name);
+                // Milestone 966 — a boot library the walk reached carries the
+                // project compiler's version too (FR-005: every boot-library
+                // component).
+                if let Some((g, v)) = compiler_version(&c.name) {
+                    apply_compiler_version(&mut c, g, v, &mut summary.renames);
+                    summary.resolved_from_compiler += 1;
+                    components.push(c);
+                    continue;
+                }
                 // #984: the closure resolves aliased names too, so a
                 // transitively-reached package whose bare name exists only
                 // via the compiler configuration gets its version rather
@@ -1373,6 +1420,14 @@ pub(crate) fn enrich(
     // propagation, which cannot re-derive it: it runs for scans with no
     // `--nix-closure`, where nothing else reads the compiler configurations.
     summary.boot_libraries = Some(boot.clone());
+    if let Some((g, _)) = &project_compiler {
+        tracing::info!(
+            compiler = %g.label,
+            boot_libraries = boot.len(),
+            versioned = summary.resolved_from_compiler,
+            "nixpkgs-haskell: boot libraries versioned from the closure's compiler"
+        );
+    }
 
     // Milestone 1275 — hand the parsed set on rather than making the
     // closure-identity pass re-read it. Moved, not cloned, and set here
@@ -1687,6 +1742,33 @@ fn apply_resolved(
             "matched-by": matched_by.as_str(),
             "pin-state": pin_state,
         }),
+    );
+}
+
+/// Milestone 966 — give a boot library the version its compiler shipped.
+///
+/// Not [`apply_resolved`]: that records a nixpkgs resolution (C176, the
+/// source hash and license of a package-set entry, and the `source` tier),
+/// and none of that is true here. The version comes from the compiler
+/// release, which C218 names; the tier stays what the reader said, because
+/// it records where the dependency was declared (clarified 2026-11-12).
+///
+/// C170 and C171 are never written on this path, and the reader's C151
+/// ("no freeze file") is withdrawn because the version it was missing is now
+/// present, for the reason `apply_resolved` gives.
+pub(crate) fn apply_compiler_version(
+    c: &mut ResolvedComponent,
+    compiler: &closure_compilers::GhcRelease,
+    version: &str,
+    renames: &mut Vec<(String, String)>,
+) {
+    correct_version_in_place(c, version, renames);
+    c.extra_annotations.remove("waybill:unresolved-reason");
+    c.extra_annotations.remove(ANN_UNRESOLVED_REASON);
+    c.extra_annotations.remove(ANN_CANDIDATE_COMPILERS);
+    c.extra_annotations.insert(
+        ANN_BOOT_LIBRARY_COMPILER.to_string(),
+        serde_json::Value::String(compiler.label.clone()),
     );
 }
 
@@ -2154,6 +2236,7 @@ mod enrich_tests {
             // These tests exercise the file-parsing ladder; the eval tier is
             // off, which is also the default and the byte-identical path.
             nix_eval: None,
+            compilers: None,
         }
     }
 
@@ -2236,7 +2319,6 @@ mod enrich_tests {
         assert!(enrich(root.path(), &mut comps, opts(), &src).is_none());
         assert_eq!(src.request_count(), 0);
         assert!(comps[0].version.is_empty());
-            compilers: None,
         assert!(comps[0].extra_annotations.is_empty());
         std::env::remove_var(cache::CACHE_ENV);
     }

@@ -4898,17 +4898,30 @@ pub async fn execute(
             // FR-012c's targets are GHC boot libraries, identified from the
             // revision's own configuration rather than from a maintained list
             // (m926). Cache-only, like the package set above.
-            let boot = match nhp::load_package_set(&root_path, true, &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs)) {
-                nhp::PackageSetLoad::Loaded(l) => nhp::boot_set(
-                    &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs),
-                    &l.location,
-                    &l.pinned.revision,
-                    &root_path,
-                    true,
-                )
-                .map(|b| b.boot)
-                .unwrap_or_default(),
-                _ => Default::default(),
+            //
+            // Milestone 966 (FR-006, T022) — with the project compiler in the
+            // boot-library table, the set is that release's libraries, the
+            // same set `enrich` classified with; computed from the table
+            // directly so a closure-only scan, where `enrich` declined, gets
+            // it too. Otherwise the union, as before.
+            let exact_boot = closure_compilers.as_ref().and_then(|cc| {
+                let g = cc.project_in_table()?;
+                nhp::boot_table::table().names(&g.version)
+            });
+            let boot = match exact_boot {
+                Some(b) => b,
+                None => match nhp::load_package_set(&root_path, true, &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs)) {
+                    nhp::PackageSetLoad::Loaded(l) => nhp::boot_set(
+                        &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs),
+                        &l.location,
+                        &l.pinned.revision,
+                        &root_path,
+                        true,
+                    )
+                    .map(|b| b.boot)
+                    .unwrap_or_default(),
+                    _ => Default::default(),
+                },
             };
             closure_package_set_available = loaded_set.is_some();
             let identity = nhp::closure_identity::reclassify(
@@ -4917,6 +4930,7 @@ pub async fn execute(
                 classified,
                 loaded_set.as_ref(),
                 &boot,
+                closure_compilers.as_ref(),
             );
             tracing::info!(
                 confirmed = identity.confirmed(),

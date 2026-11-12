@@ -13,7 +13,7 @@ cargo test -p waybill --bins haskell_packages::boot_table
 - a compiler that is known but absent from the table: unchanged, with C219 `absent-from-table`;
 - two compilers that ship one library at the same version: one component;
 - two compilers that ship different versions: two components, each with edges only from its own compiler's members;
-- `Win32` on a non-Windows system: never versioned and never in the boot set;
+- `Win32` on a non-Windows system: never versioned; it stays `compiler-supplied` (see research R4's implementation note);
 - `os-string` on 9.6.6: not `compiler-supplied`;
 - no closure: byte-identical to main.
 

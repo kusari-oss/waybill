@@ -526,6 +526,7 @@ mod tests {
                 Some(&set),
                 &BTreeSet::new(),
                 hs_builds,
+                None,
                 &mut summary,
             );
             relationships
@@ -599,6 +600,7 @@ mod tests {
                 Some(&set),
                 boot,
                 &Default::default(),
+                None,
                 &mut summary,
             );
             let targets: Vec<String> = relationships.iter().map(|r| r.to.clone()).collect();
@@ -823,6 +825,7 @@ pub(crate) fn reclassify(
     closure: &ClassifiedClosure,
     set: Option<&PackageSet>,
     boot: &BTreeSet<String>,
+    compilers: Option<&super::closure_compilers::ClosureCompilers>,
 ) -> ClosureIdentitySummary {
     // Derivations by the identity a consumer sees. A closure holds several
     // derivations per `(pname, version)` -- build variants -- and the GHC
@@ -899,7 +902,7 @@ pub(crate) fn reclassify(
         .filter(|(_, drvs)| drvs.iter().any(|d| d.is_haskell_builder()))
         .map(|((name, version), _)| (name.to_string(), version.clone()))
         .collect();
-    emit_declared_edges(components, relationships, set, boot, &haskell_builds, &mut summary);
+    emit_declared_edges(components, relationships, set, boot, &haskell_builds, compilers, &mut summary);
     summary
 }
 
@@ -918,6 +921,7 @@ fn emit_declared_edges(
     set: Option<&PackageSet>,
     boot: &BTreeSet<String>,
     haskell_builds: &std::collections::HashSet<(String, String)>,
+    compilers: Option<&super::closure_compilers::ClosureCompilers>,
     summary: &mut ClosureIdentitySummary,
 ) {
     let Some(set) = set else { return };
@@ -981,8 +985,18 @@ fn emit_declared_edges(
             best.insert(c.name.clone(), (r, c.purl.as_str().to_string()));
         }
     }
+    // Milestone 966 (research R7) — which names a Haskell build holds. Those
+    // keep binding by name (rank 2), whatever compiler built the member.
+    let built_from_hackage: BTreeSet<String> = best
+        .iter()
+        .filter(|(_, (r, _))| *r == 2)
+        .map(|(n, _)| n.clone())
+        .collect();
     let mut purl_of: std::collections::HashMap<String, String> =
         best.into_iter().map(|(name, (_, purl))| (name, purl)).collect();
+    let mut held_purls: std::collections::HashSet<String> =
+        components.iter().map(|c| c.purl.as_str().to_string()).collect();
+    let table = super::boot_table::table();
 
     let mut present: std::collections::HashSet<(String, String)> = relationships
         .iter()
@@ -997,10 +1011,40 @@ fn emit_declared_edges(
         // `<name>_<version>`: the default attribute's relations describe
         // another release (#1282).
         let Some((_, entry)) = exact_attribute(set, name, version) else { continue };
+        // Milestone 966 (FR-009) — the GHC that built this member, when the
+        // boot-library table has it.
+        let built_by = compilers.and_then(|cc| {
+            cc.member_in_table(name, version).map(|g| (g, cc.system.as_str(), cc.project_in_table()))
+        });
         for target in declared_relations(entry) {
-            let to_purl = match purl_of.get(&target) {
-                Some(p) => p.clone(),
-                None => {
+            // Research R7 rule 2: a boot library this member's compiler ships,
+            // with no Haskell build of the name in the document, is the
+            // version that compiler shipped. Two compilers shipping different
+            // versions give two components, each reached only from members
+            // its compiler built; the same version is the same PURL, so one.
+            let versioned = built_by
+                .filter(|_| !built_from_hackage.contains(&target))
+                .and_then(|(g, system, project)| {
+                    let v = table.version_of(&g.version, &target, system)?;
+                    // One version is one component, and it names the project's
+                    // compiler when that compiler ships the same version
+                    // (contract C218), whichever member reached it first.
+                    let label = project
+                        .filter(|p| table.version_of(&p.version, &target, system) == Some(v))
+                        .unwrap_or(g);
+                    let c = compiler_supplied_component(&target, Some((label, v)))?;
+                    Some((c.purl.as_str().to_string(), c))
+                });
+            let to_purl = match (versioned, purl_of.get(&target)) {
+                (Some((p, c)), _) => {
+                    if held_purls.insert(p.clone()) {
+                        components.push(c);
+                        summary.boot_targets += 1;
+                    }
+                    p
+                }
+                (None, Some(p)) => p.clone(),
+                (None, None) => {
                     // FR-012c — the closure does not contain this declared
                     // dependency. Measured: 13 of 278, every distinct one a
                     // GHC boot library, because the compiler ships them
@@ -1012,9 +1056,10 @@ fn emit_declared_edges(
                         summary.dangling_non_boot += 1;
                         continue;
                     }
-                    let Some(c) = compiler_supplied_component(&target) else { continue };
+                    let Some(c) = compiler_supplied_component(&target, None) else { continue };
                     let p = c.purl.as_str().to_string();
                     purl_of.insert(target.clone(), p.clone());
+                    held_purls.insert(p.clone());
                     components.push(c);
                     summary.boot_targets += 1;
                     p
@@ -1065,8 +1110,19 @@ fn emit_declared_edges(
 /// versionless component with no accepted reason fails the
 /// `versionless_explained` invariant — "the compiler supplies this" and
 /// "waybill could not resolve it" call for completely different action.
-fn compiler_supplied_component(name: &str) -> Option<ResolvedComponent> {
-    let purl = waybill_common::types::purl::Purl::new(&format!("pkg:hackage/{name}")).ok()?;
+///
+/// Milestone 966: with `shipped`, the compiler that built the depending member
+/// is known and the boot-library table has its version, so the component
+/// carries that version and C218 naming the compiler, and no C170.
+fn compiler_supplied_component(
+    name: &str,
+    shipped: Option<(&super::closure_compilers::GhcRelease, &str)>,
+) -> Option<ResolvedComponent> {
+    let purl_text = match shipped {
+        Some((_, v)) => format!("pkg:hackage/{name}@{v}"),
+        None => format!("pkg:hackage/{name}"),
+    };
+    let purl = waybill_common::types::purl::Purl::new(&purl_text).ok()?;
     // Written out in full because `ResolvedComponent` has no `Default`, which
     // is itself deliberate: a component with every field defaulted is a
     // component nobody decided anything about.
@@ -1075,7 +1131,7 @@ fn compiler_supplied_component(name: &str) -> Option<ResolvedComponent> {
         artifact_presence: None,
         scope_evidence: None,
         name: name.to_string(),
-        version: String::new(),
+        version: shipped.map(|(_, v)| v.to_string()).unwrap_or_default(),
         purl,
         evidence: waybill_common::resolution::ResolutionEvidence {
             technique: waybill_common::resolution::ResolutionTechnique::UrlPattern,
@@ -1112,10 +1168,16 @@ fn compiler_supplied_component(name: &str) -> Option<ResolvedComponent> {
         extra_annotations: Default::default(),
         binary_role: None,
     };
-    c.extra_annotations.insert(
-        super::ANN_UNRESOLVED_REASON.to_string(),
-        serde_json::Value::from(super::UnresolvedReason::CompilerSupplied.as_str()),
-    );
+    match shipped {
+        Some((g, _)) => c.extra_annotations.insert(
+            super::ANN_BOOT_LIBRARY_COMPILER.to_string(),
+            serde_json::Value::from(g.label.as_str()),
+        ),
+        None => c.extra_annotations.insert(
+            super::ANN_UNRESOLVED_REASON.to_string(),
+            serde_json::Value::from(super::UnresolvedReason::CompilerSupplied.as_str()),
+        ),
+    };
     // Deliberately NO `waybill:closure-identity` here. C201 declares a closed
     // enum of six values, every one of them an outcome the pass reached about
     // a closure MEMBER — and this component is not one: it is synthesised as

@@ -109,15 +109,15 @@
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] In `HP/mod.rs` `enrich`, with `opts.compilers` carrying a `project` release that is in the table: for a declared Haskell dependency whose name is in `ships(project, system)`, produce a **resolved** outcome with the table's version instead of `Unresolved{CompilerSupplied}` (the branch at `HP/mod.rs:287`).
+- [X] T014 [US1] In `HP/mod.rs` `enrich`, with `opts.compilers` carrying a `project` release that is in the table: for a declared Haskell dependency whose name is in `ships(project, system)`, produce a **resolved** outcome with the table's version instead of `Unresolved{CompilerSupplied}` (the branch at `HP/mod.rs:287`).
   - Route it through the existing resolved path at `HP/mod.rs:~1060-1083`, so the rename is recorded in `summary.renames` and C170, C171 and C151 are removed (`HP/mod.rs:1650`).
   - Insert C218 (`waybill:boot-library-compiler` = `project.label`).
   - Add the constant `ANN_BOOT_LIBRARY_COMPILER` beside `ANN_UNRESOLVED_REASON` (`HP/mod.rs:475`).
-- [ ] T015 [US1] In `HP/mod.rs`, count table-resolved boot libraries separately in the summary (`summary.resolved_from_compiler`). Leave the existing `resolved` count unchanged, so C174's meaning does not shift. Log the count at INFO.
-- [ ] T016 [US1] In `HP/closure_identity.rs` `emit_declared_edges` (`:920`), implement research R7 rule 2. For a confirmed member whose `(pname, version)` has a compiler `g` in `ClosureCompilers.by_member` that is in the table, a declared target `t` with **no rank-2 Haskell build** in the document and `t ∈ ships(g, system)` binds to `pkg:hackage/t@version_of(g, t)`.
+- [X] T015 [US1] In `HP/mod.rs`, count table-resolved boot libraries separately in the summary (`summary.resolved_from_compiler`). Leave the existing `resolved` count unchanged, so C174's meaning does not shift. Log the count at INFO.
+- [X] T016 [US1] In `HP/closure_identity.rs` `emit_declared_edges` (`:920`), implement research R7 rule 2. For a confirmed member whose `(pname, version)` has a compiler `g` in `ClosureCompilers.by_member` that is in the table, a declared target `t` with **no rank-2 Haskell build** in the document and `t ∈ ships(g, system)` binds to `pkg:hackage/t@version_of(g, t)`.
   - If no component holds that PURL, create one with `compiler_supplied_component` (`:1073`), extended to take `Option<(&GhcRelease, &str version)>`. When given one, it sets the version and C218 and omits C170.
   - Rank-2 targets, and members with no compiler or one absent from the table, keep today's path exactly.
-- [ ] T017 [US1] Thread `&ClosureCompilers` and the table into `closure_identity::reclassify` (`HP/closure_identity.rs:825`) and on to `emit_declared_edges`. Update the call at `waybill-cli/src/cli/scan_cmd.rs:4887`. When `None`, behaviour is today's.
+- [X] T017 [US1] Thread `&ClosureCompilers` and the table into `closure_identity::reclassify` (`HP/closure_identity.rs:825`) and on to `emit_declared_edges`. Update the call at `waybill-cli/src/cli/scan_cmd.rs:4887`. When `None`, behaviour is today's.
 - [ ] T018 [US1] Add C218 extractors in `waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs` (`SymmetricEqual`, per-component), and the catalog row C218 in `docs/reference/sbom-format-mapping.md`, from `contracts/c218-boot-library-compiler.md` with research R6's audit text. Both land together (memory: the mapping-row gate lives in the lib target).
 
 **Checkpoint:** T012's US1 tests pass and the T013 parity tests pass. Scans without a closure are unchanged (`cargo test -p waybill --test nix_haskell_resolution_m926` still passes).
@@ -140,8 +140,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] In `HP/mod.rs` `enrich`, when `opts.compilers.project` is in the table, set `boot` to `ships(project, system)` before the classification loop, in place of `boot_set(...)`'s union. That value is what reaches `summary.boot_libraries` (`HP/mod.rs:1365`, feeding m1276) and m926's own exemption. Otherwise keep the union. Leave `boot_libraries.rs` unchanged (fallback).
-- [ ] T022 [US2] In `waybill-cli/src/cli/scan_cmd.rs:~4873`, pass the exact set to `reclassify` as `boot` when the project compiler is in the table, instead of recomputing the union.
+- [X] T021 [US2] In `HP/mod.rs` `enrich`, when `opts.compilers.project` is in the table, set `boot` to `ships(project, system)` before the classification loop, in place of `boot_set(...)`'s union. That value is what reaches `summary.boot_libraries` (`HP/mod.rs:1365`, feeding m1276) and m926's own exemption. Otherwise keep the union. Leave `boot_libraries.rs` unchanged (fallback).
+- [X] T022 [US2] In `waybill-cli/src/cli/scan_cmd.rs:~4873`, pass the exact set to `reclassify` as `boot` when the project compiler is in the table, instead of recomputing the union.
   - Take it from the `enrich` summary (`summary.boot_libraries`) when there is one.
   - When `enrich` declined (a closure-only scan, as on shellcheck: no C174), compute `ships(project, system)` directly.
   - Fall back to today's `boot_set` union only when the project compiler is unknown or absent from the table.

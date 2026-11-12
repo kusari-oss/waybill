@@ -60,7 +60,9 @@ A TSV rather than generated Rust because the probe's output *is* the data. A dif
 
 **Finding:** the release notes and Stack list `Win32` for every release. The darwin package databases (ghc-9.6.6, ghc-9.10.3) lack it and hold `unix` and `terminfo`. `pkg:hackage/Win32` appears today in haskell-language-server's golden (static tier).
 
-**Decision:** `platform = windows` for `Win32` and `all` for everything else. A `windows` row never versions a component and is never in the boot set on a non-Windows system. The closure's `system` (for example `x86_64-linux`) decides. Nix closures of GHC are never Windows in the corpus, so in practice `Win32` is always excluded. FR-004's check asserts that no non-Windows database holds a `windows` row and that every `all` row is present.
+**Decision:** `platform = windows` for `Win32` and `all` for everything else. A `windows` row never versions a component on a non-Windows system.
+
+*Corrected at implementation (966-impl):* the decision also said a `windows` row "is never in the boot set" there. Taking `Win32` out of the classification set hands it to ordinary m926 resolution, and the pinned package set does hold a `Win32` entry (measured: `hackage-packages.nix` at a799d3e3 and the five other revisions in the local cache), so a Linux scan would have versioned it from nixpkgs, a version the build never uses. The classification set is therefore every row the table lists for the release (`BootLibraryTable::names`), so `Win32` stays `compiler-supplied` as it is today; only versioning is platform-filtered (`version_of`). The closure's `system` (for example `x86_64-linux`) decides. Nix closures of GHC are never Windows in the corpus, so in practice `Win32` is always excluded. FR-004's check asserts that no non-Windows database holds a `windows` row and that every `all` row is present.
 
 ## R5 — Verifying the table (FR-004)
 
@@ -96,7 +98,7 @@ A mutation (one altered version) must make the check fail (SC-005).
 
   - Each compiler's value is `in-table` or `absent-from-table` (FR-008).
   - `compilers: {}` means the closure ran and identified no GHC.
-  - The row is emitted **iff the closure tier ran and either m926 ran (C174) or the identity pass examined Haskell members (C201)**. That is the applicability gate (C202's lesson).
+  - The row is emitted **iff the closure tier ran and either m926 ran (C174) or the closure names at least one GHC**. That is the applicability gate (C202's lesson). *(Corrected at implementation: the second branch was "the identity pass examined Haskell members (C201)", but C201 is emitted on every closure-appended member, Haskell or not; see the C219 contract.)*
     - The second branch was found by `/speckit-analyze`. shellcheck is a closure-only scan with no C174, yet it has 2,045 C201 rows, and all 26 of its versionless boot components come from the closure.
     - Gating on m926 alone would leave C218 there with no C219 beside it.
     - Absence means not applicable, so non-Haskell and non-closure documents are byte-identical (FR-011).
@@ -134,3 +136,14 @@ A mutation (one altered version) must make the check fail (SC-005).
 ## R9 — SC-002 check
 
 `osv-scanner` 2.x is installed locally (`/opt/homebrew/bin/osv-scanner`), and `recall-truth.yml` pins 2.7.0. The check is `osv-scanner scan source --sbom <cdx>`, or the recall workflow's invocation, on each regenerated golden, asserting that HSEC-2023-0007 is reported against `pkg:hackage/base@<version>`. This is run once at close-out against the CI-regenerated goldens. The nightly can't run osv-scanner (recall-truth R7: no DB download in nightly), so the corpus expectation is the component-level proxy instead: `base` carries the table's version and C218.
+
+## Implementation notes (966-impl)
+
+Where the code met a decision above and the decision had to move. Each is also stated where it applies.
+
+1. **R4, `Win32`.** The classification set keeps `windows` rows; only versioning is platform-filtered. Removing `Win32` from the set would have let m926 resolve it from the package set, which holds it.
+2. **R6, the C219 gate.** "C201 present" became "the closure names at least one GHC": C201 is on every closure-appended member, so it did not distinguish a Haskell closure.
+3. **R2, the shared parser.** `closure_compilers::ghc_name` recognises the `-ghc-` / `-ghc-binary-` marker for both callers. `closure_identity::is_ghc_store_path` still needs only a version to follow it (its m1275 behaviour, so C201 cannot drift); `GhcRelease` needs exactly `X.Y.Z`. Sharing the whole predicate would have changed which members m1275 confirms.
+4. **R7 / data model, the shared label.** When the bootstrap compiler ships a library at the project compiler's version, the one component carries the project compiler's label whichever member reaches it first (contract C218, "a shared version is one component, and it carries the project compiler's label").
+5. **T014, the resolved path.** A table version is applied by `apply_compiler_version`, not `apply_resolved`: the latter writes C176 (`nixpkgs-resolved-via`), a package-set hash and license, and the `source` tier, none of which is true of a compiler-shipped version, and the clarification keeps the tier `design`. The PURL rename still goes through `correct_version_in_place`, so `summary.renames` records it (#980).
+6. **Fixtures of earlier milestones.** Every closure fixture of m1275/m1276/m1277/m1423/m1466 named `ghc-9.4.8`, which the table has, together with a synthetic boot library (`waybill-fixture-bootlib`, …) nulled in the configuration. With 9.4.8 known, the exact set replaces the union and the synthetic name is no longer a boot library, failing 15 tests that exercise the union rule. Those fixtures now name `ghc-99.0.1`, a release the table does not have, so the union rule they were written for still applies; their documents gain C219 `absent-from-table`.
