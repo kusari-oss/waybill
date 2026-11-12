@@ -185,21 +185,21 @@
 
 ## Phase 6: Table verification (FR-004, cross-cutting)
 
-- [ ] T028 Write `T/ghc_boot_libraries_db.rs`, per `contracts/boot-library-table.md` § Verification.
+- [X] T028 Write `T/ghc_boot_libraries_db.rs`, per `contracts/boot-library-table.md` § Verification.
   - Glob `/nix/store/*-ghc-*/lib/ghc-*/lib/package.conf.d` and `$WAYBILL_GHC_PACKAGE_DB_PATHS` (colon-separated). Parse each `.conf`'s `name:` and `version:`.
   - Assert agreement with the TSV, through a test-visible accessor or by parsing the TSV in the test with the same rules.
   - Assert every `all` row for that release is present, and no `windows` row is present for a non-Windows database.
   - Print each database checked with its counts.
   - With zero databases, print `no GHC package database found` and fail iff `WAYBILL_REQUIRE_GHC_PACKAGE_DB=1`. Put file-scope `#![cfg(unix)]` on the file (memory: Unix-only test files).
-- [ ] T029 Run T028 locally with `--nocapture` and record the output in `specs/966-ghc-boot-versions/measurements/db-check.txt`. Expect ghc-9.6.6 (37) and ghc-9.10.3 (42, four store paths) to pass.
+- [X] T029 Run T028 locally with `--nocapture` and record the output in `specs/966-ghc-boot-versions/measurements/db-check.txt`. Expect ghc-9.6.6 (37) and ghc-9.10.3 (42, four store paths) to pass.
   - Mutation check: copy the TSV aside with `cp`, change the 9.10.3 `base` version, confirm the test fails, then restore it with `cp`, never `git checkout`. Record both runs in the same file.
-- [ ] T030 Set `WAYBILL_REQUIRE_GHC_PACKAGE_DB: "1"` on the Linux corpus job's test step in `.github/workflows/public-corpus.yml`, and add `ghc_boot_libraries_db` to what that job runs, after the corpus build has realised the targets' GHCs.
+- [X] T030 Set `WAYBILL_REQUIRE_GHC_PACKAGE_DB: "1"` on the Linux corpus job's test step in `.github/workflows/public-corpus.yml`, and add `ghc_boot_libraries_db` to what that job runs, after the corpus build has realised the targets' GHCs.
 
 ---
 
 ## Phase 7: Corpus and polish
 
-- [ ] T031 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`), and confirm the per-target `test result: ok` lines.
+- [X] T031 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`), and confirm the per-target `test result: ok` lines.
   - FR-012 check: `git diff --exit-code main -- Cargo.lock` must exit 0.
   - `grep -nE 'std::fs|std::net|reqwest|Command::new' HP/boot_table.rs HP/closure_compilers.rs` must report no match outside `#[cfg(test)]`. The table enters only through `include_str!`.
   - Record both outputs in `specs/966-ghc-boot-versions/measurements/fr012.txt`.

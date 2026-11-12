@@ -43,10 +43,15 @@ pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
     // immunity reads. Both must read one source, or this row and the
     // propagation disagree about one document and each is locally
     // satisfiable while the pair is not.
+    //
+    // Milestone 966: a boot library that took its compiler's version carries
+    // C218 (`waybill:boot-library-compiler`) instead of C170 and remains
+    // compiler-supplied, so both signals define the population.
     let compiler_supplied: Vec<&serde_json::Value> = components
         .iter()
         .filter(|c| {
             cdx_prop(c, "waybill:haskell-version-unresolved-reason") == Some("compiler-supplied")
+                || cdx_prop(c, "waybill:boot-library-compiler").is_some()
         })
         .collect();
 

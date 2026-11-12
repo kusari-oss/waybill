@@ -114,6 +114,26 @@ jobs:
           cargo test --test public_corpus --release -- --nocapture --include-ignored --test-threads=3 \
             2>&1 | tee corpus-artifacts/corpus-run.log
 
+      # Milestone 966 (#966, FR-004) — the GHC boot-library table against
+      # every GHC package database in the store.
+      #
+      # The table is assembled from published sources; the package database
+      # a GHC installs is the independent check. Locally the test passes
+      # with a printed notice when no GHC is in the store. Here the closure
+      # targets above have realised their GHCs, so finding none means the
+      # check verified nothing, and `WAYBILL_REQUIRE_GHC_PACKAGE_DB=1` makes
+      # that a failure (the `WAYBILL_REQUIRE_SPDX3_VALIDATOR` pattern).
+      #
+      # `if: always()`: a golden drift above must not hide a table defect.
+      - name: GHC boot-library table check
+        if: always()
+        env:
+          WAYBILL_REQUIRE_GHC_PACKAGE_DB: '1'
+        run: |
+          set -o pipefail
+          cargo test --test ghc_boot_libraries_db --release -- --nocapture \
+            2>&1 | tee corpus-artifacts/ghc-boot-libraries-db.log
+
       # Issue #971 part B — differential check of the nixpkgs Haskell
       # resolution against `nix eval`.
       #

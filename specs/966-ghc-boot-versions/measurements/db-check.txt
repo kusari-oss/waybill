@@ -1,0 +1,53 @@
+# T029: FR-004 table check, 2026-11-12, aarch64-darwin, nix 2.34.6
+
+## Run 1: committed table
+$ cargo test -p waybill --test ghc_boot_libraries_db -- --nocapture --test-threads=1
+running 3 tests
+test a_disagreement_is_reported ... ok
+test ghc_boot_libraries_match_every_available_package_db ... /nix/store/5x2lj0zv8v9lgdajddhs282pi5byqjjn-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 0 disagreements
+/nix/store/f8bybrcsifh30k70svzih0adh2030wq5-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 0 disagreements
+/nix/store/r38qhsgy1sgx59xvrr2plsh6wl1xk69b-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 0 disagreements
+/nix/store/vbrn02rqpff4ihwx5hscp488m7iiwswv-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 0 disagreements
+ok
+test only_a_ghc_store_path_names_a_release ... ok
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s
+
+## Run 2: mutation (table copied aside with cp; 9.10.3 base 4.20.2.0 -> 4.20.2.1)
+running 3 tests
+test a_disagreement_is_reported ... ok
+test ghc_boot_libraries_match_every_available_package_db ... /nix/store/5x2lj0zv8v9lgdajddhs282pi5byqjjn-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 1 disagreements
+/nix/store/f8bybrcsifh30k70svzih0adh2030wq5-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 1 disagreements
+/nix/store/r38qhsgy1sgx59xvrr2plsh6wl1xk69b-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 1 disagreements
+/nix/store/vbrn02rqpff4ihwx5hscp488m7iiwswv-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 1 disagreements
+thread 'ghc_boot_libraries_match_every_available_package_db' (9313472) panicked at waybill-cli/tests/ghc_boot_libraries_db.rs:178:5:
+the table disagrees with a GHC package database:
+9.10.3: base is {"4.20.2.0"} in the database, 4.20.2.1 in the table
+9.10.3: base is {"4.20.2.0"} in the database, 4.20.2.1 in the table
+9.10.3: base is {"4.20.2.0"} in the database, 4.20.2.1 in the table
+9.10.3: base is {"4.20.2.0"} in the database, 4.20.2.1 in the table
+FAILED
+test only_a_ghc_store_path_names_a_release ... ok
+failures:
+failures:
+    ghc_boot_libraries_match_every_available_package_db
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+error: test failed, to rerun pass `-p waybill --test ghc_boot_libraries_db`
+
+Restored with cp from the copy; cmp against the copy: identical.
+
+## Run 3: restored table, WAYBILL_REQUIRE_GHC_PACKAGE_DB=1
+test ghc_boot_libraries_match_every_available_package_db ... /nix/store/5x2lj0zv8v9lgdajddhs282pi5byqjjn-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 0 disagreements
+/nix/store/f8bybrcsifh30k70svzih0adh2030wq5-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 0 disagreements
+/nix/store/r38qhsgy1sgx59xvrr2plsh6wl1xk69b-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 0 disagreements
+/nix/store/vbrn02rqpff4ihwx5hscp488m7iiwswv-ghc-9.10.3/lib/ghc-9.10.3/lib/package.conf.d: ghc-9.10.3, 42 libraries in the database, 42 `all` rows in the table, 0 disagreements
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+## ghc-9.6.6
+At the start of this session /nix/store/fr90imdmlrm7dlwlv4jxs43k6450ias7-ghc-9.6.6/lib/ghc-9.6.6/lib/package.conf.d
+was present locally (37 .conf files, counted with ls). By the time T029 ran it was gone (cause not established; inference: a store garbage collection)
+(ls -ld on the path: No such file or directory; only ghc-9.6.6-doc remains), so the test could not read it.
+Supplementary check, not the test: the binary cache's listing of the same store path,
+$ nix store ls --store https://cache.nixos.org /nix/store/fr90imdmlrm7dlwlv4jxs43k6450ias7-ghc-9.6.6/lib/ghc-9.6.6/lib/package.conf.d   (8.5 s)
+gives 37 <name>-<version>.conf file names. Split at the last '-' and compared with the table's 9.6.6 'all' rows:
+  cache: 37 pairs, table: 37 pairs, diff: identical
+This compares file names only, not .conf contents.

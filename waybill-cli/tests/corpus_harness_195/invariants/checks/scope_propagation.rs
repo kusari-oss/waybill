@@ -125,11 +125,15 @@ pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
     // Milestone 1276 — the compiler-supplied exemption. See the module
     // comment: demanding a non-runtime marker for a package the compiler
     // ships would demand a value CycloneDX defines as false of it.
+    //
+    // Milestone 966: a boot library that took its compiler's version carries
+    // C218 instead of C170, and is no less compiler-supplied.
     let compiler_supplied: HashSet<&str> = components
         .iter()
         .filter(|c| {
             super::cdx_prop(c, "waybill:haskell-version-unresolved-reason")
                 == Some("compiler-supplied")
+                || super::cdx_prop(c, "waybill:boot-library-compiler").is_some()
         })
         .filter_map(cdx_component_ref)
         .collect();
