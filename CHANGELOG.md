@@ -21,7 +21,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `confirmed`, and that attribute's license, source hash and declared edges.
   `Cabal`, `Cabal-syntax`, `extensions` and `os-string` change on the
   haskell-language-server closure; `os-string` changes on four of the five
-  nix-closure corpus targets. C201's values are unchanged, and the
+  nix-closure corpus targets. `os-string` is a boot library of the pinned
+  compiler, so as a `pkg:hackage` component it now falls under the existing
+  compiler-supplied scope exemption (C203 `exempt-compiler-supplied`). On
+  nix-closure-slack-web and nix-closure-slacklinker that turns its
+  runtime-closure `scope: excluded` into `required`, as was already the case
+  for nix-closure-openai's `os-string 2.0.6`. C201's values are unchanged, and the
   `version-disagrees` and `not-in-package-set` entries in its catalog row now
   say that neither attribute holds the version (#1282).
 - **A declared Haskell dependency no longer resolves to a closure member
