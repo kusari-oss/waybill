@@ -188,7 +188,7 @@
 ## Phase 7: Polish
 
 - [X] T029 [P] Add a CHANGELOG entry under Unreleased (Changed). Name it as a VEX shape change for consumers: the pair becomes a single `fixed` / `resolved` claim, and patched components' PURLs gain `?nix_drv=`. Quote the SC-001/SC-002 numbers from T027/T028. Note that #1435 can leave draft.
-- [ ] T030 Close-out: verify every task's claim against code or a recorded artifact before ticking it. Re-run the gate if anything changed since T024.
+- [X] T030 Close-out: verify every task's claim against code or a recorded artifact before ticking it. Re-run the gate if anything changed since T024.
 
 ---
 
