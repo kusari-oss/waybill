@@ -53,6 +53,30 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `glibc 2.42-61` loses its mark in all three formats and nothing else
   changes.
 
+- **C184 `waybill:nix-closure` counts what the document holds.** `edges`
+  was the `.drv`-keyed projection, counted before build variants of one
+  package collapse onto one component, and the component counts were taken
+  before `--exclude-scope` removed members. Both are now taken from the set
+  the document is written from: `components-emitted` is the number of
+  components carrying C182, and `edges` the distinct dependency pairs the
+  closure graph contributed. On moat (aarch64-darwin) `edges` goes from
+  7,978 to 6,167, the number of dependency pairs between closure members in
+  that document; `components-emitted` stays 951 of 977, the other 26 coming
+  from other readers. `edges` drops on every `--nix-closure` corpus golden
+  (#1445).
+- **An edited SPDX document no longer references the original OpenVEX
+  sidecar.** `sbom edit` does not edit the sidecar, which names components
+  by PURL, but the edited SPDX 2.3 and SPDX 3 documents kept pointing at it,
+  SHA-256 included, after the edit dropped the components its statements
+  assess. An edit that drops a component, or redacts names or hosts, now
+  removes the reference (`DocumentRef-OpenVEX`; the SPDX 3
+  `vulnerabilityExploitabilityAssessment` `externalRef`) and says so on
+  stderr. Dropping annotations or redacting paths keeps it. On the moat
+  runtime-only recipe all three formats now carry no VEX, where CycloneDX
+  already went from 36 statements to 0. Where an edit keeps components that
+  statements assess, CycloneDX keeps those statements and SPDX has none;
+  `docs/user-guide/sbom-edit.md` says so (#1454).
+
 ## [0.15.0] - 2026-11-11
 
 A minor. It adds surface (`--nix-allow-ifd`, the `sbom edit` selector
