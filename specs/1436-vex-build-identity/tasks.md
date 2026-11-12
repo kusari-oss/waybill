@@ -172,22 +172,22 @@
 ## Phase 6: Scanner gate and corpus (SC-001–SC-005)
 
 - [X] T024 Run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Confirm per-target `test result: ok` lines and 0 failure blocks. Check `git diff --exit-code main -- Cargo.lock` (FR-012).
-- [ ] T025 Push the branch. Dispatch `gh workflow run public-corpus.yml --ref 1436-vex-build-identity -f branch=1436-vex-build-identity -f regen_goldens=true`. Review the artifact against the committed goldens with a normalized, sorted comparison, and record it in `measurements/golden-review.txt`:
+- [X] T025 Push the branch. Dispatch `gh workflow run public-corpus.yml --ref 1436-vex-build-identity -f branch=1436-vex-build-identity -f regen_goldens=true`. Review the artifact against the committed goldens with a normalized, sorted comparison, and record it in `measurements/golden-review.txt`:
   - only closure targets with CVE-resolving backports change;
   - the changed PURLs are exactly those components plus `?nix_drv=`;
   - `vulnerabilities[]` pairs become single `resolved` entries;
   - every other golden is byte-identical (SC-005);
   - no relationship endpoint is orphaned.
-- [ ] T026 Commit the goldens. Dispatch a non-regen run and confirm it passes.
-- [ ] T027 SC-001, SC-002 and SC-004 on the regenerated goldens. Modify `measurements/fixed-qualified-probe.sh` (or add a sibling) to take the **emitted** `waybill.openvex.json` instead of synthesizing one.
+- [X] T026 Commit the goldens. Dispatch a non-regen run and confirm it passes.
+- [X] T027 SC-001, SC-002 and SC-004 on the regenerated goldens. Modify `measurements/fixed-qualified-probe.sh` (or add a sibling) to take the **emitted** `waybill.openvex.json` instead of synthesizing one.
   - The sidecar comes from the regen artifact if present. Otherwise regenerate locally from the same build with `--nix-closure` on the committed corpus pins.
   - Assert: every patched finding is suppressed, 0 others are lost, and without VEX the findings equal the pre-change goldens' (grype and osv-scanner).
   - Record in `measurements/sc-results.tsv`.
-- [ ] T028 The same for the five nixpkgs wrapper targets, using T002's baseline. moat is covered by T027 through its regenerated golden, and is never evaluated locally. Record in `measurements/sc-results.tsv`. Re-check PyPI on httpie for FR-007, and if httpie has a CVE-resolving `pkg:pypi` component, its qualifier must lose no osv-scanner finding.
+- [X] T028 The same for the five nixpkgs wrapper targets, using T002's baseline. moat is covered by T027 through its regenerated golden, and is never evaluated locally. Record in `measurements/sc-results.tsv`. Re-check PyPI on httpie for FR-007, and if httpie has a CVE-resolving `pkg:pypi` component, its qualifier must lose no osv-scanner finding.
 
 ## Phase 7: Polish
 
-- [ ] T029 [P] Add a CHANGELOG entry under Unreleased (Changed). Name it as a VEX shape change for consumers: the pair becomes a single `fixed` / `resolved` claim, and patched components' PURLs gain `?nix_drv=`. Quote the SC-001/SC-002 numbers from T027/T028. Note that #1435 can leave draft.
+- [X] T029 [P] Add a CHANGELOG entry under Unreleased (Changed). Name it as a VEX shape change for consumers: the pair becomes a single `fixed` / `resolved` claim, and patched components' PURLs gain `?nix_drv=`. Quote the SC-001/SC-002 numbers from T027/T028. Note that #1435 can leave draft.
 - [ ] T030 Close-out: verify every task's claim against code or a recorded artifact before ticking it. Re-run the gate if anything changed since T024.
 
 ---
