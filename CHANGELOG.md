@@ -17,7 +17,9 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `runtime-closure`. nix keeps those references for haddock links and man
   pages, not for linked code. A member also reached through any other
   output still ships. The runtime query becomes `nix path-info -r --json`,
-  whose references the rule follows. C216 gains `doc-only-excluded`,
+  whose references the rule follows; an answer that reports a path as
+  `null`, which `--json` can do with exit 0 for an output the store does
+  not hold, is a miss (`not-in-any-store`), never a runtime closure. C216 gains `doc-only-excluded`,
   `{"members": <n>, "output-names": ["devdoc","doc","info","man"],
   "paths": <n>}` under `runtime-closure` and null otherwise; `schema` stays
   `1`. On moat (aarch64-darwin) it sets aside 126 of 295 runtime paths and

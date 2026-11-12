@@ -96,6 +96,10 @@ pub struct NixStub<'a> {
     /// (`fixtures/nix_ifd/cabal2nix-refusal.stderr`) unless their argv
     /// carries `allow-import-from-derivation true`.
     pub ifd_required: bool,
+    /// #1455 — under `--json`, a store that does not hold the output answers
+    /// `{"<path>":null}` with exit 0, as the corpus run's nix did, instead of
+    /// exiting 1 with `path '…' is not valid`.
+    pub json_miss_is_null: bool,
     /// Milestone 1283 — `derivation show` of [`Self::attr`] fails with this
     /// stderr instead of printing the closure.
     pub closure_stderr: Option<String>,
@@ -120,6 +124,7 @@ impl Default for NixStub<'_> {
             ifd_reported: None,
             sandbox: None,
             ifd_required: false,
+            json_miss_is_null: false,
             closure_stderr: None,
         }
     }
@@ -173,6 +178,10 @@ impl NixStub<'_> {
         let subs = self.substituters.join(" ");
         // nix's own wording for an output a store does not hold (q2 e).
         let miss = r#"eval "last=\${$#}"; echo "don't know how to build these paths:" >&2; echo "error: path '$last' is not valid" >&2; exit 1"#;
+        let null_miss = format!(
+            r#"eval "last=\${{$#}}"; case "$*" in *--json*) printf '{{"%s":null}}\n' "$last"; exit 0 ;; esac; {miss}"#
+        );
+        let miss: &str = if self.json_miss_is_null { &null_miss } else { miss };
         let by_output: String = self
             .runtime_by_output
             .iter()
@@ -200,6 +209,7 @@ impl NixStub<'_> {
         // forms; the references come from `refs.txt` (see `run`).
         let path_info = format!(
             "tmp='{listing}'\n( {path_info} ) > \"$tmp\" || exit $?\n\
+             case \"$(head -c 1 \"$tmp\")\" in '{{') cat \"$tmp\"; exit 0 ;; esac\n\
              case \"$*\" in *--json*) awk -v refs='{refs}' '\
              BEGIN {{ while ((getline l < refs) > 0) {{ split(l, a, \" \"); \
              r[a[1]] = r[a[1]] (r[a[1]] == \"\" ? \"\" : \",\") \"\\\"/nix/store/\" a[2] \"\\\"\" }} }} \

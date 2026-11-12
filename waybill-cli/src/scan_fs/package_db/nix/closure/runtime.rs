@@ -679,9 +679,14 @@ pub(crate) fn verify_argv<'a>(url: &'a str, connect_timeout: &'a str, outputs: &
 /// - format 2 (`--json-format 2`): `{"info": {...}}`, keyed by basename;
 /// - nix before 2.19: an array of objects, each with its `path`.
 ///
-/// A path whose value is `null` (not valid in that store) is listed with no
-/// references.
-pub(crate) fn parse_listing(stdout: &str) -> Option<BTreeMap<String, BTreeSet<String>>> {
+/// A path whose value is `null` is not valid in that store, so the answer
+/// is [`Listing::NotValid`]. Under `--json` nix can report that with exit 0,
+/// where the plain listing exits 1 with `path '…' is not valid`: measured
+/// locally for a non-recursive query (`{"/nix/store/…-patchutils-0.4.2":null}`),
+/// and on the corpus run that first ran this query, where the recursive form
+/// did the same on CI's nix and two targets read as a one-path runtime closure
+/// (`measurements/doc-outputs/README.md`).
+pub(crate) fn parse_listing(stdout: &str) -> Option<Listing> {
     let v: Value = serde_json::from_str(stdout.trim()).ok()?;
     let entries: Vec<(&str, &Value)> = match &v {
         Value::Object(o) => match o.get("info") {
@@ -698,6 +703,9 @@ pub(crate) fn parse_listing(stdout: &str) -> Option<BTreeMap<String, BTreeSet<St
     };
     let mut listing = BTreeMap::new();
     for (path, info) in entries {
+        if info.is_null() {
+            return Some(Listing::NotValid);
+        }
         let base = store_basename(path).to_string();
         let refs: BTreeSet<String> = match info.get("references") {
             Some(Value::Array(rs)) => rs
@@ -710,7 +718,16 @@ pub(crate) fn parse_listing(stdout: &str) -> Option<BTreeMap<String, BTreeSet<St
         };
         listing.insert(base, refs);
     }
-    Some(listing)
+    Some(Listing::Paths(listing))
+}
+
+/// What one `path-info -r --json` answer said.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Listing {
+    /// Each listed path and its references.
+    Paths(BTreeMap<String, BTreeSet<String>>),
+    /// A queried path is not valid in that store: the store does not hold it.
+    NotValid,
 }
 
 /// The configured substituters, from `nix config show`'s full output.
@@ -770,10 +787,11 @@ type Runner<'a> =
 fn ask(run: &mut Runner<'_>, argv: &[&str], budget: Duration) -> Answer {
     match run(argv, budget) {
         Ok((true, stdout, _)) => match parse_listing(&stdout) {
+            Some(Listing::Paths(listing)) if !listing.is_empty() => Answer::Hit(listing),
+            Some(Listing::NotValid) => Answer::Miss(RuntimeUnavailable::NotInAnyStore),
             // A zero-path closure is not an answer: every output references
             // at least itself. Neither is output that is not the JSON nix
             // prints.
-            Some(listing) if !listing.is_empty() => Answer::Hit(listing),
             _ => Answer::Miss(RuntimeUnavailable::QueryFailed),
         },
         Ok((false, _, stderr)) => Answer::Miss(failure_of(&stderr)),
@@ -1220,15 +1238,21 @@ mod tests {
         let legacy = r#"[{"path":"/nix/store/i91r-moat-0.1","references":["/nix/store/n0mp-hspec-2.11.17","/nix/store/dq22-moat-0.1-doc"]},
             {"path":"/nix/store/n0mp-hspec-2.11.17","references":[]},{"path":"/nix/store/dq22-moat-0.1-doc","references":[]}]"#;
         for (shape, out) in [("format 1", v1), ("format 2", v2), ("array", legacy)] {
-            assert_eq!(parse_listing(out).as_ref(), Some(&want), "{shape}");
+            assert_eq!(parse_listing(out), Some(Listing::Paths(want.clone())), "{shape}");
         }
-        // A path nix reports as invalid is listed, referencing nothing.
-        let got = parse_listing(r#"{"/nix/store/a-x":null}"#).unwrap();
-        assert_eq!(got.get("a-x"), Some(&BTreeSet::new()));
+        // A path nix reports as `null` is not valid in that store, whatever
+        // the rest of the answer holds (measured: exit 0 under `--json`).
+        for out in [
+            r#"{"/nix/store/1lmn-patchutils-0.4.2":null}"#,
+            r#"{"/nix/store/a-x":{"references":[]},"/nix/store/b-y":null}"#,
+            r#"{"info":{"1lmn-patchutils-0.4.2":null},"version":2}"#,
+        ] {
+            assert_eq!(parse_listing(out), Some(Listing::NotValid), "{out}");
+        }
         // The plain listing is not an answer to a `--json` query.
         assert_eq!(parse_listing("/nix/store/aaa-libffi-40\n"), None);
         assert_eq!(parse_listing(""), None);
-        assert_eq!(parse_listing("{}"), Some(BTreeMap::new()));
+        assert_eq!(parse_listing("{}"), Some(Listing::Paths(BTreeMap::new())));
     }
 
     /// #1455: the documentation rule. Output names decide, not path

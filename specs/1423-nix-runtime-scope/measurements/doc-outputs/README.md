@@ -42,6 +42,24 @@ a bare `--json` is deprecated in favour of `--json-format 1|2`; a nix older
 than that flag rejects it, so waybill passes bare `--json` and parses format
 1, format 2 and the pre-2.19 array.
 
+### A `null` answer is a miss
+
+The plain listing exits 1 with `path '…' is not valid` for an output the
+store does not hold. `--json` need not:
+
+- locally (nix 2.34.6), `nix path-info --json <unbuilt output>` prints
+  `{"/nix/store/1lmn…-patchutils-0.4.2":null}` and exits 0; the recursive
+  form exits 1 here;
+- on the first corpus run of this change (public-corpus run 43162793943,
+  x86_64-linux, the Determinate installer's nix), the recursive form did the
+  same for moat's and shellcheck's outputs. Inference from the documents, not
+  observed directly: C216 read `runtime-closure`, `store: local`, with one
+  static-link root and nothing unmatched, i.e. a one-path closure, and nearly
+  every member was marked.
+
+So a `null` entry anywhere in the answer is `not-in-any-store`, and the next
+store, or the walk, decides (`a_null_json_answer_is_not_a_runtime_closure`).
+
 ## What the rule changes on moat
 
 `out/analysis.txt` (the probe) and `out/scan-after.txt` (the binary) agree:

@@ -1797,6 +1797,30 @@ fn a_member_also_reached_through_a_non_documentation_output_ships() {
     );
 }
 
+/// #1455: under `--json` a store that does not hold the output can answer
+/// `{"<path>":null}` with exit 0. The corpus run's nix did, and the first
+/// version of this change read that as a one-path runtime closure, marking
+/// almost everything in moat and shellcheck. It is a miss: the walk decides,
+/// and C216 says the output was in no store.
+#[test]
+fn a_null_json_answer_is_not_a_runtime_closure() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(NixStub {
+        json_miss_is_null: true,
+        substituters: vec![SUBSTITUTER.to_string()],
+        ..base(&closure)
+    });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}\n{}", run.nix_log());
+    assert_eq!(c216["unavailable-reason"], "not-in-any-store", "{c216}");
+    assert!(
+        run.nix_log().contains(&format!("--json --store {SUBSTITUTER}")),
+        "the substituter was asked too, and answered null:\n{}",
+        run.nix_log()
+    );
+    assert!(!run.marked().contains("waybill-fixture-ssl"), "the walk reaches the app's buildInputs");
+}
+
 /// The rule reads the runtime closure's references, so it applies only when
 /// the runtime closure decided: the walk has neither, and C216 says so.
 #[test]
