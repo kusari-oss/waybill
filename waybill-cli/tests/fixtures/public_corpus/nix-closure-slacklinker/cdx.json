@@ -89787,7 +89787,7 @@
       "properties": [
         {
           "name": "waybill:scope-classification-source",
-          "value": "exempt-compiler-supplied"
+          "value": "runtime-closure"
         },
         {
           "name": "waybill:sbom-tier",
@@ -89807,6 +89807,7 @@
         }
       ],
       "purl": "pkg:hackage/os-string@2.0.10",
+      "scope": "excluded",
       "type": "library",
       "version": "2.0.10"
     },
@@ -194471,7 +194472,7 @@
       },
       {
         "name": "waybill:scope-exemptions",
-        "value": "{\"compiler-supplied\":40}"
+        "value": "{\"compiler-supplied\":39}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",

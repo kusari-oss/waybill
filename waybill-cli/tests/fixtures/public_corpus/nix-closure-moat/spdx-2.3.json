@@ -65,7 +65,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-exemptions\",\"value\":\"{\\\"compiler-supplied\\\":37}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-exemptions\",\"value\":\"{\\\"compiler-supplied\\\":36}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -69777,7 +69777,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"exempt-compiler-supplied\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"reachability-walk\"}"
         },
         {
           "annotationDate": "<masked>",

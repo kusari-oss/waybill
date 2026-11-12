@@ -73768,6 +73768,17 @@
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-UAOHOXZ2G7ZXNYVC",
       "relationshipType": "usesTool",
       "scope": "build",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-GHWODQF5U4D3GHYK",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6TMQXAMMZL5QCQQV"
+      ],
+      "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-UAOHOXZ2G7ZXNYVC",
+      "relationshipType": "usesTool",
+      "scope": "build",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-GI2V6O3VIJK2XSIK",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-APN5UW6TY6GQNJ4M"
@@ -116036,7 +116047,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2RXCUJBDRDWXPPVZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"exempt-compiler-supplied\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"runtime-closure\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6TMQXAMMZL5QCQQV",
       "type": "Annotation"
     },
@@ -277884,7 +277895,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WKOXQHO45WCWDYNW",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-exemptions\",\"value\":\"{\\\"compiler-supplied\\\":40}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-exemptions\",\"value\":\"{\\\"compiler-supplied\\\":39}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },

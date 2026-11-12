@@ -110,6 +110,20 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Only the compiler's own copy of a GHC boot library is exempt from scope
+  (#1478).** Both scope passes used to exempt any `pkg:hackage` component
+  whose *name* is a boot library. nixpkgs also builds some of those names
+  from Hackage as ordinary closure members: `os-string@2.0.8` on slack-web
+  and `@2.0.10` on slacklinker and moat sit beside GHC's own
+  `os-string@2.0.7`. Exempting them overrode the runtime closure's evidence.
+  A component is now the compiler's copy only if its PURL is versionless or
+  its version came from the compiler (C218, #966). On those three targets
+  the one `os-string` build is now scoped by its evidence: `excluded` on
+  slack-web and slacklinker (runtime closure), runtime on moat (reachability
+  walk). Each target's C202 `compiler-supplied` count falls by one, and no
+  other component or edge changes. Scans without `--nix-closure` hold no such
+  component and are unchanged.
+
 - **A `--nix-closure` member that nixpkgs holds only under a versioned alias
   is now a Hackage package.** The closure identity pass looked up a
   member's exact name and version in the pinned package set's default

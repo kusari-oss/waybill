@@ -56819,7 +56819,7 @@
       "properties": [
         {
           "name": "waybill:scope-classification-source",
-          "value": "exempt-compiler-supplied"
+          "value": "reachability-walk"
         },
         {
           "name": "waybill:sbom-tier",
@@ -102670,7 +102670,7 @@
       },
       {
         "name": "waybill:scope-exemptions",
-        "value": "{\"compiler-supplied\":37}"
+        "value": "{\"compiler-supplied\":36}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",
