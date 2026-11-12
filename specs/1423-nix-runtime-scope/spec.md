@@ -100,7 +100,7 @@ A user who wants runtime-only scanner results follows one documented step and ge
 - **Exempt members.** The evaluated package (`exempt-evaluated-package`) and compiler-supplied boot libraries (`exempt-compiler-supplied`) keep their exemptions; nothing here may mark them.
 - **A statically linked Haskell library also reachable only through a test edge.** It is runtime if any non-test library path from a runtime member reaches it. A test edge alone does not make it runtime.
 - **Statically linked C libraries** (`pkgsStatic`, vendored `.a` archives). Nothing here detects these. They are marked by the runtime closure like any other member, and the method annotation (FR-007) MUST say that static C linking is not detected.
-- **Members whose scope a lifecycle pass already set** (the milestone-1269 test-dependency propagation, e.g. `hspec`). Runtime-closure truth wins: a test dependency outside the runtime closure stays marked, and one inside it is unmarked.
+- **Members whose scope a lifecycle pass already set** (the milestone-1269 test-dependency propagation, e.g. `hspec`). Runtime-closure truth wins: a test dependency outside the runtime closure stays marked, and one inside it is unmarked. The same holds for a member statically linked into what ships; a reader's lifecycle scope on such a member is withdrawn, not merely outvoted, so no format marks it (#1465).
 - **Scans without `--nix-closure`.** Nothing changes.
 
 ## Requirements *(mandatory)*

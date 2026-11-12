@@ -65,6 +65,22 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `waybill:closure-member-role: fragment` and `waybill:closure-role:
   build-tooling`. Such members are now always their own component, as
   milestone 1282 required (#1466).
+- **A `--nix-closure` component the runtime closure shows ships is no
+  longer marked not-in-artifact by a reader's lifecycle scope (#1465).**
+  Runtime evidence wins: a component whose C203
+  `waybill:scope-classification-source` is `runtime-closure` and that the
+  closure holds, or `statically-linked`, loses a non-runtime lifecycle scope
+  a reader gave it, so no CycloneDX `scope: excluded`, no
+  `waybill:lifecycle-scope`, and the SPDX 2.3 `DEV_DEPENDENCY_OF` (SPDX 3
+  `development`-scoped) edges into it become ordinary dependency edges. On
+  `nix-closure-slack-web`, QuickCheck and th-compat, declared by slack-web's
+  own test suite and propagated into the runtime closure by aeson, read as
+  excluded. A member the runtime closure does not hold keeps its scope, and
+  `reachability-walk` and `closure-role` members are unchanged; scans
+  without `--nix-closure` are untouched. Invariant I10 gains the kind
+  `closure-runtime-member-but-marked`, reading the closure's own verdict from
+  SPDX 2.3 `BUILD_TOOL_OF`, since CycloneDX's one `scope` field cannot tell
+  the two marks apart.
 - **The reachability walk keeps the C library on Linux (#1467).** When no
   store holds a `--nix-closure` output, the walk marked glibc not-in-artifact,
   because no dependency field names it: a member links it through its

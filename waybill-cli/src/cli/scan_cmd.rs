@@ -5239,6 +5239,16 @@ pub async fn execute(
             &runtime_evidence,
             &relationships,
         );
+        // #1465 — runtime evidence wins: a member the runtime closure holds,
+        // or that is statically linked into it, no longer carries a reader's
+        // non-runtime scope. After the pass above, whose verdict it reads, and
+        // before `--exclude-scope`, which would otherwise drop what ships.
+        // This is the precedence rule the paragraph above anticipated: runtime
+        // evidence is the one mechanism that asserts presence.
+        crate::resolve::closure_role_scope::withdraw_scope_runtime_evidence_contradicts(
+            &mut components,
+            &mut relationships,
+        );
         if role_scope_summary.roles_seen > 0 {
             tracing::info!(
                 roles_seen = role_scope_summary.roles_seen,
