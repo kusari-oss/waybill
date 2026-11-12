@@ -184,7 +184,7 @@
 
   SC-001/SC-002 must be ≥ 90%, or the shortfall is explained with each missed finding's cause.
 - [ ] T042 Check the proxy against real grype. For one target, run grype on waybill's runtime-only CycloneDX and compare its recalled set with the T036 proxy's recalled set. Record the agreement in `specs/1283-nix-allow-ifd/measurements/recall/proxy-vs-grype.txt`.
-- [ ] T043 Run the full gate. Check `GATE_EXIT=0` and the `>>> all pre-PR checks passed.` line, and enumerate every `test result:` line. Then diff the `#[cfg]` attributes around edited functions in `scan_cmd.rs` against `main`.
+- [X] T043 Run the full gate. Check `GATE_EXIT=0` and the `>>> all pre-PR checks passed.` line, and enumerate every `test result:` line. Then diff the `#[cfg]` attributes around edited functions in `scan_cmd.rs` against `main`.
 
 ## Dependencies
 
