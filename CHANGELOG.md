@@ -9,6 +9,22 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A `--nix-closure` member that nixpkgs holds only under a versioned alias
+  is now a Hackage package.** The closure identity pass looked up a
+  member's exact name and version in the pinned package set's default
+  attribute only. nixpkgs keeps other versions as
+  `<name>_<version with . -> _>`, and the packages GHC ships have no default
+  attribute at all. So haskell-language-server's `Cabal 3.14.2.0`, which
+  nixpkgs holds as `Cabal_3_14_2_0`, stayed `pkg:generic`, and HSEC-2026-0006
+  could not match it. The alias is now looked up too, with the same exact
+  version and GHC-built requirements. The member then gets `pkg:hackage`, C201
+  `confirmed`, and that attribute's license, source hash and declared edges.
+  `Cabal`, `Cabal-syntax`, `extensions` and `os-string` change on the
+  haskell-language-server closure; `os-string` changes on four of the five
+  nix-closure corpus targets. C201's values are unchanged, and the
+  `version-disagrees` and `not-in-package-set` entries in its catalog row now
+  say that neither attribute holds the version (#1282).
+
 - **A declared Haskell dependency no longer resolves to a closure member
   that only shares its name.** A closure member that declares no `pname`
   (C206: a fetched source, build scaffolding, or a live-bootstrap C

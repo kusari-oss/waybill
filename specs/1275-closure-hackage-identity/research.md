@@ -110,6 +110,38 @@ ambiguity — when two aliases carry the same version, something has to choose.
 Recorded as a measured limitation rather than an oversight, with the cost
 stated: 1 of 60.
 
+> **Superseded 2026-11-12 (#1282).** The default-only rule is replaced: an
+> exact pair is looked up as the default attribute `<name>`, then as the
+> versioned alias `<name>_<version with . -> _>`, with `entry.version ==
+> version` required either way. The GHC-built signal (R5) is unchanged.
+>
+> **The ambiguity R4 deferred on does not occur.**
+> `measurements/alias-census.sh` reads `hackage-packages.nix` at the four
+> revisions the nix-closure corpus goldens pin (`a799d3e3`, `2c15aa59`,
+> `5ae3b07d`, `5b2c2d84`; 18,336–19,429 attributes each). Output:
+> `measurements/alias-census-2026-11-12.txt`.
+> - Every attribute is `<pname>` or `<pname>_<version>`.
+> - No `(pname, version)` pair is held by more than one attribute. The
+>   probe's positive control shows both checks fire.
+> - So the alias for an exact pair is a function of the pair. There is no
+>   reverse index to build, and no lookup ever chooses between candidates.
+>
+> **The cost was larger than 1 of 60 once the GHC boot packages were in a
+> closure.** They have no default attribute at all. Measured on main
+> `61f6a89f`:
+> - Every nix-closure corpus target except openai kept `os-string` generic.
+> - nixpkgs `haskell-language-server` (aarch64-darwin, `a799d3e3`) kept four
+>   members generic: `Cabal 3.14.2.0`, `Cabal-syntax 3.14.2.0`,
+>   `extensions 0.1.1.0` and `os-string 2.0.10`. Cabal and Cabal-syntax are
+>   runtime members.
+> - osv-scanner 2.7.0 matches `pkg:hackage/Cabal@3.14.2.0` to HSEC-2026-0006
+>   and `pkg:generic/Cabal@3.14.2.0` to nothing. This was the one recall miss
+>   in milestone 1283's recall corpus.
+>
+> C201's values are unchanged. `confirmed` now names either attribute;
+> `version-disagrees` and `not-in-package-set` mean that neither holds the
+> version.
+
 ## R5 — the corroborating signal FR-005 requires
 
 FR-005 forbids resting identity on two strings agreeing. The independent
