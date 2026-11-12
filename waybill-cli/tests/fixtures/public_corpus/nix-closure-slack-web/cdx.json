@@ -17972,6 +17972,7 @@
         }
       ],
       "purl": "pkg:generic/bash-interactive@5.3p3",
+      "scope": "excluded",
       "type": "library",
       "version": "5.3p3"
     },
@@ -53245,6 +53246,7 @@
         }
       ],
       "purl": "pkg:generic/readline@8.3p1",
+      "scope": "excluded",
       "type": "library",
       "version": "8.3p1"
     },
@@ -120702,7 +120704,7 @@
       },
       {
         "name": "waybill:closure-scope-method",
-        "value": "{\"c-runtime-libraries\":null,\"method\":\"runtime-closure\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-roots\":{\"declared-edges\":0,\"derivation-fields\":141},\"static-link-source\":\"derivation-fields\",\"store\":\"local\",\"unavailable-reason\":null,\"unmatched-runtime-paths\":0,\"verified\":true,\"walk-outcome\":null}"
+        "value": "{\"c-runtime-libraries\":null,\"doc-only-excluded\":{\"members\":2,\"output-names\":[\"devdoc\",\"doc\",\"info\",\"man\"],\"paths\":143},\"method\":\"runtime-closure\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-roots\":{\"declared-edges\":0,\"derivation-fields\":141},\"static-link-source\":\"derivation-fields\",\"store\":\"local\",\"unavailable-reason\":null,\"unmatched-runtime-paths\":0,\"verified\":true,\"walk-outcome\":null}"
       }
     ],
     "supplier": {

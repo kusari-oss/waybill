@@ -131,7 +131,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-scope-method\",\"value\":\"{\\\"c-runtime-libraries\\\":null,\\\"method\\\":\\\"runtime-closure\\\",\\\"outputs\\\":[\\\"out\\\"],\\\"outputs-source\\\":\\\"outputs-to-install\\\",\\\"schema\\\":1,\\\"static-c-linking-detected\\\":false,\\\"static-link-roots\\\":{\\\"declared-edges\\\":0,\\\"derivation-fields\\\":141},\\\"static-link-source\\\":\\\"derivation-fields\\\",\\\"store\\\":\\\"local\\\",\\\"unavailable-reason\\\":null,\\\"unmatched-runtime-paths\\\":0,\\\"verified\\\":true,\\\"walk-outcome\\\":null}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-scope-method\",\"value\":\"{\\\"c-runtime-libraries\\\":null,\\\"doc-only-excluded\\\":{\\\"members\\\":2,\\\"output-names\\\":[\\\"devdoc\\\",\\\"doc\\\",\\\"info\\\",\\\"man\\\"],\\\"paths\\\":143},\\\"method\\\":\\\"runtime-closure\\\",\\\"outputs\\\":[\\\"out\\\"],\\\"outputs-source\\\":\\\"outputs-to-install\\\",\\\"schema\\\":1,\\\"static-c-linking-detected\\\":false,\\\"static-link-roots\\\":{\\\"declared-edges\\\":0,\\\"derivation-fields\\\":141},\\\"static-link-source\\\":\\\"derivation-fields\\\",\\\"store\\\":\\\"local\\\",\\\"unavailable-reason\\\":null,\\\"unmatched-runtime-paths\\\":0,\\\"verified\\\":true,\\\"walk-outcome\\\":null}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -117547,6 +117547,11 @@
       "spdxElementId": "SPDXRef-Package-65TN3HXD7ZATNMZZ"
     },
     {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-65TZF3YPW33MNXLP"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-32246LUESBQ6STT7",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-65TZF3YPW33MNXLP"
@@ -223660,6 +223665,11 @@
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
       "relationshipType": "BUILD_TOOL_OF",
       "spdxElementId": "SPDXRef-Package-NRX7RAOPKNGGND2A"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-NSB5OIL43R2GHDB4"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-32246LUESBQ6STT7",

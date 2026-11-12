@@ -80204,6 +80204,17 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-I6F5BGJLYDLWDBD7",
+      "relationshipType": "usesTool",
+      "scope": "build",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-VXXGGXJJMYFL2QM5",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NSB5OIL43R2GHDB4"
+      ],
+      "type": "LifecycleScopedRelationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IEPIMGBVQJZUHAHP",
       "relationshipType": "dependsOn",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-VXXQ3REA2GDVALCK",
@@ -84938,6 +84949,17 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZWUMF2ZJCEAOXZVP"
       ],
       "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-I6F5BGJLYDLWDBD7",
+      "relationshipType": "usesTool",
+      "scope": "build",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-Y6ML4TMVE7JBRCD7",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-65TZF3YPW33MNXLP"
+      ],
+      "type": "LifecycleScopedRelationship"
     },
     {
       "creationInfo": "<masked>",
@@ -116178,7 +116200,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-F7MZFW4BRCBGSL4V",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-scope-method\",\"value\":\"{\\\"c-runtime-libraries\\\":null,\\\"method\\\":\\\"runtime-closure\\\",\\\"outputs\\\":[\\\"out\\\"],\\\"outputs-source\\\":\\\"outputs-to-install\\\",\\\"schema\\\":1,\\\"static-c-linking-detected\\\":false,\\\"static-link-roots\\\":{\\\"declared-edges\\\":0,\\\"derivation-fields\\\":141},\\\"static-link-source\\\":\\\"derivation-fields\\\",\\\"store\\\":\\\"local\\\",\\\"unavailable-reason\\\":null,\\\"unmatched-runtime-paths\\\":0,\\\"verified\\\":true,\\\"walk-outcome\\\":null}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-scope-method\",\"value\":\"{\\\"c-runtime-libraries\\\":null,\\\"doc-only-excluded\\\":{\\\"members\\\":2,\\\"output-names\\\":[\\\"devdoc\\\",\\\"doc\\\",\\\"info\\\",\\\"man\\\"],\\\"paths\\\":143},\\\"method\\\":\\\"runtime-closure\\\",\\\"outputs\\\":[\\\"out\\\"],\\\"outputs-source\\\":\\\"outputs-to-install\\\",\\\"schema\\\":1,\\\"static-c-linking-detected\\\":false,\\\"static-link-roots\\\":{\\\"declared-edges\\\":0,\\\"derivation-fields\\\":141},\\\"static-link-source\\\":\\\"derivation-fields\\\",\\\"store\\\":\\\"local\\\",\\\"unavailable-reason\\\":null,\\\"unmatched-runtime-paths\\\":0,\\\"verified\\\":true,\\\"walk-outcome\\\":null}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },

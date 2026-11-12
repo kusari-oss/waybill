@@ -37,7 +37,7 @@
 //! nix's ~79 s default (q5). The timeout shrinks to what is left of a 5 s
 //! budget across substituters ([`REMOTE_BUDGET`]).
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::time::{Duration, Instant};
 
 use serde_json::Value;
@@ -81,9 +81,82 @@ impl RuntimeStore {
 pub(crate) struct RuntimeClosure {
     /// Store basenames.
     pub(crate) paths: BTreeSet<String>,
+    /// #1455 — each path's references (store basenames, itself excluded), as
+    /// the same `path-info -r --json` answer reported them.
+    pub(crate) references: BTreeMap<String, BTreeSet<String>>,
+    /// The basenames of the outputs queried: where the references are
+    /// followed from.
+    pub(crate) queried: Vec<String>,
     pub(crate) store: RuntimeStore,
     /// Signature-verified. Always true: an unverified answer is never built.
     pub(crate) verified: bool,
+}
+
+/// #1455 — the output names whose paths count as documentation, sorted.
+///
+/// The maintainer's rule: a member the runtime closure reaches **only**
+/// through these outputs does not ship. nix keeps them for haddock links
+/// (`package.conf.d` names a `-doc` output, whose HTML links other packages'
+/// `-doc` outputs) and man pages, not for linked code.
+pub(crate) const DOCUMENTATION_OUTPUTS: [&str; 4] = ["devdoc", "doc", "info", "man"];
+
+/// The runtime paths reached **only** through documentation outputs: the
+/// documentation outputs themselves, and what only they lead to.
+///
+/// An output is documentation by its **name** in the derivation that
+/// produced it (`outputs.<name>.path` in the closure already read), never by
+/// a path suffix: a package called `foo-doc` has an `out`. A path no closure
+/// derivation produced has no name, so it is never documentation.
+///
+/// The references are followed from the queried outputs twice: through
+/// everything, and through everything but documentation outputs. A path the
+/// first reaches and the second does not is documentation-only. A listed
+/// path neither reaches (the references are incomplete) is left shipping:
+/// missing evidence never drops a member.
+pub(crate) fn documentation_only(raw: &RawClosure, rc: &RuntimeClosure) -> BTreeSet<String> {
+    let names: HashMap<&str, &str> = raw
+        .derivations
+        .values()
+        .flat_map(|d| {
+            d.outputs
+                .iter()
+                .filter_map(|(n, o)| Some((store_basename(o.path.as_deref()?), n.as_str())))
+        })
+        .collect();
+    let is_doc = |p: &str| names.get(p).is_some_and(|n| DOCUMENTATION_OUTPUTS.contains(n));
+    let reach = |skip_doc: bool| -> HashSet<&str> {
+        let mut seen: HashSet<&str> = HashSet::new();
+        let mut stack: Vec<&str> = rc.queried.iter().map(String::as_str).collect();
+        while let Some(p) = stack.pop() {
+            if (skip_doc && is_doc(p)) || !seen.insert(p) {
+                continue;
+            }
+            if let Some(rs) = rc.references.get(p) {
+                stack.extend(rs.iter().map(String::as_str));
+            }
+        }
+        seen
+    };
+    let all = reach(false);
+    let shipping = reach(true);
+    rc.paths
+        .iter()
+        .filter(|p| all.contains(p.as_str()) && !shipping.contains(p.as_str()))
+        .cloned()
+        .collect()
+}
+
+/// #1455 — what the documentation-output rule excluded (C216
+/// `doc-only-excluded`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub(crate) struct DocOnlyExcluded {
+    /// Members marked not-in-artifact only because the rule applied: the
+    /// runtime closure holds them, but only through documentation outputs.
+    /// Counted by the scope pass, after the exemptions and static linking.
+    pub(crate) members: usize,
+    /// Runtime paths reached only through documentation outputs, the
+    /// documentation outputs included.
+    pub(crate) paths: usize,
 }
 
 /// How the queried outputs were chosen (C216 `outputs-source`).
@@ -372,6 +445,9 @@ pub(crate) struct ScopeMethodRecord {
     /// #1458 — the outputs whose runtime closure was asked for. `None` when
     /// no query was made (`no-evaluated-package`, or no output declared).
     pub(crate) outputs: Option<OutputSelection>,
+    /// #1455 — what the documentation-output rule excluded. `None` unless
+    /// the runtime closure decided: the rule reads its references.
+    pub(crate) doc_only: Option<DocOnlyExcluded>,
 }
 
 impl ScopeMethodRecord {
@@ -380,6 +456,7 @@ impl ScopeMethodRecord {
         runtime: &RuntimeClosure,
         static_link: StaticLinkRoots,
         unmatched_runtime_paths: usize,
+        doc_only_paths: usize,
     ) -> Self {
         Self {
             method: ScopeMethod::RuntimeClosure,
@@ -391,6 +468,16 @@ impl ScopeMethodRecord {
             unmatched_runtime_paths: Some(unmatched_runtime_paths),
             walk_outcome: None,
             outputs: None,
+            doc_only: Some(DocOnlyExcluded { members: 0, paths: doc_only_paths }),
+        }
+    }
+
+    /// #1455 — record how many members the scope pass marked only because
+    /// of the documentation-output rule. A no-op unless the runtime closure
+    /// decided.
+    pub(crate) fn set_doc_only_members(&mut self, members: usize) {
+        if let Some(d) = self.doc_only.as_mut() {
+            d.members = members;
         }
     }
 
@@ -411,6 +498,7 @@ impl ScopeMethodRecord {
             unmatched_runtime_paths: None,
             walk_outcome: Some(WalkOutcome::Used),
             outputs: None,
+            doc_only: None,
         }
     }
 
@@ -435,6 +523,7 @@ impl ScopeMethodRecord {
             unmatched_runtime_paths: None,
             walk_outcome,
             outputs: None,
+            doc_only: None,
         }
     }
 
@@ -448,6 +537,19 @@ impl ScopeMethodRecord {
         o.insert(
             "c-runtime-libraries".into(),
             opt_str(self.c_runtime_libraries.map(CRuntimeLibraries::wire)),
+        );
+        o.insert(
+            "doc-only-excluded".into(),
+            self.doc_only.map_or(Value::Null, |d| {
+                let mut v = serde_json::Map::new();
+                v.insert("members".into(), d.members.into());
+                v.insert(
+                    "output-names".into(),
+                    DOCUMENTATION_OUTPUTS.iter().map(|n| Value::from(*n)).collect(),
+                );
+                v.insert("paths".into(), d.paths.into());
+                Value::Object(v)
+            }),
         );
         o.insert("method".into(), self.method.wire().into());
         o.insert(
@@ -495,14 +597,20 @@ impl ScopeMethodRecord {
     }
 }
 
-/// `nix path-info -r <path>…` against the default (local) store. Given
-/// several outputs it lists the union of their closures (q11).
+/// `nix path-info -r --json <path>…` against the default (local) store.
+/// Given several outputs it lists the union of their closures (q11).
+///
+/// `--json` (#1455) carries each path's `references`, which the
+/// documentation-output rule follows, in the same answer: same store, same
+/// verification. A bare `--json` is what every nix in use accepts; nix 2.34
+/// warns that `--json-format` will become required, and a nix without that
+/// flag rejects it, so it is not passed (`measurements/doc-outputs/`).
 ///
 /// No bounds: the default store is the daemon, which refuses
 /// `connect-timeout` and `download-attempts` from an untrusted user as
 /// restricted settings (q9), and the local store involves no network.
 pub(crate) fn local_argv<'a>(outputs: &[&'a str]) -> Vec<&'a str> {
-    let mut argv = vec!["path-info", "-r"];
+    let mut argv = vec!["path-info", "-r", "--json"];
     argv.extend_from_slice(outputs);
     argv
 }
@@ -519,12 +627,13 @@ pub(crate) fn connect_timeout_for(remaining: Duration) -> Option<u64> {
     (secs >= 1).then(|| secs.min(REMOTE_CONNECT_TIMEOUT_SECS))
 }
 
-/// `nix path-info -r --store <url>` with the remote bounds. `connect_timeout`
-/// is whole seconds ([`connect_timeout_for`]).
+/// `nix path-info -r --json --store <url>` with the remote bounds.
+/// `connect_timeout` is whole seconds ([`connect_timeout_for`]).
 pub(crate) fn remote_argv<'a>(url: &'a str, connect_timeout: &'a str, outputs: &[&'a str]) -> Vec<&'a str> {
     let mut argv = vec![
         "path-info",
         "-r",
+        "--json",
         "--store",
         url,
         "--option",
@@ -560,15 +669,65 @@ pub(crate) fn verify_argv<'a>(url: &'a str, connect_timeout: &'a str, outputs: &
     argv
 }
 
-/// Store basenames from `nix path-info -r`'s plain output: one full store
-/// path per line (q2, re-confirmed at T001).
-pub(crate) fn parse_paths(stdout: &str) -> BTreeSet<String> {
-    stdout
-        .lines()
-        .map(str::trim)
-        .filter(|l| !l.is_empty())
-        .map(|l| store_basename(l).to_string())
-        .collect()
+/// Each runtime path's references, as store basenames (a path's reference
+/// to itself left out), from `nix path-info -r --json`. `None` when the
+/// output is not one of the shapes nix prints.
+///
+/// Three shapes are read (`measurements/doc-outputs/`):
+/// - format 1, what nix 2.34 prints for a bare `--json`: an object keyed by
+///   full store path, `references` as full store paths;
+/// - format 2 (`--json-format 2`): `{"info": {...}}`, keyed by basename;
+/// - nix before 2.19: an array of objects, each with its `path`.
+///
+/// A path whose value is `null` is not valid in that store, so the answer
+/// is [`Listing::NotValid`]. Under `--json` nix can report that with exit 0,
+/// where the plain listing exits 1 with `path '…' is not valid`: measured
+/// locally for a non-recursive query (`{"/nix/store/…-patchutils-0.4.2":null}`),
+/// and on the corpus run that first ran this query, where the recursive form
+/// did the same on CI's nix and two targets read as a one-path runtime closure
+/// (`measurements/doc-outputs/README.md`).
+pub(crate) fn parse_listing(stdout: &str) -> Option<Listing> {
+    let v: Value = serde_json::from_str(stdout.trim()).ok()?;
+    let entries: Vec<(&str, &Value)> = match &v {
+        Value::Object(o) => match o.get("info") {
+            Some(Value::Object(info)) if !o.keys().any(|k| k.starts_with('/')) => {
+                info.iter().map(|(k, v)| (k.as_str(), v)).collect()
+            }
+            _ => o.iter().map(|(k, v)| (k.as_str(), v)).collect(),
+        },
+        Value::Array(a) => a
+            .iter()
+            .map(|e| Some((e.get("path")?.as_str()?, e)))
+            .collect::<Option<Vec<_>>>()?,
+        _ => return None,
+    };
+    let mut listing = BTreeMap::new();
+    for (path, info) in entries {
+        if info.is_null() {
+            return Some(Listing::NotValid);
+        }
+        let base = store_basename(path).to_string();
+        let refs: BTreeSet<String> = match info.get("references") {
+            Some(Value::Array(rs)) => rs
+                .iter()
+                .filter_map(Value::as_str)
+                .map(|r| store_basename(r).to_string())
+                .filter(|r| *r != base)
+                .collect(),
+            _ => BTreeSet::new(),
+        };
+        listing.insert(base, refs);
+    }
+    Some(Listing::Paths(listing))
+}
+
+/// What one `path-info -r --json` answer said.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Listing {
+    /// Each listed path and its references.
+    Paths(BTreeMap<String, BTreeSet<String>>),
+    /// A queried path is not valid in that store: the store does not hold it.
+    NotValid,
 }
 
 /// The configured substituters, from `nix config show`'s full output.
@@ -594,9 +753,9 @@ pub(crate) fn substituters_from_config(config: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// One store's answer.
+/// One store's answer: each listed path and its references.
 enum Answer {
-    Hit(BTreeSet<String>),
+    Hit(BTreeMap<String, BTreeSet<String>>),
     Miss(RuntimeUnavailable),
 }
 
@@ -627,16 +786,14 @@ type Runner<'a> =
 
 fn ask(run: &mut Runner<'_>, argv: &[&str], budget: Duration) -> Answer {
     match run(argv, budget) {
-        Ok((true, stdout, _)) => {
-            let paths = parse_paths(&stdout);
-            if paths.is_empty() {
-                // A zero-path closure is not an answer: every output
-                // references at least itself.
-                Answer::Miss(RuntimeUnavailable::QueryFailed)
-            } else {
-                Answer::Hit(paths)
-            }
-        }
+        Ok((true, stdout, _)) => match parse_listing(&stdout) {
+            Some(Listing::Paths(listing)) if !listing.is_empty() => Answer::Hit(listing),
+            Some(Listing::NotValid) => Answer::Miss(RuntimeUnavailable::NotInAnyStore),
+            // A zero-path closure is not an answer: every output references
+            // at least itself. Neither is output that is not the JSON nix
+            // prints.
+            _ => Answer::Miss(RuntimeUnavailable::QueryFailed),
+        },
         Ok((false, _, stderr)) => Answer::Miss(failure_of(&stderr)),
         Err(reason) => Answer::Miss(reason),
     }
@@ -686,15 +843,17 @@ fn query_with(
     outputs: &[&str],
     substituters: &[String],
 ) -> Result<RuntimeClosure, RuntimeUnavailable> {
+    let closure = |listing: BTreeMap<String, BTreeSet<String>>, store: RuntimeStore| RuntimeClosure {
+        paths: listing.keys().cloned().collect(),
+        references: listing,
+        queried: outputs.iter().map(|o| store_basename(o).to_string()).collect(),
+        store,
+        // The local store holds only paths it has verified or built; a
+        // substituter's answer is built only after verification.
+        verified: true,
+    };
     let mut worst = match ask(run, &local_argv(outputs), budget) {
-        Answer::Hit(paths) => {
-            return Ok(RuntimeClosure {
-                paths,
-                store: RuntimeStore::Local,
-                // The local store holds only paths it has verified or built.
-                verified: true,
-            })
-        }
+        Answer::Hit(listing) => return Ok(closure(listing, RuntimeStore::Local)),
         Answer::Miss(reason) => reason,
     };
     let remote_started = elapsed();
@@ -716,13 +875,9 @@ fn query_with(
         // and is never skipped, since skipping it would discard the answer.
         let connect = connect.to_string();
         let reason = match ask(run, &remote_argv(url, &connect, outputs), budget) {
-            Answer::Hit(paths) => match run(&verify_argv(url, &connect, outputs), budget) {
+            Answer::Hit(listing) => match run(&verify_argv(url, &connect, outputs), budget) {
                 Ok((true, _, _)) => {
-                    return Ok(RuntimeClosure {
-                        paths,
-                        store: RuntimeStore::Substituter(url.clone()),
-                        verified: true,
-                    })
+                    return Ok(closure(listing, RuntimeStore::Substituter(url.clone())))
                 }
                 // A failed or unrunnable verification is a miss: an answer we
                 // cannot trust is not used (FR-004).
@@ -820,9 +975,15 @@ pub(crate) enum RuntimeEvidence {
     /// Haskell builds a wrapper root consumed through `inputs.drvs` together
     /// with what is linked into them, when the runtime closure does not
     /// already hold those builds (x86_64-linux, q10).
+    ///
+    /// `doc_only` (#1455) holds the members the runtime closure holds only
+    /// through documentation outputs ([`documentation_only`]). They are not
+    /// in `runtime`; the set exists so the scope pass can count the members
+    /// it marked only because of that rule (C216 `doc-only-excluded`).
     Closure {
         runtime: HashSet<MemberKey>,
         static_linked: HashSet<MemberKey>,
+        doc_only: HashSet<MemberKey>,
     },
     /// Marks come from the reachability walk (US2): `reached` is what the walk
     /// from the evaluated package reaches, plus the Haskell libraries
@@ -965,7 +1126,14 @@ fn decide(
         }
         Ok(rc) => rc,
     };
-    let (runtime_drvs, stray) = join(raw, &rc.paths);
+    // #1455: a path reached only through documentation outputs does not
+    // ship. Everything below reads the paths that do; the full listing is
+    // still what `unmatched-runtime-paths` counts against.
+    let doc_only_paths = documentation_only(raw, rc);
+    let shipping: BTreeSet<String> = rc.paths.difference(&doc_only_paths).cloned().collect();
+    let (runtime_drvs, _) = join(raw, &shipping);
+    let (_, stray) = join(raw, &rc.paths);
+    let (doc_only_drvs, _) = join(raw, &doc_only_paths);
     // Static linking is seeded from the runtime members and, when the
     // evaluated root is a wrapper rather than a Haskell build itself, from the
     // Haskell builds it consumed through `inputs.drvs`. The root is runtime by
@@ -988,6 +1156,8 @@ fn decide(
     let linked = static_link_set(raw, &roots, declared().as_ref(), &test_deps);
 
     let runtime: HashSet<MemberKey> = runtime_drvs.iter().filter_map(key_of).collect();
+    let doc_only: HashSet<MemberKey> =
+        doc_only_drvs.iter().filter_map(key_of).filter(|k| !runtime.contains(k)).collect();
     let static_linked: HashSet<MemberKey> = linked
         .members
         .iter()
@@ -1019,10 +1189,13 @@ fn decide(
         statically_linked = static_linked.len(),
         static_link_source = linked.source().wire(),
         unmatched,
+        doc_only_paths = doc_only_paths.len(),
+        doc_only_members = doc_only.len(),
         "nix-closure: scope from the runtime closure"
     );
-    let record = ScopeMethodRecord::runtime_closure(rc, linked.roots, unmatched);
-    (RuntimeEvidence::Closure { runtime, static_linked }, Some(record))
+    let record =
+        ScopeMethodRecord::runtime_closure(rc, linked.roots, unmatched, doc_only_paths.len());
+    (RuntimeEvidence::Closure { runtime, static_linked, doc_only }, Some(record))
 }
 
 /// The runtime query: which outputs it asked about, and what came back.
@@ -1045,15 +1218,102 @@ mod tests {
     use super::*;
     use crate::scan_fs::package_db::nix::eval::invoke::argv_is_safe;
 
+    /// #1455: the three shapes `path-info -r --json` has printed. Formats 1
+    /// and 2 are trimmed from nix 2.34.6's answer for moat's output
+    /// (`measurements/doc-outputs/`); the array is the pre-2.19 shape.
     #[test]
-    fn the_listing_parses_into_store_basenames() {
-        let out = "/nix/store/aaa-libffi-40\n/nix/store/bbb-shellcheck-0.11.0-bin\n\n  \n";
-        let got = parse_paths(out);
-        assert_eq!(
-            got.into_iter().collect::<Vec<_>>(),
-            vec!["aaa-libffi-40".to_string(), "bbb-shellcheck-0.11.0-bin".to_string()]
-        );
-        assert!(parse_paths("").is_empty());
+    fn the_listing_parses_with_references_in_every_json_shape() {
+        let want: BTreeMap<String, BTreeSet<String>> = [
+            ("i91r-moat-0.1", vec!["n0mp-hspec-2.11.17", "dq22-moat-0.1-doc"]),
+            ("n0mp-hspec-2.11.17", vec![]),
+            ("dq22-moat-0.1-doc", vec![]),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), v.into_iter().map(str::to_string).collect()))
+        .collect();
+        let v1 = r#"{"/nix/store/i91r-moat-0.1":{"ca":null,"deriver":"/nix/store/y408-moat-0.1.drv","narSize":8188392,"references":["/nix/store/n0mp-hspec-2.11.17","/nix/store/dq22-moat-0.1-doc","/nix/store/i91r-moat-0.1"]},
+            "/nix/store/n0mp-hspec-2.11.17":{"references":["/nix/store/n0mp-hspec-2.11.17"]},"/nix/store/dq22-moat-0.1-doc":{"references":[]}}"#;
+        let v2 = r#"{"info":{"i91r-moat-0.1":{"ca":null,"deriver":"y408-moat-0.1.drv","references":["n0mp-hspec-2.11.17","dq22-moat-0.1-doc"]},
+            "n0mp-hspec-2.11.17":{"references":[]},"dq22-moat-0.1-doc":{"references":[]}},"version":2}"#;
+        let legacy = r#"[{"path":"/nix/store/i91r-moat-0.1","references":["/nix/store/n0mp-hspec-2.11.17","/nix/store/dq22-moat-0.1-doc"]},
+            {"path":"/nix/store/n0mp-hspec-2.11.17","references":[]},{"path":"/nix/store/dq22-moat-0.1-doc","references":[]}]"#;
+        for (shape, out) in [("format 1", v1), ("format 2", v2), ("array", legacy)] {
+            assert_eq!(parse_listing(out), Some(Listing::Paths(want.clone())), "{shape}");
+        }
+        // A path nix reports as `null` is not valid in that store, whatever
+        // the rest of the answer holds (measured: exit 0 under `--json`).
+        for out in [
+            r#"{"/nix/store/1lmn-patchutils-0.4.2":null}"#,
+            r#"{"/nix/store/a-x":{"references":[]},"/nix/store/b-y":null}"#,
+            r#"{"info":{"1lmn-patchutils-0.4.2":null},"version":2}"#,
+        ] {
+            assert_eq!(parse_listing(out), Some(Listing::NotValid), "{out}");
+        }
+        // The plain listing is not an answer to a `--json` query.
+        assert_eq!(parse_listing("/nix/store/aaa-libffi-40\n"), None);
+        assert_eq!(parse_listing(""), None);
+        assert_eq!(parse_listing("{}"), Some(Listing::Paths(BTreeMap::new())));
+    }
+
+    /// #1455: the documentation rule. Output names decide, not path
+    /// suffixes; a member also reached through a non-documentation output
+    /// ships; a path the references never reach is left shipping.
+    #[test]
+    fn documentation_only_paths_are_found_by_output_name() {
+        let raw = RawClosure::parse(
+            r#"{"derivations":{
+                "r.drv":{"name":"app-1","env":{},"outputs":{"out":{"path":"r"},"doc":{"path":"r-doc"}}},
+                "a.drv":{"name":"a-1","env":{},"outputs":{"out":{"path":"a"},"doc":{"path":"a-doc"}}},
+                "m.drv":{"name":"m-1","env":{},"outputs":{"out":{"path":"m"},"man":{"path":"m-man"}}},
+                "x.drv":{"name":"x-doc-1","env":{},"outputs":{"out":{"path":"x-doc"}}},
+                "s.drv":{"name":"s-1","env":{},"outputs":{"out":{"path":"s"}}},
+                "b.drv":{"name":"b-1","env":{},"outputs":{"out":{"path":"b"}}},
+                "c.drv":{"name":"c-1","env":{},"outputs":{"out":{"path":"c"}}}
+            },"version":4}"#,
+        )
+        .unwrap();
+        let refs = |pairs: &[(&str, &str)]| -> BTreeMap<String, BTreeSet<String>> {
+            let mut m: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+            for p in ["r", "r-doc", "a", "a-doc", "m", "m-man", "x-doc", "s", "b", "c", "orphan"] {
+                m.entry(p.to_string()).or_default();
+            }
+            for (f, t) in pairs {
+                m.entry(f.to_string()).or_default().insert(t.to_string());
+            }
+            m
+        };
+        let rc = |pairs: &[(&str, &str)], queried: &[&str]| {
+            let references = refs(pairs);
+            RuntimeClosure {
+                paths: references.keys().cloned().collect(),
+                references,
+                queried: queried.iter().map(|q| q.to_string()).collect(),
+                store: RuntimeStore::Local,
+                verified: true,
+            }
+        };
+        let edges = [
+            ("r", "r-doc"),
+            ("r", "a"),
+            ("r", "m-man"),
+            ("r", "x-doc"),
+            ("r-doc", "a-doc"),
+            ("a-doc", "s"),
+            ("a-doc", "b"),
+            ("a", "b"),
+            ("m-man", "c"),
+        ];
+        let got = documentation_only(&raw, &rc(&edges, &["r"]));
+        // `s` and `c` only through documentation; `b` through `a` as well;
+        // `x-doc` is an `out`; `orphan` is reached by nothing, so it stays.
+        let want: BTreeSet<String> =
+            ["r-doc", "a-doc", "m-man", "s", "c"].into_iter().map(str::to_string).collect();
+        assert_eq!(got, want);
+        // An installed documentation output is not followed either: with the
+        // root's `doc` queried alongside `out`, the same paths come back.
+        assert_eq!(documentation_only(&raw, &rc(&edges, &["r", "r-doc"])), want);
+        // No references at all: nothing is reached, so nothing is excluded.
+        assert_eq!(documentation_only(&raw, &rc(&[], &["r"])), BTreeSet::new());
     }
 
     #[test]
@@ -1075,7 +1335,10 @@ mod tests {
     #[test]
     fn several_outputs_are_queried_together_after_the_options() {
         let outs = ["/nix/store/a-bin", "/nix/store/a-man"];
-        assert_eq!(local_argv(&outs), vec!["path-info", "-r", "/nix/store/a-bin", "/nix/store/a-man"]);
+        assert_eq!(
+            local_argv(&outs),
+            vec!["path-info", "-r", "--json", "/nix/store/a-bin", "/nix/store/a-man"]
+        );
         for argv in [remote_argv("https://c", "2", &outs), verify_argv("https://c", "2", &outs)] {
             assert_eq!(&argv[argv.len() - 2..], &outs[..], "{argv:?}");
         }
@@ -1098,7 +1361,7 @@ mod tests {
     #[test]
     fn the_local_query_carries_no_store_and_no_restricted_options() {
         let argv = local_argv(&["/nix/store/x-out"]);
-        assert_eq!(argv, vec!["path-info", "-r", "/nix/store/x-out"]);
+        assert_eq!(argv, vec!["path-info", "-r", "--json", "/nix/store/x-out"]);
     }
 
     #[test]
@@ -1214,7 +1477,7 @@ mod tests {
                 Sub::Hit(_) if verify => Ok((true, String::new(), String::new())),
                 Sub::Hit(cost) => {
                     clock.set(clock.get() + cost);
-                    Ok((true, "/nix/store/a-x-out\n".to_string(), String::new()))
+                    Ok((true, r#"{"/nix/store/a-x-out":{"references":[]}}"#.to_string(), String::new()))
                 }
             }
         };
@@ -1299,7 +1562,7 @@ mod tests {
     fn a_spent_budget_tries_no_substituter() {
         let (got, log, _) = stub_query(&[("https://a.test", Sub::Unreachable)], Duration::ZERO);
         assert_eq!(got, Err(RuntimeUnavailable::QueryTimedOut));
-        assert_eq!(log, vec!["path-info -r /nix/store/x-out".to_string()]);
+        assert_eq!(log, vec!["path-info -r --json /nix/store/x-out".to_string()]);
         // Without substituters there is nothing to stop, so the reason stays
         // the local miss.
         let (got, _, _) = stub_query(&[], Duration::ZERO);
@@ -1422,24 +1685,27 @@ mod tests {
     fn the_record_wire_is_sorted_and_complete() {
         let rc = RuntimeClosure {
             paths: BTreeSet::new(),
+            references: BTreeMap::new(),
+            queried: Vec::new(),
             store: RuntimeStore::Substituter("https://cache.example".into()),
             verified: true,
         };
         let declared = StaticLinkRoots { declared_edges: 4, derivation_fields: 0 };
-        let mut record = ScopeMethodRecord::runtime_closure(&rc, declared, 3);
+        let mut record = ScopeMethodRecord::runtime_closure(&rc, declared, 3, 126);
+        record.set_doc_only_members(2);
         record.outputs = Some(OutputSelection {
             names: vec!["bin".into(), "man".into()],
             source: OutputsSource::OutputsToInstall,
         });
         assert_eq!(
             record.wire(),
-            r#"{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":4,"derivation-fields":0},"static-link-source":"declared-edges","store":"https://cache.example","unavailable-reason":null,"unmatched-runtime-paths":3,"verified":true,"walk-outcome":null}"#
+            r#"{"c-runtime-libraries":null,"doc-only-excluded":{"members":2,"output-names":["devdoc","doc","info","man"],"paths":126},"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":4,"derivation-fields":0},"static-link-source":"declared-edges","store":"https://cache.example","unavailable-reason":null,"unmatched-runtime-paths":3,"verified":true,"walk-outcome":null}"#
         );
         let w = ScopeMethodRecord::closure_role(RuntimeUnavailable::NoEvaluatedPackage, None, None)
             .wire();
         assert_eq!(
             w,
-            r#"{"c-runtime-libraries":"not-assessed","method":"closure-role","outputs":null,"outputs-source":null,"schema":1,"static-c-linking-detected":false,"static-link-roots":null,"static-link-source":null,"store":null,"unavailable-reason":"no-evaluated-package","unmatched-runtime-paths":null,"verified":null,"walk-outcome":null}"#
+            r#"{"c-runtime-libraries":"not-assessed","doc-only-excluded":null,"method":"closure-role","outputs":null,"outputs-source":null,"schema":1,"static-c-linking-detected":false,"static-link-roots":null,"static-link-source":null,"store":null,"unavailable-reason":"no-evaluated-package","unmatched-runtime-paths":null,"verified":null,"walk-outcome":null}"#
         );
         let w = ScopeMethodRecord::closure_role(
             RuntimeUnavailable::NotInAnyStore,

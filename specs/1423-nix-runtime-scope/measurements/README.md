@@ -19,6 +19,7 @@ The input SBOMs and grype outputs came from `specs/1377-nix-subject-identity/mea
 | `split.py` / `split.json` | grype findings split by runtime truth × today's scope mark × closure role |
 | `runtime.py` / `runtime.json` | runtime truth per component and per finding, and precision/recall of today's marks |
 | `reach.py` / `reach.json` | the fallback: a walk from the evaluated root over runtime-linking edges, scored against `rt/` |
+| `doc-outputs/` | #1455: how a documentation output is identified (output name, from the closure's derivations), the runtime query's references (`path-info -r --json`), and what the rule changes on moat on aarch64-darwin, scanned by the waybill binary before and after |
 | `c-runtime/` | #1467: the walk against the runtime closure on x86_64-linux and aarch64-darwin, scanned by the waybill binary itself, before and after the walk keeps the compiler's libc |
 
 Runtime truth for a component means one of two things:

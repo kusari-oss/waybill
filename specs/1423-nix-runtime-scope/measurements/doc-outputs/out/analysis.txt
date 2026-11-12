@@ -1,0 +1,10 @@
+runtime paths: 295; named by a derivation output: 295; unnamed: 0
+output names: {'out': 157, 'doc': 123, 'dev': 7, 'lib': 4, 'libtool': 1, 'data': 1, 'xcrun': 1, 'man': 1}
+name vs suffix disagreements: 0
+documentation-output paths: 124; reachable without them: 169
+derivations with every runtime path outside the non-doc set: 2
+   bash-interactive-5.3p9 ['out']
+   readline-8.3p3 ['out']
+non-documentation paths reachable only through a documentation output: 2
+   jmww9gmmd1h1wjhlw4adcfnb2xkbab1w-bash-interactive-5.3p9
+   xy5a4pba2kn5rpyf5f3nc72nygv6viad-readline-8.3p3

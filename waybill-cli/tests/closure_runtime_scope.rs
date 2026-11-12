@@ -10,7 +10,7 @@
 //!
 //! Every assertion is on the emitted documents, in all three formats, through
 //! the shared stub `nix` (`common/nix_stub.rs`), which answers
-//! `nix path-info -r` from a listing the test supplies and makes no network
+//! `nix path-info -r --json` from a listing the test supplies and makes no network
 //! access. Every name is `waybill-fixture-*` (#285, #640).
 //!
 //! # Fixtures (`tests/fixtures/nix_closure_runtime/`)
@@ -26,6 +26,7 @@
 //! | `closure-tworoots.json` | US2 | two unconsumed derivations, so no evaluated package to walk from |
 //! | `closure-outputs.json` | postgrest (#1458) | `closure-runtime.json` with the app's `outputs` headed by `out`, the library, while the attribute installs `bin`; each output gets its own `path-info` listing |
 //! | `closure-tests-library.json` | slack-web / openai (#1283) | the evaluated package is the project (`project-tests`), a library built with its test suite: `hspec` is in its `buildInputs`, its library dependency `aeson` in `propagatedBuildInputs`; `aeson`'s own test dependency is in `aeson`'s `buildInputs`, and `text`, which propagates nothing (hashable's shape), has `tasty` in its own |
+//! | `closure-doc-outputs.json` | hlint / moat on aarch64-darwin (#1455) | members whose only runtime paths are their own `doc` or `devdoc` output, or a path only a `doc`, `man`, `info` or `devdoc` output references; a member referenced by a documentation output and by an `out`; a package named `-doc` whose output is `out` |
 //! | `closure-tests-executable.json` | slacklinker (#1283) | the same project as an executable-only build: `aeson` and `hspec` share `buildInputs`, and `hspec` was built at a version the package set disagrees with |
 //!
 //! US4 reuses `closure-runtime.json`, adding a CVE-named patch to one member
@@ -56,7 +57,8 @@ fn fixture(name: &str) -> String {
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
 }
 
-/// A runtime listing in `nix path-info -r`'s plain form.
+/// A runtime listing, one store path per line. The stub prints it as
+/// `nix path-info -r --json` does, with the references the test supplies.
 fn listing(basenames: &[&str]) -> String {
     basenames.iter().map(|b| format!("/nix/store/{b}")).collect::<Vec<_>>().join("\n")
 }
@@ -328,6 +330,9 @@ fn us1_local_store_answer_records_store_local() {
         serde_json::json!({
             // The runtime closure lists the C libraries itself (#1467).
             "c-runtime-libraries": null,
+            // Nothing in this closure is reached only through a documentation
+            // output (#1455).
+            "doc-only-excluded": {"members": 0, "output-names": ["devdoc", "doc", "info", "man"], "paths": 0},
             "method": "runtime-closure",
             // The stub refuses the output selection, so the default output
             // was queried and the record says so (#1458).
@@ -1125,6 +1130,9 @@ fn runtime_closure_follows_the_selected_output_not_the_head_of_outputs() {
         run.c216().expect("C216"),
         serde_json::json!({
             "c-runtime-libraries": null,
+            // Nothing in this closure is reached only through a documentation
+            // output (#1455).
+            "doc-only-excluded": {"members": 0, "output-names": ["devdoc", "doc", "info", "man"], "paths": 0},
             "method": "runtime-closure",
             "outputs": ["bin"],
             "outputs-source": "output-specified",
@@ -1142,7 +1150,7 @@ fn runtime_closure_follows_the_selected_output_not_the_head_of_outputs() {
         run.scan.stderr
     );
     let calls = path_info_calls(&run);
-    assert_eq!(calls, vec!["path-info -r /nix/store/h-app-bin"], "{}", run.nix_log());
+    assert_eq!(calls, vec!["path-info -r --json /nix/store/h-app-bin"], "{}", run.nix_log());
     let marked = run.marked();
     for n in ["waybill-fixture-xml", "waybill-fixture-py"] {
         assert!(marked.contains(n), "{n}: only the library output references it; marked {marked:?}");
@@ -1169,7 +1177,7 @@ fn runtime_closure_is_the_union_of_outputs_to_install() {
     assert_eq!(c216["unmatched-runtime-paths"], 0, "`doc` is the app's own output: {c216}");
     assert_eq!(
         path_info_calls(&run),
-        vec!["path-info -r /nix/store/h-app-bin /nix/store/h-app-doc"],
+        vec!["path-info -r --json /nix/store/h-app-bin /nix/store/h-app-doc"],
         "{}",
         run.nix_log()
     );
@@ -1190,7 +1198,7 @@ fn an_unevaluable_selection_falls_back_to_the_default_output_and_says_so() {
     assert_eq!(c216["outputs"], serde_json::json!(["out"]), "{c216}");
     assert_eq!(c216["outputs-source"], "default-output", "{c216}");
     assert!(run.nix_log().lines().any(|l| l.starts_with("eval") && l.contains("outputSpecified")));
-    assert_eq!(path_info_calls(&run), vec!["path-info -r /nix/store/h-app-lib"], "{}", run.nix_log());
+    assert_eq!(path_info_calls(&run), vec!["path-info -r --json /nix/store/h-app-lib"], "{}", run.nix_log());
     let marked = run.marked();
     for n in ["waybill-fixture-xml", "waybill-fixture-py"] {
         assert!(!marked.contains(n), "{n}: the library output references it; marked {marked:?}");
@@ -1243,6 +1251,8 @@ fn us2_no_store_answer_uses_walk() {
         serde_json::json!({
             // No member of this fixture names a C compiler (#1467).
             "c-runtime-libraries": "not-assessed",
+            // The rule reads the runtime closure's references (#1455).
+            "doc-only-excluded": null,
             "method": "reachability-walk",
             // Asked about, though no store held it.
             "outputs": ["bin"],
@@ -1456,6 +1466,8 @@ fn us2_walk_that_reaches_only_the_root_is_not_used() {
         run.c216().expect("C216"),
         serde_json::json!({
             "c-runtime-libraries": "not-assessed",
+            // The rule reads the runtime closure's references (#1455).
+            "doc-only-excluded": null,
             "method": "closure-role",
             "outputs": ["bin"],
             "outputs-source": "default-output",
@@ -1606,6 +1618,8 @@ fn us2_no_evaluated_package_falls_back_to_closure_role() {
         run.c216().expect("C216"),
         serde_json::json!({
             "c-runtime-libraries": "not-assessed",
+            // The rule reads the runtime closure's references (#1455).
+            "doc-only-excluded": null,
             "method": "closure-role",
             "outputs": null,
             "outputs-source": null,
@@ -1629,6 +1643,194 @@ fn us2_no_evaluated_package_falls_back_to_closure_role() {
     assert!(!marked.contains("waybill-fixture-lib"), "artifact-input, left alone by the role rule");
     assert_eq!(run.c203("waybill-fixture-tool").as_deref(), Some("closure-role"));
     assert_eq!(run.c203("waybill-fixture-lib"), None, "the role rule decides nothing about it");
+}
+
+// ---- #1455: reached only through documentation outputs ---------------------
+
+/// Every path in `closure-doc-outputs.json`'s runtime closure.
+fn doc_outputs_listing() -> String {
+    listing(&[
+        "h-app-bin",
+        "h-app-doc",
+        "h-ssl",
+        "h-ssl-doc",
+        "h-shared",
+        "h-testfw-doc",
+        "h-shell",
+        "h-readline",
+        "h-z",
+        "h-z-man",
+        "h-z-info",
+        "h-groff",
+        "h-texinfo",
+        "h-xml-devdoc",
+        "h-gtkdoc",
+        "h-api-doc",
+        "h-apidep",
+    ])
+}
+
+/// The references, shaped on aarch64-darwin's hlint and moat closures
+/// (`measurements/doc-outputs/`): the installed `bin` references the app's
+/// own `-doc` output (haddock's `package.conf.d` link), whose pages link
+/// other packages' `-doc` outputs; one such output references a shell
+/// (`ghc-doc` → `bash-interactive`), which references readline. One output
+/// of each documentation name leads somewhere only it reaches. `shared` is
+/// referenced by a documentation output and by `ssl`'s `out`, and
+/// `api-doc` is a package whose name ends in `-doc` but whose output is
+/// `out`.
+const DOC_OUTPUT_REFS: &[(&str, &str)] = &[
+    ("h-app-bin", "h-app-doc"),
+    ("h-app-bin", "h-ssl"),
+    ("h-app-bin", "h-z"),
+    ("h-app-bin", "h-z-man"),
+    ("h-app-bin", "h-z-info"),
+    ("h-app-bin", "h-xml-devdoc"),
+    ("h-app-bin", "h-api-doc"),
+    ("h-app-doc", "h-ssl-doc"),
+    ("h-app-doc", "h-testfw-doc"),
+    ("h-ssl", "h-shared"),
+    ("h-ssl-doc", "h-shared"),
+    ("h-ssl-doc", "h-shell"),
+    ("h-shell", "h-readline"),
+    ("h-z-man", "h-groff"),
+    ("h-z-info", "h-texinfo"),
+    ("h-xml-devdoc", "h-gtkdoc"),
+    ("h-api-doc", "h-apidep"),
+];
+
+/// The members the runtime closure holds only through a documentation output.
+const DOC_ONLY: &[&str] = &[
+    // its only runtime path is its own `-doc` output
+    "waybill-fixture-testfw",
+    // only through `ssl`'s `-doc`, directly and then transitively
+    "waybill-fixture-shell",
+    "waybill-fixture-readline",
+    // only through `z`'s `man` and `info`, and `xml`'s `devdoc`
+    "waybill-fixture-groff",
+    "waybill-fixture-texinfo",
+    "waybill-fixture-gtkdoc",
+    // its only runtime path is its `devdoc` output
+    "waybill-fixture-xml",
+];
+
+/// #1455, the maintainer's rule: a member the runtime closure reaches only
+/// through `doc`, `devdoc`, `man` or `info` outputs does not ship. It is
+/// marked in all three formats with C203 `runtime-closure`, and C216 says
+/// which output names were treated as documentation and how many members
+/// and paths the rule excluded.
+#[test]
+fn a_member_reached_only_through_documentation_outputs_does_not_ship() {
+    let closure = fixture("closure-doc-outputs.json");
+    let run = scan_with(NixStub {
+        runtime: Some(doc_outputs_listing()),
+        runtime_refs: DOC_OUTPUT_REFS.to_vec(),
+        ..base(&closure)
+    });
+    assert_eq!(run.marked(), names(DOC_ONLY), "stderr:\n{}", run.scan.stderr);
+    for n in DOC_ONLY {
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+    for n in [
+        "waybill-fixture-ssl",
+        // a documentation output references it, and so does `ssl`'s `out`
+        "waybill-fixture-shared",
+        "waybill-fixture-z",
+        // named `-doc`, but its output is `out`: the output name decides
+        "waybill-fixture-api-doc",
+        "waybill-fixture-apidep",
+    ] {
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+    let c216 = run.c216().expect("C216");
+    assert_eq!(
+        c216["doc-only-excluded"],
+        serde_json::json!({
+            "members": DOC_ONLY.len(),
+            "output-names": ["devdoc", "doc", "info", "man"],
+            // six documentation outputs, and the five paths only they reach
+            "paths": 11,
+        }),
+        "{c216}"
+    );
+    assert_eq!(c216["unmatched-runtime-paths"], 0, "{c216}");
+    assert_eq!(
+        path_info_calls(&run),
+        vec!["path-info -r --json /nix/store/h-app-bin"],
+        "the references come from the same query as the listing\n{}",
+        run.nix_log()
+    );
+}
+
+/// CONTROL for the test above: the same closure and listing, with the
+/// installed output referencing every path itself. The five members only a
+/// documentation output led to now ship, which shows those marks came from
+/// the references. The two whose only runtime path *is* a documentation
+/// output stay marked: what ships of them is documentation.
+#[test]
+fn a_member_also_reached_through_a_non_documentation_output_ships() {
+    let closure = fixture("closure-doc-outputs.json");
+    let direct: Vec<(&str, &str)> = DOC_OUTPUT_REFS
+        .iter()
+        .map(|(_, to)| ("h-app-bin", *to))
+        .collect();
+    let run = scan_with(NixStub {
+        runtime: Some(doc_outputs_listing()),
+        runtime_refs: direct,
+        ..base(&closure)
+    });
+    assert_eq!(
+        run.marked(),
+        names(&["waybill-fixture-testfw", "waybill-fixture-xml"]),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    let c216 = run.c216().expect("C216");
+    assert_eq!(
+        c216["doc-only-excluded"],
+        serde_json::json!({
+            "members": 2,
+            "output-names": ["devdoc", "doc", "info", "man"],
+            "paths": 6,
+        }),
+        "{c216}"
+    );
+}
+
+/// #1455: under `--json` a store that does not hold the output can answer
+/// `{"<path>":null}` with exit 0. The corpus run's nix did, and the first
+/// version of this change read that as a one-path runtime closure, marking
+/// almost everything in moat and shellcheck. It is a miss: the walk decides,
+/// and C216 says the output was in no store.
+#[test]
+fn a_null_json_answer_is_not_a_runtime_closure() {
+    let closure = fixture("closure-runtime.json");
+    let run = scan_with(NixStub {
+        json_miss_is_null: true,
+        substituters: vec![SUBSTITUTER.to_string()],
+        ..base(&closure)
+    });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}\n{}", run.nix_log());
+    assert_eq!(c216["unavailable-reason"], "not-in-any-store", "{c216}");
+    assert!(
+        run.nix_log().contains(&format!("--json --store {SUBSTITUTER}")),
+        "the substituter was asked too, and answered null:\n{}",
+        run.nix_log()
+    );
+    assert!(!run.marked().contains("waybill-fixture-ssl"), "the walk reaches the app's buildInputs");
+}
+
+/// The rule reads the runtime closure's references, so it applies only when
+/// the runtime closure decided: the walk has neither, and C216 says so.
+#[test]
+fn the_documentation_rule_is_null_when_the_walk_decides() {
+    let closure = fixture("closure-doc-outputs.json");
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}");
+    // Present and null: indexing an absent key also yields null.
+    assert_eq!(c216.get("doc-only-excluded"), Some(&Value::Null), "{c216}");
 }
 
 // ---- US4: the runtime-only recipe (FR-011, FR-012) ------------------------

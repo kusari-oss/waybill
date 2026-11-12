@@ -128192,7 +128192,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-F7MZFW4BRCBGSL4V",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-scope-method\",\"value\":\"{\\\"c-runtime-libraries\\\":null,\\\"method\\\":\\\"runtime-closure\\\",\\\"outputs\\\":[\\\"bin\\\",\\\"man\\\",\\\"doc\\\"],\\\"outputs-source\\\":\\\"outputs-to-install\\\",\\\"schema\\\":1,\\\"static-c-linking-detected\\\":false,\\\"static-link-roots\\\":{\\\"declared-edges\\\":1,\\\"derivation-fields\\\":0},\\\"static-link-source\\\":\\\"declared-edges\\\",\\\"store\\\":\\\"https://cache.nixos.org/\\\",\\\"unavailable-reason\\\":null,\\\"unmatched-runtime-paths\\\":0,\\\"verified\\\":true,\\\"walk-outcome\\\":null}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-scope-method\",\"value\":\"{\\\"c-runtime-libraries\\\":null,\\\"doc-only-excluded\\\":{\\\"members\\\":0,\\\"output-names\\\":[\\\"devdoc\\\",\\\"doc\\\",\\\"info\\\",\\\"man\\\"],\\\"paths\\\":2},\\\"method\\\":\\\"runtime-closure\\\",\\\"outputs\\\":[\\\"bin\\\",\\\"man\\\",\\\"doc\\\"],\\\"outputs-source\\\":\\\"outputs-to-install\\\",\\\"schema\\\":1,\\\"static-c-linking-detected\\\":false,\\\"static-link-roots\\\":{\\\"declared-edges\\\":1,\\\"derivation-fields\\\":0},\\\"static-link-source\\\":\\\"declared-edges\\\",\\\"store\\\":\\\"https://cache.nixos.org/\\\",\\\"unavailable-reason\\\":null,\\\"unmatched-runtime-paths\\\":0,\\\"verified\\\":true,\\\"walk-outcome\\\":null}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },

@@ -58,6 +58,14 @@ pub struct NixStub<'a> {
     /// `path-info -r` prints the union of the listings of the outputs its
     /// argv names, and misses when it names none of them.
     pub runtime_by_output: Vec<(&'a str, String)>,
+    /// #1455 — the references `nix path-info -r --json` reports, as
+    /// `(referrer basename, referenced basename)`. A listed path no pair
+    /// names references nothing. The listing itself still says which paths
+    /// the closure holds; under `--json` the stub prints it in nix's
+    /// format-1 shape (an object keyed by full store path, each value
+    /// carrying `references` as full store paths), as nix 2.34 prints for a
+    /// bare `--json`.
+    pub runtime_refs: Vec<(&'a str, &'a str)>,
     /// #1458 — what the output-selection evaluation (`outputSpecified` /
     /// `meta.outputsToInstall`) prints. `None`: it fails, as an evaluation
     /// error would.
@@ -88,6 +96,10 @@ pub struct NixStub<'a> {
     /// (`fixtures/nix_ifd/cabal2nix-refusal.stderr`) unless their argv
     /// carries `allow-import-from-derivation true`.
     pub ifd_required: bool,
+    /// #1455 — under `--json`, a store that does not hold the output answers
+    /// `{"<path>":null}` with exit 0, as the corpus run's nix did, instead of
+    /// exiting 1 with `path '…' is not valid`.
+    pub json_miss_is_null: bool,
     /// Milestone 1283 — `derivation show` of [`Self::attr`] fails with this
     /// stderr instead of printing the closure.
     pub closure_stderr: Option<String>,
@@ -103,6 +115,7 @@ impl Default for NixStub<'_> {
             runtime: None,
             runtime_store: None,
             runtime_by_output: Vec::new(),
+            runtime_refs: Vec::new(),
             selection: None,
             substituters: Vec::new(),
             verify_ok: true,
@@ -111,6 +124,7 @@ impl Default for NixStub<'_> {
             ifd_reported: None,
             sandbox: None,
             ifd_required: false,
+            json_miss_is_null: false,
             closure_stderr: None,
         }
     }
@@ -164,6 +178,10 @@ impl NixStub<'_> {
         let subs = self.substituters.join(" ");
         // nix's own wording for an output a store does not hold (q2 e).
         let miss = r#"eval "last=\${$#}"; echo "don't know how to build these paths:" >&2; echo "error: path '$last' is not valid" >&2; exit 1"#;
+        let null_miss = format!(
+            r#"eval "last=\${{$#}}"; case "$*" in *--json*) printf '{{"%s":null}}\n' "$last"; exit 0 ;; esac; {miss}"#
+        );
+        let miss: &str = if self.json_miss_is_null { &null_miss } else { miss };
         let by_output: String = self
             .runtime_by_output
             .iter()
@@ -186,6 +204,21 @@ impl NixStub<'_> {
                 "case \"$*\" in *\"--store {url} \"*) cat <<'RTEOF'\n{listing}\nRTEOF\n ;; *) {miss} ;; esac"
             ),
         };
+        // #1455 — the listing, unioned and de-duplicated, as `--json` prints
+        // it. Rendered from the listing so every existing listing serves both
+        // forms; the references come from `refs.txt` (see `run`).
+        let path_info = format!(
+            "tmp='{listing}'\n( {path_info} ) > \"$tmp\" || exit $?\n\
+             case \"$(head -c 1 \"$tmp\")\" in '{{') cat \"$tmp\"; exit 0 ;; esac\n\
+             case \"$*\" in *--json*) awk -v refs='{refs}' '\
+             BEGIN {{ while ((getline l < refs) > 0) {{ split(l, a, \" \"); \
+             r[a[1]] = r[a[1]] (r[a[1]] == \"\" ? \"\" : \",\") \"\\\"/nix/store/\" a[2] \"\\\"\" }} }} \
+             NF {{ p = $1; if (seen[p]++) next; b = p; sub(/.*\\//, \"\", b); \
+             out = out (n++ ? \",\" : \"\") \"\\\"\" p \"\\\":{{\\\"references\\\":[\" r[b] \"]}}\" }} \
+             END {{ print \"{{\" out \"}}\" }}' \"$tmp\" ;; *) cat \"$tmp\" ;; esac",
+            refs = aux.join("refs.txt").display(),
+            listing = aux.join("path-info.out").display(),
+        );
         let selection = match self.selection {
             Some(json) => format!("cat <<'SELEOF'\n{json}\nSELEOF\n"),
             None => "echo 'error: stub refuses this evaluation' >&2; exit 1".to_string(),
@@ -280,6 +313,9 @@ esac
         let refusal = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("tests/fixtures/nix_ifd/cabal2nix-refusal.stderr");
         std::fs::copy(&refusal, dir.path().join("ifd-refusal.stderr")).expect("copy refusal");
+        let refs: String =
+            self.runtime_refs.iter().map(|(from, to)| format!("{from} {to}\n")).collect();
+        std::fs::write(dir.path().join("refs.txt"), refs).expect("write refs");
         if let Some(e) = &self.closure_stderr {
             std::fs::write(dir.path().join("closure.stderr"), e).expect("write closure stderr");
         }
