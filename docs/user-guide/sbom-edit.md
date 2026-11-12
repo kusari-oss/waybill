@@ -144,6 +144,7 @@ annotation (catalogue row C216) says how the marks were decided:
 jq -r '.metadata.properties[] | select(.name == "waybill:closure-scope-method") | .value' closure.cdx.json
 # {"c-runtime-libraries":null,
 #  "doc-only-excluded":{"members":0,"output-names":["devdoc","doc","info","man"],"paths":0},
+#  "lib-links-excluded":{"members":0,"not-assessed":null,"paths":0,"rule":"unloaded-lib-links"},
 #  "method":"runtime-closure","outputs":["bin"],
 #  "outputs-source":"output-specified","schema":1,"static-c-linking-detected":false,
 #  "static-link-roots":{"declared-edges":0,"derivation-fields":0},
@@ -159,7 +160,7 @@ its library rather than its executable.
 
 | `method` | Where the marks come from | How far to trust them |
 |---|---|---|
-| `runtime-closure` | The runtime closure of the outputs the attribute installs (`outputs`), `nix path-info -r`, from the local store or a substituter your nix already trusts (`store`). A substituter's answer is signature-checked first (`verified`). | Exact for what the output references. Go modules, Rust crates and Haskell libraries compiled into a runtime member are kept, with `waybill:scope-classification-source` `statically-linked`. A member the output references only through documentation outputs (`doc`, `devdoc`, `man`, `info`), such as the shell a compiler's `-doc` output references, is marked: `doc-only-excluded` counts those members and the paths set aside (#1455). |
+| `runtime-closure` | The runtime closure of the outputs the attribute installs (`outputs`), `nix path-info -r`, from the local store or a substituter your nix already trusts (`store`). A substituter's answer is signature-checked first (`verified`). | Exact for what the output references. Go modules, Rust crates and Haskell libraries compiled into a runtime member are kept, with `waybill:scope-classification-source` `statically-linked`. A member the output references only through documentation outputs (`doc`, `devdoc`, `man`, `info`), such as the shell a compiler's `-doc` output references, is marked: `doc-only-excluded` counts those members and the paths set aside (#1455). On darwin, so is a member referenced only through another member's `lib/links` symlink folder when no shipping Mach-O file loads it: `lib-links-excluded` counts those, or says why the rule was not assessed (`remote-store` for a substituter's answer). |
 | `reachability-walk` | No store held the output (`unavailable-reason` says why), so waybill walked from the evaluated package over runtime-linking dependency fields. | An approximation. On the five flakes above it kept 346 findings, 331 of them runtime, and missed 19 runtime ones (`measurements/us2-walk-score/`). It keeps the C library its members' compiler links, which no dependency field names; `c-runtime-libraries: libc-only` says the compiler's own runtime libraries (gcc's `lib` output) and what that libc references were not assessed, and on Linux those stay marked (#1467). |
 | `closure-role` | Neither source was usable; each member's build-graph role decides. | The weakest. Before milestone 1423 every closure document was marked this way, and as a findings filter it was 31.1% precise on the same five flakes (`measurements/README.md`). |
 

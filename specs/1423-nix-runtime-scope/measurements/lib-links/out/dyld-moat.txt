@@ -1,0 +1,7 @@
+1xc1accnhb2vpsjlz7i0pxdm64r2sbw9-th-abstraction-0.7.2.0
+3ka4xlp5l7zqg96c85jmikxlzpdmgki1-haddock-library-1.11.0
+f8bybrcsifh30k70svzih0adh2030wq5-ghc-9.10.3
+i0k31x2arb8alcx6lncdyx1bmgzy988l-cmark-gfm-0.2.6
+i91rdxnpdryxhbhpqq2vbknlaaikks8x-moat-0.1
+vbfjrppkj89nzlb861xsr5k5zfsq60xp-gmp-with-cxx-6.3.0
+wjb6smwmv8cynnr776j01kjjzdks1863-libiconv-113

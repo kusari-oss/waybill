@@ -9,6 +9,34 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **On darwin, a reference that exists only because of `lib/links` does not
+  ship its target (#1455, second rule).** nixpkgs' Haskell builder gives
+  every darwin library output a `lib/links` folder with one symlink per
+  dylib in its build environment, test dependencies included, so a
+  `--nix-closure` runtime closure held every test framework any library in
+  it was tested with. Under the runtime closure, a reference from an output
+  that only its `lib/links` symlinks make (the target's store hash appears
+  nowhere else in the output) now ships the target only when a Mach-O file
+  in a shipping output loads the dylib the symlink names. The loaded names
+  are pooled over all shipping outputs, because dyld searches the whole
+  load chain's rpaths. The files are read from the local store. A
+  substituter's answer, an unreadable output or an unparsable Mach-O file
+  leaves the rule unassessed. C216 gains `lib-links-excluded`, `{"members",
+  "not-assessed", "paths", "rule": "unloaded-lib-links"}`. Linux has no
+  `lib/links`, so the rule reads no file there and changes nothing. On moat
+  (aarch64-darwin) it sets aside 101 runtime paths, among them 22 of the 23
+  test-framework packages. tasty stays, because vector's `out` installs a
+  `benchmarks-O2` internal library whose dylib loads it. Every store path
+  dyld loads from moat's dylib is kept
+  (`specs/1423-nix-runtime-scope/measurements/lib-links/`). None of the
+  newly marked members is in moat's library closure (the `depends` of its
+  `package.conf.d` entry, followed transitively), nor in any shipping
+  library's closure. On the runtime-only view, grype 0.120.0 finds the same
+  61 findings before and after. osv-scanner 2.7.0's 3 findings (HSEC-2026-0007
+  on aeson and text-iso8601, HSEC-2026-0011 on scientific) go, because those
+  packages are haddock-library's test-suite dependencies and nothing that
+  ships links or loads them.
+
 - **A member reached only through documentation outputs does not ship
   (#1455).** Under the runtime closure, a `--nix-closure` member whose
   runtime paths are all documentation outputs (`doc`, `devdoc`, `man`,

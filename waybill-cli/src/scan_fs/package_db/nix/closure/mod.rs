@@ -47,6 +47,9 @@ use std::path::Path;
 use std::time::Duration;
 
 pub(crate) mod licenses;
+// #1455 (second rule) — references that exist only through darwin's
+// `lib/links` folder.
+pub(crate) mod lib_links;
 
 use super::eval::invoke::{
     argv_is_safe, is_safe_attribute_name, run_bounded, verify_ifd_policy_with_config,

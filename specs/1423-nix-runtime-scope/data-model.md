@@ -34,6 +34,8 @@ Go and Rust modules are not in this set. They inherit from their host through th
 
 `enum RuntimeEvidence { Closure { runtime: HashSet<MemberKey>, static_linked: HashSet<MemberKey>, doc_only: HashSet<MemberKey> }, Walk { reached: HashSet<MemberKey> }, RoleWithLinked { linked: HashSet<MemberKey> }, None }`
 
+`Closure.runtime` also leaves out a path reached only through `lib/links` entries no shipping Mach-O file loads (#1455 second rule, the maintainer's option 1; `closure/lib_links.rs`, C216 `lib-links-excluded`); `links_only` holds the members excluded only that way, counted like `doc_only`. The rule reads the local store's files and is not assessed for a substituter's answer.
+
 `Closure.runtime` is built from the runtime paths that are **not** documentation-only (#1455, decided by the maintainer: a member reached only through documentation outputs does not ship). A path is documentation-only when the references reach it from the queried outputs but not without passing through an output named `doc`, `devdoc`, `man` or `info`; the output name comes from the closure's `outputs.<name>.path`. `doc_only` holds the members whose every runtime path is documentation-only; it is not consulted for the decision (they are already outside `runtime`), only to count the members marked because of the rule for C216 `doc-only-excluded`. The static-link set is seeded from the shipping members only.
 
 `RoleWithLinked` is a walk set aside as `reached-only-root` (rule 4): the role rule decides, except for `linked`, the consumed Haskell builds plus their statically linked libraries.

@@ -1,0 +1,37 @@
+== vector benchmarks-O2 internal library (in vector's out)
+/nix/store/67n70m9lvgx7clw7gq4hd8lgzy1y23js-vector-0.13.2.0/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3-5f33/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib:
+	@rpath/libHSvector-0.13.2.0-78zJNwNPxDf1820EuN5Fj7-benchmarks-O2-ghc9.10.3.dylib (compatibility version 0.0.0, current version 0.0.0)
+	@rpath/libHSvector-0.13.2.0-LU3lMjMZ8ZpKR1S1emjh2d-ghc9.10.3.dylib (compatibility version 0.0.0, current version 0.0.0)
+	@rpath/libHSvector-stream-0.1.0.1-AgS3wWsDRmmF2LjRYNosyW-ghc9.10.3.dylib (compatibility version 0.0.0, current version 0.0.0)
+	@rpath/libHSprimitive-0.9.1.0-EZU83wSxHjWL9HUE4hNd5V-ghc9.10.3.dylib (compatibility version 0.0.0, current version 0.0.0)
+	@rpath/libHStasty-1.5.4-16nJBfm9EGm9TaiyHwtwv6-ghc9.10.3.dylib (compatibility version 0.0.0, current version 0.0.0)
+	@rpath/libHSrandom-1.2.1.3-I9mzdREzfv8LvTgXc9q99f-ghc9.10.3.dylib (compatibility version 0.0.0, current version 0.0.0)
+	@rpath/libHSghc-internal-9.1003.0-21d8-ghc9.10.3.dylib (compatibility version 0.0.0, current version 0.0.0)
+	@rpath/libHSghc-prim-0.12.0-deae-ghc9.10.3.dylib (compatibility version 0.0.0, current version 0.0.0)
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1345.100.2)
+== grep -l vector's hash in moat's out, outside lib/links
+/nix/store/i91rdxnpdryxhbhpqq2vbknlaaikks8x-moat-0.1/nix-support/propagated-build-inputs
+== Haskell executables in the closure: hspec-discover, doctest
+/nix/store/5drfhmwnp9fsj39ln8rjdqz04czxjjpp-hspec-discover-2.11.17/bin/hspec-discover:
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1345.100.2)
+	/nix/store/wjb6smwmv8cynnr776j01kjjzdks1863-libiconv-113/lib/libiconv.2.dylib (compatibility version 7.0.0, current version 7.0.0)
+	/nix/store/vbfjrppkj89nzlb861xsr5k5zfsq60xp-gmp-with-cxx-6.3.0/lib/libgmp.10.dylib (compatibility version 16.0.0, current version 16.0.0)
+	/nix/store/f0afx0r5bzvk3gdf8bdh4fssl0p75m1k-libffi-40/lib/libffi.7.dylib (compatibility version 9.0.0, current version 9.0.0)
+/nix/store/k1rip0llvb2hd2cy18sk9c25q9k6zjk7-doctest-0.24.3/bin/doctest:
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1345.100.2)
+	/nix/store/wjb6smwmv8cynnr776j01kjjzdks1863-libiconv-113/lib/libiconv.2.dylib (compatibility version 7.0.0, current version 7.0.0)
+	/nix/store/vbfjrppkj89nzlb861xsr5k5zfsq60xp-gmp-with-cxx-6.3.0/lib/libgmp.10.dylib (compatibility version 16.0.0, current version 16.0.0)
+	/nix/store/f0afx0r5bzvk3gdf8bdh4fssl0p75m1k-libffi-40/lib/libffi.7.dylib (compatibility version 9.0.0, current version 9.0.0)
+== LC_RPATH of moat's dylib
+         path /nix/store/i91rdxnpdryxhbhpqq2vbknlaaikks8x-moat-0.1/lib/links (offset 12)
+         path /nix/store/f8bybrcsifh30k70svzih0adh2030wq5-ghc-9.10.3/lib/ghc-9.10.3/lib/aarch64-osx-ghc-9.10.3 (offset 12)
+         path /nix/store/7r160i3gca967vnnsx9qkazinqhsqrxp-ncurses-6.6/lib (offset 12)
+         path /nix/store/f0afx0r5bzvk3gdf8bdh4fssl0p75m1k-libffi-40/lib (offset 12)
+         path /nix/store/vbfjrppkj89nzlb861xsr5k5zfsq60xp-gmp-with-cxx-6.3.0/lib (offset 12)
+         path /nix/store/wjb6smwmv8cynnr776j01kjjzdks1863-libiconv-113/lib (offset 12)
+         path /nix/store/i37q3dpd0wqclijpx1wspig9nf8waj4x-libcxx-21.1.6+apple-sdk-26.4/lib (offset 12)
+         path /nix/store/yxlbgn6b68633wi1y36gflf0qr5naz0v-compiler-rt-libc-21.1.8/lib (offset 12)
+         path /nix/store/p4lp3xq4imd1qzqh08x8vcq2zfhi7rca-libresolv-93/lib (offset 12)
+         path /nix/store/3r9in20wx4a44zsl9w4zrj0bvhbaylk8-libsbuf-14.1.0/lib (offset 12)
+         path /nix/store/rc9xga34lhavrc95lfbpmcvln61z2s7v-libutil-73/lib (offset 12)
+         path /nix/store/f8bybrcsifh30k70svzih0adh2030wq5-ghc-9.10.3/lib/ghc-9.10.3/lib/../lib/aarch64-osx-ghc-9.10.3 (offset 12)

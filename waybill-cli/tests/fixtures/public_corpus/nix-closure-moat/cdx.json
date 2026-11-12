@@ -102340,7 +102340,7 @@
       },
       {
         "name": "waybill:closure-scope-method",
-        "value": "{\"c-runtime-libraries\":\"libc-only\",\"doc-only-excluded\":null,\"method\":\"reachability-walk\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-roots\":{\"declared-edges\":91,\"derivation-fields\":33},\"static-link-source\":\"mixed\",\"store\":null,\"unavailable-reason\":\"not-in-any-store\",\"unmatched-runtime-paths\":null,\"verified\":null,\"walk-outcome\":\"used\"}"
+        "value": "{\"c-runtime-libraries\":\"libc-only\",\"doc-only-excluded\":null,\"lib-links-excluded\":null,\"method\":\"reachability-walk\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-roots\":{\"declared-edges\":91,\"derivation-fields\":33},\"static-link-source\":\"mixed\",\"store\":null,\"unavailable-reason\":\"not-in-any-store\",\"unmatched-runtime-paths\":null,\"verified\":null,\"walk-outcome\":\"used\"}"
       }
     ],
     "supplier": {

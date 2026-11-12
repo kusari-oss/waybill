@@ -5254,6 +5254,7 @@ pub async fn execute(
         // the exemptions and static linking had their say.
         if let Some(record) = closure_scope_method.as_mut() {
             record.set_doc_only_members(role_scope_summary.doc_only_excluded);
+            record.set_lib_links_members(role_scope_summary.lib_links_excluded);
         }
         if role_scope_summary.roles_seen > 0 {
             tracing::info!(
@@ -5266,6 +5267,7 @@ pub async fn execute(
                 statically_linked = role_scope_summary.statically_linked,
                 decided_not_in_artifact = role_scope_summary.decided_not_in_artifact,
                 doc_only_excluded = role_scope_summary.doc_only_excluded,
+                lib_links_excluded = role_scope_summary.lib_links_excluded,
                 "nix-closure: artifact-presence classification"
             );
         }
