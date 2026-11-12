@@ -24838,6 +24838,12 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:c-ares:c-ares:1.34.5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:c-ares_project:c-ares:1.34.5:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -28603,6 +28609,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:haxx:curl:8.17.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:curl:curl:8.17.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -33435,6 +33447,18 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:file_project:file:5.45:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:christos_zoulas:file:5.45:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gentoo:file:5.45:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -34316,6 +34340,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -46189,6 +46219,12 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:libarchive:libarchive:3.8.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:freebsd:libarchive:3.8.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -48173,6 +48209,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:libuv:libuv:1.51.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:libuv_project:libuv:1.51.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -52494,6 +52536,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:ncurses:6.5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -79631,6 +79679,12 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -83433,6 +83487,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:tukaani:xz:5.8.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:xz_project:xz:5.8.1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],

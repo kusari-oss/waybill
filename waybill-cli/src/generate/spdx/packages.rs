@@ -456,6 +456,23 @@ fn cpe_external_ref(c: &ResolvedComponent) -> Option<SpdxExternalRef> {
     })
 }
 
+/// The curated CPEs after the primary, as further `SECURITY / cpe23Type`
+/// references (#1430). grype reads every one; see
+/// [`crate::generate::cpe::secondary_cpes`] for which CPEs qualify.
+fn secondary_cpe_external_refs(c: &ResolvedComponent) -> Vec<SpdxExternalRef> {
+    let comment = crate::scan_fs::package_db::nix::closure::identifiers::cpe_source(c)
+        .map(|s| s.comment().to_string());
+    crate::generate::cpe::secondary_cpes(c)
+        .into_iter()
+        .map(|cpe| SpdxExternalRef {
+            category: SpdxExternalRefCategory::Security,
+            ref_type: "cpe23Type".to_string(),
+            locator: cpe.to_string(),
+            comment: comment.clone(),
+        })
+        .collect()
+}
+
 #[allow(clippy::too_many_arguments)]
 fn component_to_package(
     c: &ResolvedComponent,
@@ -548,6 +565,7 @@ fn component_to_package(
     if let Some(cpe_ref) = cpe_external_ref(c) {
         external_refs.push(cpe_ref);
     }
+    external_refs.extend(secondary_cpe_external_refs(c));
 
     // A9/A10/A11: external references — homepage, vcs, distribution,
     // etc. CDX uses a free-form `type` string; SPDX 2.3's
@@ -764,6 +782,27 @@ mod tests {
             cpe_external_ref(&c).unwrap().comment.as_deref(),
             Some("CPE declared by nixpkgs meta.identifiers.cpe")
         );
+    }
+
+    /// #1430 — a curated row's every vendor is a `cpe23Type` reference, with
+    /// the primary's provenance comment; heuristic candidates are not.
+    #[test]
+    fn i1430_curated_secondary_cpes_are_further_cpe_refs() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut c = mk_component("pkg:generic/unzip@9.9.9", "unzip", "9.9.9");
+        c.cpes = crate::generate::cpe::synthesize_cpes(&c);
+        c.extra_annotations.insert(ids::ANN_CURATED_CPE.to_string(), serde_json::json!(true));
+        let refs = secondary_cpe_external_refs(&c);
+        let locators: Vec<&str> = refs.iter().map(|r| r.locator.as_str()).collect();
+        assert_eq!(locators, vec!["cpe:2.3:a:unzip_project:unzip:9.9.9:*:*:*:*:*:*:*"]);
+        assert!(refs.iter().all(|r| r.ref_type == "cpe23Type"
+            && matches!(r.category, SpdxExternalRefCategory::Security)
+            && r.comment.as_deref() == Some("CPE from waybill's curated CPE table")));
+
+        let mut deb = mk_component("pkg:deb/debian/jq@1.6-2.1?distro=bookworm", "jq", "1.6-2.1");
+        deb.cpes = crate::generate::cpe::synthesize_cpes(&deb);
+        assert_eq!(deb.cpes.len(), 2, "CONTROL: {:?}", deb.cpes);
+        assert!(secondary_cpe_external_refs(&deb).is_empty());
     }
 
     fn mk_component(purl: &str, name: &str, version: &str) -> ResolvedComponent {
