@@ -43,3 +43,19 @@ waybill-fixture-vendor:waybill-fixture-product	0   (negative control)
     libtiff_project              Libtiff Project Libtiff 4.0.6
 === glib (593 entries) ===
     gnome                        GNOME Glib 2.16.4
+
+## libidn2: the row's vendor was wrong (found comparing with nixpkgs' declared CPEs)
+# nixos-unstable d4f25a3e declares cpe:2.3:a:gnu:libidn2; waybill's row said libidn2_project:libidn2.
+# scripts/probe-cpe-dictionary.sh gnu:libidn2 libidn2_project:libidn2   (dictionary entries)
+gnu:libidn2	23
+libidn2_project:libidn2	23
+# scripts/probe-cpe-dictionary.sh --cves gnu:libidn2 libidn2_project:libidn2   (advisories)
+gnu:libidn2	4
+libidn2_project:libidn2	0
+# NVD CVE API, virtualMatchString=cpe:2.3:a:gnu:libidn2 (total 4):
+CVE-2017-14061  Integer overflow in the _isBidi function in bidi.c in Libidn2 before 2.0.4 ...
+CVE-2017-14062  Integer overflow in the decode_digit function in puny_decode.c in Libidn2 before 2.0.4 ...
+CVE-2019-18224  idn2_to_ascii_4i in lib/lookup.c in GNU libidn2 before 2.1.1 has a heap-based buffer overflow ...
+CVE-2019-12290  GNU libidn2 before 2.2.0 fails to perform the roundtrip checks specified in RFC3490 ...
+# virtualMatchString=cpe:2.3:a:libidn2_project:libidn2: total 0.
+# cpe-titles.py libidn2: libidn2_project "Libidn2 Project Libidn2 0.3"; gnu "GNU libidn 0.3" (the misleading title).

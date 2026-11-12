@@ -170,10 +170,13 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("libass", &[("libass_project", "libass")]),
     ("libedit", &[("libedit_project", "libedit")]),
     ("libffi", &[("libffi_project", "libffi")]),
-    // `gnu` also files a `libidn2` product, but its title reads
-    // "GNU libidn 0.3" — that is libidn v1, a different library.
-    // Deliberately not emitted.
-    ("libidn2", &[("libidn2_project", "libidn2")]),
+    // NVD files every libidn2 CVE under `gnu:libidn2` (4, all "Libidn2" /
+    // "GNU libidn2" in their descriptions) and none under
+    // `libidn2_project:libidn2` (0), which this row used until 2026-11-12.
+    // That choice read the dictionary title "GNU libidn 0.3" as libidn v1;
+    // the CVEs say otherwise, and nixpkgs declares `gnu:libidn2` too.
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("libidn2", &[("gnu", "libidn2")]),
     ("libmicrohttpd", &[("gnu", "libmicrohttpd")]),
     // LibreSSL — `openbsd:libressl` (LibreSSL is an OpenBSD project).
     // A second `libressl:libressl` candidate was emitted here until
@@ -378,6 +381,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("gnu", "gnutls", 366),
     ("gnu", "gzip", 26),
     ("gnu", "less", 5),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("gnu", "libidn2", 23),
     // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
     ("gnu", "libmicrohttpd", 61),
     ("gnu", "libtool", 14),
@@ -400,7 +405,6 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("libedit_project", "libedit", 2),
     ("libexpat", "expat", 25),
     ("libffi_project", "libffi", 9),
-    ("libidn2_project", "libidn2", 23),
     // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
     ("libsndfile_project", "libsndfile", 39),
     ("libssh", "libssh", 53),
