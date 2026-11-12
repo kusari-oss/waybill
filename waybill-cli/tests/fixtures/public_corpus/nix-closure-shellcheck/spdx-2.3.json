@@ -35,7 +35,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":357,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1346,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":296,\\\"with_candidates\\\":72}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":358,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1346,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":296,\\\"with_candidates\\\":72}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -118022,6 +118022,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-role\",\"value\":\"build-tooling\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"closure-member-not-an-edge-endpoint\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -135499,6 +135505,42 @@
       "versionInfo": "NOASSERTION"
     },
     {
+      "SPDXID": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.95,\"technique\":\"url-pattern\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:haskell-version-unresolved-reason\",\"value\":\"compiler-supplied\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:hackage/time",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "time",
+      "versionInfo": "NOASSERTION"
+    },
+    {
       "SPDXID": "SPDXRef-Package-TI3DFPLS4EPKDAJM",
       "annotations": [
         {
@@ -138178,6 +138220,11 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-VFV2M3B5MWQ7JMDF",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
@@ -139023,12 +139070,12 @@
       "spdxElementId": "SPDXRef-Package-24U5Y5RYCNXCFIS4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-XWBGY3PSFFHZHU3Q",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-24U5Y5RYCNXCFIS4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-XWBGY3PSFFHZHU3Q",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-24U5Y5RYCNXCFIS4"
     },
@@ -141258,12 +141305,12 @@
       "spdxElementId": "SPDXRef-Package-36OHPM4XUKBX3LEV"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-WTASZGEB6LNGEHC5",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-36OHPM4XUKBX3LEV"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-WTASZGEB6LNGEHC5",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-36OHPM4XUKBX3LEV"
     },
@@ -141983,7 +142030,7 @@
       "spdxElementId": "SPDXRef-Package-3C3VEB6QEMNM7DSO"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-3C3VEB6QEMNM7DSO"
     },
@@ -146858,12 +146905,12 @@
       "spdxElementId": "SPDXRef-Package-5SBEI2GYW5KJ34BJ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-XWBGY3PSFFHZHU3Q",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-5SBEI2GYW5KJ34BJ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-XWBGY3PSFFHZHU3Q",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-5SBEI2GYW5KJ34BJ"
     },
@@ -152258,7 +152305,7 @@
       "spdxElementId": "SPDXRef-Package-AQEZ4PIKABQ47NR7"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-AQEZ4PIKABQ47NR7"
     },
@@ -155123,17 +155170,17 @@
       "spdxElementId": "SPDXRef-Package-C5RPJGCOQT5JA3OF"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-C5RPJGCOQT5JA3OF"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-VRR7ZPYX3SUI4TTV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-C5RPJGCOQT5JA3OF"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-WANTPW35ERY5THXK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-C5RPJGCOQT5JA3OF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-C5RPJGCOQT5JA3OF"
     },
@@ -156263,7 +156310,7 @@
       "spdxElementId": "SPDXRef-Package-CLDUOBJMD57Z3VM2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-CLDUOBJMD57Z3VM2"
     },
@@ -156833,7 +156880,7 @@
       "spdxElementId": "SPDXRef-Package-CSYLIZSGZ7PYQ5PE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-CSYLIZSGZ7PYQ5PE"
     },
@@ -159628,17 +159675,17 @@
       "spdxElementId": "SPDXRef-Package-DZKVZV7Q2FAA75AK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-DZKVZV7Q2FAA75AK"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-VRR7ZPYX3SUI4TTV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-DZKVZV7Q2FAA75AK"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-WLWGUV37AYIDZDJW",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-DZKVZV7Q2FAA75AK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-DZKVZV7Q2FAA75AK"
     },
@@ -163028,17 +163075,17 @@
       "spdxElementId": "SPDXRef-Package-FPSJJL4YTQSNTAPB"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FPSJJL4YTQSNTAPB"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-WANTPW35ERY5THXK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-FPSJJL4YTQSNTAPB"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-XREBNKV7E2SDT45L",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-FPSJJL4YTQSNTAPB"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-FPSJJL4YTQSNTAPB"
     },
@@ -166843,12 +166890,12 @@
       "spdxElementId": "SPDXRef-Package-HSKLST7WM66EZPTE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-WANTPW35ERY5THXK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-HSKLST7WM66EZPTE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-WANTPW35ERY5THXK",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-HSKLST7WM66EZPTE"
     },
@@ -168233,12 +168280,12 @@
       "spdxElementId": "SPDXRef-Package-IKNQE5P5GHJML7NY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-WLWGUV37AYIDZDJW",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-IKNQE5P5GHJML7NY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-WLWGUV37AYIDZDJW",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-IKNQE5P5GHJML7NY"
     },
@@ -170433,7 +170480,7 @@
       "spdxElementId": "SPDXRef-Package-JEVCEFNFMHII5NZD"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-JEVCEFNFMHII5NZD"
     },
@@ -172378,12 +172425,12 @@
       "spdxElementId": "SPDXRef-Package-KDPEJUHV3D22LRO7"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-XWBGY3PSFFHZHU3Q",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-KDPEJUHV3D22LRO7"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-XWBGY3PSFFHZHU3Q",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-KDPEJUHV3D22LRO7"
     },
@@ -173078,12 +173125,12 @@
       "spdxElementId": "SPDXRef-Package-KQHIVGHA3NJC4LQT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-WLWGUV37AYIDZDJW",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-KQHIVGHA3NJC4LQT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-WLWGUV37AYIDZDJW",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-KQHIVGHA3NJC4LQT"
     },
@@ -175688,17 +175735,17 @@
       "spdxElementId": "SPDXRef-Package-M3QKHUZJJG4N4Y7M"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-M3QKHUZJJG4N4Y7M"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-VRR7ZPYX3SUI4TTV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-M3QKHUZJJG4N4Y7M"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-XJP2BKLGFML2Z4UD",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-M3QKHUZJJG4N4Y7M"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-M3QKHUZJJG4N4Y7M"
     },
@@ -176748,12 +176795,12 @@
       "spdxElementId": "SPDXRef-Package-MMQJG2NSCJMLDGDE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-XUHBN7LAWT5G6NJW",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-MMQJG2NSCJMLDGDE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-XUHBN7LAWT5G6NJW",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-MMQJG2NSCJMLDGDE"
     },
@@ -179223,11 +179270,6 @@
       "spdxElementId": "SPDXRef-Package-NIIZCAOKOWSGGVU2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-NIIZCAOKOWSGGVU2"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-VRR7ZPYX3SUI4TTV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-NIIZCAOKOWSGGVU2"
@@ -179254,6 +179296,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-XUHBN7LAWT5G6NJW",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-NIIZCAOKOWSGGVU2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-NIIZCAOKOWSGGVU2"
     },
@@ -180033,12 +180080,12 @@
       "spdxElementId": "SPDXRef-Package-O34JVSJ4WWWXVCVH"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-WANTPW35ERY5THXK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-O34JVSJ4WWWXVCVH"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-WANTPW35ERY5THXK",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-O34JVSJ4WWWXVCVH"
     },
@@ -193113,7 +193160,7 @@
       "spdxElementId": "SPDXRef-Package-U5SHSCXYLBJORFVC"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-U5SHSCXYLBJORFVC"
     },
@@ -195543,7 +195590,7 @@
       "spdxElementId": "SPDXRef-Package-VC63VMWUHQBCGRMX"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-VC63VMWUHQBCGRMX"
     },
@@ -196948,17 +196995,17 @@
       "spdxElementId": "SPDXRef-Package-VRR7ZPYX3SUI4TTV"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-VRR7ZPYX3SUI4TTV"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-VOYR53SJHK6XO2B7",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-VRR7ZPYX3SUI4TTV"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-WANTPW35ERY5THXK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-VRR7ZPYX3SUI4TTV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-VRR7ZPYX3SUI4TTV"
     },
@@ -200963,7 +201010,7 @@
       "spdxElementId": "SPDXRef-Package-XVEOMIHCSDQF5AV5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-XVEOMIHCSDQF5AV5"
     },
@@ -202918,7 +202965,7 @@
       "spdxElementId": "SPDXRef-Package-YW2NJSG3ZSCB5TKE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-VDJ24GHEMW5M2BNE",
+      "relatedSpdxElement": "SPDXRef-Package-Y2XG3P7JIRI2DCD4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-YW2NJSG3ZSCB5TKE"
     },

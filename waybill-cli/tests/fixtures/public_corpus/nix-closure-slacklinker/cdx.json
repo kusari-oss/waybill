@@ -5617,10 +5617,6 @@
           "value": "[\"package.yaml\"]"
         },
         {
-          "name": "waybill:scope-classification-source",
-          "value": "exempt-compiler-supplied"
-        },
-        {
           "name": "waybill:source-type",
           "value": "hackage-cabal-design"
         },
@@ -5631,18 +5627,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "hpack-manifest"
-        },
-        {
-          "name": "waybill:closure-admission",
-          "value": "build-graph"
-        },
-        {
-          "name": "waybill:closure-member-role",
-          "value": "fragment"
-        },
-        {
-          "name": "waybill:closure-role",
-          "value": "build-tooling"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -119418,6 +119402,61 @@
       "type": "library"
     },
     {
+      "bom-ref": "pkg:generic/time-c2p74ajc9zfg6dvmv48f4v1xkr82j7ij",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "time",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "runtime-closure"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-admission",
+          "value": "build-graph"
+        },
+        {
+          "name": "waybill:closure-contents",
+          "value": "absent"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "no-version-recorded"
+        },
+        {
+          "name": "waybill:closure-member-role",
+          "value": "fragment"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "closure-member-not-an-edge-endpoint"
+        }
+      ],
+      "purl": "pkg:generic/time-c2p74ajc9zfg6dvmv48f4v1xkr82j7ij",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
       "bom-ref": "pkg:generic/time-builder-1vkbzh19qql99n9jv0c0ffqgyzjqlwhy",
       "evidence": {
         "identity": [
@@ -184149,6 +184188,10 @@
       "ref": "pkg:generic/time-builder-1vkbzh19qql99n9jv0c0ffqgyzjqlwhy"
     },
     {
+      "dependsOn": [],
+      "ref": "pkg:generic/time-c2p74ajc9zfg6dvmv48f4v1xkr82j7ij"
+    },
+    {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/curl@8.18.0",
@@ -193972,7 +194015,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":406,\"excluded_files\":7,\"excluded_members\":1518,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":393,\"with_candidates\":611}"
+        "value": "{\"addressable_without_cpe\":407,\"excluded_files\":7,\"excluded_members\":1518,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":393,\"with_candidates\":611}"
       },
       {
         "name": "waybill:closure-graph-admission",
@@ -193984,7 +194027,7 @@
       },
       {
         "name": "waybill:nix-closure-contents",
-        "value": "{\"absent\":1036,\"failed\":0,\"members\":2350,\"modules\":{\"cargo\":540,\"golang\":0},\"no-outputs\":903,\"partial\":116,\"read\":295,\"root\":\"read\",\"schema\":\"waybill-nix-closure-contents/v1\",\"yielded\":3}"
+        "value": "{\"absent\":1037,\"failed\":0,\"members\":2351,\"modules\":{\"cargo\":540,\"golang\":0},\"no-outputs\":903,\"partial\":116,\"read\":295,\"root\":\"read\",\"schema\":\"waybill-nix-closure-contents/v1\",\"yielded\":3}"
       },
       {
         "name": "waybill:closure-ecosystem-identity-outcome",
@@ -194028,7 +194071,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 606 component(s) not reachable from root; transitive-edges-unresolvable: cargo, hackage"
+        "value": "orphaned-components-detected: 607 component(s) not reachable from root; transitive-edges-unresolvable: cargo, hackage"
       },
       {
         "name": "waybill:workspaces-detected",
