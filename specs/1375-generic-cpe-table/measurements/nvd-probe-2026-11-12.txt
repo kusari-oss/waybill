@@ -59,3 +59,14 @@ CVE-2019-18224  idn2_to_ascii_4i in lib/lookup.c in GNU libidn2 before 2.1.1 has
 CVE-2019-12290  GNU libidn2 before 2.2.0 fails to perform the roundtrip checks specified in RFC3490 ...
 # virtualMatchString=cpe:2.3:a:libidn2_project:libidn2: total 0.
 # cpe-titles.py libidn2: libidn2_project "Libidn2 Project Libidn2 0.3"; gnu "GNU libidn 0.3" (the misleading title).
+
+## expat: the row's pair had no CVEs (found by a CVE census of the curated rows nixpkgs does not declare)
+# scripts/probe-cpe-dictionary.sh --cves libexpat_project:libexpat libexpat:expat
+libexpat_project:libexpat	68
+libexpat:expat	0
+# scripts/probe-cpe-dictionary.sh libexpat_project:libexpat   (dictionary entries)
+libexpat_project:libexpat	52
+# cpe-titles.py libexpat expat:
+#   === libexpat (52 entries) ===  libexpat_project  "libexpat Project libexpat 1.95.0"
+#   === expat (25 entries) ===     libexpat          "libexpat Expat 2.1.0"
+# lzo was checked the same way and is not an error: lzo_project:lzo and oberhumer:lzo both have 0 CVEs.

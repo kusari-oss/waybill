@@ -122,7 +122,13 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("curl", &[("haxx", "curl"), ("curl", "curl")]),
     ("diffutils", &[("gnu", "diffutils")]),
     ("ed", &[("gnu", "ed")]),
-    ("expat", &[("libexpat", "expat")]),
+    // NVD files every expat CVE under `libexpat_project:libexpat` (68) and
+    // none under `libexpat:expat` (0), the pair this row used until
+    // 2026-11-12 — the anchore/syft#4788 trap cited above, in a subtler form:
+    // `libexpat:expat` is in the dictionary ("libexpat Expat 2.1.0"), so the
+    // presence probe passed it. specs/1375-generic-cpe-table/measurements/
+    // nvd-probe-2026-11-12.txt.
+    ("expat", &[("libexpat_project", "libexpat")]),
     // Three legitimate vendors: the project, Christos Zoulas (the
     // maintainer), and Gentoo's packaging.
     ("file", &[("file_project", "file"), ("christos_zoulas", "file"), ("gentoo", "file")]),
@@ -403,7 +409,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
     ("libass_project", "libass", 4),
     ("libedit_project", "libedit", 2),
-    ("libexpat", "expat", 25),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("libexpat_project", "libexpat", 52),
     ("libffi_project", "libffi", 9),
     // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
     ("libsndfile_project", "libsndfile", 39),
@@ -1167,7 +1174,9 @@ mod tests {
     fn m1375_the_vendor_is_nvds_not_the_component_name() {
         for (slug, want_vendor) in [
             ("bash", "gnu"),
-            ("expat", "libexpat"),
+            // NVD files expat's CVEs under `libexpat_project:libexpat`;
+            // `libexpat:expat` exists in the dictionary with 0 (2026-11-12).
+            ("expat", "libexpat_project"),
             ("libxml2", "xmlsoft"),
             ("brotli", "google"),
             ("gawk", "fossies"),

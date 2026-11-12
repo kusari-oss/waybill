@@ -16,3 +16,5 @@
     libtiff_project              Libtiff Project Libtiff 4.0.6
 === glib (593 entries) ===
     gnome                        GNOME Glib 2.16.4
+=== libexpat (52 entries) ===
+    libexpat_project             libexpat Project libexpat 1.95.0
