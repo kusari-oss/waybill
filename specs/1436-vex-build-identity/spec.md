@@ -34,6 +34,7 @@ This feature makes that the closure tier's VEX shape. It ends m1035's "two state
 ### Session 2026-11-12
 
 - Q: What status should the per-build statement carry? → A: `fixed` in OpenVEX, which is `resolved_with_pedigree` in CycloneDX (FR-002, FR-005). Research must confirm grype honours `fixed` on a qualified product. `not_affected` with a justification is the fallback.
+- Q: Which closure components carry the build-identity qualifier? → A: Only components with a resolved CVE: at least one `pedigree.patches[].resolves` entry (FR-001). On moat that is 3 components (`libssh2`, `net-tools`, `unzip`). A component with patches but no CVE association, 63 more on moat, keeps its PURL unchanged, as does every other member.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -87,7 +88,7 @@ A user sees a qualifier on a patched component's PURL and wants to know what it 
 
 - **A component patched for one CVE but not another.** Only the resolved CVEs get a statement. Every other advisory still matches, because version matching ignores the qualifier (Acceptance US3-2).
 - **The same name and version, built twice** (two outputs, or a bootstrap build). Each build has its own identity, so a statement for one never covers the other (Acceptance US1-2). This is the leakage the success criteria forbid.
-- **A registry PURL that carries backports** (`pkg:hackage`: 3 of 66 patched components on moat; `pkg:pypi` on httpie). The same rule applies, provided research shows the qualifier changes no finding for the scanners that match those types (osv-scanner, grype). If it does, the plan must say so, and those components keep a shape that makes no false claim.
+- **A registry PURL whose patches resolve a CVE.** None on `nix-closure-moat`: its 3 patched `pkg:hackage` components resolve no CVE, so FR-001 leaves them unqualified. Others may exist, such as `pkg:pypi` on httpie, which the plan must count. Where one does, the same rule applies, provided research shows the qualifier changes no finding for the scanners that match those types (osv-scanner, grype). If it does, the plan must say so, and those components keep a shape that makes no false claim.
 - **A filename-derived patch-to-CVE association** (m1035's lower evidence grade). The statement still carries the grade in its impact statement, as today. The grade is never dropped by the reshaping.
 - **A component dropped from this document** (root override, `--tier`, `--split`). C193 counts the claims this document cannot carry, as today, and the sidecar still names them.
 - **`--split`.** Each projected document carries the qualified PURLs of the components it holds. A statement and its product stay in the same document.
@@ -98,7 +99,7 @@ A user sees a qualifier on a patched component's PURL and wants to know what it 
 
 ### Functional Requirements
 
-- **FR-001**: Every closure component with backport evidence (at least one `pedigree.patches[].resolves` entry) MUST carry a PURL qualifier that identifies the exact build. It MUST be deterministic, meaning the same build always gives the same value. It MUST leave the PURL's type, namespace, name and version unchanged. Components without backport evidence MUST keep their PURL byte-identical.
+- **FR-001**: Every closure component with backport evidence (at least one `pedigree.patches[].resolves` entry) MUST carry a PURL qualifier that identifies the exact build. It MUST be deterministic, meaning the same build always gives the same value. It MUST leave the PURL's type, namespace, name and version unchanged. Components without backport evidence MUST keep their PURL byte-identical. That includes components that carry patches with no `resolves` entry (63 on `nix-closure-moat`, against 3 that resolve a CVE). The qualifier exists only to scope a statement to this build, so it appears only where a statement needs it (clarified 2026-11-12).
 - **FR-002**: For each (patched component, resolved CVE) pair, the OpenVEX sidecar MUST carry exactly one statement whose product is the component's qualified PURL, with no subcomponent. Its status MUST be `fixed`: the build's backported patch remediated the CVE (clarified 2026-11-12, option A).
   - On an unqualified product, grype honoured `fixed` on 6 of 6 targets (`b_fixed`). The research phase MUST measure it on a **qualified** product, which was measured only with `not_affected` (`q_lone`, 6/6).
   - If grype does not honour `fixed` there, the fallback is `not_affected` with the closest justification. The measurement and the reason MUST be recorded, and the spec amended.
