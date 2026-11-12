@@ -21,6 +21,7 @@
 pub(crate) mod boot_libraries;
 pub(crate) mod boot_table;
 pub(crate) mod closure;
+pub(crate) mod closure_compilers;
 pub(crate) mod closure_identity;
 pub(crate) mod cache;
 pub(crate) mod fetch;
@@ -499,6 +500,14 @@ pub(crate) struct ResolveOptions {
 }
 
 // The FR-019 budget is not carried here: it belongs to the retrieval
+    /// Milestone 966 (#966) — the GHCs the derivation closure names, when
+    /// `--nix-closure` ran.
+    ///
+    /// With a project compiler the boot-library table has, the
+    /// compiler-supplied set is that release's libraries (FR-006) and each
+    /// one takes the release's version (FR-005). `None` — no closure — is the
+    /// union rule, byte-identical to before (FR-011).
+    pub(crate) compilers: Option<closure_compilers::ClosureCompilers>,
 // boundary, and `HttpSource` already owns it. Duplicating it would create two
 // places to change and one of them would drift.
 
@@ -2227,6 +2236,7 @@ mod enrich_tests {
         assert!(enrich(root.path(), &mut comps, opts(), &src).is_none());
         assert_eq!(src.request_count(), 0);
         assert!(comps[0].version.is_empty());
+            compilers: None,
         assert!(comps[0].extra_annotations.is_empty());
         std::env::remove_var(cache::CACHE_ENV);
     }

@@ -55,24 +55,24 @@
   - Add `TableSource` and `Platform` enums, and `ships(release, system)`, `version_of(release, name, system)` and `observed()` (the header date).
   - A malformed line is a test failure, never a runtime panic: the loader skips it and counts it, and T003 asserts the count is 0.
   - Register the module in `HP/mod.rs`.
-- [ ] T005 [P] Write unit tests for `GhcRelease` parsing in `HP/closure_compilers.rs`:
+- [X] T005 [P] Write unit tests for `GhcRelease` parsing in `HP/closure_compilers.rs`:
   - `<hash>-ghc-9.10.3` gives `{9.10.3, bootstrap:false}`;
   - `<hash>-ghc-binary-9.8.4` gives `{9.8.4, bootstrap:true}`;
   - `ghc-9.10.3-doc`, `ghc-settings-edit` and `ghc-9.10` give `None`.
-- [ ] T006 Implement `GhcRelease` and the shared parser in `HP/closure_compilers.rs`. Switch `closure_identity::is_ghc_store_path` (`HP/closure_identity.rs:135`) to call it. The existing tests at `closure_identity.rs:258-297` must still pass unchanged.
-- [ ] T007 [P] Write unit tests for `ClosureCompilers::from_closure` in `HP/closure_compilers.rs`, using an in-memory `RawDerivation` map:
+- [X] T006 Implement `GhcRelease` and the shared parser in `HP/closure_compilers.rs`. Switch `closure_identity::is_ghc_store_path` (`HP/closure_identity.rs:135`) to call it. The existing tests at `closure_identity.rs:258-297` must still pass unchanged.
+- [X] T007 [P] Write unit tests for `ClosureCompilers::from_closure` in `HP/closure_compilers.rs`, using an in-memory `RawDerivation` map:
   - a member's compiler comes from its `nativeBuildInputs`;
   - a member naming two GHCs gets none;
   - `project` is the evaluated derivation's compiler;
   - if the evaluated derivation names none, `project` falls back to the single non-bootstrap `ghc` in the closure;
   - with two non-bootstrap GHCs and no evaluated compiler, `project` is `None`;
   - `seen` collects every distinct compiler.
-- [ ] T008 Implement `ClosureCompilers::from_closure(&ClassifiedClosure, fallback_system: &str)` in `HP/closure_compilers.rs`, per data-model.md. Use `closure.graph.evaluated` for the project derivation.
+- [X] T008 Implement `ClosureCompilers::from_closure(&ClassifiedClosure, fallback_system: &str)` in `HP/closure_compilers.rs`, per data-model.md. Use `closure.graph.evaluated` for the project derivation.
   - `system` is the evaluated derivation's `env.system`. If that is absent, use `fallback_system`.
   - Neither `ClassifiedClosure` (`closure/mod.rs:266`) nor `RawDerivation` has a system field. The caller (T010) passes the `NixSystem` detected at `scan_cmd.rs:4556` out of the closure block for the fallback.
   - Add a T007 case for each of the two sources.
-- [ ] T009 Add `compilers: Option<ClosureCompilers>` to `ResolveOptions` (`HP/mod.rs:481`). Default it to `None`, and update every construction site (`grep -rn 'ResolveOptions {'` across `waybill-cli/src` and `waybill-cli/tests`). With `None`, behaviour is unchanged.
-- [ ] T010 In `waybill-cli/src/cli/scan_cmd.rs`, derive `ClosureCompilers` from `nix_closure` when it is `Some(Ok(classified))`, after line ~4536 and before `nhp::enrich` at ~4604.
+- [X] T009 Add `compilers: Option<ClosureCompilers>` to `ResolveOptions` (`HP/mod.rs:481`). Default it to `None`, and update every construction site (`grep -rn 'ResolveOptions {'` across `waybill-cli/src` and `waybill-cli/tests`). With `None`, behaviour is unchanged.
+- [X] T010 In `waybill-cli/src/cli/scan_cmd.rs`, derive `ClosureCompilers` from `nix_closure` when it is `Some(Ok(classified))`, after line ~4536 and before `nhp::enrich` at ~4604.
   - Pass the `NixSystem` detected at `:4556` out of the closure block, as T008's fallback.
   - Pass the result in `ResolveOptions.compilers`, and keep it for T017, T022 and T025.
 

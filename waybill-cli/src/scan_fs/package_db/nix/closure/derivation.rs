@@ -105,7 +105,7 @@ impl RawDerivation {
     /// defined default rather than an observed preference — which is why
     /// [`Self::carrier_disagreements`] exists to report it if it ever happens
     /// instead of letting the choice pass silently.
-    fn attr_str(&self, field: &str) -> Option<&str> {
+    pub(crate) fn attr_str(&self, field: &str) -> Option<&str> {
         if let Some(v) = self.env.get(field) {
             return Some(v.as_str());
         }

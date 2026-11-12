@@ -132,20 +132,15 @@ pub(crate) fn built_by_ghc(drv: &RawDerivation) -> bool {
 }
 
 /// Whether one store path names a GHC or a bootstrap GHC.
+///
+/// A GHC name immediately followed by a version. Matching the bare string
+/// `ghc` would accept `ghc-settings-edit` and every other package whose name
+/// merely starts that way. Milestone 966: the name is recognised by
+/// `closure_compilers::ghc_name`, the parser the boot-library release is read
+/// with, so the signal and the release cannot disagree about what a GHC path
+/// is called.
 fn is_ghc_store_path(path: &str) -> bool {
-    let base = crate::scan_fs::package_db::nix::closure::derivation::store_basename(path);
-    // Strip the hash-dash prefix nix gives every store path, then look for a
-    // GHC name immediately followed by a version. Matching the bare string
-    // `ghc` would accept `ghc-settings-edit` and every other package whose
-    // name merely starts that way.
-    for marker in ["-ghc-", "-ghc-binary-"] {
-        if let Some(rest) = base.split_once(marker).map(|(_, r)| r) {
-            if rest.starts_with(|c: char| c.is_ascii_digit()) {
-                return true;
-            }
-        }
-    }
-    false
+    super::closure_compilers::ghc_name(path).is_some()
 }
 
 /// Decide what identity a closure member may claim.

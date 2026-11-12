@@ -4525,6 +4525,9 @@ pub async fn execute(
     let mut closure_policy: Option<scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy> =
         None;
     let mut closure_ifd: Option<scan_fs::package_db::nix::eval::result::IfdPolicyVerified> = None;
+    // Milestone 966 — the system the closure was evaluated for, the fallback
+    // for a closure whose evaluated derivation records none (research R4).
+    let mut closure_system: Option<String> = None;
     // Milestone 1035 (#1034, #1040) — the derivation closure.
     //
     // Runs after the manifest-derived set exists, because it supplements that
@@ -4556,6 +4559,7 @@ pub async fn execute(
                 let system = scan_fs::package_db::nix::eval::invoke::detect_host_system(
                     cfg.budget,
                 );
+                closure_system = system.as_ref().ok().map(|s| s.as_str().to_string());
                 // The pre-flight gates everything below it; its record is
                 // kept whether it passes or not (C217).
                 let preflighted = system.and_then(|sys| {
@@ -4601,6 +4605,28 @@ pub async fn execute(
             }
         }
     };
+    // Milestone 966 (#966) — which GHC built what, read from the closure
+    // before the Haskell enrichment so it classifies with the exact
+    // compiler (research R1). `None` without a closure, which keeps every
+    // such scan byte-identical (FR-011).
+    let closure_compilers: Option<
+        scan_fs::package_db::nix::haskell_packages::closure_compilers::ClosureCompilers,
+    > = match &nix_closure {
+        Some(Ok(c)) => {
+            let cc = scan_fs::package_db::nix::haskell_packages::closure_compilers::ClosureCompilers::from_closure(
+                c,
+                closure_system.as_deref().unwrap_or_default(),
+            );
+            tracing::info!(
+                project = cc.project.as_ref().map(|g| g.label.as_str()).unwrap_or("none"),
+                compilers = cc.seen.len(),
+                system = %cc.system,
+                "nix-closure: GHC compilers identified"
+            );
+            Some(cc)
+        }
+        _ => None,
+    };
     let nixpkgs_haskell_summary = {
         use scan_fs::package_db::nix::haskell_packages as nhp;
         let source = nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs);
@@ -4615,6 +4641,7 @@ pub async fn execute(
                 // opted in, and `None` means no `nix` process is started at
                 // all -- which is what keeps the default path byte-identical.
                 nix_eval: nix_eval_cfg.clone(),
+                compilers: closure_compilers.clone(),
             },
             &source,
         )
