@@ -1013,38 +1013,61 @@ fn emit_declared_edges(
         let Some((_, entry)) = exact_attribute(set, name, version) else { continue };
         // Milestone 966 (FR-009) — the GHC that built this member, when the
         // boot-library table has it.
-        let built_by = compilers.and_then(|cc| {
-            cc.member_in_table(name, version).map(|g| (g, cc.system.as_str(), cc.project_in_table()))
-        });
+        let built_by: Vec<&super::closure_compilers::GhcRelease> =
+            compilers.map(|cc| cc.members_in_table(name, version)).unwrap_or_default();
+        let system = compilers.map(|cc| cc.system.as_str()).unwrap_or_default();
+        let project = compilers.and_then(|cc| cc.project_in_table());
         for target in declared_relations(entry) {
             // Research R7 rule 2: a boot library this member's compiler ships,
             // with no Haskell build of the name in the document, is the
             // version that compiler shipped. Two compilers shipping different
             // versions give two components, each reached only from members
             // its compiler built; the same version is the same PURL, so one.
-            let versioned = built_by
-                .filter(|_| !built_from_hackage.contains(&target))
-                .and_then(|(g, system, project)| {
-                    let v = table.version_of(&g.version, &target, system)?;
+            //
+            // A member built by more than one compiler (build variants) links
+            // each one's copy, so it takes an edge to each version. Only when
+            // EVERY one of its compilers ships the name: otherwise the name is
+            // not a boot library for some variant, and today's path below
+            // decides the whole member, never half of it.
+            let versioned: Vec<(String, ResolvedComponent)> = if built_from_hackage.contains(&target) {
+                Vec::new()
+            } else {
+                let mut out = Vec::new();
+                for g in &built_by {
+                    let Some(v) = table.version_of(&g.version, &target, system) else {
+                        out.clear();
+                        break;
+                    };
                     // One version is one component, and it names the project's
                     // compiler when that compiler ships the same version
                     // (contract C218), whichever member reached it first.
                     let label = project
                         .filter(|p| table.version_of(&p.version, &target, system) == Some(v))
                         .unwrap_or(g);
-                    let c = compiler_supplied_component(&target, Some((label, v)))?;
-                    Some((c.purl.as_str().to_string(), c))
-                });
-            let to_purl = match (versioned, purl_of.get(&target)) {
-                (Some((p, c)), _) => {
+                    let Some(c) = compiler_supplied_component(&target, Some((label, v))) else {
+                        out.clear();
+                        break;
+                    };
+                    out.push((c.purl.as_str().to_string(), c));
+                }
+                out
+            };
+            let to_purls: Vec<String> = if !versioned.is_empty() {
+                let mut purls = Vec::new();
+                for (p, c) in versioned {
                     if held_purls.insert(p.clone()) {
                         components.push(c);
                         summary.boot_targets += 1;
                     }
-                    p
+                    if !purls.contains(&p) {
+                        purls.push(p);
+                    }
                 }
-                (None, Some(p)) => p.clone(),
-                (None, None) => {
+                purls
+            } else {
+                vec![match purl_of.get(&target) {
+                Some(p) => p.clone(),
+                None => {
                     // FR-012c — the closure does not contain this declared
                     // dependency. Measured: 13 of 278, every distinct one a
                     // GHC boot library, because the compiler ships them
@@ -1064,27 +1087,30 @@ fn emit_declared_edges(
                     summary.boot_targets += 1;
                     p
                 }
+            }]
             };
-            if from_purl == &to_purl {
-                continue;
+            for to_purl in to_purls {
+                if from_purl == &to_purl {
+                    continue;
+                }
+                if !present.insert((from_purl.clone(), to_purl.clone())) {
+                    summary.edges_duplicate += 1;
+                    continue;
+                }
+                relationships.push(waybill_common::resolution::Relationship {
+                    from: from_purl.clone(),
+                    to: to_purl,
+                    relationship_type: waybill_common::resolution::RelationshipType::DependsOn,
+                    // Principle X — the edge says where it came from, so a
+                    // consumer can tell a relation read from the pinned nixpkgs
+                    // apart from one the project declared itself.
+                    provenance: waybill_common::resolution::EnrichmentProvenance {
+                        source: "nixpkgs".to_string(),
+                        data_type: "nix-closure-declared".to_string(),
+                    },
+                });
+                summary.edges += 1;
             }
-            if !present.insert((from_purl.clone(), to_purl.clone())) {
-                summary.edges_duplicate += 1;
-                continue;
-            }
-            relationships.push(waybill_common::resolution::Relationship {
-                from: from_purl.clone(),
-                to: to_purl,
-                relationship_type: waybill_common::resolution::RelationshipType::DependsOn,
-                // Principle X — the edge says where it came from, so a
-                // consumer can tell a relation read from the pinned nixpkgs
-                // apart from one the project declared itself.
-                provenance: waybill_common::resolution::EnrichmentProvenance {
-                    source: "nixpkgs".to_string(),
-                    data_type: "nix-closure-declared".to_string(),
-                },
-            });
-            summary.edges += 1;
         }
     }
 

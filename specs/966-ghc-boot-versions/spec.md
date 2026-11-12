@@ -121,6 +121,7 @@ The user's closure uses a GHC released after the table was last refreshed.
 - **FR-009**: When more than one GHC built members of the closure, a boot library MUST take the version of the GHC that built the member depending on it.
   - Where those compilers ship the library at different versions, the document MUST carry one versioned component per version, and each declared edge MUST point at the version its member's compiler shipped.
   - Where they ship the same version, it is one component.
+  - A member nixpkgs builds more than once under one identity, by different compilers (build variants), links each one's copy, so it takes an edge to each compiler's version. This applies only when every one of those compilers is in the table and ships the library; otherwise the member keeps the fallback path whole. *Added 2026-11-12 after the first corpus regen, where `nix-closure-shellcheck` left 14 libraries with a versionless component beside the versioned ones.*
   - A design-tier dependency (declared by the scanned project) takes the version of the compiler that built the scanned output.
 - **FR-010**: Versioning a component MUST NOT leave a versionless component of the same library in the document, and MUST NOT orphan any relationship that pointed at the versionless PURL (#980). Versioned components of the same library at different versions (FR-009) are not duplicates.
 - **FR-011**: Scans without `--nix-closure`, and scans whose closure identifies no compiler, MUST be unchanged. Their goldens MUST stay byte-identical.

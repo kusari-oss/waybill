@@ -44,7 +44,7 @@ Derived from the `ClassifiedClosure` once, before `enrich`.
 |---|---|---|
 | `system` | `String` | the evaluated derivation's `env.system` (stdenv sets it). If that is absent, the `NixSystem` detected at `scan_cmd.rs:4556`, passed out of the closure block. Neither `ClassifiedClosure` nor `RawDerivation` carries a system field. |
 | `project` | `Option<GhcRelease>` | research R2's rule |
-| `by_member` | `(pname, version) → GhcRelease` | only members whose `nativeBuildInputs` name exactly one GHC |
+| `by_member` | `(pname, version) → BTreeSet<GhcRelease>` | every GHC that built one of the member's build variants. A single variant naming two GHCs poisons the member (absent). `members_in_table` returns the set only when the table has every one. |
 | `seen` | `BTreeSet<GhcRelease>` | every distinct compiler found; C219's keys |
 
 ## Classification outcomes (per declared Haskell dependency, design tier)

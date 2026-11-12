@@ -90,9 +90,18 @@ pub(crate) struct ClosureCompilers {
     pub(crate) system: String,
     /// The compiler for the project's own declarations (FR-009, last bullet).
     pub(crate) project: Option<GhcRelease>,
-    /// `(pname, version)` -> the one GHC that built it. A member whose build
-    /// variants name different GHCs, or one variant naming two, is absent.
-    pub(crate) by_member: BTreeMap<(String, String), GhcRelease>,
+    /// `(pname, version)` -> every GHC that built one of its build variants.
+    ///
+    /// Plural because nixpkgs can build a package twice under one identity,
+    /// once with the bootstrap `ghc-binary` and once with the project's GHC.
+    /// Such a member links each compiler's boot libraries, so it depends on
+    /// both versions. Keeping only members whose variants agree left their
+    /// edges on a versionless component beside the versioned ones on
+    /// `nix-closure-shellcheck` (13 members, `alex`, `happy`, `hashable`,
+    /// `splitmix`, ... -> versionless `base`), which FR-010 forbids. A single
+    /// variant naming two GHCs says nothing about which one compiled it, so
+    /// its member is absent.
+    pub(crate) by_member: BTreeMap<(String, String), BTreeSet<GhcRelease>>,
     /// Every distinct compiler assigned above: C219's keys.
     pub(crate) seen: BTreeSet<GhcRelease>,
 }
@@ -116,7 +125,7 @@ impl ClosureCompilers {
         evaluated: Option<&RawDerivation>,
         fallback_system: &str,
     ) -> Self {
-        let mut by_member: BTreeMap<(String, String), Option<GhcRelease>> = BTreeMap::new();
+        let mut by_member: BTreeMap<(String, String), Option<BTreeSet<GhcRelease>>> = BTreeMap::new();
         let mut non_bootstrap: BTreeSet<GhcRelease> = BTreeSet::new();
         for drv in drvs {
             let all: BTreeSet<GhcRelease> =
@@ -125,25 +134,26 @@ impl ClosureCompilers {
             let Some(pname) = drv.pname() else { continue };
             let key = (pname.to_string(), drv.version().unwrap_or_default().to_string());
             let mine = compiler_of(drv);
-            // A member's build variants must agree, and a variant that names
-            // no GHC at all says nothing about the others (a wrapper or a
-            // data output beside the library build).
-            match (by_member.get(&key), mine) {
-                (_, None) if all.len() > 1 => {
+            // Each build variant contributes the GHC that compiled it. A
+            // variant naming no GHC says nothing (a wrapper or a data output
+            // beside the library build); one naming two poisons the member,
+            // because which of them compiled it is unknown.
+            match mine {
+                None if all.len() > 1 => {
                     by_member.insert(key, None);
                 }
-                (_, None) => {}
-                (None, Some(g)) => {
-                    by_member.insert(key, Some(g));
+                None => {}
+                Some(g) => {
+                    if let Some(held) = by_member.entry(key).or_insert_with(|| Some(BTreeSet::new())) {
+                        held.insert(g);
+                    }
                 }
-                (Some(Some(held)), Some(g)) if *held != g => {
-                    by_member.insert(key, None);
-                }
-                (Some(_), Some(_)) => {}
             }
         }
-        let by_member: BTreeMap<(String, String), GhcRelease> =
-            by_member.into_iter().filter_map(|(k, v)| v.map(|g| (k, g))).collect();
+        let by_member: BTreeMap<(String, String), BTreeSet<GhcRelease>> = by_member
+            .into_iter()
+            .filter_map(|(k, v)| v.filter(|s| !s.is_empty()).map(|s| (k, s)))
+            .collect();
 
         // Research R2: the evaluated derivation's compiler; failing that, the
         // closure's single non-bootstrap GHC, and otherwise none.
@@ -159,7 +169,7 @@ impl ClosureCompilers {
             .filter(|s| !s.is_empty())
             .unwrap_or(fallback_system)
             .to_string();
-        let mut seen: BTreeSet<GhcRelease> = by_member.values().cloned().collect();
+        let mut seen: BTreeSet<GhcRelease> = by_member.values().flatten().cloned().collect();
         seen.extend(project.iter().cloned());
         Self { system, project, by_member, seen }
     }
@@ -171,11 +181,17 @@ impl ClosureCompilers {
             .filter(|g| super::boot_table::table().has_release(&g.version))
     }
 
-    /// The compiler that built `(pname, version)`, when the table has it.
-    pub(crate) fn member_in_table(&self, pname: &str, version: &str) -> Option<&GhcRelease> {
-        self.by_member
-            .get(&(pname.to_string(), version.to_string()))
-            .filter(|g| super::boot_table::table().has_release(&g.version))
+    /// The compilers that built `(pname, version)`, when the table has
+    /// **every** one of them. Empty otherwise, so a member some of whose
+    /// variants were built by an unknown compiler keeps today's path whole,
+    /// rather than gaining versioned edges for some variants and a versionless
+    /// one for the rest.
+    pub(crate) fn members_in_table(&self, pname: &str, version: &str) -> Vec<&GhcRelease> {
+        let table = super::boot_table::table();
+        match self.by_member.get(&(pname.to_string(), version.to_string())) {
+            Some(set) if set.iter().all(|g| table.has_release(&g.version)) => set.iter().collect(),
+            _ => Vec::new(),
+        }
     }
 
     /// The C219 value: which compilers, whether the table had each, which
@@ -253,8 +269,11 @@ mod tests {
         let lib = drv("waybill-fixture-lib", "1.0", &["/nix/store/x-pkg-config-0.29", G9103], None);
         let tool = drv("waybill-fixture-tool", "2.0", &[G984B], None);
         let cc = ClosureCompilers::from_derivations([&lib, &tool].into_iter(), None, "x86_64-linux");
-        assert_eq!(cc.by_member[&("waybill-fixture-lib".into(), "1.0".into())].label, "ghc-9.10.3");
-        assert_eq!(cc.by_member[&("waybill-fixture-tool".into(), "2.0".into())].label, "ghc-binary-9.8.4");
+        let labels = |k: (&str, &str)| -> Vec<String> {
+            cc.by_member[&(k.0.to_string(), k.1.to_string())].iter().map(|g| g.label.clone()).collect()
+        };
+        assert_eq!(labels(("waybill-fixture-lib", "1.0")), ["ghc-9.10.3"]);
+        assert_eq!(labels(("waybill-fixture-tool", "2.0")), ["ghc-binary-9.8.4"]);
     }
 
     #[test]
@@ -265,11 +284,37 @@ mod tests {
     }
 
     #[test]
-    fn build_variants_that_disagree_get_none() {
+    fn build_variants_built_by_different_ghcs_keep_both() {
+        // nixpkgs builds some packages twice under one identity, once with the
+        // bootstrap compiler; the member links each one's boot libraries.
         let a = drv("waybill-fixture-lib", "1.0", &[G9103], None);
-        let b = drv("waybill-fixture-lib", "1.0", &["/nix/store/ccc-ghc-9.6.6"], None);
+        let b = drv("waybill-fixture-lib", "1.0", &[G984B], None);
         let cc = ClosureCompilers::from_derivations([&a, &b].into_iter(), None, "x86_64-linux");
-        assert!(cc.by_member.is_empty());
+        let got: Vec<&str> = cc.by_member[&("waybill-fixture-lib".into(), "1.0".into())]
+            .iter()
+            .map(|g| g.label.as_str())
+            .collect();
+        assert_eq!(got.len(), 2, "{got:?}");
+        assert!(got.contains(&"ghc-9.10.3") && got.contains(&"ghc-binary-9.8.4"), "{got:?}");
+        assert_eq!(cc.members_in_table("waybill-fixture-lib", "1.0").len(), 2);
+    }
+
+    #[test]
+    fn a_variant_naming_two_ghcs_poisons_its_member_in_either_order() {
+        let one = drv("waybill-fixture-lib", "1.0", &[G9103], None);
+        let both = drv("waybill-fixture-lib", "1.0", &[G9103, G984B], None);
+        for order in [[&one, &both], [&both, &one]] {
+            let cc = ClosureCompilers::from_derivations(order.into_iter(), None, "x86_64-linux");
+            assert!(cc.by_member.is_empty(), "{:?}", cc.by_member);
+        }
+    }
+
+    #[test]
+    fn a_member_with_any_compiler_absent_from_the_table_keeps_todays_path() {
+        let a = drv("waybill-fixture-lib", "1.0", &[G9103], None);
+        let b = drv("waybill-fixture-lib", "1.0", &["/nix/store/ddd-ghc-99.0.1"], None);
+        let cc = ClosureCompilers::from_derivations([&a, &b].into_iter(), None, "x86_64-linux");
+        assert!(cc.members_in_table("waybill-fixture-lib", "1.0").is_empty());
     }
 
     #[test]

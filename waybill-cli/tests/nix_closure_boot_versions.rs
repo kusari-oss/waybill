@@ -319,6 +319,37 @@ fn win32_is_never_versioned_on_linux() {
     assert_eq!(prop(win32[0], C170).as_deref(), Some("compiler-supplied"));
 }
 
+/// The main closure plus a second build of `waybill-fixture-dep` under the
+/// same identity, compiled by the bootstrap GHC. nixpkgs does this for the
+/// tools its own bootstrap needs: on `nix-closure-shellcheck` 13 members
+/// (`alex`, `happy`, `hashable`, ...) reached `base` through a versionless
+/// component this way, beside the two versioned ones.
+fn variant_closure() -> String {
+    let mut v: Value = serde_json::from_str(&read("closure.json")).unwrap();
+    let drvs = v["derivations"].as_object_mut().unwrap();
+    let mut twin = drvs["d-dep.drv"].clone();
+    twin["env"]["nativeBuildInputs"] = Value::from("/nix/store/bbb-ghc-binary-9.8.4");
+    twin["outputs"]["out"]["path"] = Value::from("h-dep-bootstrap");
+    drvs.insert("d-dep-bootstrap.drv".to_string(), twin);
+    serde_json::to_string(&v).unwrap()
+}
+
+#[test]
+fn a_member_built_by_both_compilers_depends_on_both_versions() {
+    let s = scan_with("project", &variant_closure(), CLOSURE_FLAGS);
+    let (p10, p8) = (
+        hackage("base", &version("9.10.3", "base")),
+        hackage("base", &version("9.8.4", "base")),
+    );
+    let dep = depends_on(&s.cdx, DEP);
+    assert!(dep.contains(&p10) && dep.contains(&p8), "{DEP} -> {dep:?}");
+    assert!(!dep.contains("pkg:hackage/base"), "{DEP} -> {dep:?} (FR-010)");
+    assert!(
+        !purls(&s.cdx).iter().any(|p| p == "pkg:hackage/base"),
+        "a versionless base beside the versioned ones (FR-010)"
+    );
+}
+
 #[test]
 fn no_versionless_twin_remains() {
     for s in [main_scan(), scan_with("closure_only", &read("closure.json"), CLOSURE_FLAGS)] {
