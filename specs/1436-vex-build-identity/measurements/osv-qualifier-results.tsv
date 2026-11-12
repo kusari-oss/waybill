@@ -1,0 +1,8 @@
+# nix-closure-slacklinker
+variant	purls_qualified	ecosystems	pairs	lost_vs_base	gained_vs_base
+base	0	crates.io,Hackage	55	0	0
+qualified	2942	crates.io,Hackage	55	0	0
+# nix-closure-openai
+variant	purls_qualified	ecosystems	pairs	lost_vs_base	gained_vs_base
+base	0	Hackage	12	0	0
+qualified	1375	Hackage	12	0	0

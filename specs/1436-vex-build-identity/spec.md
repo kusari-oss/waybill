@@ -33,7 +33,8 @@ This feature makes that the closure tier's VEX shape. It ends m1035's "two state
 
 ### Session 2026-11-12
 
-- Q: What status should the per-build statement carry? → A: `fixed` in OpenVEX, which is `resolved_with_pedigree` in CycloneDX (FR-002, FR-005). Research must confirm grype honours `fixed` on a qualified product. `not_affected` with a justification is the fallback.
+- Q: What status should the per-build statement carry? → A: `fixed` in OpenVEX (FR-002). Research confirmed grype honours it on a qualified product: 17 of 17 suppressed, 0 leaked. The fallback is not needed.
+- Q (raised during planning): Which CycloneDX state should a backport entry carry? → A: plain `resolved`. It was first planned as `resolved_with_pedigree`, but the vendored CycloneDX 1.6 schema defines that state as evidence "in the affected components pedigree containing verifiable commit history and/or diff(s)". waybill's `pedigree.patches` entries carry only `type` and `resolves`, with no diff or commit, so the stronger state would claim evidence the document doesn't hold (FR-005).
 - Q: Which closure components carry the build-identity qualifier? → A: Only components with a resolved CVE: at least one `pedigree.patches[].resolves` entry (FR-001). On moat that is 3 components (`libssh2`, `net-tools`, `unzip`). A component with patches but no CVE association, 63 more on moat, keeps its PURL unchanged, as does every other member.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -106,7 +107,7 @@ A user sees a qualifier on a patched component's PURL and wants to know what it 
 - **FR-003**: No statement MAY name a patched component's PURL with any other status for the same CVE, whether qualified or unqualified. The version-level claim MUST NOT be emitted as a VEX statement. It stays in `pedigree.patches[].resolves`. This ends m1035's two-statement rule for closure backports.
 - **FR-004**: Each statement MUST keep the evidence grade and the patch provenance (m1035) in its impact statement.
 - **FR-005**: CycloneDX `vulnerabilities[]` MUST carry one entry per (patched component, CVE). `affects[].ref` MUST be the component's bom-ref.
-  - The state MUST be `resolved_with_pedigree`: the native state for a resolution that the component's pedigree shows, and it points at `pedigree.patches`. Catalog row F1, which today says `resolved_with_pedigree` is never emitted, MUST be updated.
+  - The state MUST be `resolved`, which is `fixed`'s existing mapping. The schema's definition of `resolved_with_pedigree` requires diffs or commit history in the pedigree, and waybill's patch entries carry neither (clarified during planning). Catalog row F1's statement that `resolved_with_pedigree` is never emitted stays true.
   - No entry may mark a patched component `exploitable` for a CVE its patches resolve (#1421).
 - **FR-006**: The OpenVEX sidecar and CycloneDX `vulnerabilities[]` MUST make the same claims about the same pairs (m1068: one source, two carriers). SPDX 2.3 and SPDX 3 MUST continue to reference the same sidecar (catalog row F1), and the qualified PURLs MUST be identical across all three formats.
 - **FR-007**: Adding the qualifier MUST NOT change the set of findings grype or osv-scanner report on the document when no VEX is supplied. This is measured per target.
