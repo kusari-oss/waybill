@@ -92,7 +92,7 @@ For the per-annotation wire shapes these invariants read, see
 | I7 | A component not reachable from the subject by any dependency edge carries a marker explaining why | subject resolvable and at least one non-subject component | `unreachable-and-unexplained` | Active |
 | I8 | A component with no version carries an annotation explaining why it has none | at least one component has an absent or empty version | `versionless-and-unexplained` | Active |
 | I9 | A component the compiler supplies carries no non-runtime scope | at least one component is marked compiler-supplied | `compiler-supplied-non-runtime` | Active |
-| I10 | A closure member's non-runtime marker agrees with the evidence that decided it, or the member says it was exempted | at least one component carries a closure role | `closure-tooling-without-non-runtime-marker`, `closure-statically-linked-but-marked` | Active |
+| I10 | A closure member's non-runtime marker agrees with the evidence that decided it, or the member says it was exempted | at least one component carries a closure role | `closure-tooling-without-non-runtime-marker`, `closure-statically-linked-but-marked`, `closure-runtime-member-but-marked` | Active |
 
 ### I10
 
@@ -160,9 +160,12 @@ member was decided, and the row reads it:
 
 - **Population**: every component carrying C182, in any role.
 - `exempt-compiler-supplied`, `exempt-evaluated-package`: pass.
-- `runtime-closure`, `reachability-walk`: pass, marked or not. The native
-  mark says which way the evidence went, and nothing else in the document
-  contradicts it.
+- `runtime-closure`: marked or not, according to whether the closure holds
+  the member. A member the closure holds must be **unmarked**; a mark is
+  `closure-runtime-member-but-marked` (#1465, below).
+- `reachability-walk`: pass, marked or not. The walk approximates the runtime
+  closure and is not evidence that a member ships, so a reader's scope on a
+  member it reached contradicts nothing.
 - `statically-linked`: must be **unmarked**; a mark is
   `closure-statically-linked-but-marked` (the converse check).
 - `closure-role`, `closure-role+lifecycle-propagation`, or no C203 at all:
@@ -171,6 +174,31 @@ member was decided, and the row reads it:
   reading.
 
 The row reports n/a only where no component carries a closure role at all.
+
+**#1465: runtime evidence wins.** A member the runtime closure holds, or that
+is statically linked into what ships, carries no not-in-artifact mark in any
+format, whatever lifecycle scope a reader gave it. Before #1465 the closure
+left such a member unmarked and a reader's scope marked it anyway:
+slack-web's test suite declares QuickCheck and th-compat, the Haskell reader
+scoped both `development`, and aeson propagates both into the runtime
+closure, so CycloneDX called them `excluded`. This row passed them, because
+`runtime-closure` passed marked or not.
+
+*How the document tells "the closure holds it" apart.* Not from CycloneDX:
+`scope: excluded` is one field written by two marks, the closure's verdict
+and a reader's lifecycle scope, so QuickCheck (inside the closure) and
+`hspec` (outside it) were the same component there — C203
+`runtime-closure`, C42 `development`, `scope: excluded`. SPDX 2.3 keeps them
+apart. `BUILD_TOOL_OF` is emitted from the closure's verdict alone, and the
+lifecycle scope rides the dependency-edge types instead: `hspec` has a
+`BUILD_TOOL_OF` edge, QuickCheck and th-compat had none. So a `runtime-closure`
+member with no `BUILD_TOOL_OF` in SPDX 2.3 is one the closure holds, and a
+mark on it (C42 or the native `scope`, the same test as every other arm) is
+`closure-runtime-member-but-marked`. Measured on the committed slack-web
+golden before the fix: exactly those two, and no other member of the five
+Nix targets. A member SPDX 2.3 does not hold is not judged, and the arm
+relies on SPDX 2.3's full relationship vocabulary — the default, and what the
+corpus emits; `--spdx2-relationship-compat basic` drops `BUILD_TOOL_OF`.
 
 ### I1
 

@@ -511,6 +511,25 @@ pub(crate) fn withdraw_compiler_supplied_scope(
     if withdrawn.is_empty() {
         return 0;
     }
+    retype_edges_into_withdrawn(relationships, &withdrawn);
+    tracing::info!(
+        withdrawn = withdrawn.len(),
+        "withdrew a reader-assigned non-runtime scope from packages the compiler supplies",
+    );
+    withdrawn.len()
+}
+
+/// Return every scope-typed edge into a component whose non-runtime scope was
+/// withdrawn to `DependsOn`.
+///
+/// The reader-side edge typing (`apply_lifecycle_scope_to_edges`) typed them
+/// from the scope being withdrawn; left alone, SPDX 2.3 would keep
+/// `DEV_DEPENDENCY_OF` beside a CycloneDX `required`. Shared by the #1283
+/// compiler-supplied withdrawal and the #1465 runtime-evidence one.
+pub(crate) fn retype_edges_into_withdrawn(
+    relationships: &mut [Relationship],
+    withdrawn: &HashSet<String>,
+) {
     use waybill_common::resolution::RelationshipType;
     for r in relationships.iter_mut().filter(|r| withdrawn.contains(&r.to)) {
         if matches!(
@@ -523,11 +542,6 @@ pub(crate) fn withdraw_compiler_supplied_scope(
             r.relationship_type = RelationshipType::DependsOn;
         }
     }
-    tracing::info!(
-        withdrawn = withdrawn.len(),
-        "withdrew a reader-assigned non-runtime scope from packages the compiler supplies",
-    );
-    withdrawn.len()
 }
 
 #[cfg(test)]

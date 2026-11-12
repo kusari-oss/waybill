@@ -926,6 +926,91 @@ fn an_executable_roots_declared_test_dependencies_are_not_statically_linked() {
     assert_no_linked_member_is_marked(&run);
 }
 
+/// The SPDX 2.3 relationship types naming `name`'s package as the
+/// dependency, deduplicated and sorted.
+fn spdx23_types_into(run: &Run, name: &str) -> BTreeSet<String> {
+    let doc = &run.scan.spdx23;
+    let id = doc["packages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["name"] == name)
+        .and_then(|p| p["SPDXID"].as_str())
+        .unwrap_or_else(|| panic!("no SPDX 2.3 package named {name}"))
+        .to_string();
+    doc["relationships"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|r| {
+            let ty = r["relationshipType"].as_str()?;
+            let into = (ty == "DEPENDS_ON" && r["relatedSpdxElement"] == id.as_str())
+                || (ty.ends_with("_DEPENDENCY_OF") && r["spdxElementId"] == id.as_str());
+            into.then(|| ty.to_string())
+        })
+        .collect()
+}
+
+/// The SPDX 3 lifecycle scopes on `dependsOn` relationships into `name`.
+fn spdx3_scopes_into(run: &Run, name: &str) -> BTreeSet<String> {
+    let graph = run.scan.spdx3["@graph"].as_array().unwrap();
+    let id = graph
+        .iter()
+        .find(|e| e["name"] == name && e["type"] == "software_Package")
+        .and_then(|e| e["spdxId"].as_str())
+        .unwrap_or_else(|| panic!("no SPDX 3 package named {name}"))
+        .to_string();
+    graph
+        .iter()
+        .filter(|e| e["relationshipType"] == "dependsOn")
+        .filter(|e| e["to"].as_array().is_some_and(|t| t.iter().any(|x| x == id.as_str())))
+        .map(|e| e["scope"].as_str().unwrap_or("none").to_string())
+        .collect()
+}
+
+/// #1465 — runtime evidence wins over a reader's lifecycle scope.
+///
+/// slack-web's shape: its test suite declares QuickCheck, so the Haskell
+/// reader scoped it `development`, and aeson propagates it into the runtime
+/// closure. The runtime closure decided it ships (C203 `runtime-closure`) and
+/// left it unmarked, yet the reader's `development` alone put CycloneDX
+/// `scope: excluded` on it and `DEV_DEPENDENCY_OF` on every edge into it in
+/// SPDX 2.3. Here `text` takes QuickCheck's place: declared only by the test
+/// suite, propagated by `aeson`, held by the runtime closure.
+#[test]
+fn a_test_declared_package_the_runtime_closure_holds_is_not_marked() {
+    let closure = fixture("closure-tests-library.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = scan_with(NixStub {
+        project: dir().join("project-tests-ships"),
+        runtime: Some(tests_library_runtime()),
+        package_set: Some((&packages, "{ }\n")),
+        ..base(&closure)
+    });
+    assert_eq!(run.c216().unwrap()["method"], "runtime-closure");
+
+    let text = run.cdx("waybill-fixture-text");
+    assert_eq!(run.c203("waybill-fixture-text").as_deref(), Some("runtime-closure"));
+    assert_ne!(text["scope"], "excluded", "the runtime closure holds it: {text}\n{}", run.scan.stderr);
+    assert_eq!(Run::cdx_prop(text, "waybill:lifecycle-scope"), None, "{text}");
+    assert!(!run.marked().contains("waybill-fixture-text"));
+    assert_eq!(
+        spdx23_types_into(&run, "waybill-fixture-text"),
+        names(&["DEPENDS_ON"]),
+        "edges the reader typed from its scope agree with the component"
+    );
+    assert_eq!(spdx3_scopes_into(&run, "waybill-fixture-text"), names(&["none"]));
+
+    // CONTROL: a test dependency the runtime closure does not hold keeps the
+    // reader's scope and the closure's mark, in every format.
+    let hspec = run.cdx("waybill-fixture-hspec");
+    assert_eq!(run.c203("waybill-fixture-hspec").as_deref(), Some("runtime-closure"));
+    assert_eq!(hspec["scope"], "excluded");
+    assert_eq!(Run::cdx_prop(hspec, "waybill:lifecycle-scope"), Some("development"));
+    assert!(run.marked().contains("waybill-fixture-hspec"));
+    assert!(spdx23_types_into(&run, "waybill-fixture-hspec").contains("DEV_DEPENDENCY_OF"));
+}
+
 // ---- US1: embedded modules (FR-002) ---------------------------------------
 
 fn uvarint(mut v: u64) -> Vec<u8> {

@@ -31,6 +31,11 @@
 //! own: `exempt-compiler-supplied`. The requirement came out of writing this
 //! row, not out of the spec — with the exemption collapsed into absence, a
 //! deliberate omission and a missed component are the same document.
+//!
+//! **#1465: runtime evidence wins.** A `runtime-closure` member the closure
+//! holds carries no mark, whatever scope a reader gave it. CycloneDX alone
+//! cannot tell such a member from one the closure marked, so this arm reads
+//! the closure's verdict from SPDX 2.3 (see [`spdx23_closure_verdict`]).
 
 use std::collections::HashSet;
 
@@ -41,17 +46,25 @@ pub const KIND_TOOLING_WITHOUT_MARKER: &str = "closure-tooling-without-non-runti
 /// Milestone 1423 — a member C203 says is statically linked into a runtime
 /// member, which nonetheless carries a not-in-artifact mark.
 pub const KIND_LINKED_BUT_MARKED: &str = "closure-statically-linked-but-marked";
-pub const KINDS: &[&str] = &[KIND_TOOLING_WITHOUT_MARKER, KIND_LINKED_BUT_MARKED];
+/// #1465 — a member the runtime closure holds, which nonetheless carries a
+/// non-runtime mark (a reader's lifecycle scope, which runtime evidence
+/// overrides).
+pub const KIND_RUNTIME_BUT_MARKED: &str = "closure-runtime-member-but-marked";
+pub const KINDS: &[&str] =
+    &[KIND_TOOLING_WITHOUT_MARKER, KIND_LINKED_BUT_MARKED, KIND_RUNTIME_BUT_MARKED];
 
 /// How a member's C203 value says it was decided (milestone 1423,
 /// `specs/1423-nix-runtime-scope/contracts/c203-values.md`).
 enum Decided {
     /// An exemption: nothing to check.
     Exempt,
-    /// The runtime closure or the walk decided it, in whichever direction.
-    /// The native mark says which, and nothing else in the document says
-    /// otherwise, so there is nothing further to compare it against.
-    ByEvidence,
+    /// The runtime closure decided it, in whichever direction. Inside the
+    /// closure it must carry no mark (#1465); outside, a mark is correct.
+    RuntimeClosure,
+    /// The walk decided it, in whichever direction. The walk approximates the
+    /// runtime closure and is not evidence that a member ships, so a reader's
+    /// scope on a member it reached is not contradicted by anything.
+    ByWalk,
     /// Statically linked into a runtime member: must carry no mark.
     StaticallyLinked,
     /// The milestone-1277 role rule, which is also every pre-1423 document.
@@ -63,7 +76,8 @@ enum Decided {
 fn decided(component: &serde_json::Value) -> Decided {
     match cdx_prop(component, "waybill:scope-classification-source") {
         Some("exempt-compiler-supplied" | "exempt-evaluated-package") => Decided::Exempt,
-        Some("runtime-closure" | "reachability-walk") => Decided::ByEvidence,
+        Some("runtime-closure") => Decided::RuntimeClosure,
+        Some("reachability-walk") => Decided::ByWalk,
         Some("statically-linked") => Decided::StaticallyLinked,
         Some("closure-role" | "closure-role+lifecycle-propagation") | None => Decided::ByRole,
         Some(_) => Decided::ByRole,
@@ -101,8 +115,45 @@ fn carries_non_runtime_marker(component: &serde_json::Value) -> bool {
     super::cdx_carries_non_runtime_marker(component)
 }
 
+/// The closure's own not-in-artifact verdict, read from SPDX 2.3: the PURLs
+/// of the packages on the member side of a `BUILD_TOOL_OF` edge, and the
+/// PURLs of every package the document holds.
+///
+/// **Why SPDX 2.3, and not CycloneDX.** CycloneDX has one field for two
+/// marks: `scope: excluded` is set by the closure's verdict
+/// (`artifact_presence`) and, separately, by a reader's lifecycle scope. A
+/// member inside the runtime closure carrying a reader's `development`
+/// (#1465's QuickCheck) and a test dependency outside it carrying the same
+/// (`hspec`) are therefore the same CycloneDX component: C203
+/// `runtime-closure`, C42 `development`, `scope: excluded`. Measured on the
+/// committed slack-web golden before #1465. SPDX 2.3 keeps the two apart:
+/// `BUILD_TOOL_OF` is emitted from the closure's verdict alone
+/// (`generate/spdx/relationships.rs`), and the lifecycle scope rides the
+/// dependency-edge types instead. hspec has a `BUILD_TOOL_OF` edge there;
+/// QuickCheck and th-compat had none.
+///
+/// This depends on SPDX 2.3's full relationship vocabulary, which is the
+/// default and what the corpus harness emits; `--spdx2-relationship-compat
+/// basic` drops `BUILD_TOOL_OF` entirely.
+fn spdx23_closure_verdict(spdx: &serde_json::Value) -> (HashSet<&str>, HashSet<&str>) {
+    let id_to_purl = super::spdx_id_to_purl(spdx);
+    let marked = spdx
+        .get("relationships")
+        .and_then(|r| r.as_array())
+        .map(|rels| {
+            rels.iter()
+                .filter(|r| r.get("relationshipType").and_then(|t| t.as_str()) == Some("BUILD_TOOL_OF"))
+                .filter_map(|r| r.get("spdxElementId")?.as_str())
+                .filter_map(|id| id_to_purl.get(id).copied())
+                .collect()
+        })
+        .unwrap_or_default();
+    (marked, id_to_purl.values().copied().collect())
+}
+
 pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
     let components = cdx_components(&sboms.cdx);
+    let (closure_marked, spdx23_purls) = spdx23_closure_verdict(&sboms.spdx_2_3);
 
     // Milestone 1423: every closure member, not only the non-shipping roles.
     // Under the runtime closure a `build-tooling` member the output references
@@ -122,12 +173,26 @@ pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
 
     let mut unmarked_tooling: HashSet<&str> = HashSet::new();
     let mut linked_but_marked: HashSet<&str> = HashSet::new();
+    let mut runtime_but_marked: HashSet<&str> = HashSet::new();
     for c in &population {
         let marked = carries_non_runtime_marker(c);
         match decided(c) {
             // Being exempt satisfies the row, and says so. This is the arm
             // that makes the row checkable at all.
-            Decided::Exempt | Decided::ByEvidence => {}
+            Decided::Exempt | Decided::ByWalk => {}
+            // #1465: the closure holds it — SPDX 2.3 carries no
+            // `BUILD_TOOL_OF` for it — so a mark can only be a reader's scope,
+            // which runtime evidence overrides. A member SPDX 2.3 does not
+            // hold is not judged: the document cannot say which way the
+            // closure went.
+            Decided::RuntimeClosure => {
+                let purl = c.get("purl").and_then(|p| p.as_str());
+                let closure_holds = purl
+                    .is_some_and(|p| spdx23_purls.contains(p) && !closure_marked.contains(p));
+                if marked && closure_holds {
+                    runtime_but_marked.extend(cdx_component_ref(c));
+                }
+            }
             // The converse check: linked into a runtime member, so a mark
             // would contradict the document's own evidence.
             Decided::StaticallyLinked => {
@@ -149,6 +214,7 @@ pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
     for (kind, set) in [
         (KIND_TOOLING_WITHOUT_MARKER, unmarked_tooling),
         (KIND_LINKED_BUT_MARKED, linked_but_marked),
+        (KIND_RUNTIME_BUT_MARKED, runtime_but_marked),
     ] {
         if set.is_empty() {
             continue;
@@ -222,7 +288,8 @@ mod tests {
             cdx,
             spdx_2_3: serde_json::json!({}),
             spdx_3: serde_json::json!({}),
-            // This row reads only the CycloneDX document.
+            // No SPDX 2.3 packages: the #1465 arm judges nothing unless a
+            // test supplies one (`with_spdx23`).
             paths: crate::corpus_harness_195::harness::EmittedPaths {
                 cdx: PathBuf::new(),
                 spdx_2_3: PathBuf::new(),
@@ -380,15 +447,89 @@ mod tests {
         }
     }
 
-    /// curl's libxml2: an `artifact-input` the output does not reference.
+    /// The SPDX 2.3 twin of [`doc`]'s member, `pkg:generic/tool@1.0.0`.
+    /// `build_tool_of` is the closure's own not-in-artifact verdict.
+    fn spdx23(build_tool_of: bool) -> serde_json::Value {
+        let mut rels = vec![serde_json::json!({
+            "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES",
+            "relatedSpdxElement": "SPDXRef-app" })];
+        if build_tool_of {
+            rels.push(serde_json::json!({
+                "spdxElementId": "SPDXRef-tool", "relationshipType": "BUILD_TOOL_OF",
+                "relatedSpdxElement": "SPDXRef-app" }));
+        }
+        let pkg = |id: &str, purl: &str| {
+            serde_json::json!({ "SPDXID": id, "externalRefs": [
+                { "referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl",
+                  "referenceLocator": purl } ] })
+        };
+        serde_json::json!({
+            "packages": [pkg("SPDXRef-app", "pkg:generic/app@1.0.0"), pkg("SPDXRef-tool", "pkg:generic/tool@1.0.0")],
+            "relationships": rels,
+        })
+    }
+
+    fn with_spdx23(cdx: serde_json::Value, spdx: serde_json::Value) -> EmittedSboms {
+        let mut s = sboms(cdx);
+        s.spdx_2_3 = spdx;
+        s
+    }
+
+    /// curl's libxml2: an `artifact-input` the output does not reference. The
+    /// closure marked it, so SPDX 2.3 carries its `BUILD_TOOL_OF`.
     #[test]
     fn i10_a_marked_artifact_member_the_runtime_closure_decided_passes() {
         for source in ["runtime-closure", "reachability-walk"] {
             assert!(
-                matches!(check(&sboms(with_source("artifact-input", true, source))), CellOutcome::Pass),
+                matches!(
+                    check(&with_spdx23(with_source("artifact-input", true, source), spdx23(true))),
+                    CellOutcome::Pass
+                ),
                 "{source}"
             );
         }
+    }
+
+    /// #1465 — slack-web's QuickCheck: the runtime closure holds it (no
+    /// `BUILD_TOOL_OF` in SPDX 2.3), yet it carries a mark, from a reader's
+    /// `development`. Runtime evidence wins, so the mark is a defect.
+    #[test]
+    fn i10_a_runtime_closure_member_the_closure_holds_that_is_marked_fails() {
+        match check(&with_spdx23(with_source("artifact-input", true, "runtime-closure"), spdx23(false))) {
+            CellOutcome::Fail(v) => {
+                assert_eq!(v.len(), 1);
+                assert_eq!(v[0].kind, KIND_RUNTIME_BUT_MARKED);
+                assert_eq!(v[0].count, 1);
+                assert_eq!(v[0].example.as_deref(), Some("pkg:generic/tool@1.0.0"));
+            }
+            other => panic!("expected a failure, got {other:?}"),
+        }
+        // CONTROL: unmarked, the same member passes.
+        assert!(matches!(
+            check(&with_spdx23(with_source("artifact-input", false, "runtime-closure"), spdx23(false))),
+            CellOutcome::Pass
+        ));
+    }
+
+    /// The walk is not evidence of shipping (#1465 scopes the rule to
+    /// `runtime-closure` and `statically-linked`), so a reader's mark on a
+    /// member it reached contradicts nothing.
+    #[test]
+    fn i10_a_marked_member_the_walk_reached_passes() {
+        assert!(matches!(
+            check(&with_spdx23(with_source("artifact-input", true, "reachability-walk"), spdx23(false))),
+            CellOutcome::Pass
+        ));
+    }
+
+    /// A member SPDX 2.3 does not hold is not judged: the document cannot say
+    /// which way the closure went.
+    #[test]
+    fn i10_a_runtime_closure_member_missing_from_spdx23_is_not_judged() {
+        assert!(matches!(
+            check(&sboms(with_source("artifact-input", true, "runtime-closure"))),
+            CellOutcome::Pass
+        ));
     }
 
     #[test]
