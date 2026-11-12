@@ -6,7 +6,7 @@
         "pname": "waybill-fixture-app",
         "version": "0.1.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
         "buildInputs": "/nix/store/h-cabal /nix/store/h-syntax /nix/store/h-hashable /nix/store/h-text /nix/store/h-old /nix/store/h-ext /nix/store/h-stale /nix/store/h-cnative"
       },
       "inputs": {
@@ -30,7 +30,7 @@
         "pname": "waybill-fixture-cabal",
         "version": "3.14.2.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-cabal" } }
     },
@@ -40,7 +40,7 @@
         "pname": "waybill-fixture-syntax",
         "version": "3.14.2.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-syntax" } }
     },
@@ -50,7 +50,7 @@
         "pname": "waybill-fixture-hashable",
         "version": "1.5.1.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-hashable" } }
     },
@@ -60,7 +60,7 @@
         "pname": "waybill-fixture-text",
         "version": "2.0.2",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-text" } }
     },
@@ -70,7 +70,7 @@
         "pname": "waybill-fixture-old",
         "version": "1.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-old" } }
     },
@@ -80,7 +80,7 @@
         "pname": "waybill-fixture-ext",
         "version": "0.1.1.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-ext" } }
     },
@@ -90,7 +90,7 @@
         "pname": "waybill-fixture-stale",
         "version": "9.9.9",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h-stale" } }
     },

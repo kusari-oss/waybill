@@ -502,7 +502,13 @@ pub fn classify_orphans(
             // they are unreachable-and-unexplained, and `nix-closure-moat`
             // gains three I7 offenders where it has none today.
             || c.extra_annotations
-                .contains_key("waybill:haskell-version-unresolved-reason");
+                .contains_key("waybill:haskell-version-unresolved-reason")
+            // C218, milestone 966. The same synthesised boot-library
+            // component, once its compiler is known and the boot-library
+            // table has it: it carries that compiler's version and C218
+            // instead of C170, and is unreachable for the same reason.
+            || c.extra_annotations
+                .contains_key("waybill:boot-library-compiler");
         if already_explained {
             continue;
         }

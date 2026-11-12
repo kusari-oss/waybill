@@ -1,0 +1,58 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-app-0.1.0.drv": {
+      "name": "waybill-fixture-app-0.1.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "0.1.0",
+        "system": "x86_64-linux",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/aaa-ghc-9.10.3 /nix/store/h-boottool",
+        "buildInputs": "/nix/store/h-lib /nix/store/h-dep"
+      },
+      "inputs": {
+        "drvs": {
+          "d-lib.drv": { "outputs": ["out"] },
+          "d-dep.drv": { "outputs": ["out"] },
+          "d-boottool.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "h-app" } }
+    },
+    "d-lib.drv": {
+      "name": "waybill-fixture-lib-1.0.0",
+      "env": {
+        "pname": "waybill-fixture-lib",
+        "version": "1.0.0",
+        "system": "x86_64-linux",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/aaa-ghc-9.10.3"
+      },
+      "outputs": { "out": { "path": "h-lib" } }
+    },
+    "d-dep.drv": {
+      "name": "waybill-fixture-dep-1.2.0",
+      "env": {
+        "pname": "waybill-fixture-dep",
+        "version": "1.2.0",
+        "system": "x86_64-linux",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/aaa-ghc-9.10.3"
+      },
+      "outputs": { "out": { "path": "h-dep" } }
+    },
+    "d-boottool.drv": {
+      "name": "waybill-fixture-boottool-2.0.0",
+      "env": {
+        "pname": "waybill-fixture-boottool",
+        "version": "2.0.0",
+        "system": "x86_64-linux",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/bbb-ghc-binary-9.8.4"
+      },
+      "outputs": { "out": { "path": "h-boottool" } }
+    }
+  },
+  "version": 4
+}

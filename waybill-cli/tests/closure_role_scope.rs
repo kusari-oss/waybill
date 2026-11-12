@@ -70,7 +70,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roletext",
         "version": "2.0.2",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h1-roletext" } }
     },
@@ -88,7 +88,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roletoolhask",
         "version": "3.3.3",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h3-roletoolhask" } }
     },
@@ -97,7 +97,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roletoolboot",
         "version": "2.2.2",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h4-roletoolboot" } }
     },
@@ -106,7 +106,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roledual",
         "version": "4.4.4",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h5-roledual" } }
     },
@@ -115,7 +115,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-roletest",
         "version": "6.6.6",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h7-roletest" } }
     },

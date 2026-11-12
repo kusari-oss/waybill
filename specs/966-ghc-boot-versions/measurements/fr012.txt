@@ -1,0 +1,20 @@
+# T031: FR-012 checks, 2026-11-12, branch 966-impl
+
+$ git diff --exit-code main -- Cargo.lock waybill-cli/Cargo.toml Cargo.toml
+(no output)
+exit=0
+
+$ grep -nE 'std::fs|std::net|reqwest|Command::new' boot_table.rs closure_compilers.rs
+(no output)
+grep exit=1   (no match anywhere in either file, test modules included)
+
+$ grep -n 'include_str!' boot_table.rs
+22:const TSV: &str = include_str!("ghc_boot_libraries.tsv");
+
+The table enters the binary only through include_str!. No new Cargo
+dependency, and no scan-time network or filesystem access for it.
+
+# Pre-PR gate (T031), on the tree of the verification commit
+$ ./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh
+GATE_EXIT=0 GATE_RESULT=pass; ">>> all pre-PR checks passed." present (log line 15114)
+388 "test result: ok." lines, 0 "test result: FAILED"; summed: 7924 passed, 0 failed; 0 "---- ... stdout ----" failure blocks.

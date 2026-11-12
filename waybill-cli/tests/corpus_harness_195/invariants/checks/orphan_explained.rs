@@ -62,6 +62,9 @@ fn is_explained(component: &serde_json::Value) -> bool {
         // has none today — a defect created by the milestone that would then
         // have to be declared rather than fixed.
         || cdx_prop(component, "waybill:haskell-version-unresolved-reason").is_some()
+        // C218, milestone 966 — mirrors `generate/orphan_reason.rs`: the same
+        // synthesised boot-library component, versioned from its compiler.
+        || cdx_prop(component, "waybill:boot-library-compiler").is_some()
 }
 
 pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {

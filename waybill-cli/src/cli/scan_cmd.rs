@@ -4525,6 +4525,9 @@ pub async fn execute(
     let mut closure_policy: Option<scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy> =
         None;
     let mut closure_ifd: Option<scan_fs::package_db::nix::eval::result::IfdPolicyVerified> = None;
+    // Milestone 966 — the system the closure was evaluated for, the fallback
+    // for a closure whose evaluated derivation records none (research R4).
+    let mut closure_system: Option<String> = None;
     // Milestone 1035 (#1034, #1040) — the derivation closure.
     //
     // Runs after the manifest-derived set exists, because it supplements that
@@ -4556,6 +4559,7 @@ pub async fn execute(
                 let system = scan_fs::package_db::nix::eval::invoke::detect_host_system(
                     cfg.budget,
                 );
+                closure_system = system.as_ref().ok().map(|s| s.as_str().to_string());
                 // The pre-flight gates everything below it; its record is
                 // kept whether it passes or not (C217).
                 let preflighted = system.and_then(|sys| {
@@ -4601,6 +4605,28 @@ pub async fn execute(
             }
         }
     };
+    // Milestone 966 (#966) — which GHC built what, read from the closure
+    // before the Haskell enrichment so it classifies with the exact
+    // compiler (research R1). `None` without a closure, which keeps every
+    // such scan byte-identical (FR-011).
+    let closure_compilers: Option<
+        scan_fs::package_db::nix::haskell_packages::closure_compilers::ClosureCompilers,
+    > = match &nix_closure {
+        Some(Ok(c)) => {
+            let cc = scan_fs::package_db::nix::haskell_packages::closure_compilers::ClosureCompilers::from_closure(
+                c,
+                closure_system.as_deref().unwrap_or_default(),
+            );
+            tracing::info!(
+                project = cc.project.as_ref().map(|g| g.label.as_str()).unwrap_or("none"),
+                compilers = cc.seen.len(),
+                system = %cc.system,
+                "nix-closure: GHC compilers identified"
+            );
+            Some(cc)
+        }
+        _ => None,
+    };
     let nixpkgs_haskell_summary = {
         use scan_fs::package_db::nix::haskell_packages as nhp;
         let source = nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs);
@@ -4615,6 +4641,7 @@ pub async fn execute(
                 // opted in, and `None` means no `nix` process is started at
                 // all -- which is what keeps the default path byte-identical.
                 nix_eval: nix_eval_cfg.clone(),
+                compilers: closure_compilers.clone(),
             },
             &source,
         )
@@ -4871,17 +4898,30 @@ pub async fn execute(
             // FR-012c's targets are GHC boot libraries, identified from the
             // revision's own configuration rather than from a maintained list
             // (m926). Cache-only, like the package set above.
-            let boot = match nhp::load_package_set(&root_path, true, &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs)) {
-                nhp::PackageSetLoad::Loaded(l) => nhp::boot_set(
-                    &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs),
-                    &l.location,
-                    &l.pinned.revision,
-                    &root_path,
-                    true,
-                )
-                .map(|b| b.boot)
-                .unwrap_or_default(),
-                _ => Default::default(),
+            //
+            // Milestone 966 (FR-006, T022) — with the project compiler in the
+            // boot-library table, the set is that release's libraries, the
+            // same set `enrich` classified with; computed from the table
+            // directly so a closure-only scan, where `enrich` declined, gets
+            // it too. Otherwise the union, as before.
+            let exact_boot = closure_compilers.as_ref().and_then(|cc| {
+                let g = cc.project_in_table()?;
+                nhp::boot_table::table().names(&g.version)
+            });
+            let boot = match exact_boot {
+                Some(b) => b,
+                None => match nhp::load_package_set(&root_path, true, &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs)) {
+                    nhp::PackageSetLoad::Loaded(l) => nhp::boot_set(
+                        &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs),
+                        &l.location,
+                        &l.pinned.revision,
+                        &root_path,
+                        true,
+                    )
+                    .map(|b| b.boot)
+                    .unwrap_or_default(),
+                    _ => Default::default(),
+                },
             };
             closure_package_set_available = loaded_set.is_some();
             let identity = nhp::closure_identity::reclassify(
@@ -4890,6 +4930,7 @@ pub async fn execute(
                 classified,
                 loaded_set.as_ref(),
                 &boot,
+                closure_compilers.as_ref(),
             );
             tracing::info!(
                 confirmed = identity.confirmed(),
@@ -5706,6 +5747,21 @@ pub async fn execute(
             }
             .wire()
         });
+    // C219 (m966, #966) — which GHCs the closure named, whether the
+    // boot-library table has each, and the table's date. Applicable iff the
+    // closure tier ran and Haskell is in play: the nixpkgs-Haskell pass ran
+    // (C174), or the closure names at least one GHC (a closure-only scan,
+    // where that pass declines). Absent otherwise, so documents without a
+    // closure, or with one that holds no Haskell, are byte-identical
+    // (FR-011). Built from `closure_compilers`, never from the enrichment
+    // summary, which a closure-only scan does not have.
+    let ghc_boot_libraries_json: Option<String> = closure_compilers
+        .as_ref()
+        .filter(|cc| nixpkgs_haskell_summary.is_some() || !cc.seen.is_empty())
+        .map(|cc| {
+            let table = scan_fs::package_db::nix::haskell_packages::boot_table::table();
+            cc.document_value(table.observed()).to_string()
+        });
     // C208 (m1366, #1365) — rendered beside C190 because the two answer
     // adjacent questions about the same tier: C190 says the closure was not
     // taken, C208 says what the ecosystem identity pass did with the one that
@@ -5753,6 +5809,7 @@ pub async fn execute(
         cpe_coverage: Some(cpe_coverage_json.as_str()),
         closure_graph_admission: closure_graph_admission_json.as_deref(),
         nix_evaluation_policy: nix_evaluation_policy_json.as_deref(),
+        ghc_boot_libraries: ghc_boot_libraries_json.as_deref(),
         nix_closure_contents: closure_contents.as_ref().map(|c| c.wire.as_str()),
         nix_closure_contents_unread: closure_contents.as_ref().is_some_and(|c| c.unread),
         // C192 (m1067): answers served from the disk cache count as online.

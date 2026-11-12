@@ -57,7 +57,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-aeson",
         "version": "2.2.4.1",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h1-aeson" } }
     },
@@ -66,7 +66,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-text",
         "version": "2.0.2",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h2-text" } }
     },
@@ -107,7 +107,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-ghcshell",
         "version": "7.7.7",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h8-ghcshell" } }
     },
@@ -116,7 +116,7 @@ const CLOSURE_JSON: &str = r#"{
       "env": {
         "pname": "waybill-fixture-oddlic",
         "version": "3.1.4",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1"
       },
       "outputs": { "out": { "path": "h7-oddlic" } }
     }

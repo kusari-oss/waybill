@@ -1,0 +1,41 @@
+# Golden review, #966 (T032)
+
+- Regen run 43257463764 at cb33f2b3 (public-corpus.yml, regen_goldens=true): corpus 158 passed, 0 failed; table check 3 passed.
+- Table check on Linux: ghc-9.6.6 (37 libraries, 0 disagreements), ghc-9.10.3 ×2 (42 each, 0 disagreements).
+- An earlier run, 43252290895 at 66e7126b, exposed the build-variant defect (research, implementation note 8); its goldens were not committed.
+
+## Artifact vs committed
+
+67 files: 52 byte-identical, 15 differ (cdx, spdx-2.3 and spdx-3 of the five closure targets). No committed golden is missing from the artifact.
+
+## SC-001, FR-010, C218, C219 (cdx.json; components deduplicated by bom-ref)
+
+```
+nix-closure-moat: old versionless 24; gained version+C218 24; still versionless []; resolved otherwise []
+   C218 components 36 labels ['ghc-9.10.3', 'ghc-binary-9.8.4']; versionless-twins []
+   C219 {"compilers":{"ghc-9.10.3":"in-table","ghc-binary-9.8.4":"in-table"},"project":"ghc-9.10.3","schema":1,"system":"x86_64-linux","table":"2026-11-12"}
+nix-closure-openai: old versionless 26; gained version+C218 25; still versionless []; resolved otherwise ['os-string']
+   C218 components 40 labels ['ghc-9.6.6', 'ghc-binary-9.2.4']; versionless-twins []
+   C219 {"compilers":{"ghc-9.6.6":"in-table","ghc-binary-9.2.4":"in-table"},"project":"ghc-9.6.6","schema":1,"system":"x86_64-linux","table":"2026-11-12"}
+nix-closure-shellcheck: old versionless 26; gained version+C218 26; still versionless []; resolved otherwise []
+   C218 components 39 labels ['ghc-9.10.3', 'ghc-binary-9.8.4']; versionless-twins []
+   C219 {"compilers":{"ghc-9.10.3":"in-table","ghc-binary-9.8.4":"in-table"},"project":"ghc-9.10.3","schema":1,"system":"x86_64-linux","table":"2026-11-12"}
+nix-closure-slack-web: old versionless 27; gained version+C218 26; still versionless ['hspec-discover']; resolved otherwise []
+   C218 components 40 labels ['ghc-9.10.3', 'ghc-binary-9.8.4']; versionless-twins []
+   C219 {"compilers":{"ghc-9.10.3":"in-table","ghc-binary-9.8.4":"in-table"},"project":"ghc-9.10.3","schema":1,"system":"x86_64-linux","table":"2026-11-12"}
+nix-closure-slacklinker: old versionless 29; gained version+C218 27; still versionless ['hunit', 'slack-web']; resolved otherwise []
+   C218 components 39 labels ['ghc-9.10.3', 'ghc-binary-9.8.4']; versionless-twins []
+   C219 {"compilers":{"ghc-9.10.3":"in-table","ghc-binary-9.8.4":"in-table"},"project":"ghc-9.10.3","schema":1,"system":"x86_64-linux","table":"2026-11-12"}
+```
+
+## Churn outside boot libraries
+
+```
+nix-closure-moat: removed 24 added 36; non-boot removed []; non-boot added []
+nix-closure-openai: removed 26 added 40; non-boot removed []; non-boot added []
+nix-closure-shellcheck: removed 26 added 39; non-boot removed []; non-boot added []
+nix-closure-slack-web: removed 26 added 40; non-boot removed []; non-boot added []
+nix-closure-slacklinker: removed 27 added 39; non-boot removed []; non-boot added []
+```
+
+Every added or removed PURL names a library in the boot-library table. No C218 or C219 appears on any target other than these five.

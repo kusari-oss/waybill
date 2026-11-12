@@ -1012,6 +1012,10 @@ cdx_anno!(c215_cdx, "waybill:closure-binary-identity", component);
 cdx_anno!(c216_cdx, "waybill:closure-scope-method", document);
 // Milestone 1283 (#1283): C217 — the Nix evaluation policy.
 cdx_anno!(c217_cdx, "waybill:nix-evaluation-policy", document);
+// Milestone 966 (#966): C218 — the compiler release a boot library's version
+// came from; C219 — which GHCs the closure named and whether the table has each.
+cdx_anno!(c218_cdx, "waybill:boot-library-compiler", component);
+cdx_anno!(c219_cdx, "waybill:ghc-boot-libraries", document);
 cdx_anno!(c183_cdx, "waybill:patch-evidence-grade", document);
 cdx_anno!(c184_cdx, "waybill:nix-closure", document);
 // Milestone 1278 (#1348): C204 -- what the closure reader did not consult.

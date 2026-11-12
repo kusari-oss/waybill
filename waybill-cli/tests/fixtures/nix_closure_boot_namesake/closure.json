@@ -6,7 +6,7 @@
         "pname": "waybill-fixture-app",
         "version": "0.1.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
         "buildInputs": "/nix/store/h-lib"
       },
       "inputs": {
@@ -21,7 +21,7 @@
         "pname": "waybill-fixture-lib",
         "version": "1.0.0",
         "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
-        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8 /nix/store/h-clock /nix/store/h-gone"
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1 /nix/store/h-clock /nix/store/h-gone"
       },
       "inputs": {
         "drvs": {
