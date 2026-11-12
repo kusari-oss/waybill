@@ -210,11 +210,11 @@
   - `os-string` resolved on openai;
   - no change to any target without `--nix-closure` (SC-004);
   - the database check ran on Linux and printed its databases.
-- [ ] T033 Commit the regenerated goldens. Then dispatch a non-regen run (`regen_goldens=false`) and confirm it passes with goldens unchanged.
+- [X] T033 Commit the regenerated goldens. Then dispatch a non-regen run (`regen_goldens=false`) and confirm it passes with goldens unchanged.
 - [X] T034 SC-002: run `osv-scanner scan source --sbom <target>/cdx.json --format json` on each of the five regenerated closure goldens, and record the `base` vulnerability IDs in `specs/966-ghc-boot-versions/measurements/sc002-osv.txt`. Expect HSEC-2023-0007 on all five. If any target misses it, find out why before claiming SC-002.
 - [X] T035 [P] Add one paragraph to the Nix closure section of `docs/user-guide/`: boot-library versions come from the compiler the closure names, through a dated table (C218 and C219); an unknown compiler leaves them `compiler-supplied`. Add a CHANGELOG entry under Unreleased.
 - [X] T036 [P] Add a short `specs/966-ghc-boot-versions/measurements/README.md` preamble saying how to re-run each probe, and that `global-hints-2026-11-12.yaml` is the snapshot the spec's numbers came from.
-- [ ] T037 Close-out: for every task above, verify its claim against the code or an artifact before ticking it (memory: a task can be unimplemented, not unticked). Re-run the gate if anything changed since T031.
+- [X] T037 Close-out: for every task above, verify its claim against the code or an artifact before ticking it (memory: a task can be unimplemented, not unticked). Re-run the gate if anything changed since T031.
 
 ---
 
