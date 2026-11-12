@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed
+
+- **A declared Haskell dependency no longer resolves to a closure member
+  that only shares its name.** A closure member that declares no `pname`
+  (C206: a fetched source, build scaffolding, or a live-bootstrap C
+  fragment) is named after its derivation, and on nixpkgs `a799d3e3` one
+  such fragment is called `time`, like the GHC boot library. On
+  nix-closure-shellcheck 24 `pkg:hackage` libraries depended on that
+  fragment, a versionless `scope: excluded` build-tooling component; they
+  now depend on the compiler-supplied `pkg:hackage/time`, as they already
+  did for the other boot libraries the compiler ships. A declared target
+  that is neither a boot library nor any Haskell component is left without
+  an edge and counted, as when nothing carries its name. On
+  nix-closure-moat and nix-closure-slacklinker the same fragment had merged
+  into the project's own `pkg:hackage/time`, which then carried
+  `waybill:closure-member-role: fragment` and `waybill:closure-role:
+  build-tooling`. Such members are now always their own component, as
+  milestone 1282 required (#1466).
+
 ## [0.15.0] - 2026-11-11
 
 A minor. It adds surface (`--nix-allow-ifd`, the `sbom edit` selector

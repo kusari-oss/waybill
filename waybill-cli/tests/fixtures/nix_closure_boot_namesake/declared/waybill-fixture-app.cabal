@@ -1,0 +1,10 @@
+cabal-version:      2.4
+name:               waybill-fixture-app
+version:            0.1.0
+
+-- #1466, the nix-closure-moat shape: the project itself declares the boot
+-- library, so the design tier emits a versionless compiler-supplied
+-- `pkg:hackage/waybill-fixture-clock` before the closure tier runs.
+library
+    build-depends:    waybill-fixture-clock
+    default-language: Haskell2010

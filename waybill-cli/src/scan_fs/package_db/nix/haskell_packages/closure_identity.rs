@@ -46,6 +46,7 @@ use waybill_common::resolution::ResolvedComponent;
 use super::package_set::{PackageSet, PackageSetEntry};
 use crate::scan_fs::package_db::nix::closure::derivation::RawDerivation;
 use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_ROLE;
+use crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE;
 use crate::scan_fs::package_db::nix::closure::ClassifiedClosure;
 
 /// The C201 annotation: what this pass concluded about one closure member.
@@ -470,6 +471,60 @@ mod tests {
             assert_eq!(target_of(order, &hs_generic), vec!["pkg:generic/waybill-fixture-zlib@0.7.2"]);
         }
     }
+
+    /// #1466: a member that declares no `pname` (C206) is never a declared
+    /// target, whatever it is called. On nixpkgs `a799d3e3` the live-bootstrap
+    /// fragment `time` took 24 edges meant for the GHC boot library. Without
+    /// it, a boot target gets FR-012c's compiler-supplied component and any
+    /// other target is omitted and counted.
+    #[test]
+    fn a_declared_target_never_binds_to_a_nameless_member() {
+        let text = concat!(
+            "  waybill-fixture-lib = callPackage ({ mkDerivation }: mkDerivation {\n",
+            "      pname = \"waybill-fixture-lib\";\n",
+            "      version = \"1.0.0\";\n",
+            "      libraryHaskellDepends = [ waybill-fixture-clock ];\n",
+            "      license = lib.licenses.bsd3;\n",
+            "  }) { };\n",
+        );
+        let set = super::super::package_set::parse(text);
+        let mut lib = super::super::enrich_tests::comp("waybill-fixture-lib");
+        lib.purl = waybill_common::types::purl::Purl::new("pkg:hackage/waybill-fixture-lib@1.0.0").unwrap();
+        lib.version = "1.0.0".to_string();
+        lib.extra_annotations
+            .insert(ANN_CLOSURE_IDENTITY.to_string(), serde_json::Value::from("confirmed"));
+        let mut fragment = super::super::enrich_tests::comp("waybill-fixture-clock");
+        fragment.purl = waybill_common::types::purl::Purl::new("pkg:generic/waybill-fixture-clock-c10ck").unwrap();
+        fragment.version = String::new();
+        fragment
+            .extra_annotations
+            .insert(ANN_MEMBER_ROLE.to_string(), serde_json::Value::from("fragment"));
+
+        let run = |boot: &BTreeSet<String>| {
+            let mut components = vec![lib.clone(), fragment.clone()];
+            let mut relationships = Vec::new();
+            let mut summary = ClosureIdentitySummary::default();
+            emit_declared_edges(
+                &mut components,
+                &mut relationships,
+                Some(&set),
+                boot,
+                &Default::default(),
+                &mut summary,
+            );
+            let targets: Vec<String> = relationships.iter().map(|r| r.to.clone()).collect();
+            (targets, summary)
+        };
+
+        let boot: BTreeSet<String> = ["waybill-fixture-clock".to_string()].into();
+        let (targets, summary) = run(&boot);
+        assert_eq!(targets, vec!["pkg:hackage/waybill-fixture-clock"]);
+        assert_eq!(summary.boot_targets, 1);
+
+        let (targets, summary) = run(&BTreeSet::new());
+        assert!(targets.is_empty(), "bound to {targets:?}");
+        assert_eq!(summary.dangling_non_boot, 1, "the omission is counted");
+    }
 }
 
 /// Milestone 1275 T009 — FR-006's agreement, measured against **this** code.
@@ -822,6 +877,17 @@ fn emit_declared_edges(
     };
     let mut best: std::collections::HashMap<String, (u8, String)> = std::collections::HashMap::new();
     for c in components.iter() {
+        // #1466 — a closure member that declares no `pname` (C206) is never a
+        // candidate. Its name is whatever its derivation is called, and on
+        // nixpkgs `a799d3e3` a live-bootstrap C fragment is called `time`:
+        // 24 libraries declaring the boot library bound to it. A Haskell
+        // build always declares its `pname`, so no such member can be the
+        // package a declared target names. Excluded, a boot target falls
+        // through to FR-012c's compiler-supplied component and any other
+        // target to the counted omission, exactly as when the name is absent.
+        if c.extra_annotations.contains_key(ANN_MEMBER_ROLE) {
+            continue;
+        }
         let r = rank(c);
         if best.get(&c.name).is_none_or(|(held, _)| r >= *held) {
             best.insert(c.name.clone(), (r, c.purl.as_str().to_string()));
