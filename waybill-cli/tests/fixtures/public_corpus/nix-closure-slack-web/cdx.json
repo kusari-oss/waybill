@@ -120680,7 +120680,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":1193,\"components-without-member-role\":496,\"derivations\":1293,\"distinct-cves\":16,\"edge-ineligible-components\":80,\"edges\":53321,\"identifiers\":{\"by-drv\":362,\"by-name-version\":82,\"declared\":6,\"received\":444,\"rejected\":0,\"wanted\":1213},\"licenses\":{\"degraded\":null,\"received\":361,\"wanted\":1213,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":72,\"package\":4,\"scaffolding\":8,\"source\":613},\"patches\":190,\"patches-without-cve\":172,\"roles\":{\"artifact-input\":393,\"both\":49,\"build-tooling\":850,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":1193,\"components-without-member-role\":496,\"derivations\":1293,\"distinct-cves\":16,\"edge-ineligible-components\":80,\"edges\":41999,\"identifiers\":{\"by-drv\":362,\"by-name-version\":82,\"declared\":6,\"received\":444,\"rejected\":0,\"wanted\":1213},\"licenses\":{\"degraded\":null,\"received\":361,\"wanted\":1213,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":72,\"package\":4,\"scaffolding\":8,\"source\":613},\"patches\":190,\"patches-without-cve\":172,\"roles\":{\"artifact-input\":393,\"both\":49,\"build-tooling\":850,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",
@@ -120692,7 +120692,7 @@
       },
       {
         "name": "waybill:closure-scope-method",
-        "value": "{\"method\":\"runtime-closure\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-source\":\"derivation-fields\",\"store\":\"local\",\"unavailable-reason\":null,\"unmatched-runtime-paths\":0,\"verified\":true,\"walk-outcome\":null}"
+        "value": "{\"c-runtime-libraries\":null,\"method\":\"runtime-closure\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-roots\":{\"declared-edges\":0,\"derivation-fields\":141},\"static-link-source\":\"derivation-fields\",\"store\":\"local\",\"unavailable-reason\":null,\"unmatched-runtime-paths\":0,\"verified\":true,\"walk-outcome\":null}"
       }
     ],
     "supplier": {

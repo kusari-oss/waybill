@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed
+
+- **C216 reports the static-link source per root (#1456).** A
+  `--nix-closure` document's `waybill:closure-scope-method` gains
+  `static-link-roots`, `{"declared-edges": <n>, "derivation-fields": <n>}`,
+  the number of static-link roots (runtime Haskell members, or Haskell
+  builds a wrapper root consumed) each source decided, and
+  `static-link-source` gains `mixed` for a closure where both did. The
+  selection itself was already per root: a root the pinned package set
+  confirmed is followed through its declared relations, which leave test
+  dependencies out, whatever its neighbours are; only an unconfirmed root
+  reads its derivation fields. What was closure-wide was the label: the
+  nix-closure-moat golden read `derivation-fields` while 91 of its 124
+  Haskell roots were decided by declared relations; it now reads `mixed`
+  with `{"declared-edges": 91, "derivation-fields": 33}`, and openai
+  reads `mixed` with 1 and 150. The issue inferred the selection itself
+  was closure-wide; the code since #1423 shows it was not, and a new
+  two-root test pins that. Additive: `schema` stays `1`, and no mark
+  changes.
+
 ### Fixed
 
 - **A `--nix-closure` component the runtime closure shows ships is no
@@ -25,6 +45,54 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `closure-runtime-member-but-marked`, reading the closure's own verdict from
   SPDX 2.3 `BUILD_TOOL_OF`, since CycloneDX's one `scope` field cannot tell
   the two marks apart.
+
+- **The reachability walk keeps the C library on Linux (#1467).** When no
+  store holds a `--nix-closure` output, the walk marked glibc not-in-artifact,
+  because no dependency field names it: a member links it through its
+  `stdenv`'s C compiler wrapper, whose `libc_lib` is the libc every
+  dynamically linked output loads. The walk now follows that chain from
+  each walked member and keeps the libc (C203 `reachability-walk`), less a
+  bootstrap libc that another one found was built from. Measured on curl,
+  openssh, httpie, gh and ripgrep at nixpkgs `a799d3e3`, x86_64-linux, each
+  scanned twice (cache.nixos.org's verified runtime closure as truth, and
+  the walk with substituters disabled): glibc was runtime in all five truths
+  and marked by the walk in all five; it is now kept in all five, with no
+  other mark changed. Still marked and not assessed: gcc's runtime
+  libraries (`libgcc_s`, `libstdc++`, 4 of 5 truths) and what glibc itself
+  references (`xgcc` libgcc in all 5; `libidn2`/`libunistring` in the 4
+  whose walk does not reach them otherwise), which no dependency field
+  names either. aarch64-darwin, where the same chain ends at `libSystem`,
+  was not measured. C216 gains `c-runtime-libraries`, which
+  says so: `libc-only` under the walk, `not-assessed` when no walked member
+  names a C compiler and under `closure-role`, null under `runtime-closure`
+  (`specs/1423-nix-runtime-scope/measurements/c-runtime/`). On the
+  nix-closure-moat golden, the one corpus target scanned by the walk,
+  `glibc 2.42-61` loses its mark in all three formats and nothing else
+  changes.
+
+- **C184 `waybill:nix-closure` counts what the document holds.** `edges`
+  was the `.drv`-keyed projection, counted before build variants of one
+  package collapse onto one component, and the component counts were taken
+  before `--exclude-scope` removed members. Both are now taken from the set
+  the document is written from: `components-emitted` is the number of
+  components carrying C182, and `edges` the distinct dependency pairs the
+  closure graph contributed. On moat (aarch64-darwin) `edges` goes from
+  7,978 to 6,167, the number of dependency pairs between closure members in
+  that document; `components-emitted` stays 951 of 977, the other 26 coming
+  from other readers. `edges` drops on every `--nix-closure` corpus golden
+  (#1445).
+- **An edited SPDX document no longer references the original OpenVEX
+  sidecar.** `sbom edit` does not edit the sidecar, which names components
+  by PURL, but the edited SPDX 2.3 and SPDX 3 documents kept pointing at it,
+  SHA-256 included, after the edit dropped the components its statements
+  assess. An edit that drops a component, or redacts names or hosts, now
+  removes the reference (`DocumentRef-OpenVEX`; the SPDX 3
+  `vulnerabilityExploitabilityAssessment` `externalRef`) and says so on
+  stderr. Dropping annotations or redacting paths keeps it. On the moat
+  runtime-only recipe all three formats now carry no VEX, where CycloneDX
+  already went from 36 statements to 0. Where an edit keeps components that
+  statements assess, CycloneDX keeps those statements and SPDX has none;
+  `docs/user-guide/sbom-edit.md` says so (#1454).
 
 ## [0.15.0] - 2026-11-11
 

@@ -32615,7 +32615,6 @@
         }
       ],
       "purl": "pkg:generic/glibc@2.42-61",
-      "scope": "excluded",
       "type": "library",
       "version": "2.42-61"
     },
@@ -102267,7 +102266,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":1590,\"components-without-member-role\":503,\"derivations\":1749,\"distinct-cves\":13,\"edge-ineligible-components\":512,\"edges\":7761,\"identifiers\":{\"by-drv\":231,\"by-name-version\":95,\"declared\":50,\"received\":326,\"rejected\":0,\"wanted\":1237},\"licenses\":{\"degraded\":null,\"received\":230,\"wanted\":1237,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":245,\"package\":73,\"scaffolding\":267,\"source\":502},\"patches\":212,\"patches-without-cve\":197,\"roles\":{\"artifact-input\":268,\"both\":45,\"build-tooling\":1435,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":1590,\"components-without-member-role\":503,\"derivations\":1749,\"distinct-cves\":13,\"edge-ineligible-components\":512,\"edges\":6702,\"identifiers\":{\"by-drv\":231,\"by-name-version\":95,\"declared\":50,\"received\":326,\"rejected\":0,\"wanted\":1237},\"licenses\":{\"degraded\":null,\"received\":230,\"wanted\":1237,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":245,\"package\":73,\"scaffolding\":267,\"source\":502},\"patches\":212,\"patches-without-cve\":197,\"roles\":{\"artifact-input\":268,\"both\":45,\"build-tooling\":1435,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",
@@ -102279,7 +102278,7 @@
       },
       {
         "name": "waybill:closure-scope-method",
-        "value": "{\"method\":\"reachability-walk\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-source\":\"derivation-fields\",\"store\":null,\"unavailable-reason\":\"not-in-any-store\",\"unmatched-runtime-paths\":null,\"verified\":null,\"walk-outcome\":\"used\"}"
+        "value": "{\"c-runtime-libraries\":\"libc-only\",\"method\":\"reachability-walk\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-roots\":{\"declared-edges\":91,\"derivation-fields\":33},\"static-link-source\":\"mixed\",\"store\":null,\"unavailable-reason\":\"not-in-any-store\",\"unmatched-runtime-paths\":null,\"verified\":null,\"walk-outcome\":\"used\"}"
       }
     ],
     "supplier": {

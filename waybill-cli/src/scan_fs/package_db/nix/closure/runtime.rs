@@ -45,7 +45,7 @@ use waybill_common::resolution::{Relationship, ResolvedComponent};
 
 use super::derivation::{store_basename, RawClosure};
 use super::member_key::{key_of_component, key_of_derivation, MemberKey};
-use super::static_link::{static_link_set, DeclaredEdges, ManifestTestDeps, StaticLinkSource};
+use super::static_link::{static_link_set, DeclaredEdges, ManifestTestDeps, StaticLinkRoots};
 use super::walk;
 use super::{guard, ClassifiedClosure};
 use crate::scan_fs::package_db::nix::eval::invoke::run_bounded;
@@ -330,6 +330,29 @@ impl WalkOutcome {
     }
 }
 
+/// #1467 — which C runtime libraries the marks assessed (C216
+/// `c-runtime-libraries`), when the runtime closure did not decide them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum CRuntimeLibraries {
+    /// The walk kept the C library its members' compiler links
+    /// ([`walk::compiler_libcs`]). The compiler's own runtime libraries
+    /// (gcc's `lib` output: `libgcc_s`, `libstdc++`) and what the C library
+    /// references were not assessed.
+    LibcOnly,
+    /// None was assessed: the role rule decided, or no walked member names a
+    /// C compiler.
+    NotAssessed,
+}
+
+impl CRuntimeLibraries {
+    pub(crate) fn wire(self) -> &'static str {
+        match self {
+            Self::LibcOnly => "libc-only",
+            Self::NotAssessed => "not-assessed",
+        }
+    }
+}
+
 /// C216 — how the document's scope marks were decided.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ScopeMethodRecord {
@@ -337,7 +360,12 @@ pub(crate) struct ScopeMethodRecord {
     pub(crate) store: Option<String>,
     pub(crate) verified: Option<bool>,
     pub(crate) unavailable_reason: Option<RuntimeUnavailable>,
-    pub(crate) static_link_source: Option<StaticLinkSource>,
+    /// The static-link roots each source decided; the source is derived from
+    /// it (#1456). `None` when no static-link set was computed.
+    pub(crate) static_link: Option<StaticLinkRoots>,
+    /// `None` under `runtime-closure`, whose listing holds every C library a
+    /// runtime path references.
+    pub(crate) c_runtime_libraries: Option<CRuntimeLibraries>,
     pub(crate) unmatched_runtime_paths: Option<usize>,
     /// `None` when no walk ran.
     pub(crate) walk_outcome: Option<WalkOutcome>,
@@ -350,7 +378,7 @@ impl ScopeMethodRecord {
     /// The record for marks taken from the runtime closure.
     pub(crate) fn runtime_closure(
         runtime: &RuntimeClosure,
-        static_link_source: StaticLinkSource,
+        static_link: StaticLinkRoots,
         unmatched_runtime_paths: usize,
     ) -> Self {
         Self {
@@ -358,7 +386,8 @@ impl ScopeMethodRecord {
             store: Some(runtime.store.wire().to_string()),
             verified: Some(runtime.verified),
             unavailable_reason: None,
-            static_link_source: Some(static_link_source),
+            static_link: Some(static_link),
+            c_runtime_libraries: None,
             unmatched_runtime_paths: Some(unmatched_runtime_paths),
             walk_outcome: None,
             outputs: None,
@@ -369,14 +398,16 @@ impl ScopeMethodRecord {
     /// runtime closure could not be had for `reason`.
     pub(crate) fn reachability_walk(
         reason: RuntimeUnavailable,
-        static_link_source: StaticLinkSource,
+        static_link: StaticLinkRoots,
+        c_runtime_libraries: CRuntimeLibraries,
     ) -> Self {
         Self {
             method: ScopeMethod::ReachabilityWalk,
             store: None,
             verified: None,
             unavailable_reason: Some(reason),
-            static_link_source: Some(static_link_source),
+            static_link: Some(static_link),
+            c_runtime_libraries: Some(c_runtime_libraries),
             unmatched_runtime_paths: None,
             walk_outcome: Some(WalkOutcome::Used),
             outputs: None,
@@ -385,20 +416,22 @@ impl ScopeMethodRecord {
 
     /// The record for marks left to the role rule, because the runtime
     /// closure could not be had for `reason`. `walk_outcome` says whether a
-    /// walk ran and was set aside, or none could run. `static_link_source`
-    /// is set only when the walk was set aside and the consumed static
-    /// build's libraries were kept runtime (T042).
+    /// walk ran and was set aside, or none could run. `static_link` is set
+    /// only when the walk was set aside and the consumed static build's
+    /// libraries were kept runtime (T042). The role rule assesses no C
+    /// runtime library.
     pub(crate) fn closure_role(
         reason: RuntimeUnavailable,
         walk_outcome: Option<WalkOutcome>,
-        static_link_source: Option<StaticLinkSource>,
+        static_link: Option<StaticLinkRoots>,
     ) -> Self {
         Self {
             method: ScopeMethod::ClosureRole,
             store: None,
             verified: None,
             unavailable_reason: Some(reason),
-            static_link_source,
+            static_link,
+            c_runtime_libraries: Some(CRuntimeLibraries::NotAssessed),
             unmatched_runtime_paths: None,
             walk_outcome,
             outputs: None,
@@ -412,6 +445,10 @@ impl ScopeMethodRecord {
         // Inserted in sorted order so the bytes do not depend on whether
         // `serde_json` preserves insertion order.
         let mut o = serde_json::Map::new();
+        o.insert(
+            "c-runtime-libraries".into(),
+            opt_str(self.c_runtime_libraries.map(CRuntimeLibraries::wire)),
+        );
         o.insert("method".into(), self.method.wire().into());
         o.insert(
             "outputs".into(),
@@ -428,8 +465,17 @@ impl ScopeMethodRecord {
         // document says so rather than implying otherwise.
         o.insert("static-c-linking-detected".into(), false.into());
         o.insert(
+            "static-link-roots".into(),
+            self.static_link.map_or(Value::Null, |r| {
+                let mut counts = serde_json::Map::new();
+                counts.insert("declared-edges".into(), r.declared_edges.into());
+                counts.insert("derivation-fields".into(), r.derivation_fields.into());
+                Value::Object(counts)
+            }),
+        );
+        o.insert(
             "static-link-source".into(),
-            opt_str(self.static_link_source.map(StaticLinkSource::wire)),
+            opt_str(self.static_link.map(|r| r.source().wire())),
         );
         o.insert("store".into(), opt_str(self.store.as_deref()));
         o.insert(
@@ -881,27 +927,40 @@ fn decide(
                     reached_derivations = walked.len(),
                     consumed_haskell_builds = consumed.len(),
                     statically_linked = linked.len(),
-                    static_link_source = linked_libs.source.wire(),
+                    static_link_source = linked_libs.source().wire(),
                     "nix-closure: the reachability walk reached only the evaluated package; \
                      scope from the closure role, keeping the consumed static build runtime"
                 );
                 let record = ScopeMethodRecord::closure_role(
                     *reason,
                     Some(WalkOutcome::ReachedOnlyRoot),
-                    Some(linked_libs.source),
+                    Some(linked_libs.roots),
                 );
                 return (RuntimeEvidence::RoleWithLinked { linked }, Some(record));
             }
+            // #1467: the C library is named by no dependency field, only by
+            // each member's compiler. Added after the reached-only-root test
+            // above, which is about what the walk itself could follow: a
+            // wrapper's own compiler names a libc too.
+            let libcs = walk::compiler_libcs(raw, &walked);
+            let reached: HashSet<MemberKey> =
+                reached.into_iter().chain(libcs.iter().filter_map(key_of)).collect();
+            let c_runtime = if libcs.is_empty() {
+                CRuntimeLibraries::NotAssessed
+            } else {
+                CRuntimeLibraries::LibcOnly
+            };
             tracing::info!(
                 reason = reason.wire(),
                 derivations = raw.derivations.len(),
                 reached_derivations = walked.len(),
                 statically_linked = linked.members.len(),
+                compiler_libcs = libcs.len(),
                 reached_members = reached.len(),
-                static_link_source = linked.source.wire(),
+                static_link_source = linked.source().wire(),
                 "nix-closure: scope from the reachability walk (an approximation)"
             );
-            let record = ScopeMethodRecord::reachability_walk(*reason, linked.source);
+            let record = ScopeMethodRecord::reachability_walk(*reason, linked.roots, c_runtime);
             return (RuntimeEvidence::Walk { reached }, Some(record));
         }
         Ok(rc) => rc,
@@ -958,11 +1017,11 @@ fn decide(
         runtime_members = runtime.len(),
         seeded_from_root = seeds.difference(&runtime_drvs).count(),
         statically_linked = static_linked.len(),
-        static_link_source = linked.source.wire(),
+        static_link_source = linked.source().wire(),
         unmatched,
         "nix-closure: scope from the runtime closure"
     );
-    let record = ScopeMethodRecord::runtime_closure(rc, linked.source, unmatched);
+    let record = ScopeMethodRecord::runtime_closure(rc, linked.roots, unmatched);
     (RuntimeEvidence::Closure { runtime, static_linked }, Some(record))
 }
 
@@ -1366,34 +1425,51 @@ mod tests {
             store: RuntimeStore::Substituter("https://cache.example".into()),
             verified: true,
         };
-        let mut record = ScopeMethodRecord::runtime_closure(&rc, StaticLinkSource::DeclaredEdges, 3);
+        let declared = StaticLinkRoots { declared_edges: 4, derivation_fields: 0 };
+        let mut record = ScopeMethodRecord::runtime_closure(&rc, declared, 3);
         record.outputs = Some(OutputSelection {
             names: vec!["bin".into(), "man".into()],
             source: OutputsSource::OutputsToInstall,
         });
         assert_eq!(
             record.wire(),
-            r#"{"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-source":"declared-edges","store":"https://cache.example","unavailable-reason":null,"unmatched-runtime-paths":3,"verified":true,"walk-outcome":null}"#
+            r#"{"c-runtime-libraries":null,"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":4,"derivation-fields":0},"static-link-source":"declared-edges","store":"https://cache.example","unavailable-reason":null,"unmatched-runtime-paths":3,"verified":true,"walk-outcome":null}"#
         );
         let w = ScopeMethodRecord::closure_role(RuntimeUnavailable::NoEvaluatedPackage, None, None)
             .wire();
         assert_eq!(
             w,
-            r#"{"method":"closure-role","outputs":null,"outputs-source":null,"schema":1,"static-c-linking-detected":false,"static-link-source":null,"store":null,"unavailable-reason":"no-evaluated-package","unmatched-runtime-paths":null,"verified":null,"walk-outcome":null}"#
+            r#"{"c-runtime-libraries":"not-assessed","method":"closure-role","outputs":null,"outputs-source":null,"schema":1,"static-c-linking-detected":false,"static-link-roots":null,"static-link-source":null,"store":null,"unavailable-reason":"no-evaluated-package","unmatched-runtime-paths":null,"verified":null,"walk-outcome":null}"#
         );
         let w = ScopeMethodRecord::closure_role(
             RuntimeUnavailable::NotInAnyStore,
             Some(WalkOutcome::ReachedOnlyRoot),
-            Some(StaticLinkSource::DerivationFields),
+            Some(StaticLinkRoots { declared_edges: 0, derivation_fields: 1 }),
         )
         .wire();
         assert!(w.ends_with(r#""verified":null,"walk-outcome":"reached-only-root"}"#), "{w}");
         assert!(w.contains(r#""static-link-source":"derivation-fields""#), "{w}");
+        // #1456: a closure whose runtime roots used both sources says so.
         let w = ScopeMethodRecord::reachability_walk(
             RuntimeUnavailable::QueryTimedOut,
-            StaticLinkSource::None,
+            StaticLinkRoots { declared_edges: 138, derivation_fields: 1 },
+            CRuntimeLibraries::LibcOnly,
         )
         .wire();
         assert!(w.ends_with(r#""verified":null,"walk-outcome":"used"}"#), "{w}");
+        assert!(
+            w.contains(r#""static-link-roots":{"declared-edges":138,"derivation-fields":1},"static-link-source":"mixed""#),
+            "{w}"
+        );
+        // #1467: the walk says which C runtime libraries it assessed.
+        assert!(w.starts_with(r#"{"c-runtime-libraries":"libc-only","#), "{w}");
+        let w = ScopeMethodRecord::reachability_walk(
+            RuntimeUnavailable::NotInAnyStore,
+            StaticLinkRoots::default(),
+            CRuntimeLibraries::NotAssessed,
+        )
+        .wire();
+        assert!(w.starts_with(r#"{"c-runtime-libraries":"not-assessed","#), "{w}");
+        assert!(w.contains(r#""static-link-source":"none""#), "{w}");
     }
 }

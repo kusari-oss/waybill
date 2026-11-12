@@ -24,7 +24,7 @@ Built only when a store answers completely and, for remote stores, verification 
 | field | type | meaning |
 |---|---|---|
 | `members` | `BTreeSet<DrvKey>` | Haskell library derivations linked into a runtime member, or into a Haskell build the evaluated wrapper root consumed (research R4, correction) |
-| `source` | `StaticLinkSource` | `DeclaredEdges` (m1275, excludes tests) or `DerivationFields` (fallback, may include test deps) |
+| `roots` | `StaticLinkRoots` | how many roots each source decided, chosen per root (#1456): `declared_edges` (m1275, excludes tests) for a root the package set confirmed, `derivation_fields` (fallback, may include test deps) for any other. `source()` derives C216 `static-link-source`: `None`, `DeclaredEdges`, `DerivationFields`, or `Mixed` when both are non-zero |
 
 Go and Rust modules are not in this set. They inherit from their host through the existing `embedded-build-info` relationships.
 
@@ -38,7 +38,7 @@ Go and Rust modules are not in this set. They inherit from their host through th
 
 Built in `scan_cmd.rs` (via `closure/runtime.rs::evidence`) from `ClassifiedClosure` before `assign_role_scope`, keyed by component identity (`MemberKey`) rather than `.drv`, because build variants share a component. `None` is used when the closure tier degraded, and today's behaviour is unchanged in that case; it is also used for `no-evaluated-package` (rule 5).
 
-`Walk.reached` is the walk from the evaluated derivation over `ARTIFACT_FIELDS` (`closure/walk.rs`, the `reach.py` rule) united with the static-link set computed from the reached Haskell members. The `RuntimeUnavailable` reason is not carried here: the pass does not need it, and C216's `ScopeMethodRecord` holds it.
+`Walk.reached` is the walk from the evaluated derivation over `ARTIFACT_FIELDS` (`closure/walk.rs`, the `reach.py` rule) united with the static-link set computed from the reached Haskell members, and with the C library each walked member's compiler links (`walk::compiler_libcs`: `stdenv` → C compiler wrapper in its `defaultNativeBuildInputs` → `libc_lib`, less a bootstrap libc another found libc was built from; #1467). The libc is added after the `reached-only-root` test, which is about what the walk itself followed. The `RuntimeUnavailable` reason is not carried here: the pass does not need it, and C216's `ScopeMethodRecord` holds it.
 
 ## ScopeEvidence (`waybill-common/src/resolution.rs`, beside `ArtifactPresence`)
 

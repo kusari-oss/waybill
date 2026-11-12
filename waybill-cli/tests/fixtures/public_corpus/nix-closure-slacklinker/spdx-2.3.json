@@ -107,7 +107,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":2351,\\\"components-without-member-role\\\":833,\\\"derivations\\\":2518,\\\"distinct-cves\\\":19,\\\"edge-ineligible-components\\\":523,\\\"edges\\\":13452,\\\"identifiers\\\":{\\\"by-drv\\\":492,\\\"by-name-version\\\":103,\\\"declared\\\":54,\\\"received\\\":595,\\\"rejected\\\":0,\\\"wanted\\\":1995},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":490,\\\"wanted\\\":1995,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":256,\\\"package\\\":93,\\\"scaffolding\\\":267,\\\"source\\\":902},\\\"patches\\\":285,\\\"patches-without-cve\\\":264,\\\"roles\\\":{\\\"artifact-input\\\":555,\\\"both\\\":60,\\\"build-tooling\\\":1902,\\\"unreferenced\\\":1}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":2351,\\\"components-without-member-role\\\":833,\\\"derivations\\\":2518,\\\"distinct-cves\\\":19,\\\"edge-ineligible-components\\\":523,\\\"edges\\\":11883,\\\"identifiers\\\":{\\\"by-drv\\\":492,\\\"by-name-version\\\":103,\\\"declared\\\":54,\\\"received\\\":595,\\\"rejected\\\":0,\\\"wanted\\\":1995},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":490,\\\"wanted\\\":1995,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":256,\\\"package\\\":93,\\\"scaffolding\\\":267,\\\"source\\\":902},\\\"patches\\\":285,\\\"patches-without-cve\\\":264,\\\"roles\\\":{\\\"artifact-input\\\":555,\\\"both\\\":60,\\\"build-tooling\\\":1902,\\\"unreferenced\\\":1}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -125,7 +125,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-scope-method\",\"value\":\"{\\\"method\\\":\\\"runtime-closure\\\",\\\"outputs\\\":[\\\"out\\\"],\\\"outputs-source\\\":\\\"outputs-to-install\\\",\\\"schema\\\":1,\\\"static-c-linking-detected\\\":false,\\\"static-link-source\\\":\\\"derivation-fields\\\",\\\"store\\\":\\\"local\\\",\\\"unavailable-reason\\\":null,\\\"unmatched-runtime-paths\\\":0,\\\"verified\\\":true,\\\"walk-outcome\\\":null}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-scope-method\",\"value\":\"{\\\"c-runtime-libraries\\\":null,\\\"method\\\":\\\"runtime-closure\\\",\\\"outputs\\\":[\\\"out\\\"],\\\"outputs-source\\\":\\\"outputs-to-install\\\",\\\"schema\\\":1,\\\"static-c-linking-detected\\\":false,\\\"static-link-roots\\\":{\\\"declared-edges\\\":0,\\\"derivation-fields\\\":1},\\\"static-link-source\\\":\\\"derivation-fields\\\",\\\"store\\\":\\\"local\\\",\\\"unavailable-reason\\\":null,\\\"unmatched-runtime-paths\\\":0,\\\"verified\\\":true,\\\"walk-outcome\\\":null}\"}"
     },
     {
       "annotationDate": "<masked>",
