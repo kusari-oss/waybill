@@ -174,27 +174,33 @@ impl RawDerivation {
         self.outputs.values().filter_map(|o| o.path.as_deref())
     }
 
-    /// The path of the output an attribute's `outPath` names: the first entry
-    /// of the derivation's `outputs` attribute.
+    /// The derivation's default output: the first entry of its `outputs`
+    /// attribute, without which `out`, then a sole output.
     ///
     /// Milestone 1423. `nix derivation show` keys its `outputs` object
     /// alphabetically, so the order survives only in the attribute (`env`, or
-    /// the typed carrier under structured attributes). Measured against the
-    /// evaluated `outPath` for shellcheck, curl, hlint and pandoc: 4 of 4
-    /// agree (`specs/1423-nix-runtime-scope/measurements/nix-behaviour/q9-*`).
-    /// Without the attribute, `out`, then a sole output.
-    pub(crate) fn default_output_path(&self) -> Option<&str> {
-        let named = self
-            .paths_in("outputs")
+    /// the typed carrier under structured attributes). It is the output an
+    /// attribute's `outPath` names **only when the attribute selects no
+    /// output**: shellcheck, curl, hlint and pandoc agree (q9), but
+    /// `pkgs.postgrest` and `pkgs.cachix` are their `bin` outputs
+    /// (`outputSpecified`), while their `outputs` start with `out` (q11,
+    /// #1458). The runtime query therefore asks the evaluation which outputs
+    /// the attribute installs, and uses this only as the fallback.
+    pub(crate) fn default_output_name(&self) -> Option<&str> {
+        self.paths_in("outputs")
             .next()
-            .and_then(|head| self.outputs.get(head))
-            .or_else(|| self.outputs.get("out"))
+            .filter(|head| self.outputs.contains_key(*head))
+            .or_else(|| self.outputs.contains_key("out").then_some("out"))
             .or_else(|| {
                 (self.outputs.len() == 1)
-                    .then(|| self.outputs.values().next())
+                    .then(|| self.outputs.keys().next().map(String::as_str))
                     .flatten()
-            })?;
-        named.path.as_deref()
+            })
+    }
+
+    /// The path of the named output, when the derivation declares it.
+    pub(crate) fn output_path(&self, name: &str) -> Option<&str> {
+        self.outputs.get(name)?.path.as_deref()
     }
 
     /// Whether nixpkgs' Haskell generic builder built this derivation.

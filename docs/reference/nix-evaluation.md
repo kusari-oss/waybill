@@ -250,8 +250,9 @@ those patches with no component to attach to.
 
 ### What ships, and a runtime-only document (milestone 1423)
 
-Members outside the evaluated package's runtime closure carry the
-not-in-artifact mark: CycloneDX `scope: excluded`, SPDX 2.3 `BUILD_TOOL_OF`,
+Members outside the runtime closure of the outputs the evaluated attribute
+installs (its selected output, else `meta.outputsToInstall`, else its
+default output; C216 `outputs` says which) carry the not-in-artifact mark: CycloneDX `scope: excluded`, SPDX 2.3 `BUILD_TOOL_OF`,
 SPDX 3 `usesTool` with `scope: build`. The document-scope
 `waybill:closure-scope-method` (C216) says whether the marks came from the
 runtime closure (`nix path-info -r`, exact for what the output references) or

@@ -132,6 +132,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A `--nix-closure` document's runtime closure is that of the output
+  the attribute installs.** The runtime query asked about the head of the
+  evaluated derivation's `outputs`. `pkgs.postgrest` and `pkgs.cachix` are
+  their `bin` outputs while their `outputs` start with `out`, the library,
+  so postgrest's runtime view kept the 754 paths of `out` where the
+  executable references 129, leaving c-ares and libxslt in it. The query now
+  takes the attribute's selected output, else its `meta.outputsToInstall`
+  (shellcheck: `bin`, `man`, `doc`, queried as one union), read from one
+  extra pure evaluation of the attribute (~0.45 s), and falls back to the
+  default output when that cannot be had. C216 gains `outputs` and
+  `outputs-source` (`output-specified`, `outputs-to-install` or
+  `default-output`), so a document says which outputs were used and when
+  the fallback was (#1458).
 - **A `--nix-closure` CycloneDX document with re-identified Python
   members is schema-valid again.** Milestone 1366 recorded why a closure
   member's `pkg:pypi` identifier was derived by adding a
