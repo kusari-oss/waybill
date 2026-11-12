@@ -127,7 +127,8 @@ pub struct NixClosureSummary {
     pub distinct_cves: usize,
     /// What the reader saw but did not consult (#1348).
     pub read_outcome: super::derivation::ReadOutcome,
-    /// Dependency edges the closure contributed (milestone 1280, FR-008).
+    /// Dependency edges the closure contributed (milestone 1280, FR-008): the
+    /// distinct pairs in the document, not the `.drv`-keyed projection (#1445).
     ///
     /// Recorded so a closure that contributed **no** edges is distinguishable
     /// from one that was never read. Before milestone 1280 this was always
@@ -182,19 +183,72 @@ impl NixClosureSummary {
         // total drift, and the drift would be invisible: both would still
         // produce a plausible number.
         let totals = super::patches::totals(patched);
-        // Built once and measured twice. Calling `emit::components` again for
-        // the member-role counts would be a second traversal that could
-        // disagree with the first, and the disagreement would be invisible:
-        // both numbers would look plausible.
+        let mut summary = Self {
+            attribute: closure.attribute.clone(),
+            derivations: closure.raw.derivations.len(),
+            role_counts: closure.role_counts(),
+            components_emitted: 0,
+            patches: totals.patches,
+            patches_without_cve: totals.without_cve,
+            distinct_cves: totals.distinct_cves,
+            read_outcome: closure.read_outcome.clone(),
+            edges: 0,
+            license_coverage: closure.license_coverage.clone(),
+            identifier_coverage: closure.identifiers.coverage.clone(),
+            licenses_degraded: closure.degraded_licenses.as_ref().map(|r| r.wire().to_string()),
+            member_role_counts: Default::default(),
+            components_without_member_role: 0,
+            edge_ineligible_components: 0,
+            scope_method: None,
+        };
+        // Provisional: what the closure alone would contribute, before it
+        // meets any other reader's components. The scan replaces these with
+        // [`Self::count_emitted`] over the final document; a caller holding
+        // only the closure gets the same measure over what it has.
         let components = emit::components(closure);
+        let (edges, _) = super::graph::relationships(&closure.graph, &closure.raw, &components);
+        summary.count_emitted(&components, &edges);
+        summary
+    }
+
+    /// Take `components-emitted`, its member-role breakdown and `edges` from
+    /// the components and relationships a document will be written from
+    /// (#1445).
+    ///
+    /// Called by the scan after every pass that can add, merge, rename or
+    /// remove a closure member, so each figure is checkable against the
+    /// document it is emitted in. Taken earlier they were not: `edges` was the
+    /// `.drv`-keyed projection, counted before build variants of one package
+    /// collapse onto one component (moat: 7,978 projected, 6,167 contributed),
+    /// and `--exclude-scope` removes members after the record used to be
+    /// built.
+    ///
+    /// - A closure member is a component carrying the C182 role, whether the
+    ///   closure appended it or merged it into another reader's component.
+    /// - An edge is a distinct `(from, to)` pair of a relationship the closure
+    ///   graph contributed whose endpoints are both components. A pair another
+    ///   reader also contributed is counted: it is in the document. Edges from
+    ///   other sources -- manifests, the identity pass's declared edges, the
+    ///   contents pass, the subject anchoring the emitters add -- are not, so
+    ///   a document's dependency total is at least this and usually more.
+    pub(crate) fn count_emitted(
+        &mut self,
+        components: &[waybill_common::resolution::ResolvedComponent],
+        relationships: &[waybill_common::resolution::Relationship],
+    ) {
         let mut member_role_counts: std::collections::BTreeMap<&'static str, usize> =
             super::member::MemberRole::ALL
                 .iter()
                 .map(|r| (r.wire(), 0usize))
                 .collect();
+        let mut members = 0usize;
         let mut without_member_role = 0usize;
         let mut edge_ineligible = 0usize;
-        for c in &components {
+        for c in components
+            .iter()
+            .filter(|c| c.extra_annotations.contains_key(emit::ANN_CLOSURE_ROLE))
+        {
+            members += 1;
             match c
                 .extra_annotations
                 .get(super::member::ANN_MEMBER_ROLE)
@@ -218,29 +272,19 @@ impl NixClosureSummary {
                 None => without_member_role += 1,
             }
         }
-        Self {
-            attribute: closure.attribute.clone(),
-            derivations: closure.raw.derivations.len(),
-            role_counts: closure.role_counts(),
-            components_emitted: components.len(),
-            patches: totals.patches,
-            patches_without_cve: totals.without_cve,
-            distinct_cves: totals.distinct_cves,
-            read_outcome: closure.read_outcome.clone(),
-            // The projected, `.drv`-keyed count. Deliberately not the
-            // post-join relationship count: that depends on the final
-            // component set, which does not exist when this summary is built,
-            // and a figure that changes depending on when you ask is worse
-            // than one that is explicit about what it counts.
-            edges: closure.graph.edges.len(),
-            license_coverage: closure.license_coverage.clone(),
-            identifier_coverage: closure.identifiers.coverage.clone(),
-            licenses_degraded: closure.degraded_licenses.as_ref().map(|r| r.wire().to_string()),
-            member_role_counts,
-            components_without_member_role: without_member_role,
-            edge_ineligible_components: edge_ineligible,
-            scope_method: None,
-        }
+        let present: std::collections::HashSet<&str> =
+            components.iter().map(|c| c.purl.as_str()).collect();
+        let edges: std::collections::BTreeSet<(&str, &str)> = relationships
+            .iter()
+            .filter(|r| super::graph::is_closure_edge(r))
+            .filter(|r| present.contains(r.from.as_str()) && present.contains(r.to.as_str()))
+            .map(|r| (r.from.as_str(), r.to.as_str()))
+            .collect();
+        self.components_emitted = members;
+        self.member_role_counts = member_role_counts;
+        self.components_without_member_role = without_member_role;
+        self.edge_ineligible_components = edge_ineligible;
+        self.edges = edges.len();
     }
 
     /// The C216 wire value — a JSON object with sorted keys and `schema: 1`,
