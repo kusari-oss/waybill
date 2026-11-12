@@ -1,0 +1,34 @@
+curl grype before=211 after=226 lost=0 gained=15 gained_elsewhere=0
+curl trivy before=4 after=4 lost=0 gained=0 gained_elsewhere=0
+curl osv before=7 after=7 lost=0 gained=0 gained_elsewhere=0
+openssh grype before=237 after=252 lost=0 gained=15 gained_elsewhere=0
+openssh trivy before=3 after=3 lost=0 gained=0 gained_elsewhere=0
+openssh osv before=5 after=5 lost=0 gained=0 gained_elsewhere=0
+httpie grype before=355 after=370 lost=0 gained=15 gained_elsewhere=0
+httpie trivy before=141 after=141 lost=0 gained=0 gained_elsewhere=0
+httpie osv before=246 after=246 lost=0 gained=0 gained_elsewhere=0
+gh grype before=266 after=281 lost=0 gained=15 gained_elsewhere=0
+gh trivy before=57 after=57 lost=0 gained=0 gained_elsewhere=0
+gh osv before=72 after=72 lost=0 gained=0 gained_elsewhere=0
+ripgrep grype before=232 after=247 lost=0 gained=15 gained_elsewhere=0
+ripgrep trivy before=26 after=26 lost=0 gained=0 gained_elsewhere=0
+ripgrep osv before=53 after=53 lost=0 gained=0 gained_elsewhere=0
+moat grype before=220 after=235 lost=0 gained=15 gained_elsewhere=0
+moat trivy before=13 after=13 lost=0 gained=0 gained_elsewhere=0
+moat osv before=26 after=26 lost=0 gained=0 gained_elsewhere=0
+--- grype findings gained, by component (count of targets)
+   6 CVE-2014-8139	unzip	6.0
+   6 CVE-2014-8140	unzip	6.0
+   6 CVE-2014-8141	unzip	6.0
+   6 CVE-2014-9636	unzip	6.0
+   6 CVE-2014-9913	unzip	6.0
+   6 CVE-2015-7696	unzip	6.0
+   6 CVE-2015-7697	unzip	6.0
+   6 CVE-2016-9844	unzip	6.0
+   6 CVE-2018-1000035	unzip	6.0
+   6 CVE-2018-18384	unzip	6.0
+   6 CVE-2019-13232	unzip	6.0
+   6 CVE-2019-6293	flex	2.6.4
+   6 CVE-2021-4217	unzip	6.0
+   6 CVE-2022-0529	unzip	6.0
+   6 CVE-2022-0530	unzip	6.0

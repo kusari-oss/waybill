@@ -1,0 +1,96 @@
+curl	unzip	6.0	CVE-2014-8139	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2014-8140	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2014-8141	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2014-9636	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2014-9913	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2015-7696	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2015-7697	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2016-9844	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2018-18384	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2019-13232	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2021-4217	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2022-0529	PATCHED-BY-NIX
+curl	unzip	6.0	CVE-2022-0530	PATCHED-BY-NIX
+curl	flex	not-patched	1
+curl	unzip	not-patched	1
+curl	unzip	patched	13
+openssh	unzip	6.0	CVE-2014-8139	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2014-8140	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2014-8141	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2014-9636	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2014-9913	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2015-7696	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2015-7697	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2016-9844	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2018-18384	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2019-13232	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2021-4217	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2022-0529	PATCHED-BY-NIX
+openssh	unzip	6.0	CVE-2022-0530	PATCHED-BY-NIX
+openssh	flex	not-patched	1
+openssh	unzip	not-patched	1
+openssh	unzip	patched	13
+httpie	unzip	6.0	CVE-2014-8139	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2014-8140	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2014-8141	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2014-9636	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2014-9913	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2015-7696	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2015-7697	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2016-9844	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2018-18384	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2019-13232	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2021-4217	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2022-0529	PATCHED-BY-NIX
+httpie	unzip	6.0	CVE-2022-0530	PATCHED-BY-NIX
+httpie	flex	not-patched	1
+httpie	unzip	not-patched	1
+httpie	unzip	patched	13
+gh	unzip	6.0	CVE-2014-8139	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2014-8140	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2014-8141	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2014-9636	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2014-9913	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2015-7696	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2015-7697	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2016-9844	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2018-18384	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2019-13232	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2021-4217	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2022-0529	PATCHED-BY-NIX
+gh	unzip	6.0	CVE-2022-0530	PATCHED-BY-NIX
+gh	flex	not-patched	1
+gh	unzip	not-patched	1
+gh	unzip	patched	13
+ripgrep	unzip	6.0	CVE-2014-8139	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2014-8140	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2014-8141	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2014-9636	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2014-9913	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2015-7696	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2015-7697	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2016-9844	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2018-18384	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2019-13232	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2021-4217	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2022-0529	PATCHED-BY-NIX
+ripgrep	unzip	6.0	CVE-2022-0530	PATCHED-BY-NIX
+ripgrep	flex	not-patched	1
+ripgrep	unzip	not-patched	1
+ripgrep	unzip	patched	13
+moat	unzip	6.0	CVE-2014-8139	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2014-8140	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2014-8141	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2014-9636	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2014-9913	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2015-7696	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2015-7697	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2016-9844	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2018-18384	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2019-13232	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2021-4217	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2022-0529	PATCHED-BY-NIX
+moat	unzip	6.0	CVE-2022-0530	PATCHED-BY-NIX
+moat	flex	not-patched	1
+moat	unzip	not-patched	1
+moat	unzip	patched	13

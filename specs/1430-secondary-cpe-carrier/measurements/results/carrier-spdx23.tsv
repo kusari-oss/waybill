@@ -1,0 +1,5 @@
+variant	grype_exit	grype_unzip	trivy_exit	trivy_findings
+primary	0	0	0	0
+both	0	14	0	0
+reversed	0	14	0	0
+second	0	14	0	0
