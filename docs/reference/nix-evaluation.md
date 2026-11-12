@@ -290,6 +290,58 @@ Haskell component for binds to its compiler-supplied `pkg:hackage/<name>`
 component, and any other such target gets no edge. Those members are also
 never merged into another reader's component of the same name (#1466).
 
+### GHC boot-library versions (milestone 966)
+
+GHC ships `base`, `process`, `bytestring`, `Cabal` and about 40 more
+libraries inside the compiler. nixpkgs binds them to `null`, so the package
+set has no version for them. Without a closure they stay versionless and
+`compiler-supplied` (C170). Their versions change between patch releases:
+`base` and `process` differ in every GHC series with more than one release.
+So the version can only be known from the exact compiler.
+
+The closure names that compiler. Each Haskell member's `nativeBuildInputs`
+holds a `ghc-X.Y.Z` (or bootstrap `ghc-binary-X.Y.Z`) store path. waybill
+looks the release up in a committed, dated table
+(`haskell_packages/ghc_boot_libraries.tsv`, produced by
+`scripts/ghc-boot-libraries.py`):
+
+- **Primary source:** GHC's release notes ("Included libraries").
+- **Gap filler:** Stack's `global-hints.yaml`, for the libraries the notes
+  omit.
+- **Disagreements:** settled from GHC's own release tag.
+
+A test checks the table against every GHC package database it can find, and
+CI requires it on Linux.
+
+- **Declared by the project:** the version shipped by the compiler that
+  built the evaluated output. The tier stays `design`.
+- **Declared by a closure member:** the version shipped by the compiler that
+  built that member. A member built once by the bootstrap GHC and once by
+  the project's GHC depends on both versions. Where the two compilers ship
+  different versions, the document holds one component per version.
+- **Provenance:** C218 `waybill:boot-library-compiler` on each such
+  component names the compiler. Document row C219
+  `waybill:ghc-boot-libraries` lists every compiler found, whether the table
+  had it, the system, and the table's date.
+- **Compiler not in the table:** a release newer than the table leaves
+  today's `compiler-supplied` behaviour, and C219 records it as
+  `absent-from-table`.
+- **Windows-only libraries:** `Win32` is never versioned on a non-Windows
+  system.
+
+```sh
+jq -r '.metadata.properties[] | select(.name=="waybill:ghc-boot-libraries") | .value' app.cdx.json
+# {"compilers":{"ghc-9.10.3":"in-table","ghc-binary-9.8.4":"in-table"},"project":"ghc-9.10.3",
+#  "schema":1,"system":"x86_64-linux","table":"2026-11-12"}
+```
+
+This is what lets a vulnerability scanner see them. On the five Haskell
+closure corpus targets, osv-scanner 2.7.0 newly reports HSEC-2023-0007 on
+`base` and HSEC-2026-0006 on the `Cabal` GHC ships, and loses no finding.
+On openai it also reports HSEC-2024-0003, which affects `process` on
+Windows only. That match is correct for the version; whether it applies is
+a VEX question.
+
 ### The document's subject (milestone 1377)
 
 When the closure resolves, the derivation the evaluated attribute built is

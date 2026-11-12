@@ -1,0 +1,9 @@
+# SC-002: osv-scanner 2.7.0 on the closure goldens (2026-11-12)
+
+Before = goldens at f9120ca9~1 (pre-966); after = f9120ca9. Invocation: osv-scanner scan source -L <copy named <t>.cdx.json> --format json (osv-scanner rejects the filename cdx.json).
+
+nix-closure-moat: ids before 2, after 4; lost []; gained [HSEC-2023-0007 HSEC-2026-0006]; base: 4.19.2.0=HSEC-2023-0007 4.20.2.0=HSEC-2023-0007
+nix-closure-openai: ids before 6, after 9; lost []; gained [HSEC-2023-0007 HSEC-2024-0003 HSEC-2026-0006]; base: 4.16.3.0=HSEC-2023-0007 4.18.2.1=HSEC-2023-0007
+nix-closure-shellcheck: ids before 4, after 6; lost []; gained [HSEC-2023-0007 HSEC-2026-0006]; base: 4.19.2.0=HSEC-2023-0007 4.20.2.0=HSEC-2023-0007
+nix-closure-slack-web: ids before 5, after 7; lost []; gained [HSEC-2023-0007 HSEC-2026-0006]; base: 4.19.2.0=HSEC-2023-0007 4.20.2.0=HSEC-2023-0007
+nix-closure-slacklinker: ids before 47, after 49; lost []; gained [HSEC-2023-0007 HSEC-2026-0006]; base: 4.19.2.0=HSEC-2023-0007 4.20.2.0=HSEC-2023-0007

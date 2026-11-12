@@ -2,7 +2,27 @@
 
 Measured 2026-11-12, aarch64-darwin, nix 2.34.6, waybill main@d2041e9d.
 Probes are in this directory: `patchdiff.py`, `compare.py`, `notes_vs_hints.py`,
-`coverage.py`, plus the `osv-*.json` responses.
+`coverage.py`. `osv-boot.txt` summarises the OSV responses (the per-package JSON
+was not kept).
+
+## Re-running
+
+Every script runs with `python3 -I -B` and reads only the paths it is given.
+`global-hints-2026-11-12.yaml` is the Stack snapshot every number below came
+from. Use a fresh copy (`stack/global-hints.yaml` in
+commercialhaskell/stackage-content) to measure today.
+
+| question | command |
+|---|---|
+| Does a series pin boot-library versions? | `patchdiff.py global-hints-2026-11-12.yaml` |
+| Do local GHC package databases agree with Stack? | `compare.py global-hints-2026-11-12.yaml /nix/store/<hash>-ghc-X.Y.Z …` |
+| Do the release notes agree with Stack? | Fetch `https://downloads.haskell.org/ghc/<v>/docs/users_guide/<v>-notes.html` for every `<v>` in `notes-fetch.txt` into `<dir>`, then `notes_vs_hints.py global-hints-2026-11-12.yaml notes-fetch.txt <dir>` |
+| How much would a table resolve on the goldens? | `coverage.py global-hints-2026-11-12.yaml <target>/cdx.json …` |
+| Which boot libraries have OSV advisories? | `POST https://api.osv.dev/v1/query` with `{"package":{"name":<n>,"ecosystem":"Hackage"}}` per name (`osv-boot.txt`) |
+
+Implementation-time records: `table-generation.txt` (T002), `db-check.txt`
+(T029), `fr012.txt` (T031), `golden-review.txt` (T032), `sc002-osv.txt` (T034).
+
 
 ## Answer
 
