@@ -13,6 +13,7 @@
 ```json
 {
   "doc-only-excluded": {"members": <n>, "output-names": ["devdoc", "doc", "info", "man"], "paths": <n>} | null,
+  "lib-links-excluded": {"members": <n> | null, "not-assessed": null | "remote-store" | "unreadable-output" | "unparsed-mach-o", "paths": <n> | null, "rule": "unloaded-lib-links"} | null,
   "method": "runtime-closure" | "reachability-walk" | "closure-role",
   "outputs": ["<output name>", ...] | null,
   "outputs-source": "output-specified" | "outputs-to-install" | "default-output" | null,
@@ -30,7 +31,7 @@
 ```
 
 `static-link-roots` and the `mixed` value were added by #1456,
-`c-runtime-libraries` by #1467, and `doc-only-excluded` by #1455. All are
+`c-runtime-libraries` by #1467, and `doc-only-excluded` and `lib-links-excluded` by #1455. All are
 additive: `schema` stays `1`, and every pre-existing key keeps its meaning.
 
 ## Rules
@@ -68,6 +69,13 @@ additive: `schema` stays `1`, and every pre-existing key keeps its meaning.
   - `members` counts the members the scope pass marked not-in-artifact only because of the rule: in the runtime closure, but only through documentation outputs, not exempt and not statically linked into a runtime member. Their C203 is `runtime-closure`: the runtime closure's evidence decided them, and invariant I10 accepts a marked `runtime-closure` member. Embedded modules of such a member follow their host and are not counted. `paths` counts the runtime paths the rule set aside, the documentation outputs included.
   - null unless `method = runtime-closure`: the walk and the role rule have no references to follow.
   - Measured on moat (aarch64-darwin, local store): 126 of 295 runtime paths are documentation-only, and the rule excludes 2 members, `bash-interactive` and `readline`. It excludes none of moat's test frameworks: hspec, tasty, QuickCheck and test-framework reach the runtime closure through darwin's `lib/links` symlinks in the `out` outputs of moat and its libraries, not through documentation (`measurements/doc-outputs/`).
+- `lib-links-excluded` (#1455, second rule) records the `lib/links` rule. **Decision (maintainer, option 1 on #1455): on darwin, a reference that exists only because of a member's `lib/links` symlink folder (the Haskell generic builder's link farm) does not count as shipping its target. A dylib a Mach-O file in a shipped output actually loads still ships.** The farm holds one symlink per dylib in the build environment, test dependencies included, so the runtime closure held every test framework any library in it was tested with. moat's dylib loads 3 of the 33 Haskell dylibs its farm names (`measurements/lib-links/`).
+  - For a runtime output `O` with a `lib/links` directory and a reference `O → T`: if `T`'s store hash appears in `O` outside `lib/links` (file contents or a symlink target, the way nix found the reference), the reference stands. If only `lib/links` symlinks point into `T`, it stands when one of their names is the last component of an install name (`LC_LOAD_DYLIB`, `LC_LOAD_WEAK_DYLIB`, `LC_REEXPORT_DYLIB`, `LC_LAZY_LOAD_DYLIB`, `LC_LOAD_UPWARD_DYLIB`) that some Mach-O file in a shipping output loads. dyld searches the rpaths of every image in the load chain, so the loaded names are pooled over all shipping outputs, to a fixpoint. A reference that is not a store hash, or whose hash is found nowhere, stands.
+  - The files are read from the local store. `rule` is `unloaded-lib-links`. `members` counts members marked not-in-artifact only because of the rule (not exempt, not statically linked; C203 `runtime-closure`; a member with paths set aside by both rules counts here), `paths` the runtime paths it set aside. The static-link set is seeded from shipping members only, so a library kept only as statically linked into a member the rule sets aside is marked too. It is not counted, because none of its own runtime paths was set aside (on moat: `os-string 2.0.10`).
+  - `not-assessed` is null when the rule was applied, else why it was not, with `members` and `paths` null and nothing set aside: `remote-store` (a substituter answered; its files are not here, so which file holds a reference cannot be told), `unreadable-output` (a shipping output, or one with a farm, could not be read), `unparsed-mach-o` (a Mach-O file in a shipping output has load commands that could not be parsed, so what it loads is unknown).
+  - A closure in which no runtime output has a `lib/links` directory (every Linux closure) is assessed without reading a file: `members` and `paths` are 0.
+  - null unless `method = runtime-closure`.
+  - Measured on moat (aarch64-darwin, local store, the waybill binary): `{"members":101,"paths":101}`. 22 of the 23 test-framework packages are marked. tasty stays, because vector's `out` installs an internal `benchmarks-O2` library whose dylib loads it. None of the 7 store paths dyld loads from moat's dylib is marked. The rule took 1.8 s. The first binary run reported `unparsed-mach-o` on apple-sdk's universal static archives, whose slices are `ar` archives; archive slices are now skipped.
 - `static-c-linking-detected` is always `false`. It exists so the document says, rather than implies, that static C linking is not detected (spec edge case).
 - `unmatched-runtime-paths` counts runtime store paths that joined to no emitted component, including a path whose name matches a component but whose version does not (the join is by output path, never by name). It is null unless `method = runtime-closure`.
 

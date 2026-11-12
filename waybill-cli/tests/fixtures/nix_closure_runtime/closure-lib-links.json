@@ -1,0 +1,59 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-app-1.0.drv": {
+      "name": "waybill-fixture-app-1.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "1.0",
+        "outputs": "out",
+        "propagatedBuildInputs": "/nix/store/11111111111111111111111111111115-waybill-fixture-decl-1.0 /nix/store/11111111111111111111111111111112-waybill-fixture-used-1.0",
+        "buildInputs": "/nix/store/11111111111111111111111111111113-waybill-fixture-testfw-2.11"
+      },
+      "inputs": {
+        "drvs": {
+          "d-used.drv": { "outputs": ["out"] },
+          "d-testfw.drv": { "outputs": ["out"] },
+          "d-decl.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "11111111111111111111111111111111-waybill-fixture-app-1.0" } }
+    },
+    "d-used.drv": {
+      "name": "waybill-fixture-used-1.0",
+      "env": {
+        "pname": "waybill-fixture-used",
+        "version": "1.0",
+        "propagatedBuildInputs": "/nix/store/11111111111111111111111111111116-waybill-fixture-chain-1.0"
+      },
+      "inputs": { "drvs": { "d-chain.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "11111111111111111111111111111112-waybill-fixture-used-1.0" } }
+    },
+    "d-testfw.drv": {
+      "name": "waybill-fixture-testfw-2.11",
+      "env": {
+        "pname": "waybill-fixture-testfw",
+        "version": "2.11",
+        "propagatedBuildInputs": "/nix/store/11111111111111111111111111111114-waybill-fixture-testdep-0.3"
+      },
+      "inputs": { "drvs": { "d-testdep.drv": { "outputs": ["out"] } }, "srcs": [] },
+      "outputs": { "out": { "path": "11111111111111111111111111111113-waybill-fixture-testfw-2.11" } }
+    },
+    "d-testdep.drv": {
+      "name": "waybill-fixture-testdep-0.3",
+      "env": { "pname": "waybill-fixture-testdep", "version": "0.3" },
+      "outputs": { "out": { "path": "11111111111111111111111111111114-waybill-fixture-testdep-0.3" } }
+    },
+    "d-decl.drv": {
+      "name": "waybill-fixture-decl-1.0",
+      "env": { "pname": "waybill-fixture-decl", "version": "1.0" },
+      "outputs": { "out": { "path": "11111111111111111111111111111115-waybill-fixture-decl-1.0" } }
+    },
+    "d-chain.drv": {
+      "name": "waybill-fixture-chain-1.0",
+      "env": { "pname": "waybill-fixture-chain", "version": "1.0" },
+      "outputs": { "out": { "path": "11111111111111111111111111111116-waybill-fixture-chain-1.0" } }
+    }
+  },
+  "version": 4
+}

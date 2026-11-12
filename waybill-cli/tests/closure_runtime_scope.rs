@@ -27,6 +27,7 @@
 //! | `closure-outputs.json` | postgrest (#1458) | `closure-runtime.json` with the app's `outputs` headed by `out`, the library, while the attribute installs `bin`; each output gets its own `path-info` listing |
 //! | `closure-tests-library.json` | slack-web / openai (#1283) | the evaluated package is the project (`project-tests`), a library built with its test suite: `hspec` is in its `buildInputs`, its library dependency `aeson` in `propagatedBuildInputs`; `aeson`'s own test dependency is in `aeson`'s `buildInputs`, and `text`, which propagates nothing (hashable's shape), has `tasty` in its own |
 //! | `closure-doc-outputs.json` | hlint / moat on aarch64-darwin (#1455) | members whose only runtime paths are their own `doc` or `devdoc` output, or a path only a `doc`, `man`, `info` or `devdoc` output references; a member referenced by a documentation output and by an `out`; a package named `-doc` whose output is `out` |
+//! | `closure-lib-links.json` | moat on aarch64-darwin (#1455, second rule) | an app whose `lib/links` farm points at a library its dylib loads, one loaded only by that library (dyld's load-chain rpaths), one named in `propagated-build-inputs`, and a test framework (with its own farm) that only the farm names; the files are built by `lib_links_store` |
 //! | `closure-tests-executable.json` | slacklinker (#1283) | the same project as an executable-only build: `aeson` and `hspec` share `buildInputs`, and `hspec` was built at a version the package set disagrees with |
 //!
 //! US4 reuses `closure-runtime.json`, adding a CVE-named patch to one member
@@ -333,6 +334,8 @@ fn us1_local_store_answer_records_store_local() {
             // Nothing in this closure is reached only through a documentation
             // output (#1455).
             "doc-only-excluded": {"members": 0, "output-names": ["devdoc", "doc", "info", "man"], "paths": 0},
+            // No output in this store has a lib/links folder (#1455).
+            "lib-links-excluded": {"members": 0, "not-assessed": null, "paths": 0, "rule": "unloaded-lib-links"},
             "method": "runtime-closure",
             // The stub refuses the output selection, so the default output
             // was queried and the record says so (#1458).
@@ -1133,6 +1136,8 @@ fn runtime_closure_follows_the_selected_output_not_the_head_of_outputs() {
             // Nothing in this closure is reached only through a documentation
             // output (#1455).
             "doc-only-excluded": {"members": 0, "output-names": ["devdoc", "doc", "info", "man"], "paths": 0},
+            // No output in this store has a lib/links folder (#1455).
+            "lib-links-excluded": {"members": 0, "not-assessed": null, "paths": 0, "rule": "unloaded-lib-links"},
             "method": "runtime-closure",
             "outputs": ["bin"],
             "outputs-source": "output-specified",
@@ -1253,6 +1258,7 @@ fn us2_no_store_answer_uses_walk() {
             "c-runtime-libraries": "not-assessed",
             // The rule reads the runtime closure's references (#1455).
             "doc-only-excluded": null,
+            "lib-links-excluded": null,
             "method": "reachability-walk",
             // Asked about, though no store held it.
             "outputs": ["bin"],
@@ -1468,6 +1474,7 @@ fn us2_walk_that_reaches_only_the_root_is_not_used() {
             "c-runtime-libraries": "not-assessed",
             // The rule reads the runtime closure's references (#1455).
             "doc-only-excluded": null,
+            "lib-links-excluded": null,
             "method": "closure-role",
             "outputs": ["bin"],
             "outputs-source": "default-output",
@@ -1620,6 +1627,7 @@ fn us2_no_evaluated_package_falls_back_to_closure_role() {
             "c-runtime-libraries": "not-assessed",
             // The rule reads the runtime closure's references (#1455).
             "doc-only-excluded": null,
+            "lib-links-excluded": null,
             "method": "closure-role",
             "outputs": null,
             "outputs-source": null,
@@ -1831,6 +1839,185 @@ fn the_documentation_rule_is_null_when_the_walk_decides() {
     assert_eq!(c216["method"], "reachability-walk", "{c216}");
     // Present and null: indexing an absent key also yields null.
     assert_eq!(c216.get("doc-only-excluded"), Some(&Value::Null), "{c216}");
+}
+
+// ---- #1455: references that exist only because of darwin's lib/links ------
+
+const LL_APP: &str = "11111111111111111111111111111111-waybill-fixture-app-1.0";
+const LL_USED: &str = "11111111111111111111111111111112-waybill-fixture-used-1.0";
+const LL_TESTFW: &str = "11111111111111111111111111111113-waybill-fixture-testfw-2.11";
+const LL_TESTDEP: &str = "11111111111111111111111111111114-waybill-fixture-testdep-0.3";
+const LL_DECL: &str = "11111111111111111111111111111115-waybill-fixture-decl-1.0";
+const LL_CHAIN: &str = "11111111111111111111111111111116-waybill-fixture-chain-1.0";
+
+/// A minimal 64-bit little-endian Mach-O dylib whose only load commands are
+/// `LC_LOAD_DYLIB` for each of `loads`, as `otool -L` would list them.
+fn macho_dylib(loads: &[&str]) -> Vec<u8> {
+    let mut cmds: Vec<u8> = Vec::new();
+    for name in loads {
+        let mut payload = name.as_bytes().to_vec();
+        payload.push(0);
+        while (24 + payload.len()) % 8 != 0 {
+            payload.push(0);
+        }
+        let size = (24 + payload.len()) as u32;
+        for v in [0x0c_u32, size, 24, 2, 0x0001_0000, 0x0001_0000] {
+            cmds.extend_from_slice(&v.to_le_bytes());
+        }
+        cmds.extend_from_slice(&payload);
+    }
+    let mut out: Vec<u8> = Vec::new();
+    for v in [0xfeed_facf_u32, 0x0100_000c, 0, 6, loads.len() as u32, cmds.len() as u32, 0, 0] {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
+    out.extend_from_slice(&cmds);
+    out
+}
+
+/// The darwin shape moat's closure has, built as files in a store directory:
+/// the app's `lib/links` farm points at every library its build environment
+/// held, its dylib loads only `used`, `used` loads `chain` (resolved through
+/// the app's farm, as dyld does through the loader's rpaths), `decl` is named
+/// in `nix-support/propagated-build-inputs`, and `testfw` (with its own farm
+/// entry for `testdep`) is in the farm and nowhere else. `app_loads` adds
+/// install names the app's dylib loads.
+fn lib_links_store(app_loads: &[&str]) -> tempfile::TempDir {
+    use std::os::unix::fs::symlink;
+    let store = tempfile::tempdir().unwrap();
+    let s = store.path();
+    let put = |out: &str, file: &str, bytes: &[u8]| {
+        let p = s.join(out).join(file);
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(p, bytes).unwrap();
+    };
+    let link = |out: &str, entry: &str, target_out: &str, target_file: &str| {
+        let dir = s.join(out).join("lib/links");
+        std::fs::create_dir_all(&dir).unwrap();
+        symlink(s.join(target_out).join(target_file), dir.join(entry)).unwrap();
+    };
+    let mut loads = vec!["@rpath/libHSused.dylib", "/usr/lib/libSystem.B.dylib"];
+    loads.extend_from_slice(app_loads);
+    put(LL_APP, "lib/libHSapp.dylib", &macho_dylib(&loads));
+    for (entry, out) in [
+        ("libHSused.dylib", LL_USED),
+        ("libHSchain.dylib", LL_CHAIN),
+        ("libHStestfw.dylib", LL_TESTFW),
+        ("libHSdecl.dylib", LL_DECL),
+    ] {
+        link(LL_APP, entry, out, &format!("lib/{entry}"));
+    }
+    let pbi = format!("{} {}\n", s.join(LL_DECL).display(), s.join(LL_USED).display());
+    put(LL_APP, "nix-support/propagated-build-inputs", pbi.as_bytes());
+    put(LL_USED, "lib/libHSused.dylib", &macho_dylib(&["@rpath/libHSchain.dylib"]));
+    put(LL_CHAIN, "lib/libHSchain.dylib", &macho_dylib(&[]));
+    put(LL_TESTFW, "lib/libHStestfw.dylib", &macho_dylib(&["@rpath/libHStestdep.dylib"]));
+    link(LL_TESTFW, "libHStestdep.dylib", LL_TESTDEP, "lib/libHStestdep.dylib");
+    put(LL_TESTDEP, "lib/libHStestdep.dylib", &macho_dylib(&[]));
+    put(LL_DECL, "lib/libHSdecl.dylib", &macho_dylib(&[]));
+    store
+}
+
+fn lib_links_listing() -> String {
+    listing(&[LL_APP, LL_USED, LL_TESTFW, LL_TESTDEP, LL_DECL, LL_CHAIN])
+}
+
+/// The references nix reports: the app references every farm target, and
+/// testfw its own farm target.
+const LL_REFS: &[(&str, &str)] = &[
+    (LL_APP, LL_USED),
+    (LL_APP, LL_CHAIN),
+    (LL_APP, LL_TESTFW),
+    (LL_APP, LL_DECL),
+    (LL_TESTFW, LL_TESTDEP),
+];
+
+fn lib_links_run(store: &tempfile::TempDir, runtime_store: Option<String>) -> Run {
+    let closure = fixture("closure-lib-links.json");
+    let subs = runtime_store.iter().cloned().collect();
+    scan_with(NixStub {
+        runtime: Some(lib_links_listing()),
+        runtime_refs: LL_REFS.to_vec(),
+        runtime_store,
+        substituters: subs,
+        store_dir: Some(store.path().to_path_buf()),
+        ..base(&closure)
+    })
+}
+
+/// #1455, the maintainer's second rule (option 1): a reference that exists
+/// only because of a `lib/links` symlink does not ship its target, unless a
+/// Mach-O file in a shipping output loads the dylib that symlink names. On
+/// moat, that is what keeps hspec, tasty and QuickCheck in the runtime
+/// closure (`measurements/lib-links/`).
+#[test]
+fn a_lib_links_entry_nothing_loads_does_not_ship_its_target() {
+    let store = lib_links_store(&[]);
+    let run = lib_links_run(&store, None);
+    assert_eq!(
+        run.marked(),
+        names(&["waybill-fixture-testfw", "waybill-fixture-testdep"]),
+        "stderr:\n{}",
+        run.scan.stderr
+    );
+    for n in ["waybill-fixture-testfw", "waybill-fixture-testdep", "waybill-fixture-used"] {
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+    let c216 = run.c216().expect("C216");
+    assert_eq!(
+        c216["lib-links-excluded"],
+        serde_json::json!({
+            "members": 2,
+            "not-assessed": null,
+            "paths": 2,
+            "rule": "unloaded-lib-links",
+        }),
+        "{c216}"
+    );
+}
+
+/// The hard constraint: a dylib that a Mach-O file in a shipped output loads
+/// ships, and so does what it loads in turn.
+#[test]
+fn a_dylib_a_shipped_binary_loads_still_ships() {
+    let store = lib_links_store(&["@rpath/libHStestfw.dylib"]);
+    let run = lib_links_run(&store, None);
+    assert_eq!(run.marked(), BTreeSet::new(), "stderr:\n{}", run.scan.stderr);
+    assert_eq!(run.c216().expect("C216")["lib-links-excluded"]["members"], 0);
+}
+
+/// A runtime closure from a substituter comes without its files, so which
+/// file holds a reference cannot be told. The reference keeps counting and
+/// C216 says the rule was not assessed.
+#[test]
+fn a_remote_runtime_closure_is_not_assessed_for_lib_links() {
+    let store = lib_links_store(&[]);
+    let run = lib_links_run(&store, Some(SUBSTITUTER.to_string()));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["store"], SUBSTITUTER, "{c216}");
+    assert_eq!(
+        c216["lib-links-excluded"],
+        serde_json::json!({
+            "members": null,
+            "not-assessed": "remote-store",
+            "paths": null,
+            "rule": "unloaded-lib-links",
+        }),
+        "{c216}"
+    );
+    assert_eq!(run.marked(), BTreeSet::new());
+}
+
+/// A shipping output that cannot be read could load anything, so nothing is
+/// dropped and C216 says why.
+#[test]
+fn an_unreadable_shipping_output_leaves_lib_links_unassessed() {
+    let store = lib_links_store(&[]);
+    std::fs::remove_dir_all(store.path().join(LL_USED)).unwrap();
+    let run = lib_links_run(&store, None);
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["lib-links-excluded"]["not-assessed"], "unreadable-output", "{c216}");
+    assert_eq!(c216["lib-links-excluded"]["members"], Value::Null, "{c216}");
+    assert_eq!(run.marked(), BTreeSet::new());
 }
 
 // ---- US4: the runtime-only recipe (FR-011, FR-012) ------------------------

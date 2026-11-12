@@ -46,6 +46,7 @@ use waybill_common::resolution::{Relationship, ResolvedComponent};
 use super::derivation::{store_basename, RawClosure};
 use super::member_key::{key_of_component, key_of_derivation, MemberKey};
 use super::static_link::{static_link_set, DeclaredEdges, ManifestTestDeps, StaticLinkRoots};
+use super::lib_links;
 use super::walk;
 use super::{guard, ClassifiedClosure};
 use crate::scan_fs::package_db::nix::eval::invoke::run_bounded;
@@ -114,15 +115,7 @@ pub(crate) const DOCUMENTATION_OUTPUTS: [&str; 4] = ["devdoc", "doc", "info", "m
 /// path neither reaches (the references are incomplete) is left shipping:
 /// missing evidence never drops a member.
 pub(crate) fn documentation_only(raw: &RawClosure, rc: &RuntimeClosure) -> BTreeSet<String> {
-    let names: HashMap<&str, &str> = raw
-        .derivations
-        .values()
-        .flat_map(|d| {
-            d.outputs
-                .iter()
-                .filter_map(|(n, o)| Some((store_basename(o.path.as_deref()?), n.as_str())))
-        })
-        .collect();
+    let names = output_names(raw);
     let is_doc = |p: &str| names.get(p).is_some_and(|n| DOCUMENTATION_OUTPUTS.contains(n));
     let reach = |skip_doc: bool| -> HashSet<&str> {
         let mut seen: HashSet<&str> = HashSet::new();
@@ -144,6 +137,33 @@ pub(crate) fn documentation_only(raw: &RawClosure, rc: &RuntimeClosure) -> BTree
         .filter(|p| all.contains(p.as_str()) && !shipping.contains(p.as_str()))
         .cloned()
         .collect()
+}
+
+/// Each closure output's basename and the name of the output it is.
+fn output_names(raw: &RawClosure) -> HashMap<&str, &str> {
+    raw.derivations
+        .values()
+        .flat_map(|d| {
+            d.outputs
+                .iter()
+                .filter_map(|(n, o)| Some((store_basename(o.path.as_deref()?), n.as_str())))
+        })
+        .collect()
+}
+
+/// #1455 (second rule) — what the `lib/links` rule excluded (C216
+/// `lib-links-excluded`), or why it was not assessed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum LibLinksExcluded {
+    Assessed {
+        /// Members marked not-in-artifact only because of the rule, counted
+        /// by the scope pass after the exemptions and static linking.
+        members: usize,
+        /// Runtime paths the rule set aside: reached, outside documentation
+        /// outputs, only through an unloaded `lib/links` entry.
+        paths: usize,
+    },
+    NotAssessed(lib_links::NotAssessed),
 }
 
 /// #1455 — what the documentation-output rule excluded (C216
@@ -448,6 +468,9 @@ pub(crate) struct ScopeMethodRecord {
     /// #1455 — what the documentation-output rule excluded. `None` unless
     /// the runtime closure decided: the rule reads its references.
     pub(crate) doc_only: Option<DocOnlyExcluded>,
+    /// #1455 (second rule) — what the `lib/links` rule excluded. `None`
+    /// unless the runtime closure decided.
+    pub(crate) lib_links: Option<LibLinksExcluded>,
 }
 
 impl ScopeMethodRecord {
@@ -457,6 +480,7 @@ impl ScopeMethodRecord {
         static_link: StaticLinkRoots,
         unmatched_runtime_paths: usize,
         doc_only_paths: usize,
+        lib_links: LibLinksExcluded,
     ) -> Self {
         Self {
             method: ScopeMethod::RuntimeClosure,
@@ -469,6 +493,15 @@ impl ScopeMethodRecord {
             walk_outcome: None,
             outputs: None,
             doc_only: Some(DocOnlyExcluded { members: 0, paths: doc_only_paths }),
+            lib_links: Some(lib_links),
+        }
+    }
+
+    /// #1455 (second rule) — record how many members the scope pass marked
+    /// only because of the `lib/links` rule. A no-op unless it was assessed.
+    pub(crate) fn set_lib_links_members(&mut self, n: usize) {
+        if let Some(LibLinksExcluded::Assessed { members, .. }) = self.lib_links.as_mut() {
+            *members = n;
         }
     }
 
@@ -499,6 +532,7 @@ impl ScopeMethodRecord {
             walk_outcome: Some(WalkOutcome::Used),
             outputs: None,
             doc_only: None,
+            lib_links: None,
         }
     }
 
@@ -524,6 +558,7 @@ impl ScopeMethodRecord {
             walk_outcome,
             outputs: None,
             doc_only: None,
+            lib_links: None,
         }
     }
 
@@ -548,6 +583,25 @@ impl ScopeMethodRecord {
                     DOCUMENTATION_OUTPUTS.iter().map(|n| Value::from(*n)).collect(),
                 );
                 v.insert("paths".into(), d.paths.into());
+                Value::Object(v)
+            }),
+        );
+        o.insert(
+            "lib-links-excluded".into(),
+            self.lib_links.map_or(Value::Null, |l| {
+                let (members, paths, not_assessed) = match l {
+                    LibLinksExcluded::Assessed { members, paths } => {
+                        (Value::from(members), Value::from(paths), Value::Null)
+                    }
+                    LibLinksExcluded::NotAssessed(r) => {
+                        (Value::Null, Value::Null, Value::from(r.wire()))
+                    }
+                };
+                let mut v = serde_json::Map::new();
+                v.insert("members".into(), members);
+                v.insert("not-assessed".into(), not_assessed);
+                v.insert("paths".into(), paths);
+                v.insert("rule".into(), lib_links::RULE.into());
                 Value::Object(v)
             }),
         );
@@ -980,10 +1034,15 @@ pub(crate) enum RuntimeEvidence {
     /// through documentation outputs ([`documentation_only`]). They are not
     /// in `runtime`; the set exists so the scope pass can count the members
     /// it marked only because of that rule (C216 `doc-only-excluded`).
+    ///
+    /// `links_only` (#1455, second rule) holds the members the runtime
+    /// closure holds only through `lib/links` entries nothing shipping loads
+    /// ([`lib_links`]). Like `doc_only`, it is only counted.
     Closure {
         runtime: HashSet<MemberKey>,
         static_linked: HashSet<MemberKey>,
         doc_only: HashSet<MemberKey>,
+        links_only: HashSet<MemberKey>,
     },
     /// Marks come from the reachability walk (US2): `reached` is what the walk
     /// from the evaluated package reaches, plus the Haskell libraries
@@ -1130,10 +1189,42 @@ fn decide(
     // ship. Everything below reads the paths that do; the full listing is
     // still what `unmatched-runtime-paths` counts against.
     let doc_only_paths = documentation_only(raw, rc);
-    let shipping: BTreeSet<String> = rc.paths.difference(&doc_only_paths).cloned().collect();
+    // #1455, second rule: nor does a path reached only through `lib/links`
+    // entries no shipping Mach-O file loads. Read from the local store's
+    // files; a substituter's answer leaves it unassessed.
+    let names = output_names(raw);
+    let is_doc = |p: &str| names.get(p).is_some_and(|n| DOCUMENTATION_OUTPUTS.contains(n));
+    let past_doc: HashSet<&str> =
+        lib_links::reachable(&rc.queried, &rc.references, &is_doc, &mut |_, _| Ok(true))
+            .unwrap_or_default();
+    let started = Instant::now();
+    let links = lib_links::shipping(
+        &super::contents::store_dir(),
+        rc.store == RuntimeStore::Local,
+        &rc.queried,
+        &rc.references,
+        &is_doc,
+    );
+    let links_only_paths: BTreeSet<String> = match &links {
+        Ok(kept) => past_doc.iter().filter(|p| !kept.contains(*p)).map(|p| p.to_string()).collect(),
+        Err(_) => BTreeSet::new(),
+    };
+    tracing::info!(
+        outcome = links.as_ref().err().map_or("assessed", |r| r.wire()),
+        set_aside = links_only_paths.len(),
+        elapsed_ms = started.elapsed().as_millis(),
+        "nix-closure: lib/links references"
+    );
+    let shipping: BTreeSet<String> = rc
+        .paths
+        .iter()
+        .filter(|p| !doc_only_paths.contains(*p) && !links_only_paths.contains(*p))
+        .cloned()
+        .collect();
     let (runtime_drvs, _) = join(raw, &shipping);
     let (_, stray) = join(raw, &rc.paths);
     let (doc_only_drvs, _) = join(raw, &doc_only_paths);
+    let (links_only_drvs, _) = join(raw, &links_only_paths);
     // Static linking is seeded from the runtime members and, when the
     // evaluated root is a wrapper rather than a Haskell build itself, from the
     // Haskell builds it consumed through `inputs.drvs`. The root is runtime by
@@ -1156,8 +1247,16 @@ fn decide(
     let linked = static_link_set(raw, &roots, declared().as_ref(), &test_deps);
 
     let runtime: HashSet<MemberKey> = runtime_drvs.iter().filter_map(key_of).collect();
-    let doc_only: HashSet<MemberKey> =
-        doc_only_drvs.iter().filter_map(key_of).filter(|k| !runtime.contains(k)).collect();
+    // A member with a path the `lib/links` rule set aside would have shipped
+    // under the documentation rule alone, so that rule is the one it counts
+    // against.
+    let links_only: HashSet<MemberKey> =
+        links_only_drvs.iter().filter_map(key_of).filter(|k| !runtime.contains(k)).collect();
+    let doc_only: HashSet<MemberKey> = doc_only_drvs
+        .iter()
+        .filter_map(key_of)
+        .filter(|k| !runtime.contains(k) && !links_only.contains(k))
+        .collect();
     let static_linked: HashSet<MemberKey> = linked
         .members
         .iter()
@@ -1191,11 +1290,21 @@ fn decide(
         unmatched,
         doc_only_paths = doc_only_paths.len(),
         doc_only_members = doc_only.len(),
+        lib_links_members = links_only.len(),
         "nix-closure: scope from the runtime closure"
     );
-    let record =
-        ScopeMethodRecord::runtime_closure(rc, linked.roots, unmatched, doc_only_paths.len());
-    (RuntimeEvidence::Closure { runtime, static_linked, doc_only }, Some(record))
+    let lib_links = match links {
+        Ok(_) => LibLinksExcluded::Assessed { members: 0, paths: links_only_paths.len() },
+        Err(reason) => LibLinksExcluded::NotAssessed(reason),
+    };
+    let record = ScopeMethodRecord::runtime_closure(
+        rc,
+        linked.roots,
+        unmatched,
+        doc_only_paths.len(),
+        lib_links,
+    );
+    (RuntimeEvidence::Closure { runtime, static_linked, doc_only, links_only }, Some(record))
 }
 
 /// The runtime query: which outputs it asked about, and what came back.
@@ -1691,21 +1800,28 @@ mod tests {
             verified: true,
         };
         let declared = StaticLinkRoots { declared_edges: 4, derivation_fields: 0 };
-        let mut record = ScopeMethodRecord::runtime_closure(&rc, declared, 3, 126);
+        let mut record = ScopeMethodRecord::runtime_closure(
+            &rc,
+            declared,
+            3,
+            126,
+            LibLinksExcluded::Assessed { members: 0, paths: 101 },
+        );
         record.set_doc_only_members(2);
+        record.set_lib_links_members(22);
         record.outputs = Some(OutputSelection {
             names: vec!["bin".into(), "man".into()],
             source: OutputsSource::OutputsToInstall,
         });
         assert_eq!(
             record.wire(),
-            r#"{"c-runtime-libraries":null,"doc-only-excluded":{"members":2,"output-names":["devdoc","doc","info","man"],"paths":126},"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":4,"derivation-fields":0},"static-link-source":"declared-edges","store":"https://cache.example","unavailable-reason":null,"unmatched-runtime-paths":3,"verified":true,"walk-outcome":null}"#
+            r#"{"c-runtime-libraries":null,"doc-only-excluded":{"members":2,"output-names":["devdoc","doc","info","man"],"paths":126},"lib-links-excluded":{"members":22,"not-assessed":null,"paths":101,"rule":"unloaded-lib-links"},"method":"runtime-closure","outputs":["bin","man"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":4,"derivation-fields":0},"static-link-source":"declared-edges","store":"https://cache.example","unavailable-reason":null,"unmatched-runtime-paths":3,"verified":true,"walk-outcome":null}"#
         );
         let w = ScopeMethodRecord::closure_role(RuntimeUnavailable::NoEvaluatedPackage, None, None)
             .wire();
         assert_eq!(
             w,
-            r#"{"c-runtime-libraries":"not-assessed","doc-only-excluded":null,"method":"closure-role","outputs":null,"outputs-source":null,"schema":1,"static-c-linking-detected":false,"static-link-roots":null,"static-link-source":null,"store":null,"unavailable-reason":"no-evaluated-package","unmatched-runtime-paths":null,"verified":null,"walk-outcome":null}"#
+            r#"{"c-runtime-libraries":"not-assessed","doc-only-excluded":null,"lib-links-excluded":null,"method":"closure-role","outputs":null,"outputs-source":null,"schema":1,"static-c-linking-detected":false,"static-link-roots":null,"static-link-source":null,"store":null,"unavailable-reason":"no-evaluated-package","unmatched-runtime-paths":null,"verified":null,"walk-outcome":null}"#
         );
         let w = ScopeMethodRecord::closure_role(
             RuntimeUnavailable::NotInAnyStore,
