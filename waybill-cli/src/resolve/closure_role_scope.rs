@@ -153,6 +153,61 @@ pub(crate) fn assign_role_scope(
     summary
 }
 
+/// #1465 — runtime evidence wins over a non-runtime lifecycle scope.
+///
+/// A component the runtime closure holds (C203 `runtime-closure`, unmarked)
+/// or that is statically linked into what ships (`statically-linked`) is in
+/// the artifact, yet a reader's own lifecycle scope still drove CycloneDX
+/// `scope: excluded` and SPDX 2.3 `DEV_DEPENDENCY_OF` on it. Measured on
+/// `nix-closure-slack-web`: slack-web's test suite declares QuickCheck and
+/// th-compat, so the Haskell reader scoped both `development`, while aeson
+/// propagates them into the runtime closure. The 1423 spec's edge case is the
+/// authority: "Runtime-closure truth wins: a test dependency outside the
+/// runtime closure stays marked, and one inside it is unmarked."
+///
+/// The scope is withdrawn rather than masked at emission, for the reason
+/// [`crate::resolve::scope_propagation::withdraw_compiler_supplied_scope`]
+/// gives: CycloneDX `scope`, both SPDX relationship vocabularies, the
+/// synthesized root edges and `--exclude-scope` all read `lifecycle_scope`,
+/// so withdrawing it is the one change that makes every reader agree. The
+/// edges the reader typed from it return to `DependsOn`.
+///
+/// **Only runtime evidence.** `reachability-walk` is an approximation of the
+/// runtime closure and `closure-role` is not about presence at all, so a
+/// member they decided keeps whatever scope a reader gave it. A member the
+/// runtime closure marked not-in-artifact keeps its scope too: the closure
+/// agrees it does not ship. Runs after [`assign_role_scope`], whose verdict it
+/// reads; a no-op on every scan without `--nix-closure`, where no component
+/// carries a [`ScopeEvidence`]. Returns how many scopes it withdrew.
+pub(crate) fn withdraw_scope_runtime_evidence_contradicts(
+    components: &mut [ResolvedComponent],
+    relationships: &mut [Relationship],
+) -> usize {
+    let mut withdrawn: HashSet<String> = HashSet::new();
+    for c in components.iter_mut() {
+        let shipped_by_evidence = matches!(
+            c.scope_evidence,
+            Some(ScopeEvidence::RuntimeClosure | ScopeEvidence::StaticallyLinked)
+        ) && c.artifact_presence.is_none();
+        if shipped_by_evidence && c.lifecycle_scope.is_some_and(|s| s.is_non_runtime()) {
+            c.lifecycle_scope = None;
+            // C62 describes a scope; with none there is nothing to derive.
+            c.extra_annotations
+                .remove(crate::resolve::scope_propagation::ANN_SCOPE_DERIVATION);
+            withdrawn.insert(c.purl.as_str().to_string());
+        }
+    }
+    if withdrawn.is_empty() {
+        return 0;
+    }
+    crate::resolve::scope_propagation::retype_edges_into_withdrawn(relationships, &withdrawn);
+    tracing::info!(
+        withdrawn = withdrawn.len(),
+        "nix-closure: withdrew a non-runtime lifecycle scope from components the runtime evidence shows ship",
+    );
+    withdrawn.len()
+}
+
 /// Rules 1–4 under runtime evidence: `runtime` is the runtime closure (rule
 /// 3) or the walk's reached set (rule 4), and `decided_by` is the evidence
 /// recorded on every member either way.
@@ -1040,6 +1095,106 @@ mod tests {
                 Some("exempt-compiler-supplied")
             );
         }
+    }
+
+    // ---- #1465: runtime evidence wins over a reader's lifecycle scope ----
+
+    /// A closure member decided by `evidence` (`presence` its verdict),
+    /// carrying the scope a reader gave it and the C62 derivation.
+    fn dev_scoped(
+        purl: &str,
+        presence: Option<ArtifactPresence>,
+        evidence: Option<ScopeEvidence>,
+    ) -> ResolvedComponent {
+        let mut c = component(purl, Some("artifact-input"));
+        c.artifact_presence = presence;
+        c.scope_evidence = evidence;
+        c.lifecycle_scope = Some(waybill_common::resolution::LifecycleScope::Development);
+        c.extra_annotations.insert(
+            crate::resolve::scope_propagation::ANN_SCOPE_DERIVATION.to_string(),
+            serde_json::Value::String("transitive".to_string()),
+        );
+        c
+    }
+
+    fn dev_edge(from: &str, to: &str) -> Relationship {
+        let mut r = crate::generate::graph_completeness::test_support::mk_rel(from, to);
+        r.relationship_type = waybill_common::resolution::RelationshipType::DevDependsOn;
+        r
+    }
+
+    const ROOT: &str = "pkg:hackage/waybill-fixture-root@1.0";
+
+    #[test]
+    fn i1465_a_member_the_runtime_evidence_ships_loses_a_readers_scope() {
+        for e in [ScopeEvidence::RuntimeClosure, ScopeEvidence::StaticallyLinked] {
+            let p = "pkg:hackage/waybill-fixture-qc@2.15";
+            let mut c = vec![dev_scoped(p, None, Some(e))];
+            let mut r = vec![dev_edge(ROOT, p)];
+            assert_eq!(withdraw_scope_runtime_evidence_contradicts(&mut c, &mut r), 1, "{e:?}");
+            assert_eq!(c[0].lifecycle_scope, None, "{e:?}");
+            assert!(
+                !c[0].extra_annotations.contains_key(crate::resolve::scope_propagation::ANN_SCOPE_DERIVATION),
+                "C62 describes a scope; with none it must go too"
+            );
+            assert_eq!(
+                r[0].relationship_type,
+                waybill_common::resolution::RelationshipType::DependsOn,
+                "the edge the reader typed agrees with the component, or SPDX 2.3 keeps \
+                 DEV_DEPENDENCY_OF beside a CycloneDX `required`"
+            );
+        }
+    }
+
+    /// The rule is narrow: every state below keeps the reader's scope.
+    #[test]
+    fn i1465_only_runtime_evidence_of_shipping_withdraws_a_scope() {
+        let cases = [
+            // The runtime closure agrees it does not ship (hspec).
+            ("closure-marked", Some(ArtifactPresence::NotInArtifact), Some(ScopeEvidence::RuntimeClosure)),
+            // The walk approximates the runtime closure; it is not evidence.
+            ("walk-unmarked", None, Some(ScopeEvidence::ReachabilityWalk)),
+            ("walk-marked", Some(ArtifactPresence::NotInArtifact), Some(ScopeEvidence::ReachabilityWalk)),
+            // The role rule says nothing about presence.
+            ("role", Some(ArtifactPresence::NotInArtifact), Some(ScopeEvidence::ClosureRole)),
+            // Not decided by any evidence: every scan without --nix-closure.
+            ("none", None, None),
+        ];
+        for (label, presence, evidence) in cases {
+            let p = "pkg:hackage/waybill-fixture-hspec@2.11";
+            let mut c = vec![dev_scoped(p, presence, evidence)];
+            let mut r = vec![dev_edge(ROOT, p)];
+            assert_eq!(withdraw_scope_runtime_evidence_contradicts(&mut c, &mut r), 0, "{label}");
+            assert_eq!(
+                c[0].lifecycle_scope,
+                Some(waybill_common::resolution::LifecycleScope::Development),
+                "{label}"
+            );
+            assert_eq!(
+                r[0].relationship_type,
+                waybill_common::resolution::RelationshipType::DevDependsOn,
+                "{label}"
+            );
+        }
+    }
+
+    /// Only edges into a withdrawn component are re-typed.
+    #[test]
+    fn i1465_edges_into_other_components_keep_their_type() {
+        let ships = "pkg:hackage/waybill-fixture-qc@2.15";
+        let stays = "pkg:hackage/waybill-fixture-hspec@2.11";
+        let mut c = vec![
+            dev_scoped(ships, None, Some(ScopeEvidence::RuntimeClosure)),
+            dev_scoped(stays, Some(ArtifactPresence::NotInArtifact), Some(ScopeEvidence::RuntimeClosure)),
+        ];
+        let mut r = vec![dev_edge(ROOT, ships), dev_edge(ROOT, stays)];
+        assert_eq!(withdraw_scope_runtime_evidence_contradicts(&mut c, &mut r), 1);
+        assert_eq!(r[0].relationship_type, waybill_common::resolution::RelationshipType::DependsOn);
+        assert_eq!(r[1].relationship_type, waybill_common::resolution::RelationshipType::DevDependsOn);
+        assert_eq!(
+            c[1].lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Development)
+        );
     }
 
     /// An unrecognised role value is not a licence to guess. It is neither
