@@ -1,0 +1,30 @@
+test frameworks, full document / runtime view:
+cdx    23 / 23
+spdx   23 / 23
+spdx3  23 / 23
+kept in the SPDX 2.3 runtime view:
+  ChasingBottoms
+  doctest
+  hspec
+  hspec-core
+  hspec-discover
+  hspec-expectations
+  hspec-golden
+  hspec-meta
+  HUnit
+  QuickCheck
+  quickcheck-instances
+  quickcheck-io
+  quickcheck-unicode
+  smallcheck
+  tasty
+  tasty-golden
+  tasty-hunit
+  tasty-inspection-testing
+  tasty-quickcheck
+  tasty-smallcheck
+  test-framework
+  test-framework-hunit
+  test-framework-quickcheck2
+packages, full / runtime view (spdx): 843 / 185
+C216: {"c-runtime-libraries":null,"method":"runtime-closure","outputs":["out"],"outputs-source":"outputs-to-install","schema":1,"static-c-linking-detected":false,"static-link-roots":{"declared-edges":91,"derivation-fields":33},"static-link-source":"mixed","store":"local","unavailable-reason":null,"unmatched-runtime-paths":0,"verified":true,"walk-outcome":null}

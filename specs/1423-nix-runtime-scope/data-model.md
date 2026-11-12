@@ -7,6 +7,8 @@ All of this is in-process state for one scan, except what is emitted (C203, C216
 | field | type | meaning |
 |---|---|---|
 | `paths` | `BTreeSet<String>` | store basenames that nix reports as the runtime closure of the outputs the evaluated attribute installs, falling back to its default output; C216 `outputs` names them (research R2, #1458) |
+| `references` | `BTreeMap<String, BTreeSet<String>>` | each path's references, from the same `nix path-info -r --json` answer (#1455) |
+| `queried` | `Vec<String>` | the basenames of the outputs queried, where the references are followed from (#1455) |
 | `store` | `RuntimeStore` | `Local`, or `Substituter(url)`: the store that answered |
 | `verified` | `bool` | signature-verified against `trusted-public-keys`; always true for `Local` |
 
@@ -30,7 +32,9 @@ Go and Rust modules are not in this set. They inherit from their host through th
 
 ## RuntimeEvidence (input to the scope pass)
 
-`enum RuntimeEvidence { Closure { runtime: HashSet<MemberKey>, static_linked: HashSet<MemberKey> }, Walk { reached: HashSet<MemberKey> }, RoleWithLinked { linked: HashSet<MemberKey> }, None }`
+`enum RuntimeEvidence { Closure { runtime: HashSet<MemberKey>, static_linked: HashSet<MemberKey>, doc_only: HashSet<MemberKey> }, Walk { reached: HashSet<MemberKey> }, RoleWithLinked { linked: HashSet<MemberKey> }, None }`
+
+`Closure.runtime` is built from the runtime paths that are **not** documentation-only (#1455, decided by the maintainer: a member reached only through documentation outputs does not ship). A path is documentation-only when the references reach it from the queried outputs but not without passing through an output named `doc`, `devdoc`, `man` or `info`; the output name comes from the closure's `outputs.<name>.path`. `doc_only` holds the members whose every runtime path is documentation-only; it is not consulted for the decision (they are already outside `runtime`), only to count the members marked because of the rule for C216 `doc-only-excluded`. The static-link set is seeded from the shipping members only.
 
 `RoleWithLinked` is a walk set aside as `reached-only-root` (rule 4): the role rule decides, except for `linked`, the consumed Haskell builds plus their statically linked libraries.
 
@@ -55,7 +59,7 @@ For each closure member `c`, the first rule that applies wins:
 1. `c` is the evaluated package → `ExemptEvaluatedPackage`, as today.
 2. `c` is a compiler-supplied boot library in a tooling role → `ExemptCompilerSupplied`, as today.
 3. Under `RuntimeEvidence::Closure`:
-   - `c`'s outputs intersect `runtime.paths` → runtime, `RuntimeClosure`;
+   - `c`'s outputs intersect the runtime paths that are not documentation-only → runtime, `RuntimeClosure` (#1455: a member the runtime closure holds only through documentation outputs falls through to the next two cases);
    - else `c ∈ static_link.members`, or `c` is a Haskell build the evaluated wrapper root consumed through `inputs.drvs` (other than as a build tool), or `c` is an embedded module of a runtime host → runtime, `StaticallyLinked`;
    - else → `NotInArtifact`, `RuntimeClosure`.
 4. Under `RuntimeEvidence::Walk`: `c ∈ reached` (or an embedded module of a reached host) → runtime, `ReachabilityWalk`; else `NotInArtifact`, `ReachabilityWalk`. A statically linked Haskell library is in `reached`, so it too carries `ReachabilityWalk`, never `StaticallyLinked`: its root is an approximation, and the document must not present it as proven (US2 scenario 2). The compiler-supplied exemption applies to any role, as under rule 3. A walk that reaches no member but the root, from a root that consumed a Haskell build through `inputs.drvs` (shellcheck's wrapper), is not used: `evidence` returns `RoleWithLinked`, so rule 5 applies, and C216 says `walk-outcome: reached-only-root`. The exception is the Haskell-builder derivation(s) the root consumed through `inputs.drvs`, other than one it names only as a build tool, and the libraries linked into them (the static-link logic, from those builds): they are runtime with `StaticallyLinked` evidence, whatever their role, because their code ships inside the wrapper's binary and the fallback errs toward runtime, never toward dropping linked code (T042). The compiler-supplied exemption still wins inside that set. Everything else stays on the role rule.

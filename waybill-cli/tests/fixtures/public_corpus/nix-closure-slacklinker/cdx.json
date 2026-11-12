@@ -194060,7 +194060,7 @@
       },
       {
         "name": "waybill:closure-scope-method",
-        "value": "{\"c-runtime-libraries\":null,\"method\":\"runtime-closure\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-roots\":{\"declared-edges\":0,\"derivation-fields\":1},\"static-link-source\":\"derivation-fields\",\"store\":\"local\",\"unavailable-reason\":null,\"unmatched-runtime-paths\":0,\"verified\":true,\"walk-outcome\":null}"
+        "value": "{\"c-runtime-libraries\":null,\"doc-only-excluded\":{\"members\":0,\"output-names\":[\"devdoc\",\"doc\",\"info\",\"man\"],\"paths\":0},\"method\":\"runtime-closure\",\"outputs\":[\"out\"],\"outputs-source\":\"outputs-to-install\",\"schema\":1,\"static-c-linking-detected\":false,\"static-link-roots\":{\"declared-edges\":0,\"derivation-fields\":1},\"static-link-source\":\"derivation-fields\",\"store\":\"local\",\"unavailable-reason\":null,\"unmatched-runtime-paths\":0,\"verified\":true,\"walk-outcome\":null}"
       }
     ],
     "supplier": {

@@ -5249,6 +5249,12 @@ pub async fn execute(
             &mut components,
             &mut relationships,
         );
+        // #1455 — the members marked only because the runtime closure holds
+        // them through documentation outputs alone, counted by the pass after
+        // the exemptions and static linking had their say.
+        if let Some(record) = closure_scope_method.as_mut() {
+            record.set_doc_only_members(role_scope_summary.doc_only_excluded);
+        }
         if role_scope_summary.roles_seen > 0 {
             tracing::info!(
                 roles_seen = role_scope_summary.roles_seen,
@@ -5259,6 +5265,7 @@ pub async fn execute(
                 decided_runtime = role_scope_summary.decided_runtime,
                 statically_linked = role_scope_summary.statically_linked,
                 decided_not_in_artifact = role_scope_summary.decided_not_in_artifact,
+                doc_only_excluded = role_scope_summary.doc_only_excluded,
                 "nix-closure: artifact-presence classification"
             );
         }
