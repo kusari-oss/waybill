@@ -6,11 +6,11 @@ The `nix_drv` qualifier on a patched component's PURL (research R1).
 
 | field | type | rule |
 |---|---|---|
-| `drv_hash` | 32 chars, Nix base32 alphabet | the hash part of the `.drv` store path whose patches resolve at least one CVE for this component |
+| `drv_hashes` | one or more 32-char Nix base32 hashes, sorted, comma-joined | the hash part of every `.drv` merged into this component that applies patches (research R4) |
 
-- **Present iff** the component has at least one `pedigree.patches[].resolves` entry **and** those entries come from exactly one derivation (research R4).
+- **Present iff** the component has at least one `pedigree.patches[].resolves` entry. The value covers every patching derivation merged into it, so one component of two variants carries both hashes.
 - **Absent otherwise.** The PURL is then byte-identical to today's (FR-001, clarification 2).
-- **The PURL** is `<today's PURL>?nix_drv=<drv_hash>`, using the `Purl` type's own qualifier encoding.
+- **The PURL** is `<today's PURL>?nix_drv=<h1>[,<h2>…]`, using the `Purl` type's own qualifier encoding.
 
 ## BackportClaim
 
@@ -25,7 +25,7 @@ One per (component, resolved CVE). This is what `pedigree.patches[].resolves` al
 
 ## VEX statement (closure backports)
 
-There is exactly one per BackportClaim whose component has a BuildIdentity.
+There is exactly one per BackportClaim whose CVE is resolved by **every** derivation in the component's BuildIdentity (research R4). A nixpkgs declaration for the same (component, CVE) withholds it (R10).
 
 | carrier | field | value |
 |---|---|---|
@@ -45,7 +45,7 @@ No `affected` statement is emitted for a BackportClaim (FR-003). No statement na
 
 A count, **C220 `waybill:vex-claims-unscoped`**, at document scope.
 
-- **What it counts:** the BackportClaims that got no statement because their component's patches come from several derivations (research R4).
+- **What it counts:** the BackportClaims that got no statement because only some of the component's derivations resolve the CVE (research R4).
 - **Encoding:** a decimal string, emitted only when greater than zero. That is C193's shape and rationale.
 - **Formats:** all three, with parity.
 

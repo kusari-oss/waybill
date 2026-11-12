@@ -88,7 +88,9 @@ A user sees a qualifier on a patched component's PURL and wants to know what it 
 ### Edge Cases
 
 - **A component patched for one CVE but not another.** Only the resolved CVEs get a statement. Every other advisory still matches, because version matching ignores the qualifier (Acceptance US3-2).
-- **The same name and version, built twice** (two outputs, or a bootstrap build). Each build has its own identity, so a statement for one never covers the other (Acceptance US1-2). This is the leakage the success criteria forbid.
+- **The same name and version, built twice.**
+  - Across documents or closures, each build has its own identity, so a statement for one never covers the other (Acceptance US1-2). This is the leakage the success criteria forbid.
+  - Within one closure, nixpkgs often merges two build variants into one component: `unzip 6.0` appears twice, each variant applying the same patches. The component's identity names every variant. A CVE is claimed only when every variant resolves it; otherwise it is counted, not claimed (research R4).
 - **A registry PURL whose patches resolve a CVE.** None on `nix-closure-moat`: its 3 patched `pkg:hackage` components resolve no CVE, so FR-001 leaves them unqualified. Others may exist, such as `pkg:pypi` on httpie, which the plan must count. Where one does, the same rule applies, provided research shows the qualifier changes no finding for the scanners that match those types (osv-scanner, grype). If it does, the plan must say so, and those components keep a shape that makes no false claim.
 - **A filename-derived patch-to-CVE association** (m1035's lower evidence grade). The statement still carries the grade in its impact statement, as today. The grade is never dropped by the reshaping.
 - **A component dropped from this document** (root override, `--tier`, `--split`). C193 counts the claims this document cannot carry, as today, and the sidecar still names them.

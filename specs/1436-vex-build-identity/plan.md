@@ -5,13 +5,13 @@
 
 ## Summary
 
-Each closure component whose patches resolve a CVE gets a build-identity PURL qualifier, `?nix_drv=<the patching derivation's store hash>`. For each (component, CVE) there is one VEX statement: OpenVEX `fixed`, product = that qualified PURL, no subcomponent. CycloneDX carries it as a single `resolved` entry on the component.
+Each closure component whose patches resolve a CVE gets a build-identity PURL qualifier, `?nix_drv=<…>`. Its value is the sorted store hashes of every patching derivation merged into the component; nixpkgs often builds `unzip 6.0` twice, so this is usually more than one. For each (component, CVE) there is one VEX statement: OpenVEX `fixed`, product = that qualified PURL, no subcomponent. CycloneDX carries it as a single `resolved` entry on the component.
 
 This replaces m1035's affected / not_affected pair. That pair suppressed 0 findings in grype and made CycloneDX mark patched components `exploitable` (#1421). The version-level claim stays in `pedigree.patches[].resolves`.
 
 Measured on main's five closure goldens before any code (research R2): grype suppresses 17 of 17 patched findings with this shape, leaks onto 0 unqualified components, and loses 0 others. The qualifier changes no grype or osv-scanner finding (R2, R3).
 
-A component whose patches come from several derivations is left unscoped, with no statement, and counted in a new row, C220. That is Principle IX: no statement that could cover a build it doesn't describe.
+A CVE is claimed only when every one of those derivations resolves it. One that only some variants resolve gets no statement and is counted in a new row, C220. That is Principle IX: no claim that is false of any build the component describes.
 
 ## Technical Context
 
@@ -44,7 +44,7 @@ A component whose patches come from several derivations is left unscoped, with n
 | I Pure Rust, statically linked | Pass | No new crates or subprocesses. |
 | IV Type-driven correctness | Pass | The qualifier is built by the `Purl` type. The drv hash is taken from the parsed derivation key, never assembled from strings. No new `.unwrap()`. |
 | V Native first | Pass | The identity rides in the PURL's own qualifier slot. The key choice checked the PURL spec first: `checksum` was rejected on evidence (R1). The claim rides in native OpenVEX `fixed` and CycloneDX `vulnerabilities[]` `resolved`. The stronger `resolved_with_pedigree` was rejected because the pedigree holds no diffs (R5). Only C220 is new, with C193's KEEP-NO-NATIVE audit. |
-| IX Accuracy | Pass | A statement names only the build it describes, and the leak probe measured 0. The version-level claim isn't restated as VEX. Ambiguous builds (several derivations) get no statement rather than an over-broad one (R4). |
+| IX Accuracy | Pass | A statement names only the builds it describes, and the leak probe measured 0. The version-level claim isn't restated as VEX. A CVE that not every variant resolves gets no statement (R4), and a nixpkgs declaration still withholds the claim (R10). |
 | X Transparency | Pass | Each statement keeps m1035's evidence grade note. C220 counts what couldn't be scoped, and C193 what projection dropped. |
 | XII External sources | Pass | No external source is added. The claim comes from the closure's own patches, as in m1035. |
 
@@ -66,8 +66,8 @@ specs/1436-vex-build-identity/
 ### Source Code
 
 ```text
-waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs        # qualify CVE-resolving components with nix_drv (one patching derivation), before edges are projected
-waybill-cli/src/scan_fs/package_db/nix/closure/patches.rs     # keep which derivation carried each resolves-bearing patch (R4)
+waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs        # qualify CVE-resolving components with nix_drv (every patching variant), before edges are projected
+waybill-cli/src/scan_fs/package_db/nix/closure/patches.rs     # keep each derivation's patch set beside the per-identity union (R4, R11)
 waybill-cli/src/generate/openvex/mod.rs                       # backport_statements: one `fixed` per (qualified PURL, CVE), no root, no `affected` half
 waybill-cli/src/generate/cyclonedx/vex.rs                     # backport entries: affects = component bom-ref, `resolved`; no vex-subcomponent for backports
 waybill-cli/src/generate/{cyclonedx/metadata,spdx/annotations,spdx/v3_annotations}.rs  # C220
@@ -82,8 +82,8 @@ Existing tests that pin the m1035 pair (OpenVEX and CycloneDX VEX unit tests, m1
 
 ## Phasing
 
-1. **Identity.** Record the patching derivation. Apply `nix_drv` to single-derivation CVE-resolving components before edges. Run the orphan check.
-2. **US1 (OpenVEX).** `fixed` per (qualified PURL, CVE) with no root; remove the `affected` half; leave m1050 untouched.
+1. **Identity.** Keep each patching derivation's set. Apply `nix_drv` (every variant, sorted) to CVE-resolving components before edges. Run the orphan check.
+2. **US1 (OpenVEX).** `fixed` per (qualified PURL, CVE), only where every variant resolves the CVE, with no root. Remove the `affected` half. Carry over the m1050 declaration withholding (R10).
 3. **US2 (CycloneDX).** Single `resolved` entry per pair on the component's bom-ref; no `exploitable`; no subcomponent property.
 4. **US3 (records and docs).** C220 in all three formats with extractors; F1, the Nix reference and the user guide.
 5. **Tests.** Rewrite the m1035/m1068 pins with a mutation check each; add the new suite.

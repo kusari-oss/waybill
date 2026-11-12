@@ -76,13 +76,19 @@ Earlier ones (2026-11-10) are described in `measurements/README.md`.
 
 ## R4 — One component, several patched derivations
 
-A closure component is one identity `(pname, version)` and may merge several derivations (build variants; #966's research note 8 found such pairs for Haskell). Today `ANN_CLOSURE_PATCHES` is per component, and the derivation that carried each patch isn't recorded.
+A closure component is one identity `(pname, version)`, and it may merge several derivations (build variants). This is **common for exactly the components this feature is about**. `patches.rs` `merge_by_identity` records: "`unzip 6.0` appears twice in a real closure as two build variants, each applying the same 17 patches". `unzip` is the source of most patched findings, 11 of 17 per target once #1435's CPE lands. The patch sets are unioned per identity, and the derivations that carried them are not kept (R11).
 
-**Decision (fail closed, Principle IX):**
-- **One derivation:** when the resolves-bearing patches of a component come from exactly **one** derivation, that derivation's hash is the qualifier.
-- **Several derivations with different hashes:** the component is left unqualified, **no** statement is emitted for it, and the omission is counted. A statement scoped to one variant's hash would leave the other variant unscoped. One on the unqualified PURL would over-claim for every build of that version.
-- **The count:** extend C193's sibling semantics. A new document count, `waybill:vex-claims-unscoped`, is emitted only when greater than zero (data model).
-- **How often it happens is not measured yet.** T-measure counts it on the goldens' closures and the six targets. If it is common, revisit before tasks close.
+**First decision, superseded at tasks time:** leave a multi-derivation component unscoped, with no statement. That would have given `unzip` no claim and made SC-001 unreachable, so it was revisited, as this section had said it would be if the case proved common.
+
+**Decision:** the qualifier names the **set** of derivations the component stands for, and a claim is made only where it holds for all of them (Principle IX).
+- **The value:** `nix_drv` is the sorted, comma-joined store hashes of every derivation merged into the component that applies patches. With one such derivation it is a single hash.
+  - The order is fixed, so the value is deterministic.
+  - A scanner treats it as opaque: product PURL and package PURL compare equal as strings.
+- **The claim:** a `fixed` statement for a CVE is emitted only when **every** one of those derivations applies a patch that resolves it. Then the claim is true of each build the component describes.
+- **The count:** a CVE that only some variants resolve gets no statement, and it is counted in C220 `waybill:vex-claims-unscoped`.
+- **Accuracy:** a statement can never cover a variant that lacks the patch. A different set of variants (another closure, another revision) has a different qualifier, so the leak probe's guarantee holds.
+- **Rejected: splitting the component into one per variant.** It changes component counts and edges across the document for a claim that, as measured, is identical across the variants.
+- **Unmeasured, to measure at implementation:** how often variants disagree on a CVE, recorded per target.
 
 ## R5 — CycloneDX state for a backport claim (FR-005)
 
@@ -129,3 +135,23 @@ A closure component is one identity `(pname, version)` and may merge several der
 - m1050's nixpkgs security declarations keep their statements and shape.
 - Non-closure scans emit no backport statements, so they are byte-identical (SC-005).
 - Components without a resolved CVE keep their PURL (FR-001, clarification 2).
+
+## R10 — A nixpkgs declaration still withholds the claim (FR-008)
+
+`openvex/mod.rs:163` `is_withheld_not_affected` (m1050, FR-012 there):
+- when `meta.knownVulnerabilities` declares a version vulnerable, the patch-derived `not_affected` is withheld;
+- the match is on (subcomponent, CVE);
+- test: `a_declaration_withholds_the_patch_derived_not_affected`.
+
+nixpkgs then says, in its own words, that this build's version is vulnerable. A `fixed` claim must not override that.
+
+**Decision:** the rule carries over to the new shape.
+- A backport `fixed` statement is withheld when a declaration names the same (component, CVE).
+- The match is on the product PURL with qualifiers removed, plus the CVE.
+- The declaration's own statements are unchanged (FR-008).
+
+## R11 — Where patch records come from
+
+`closure/emit.rs:636` attaches `ANN_CLOSURE_PATCHES` from an index keyed by `(name, version)`. The derivation that carried each patch is not kept.
+
+R4 needs it, so before merging, each derivation's patch set must be kept beside the union. A component then knows its full set of patching derivations, which become the qualifier value, and which CVEs every one of them resolves (R4).

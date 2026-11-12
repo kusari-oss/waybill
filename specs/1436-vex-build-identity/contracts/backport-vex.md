@@ -3,10 +3,11 @@
 ## The qualifier
 
 ```
-pkg:generic/unzip@6.0?nix_drv=<32-char drv store hash>
+pkg:generic/unzip@6.0?nix_drv=<32-char drv store hash>[,<another>…]   # sorted; every patching variant
 ```
 
-- **On:** only components with a CVE-resolving backport from exactly one derivation (research R1, R4).
+- **On:** only components with a CVE-resolving backport. The value lists every patching derivation merged into the component (research R1, R4).
+- **Claim:** a `fixed` statement for a CVE only when every listed derivation resolves it.
 - **Across formats:** the same string in CycloneDX `purl` and `bom-ref`, SPDX 2.3 `externalRefs[PACKAGE-MANAGER/purl]`, SPDX 3 `software_packageUrl`, and the OpenVEX product `@id`.
 - **Determinism:** the same derivation always gives the same value.
 - **Matching:** scanners strip or ignore qualifiers when matching advisories (measured: grype 0.120.0, `q_none` = `none` on five goldens; osv-scanner 2.7.0, 0 of 67 findings lost with every PURL qualified).
@@ -46,7 +47,7 @@ After, per (component, CVE):
 
 ## C220 `waybill:vex-claims-unscoped`
 
-- **Value:** a document-scope decimal string counting the backport claims left without a statement because the component's patches come from several derivations.
+- **Value:** a document-scope decimal string counting the backport claims left without a statement because only some of the component's derivations resolve the CVE.
 - **When:** emitted only when greater than zero.
 - **Carriers:** CycloneDX `metadata.properties[]`; SPDX 2.3 document annotation; SPDX 3 document `Annotation`. `SymmetricEqual`.
 - **Catalog:** KEEP-NO-NATIVE, the same audit as C193: no format has a slot for "claims this document could not scope".
