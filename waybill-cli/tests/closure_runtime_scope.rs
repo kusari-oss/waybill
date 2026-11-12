@@ -22,6 +22,7 @@
 //! | `closure-static-namesake.json` | pandoc-cli / cachix (#1459) | a static Haskell executable linking Haskell `zlib`, which shares its name with a build-only C `zlib`, and `fsnotify`, whose derivation propagates `hfsevents` while the package set declares something else |
 //! | `closure-embedded.json` | gh | Go modules read from a runtime binary and from a build tool's binary |
 //! | `closure-walk.json` | US2 | `perl` is `both` but reached only through a reached member's `nativeBuildInputs`; `xml` is an `artifact-input` of the build tool only |
+//! | `closure-walk-libc.json` | US2, #1467 | the app and `ssl` reach the libc only through their `stdenv` → C compiler wrapper → `libc_lib`; a build tool's own stdenv names another libc; `unistring` is built by a bootstrap stage whose compiler names the libc the final one was built from |
 //! | `closure-tworoots.json` | US2 | two unconsumed derivations, so no evaluated package to walk from |
 //! | `closure-outputs.json` | postgrest (#1458) | `closure-runtime.json` with the app's `outputs` headed by `out`, the library, while the attribute installs `bin`; each output gets its own `path-info` listing |
 //! | `closure-tests-library.json` | slack-web / openai (#1283) | the evaluated package is the project (`project-tests`), a library built with its test suite: `hspec` is in its `buildInputs`, its library dependency `aeson` in `propagatedBuildInputs`; `aeson`'s own test dependency is in `aeson`'s `buildInputs`, and `text`, which propagates nothing (hashable's shape), has `tasty` in its own |
@@ -325,6 +326,8 @@ fn us1_local_store_answer_records_store_local() {
     assert_eq!(
         c216,
         serde_json::json!({
+            // The runtime closure lists the C libraries itself (#1467).
+            "c-runtime-libraries": null,
             "method": "runtime-closure",
             // The stub refuses the output selection, so the default output
             // was queried and the record says so (#1458).
@@ -332,6 +335,7 @@ fn us1_local_store_answer_records_store_local() {
             "outputs-source": "default-output",
             "schema": 1,
             "static-c-linking-detected": false,
+            "static-link-roots": {"declared-edges": 0, "derivation-fields": 0},
             "static-link-source": "none",
             "store": "local",
             "unavailable-reason": null,
@@ -664,6 +668,58 @@ fn us1_linux_static_build_seed_uses_declared_edges() {
     assert_eq!(run.c216().unwrap()["static-link-source"], "declared-edges");
 }
 
+/// `unlisted`: a second runtime Haskell executable the package set does not
+/// hold, linking `fgl` through its own `buildInputs`. moat's shape: the
+/// project is not in nixpkgs, everything else is.
+fn with_unlisted(closure: String) -> String {
+    let closure = closure
+        .replacen(
+            "\"d-gmp.drv\": { \"outputs\": [\"out\"] }\n        },",
+            "\"d-gmp.drv\": { \"outputs\": [\"out\"] },\n          \"d-unl.drv\": { \"outputs\": [\"out\"] }\n        },",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": {\n",
+            "\"d-unl.drv\": {\n      \"name\": \"waybill-fixture-unlisted-1.0\",\n      \"env\": {\n        \"pname\": \"waybill-fixture-unlisted\",\n        \"version\": \"1.0\",\n        \"setupCompilerEnvironmentPhase\": \"runHook preSetupCompilerEnvironment\",\n        \"nativeBuildInputs\": \"/nix/store/zzz-ghc-9.4.8\",\n        \"buildInputs\": \"/nix/store/h-fgl\"\n      },\n      \"outputs\": { \"out\": { \"path\": \"h-unl\" } }\n    },\n    \"d-gmp.drv\": {\n",
+            1,
+        );
+    assert_eq!(closure.matches("d-unl.drv").count(), 2, "the fixture edits applied");
+    closure
+}
+
+/// #1456: the static-link source is chosen per root. One unconfirmed root
+/// falls back to its derivation fields; the confirmed static build keeps its
+/// declared relations, so its test-only dependency stays marked. C216 says
+/// both happened, with a count for each, instead of `derivation-fields` for
+/// the whole closure.
+#[test]
+fn a_mixed_static_link_source_is_reported_per_root() {
+    let closure = with_unlisted(fixture("closure-static.json"));
+    let packages = fixture("hackage-packages.nix");
+    let run = scan_with(NixStub {
+        runtime: Some(listing(&["h-sc-bin", "h-SC", "h-gmp", "h-unl"])),
+        package_set: Some((&packages, "{ }\n")),
+        ..base(&closure)
+    });
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["static-link-source"], "mixed", "{c216}\nstderr:\n{}", run.scan.stderr);
+    assert_eq!(
+        c216["static-link-roots"],
+        serde_json::json!({"declared-edges": 1, "derivation-fields": 1}),
+        "{c216}"
+    );
+    let marked = run.marked();
+    for n in ["waybill-fixture-hspec", "waybill-fixture-hunit"] {
+        assert!(marked.contains(n), "{n} is test-only for the confirmed root; marked: {marked:?}");
+    }
+    // CONTROL: the confirmed root's library dependencies, which `unlisted`'s
+    // `fgl` overlaps, are still linked.
+    for n in ["waybill-fixture-aeson", "waybill-fixture-text", "waybill-fixture-fgl"] {
+        assert!(!marked.contains(n), "{n}; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+}
+
 /// #1459's shape: the static build is in the runtime closure, as on
 /// aarch64-darwin; none of its libraries are.
 fn namesake_runtime() -> String {
@@ -796,9 +852,14 @@ fn a_library_roots_test_dependencies_are_not_statically_linked() {
     let run = tests_scan(&closure, tests_library_runtime(), &packages);
     let c216 = run.c216().unwrap();
     assert_eq!(c216["method"], "runtime-closure", "{c216}");
+    // The project is not in the package set, so its root falls back, as on
+    // the corpus. Nothing here was built by a GHC, which confirmation
+    // requires, so `aeson` and `text` fall back too (#1456 counts them).
+    assert_eq!(c216["static-link-source"], "derivation-fields", "{c216}");
     assert_eq!(
-        c216["static-link-source"], "derivation-fields",
-        "the project is not in the package set, so its root falls back, as on the corpus"
+        c216["static-link-roots"],
+        serde_json::json!({"declared-edges": 0, "derivation-fields": 3}),
+        "{c216}"
     );
     let marked = run.marked();
     for n in [
@@ -839,7 +900,13 @@ fn an_executable_roots_declared_test_dependencies_are_not_statically_linked() {
     let closure = fixture("closure-tests-executable.json");
     let packages = fixture("hackage-packages.nix");
     let run = tests_scan(&closure, tests_executable_runtime(), &packages);
-    assert_eq!(run.c216().unwrap()["static-link-source"], "derivation-fields");
+    let c216 = run.c216().unwrap();
+    assert_eq!(c216["static-link-source"], "derivation-fields", "{c216}");
+    assert_eq!(
+        c216["static-link-roots"],
+        serde_json::json!({"declared-edges": 0, "derivation-fields": 1}),
+        "the project is the only runtime Haskell member, and it is unconfirmed: {c216}"
+    );
 
     let built = cdx_by_purl(&run, "waybill-fixture-hspec", "pkg:generic/");
     assert_eq!(built["version"], "2.11.10");
@@ -972,11 +1039,13 @@ fn runtime_closure_follows_the_selected_output_not_the_head_of_outputs() {
     assert_eq!(
         run.c216().expect("C216"),
         serde_json::json!({
+            "c-runtime-libraries": null,
             "method": "runtime-closure",
             "outputs": ["bin"],
             "outputs-source": "output-specified",
             "schema": 1,
             "static-c-linking-detected": false,
+            "static-link-roots": {"declared-edges": 0, "derivation-fields": 0},
             "static-link-source": "none",
             "store": "local",
             "unavailable-reason": null,
@@ -1087,12 +1156,15 @@ fn us2_no_store_answer_uses_walk() {
     assert_eq!(
         run.c216().expect("C216 on a closure document"),
         serde_json::json!({
+            // No member of this fixture names a C compiler (#1467).
+            "c-runtime-libraries": "not-assessed",
             "method": "reachability-walk",
             // Asked about, though no store held it.
             "outputs": ["bin"],
             "outputs-source": "default-output",
             "schema": 1,
             "static-c-linking-detected": false,
+            "static-link-roots": {"declared-edges": 0, "derivation-fields": 0},
             "static-link-source": "none",
             "store": null,
             "unavailable-reason": "not-in-any-store",
@@ -1156,6 +1228,94 @@ fn us2_walk_follows_only_runtime_linking_fields() {
     assert!(!marked.contains("waybill-fixture-z"), "propagated by a reached member");
 }
 
+/// #1467: no dependency field names the C library. A member reaches glibc
+/// only through its `stdenv`, whose `defaultNativeBuildInputs` hold the C
+/// compiler wrapper, whose `libc_lib` is the library every dynamically linked
+/// output it produces loads (measured on curl, openssh, httpie, gh and
+/// ripgrep at nixpkgs `a799d3e3`, x86_64-linux: the runtime closure holds
+/// glibc for all five, and the walk marked it in all five).
+///
+/// CONTROLS, in the same scan: the compiler, the libc's headers and what the
+/// libc itself lists stay marked, and so does the libc of the stdenv only a
+/// build tool was built with. `unistring` is curl's `libunistring`: reached,
+/// but built by a bootstrap stage whose compiler names the bootstrap libc
+/// the final one was built from, which no measured runtime closure holds.
+#[test]
+fn us2_walk_keeps_the_libc_its_members_compiler_links() {
+    let closure = fixture("closure-walk-libc.json");
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}");
+    let marked = run.marked();
+    assert!(
+        !marked.contains("waybill-fixture-libc"),
+        "the libc the app's and ssl's compiler links ships; marked: {marked:?}\nstderr:\n{}",
+        run.scan.stderr
+    );
+    assert_eq!(run.c203("waybill-fixture-libc").as_deref(), Some("reachability-walk"));
+    assert!(!marked.contains("waybill-fixture-unistring"), "reached through ssl");
+    for n in [
+        "waybill-fixture-gcc",
+        "waybill-fixture-cc-wrapper",
+        "waybill-fixture-headers",
+        "waybill-fixture-bootlibc",
+        "waybill-fixture-stage0libc",
+        "waybill-fixture-tool",
+    ] {
+        assert!(marked.contains(n), "{n} does not ship; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("reachability-walk"), "{n}");
+    }
+    assert_eq!(
+        c216["c-runtime-libraries"], "libc-only",
+        "the compiler's runtime libraries and the libc's own references were not assessed: {c216}"
+    );
+}
+
+/// The shellcheck wrapper on x86_64-linux is itself built with a C compiler,
+/// so its own stdenv names glibc. That is not something the walk followed:
+/// the wrapper still reaches only itself, and the walk is still set aside.
+/// Counted as reached, the libc would make the walk "used" and mark every
+/// library linked into the binary.
+#[test]
+fn us2_the_roots_own_libc_does_not_make_a_wrapper_walk_used() {
+    let closure = fixture("closure-static.json")
+        .replacen(
+            "\"outputs\": \"bin out\",",
+            "\"outputs\": \"bin out\",\n        \"stdenv\": \"/nix/store/h-std\",",
+            1,
+        )
+        .replacen(
+            "\"drvs\": { \"d-SC.drv\": { \"outputs\": [\"out\"] } },",
+            "\"drvs\": { \"d-SC.drv\": { \"outputs\": [\"out\"] }, \"d-std.drv\": { \"outputs\": [\"out\"] } },",
+            1,
+        )
+        .replacen(
+            "\"d-gmp.drv\": {\n",
+            "\"d-std.drv\": {\n      \"name\": \"waybill-fixture-stdenv\",\n      \"env\": { \"defaultNativeBuildInputs\": \"/nix/store/h-cc\" },\n      \"inputs\": { \"drvs\": { \"d-cc.drv\": { \"outputs\": [\"out\"] } }, \"srcs\": [] },\n      \"outputs\": { \"out\": { \"path\": \"h-std\" } }\n    },\n    \"d-cc.drv\": {\n      \"name\": \"waybill-fixture-cc-wrapper-15.2.0\",\n      \"env\": { \"pname\": \"waybill-fixture-cc-wrapper\", \"version\": \"15.2.0\", \"libc_lib\": \"/nix/store/h-libc\" },\n      \"inputs\": { \"drvs\": { \"d-libc.drv\": { \"outputs\": [\"out\"] } }, \"srcs\": [] },\n      \"outputs\": { \"out\": { \"path\": \"h-cc\" } }\n    },\n    \"d-libc.drv\": {\n      \"name\": \"waybill-fixture-libc-2.42\",\n      \"env\": { \"pname\": \"waybill-fixture-libc\", \"version\": \"2.42\" },\n      \"outputs\": { \"out\": { \"path\": \"h-libc\" } }\n    },\n    \"d-gmp.drv\": {\n",
+            1,
+        );
+    assert_eq!(closure.matches("h-libc").count(), 2, "the fixture edits applied");
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "closure-role", "{c216}\nstderr:\n{}", run.scan.stderr);
+    assert_eq!(c216["walk-outcome"], "reached-only-root", "{c216}");
+    let marked = run.marked();
+    for lib in HASKELL_LIBS {
+        assert!(!marked.contains(lib), "{lib} is linked into the binary; marked: {marked:?}");
+    }
+}
+
+/// #1467's other half: a walk whose members name no C compiler keeps no libc,
+/// and the record says C runtime libraries were not assessed.
+#[test]
+fn us2_walk_without_a_compiler_libc_says_not_assessed() {
+    let closure = fixture("closure-walk.json");
+    let run = scan_with(base(&closure));
+    let c216 = run.c216().expect("C216");
+    assert_eq!(c216["method"], "reachability-walk", "{c216}");
+    assert_eq!(c216["c-runtime-libraries"], "not-assessed", "{c216}");
+}
+
 /// Embedded modules inherit a reached host's status under the walk, and are
 /// decided by it (data-model rule 4).
 #[test]
@@ -1210,6 +1370,7 @@ fn us2_walk_that_reaches_only_the_root_is_not_used() {
     assert_eq!(
         run.c216().expect("C216"),
         serde_json::json!({
+            "c-runtime-libraries": "not-assessed",
             "method": "closure-role",
             "outputs": ["bin"],
             "outputs-source": "default-output",
@@ -1217,6 +1378,7 @@ fn us2_walk_that_reaches_only_the_root_is_not_used() {
             "static-c-linking-detected": false,
             // The consumed static build's libraries are kept runtime (T042),
             // found through its derivation fields: no package set here.
+            "static-link-roots": {"declared-edges": 0, "derivation-fields": 1},
             "static-link-source": "derivation-fields",
             "store": null,
             "unavailable-reason": "not-in-any-store",
@@ -1358,11 +1520,13 @@ fn us2_no_evaluated_package_falls_back_to_closure_role() {
     assert_eq!(
         run.c216().expect("C216"),
         serde_json::json!({
+            "c-runtime-libraries": "not-assessed",
             "method": "closure-role",
             "outputs": null,
             "outputs-source": null,
             "schema": 1,
             "static-c-linking-detected": false,
+            "static-link-roots": null,
             "static-link-source": null,
             "store": null,
             "unavailable-reason": "no-evaluated-package",

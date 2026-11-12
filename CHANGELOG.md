@@ -7,7 +7,51 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed
+
+- **C216 reports the static-link source per root (#1456).** A
+  `--nix-closure` document's `waybill:closure-scope-method` gains
+  `static-link-roots`, `{"declared-edges": <n>, "derivation-fields": <n>}`,
+  the number of static-link roots (runtime Haskell members, or Haskell
+  builds a wrapper root consumed) each source decided, and
+  `static-link-source` gains `mixed` for a closure where both did. The
+  selection itself was already per root: a root the pinned package set
+  confirmed is followed through its declared relations, which leave test
+  dependencies out, whatever its neighbours are; only an unconfirmed root
+  reads its derivation fields. What was closure-wide was the label: the
+  nix-closure-moat golden read `derivation-fields` while 91 of its 124
+  Haskell roots were decided by declared relations; it now reads `mixed`
+  with `{"declared-edges": 91, "derivation-fields": 33}`, and openai
+  reads `mixed` with 1 and 150. The issue inferred the selection itself
+  was closure-wide; the code since #1423 shows it was not, and a new
+  two-root test pins that. Additive: `schema` stays `1`, and no mark
+  changes.
+
 ### Fixed
+
+- **The reachability walk keeps the C library on Linux (#1467).** When no
+  store holds a `--nix-closure` output, the walk marked glibc not-in-artifact,
+  because no dependency field names it: a member links it through its
+  `stdenv`'s C compiler wrapper, whose `libc_lib` is the libc every
+  dynamically linked output loads. The walk now follows that chain from
+  each walked member and keeps the libc (C203 `reachability-walk`), less a
+  bootstrap libc that another one found was built from. Measured on curl,
+  openssh, httpie, gh and ripgrep at nixpkgs `a799d3e3`, x86_64-linux, each
+  scanned twice (cache.nixos.org's verified runtime closure as truth, and
+  the walk with substituters disabled): glibc was runtime in all five truths
+  and marked by the walk in all five; it is now kept in all five, with no
+  other mark changed. Still marked and not assessed: gcc's runtime
+  libraries (`libgcc_s`, `libstdc++`, 4 of 5 truths) and what glibc itself
+  references (`xgcc` libgcc in all 5; `libidn2`/`libunistring` in the 4
+  whose walk does not reach them otherwise), which no dependency field
+  names either. aarch64-darwin, where the same chain ends at `libSystem`,
+  was not measured. C216 gains `c-runtime-libraries`, which
+  says so: `libc-only` under the walk, `not-assessed` when no walked member
+  names a C compiler and under `closure-role`, null under `runtime-closure`
+  (`specs/1423-nix-runtime-scope/measurements/c-runtime/`). On the
+  nix-closure-moat golden, the one corpus target scanned by the walk,
+  `glibc 2.42-61` loses its mark in all three formats and nothing else
+  changes.
 
 - **C184 `waybill:nix-closure` counts what the document holds.** `edges`
   was the `.drv`-keyed projection, counted before build variants of one
