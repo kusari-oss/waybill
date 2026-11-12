@@ -1,0 +1,12 @@
+# T001 (2026-11-12): research R4's variant question, as waybill reports it (the `nix-closure: backport identity` INFO line).
+# Five nixpkgs wrapper flakes over nixpkgs a799d3e3 (packages.aarch64-darwin.default = legacyPackages.aarch64-darwin.<target>), aarch64-darwin, nix 2.34.6.
+# `waybill sbom scan --nix-closure --no-deps-dev --no-clearly-defined`, release build of branch 1436-impl.
+# (a) components with >=1 resolved CVE; (b) of those, merging >1 patching derivation; pairs = (a)'s (component, CVE) pairs;
+# (c) pairs not every patching variant resolves (C220); variants_without_patches = emitted derivations merged into an (a) component that apply no patch.
+# moat and the other corpus closure targets are not evaluated locally; their counts come from the CI corpus run (T025).
+target	a_components	b_multi_variant	pairs	c_unscoped_pairs	variants_without_patches
+curl	4	2	18	0	0
+openssh	4	2	18	0	0
+httpie	6	3	23	0	0
+gh	4	2	18	0	0
+ripgrep	4	2	18	0	0

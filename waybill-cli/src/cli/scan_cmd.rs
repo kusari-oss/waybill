@@ -4988,6 +4988,30 @@ pub async fn execute(
             // Before this, the tier emitted components and no dependency edges
             // at all, so every closure component was an orphan by
             // construction -- measured, 352 of 406 on the pinned golden.
+            //
+            // #1436 (FR-001, research R6) — restore the `nix_drv` qualifier on
+            // every CVE-resolving backport first. `emit::components` applied
+            // it, but the three identity passes above rebuild a PURL from its
+            // parts, and a member merged into another reader's component
+            // takes that component's PURL. Done here, the closure edges below
+            // are built from the qualified PURL; edges that already name the
+            // old one (the manifest's, the contents pass's) are moved with it.
+            let qualified =
+                scan_fs::package_db::nix::closure::emit::qualify_backport_identities(
+                    &mut components,
+                );
+            if !qualified.is_empty() {
+                let moved = scan_fs::package_db::nix::haskell_packages::apply_renames(
+                    &qualified,
+                    &mut relationships,
+                );
+                tracing::info!(
+                    components = qualified.len(),
+                    rewritten_endpoints = moved,
+                    "nix-closure: build identity restored on backported components"
+                );
+            }
+            scan_fs::package_db::nix::closure::emit::log_backport_census(&components);
             let (edges, unanchored) = scan_fs::package_db::nix::closure::graph::relationships(
                 &classified.graph,
                 &classified.raw,
@@ -9512,6 +9536,64 @@ mod tests {
             vec!["MIT"],
             "dropping it here would discard the only license available"
         );
+    }
+
+    /// #1436 T007 (research R6) — a patched closure member that another
+    /// reader also emitted still merges into it, and the merged component
+    /// takes the build identity, with its existing edges moved.
+    ///
+    /// The sequence is `execute`'s: merge, then restore the qualifier, then
+    /// `apply_renames` on the relationships that already exist.
+    #[test]
+    fn m1436_a_patched_member_merges_and_the_merged_component_is_qualified() {
+        use crate::scan_fs::package_db::nix::closure::emit::{
+            qualify_backport_identities, ANN_BACKPORT_IDENTITY, ANN_CLOSURE_PATCHES,
+        };
+        use waybill_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
+        const DRV: &str = "0b1d6zkr6zq8m4rv7ah3ylnrwfkdsxfh";
+
+        let mut components = vec![
+            make_component("pkg:hackage/waybill-fixture-app@1.0"),
+            make_component("pkg:hackage/waybill-fixture-zip@6.0"),
+        ];
+        let mut relationships = vec![Relationship {
+            from: "pkg:hackage/waybill-fixture-app@1.0".to_string(),
+            to: "pkg:hackage/waybill-fixture-zip@6.0".to_string(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance {
+                source: "cabal".to_string(),
+                data_type: "dependency".to_string(),
+            },
+        }];
+        let mut member = make_component(&format!("pkg:generic/waybill-fixture-zip@6.0?nix_drv={DRV}"));
+        member.extra_annotations.insert(
+            ANN_CLOSURE_PATCHES.to_string(),
+            serde_json::Value::String(
+                r#"[{"type":"backport","resolves":[{"type":"security","id":"CVE-2099-0001"}]}]"#.to_string(),
+            ),
+        );
+        member.extra_annotations.insert(
+            ANN_BACKPORT_IDENTITY.to_string(),
+            serde_json::json!({"nix_drv": DRV, "claims": ["CVE-2099-0001"], "unscoped": []}),
+        );
+
+        let (merged, appended, _) = merge_closure_components(&mut components, vec![member]);
+        // CONTROL: it merged, rather than being appended beside the reader's.
+        assert_eq!((merged, appended), (1, 0));
+
+        let renames = qualify_backport_identities(&mut components);
+        let moved =
+            crate::scan_fs::package_db::nix::haskell_packages::apply_renames(&renames, &mut relationships);
+        let qualified = format!("pkg:hackage/waybill-fixture-zip@6.0?nix_drv={DRV}");
+        assert_eq!(components[1].purl.as_str(), qualified, "the reader's PURL type is kept");
+        assert_eq!(moved, 1);
+        assert_eq!(relationships[0].to, qualified, "the existing edge follows (#980)");
+        // Every endpoint is still a component.
+        let purls: std::collections::HashSet<&str> =
+            components.iter().map(|c| c.purl.as_str()).collect();
+        for r in &relationships {
+            assert!(purls.contains(r.from.as_str()) && purls.contains(r.to.as_str()), "{r:?}");
+        }
     }
 
     /// #1466, milestone 1282 FR-011 — a member that declares no `pname` is

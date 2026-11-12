@@ -579,6 +579,9 @@ pub fn is_internal_emission_key(key: &str) -> bool {
             | crate::scan_fs::package_db::pip::uv_lock::ARTIFACT_URL_KEY
             | NIX_EVALUATED_PACKAGE_KEY
             | crate::scan_fs::package_db::nix::closure::identifiers::ANN_CURATED_CPE
+            // #1436: the identity is in the PURL, the claims in the VEX, the
+            // unscoped count in C220.
+            | crate::scan_fs::package_db::nix::closure::emit::ANN_BACKPORT_IDENTITY
     )
 }
 

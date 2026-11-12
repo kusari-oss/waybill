@@ -1,0 +1,36 @@
+# T002 (2026-11-12): SC-001's baseline on the five nixpkgs wrapper targets (nixpkgs a799d3e3, aarch64-darwin).
+# Documents: `waybill sbom scan --nix-closure --no-deps-dev --no-clearly-defined` with main@b949532d (pre-change), all three formats plus the OpenVEX sidecar.
+# grype 0.120.0 (/nix/store/7r24kzxg8in0g0vydh63z6ybrm5p7cmy-grype-0.120.0), DB schema v6.1.10 built 2026-11-08T06:19:57Z (manual import), GRYPE_DB_AUTO_UPDATE=false.
+# "patched" = a finding whose (artifact PURL without qualifiers, vulnerability id) is in the document's pedigree.patches[].resolves.
+# Rows 1-25: fixed-qualified-probe.sh with GOLDENS=<the five documents> (synthetic VEX). Rows 26-30 (variant emitted_m1035): grype with the sidecar main emits today.
+target	variant	findings	patched_reported	patched_suppressed	others_lost
+curl	none	207	6	0	0
+curl	q_none	207	6	0	0
+curl	fixed_q	201	6	6	0
+curl	na_q	201	6	6	0
+curl	leak	207	6	0	0
+openssh	none	234	6	0	0
+openssh	q_none	234	6	0	0
+openssh	fixed_q	228	6	6	0
+openssh	na_q	228	6	6	0
+openssh	leak	234	6	0	0
+httpie	none	307	7	0	0
+httpie	q_none	307	7	0	0
+httpie	fixed_q	300	7	7	0
+httpie	na_q	300	7	7	0
+httpie	leak	307	7	0	0
+gh	none	262	6	0	0
+gh	q_none	262	6	0	0
+gh	fixed_q	256	6	6	0
+gh	na_q	256	6	6	0
+gh	leak	262	6	0	0
+ripgrep	none	219	6	0	0
+ripgrep	q_none	219	6	0	0
+ripgrep	fixed_q	213	6	6	0
+ripgrep	na_q	213	6	6	0
+ripgrep	leak	219	6	0	0
+curl	emitted_m1035	207	6	0	0
+openssh	emitted_m1035	234	6	0	0
+httpie	emitted_m1035	307	7	0	0
+gh	emitted_m1035	262	6	0	0
+ripgrep	emitted_m1035	219	6	0	0

@@ -157,3 +157,31 @@ OUT_DIR=$(mktemp -d) ./shape-probe.sh    > shape-results.tsv
 OUT_DIR=$(mktemp -d) ./coverage-probe.sh > coverage-results.tsv
 SRC=$SRC_DIR/curl/waybill.cdx.json OUT_DIR=$(mktemp -d) ./trivy-probe.sh > trivy-results.tsv
 ```
+
+## 2026-11-12, at implementation (T001, T002)
+
+**Inputs.** Five wrapper flakes over nixpkgs `a799d3e3`, each setting
+`packages.aarch64-darwin.default` to one of curl, openssh, httpie, gh and
+ripgrep, built in a temporary directory outside the repository. Only nixpkgs
+is evaluated; moat is never evaluated locally (its figures come from the CI
+corpus run). Scanned with `waybill sbom scan --nix-closure --no-deps-dev
+--no-clearly-defined`, all three formats plus the OpenVEX sidecar. grype and
+its database are the pins above (0.120.0; schema v6.1.10 built 2026-11-08).
+
+**T001 — do build variants disagree about a CVE? (`variants-results.tsv`).**
+Read from waybill's own `nix-closure: backport identity` log line, not
+re-derived. On every target, 4–6 components have a resolved CVE and 2–3 of
+them merge two patching derivations (unzip, libssh2, and on httpie jq), but
+**0** of 18–23 (component, CVE) pairs are resolved by only some variants, and
+no such component merges a derivation that applies no patch. Research R4's
+"claim only what every variant resolves" rule therefore withholds nothing on
+these targets; C220 is 0 and not emitted.
+
+**T002 — SC-001's baseline (`baseline-2026-11-12.tsv`).** On documents from
+main (`b949532d`, the pre-change build): grype reports 31 patched findings
+(6, 6, 7, 6, 6), and the sidecar main emits — milestone 1035's pair — suppresses
+**0** of them. The synthetic `fixed`-on-qualified-PURL VEX of
+`fixed-qualified-probe.sh` suppresses 31 of 31, leaks 0, and qualifying the
+patched components alone (`q_none`) changes no finding. The 102 / 36 figures
+of 2026-11-10 used other documents and #1435's extra unzip CPE and are not
+comparable; this is the number SC-001 is judged against on these targets.
