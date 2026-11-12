@@ -1,0 +1,19 @@
+target	S_rp	S_collisions	S_questionable	W_rp	S_only_rp	of_which_patched	remaining_real_gap	W_only_rp
+curl	218	0	0	205	17	17	0	4
+openssh	246	0	0	232	18	17	1	4
+httpie	316	25	2	336	28	18	10	48
+gh	218	0	0	263	17	17	0	62
+ripgrep	218	0	0	241	17	17	0	40
+
+remaining real gap (sbomnix right-product, not patched, not found by waybill):
+  openssh	CVE-2026-10846	ldns
+  httpie	CVE-2021-4048	lapack
+  httpie	CVE-2022-26345	openmp
+  httpie	CVE-2022-36073	rubygems
+  httpie	CVE-2023-37769	pixman
+  httpie	CVE-2025-50422	cairo
+  httpie	CVE-2026-113679	harfbuzz
+  httpie	CVE-2026-113680	harfbuzz
+  httpie	CVE-2026-116741	speex
+  httpie	CVE-2026-4775	libtiff
+  httpie	CVE-2026-58016	glib

@@ -1,0 +1,4 @@
+target	S_grype_rp	S_patched	S_osv	WR_grype_rp	WR_vex_rp	WR_patched_after_vex	WR_osv	truth	WR_recall	S_only_real	WR_only_real
+nix-closure-slack-web	294	2	0	299	297	0	8	300	300/300	0	13
+nix-closure-openai	261	0	0	266	266	0	10	268	268/268	0	15
+nix-closure-slacklinker	150	0	0	151	151	0	13	157	157/157	0	14

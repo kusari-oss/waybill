@@ -1,0 +1,11 @@
+target	mode	S	W_vex	W_osv	both	S_only	S_only_patched	S_only_W_has_no_cpe	S_only_W_has_cpe	S_only_W_lacks	W_only
+curl	runtime	100	99	0	99	1	1	0	0	0	0
+curl	buildtime	218	205	0	201	17	17	0	0	0	4
+openssh	runtime	28	70	0	28	0	0	0	0	0	42
+openssh	buildtime	246	232	0	228	18	17	1	0	0	4
+httpie	runtime	109	109	2	109	0	0	0	0	0	2
+httpie	buildtime	343	304	38	288	55	18	35	2	0	48
+gh	runtime	0	55	58	0	0	0	0	0	0	58
+gh	buildtime	218	260	58	201	17	17	0	0	0	62
+ripgrep	runtime	6	6	3	6	0	0	0	0	0	3
+ripgrep	buildtime	218	217	30	201	17	17	0	0	0	40
