@@ -103,6 +103,11 @@ pub struct NixStub<'a> {
     /// Milestone 1283 — `derivation show` of [`Self::attr`] fails with this
     /// stderr instead of printing the closure.
     pub closure_stderr: Option<String>,
+    /// #1436 — what the milestone-1050 declaration evaluation (the one that
+    /// reads `meta.knownVulnerabilities`) prints: `{pname: [{setId, out,
+    /// kv}]}`. `None`: it is unhandled and fails, as before, and the pass
+    /// degrades.
+    pub declarations: Option<&'a str>,
 }
 
 impl Default for NixStub<'_> {
@@ -126,6 +131,7 @@ impl Default for NixStub<'_> {
             ifd_required: false,
             json_miss_is_null: false,
             closure_stderr: None,
+            declarations: None,
         }
     }
 }
@@ -172,6 +178,10 @@ impl NixStub<'_> {
                 "  *rowIn*) echo 'error: stub refuses this evaluation' >&2; exit 1 ;;".to_string()
             }
             Rows::Json(rows) => format!("  *rowIn*) cat <<'ROWSEOF'\n{rows}\nROWSEOF\n  ;;"),
+        };
+        let declarations_case = match self.declarations {
+            Some(json) => format!("  \"eval\"*knownVulnerabilities*) cat <<'DECLEOF'\n{json}\nDECLEOF\n  ;;"),
+            None => String::new(),
         };
         let attr = self.attr;
         let closure = self.closure;
@@ -269,6 +279,7 @@ echo "$*" >> '{log}'
   "path-info"*) {path_info} ;;
   "store verify"*) {verify} ;;
   "eval"*outputSpecified*) {selection} ;;
+{declarations_case}
 {rows_case}
   "derivation show"*"#{attr}") {closure_arm}
   ;;

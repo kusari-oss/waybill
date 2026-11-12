@@ -1,0 +1,11 @@
+variant	exit	findings	subject_reported	others_lost
+none	0	4	1	0
+a_pair	0	4	1	0
+a_only	0	4	1	0
+a_parent	0	4	1	0
+b_only	0	3	0	0
+b_pair	0	4	1	0
+b_pair_rev	0	3	0	0
+c_link_comp	0	3	0	0
+c_link_pair	0	4	1	0
+c_embed	0	4	1	0

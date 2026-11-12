@@ -45649,7 +45649,7 @@
       "version": "0.9.0"
     },
     {
-      "bom-ref": "pkg:generic/libssh2@1.11.1",
+      "bom-ref": "pkg:generic/libssh2@1.11.1?nix_drv=61s6dgr2mn6jxmz42zxmgd6b105gmwak,v58hi5qdk8yd60fxjiaxgz2kwq1qwfbd",
       "cpe": "cpe:2.3:a:libssh2:libssh2:1.11.1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
@@ -45721,7 +45721,7 @@
           "value": "artifact-input"
         }
       ],
-      "purl": "pkg:generic/libssh2@1.11.1",
+      "purl": "pkg:generic/libssh2@1.11.1?nix_drv=61s6dgr2mn6jxmz42zxmgd6b105gmwak,v58hi5qdk8yd60fxjiaxgz2kwq1qwfbd",
       "type": "library",
       "version": "1.11.1"
     },
@@ -54203,7 +54203,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:generic/net-tools@2.10",
+      "bom-ref": "pkg:generic/net-tools@2.10?nix_drv=489lsy6qmapglh8j3xzdxyzpyz1jdcn0",
       "evidence": {
         "identity": [
           {
@@ -54262,7 +54262,7 @@
           "value": "build-tooling"
         }
       ],
-      "purl": "pkg:generic/net-tools@2.10",
+      "purl": "pkg:generic/net-tools@2.10?nix_drv=489lsy6qmapglh8j3xzdxyzpyz1jdcn0",
       "scope": "excluded",
       "type": "library",
       "version": "2.10"
@@ -83318,7 +83318,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:generic/unzip@6.0",
+      "bom-ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r",
       "cpe": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
@@ -83514,7 +83514,7 @@
           "value": "build-tooling"
         }
       ],
-      "purl": "pkg:generic/unzip@6.0",
+      "purl": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r",
       "scope": "excluded",
       "type": "library",
       "version": "6.0"
@@ -88531,7 +88531,7 @@
         "pkg:generic/setuptools@80.10.1",
         "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/unzip@6.0",
+        "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
       "ref": "pkg:generic/asciidoc@10.2.1"
@@ -90311,7 +90311,7 @@
         "pkg:generic/krb5@1.22.1",
         "pkg:generic/libidn2@2.3.8",
         "pkg:generic/libpsl@0.21.5",
-        "pkg:generic/libssh2@1.11.1",
+        "pkg:generic/libssh2@1.11.1?nix_drv=61s6dgr2mn6jxmz42zxmgd6b105gmwak,v58hi5qdk8yd60fxjiaxgz2kwq1qwfbd",
         "pkg:generic/nghttp2@1.69.0",
         "pkg:generic/nghttp3@1.15.0",
         "pkg:generic/ngtcp2@1.22.1",
@@ -90558,7 +90558,7 @@
         "pkg:generic/docbook-xml-4.3.zip-sha256.hIwaKlOpv1ISwBMWnPsNqZqpH6o8Na2LMFpWTH1wUNGQ.e",
         "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/unzip@6.0"
+        "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
       ],
       "ref": "pkg:generic/docbook-xml@4.3"
     },
@@ -90568,7 +90568,7 @@
         "pkg:generic/docbook-xml-4.5.zip-sha256.hTk4DeiuDyYxslIGDkNS90.sbhD27GLdeRiFlOJhkNx7Q.e",
         "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/unzip@6.0"
+        "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
       ],
       "ref": "pkg:generic/docbook-xml@4.5"
     },
@@ -92670,7 +92670,7 @@
         "pkg:generic/libidn2@2.3.8",
         "pkg:generic/libtasn1@4.21.0",
         "pkg:generic/libunistring@1.4.2",
-        "pkg:generic/net-tools@2.10",
+        "pkg:generic/net-tools@2.10?nix_drv=489lsy6qmapglh8j3xzdxyzpyz1jdcn0",
         "pkg:generic/nettle@3.10.2",
         "pkg:generic/p11-kit@0.26.2",
         "pkg:generic/perl@5.42.0",
@@ -94095,7 +94095,7 @@
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/zlib@1.3.2"
       ],
-      "ref": "pkg:generic/libssh2@1.11.1"
+      "ref": "pkg:generic/libssh2@1.11.1?nix_drv=61s6dgr2mn6jxmz42zxmgd6b105gmwak,v58hi5qdk8yd60fxjiaxgz2kwq1qwfbd"
     },
     {
       "dependsOn": [
@@ -95147,7 +95147,7 @@
         "pkg:generic/net-tools-2.10.tar.xz-sha256.hsmJDWlJB6Jv6UcPKvVEzdTlS96e3uT8y4Iy52W9YDWk.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
-      "ref": "pkg:generic/net-tools@2.10"
+      "ref": "pkg:generic/net-tools@2.10?nix_drv=489lsy6qmapglh8j3xzdxyzpyz1jdcn0"
     },
     {
       "dependsOn": [
@@ -97385,7 +97385,7 @@
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/nss-cacert@3.123",
         "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/unzip@6.0"
+        "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
       ],
       "ref": "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e"
     },
@@ -97675,7 +97675,7 @@
         "pkg:generic/sqlite-src-3510200.zip-sha256.hhREPdi1QeUFNmd1deRe8P.sfgWHbmzL0T2ElqOBfyCCk.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tcl@8.6.16",
-        "pkg:generic/unzip@6.0",
+        "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r",
         "pkg:generic/zlib@1.3.2"
       ],
       "ref": "pkg:generic/sqlite@3.51.2"
@@ -99163,7 +99163,7 @@
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/unzip60.tar.gz-sha256.hA22WmRZG0ESe0KqVLk.p.pIbR2zplKvCduSdMOaGcIvTc.e"
       ],
-      "ref": "pkg:generic/unzip@6.0"
+      "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
     },
     {
       "dependsOn": [
@@ -102767,418 +102767,158 @@
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-8139 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-8139 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2014-8139",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2014-8139; the build this document describes applies it. The backport is matched to CVE-2014-8139 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-8139 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2014-8139",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2014-8139"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-8140 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-8140 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2014-8140",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2014-8140; the build this document describes applies it. The backport is matched to CVE-2014-8140 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-8140 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2014-8140",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2014-8140"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-8141 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-8141 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2014-8141",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2014-8141; the build this document describes applies it. The backport is matched to CVE-2014-8141 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-8141 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2014-8141",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2014-8141"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-9636 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-9636 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2014-9636",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2014-9636; the build this document describes applies it. The backport is matched to CVE-2014-9636 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-9636 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2014-9636",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2014-9636"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2014-9913 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2014-9913 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2014-9913",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2014-9913; the build this document describes applies it. The backport is matched to CVE-2014-9913 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2014-9913 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2014-9913",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2014-9913"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2015-7696 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2015-7696 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2015-7696",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2015-7696; the build this document describes applies it. The backport is matched to CVE-2015-7696 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2015-7696 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2015-7696",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2015-7696"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2015-7697 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2015-7697 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2015-7697",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2015-7697; the build this document describes applies it. The backport is matched to CVE-2015-7697 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2015-7697 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2015-7697",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2015-7697"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2016-9844 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2016-9844 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2016-9844",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2016-9844; the build this document describes applies it. The backport is matched to CVE-2016-9844 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2016-9844 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2016-9844",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2016-9844"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2018-18384 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2018-18384 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2018-18384",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2018-18384; the build this document describes applies it. The backport is matched to CVE-2018-18384 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2018-18384 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2018-18384",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2018-18384"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2019-13232 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2019-13232 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2019-13232",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2019-13232; the build this document describes applies it. The backport is matched to CVE-2019-13232 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2019-13232 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2019-13232",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2019-13232"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/unzip@6.0"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2021-4217 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2021-4217 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2021-4217",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2021-4217; the build this document describes applies it. The backport is matched to CVE-2021-4217 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2021-4217 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2021-4217",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/unzip@6.0"
-        }
-      ]
+      "id": "CVE-2021-4217"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/net-tools@2.10"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2025-46836 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2025-46836 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2025-46836",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2025-46836; the build this document describes applies it. The backport is matched to CVE-2025-46836 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/net-tools@2.10?nix_drv=489lsy6qmapglh8j3xzdxyzpyz1jdcn0"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2025-46836 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2025-46836",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/net-tools@2.10"
-        }
-      ]
+      "id": "CVE-2025-46836"
     },
     {
       "affects": [
         {
-          "ref": "pkg:generic/libssh2@1.11.1"
-        }
-      ],
-      "analysis": {
-        "detail": "This version as published is affected: nixpkgs applies a patch for CVE-2026-7598 to it, which is evidence the maintainers believed it vulnerable. The association is filename-derived: it comes from the patch filename. This statement is about the upstream version; the `not_affected` statement for CVE-2026-7598 covers the build this document describes, which has the patch applied.",
-        "state": "exploitable"
-      },
-      "id": "CVE-2026-7598",
-      "recommendation": "Use a build that applies the nixpkgs backport for CVE-2026-7598; the build this document describes applies it. The backport is matched to CVE-2026-7598 by its patch filename alone, so confirm it addresses the issue before relying on it."
-    },
-    {
-      "affects": [
-        {
-          "ref": "nix-closure-moat@d069055"
+          "ref": "pkg:generic/libssh2@1.11.1?nix_drv=61s6dgr2mn6jxmz42zxmgd6b105gmwak,v58hi5qdk8yd60fxjiaxgz2kwq1qwfbd"
         }
       ],
       "analysis": {
         "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2026-7598 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
-        "justification": "code_not_present",
-        "state": "not_affected"
+        "state": "resolved"
       },
-      "id": "CVE-2026-7598",
-      "properties": [
-        {
-          "name": "waybill:vex-subcomponent",
-          "value": "pkg:generic/libssh2@1.11.1"
-        }
-      ]
+      "id": "CVE-2026-7598"
     }
   ]
 }

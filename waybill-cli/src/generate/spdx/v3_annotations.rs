@@ -587,6 +587,11 @@ fn push_document_fields(
     if omitted > 0 {
         push(out, "waybill:vex-claims-omitted", json!(omitted.to_string()));
     }
+    // C220 (m1436, #1436) — backport claims no statement could be scoped to.
+    let unscoped = crate::generate::openvex::claims::unscoped_claims(scan.components);
+    if unscoped > 0 {
+        push(out, "waybill:vex-claims-unscoped", json!(unscoped.to_string()));
+    }
 
     if scan.deps_dev_online {
         if let Some(v) = crate::enrich::deps_dev_outcome::document_value(scan.components) {

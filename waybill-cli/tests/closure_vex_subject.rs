@@ -1,11 +1,17 @@
-//! #1436 — a `--nix-closure` scan's VEX names the subject its document names.
+//! #1436 — a `--nix-closure` scan's backport claim, whatever its subject.
 //!
-//! Since milestone 1377 the subject of a closure scan is the evaluated
-//! package. The VEX code found its "this build" subject only through a
-//! main-module component, so on a wrapper flake (no language manifest, so no
-//! main module) no backport statement was emitted at all: no OpenVEX sidecar
-//! and no CycloneDX `vulnerabilities[]`. Measured on curl, openssh, httpie,
-//! gh and ripgrep wrapper flakes.
+//! Part 1 of #1436: since milestone 1377 the subject of a closure scan is the
+//! evaluated package, and the VEX code found its "this build" subject only
+//! through a main-module component, so on a wrapper flake (no language
+//! manifest, so no main module) no backport statement was emitted at all.
+//! Measured on curl, openssh, httpie, gh and ripgrep wrapper flakes.
+//!
+//! Milestone 1436 removed the dependence: a backport claim is one `fixed`
+//! statement whose product is the patched component's own build-qualified
+//! PURL, so it needs no subject. These three shapes — a wrapper flake, a main
+//! module beside the evaluated package, and the evaluated package as the
+//! main module — now pin that the claim is the same in each, and that the
+//! document's subject is still the one milestone 1377 elects.
 //!
 //! Every assertion is on the emitted documents, through the stub `nix`.
 
@@ -20,7 +26,9 @@ use common::nix_stub::{NixStub, Rows, Scan, DEFAULT_ATTR};
 use serde_json::Value;
 
 const CVE: &str = "CVE-2026-90001";
-const LIB: &str = "pkg:generic/waybill-fixture-lib@1.0";
+/// The fixture's `.drv` keys carry no store hash, so `nix_drv` falls back to
+/// the key's basename without `.drv` (`patches::drv_hashes`).
+const LIB: &str = "pkg:generic/waybill-fixture-lib@1.0?nix_drv=aaaa-waybill-fixture-lib-1.0";
 
 fn fixture(name: &str) -> String {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -77,8 +85,8 @@ fn scan(project: &Path, closure: &str) -> VexScan {
     VexScan { scan, openvex, _out: out }
 }
 
-/// The `not_affected` statement for [`CVE`], from the sidecar.
-fn openvex_not_affected(s: &VexScan) -> Value {
+/// Every sidecar statement about [`CVE`].
+fn openvex_statements(s: &VexScan) -> Vec<Value> {
     let doc = s.openvex.as_ref().unwrap_or_else(|| {
         panic!("no OpenVEX sidecar was written.\nstderr:\n{}", s.scan.stderr)
     });
@@ -86,86 +94,65 @@ fn openvex_not_affected(s: &VexScan) -> Value {
         .as_array()
         .unwrap()
         .iter()
-        .find(|st| st["status"] == "not_affected" && st["vulnerability"]["name"] == CVE)
+        .filter(|st| st["vulnerability"]["name"] == CVE)
         .cloned()
-        .unwrap_or_else(|| panic!("no not_affected for {CVE}: {doc:#}"))
+        .collect()
 }
 
-/// The CycloneDX `vulnerabilities[]` entry for [`CVE`] in `state`.
-fn cdx_entry(s: &VexScan, state: &str) -> Value {
+/// Every CycloneDX `vulnerabilities[]` entry for [`CVE`].
+fn cdx_entries(s: &VexScan) -> Vec<Value> {
     s.scan.cdx["vulnerabilities"]
         .as_array()
         .unwrap_or_else(|| panic!("no vulnerabilities[]: {:#}", s.scan.cdx["vulnerabilities"]))
         .iter()
-        .find(|v| v["id"] == CVE && v["analysis"]["state"] == state)
+        .filter(|v| v["id"] == CVE)
         .cloned()
-        .unwrap_or_else(|| panic!("no {state} entry for {CVE}: {:#}", s.scan.cdx["vulnerabilities"]))
+        .collect()
 }
 
 fn subject_purl(s: &VexScan) -> String {
     s.scan.cdx["metadata"]["component"]["purl"].as_str().unwrap_or_default().to_string()
 }
 
-fn subject_ref(s: &VexScan) -> String {
-    s.scan.cdx["metadata"]["component"]["bom-ref"].as_str().unwrap_or_default().to_string()
-}
-
-/// Asserts both carriers name the document subject as the build, with the
-/// patched component beneath it.
-fn assert_vex_names_the_subject(s: &VexScan, expected_subject: &str) {
+/// Asserts both carriers make the one backport claim, on the patched
+/// component's qualified PURL, whatever the document's subject is.
+fn assert_the_claim_names_the_component(s: &VexScan, expected_subject: &str) {
     // CONTROL: the document's subject is the one this case is about, so the
-    // VEX assertions below compare against a known value.
+    // claim below is shown not to depend on it.
     assert_eq!(subject_purl(s), expected_subject, "document subject");
 
-    let st = openvex_not_affected(s);
-    assert_eq!(st["products"][0]["@id"], expected_subject, "OpenVEX build subject: {st:#}");
-    assert_eq!(st["products"][0]["subcomponents"][0]["@id"], LIB, "{st:#}");
+    let st = openvex_statements(s);
+    assert_eq!(st.len(), 1, "one statement for the pair: {st:#?}");
+    assert_eq!(st[0]["status"], "fixed", "{st:#?}");
+    assert_eq!(st[0]["products"][0]["@id"], LIB, "{st:#?}");
+    assert!(st[0]["products"][0]["subcomponents"].is_null(), "{st:#?}");
 
-    // The version-scoped half is still emitted and still about the
-    // component, not the build (the m1035 pair is unchanged).
-    let doc = s.openvex.as_ref().unwrap();
-    let affected: Vec<&Value> = doc["statements"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|st| st["status"] == "affected" && st["vulnerability"]["name"] == CVE)
-        .collect();
-    assert_eq!(affected.len(), 1, "{doc:#}");
-    assert_eq!(affected[0]["products"][0]["@id"], LIB);
-
-    let not = cdx_entry(s, "not_affected");
-    let refs: Vec<&str> = not["affects"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter_map(|a| a["ref"].as_str())
-        .collect();
-    assert_eq!(refs, vec![subject_ref(s).as_str()], "CDX build subject: {not:#}");
+    let v = cdx_entries(s);
+    assert_eq!(v.len(), 1, "one entry for the pair: {v:#?}");
+    assert_eq!(v[0]["analysis"]["state"], "resolved", "{v:#?}");
+    assert_eq!(v[0]["affects"], serde_json::json!([{ "ref": LIB }]), "{v:#?}");
     assert!(
-        not["properties"]
-            .as_array()
-            .is_some_and(|p| p.iter().any(|p| p["name"] == "waybill:vex-subcomponent")),
-        "the patched component rides as a subcomponent: {not:#}"
+        !v[0]["properties"].to_string().contains("waybill:vex-subcomponent"),
+        "{v:#?}"
     );
-    let _ = cdx_entry(s, "exploitable");
 }
 
 /// The issue's case: a wrapper flake has no main module, and its subject is
 /// the evaluated package. Before #1436 neither carrier held a statement.
 #[test]
-fn a_wrapper_flake_names_the_evaluated_package_as_the_vex_subject() {
+fn a_wrapper_flake_gets_its_backport_claim() {
     let dir = wrapper_flake();
     let s = scan(dir.path(), &patched("closure.json"));
-    assert_vex_names_the_subject(&s, "pkg:generic/waybill-fixture-app@2.1");
+    assert_the_claim_names_the_component(&s, "pkg:generic/waybill-fixture-app@2.1");
 }
 
 /// A main module that is not the evaluated package is a sibling of the
-/// subject, so it is not "this build". Before #1436 the VEX named it while the
-/// document named the evaluated package.
+/// subject. Before #1436 the VEX named it as "this build" while the document
+/// named the evaluated package; now no backport claim names a build at all.
 #[test]
-fn a_main_module_beside_the_evaluated_package_does_not_become_the_vex_subject() {
+fn a_main_module_beside_the_evaluated_package_does_not_change_the_claim() {
     let s = scan(&cabal_project(), &patched("closure.json"));
-    assert_vex_names_the_subject(&s, "pkg:generic/waybill-fixture-app@2.1");
+    assert_the_claim_names_the_component(&s, "pkg:generic/waybill-fixture-app@2.1");
 }
 
 /// Control: the moat shape, where the evaluated package IS the main module.
@@ -173,5 +160,5 @@ fn a_main_module_beside_the_evaluated_package_does_not_become_the_vex_subject() 
 #[test]
 fn control_an_evaluated_package_that_is_the_main_module_keeps_its_subject() {
     let s = scan(&cabal_project(), &patched("closure-mainmodule.json"));
-    assert_vex_names_the_subject(&s, "pkg:hackage/waybill-fixture-roleproj@0.1.0");
+    assert_the_claim_names_the_component(&s, "pkg:hackage/waybill-fixture-roleproj@0.1.0");
 }

@@ -518,11 +518,57 @@ Neither SPDX version has an equivalent, so both carry the same array in a
 `waybill:closure-patches` annotation. That is the one place the three
 formats differ in capability rather than in spelling.
 
-A backport also produces **two** OpenVEX statements, never one: `affected`
-for the component version as published, and `not_affected` for the build
-this document describes, with the component named as a subcomponent. Both
-carry the evidence grade. A lone `not_affected` would let a consumer
-suppress a real finding on the weaker half of the evidence.
+A backport also produces **one** VEX statement per CVE it resolves: status
+`fixed`, whose product is the patched component's own PURL with a
+build-identity qualifier (milestone 1436, #1436).
+
+### The `nix_drv` qualifier
+
+A component whose patches resolve a CVE carries
+`?nix_drv=<hash>[,<hash>…]` on its PURL:
+
+```
+pkg:generic/unzip@6.0?nix_drv=l3jnrx992av3mhj5fna6064jfhncas5k,pfs456lvwjqfb35s5ypvnbkrdy01v3i6
+```
+
+- **What it identifies.** The value is the store hash of every derivation
+  (`.drv`) merged into the component that applies patches, sorted and
+  comma-joined. nixpkgs often builds one `(name, version)` more than once —
+  `unzip 6.0` is two derivations in a real closure — and waybill emits them
+  as one component, so the identity names each build it stands for. The
+  same derivations always give the same value. It is the derivation's hash,
+  not a checksum of an artifact, which is why the key is not PURL's
+  `checksum`.
+- **Why it exists.** Scanners apply a VEX statement only when its product is
+  the scanned package's own PURL; grype never reads a subcomponent or the
+  document's subject. A claim on plain `pkg:generic/unzip@6.0` would cover
+  every unzip 6.0 anywhere, patched or not. The qualifier scopes the claim
+  to these builds. Measured with grype 0.120.0: it suppresses every patched
+  finding, and none on an unqualified unzip 6.0.
+- **It does not change matching.** grype and osv-scanner ignore qualifiers
+  when matching advisories, so a qualified document reports the same
+  findings as an unqualified one when no VEX is supplied (measured: grype
+  0.120.0, osv-scanner 2.7.0). Every other advisory still matches.
+- **Only where a claim needs it.** A component with no CVE-resolving patch —
+  including one whose patches name no CVE — keeps its PURL byte-identical.
+  The qualified PURL is the same string in CycloneDX `purl` and `bom-ref`,
+  SPDX 2.3 `externalRefs`, SPDX 3 `software_packageUrl` and the OpenVEX
+  product.
+
+A CVE is claimed only when **every** patching build of the component
+resolves it, because a claim true of one build is false of the component.
+One that only some builds resolve gets no statement, stays in
+`pedigree.patches[].resolves`, and is counted at document scope in
+`waybill:vex-claims-unscoped` (emitted only when greater than zero).
+
+The version-level claim — "this version as published is affected" — is not
+a VEX statement. It is what `pedigree.patches[].resolves` already says.
+Milestone 1035 emitted it as an `affected` beside a build-scoped
+`not_affected` that named the build as product and the component as a
+subcomponent. That pair suppressed nothing in grype, which never reads a
+subcomponent; and an `affected` and a `not_affected` that both match one
+PURL are honoured by at most one of grype and Trivy, which break the tie in
+opposite directions. So the pair was replaced.
 
 ### Where the VEX appears
 
@@ -530,26 +576,28 @@ The same statements reach both output families (milestone 1068):
 
 - **CycloneDX**: natively, in `vulnerabilities[]`, whether or not SPDX is
   also requested.
-  - **Version statement.** `affected` becomes `analysis.state: exploitable`, with the
-    component's `bom-ref` in `affects[]`.
-  - **Build statement.** `not_affected` becomes `not_affected` / `code_not_present`,
-    with the document root in `affects[]` and the component named in a
-    `waybill:vex-subcomponent` property. Reading the subcomponent as the
-    affected party would turn "this build is not affected" into "this version
-    is not affected", which is the claim the pair exists to keep apart.
+  - **Backport.** `fixed` becomes `analysis.state: resolved`, one entry per
+    (component, CVE), with the component's qualified `bom-ref` in
+    `affects[]`. No entry marks a patched component `exploitable` for a CVE
+    its own patches resolve.
+  - **nixpkgs declaration.** `affected` becomes `exploitable`, with the
+    document root in `affects[]` and the declared component in a
+    `waybill:vex-subcomponent` property (see below).
   - **Evidence grade.** `analysis.detail` carries it. No statement is mapped to
-    `resolved_with_pedigree`: a filename-graded patch is not verifiable
-    remediation.
+    `resolved_with_pedigree`: the schema defines it as remediation evidenced
+    by commit history or diffs in the pedigree, and waybill's patch entries
+    carry neither.
 - **SPDX 2.3 and SPDX 3**: in the OpenVEX sidecar the SPDX document
   references.
 
 A document that does not contain a statement's component (a `--split`
-document, `--tier`, a root override) does not carry that claim, and counts
-it in `waybill:vex-claims-omitted`. The sidecar still names it by PURL.
+document, a root override that drops it) does not carry that claim, and
+counts it in `waybill:vex-claims-omitted`. The sidecar still names it by PURL.
 
 ```sh
 jq -c '.vulnerabilities[] | {id, state: .analysis.state, affects: [.affects[].ref],
        sub: [.properties[]? | select(.name=="waybill:vex-subcomponent") | .value]}' out.cdx.json
+grype sbom:out.cdx.json --vex out.openvex.json   # backported CVEs drop out
 ```
 
 **An empty `vulnerabilities[]` is not a claim that nothing is vulnerable.**
@@ -706,11 +754,13 @@ declarations are unaffected.
 ### When nixpkgs and a patch disagree
 
 If nixpkgs declares a CVE that a patch on the same component also names, the
-declaration wins: the `affected` is emitted and the patch-derived
-`not_affected` is withheld. A maintainer stating a version is vulnerable
-outranks a CVE read out of a filename, and a `not_affected` against an
-explicit contrary declaration would let a consumer dismiss a real finding on
-the weaker evidence.
+declaration wins: the `affected` is emitted and the patch-derived `fixed` is
+withheld. A maintainer stating a version is vulnerable outranks a CVE read out
+of a filename, and a `fixed` against an explicit contrary declaration would
+let a consumer dismiss a real finding on the weaker evidence. The two are
+matched on the component's PURL with qualifiers removed, and the claim is
+withheld even when the declaration itself cannot be emitted for want of a
+document subject.
 
 Nothing is lost. The patch stays in the component's `pedigree.patches[]`, so
 the build's patching is still visible; what is withheld is the suppression,

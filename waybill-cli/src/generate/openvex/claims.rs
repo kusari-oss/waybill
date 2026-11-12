@@ -47,6 +47,17 @@ pub(crate) fn claims(statements: &[OpenVexStatement]) -> Vec<Claim<'_>> {
     out
 }
 
+/// C220 (milestone 1436) — backport claims left without a statement because
+/// only some of a component's build variants resolve the CVE (research R4),
+/// counted over `components`, so each projected document counts the ones it
+/// holds.
+pub(crate) fn unscoped_claims(components: &[ResolvedComponent]) -> usize {
+    components
+        .iter()
+        .map(|c| crate::scan_fs::package_db::nix::closure::emit::backport_unscoped(c).len())
+        .sum()
+}
+
 /// C193 — claims whose component is not among `components`.
 pub(crate) fn omitted_claims(
     statements: &[OpenVexStatement],
@@ -93,7 +104,11 @@ mod tests {
         crate::enrich::depsdev_source::tests::make_component(purl)
     }
 
-    /// A backport: `affected` on the version, `not_affected` on the build.
+    /// A version statement and a build statement about one component: the
+    /// milestone-1035 backport pair. Since milestone 1436 a backport is one
+    /// version-shaped `fixed` on a build-qualified PURL and only nixpkgs
+    /// declarations make build statements, but the expansion rule these tests
+    /// pin is the same for both shapes.
     fn backport() -> Vec<OpenVexStatement> {
         vec![
             statement(OpenVexStatus::Affected, vec![product("pkg:generic/unzip@6.0", &[])]),

@@ -1,0 +1,29 @@
+# Golden review, #1436 (T025)
+
+Regen run 43294240633 at 6fea62a5: corpus 158 passed, 0 failed; table check 3 passed.
+67 files in the artifact: 52 byte-identical, 15 differ (cdx, spdx-2.3, spdx-3 of the five closure targets); no committed golden missing.
+
+```
+nix-closure-moat: renamed->nix_drv 3; other purls added [] removed []; patched still unqualified []
+   vulns 26 ['exploitable', 'not_affected'] -> 13 ['resolved']; exploitable on patched []; affects resolve True
+   doc rows changed: {}
+   e.g. ['pkg:generic/libssh2@1.11.1?nix_drv=61s6dgr2mn6jxmz42zxmgd6b105gmwak,v58hi5qdk8yd60fxjiaxgz2kwq1qwfbd', 'pkg:generic/net-tools@2.10?nix_drv=489lsy6qmapglh8j3xzdxyzpyz1jdcn0']
+nix-closure-openai: renamed->nix_drv 4; other purls added [] removed []; patched still unqualified []
+   vulns 36 ['exploitable', 'not_affected'] -> 19 ['resolved']; exploitable on patched []; affects resolve True
+   doc rows changed: {}
+   e.g. ['pkg:generic/db@4.8.30?nix_drv=slrk4bhapa03dkc9mhxrzg76zmgfj7zr', 'pkg:generic/db@5.3.28?nix_drv=ammmfjjix9ij2sm57hnxbgfv6bnxpr4r']
+nix-closure-shellcheck: renamed->nix_drv 3; other purls added [] removed []; patched still unqualified []
+   vulns 26 ['exploitable', 'not_affected'] -> 13 ['resolved']; exploitable on patched []; affects resolve True
+   doc rows changed: {}
+   e.g. ['pkg:generic/libssh2@1.11.1?nix_drv=61s6dgr2mn6jxmz42zxmgd6b105gmwak,v58hi5qdk8yd60fxjiaxgz2kwq1qwfbd', 'pkg:generic/net-tools@2.10?nix_drv=489lsy6qmapglh8j3xzdxyzpyz1jdcn0']
+nix-closure-slack-web: renamed->nix_drv 4; other purls added [] removed []; patched still unqualified []
+   vulns 32 ['exploitable', 'not_affected'] -> 16 ['resolved']; exploitable on patched []; affects resolve True
+   doc rows changed: {}
+   e.g. ['pkg:generic/binutils@2.44?nix_drv=8bbzicvx2zg4bcvlad62njwh36f7f09w,nny9jdip1v1803lglmlbpvk3kbvkgl75', 'pkg:generic/net-tools@2.10?nix_drv=yvpf8z792jly45yka1689w8fs5h0vxzl']
+nix-closure-slacklinker: renamed->nix_drv 6; other purls added [] removed []; patched still unqualified []
+   vulns 38 ['exploitable', 'not_affected'] -> 19 ['resolved']; exploitable on patched []; affects resolve True
+   doc rows changed: {}
+   e.g. ['pkg:generic/binutils@2.44?nix_drv=ibgm6y86w54yc8hhljfxqwc24ncghqa0,j05cdzm7axkq56ni3a9i3758sv0z9ll9', 'pkg:generic/db@4.8.30?nix_drv=k29ryfacbsvpab6v1yy84dyfksndqyjd']
+```
+
+Every PURL that changed is a component with a resolved CVE gaining ?nix_drv=; no other PURL changed. vulnerabilities[] pairs (exploitable + not_affected) became single resolved entries; none is exploitable on a patched component; every affects ref resolves; no document-level row changed. Dangling dependency refs, counting every bom-ref including nested components: 0 on main and 0 regenerated.

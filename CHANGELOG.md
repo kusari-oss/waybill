@@ -42,6 +42,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **Nix closure backport VEX is now one claim that scanners honour (#1436, #1421).**
+  - **What changed:**
+    - A `--nix-closure` component whose nixpkgs backport patches resolve a CVE gets a build-identity PURL qualifier: `?nix_drv=` with the sorted store hashes of every patching derivation merged into it (nixpkgs often builds `unzip 6.0` twice).
+    - For each CVE that every one of those builds resolves, the OpenVEX sidecar carries one `fixed` statement on that qualified PURL, and CycloneDX `vulnerabilities[]` one `resolved` entry on the component.
+    - This replaces milestone 1035's `affected` + build-scoped `not_affected` pair. That pair suppressed nothing in grype, and it made CycloneDX mark patched components `exploitable`.
+    - The version-level claim stays in `pedigree.patches[].resolves`.
+    - A CVE only some builds resolve gets no statement, and is counted in new row C220 `waybill:vex-claims-unscoped`.
+    - A nixpkgs `meta.knownVulnerabilities` declaration still withholds the claim.
+  - **Measured with grype 0.120.0:** on the five Haskell closure corpus targets, 17 of 17 patched findings are suppressed. On five nixpkgs wrapper targets (curl, openssh, httpie, gh, ripgrep) with the sidecar waybill emits, 31 of 31 are suppressed. No other finding was lost.
+  - **What the qualifier does not change:** without VEX, grype's and osv-scanner's finding sets are identical to before.
+  - **For consumers matching PURLs exactly:** only those patched components change identity.
+  - **#1435** (unzip's second CPE) no longer adds unsuppressable noise, and can leave draft.
+
 - **On darwin, a reference that exists only because of `lib/links` does not
   ship its target (#1455, second rule).** nixpkgs' Haskell builder gives
   every darwin library output a `lib/links` folder with one symlink per
