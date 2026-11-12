@@ -22,17 +22,17 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Measure R4's variant question before building on it. Write `specs/1436-vex-build-identity/measurements/variants-probe.sh`, and record its output in `variants-results.tsv` with a short note in `measurements/README.md`.
-  - **Inputs:** each of the six wrapper targets, plus moat.
-    - Build wrapper flakes over nixpkgs `a799d3e3` for curl, openssh, httpie, gh and ripgrep, in a temp dir outside the repo. They evaluate nixpkgs only, and no third-party flake is built.
-    - moat uses its committed corpus pin; reading its closure is evaluation only.
-    - Run `waybill debug closure-dump`.
-  - **Count per target:**
-    - (a) components with ≥1 resolves-bearing patch;
+- [ ] T001 Measure R4's variant question, from waybill itself. Do not re-derive patch-to-CVE matching in a script; that would be modelling the reader.
+  - **When:** after T004, which gives waybill per-variant patch sets.
+  - **How:** add one INFO line in `NC/emit.rs`, `nix-closure: backport identity`, with three counts:
+    - (a) components with ≥1 resolved CVE;
     - (b) how many of those merge >1 patching derivation;
-    - (c) (component, CVE) pairs where **not every** variant resolves the CVE, the future C220 count.
-  - **Gate:** if (c) is a large share of (a)'s pairs, stop and report before Phase 2, because R4's design would then leave too much unclaimed.
-- [ ] T002 [P] Re-measure SC-001's baseline. For the same six targets, scan with current main (`waybill sbom scan --nix-closure`), then run `measurements/fixed-qualified-probe.sh` with `GOLDENS` pointed at those documents (each as `<target>/cdx.json`). Record `none` (patched findings reported) and the synthetic-VEX result in `measurements/baseline-2026-11-12.tsv`. Use the grype and database pins from `quickstart.md`. This is the number SC-001 is judged against.
+    - (c) (component, CVE) pairs that not every variant resolves, which is the C220 count.
+  - **Local inputs:** only the five nixpkgs wrapper targets (curl, openssh, httpie, gh, ripgrep) over nixpkgs `a799d3e3`, as wrapper flakes in a temp dir outside the repo. They evaluate nixpkgs only.
+  - **Moat:** **never evaluate moat, or any other third-party flake, locally.** Take moat's counts, and the other corpus closure targets', from the CI corpus run's log (T025).
+  - **Record:** `specs/1436-vex-build-identity/measurements/variants-results.tsv`, plus a note in `measurements/README.md`.
+  - **Gate:** if (c) is a large share of (a)'s pairs, stop and report before US1.
+- [ ] T002 [P] Re-measure SC-001's baseline. For the five nixpkgs wrapper targets (moat's baseline comes from its committed golden, because it is never evaluated locally), scan with current main (`waybill sbom scan --nix-closure`), then run `measurements/fixed-qualified-probe.sh` with `GOLDENS` pointed at those documents (each as `<target>/cdx.json`). Record `none` (patched findings reported) and the synthetic-VEX result in `measurements/baseline-2026-11-12.tsv`. Use the grype and database pins from `quickstart.md`. This is the number SC-001 is judged against.
 
 ## Phase 2: Foundational (blocks every story)
 
@@ -51,8 +51,8 @@
 - [ ] T006 Implement the qualifier in `NC/emit.rs`, at the `ANN_CLOSURE_PATCHES` attachment around `:636`.
   - When `record.distinct_cves()` is non-empty, rebuild the component's PURL with qualifier `nix_drv` = `record.drv_hashes().join(",")` through `waybill_common::types::purl::Purl`.
   - Do it **before** `graph::project`, so the closure edges are built from the qualified PURL (research R6).
-  - Store the every-variant CVE set on the component as an internal annotation for the VEX generator, for example `waybill:closure-backport-claims`, a JSON array of CVE ids.
-  - If that annotation would reach the documents, it needs its own catalog row and extractors. Prefer an in-memory field. Decide, and record the decision in `research.md` as R12.
+  - Carry the every-variant CVE set to the VEX generator **in memory**, not as an emitted annotation. A new `waybill:` annotation would need a catalog row and extractors, and nothing needs it in the documents.
+  - If no in-memory path exists without broad plumbing, stop and record the choice in `research.md` as R12 before emitting anything.
 - [ ] T007 Check the merge with manifest components in `waybill-cli/src/cli/scan_cmd.rs` (`merge_closure_components`). A closure member whose **unqualified** PURL equals a manifest component's must still merge, and the qualified PURL is kept (research R6).
   - Write the test first: a fixture where the manifest tier also emits the patched component.
   - Any rename goes through `apply_renames`.
@@ -84,6 +84,8 @@
   - `statements_need_no_document_subject`: a wrapper flake, no main-module, statements are emitted.
   - `the_grade_note_is_kept` (FR-004).
   - `a_declaration_withholds_the_fixed_claim` (R10): seed a nixpkgs declaration for (ssh, CVE-2099-0002) the way `T/nixpkgs_declarations.rs` does.
+  - `the_unpatched_build_is_never_named`: the unpatched zip keeps an unqualified PURL, and no statement names it (SC-002's leak case).
+  - `projected_documents_keep_statements_with_components`: under `--split` and `--tier`, each statement stays in the document holding its component, and C193 counts the claims a projection drops.
   - `no_orphan_endpoint` (T008).
 - [ ] T011 [US1] Rewrite the OpenVEX unit tests that pin the pair in `OV`'s test module:
   - `a_backport_produces_both_statements_with_different_subjects` (`:1063`);
@@ -179,7 +181,7 @@
   - The sidecar comes from the regen artifact if present. Otherwise regenerate locally from the same build with `--nix-closure` on the committed corpus pins.
   - Assert: every patched finding is suppressed, 0 others are lost, and without VEX the findings equal the pre-change goldens' (grype and osv-scanner).
   - Record in `measurements/sc-results.tsv`.
-- [ ] T028 The same for the six wrapper targets, using T002's baseline. Record in `measurements/sc-results.tsv`. Re-check PyPI on httpie for FR-007, and if httpie has a CVE-resolving `pkg:pypi` component, its qualifier must lose no osv-scanner finding.
+- [ ] T028 The same for the five nixpkgs wrapper targets, using T002's baseline. moat is covered by T027 through its regenerated golden, and is never evaluated locally. Record in `measurements/sc-results.tsv`. Re-check PyPI on httpie for FR-007, and if httpie has a CVE-resolving `pkg:pypi` component, its qualifier must lose no osv-scanner finding.
 
 ## Phase 7: Polish
 
@@ -190,7 +192,7 @@
 
 ## Dependencies and execution order
 
-- **T001 gates everything.** Its result can send R4 back for a decision.
+- **T001 runs right after T004** and gates US1. Its result can send R4 back for a decision.
 - **T002** is independent, and needed only by T028.
 - **Phase 2:** T003→T004, T005→T006→T007, and T008 alongside. All of it blocks every story.
 - **US1 (T009–T014)** comes before US2: US2 checks CDX entries derived from the statements US1 produces.

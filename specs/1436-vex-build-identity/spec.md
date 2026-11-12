@@ -102,8 +102,8 @@ A user sees a qualifier on a patched component's PURL and wants to know what it 
 
 ### Functional Requirements
 
-- **FR-001**: Every closure component with backport evidence (at least one `pedigree.patches[].resolves` entry) MUST carry a PURL qualifier that identifies the exact build. It MUST be deterministic, meaning the same build always gives the same value. It MUST leave the PURL's type, namespace, name and version unchanged. Components without backport evidence MUST keep their PURL byte-identical. That includes components that carry patches with no `resolves` entry (63 on `nix-closure-moat`, against 3 that resolve a CVE). The qualifier exists only to scope a statement to this build, so it appears only where a statement needs it (clarified 2026-11-12).
-- **FR-002**: For each (patched component, resolved CVE) pair, the OpenVEX sidecar MUST carry exactly one statement whose product is the component's qualified PURL, with no subcomponent. Its status MUST be `fixed`: the build's backported patch remediated the CVE (clarified 2026-11-12, option A).
+- **FR-001**: Every closure component with backport evidence (at least one `pedigree.patches[].resolves` entry) MUST carry a PURL qualifier that identifies the build or builds the component stands for. nixpkgs can merge build variants into one component, and the qualifier names every patching variant (research R4). It MUST be deterministic, meaning the same build always gives the same value. It MUST leave the PURL's type, namespace, name and version unchanged. Components without backport evidence MUST keep their PURL byte-identical. That includes components that carry patches with no `resolves` entry (63 on `nix-closure-moat`, against 3 that resolve a CVE). The qualifier exists only to scope a statement to this build, so it appears only where a statement needs it (clarified 2026-11-12).
+- **FR-002**: For each (patched component, CVE) pair that **every** build variant merged into the component resolves (research R4), the OpenVEX sidecar MUST carry exactly one statement whose product is the component's qualified PURL, with no subcomponent. A CVE that only some variants resolve gets no statement and is counted in C220. Its status MUST be `fixed`: the build's backported patch remediated the CVE (clarified 2026-11-12, option A).
   - On an unqualified product, grype honoured `fixed` on 6 of 6 targets (`b_fixed`). The research phase MUST measure it on a **qualified** product, which was measured only with `not_affected` (`q_lone`, 6/6).
   - If grype does not honour `fixed` there, the fallback is `not_affected` with the closest justification. The measurement and the reason MUST be recorded, and the spec amended.
 - **FR-003**: No statement MAY name a patched component's PURL with any other status for the same CVE, whether qualified or unqualified. The version-level claim MUST NOT be emitted as a VEX statement. It stays in `pedigree.patches[].resolves`. This ends m1035's two-statement rule for closure backports.
@@ -116,12 +116,12 @@ A user sees a qualifier on a patched component's PURL and wants to know what it 
 - **FR-008**: VEX from sources other than closure backports (m1050's nixpkgs security declarations, and any other VEX) MUST be unchanged by this feature.
 - **FR-009**: Before choosing the qualifier key and value, the plan MUST check the PURL specification and the existing catalog for an established key, applying Principle V. It MUST also measure that grype, osv-scanner and Trivy tolerate the chosen qualifier on every PURL type it is applied to. The choice and the evidence MUST be recorded.
 - **FR-010**: The catalog (`docs/reference/sbom-format-mapping.md`, row F1 and any new row) and the user guide MUST describe the new shape, the qualifier, and where the version-level claim now lives.
-- **FR-011**: The behaviour MUST be testable without network access or real builds, using the existing stub closures: a patched component; an unpatched build of the same name and version; a component patched for one of two CVEs; a filename-derived association; a projected (`--split`/`--tier`) document.
+- **FR-011**: The behaviour MUST be testable without network access or real builds, using the existing stub closures: a patched component; an unpatched build of the same name and version; a component patched for one of two CVEs; a filename-derived association; two variants that both resolve a CVE; two variants of which only one does; a nixpkgs declaration that withholds the claim (research R10); a projected (`--split`/`--tier`) document.
 - **FR-012**: No new Cargo dependencies, and no new network access at scan time.
 
 ### Key Entities
 
-- **Build identity**: the value that distinguishes this build of a component from any other build of the same name and version. It is carried as a PURL qualifier on patched components only.
+- **Build identity**: the value that distinguishes the build or builds a component stands for from any other build of the same name and version: the sorted store hashes of its patching derivations. It is carried as a PURL qualifier on patched components only.
 - **Backport claim**: one (patched component, resolved CVE) pair with its evidence grade and patch provenance, derived from `pedigree.patches[].resolves`.
 - **VEX statement**: the single statement per backport claim, carried in the OpenVEX sidecar and in CycloneDX `vulnerabilities[]`.
 
@@ -129,7 +129,7 @@ A user sees a qualifier on a patched component's PURL and wants to know what it 
 
 ### Measurable Outcomes
 
-- **SC-001**: Across the six measurement targets, grype with waybill's VEX suppresses **every** patched finding: those whose (component, CVE) is in the document's `pedigree.patches[].resolves`. Today it suppresses 0. The count is re-measured at implementation time against the same targets. It was 102 on 2026-11-10 with #1435's unzip CPE, and 36 without.
+- **SC-001**: Across the six measurement targets, grype with waybill's VEX suppresses **every** claimable patched finding: a finding whose (component, CVE) is resolved by every build variant of that component. Today it suppresses 0. Pairs that only some variants resolve are reported separately, with their C220 count, and are not claimed. The count is re-measured at implementation time against the same targets. It was 102 on 2026-11-10 with #1435's unzip CPE, and 36 without.
 - **SC-002**: Across the same targets, **zero** findings disappear that are not patched pairs. That includes zero leakage onto an unpatched build of a patched component's name and version.
 - **SC-003**: On every committed closure golden, no `vulnerabilities[]` entry marks a patched component `exploitable` for a CVE its patches resolve. Today moat has 13.
 - **SC-004**: Without VEX, grype and osv-scanner report the same findings on the qualified documents as on today's, on every closure golden and measurement target.
