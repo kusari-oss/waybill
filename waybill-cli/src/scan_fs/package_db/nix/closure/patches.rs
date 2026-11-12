@@ -180,7 +180,9 @@ impl ComponentPatches {
 fn cve_pattern() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"CVE-\d{4}-\d+").expect("static CVE pattern is valid")
+        // Case-insensitive (#1487): nixpkgs also names patches in lower case,
+        // e.g. unzip's `28-cve-2022-0529-and-cve-2022-0530.patch`.
+        Regex::new(r"(?i)CVE-\d{4}-\d+").expect("static CVE pattern is valid")
     })
 }
 
@@ -189,7 +191,7 @@ pub(crate) fn cves_in_filename(name: &str) -> Vec<GradedCve> {
     let mut seen = BTreeSet::new();
     cve_pattern()
         .find_iter(name)
-        .map(|m| m.as_str().to_string())
+        .map(|m| m.as_str().to_ascii_uppercase())
         .filter(|id| seen.insert(id.clone()))
         .map(GradedCve::from_filename)
         .collect()
@@ -393,6 +395,34 @@ mod tests {
         let grades = [EvidenceGrade::FilenameDerived, EvidenceGrade::NixpkgsDeclared];
         let wires: std::collections::BTreeSet<&str> = grades.iter().map(|g| g.wire()).collect();
         assert_eq!(wires.len(), grades.len(), "wire forms collide: {wires:?}");
+    }
+
+    /// #1487: nixpkgs names some patches in lower case. At `a799d3e3`, unzip
+    /// applies `28-cve-2022-0529-and-cve-2022-0530.patch`, and grype kept
+    /// reporting both CVEs on a build that patches them.
+    #[test]
+    fn m1487_a_lower_case_patch_name_yields_both_cves_upper_cased() {
+        let ids: Vec<String> = cves_in_filename("28-cve-2022-0529-and-cve-2022-0530.patch")
+            .into_iter()
+            .map(|c| c.id)
+            .collect();
+        assert_eq!(ids, ["CVE-2022-0529", "CVE-2022-0530"]);
+    }
+
+    #[test]
+    fn m1487_mixed_case_and_duplicates_collapse_to_one_upper_case_id() {
+        let ids: Vec<String> = cves_in_filename("fix-Cve-2019-13232-cve-2019-13232.patch")
+            .into_iter()
+            .map(|c| c.id)
+            .collect();
+        assert_eq!(ids, ["CVE-2019-13232"]);
+    }
+
+    #[test]
+    fn m1487_case_insensitivity_does_not_loosen_the_shape() {
+        // Still a CVE id: a two-digit year is not one, in any case.
+        assert!(cves_in_filename("cve-22-0529.patch").is_empty());
+        assert!(cves_in_filename("CVE-22-0529.patch").is_empty());
     }
 
     #[test]

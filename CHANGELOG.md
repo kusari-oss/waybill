@@ -123,6 +123,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A nixpkgs patch named in lower case now counts as resolving its CVEs
+  (#1487).** The closure tier read CVE ids from patch file names with a
+  case-sensitive `CVE-` pattern, and nixpkgs also writes `cve-`. At
+  `a799d3e3`, unzip applies `28-cve-2022-0529-and-cve-2022-0530.patch`, so
+  neither CVE reached `pedigree.patches[].resolves` or got a #1436 `fixed`
+  claim. Matching is now case-insensitive, the id is upper-cased, and the
+  evidence grade is unchanged. Measured with grype 0.120.0 on five nixpkgs
+  wrapper flakes (curl, openssh, httpie, gh, ripgrep), with #1435's unzip CPE:
+  unzip's findings with waybill's VEX fall from 3 to 1, the remaining
+  CVE-2018-1000035 having no patch.
+
 - **Only the compiler's own copy of a GHC boot library is exempt from scope
   (#1478).** Both scope passes used to exempt any `pkg:hackage` component
   whose *name* is a boot library. nixpkgs also builds some of those names
