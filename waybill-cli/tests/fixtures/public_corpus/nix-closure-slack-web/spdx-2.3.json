@@ -65,7 +65,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-exemptions\",\"value\":\"{\\\"compiler-supplied\\\":41}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-exemptions\",\"value\":\"{\\\"compiler-supplied\\\":40}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -55177,7 +55177,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"exempt-compiler-supplied\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:scope-classification-source\",\"value\":\"runtime-closure\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -180632,6 +180632,11 @@
       "relatedSpdxElement": "SPDXRef-Package-ZWUMF2ZJCEAOXZVP",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-H5MO7LXYQ3KNBTHI"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-H6BZPOR7GRVVHS74"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-2XGIUPKS3427EVIH",

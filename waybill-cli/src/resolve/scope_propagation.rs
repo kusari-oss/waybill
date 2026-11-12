@@ -228,9 +228,24 @@ fn compiler_supplied<'a>(
     }
     components
         .iter()
-        .filter(|c| is_haskell_purl(c.purl.as_str()) && boot.contains(c.name.as_str()))
+        .filter(|c| {
+            is_haskell_purl(c.purl.as_str()) && boot.contains(c.name.as_str()) && is_the_compilers_copy(c)
+        })
         .map(|c| c.purl.as_str())
         .collect()
+}
+
+/// Whether a boot-library-named component is the compiler's own copy:
+/// versionless, or versioned from the compiler (C218, #966). A versioned
+/// Hackage build of the same name (`os-string@2.0.10` beside GHC's
+/// `os-string@2.0.7`) is an ordinary member, and exempting it overrides the
+/// evidence that scoped it (#1478). Duplicated in `closure_role_scope` for the
+/// reason `is_haskell_purl` is.
+fn is_the_compilers_copy(c: &ResolvedComponent) -> bool {
+    !c.purl.as_str().contains('@')
+        || c.extra_annotations.contains_key(
+            crate::scan_fs::package_db::nix::haskell_packages::ANN_BOOT_LIBRARY_COMPILER,
+        )
 }
 
 /// Whether a PURL names a Hackage package.
@@ -548,6 +563,17 @@ pub(crate) fn retype_edges_into_withdrawn(
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// GHC's own copy of a boot library, as real documents carry it since
+    /// #966: versioned from the compiler, with C218 naming it. A versioned
+    /// boot name WITHOUT C218 is a separate Hackage build (#1478).
+    fn compilers_copy(mut c: ResolvedComponent) -> ResolvedComponent {
+        c.extra_annotations.insert(
+            crate::scan_fs::package_db::nix::haskell_packages::ANN_BOOT_LIBRARY_COMPILER.to_string(),
+            serde_json::Value::from("ghc-9.10.3"),
+        );
+        c
+    }
     use crate::generate::graph_completeness::test_support::{mk_component, mk_rel};
     use waybill_common::resolution::{EnrichmentProvenance, RelationshipType};
 
@@ -580,7 +606,7 @@ mod tests {
         let mut comps = vec![
             mk_component("pkg:hackage/root@1.0.0"),
             scoped("pkg:hackage/testdep@1.0.0", LifecycleScope::Test),
-            mk_component("pkg:hackage/pretty@1.1.3.6"),
+            compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6")),
         ];
         let rels = vec![
             mk_rel("pkg:hackage/root@1.0.0", "pkg:hackage/testdep@1.0.0"),
@@ -614,7 +640,7 @@ mod tests {
         let mut comps = vec![
             mk_component("pkg:hackage/root@1.0.0"),
             scoped("pkg:hackage/testdep@1.0.0", LifecycleScope::Test),
-            mk_component("pkg:hackage/pretty@1.1.3.6"),
+            compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6")),
         ];
         let rels = vec![
             mk_rel("pkg:hackage/root@1.0.0", "pkg:hackage/testdep@1.0.0"),
@@ -682,7 +708,7 @@ mod tests {
     #[test]
     fn m1276_the_exempt_class_is_the_class_c170_describes() {
         let comps = vec![
-            mk_component("pkg:hackage/pretty@1.1.3.6"),
+            compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6")),
             mk_component("pkg:hackage/aeson@2.2.4.1"),
             mk_component("pkg:npm/pretty@2.0.0"),
         ];
@@ -732,7 +758,7 @@ mod tests {
 
     #[test]
     fn m1276_a_nulled_hackage_package_is_compiler_supplied() {
-        let comps = vec![mk_component("pkg:hackage/pretty@1.1.3.6")];
+        let comps = vec![compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6"))];
         let exempt = compiler_supplied(&comps, &boot_set(&["pretty"]));
         assert_eq!(exempt.len(), 1);
         assert!(exempt.contains("pkg:hackage/pretty@1.1.3.6"));
@@ -767,7 +793,7 @@ mod tests {
         // FR-005. The compiler configuration could not be read, so nothing is
         // known to be compiler-supplied. Unearned immunity is the dangerous
         // default, and this is the arm that refuses it.
-        let comps = vec![mk_component("pkg:hackage/pretty@1.1.3.6")];
+        let comps = vec![compilers_copy(mk_component("pkg:hackage/pretty@1.1.3.6"))];
         assert!(compiler_supplied(&comps, &HashSet::new()).is_empty());
     }
 
@@ -1436,5 +1462,17 @@ mod tests {
             0
         );
         assert_eq!(scope_of(&comps, npm), Some(LifecycleScope::Development));
+    }
+
+    /// #1478, the propagation side: only the compiler's copy is immune.
+    #[test]
+    fn m1478_a_versioned_hackage_build_of_a_boot_name_is_not_immune() {
+        let comps = vec![
+            compilers_copy(mk_component("pkg:hackage/os-string@2.0.7")),
+            mk_component("pkg:hackage/os-string@2.0.10"),
+        ];
+        let exempt = compiler_supplied(&comps, &boot_set(&["os-string"]));
+        assert!(exempt.contains("pkg:hackage/os-string@2.0.7"), "{exempt:?}");
+        assert!(!exempt.contains("pkg:hackage/os-string@2.0.10"), "{exempt:?}");
     }
 }
