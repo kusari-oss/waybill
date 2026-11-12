@@ -1,0 +1,12 @@
+# The IFD corpus targets whose recall truth recall-truth.yml produces.
+# Columns (tab-separated): corpus target name, clone URL, full pinned SHA, flake attribute.
+# Must agree with waybill-cli/tests/corpus_harness_195/manifest.rs; the default
+# test lane checks that (manifest::recall_targets_table_matches_manifest).
+#
+# slacklinker and openai: ../stage2-target-shas.txt. slack-web is not in that
+# file (it was measured in an earlier stage); its SHA is master HEAD of
+# 2026-10-13, "DUX-5929 Improve `SlackClientError` messages (#174)", confirmed
+# fetchable by full SHA from github.com on 2026-11-11.
+nix-closure-slack-web	https://github.com/MercuryTechnologies/slack-web	7b46273d3723ba37da26e4c4f7a3c5575ae9e837	default
+nix-closure-openai	https://github.com/MercuryTechnologies/openai	8a357137b9d3f1727b1dbb6ea3574e7b1b0fb4b7	default
+nix-closure-slacklinker	https://github.com/MercuryTechnologies/slacklinker	72af26a71622bcf1eb4b84d017677be711c6fc7b	default

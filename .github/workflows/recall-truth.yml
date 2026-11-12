@@ -1,0 +1,298 @@
+name: Recall truth (nix IFD corpus)
+
+# Feature 1283 (T037, research R7) — produce the vulnerability truth that the
+# nightly corpus targets `nix-closure-{slack-web,openai,slacklinker}` score
+# waybill's runtime-only view against.
+#
+# Dispatch-only, and deliberately so. The nightly lane runs neither sbomnix
+# nor grype: a vulnerability database in the nightly would make its result
+# drift with the database rather than with waybill. Instead this workflow is
+# run when a target's pin changes (or on purpose), its artifact is reviewed,
+# and `recall-truth.json` is committed beside the target's goldens — the same
+# flow as goldens.
+#
+# Truth, per target (specs/1283-nix-allow-ifd/measurements/recall/README.md):
+#   grype findings on sbomnix's runtime CycloneDX of the realised output,
+#   minus name collisions (classify.py, cross-checked against the reviewed
+#   verdicts it carries), plus the HSEC advisories osv-scanner reports for
+#   the output's Haskell link closure. Nothing in it comes from waybill.
+#
+# Every tool is pinned: sbomnix, grype and osv-scanner from one nixpkgs
+# revision, and the grype database by archive URL and sha256. osv-scanner
+# queries the live OSV API — there is no pinnable OSV database — so the
+# artifact records the run date and the truth file's `produced` field says
+# when that answer was true.
+#
+# x86_64-linux on purpose: slacklinker's output does not build on
+# aarch64-darwin (disallowedReferences to ghc; its own CI builds only
+# x86_64-linux), and the nightly corpus lane that reads the truth runs here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: >-
+          Corpus target names, space- or comma-separated, from
+          specs/1283-nix-allow-ifd/measurements/recall/targets.tsv — or `all`.
+        type: string
+        default: all
+
+permissions:
+  contents: read
+
+env:
+  # sbomnix 1.9.0, grype 0.120.0 and osv-scanner 2.7.0 — the versions the
+  # stage 2 recall measurement used. grype's derivation at this revision is
+  # byte-identical to the measured one (/nix/store/g6d4m4x9…-grype-0.120.0.drv,
+  # checked 2026-11-11); osv-scanner came from Homebrew there, same version.
+  TOOLS_NIXPKGS: 0bb2eedc20e4739f29e8045034f2828ad7054f8f
+  SBOMNIX_VERSION: 1.9.0
+  GRYPE_VERSION: 0.120.0
+  OSV_SCANNER_VERSION: 2.7.0
+  # The grype database the stage 2 measurement used (schema v6.1.10, built
+  # 2026-11-08). Anchore's retention of dated archives is not documented; if
+  # the download 404s, pick a newer archive from
+  # https://grype.anchore.io/databases/v6/latest.json, update both lines, and
+  # say so in the PR that commits the truth.
+  GRYPE_DB_URL: https://grype.anchore.io/databases/v6/vulnerability-db_v6.1.10_2026-11-08T00:22:04Z_1794118797.tar.zst
+  GRYPE_DB_SHA256: dcca24722e16c2bcf4a542a3f7fdd2147baf9215c17b973f5a7d4243fbddacea
+  GRYPE_DB_AUTO_UPDATE: 'false'
+  GRYPE_DB_VALIDATE_AGE: 'false'
+  GRYPE_CHECK_FOR_APP_UPDATE: 'false'
+  # sbomnix runs nix itself and cannot be handed `--option`, so the setting
+  # goes through NIX_CONFIG: these targets need import-from-derivation, and
+  # stating it keeps the truth independent of the installer's default.
+  NIX_CONFIG: |
+    allow-import-from-derivation = true
+    accept-flake-config = false
+  RECALL_DIR: specs/1283-nix-allow-ifd/measurements/recall
+
+jobs:
+  plan:
+    name: Select targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      targets: ${{ steps.select.outputs.targets }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The input is free text, so it is read from the environment, never
+      # spliced into the script, and every name must be an exact row of the
+      # table: the matrix below only ever holds names this file defines.
+      - name: Validate the requested targets
+        id: select
+        env:
+          REQUESTED: ${{ inputs.targets }}
+        run: |
+          set -euo pipefail
+          set -f
+          table="$RECALL_DIR/targets.tsv"
+          known=$(grep -v '^#' "$table" | cut -f1 | sed '/^$/d')
+          requested=$(printf '%s' "$REQUESTED" | tr ',' ' ')
+          if [ "$(printf '%s' "$requested" | tr -d '[:space:]')" = "all" ]; then
+            selected=$known
+          else
+            selected=$requested
+          fi
+          names=()
+          for t in $selected; do
+            if ! printf '%s\n' "$known" | grep -qxF -- "$t"; then
+              echo "::error::unknown target '$t'; known targets: $(printf '%s' "$known" | tr '\n' ' ')"
+              exit 1
+            fi
+            names+=("$t")
+          done
+          if [ "${#names[@]}" -eq 0 ]; then
+            echo "::error::no targets selected"
+            exit 1
+          fi
+          json=$(printf '%s\n' "${names[@]}" | sort -u | python3 -I -B -c \
+            'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')
+          echo "targets=${json}" >> "$GITHUB_OUTPUT"
+          echo "selected: ${json}"
+
+  truth:
+    name: Truth for ${{ matrix.target }}
+    needs: plan
+    runs-on: ubuntu-latest
+    # Realising an IFD target can build a good part of its Haskell closure.
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.plan.outputs.targets) }}
+    env:
+      TARGET: ${{ matrix.target }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install nix
+        uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+
+      - name: Resolve the target's pin
+        id: pin
+        run: |
+          set -euo pipefail
+          row=$(awk -F'\t' -v t="$TARGET" '!/^#/ && $1 == t' "$RECALL_DIR/targets.tsv")
+          [ -n "$row" ] || { echo "::error::$TARGET is not in targets.tsv"; exit 1; }
+          url=$(printf '%s' "$row" | cut -f2)
+          sha=$(printf '%s' "$row" | cut -f3)
+          attr=$(printf '%s' "$row" | cut -f4)
+          case "$url" in
+            https://github.com/*/*) ;;
+            *) echo "::error::$TARGET: clone URL $url is not a github.com repository"; exit 1 ;;
+          esac
+          printf '%s' "$sha" | grep -qxE '[0-9a-f]{40}' \
+            || { echo "::error::$TARGET: pin $sha is not a full SHA"; exit 1; }
+          repo=${url#https://github.com/}
+          flake="github:${repo}/${sha}"
+          {
+            echo "sha=${sha}"
+            echo "attr=${attr}"
+            echo "flake=${flake}"
+          } >> "$GITHUB_OUTPUT"
+          mkdir -p "out/$TARGET"
+          echo "target ${TARGET}: ${flake}#${attr}" | tee "out/$TARGET/target.txt"
+
+      - name: Install the pinned tools
+        id: tools
+        run: |
+          set -euo pipefail
+          for p in sbomnix grype osv-scanner; do
+            path=$(nix build --no-link --print-out-paths "github:NixOS/nixpkgs/${TOOLS_NIXPKGS}#${p}")
+            echo "${p//-/_}=${path}" >> "$GITHUB_OUTPUT"
+            echo "$p: $path"
+          done
+
+      - name: Record and check tool versions
+        env:
+          SBOMNIX_BIN: ${{ steps.tools.outputs.sbomnix }}/bin/sbomnix
+          GRYPE_BIN: ${{ steps.tools.outputs.grype }}/bin/grype
+          OSV_BIN: ${{ steps.tools.outputs.osv_scanner }}/bin/osv-scanner
+        run: |
+          set -euo pipefail
+          o="out/$TARGET"
+          { nix --version; "$SBOMNIX_BIN" --version; "$GRYPE_BIN" version; "$OSV_BIN" --version; } \
+            > "$o/versions.txt" 2>&1
+          cat "$o/versions.txt"
+          grep -qF "$SBOMNIX_VERSION" "$o/versions.txt" || { echo "::error::sbomnix is not $SBOMNIX_VERSION"; exit 1; }
+          grep -qE "^Version:[[:space:]]+${GRYPE_VERSION}$" "$o/versions.txt" || { echo "::error::grype is not $GRYPE_VERSION"; exit 1; }
+          grep -qF "osv-scanner version: $OSV_SCANNER_VERSION" "$o/versions.txt" || { echo "::error::osv-scanner is not $OSV_SCANNER_VERSION"; exit 1; }
+
+      - name: Install the pinned grype database
+        env:
+          GRYPE_BIN: ${{ steps.tools.outputs.grype }}/bin/grype
+          GRYPE_DB_CACHE_DIR: ${{ github.workspace }}/grype-db
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 -o grype-db.tar.zst "$GRYPE_DB_URL"
+          echo "${GRYPE_DB_SHA256}  grype-db.tar.zst" | sha256sum -c -
+          "$GRYPE_BIN" db import grype-db.tar.zst
+          "$GRYPE_BIN" db status | tee "out/$TARGET/grype-db-status.txt"
+
+      - name: Realise the output
+        env:
+          FLAKE: ${{ steps.pin.outputs.flake }}
+          ATTR: ${{ steps.pin.outputs.attr }}
+        run: |
+          set -euo pipefail
+          o="out/$TARGET"
+          start=$(date +%s)
+          nix build --no-link --print-out-paths -L "${FLAKE}#${ATTR}" > "$o/build.out" 2> "$o/build.log"
+          echo "realised in $(( $(date +%s) - start ))s: $(tr '\n' ' ' < "$o/build.out")"
+
+      - name: sbomnix (runtime)
+        env:
+          FLAKE: ${{ steps.pin.outputs.flake }}
+          ATTR: ${{ steps.pin.outputs.attr }}
+          SBOMNIX_BIN: ${{ steps.tools.outputs.sbomnix }}/bin/sbomnix
+        run: |
+          set -euo pipefail
+          o="$GITHUB_WORKSPACE/out/$TARGET"
+          # Runtime is sbomnix's default mode (no --buildtime).
+          ( cd "$o" && "$SBOMNIX_BIN" --cdx S.cdx.json --spdx S.spdx.json --csv S.csv "${FLAKE}#${ATTR}" > S.log 2>&1 )
+          test -s "$o/S.cdx.json"
+
+      - name: grype on the sbomnix document
+        env:
+          GRYPE_BIN: ${{ steps.tools.outputs.grype }}/bin/grype
+          GRYPE_DB_CACHE_DIR: ${{ github.workspace }}/grype-db
+        run: |
+          set -euo pipefail
+          o="out/$TARGET"
+          "$GRYPE_BIN" "sbom:$o/S.cdx.json" -o json --file "$o/S.cdx.json.grype.json"
+          test -s "$o/S.cdx.json.grype.json"
+
+      - name: Haskell link closure (nix eval)
+        env:
+          FLAKE: ${{ steps.pin.outputs.flake }}
+          ATTR: ${{ steps.pin.outputs.attr }}
+        run: |
+          set -euo pipefail
+          o="out/$TARGET"
+          nix eval --json --option allow-import-from-derivation true \
+            --file "$RECALL_DIR/link-closure.nix" \
+            --argstr flake "$FLAKE" --argstr system x86_64-linux --argstr attr "$ATTR" \
+            result > "$o/link-closure.json"
+          python3 -I -B "$RECALL_DIR/classify.py" link-cdx \
+            --link-closure "$o/link-closure.json" --out "$o/link.cdx.json"
+
+      - name: osv-scanner on the link closure (HSEC)
+        env:
+          OSV_BIN: ${{ steps.tools.outputs.osv_scanner }}/bin/osv-scanner
+        run: |
+          set -uo pipefail
+          o="out/$TARGET"
+          date -u +%Y-%m-%dT%H:%M:%SZ > "$o/osv-query-time.txt"
+          "$OSV_BIN" scan source -L "$o/link.cdx.json" --format json > "$o/link.cdx.json.osv.json" 2> "$o/link.osv.err"
+          rc=$?
+          # osv-scanner exits 1 when it FINDS vulnerabilities; above 1 is an error.
+          if [ "$rc" -gt 1 ]; then
+            cat "$o/link.osv.err"
+            echo "::error::osv-scanner failed (exit $rc)"
+            exit 1
+          fi
+
+      - name: Classify and write recall-truth.json
+        env:
+          SHA: ${{ steps.pin.outputs.sha }}
+        run: |
+          set -euo pipefail
+          o="out/$TARGET"
+          db_built=$(awk -F': *' '/^Built:/ {print $2; exit}' "$o/grype-db-status.txt")
+          python3 -I -B "$RECALL_DIR/classify.py" truth \
+            --grype "$o/S.cdx.json.grype.json" \
+            --osv "$o/link.cdx.json.osv.json" \
+            --link-closure "$o/link-closure.json" \
+            --target-pin "$SHA" \
+            --tool "sbomnix=${SBOMNIX_VERSION}" \
+            --tool "grype=${GRYPE_VERSION}" \
+            --tool "grype-db=${db_built}" \
+            --tool "osv-scanner=${OSV_SCANNER_VERSION}" \
+            --tool "nixpkgs=${TOOLS_NIXPKGS}" \
+            --out "$o/recall-truth.json"
+          {
+            echo "## ${TARGET}"
+            echo ""
+            echo "Install with: \`cp recall-truth.json waybill-cli/tests/fixtures/public_corpus/${TARGET}/\`"
+            echo "after reviewing every \`excluded\` entry against classify.py."
+            echo ""
+            jq -r '"- findings: \(.findings | length)"' "$o/recall-truth.json"
+            jq -r '.excluded | group_by(.reason) | map("- excluded, \(.[0].reason): \(length)") | .[]' "$o/recall-truth.json"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: recall-truth-${{ matrix.target }}
+          path: out/${{ matrix.target }}/
+          if-no-files-found: error
+          retention-days: 30
