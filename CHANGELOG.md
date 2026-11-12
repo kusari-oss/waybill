@@ -7,6 +7,51 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-11
+
+A minor. It adds surface (`--nix-allow-ifd`, the `sbom edit` selector
+`scope=excluded`, document rows C216 and C217), and much of what follows
+changes what a `--nix-closure` document says on the wire even where the
+entry is filed as a fix. What a consumer will notice:
+
+- **What ships is now decided from the runtime closure.** A `--nix-closure`
+  document marks as not-in-artifact everything outside the runtime closure
+  of the outputs the attribute installs, plus what is statically linked
+  into it, and says how it decided (C216). A scanner reading the runtime
+  view (`sbom edit --drop 'scope=excluded'`) sees a different, smaller
+  component set than in 0.14. For an exact view, build the output before
+  scanning; otherwise a reachability walk decides (#1467).
+- **Flakes that need import-from-derivation get a closure with
+  `--nix-allow-ifd`.** Off by default. It builds derivations while
+  evaluating the flake: do not use it on an untrusted flake. Every Nix-tier
+  document now carries C217 recording the policy.
+- **More closure components are matchable by CPE**, from nixpkgs'
+  declarations and the curated table; the document subject is the package
+  the closure built; Go modules and Rust crates compiled into a closure
+  binary are listed.
+- **Identifiers that changed:** a nixpkgs Haskell version the project's own
+  requirement rules out is withheld (versionless purl); the OpenVEX sidecar
+  is renamed after its SPDX document; SPDX 2.3 emits each relationship once.
+
+Measured against sbomnix 1.9.0 + grype on 12 Nix/Haskell flakes (spec
+1283's recall corpus; moat was measured before this release's last fixes,
+none of which changed a versioned runtime component of it): waybill's
+runtime view recalls every real finding in the adjudicated truth except
+one (haskell-language-server's Cabal, below), with no name-collision false
+positives.
+
+Known limitations: Hackage packages the closure appends as `pkg:generic`
+carry no CPE or HSEC match (#1282, the one recall miss); a test-declared
+package that ships still reads `development` (#1465); declared edges can
+bind to a build fragment for GHC boot libraries (#1466); the reachability
+walk under-marks C runtime libraries on Linux (#1467); on darwin, test
+frameworks reached only through `-doc` outputs count as shipping (#1455);
+the static-link source falls back to derivation fields for the whole
+closure when one Haskell root is unconfirmed (#1456); C184's counts
+disagree with the document (#1445); an edited SPDX document still names
+the original OpenVEX sidecar (#1454); GHC boot-library versions remain
+unresolved (#966).
+
 ### Changed
 
 - **`--nix-closure` decides what is in the artifact from the runtime
