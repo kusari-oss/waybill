@@ -92,6 +92,8 @@ Dropping a component removes everything that refers to it:
   `waybill:vex-subcomponent` property; once its last subcomponent is dropped,
   the statement goes too, since the root alone would be a different claim.
   The count is reported on stderr.
+- in SPDX, the reference to the scan's OpenVEX sidecar. See
+  [VEX in SPDX](#vex-in-spdx).
 
 Its dependents are connected to its dependencies, so nothing reachable before
 becomes unreachable. A bridged edge keeps a non-runtime scope: a dependency
@@ -132,7 +134,8 @@ none lost, none added (`specs/1423-nix-runtime-scope/measurements/us4-scanner-ch
 
 The edit removes VEX statements about the dropped members and keeps the
 rest; stderr reports how many went. For SPDX, the scan writes VEX to an
-OpenVEX sidecar, which `sbom edit` does not change (see [Limits](#limits)).
+OpenVEX sidecar, which `sbom edit` does not change; the edited SPDX
+documents stop referencing it (see [VEX in SPDX](#vex-in-spdx)).
 
 **How exact the marks are.** The document-scope `waybill:closure-scope-method`
 annotation (catalogue row C216) says how the marks were decided:
@@ -179,6 +182,36 @@ the lifecycle scope. `scope=excluded` matches it in SPDX but not in CycloneDX,
 so the CycloneDX runtime-only document keeps it. On the five flakes above
 this did not occur: all three formats dropped the same PURLs. Run the recipe
 on an SPDX document as well when you need to be sure.
+
+### VEX in SPDX
+
+`sbom scan` writes an SPDX document's VEX to an OpenVEX sidecar and
+references it from the document: an SPDX 2.3 `externalDocumentRefs[]`
+entry, `DocumentRef-OpenVEX`, with the sidecar's SHA-256, and an SPDX 3
+`externalRef` of type `vulnerabilityExploitabilityAssessment`.
+
+`sbom edit` edits one document and never the sidecar. The sidecar names
+components by PURL, so once an edit drops a component, or a `names` or
+`hosts` redaction replaces a value, the sidecar may assess components the
+edited document no longer holds, or name them as the edit no longer does.
+The edit then removes the reference and says so on stderr:
+
+```text
+OpenVEX sidecar reference removed: closure.openvex.json (sbom edit does not edit the sidecar, …)
+```
+
+Kept, the reference would point a consumer at statements about components
+that are gone, and the SPDX 2.3 checksum would still verify, lending them the
+document's integrity. An edit that only drops annotations or redacts paths
+keeps the reference, since the sidecar still describes the same components.
+
+This matches CycloneDX when every statement is about dropped components, as
+in the runtime-only recipe on a closure whose patches are all in build
+tools: CycloneDX's embedded VEX goes to zero, and neither SPDX document
+references any. When some statements are about components the edit kept,
+CycloneDX keeps them and the SPDX documents have none. Use the CycloneDX
+derivative for VEX in that case, or edit the sidecar yourself and reference
+it again.
 
 ### Dropping annotations: `--drop-annotations <namespace>`
 
@@ -318,9 +351,10 @@ The exit status is non-zero if any check failed or mismatched.
 ## Limits
 
 - **One document per invocation.** The OpenVEX sidecar a scan writes next
-  to an SPDX document (`<name>.openvex.json`) is not edited. It names
-  components by PURL, so edit or withhold it separately when you drop or
-  redact components.
+  to an SPDX document (`<name>.openvex.json`) is not edited. An edit that
+  drops components or redacts names or hosts removes the document's
+  reference to it ([VEX in SPDX](#vex-in-spdx)); edit or withhold the sidecar
+  separately.
 - **SPDX 2.3 key order.** waybill writes SPDX 2.3 in field order, not sorted.
   An edited SPDX 2.3 document is written with sorted keys: the same JSON,
   reordered. CycloneDX and SPDX 3 keep their bytes outside what changed.

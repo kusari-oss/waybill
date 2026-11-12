@@ -41,6 +41,18 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use super::derivation::{RawClosure, RawDerivation};
 
+/// The provenance [`relationships`] stamps on every edge it returns, and the
+/// only thing that tells those edges apart from every other source's once
+/// they are in the scan's relationship list.
+const EDGE_SOURCE: &str = "nix-closure";
+const EDGE_DATA_TYPE: &str = "nix-build-graph";
+
+/// Is this one of the edges [`relationships`] contributed? (#1445: C184's
+/// `edges` counts them in the final document.)
+pub(crate) fn is_closure_edge(r: &waybill_common::resolution::Relationship) -> bool {
+    r.provenance.source == EDGE_SOURCE && r.provenance.data_type == EDGE_DATA_TYPE
+}
+
 /// A component identity: the `(name, version)` pair several derivations may
 /// collapse onto.
 pub(crate) type Identity = (String, String);
@@ -309,7 +321,7 @@ pub(crate) fn relationships(
             // and would stop the role being usable as a filter over it.
             relationship_type: RelationshipType::DependsOn,
             provenance: EnrichmentProvenance {
-                source: "nix-closure".to_string(),
+                source: EDGE_SOURCE.to_string(),
                 // `nix-build-graph`, not `dependency`, and the distinction is
                 // load-bearing: `resolve/scope_propagation.rs` declines to
                 // traverse this `data_type`.
@@ -321,7 +333,7 @@ pub(crate) fn relationships(
                 // through `buildInputs`. Measured: traversing them made 7 test
                 // libraries stop asserting `scope: "excluded"`, which for a
                 // test library was the correct claim.
-                data_type: "nix-build-graph".to_string(),
+                data_type: EDGE_DATA_TYPE.to_string(),
             },
         })
         .collect();

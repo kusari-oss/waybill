@@ -493,3 +493,72 @@ fn us3_real_lifecycle_scopes_unchanged() {
         assert!(dropped_purls(&input, "scope=excluded", file).is_empty(), "{file}: development read as excluded");
     }
 }
+
+// ---------------------------------------------------------------- #1454
+
+/// The document's references to its OpenVEX sidecar: SPDX 2.3
+/// `externalDocumentRefs[]` entries naming one, SPDX 3 `SpdxDocument`
+/// `externalRef[]` entries of type `vulnerabilityExploitabilityAssessment`.
+fn openvex_refs(doc: &Value) -> Vec<String> {
+    match format_of(doc) {
+        "spdx23" => doc["externalDocumentRefs"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|r| r["spdxDocument"].as_str())
+            .filter(|d| d.ends_with(".openvex.json"))
+            .map(str::to_string)
+            .collect(),
+        _ => doc["@graph"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|e| e["type"] == "SpdxDocument")
+            .flat_map(|e| e["externalRef"].as_array().cloned().unwrap_or_default())
+            .filter(|r| r["externalRefType"] == "vulnerabilityExploitabilityAssessment")
+            .flat_map(|r| r["locator"].as_array().cloned().unwrap_or_default())
+            .filter_map(|l| l.as_str().map(str::to_string))
+            .collect(),
+    }
+}
+
+/// #1454: the runtime-only recipe on the nix-closure-moat golden. The edited
+/// SPDX documents used to keep pointing at the original sidecar, with its
+/// SHA-256, after the edit dropped every component its statements assess;
+/// the CycloneDX edit drops the same statements from the document. An edit
+/// that drops components no longer references a sidecar it did not edit, and
+/// says so. One that touches no component keeps the reference: the sidecar
+/// still describes that document.
+#[test]
+fn i1454_an_edit_that_drops_components_drops_the_openvex_reference() {
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/public_corpus/nix-closure-moat");
+    let work = tempfile::tempdir().unwrap();
+    for file in ["spdx-2.3.json", "spdx-3.json"] {
+        let mut input = read_json(&dir.join(file));
+        unmask(&mut input);
+        // CONTROL: the golden references its sidecar, or absence below is
+        // not the edit's doing.
+        assert_eq!(openvex_refs(&input), vec!["nix-closure-moat.openvex.json".to_string()], "{file}");
+        let path = work.path().join(file);
+        std::fs::write(&path, serde_json::to_string_pretty(&input).unwrap()).unwrap();
+
+        let kept = edit(&path, &["--drop-annotations", "waybill:graph-"]);
+        kept.assert_ok();
+        assert_eq!(openvex_refs(&kept.json()), openvex_refs(&input), "{file}: no component changed");
+        assert!(!kept.stderr.contains("OpenVEX"), "{file}: {}", kept.stderr);
+
+        let e = edit(&path, &["--drop", "scope=excluded"]);
+        e.assert_ok();
+        assert!(e.stderr.contains("drop-components: matched "), "{file}: {}", e.stderr);
+        assert_eq!(openvex_refs(&e.json()), Vec::<String>::new(), "{file}: still references the original sidecar");
+        assert!(
+            e.stderr.contains("OpenVEX sidecar reference removed: nix-closure-moat.openvex.json"),
+            "{file}: the edit report must say the reference went: {}",
+            e.stderr
+        );
+        assert!(schema_errors(&e.json()).is_empty(), "{file}: {:#?}", schema_errors(&e.json()));
+        if file == "spdx-3.json" {
+            spdx3_validate_or_skip(&e.path);
+        }
+    }
+}

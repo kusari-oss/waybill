@@ -131481,7 +131481,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":1330,\"components-without-member-role\":544,\"derivations\":1448,\"distinct-cves\":18,\"edge-ineligible-components\":80,\"edges\":58325,\"identifiers\":{\"by-drv\":353,\"by-name-version\":97,\"declared\":0,\"received\":450,\"rejected\":0,\"wanted\":1368},\"licenses\":{\"degraded\":null,\"received\":352,\"wanted\":1368,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":72,\"package\":4,\"scaffolding\":8,\"source\":702},\"patches\":248,\"patches-without-cve\":228,\"roles\":{\"artifact-input\":446,\"both\":56,\"build-tooling\":945,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":1330,\"components-without-member-role\":544,\"derivations\":1448,\"distinct-cves\":18,\"edge-ineligible-components\":80,\"edges\":46609,\"identifiers\":{\"by-drv\":353,\"by-name-version\":97,\"declared\":0,\"received\":450,\"rejected\":0,\"wanted\":1368},\"licenses\":{\"degraded\":null,\"received\":352,\"wanted\":1368,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":72,\"package\":4,\"scaffolding\":8,\"source\":702},\"patches\":248,\"patches-without-cve\":228,\"roles\":{\"artifact-input\":446,\"both\":56,\"build-tooling\":945,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",

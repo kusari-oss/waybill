@@ -218,7 +218,7 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
             );
             doc.external_document_refs.push(
                 document::SpdxExternalDocumentRef {
-                    id: "DocumentRef-OpenVEX".to_string(),
+                    id: crate::generate::openvex::SPDX23_DOCUMENT_REF.to_string(),
                     spdx_document: sidecar_path,
                     checksum: packages::SpdxChecksum {
                         algorithm: packages::SpdxChecksumAlgorithm::SHA256,
