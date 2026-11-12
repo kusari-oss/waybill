@@ -318,7 +318,9 @@ not", and "no version recorded".
   index that would reach the 60th is deferred because it introduces a new
   ambiguity when two aliases share a version (research R4, plan Risks). The
   gap is measured and stated rather than discovered — a criterion of 60 would
-  report a milestone that met its design as having failed.
+  report a milestone that met its design as having failed. *(Superseded
+  2026-11-12 by #1282: the alias lookup was adopted once the ambiguity was
+  measured as absent; see research R4.)*
 - **SC-002**: Those components carry licenses at no lower a rate than the
   already-resolved components do. Measured today: 0 of 60 closure members,
   against 47 of 65 resolved ones.

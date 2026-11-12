@@ -49,6 +49,42 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A `--nix-closure` member that nixpkgs holds only under a versioned alias
+  is now a Hackage package.** The closure identity pass looked up a
+  member's exact name and version in the pinned package set's default
+  attribute only. nixpkgs keeps other versions as
+  `<name>_<version with . -> _>`, and the packages GHC ships have no default
+  attribute at all. So haskell-language-server's `Cabal 3.14.2.0`, which
+  nixpkgs holds as `Cabal_3_14_2_0`, stayed `pkg:generic`, and HSEC-2026-0006
+  could not match it. The alias is now looked up too, with the same exact
+  version and GHC-built requirements. The member then gets `pkg:hackage`, C201
+  `confirmed`, and that attribute's license, source hash and declared edges.
+  `Cabal`, `Cabal-syntax`, `extensions` and `os-string` change on the
+  haskell-language-server closure; `os-string` changes on four of the five
+  nix-closure corpus targets. `os-string` is a boot library of the pinned
+  compiler, so as a `pkg:hackage` component it now falls under the existing
+  compiler-supplied scope exemption (C203 `exempt-compiler-supplied`). On
+  nix-closure-slack-web and nix-closure-slacklinker that turns its
+  runtime-closure `scope: excluded` into `required`, as was already the case
+  for nix-closure-openai's `os-string 2.0.6`. C201's values are unchanged, and the
+  `version-disagrees` and `not-in-package-set` entries in its catalog row now
+  say that neither attribute holds the version (#1282).
+- **A declared Haskell dependency no longer resolves to a closure member
+  that only shares its name.** A closure member that declares no `pname`
+  (C206: a fetched source, build scaffolding, or a live-bootstrap C
+  fragment) is named after its derivation, and on nixpkgs `a799d3e3` one
+  such fragment is called `time`, like the GHC boot library. On
+  nix-closure-shellcheck 24 `pkg:hackage` libraries depended on that
+  fragment, a versionless `scope: excluded` build-tooling component; they
+  now depend on the compiler-supplied `pkg:hackage/time`, as they already
+  did for the other boot libraries the compiler ships. A declared target
+  that is neither a boot library nor any Haskell component is left without
+  an edge and counted, as when nothing carries its name. On
+  nix-closure-moat and nix-closure-slacklinker the same fragment had merged
+  into the project's own `pkg:hackage/time`, which then carried
+  `waybill:closure-member-role: fragment` and `waybill:closure-role:
+  build-tooling`. Such members are now always their own component, as
+  milestone 1282 required (#1466).
 - **A `--nix-closure` component the runtime closure shows ships is no
   longer marked not-in-artifact by a reader's lifecycle scope (#1465).**
   Runtime evidence wins: a component whose C203
@@ -65,7 +101,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `closure-runtime-member-but-marked`, reading the closure's own verdict from
   SPDX 2.3 `BUILD_TOOL_OF`, since CycloneDX's one `scope` field cannot tell
   the two marks apart.
-
 - **The reachability walk keeps the C library on Linux (#1467).** When no
   store holds a `--nix-closure` output, the walk marked glibc not-in-artifact,
   because no dependency field names it: a member links it through its
@@ -89,7 +124,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   nix-closure-moat golden, the one corpus target scanned by the walk,
   `glibc 2.42-61` loses its mark in all three formats and nothing else
   changes.
-
 - **C184 `waybill:nix-closure` counts what the document holds.** `edges`
   was the `.drv`-keyed projection, counted before build variants of one
   package collapse onto one component, and the component counts were taken

@@ -47287,7 +47287,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:generic/os-string@2.0.8",
+      "bom-ref": "pkg:hackage/os-string@2.0.8",
       "evidence": {
         "identity": [
           {
@@ -47302,11 +47302,17 @@
           }
         ]
       },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "02794279dd30282e7b0d45a860dda50ee26a92b1461f5da4545f62dab4172686"
+        }
+      ],
       "name": "os-string",
       "properties": [
         {
           "name": "waybill:scope-classification-source",
-          "value": "runtime-closure"
+          "value": "exempt-compiler-supplied"
         },
         {
           "name": "waybill:sbom-tier",
@@ -47318,15 +47324,14 @@
         },
         {
           "name": "waybill:closure-identity",
-          "value": "not-in-package-set"
+          "value": "confirmed"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
         }
       ],
-      "purl": "pkg:generic/os-string@2.0.8",
-      "scope": "excluded",
+      "purl": "pkg:hackage/os-string@2.0.8",
       "type": "library",
       "version": "2.0.8"
     },
@@ -92747,53 +92752,6 @@
         "pkg:generic/bzip2@1.0.8",
         "pkg:generic/coreutils@9.8",
         "pkg:generic/diffutils@3.12",
-        "pkg:generic/ed@1.22.2",
-        "pkg:generic/file@5.45",
-        "pkg:generic/findutils@4.10.0",
-        "pkg:generic/gawk@5.3.2",
-        "pkg:generic/gcc-wrapper@14.3.0",
-        "pkg:generic/gcc@14.3.0",
-        "pkg:generic/ghc-binary@9.8.4",
-        "pkg:generic/glibc-locales@2.40-66",
-        "pkg:generic/glibc@2.40-66",
-        "pkg:generic/gmp-with-cxx@6.3.0",
-        "pkg:generic/gmp@6.3.0",
-        "pkg:generic/gnu-config@2024-01-01",
-        "pkg:generic/gnugrep@3.12",
-        "pkg:generic/gnumake@4.4.1",
-        "pkg:generic/gnused@4.9",
-        "pkg:generic/gnutar@1.35",
-        "pkg:generic/gzip@1.14",
-        "pkg:generic/isl@0.20",
-        "pkg:generic/libidn2@2.3.8",
-        "pkg:generic/libmpc@1.3.1",
-        "pkg:generic/libunistring@1.4.1",
-        "pkg:generic/linux-headers@6.16.7",
-        "pkg:generic/mpfr@4.2.2",
-        "pkg:generic/os-string-2.0.8.tar.gz-sha256.hAnlCed0wKC57DUWoYN2lDuJqkrFGH12kVF9i2rQXJoY.e",
-        "pkg:generic/patch@2.8",
-        "pkg:generic/patchelf@0.15.2",
-        "pkg:generic/pcre2@10.46",
-        "pkg:generic/xgcc@14.3.0",
-        "pkg:generic/xz@5.8.1",
-        "pkg:generic/zlib@1.3.1",
-        "pkg:hackage/hscolour@1.25"
-      ],
-      "ref": "pkg:generic/os-string@2.0.8"
-    },
-    {
-      "dependsOn": [
-        "pkg:generic/acl@2.3.2",
-        "pkg:generic/attr@2.5.2",
-        "pkg:generic/bash@5.3p3",
-        "pkg:generic/binutils-wrapper@2.44",
-        "pkg:generic/binutils@2.44",
-        "pkg:generic/bootstrap-stage3-gcc-wrapper@14.3.0",
-        "pkg:generic/bootstrap-tools.tar.xz-sha256.hYQlr088HPoVWBU2jpPhpIMyOyoEDZYDw1y60SGGbUM0.e",
-        "pkg:generic/busybox-sha256.hQrTEnQTBM1Y.sqV9odq8irZkQSD9uOMbs2Q5NgCvKCNQ.e",
-        "pkg:generic/bzip2@1.0.8",
-        "pkg:generic/coreutils@9.8",
-        "pkg:generic/diffutils@3.12",
         "pkg:generic/docbook-xml@4.3",
         "pkg:generic/docbook-xsl-nons@1.79.2",
         "pkg:generic/ed@1.22.2",
@@ -110835,7 +110793,6 @@
         "pkg:generic/libunistring@1.4.1",
         "pkg:generic/linux-headers@6.16.7",
         "pkg:generic/mpfr@4.2.2",
-        "pkg:generic/os-string@2.0.8",
         "pkg:generic/patch@2.8",
         "pkg:generic/patchelf@0.15.2",
         "pkg:generic/pcre2@10.46",
@@ -110854,6 +110811,7 @@
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/jailbreak-cabal@1.4.1",
         "pkg:hackage/os-string",
+        "pkg:hackage/os-string@2.0.8",
         "pkg:hackage/primitive@0.9.1.0",
         "pkg:hackage/random@1.2.1.3",
         "pkg:hackage/tasty-hunit@0.10.2",
@@ -114366,6 +114324,58 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/os-string"
+    },
+    {
+      "dependsOn": [
+        "pkg:generic/acl@2.3.2",
+        "pkg:generic/attr@2.5.2",
+        "pkg:generic/bash@5.3p3",
+        "pkg:generic/binutils-wrapper@2.44",
+        "pkg:generic/binutils@2.44",
+        "pkg:generic/bootstrap-stage3-gcc-wrapper@14.3.0",
+        "pkg:generic/bootstrap-tools.tar.xz-sha256.hYQlr088HPoVWBU2jpPhpIMyOyoEDZYDw1y60SGGbUM0.e",
+        "pkg:generic/busybox-sha256.hQrTEnQTBM1Y.sqV9odq8irZkQSD9uOMbs2Q5NgCvKCNQ.e",
+        "pkg:generic/bzip2@1.0.8",
+        "pkg:generic/coreutils@9.8",
+        "pkg:generic/diffutils@3.12",
+        "pkg:generic/ed@1.22.2",
+        "pkg:generic/file@5.45",
+        "pkg:generic/findutils@4.10.0",
+        "pkg:generic/gawk@5.3.2",
+        "pkg:generic/gcc-wrapper@14.3.0",
+        "pkg:generic/gcc@14.3.0",
+        "pkg:generic/ghc-binary@9.8.4",
+        "pkg:generic/glibc-locales@2.40-66",
+        "pkg:generic/glibc@2.40-66",
+        "pkg:generic/gmp-with-cxx@6.3.0",
+        "pkg:generic/gmp@6.3.0",
+        "pkg:generic/gnu-config@2024-01-01",
+        "pkg:generic/gnugrep@3.12",
+        "pkg:generic/gnumake@4.4.1",
+        "pkg:generic/gnused@4.9",
+        "pkg:generic/gnutar@1.35",
+        "pkg:generic/gzip@1.14",
+        "pkg:generic/isl@0.20",
+        "pkg:generic/libidn2@2.3.8",
+        "pkg:generic/libmpc@1.3.1",
+        "pkg:generic/libunistring@1.4.1",
+        "pkg:generic/linux-headers@6.16.7",
+        "pkg:generic/mpfr@4.2.2",
+        "pkg:generic/os-string-2.0.8.tar.gz-sha256.hAnlCed0wKC57DUWoYN2lDuJqkrFGH12kVF9i2rQXJoY.e",
+        "pkg:generic/patch@2.8",
+        "pkg:generic/patchelf@0.15.2",
+        "pkg:generic/pcre2@10.46",
+        "pkg:generic/xgcc@14.3.0",
+        "pkg:generic/xz@5.8.1",
+        "pkg:generic/zlib@1.3.1",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/deepseq",
+        "pkg:hackage/exceptions",
+        "pkg:hackage/hscolour@1.25",
+        "pkg:hackage/template-haskell"
+      ],
+      "ref": "pkg:hackage/os-string@2.0.8"
     },
     {
       "dependsOn": [
@@ -120602,7 +120612,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":301,\"excluded_files\":3,\"excluded_members\":697,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":181,\"with_candidates\":55}"
+        "value": "{\"addressable_without_cpe\":302,\"excluded_files\":3,\"excluded_members\":697,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":180,\"with_candidates\":55}"
       },
       {
         "name": "waybill:closure-graph-admission",
@@ -120626,7 +120636,7 @@
       },
       {
         "name": "waybill:scope-exemptions",
-        "value": "{\"compiler-supplied\":26}"
+        "value": "{\"compiler-supplied\":27}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",

@@ -1,0 +1,47 @@
+{
+  "derivations": {
+    "r00t-waybill-fixture-app-0.1.0.drv": {
+      "name": "waybill-fixture-app-0.1.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "0.1.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8",
+        "buildInputs": "/nix/store/h-lib"
+      },
+      "inputs": {
+        "drvs": { "d-lib.drv": { "outputs": ["out"] } },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "h-app" } }
+    },
+    "d-lib.drv": {
+      "name": "waybill-fixture-lib-1.0.0",
+      "env": {
+        "pname": "waybill-fixture-lib",
+        "version": "1.0.0",
+        "setupCompilerEnvironmentPhase": "runHook preSetupCompilerEnvironment",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-9.4.8 /nix/store/h-clock /nix/store/h-gone"
+      },
+      "inputs": {
+        "drvs": {
+          "c10ck-waybill-fixture-clock.drv": { "outputs": ["out"] },
+          "g0ne-waybill-fixture-gone.drv": { "outputs": ["out"] }
+        },
+        "srcs": []
+      },
+      "outputs": { "out": { "path": "h-lib" } }
+    },
+    "c10ck-waybill-fixture-clock.drv": {
+      "name": "waybill-fixture-clock",
+      "env": {},
+      "outputs": { "out": { "path": "h-clock" } }
+    },
+    "g0ne-waybill-fixture-gone.drv": {
+      "name": "waybill-fixture-gone",
+      "env": {},
+      "outputs": { "out": { "path": "h-gone" } }
+    }
+  },
+  "version": 4
+}
