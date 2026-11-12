@@ -478,6 +478,7 @@ pub(crate) fn run(
     project_root: &std::path::Path,
     system: &str,
     budget: std::time::Duration,
+    ifd: &crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified,
     purl_of: &dyn Fn(&str) -> Option<String>,
 ) -> Result<
     (
@@ -531,7 +532,7 @@ pub(crate) fn run(
         })?;
 
     let names: Vec<String> = members.keys().cloned().collect();
-    let candidates = evaluate::evaluate(&revision, system, &names, budget)?;
+    let candidates = evaluate::evaluate(&revision, system, &names, ifd, budget)?;
     let resolutions = resolve::resolve_all(&members, &candidates);
     let summary = NixpkgsSecuritySummary::build_with_purls(&resolutions, purl_of);
     // Returned rather than stamped here: the prose annotation mutates the
@@ -637,6 +638,9 @@ mod tests {
             &revision,
             system.as_str(),
             &names,
+            &crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified::assumed_for_test(
+                crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy::Refuse,
+            ),
             std::time::Duration::from_secs(300),
         )
         .expect("evaluation");

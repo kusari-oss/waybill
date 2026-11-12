@@ -89,7 +89,10 @@ closure, tool versions, grype database status). Review the `excluded` list
 against the rule above, then commit `recall-truth.json` beside the target's
 goldens.
 
-Pinned: sbomnix 1.9.0, grype 0.120.0 and osv-scanner 2.7.0 from nixpkgs
+Pinned: sbomnix 1.9.0 from its own flake at the v1.9.0 tag
+(`github:tiiuae/sbomnix/95480c2168f0156eea4a3aac34d2bbb964aa3b4b`, the build
+the measurement used; nixpkgs' sbomnix does not build on Linux at the revision
+below), grype 0.120.0 and osv-scanner 2.7.0 from nixpkgs
 `0bb2eedc20e4739f29e8045034f2828ad7054f8f`; the grype database by archive URL
 and sha256 (schema v6.1.10, built 2026-11-08). osv-scanner reads the live OSV
 API, so the HSEC half of truth is as of the run date (`produced`).

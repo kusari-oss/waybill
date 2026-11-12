@@ -24,6 +24,8 @@
 //! | `closure-walk.json` | US2 | `perl` is `both` but reached only through a reached member's `nativeBuildInputs`; `xml` is an `artifact-input` of the build tool only |
 //! | `closure-tworoots.json` | US2 | two unconsumed derivations, so no evaluated package to walk from |
 //! | `closure-outputs.json` | postgrest (#1458) | `closure-runtime.json` with the app's `outputs` headed by `out`, the library, while the attribute installs `bin`; each output gets its own `path-info` listing |
+//! | `closure-tests-library.json` | slack-web / openai (#1283) | the evaluated package is the project (`project-tests`), a library built with its test suite: `hspec` is in its `buildInputs`, its library dependency `aeson` in `propagatedBuildInputs`; `aeson`'s own test dependency is in `aeson`'s `buildInputs`, and `text`, which propagates nothing (hashable's shape), has `tasty` in its own |
+//! | `closure-tests-executable.json` | slacklinker (#1283) | the same project as an executable-only build: `aeson` and `hspec` share `buildInputs`, and `hspec` was built at a version the package set disagrees with |
 //!
 //! US4 reuses `closure-runtime.json`, adding a CVE-named patch to one member
 //! the recipe keeps and one it drops (`us4_closure`).
@@ -731,6 +733,130 @@ fn us1_platform_conditional_haskell_dependency_is_runtime() {
         assert!(!marked.contains(n), "{n} is linked; marked: {marked:?}");
         assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
     }
+}
+
+// ---- 1283: a project's own test suite is not linked code -----------------
+
+/// The three IFD corpus targets (slack-web, slacklinker, openai) are the first
+/// whose evaluated package is the project itself, built with its test suite.
+/// nixpkgs' generic builder puts a `doCheck` build's test dependencies in
+/// `buildInputs`, and the static-link fallback followed that field at every
+/// runtime Haskell member the package set did not confirm. Measured on the
+/// CI documents: 26 test frameworks were C203 `statically-linked` while the
+/// project's own manifest scoped them `development` (CDX `scope: excluded`),
+/// which invariant I10 reports as `closure-statically-linked-but-marked`.
+///
+/// A library's link dependencies are in its `propagatedBuildInputs`; its
+/// `buildInputs` holds its test and benchmark dependencies
+/// (`specs/1283-nix-allow-ifd/measurements/invariants/`, aeson-2.2.4.1 at the
+/// pinned revision). slack-web and openai are libraries, and so is every
+/// runtime library whose own test suite reached the set (`tasty` here, from
+/// `aeson`).
+fn tests_library_runtime() -> String {
+    listing(&["h-proj", "h-aeson", "h-text"])
+}
+
+/// slacklinker's shape: an executable-only build, so the runtime closure holds
+/// none of its Haskell libraries and `buildInputs` mixes library and test
+/// dependencies. Only the project's own manifest tells them apart.
+fn tests_executable_runtime() -> String {
+    listing(&["h-proj", "h-gmp"])
+}
+
+fn tests_scan(closure: &str, runtime: String, packages: &str) -> Run {
+    scan_with(NixStub {
+        project: dir().join("project-tests"),
+        runtime: Some(runtime),
+        package_set: Some((packages, "{ }\n")),
+        ..base(closure)
+    })
+}
+
+/// I10's converse check over the whole document: a member C203 calls
+/// statically linked carries no not-in-artifact mark in any format.
+fn assert_no_linked_member_is_marked(run: &Run) {
+    let marked = run.marked();
+    for c in run.cdx_components() {
+        if Run::cdx_prop(c, C203) != Some("statically-linked") {
+            continue;
+        }
+        assert_ne!(c["scope"], "excluded", "{} is statically-linked and marked", c["purl"]);
+        let name = c["name"].as_str().unwrap_or_default();
+        assert!(!marked.contains(name), "{name} is statically-linked and marked: {marked:?}");
+    }
+}
+
+/// slack-web and openai: the library root's test dependencies, and those of a
+/// runtime library, are decided by the runtime closure, which does not hold
+/// them. The root's library dependencies are in it.
+#[test]
+fn a_library_roots_test_dependencies_are_not_statically_linked() {
+    let closure = fixture("closure-tests-library.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = tests_scan(&closure, tests_library_runtime(), &packages);
+    let c216 = run.c216().unwrap();
+    assert_eq!(c216["method"], "runtime-closure", "{c216}");
+    assert_eq!(
+        c216["static-link-source"], "derivation-fields",
+        "the project is not in the package set, so its root falls back, as on the corpus"
+    );
+    let marked = run.marked();
+    for n in [
+        // The project's test suite, and what it links (`development`).
+        "waybill-fixture-hspec",
+        "waybill-fixture-hunit",
+        // `aeson`'s own test suite, which no manifest of the project names.
+        "waybill-fixture-quickcheck",
+        // `text`'s test suite and its closure. `text` is hashable's shape: a
+        // library whose dependencies are all boot packages, so it propagates
+        // nothing, and only its install phase registering a package says it
+        // is a library.
+        "waybill-fixture-tasty",
+        "waybill-fixture-ansi",
+    ] {
+        assert!(marked.contains(n), "{n} is a test dependency; marked: {marked:?}\n{}", run.scan.stderr);
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+    // CONTROL: the library's own dependencies ship, by store reference.
+    for n in ["waybill-fixture-aeson", "waybill-fixture-text"] {
+        assert!(!marked.contains(n), "{n}; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("runtime-closure"), "{n}");
+    }
+    assert_no_linked_member_is_marked(&run);
+}
+
+/// slacklinker: an executable-only root, whose test dependencies sit in the
+/// same `buildInputs` as its library dependencies. The project's manifest
+/// declares `hspec` for its test suite only, so that edge is not followed; the
+/// library dependencies still are.
+///
+/// `hspec` was built at 2.11.10 while the package set says 2.11.9, so the
+/// closure member is a different component from the one the manifest
+/// declares (slacklinker's `tmp-postgres` has this shape). The test edge is
+/// recognised by the package name the manifest declares.
+#[test]
+fn an_executable_roots_declared_test_dependencies_are_not_statically_linked() {
+    let closure = fixture("closure-tests-executable.json");
+    let packages = fixture("hackage-packages.nix");
+    let run = tests_scan(&closure, tests_executable_runtime(), &packages);
+    assert_eq!(run.c216().unwrap()["static-link-source"], "derivation-fields");
+
+    let built = cdx_by_purl(&run, "waybill-fixture-hspec", "pkg:generic/");
+    assert_eq!(built["version"], "2.11.10");
+    assert_eq!(built["scope"], "excluded", "test-only; stderr:\n{}", run.scan.stderr);
+    assert_eq!(Run::cdx_prop(built, C203), Some("runtime-closure"));
+
+    let marked = run.marked();
+    assert!(marked.contains("waybill-fixture-hunit"), "linked only into hspec; marked: {marked:?}");
+    assert_eq!(run.c203("waybill-fixture-hunit").as_deref(), Some("runtime-closure"));
+
+    // CONTROL: the executable's library dependencies are still linked into
+    // it, so the fallback was narrowed, not switched off.
+    for n in ["waybill-fixture-aeson", "waybill-fixture-text"] {
+        assert!(!marked.contains(n), "{n} is linked; marked: {marked:?}");
+        assert_eq!(run.c203(n).as_deref(), Some("statically-linked"), "{n}");
+    }
+    assert_no_linked_member_is_marked(&run);
 }
 
 // ---- US1: embedded modules (FR-002) ---------------------------------------

@@ -408,6 +408,13 @@ fn build_deps_dev_source(
 }
 
 #[derive(Args, Debug)]
+// Milestone 1283 — the Nix tiers `--nix-allow-ifd` applies to. `multiple`, so
+// the two tiers stay combinable.
+#[command(group(
+    clap::ArgGroup::new("nix_tier")
+        .args(["nix_closure", "nix_eval"])
+        .multiple(true)
+))]
 pub struct ScanArgs {
     /// Directory to walk for package artifacts.
     ///
@@ -688,7 +695,8 @@ pub struct ScanArgs {
     ///
     /// Defences are milestone 1034's, unchanged and now load-bearing:
     /// pure mode, import-from-derivation refused and the refusal
-    /// verified, no `--accept-flake-config`, and a wall-clock budget.
+    /// verified (unless `--nix-allow-ifd`), no `--accept-flake-config`,
+    /// and a wall-clock budget.
     ///
     /// Default (flag omitted): no `nix` process is started at all.
     ///
@@ -750,6 +758,22 @@ pub struct ScanArgs {
         requires = "nix_closure"
     )]
     pub nix_closure_require_root_contents: bool,
+
+    /// Allow import-from-derivation during Nix evaluation. Nix will BUILD
+    /// derivations while evaluating the flake (e.g. callCabal2nix). Do not use
+    /// on an untrusted flake. Where nix's sandbox is off (the macOS default)
+    /// those builds run unsandboxed.
+    ///
+    /// Requires `--nix-closure` or `--nix-eval`. Every Nix evaluation then
+    /// passes `allow-import-from-derivation true`, and waybill confirms nix
+    /// applied it before evaluating anything; if it cannot, the tier degrades
+    /// (`ifd-allowance-unverified`). Nothing else is relaxed:
+    /// `--accept-flake-config` and `--impure` stay refused, so a flake's own
+    /// substituters and keys are still ignored. The document records the
+    /// policy and nix's sandbox setting (`waybill:nix-evaluation-policy`).
+    /// Milestone 1283.
+    #[arg(long = "nix-allow-ifd", default_value_t = false, requires = "nix_tier")]
+    pub nix_allow_ifd: bool,
 
     /// The Nix platform to evaluate for, e.g. `x86_64-linux`.
     ///
@@ -4465,6 +4489,20 @@ pub async fn execute(
     // The pass gates itself: a repository without both a nixpkgs-shaped
     // pinned input and at least one Haskell dependency does no work and
     // produces no annotation (SC-009).
+    // Milestone 1283 (#1283) — the import-from-derivation policy every Nix
+    // tier evaluates under, verified by each tier's pre-flight.
+    let ifd_policy = if args.nix_allow_ifd {
+        scan_fs::package_db::nix::eval::preflight::IfdPolicy::Allow
+    } else {
+        scan_fs::package_db::nix::eval::preflight::IfdPolicy::Refuse
+    };
+    if args.nix_allow_ifd && offline {
+        // Contract cli-nix-allow-ifd: accepted, but no tier runs offline, so
+        // nothing was evaluated with import-from-derivation allowed.
+        tracing::info!(
+            "--nix-allow-ifd had no effect: --offline admits no Nix tier, so nothing was evaluated"
+        );
+    }
     // Milestone 1034 (#971 part A) — resolve the operator's `--nix-eval`
     // choice once, before the pass that consumes it. An unparseable
     // `--nix-eval-system` is an argument error rather than a degradation: the
@@ -4476,11 +4514,17 @@ pub async fn execute(
             Some(s) => Some(s.parse().map_err(|e| anyhow::anyhow!("--nix-eval-system: {e}"))?),
             None => None,
         };
-        Some(TierConfig::from_flags(system, args.nix_eval_timeout_secs))
+        Some(TierConfig::from_flags(system, args.nix_eval_timeout_secs, ifd_policy))
     } else {
         None
     };
 
+    // Milestone 1283 — the closure tier's C217 record, and the policy its
+    // pre-flight verified, which the declaration pass below inherits rather
+    // than re-verifying. `None` when no pre-flight ran.
+    let mut closure_policy: Option<scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy> =
+        None;
+    let mut closure_ifd: Option<scan_fs::package_db::nix::eval::result::IfdPolicyVerified> = None;
     // Milestone 1035 (#1034, #1040) — the derivation closure.
     //
     // Runs after the manifest-derived set exists, because it supplements that
@@ -4505,14 +4549,25 @@ pub async fn execute(
                 let cfg = closure::ClosureConfig::from_flags(
                     args.nix_closure_attr.clone(),
                     None,
+                    ifd_policy,
                 );
                 // The platform must be explicit for evaluation to stay pure;
                 // `builtins.currentSystem` does not exist in pure mode.
                 let system = scan_fs::package_db::nix::eval::invoke::detect_host_system(
                     cfg.budget,
                 );
-                Some(match system {
-                    Ok(sys) => closure::resolve(&root_path, &sys, &cfg).map(|mut c| {
+                // The pre-flight gates everything below it; its record is
+                // kept whether it passes or not (C217).
+                let preflighted = system.and_then(|sys| {
+                    let pre = closure::preflight(&cfg);
+                    closure_policy = Some(match &pre {
+                        Ok(p) => closure::summary::NixEvaluationPolicy::verified(&p.ifd, &p.environment),
+                        Err(_) => closure::summary::NixEvaluationPolicy::unverified(cfg.ifd_policy),
+                    });
+                    pre.map(|p| (sys, p))
+                });
+                Some(match preflighted {
+                    Ok((sys, pre)) => closure::resolve(&root_path, &sys, &cfg, &pre).map(|mut c| {
                         tracing::info!(
                             attribute = %c.attribute,
                             derivations = c.raw.derivations.len(),
@@ -4531,13 +4586,14 @@ pub async fn execute(
                         // milestone (spec FR-006).
                         match nixpkgs_revision_for_licenses(&root_path) {
                             Some(rev) => {
-                                closure::attach_licenses(&mut c, &rev, &sys, cfg.budget);
+                                closure::attach_licenses(&mut c, &rev, &sys, cfg.budget, &pre.ifd);
                             }
                             None => tracing::info!(
                                 "nix-closure-licenses: no pinned nixpkgs revision in flake.lock; \
                                  emitting the closure without declared licenses"
                             ),
                         }
+                        closure_ifd = Some(pre.ifd);
                         c
                     }),
                     Err(reason) => Err(reason),
@@ -5075,6 +5131,14 @@ pub async fn execute(
             .and_then(|s| s.boot_libraries.clone())
             .map(|b| b.into_iter().collect())
             .unwrap_or_default();
+        // #1283 (invariant I9) — the direct origin milestone 1276 left open: a
+        // reader's own non-runtime scope on a package the compiler supplies.
+        // Before the propagation, so the withdrawn mark seeds nothing.
+        crate::resolve::scope_propagation::withdraw_compiler_supplied_scope(
+            &mut components,
+            &mut relationships,
+            &boot_libraries,
+        );
         let scope_propagation_summary =
             crate::resolve::scope_propagation::propagate_non_runtime_scope(
                 &mut components,
@@ -5228,8 +5292,8 @@ pub async fn execute(
     // still emits its components when this fails, because "the closure is
     // unknown" and "what nixpkgs says about it is unknown" are different
     // gaps and a consumer needs to tell them apart.
-    let nixpkgs_security_summary = match &nix_closure {
-        Some(Ok(classified)) if !args.no_nixpkgs_security => {
+    let nixpkgs_security_summary = match (&nix_closure, &closure_ifd) {
+        (Some(Ok(classified)), Some(ifd)) if !args.no_nixpkgs_security => {
             use scan_fs::package_db::nix::declarations;
             // Timed because the pass runs automatically: an operator who
             // finds a scan slower has to be able to see whether this is why,
@@ -5249,6 +5313,7 @@ pub async fn execute(
                     &root_path,
                     sys.as_str(),
                     std::time::Duration::from_secs(300),
+                    ifd,
                     &|pname| by_name.get(pname).cloned(),
                 )
             }) {
@@ -5594,6 +5659,27 @@ pub async fn execute(
         _ => None,
     };
     let nix_closure_degraded: Option<&str> = nix_closure_degraded_json.as_deref();
+    // C217 (m1283, #1283) — the import-from-derivation policy the Nix
+    // evaluations ran under. Present whenever a Nix tier was admitted, on
+    // success and degradation alike; absent with no tier and under
+    // `--offline`, where C190/C180 say `offline-requested`. Each tier's
+    // pre-flight reports its own record; a tier that was admitted but whose
+    // pre-flight never completed (nix absent, or `--nix-eval` with nothing to
+    // evaluate) contributes an unverified one only when no tier verified.
+    let nix_evaluation_policy_json: Option<String> =
+        ((args.nix_closure || args.nix_eval) && !offline).then(|| {
+            use scan_fs::package_db::nix::closure::summary::NixEvaluationPolicy;
+            let eval_policy = nixpkgs_haskell_summary
+                .as_ref()
+                .and_then(|s| s.nix_eval.as_ref())
+                .and_then(|n| n.policy.clone());
+            match (closure_policy.clone(), eval_policy) {
+                (Some(a), Some(b)) => a.merge(b),
+                (Some(a), None) | (None, Some(a)) => a,
+                (None, None) => NixEvaluationPolicy::unverified(ifd_policy),
+            }
+            .wire()
+        });
     // C208 (m1366, #1365) — rendered beside C190 because the two answer
     // adjacent questions about the same tier: C190 says the closure was not
     // taken, C208 says what the ecosystem identity pass did with the one that
@@ -5640,6 +5726,7 @@ pub async fn execute(
         closure_ecosystem_identity: closure_ecosystem_identity_value,
         cpe_coverage: Some(cpe_coverage_json.as_str()),
         closure_graph_admission: closure_graph_admission_json.as_deref(),
+        nix_evaluation_policy: nix_evaluation_policy_json.as_deref(),
         nix_closure_contents: closure_contents.as_ref().map(|c| c.wire.as_str()),
         nix_closure_contents_unread: closure_contents.as_ref().is_some_and(|c| c.unread),
         // C192 (m1067): answers served from the disk cache count as online.
@@ -6938,6 +7025,16 @@ pub(crate) fn classify_addressability(
 fn is_release_shaped(version: &str) -> bool {
     if version.is_empty() {
         return false;
+    }
+    // #1283 — nixpkgs' `<release>-<patch level>` (glibc `2.40-66`): grype
+    // matches the whole string as a CPE version. Admitted only when the
+    // release is dotted digits and the patch level is digits, so none of
+    // the declined shapes above (`20251016-3.1`, `0-unstable-...`) qualify.
+    if let Some((release, patch)) = version.split_once('-') {
+        return release.contains('.')
+            && release.split('.').all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()))
+            && !patch.is_empty()
+            && patch.bytes().all(|b| b.is_ascii_digit());
     }
     let mut chars = version.chars().peekable();
     // A leading digit is required: `boot` and `v1.2` are both out.
@@ -8530,6 +8627,7 @@ mod tests {
             nix_closure: false,
             nix_closure_attr: None,
             nix_closure_require_root_contents: false,
+            nix_allow_ifd: false,
             no_nixpkgs_haskell: false,
             no_nixpkgs_haskell_closure: false,
             no_nixpkgs_security: false,
@@ -10564,6 +10662,30 @@ mod cpe_coverage_tests {
             "26.05pre-git",          // nixpkgs hooks
             "boot",                  // bootstrap stages
             "",
+        ] {
+            assert!(!is_release_shaped(v), "{v} must be declined");
+        }
+    }
+
+    /// #1283 — nixpkgs' glibc carries its patch level after a dash
+    /// (`2.40-66`: 2.40 with 66 backported patches). grype matched
+    /// `cpe:2.3:a:gnu:glibc:2.40-66` for all 36 glibc findings of
+    /// slack-web's recall truth (recall-truth run 43107760056), so this
+    /// shape is matchable, unlike the declined ones above. Only a dotted
+    /// release followed by one dash and digits is admitted.
+    #[test]
+    fn a_dotted_release_with_a_numeric_patch_level_is_accepted() {
+        for v in ["2.40-66", "2.42-51", "2.40-36"] {
+            assert!(is_release_shaped(v), "{v} must be accepted");
+        }
+        for v in [
+            "2.40-",       // no patch level
+            "2.40-rc1",    // not numeric
+            "2.40-66-1",   // two dashes
+            "2.40-6.1",    // dotted after the dash
+            "240-66",      // no dot before the dash
+            "1.0.2k-3",    // letter-suffixed release
+            "-66",         // nothing before the dash
         ] {
             assert!(!is_release_shaped(v), "{v} must be declined");
         }

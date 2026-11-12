@@ -17,8 +17,9 @@ name: Recall truth (nix IFD corpus)
 #   verdicts it carries), plus the HSEC advisories osv-scanner reports for
 #   the output's Haskell link closure. Nothing in it comes from waybill.
 #
-# Every tool is pinned: sbomnix, grype and osv-scanner from one nixpkgs
-# revision, and the grype database by archive URL and sha256. osv-scanner
+# Every tool is pinned: sbomnix from its own flake at the v1.9.0 tag, grype
+# and osv-scanner from one nixpkgs revision, and the grype database by
+# archive URL and sha256. osv-scanner
 # queries the live OSV API — there is no pinnable OSV database — so the
 # artifact records the run date and the truth file's `produced` field says
 # when that answer was true.
@@ -46,6 +47,11 @@ env:
   # byte-identical to the measured one (/nix/store/g6d4m4x9…-grype-0.120.0.drv,
   # checked 2026-11-11); osv-scanner came from Homebrew there, same version.
   TOOLS_NIXPKGS: 0bb2eedc20e4739f29e8045034f2828ad7054f8f
+  # sbomnix is NOT taken from TOOLS_NIXPKGS: there it fails to build on Linux
+  # (python3.14-sqliteschema 2.0.1 wants typepy<2, gets 2.0.0; run 43105765023).
+  # The measurement used sbomnix's own flake at its v1.9.0 tag (version string
+  # 1.9.0+g95480c2), which pins its own nixpkgs, so the truth uses that too.
+  SBOMNIX_FLAKE: github:tiiuae/sbomnix/95480c2168f0156eea4a3aac34d2bbb964aa3b4b
   SBOMNIX_VERSION: 1.9.0
   GRYPE_VERSION: 0.120.0
   OSV_SCANNER_VERSION: 2.7.0
@@ -165,7 +171,10 @@ jobs:
         id: tools
         run: |
           set -euo pipefail
-          for p in sbomnix grype osv-scanner; do
+          path=$(nix build --no-link --print-out-paths "${SBOMNIX_FLAKE}#sbomnix")
+          echo "sbomnix=${path}" >> "$GITHUB_OUTPUT"
+          echo "sbomnix: $path"
+          for p in grype osv-scanner; do
             path=$(nix build --no-link --print-out-paths "github:NixOS/nixpkgs/${TOOLS_NIXPKGS}#${p}")
             echo "${p//-/_}=${path}" >> "$GITHUB_OUTPUT"
             echo "$p: $path"
@@ -251,9 +260,11 @@ jobs:
           set -uo pipefail
           o="out/$TARGET"
           date -u +%Y-%m-%dT%H:%M:%SZ > "$o/osv-query-time.txt"
-          "$OSV_BIN" scan source -L "$o/link.cdx.json" --format json > "$o/link.cdx.json.osv.json" 2> "$o/link.osv.err"
-          rc=$?
           # osv-scanner exits 1 when it FINDS vulnerabilities; above 1 is an error.
+          # Actions runs this with `bash -e`, so the status is captured with
+          # `|| rc=$?`; a bare `rc=$?` on the next line is never reached.
+          rc=0
+          "$OSV_BIN" scan source -L "$o/link.cdx.json" --format json > "$o/link.cdx.json.osv.json" 2> "$o/link.osv.err" || rc=$?
           if [ "$rc" -gt 1 ]; then
             cat "$o/link.osv.err"
             echo "::error::osv-scanner failed (exit $rc)"

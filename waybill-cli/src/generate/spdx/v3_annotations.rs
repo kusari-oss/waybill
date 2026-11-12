@@ -655,6 +655,15 @@ fn push_document_fields(
     if let Some(record) = scan.closure_graph_admission {
         push(out, "waybill:closure-graph-admission", json!(record));
     }
+    // C217 (m1283, #1283) — the Nix evaluation policy, same canonical string
+    // as the other two formats.
+    if let Some(record) = scan.nix_evaluation_policy {
+        push(
+            out,
+            crate::scan_fs::package_db::nix::closure::summary::ANN_NIX_EVALUATION_POLICY,
+            json!(record),
+        );
+    }
     // C213 (m1378, #1396) — which closure members had their outputs read.
     if let Some(record) = scan.nix_closure_contents {
         push(out, crate::scan_fs::package_db::nix::closure::contents::ANN_NIX_CLOSURE_CONTENTS, json!(record));

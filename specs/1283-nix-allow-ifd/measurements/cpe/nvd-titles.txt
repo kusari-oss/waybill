@@ -1,0 +1,12 @@
+=== binutils (81 entries) ===
+    gnu                          GNU Binutils
+=== gcc (137 entries) ===
+    gnu                          GNU gcc
+    groups_communities_and_co_project Groups, Communities and Co (GCC) project Groups, Communities and Co (GCC
+=== glibc (198 entries) ===
+    gentoo                       Gentoo glibc
+    gnu                          GNU glibc
+=== libmicrohttpd (61 entries) ===
+    gnu                          GNU libmicrohttpd 0.9.32
+=== p11-kit (93 entries) ===
+    p11-kit_project              P11-kit Project P11-kit 0.1

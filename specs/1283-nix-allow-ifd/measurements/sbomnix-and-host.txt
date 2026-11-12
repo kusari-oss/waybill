@@ -1,0 +1,39 @@
+# sbomnix 1.9.0 flakeref.py (excerpt), how it evaluates and builds
+            exec_cmd_fn=exec_cmd_fn,
+            log=log,
+        )
+
+    if looks_like_flakeref:
+        log.info("Evaluating flakeref '%s'", flakeref)
+    else:
+        log.log(LOG_VERBOSE, "Evaluating '%s'", flakeref)
+    cmd = nix_cmd("eval", "--raw", flakeref, impure=impure)
+    started = time.perf_counter()
+    ret = exec_cmd_fn(cmd, raise_on_error=False, return_error=True, log_error=False)
+    elapsed = time.perf_counter() - started
+    if ret is None or ret.returncode != 0:
+        log.debug("nix eval failed for '%s' after %.3fs", flakeref, elapsed)
+        if looks_like_flakeref:
+            raise FlakeRefResolutionError(flakeref, ret.stderr if ret else "")
+        log.debug("not a flakeref: '%s'", flakeref)
+        return None
+    nixpath = ret.stdout.strip()
+    log.log(LOG_VERBOSE, "Evaluated '%s' in %.3fs", flakeref, elapsed)
+    log.debug("flakeref='%s' maps to path='%s'", flakeref, nixpath)
+    if not force_realise:
+        return nixpath
+    log.info("Realising flakeref '%s'", flakeref)
+    cmd = nix_cmd("build", "--no-link", flakeref, impure=impure)
+    started = time.perf_counter()
+    ret = exec_cmd_fn(cmd, raise_on_error=False, return_error=True, log_error=False)
+    elapsed = time.perf_counter() - started
+    if ret is None or ret.returncode != 0:
+        log.debug("nix build failed for '%s' after %.3fs", flakeref, elapsed)
+        raise FlakeRefRealisationError(flakeref, ret.stderr if ret else "")
+    log.log(LOG_VERBOSE, "Realised flakeref '%s' in %.3fs", flakeref, elapsed)
+    return nixpath
+
+# grep for allow-import-from-derivation across sbomnix: 0 files
+# nix config show allow-import-from-derivation: true
+# nix config show sandbox: false
+# nix --version: nix (Determinate Nix 3.20.0) 2.34.6

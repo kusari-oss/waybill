@@ -1,0 +1,33 @@
+cabal-version: 2.4
+name:          waybill-fixture-bootproj
+version:       0.1.0
+license:       MIT
+
+-- Milestone 1283 — invariant I9's direct-mark origin.
+--
+-- The test suite, and nothing else, declares `waybill-fixture-bootlib`, which
+-- the seeded compiler configuration nulls: the compiler supplies it. The
+-- Haskell reader scopes it `development` from the stanza that names it. That
+-- is the mark slack-web's `template-haskell` carried on the 1283 corpus run,
+-- and the one milestone 1276 built no suppression path for, its population
+-- having been zero.
+--
+-- `waybill-fixture-hspec` is the control: declared by the same stanza and not
+-- supplied by the compiler, so it keeps its `development` scope.
+
+library
+  build-depends:    base, waybill-fixture-text
+  exposed-modules:  Lib
+  hs-source-dirs:   src
+  default-language: Haskell2010
+
+test-suite spec
+  type:             exitcode-stdio-1.0
+  main-is:          Spec.hs
+  hs-source-dirs:   test
+  default-language: Haskell2010
+  build-depends:
+      base
+    , waybill-fixture-bootproj
+    , waybill-fixture-bootlib
+    , waybill-fixture-hspec

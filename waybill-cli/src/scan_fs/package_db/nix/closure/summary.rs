@@ -31,6 +31,83 @@ pub const ANN_NIX_CLOSURE_READ: &str = "waybill:nix-closure-read";
 /// C216 — how the closure scope marks were decided (milestone 1423).
 pub const ANN_CLOSURE_SCOPE_METHOD: &str = "waybill:closure-scope-method";
 
+/// C217 — the import-from-derivation policy Nix evaluations ran under, and
+/// nix's sandbox setting (milestone 1283).
+pub const ANN_NIX_EVALUATION_POLICY: &str = "waybill:nix-evaluation-policy";
+
+/// Milestone 1283 (#1283) — C217, how this scan's Nix evaluations were
+/// configured.
+///
+/// Emitted whenever a Nix tier (`--nix-closure` or `--nix-eval`) was admitted,
+/// on success and on degradation alike, which is why it is its own value
+/// rather than a field of C216 (absent on degradation) or C190 (absent on
+/// success) — research R4.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct NixEvaluationPolicy {
+    /// What was *requested*: `Allow` only with `--nix-allow-ifd`.
+    pub(crate) import_from_derivation: crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy,
+    /// True only when a pre-flight confirmed nix reports the requested value.
+    pub(crate) verified: bool,
+    /// nix's reported `sandbox` value, verbatim; `None` when nix reported none
+    /// or no pre-flight completed.
+    pub(crate) sandbox: Option<String>,
+}
+
+impl NixEvaluationPolicy {
+    /// The record for a pre-flight that confirmed the policy. Taking the
+    /// token is what keeps `verified: true` from being written by hand.
+    pub(crate) fn verified(
+        ifd: &crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified,
+        environment: &crate::scan_fs::package_db::nix::eval::preflight::NixEnvironment,
+    ) -> Self {
+        Self {
+            import_from_derivation: ifd.policy(),
+            verified: true,
+            sandbox: environment.sandbox.clone(),
+        }
+    }
+
+    /// The record for a tier that was admitted and whose pre-flight did not
+    /// confirm the requested policy, or never ran.
+    pub(crate) fn unverified(
+        requested: crate::scan_fs::package_db::nix::eval::preflight::IfdPolicy,
+    ) -> Self {
+        Self {
+            import_from_derivation: requested,
+            verified: false,
+            sandbox: None,
+        }
+    }
+
+    /// Two tiers' records, as one. Verified only if both were, so a document
+    /// never claims more than the weaker tier established.
+    pub(crate) fn merge(self, other: Self) -> Self {
+        Self {
+            import_from_derivation: self.import_from_derivation,
+            verified: self.verified && other.verified,
+            sandbox: self.sandbox.or(other.sandbox),
+        }
+    }
+
+    /// The C217 wire value: a JSON object with sorted keys, identical in all
+    /// three formats. Inserted in sorted order, as C216's is, so the bytes do
+    /// not depend on whether `serde_json` preserves insertion order.
+    pub(crate) fn wire(&self) -> String {
+        let mut o = serde_json::Map::new();
+        o.insert(
+            "import-from-derivation".into(),
+            self.import_from_derivation.wire().into(),
+        );
+        o.insert(
+            "sandbox".into(),
+            self.sandbox.as_deref().map_or(Value::Null, Value::from),
+        );
+        o.insert("schema".into(), 1.into());
+        o.insert("verified".into(), self.verified.into());
+        Value::Object(o).to_string()
+    }
+}
+
 /// What one closure query contributed, as emitted at document scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NixClosureSummary {
@@ -419,5 +496,62 @@ mod tests {
         assert_eq!(s.role_counts.get("artifact-input").copied(), Some(1));
         // `app` is the root and Unreferenced; `lib` is an artifact input.
         assert_eq!(s.components_emitted, 1);
+    }
+
+    // ── T009 (#1283) — C217's exact bytes ───────────────────────────────
+
+    use crate::scan_fs::package_db::nix::eval::preflight::{IfdPolicy, NixEnvironment};
+    use crate::scan_fs::package_db::nix::eval::result::IfdPolicyVerified;
+
+    fn env(sandbox: Option<&str>) -> NixEnvironment {
+        NixEnvironment { sandbox: sandbox.map(str::to_string) }
+    }
+
+    #[test]
+    fn t009_c217_allowed_and_verified() {
+        let v = IfdPolicyVerified::assumed_for_test(IfdPolicy::Allow);
+        assert_eq!(
+            NixEvaluationPolicy::verified(&v, &env(Some("false"))).wire(),
+            r#"{"import-from-derivation":"allowed","sandbox":"false","schema":1,"verified":true}"#
+        );
+    }
+
+    #[test]
+    fn t009_c217_refused_and_verified() {
+        let v = IfdPolicyVerified::assumed_for_test(IfdPolicy::Refuse);
+        assert_eq!(
+            NixEvaluationPolicy::verified(&v, &env(Some("true"))).wire(),
+            r#"{"import-from-derivation":"refused","sandbox":"true","schema":1,"verified":true}"#
+        );
+    }
+
+    #[test]
+    fn t009_c217_unverified_carries_the_request_and_no_sandbox() {
+        assert_eq!(
+            NixEvaluationPolicy::unverified(IfdPolicy::Allow).wire(),
+            r#"{"import-from-derivation":"allowed","sandbox":null,"schema":1,"verified":false}"#
+        );
+    }
+
+    #[test]
+    fn t009_c217_sandbox_unreported_is_null_not_absent() {
+        let v = IfdPolicyVerified::assumed_for_test(IfdPolicy::Refuse);
+        let w = NixEvaluationPolicy::verified(&v, &env(None)).wire();
+        assert_eq!(
+            w,
+            r#"{"import-from-derivation":"refused","sandbox":null,"schema":1,"verified":true}"#
+        );
+        let parsed: serde_json::Value = serde_json::from_str(&w).unwrap();
+        assert_eq!(parsed.as_object().unwrap().len(), 4, "every key, always: {w}");
+    }
+
+    #[test]
+    fn t009_c217_merge_is_verified_only_if_both_were() {
+        let v = IfdPolicyVerified::assumed_for_test(IfdPolicy::Allow);
+        let ok = NixEvaluationPolicy::verified(&v, &env(Some("false")));
+        let merged = ok.clone().merge(NixEvaluationPolicy::unverified(IfdPolicy::Allow));
+        assert!(!merged.verified);
+        assert_eq!(merged.sandbox.as_deref(), Some("false"));
+        assert!(ok.clone().merge(ok).verified);
     }
 }

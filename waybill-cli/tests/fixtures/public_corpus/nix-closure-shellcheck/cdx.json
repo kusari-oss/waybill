@@ -10438,6 +10438,7 @@
     },
     {
       "bom-ref": "pkg:generic/binutils@2.46",
+      "cpe": "cpe:2.3:a:gnu:binutils:2.46:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -10447,6 +10448,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:binutils:2.46:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -10514,6 +10527,7 @@
     },
     {
       "bom-ref": "pkg:generic/binutils@2.46.0",
+      "cpe": "cpe:2.3:a:gnu:binutils:2.46.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -10523,6 +10537,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:binutils:2.46.0:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -33524,6 +33550,7 @@
     },
     {
       "bom-ref": "pkg:generic/gcc@10.4.0",
+      "cpe": "cpe:2.3:a:gnu:gcc:10.4.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -33533,6 +33560,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:gcc:10.4.0:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -33661,6 +33700,7 @@
     },
     {
       "bom-ref": "pkg:generic/gcc@4.6.4",
+      "cpe": "cpe:2.3:a:gnu:gcc:4.6.4:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -33670,6 +33710,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:gcc:4.6.4:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -37340,7 +37392,7 @@
         },
         {
           "name": "waybill:cpe-provenance",
-          "value": "{\"basis\":\"drv\"}"
+          "value": "{\"basis\":\"drv\",\"overrode\":\"cpe:2.3:a:gnu:glibc:2.42-61:*:*:*:*:*:*:*\"}"
         }
       ],
       "purl": "pkg:generic/glibc@2.42-61",
@@ -54656,6 +54708,7 @@
     },
     {
       "bom-ref": "pkg:generic/libmicrohttpd@1.0.2",
+      "cpe": "cpe:2.3:a:gnu:libmicrohttpd:1.0.2:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -54665,6 +54718,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gnu:libmicrohttpd:1.0.2:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -132931,11 +132996,15 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":357,\"excluded_files\":0,\"excluded_members\":1346,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":301,\"with_candidates\":67}"
+        "value": "{\"addressable_without_cpe\":357,\"excluded_files\":0,\"excluded_members\":1346,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":296,\"with_candidates\":72}"
       },
       {
         "name": "waybill:closure-graph-admission",
         "value": "{\"admitted\":172,\"relabelled\":1402,\"schema\":\"waybill-closure-graph-admission/v1\"}"
+      },
+      {
+        "name": "waybill:nix-evaluation-policy",
+        "value": "{\"import-from-derivation\":\"refused\",\"sandbox\":\"true\",\"schema\":1,\"verified\":true}"
       },
       {
         "name": "waybill:nix-closure-contents",

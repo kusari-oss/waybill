@@ -69,8 +69,44 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   build. The destination now comes from the `sockaddr` the process
   passed, so both address families are observed. Documents for
   IPv6-connecting builds change (#1252).
+- **The import-from-derivation degradation WARN names the opt-in.** When
+  `--nix-closure` degrades with `import-from-derivation-required`, the
+  WARN now ends "Pass --nix-allow-ifd to allow it, only for a flake you
+  trust." (#1283).
 
 ### Added
+
+- **`--nix-allow-ifd`: opt-in import-from-derivation for the Nix tiers.**
+  With `--nix-closure` or `--nix-eval` (clap rejects it alone), every Nix
+  evaluation passes `allow-import-from-derivation true`, so flakes built
+  with `callCabal2nix`, `developPackage` or `packageSourceOverrides` get a
+  closure instead of degrading. **Nix builds derivations while evaluating
+  the flake; do not use it on an untrusted flake.** The allowance is
+  verified the way the refusal is, through `nix config show`, and nothing
+  is evaluated if nix does not report it (`ifd-allowance-unverified`). A
+  build that fails during evaluation is its own reason,
+  `import-from-derivation-build-failed`. Where nix's sandbox is off (the
+  macOS default) the scan WARNs once that those builds run unsandboxed,
+  and proceeds. `--accept-flake-config` and `--impure` stay refused.
+  Without the flag, behaviour is unchanged apart from the C217 record
+  below (#1283).
+- **C217 `waybill:nix-evaluation-policy`.** Every document from a scan
+  that admits a Nix tier records, at document scope in all three formats,
+  the import-from-derivation policy requested, whether a pre-flight
+  verified it, and nix's sandbox setting:
+  `{"import-from-derivation":"refused"|"allowed","sandbox":…,"schema":1,"verified":…}`.
+  Present on success and degradation alike; absent with no Nix tier and
+  under `--offline`. Documents of scans without a Nix tier are
+  byte-identical (#1283).
+- **Curated CPEs for glibc, binutils, gcc, p11-kit and libmicrohttpd.**
+  A Linux `--nix-closure` document's runtime closure holds all five
+  (glibc in any dynamically linked output; binutils and gcc through GHC's
+  toolchain), and nixpkgs revisions that predate `meta.identifiers`
+  declare no CPE for them, so a CPE matcher saw them as unaddressable: 62
+  of slack-web's 300 recall-truth findings and 57 of openai's 268. Each
+  pair is in NVD's dictionary (`gnu:glibc` 196 entries, `gnu:binutils` 81,
+  `gnu:gcc` 128, `p11-kit_project:p11-kit` 93, `gnu:libmicrohttpd` 61,
+  probed 2026-11-11) and its NVD titles name the same software (#1283).
 
 - **`sbom edit` selector `scope=excluded`: components not in the
   artifact, the same set in all three formats.** It matches CycloneDX
@@ -132,6 +168,42 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A Haskell project's test suite is no longer reported as statically
+  linked into its `--nix-closure` artifact.** The static-link fallback
+  followed `buildInputs` at every runtime Haskell member the package set
+  did not confirm, and with `doCheck` the generic builder puts a package's
+  test-suite dependencies there. On the three import-from-derivation
+  corpus targets this gave 26 test frameworks (HUnit, hspec, tasty-hunit
+  and their closures) C203 `statically-linked` while the project's own
+  manifest scoped them `development`: CycloneDX said `excluded`, SPDX 2.3
+  carried no `BUILD_TOOL_OF`, so the not-in-artifact selection differed by
+  format, and invariant I10 reported `closure-statically-linked-but-marked`.
+  A library propagates everything it links, so a library's `buildInputs` is
+  no longer followed (measured on six libraries at the pinned revision:
+  every link dependency propagated, the test suite in `buildInputs`). A
+  library is recognised by what it propagates or, since one whose
+  dependencies are all boot packages propagates nothing (`hashable`), by
+  its install phase registering a package. At an
+  executable-only build, which lists both together, the dependencies the
+  scanned project's manifest declares for its test suite are skipped by
+  name. Both are now decided by the runtime closure, which does not hold
+  them, and marked in all three formats; the libraries an executable links
+  are unchanged (#1283).
+- **A package the compiler supplies is no longer marked non-runtime because
+  a test suite declares it.** Milestone 1276 kept such a package from
+  inheriting a non-runtime scope but left a reader's own mark in place, and
+  slack-web's test suite declares `template-haskell`: CycloneDX called a
+  package GHC ships in every build `excluded`, which invariant I9 reports.
+  The mark is now withdrawn before the propagation runs, and the edges into
+  the package return to `DEPENDS_ON`, so SPDX 2.3 agrees (#1283).
+- **Invariant I3 reads the not-in-artifact marker.** It accepted only C42
+  `waybill:lifecycle-scope` as a non-runtime marker, and the
+  not-in-artifact marker is the native CycloneDX `scope` alone. It
+  reported 48 components on the import-from-derivation targets, and 15 on
+  `nix-closure-moat` whose declaration had absorbed them, that every format
+  already marked: source tarballs, `.cabal` revisions and patches of test
+  libraries. Which edges are non-runtime is still read from C42 alone
+  (#1283).
 - **A `--nix-closure` document's runtime closure is that of the output
   the attribute installs.** The runtime query asked about the head of the
   evaluated derivation's `outputs`. `pkgs.postgrest` and `pkgs.cachix` are

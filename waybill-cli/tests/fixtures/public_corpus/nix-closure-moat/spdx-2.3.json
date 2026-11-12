@@ -23,13 +23,19 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-evaluation-policy\",\"value\":\"{\\\"import-from-derivation\\\":\\\"refused\\\",\\\"sandbox\\\":\\\"true\\\",\\\"schema\\\":1,\\\"verified\\\":true}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure-contents\",\"value\":\"{\\\"absent\\\":1086,\\\"failed\\\":0,\\\"members\\\":1589,\\\"modules\\\":{\\\"cargo\\\":0,\\\"golang\\\":0},\\\"no-outputs\\\":503,\\\"partial\\\":0,\\\"read\\\":0,\\\"root\\\":\\\"absent\\\",\\\"schema\\\":\\\"waybill-nix-closure-contents/v1\\\",\\\"yielded\\\":0}\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":300,\\\"with_candidates\\\":66}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":162,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1087,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":295,\\\"with_candidates\\\":71}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -14462,6 +14468,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/binutils@2.46",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:binutils:2.46:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -14522,6 +14534,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/binutils@2.46.0",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:binutils:2.46.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -35799,6 +35817,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gcc@10.4.0",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:gcc:10.4.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -35937,6 +35961,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gcc@4.6.4",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:gcc:4.6.4:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -40028,7 +40058,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\",\\\"overrode\\\":\\\"cpe:2.3:a:gnu:glibc:2.42-61:*:*:*:*:*:*:*\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -55802,6 +55832,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libmicrohttpd@1.0.2",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:libmicrohttpd:1.0.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,

@@ -1,0 +1,5 @@
+## nix config show --option allow-import-from-derivation true | grep allow-import
+6:allow-import-from-derivation = true
+## ... false
+6:allow-import-from-derivation = false
+## nix --version: nix (Determinate Nix 3.20.0) 2.34.6

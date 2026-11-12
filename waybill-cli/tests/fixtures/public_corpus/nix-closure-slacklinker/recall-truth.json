@@ -1,0 +1,1271 @@
+{
+ "schema": 1,
+ "produced": "2026-11-11",
+ "tools": {
+  "grype": "0.120.0",
+  "grype-db": "2026-11-08T06",
+  "nixpkgs": "0bb2eedc20e4739f29e8045034f2828ad7054f8f",
+  "osv-scanner": "2.7.0",
+  "sbomnix": "1.9.0"
+ },
+ "target-pin": "72af26a71622bcf1eb4b84d017677be711c6fc7b",
+ "findings": [
+  {
+   "id": "CVE-2010-4756",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2019-1010022",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2019-1010023",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2019-1010024",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2019-1010025",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2023-4039",
+   "name": "gcc",
+   "version": "15.2.0",
+   "matcher": {
+    "cpe": "gnu:gcc"
+   }
+  },
+  {
+   "id": "CVE-2025-15281",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2025-15661",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-0861",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-0915",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-10536",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-107928",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-107929",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-111497",
+   "name": "brotli",
+   "version": "1.2.0",
+   "matcher": {
+    "cpe": "google:brotli"
+   }
+  },
+  {
+   "id": "CVE-2026-11352",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-11564",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-11586",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-11856",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-12064",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-13608",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-14456",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-14457",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-18374",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-18798",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-18924",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-19499",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-19542",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-1965",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-19931",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-2673",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-27135",
+   "name": "nghttp2",
+   "version": "1.67.1",
+   "matcher": {
+    "cpe": "nghttp2:nghttp2"
+   }
+  },
+  {
+   "id": "CVE-2026-27171",
+   "name": "zlib",
+   "version": "1.3.1",
+   "matcher": {
+    "cpe": "zlib:zlib"
+   }
+  },
+  {
+   "id": "CVE-2026-28386",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-28387",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-28388",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-28389",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-28390",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-31789",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-31790",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-34180",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-34181",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-34182",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-34183",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-34743",
+   "name": "xz",
+   "version": "5.8.2",
+   "matcher": {
+    "cpe": "tukaani:xz"
+   }
+  },
+  {
+   "id": "CVE-2026-35188",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-35189",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-35191",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-3783",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-3784",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-3805",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-4046",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-42764",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-42765",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-42766",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-42767",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-42768",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-42769",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-42770",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-42772",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-4437",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-4438",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-45445",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-45446",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-45447",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-4873",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-5435",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-5450",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-54872",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-54873",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-54874",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-54875",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-54876",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-55199",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-55200",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-5545",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-5773",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-58050",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-58051",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-58055",
+   "name": "nghttp2",
+   "version": "1.67.1",
+   "matcher": {
+    "cpe": "nghttp2:nghttp2"
+   }
+  },
+  {
+   "id": "CVE-2026-5928",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-6238",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-6253",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-6276",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-63072",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-63073",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-63074",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-63075",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-63076",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-6368",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-6429",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-66032",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-66033",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-66034",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-66035",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-6791",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-7009",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-7168",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-72897",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-7383",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-75803",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-75804",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-75805",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-75806",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-7598",
+   "name": "libssh2",
+   "version": "1.11.1",
+   "matcher": {
+    "cpe": "libssh2:libssh2"
+   }
+  },
+  {
+   "id": "CVE-2026-77117",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-77696",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-80229",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-80230",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-80231",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-80489",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-82208",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-82209",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-8286",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-84243",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-8458",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-84782",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-84784",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-86409",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-86410",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-86412",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-86414",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-8674",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-86805",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-87862",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-87863",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-87864",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-87865",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-87866",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-89092",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-8924",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-8925",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-8926",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-8927",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-8932",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-9076",
+   "name": "openssl",
+   "version": "3.6.1",
+   "matcher": {
+    "cpe": "openssl:openssl"
+   }
+  },
+  {
+   "id": "CVE-2026-9079",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-9080",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-92386",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-92387",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-92388",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-92389",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-92390",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-92391",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-92392",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-94266",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-9545",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-9546",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-9547",
+   "name": "curl",
+   "version": "8.18.0",
+   "matcher": {
+    "cpe": "haxx:curl"
+   }
+  },
+  {
+   "id": "CVE-2026-95818",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "CVE-2026-9648",
+   "name": "crypton-x509",
+   "version": "1.7.7",
+   "matcher": {
+    "purl": "pkg:hackage/crypton-x509@1.7.7"
+   }
+  },
+  {
+   "id": "CVE-2026-9648",
+   "name": "crypton-x509-validation",
+   "version": "1.6.14",
+   "matcher": {
+    "purl": "pkg:hackage/crypton-x509-validation@1.6.14"
+   }
+  },
+  {
+   "id": "CVE-2026-97399",
+   "name": "glibc",
+   "version": "2.42-51",
+   "matcher": {
+    "cpe": "gnu:glibc"
+   }
+  },
+  {
+   "id": "HSEC-2025-0002",
+   "name": "cryptonite",
+   "version": "0.30",
+   "matcher": {
+    "purl": "pkg:hackage/cryptonite@0.30"
+   }
+  },
+  {
+   "id": "HSEC-2026-0007",
+   "name": "aeson",
+   "version": "2.2.3.0",
+   "matcher": {
+    "purl": "pkg:hackage/aeson@2.2.3.0"
+   }
+  },
+  {
+   "id": "HSEC-2026-0007",
+   "name": "text-iso8601",
+   "version": "0.1.1",
+   "matcher": {
+    "purl": "pkg:hackage/text-iso8601@0.1.1"
+   }
+  },
+  {
+   "id": "HSEC-2026-0011",
+   "name": "scientific",
+   "version": "0.3.8.1",
+   "matcher": {
+    "purl": "pkg:hackage/scientific@0.3.8.1"
+   }
+  },
+  {
+   "id": "HSEC-2026-0013",
+   "name": "warp",
+   "version": "3.4.9",
+   "matcher": {
+    "purl": "pkg:hackage/warp@3.4.9"
+   }
+  }
+ ],
+ "excluded": []
+}

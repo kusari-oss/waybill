@@ -74,6 +74,23 @@ pub struct NixStub<'a> {
     /// `NIX_STORE_DIR` for the scan, so the contents pass reads synthesized
     /// outputs instead of the host's store.
     pub store_dir: Option<PathBuf>,
+    /// Milestone 1283 — what `config show` reports for
+    /// `allow-import-from-derivation`. `None` reflects the value the argv
+    /// requested, as a nix that supports the setting does; `Some(v)` always
+    /// reports `v`, as a nix (or a configuration) that ignores the request.
+    pub ifd_reported: Option<&'a str>,
+    /// Milestone 1283 — the `sandbox = …` line `config show` prints; `None`
+    /// prints none.
+    pub sandbox: Option<&'a str>,
+    /// Milestone 1283 — the flake evaluates through import-from-derivation:
+    /// `derivation show` and the output-selection evaluation of the project's
+    /// flake fail with nix's measured refusal
+    /// (`fixtures/nix_ifd/cabal2nix-refusal.stderr`) unless their argv
+    /// carries `allow-import-from-derivation true`.
+    pub ifd_required: bool,
+    /// Milestone 1283 — `derivation show` of [`Self::attr`] fails with this
+    /// stderr instead of printing the closure.
+    pub closure_stderr: Option<String>,
 }
 
 impl Default for NixStub<'_> {
@@ -91,6 +108,10 @@ impl Default for NixStub<'_> {
             verify_ok: true,
             package_set: None,
             store_dir: None,
+            ifd_reported: None,
+            sandbox: None,
+            ifd_required: false,
+            closure_stderr: None,
         }
     }
 }
@@ -130,7 +151,7 @@ fn seed_cache(set: Option<(&str, &str)>) -> tempfile::TempDir {
 }
 
 impl NixStub<'_> {
-    fn script(&self, log_path: &Path) -> String {
+    fn script(&self, log_path: &Path, aux: &Path) -> String {
         let log = log_path.display();
         let rows_case = match self.rows {
             Rows::Fail => {
@@ -169,6 +190,37 @@ impl NixStub<'_> {
             Some(json) => format!("cat <<'SELEOF'\n{json}\nSELEOF\n"),
             None => "echo 'error: stub refuses this evaluation' >&2; exit 1".to_string(),
         };
+        // Milestone 1283 — `config show` reflects the requested value unless
+        // the test overrides it, and prints a sandbox line when asked.
+        let ifd_line = match self.ifd_reported {
+            Some(v) => format!("echo 'allow-import-from-derivation = {v}'"),
+            None => "case \"$*\" in *'allow-import-from-derivation true'*) \
+                     echo 'allow-import-from-derivation = true' ;; \
+                     *) echo 'allow-import-from-derivation = false' ;; esac"
+                .to_string(),
+        };
+        let sandbox_line = match self.sandbox {
+            Some(v) => format!("; echo 'sandbox = {v}'; echo 'sandbox-fallback = true'"),
+            None => String::new(),
+        };
+        // Gates the calls that force the package: the closure and the output
+        // selection. Listing attribute names forces no value, so it needs no
+        // import-from-derivation and is not gated.
+        let ifd_gate = if self.ifd_required {
+            format!(
+                "case \"$*\" in \"derivation show\"*'{project}#'*|\"eval\"*outputSpecified*'{project}#'*) \
+                 case \"$*\" in *'allow-import-from-derivation true'*) ;; \
+                 *) cat '{refusal}' >&2; exit 1 ;; esac ;; esac\n",
+                project = self.project.display(),
+                refusal = aux.join("ifd-refusal.stderr").display(),
+            )
+        } else {
+            String::new()
+        };
+        let closure_arm = match &self.closure_stderr {
+            Some(_) => format!("cat '{}' >&2; exit 1", aux.join("closure.stderr").display()),
+            None => format!("cat <<'CLOSUREEOF'\n{closure}\nCLOSUREEOF\n"),
+        };
         let verify = if self.verify_ok {
             "exit 0".to_string()
         } else {
@@ -177,17 +229,15 @@ impl NixStub<'_> {
         format!(
             r##"#!/bin/sh
 echo "$*" >> '{log}'
-case "$*" in
+{ifd_gate}case "$*" in
   *builtins.currentSystem*) printf '%s' 'aarch64-darwin' ;;
   "config show substituters"*) echo '{subs}' ;;
-  "config show"*) echo 'allow-dirty = true'; echo 'allow-import-from-derivation = false'; echo 'substituters = {subs}' ;;
+  "config show"*) echo 'allow-dirty = true'; {ifd_line}{sandbox_line}; echo 'substituters = {subs}' ;;
   "path-info"*) {path_info} ;;
   "store verify"*) {verify} ;;
   "eval"*outputSpecified*) {selection} ;;
 {rows_case}
-  "derivation show"*"#{attr}") cat <<'CLOSUREEOF'
-{closure}
-CLOSUREEOF
+  "derivation show"*"#{attr}") {closure_arm}
   ;;
   *"#packages.aarch64-darwin") echo '["default"]' ;;
   *"#packages") echo '["aarch64-darwin"]' ;;
@@ -225,7 +275,16 @@ esac
         let bin = dir.path().join("bin");
         std::fs::create_dir_all(&bin).expect("mkdir bin");
         let nix = bin.join("nix");
-        std::fs::write(&nix, self.script(&dir.path().join("nix.log"))).expect("write stub");
+        // Milestone 1283 — stderr the stub replays is passed through files:
+        // nix's messages are full of single quotes a heredoc would mangle.
+        let refusal = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/nix_ifd/cabal2nix-refusal.stderr");
+        std::fs::copy(&refusal, dir.path().join("ifd-refusal.stderr")).expect("copy refusal");
+        if let Some(e) = &self.closure_stderr {
+            std::fs::write(dir.path().join("closure.stderr"), e).expect("write closure stderr");
+        }
+        std::fs::write(&nix, self.script(&dir.path().join("nix.log"), dir.path()))
+            .expect("write stub");
         {
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(&nix, std::fs::Permissions::from_mode(0o755))
