@@ -9,6 +9,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **A member reached only through documentation outputs does not ship
+  (#1455).** Under the runtime closure, a `--nix-closure` member whose
+  runtime paths are all documentation outputs (`doc`, `devdoc`, `man`,
+  `info`, by the output name in the derivation that produced the path), or
+  are reached only through them, is now marked not-in-artifact, with C203
+  `runtime-closure`. nix keeps those references for haddock links and man
+  pages, not for linked code. A member also reached through any other
+  output still ships. The runtime query becomes `nix path-info -r --json`,
+  whose references the rule follows. C216 gains `doc-only-excluded`,
+  `{"members": <n>, "output-names": ["devdoc","doc","info","man"],
+  "paths": <n>}` under `runtime-closure` and null otherwise; `schema` stays
+  `1`. On moat (aarch64-darwin) it sets aside 126 of 295 runtime paths and
+  marks 2 members, `bash-interactive` and `readline`. It does **not** remove
+  moat's test frameworks, which the issue reported: all 23 reach the
+  runtime closure through darwin `lib/links` symlinks in `out` outputs, so
+  the runtime view keeps them (`specs/1423-nix-runtime-scope/measurements/
+  doc-outputs/`).
+
 - **C216 reports the static-link source per root (#1456).** A
   `--nix-closure` document's `waybill:closure-scope-method` gains
   `static-link-roots`, `{"declared-edges": <n>, "derivation-fields": <n>}`,

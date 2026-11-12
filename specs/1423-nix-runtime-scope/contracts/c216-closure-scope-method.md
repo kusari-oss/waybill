@@ -12,6 +12,7 @@
 
 ```json
 {
+  "doc-only-excluded": {"members": <n>, "output-names": ["devdoc", "doc", "info", "man"], "paths": <n>} | null,
   "method": "runtime-closure" | "reachability-walk" | "closure-role",
   "outputs": ["<output name>", ...] | null,
   "outputs-source": "output-specified" | "outputs-to-install" | "default-output" | null,
@@ -28,9 +29,9 @@
 }
 ```
 
-`static-link-roots` and the `mixed` value were added by #1456, and
-`c-runtime-libraries` by #1467. Both are additive: `schema` stays `1`, and
-every pre-existing key keeps its meaning.
+`static-link-roots` and the `mixed` value were added by #1456,
+`c-runtime-libraries` by #1467, and `doc-only-excluded` by #1455. All are
+additive: `schema` stays `1`, and every pre-existing key keeps its meaning.
 
 ## Rules
 
@@ -60,6 +61,13 @@ every pre-existing key keeps its meaning.
   - null under `runtime-closure`: the listing holds every library a runtime path references.
   - `libc-only` under `reachability-walk` when a walked member names a C compiler. No dependency field names the C library: a member links it because its `stdenv`'s C compiler wrapper (an entry of the stdenv's `defaultNativeBuildInputs`) passes the wrapper's `libc_lib` to every link, and the derivation graph records that chain. The walk keeps that libc as runtime (C203 `reachability-walk`), except a libc another one found this way was built from, which is the bootstrap libc it replaced (curl's `libunistring` is built at nixpkgs' bootstrap stage 2, whose compiler names `bootstrap-stage0-glibc-minimal-bootstrap`). Not assessed: the compiler's own runtime libraries (gcc's `lib` output, `libgcc_s` and `libstdc++`), and what the libc itself references (glibc's `xgcc` libgcc and `libidn2`, named only in `makeFlags` and `postPatch`, never in a dependency field). Measured in `measurements/c-runtime/`.
   - `not-assessed` under `reachability-walk` when no walked member names a C compiler, and always under `closure-role`, which assesses none.
+- `doc-only-excluded` (#1455) records the documentation-output rule. **Decision (maintainer, on #1455): a closure member the runtime closure reaches only through documentation outputs does not count as shipping.** nix keeps those references for documentation linkage — haddock's `package.conf.d` names a package's `-doc` output, whose HTML links other packages' `-doc` outputs, and `ghc-doc` references `bash-interactive` — not for linked code (`measurements/nix-behaviour/q7-*`).
+  - Documentation outputs are the outputs named `devdoc`, `doc`, `info` and `man` (`output-names`, sorted). A path's output name is read from the derivation that produced it (`outputs.<name>.path` in the closure the tier already read), never from a path suffix: a package called `foo-doc` has an `out`. A runtime path no closure derivation produced has no name and is never documentation. On moat's aarch64-darwin closure every one of the 295 runtime paths was named this way, and name and suffix agreed on all of them (`measurements/doc-outputs/`).
+  - The references come from the runtime query itself, which is `nix path-info -r --json` (the same store, the same verification). They are followed from the queried outputs twice, through every path and through every path but documentation outputs; a path the first walk reaches and the second does not is documentation-only. That covers both a documentation output and a path only documentation outputs lead to. A member ships when any of its runtime paths is not documentation-only, so a member also reached through any other output still ships. A listed path neither walk reaches is left shipping: incomplete references never drop a member.
+  - An installed documentation output (shellcheck's `outputsToInstall` includes `man` and `doc`) is not followed either; the evaluated package itself is exempt, as always.
+  - `members` counts the members the scope pass marked not-in-artifact only because of the rule: in the runtime closure, but only through documentation outputs, not exempt and not statically linked into a runtime member. Their C203 is `runtime-closure`: the runtime closure's evidence decided them, and invariant I10 accepts a marked `runtime-closure` member. Embedded modules of such a member follow their host and are not counted. `paths` counts the runtime paths the rule set aside, the documentation outputs included.
+  - null unless `method = runtime-closure`: the walk and the role rule have no references to follow.
+  - Measured on moat (aarch64-darwin, local store): 126 of 295 runtime paths are documentation-only, and the rule excludes 2 members, `bash-interactive` and `readline`. It excludes none of moat's test frameworks: hspec, tasty, QuickCheck and test-framework reach the runtime closure through darwin's `lib/links` symlinks in the `out` outputs of moat and its libraries, not through documentation (`measurements/doc-outputs/`).
 - `static-c-linking-detected` is always `false`. It exists so the document says, rather than implies, that static C linking is not detected (spec edge case).
 - `unmatched-runtime-paths` counts runtime store paths that joined to no emitted component, including a path whose name matches a component but whose version does not (the join is by output path, never by name). It is null unless `method = runtime-closure`.
 

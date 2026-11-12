@@ -77,6 +77,10 @@ pub(crate) struct RoleScopeSummary {
     pub(crate) decided_runtime: usize,
     pub(crate) statically_linked: usize,
     pub(crate) decided_not_in_artifact: usize,
+    /// #1455 — of `decided_not_in_artifact`, the members the runtime closure
+    /// holds only through documentation outputs: marked only because of
+    /// that rule. C216 `doc-only-excluded.members`.
+    pub(crate) doc_only_excluded: usize,
 }
 
 impl RoleScopeSummary {
@@ -131,11 +135,12 @@ pub(crate) fn assign_role_scope(
         RuntimeEvidence::RoleWithLinked { linked } => {
             assign_from_roles(components, boot_libraries, linked)
         }
-        RuntimeEvidence::Closure { runtime, static_linked } => assign_from_runtime(
+        RuntimeEvidence::Closure { runtime, static_linked, doc_only } => assign_from_runtime(
             components,
             boot_libraries,
             runtime,
             static_linked,
+            doc_only,
             ScopeEvidence::RuntimeClosure,
         ),
         // Rule 4. The same decision as rule 3, with the walk's reached set in
@@ -145,6 +150,7 @@ pub(crate) fn assign_role_scope(
             components,
             boot_libraries,
             reached,
+            &HashSet::new(),
             &HashSet::new(),
             ScopeEvidence::ReachabilityWalk,
         ),
@@ -210,12 +216,14 @@ pub(crate) fn withdraw_scope_runtime_evidence_contradicts(
 
 /// Rules 1–4 under runtime evidence: `runtime` is the runtime closure (rule
 /// 3) or the walk's reached set (rule 4), and `decided_by` is the evidence
-/// recorded on every member either way.
+/// recorded on every member either way. `doc_only` (#1455) is only counted:
+/// a member in it is outside `runtime` already.
 fn assign_from_runtime(
     components: &mut [ResolvedComponent],
     boot_libraries: &HashSet<String>,
     runtime: &HashSet<MemberKey>,
     static_linked: &HashSet<MemberKey>,
+    doc_only: &HashSet<MemberKey>,
     decided_by: ScopeEvidence,
 ) -> RoleScopeSummary {
     let mut summary = RoleScopeSummary::default();
@@ -249,6 +257,9 @@ fn assign_from_runtime(
             (None, ScopeEvidence::StaticallyLinked)
         } else {
             summary.decided_not_in_artifact += 1;
+            if key.as_ref().is_some_and(|k| doc_only.contains(k)) {
+                summary.doc_only_excluded += 1;
+            }
             (Some(ArtifactPresence::NotInArtifact), decided_by)
         };
         // Assigned, not merged: a `NotInArtifact` set earlier is cleared when
@@ -811,6 +822,7 @@ mod tests {
         RuntimeEvidence::Closure {
             runtime: runtime.iter().map(|(n, v)| key(n, v)).collect(),
             static_linked: linked.iter().map(|(n, v)| key(n, v)).collect(),
+            doc_only: HashSet::new(),
         }
     }
 
