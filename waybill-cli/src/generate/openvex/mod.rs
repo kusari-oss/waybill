@@ -39,6 +39,12 @@ use statements::{
 /// writes it to [`sidecar_path_for`] of the SPDX output instead (#1443).
 pub const OPENVEX_DEFAULT_FILENAME: &str = "waybill.openvex.json";
 
+/// How an SPDX document names its sidecar: the SPDX 2.3
+/// `externalDocumentRefs[]` id, and the SPDX 3 `externalRef` content type.
+/// `sbom edit` finds the reference by these (#1454).
+pub(crate) const SPDX23_DOCUMENT_REF: &str = "DocumentRef-OpenVEX";
+pub(crate) const CONTENT_TYPE: &str = "application/openvex+json";
+
 /// #1443 — where the sidecar for an SPDX document at `spdx_doc` goes: beside
 /// it, named after it. `out/app.spdx.json` → `out/app.openvex.json`.
 ///

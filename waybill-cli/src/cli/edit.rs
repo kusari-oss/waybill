@@ -242,6 +242,13 @@ pub async fn execute(args: EditArgs) -> anyhow::Result<ExitCode> {
         );
     }
 
+    for sidecar in &outcome.report.openvex_references_removed {
+        eprintln!(
+            "OpenVEX sidecar reference removed: {sidecar} (sbom edit does not edit the sidecar, \
+             which may assess components this edit dropped or name ones it redacted)"
+        );
+    }
+
     if to_stdout {
         use std::io::Write;
         std::io::stdout().write_all(&outcome.bytes)?;
