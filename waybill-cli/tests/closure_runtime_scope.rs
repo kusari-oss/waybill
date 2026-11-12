@@ -2283,8 +2283,10 @@ fn us4_vex(doc: &Value) -> BTreeSet<(String, String)> {
         .collect()
 }
 
-fn us4_backport_pair(cve: &str) -> BTreeSet<(String, String)> {
-    ["exploitable", "not_affected"].iter().map(|s| (cve.to_string(), s.to_string())).collect()
+/// A backport's CycloneDX entries: one `resolved` on the patched component
+/// since milestone 1436 (it was m1035's `exploitable` + `not_affected` pair).
+fn us4_backport_claim(cve: &str) -> BTreeSet<(String, String)> {
+    [(cve.to_string(), "resolved".to_string())].into_iter().collect()
 }
 
 /// FR-011 / FR-012 / US4 scenario 1: the documented recipe,
@@ -2349,12 +2351,12 @@ fn us4_drop_scope_excluded_yields_valid_runtime_document() {
         dropped_by_format.push((label, dropped));
 
         if label == "cdx" {
-            // CONTROL: the scan wrote both backport pairs.
-            let both: BTreeSet<_> = us4_backport_pair(KEPT_CVE).union(&us4_backport_pair(DROPPED_CVE)).cloned().collect();
+            // CONTROL: the scan wrote both backport claims.
+            let both: BTreeSet<_> = us4_backport_claim(KEPT_CVE).union(&us4_backport_claim(DROPPED_CVE)).cloned().collect();
             assert_eq!(us4_vex(doc), both, "input VEX");
             assert_eq!(
                 us4_vex(&out),
-                us4_backport_pair(KEPT_CVE),
+                us4_backport_claim(KEPT_CVE),
                 "FR-012: VEX about the kept member stays, VEX about the dropped one goes"
             );
             assert!(e.stderr.contains("vulnerability statement(s) removed"), "{}", e.stderr);

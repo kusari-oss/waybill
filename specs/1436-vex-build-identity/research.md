@@ -89,6 +89,7 @@ A closure component is one identity `(pname, version)`, and it may merge several
 - **Accuracy:** a statement can never cover a variant that lacks the patch. A different set of variants (another closure, another revision) has a different qualifier, so the leak probe's guarantee holds.
 - **Rejected: splitting the component into one per variant.** It changes component counts and edges across the document for a claim that, as measured, is identical across the variants.
 - **Unmeasured, to measure at implementation:** how often variants disagree on a CVE, recorded per target.
+- **Measured at implementation (T001, 2026-11-12):** never, on the five nixpkgs wrapper targets. Of 4–6 components per target with a resolved CVE, 2–3 merge two patching derivations, and 0 of 18–23 (component, CVE) pairs per target are resolved by only some of them. No CVE-resolving component merges a derivation that applies no patch either. See `measurements/variants-results.tsv`.
 
 ## R5 — CycloneDX state for a backport claim (FR-005)
 
@@ -110,6 +111,10 @@ A closure component is one identity `(pname, version)`, and it may merge several
 - **Merges:** any rename after that point (a merge into a manifest-derived component of the same PURL) goes through `apply_renames`.
 - **The rule for merges:** a closure member whose unqualified PURL equals a manifest component's keeps the merge. The qualified PURL wins, because it is the more specific identity of the same component.
 - **Tests:** an orphan check (every relationship endpoint is a component) runs on every fixture.
+
+**Implementation note (2026-11-12).** `emit::components` applies the qualifier, as decided. It does not survive there on its own: three passes between emission and the edge build — the milestone-1275 Hackage identity pass (`closure_identity.rs`), the milestone-1366 ecosystem identity pass and the milestone-1378 contents pass — rebuild a component's PURL from its parts, and a member merged into another reader's component takes that component's PURL. So the scan applies it again (`emit::qualify_backport_identities`, idempotent) immediately before `closure::graph::relationships`, and moves the endpoints of edges that already exist with `apply_renames`. The closure edges are then built from the qualified PURL. A merged component keeps its own PURL type and gains the qualifier (test `m1436_a_patched_member_merges_and_the_merged_component_is_qualified`).
+
+The every-variant CVE set reaches the VEX generator in memory, as T006 asked, through an internal annotation (`waybill:nix-backport-identity`) filtered from every format by `is_internal_emission_key` — the mechanism `waybill:nix-evaluated-package` already uses — so no new emitted field and no new plumbing. A statement is emitted only when the component's PURL actually carries the recorded `nix_drv` value, so a PURL that could not be qualified never receives a build-scoped claim.
 
 ## R7 — The statements (FR-002–FR-004)
 
@@ -149,6 +154,7 @@ nixpkgs then says, in its own words, that this build's version is vulnerable. A 
 - A backport `fixed` statement is withheld when a declaration names the same (component, CVE).
 - The match is on the product PURL with qualifiers removed, plus the CVE.
 - The declaration's own statements are unchanged (FR-008).
+- **Implementation note (2026-11-12).** The withholding is keyed on a declaration *existing*, not on its statement being emitted. Since a backport claim no longer needs a document subject, it is emitted on a scan with no subject, where the declaration (which still names the build) is not. Withholding only beside an emitted declaration would let the claim stand against nixpkgs' word. `declarations::withheld_pairs` also compares PURLs without qualifiers now, so the count it feeds (`reconciliations-withheld`) matches the behaviour.
 
 ## R11 — Where patch records come from
 

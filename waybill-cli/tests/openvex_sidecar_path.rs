@@ -152,30 +152,29 @@ fn the_sidecar_a_scan_writes_validates_against_the_openvex_schema() {
     let path = out.path().join("app.openvex.json");
     let doc = read_json(&path);
 
-    // CONTROL: the document holds the statements whose shape is at issue,
-    // so a clean result is not a clean result over nothing.
+    // CONTROL: the document holds the statement whose shape is at issue,
+    // so a clean result is not a clean result over nothing. Since milestone
+    // 1436 a backport is one `fixed` statement, not the m1035 pair.
     let statuses: Vec<&str> = doc["statements"]
         .as_array()
         .unwrap()
         .iter()
         .filter_map(|st| st["status"].as_str())
         .collect();
-    assert!(
-        statuses.contains(&"affected") && statuses.contains(&"not_affected"),
-        "expected the backport pair: {statuses:?}\nstderr:\n{}",
-        s.stderr
-    );
+    assert_eq!(statuses, ["fixed"], "expected the backport claim\nstderr:\n{}", s.stderr);
 
     let errors = schema_errors(&doc);
     assert!(errors.is_empty(), "{} schema errors:\n{}", errors.len(), errors.join("\n"));
 
-    // CONTROL: the validator rejects the pre-fix shape, so the pass above is
-    // the schema speaking and not a validator that accepts anything.
-    let mut pre_fix = doc.clone();
-    for st in pre_fix["statements"].as_array_mut().unwrap() {
+    // CONTROL: the validator rejects a shape the schema forbids (#1443's: an
+    // `affected` with no action), so the pass above is the schema speaking
+    // and not a validator that accepts anything.
+    let mut broken = doc.clone();
+    for st in broken["statements"].as_array_mut().unwrap() {
+        st["status"] = Value::String("affected".to_string());
         st.as_object_mut().unwrap().remove("action_statement");
     }
-    assert!(!schema_errors(&pre_fix).is_empty(), "validator accepted affected without action");
+    assert!(!schema_errors(&broken).is_empty(), "validator accepted affected without action");
 }
 
 #[test]
