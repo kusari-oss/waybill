@@ -25,6 +25,7 @@ use waybill_common::resolution::{
     EnrichmentProvenance, RelationshipType, ResolutionEvidence, ResolutionTechnique,
     Relationship, ResolvedComponent,
 };
+use waybill_common::types::cpe::Cpe;
 use waybill_common::types::purl::Purl;
 
 use super::annotation;
@@ -172,6 +173,27 @@ pub(crate) fn merge(
 /// Construct a `ResolvedComponent` from a supplement-only entry.
 /// Leaves scanner-specific fields (evidence, occurrences, deep-hash
 /// occurrences) empty.
+/// The supplement's CPE, when it is a CPE 2.3 formatted string with a named
+/// vendor and product (#1403). Anything else is dropped with a WARN: the
+/// `cpes` field holds only validated values, and a malformed CPE would match
+/// nothing or everything.
+fn valid_cpes(supp: &SupplementComponent) -> Vec<Cpe> {
+    supp.cpes
+        .iter()
+        .flatten()
+        .filter_map(|raw| match Cpe::parse(raw) {
+            Ok(cpe) => Some(cpe),
+            Err(e) => {
+                tracing::warn!(
+                    component = %supp.purl,
+                    "supplement-cdx: dropping the component's cpe: {e}"
+                );
+                None
+            }
+        })
+        .collect()
+}
+
 fn synthesize_resolved(supp: &SupplementComponent) -> ResolvedComponent {
     let name = supp
         .name
@@ -237,7 +259,7 @@ fn synthesize_resolved(supp: &SupplementComponent) -> ResolvedComponent {
         concluded_licenses: Vec::new(),
         hashes: Vec::new(),
         supplier: supp.supplier.clone(),
-        cpes: supp.cpes.clone().unwrap_or_default(),
+        cpes: valid_cpes(supp),
         advisories: Vec::new(),
         occurrences: Vec::new(),
         lifecycle_scope: None,
@@ -485,6 +507,20 @@ mod tests {
             dependencies: Vec::new(),
             subject_refs: Vec::new(),
         }
+    }
+
+    /// #1403 — the `cpes` field holds only validated CPEs: a supplement's
+    /// malformed CPE (here a CPE 2.2 URI) is dropped, a valid one kept.
+    #[test]
+    fn i1403_a_malformed_supplement_cpe_is_dropped() {
+        let valid = "cpe:2.3:a:waybill-fixture-vendor:waybill-fixture-lib:1.0:*:*:*:*:*:*:*";
+        let mut kept = supp_component("pkg:generic/waybill-fixture-lib@1.0");
+        kept.cpes = Some(vec![valid.to_string()]);
+        assert_eq!(synthesize_resolved(&kept).cpes, vec![Cpe::parse(valid).unwrap()]);
+
+        let mut dropped = supp_component("pkg:generic/waybill-fixture-lib@1.0");
+        dropped.cpes = Some(vec!["cpe:/a:waybill-fixture-vendor:waybill-fixture-lib:1.0".to_string()]);
+        assert!(synthesize_resolved(&dropped).cpes.is_empty());
     }
 
     #[test]

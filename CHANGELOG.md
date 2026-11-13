@@ -74,6 +74,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **A supplement's malformed CPE is dropped with a warning (#1403).** CPEs
+  are now a validated type. A value must be a CPE 2.3 formatted string with a
+  named vendor and product. A `--supplement-cdx` component whose `cpe` is
+  anything else is emitted without it, and the scan logs a WARN naming the
+  component. Before, it was copied verbatim, and a CPE 2.2 URI or a
+  wildcard vendor matches nothing or everything. Every other emitted CPE is
+  unchanged.
+
 - **Four curated CPE rows put the vendor with more CVEs first (#1490).**
   `c-ares` (`c-ares_project` 9, `c-ares` 6), `flex` (`westes` 3,
   `flex_project` 0), `less` (`gnu` 3, `greenwoodsoftware` 2) and `unzip`
