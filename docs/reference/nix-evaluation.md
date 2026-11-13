@@ -167,6 +167,14 @@ devShells.
 
 Evaluation outlasted its budget. Raise `--nix-eval-timeout-secs`.
 
+### Case 9 — `package-set-unavailable`
+
+The nixpkgs Haskell package set for the pinned revision could not be
+acquired, so the scan stopped before the evaluation tier was reached.
+`waybill:nixpkgs-haskell-degraded` says why the set was unavailable.
+Under `--offline` the same situation records `offline-requested`, the
+refusal the tier records anyway (#1418).
+
 `waybill:nix-eval-tier` records what the tier did whenever it ran,
 degradation included — so "ran and got nothing" stays distinguishable
 from "never ran".

@@ -145,6 +145,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **`--nix-eval` records why it did nothing when the nixpkgs package set
+  is unavailable (#1418).** When the Haskell package set for the pinned
+  revision could not be retrieved, the scan stopped before the eval tier and
+  the document carried no C178 or C180 record, which read the same as
+  `--nix-eval` not having been passed. C180 now records
+  `package-set-unavailable`, a new value, or `offline-requested` under
+  `--offline`. Scans without `--nix-eval` are unchanged.
+
 - **A closure edge into a nameless member reaches that member (#1473).**
   Under `--nix-closure`, members that declare no `pname` (fetched sources,
   mostly) share the name `source`, and edges were joined to components on
