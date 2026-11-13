@@ -27,6 +27,7 @@ pub(crate) mod cache;
 pub(crate) mod fetch;
 pub(crate) mod nix_base32;
 pub(crate) mod package_set;
+pub(crate) mod twin_merge;
 pub(crate) mod version_range;
 
 use std::collections::BTreeSet;

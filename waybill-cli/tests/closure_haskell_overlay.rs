@@ -72,26 +72,82 @@ fn prop(c: &Value, name: &str) -> Option<String> {
         .map(str::to_string)
 }
 
+fn spdx23_count(doc: &Value, name: &str) -> usize {
+    doc["packages"].as_array().into_iter().flatten().filter(|p| p["name"] == name).count()
+}
+
+fn spdx3_count(doc: &Value, name: &str) -> usize {
+    doc["@graph"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|e| e["type"] == "software_Package" && e["name"] == name)
+        .count()
+}
+
+/// The component count of `waybill-fixture-<short>` in each of the three
+/// formats, which must agree.
+fn count_everywhere(s: &Scan, short: &str) -> usize {
+    let name = format!("waybill-fixture-{short}");
+    let cdx = named(&s.cdx, short).len();
+    assert_eq!(spdx23_count(&s.spdx23, &name), cdx, "{name}: SPDX 2.3 disagrees with CycloneDX");
+    assert_eq!(spdx3_count(&s.spdx3, &name), cdx, "{name}: SPDX 3 disagrees with CycloneDX");
+    cdx
+}
+
+// ---------------------------------------------------------------
+// US1 — one component per dependency
+// ---------------------------------------------------------------
+
 #[test]
-#[ignore = "diagnostic: prints the fixture's current shape"]
-fn diagnostic_print_shape() {
+fn m1046_us1_a_declared_and_built_dependency_is_one_component() {
     let s = scan_with(&[]);
-    for short in ["overlaid", "relaxed", "namesake", "variants"] {
-        for c in named(&s.cdx, short) {
-            eprintln!(
-                "{short}: purl={} tier={:?} identity={:?} ranges={:?} unresolved={:?} refs={}",
-                c["purl"],
-                prop(c, "waybill:sbom-tier"),
-                prop(c, "waybill:closure-identity"),
-                prop(c, "waybill:requirement-ranges"),
-                prop(c, "waybill:haskell-version-unresolved-reason"),
-                c["externalReferences"]
-            );
-        }
+    for (short, range) in [("overlaid", ">= 2.0.0.0"), ("relaxed", ">=1.0 && <1.5")] {
+        assert_eq!(count_everywhere(&s, short), 1, "{short} must be one component");
+        let c = named(&s.cdx, short)[0];
+        assert_eq!(prop(c, "waybill:sbom-tier").as_deref(), Some("build"), "{short}: the build survives");
+        assert_eq!(
+            prop(c, "waybill:requirement-ranges").as_deref(),
+            Some(serde_json::json!([range]).to_string().as_str()),
+            "{short}: the declared range moves onto the survivor"
+        );
+        assert_eq!(prop(c, "waybill:haskell-version-unresolved-reason"), None, "{short}: no longer unresolved");
     }
-    for c in components(&s.cdx) {
-        if prop(c, "waybill:closure-member-role").as_deref() == Some("source") {
-            eprintln!("source member: {} refs={}", c["name"], c["externalReferences"]);
-        }
+}
+
+/// FR-003, FR-004: a namesake no GHC built, and two in-range variants, stay
+/// unmerged.
+#[test]
+fn m1046_us1_a_namesake_and_ambiguous_variants_stay_unmerged() {
+    let s = scan_with(&[]);
+    assert_eq!(count_everywhere(&s, "namesake"), 2, "not a Haskell package: design and build both stay");
+    assert_eq!(count_everywhere(&s, "variants"), 3, "two variants in range: nothing merges");
+}
+
+#[test]
+fn m1046_us1_no_edge_names_a_removed_twin() {
+    let s = scan_with(&[]);
+    // CONTROL: there are references to check.
+    assert!(common::endpoints::reference_count(&s.cdx, &s.spdx23, &s.spdx3) > 0);
+    let dangling = common::endpoints::dangling(&s.cdx, &s.spdx23, &s.spdx3);
+    assert!(dangling.is_empty(), "{dangling:#?}");
+}
+
+/// CONTROL: without `--nix-closure` nothing is merged; the versionless
+/// design-tier component is still there.
+#[test]
+fn m1046_us1_without_the_closure_the_design_twin_remains() {
+    let closure = read("closure.json");
+    let packages = read("hackage-packages.nix");
+    let s = NixStub {
+        project: dir().join("project"),
+        closure: &closure,
+        package_set: Some((&packages, "{ }\n")),
+        ..Default::default()
     }
+    .scan(&["--no-deps-dev", "--no-clearly-defined"]);
+    let o = named(&s.cdx, "overlaid");
+    assert_eq!(o.len(), 1);
+    assert_eq!(o[0]["purl"], "pkg:hackage/waybill-fixture-overlaid");
+    assert_eq!(prop(o[0], "waybill:sbom-tier").as_deref(), Some("design"));
 }

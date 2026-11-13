@@ -4938,6 +4938,22 @@ pub async fn execute(
                 "nix-closure: identity pass"
             );
 
+            // #1046 — one component per Haskell dependency the manifest
+            // declares and the closure built. HERE: after the identity pass,
+            // so the build-tier identity the twin folds into is final; before
+            // `qualify_backport_identities` and the edge build below, so both
+            // see the survivor and no edge is built against the removed twin.
+            // Not in `merge_closure_components`, which runs before the
+            // identity pass (m1035 measured that reordering it downgrades
+            // PURLs).
+            let twins = nhp::twin_merge::merge(&mut components, &mut relationships, &classified.raw);
+            tracing::info!(
+                merged = twins.merged,
+                out_of_range = twins.out_of_range,
+                declined = ?twins.declined,
+                "nix-closure: design/build twins merged"
+            );
+
             // Milestone 1366 (#1365) — an ecosystem identity for the
             // closure's PyPI components.
             //

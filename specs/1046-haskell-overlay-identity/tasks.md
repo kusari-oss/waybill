@@ -51,25 +51,25 @@
 
 **Independent test**: scan the T001 fixture with a stub `nix`. `waybill-fixture-overlaid` appears once, with the build's version and the declared range.
 
-- [ ] T007 [P] [US1] Write unit tests in a new `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/twin_merge.rs` (tests module) for selection, per data-model "Twin pair":
+- [X] T007 [P] [US1] Write unit tests in a new `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/twin_merge.rs` (tests module) for selection, per data-model "Twin pair":
   - one Haskell candidate merges;
   - a candidate that is neither `pkg:hackage` nor GHC-built never merges (the namesake);
   - two variants with exactly one in range merge onto that one;
   - two variants with none or both in range do not merge, and say why;
   - a design-tier component that already has a version is not a twin.
-- [ ] T008 [P] [US1] Write unit tests in the same module for the merge's effect (research R6):
+- [X] T008 [P] [US1] Write unit tests in the same module for the merge's effect (research R6):
   - the survivor keeps its PURL, version, tier and scope;
   - it gains C20 `waybill:requirement-ranges` and the source-file evidence;
   - `waybill:haskell-version-unresolved-reason` and `waybill:unresolved-reason` are dropped;
   - C172 is kept;
   - an edge naming the design PURL is renamed to the survivor's, and a duplicate edge is removed;
   - the design component is gone.
-- [ ] T009 [US1] Implement `twin_merge::merge(components, relationships, raw) -> TwinMergeSummary` in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/twin_merge.rs`. Use `closure_identity::built_by_ghc` for the Haskell evidence, `version_range::admits` for variant selection, and `super::apply_renames` for edges. The summary carries `merged` and `declined_by_reason` counts. Register the module in `haskell_packages/mod.rs`. Make T007 and T008 pass.
-- [ ] T010 [US1] Call `twin_merge::merge` in `waybill-cli/src/cli/scan_cmd.rs`:
+- [X] T009 [US1] Implement `twin_merge::merge(components, relationships, raw) -> TwinMergeSummary` in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/twin_merge.rs`. Use `closure_identity::built_by_ghc` for the Haskell evidence, `version_range::admits` for variant selection, and `super::apply_renames` for edges. The summary carries `merged` and `declined_by_reason` counts. Register the module in `haskell_packages/mod.rs`. Make T007 and T008 pass.
+- [X] T010 [US1] Call `twin_merge::merge` in `waybill-cli/src/cli/scan_cmd.rs`:
   - **Where:** immediately after `closure_identity::reclassify` (which, once US2 lands, includes the Hackage step), and before `emit::qualify_backport_identities`.
   - **Logging:** one INFO line with the summary.
   - **Ordering comment:** record why this position (research R1). A merge before `reclassify` would merge `pkg:generic` and miss US2. A merge after `graph::relationships` would leave the closure's edges built against a removed PURL.
-- [ ] T011 [US1] Add a new integration test `waybill-cli/tests/closure_haskell_overlay.rs`. Use `common::nix_stub::NixStub` with a closure holding these derivations, each `nativeBuildInputs` naming a `ghc-9.6.6` store path except the namesake's:
+- [X] T011 [US1] Add a new integration test `waybill-cli/tests/closure_haskell_overlay.rs`. Use `common::nix_stub::NixStub` with a closure holding these derivations, each `nativeBuildInputs` naming a `ghc-9.6.6` store path except the namesake's:
   - `waybill-fixture-overlaid-2.1.0.0`;
   - `waybill-fixture-namesake-1.0` (not GHC-built);
   - two `waybill-fixture-variants` versions.
@@ -150,12 +150,12 @@
 
 **Independent test**: `waybill-fixture-relaxed` declared `>=1.0 && <1.5`, built `1.6`. One component, with C221 `{"requirement-ranges":[">=1.0 && <1.5"],"version":"1.6"}`.
 
-- [ ] T023 [P] [US4] Write unit tests in `twin_merge.rs`:
+- [X] T023 [P] [US4] Write unit tests in `twin_merge.rs`:
   - an out-of-range single candidate merges and gets C221 with sorted keys;
   - an in-range one gets no C221;
   - a range that does not parse (`Admits::Unknown`) gets no C221;
   - several ranges, one admitting, get no C221 (`version_range::contradicts` semantics).
-- [ ] T024 [US4] Implement C221 (`ANN_REQUIREMENT_UNSATISFIED = "waybill:requirement-unsatisfied"`) in `twin_merge.rs`, set on the survivor when `version_range::contradicts(&ranges, &version)`. Make T023 pass.
+- [X] T024 [US4] Implement C221 (`ANN_REQUIREMENT_UNSATISFIED = "waybill:requirement-unsatisfied"`) in `twin_merge.rs`, set on the survivor when `version_range::contradicts(&ranges, &version)`. Make T023 pass.
 - [X] T025 [P] [US4] Add C221 parity extractors: `cdx_anno!`, `spdx23_anno!` and `spdx3_anno!` (`component` scope) in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`, and a `ParityExtractor` row `C221` (`SymmetricEqual`, `order_sensitive: false`) in `waybill-cli/src/parity/extractors/mod.rs`. The catalog row from T002 and the extractor must land together (the lib-target gate).
 - [ ] T026 [US4] Extend `waybill-cli/tests/closure_haskell_overlay.rs` with `waybill-fixture-relaxed`. Assert one component, C221 in all three formats, and that the value is equal across them.
 
