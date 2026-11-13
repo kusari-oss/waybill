@@ -136,6 +136,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **expat and libidn2 now emit the CPE NVD files their CVEs under.** The
+  curated rows pointed at `libexpat:expat` and `libidn2_project:libidn2`,
+  which exist in NVD's dictionary but hold 0 CVEs. NVD files expat's 68 under
+  `libexpat_project:libexpat` and libidn2's under `gnu:libidn2`, which
+  nixpkgs already declares. On five nixpkgs wrapper flakes, grype 0.120.0
+  reports 23 more expat 2.8.0 CVEs on every target. The other rows' CVE
+  placement is #1490.
+
 - **A nixpkgs patch named in lower case now counts as resolving its CVEs
   (#1487).** The closure tier read CVE ids from patch file names with a
   case-sensitive `CVE-` pattern, and nixpkgs also writes `cve-`. At
