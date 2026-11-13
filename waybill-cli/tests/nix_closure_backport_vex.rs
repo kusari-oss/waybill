@@ -316,22 +316,32 @@ fn projected_documents_keep_statements_with_components() {
     assert_eq!(carried, sidecar);
     assert_eq!(doc_property(&s.scan.cdx, "waybill:vex-claims-omitted"), None);
 
-    // `--tier` runs before the closure tier adds its members, so it never
-    // drops one (`scan_cmd.rs`, the `apply_tier_filter` call site): the
-    // claims stay, each with its component, and nothing is counted. A
-    // `--split` document is asserted at unit level in
+    // #1360 — `--tier` now filters the closure tier too, so `source-only`
+    // drops the build-tier members, and their backport claims go with them:
+    // a claim is derived from its component's pedigree, so no claim can name
+    // a component the document lacks, and none is left to count as omitted.
+    // A `--split` document is asserted at unit level in
     // `generate/cyclonedx/vex.rs`
     // (`a_split_document_carries_the_backport_claims_of_what_it_holds`),
     // because the stub harness writes per-format `--output`s, which
     // `--split` refuses.
     let s = scan_with(&closure(), None, &["--tier", "source-only"]);
     let purls = cdx_purls(&s.scan.cdx);
-    let st = claims(&s);
-    assert_eq!(st.len(), 3, "{st:#?}");
-    for (p, _, _) in &st {
-        assert!(purls.contains(p), "a claim whose component is not in the document: {p}");
-    }
-    assert_eq!(s.scan.cdx["vulnerabilities"].as_array().map(Vec::len), Some(3));
+    assert!(
+        !purls.iter().any(|p| p.contains("?nix_drv=")),
+        "the backported closure members are build-tier and must be dropped: {purls:?}"
+    );
+    let st = s
+        .openvex
+        .as_ref()
+        .and_then(|d| d["statements"].as_array().cloned())
+        .unwrap_or_default();
+    assert!(st.is_empty(), "no claim may outlive its component: {st:#?}");
+    assert_eq!(
+        s.scan.cdx["vulnerabilities"].as_array().map_or(0, Vec::len),
+        0,
+        "CycloneDX carries no claim for a dropped component"
+    );
     assert_eq!(doc_property(&s.scan.cdx, "waybill:vex-claims-omitted"), None);
 }
 
