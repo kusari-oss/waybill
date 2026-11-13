@@ -24799,7 +24799,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:c-ares:c-ares:1.34.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares_project:c-ares:1.34.5:*:*:*:*:*:*:*\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:c-ares_project:c-ares:1.34.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares:c-ares:1.34.5:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -24836,13 +24836,13 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:c-ares:c-ares:1.34.5:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:c-ares_project:c-ares:1.34.5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         },
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:c-ares_project:c-ares:1.34.5:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:c-ares:c-ares:1.34.5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -34296,7 +34296,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -34339,13 +34339,13 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         },
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -79292,7 +79292,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -79335,13 +79335,13 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         },
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],

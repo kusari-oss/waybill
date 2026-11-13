@@ -15117,7 +15117,7 @@
     },
     {
       "bom-ref": "pkg:generic/c-ares@1.34.6",
-      "cpe": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -15131,7 +15131,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
@@ -15156,11 +15156,11 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*\"]"
+          "value": "[\"cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "syft:cpe23",
-          "value": "cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -26593,7 +26593,7 @@
     },
     {
       "bom-ref": "pkg:generic/flex@2.6.4",
-      "cpe": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -26607,7 +26607,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
@@ -26642,11 +26642,11 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\"]"
+          "value": "[\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "syft:cpe23",
-          "value": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -83099,7 +83099,7 @@
     },
     {
       "bom-ref": "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r",
-      "cpe": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -83113,7 +83113,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
@@ -83281,11 +83281,11 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\"]"
+          "value": "[\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "syft:cpe23",
-          "value": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
