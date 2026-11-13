@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-12
+Auto-generated from all feature plans. Last updated: 2026-11-13
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -470,6 +470,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-12
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only. The table is `include_str!` data parsed with std, `serde_json` serializes C219, and `tracing` is used. The probe is Python 3 stdlib, run with `-I -B`. **Zero new Cargo dependencies** (FR-012). (966-ghc-boot-versions)
 - one committed TSV (1,407 rows across 36 releases in the 2026-11-12 Stack snapshot), embedded in the binary. No runtime state and no scan-time network. (966-ghc-boot-versions)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only — `waybill_common::types::purl::Purl` (qualifier encoding), `serde`/`serde_json`, `tracing`. The derivation map is already parsed by the closure tier. **Zero new Cargo dependencies** (FR-012). (1436-vex-build-identity)
+- N/A. A per-scan memo of Hackage answers; no disk cache (R3). (1046-haskell-overlay-identity)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -702,9 +703,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1046-haskell-overlay-identity: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only.
 - 1436-vex-build-identity: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only — `waybill_common::types::purl::Purl` (qualifier encoding), `serde`/`serde_json`, `tracing`. The derivation map is already parsed by the closure tier. **Zero new Cargo dependencies** (FR-012).
 - 966-ghc-boot-versions: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only. The table is `include_str!` data parsed with std, `serde_json` serializes C219, and `tracing` is used. The probe is Python 3 stdlib, run with `-I -B`. **Zero new Cargo dependencies** (FR-012).
-- 1283-nix-allow-ifd: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only — `clap` (flag + `ArgGroup`), `serde`/`serde_json` (C217), `tracing` (WARNs), `anyhow`/`thiserror`; the `eval::invoke` helpers (`run_bounded`, `argv_is_safe`) and `eval::preflight`. **Zero new Cargo dependencies** (FR-012).
 
 
 <!-- MANUAL ADDITIONS START -->
