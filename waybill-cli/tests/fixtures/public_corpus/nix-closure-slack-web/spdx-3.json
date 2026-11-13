@@ -20774,6 +20774,12 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:invisible-island:ncurses:6.5:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
@@ -159637,7 +159643,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WQHFN6RZYZKDD3UO",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.5:*:*:*:*:*:*:*\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:invisible-island:ncurses:6.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.5:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZDXUW2EIBG336S3E",
       "type": "Annotation"
     },
