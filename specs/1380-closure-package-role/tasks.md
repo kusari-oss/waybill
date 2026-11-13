@@ -24,8 +24,11 @@
   - doc comment per `contracts/member-role.md`.
 - [ ] T003 Add `PatchOutputs` in `member.rs`: a set of store basenames, built by `PatchOutputs::of(&RawClosure)` from every derivation's `paths_in("patches")` (both carriers, research R2).
 - [ ] T004 Change the signature to `member::classify(drv, &PatchOutputs)`, behaviour still unchanged.
-  - Build `PatchOutputs` once per closure and pass it at every call site: `emit.rs` (both sites), `graph.rs::stops` and `waybill-cli/src/cli/debug_cmd.rs`.
-  - Thread it through the callers' signatures where they lack the closure.
+  - Build `PatchOutputs` once per closure and pass it at every call site:
+    - `emit.rs::emitted_drv_keys` and the component loop in `emit.rs::components`;
+    - `graph.rs::project`, which builds it and passes it through `nearest_stopping` to `stops`;
+    - `waybill-cli/src/cli/debug_cmd.rs`'s closure dump.
+  - Every one of these already holds the `RawClosure`, so no public signature outside the closure module changes.
   - `cargo build --workspace --all-targets` must pass.
 - [ ] T005 Add a unit test in `member.rs` asserting the invariant (data-model): for every member, the new classification differs from the old one only where the old role was `package`, and every new role is an endpoint. Keep the old ladder as a test-only function, so the test compares the two.
 
@@ -96,7 +99,8 @@
 - [ ] T011 [US1] Add an integration test `waybill-cli/tests/closure_member_role.rs`, following `closure_members.rs`'s harness. It asserts:
   - every member's C206 value in CDX, SPDX 2.3 and SPDX 3;
   - C184 `member-roles` counts, including `check`;
-  - the named `dependencies[]` edges, against expectations computed from the old ladder (FR-006).
+  - the named `dependencies[]` edges, against expectations computed from the old ladder (FR-006);
+  - the C206 parity extractors (`c206_cdx`, `c206_spdx23`, `c206_spdx3`) return equal sets on the fixture's three documents (FR-007).
 - [ ] T012 [US1] Update existing tests that assert `package` for a member that now moves, in `closure_members.rs` and the `member.rs` m1282 tests. Each change is listed in the commit message with its reason.
 
 ### Implementation

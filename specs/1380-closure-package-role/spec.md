@@ -46,7 +46,7 @@ The "genuine packages" column is the census's `other` group, read by hand. Its e
 
 A consumer reads C206 to find the built packages among a closure's members. Today, filtering on `package` returns mostly version checks, test programs and source trees. After this change it returns built software only.
 
-**Why this priority**: The role's whole purpose is this filter, and today the filter's answer is mostly wrong. The adjacent CPE work (#1367, #1371) will want to key on `role == package`. A wrong population then becomes wrong CPEs.
+**Why this priority**: The role's whole purpose is this filter, and today the filter's answer is mostly wrong. The adjacent CPE work (spec 1367, #1371) will want to key on `role == package`. A wrong population then becomes wrong CPEs.
 
 **Independent Test**: On each closure golden, list the members carrying `package`, and check every one against the census's hand-read classification.
 
@@ -60,7 +60,7 @@ A consumer reads C206 to find the built packages among a closure's members. Toda
 
 ### User Story 2 - A source tree is recorded as source (Priority: P1)
 
-A member that is a tree of source code is labelled `source`, whether it was fetched or produced by unpacking or filtering a fetch. That covers a patch file, a vendored dependency tree, and `<name>-src-<v>` or `<name>-source`.
+Among today's `package` members, one that is a tree of source code is labelled `source`. That covers a patch file, a vendored dependency tree, and `<name>-src-<v>` or `<name>-source`. Members outside today's `package` population keep their roles (#1502 tracks the patches that are `fragment` today).
 
 **Why this priority**: It is the issue's central example. `source` is already a graph endpoint, so the graph does not change.
 
@@ -103,7 +103,7 @@ Version-check derivations (`*-get-version-<v>`) and test programs (`*-simple-pro
 
 - **FR-001**: A closure member carries `package` only when it is a built, version-bearing package. On every census closure, no member of the census's version-check, test-program, source-tree, patch or vendor groups carries `package`.
 - **FR-002**: The members the census reads as genuine packages keep `package` on every census closure: the `mes`/`tinycc` bootstrap chain, `glibc-iconv`, `libidn2`, `llvm-binutils`, `auditable-cargo`, the `rustc` wrappers, and environments (`-env`).
-- **FR-003**: A member that is a tree of source code, a patch or a vendored dependency tree carries `source`. A member that was not fetched keeps its recipe-hash identity. Only fixed-output members have a content-hash identity, as before.
+- **FR-003**: Among the members the version-token rule claims (today's `package` population), a tree of source code, a patch or a vendored dependency tree carries `source`. A member that was not fetched keeps its recipe-hash identity. Only fixed-output members have a content-hash identity, as before. A member outside that population keeps its role, including the patches #1502 tracks.
 - **FR-004**: Version-check (`*-get-version-<v>`) and test-program (`*-simple-program-<v>`) derivations carry a new fifth C206 value, `check`. These two groups are its whole scope. A derivation that is some other kind of test keeps whatever role the other rules give it. `check` is a dependency-graph endpoint, as `source` and `package` are. The catalog row, the per-format parity extractors and C184's `member-roles` counts include it.
 - **FR-005**: The classification uses derivation evidence where a derivation records any. A name-shape rule is admitted only for a group that has no such evidence. Each rule's membership is checked against the census on all five closure goldens, with the counts recorded. A rule that matches a member the census reads as genuine is rejected.
 - **FR-006**: The dependency graph does not change. The members and edges in every closure golden's `dependencies[]` stay identical: every reclassified member moves between graph-endpoint roles only.
@@ -125,11 +125,11 @@ Version-check derivations (`*-get-version-<v>`) and test programs (`*-simple-pro
 - **SC-002**: Zero members from the census's misfit groups carry `package` on any of the five closure goldens.
 - **SC-003**: Every member of the genuine-package group keeps `package`: 23 of 23 on moat.
 - **SC-004**: The dependency edges in all five closure goldens are identical before and after.
-- **SC-006**: On the moat and shellcheck goldens, `check` has 46 members. On slacklinker it has 47.
 - **SC-005**: Non-closure corpus targets are byte-identical.
+- **SC-006**: On the moat and shellcheck goldens, `check` has 46 members. On slacklinker it has 47.
 
 ## Assumptions
 
 - **"Source" widens to source trees that were not fetched.** That fits the role's name, and the role's catalog text is updated to say so. The identity basis keeps the difference (FR-003).
 - **The census is the oracle.** Its grouping comes from reading names, and it is checked by hand against what each derivation is. The rules this spec admits are measured against it on all five closures, not just the three the issue named.
-- **Out of scope.** Detecting tests in general (`passthru.tests` or similar): `check` covers only the two measured groups. Also out of scope: whether any of these members should be emitted at all (#1034's depth question, now settled by runtime scope), and CPEs for them (#1367, #1371).
+- **Out of scope.** Detecting tests in general (`passthru.tests` or similar): `check` covers only the two measured groups. Also out of scope: whether any of these members should be emitted at all (#1034's depth question, now settled by runtime scope), and CPEs for them (spec 1367, #1371).
