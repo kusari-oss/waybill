@@ -2271,7 +2271,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*",
+          "identifier": "cpe:2.3:a:gnu:libidn2:2.3.8:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
@@ -13147,7 +13147,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:libexpat:expat:2.7.3:*:*:*:*:*:*:*",
+          "identifier": "cpe:2.3:a:libexpat_project:libexpat:2.7.3:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
@@ -106705,7 +106705,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-B7MUKANYBECU4WQZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-patches\",\"value\":\"[{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9913\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7697\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8141\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7696\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2016-9844\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8140\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2021-4217\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2018-18384\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9636\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8139\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"}]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-patches\",\"value\":\"[{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2022-0529\\\",\\\"type\\\":\\\"security\\\"},{\\\"id\\\":\\\"CVE-2022-0530\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9913\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7697\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8141\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7696\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2016-9844\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8140\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2021-4217\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2018-18384\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9636\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8139\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"}]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FFKOLETBFKS7BJRE",
       "type": "Annotation"
     },
@@ -121905,7 +121905,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HK625IFVXC5PSFZ6",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1193,\\\"components-without-member-role\\\":496,\\\"derivations\\\":1293,\\\"distinct-cves\\\":16,\\\"edge-ineligible-components\\\":80,\\\"edges\\\":41999,\\\"identifiers\\\":{\\\"by-drv\\\":362,\\\"by-name-version\\\":82,\\\"declared\\\":6,\\\"received\\\":444,\\\"rejected\\\":0,\\\"wanted\\\":1213},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":361,\\\"wanted\\\":1213,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":72,\\\"package\\\":4,\\\"scaffolding\\\":8,\\\"source\\\":613},\\\"patches\\\":190,\\\"patches-without-cve\\\":172,\\\"roles\\\":{\\\"artifact-input\\\":393,\\\"both\\\":49,\\\"build-tooling\\\":850,\\\"unreferenced\\\":1}}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1193,\\\"components-without-member-role\\\":496,\\\"derivations\\\":1293,\\\"distinct-cves\\\":18,\\\"edge-ineligible-components\\\":80,\\\"edges\\\":41999,\\\"identifiers\\\":{\\\"by-drv\\\":362,\\\"by-name-version\\\":82,\\\"declared\\\":6,\\\"received\\\":444,\\\"rejected\\\":0,\\\"wanted\\\":1213},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":361,\\\"wanted\\\":1213,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":72,\\\"package\\\":4,\\\"scaffolding\\\":8,\\\"source\\\":613},\\\"patches\\\":190,\\\"patches-without-cve\\\":171,\\\"roles\\\":{\\\"artifact-input\\\":393,\\\"both\\\":49,\\\"build-tooling\\\":850,\\\"unreferenced\\\":1}}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },

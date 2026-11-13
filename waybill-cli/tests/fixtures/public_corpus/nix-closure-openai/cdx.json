@@ -28104,6 +28104,10 @@
           "value": "[\"cpe:2.3:a:c-ares:c-ares:1.27.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares_project:c-ares:1.27.0:*:*:*:*:*:*:*\"]"
         },
         {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:c-ares_project:c-ares:1.27.0:*:*:*:*:*:*:*"
+        },
+        {
           "name": "waybill:scope-classification-source",
           "value": "runtime-closure"
         },
@@ -31080,6 +31084,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:haxx:curl:8.11.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:curl:curl:8.11.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:curl:curl:8.11.0:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -34629,7 +34637,7 @@
     },
     {
       "bom-ref": "pkg:generic/expat@2.6.4",
-      "cpe": "cpe:2.3:a:libexpat:expat:2.6.4:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:libexpat_project:libexpat:2.6.4:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -34643,7 +34651,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:libexpat:expat:2.6.4:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:libexpat_project:libexpat:2.6.4:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
@@ -35330,6 +35338,14 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:file_project:file:5.45:*:*:*:*:*:*:*\",\"cpe:2.3:a:christos_zoulas:file:5.45:*:*:*:*:*:*:*\",\"cpe:2.3:a:gentoo:file:5.45:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:christos_zoulas:file:5.45:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:gentoo:file:5.45:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -36032,6 +36048,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -45198,6 +45218,10 @@
           "value": "[\"cpe:2.3:a:libarchive:libarchive:3.7.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:freebsd:libarchive:3.7.7:*:*:*:*:*:*:*\"]"
         },
         {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:freebsd:libarchive:3.7.7:*:*:*:*:*:*:*"
+        },
+        {
           "name": "waybill:scope-classification-source",
           "value": "runtime-closure"
         },
@@ -46164,7 +46188,7 @@
     },
     {
       "bom-ref": "pkg:generic/libidn2@2.3.7",
-      "cpe": "cpe:2.3:a:libidn2_project:libidn2:2.3.7:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:gnu:libidn2:2.3.7:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -46178,7 +46202,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:libidn2_project:libidn2:2.3.7:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:gnu:libidn2:2.3.7:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
@@ -47559,6 +47583,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:libuv:libuv:1.48.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:libuv_project:libuv:1.48.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:libuv_project:libuv:1.48.0:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -51415,6 +51443,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:ncurses_project:ncurses:6.4.20221231:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.4.20221231:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:gnu:ncurses:6.4.20221231:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -63164,7 +63196,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:generic/sharutils@4.15.2",
+      "bom-ref": "pkg:generic/sharutils@4.15.2?nix_drv=zfndvr3agw1wr28527zq48y19556r124",
       "evidence": {
         "identity": [
           {
@@ -63194,6 +63226,12 @@
             "type": "backport"
           },
           {
+            "resolves": [
+              {
+                "id": "CVE-2018-1000097",
+                "type": "security"
+              }
+            ],
             "type": "backport"
           },
           {
@@ -63226,7 +63264,7 @@
           "value": "artifact-input"
         }
       ],
-      "purl": "pkg:generic/sharutils@4.15.2",
+      "purl": "pkg:generic/sharutils@4.15.2?nix_drv=zfndvr3agw1wr28527zq48y19556r124",
       "scope": "excluded",
       "type": "library",
       "version": "4.15.2"
@@ -73493,6 +73531,16 @@
       "pedigree": {
         "patches": [
           {
+            "resolves": [
+              {
+                "id": "CVE-2022-0529",
+                "type": "security"
+              },
+              {
+                "id": "CVE-2022-0530",
+                "type": "security"
+              }
+            ],
             "type": "backport"
           },
           {
@@ -73627,6 +73675,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -76432,6 +76484,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:tukaani:xz:5.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:xz_project:xz:5.6.3:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:xz_project:xz:5.6.3:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -99254,7 +99310,7 @@
         "pkg:generic/patchelf@0.15.0",
         "pkg:generic/pcre2@10.44",
         "pkg:generic/pkg-config-wrapper@0.29.2",
-        "pkg:generic/sharutils@4.15.2",
+        "pkg:generic/sharutils@4.15.2?nix_drv=zfndvr3agw1wr28527zq48y19556r124",
         "pkg:generic/source-sha256.hyl2.pPcKr7xRW4oIBWl.pgzh.snKhSNu5GH9fWKRGgaNHU.e",
         "pkg:generic/xgcc@13.3.0",
         "pkg:generic/xz@5.6.3",
@@ -110687,7 +110743,7 @@
         "pkg:generic/xz@5.6.3",
         "pkg:generic/zlib@1.3.1"
       ],
-      "ref": "pkg:generic/sharutils@4.15.2"
+      "ref": "pkg:generic/sharutils@4.15.2?nix_drv=zfndvr3agw1wr28527zq48y19556r124"
     },
     {
       "dependsOn": [
@@ -131969,7 +132025,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":1330,\"components-without-member-role\":544,\"derivations\":1448,\"distinct-cves\":18,\"edge-ineligible-components\":80,\"edges\":46609,\"identifiers\":{\"by-drv\":353,\"by-name-version\":97,\"declared\":0,\"received\":450,\"rejected\":0,\"wanted\":1368},\"licenses\":{\"degraded\":null,\"received\":352,\"wanted\":1368,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":72,\"package\":4,\"scaffolding\":8,\"source\":702},\"patches\":248,\"patches-without-cve\":228,\"roles\":{\"artifact-input\":446,\"both\":56,\"build-tooling\":945,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":1330,\"components-without-member-role\":544,\"derivations\":1448,\"distinct-cves\":21,\"edge-ineligible-components\":80,\"edges\":46609,\"identifiers\":{\"by-drv\":353,\"by-name-version\":97,\"declared\":0,\"received\":450,\"rejected\":0,\"wanted\":1368},\"licenses\":{\"degraded\":null,\"received\":352,\"wanted\":1368,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":72,\"package\":4,\"scaffolding\":8,\"source\":702},\"patches\":248,\"patches-without-cve\":226,\"roles\":{\"artifact-input\":446,\"both\":56,\"build-tooling\":945,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",
@@ -132126,6 +132182,18 @@
     {
       "affects": [
         {
+          "ref": "pkg:generic/sharutils@4.15.2?nix_drv=zfndvr3agw1wr28527zq48y19556r124"
+        }
+      ],
+      "analysis": {
+        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2018-1000097 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "state": "resolved"
+      },
+      "id": "CVE-2018-1000097"
+    },
+    {
+      "affects": [
+        {
           "ref": "pkg:generic/patch@2.7.6?nix_drv=qg2mlfvjfqi1a038a5k9pwdchc5ghxy2"
         }
       ],
@@ -132230,6 +132298,30 @@
         "state": "resolved"
       },
       "id": "CVE-2021-4217"
+    },
+    {
+      "affects": [
+        {
+          "ref": "pkg:generic/unzip@6.0?nix_drv=hgi8px2w87j3a3qjxs37qw6qm0axnzsq"
+        }
+      ],
+      "analysis": {
+        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2022-0529 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "state": "resolved"
+      },
+      "id": "CVE-2022-0529"
+    },
+    {
+      "affects": [
+        {
+          "ref": "pkg:generic/unzip@6.0?nix_drv=hgi8px2w87j3a3qjxs37qw6qm0axnzsq"
+        }
+      ],
+      "analysis": {
+        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2022-0530 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "state": "resolved"
+      },
+      "id": "CVE-2022-0530"
     }
   ]
 }

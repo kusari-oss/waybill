@@ -36011,6 +36011,10 @@
           "value": "[\"cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*\"]"
         },
         {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*"
+        },
+        {
           "name": "waybill:scope-classification-source",
           "value": "runtime-closure"
         },
@@ -48756,7 +48760,7 @@
     },
     {
       "bom-ref": "pkg:generic/expat@2.7.4",
-      "cpe": "cpe:2.3:a:libexpat:expat:2.7.4:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:libexpat_project:libexpat:2.7.4:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -48770,7 +48774,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:libexpat:expat:2.7.4:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:libexpat_project:libexpat:2.7.4:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
@@ -50618,6 +50622,14 @@
           "value": "[\"cpe:2.3:a:file_project:file:5.45:*:*:*:*:*:*:*\",\"cpe:2.3:a:christos_zoulas:file:5.45:*:*:*:*:*:*:*\",\"cpe:2.3:a:gentoo:file:5.45:*:*:*:*:*:*:*\"]"
         },
         {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:christos_zoulas:file:5.45:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:gentoo:file:5.45:*:*:*:*:*:*:*"
+        },
+        {
           "name": "waybill:scope-classification-source",
           "value": "runtime-closure"
         },
@@ -51540,6 +51552,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -74073,7 +74089,7 @@
         },
         {
           "name": "waybill:cpe-provenance",
-          "value": "{\"basis\":\"drv\",\"overrode\":\"cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*\"}"
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/libidn2@2.3.8",
@@ -125136,6 +125152,16 @@
             "type": "backport"
           },
           {
+            "resolves": [
+              {
+                "id": "CVE-2022-0529",
+                "type": "security"
+              },
+              {
+                "id": "CVE-2022-0530",
+                "type": "security"
+              }
+            ],
             "type": "backport"
           },
           {
@@ -125213,6 +125239,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -129720,6 +129750,10 @@
         {
           "name": "waybill:cpe-candidates",
           "value": "[\"cpe:2.3:a:tukaani:xz:5.4.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:xz_project:xz:5.4.7:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:xz_project:xz:5.4.7:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:scope-classification-source",
@@ -194524,7 +194558,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":2351,\"components-without-member-role\":833,\"derivations\":2518,\"distinct-cves\":19,\"edge-ineligible-components\":523,\"edges\":11883,\"identifiers\":{\"by-drv\":492,\"by-name-version\":103,\"declared\":54,\"received\":595,\"rejected\":0,\"wanted\":1995},\"licenses\":{\"degraded\":null,\"received\":490,\"wanted\":1995,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":256,\"package\":93,\"scaffolding\":267,\"source\":902},\"patches\":285,\"patches-without-cve\":264,\"roles\":{\"artifact-input\":555,\"both\":60,\"build-tooling\":1902,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":2351,\"components-without-member-role\":833,\"derivations\":2518,\"distinct-cves\":21,\"edge-ineligible-components\":523,\"edges\":11883,\"identifiers\":{\"by-drv\":492,\"by-name-version\":103,\"declared\":54,\"received\":595,\"rejected\":0,\"wanted\":1995},\"licenses\":{\"degraded\":null,\"received\":490,\"wanted\":1995,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":256,\"package\":93,\"scaffolding\":267,\"source\":902},\"patches\":285,\"patches-without-cve\":263,\"roles\":{\"artifact-input\":555,\"both\":60,\"build-tooling\":1902,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",
@@ -194701,6 +194735,30 @@
         "state": "resolved"
       },
       "id": "CVE-2021-4217"
+    },
+    {
+      "affects": [
+        {
+          "ref": "pkg:generic/unzip@6.0?nix_drv=9i5s0bmy4a7hyh5979s9qyia54bxp4is"
+        }
+      ],
+      "analysis": {
+        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2022-0529 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "state": "resolved"
+      },
+      "id": "CVE-2022-0529"
+    },
+    {
+      "affects": [
+        {
+          "ref": "pkg:generic/unzip@6.0?nix_drv=9i5s0bmy4a7hyh5979s9qyia54bxp4is"
+        }
+      ],
+      "analysis": {
+        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2022-0530 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "state": "resolved"
+      },
+      "id": "CVE-2022-0530"
     },
     {
       "affects": [

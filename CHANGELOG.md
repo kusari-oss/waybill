@@ -9,6 +9,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **Curated CPE rows for ldns, rubygems, pixman, cairo, harfbuzz, speex,
+  libtiff and glib.** These were the packages behind the findings sbomnix
+  1.9.0 reported and waybill did not, in the 2026-11-12 comparison
+  (`docs/audits/2026-11-12-nix-vs-sbomnix.md`). Each pair was probed against
+  NVD's dictionary and title-checked
+  (`specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt`).
+  `redhat:cairo` and `libtiff_project:libtiff` exist too, and are deliberately
+  not emitted. On five nixpkgs wrapper flakes, grype 0.120.0 now reports all 9
+  of those CVEs (openssh +1, httpie +8), with nothing lost and no other change.
+  Two sbomnix-only findings remain, and neither is a gap: `intel:openmp` is
+  Intel's product (nixpkgs' `openmp` is LLVM's), and `lapack@3` is nixpkgs'
+  provider wrapper matched by an open range.
+
 - **GHC boot libraries carry the version their compiler shipped (#966).**
   Under `--nix-closure`, `base`, `process`, `bytestring`, `Cabal` and the
   rest of what GHC ships inside the compiler used to be versionless
@@ -122,6 +135,45 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   changes.
 
 ### Fixed
+
+- **expat and libidn2 now emit the CPE NVD files their CVEs under.** The
+  curated rows pointed at `libexpat:expat` and `libidn2_project:libidn2`,
+  which exist in NVD's dictionary but hold 0 CVEs. NVD files expat's 68 under
+  `libexpat_project:libexpat` and libidn2's under `gnu:libidn2`, which
+  nixpkgs already declares. On five nixpkgs wrapper flakes, grype 0.120.0
+  reports 23 more expat 2.8.0 CVEs on every target. The other rows' CVE
+  placement is #1490.
+
+- **A nixpkgs patch named in lower case now counts as resolving its CVEs
+  (#1487).** The closure tier read CVE ids from patch file names with a
+  case-sensitive `CVE-` pattern, and nixpkgs also writes `cve-`. At
+  `a799d3e3`, unzip applies `28-cve-2022-0529-and-cve-2022-0530.patch`, so
+  neither CVE reached `pedigree.patches[].resolves` or got a #1436 `fixed`
+  claim. Matching is now case-insensitive, the id is upper-cased, and the
+  evidence grade is unchanged. Measured with grype 0.120.0 on five nixpkgs
+  wrapper flakes (curl, openssh, httpie, gh, ripgrep), with #1435's unzip CPE:
+  unzip's findings with waybill's VEX fall from 3 to 1, the remaining
+  CVE-2018-1000035 having no patch.
+
+- **grype now sees a curated CPE row's second vendor.** CycloneDX
+  `component.cpe` holds one CPE, so the further vendors of a curated row
+  (`unzip` is `info-zip`, then `unzip_project`) reached CycloneDX only in
+  `waybill:cpe-candidates`, which no scanner reads, and SPDX 2.3 only as the
+  same annotation.
+  NVD files every unzip CVE grype knows under `unzip_project`. On a
+  `pkg:generic` component, each further curated CPE is now a `syft:cpe23`
+  property in CycloneDX, the one carrier beside `component.cpe` that grype
+  0.120.0 reads (`evidence.identity[]` was measured and is not read), and a
+  further `cpe23Type` reference in SPDX 2.3. On six Nix closures grype gains
+  15 findings per target (14 on `unzip 6.0`, 1 on `flex 2.6.4`) and loses
+  none; Trivy and osv-scanner are unchanged. 13 of the 15 name CVEs nixpkgs
+  patches, and sbomnix's document reports the same 13. With #1436's VEX in
+  place, grype suppresses 11 of them (measured 2026-11-12 on curl, openssh,
+  httpie, gh and ripgrep: `unzip` 14 → 3). The other two, CVE-2022-0529 and
+  CVE-2022-0530, are patched by a file named in lower case, which waybill now
+  reads too (#1487), leaving only CVE-2018-1000035, which has no patch. Other ecosystems' extra candidates are vendor guesses
+  and are not exposed. Measurements in `specs/1430-secondary-cpe-carrier/`
+  (#1430).
 
 - **Only the compiler's own copy of a GHC boot library is exempt from scope
   (#1478).** Both scope passes used to exempt any `pkg:hackage` component

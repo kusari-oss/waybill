@@ -1,0 +1,7 @@
+target	waybill_exit	cdx_grype	spdx23_grype	cdx_vs_spdx23_diff	openvex_written	cdx_vex_grype
+curl	0	226	226	0	no	-
+openssh	0	252	252	0	no	-
+httpie	0	370	370	0	no	-
+gh	0	281	281	0	no	-
+ripgrep	0	247	247	0	no	-
+moat	0	235	235	0	yes	235

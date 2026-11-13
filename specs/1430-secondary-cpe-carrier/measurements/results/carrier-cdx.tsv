@@ -1,0 +1,45 @@
+target	variant	grype	grype_unzip	grype_lost	grype_gained	gained_not_unzip	trivy	trivy_diff	osv	osv_diff
+curl	base	211	0	0	0	0	4	0	7	0
+curl	swap	225	14	0	14	0	4	0	7	0
+curl	evidence	211	0	0	0	0	4	0	7	0
+curl	syft1	225	14	0	14	0	4	0	7	0
+curl	syft2	225	14	0	14	0	4	0	7	0
+curl	allsyft	226	14	0	15	1	4	0	7	0
+openssh	base	237	0	0	0	0	3	0	5	0
+openssh	swap	251	14	0	14	0	3	0	5	0
+openssh	evidence	237	0	0	0	0	3	0	5	0
+openssh	syft1	251	14	0	14	0	3	0	5	0
+openssh	syft2	251	14	0	14	0	3	0	5	0
+openssh	allsyft	252	14	0	15	1	3	0	5	0
+httpie	base	355	0	0	0	0	141	0	246	0
+httpie	swap	369	14	0	14	0	141	0	246	0
+httpie	evidence	355	0	0	0	0	141	0	246	0
+httpie	syft1	369	14	0	14	0	141	0	246	0
+httpie	syft2	369	14	0	14	0	141	0	246	0
+httpie	allsyft	370	14	0	15	1	141	0	246	0
+gh	base	266	0	0	0	0	57	0	72	0
+gh	swap	280	14	0	14	0	57	0	72	0
+gh	evidence	266	0	0	0	0	57	0	72	0
+gh	syft1	280	14	0	14	0	57	0	72	0
+gh	syft2	280	14	0	14	0	57	0	72	0
+gh	allsyft	281	14	0	15	1	57	0	72	0
+ripgrep	base	232	0	0	0	0	26	0	53	0
+ripgrep	swap	246	14	0	14	0	26	0	53	0
+ripgrep	evidence	232	0	0	0	0	26	0	53	0
+ripgrep	syft1	246	14	0	14	0	26	0	53	0
+ripgrep	syft2	246	14	0	14	0	26	0	53	0
+ripgrep	allsyft	247	14	0	15	1	26	0	53	0
+moat	base	220	0	0	0	0	13	0	26	0
+moat	swap	234	14	0	14	0	13	0	26	0
+moat	evidence	220	0	0	0	0	13	0	26	0
+moat	syft1	234	14	0	14	0	13	0	26	0
+moat	syft2	234	14	0	14	0	13	0	26	0
+moat	allsyft	235	14	0	15	1	13	0	26	0
+
+# gained findings on components other than unzip
+curl	allsyft	CVE-2019-6293	flex	2.6.4
+openssh	allsyft	CVE-2019-6293	flex	2.6.4
+httpie	allsyft	CVE-2019-6293	flex	2.6.4
+gh	allsyft	CVE-2019-6293	flex	2.6.4
+ripgrep	allsyft	CVE-2019-6293	flex	2.6.4
+moat	allsyft	CVE-2019-6293	flex	2.6.4

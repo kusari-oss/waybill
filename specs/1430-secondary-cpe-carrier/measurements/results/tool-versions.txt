@@ -1,0 +1,25 @@
+Version: 0.71.1
+Vulnerability DB:
+  Version: 2
+  UpdatedAt: 2026-11-10 19:01:23.081219346 +0000 UTC
+  NextUpdate: 2026-11-11 19:01:23.081218965 +0000 UTC
+  DownloadedAt: 2026-11-10 19:36:20.63584 +0000 UTC
+Java DB:
+  Version: 1
+  UpdatedAt: 2026-06-25 02:06:43.951321711 +0000 UTC
+  NextUpdate: 2026-06-28 02:06:43.951321221 +0000 UTC
+  DownloadedAt: 2026-06-26 01:43:27.151681 +0000 UTC
+osv-scanner version: 2.7.0
+osv-scalibr version: 0.5.3
+commit: n/a
+built at: n/a
+Application:         grype
+Version:             0.120.0
+BuildDate:           2026-10-02T13:23:52Z
+GitCommit:           10fbc043ecbaf8436daa9efac9f1632557caf277
+GitDescription:      v0.120.0
+Platform:            darwin/arm64
+GoVersion:           go1.26.10
+Compiler:            gc
+Syft Version:        v1.54.0
+Supported DB Schema: 6

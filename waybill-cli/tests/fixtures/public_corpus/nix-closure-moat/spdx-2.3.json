@@ -125,7 +125,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1590,\\\"components-without-member-role\\\":503,\\\"derivations\\\":1749,\\\"distinct-cves\\\":13,\\\"edge-ineligible-components\\\":512,\\\"edges\\\":6702,\\\"identifiers\\\":{\\\"by-drv\\\":231,\\\"by-name-version\\\":95,\\\"declared\\\":50,\\\"received\\\":326,\\\"rejected\\\":0,\\\"wanted\\\":1237},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":230,\\\"wanted\\\":1237,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":245,\\\"package\\\":73,\\\"scaffolding\\\":267,\\\"source\\\":502},\\\"patches\\\":212,\\\"patches-without-cve\\\":197,\\\"roles\\\":{\\\"artifact-input\\\":268,\\\"both\\\":45,\\\"build-tooling\\\":1435,\\\"unreferenced\\\":1}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1590,\\\"components-without-member-role\\\":503,\\\"derivations\\\":1749,\\\"distinct-cves\\\":15,\\\"edge-ineligible-components\\\":512,\\\"edges\\\":6702,\\\"identifiers\\\":{\\\"by-drv\\\":231,\\\"by-name-version\\\":95,\\\"declared\\\":50,\\\"received\\\":326,\\\"rejected\\\":0,\\\"wanted\\\":1237},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":230,\\\"wanted\\\":1237,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":245,\\\"package\\\":73,\\\"scaffolding\\\":267,\\\"source\\\":502},\\\"patches\\\":212,\\\"patches-without-cve\\\":196,\\\"roles\\\":{\\\"artifact-input\\\":268,\\\"both\\\":45,\\\"build-tooling\\\":1435,\\\"unreferenced\\\":1}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -18530,6 +18530,12 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -29407,7 +29413,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:libexpat:expat:2.8.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:libexpat_project:libexpat:2.8.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -31508,6 +31514,18 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:file_project:file:5.47:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:christos_zoulas:file:5.47:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gentoo:file:5.47:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -32687,6 +32705,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -55596,7 +55620,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\",\\\"overrode\\\":\\\"cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -103040,7 +103064,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-patches\",\"value\":\"[{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9913\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7697\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8141\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7696\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2016-9844\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8140\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2018-18384\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9636\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8139\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2021-4217\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"}]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-patches\",\"value\":\"[{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9913\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7697\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8141\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7696\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2016-9844\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2022-0529\\\",\\\"type\\\":\\\"security\\\"},{\\\"id\\\":\\\"CVE-2022-0530\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8140\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2018-18384\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9636\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8139\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2021-4217\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"}]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -103060,6 +103084,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],

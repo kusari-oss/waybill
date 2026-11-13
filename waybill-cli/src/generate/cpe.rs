@@ -97,6 +97,10 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // crate. Deliberately not emitted; this row is the C program.
     ("bzip2", &[("bzip", "bzip2")]),
     ("c-ares", &[("c-ares", "c-ares"), ("c-ares_project", "c-ares")]),
+    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    // redhat:cairo also exists (Red Hat Cairo, 1 CVE) and is deliberately not emitted.
+    ("cairo", &[("cairographics", "cairo")]),
     // cJSON, fontforge, giflib, libass, libsndfile, libssh and unbound
     // (`specs/nix-curated-cpe-gaps/`): C libraries in Nix closures for which
     // nixpkgs declares a product and no vendor, so no CPE arrives from
@@ -118,7 +122,13 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("curl", &[("haxx", "curl"), ("curl", "curl")]),
     ("diffutils", &[("gnu", "diffutils")]),
     ("ed", &[("gnu", "ed")]),
-    ("expat", &[("libexpat", "expat")]),
+    // NVD files every expat CVE under `libexpat_project:libexpat` (68) and
+    // none under `libexpat:expat` (0), the pair this row used until
+    // 2026-11-12 — the anchore/syft#4788 trap cited above, in a subtler form:
+    // `libexpat:expat` is in the dictionary ("libexpat Expat 2.1.0"), so the
+    // presence probe passed it. specs/1375-generic-cpe-table/measurements/
+    // nvd-probe-2026-11-12.txt.
+    ("expat", &[("libexpat_project", "libexpat")]),
     // Three legitimate vendors: the project, Christos Zoulas (the
     // maintainer), and Gentoo's packaging.
     ("file", &[("file_project", "file"), ("christos_zoulas", "file"), ("gentoo", "file")]),
@@ -141,6 +151,9 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("gcc", &[("gnu", "gcc")]),
     ("gettext", &[("gnu", "gettext")]),
     ("giflib", &[("giflib_project", "giflib")]),
+    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("glib", &[("gnome", "glib")]),
     // The GNU C Library — every dynamically linked Linux output loads it, and
     // nixpkgs revisions before meta.identifiers declare no CPE for it (#1283:
     // 36 of slack-web's 300 truth findings).
@@ -149,7 +162,13 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // GnuTLS — NVD canonical.
     ("gnutls", &[("gnu", "gnutls")]),
     ("gzip", &[("gnu", "gzip")]),
+    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("harfbuzz", &[("harfbuzz_project", "harfbuzz")]),
     ("jq", &[("jqlang", "jq"), ("jq_project", "jq")]),
+    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("ldns", &[("nlnetlabs", "ldns")]),
     // Two legitimate vendors: Greenwood Software is upstream, and GNU
     // ships it too.
     ("less", &[("greenwoodsoftware", "less"), ("gnu", "less")]),
@@ -157,10 +176,13 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("libass", &[("libass_project", "libass")]),
     ("libedit", &[("libedit_project", "libedit")]),
     ("libffi", &[("libffi_project", "libffi")]),
-    // `gnu` also files a `libidn2` product, but its title reads
-    // "GNU libidn 0.3" — that is libidn v1, a different library.
-    // Deliberately not emitted.
-    ("libidn2", &[("libidn2_project", "libidn2")]),
+    // NVD files every libidn2 CVE under `gnu:libidn2` (4, all "Libidn2" /
+    // "GNU libidn2" in their descriptions) and none under
+    // `libidn2_project:libidn2` (0), which this row used until 2026-11-12.
+    // That choice read the dictionary title "GNU libidn 0.3" as libidn v1;
+    // the CVEs say otherwise, and nixpkgs declares `gnu:libidn2` too.
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("libidn2", &[("gnu", "libidn2")]),
     ("libmicrohttpd", &[("gnu", "libmicrohttpd")]),
     // LibreSSL — `openbsd:libressl` (LibreSSL is an OpenBSD project).
     // A second `libressl:libressl` candidate was emitted here until
@@ -173,6 +195,10 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // libssh, not libssh2 (its own row below). Exact names only.
     ("libssh", &[("libssh", "libssh")]),
     ("libssh2", &[("libssh2", "libssh2")]),
+    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    // libtiff_project:libtiff is in the dictionary with 0 CVEs; every libtiff CVE is filed under libtiff:libtiff (262).
+    ("libtiff", &[("libtiff", "libtiff")]),
     ("libtool", &[("gnu", "libtool")]),
     ("libunistring", &[("gnu", "libunistring")]),
     ("libuv", &[("libuv", "libuv"), ("libuv_project", "libuv")]),
@@ -216,6 +242,9 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // against the configurations on CVE-2026-109618, whose cpeMatch
     // criteria are `cpe:2.3:a:php:php:*`. #1258.
     ("php", &[("php", "php")]),
+    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("pixman", &[("pixman", "pixman")]),
     ("pkgconf", &[("pkgconf", "pkgconf")]),
     // CPython (#1395), keyed on the two pnames nixpkgs gives its
     // interpreter: `python3` (python3, python312, python313, python314)
@@ -231,6 +260,12 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("re2c", &[("re2c", "re2c")]),
     ("readline", &[("gnu", "readline")]),
     ("rhash", &[("rhash_project", "rhash")]),
+    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("rubygems", &[("rubygems", "rubygems")]),
+    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
+    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("speex", &[("xiph", "speex")]),
     // SQLite — NVD canonical.
     ("sqlite", &[("sqlite", "sqlite")]),
     ("tcl", &[("tcl", "tcl")]),
@@ -314,6 +349,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("bzip", "bzip2", 11),
     ("c-ares", "c-ares", 67),
     ("c-ares_project", "c-ares", 39),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("cairographics", "cairo", 51),
     ("christos_zoulas", "file", 20),
     // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
     ("cjson_project", "cjson", 49),
@@ -329,6 +366,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("gentoo", "file", 1),
     // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
     ("giflib_project", "giflib", 40),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("gnome", "glib", 593),
     ("gnu", "automake", 51),
     ("gnu", "bash", 92),
     ("gnu", "bc", 8),
@@ -348,6 +387,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("gnu", "gnutls", 366),
     ("gnu", "gzip", 26),
     ("gnu", "less", 5),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("gnu", "libidn2", 23),
     // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
     ("gnu", "libmicrohttpd", 61),
     ("gnu", "libtool", 14),
@@ -358,6 +399,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("gnu", "texinfo", 2),
     ("google", "brotli", 40),
     ("greenwoodsoftware", "less", 416),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("harfbuzz_project", "harfbuzz", 205),
     ("haxx", "curl", 228),
     ("info-zip", "unzip", 5),
     ("jq_project", "jq", 1),
@@ -366,13 +409,15 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
     ("libass_project", "libass", 4),
     ("libedit_project", "libedit", 2),
-    ("libexpat", "expat", 25),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("libexpat_project", "libexpat", 52),
     ("libffi_project", "libffi", 9),
-    ("libidn2_project", "libidn2", 23),
     // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
     ("libsndfile_project", "libsndfile", 39),
     ("libssh", "libssh", 53),
     ("libssh2", "libssh2", 41),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("libtiff", "libtiff", 113),
     ("libuv", "libuv", 152),
     ("libuv_project", "libuv", 1),
     ("llvm", "clang", 1),
@@ -382,6 +427,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("lzo_project", "lzo", 11),
     ("ncurses_project", "ncurses", 49),
     ("nghttp2", "nghttp2", 134),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("nlnetlabs", "ldns", 64),
     // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
     ("nlnetlabs", "unbound", 206),
     ("nodejs", "node.js", 1714),
@@ -395,17 +442,23 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("pcre", "pcre2", 25),
     ("perl", "perl", 614),
     ("php", "php", 1641),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("pixman", "pixman", 39),
     ("pkgconf", "pkgconf", 64),
     // Probed 2026-11-09, `specs/1395-nix-python-cpe/measurements/nvd-probe.sh`.
     ("python", "python", 651),
     ("re2c", "re2c", 3),
     ("rhash_project", "rhash", 55),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("rubygems", "rubygems", 188),
     ("sqlite", "sqlite", 372),
     ("tatsuhiro-t", "ngtcp2", 54),
     ("tcl", "tcl", 81),
     ("tukaani", "xz", 62),
     ("unzip_project", "unzip", 5),
     ("westes", "flex", 35),
+    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+    ("xiph", "speex", 45),
     ("xmlsoft", "libxml2", 221),
     ("xmlsoft", "libxslt", 97),
     ("xz_project", "xz", 32),
@@ -591,6 +644,38 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<String> {
         .collect()
 }
 
+/// The CPEs after the primary that each format also hands a CPE matcher
+/// (#1430).
+///
+/// CycloneDX `component.cpe` is single-valued, so a curated row's second
+/// vendor used to reach CycloneDX only in `waybill:cpe-candidates`, which no
+/// scanner reads, and SPDX 2.3 only as that annotation. grype 0.120.0 reads
+/// `component.cpe` plus every `syft:cpe23` property in CycloneDX, and every
+/// `cpe23Type` external reference in SPDX 2.3; it does not read
+/// `evidence.identity`. Measured: all 14 grype findings on `unzip 6.0` are
+/// filed under `unzip_project`, the row's second vendor, and none surfaced.
+/// See `specs/1430-secondary-cpe-carrier/`.
+///
+/// **Only `pkg:generic` components.** Their CPEs come solely from
+/// `GENERIC_LIBRARY_CPES`, whose every pair was probed against NVD's
+/// dictionary. Every other ecosystem's extra candidates are vendor guesses
+/// (`debian:jq`, `python-<name>`), and grype's apk matcher matches every CPE
+/// it is given, so exposing those is a separate decision with its own
+/// measurement. A candidate without a release version is never returned: a
+/// matcher would read a wildcard version as every version.
+pub fn secondary_cpes(component: &ResolvedComponent) -> Vec<&str> {
+    if component.purl.ecosystem() != "generic" {
+        return Vec::new();
+    }
+    component
+        .cpes
+        .iter()
+        .skip(1)
+        .map(String::as_str)
+        .filter(|cpe| crate::generate::spdx::v3_external_ids::is_fully_resolved_cpe23(cpe))
+        .collect()
+}
+
 /// Insert `value` (lowercased, CPE-segment-safe) into `out` unless it's
 /// already present. Empty strings are dropped.
 fn push_unique(out: &mut Vec<String>, value: &str) {
@@ -687,6 +772,71 @@ mod tests {
             extra_annotations: Default::default(),
             binary_role: None,
         }
+    }
+
+    /// #1430 — a curated row's second vendor is handed to the matcher; the
+    /// primary is not repeated.
+    #[test]
+    fn i1430_a_curated_rows_second_vendor_is_a_secondary_cpe() {
+        let mut c = make_component("pkg:generic/unzip@9.9.9");
+        c.cpes = synthesize_cpes(&c);
+        // CONTROL: the row really has two vendors, or this passes vacuously.
+        assert_eq!(c.cpes.len(), 2, "{:?}", c.cpes);
+        assert_eq!(
+            secondary_cpes(&c),
+            vec!["cpe:2.3:a:unzip_project:unzip:9.9.9:*:*:*:*:*:*:*"]
+        );
+
+        let mut file = make_component("pkg:generic/file@9.9");
+        file.cpes = synthesize_cpes(&file);
+        assert_eq!(
+            secondary_cpes(&file),
+            vec![
+                "cpe:2.3:a:christos_zoulas:file:9.9:*:*:*:*:*:*:*",
+                "cpe:2.3:a:gentoo:file:9.9:*:*:*:*:*:*:*",
+            ],
+            "every vendor after the first, in table order"
+        );
+    }
+
+    /// #1430 — a single-vendor row has nothing to add.
+    #[test]
+    fn i1430_a_single_vendor_row_has_no_secondary_cpe() {
+        let mut c = make_component("pkg:generic/zlib@9.9.9");
+        c.cpes = synthesize_cpes(&c);
+        assert_eq!(c.cpes.len(), 1, "CONTROL: {:?}", c.cpes);
+        assert!(secondary_cpes(&c).is_empty());
+    }
+
+    /// #1430 — heuristic candidates in other ecosystems stay out of the
+    /// matcher's reach, though they keep their `waybill:cpe-candidates` entry.
+    #[test]
+    fn i1430_heuristic_candidates_are_not_secondary_cpes() {
+        for purl in [
+            "pkg:deb/debian/jq@1.6-2.1?distro=bookworm",
+            "pkg:apk/alpine/musl@1.2.4-r2",
+            "pkg:pypi/requests@2.31.0",
+        ] {
+            let mut c = make_component(purl);
+            c.cpes = synthesize_cpes(&c);
+            assert!(c.cpes.len() > 1, "CONTROL {purl}: {:?}", c.cpes);
+            assert!(secondary_cpes(&c).is_empty(), "{purl}: {:?}", secondary_cpes(&c));
+        }
+    }
+
+    /// #1430 — a wildcard version reads as "every version" to a matcher.
+    #[test]
+    fn i1430_a_candidate_without_a_release_version_is_not_handed_on() {
+        let mut c = make_component("pkg:generic/waybill-fixture-lib@9.9.9");
+        c.cpes = vec![
+            "cpe:2.3:a:waybill-fixture-a:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*".to_string(),
+            "cpe:2.3:a:waybill-fixture-b:waybill-fixture-lib:*:*:*:*:*:*:*:*".to_string(),
+            "cpe:2.3:a:waybill-fixture-c:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*".to_string(),
+        ];
+        assert_eq!(
+            secondary_cpes(&c),
+            vec!["cpe:2.3:a:waybill-fixture-c:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*"]
+        );
     }
 
     #[test]
@@ -1024,7 +1174,9 @@ mod tests {
     fn m1375_the_vendor_is_nvds_not_the_component_name() {
         for (slug, want_vendor) in [
             ("bash", "gnu"),
-            ("expat", "libexpat"),
+            // NVD files expat's CVEs under `libexpat_project:libexpat`;
+            // `libexpat:expat` exists in the dictionary with 0 (2026-11-12).
+            ("expat", "libexpat_project"),
             ("libxml2", "xmlsoft"),
             ("brotli", "google"),
             ("gawk", "fossies"),
@@ -1078,6 +1230,9 @@ mod tests {
             include_str!("../../../specs/1395-nix-python-cpe/measurements/nvd-titles.txt"),
             include_str!("../../../specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt"),
             include_str!("../../../specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt"),
+            include_str!(
+                "../../../specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt"
+            ),
         );
 
         // CONTROL: the files parsed to something. Without this every

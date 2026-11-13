@@ -119,7 +119,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1330,\\\"components-without-member-role\\\":544,\\\"derivations\\\":1448,\\\"distinct-cves\\\":18,\\\"edge-ineligible-components\\\":80,\\\"edges\\\":46609,\\\"identifiers\\\":{\\\"by-drv\\\":353,\\\"by-name-version\\\":97,\\\"declared\\\":0,\\\"received\\\":450,\\\"rejected\\\":0,\\\"wanted\\\":1368},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":352,\\\"wanted\\\":1368,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":72,\\\"package\\\":4,\\\"scaffolding\\\":8,\\\"source\\\":702},\\\"patches\\\":248,\\\"patches-without-cve\\\":228,\\\"roles\\\":{\\\"artifact-input\\\":446,\\\"both\\\":56,\\\"build-tooling\\\":945,\\\"unreferenced\\\":1}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1330,\\\"components-without-member-role\\\":544,\\\"derivations\\\":1448,\\\"distinct-cves\\\":21,\\\"edge-ineligible-components\\\":80,\\\"edges\\\":46609,\\\"identifiers\\\":{\\\"by-drv\\\":353,\\\"by-name-version\\\":97,\\\"declared\\\":0,\\\"received\\\":450,\\\"rejected\\\":0,\\\"wanted\\\":1368},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":352,\\\"wanted\\\":1368,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":72,\\\"package\\\":4,\\\"scaffolding\\\":8,\\\"source\\\":702},\\\"patches\\\":248,\\\"patches-without-cve\\\":226,\\\"roles\\\":{\\\"artifact-input\\\":446,\\\"both\\\":56,\\\"build-tooling\\\":945,\\\"unreferenced\\\":1}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -33264,6 +33264,12 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:c-ares:c-ares:1.27.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:c-ares_project:c-ares:1.27.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -36794,6 +36800,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:haxx:curl:8.11.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:curl:curl:8.11.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -40950,7 +40962,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:libexpat:expat:2.6.4:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:libexpat_project:libexpat:2.6.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -41700,6 +41712,18 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:file_project:file:5.45:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:christos_zoulas:file:5.45:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gentoo:file:5.45:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -42522,6 +42546,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -53210,6 +53240,12 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:libarchive:libarchive:3.7.7:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:freebsd:libarchive:3.7.7:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
@@ -54310,7 +54346,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:libidn2_project:libidn2:2.3.7:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:gnu:libidn2:2.3.7:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -55777,6 +55813,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:libuv:libuv:1.48.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:libuv_project:libuv:1.48.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -60283,6 +60325,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:ncurses_project:ncurses:6.4.20221231:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gnu:ncurses:6.4.20221231:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -74232,7 +74280,7 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-PVBEACN3FZ4JHRYW",
+      "SPDXID": "SPDXRef-Package-W4OSIRR4KFL7T7N4",
       "annotations": [
         {
           "annotationDate": "<masked>",
@@ -74268,7 +74316,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-patches\",\"value\":\"[{\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"}]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-patches\",\"value\":\"[{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2018-1000097\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"}]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -74281,7 +74329,7 @@
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:generic/sharutils@4.15.2",
+          "referenceLocator": "pkg:generic/sharutils@4.15.2?nix_drv=zfndvr3agw1wr28527zq48y19556r124",
           "referenceType": "purl"
         }
       ],
@@ -86717,7 +86765,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-patches\",\"value\":\"[{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9913\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7697\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8141\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7696\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2016-9844\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8140\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2021-4217\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2018-18384\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9636\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8139\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"}]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-patches\",\"value\":\"[{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2022-0529\\\",\\\"type\\\":\\\"security\\\"},{\\\"id\\\":\\\"CVE-2022-0530\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9913\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7697\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8141\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2015-7696\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2016-9844\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8140\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2021-4217\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2019-13232\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2018-18384\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-9636\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"},{\\\"resolves\\\":[{\\\"id\\\":\\\"CVE-2014-8139\\\",\\\"type\\\":\\\"security\\\"}],\\\"type\\\":\\\"backport\\\"}]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -86737,6 +86785,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -90158,6 +90212,12 @@
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:tukaani:xz:5.6.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:xz_project:xz:5.6.3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -264420,231 +264480,6 @@
     {
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
       "relationshipType": "BUILD_TOOL_OF",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-32246LUESBQ6STT7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-3B3GJPQOCK7XR2AJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-3ECZZDDDHD3O6FKS",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-4MZYZEKXVAZ3PR5X",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-54Q67IIV7DPVERE7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-5IGSPDE7KELQRY7A",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-5Q2DXMND5FBIHHOW",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-6DRHHO47JNQX5BTI",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-76IK5C425IGS6GTS",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-BJRO7G3QKUQZAB7B",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-BNRHN3VDDYMROJ6B",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-BS6TGDXKEOQI3LUZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-CEH5T5O44VQNBUB6",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-F46JAXLMMMU34EPX",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-FAQM6FTOM7KLSH5K",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-FXAEF4BQBSZUM34S",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-GIBCFMY2S3MR6KWB",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-IGNQZVGNAAHGRERQ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ISVKWGGKLTNH45TI",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-JCBZZKQB5L4FBNKM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-JZV7PAYXNPT2DUXM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-KGCX3JYEC3A42ZWZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-L53PR77Q5BKH73YC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-LD4M7GZO4TX26BZR",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-LMDXUKNV2GDVUIMZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-LRWJIAK76JZINVOM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-M3NAXPF44XNVD23B",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-M3XERGIIOWGP5TDC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-MAUUSVZIJSY4JCOD",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-N7P2B4ZJDXQXKF7W",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-O2THPO5VMEF3ZMR2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-OP37GEHHBVUFYPY5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-OPF3XYLP442HRSEX",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-PX42YWEG3E3W4MHB",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-QUGTPYI5BZWW3PLO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TXSSD42LKCCZHWGG",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-V2EGNNUTNLOO6H7U",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-VH37F6A34QXVZHNN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-VVLWZ2PI4NRPGMI7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-WMZ2S2NFPGFPTLZI",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-WUL5VZ4INLUOOAXF",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-XRB6CVSKCKFSHMGT",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YC6QIVICGSS5KYBM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YJPYIARNIANPPKGM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PVBEACN3FZ4JHRYW"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
-      "relationshipType": "BUILD_TOOL_OF",
       "spdxElementId": "SPDXRef-Package-PVU2OYJDRHEQBWUD"
     },
     {
@@ -291343,11 +291178,6 @@
       "spdxElementId": "SPDXRef-Package-U4PB4K5YIC35ZFAN"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-PVBEACN3FZ4JHRYW",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-U4PB4K5YIC35ZFAN"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-PX42YWEG3E3W4MHB",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-U4PB4K5YIC35ZFAN"
@@ -291379,6 +291209,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-VVLWZ2PI4NRPGMI7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-U4PB4K5YIC35ZFAN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-W4OSIRR4KFL7T7N4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-U4PB4K5YIC35ZFAN"
     },
@@ -306856,6 +306691,231 @@
       "relatedSpdxElement": "SPDXRef-Package-YJPYIARNIANPPKGM",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-W3YBWNEUCNLNNRRY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "BUILD_TOOL_OF",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-32246LUESBQ6STT7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-3B3GJPQOCK7XR2AJ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-3ECZZDDDHD3O6FKS",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4MZYZEKXVAZ3PR5X",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-54Q67IIV7DPVERE7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5IGSPDE7KELQRY7A",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5Q2DXMND5FBIHHOW",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-6DRHHO47JNQX5BTI",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-76IK5C425IGS6GTS",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BJRO7G3QKUQZAB7B",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BNRHN3VDDYMROJ6B",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BS6TGDXKEOQI3LUZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CEH5T5O44VQNBUB6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-F46JAXLMMMU34EPX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-FAQM6FTOM7KLSH5K",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-FXAEF4BQBSZUM34S",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GIBCFMY2S3MR6KWB",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IGNQZVGNAAHGRERQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ISVKWGGKLTNH45TI",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JCBZZKQB5L4FBNKM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JZV7PAYXNPT2DUXM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-KGCX3JYEC3A42ZWZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-L53PR77Q5BKH73YC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-LD4M7GZO4TX26BZR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-LMDXUKNV2GDVUIMZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-LRWJIAK76JZINVOM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-M3NAXPF44XNVD23B",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-M3XERGIIOWGP5TDC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-MAUUSVZIJSY4JCOD",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-N7P2B4ZJDXQXKF7W",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-O2THPO5VMEF3ZMR2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OP37GEHHBVUFYPY5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OPF3XYLP442HRSEX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-PX42YWEG3E3W4MHB",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-QUGTPYI5BZWW3PLO",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TXSSD42LKCCZHWGG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-V2EGNNUTNLOO6H7U",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VH37F6A34QXVZHNN",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VVLWZ2PI4NRPGMI7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-WMZ2S2NFPGFPTLZI",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-WUL5VZ4INLUOOAXF",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-XRB6CVSKCKFSHMGT",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YC6QIVICGSS5KYBM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YJPYIARNIANPPKGM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W4OSIRR4KFL7T7N4"
     },
     {
       "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
