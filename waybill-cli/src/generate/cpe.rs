@@ -96,7 +96,10 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // `bzip2_project` also files `bzip2` — "bzip2 0.4.3 for Rust", a
     // crate. Deliberately not emitted; this row is the C program.
     ("bzip2", &[("bzip", "bzip2")]),
-    ("c-ares", &[("c-ares", "c-ares"), ("c-ares_project", "c-ares")]),
+    // #1490: each multi-vendor row below lists first the vendor NVD files
+    // more CVEs under (`measurements/nvd-cves-2026-11-13.txt`): a consumer
+    // reading one CPE reads the primary.
+    ("c-ares", &[("c-ares_project", "c-ares"), ("c-ares", "c-ares")]),
     // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
     // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
     // redhat:cairo also exists (Red Hat Cairo, 1 CVE) and is deliberately not emitted.
@@ -135,7 +138,7 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("findutils", &[("gnu", "findutils")]),
     // `apache` also files `flex` — Apache Flex, the Flash framework.
     // Deliberately not emitted; this row is the lexical analyzer.
-    ("flex", &[("flex_project", "flex"), ("westes", "flex")]),
+    ("flex", &[("westes", "flex"), ("flex_project", "flex")]),
     // `fontforge_project` also files `fontforge`: every entry deprecated, 0
     // CVEs. Not emitted. nixpkgs' date version (`20251009`) is NVD's
     // version encoding verbatim.
@@ -171,7 +174,7 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("ldns", &[("nlnetlabs", "ldns")]),
     // Two legitimate vendors: Greenwood Software is upstream, and GNU
     // ships it too.
-    ("less", &[("greenwoodsoftware", "less"), ("gnu", "less")]),
+    ("less", &[("gnu", "less"), ("greenwoodsoftware", "less")]),
     ("libarchive", &[("libarchive", "libarchive"), ("freebsd", "libarchive")]),
     ("libass", &[("libass_project", "libass")]),
     ("libedit", &[("libedit_project", "libedit")]),
@@ -273,7 +276,7 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // Unbound, NLnet Labs' DNS resolver. `unbound_project` is one deprecated
     // entry with 0 CVEs; not emitted.
     ("unbound", &[("nlnetlabs", "unbound")]),
-    ("unzip", &[("info-zip", "unzip"), ("unzip_project", "unzip")]),
+    ("unzip", &[("unzip_project", "unzip"), ("info-zip", "unzip")]),
     ("xz", &[("tukaani", "xz"), ("xz_project", "xz")]),
     // zlib — NVD canonical.
     ("zlib", &[("zlib", "zlib")]),
@@ -653,7 +656,8 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<String> {
 /// `component.cpe` plus every `syft:cpe23` property in CycloneDX, and every
 /// `cpe23Type` external reference in SPDX 2.3; it does not read
 /// `evidence.identity`. Measured: all 14 grype findings on `unzip 6.0` are
-/// filed under `unzip_project`, the row's second vendor, and none surfaced.
+/// filed under `unzip_project`, then the row's second vendor, and none
+/// surfaced. #1490 has since made it the first.
 /// See `specs/1430-secondary-cpe-carrier/`.
 ///
 /// **Only `pkg:generic` components.** Their CPEs come solely from
@@ -784,7 +788,7 @@ mod tests {
         assert_eq!(c.cpes.len(), 2, "{:?}", c.cpes);
         assert_eq!(
             secondary_cpes(&c),
-            vec!["cpe:2.3:a:unzip_project:unzip:9.9.9:*:*:*:*:*:*:*"]
+            vec!["cpe:2.3:a:info-zip:unzip:9.9.9:*:*:*:*:*:*:*"]
         );
 
         let mut file = make_component("pkg:generic/file@9.9");

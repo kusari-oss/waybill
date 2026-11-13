@@ -1,0 +1,26 @@
+# 2026-11-13: CVE counts for the curated rows whose first vendor holds fewer
+# CVEs than its second (#1490). Each pair's count is the number of CVEs NVD
+# files under it (`scripts/probe-cpe-dictionary.sh --cves`).
+#
+# NVD timed out repeatedly on some queries today. A pair reported ERR was
+# re-queried on its own; the value below is the first run that returned one.
+# The controls (openssl:openssl > 0, waybill-fixture-vendor:waybill-fixture-product
+# = 0) passed in at least one run with every pair; a failed positive control
+# cannot invalidate a nonzero count, only a zero.
+#
+# scripts/probe-cpe-dictionary.sh --cves c-ares:c-ares c-ares_project:c-ares \
+#   flex_project:flex westes:flex greenwoodsoftware:less gnu:less \
+#   info-zip:unzip unzip_project:unzip
+c-ares:c-ares	6	(re-queried alone; ERR twice in the batch run)
+c-ares_project:c-ares	9
+flex_project:flex	0
+westes:flex	3
+greenwoodsoftware:less	2
+gnu:less	3
+info-zip:unzip	11
+unzip_project:unzip	16	(re-queried alone; ERR once in the batch run)
+openssl:openssl	330	(positive control)
+waybill-fixture-vendor:waybill-fixture-product	0	(negative control)
+#
+# Each product's vendor with more CVEs becomes its primary; the other stays as
+# the second, which grype reads through `syft:cpe23` (#1435).

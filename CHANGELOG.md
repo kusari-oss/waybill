@@ -55,6 +55,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **Four curated CPE rows put the vendor with more CVEs first (#1490).**
+  `c-ares` (`c-ares_project` 9, `c-ares` 6), `flex` (`westes` 3,
+  `flex_project` 0), `less` (`gnu` 3, `greenwoodsoftware` 2) and `unzip`
+  (`unzip_project` 16, `info-zip` 11), measured with
+  `scripts/probe-cpe-dictionary.sh --cves`
+  (`specs/1375-generic-cpe-table/measurements/nvd-cves-2026-11-13.txt`).
+  A consumer that reads only CycloneDX `component.cpe` now sees the vendor
+  with more CVEs. Both vendors are still emitted: the other stays a
+  `syft:cpe23` property and a further SPDX `cpe23Type` reference.
+
 - **`--tier` now filters the Nix closure tier, and everything added after
   it (#1360).** The filter ran before the `--nix-closure` and
   nixpkgs-Haskell producers and the file-tier walker, so their components
