@@ -2039,11 +2039,15 @@ mod offline_tests {
             .mount(&server)
             .await;
 
+        // Rooted directly, not through `WAYBILL_DEPS_DEV_CACHE_DIR`: the
+        // env var is process-wide, and a concurrent test that set it
+        // could hand this one a directory it then deletes.
         let dir = tempfile::tempdir().unwrap();
-        std::env::set_var("WAYBILL_DEPS_DEV_CACHE_DIR", dir.path());
         let client = DepsDevClient::new(std::time::Duration::from_secs(5))
             .with_base_url(format!("{}/v3", server.uri()));
-        let source = DepsDevSource::new(client, true).with_disk_cache(true, None);
+        let mut source = DepsDevSource::new(client, true);
+        source.disk =
+            super::super::deps_dev_disk_cache::DepsDevDiskCache::at(dir.path().to_path_buf());
 
         let cached = EnrichmentKey::from_purl_parts("cargo", None, "cached", "1.0.0").unwrap();
         let absent = EnrichmentKey::from_purl_parts("cargo", None, "absent", "1.0.0").unwrap();
@@ -2056,7 +2060,6 @@ mod offline_tests {
         let keys = vec![cached, absent];
         let mut p = ProgressReporter::new(keys.len());
         let got = source.fetch_many(&keys, &mut p).await;
-        std::env::remove_var("WAYBILL_DEPS_DEV_CACHE_DIR");
 
         assert_eq!(
             got[0].as_ref().unwrap().licenses,
@@ -2320,15 +2323,15 @@ mod pass_stats_tests {
         // An enabled disk cache is what keeps `--offline` from skipping
         // the phase outright; pointed at an empty dir, it serves nothing.
         let dir = tempfile::tempdir().unwrap();
-        std::env::set_var("WAYBILL_DEPS_DEV_CACHE_DIR", dir.path());
         let client = DepsDevClient::new(std::time::Duration::from_secs(5))
             .with_base_url(format!("{}/v3", server.uri()));
-        let source = DepsDevSource::new(client, true).with_disk_cache(true, None);
+        let mut source = DepsDevSource::new(client, true);
+        source.disk =
+            super::super::deps_dev_disk_cache::DepsDevDiskCache::at(dir.path().to_path_buf());
         let mut comps = components();
 
         let (_, _, _, stats) =
             enrich_components(&source, &mut comps, EnrichmentPass::Initial).await;
-        std::env::remove_var("WAYBILL_DEPS_DEV_CACHE_DIR");
         assert_eq!(
             stats,
             PassStats {
