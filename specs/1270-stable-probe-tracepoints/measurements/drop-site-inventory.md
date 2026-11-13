@@ -6,7 +6,7 @@ open path that recorded nothing when it returned early. It was found by
 reading, not by a check, and reading is not a method — so this enumerates
 the rest.
 
-97 candidate sites across the seven kernel programs, by
+99 candidate sites across the seven kernel programs, by
 `grep -nE "return|let _ = |unwrap_or|\.is_err\(\)"` with comment lines
 excluded. The grep over-counts — ordinary control flow matches it — and
 that is deliberate: a conservative pattern that produces rows to classify
@@ -14,7 +14,10 @@ beats a precise one that misses a site, which is the whole subject here.
 
 (An earlier draft of this document said 108. That was the same grep
 counting its own comment lines, which is the kind of figure that reads as
-a measurement and is not one.)
+a measurement and is not one. This line said 97 for longer: the table
+below was extended to 99 and the count in the prose was not, so the
+document disagreed with `scripts/audit-drop-sites.sh` — which prints the
+live figure and is the one to trust.)
 
 `scripts/audit-drop-sites.sh` diffs the live sites against the committed
 list, so a new one cannot appear unexamined.
@@ -89,6 +92,14 @@ Network paths, uncounted throughout:
 `KERNEL_TRACED_INSERT_FAILED`, and the m212 ring-buffer counters.
 
 ## SCOPE
+
+Two sites in `is_handshake` are new to the list and neither is a loss.
+
+| site | what it is | why it is not loss |
+|---|---|---|
+| `open_syscalls.rs` `None => return false` | the nonce slot could not be read | behaviourally unchanged -- it was `None => false` before and the grep simply did not match an expression arm. Nothing is armed, so nothing is recognised, so the root is never seeded and the run **aborts** rather than capturing. It fails closed, and since #1185 it also fails *loudly*: `describe_handshake_failure` prints `nonce_readback`, so an unreadable slot is named rather than inferred |
+| `open_syscalls.rs` `return true` | the handshake was recognised | the positive path. Returning here is the feature |
+
 
 `open_syscalls.rs` 100, 156–160, 208; `compiler_exec.rs` 171, 356, 427,
 432; `fs_syscalls.rs` 63, 67. The handshake, `should_trace()`, the subtree
