@@ -128,6 +128,7 @@ misses the match in a majority of cases.
 | **golang** | `[<name>, <purl-namespace>]` (namespace is the module path prefix) |
 | **maven** | `[<groupId>, <last-segment-of-groupId>, <artifactId>]` (e.g. `org.apache.commons` → `apache`) |
 | **nuget** | `[<name>]` |
+| **generic** | The curated table's pairs for the component's name, primary first, or none when the name has no row. The table is `waybill-cli/src/generate/cpe_table.toml`. Each pair carries its NVD dictionary entry count, the date it was observed, and the committed evidence files under `specs/`. |
 | other | `[]` — no opinion, empty CPE set |
 
 ### Emission format

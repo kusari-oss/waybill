@@ -472,6 +472,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-13
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only — `waybill_common::types::purl::Purl` (qualifier encoding), `serde`/`serde_json`, `tracing`. The derivation map is already parsed by the closure tier. **Zero new Cargo dependencies** (FR-012). (1436-vex-build-identity)
 - N/A. A per-scan memo of Hackage answers; no disk cache (R3). (1046-haskell-overlay-identity)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `serde_json` for the C184 counts, and the closure parser's `RawDerivation::paths_in`. **Zero new Cargo dependencies.** (1380-closure-package-role)
+- One committed data file, embedded at build time. The operator file is read once per scan. No cache, no network (FR-015). (1491-operator-cpe-table)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -704,9 +705,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1491-operator-cpe-table: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only.
 - 1380-closure-package-role: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `serde_json` for the C184 counts, and the closure parser's `RawDerivation::paths_in`. **Zero new Cargo dependencies.**
 - 1046-haskell-overlay-identity: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only.
-- 1436-vex-build-identity: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only — `waybill_common::types::purl::Purl` (qualifier encoding), `serde`/`serde_json`, `tracing`. The derivation map is already parsed by the closure tier. **Zero new Cargo dependencies** (FR-012).
 
 
 <!-- MANUAL ADDITIONS START -->

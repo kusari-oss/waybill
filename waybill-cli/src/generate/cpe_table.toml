@@ -1,0 +1,650 @@
+# Waybill's curated CPE table (spec 1491, #1491).
+#
+# Each row maps a `pkg:generic/<slug>` component to the NVD vendor and
+# product pairs a CPE matcher keys on. The slug is the lowercase name the
+# version-string scanner, the symbol-fingerprint matcher and the Nix closure
+# tier give the component. The first pair is the primary CPE; the rest are
+# secondary candidates. The CPE's version is the component's own.
+#
+# Rules, enforced by the tests in `generate/cpe.rs` and `generate/cpe_table.rs`:
+# - rows are sorted by `key`, and no key repeats;
+# - every pair forms a valid CPE 2.3 name;
+# - every pair carries the NVD CPE-dictionary entry count observed for it,
+#   the date of that observation, and two evidence files committed under
+#   `specs/`: `dictionary_evidence`, which records that count, and
+#   `title_evidence`, which records the `=== <product> (` title query showing
+#   the pair names this software and not a namesake;
+# - the file holds identifiers and their dictionary evidence only. It never
+#   holds vulnerability data; that is the scanner's, keyed on these CPEs.
+#
+# A row is added only once the pair has been probed
+# (`scripts/probe-cpe-dictionary.sh`) and its titles read. A wrong vendor or
+# product fails silently: the matcher finds nothing, which looks the same as
+# a clean component. Upstream has shipped exactly that (anchore/syft#4788
+# derived `expat:expat` where NVD uses `libexpat`).
+#
+# Every pair was found by querying NVD with the vendor wildcarded and reading
+# what came back, never by assuming the vendor equals the package name. It
+# usually does not: `bash` is `gnu`, `libxml2` is `xmlsoft`, `expat` is
+# `libexpat_project`. Titles decided the rows, not entry counts; see
+# `specs/1375-generic-cpe-table/research.md` R4 for the dispositions, and the
+# rejected names recorded in `generate/cpe.rs`.
+#
+# Multi-vendor rows list first the vendor NVD's records cite most (#1490;
+# `specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv`),
+# so a consumer reading one CPE reads the primary.
+#
+# An operator's `--cpe-map` file uses this schema, keyed by any versionless
+# PURL, with the evidence fields optional.
+
+[[row]]
+key = "pkg:generic/automake"
+pair = [
+  { vendor = "gnu", product = "automake", dictionary_entries = 51, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/bash"
+pair = [
+  { vendor = "gnu", product = "bash", dictionary_entries = 92, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/bc"
+pair = [
+  { vendor = "gnu", product = "bc", dictionary_entries = 8, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# GNU Binutils — reached in a Linux Nix closure through GHC's toolchain
+# (#1283).
+[[row]]
+key = "pkg:generic/binutils"
+pair = [
+  { vendor = "gnu", product = "binutils", dictionary_entries = 81, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/bison"
+pair = [
+  { vendor = "gnu", product = "bison", dictionary_entries = 70, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# `andybalholm` also files `brotli` — a Go port. Deliberately not
+# emitted; this row is Google's implementation.
+[[row]]
+key = "pkg:generic/brotli"
+pair = [
+  { vendor = "google", product = "brotli", dictionary_entries = 40, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# `bzip2_project` also files `bzip2` — "bzip2 0.4.3 for Rust", a
+# crate. Deliberately not emitted; this row is the C program.
+[[row]]
+key = "pkg:generic/bzip2"
+pair = [
+  { vendor = "bzip", product = "bzip2", dictionary_entries = 11, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/c-ares"
+pair = [
+  { vendor = "c-ares_project", product = "c-ares", dictionary_entries = 39, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "c-ares", product = "c-ares", dictionary_entries = 67, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# Probed 2026-11-12: specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+# redhat:cairo also exists (Red Hat Cairo) and is deliberately not emitted.
+[[row]]
+key = "pkg:generic/cairo"
+pair = [
+  { vendor = "cairographics", product = "cairo", dictionary_entries = 51, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt" },
+]
+
+# cJSON, fontforge, giflib, libass, libsndfile, libssh and unbound
+# (`specs/nix-curated-cpe-gaps/`): C libraries in Nix closures for which
+# nixpkgs declares a product and no vendor, so no CPE arrives from
+# `meta.identifiers`. Exact names only, like every row here.
+#
+# NVD moved cJSON from `cjson_project` to `davegamble` (48 of 49
+# `cjson_project` entries deprecated), but NVD records still cite
+# `cjson_project`, so both are emitted, `davegamble` first.
+[[row]]
+key = "pkg:generic/cjson"
+pair = [
+  { vendor = "davegamble", product = "cjson", dictionary_entries = 49, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt" },
+  { vendor = "cjson_project", product = "cjson", dictionary_entries = 49, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt" },
+]
+
+# `arm` also files a `clang` product (ARM Clang) — a different
+# compiler, deliberately not emitted.
+[[row]]
+key = "pkg:generic/clang"
+pair = [
+  { vendor = "llvm", product = "clang", dictionary_entries = 1, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/compiler-rt"
+pair = [
+  { vendor = "llvm", product = "compiler-rt", dictionary_entries = 52, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/coreutils"
+pair = [
+  { vendor = "gnu", product = "coreutils", dictionary_entries = 71, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/cpio"
+pair = [
+  { vendor = "gnu", product = "cpio", dictionary_entries = 16, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# libcurl: historical `haxx:curl` dominates pre-2023 NVD records;
+# modern `curl:curl` also appears. Both emitted — primary goes to
+# `component.cpe`, secondary to `waybill:cpe-candidates` property.
+[[row]]
+key = "pkg:generic/curl"
+pair = [
+  { vendor = "haxx", product = "curl", dictionary_entries = 228, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+  { vendor = "curl", product = "curl", dictionary_entries = 2, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+[[row]]
+key = "pkg:generic/diffutils"
+pair = [
+  { vendor = "gnu", product = "diffutils", dictionary_entries = 12, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/ed"
+pair = [
+  { vendor = "gnu", product = "ed", dictionary_entries = 3, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# NVD's expat records cite `libexpat_project:libexpat`, and none cite
+# `libexpat:expat`, the pair this row used until
+# 2026-11-12 — the anchore/syft#4788 trap cited above, in a subtler form:
+# `libexpat:expat` is in the dictionary ("libexpat Expat 2.1.0"), so the
+# presence probe passed it. specs/1375-generic-cpe-table/measurements/
+# nvd-probe-2026-11-12.txt.
+[[row]]
+key = "pkg:generic/expat"
+pair = [
+  { vendor = "libexpat_project", product = "libexpat", dictionary_entries = 52, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt" },
+]
+
+# Three legitimate vendors: the project, Christos Zoulas (the
+# maintainer), and Gentoo's packaging.
+[[row]]
+key = "pkg:generic/file"
+pair = [
+  { vendor = "file_project", product = "file", dictionary_entries = 85, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "christos_zoulas", product = "file", dictionary_entries = 20, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "gentoo", product = "file", dictionary_entries = 1, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/findutils"
+pair = [
+  { vendor = "gnu", product = "findutils", dictionary_entries = 6, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# `apache` also files `flex` — Apache Flex, the Flash framework.
+# Deliberately not emitted; this row is the lexical analyzer.
+[[row]]
+key = "pkg:generic/flex"
+pair = [
+  { vendor = "westes", product = "flex", dictionary_entries = 35, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "flex_project", product = "flex", dictionary_entries = 35, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# `fontforge_project` also files `fontforge`: every entry deprecated, and
+# no NVD record cites it. Not emitted. nixpkgs' date version (`20251009`) is NVD's
+# version encoding verbatim.
+[[row]]
+key = "pkg:generic/fontforge"
+pair = [
+  { vendor = "fontforge", product = "fontforge", dictionary_entries = 32, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt" },
+]
+
+# `fossies` is a source-archive site, not GNU — and it is the only
+# vendor NVD has for gawk. The attribution is upstream's to explain;
+# a scanner keyed on CPEs would use it.
+[[row]]
+key = "pkg:generic/gawk"
+pair = [
+  { vendor = "fossies", product = "gawk", dictionary_entries = 15, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# GCC — the compiler runtime (libgcc_s) a Linux closure keeps (#1283).
+# `groups_communities_and_co_project` also files a `gcc` product
+# ("Groups, Communities and Co (GCC)") — a different product,
+# deliberately not emitted.
+[[row]]
+key = "pkg:generic/gcc"
+pair = [
+  { vendor = "gnu", product = "gcc", dictionary_entries = 128, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/gettext"
+pair = [
+  { vendor = "gnu", product = "gettext", dictionary_entries = 47, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/giflib"
+pair = [
+  { vendor = "giflib_project", product = "giflib", dictionary_entries = 40, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt" },
+]
+
+# Probed 2026-11-12: specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+[[row]]
+key = "pkg:generic/glib"
+pair = [
+  { vendor = "gnome", product = "glib", dictionary_entries = 593, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt" },
+]
+
+# The GNU C Library — every dynamically linked Linux output loads it, and
+# nixpkgs revisions before meta.identifiers declare no CPE for it (#1283).
+# `gentoo` also files `glibc` (Gentoo's package); not emitted.
+[[row]]
+key = "pkg:generic/glibc"
+pair = [
+  { vendor = "gnu", product = "glibc", dictionary_entries = 196, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt" },
+]
+
+# GnuTLS — NVD canonical.
+[[row]]
+key = "pkg:generic/gnutls"
+pair = [
+  { vendor = "gnu", product = "gnutls", dictionary_entries = 366, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+[[row]]
+key = "pkg:generic/gzip"
+pair = [
+  { vendor = "gnu", product = "gzip", dictionary_entries = 26, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# Probed 2026-11-12: specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+[[row]]
+key = "pkg:generic/harfbuzz"
+pair = [
+  { vendor = "harfbuzz_project", product = "harfbuzz", dictionary_entries = 205, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt" },
+]
+
+[[row]]
+key = "pkg:generic/jq"
+pair = [
+  { vendor = "jqlang", product = "jq", dictionary_entries = 25, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "jq_project", product = "jq", dictionary_entries = 1, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# Probed 2026-11-12: specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+[[row]]
+key = "pkg:generic/ldns"
+pair = [
+  { vendor = "nlnetlabs", product = "ldns", dictionary_entries = 64, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt" },
+]
+
+# Two legitimate vendors: Greenwood Software is upstream, and GNU
+# ships it too.
+[[row]]
+key = "pkg:generic/less"
+pair = [
+  { vendor = "gnu", product = "less", dictionary_entries = 5, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "greenwoodsoftware", product = "less", dictionary_entries = 416, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libarchive"
+pair = [
+  { vendor = "libarchive", product = "libarchive", dictionary_entries = 53, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "freebsd", product = "libarchive", dictionary_entries = 2, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libass"
+pair = [
+  { vendor = "libass_project", product = "libass", dictionary_entries = 4, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libedit"
+pair = [
+  { vendor = "libedit_project", product = "libedit", dictionary_entries = 2, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libffi"
+pair = [
+  { vendor = "libffi_project", product = "libffi", dictionary_entries = 9, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# NVD's libidn2 records cite `gnu:libidn2` (their descriptions say
+# "Libidn2" / "GNU libidn2"), and none cite `libidn2_project:libidn2`,
+# which this row used until 2026-11-12. That choice read the dictionary
+# title "GNU libidn 0.3" as libidn v1; the records say otherwise, and
+# nixpkgs declares `gnu:libidn2` too.
+# specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+[[row]]
+key = "pkg:generic/libidn2"
+pair = [
+  { vendor = "gnu", product = "libidn2", dictionary_entries = 23, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libmicrohttpd"
+pair = [
+  { vendor = "gnu", product = "libmicrohttpd", dictionary_entries = 61, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt" },
+]
+
+# LibreSSL — `openbsd:libressl` (LibreSSL is an OpenBSD project).
+# A second `libressl:libressl` candidate was emitted here until
+# #1246: the vendor does not exist. All 110 libressl entries in
+# NVD's dictionary are `openbsd:libressl` and none use a `libressl`
+# vendor, so the candidate could only ever return zero.
+[[row]]
+key = "pkg:generic/libressl"
+pair = [
+  { vendor = "openbsd", product = "libressl", dictionary_entries = 110, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+# `gentoo` also files `libsndfile`: two deprecated entries. Not emitted.
+[[row]]
+key = "pkg:generic/libsndfile"
+pair = [
+  { vendor = "libsndfile_project", product = "libsndfile", dictionary_entries = 39, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt" },
+]
+
+# libssh, not libssh2 (its own row below). Exact names only.
+[[row]]
+key = "pkg:generic/libssh"
+pair = [
+  { vendor = "libssh", product = "libssh", dictionary_entries = 58, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libssh2"
+pair = [
+  { vendor = "libssh2", product = "libssh2", dictionary_entries = 41, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# Probed 2026-11-12: specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+# libtiff_project:libtiff is in the dictionary, but NVD's libtiff records cite libtiff:libtiff.
+[[row]]
+key = "pkg:generic/libtiff"
+pair = [
+  { vendor = "libtiff", product = "libtiff", dictionary_entries = 113, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libtool"
+pair = [
+  { vendor = "gnu", product = "libtool", dictionary_entries = 14, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libunistring"
+pair = [
+  { vendor = "gnu", product = "libunistring", dictionary_entries = 13, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libuv"
+pair = [
+  { vendor = "libuv", product = "libuv", dictionary_entries = 152, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "libuv_project", product = "libuv", dictionary_entries = 1, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libxml2"
+pair = [
+  { vendor = "xmlsoft", product = "libxml2", dictionary_entries = 221, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/libxslt"
+pair = [
+  { vendor = "xmlsoft", product = "libxslt", dictionary_entries = 97, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# LLVM umbrella project. Sub-projects (clang, lld) are out of scope
+# for v1 — the version-string scanner doesn't distinguish them.
+[[row]]
+key = "pkg:generic/llvm"
+pair = [
+  { vendor = "llvm", product = "llvm", dictionary_entries = 55, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+[[row]]
+key = "pkg:generic/lua"
+pair = [
+  { vendor = "lua", product = "lua", dictionary_entries = 54, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/lzo"
+pair = [
+  { vendor = "lzo_project", product = "lzo", dictionary_entries = 11, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# #1490 — NVD's ncurses records cite the maintainer's vendor slug,
+# `invisible-island`, most; then `ncurses_project`; `gnu` least. Measured
+# 2026-11-13 (specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv).
+[[row]]
+key = "pkg:generic/ncurses"
+pair = [
+  { vendor = "invisible-island", product = "ncurses", dictionary_entries = 321, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "ncurses_project", product = "ncurses", dictionary_entries = 49, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "gnu", product = "ncurses", dictionary_entries = 21, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/nghttp2"
+pair = [
+  { vendor = "nghttp2", product = "nghttp2", dictionary_entries = 134, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/ngtcp2"
+pair = [
+  { vendor = "tatsuhiro-t", product = "ngtcp2", dictionary_entries = 54, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# Node.js (issue #1244) — the product segment is `node.js`, not
+# `nodejs`. This is corroborated in-repo: the milestone-128 Yocto
+# recipe-to-CPE map, sourced from openembedded-core, carries the same
+# `("nodejs", "node.js")` pair at
+# `scan_fs/package_db/yocto/cpe_name_map.rs`. Vendor is `nodejs`.
+#
+# This maps the RUNTIME only. Node's bundled V8 and OpenSSL are
+# separate CPEs; OpenSSL already has its own row below and is
+# matched independently by the version-string scanner.
+[[row]]
+key = "pkg:generic/node"
+pair = [
+  { vendor = "nodejs", product = "node.js", dictionary_entries = 1714, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+[[row]]
+key = "pkg:generic/oniguruma"
+pair = [
+  { vendor = "oniguruma_project", product = "oniguruma", dictionary_entries = 38, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# OpenJDK — `oracle:openjdk` dominates NVD's Java records. Build
+# suffix (e.g. `+12`) is stripped before CPE emission per NVD-shape
+# inconsistency; the PURL preserves the full version verbatim.
+[[row]]
+key = "pkg:generic/openjdk"
+pair = [
+  { vendor = "oracle", product = "openjdk", dictionary_entries = 241, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+# OpenSSL — every NVD record since 2014 cites `openssl:openssl`.
+[[row]]
+key = "pkg:generic/openssl"
+pair = [
+  { vendor = "openssl", product = "openssl", dictionary_entries = 387, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+[[row]]
+key = "pkg:generic/p11-kit"
+pair = [
+  { vendor = "p11-kit_project", product = "p11-kit", dictionary_entries = 93, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt" },
+]
+
+# `tanium` also files `patch` (Tanium Patch, endpoint management) —
+# a different product, deliberately not emitted.
+[[row]]
+key = "pkg:generic/patch"
+pair = [
+  { vendor = "gnu", product = "patch", dictionary_entries = 12, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# PCRE 8.x — `pcre:pcre`.
+[[row]]
+key = "pkg:generic/pcre"
+pair = [
+  { vendor = "pcre", product = "pcre", dictionary_entries = 91, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+# PCRE 10.x — same vendor, different product.
+[[row]]
+key = "pkg:generic/pcre2"
+pair = [
+  { vendor = "pcre", product = "pcre2", dictionary_entries = 25, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+[[row]]
+key = "pkg:generic/perl"
+pair = [
+  { vendor = "perl", product = "perl", dictionary_entries = 614, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# PHP — NVD files every interpreter record under `php:php`; verified
+# against an NVD configuration whose cpeMatch criteria are
+# `cpe:2.3:a:php:php:*`. #1258.
+[[row]]
+key = "pkg:generic/php"
+pair = [
+  { vendor = "php", product = "php", dictionary_entries = 1641, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+# Probed 2026-11-12: specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+[[row]]
+key = "pkg:generic/pixman"
+pair = [
+  { vendor = "pixman", product = "pixman", dictionary_entries = 39, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt" },
+]
+
+[[row]]
+key = "pkg:generic/pkgconf"
+pair = [
+  { vendor = "pkgconf", product = "pkgconf", dictionary_entries = 64, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# CPython (#1395), keyed on the two pnames nixpkgs gives its
+# interpreter: `python3` (python3, python312, python313, python314)
+# and `python3-minimal` (python3Minimal). nixpkgs declares a product
+# and no vendor, so no CPE arrives from `meta.identifiers`. NVD files
+# CPython under `python:python` with the release in the version field
+# (`3.13.13`). `microsoft` also files a `python` product — the VS Code
+# extension — deliberately not emitted. Exact names only: nixpkgs'
+# `python3.13-<pkg>`, `python-<hook>` and `python3-<v>-env` are not
+# the interpreter. See `specs/1395-nix-python-cpe/`.
+[[row]]
+key = "pkg:generic/python3"
+pair = [
+  { vendor = "python", product = "python", dictionary_entries = 651, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1395-nix-python-cpe/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/python3-minimal"
+pair = [
+  { vendor = "python", product = "python", dictionary_entries = 651, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1395-nix-python-cpe/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/re2c"
+pair = [
+  { vendor = "re2c", product = "re2c", dictionary_entries = 3, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/readline"
+pair = [
+  { vendor = "gnu", product = "readline", dictionary_entries = 17, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/rhash"
+pair = [
+  { vendor = "rhash_project", product = "rhash", dictionary_entries = 55, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# Probed 2026-11-12: specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+[[row]]
+key = "pkg:generic/rubygems"
+pair = [
+  { vendor = "rubygems", product = "rubygems", dictionary_entries = 188, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt" },
+]
+
+# Probed 2026-11-12: specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
+[[row]]
+key = "pkg:generic/speex"
+pair = [
+  { vendor = "xiph", product = "speex", dictionary_entries = 45, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt" },
+]
+
+# SQLite — NVD canonical.
+[[row]]
+key = "pkg:generic/sqlite"
+pair = [
+  { vendor = "sqlite", product = "sqlite", dictionary_entries = 372, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]
+
+[[row]]
+key = "pkg:generic/tcl"
+pair = [
+  { vendor = "tcl", product = "tcl", dictionary_entries = 81, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/texinfo"
+pair = [
+  { vendor = "gnu", product = "texinfo", dictionary_entries = 2, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# Unbound, NLnet Labs' DNS resolver. `unbound_project` is one deprecated
+# entry that no NVD record cites; not emitted.
+[[row]]
+key = "pkg:generic/unbound"
+pair = [
+  { vendor = "nlnetlabs", product = "unbound", dictionary_entries = 206, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/unzip"
+pair = [
+  { vendor = "unzip_project", product = "unzip", dictionary_entries = 5, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "info-zip", product = "unzip", dictionary_entries = 5, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+[[row]]
+key = "pkg:generic/xz"
+pair = [
+  { vendor = "tukaani", product = "xz", dictionary_entries = 62, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "xz_project", product = "xz", dictionary_entries = 32, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# zlib — NVD canonical.
+[[row]]
+key = "pkg:generic/zlib"
+pair = [
+  { vendor = "zlib", product = "zlib", dictionary_entries = 84, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt" },
+]

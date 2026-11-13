@@ -12,467 +12,113 @@
 //!
 //! Format reference: CPE 2.3 formatted-string binding
 //! <https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf>
+//!
+//! # The curated table
+//!
+//! `pkg:generic/<slug>` components get their CPEs from the curated table,
+//! `cpe_table.toml` (spec 1491). Each row maps a library slug, the lowercase
+//! value `version_strings::CuratedLibrary::slug()`,
+//! `symbol_fingerprint::SymbolFingerprintMatch::library` and the Nix closure
+//! tier emit, to the NVD `(vendor, product)` pairs a matcher keys on, with the
+//! dictionary evidence for each pair. The file's header states its rules;
+//! the tests below enforce them.
+//!
+//! The table records where NVD's *dictionary* has a pair. It deliberately
+//! does not record whether a pair carries advisories: dictionary presence
+//! and advisory coverage are different questions, and treating a zero as an
+//! answer to the second is the trap recorded in #1245. Matching identifiers
+//! to vulnerabilities is the scanner's job.
+//!
+//! ## Why BoringSSL has no row
+//!
+//! BoringSSL is intentionally omitted, and the reason is **not** that
+//! NVD has no namespace for it. It does: probed on 2026-10-24,
+//! `cpe:2.3:a:google:boringssl` matched 2 dictionary entries, a keyword
+//! search for `boringssl` returned those same 2 and nothing else, and
+//! `virtualMatchString=cpe:2.3:a:google:boringssl:*:*:*:*:*:*:*:*`
+//! returned one advisory, CVE-2018-12440 (positive control:
+//! `openssl:openssl:3.0.11` returned 41). This comment claimed the
+//! opposite until #1268.
+//!
+//! The reason is that BoringSSL has no release versioning. Its
+//! signature is `BoringSSL <40-char-sha>`, so the version waybill
+//! extracts is a git revision (`parse_git_sha` in
+//! `scan_fs/binary/version_strings.rs` accepts exactly 40 lowercase hex
+//! bytes and nothing else). A CPE's version component is a release
+//! string that a matcher orders against advisory ranges; a git SHA
+//! cannot be ordered against anything, so a `google:boringssl` CPE
+//! built from one matches either nothing or arbitrarily. That is the
+//! same hazard the table already refuses when it declines
+//! wildcard-version CPEs, which match a library's whole history.
+//!
+//! **The general rule this row stands for**: a library whose only
+//! observable version is not a release identifier gets no CPE,
+//! whether or not a namespace exists for it. The namespace question is
+//! settled by `scripts/probe-cpe-dictionary.sh`; it is necessary and
+//! not sufficient. The inverse reading — "I could not find an NVD
+//! namespace, so I left it out" — is the unverified assumption the
+//! probe exists to prevent, and is how upstream shipped `expat:expat`
+//! (anchore/syft#4788) and display-name CPEs (anchore/syft#5429).
+//!
+//! Components for the `boringssl` slug therefore emit a PURL with no
+//! CPE field — an explicit "we don't know" per Constitution X
+//! transparency. BoringSSL-rooted vulnerabilities still reach a
+//! consumer through `openssl:openssl` records where the issue exists
+//! upstream.
+//!
+//! The distinction is not carried in the SBOM, and #1268 asked whether
+//! `waybill:unresolved-reason` (C151) should carry it. It cannot: C151
+//! is emitted if and only if the component carries
+//! `waybill:sbom-tier: "design"`, and a version-string-scanner
+//! component is binary tier. Saying "this product's versioning cannot
+//! key a CPE" on the wire needs a carrier that applies to a resolved
+//! component, which is a separate question from this row's rationale.
+//!
+//! ## Names deliberately absent (milestone 1375, #1381)
+//!
+//! Each is in NVD's dictionary and each would be wrong. They are recorded
+//! here rather than only in a spec directory because a contributor adding
+//! one will be editing *this file*, and all three are attractive: the name
+//! matches and the entry counts look convincing.
+//!
+//! - **`ninja`** — 126 entries across three vendors, and all three are other
+//!   products: "Ninja Framework Ninja 7.0.0" (a Java web framework), "ITRS
+//!   Group Ninja", "Visualshortcodes Ninja 1.4 for WordPress". The build
+//!   tool is not in NVD at all.
+//!
+//! - **`cmake`** — one vendor, `cmake_project`, whose title is "cmake
+//!   Project cmake 0.0.1 **for Node.js**": an npm package.
+//!   `cpe:2.3:a:kitware:cmake` returns **0**. This one matters most, because
+//!   a "single vendor is safe" rule would have accepted it.
+//!
+//! - **`libxcrypt`** — a single entry under `elektrobit`, an automotive
+//!   software vendor. The version in the title is a real upstream release,
+//!   so the entry may be upstream coverage filed under a downstream vendor,
+//!   or a vendored copy. The dictionary cannot say which, and a wrong vendor
+//!   matches nothing. Rejected in the conservative direction: a missing CPE
+//!   understates, a wrong one asserts.
+//!
+//! Two more, rejected by `specs/nix-curated-cpe-gaps/` (2026-11-10), where
+//! sbomnix 1.9.0 emits both and grype reports 13 and 10 findings from them.
+//! In the measured closures each is a Haskell package, fetched from
+//! `mirror://hackage/`, and the closure tier emits it as `pkg:generic` when
+//! the pinned Hackage package set is unavailable:
+//!
+//! - **`warp`** — Haskell's WAI web server. NVD's only `warp` is
+//!   `cloudflare:warp`, "Cloudflare WARP for Windows", 80 entries.
+//!
+//! - **`cmark-gfm`** — the Hackage binding, version `0.2.6`. NVD's
+//!   `github:cmark-gfm` is GitHub's C library, versioned `0.29.0.gfm.N`, and
+//!   `0.2.6` orders below every one of them. nixpkgs' C `cmark-gfm` has the
+//!   same pname, so a row cannot tell the two apart by name.
+//!
+//! `m1375_the_rejected_names_emit_no_cpe` and
+//! `nix_gap_bindings_and_prefixed_names_get_no_cpe` enforce these. The tests say what;
+//! this comment says why; neither substitutes for the other.
 
 use waybill_common::resolution::ResolvedComponent;
 use waybill_common::types::cpe::Cpe;
 
-/// v1 mapping table for `pkg:generic/<library>@<version>` components per
-/// milestone-097 FR-001. Each row maps a library slug (the lowercase
-/// value emitted by `version_strings::CuratedLibrary::slug()` and
-/// `symbol_fingerprint::SymbolFingerprintMatch::library`) to one or more
-/// `(NVD vendor, NVD product)` pairs.
-///
-/// Sorted alphabetically by library_slug for diff-friendliness per FR-002.
-/// Adding a library is a one-line PR; new entries must keep the sort.
-///
-/// BoringSSL is intentionally omitted, and the reason is **not** that
-/// NVD has no namespace for it. It does: probed on 2026-10-24,
-/// `cpe:2.3:a:google:boringssl` matched 2 dictionary entries, a keyword
-/// search for `boringssl` returned those same 2 and nothing else, and
-/// `virtualMatchString=cpe:2.3:a:google:boringssl:*:*:*:*:*:*:*:*`
-/// returned one advisory, CVE-2018-12440 (positive control:
-/// `openssl:openssl:3.0.11` returned 41). This comment claimed the
-/// opposite until #1268.
-///
-/// The reason is that BoringSSL has no release versioning. Its
-/// signature is `BoringSSL <40-char-sha>`, so the version waybill
-/// extracts is a git revision (`parse_git_sha` in
-/// `scan_fs/binary/version_strings.rs` accepts exactly 40 lowercase hex
-/// bytes and nothing else). A CPE's version component is a release
-/// string that a matcher orders against advisory ranges; a git SHA
-/// cannot be ordered against anything, so a `google:boringssl` CPE
-/// built from one matches either nothing or arbitrarily. That is the
-/// same hazard this table already refuses when it declines
-/// wildcard-version CPEs, which match a library's whole history.
-///
-/// **The general rule this row stands for**: a library whose only
-/// observable version is not a release identifier gets no CPE,
-/// whether or not a namespace exists for it. The namespace question is
-/// settled by `scripts/probe-cpe-dictionary.sh`; it is necessary and
-/// not sufficient. The inverse reading — "I could not find an NVD
-/// namespace, so I left it out" — is the unverified assumption the
-/// probe exists to prevent, and is how upstream shipped `expat:expat`
-/// (anchore/syft#4788) and display-name CPEs (anchore/syft#5429).
-///
-/// Components for the `boringssl` slug therefore emit a PURL with no
-/// CPE field — an explicit "we don't know" per Constitution X
-/// transparency. BoringSSL-rooted vulnerabilities still reach a
-/// consumer through `openssl:openssl` records where the issue exists
-/// upstream.
-///
-/// The distinction is not carried in the SBOM, and #1268 asked whether
-/// `waybill:unresolved-reason` (C151) should carry it. It cannot: C151
-/// is emitted if and only if the component carries
-/// `waybill:sbom-tier: "design"`, and a version-string-scanner
-/// component is binary tier. Saying "this product's versioning cannot
-/// key a CPE" on the wire needs a carrier that applies to a resolved
-/// component, which is a separate question from this row's rationale.
-const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
-    // Sorted by slug; `mappings_alphabetically_sorted` enforces it.
-    //
-    // Milestone 1375 (#1381) added 48 rows for the nix-closure C surface.
-    // Every pair was found by querying NVD with the **vendor wildcarded**
-    // and reading what came back, never by assuming the vendor equals the
-    // package name. It usually does not: `bash` is `gnu`, `libxml2` is
-    // `xmlsoft`, `expat` is `libexpat` — the last being exactly the defect
-    // NVD_DICTIONARY_OBSERVED's header cites (anchore/syft#4788).
-    //
-    // Entry counts did not decide these rows; titles did. See the
-    // rejections recorded after this table, and
-    // `specs/1375-generic-cpe-table/research.md` R4 for all 51 dispositions.
-    //
-    //
-    // Every pair below was found by querying NVD with the **vendor
-    //
-    ("automake", &[("gnu", "automake")]),
-    ("bash", &[("gnu", "bash")]),
-    ("bc", &[("gnu", "bc")]),
-    // GNU Binutils — reached in a Linux Nix closure through GHC's toolchain
-    // (#1283; 21 of slack-web's 300 truth findings).
-    ("binutils", &[("gnu", "binutils")]),
-    ("bison", &[("gnu", "bison")]),
-    // `andybalholm` also files `brotli` — a Go port. Deliberately not
-    // emitted; this row is Google's implementation.
-    ("brotli", &[("google", "brotli")]),
-    // `bzip2_project` also files `bzip2` — "bzip2 0.4.3 for Rust", a
-    // crate. Deliberately not emitted; this row is the C program.
-    ("bzip2", &[("bzip", "bzip2")]),
-    // #1490: each multi-vendor row below lists first the vendor NVD files
-    // more CVEs under (`measurements/nvd-cves-2026-11-13.txt`): a consumer
-    // reading one CPE reads the primary.
-    ("c-ares", &[("c-ares_project", "c-ares"), ("c-ares", "c-ares")]),
-    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
-    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    // redhat:cairo also exists (Red Hat Cairo, 1 CVE) and is deliberately not emitted.
-    ("cairo", &[("cairographics", "cairo")]),
-    // cJSON, fontforge, giflib, libass, libsndfile, libssh and unbound
-    // (`specs/nix-curated-cpe-gaps/`): C libraries in Nix closures for which
-    // nixpkgs declares a product and no vendor, so no CPE arrives from
-    // `meta.identifiers`. Exact names only, like every row here.
-    //
-    // NVD moved cJSON from `cjson_project` to `davegamble` (48 of 49
-    // `cjson_project` entries deprecated), but 3 CVEs still cite
-    // `cjson_project`, so both are emitted, `davegamble` first.
-    ("cjson", &[("davegamble", "cjson"), ("cjson_project", "cjson")]),
-    // `arm` also files a `clang` product (ARM Clang) — a different
-    // compiler, deliberately not emitted.
-    ("clang", &[("llvm", "clang")]),
-    ("compiler-rt", &[("llvm", "compiler-rt")]),
-    ("coreutils", &[("gnu", "coreutils")]),
-    ("cpio", &[("gnu", "cpio")]),
-    // libcurl: historical `haxx:curl` dominates pre-2023 NVD records;
-    // modern `curl:curl` also appears. Both emitted — primary goes to
-    // `component.cpe`, secondary to `waybill:cpe-candidates` property.
-    ("curl", &[("haxx", "curl"), ("curl", "curl")]),
-    ("diffutils", &[("gnu", "diffutils")]),
-    ("ed", &[("gnu", "ed")]),
-    // NVD files every expat CVE under `libexpat_project:libexpat` (68) and
-    // none under `libexpat:expat` (0), the pair this row used until
-    // 2026-11-12 — the anchore/syft#4788 trap cited above, in a subtler form:
-    // `libexpat:expat` is in the dictionary ("libexpat Expat 2.1.0"), so the
-    // presence probe passed it. specs/1375-generic-cpe-table/measurements/
-    // nvd-probe-2026-11-12.txt.
-    ("expat", &[("libexpat_project", "libexpat")]),
-    // Three legitimate vendors: the project, Christos Zoulas (the
-    // maintainer), and Gentoo's packaging.
-    ("file", &[("file_project", "file"), ("christos_zoulas", "file"), ("gentoo", "file")]),
-    ("findutils", &[("gnu", "findutils")]),
-    // `apache` also files `flex` — Apache Flex, the Flash framework.
-    // Deliberately not emitted; this row is the lexical analyzer.
-    ("flex", &[("westes", "flex"), ("flex_project", "flex")]),
-    // `fontforge_project` also files `fontforge`: every entry deprecated, 0
-    // CVEs. Not emitted. nixpkgs' date version (`20251009`) is NVD's
-    // version encoding verbatim.
-    ("fontforge", &[("fontforge", "fontforge")]),
-    // `fossies` is a source-archive site, not GNU — and it is the only
-    // vendor NVD has for gawk. The attribution is upstream's to explain;
-    // a scanner keyed on CPEs would use it.
-    ("gawk", &[("fossies", "gawk")]),
-    // GCC — the compiler runtime (libgcc_s) a Linux closure keeps (#1283).
-    // `groups_communities_and_co_project` also files a `gcc` product
-    // ("Groups, Communities and Co (GCC)") — a different product,
-    // deliberately not emitted.
-    ("gcc", &[("gnu", "gcc")]),
-    ("gettext", &[("gnu", "gettext")]),
-    ("giflib", &[("giflib_project", "giflib")]),
-    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
-    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("glib", &[("gnome", "glib")]),
-    // The GNU C Library — every dynamically linked Linux output loads it, and
-    // nixpkgs revisions before meta.identifiers declare no CPE for it (#1283:
-    // 36 of slack-web's 300 truth findings).
-    // `gentoo` also files `glibc` (Gentoo's package); not emitted.
-    ("glibc", &[("gnu", "glibc")]),
-    // GnuTLS — NVD canonical.
-    ("gnutls", &[("gnu", "gnutls")]),
-    ("gzip", &[("gnu", "gzip")]),
-    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
-    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("harfbuzz", &[("harfbuzz_project", "harfbuzz")]),
-    ("jq", &[("jqlang", "jq"), ("jq_project", "jq")]),
-    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
-    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("ldns", &[("nlnetlabs", "ldns")]),
-    // Two legitimate vendors: Greenwood Software is upstream, and GNU
-    // ships it too.
-    ("less", &[("gnu", "less"), ("greenwoodsoftware", "less")]),
-    ("libarchive", &[("libarchive", "libarchive"), ("freebsd", "libarchive")]),
-    ("libass", &[("libass_project", "libass")]),
-    ("libedit", &[("libedit_project", "libedit")]),
-    ("libffi", &[("libffi_project", "libffi")]),
-    // NVD files every libidn2 CVE under `gnu:libidn2` (4, all "Libidn2" /
-    // "GNU libidn2" in their descriptions) and none under
-    // `libidn2_project:libidn2` (0), which this row used until 2026-11-12.
-    // That choice read the dictionary title "GNU libidn 0.3" as libidn v1;
-    // the CVEs say otherwise, and nixpkgs declares `gnu:libidn2` too.
-    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("libidn2", &[("gnu", "libidn2")]),
-    ("libmicrohttpd", &[("gnu", "libmicrohttpd")]),
-    // LibreSSL — `openbsd:libressl` (LibreSSL is an OpenBSD project).
-    // A second `libressl:libressl` candidate was emitted here until
-    // #1246: the vendor does not exist. All 110 libressl entries in
-    // NVD's dictionary are `openbsd:libressl` and none use a `libressl`
-    // vendor, so the candidate could only ever return zero.
-    ("libressl", &[("openbsd", "libressl")]),
-    // `gentoo` also files `libsndfile`: two deprecated entries. Not emitted.
-    ("libsndfile", &[("libsndfile_project", "libsndfile")]),
-    // libssh, not libssh2 (its own row below). Exact names only.
-    ("libssh", &[("libssh", "libssh")]),
-    ("libssh2", &[("libssh2", "libssh2")]),
-    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
-    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    // libtiff_project:libtiff is in the dictionary with 0 CVEs; every libtiff CVE is filed under libtiff:libtiff (262).
-    ("libtiff", &[("libtiff", "libtiff")]),
-    ("libtool", &[("gnu", "libtool")]),
-    ("libunistring", &[("gnu", "libunistring")]),
-    ("libuv", &[("libuv", "libuv"), ("libuv_project", "libuv")]),
-    ("libxml2", &[("xmlsoft", "libxml2")]),
-    ("libxslt", &[("xmlsoft", "libxslt")]),
-    // LLVM umbrella project. Sub-projects (clang, lld) are out of scope
-    // for v1 — the version-string scanner doesn't distinguish them.
-    ("llvm", &[("llvm", "llvm")]),
-    ("lua", &[("lua", "lua")]),
-    ("lzo", &[("lzo_project", "lzo")]),
-    // #1490 — NVD files ncurses' CVEs under the maintainer's vendor slug:
-    // `invisible-island` 28, `ncurses_project` 2, `gnu` 0, measured
-    // 2026-11-13 (specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv).
-    ("ncurses", &[("invisible-island", "ncurses"), ("ncurses_project", "ncurses"), ("gnu", "ncurses")]),
-    ("nghttp2", &[("nghttp2", "nghttp2")]),
-    ("ngtcp2", &[("tatsuhiro-t", "ngtcp2")]),
-    // Node.js (issue #1244) — the product segment is `node.js`, not
-    // `nodejs`. This is corroborated in-repo: the milestone-128 Yocto
-    // recipe-to-CPE map, sourced from openembedded-core's own CVE
-    // exclusions, carries the same `("nodejs", "node.js")` pair at
-    // `scan_fs/package_db/yocto/cpe_name_map.rs`. Vendor is `nodejs`.
-    //
-    // This maps the RUNTIME only. Node's bundled V8 and OpenSSL are
-    // separate CPEs; OpenSSL already has its own row below and is
-    // matched independently by the version-string scanner.
-    ("node", &[("nodejs", "node.js")]),
-    ("oniguruma", &[("oniguruma_project", "oniguruma")]),
-    // OpenJDK — `oracle:openjdk` dominates Java vuln records. Build
-    // suffix (e.g. `+12`) is stripped before CPE emission per NVD-shape
-    // inconsistency; the PURL preserves the full version verbatim.
-    ("openjdk", &[("oracle", "openjdk")]),
-    // OpenSSL — every CVE since 2014 uses `openssl:openssl`.
-    ("openssl", &[("openssl", "openssl")]),
-    ("p11-kit", &[("p11-kit_project", "p11-kit")]),
-    // `tanium` also files `patch` (Tanium Patch, endpoint management) —
-    // a different product, deliberately not emitted.
-    ("patch", &[("gnu", "patch")]),
-    // PCRE 8.x — `pcre:pcre`.
-    ("pcre", &[("pcre", "pcre")]),
-    // PCRE 10.x — same vendor, different product.
-    ("pcre2", &[("pcre", "pcre2")]),
-    ("perl", &[("perl", "perl")]),
-    // PHP — NVD files every interpreter CVE under `php:php`; verified
-    // against the configurations on CVE-2026-109618, whose cpeMatch
-    // criteria are `cpe:2.3:a:php:php:*`. #1258.
-    ("php", &[("php", "php")]),
-    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
-    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("pixman", &[("pixman", "pixman")]),
-    ("pkgconf", &[("pkgconf", "pkgconf")]),
-    // CPython (#1395), keyed on the two pnames nixpkgs gives its
-    // interpreter: `python3` (python3, python312, python313, python314)
-    // and `python3-minimal` (python3Minimal). nixpkgs declares a product
-    // and no vendor, so no CPE arrives from `meta.identifiers`. NVD files
-    // CPython under `python:python` with the release in the version field
-    // (`3.13.13`). `microsoft` also files a `python` product — the VS Code
-    // extension — deliberately not emitted. Exact names only: nixpkgs'
-    // `python3.13-<pkg>`, `python-<hook>` and `python3-<v>-env` are not
-    // the interpreter. See `specs/1395-nix-python-cpe/`.
-    ("python3", &[("python", "python")]),
-    ("python3-minimal", &[("python", "python")]),
-    ("re2c", &[("re2c", "re2c")]),
-    ("readline", &[("gnu", "readline")]),
-    ("rhash", &[("rhash_project", "rhash")]),
-    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
-    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("rubygems", &[("rubygems", "rubygems")]),
-    // Probed 2026-11-12 for the sbomnix comparison (docs/audits/2026-11-12-nix-vs-sbomnix.md):
-    // specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("speex", &[("xiph", "speex")]),
-    // SQLite — NVD canonical.
-    ("sqlite", &[("sqlite", "sqlite")]),
-    ("tcl", &[("tcl", "tcl")]),
-    ("texinfo", &[("gnu", "texinfo")]),
-    // Unbound, NLnet Labs' DNS resolver. `unbound_project` is one deprecated
-    // entry with 0 CVEs; not emitted.
-    ("unbound", &[("nlnetlabs", "unbound")]),
-    ("unzip", &[("unzip_project", "unzip"), ("info-zip", "unzip")]),
-    ("xz", &[("tukaani", "xz"), ("xz_project", "xz")]),
-    // zlib — NVD canonical.
-    ("zlib", &[("zlib", "zlib")]),
-];
-
-/// Names deliberately **absent** from `GENERIC_LIBRARY_CPES`
-/// (milestone 1375, #1381).
-///
-/// Each is in NVD's dictionary and each would be wrong. They are recorded
-/// here rather than only in a spec directory because a contributor adding
-/// one will be editing *this file*, and all three are attractive: the name
-/// matches and the entry counts look convincing.
-///
-/// - **`ninja`** — 126 entries across three vendors, and all three are other
-///   products: "Ninja Framework Ninja 7.0.0" (a Java web framework), "ITRS
-///   Group Ninja", "Visualshortcodes Ninja 1.4 for WordPress". The build
-///   tool is not in NVD at all.
-///
-/// - **`cmake`** — one vendor, `cmake_project`, whose title is "cmake
-///   Project cmake 0.0.1 **for Node.js**": an npm package.
-///   `cpe:2.3:a:kitware:cmake` returns **0**. This one matters most, because
-///   a "single vendor is safe" rule would have accepted it.
-///
-/// - **`libxcrypt`** — a single entry under `elektrobit`, an automotive
-///   software vendor. The version in the title is a real upstream release,
-///   so the entry may be upstream coverage filed under a downstream vendor,
-///   or a vendored copy. The dictionary cannot say which, and a wrong vendor
-///   matches nothing. Rejected in the conservative direction: a missing CPE
-///   understates, a wrong one asserts.
-///
-/// Two more, rejected by `specs/nix-curated-cpe-gaps/` (2026-11-10), where
-/// sbomnix 1.9.0 emits both and grype reports 13 and 10 findings from them.
-/// In the measured closures each is a Haskell package, fetched from
-/// `mirror://hackage/`, and the closure tier emits it as `pkg:generic` when
-/// the pinned Hackage package set is unavailable:
-///
-/// - **`warp`** — Haskell's WAI web server. NVD's only `warp` is
-///   `cloudflare:warp`, "Cloudflare WARP for Windows", 80 entries.
-///
-/// - **`cmark-gfm`** — the Hackage binding, version `0.2.6`. NVD's
-///   `github:cmark-gfm` is GitHub's C library, versioned `0.29.0.gfm.N`, and
-///   `0.2.6` orders below every one of them. nixpkgs' C `cmark-gfm` has the
-///   same pname, so a row cannot tell the two apart by name.
-///
-/// `m1375_the_rejected_names_emit_no_cpe` and
-/// `nix_gap_bindings_and_prefixed_names_get_no_cpe` enforce these. The tests say what;
-/// this comment says why; neither substitutes for the other.
-/// What NVD's CPE dictionary held for every pair in
-/// `GENERIC_LIBRARY_CPES`, as `(vendor, product, entries)`.
-///
-/// Produced by `scripts/probe-cpe-dictionary.sh` on 2026-10-24 and
-/// recorded here so `every_table_pair_exists_in_the_nvd_dictionary` can
-/// enforce it without a network call. A row may be added to the table
-/// above only once it has been probed and added here (#1246).
-///
-/// WHY. A wrong vendor or product fails *silently*: the matcher finds
-/// nothing, which is indistinguishable from a component with no known
-/// vulnerabilities. Upstream ships this defect regularly — syft derived
-/// `expat:expat` from a Conan recipe name where NVD files the records
-/// under `libexpat` (anchore/syft#4788), and built Apple-bundle CPEs
-/// from display names, so `Google Chrome` matched nothing where
-/// `google:chrome` matches thousands (anchore/syft#5429). The first run
-/// of the probe found one here: `libressl:libressl`, removed above.
-///
-/// The counts are the observation, not an invariant — NVD's dictionary
-/// grows, and the test asserts only that a pair was seen at all. What
-/// the test deliberately does NOT assert is that a pair carries any
-/// advisories: dictionary presence and advisory coverage are different
-/// questions, and treating a zero as an answer to the second is the trap
-/// recorded in #1245. `probe-cpe-dictionary.sh --cves` asks that one.
-#[cfg(test)]
-const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
-    ("bzip", "bzip2", 11),
-    ("c-ares", "c-ares", 67),
-    ("c-ares_project", "c-ares", 39),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("cairographics", "cairo", 51),
-    ("christos_zoulas", "file", 20),
-    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
-    ("cjson_project", "cjson", 49),
-    ("curl", "curl", 2),
-    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
-    ("davegamble", "cjson", 49),
-    ("file_project", "file", 85),
-    ("flex_project", "flex", 35),
-    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
-    ("fontforge", "fontforge", 32),
-    ("fossies", "gawk", 15),
-    ("freebsd", "libarchive", 2),
-    ("gentoo", "file", 1),
-    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
-    ("giflib_project", "giflib", 40),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("gnome", "glib", 593),
-    ("gnu", "automake", 51),
-    ("gnu", "bash", 92),
-    ("gnu", "bc", 8),
-    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
-    ("gnu", "binutils", 81),
-    ("gnu", "bison", 70),
-    ("gnu", "coreutils", 71),
-    ("gnu", "cpio", 16),
-    ("gnu", "diffutils", 12),
-    ("gnu", "ed", 3),
-    ("gnu", "findutils", 6),
-    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
-    ("gnu", "gcc", 128),
-    ("gnu", "gettext", 47),
-    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
-    ("gnu", "glibc", 196),
-    ("gnu", "gnutls", 366),
-    ("gnu", "gzip", 26),
-    ("gnu", "less", 5),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("gnu", "libidn2", 23),
-    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
-    ("gnu", "libmicrohttpd", 61),
-    ("gnu", "libtool", 14),
-    ("gnu", "libunistring", 13),
-    ("gnu", "ncurses", 21),
-    ("gnu", "patch", 12),
-    ("gnu", "readline", 17),
-    ("gnu", "texinfo", 2),
-    ("google", "brotli", 40),
-    ("greenwoodsoftware", "less", 416),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("harfbuzz_project", "harfbuzz", 205),
-    ("haxx", "curl", 228),
-    ("info-zip", "unzip", 5),
-    // Probed 2026-11-13, specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv.
-    ("invisible-island", "ncurses", 321),
-    ("jq_project", "jq", 1),
-    ("jqlang", "jq", 25),
-    ("libarchive", "libarchive", 53),
-    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
-    ("libass_project", "libass", 4),
-    ("libedit_project", "libedit", 2),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("libexpat_project", "libexpat", 52),
-    ("libffi_project", "libffi", 9),
-    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
-    ("libsndfile_project", "libsndfile", 39),
-    ("libssh", "libssh", 53),
-    ("libssh2", "libssh2", 41),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("libtiff", "libtiff", 113),
-    ("libuv", "libuv", 152),
-    ("libuv_project", "libuv", 1),
-    ("llvm", "clang", 1),
-    ("llvm", "compiler-rt", 52),
-    ("llvm", "llvm", 55),
-    ("lua", "lua", 54),
-    ("lzo_project", "lzo", 11),
-    ("ncurses_project", "ncurses", 49),
-    ("nghttp2", "nghttp2", 134),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("nlnetlabs", "ldns", 64),
-    // Probed 2026-11-10, `specs/nix-curated-cpe-gaps/measurements/nvd-probe.sh`.
-    ("nlnetlabs", "unbound", 206),
-    ("nodejs", "node.js", 1714),
-    ("oniguruma_project", "oniguruma", 38),
-    ("openbsd", "libressl", 110),
-    ("openssl", "openssl", 368),
-    ("oracle", "openjdk", 241),
-    // Probed 2026-11-11, `specs/1283-nix-allow-ifd/measurements/cpe/nvd-probe-2026-11-11.txt`.
-    ("p11-kit_project", "p11-kit", 93),
-    ("pcre", "pcre", 91),
-    ("pcre", "pcre2", 25),
-    ("perl", "perl", 614),
-    ("php", "php", 1641),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("pixman", "pixman", 39),
-    ("pkgconf", "pkgconf", 64),
-    // Probed 2026-11-09, `specs/1395-nix-python-cpe/measurements/nvd-probe.sh`.
-    ("python", "python", 651),
-    ("re2c", "re2c", 3),
-    ("rhash_project", "rhash", 55),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("rubygems", "rubygems", 188),
-    ("sqlite", "sqlite", 372),
-    ("tatsuhiro-t", "ngtcp2", 54),
-    ("tcl", "tcl", 81),
-    ("tukaani", "xz", 62),
-    ("unzip_project", "unzip", 5),
-    ("westes", "flex", 35),
-    // Probed 2026-11-12, specs/1375-generic-cpe-table/measurements/nvd-probe-2026-11-12.txt.
-    ("xiph", "speex", 45),
-    ("xmlsoft", "libxml2", 221),
-    ("xmlsoft", "libxslt", 97),
-    ("xz_project", "xz", 32),
-    ("zlib", "zlib", 84),
-];
 
 /// Build the set of CPE 2.3 candidate strings for a resolved component.
 /// Returns empty when the component is in an ecosystem the synthesizer
@@ -615,11 +261,7 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<Cpe> {
             // no CPE (FR-003 silent-skip) so non-tracked generic PURLs
             // (e.g. `pkg:generic/weird@1.0.0`) continue to produce an
             // empty Vec just as they did before milestone 097.
-            let mapping = GENERIC_LIBRARY_CPES
-                .iter()
-                .find(|(slug, _)| *slug == name.as_str())
-                .map(|(_, pairs)| *pairs);
-            let Some(pairs) = mapping else {
+            let Some(pairs) = crate::generate::cpe_table::built_in().pairs(name) else {
                 return Vec::new();
             };
             // OpenJDK build-suffix special-case: NVD records for Java
@@ -669,7 +311,7 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<Cpe> {
 /// See `specs/1430-secondary-cpe-carrier/`.
 ///
 /// **Only `pkg:generic` components.** Their CPEs come solely from
-/// `GENERIC_LIBRARY_CPES`, whose every pair was probed against NVD's
+/// the curated table (`cpe_table.toml`), whose every pair was probed against NVD's
 /// dictionary. Every other ecosystem's extra candidates are vendor guesses
 /// (`debian:jq`, `python-<name>`), and grype's apk matcher matches every CPE
 /// it is given, so exposing those is a separate decision with its own
@@ -707,7 +349,7 @@ fn push_unique(out: &mut Vec<String>, value: &str) {
 ///
 /// `None` only when the result does not parse as a [`Cpe`], which an empty
 /// vendor or product would cause.
-fn format_cpe(vendor: &str, product: &str, version: &str) -> Option<Cpe> {
+pub(crate) fn format_cpe(vendor: &str, product: &str, version: &str) -> Option<Cpe> {
     Cpe::parse(&format!(
         "cpe:2.3:a:{}:{}:{}:*:*:*:*:*:*:*",
         cpe_escape(vendor),
@@ -788,6 +430,26 @@ mod tests {
             extra_annotations: Default::default(),
             binary_role: None,
         }
+    }
+
+    fn table() -> &'static crate::generate::cpe_table::CpeTable {
+        crate::generate::cpe_table::built_in().table()
+    }
+
+    /// `(slug, pairs)` for every built-in row.
+    fn rows() -> impl Iterator<Item = (&'static str, &'static [crate::generate::cpe_table::CpePair])> {
+        table().row.iter().map(|r| {
+            (r.key.strip_prefix("pkg:generic/").unwrap(), r.pair.as_slice())
+        })
+    }
+
+    fn repo_root() -> std::path::PathBuf {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..")
+    }
+
+    fn read_evidence(path: &str) -> String {
+        std::fs::read_to_string(repo_root().join(path))
+            .unwrap_or_else(|e| panic!("evidence {path}: {e}"))
     }
 
     /// #1430 — a curated row's second vendor is handed to the matcher; the
@@ -916,7 +578,7 @@ mod tests {
     #[test]
     fn generic_unknown_library_returns_empty() {
         // Milestone 097 FR-003: a `pkg:generic/<slug>@<version>` PURL
-        // whose slug is NOT in `GENERIC_LIBRARY_CPES` (here, `weird`)
+        // whose slug is NOT in the curated table (here, `weird`)
         // emits an empty Vec — silent skip, no error. Same assertion
         // as the pre-097 `unknown_ecosystem_returns_empty` test;
         // renamed because the failure mode changed from "ecosystem
@@ -1023,14 +685,17 @@ mod tests {
     /// must keep the sort; this test fails the build when they don't.
     #[test]
     fn mappings_alphabetically_sorted() {
-        let unsorted: Vec<&str> = GENERIC_LIBRARY_CPES
+        let rows = &table().row;
+        // CONTROL: the table is there, or an empty one passes vacuously.
+        assert!(rows.len() > 1, "the curated table has {} rows", rows.len());
+        let unsorted: Vec<&str> = rows
             .windows(2)
-            .filter(|w| w[0].0 >= w[1].0)
-            .map(|w| w[0].0)
+            .filter(|w| w[0].key >= w[1].key)
+            .map(|w| w[0].key.as_str())
             .collect();
         assert!(
             unsorted.is_empty(),
-            "GENERIC_LIBRARY_CPES is not alphabetically sorted by library_slug. \
+            "cpe_table.toml is not sorted by key. \
              Offending row(s): {unsorted:?}. Reorder the table."
         );
     }
@@ -1042,7 +707,7 @@ mod tests {
     /// (`cpe:2.3:a:vendor:product:version:update:edition:lang:sw_edition:target_sw:target_hw:other`).
     #[test]
     fn mappings_all_emit_valid_cpe23() {
-        for (slug, pairs) in GENERIC_LIBRARY_CPES {
+        for (slug, pairs) in rows() {
             let c = make_component(&format!("pkg:generic/{slug}@1.2.3"));
             let cpes = synthesize_cpes(&c);
             assert!(
@@ -1092,7 +757,7 @@ mod tests {
     /// version-string scanner, EXCEPT for the documented-omission
     /// allowlist (currently just `boringssl`, whose extracted version is
     /// a git SHA and so cannot key a CPE — see the rationale on
-    /// `GENERIC_LIBRARY_CPES` and `boringssl_has_no_release_version`
+    /// the curated table and `boringssl_has_no_release_version`
     /// below). Future milestones extending the scanner must either add
     /// a row here or extend the allowlist with a documented rationale.
     ///
@@ -1121,12 +786,12 @@ mod tests {
         // a number or a list next to the enum always can.
         for lib in CuratedLibrary::iter() {
             let slug = lib.slug();
-            let in_table = GENERIC_LIBRARY_CPES.iter().any(|(s, _)| *s == slug);
+            let in_table = rows().any(|(s, _)| s == slug);
             let omitted = OMITTED.contains(&slug);
             assert!(
                 in_table || omitted,
                 "curated library slug {slug:?} is missing from \
-                 GENERIC_LIBRARY_CPES AND not on the OMITTED allowlist. \
+                 cpe_table.toml AND not on the OMITTED allowlist. \
                  Add a mapping row OR extend the allowlist with a documented rationale."
             );
         }
@@ -1171,7 +836,7 @@ mod tests {
                     .bytes()
                     .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase()),
             "BoringSSL's extracted version {version:?} is no longer a git SHA. \
-             The `boringssl` omission in GENERIC_LIBRARY_CPES rests on it being one; \
+             The `boringssl` omission in cpe_table.toml rests on it being one; \
              if the scanner now yields a release identifier, decide whether \
              `google:boringssl` (2 NVD dictionary entries, CVE-2018-12440 as of \
              2026-10-24) should get a mapping row instead (#1268)."
@@ -1198,11 +863,10 @@ mod tests {
             ("gawk", "fossies"),
             ("compiler-rt", "llvm"),
         ] {
-            let row = GENERIC_LIBRARY_CPES
-                .iter()
+            let row = rows()
                 .find(|(s, _)| *s == slug)
                 .unwrap_or_else(|| panic!("no table row for {slug}"));
-            let vendors: Vec<&str> = row.1.iter().map(|(v, _)| *v).collect();
+            let vendors: Vec<&str> = row.1.iter().map(|p| p.vendor.as_str()).collect();
             assert!(
                 vendors.contains(&want_vendor),
                 "{slug} must emit vendor {want_vendor}, got {vendors:?} — \
@@ -1220,9 +884,11 @@ mod tests {
     #[test]
     fn m1375_no_duplicate_slug() {
         let mut seen = std::collections::HashSet::new();
-        for (slug, _) in GENERIC_LIBRARY_CPES {
-            assert!(seen.insert(*slug), "duplicate slug {slug} in the table");
+        for (slug, _) in rows() {
+            assert!(seen.insert(slug), "duplicate slug {slug} in the table");
         }
+        // CONTROL: the loop saw the whole table.
+        assert_eq!(seen.len(), table().row.len());
     }
 
     /// T009a (FR-002, SC-002) — every row's **product** has a committed title
@@ -1238,35 +904,25 @@ mod tests {
     /// a correct row.
     #[test]
     fn m1375_every_product_has_a_committed_title_query() {
-        let titles = concat!(
-            include_str!("../../../specs/1375-generic-cpe-table/measurements/nvd-titles.txt"),
-            include_str!(
-                "../../../specs/1375-generic-cpe-table/measurements/nvd-titles-existing.txt"
-            ),
-            include_str!("../../../specs/1395-nix-python-cpe/measurements/nvd-titles.txt"),
-            include_str!("../../../specs/nix-curated-cpe-gaps/measurements/nvd-titles.txt"),
-            include_str!("../../../specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt"),
-            include_str!(
-                "../../../specs/1375-generic-cpe-table/measurements/nvd-titles-2026-11-12.txt"
-            ),
-        );
-
-        // CONTROL: the files parsed to something. Without this every
-        // assertion below passes over an empty haystack.
+        // CONTROL: a known row's title file holds its query, or every check
+        // below could pass over files that were never read.
+        let bash = rows().find(|(s, _)| *s == "bash").unwrap().1;
         assert!(
-            titles.contains("=== bash ("),
-            "the committed title files did not parse; every check below would \
-             pass vacuously"
+            read_evidence(bash[0].title_evidence.as_deref().unwrap()).contains("=== bash ("),
+            "bash's title evidence does not hold its query; the checks below would be vacuous"
         );
 
-        for (slug, pairs) in GENERIC_LIBRARY_CPES {
-            for (_, product) in *pairs {
+        for (slug, pairs) in rows() {
+            for pair in pairs {
+                let path = pair.title_evidence.as_deref().unwrap();
                 assert!(
-                    titles.contains(&format!("=== {product} (")),
-                    "table row {slug:?} emits product {product:?}, which has no \
-                     committed title query. Run `cpe-titles.py {product}` and \
+                    read_evidence(path).contains(&format!("=== {} (", pair.product)),
+                    "table row {slug:?} emits product {:?}, whose title_evidence \
+                     {path} has no title query for it. Run `cpe-titles.py {}` and \
                      record it — an entry count says a pair exists, not that \
-                     it is the same software."
+                     it is the same software.",
+                    pair.product,
+                    pair.product,
                 );
             }
         }
@@ -1293,7 +949,7 @@ mod tests {
                  row here would assert software is present that is not."
             );
             assert!(
-                !GENERIC_LIBRARY_CPES.iter().any(|(s, _)| *s == name),
+                !rows().any(|(s, _)| s == name),
                 "{name} was added to the table; #1381 rejected it"
             );
         }
@@ -1304,80 +960,166 @@ mod tests {
     /// CPE matcher, which reads as "no known vulnerabilities" — the
     /// failure is silent and on the safe-looking side.
     ///
-    /// Hermetic: it compares the table against
-    /// `NVD_DICTIONARY_OBSERVED`, which records a probe run rather than
-    /// querying NVD here. So what this enforces is "no row without a
-    /// recorded observation", and `scripts/probe-cpe-dictionary.sh` is
-    /// how the observation is obtained.
+    /// Hermetic: each pair records a probe's observation, and its evidence
+    /// file is committed. What this enforces is "no pair without a recorded
+    /// observation"; `scripts/probe-cpe-dictionary.sh` is how one is made.
     #[test]
     fn every_table_pair_exists_in_the_nvd_dictionary() {
-        for (slug, pairs) in GENERIC_LIBRARY_CPES {
-            for (vendor, product) in *pairs {
-                let observed = NVD_DICTIONARY_OBSERVED
-                    .iter()
-                    .find(|(v, p, _)| v == vendor && p == product);
-                let Some((_, _, entries)) = observed else {
+        for (slug, pairs) in rows() {
+            for pair in pairs {
+                let entries = pair.dictionary_entries.unwrap_or_else(|| {
                     panic!(
-                        "GENERIC_LIBRARY_CPES row {slug:?} emits \
-                         {vendor}:{product}, which has no entry in \
-                         NVD_DICTIONARY_OBSERVED. Run \
-                         `scripts/probe-cpe-dictionary.sh {vendor}:{product}` \
-                         and record the result — a pair NVD does not have \
-                         can only ever match zero advisories."
-                    );
-                };
+                        "row {slug:?} emits {}:{} with no dictionary_entries. Run \
+                         `scripts/probe-cpe-dictionary.sh {}:{}` and record the \
+                         result — a pair NVD does not have can only ever match zero.",
+                        pair.vendor, pair.product, pair.vendor, pair.product,
+                    )
+                });
                 assert!(
-                    *entries > 0,
-                    "{vendor}:{product} (row {slug:?}) was probed and NVD's \
-                     dictionary has no such pair, so the candidate is dead. \
-                     Remove it, or correct the vendor/product."
+                    entries > 0,
+                    "{}:{} (row {slug:?}) was probed and NVD's dictionary has no \
+                     such pair, so the candidate is dead. Remove it, or correct \
+                     the vendor/product.",
+                    pair.vendor,
+                    pair.product,
                 );
             }
         }
     }
 
-    /// The converse: an observation left behind after its row changed
-    /// would make the check above vacuous for a pair nothing emits, and
-    /// would misrepresent the probe as covering the current table.
+    /// Spec 1491 FR-013 — every evidence file a pair names is committed.
     #[test]
-    fn no_dictionary_observation_is_stale() {
-        for (vendor, product, _) in NVD_DICTIONARY_OBSERVED {
-            let emitted = GENERIC_LIBRARY_CPES
-                .iter()
-                .any(|(_, pairs)| pairs.iter().any(|(v, p)| v == vendor && p == product));
-            assert!(
-                emitted,
-                "NVD_DICTIONARY_OBSERVED carries {vendor}:{product}, which no \
-                 GENERIC_LIBRARY_CPES row emits. Drop the observation with the row."
-            );
+    fn m1491_every_evidence_path_exists() {
+        let mut checked = 0;
+        for (slug, pairs) in rows() {
+            for pair in pairs {
+                for path in [&pair.dictionary_evidence, &pair.title_evidence] {
+                    let path = path.as_deref().unwrap();
+                    assert!(
+                        repo_root().join(path).is_file(),
+                        "row {slug:?} ({}:{}) names evidence {path}, which is not a \
+                         committed file",
+                        pair.vendor,
+                        pair.product,
+                    );
+                    checked += 1;
+                }
+            }
         }
+        // CONTROL: two paths for each of the 96 pair occurrences.
+        assert_eq!(checked, 2 * 96);
+    }
 
-        let mut keys: Vec<(&str, &str)> = NVD_DICTIONARY_OBSERVED
-            .iter()
-            .map(|(v, p, _)| (*v, *p))
-            .collect();
-        let before = keys.len();
-        keys.sort_unstable();
-        keys.dedup();
-        assert_eq!(keys.len(), before, "NVD_DICTIONARY_OBSERVED has a duplicate pair");
+    /// Spec 1491 FR-013, research R1 — every recorded count is the count its
+    /// dictionary evidence holds.
+    ///
+    /// Reads the evidence by its header (`product`, `vendor`,
+    /// `dictionary-entries`) and skips `#` lines. The census's
+    /// `# control+  openssl:openssl  330` line is a vulnerability count, and
+    /// reading by position or pattern would take it for a second
+    /// `openssl:openssl` count.
+    #[test]
+    fn m1491_every_count_matches_its_evidence() {
+        let mut files: std::collections::HashMap<String, std::collections::HashMap<(String, String), u32>> =
+            std::collections::HashMap::new();
+        for (slug, pairs) in rows() {
+            for pair in pairs {
+                let path = pair.dictionary_evidence.clone().unwrap();
+                let counts = files
+                    .entry(path.clone())
+                    .or_insert_with(|| dictionary_counts(&read_evidence(&path)));
+                // CONTROL: the evidence parsed to rows, and to a known one.
+                assert!(
+                    counts.len() >= 95 && counts.contains_key(&("gnu".into(), "bash".into())),
+                    "{path} parsed to {} rows without gnu:bash; the check would be vacuous",
+                    counts.len(),
+                );
+                let want = counts.get(&(pair.vendor.clone(), pair.product.clone()));
+                assert_eq!(
+                    want.copied(),
+                    pair.dictionary_entries,
+                    "row {slug:?}: {}:{} records {:?} dictionary entries, but {path} \
+                     holds {want:?}",
+                    pair.vendor,
+                    pair.product,
+                    pair.dictionary_entries,
+                );
+            }
+        }
+    }
 
-        let sorted: Vec<(&str, &str)> = {
-            let mut s: Vec<(&str, &str)> = NVD_DICTIONARY_OBSERVED
-                .iter()
-                .map(|(v, p, _)| (*v, *p))
-                .collect();
-            s.sort_unstable();
-            s
-        };
-        let actual: Vec<(&str, &str)> = NVD_DICTIONARY_OBSERVED
-            .iter()
-            .map(|(v, p, _)| (*v, *p))
-            .collect();
-        assert_eq!(
-            actual, sorted,
-            "NVD_DICTIONARY_OBSERVED is not sorted by (vendor, product); \
-             keep it sorted for diff-friendliness, as GENERIC_LIBRARY_CPES is."
-        );
+    /// Spec 1491 FR-013 — a pair two rows share carries the same evidence in
+    /// both, so the two rows cannot disagree about one observation.
+    #[test]
+    fn m1491_shared_pairs_agree() {
+        let mut seen: std::collections::HashMap<(&str, &str), &crate::generate::cpe_table::CpePair> =
+            std::collections::HashMap::new();
+        let mut shared = 0;
+        for (slug, pairs) in rows() {
+            for pair in pairs {
+                let key = (pair.vendor.as_str(), pair.product.as_str());
+                if let Some(first) = seen.insert(key, pair) {
+                    shared += 1;
+                    assert_eq!(
+                        (&first.dictionary_entries, &first.observed, &first.dictionary_evidence),
+                        (&pair.dictionary_entries, &pair.observed, &pair.dictionary_evidence),
+                        "row {slug:?} records {}:{} differently from an earlier row",
+                        pair.vendor,
+                        pair.product,
+                    );
+                }
+            }
+        }
+        // CONTROL: python:python is shared by python3 and python3-minimal.
+        assert_eq!(shared, 1, "expected exactly one shared pair (python:python)");
+    }
+
+    /// Spec 1491 FR-011, research R10 — the table holds identifiers and
+    /// dictionary evidence only. No field is about vulnerabilities, and no
+    /// line carries an advisory identifier or a count of them.
+    #[test]
+    fn m1491_the_table_carries_no_vulnerability_data() {
+        let text = include_str!("cpe_table.toml");
+        let banned_key = regex::Regex::new(r"(?im)^\s*\{?.*\b(cves?|advisor\w*|vuln\w*)\s*=").unwrap();
+        let advisory_id = regex::Regex::new(r"(?i)\b(cve|ghsa|osv)-\d").unwrap();
+        let count = regex::Regex::new(r"(?i)\b\d+\s+(cves?|advisories|vulnerabilities)\b").unwrap();
+        for (i, line) in text.lines().enumerate() {
+            for (what, re) in
+                [("a vulnerability field", &banned_key), ("an advisory identifier", &advisory_id), ("a vulnerability count", &count)]
+            {
+                assert!(!re.is_match(line), "cpe_table.toml line {} holds {what}: {line}", i + 1);
+            }
+        }
+        // CONTROL: the patterns fire on what they are meant to catch.
+        assert!(banned_key.is_match("  { vendor = \"v\", cves = 3 },"));
+        assert!(advisory_id.is_match("# see CVE-2026-1"));
+        assert!(count.is_match("# 28 CVEs under invisible-island"));
+    }
+
+    /// The census shape: `# product<TAB>vendor<TAB>dictionary-entries...`
+    /// header, `#` comments skipped.
+    fn dictionary_counts(text: &str) -> std::collections::HashMap<(String, String), u32> {
+        let mut header: Vec<&str> = Vec::new();
+        let mut out = std::collections::HashMap::new();
+        for line in text.lines() {
+            if let Some(h) = line.strip_prefix("# product\t") {
+                header = std::iter::once("product").chain(h.split('\t')).collect();
+                continue;
+            }
+            if line.is_empty() || line.starts_with('#') || header.is_empty() {
+                continue;
+            }
+            let rec: std::collections::HashMap<&str, &str> =
+                header.iter().copied().zip(line.split('\t')).collect();
+            if let (Some(p), Some(v), Some(n)) =
+                (rec.get("product"), rec.get("vendor"), rec.get("dictionary-entries"))
+            {
+                if let Ok(n) = n.parse() {
+                    out.insert(((*v).to_string(), (*p).to_string()), n);
+                }
+            }
+        }
+        out
     }
 
     /// T015 — FR-004 / SC-003: a component with `pkg:generic/<lib>`
@@ -1533,7 +1275,7 @@ mod tests {
         }
         for name in ["warp", "cmark-gfm"] {
             assert!(
-                !GENERIC_LIBRARY_CPES.iter().any(|(s, _)| *s == name),
+                !rows().any(|(s, _)| s == name),
                 "{name} was added to the table; specs/nix-curated-cpe-gaps/ rejected it"
             );
         }

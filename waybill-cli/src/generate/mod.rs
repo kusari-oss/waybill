@@ -22,6 +22,7 @@
 
 pub mod compiler_pipeline_annotation;
 pub mod cpe;
+pub(crate) mod cpe_table;
 pub mod cross_ecosystem_edges;
 pub mod cyclonedx;
 pub mod divergence_annotation;
