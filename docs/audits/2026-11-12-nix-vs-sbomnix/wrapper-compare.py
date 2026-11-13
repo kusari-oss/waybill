@@ -7,7 +7,7 @@ def walk(o):
         for v in o.values(): yield from walk(v)
     elif isinstance(o, list):
         for v in o: yield from walk(v)
-print("target\tS_rp\tS_collisions\tS_questionable\tW_rp\tS_only_rp\tof_which_patched\tremaining_real_gap\tW_only_rp")
+print("target\tS_rp\tS_collisions\tS_questionable\tW_rp\tW_collisions\tW_questionable\tS_only_rp\tof_which_patched\tremaining_real_gap\tW_only_rp")
 gaps = []
 for t in sys.argv[3:]:
     s, w = f"{D}/sbomnix/{t}", f"{D}/waybill/{t}"
@@ -25,6 +25,6 @@ for t in sys.argv[3:]:
     S, W = Sc["right-product"], Wc["right-product"]
     so = S - W; pat = so & patched; gap = so - patched
     gaps += [(t, a, b) for a, b in sorted(gap)]
-    print("\t".join(map(str, [t, len(S), len(Sc["collision"] - S), len(Sc["questionable"] - S), len(W), len(so), len(pat), len(gap), len(W - S)])))
+    print("\t".join(map(str, [t, len(S), len(Sc["collision"] - S), len(Sc["questionable"] - S), len(W), len(Wc["collision"] - W), len(Wc["questionable"] - W), len(so), len(pat), len(gap), len(W - S)])))
 print("\nremaining real gap (sbomnix right-product, not patched, not found by waybill):")
 for g in gaps: print("  " + "\t".join(g))

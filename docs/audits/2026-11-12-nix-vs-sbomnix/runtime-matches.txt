@@ -1,5 +1,5 @@
 curl 100 100 99
-openssh 28 70 70
-httpie 109 109 109
+openssh 28 71 71
+httpie 109 132 132
 gh 0 55 55
 ripgrep 6 6 6
