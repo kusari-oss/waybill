@@ -847,15 +847,12 @@ fn m1280_t057_a_degraded_closure_records_no_edge_count() {
     );
 }
 
-/// T058 / #1360 — `--tier` does not filter the closure tier, and these edges
-/// inherit that rather than introducing it.
+/// T058 / #1360 — a `--tier` scan leaves no closure edge dangling.
 ///
-/// `apply_tier_filter` runs at `scan_cmd.rs:4121`; the closure's components
-/// land at 4728 and its edges at 4814, both after it. That is pre-existing for
-/// components and is filed as #1360. What this asserts is the consequence for
-/// the edges: both endpoints also arrive after the filter, so no dangling
-/// endpoint is produced — which is the only way this could have been a defect
-/// of *this* milestone rather than an inherited one.
+/// Written when `--tier` ran above the closure merge and never filtered the
+/// closure tier. Since #1360 it is applied again below the last producer, so
+/// `source-only` drops the build-tier closure members, and this asserts the
+/// filter took their edges with them.
 #[test]
 fn m1280_t058_tier_filtering_leaves_no_dangling_closure_edge() {
     let s = scan_closure_with_args(&closure("through_fetch.json"), &["--tier", "source-only"]);
