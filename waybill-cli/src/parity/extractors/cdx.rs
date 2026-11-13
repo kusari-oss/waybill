@@ -1043,6 +1043,8 @@ cdx_anno!(c191_cdx, "waybill:deps-dev-outcome", component);
 cdx_anno!(c192_cdx, "waybill:deps-dev-outcomes", document);
 cdx_anno!(c193_cdx, "waybill:vex-claims-omitted", document);
 cdx_anno!(c220_cdx, "waybill:vex-claims-unscoped", document);
+// Milestone 1046 (#1046): C221 — a merged twin built outside its declared range.
+cdx_anno!(c221_cdx, "waybill:requirement-unsatisfied", component);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

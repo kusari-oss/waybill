@@ -88,6 +88,29 @@ pub(crate) enum HackageIdentity {
     /// FR-009 — the set itself was unavailable. Every member lands here, and
     /// the document says the pass did not run.
     PackageSetUnavailable,
+    /// #1046 — a GHC-built member the set carries at another version, which
+    /// Hackage says is published at this one: the overlay case. Carries the
+    /// VCS checkout its `src` is, when it is one, for the `vcs_url` qualifier.
+    HackagePublished {
+        vcs: Option<crate::scan_fs::package_db::nix::closure::emit::VcsSource>,
+    },
+    /// #1046 — Hackage says this version is not published (a fork's own
+    /// version number). Stays `pkg:generic`.
+    HackageUnpublished,
+    /// #1046 — `--offline`: the question was not asked.
+    HackageUncheckedOffline,
+    /// #1046 — `--no-hackage-lookup`: the question was not asked.
+    HackageUncheckedOptedOut,
+    /// #1046 — the question was asked and not answered.
+    HackageUnreachable,
+}
+
+/// #1046 — whether, and how, the identity pass may ask Hackage about a
+/// GHC-built `version-disagrees` member.
+pub(crate) enum HackageLookup<'a> {
+    Offline,
+    OptedOut,
+    Source(&'a dyn super::hackage::HackageSource),
 }
 
 impl HackageIdentity {
@@ -100,6 +123,11 @@ impl HackageIdentity {
             Self::NotInPackageSet => "not-in-package-set",
             Self::NoVersionRecorded => "no-version-recorded",
             Self::PackageSetUnavailable => "package-set-unavailable",
+            Self::HackagePublished { .. } => "hackage-published",
+            Self::HackageUnpublished => "hackage-unpublished",
+            Self::HackageUncheckedOffline => "hackage-unchecked-offline",
+            Self::HackageUncheckedOptedOut => "hackage-unchecked-opted-out",
+            Self::HackageUnreachable => "hackage-unreachable",
         }
     }
 
@@ -210,6 +238,35 @@ pub(crate) fn exact_attribute<'s>(
     Some((alias, entry))
 }
 
+/// #1046 — settle a `version-disagrees` member that a GHC built by asking
+/// Hackage whether its exact version is published.
+///
+/// Only that population reaches here: the pinned set carries the name (so it
+/// is public; spec FR-006a), at another version, and the GHC signal says it
+/// is a Haskell package rather than one of the 26 measured collisions such as
+/// GNU `bash`. Every other outcome of [`decide`] is returned unchanged by the
+/// caller, and makes no request.
+pub(crate) fn consult_hackage(
+    name: &str,
+    version: &str,
+    lookup: &HackageLookup<'_>,
+    vcs: Option<crate::scan_fs::package_db::nix::closure::emit::VcsSource>,
+) -> HackageIdentity {
+    use super::hackage::Published;
+    match lookup {
+        HackageLookup::Offline => HackageIdentity::HackageUncheckedOffline,
+        HackageLookup::OptedOut => HackageIdentity::HackageUncheckedOptedOut,
+        HackageLookup::Source(src) => match src.published(name, version) {
+            Published::Yes => HackageIdentity::HackagePublished { vcs },
+            Published::No => HackageIdentity::HackageUnpublished,
+            Published::Unreachable(detail) => {
+                tracing::info!(name, version, detail = %detail, "nix-closure: Hackage did not answer");
+                HackageIdentity::HackageUnreachable
+            }
+        },
+    }
+}
+
 /// The declared runtime dependencies of a confirmed member, as attribute
 /// names.
 ///
@@ -226,6 +283,75 @@ pub(crate) fn declared_relations(entry: &PackageSetEntry) -> BTreeSet<String> {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    // --- #1046: the Hackage publication check ---------------------------
+
+    /// Answers from a table and counts every question asked.
+    struct CountingHackage {
+        answer: super::super::hackage::Published,
+        asked: std::cell::Cell<usize>,
+    }
+
+    impl super::super::hackage::HackageSource for CountingHackage {
+        fn published(&self, _: &str, _: &str) -> super::super::hackage::Published {
+            self.asked.set(self.asked.get() + 1);
+            self.answer.clone()
+        }
+    }
+
+    fn counting(answer: super::super::hackage::Published) -> CountingHackage {
+        CountingHackage { answer, asked: std::cell::Cell::new(0) }
+    }
+
+    #[test]
+    fn m1046_each_hackage_answer_has_its_own_outcome() {
+        use super::super::hackage::Published;
+        for (answer, wire) in [
+            (Published::Yes, "hackage-published"),
+            (Published::No, "hackage-unpublished"),
+            (Published::Unreachable("x".into()), "hackage-unreachable"),
+        ] {
+            let src = counting(answer);
+            let id = consult_hackage("waybill-fixture-a", "2.1", &HackageLookup::Source(&src), None);
+            assert_eq!(id.wire(), wire);
+            assert_eq!(src.asked.get(), 1);
+        }
+    }
+
+    /// `--offline` and `--no-hackage-lookup` decide without asking.
+    #[test]
+    fn m1046_offline_and_opted_out_make_no_request() {
+        assert_eq!(
+            consult_hackage("waybill-fixture-a", "2.1", &HackageLookup::Offline, None).wire(),
+            "hackage-unchecked-offline"
+        );
+        assert_eq!(
+            consult_hackage("waybill-fixture-a", "2.1", &HackageLookup::OptedOut, None).wire(),
+            "hackage-unchecked-opted-out"
+        );
+    }
+
+    /// Every outcome maps to its own wire value, and the five new ones leave
+    /// `version-disagrees` as it was.
+    #[test]
+    fn m1046_the_wire_values_are_distinct() {
+        let all = [
+            HackageIdentity::Confirmed { attribute: "a".into() },
+            HackageIdentity::VersionDisagrees,
+            HackageIdentity::SignalsDisagree,
+            HackageIdentity::NotInPackageSet,
+            HackageIdentity::NoVersionRecorded,
+            HackageIdentity::PackageSetUnavailable,
+            HackageIdentity::HackagePublished { vcs: None },
+            HackageIdentity::HackageUnpublished,
+            HackageIdentity::HackageUncheckedOffline,
+            HackageIdentity::HackageUncheckedOptedOut,
+            HackageIdentity::HackageUnreachable,
+        ];
+        let wires: std::collections::BTreeSet<&str> = all.iter().map(|i| i.wire()).collect();
+        assert_eq!(wires.len(), all.len());
+        assert_eq!(HackageIdentity::VersionDisagrees.wire(), "version-disagrees");
+    }
     use std::collections::BTreeMap;
 
     /// A derivation whose `nativeBuildInputs` holds exactly these paths.
@@ -826,6 +952,7 @@ pub(crate) fn reclassify(
     set: Option<&PackageSet>,
     boot: &BTreeSet<String>,
     compilers: Option<&super::closure_compilers::ClosureCompilers>,
+    hackage: &HackageLookup<'_>,
 ) -> ClosureIdentitySummary {
     // Derivations by the identity a consumer sees. A closure holds several
     // derivations per `(pname, version)` -- build variants -- and the GHC
@@ -838,13 +965,25 @@ pub(crate) fn reclassify(
         drvs_of.entry((pname, version)).or_default().push(drv);
     }
 
+    let out_index = closure.raw.output_index();
     let mut summary = ClosureIdentitySummary::default();
     for c in components.iter_mut().filter(|c| is_unidentified_closure_member(c)) {
         let drvs = drvs_of
             .get(&(c.name.as_str(), c.version.clone()))
             .cloned()
             .unwrap_or_default();
-        let id = decide(&c.name, &c.version, set, &drvs);
+        let mut id = decide(&c.name, &c.version, set, &drvs);
+        if id == HackageIdentity::VersionDisagrees && drvs.iter().copied().any(built_by_ghc) {
+            // The checkout this member was built from, when it is a VCS one:
+            // the first variant whose `src` resolves to a fetch recording a
+            // URL and a revision.
+            let vcs = drvs.iter().find_map(|d| {
+                crate::scan_fs::package_db::nix::closure::derivation::src_derivation(d, &out_index, &closure.raw.derivations)
+                    .and_then(|k| closure.raw.derivations.get(k))
+                    .and_then(crate::scan_fs::package_db::nix::closure::emit::vcs_source)
+            });
+            id = consult_hackage(&c.name, &c.version, hackage, vcs);
+        }
         *summary.outcomes.entry(id.wire().to_string()).or_default() += 1;
 
         // Principle X / FR-007: every examined member records the outcome,
@@ -855,6 +994,26 @@ pub(crate) fn reclassify(
             ANN_CLOSURE_IDENTITY.to_string(),
             serde_json::Value::from(id.wire()),
         );
+
+        // #1046 — a Hackage-published overlay version: the identity, and the
+        // `vcs_url` qualifier when it was built from a checkout. No license,
+        // hash or declared edges: the pinned set does not carry this version.
+        if let HackageIdentity::HackagePublished { vcs } = &id {
+            let location = vcs.as_ref().map(|v| v.location());
+            let qualifiers: Vec<(&str, &str)> =
+                location.as_deref().map(|l| vec![("vcs_url", l)]).unwrap_or_default();
+            match waybill_common::types::purl::Purl::from_parts("hackage", &c.name, Some(&c.version), &qualifiers) {
+                Ok(p) => {
+                    let before = c.purl.as_str().to_string();
+                    if before != p.as_str() {
+                        summary.renames.push((before, p.as_str().to_string()));
+                    }
+                    c.purl = p;
+                }
+                Err(e) => tracing::warn!(name = %c.name, error = %e, "nix-closure: a Hackage-published identity yields no valid PURL"),
+            }
+            continue;
+        }
 
         let Some(attribute) = id.attribute() else { continue };
         let Some(entry) = set.and_then(|s| s.get(attribute)) else { continue };

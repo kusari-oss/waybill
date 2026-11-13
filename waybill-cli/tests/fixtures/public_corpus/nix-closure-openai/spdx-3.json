@@ -476,6 +476,7 @@
       "name": "p11-kit",
       "software_packageUrl": "pkg:generic/p11-kit@0.25.5",
       "software_packageVersion": "0.25.5",
+      "software_sourceInfo": "git+https://github.com/p11-glue/p11-kit.git@0.25.5",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2MKKZVL6GDICXQ4B",
       "type": "software_Package"
     },
@@ -7437,8 +7438,8 @@
         }
       ],
       "name": "xmlto",
-      "software_downloadLocation": "https://pagure.io/xmlto.git",
       "software_packageUrl": "pkg:generic/xmlto-sha256.hwttag8J1t9cBPBHNY7me2H0IPOzS8IjfCLIHNWq67Do.e",
+      "software_sourceInfo": "git+https://pagure.io/xmlto.git@0.0.29",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DVS7UDXEKDEUQW5N",
       "type": "software_Package"
     },
@@ -14974,8 +14975,8 @@
         }
       ],
       "name": "source",
-      "software_downloadLocation": "https://github.com/p11-glue/p11-kit.git",
       "software_packageUrl": "pkg:generic/source-sha256.h2xDUvXGsF8x42uezgnvOXLVUdNNHcaE042HDDEJeplc.e",
+      "software_sourceInfo": "git+https://github.com/p11-glue/p11-kit.git@0.25.5",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OHFFHNMTGRRPD5JE",
       "type": "software_Package"
     },
@@ -21129,6 +21130,7 @@
       "name": "xmlto",
       "software_packageUrl": "pkg:generic/xmlto@0.0.29",
       "software_packageVersion": "0.0.29",
+      "software_sourceInfo": "git+https://pagure.io/xmlto.git@0.0.29",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XPSTWECN6SDDIOW7",
       "type": "software_Package"
     },

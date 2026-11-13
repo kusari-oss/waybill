@@ -1,0 +1,161 @@
+{
+  "derivations": {
+    "d-namesake.drv": {
+      "env": {
+        "pname": "waybill-fixture-namesake",
+        "src": "/nix/store/v8vkxnkp0faz74a2j1ddjkp8srdpx8fy-waybill-fixture-namesake-1.0.tar.gz",
+        "version": "1.0"
+      },
+      "inputs": {
+        "drvs": {
+          "d-src-namesake.drv": {
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "name": "waybill-fixture-namesake-1.0",
+      "outputs": {
+        "out": {
+          "path": "h-namesake"
+        }
+      }
+    },
+    "d-overlaid.drv": {
+      "env": {
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "pname": "waybill-fixture-overlaid",
+        "src": "/nix/store/naf09vimr6h5zqzhz0ncshj0vk3k6rkc-waybill-fixture-overlaid-1111111",
+        "version": "2.1.0.0"
+      },
+      "inputs": {
+        "drvs": {
+          "d-src-overlaid.drv": {
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "name": "waybill-fixture-overlaid-2.1.0.0",
+      "outputs": {
+        "out": {
+          "path": "h-overlaid"
+        }
+      }
+    },
+    "d-relaxed.drv": {
+      "env": {
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "pname": "waybill-fixture-relaxed",
+        "version": "1.6"
+      },
+      "name": "waybill-fixture-relaxed-1.6",
+      "outputs": {
+        "out": {
+          "path": "h-relaxed"
+        }
+      }
+    },
+    "d-src-namesake.drv": {
+      "env": {
+        "urls": "https://example.invalid/waybill-fixture-namesake-1.0.tar.gz https://mirror.invalid/waybill-fixture-namesake-1.0.tar.gz"
+      },
+      "name": "waybill-fixture-namesake-1.0.tar.gz",
+      "outputs": {
+        "out": {
+          "hash": "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
+          "method": "flat"
+        }
+      }
+    },
+    "d-src-overlaid.drv": {
+      "env": {},
+      "name": "waybill-fixture-overlaid-1111111",
+      "outputs": {
+        "out": {
+          "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+          "method": "nar"
+        }
+      },
+      "structuredAttrs": {
+        "rev": "1111111111111111111111111111111111111111",
+        "url": "https://example.invalid/waybill-fixture-overlaid.git"
+      }
+    },
+    "d-variants-31.drv": {
+      "env": {
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "pname": "waybill-fixture-variants",
+        "version": "3.1"
+      },
+      "name": "waybill-fixture-variants-3.1",
+      "outputs": {
+        "out": {
+          "path": "h-variants-31"
+        }
+      }
+    },
+    "d-variants-32.drv": {
+      "env": {
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "pname": "waybill-fixture-variants",
+        "version": "3.2"
+      },
+      "name": "waybill-fixture-variants-3.2",
+      "outputs": {
+        "out": {
+          "path": "h-variants-32"
+        }
+      }
+    },
+    "r00t-waybill-fixture-proj-0.1.0.drv": {
+      "env": {
+        "buildInputs": "/nix/store/h-overlaid /nix/store/h-relaxed /nix/store/h-namesake /nix/store/h-variants-31 /nix/store/h-variants-32",
+        "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
+        "pname": "waybill-fixture-proj",
+        "version": "0.1.0"
+      },
+      "inputs": {
+        "drvs": {
+          "d-namesake.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "d-overlaid.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "d-relaxed.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "d-variants-31.drv": {
+            "outputs": [
+              "out"
+            ]
+          },
+          "d-variants-32.drv": {
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      },
+      "name": "waybill-fixture-proj-0.1.0",
+      "outputs": {
+        "out": {
+          "path": "h-proj"
+        }
+      }
+    }
+  },
+  "version": 4
+}

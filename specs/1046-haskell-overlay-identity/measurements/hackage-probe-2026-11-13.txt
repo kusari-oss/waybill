@@ -1,0 +1,57 @@
+# 2026-11-13T07:03Z — specs/1046-haskell-overlay-identity/measurements/hackage-probe.sh
+## A. per-name version list: /package/<name>/preferred (JSON)
+slack-web preferred	HTTP 200	320ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+tmp-postgres preferred	HTTP 200	262ms	{"normal-version":["1.34.1.0","1.34.0.1","1.34.0.0","1.33.0.0","1.32.0.1","1.32.0.0","1.31.0.3","1.31.0.2","1.31.0.1","1
+HUnit preferred	HTTP 200	259ms	{"normal-version":["1.6.2.0","1.6.1.0","1.6.0.0","1.5.0.0","1.4.0.0","1.3.1.2","1.3.1.1","1.3.1.0","1.3.0.0","1.2.5.2","
+hunit preferred (case)	HTTP 404	148ms	Package not found: No such package in package index 
+nonexistent preferred	HTTP 404	149ms	Package not found: No such package in package index 
+## B. per-version existence: /package/<name>-<version>/<name>.cabal
+slack-web-2.3.0.0 cabal	HTTP 200	213ms	name: slack-web version: 2.3.0.0 
+slack-web-2.3.0.1 cabal (absent)	HTTP 404	150ms	Package not found: No such package version for slack-web 
+tmp-postgres-1.35.0.0 cabal	HTTP 404	153ms	Package not found: No such package version for tmp-postgres 
+HUnit-1.6.2.0 cabal	HTTP 200	234ms	name: HUnit version: 1.6.2.0 
+hunit-1.6.2.0 cabal (case)	HTTP 404	146ms	Package not found: No such package version for hunit 
+## C. latency, 5 runs each
+run1 preferred	HTTP 200	221ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run2 preferred	HTTP 200	268ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run3 preferred	HTTP 200	231ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run4 preferred	HTTP 200	237ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run5 preferred	HTTP 200	219ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run1 cabal	HTTP 200	420ms	name: slack-web version: 2.3.0.0 
+run2 cabal	HTTP 200	216ms	name: slack-web version: 2.3.0.0 
+run3 cabal	HTTP 200	225ms	name: slack-web version: 2.3.0.0 
+run4 cabal	HTTP 200	227ms	name: slack-web version: 2.3.0.0 
+run5 cabal	HTTP 200	228ms	name: slack-web version: 2.3.0.0 
+## D. burst: 20 sequential per-version requests, status codes only
+200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 
+## E. a deprecated version: listed apart, still served
+text deprecated-version count: 0 first: []
+
+# re-run at implementation time (T032), 2026-11-13T07:55Z
+## A. per-name version list: /package/<name>/preferred (JSON)
+slack-web preferred	HTTP 200	244ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+tmp-postgres preferred	HTTP 200	161ms	{"normal-version":["1.34.1.0","1.34.0.1","1.34.0.0","1.33.0.0","1.32.0.1","1.32.0.0","1.31.0.3","1.31.0.2","1.31.0.1","1
+HUnit preferred	HTTP 200	236ms	{"normal-version":["1.6.2.0","1.6.1.0","1.6.0.0","1.5.0.0","1.4.0.0","1.3.1.2","1.3.1.1","1.3.1.0","1.3.0.0","1.2.5.2","
+hunit preferred (case)	HTTP 404	166ms	Package not found: No such package in package index 
+nonexistent preferred	HTTP 404	168ms	Package not found: No such package in package index 
+## B. per-version existence: /package/<name>-<version>/<name>.cabal
+slack-web-2.3.0.0 cabal	HTTP 200	232ms	name: slack-web version: 2.3.0.0 
+slack-web-2.3.0.1 cabal (absent)	HTTP 404	162ms	Package not found: No such package version for slack-web 
+tmp-postgres-1.35.0.0 cabal	HTTP 404	262ms	Package not found: No such package version for tmp-postgres 
+HUnit-1.6.2.0 cabal	HTTP 200	242ms	name: HUnit version: 1.6.2.0 
+hunit-1.6.2.0 cabal (case)	HTTP 404	164ms	Package not found: No such package version for hunit 
+## C. latency, 5 runs each
+run1 preferred	HTTP 200	243ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run2 preferred	HTTP 200	240ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run3 preferred	HTTP 200	176ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run4 preferred	HTTP 200	236ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run5 preferred	HTTP 200	239ms	{"normal-version":["2.3.0.0","2.2.0.0","2.1.0.0","2.0.1.0","1.6.1.0","1.6.0.0","1.5.0.1","1.5.0.0","0.4.0.0","0.3.0.1","
+run1 cabal	HTTP 200	248ms	name: slack-web version: 2.3.0.0 
+run2 cabal	HTTP 200	242ms	name: slack-web version: 2.3.0.0 
+run3 cabal	HTTP 200	240ms	name: slack-web version: 2.3.0.0 
+run4 cabal	HTTP 200	165ms	name: slack-web version: 2.3.0.0 
+run5 cabal	HTTP 200	235ms	name: slack-web version: 2.3.0.0 
+## D. burst: 20 sequential per-version requests, status codes only
+200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 
+## E. a deprecated version: listed apart, still served
+text deprecated-version count: 0 first: []

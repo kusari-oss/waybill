@@ -288,7 +288,12 @@ fn scan_closure_with(closure: &str, confirmation: Confirmation) -> Scan {
     let cdx_path = dir.path().join("out.cdx.json");
     let spdx23_path = dir.path().join("out.spdx23.json");
     let spdx3_path = dir.path().join("out.spdx3.json");
-    let mut cmd = Command::new(binary_path());
+    let mut cmd = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        };
     cmd.args([
         "sbom",
         "scan",
@@ -437,7 +442,12 @@ fn m1366_the_record_is_identical_in_all_three_formats() {
 fn m1366_no_closure_means_no_record() {
     let dir = tempfile::tempdir().unwrap();
     let cdx_path = dir.path().join("out.cdx.json");
-    let out = Command::new(binary_path())
+    let out = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "scan", "--path", project().to_str().unwrap(), "--no-deep-hash"])
         .args(["--format", "cyclonedx-json", "--output"])
         .arg(format!("cyclonedx-json={}", cdx_path.display()))
@@ -631,7 +641,12 @@ fn m1442_parity_check_reports_c207_present_in_every_format() {
     ] {
         std::fs::write(dir.path().join(f), v.to_string()).unwrap();
     }
-    let out = Command::new(binary_path())
+    let out = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
         .arg(dir.path())
         .output()

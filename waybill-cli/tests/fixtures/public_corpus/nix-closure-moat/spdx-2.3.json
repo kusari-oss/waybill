@@ -4269,6 +4269,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/0001-Add-prototype-to-function-definitions.patch-sha256.hX2Vv6VVM3KjmBHo2ukVWe5YTVXRmqe.s.sKw2kr73OpZs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://sourceforge.net/p/expect/patches/24/attachment/0001-Add-prototype-to-function-definitions.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -4407,6 +4412,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch-sha256.hA89dikDVDJGXZ702nq3MbVBfYEChaWk1bp59aDKD7kU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/docbook/xslt10-stylesheets/commit/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -4473,6 +4483,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/40c1ccf3432a6787be1801ced721540e34c6cd87.patch-sha256.hIemngBqBq3QRCmVscWtsuXHiFgvTOJIIB9SyAvsqHd0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pexpect/ptyprocess/commit/40c1ccf3432a6787be1801ced721540e34c6cd87.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -4539,6 +4554,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/883630f76cbf512003b81de25cd96cb75c6cf0f9.patch-sha256.hVPJqJUAovw6V92jpqIXkIR1xYGbxIWxaHr8cePWI2SU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/libevent/libevent/commit/883630f76cbf512003b81de25cd96cb75c6cf0f9.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -4659,6 +4679,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/CUnit-2.1-3.tar.bz2-sha256.h9bKRN.shFuwi3fsYFhP23KLTljxAj5vJJpGTvpJpA8hQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://sourceforge/cunit/CUnit/2.1-3/CUnit-2.1-3.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -4725,6 +4750,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/CVE-2019-13232-1.patch-sha256.hJFgv89zZJtGkbK.pFBvdpmdJSXdZuNvULJdylB5lpXxI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/madler/unzip/commit/41beb477c5744bc396fa1162ee0c14218ec12213.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -4791,6 +4821,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/CVE-2019-13232-2.patch-sha256.hYmjpyVZfcx.sb1jGtvYLucrqC3mX86yjAlJn.s7SXjwkc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/madler/unzip/commit/47b3ceae397d21bf822bc2ac73052a4b1daf8e1c.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -4857,6 +4892,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/CVE-2019-13232-3.patch-sha256.h7p4mAYGQpRVXK2aiYRiRaEOqEAITGoa1xSdp3GY7ess.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/madler/unzip/commit/6d351831be705cc26d897db44f878a978f4138fc.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -4923,6 +4963,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/CVE-2025-46836.patch-sha256.h2R9giETNN3e2t1DPQj0kb4uYCXpkBxnF8grWIBLM7s0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/ecki/net-tools/commit/7a8f42fb20013a1493d8cae1c43436f85e656f2d.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -5049,6 +5094,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ChasingBottoms-1.3.1.17-r1.cabal-sha256.hMDZDkpK0oVee3PK1ThQcYEIUPiAIjahsf3.pJOeLl4fc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/ChasingBottoms-1.3.1.17/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -5115,6 +5165,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ChasingBottoms-1.3.1.17.tar.gz-sha256.hr3rC.sIsVSEwe5B1HVru.pjikGVfMioBhwSz22cNqrIxw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/ChasingBottoms-1.3.1.17.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -5241,6 +5296,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/Diff-1.0.2.tar.gz-sha256.hzX4m09Xr9.sLBp1Ja6.pJR.p8v.s7ipjYttjS0viO541TYU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/Diff-1.0.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -5307,6 +5367,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/HUnit-1.6.2.0.tar.gz-sha256.hsLdTiHH.swFhIb8AHQIhtLzFy.pPpoaZNr.soOl4QvXRKs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/HUnit-1.6.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -6513,6 +6578,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/OneTuple-0.4.2.1.tar.gz-sha256.hxQQTJVHpyPWv5sjI1b8e0gj02piwy0r1lAC9m9g24D4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/OneTuple-0.4.2.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -6579,6 +6649,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/PySocks-1.7.1.tar.gz-sha256.hP4gEVx6.pFZw4CsbeN2Q7tGhZcGVdO7okNTDWVYt5mqA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/P/PySocks/PySocks-1.7.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -6645,6 +6720,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/Python-3.13.13.tar.xz-sha256.hKrkf9AF4PMymT3XRDIgulXvf1g4r9acvhCF5Nym3inE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://www.python.org/ftp/python/3.13.13/Python-3.13.13.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -6782,6 +6862,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/QuickCheck-2.15.0.1-r1.cabal-sha256.hDP0ze7nm.p.sCSVb0ku0mKFW8dm81GU5ashleyUDS57jE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/QuickCheck-2.15.0.1/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -6848,6 +6933,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/QuickCheck-2.15.0.1.tar.gz-sha256.ho7IhbduvSB28gkFLYSD4tybZads.sC1HyCnpFQl7zbn8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/QuickCheck-2.15.0.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -6974,6 +7064,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/StateVar-1.2.2.tar.gz-sha256.hXks52jlWVqWYJ7AoBQiq.sccDNXmLUOXW.sVJZYCYlGCU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/StateVar-1.2.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -8696,6 +8791,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/a44312974bd9084aa568d2e18ce5b2a7e0e45983.patch-sha256.hDEO4FbzKNAXADYocSQhhwjQTGGu9V5pqd38u1sWhpOI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pexpect/ptyprocess/commit/a44312974bd9084aa568d2e18ce5b2a7e0e45983.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -9535,6 +9635,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/adjunctions-4.4.4.tar.gz-sha256.hIUCNm9PHQzG1V86GKB5ZL1ZGbhnSp.pPzfkBlIDpmMUU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/adjunctions-4.4.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -9661,6 +9766,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/aeson-2.2.4.1.tar.gz-sha256.hQHHxqnz0.p.pbIiH0k7S.p9V7J0QRSZSwNWFs5iC3wC.pmA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/aeson-2.2.4.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -9841,6 +9951,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/alex-3.5.4.2.tar.gz-sha256.h30gdyWDixZowOV9zNQMf1O.pHc7ikKJSk8jIOAP9HRBg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/alex-3.5.4.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -9907,6 +10022,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ansi-terminal-1.1.5.tar.gz-sha256.hnPCDzvLiuoikJfEyyKgr.ppMetLDDgjKyAX.pPzqLiMHM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/ansi-terminal-1.1.5.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -9973,6 +10093,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ansi-terminal-types-1.1.3.tar.gz-sha256.hn8nOIVfxiJvZmk0iyfHGRYlZC.pD3l8Pv5xyPoXoRpok.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/ansi-terminal-types-1.1.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -10099,6 +10224,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ansi-wl-pprint-1.0.2.tar.gz-sha256.hI04YE6F45UZtEhY14ZDm.szPqbwnEUSATiCTV3navJ0c.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/ansi-wl-pprint-1.0.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -10423,6 +10553,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/assoc-1.1.1-r2.cabal-sha256.hdmsQQO2lJVv88Q4amFnAbQ7WrQ4qyH7ZFbsDVXTRCuQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/assoc-1.1.1/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -10489,6 +10624,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/assoc-1.1.1.tar.gz-sha256.hIxFJt.s7wn13ZWvUSKGFeOyltvQ.pq3soFPgZEpLE7D.sY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/assoc-1.1.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -10615,6 +10755,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/async-2.2.6.tar.gz-sha256.hFIVxvBiAAxASQdpsSRMdBzJOY6iO0oOoTe8ulpRZlhk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/async-2.2.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -10885,6 +11030,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/attoparsec-0.14.4-r6.cabal-sha256.hNRKdCrF0HwAPGn0vyDlUSRnub7uPLW5.sCmKcQfkQNfM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/attoparsec-0.14.4/revision/6.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -10951,6 +11101,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/attoparsec-0.14.4.tar.gz-sha256.hPzN.s5YYkVl3hJCb2B8I.pYMewnIa04638gnyhiMmXnmw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/attoparsec-0.14.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -11220,6 +11375,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/attrs-26.1.0.tar.gz-sha256.h0DzricsyKo.sXBtT7kZQHN7ZkKqNpmP4TCpvJbJhe.szI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/a/attrs/attrs-26.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -11596,6 +11756,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/autoconf-archive-2024.10.16.tar.xz-sha256.he81dABkW86UO10NvT3AOPSsbrePtgDIZxZLWJQKlc2M.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/autoconf-archive/autoconf-archive-2024.10.16.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -11782,6 +11947,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/automake-1.16.5.tar.xz-sha256.h8B1YzW2dd.svcqetLvV6tGYgij9tz1veiAfX41rEYtGk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/automake/automake-1.16.5.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -12027,6 +12197,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/babel-2.17.0.tar.gz-sha256.hDFTP.pxn2kM3MUqO1C8v3HgeoCNHIDVSfJFm50s8K.p50.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/b/babel/babel-2.17.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -12153,6 +12328,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/base-compat-0.14.1.tar.gz-sha256.hdOZVVB5kXo.sHqt4eahtpc1Yb4LypNpvBYjqjRQGaNek.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/base-compat-0.14.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -12279,6 +12459,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/base-orphans-0.9.4.tar.gz-sha256.hCMwoOjE1D3vSiypdMa9pPuM38lk9PnIimZty3UlUxys.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/base-orphans-0.9.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -12405,6 +12590,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/base16-bytestring-1.0.2.0-r1.cabal-sha256.hppToj57J.sHnwsD8jPT.sqWSto9wo0qsLdtbyuy2Vi4v0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/base16-bytestring-1.0.2.0/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -12471,6 +12661,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/base16-bytestring-1.0.2.0.tar.gz-sha256.hHVqRFD7w4iFXU2CT7I5Z0iamgiDsiTeNXcruqGRyx4Q.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/base16-bytestring-1.0.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -12597,6 +12792,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/base64-bytestring-1.2.1.0-r1.cabal-sha256.hRTBcz4kUxm04W1GHIUcse4yFjxmGlFN390.pFweDUmAM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/base64-bytestring-1.2.1.0/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -12663,6 +12863,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/base64-bytestring-1.2.1.0.tar.gz-sha256.h.p.sjtMO3eJx62BTUgIUMdjxsFX5WlavMf4urPa9.scSck.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/base64-bytestring-1.2.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -13555,6 +13760,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bash53-001-sha256.hH2CENDZK.pGubRciw6j.pzsWX7gw0naX5s38esF97jKH8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/bash/bash-5.3-patches/bash53-001",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -13763,6 +13973,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bash53-004-sha256.hlZHSRQRVKfMvCBL5QYC52c6QI.sWnZcA5uFLl38mXR9A.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/bash/bash-5.3-patches/bash53-004",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -13829,6 +14044,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bash53-005-sha256.hzKHvUtu.sQzvJjjMmm2SyyBQCjv4lOL4eLJo3fakLyZ0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/bash/bash-5.3-patches/bash53-005",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -13895,6 +14115,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bash53-006-sha256.hKRGa3e.stjv.pRrjf9UYIsMXgO4w1KKDdulgAnBsmV.sxA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/bash/bash-5.3-patches/bash53-006",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -14234,6 +14459,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bifunctors-5.6.3-r1.cabal-sha256.hWPHWbbce2d1wZI6soaCYayk1Szpptb.sXKc4aiWdmRm4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/bifunctors-5.6.3/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -14300,6 +14530,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bifunctors-5.6.3.tar.gz-sha256.hrXo1fwIvTHgMUFBA1z8cBqT9aXtKC6thI7vXO1XYEVw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/bifunctors-5.6.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -15072,6 +15307,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bison-3.8.2.tar.gz-sha256.hBsnhO99.psk1M62tZIFpPZ8LH5yExGWREMP6C.p9FKCrs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/bison/bison-3.8.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -15335,6 +15575,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/blaze-builder-0.4.4.1.tar.gz-sha256.hlx02BCisl6.paTlXk8sI2SfbO3Azl1ulNUg5mPzPqURM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/blaze-builder-0.4.4.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -15461,6 +15706,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/blaze-html-0.9.2.0-r1.cabal-sha256.hhcQvhPTq0sSIRPvghlBprdO7O7MyLThgfpPVUVpMnFg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/blaze-html-0.9.2.0/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -15527,6 +15777,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/blaze-html-0.9.2.0.tar.gz-sha256.hZVQu8592RKPXavyt65dtPjNMaUdRa3MT.sLWRZc6hYI8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/blaze-html-0.9.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -15653,6 +15908,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/blaze-markup-0.8.3.0-r2.cabal-sha256.hAn8hi4HSinwKM7k9RWxOWqktFF6dzuFINPutc6Oa1.pQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/blaze-markup-0.8.3.0/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -15719,6 +15979,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/blaze-markup-0.8.3.0.tar.gz-sha256.hhgasi0off48bvAdwsnUum2.pIzMn73LszqiBXfQ5ZMOg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/blaze-markup-0.8.3.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -16085,6 +16350,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/bluez-5.86.tar.xz-sha256.hmfFEVAxgcFkeTFO8uXfrQmZMYrezbLNaKc9y3tM5Yh0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://kernel/linux/bluetooth/bluez-5.86.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -17783,6 +18053,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/buildcatrust-0.5.1.tar.gz-sha256.hI7f2LCQ8dGFOX.sd04mOUll7IL7y5Qn1EPu9UO5496So.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/b/buildcatrust/buildcatrust-0.5.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -18602,6 +18877,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/c-ares-1.34.6.tar.gz-sha256.hkS3XzDs.pinnFL9f7nA9Ozwqqc.pRe.saiAJmotbia4TvU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/c-ares/c-ares/releases/download/v1.34.6/c-ares-1.34.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -18812,6 +19092,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/call-stack-0.4.0.tar.gz-sha256.hQwvPijQE9.pVTGVc8C4B7E1aUbwyPKJuz2a.pyecY2uHs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/call-stack-0.4.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -18878,6 +19163,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/call-stack-tests-normalize-pkg-name.patch-sha256.hxkdjf8zXW.pUMxot2Z8WYYmvAJsT.pVGKXWGt19mZZwCg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/sol/call-stack/commit/cbbee23ce309d18201951e16a8b6d30b57e2bdf9.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -19142,6 +19432,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/case-insensitive-1.2.1.0.tar.gz-sha256.hKW3BfgxfPfs9gs7YPkycRMM47N50myeLbq5RLx0E5AY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/case-insensitive-1.2.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -19951,6 +20246,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/certdata.txt-sha256.hdxMO.pRITdyhEVh.p9OqMdQTslwqx.sV2.sqO8O7.s375NIk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://hg-edge.mozilla.org/projects/nss/raw-file/NSS_3_123_RTM/lib/ckfw/builtins/certdata.txt",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -20191,6 +20491,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/character-ps-0.1.tar.gz-sha256.hIt5x.seOLI20.pkWioMrXh510ftPQChme990eztMjBUpw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/character-ps-0.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -20317,6 +20622,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/charset-0.3.12.tar.gz-sha256.hHOjG1ESunVaFCZ.shGP2idExKYDdVlQfYIT.s2ht.sKci0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/charset-0.3.12.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -20785,6 +21095,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/clock-0.8.4.tar.gz-sha256.haumJiv54il4zTNX61dGKPC6OWfoJqve5V9uzikdn3y4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/clock-0.8.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -21343,6 +21658,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/cmake-4.1.2.tar.gz-sha256.hZD8EGCt7oyOrMfUm94UTT7ecujGIqFIgbvBHP.p4oKhU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://cmake.org/files/v4.1/cmake-4.1.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -21469,6 +21789,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/cmark-gfm-0.2.6-r1.cabal-sha256.hhnK5OI9d36js5pHlm0Jy.poB6Ld8GmJcM1zr5vruYBY0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/cmark-gfm-0.2.6/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -21535,6 +21860,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/cmark-gfm-0.2.6.tar.gz-sha256.hlYz7O9VLG.sqeHi2c0XSOdsENKzCjzO6rP2qFIgXBqGk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/cmark-gfm-0.2.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -21661,6 +21991,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/code-page-0.2.1.tar.gz-sha256.hsvkOGcYe2Kb.scpX38SPUqZE8eQ1M8sYCm8KZKT.sbKqo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/code-page-0.2.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -21727,6 +22062,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/colour-2.3.7.tar.gz-sha256.hHzsQVWdavk4zYoAMyb96ubkt.sfIaH2yCslJhEnC.ploA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/colour-2.3.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -21924,6 +22264,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/comonad-5.0.10.tar.gz-sha256.h6XOd8r9ZRJWAYqTqc73jvzXAh5zuCUTt9.sBb6.smT.pcE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/comonad-5.0.10.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -22061,6 +22406,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/config.sub-948ae97-sha256.h.sjovMvuv9XhIcyVJ9I2YP9ZSYCTsLw9ancdcL0NZo6Y.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://git.savannah.gnu.org/cgit/config.git/plain/config.sub?id=948ae97ca5703224bd3eada06b7a69f40dd15a02",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -22187,6 +22537,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/contravariant-1.5.6.tar.gz-sha256.hZfMmA1TuX9Hyx.s.sFTP.pZ0it5TCVPBTc0l5rTeCDm7.pM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/contravariant-1.5.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -24164,6 +24519,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/cryptohash-sha256-0.11.102.1-r6.cabal-sha256.hDp3izM4mHnpbAn6EL29H9Q6w5gWaDemKVHn3WqgWQQc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/cryptohash-sha256-0.11.102.1/revision/6.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -24230,6 +24590,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/cryptohash-sha256-0.11.102.1.tar.gz-sha256.hc6fccWOHGoCDdJUDmgmZZ7EfXE.snChGCd4QvenE8a.sY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/cryptohash-sha256-0.11.102.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -24547,6 +24912,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/data-fix-0.3.4-r2.cabal-sha256.hIANgxJzIHPi4u99Jr9Su4D.s.s0J0zlbCAp.pfGX88B0xM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/data-fix-0.3.4/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -24613,6 +24983,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/data-fix-0.3.4.tar.gz-sha256.hjfBS0YwEernpIAU2qHmbWvOZfr7Luwkac4S2voQWqzc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/data-fix-0.3.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -24787,6 +25162,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/dejagnu-1.6.3.tar.gz-sha256.hh9rvrNeVi0pp.pIxoVtvRY0JhljxBQHnQw3H1ic1mouM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/dejagnu/dejagnu-1.6.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -25654,6 +26034,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/distributive-0.6.3.tar.gz-sha256.hrusCiiPbn5sHPiSmvXZrebnVjCtAewa.sMylsJ.pkmS6o.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/distributive-0.6.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -25780,6 +26165,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/dlist-1.0-r2.cabal-sha256.hhUcnWUxagWqz0Q8VsbxP7a.peP30e9Reiu5AR8puiYdI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/dlist-1.0/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -25846,6 +26236,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/dlist-1.0.tar.gz-sha256.hFz1jcyi7Fz.sMNl8w0p.s0qUKSoeDlVYrrPfwR3oFRARU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/dlist-1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -25972,6 +26367,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://src.fedoraproject.org/rpms/docbook-style-xsl/raw/e3ae7a97ed1d185594dd35954e1a02196afb205a/f/docbook-style-xsl-non-recursive-string-subst.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -26146,6 +26546,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/docbook-xml-4.3.zip-sha256.hIwaKlOpv1ISwBMWnPsNqZqpH6o8Na2LMFpWTH1wUNGQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://www.oasis-open.org/docbook/xml/4.3/docbook-xml-4.3.zip",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -26212,6 +26617,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/docbook-xml-4.5.zip-sha256.hTk4DeiuDyYxslIGDkNS90.sbhD27GLdeRiFlOJhkNx7Q.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -26278,6 +26688,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/docbook-xsl-1.79.2.tar.bz2-sha256.hMWUk6kROUyCKL7kO62dq91XaluFBeDW6X163Gcgfo3E.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-1.79.2.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -26404,6 +26819,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/docbook-xsl-nons-1.79.2.tar.bz2-sha256.h7oueygt6j4kHWDKi2nU0vOjFR4.sI.sCZ29RLV2H2DIQI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-nons-1.79.2.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -26596,6 +27016,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/doctest-0.24.3.tar.gz-sha256.hZSQPDxGFauWM9e6rjW3fJKJq3ArNlcmGYApGjnQrEjg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/doctest-0.24.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -26716,6 +27141,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/docutils-0.22.4.tar.gz-sha256.hTbU7H96avsu3TZEjDTKrYm2U9rrfxXXW25GUpJ3ymWg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://sourceforge/docutils/docutils-0.22.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -27214,6 +27644,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/e230f474b87134e8c6c85b630084c612057f253e.patch-sha256.hQERl8RHJz7tFr.p.phZIYwdj1.sogPpjArC.pia8S.sbWxKk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/google/brotli/commit/e230f474b87134e8c6c85b630084c612057f253e.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -27465,6 +27900,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/editables-0.5.tar.gz-sha256.hMJYn2bXErcDmaNjG.pnusG6fIxdQVwtJ.sYPCB.pOgNHeI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/e/editables/editables-0.5.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -27603,6 +28043,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/elfutils-0.194.tar.bz2-sha256.hCeL.sAz05uqiziKLX.p8U5C.s3pmuO3xnx9qvdDP7zw8B4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://sourceware.org/elfutils/ftp/0.194/elfutils-0.194.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -27669,6 +28114,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/enable-ignore-build-platform-mismatch.patch-sha256.hL3FQvcm9QB59BOiR2g5.sHACAufIG08HiT53EIOjj64g.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.haskell.org/ghc/ghc/-/commit/4ee094d46effd06093090fcba70f0a80d2a57e6c.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -28347,6 +28797,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/execnet-2.1.2.tar.gz-sha256.hY9g7.sdmiPjW5xqMmFBIyT5ZMLsjc2NPGkW7pNz4L780.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/e/execnet/execnet-2.1.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -29481,6 +29936,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/expat-2.8.0.tar.xz-sha256.ho3v64KqXdb2FIevYXcRW1Ibw.szETj2yR.sZAupzJiRUI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/libexpat/libexpat/releases/download/R_2_8_0/expat-2.8.0.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -29607,6 +30067,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/expect-configure-c99.patch-sha256.hPxQQ9roWgVXUoCMxkXEgu.pit26ES.sJuzHF6oML.snk54.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://sourceforge.net/p/expect/patches/_discuss/thread/b813ca9895/6759/attachment/expect-configure-c99.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -29673,6 +30138,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/expect-gui--askyesno-failure-in-t1517.patch-sha256.hvvhbvg74OIMzfksHiErSnjOZ.pW0M.sT9J8GOQ4E4wKbU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://lore.kernel.org/git/20251201031040.1120091-1-brianmlyles@gmail.com/raw",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -29739,6 +30209,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/expect5.45.4.tar.gz-sha256.hSafag7C92fRtBKBN7sGcd2e7mjI.pQMR4H4nK92C5LDQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://sourceforge/expect/Expect/5.45.4/expect5.45.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -29936,6 +30411,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/extra-1.8.1.tar.gz-sha256.hZqfW1xhkanvagi1nVQ3BhcbiWtH3.ss8G.sBMuMACYtZg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/extra-1.8.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -30002,6 +30482,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/f9deba0c8404529772468d6dd01389f7dbfa5ba9.patch-sha256.hTmWfD99YaSIHA5PSsWHE91GSsdsVgVU.pqIow7LOwOGw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/numactl/numactl/commit/f9deba0c8404529772468d6dd01389f7dbfa5ba9.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -31592,6 +32077,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/file-5.47.tar.gz-sha256.hRWcv7BZctMwTWKLXa11X0ih23Ll6sWlCesOFy.pHVWXo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://astron.com/pub/file/file-5.47.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -31712,6 +32202,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/filelock-3.20.3.tar.gz-sha256.hGMV.p6RXH7GHP8Oz38Phpk2x8MBkbsM9AbxNBd40INOE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/f/filelock/filelock-3.20.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -31838,6 +32333,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/filepattern-0.1.3.tar.gz-sha256.hzERdQ56i9lysdgTTV4qiw6YuWpHcmJ9M5bM5DbnlljY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/filepattern-0.1.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -32359,6 +32859,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/fingertree-0.1.6.3.tar.gz-sha256.hh.pCuX9jf5XEZuKaikfZrKql1H.pPG3.p.s3996H2fzborg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/fingertree-0.1.6.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -32425,6 +32930,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/fix-aarch64_attributes.patch-sha256.hhksO5HXL9Jv5E4o2rI4NAgQp.p4z.pLg7Wn.sAdW7fpr0c.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://sourceware.org/git/?p=elfutils.git;a=patch;h=b27adc5262e807f341ca0a4910ce04294144f79a",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -32491,6 +33001,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/fix-aarch64_fregs.patch-sha256.hzvncoRkQx3AwPx52ehjA2vcFroF.pyDC2MQR5uS6DATs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://git.alpinelinux.org/aports/plain/main/elfutils/fix-aarch64_fregs.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -32778,6 +33293,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/flex-2.6.4.tar.gz-sha256.h6HquAyvwfCb4WsDtMlCZjDdiHZX4vXSLMfFbM8Re6ZU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -33894,6 +34414,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/free-5.2-r8.cabal-sha256.hOcoBZF98Lwj.s1kImiRxRS9ySSofaSPgV.pf53wuCsEWQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/free-5.2/revision/8.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -33960,6 +34485,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/free-5.2.tar.gz-sha256.hcoZ.sfIkXMmN2Vzbo05XpQpHxqupibssdZz1yzpC5T4k.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/free-5.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -34152,6 +34682,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/freezegun-1.5.5.tar.gz-sha256.hrHdCpsxsJaLDXpKS39VUuJe1F9LewmiRoujevyBcuUo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/f/freezegun/freezegun-1.5.5.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -36097,6 +36632,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gcc-15.patch-sha256.hBnv23M2K1Qf7pEaEz0ueSNzTCdjMTDiMm.pH7JaxUISs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/westes/flex/commit/bf254c75b1e0d2641ebbd7fc85fb183f36a62ea7.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -36821,6 +37361,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gdbm-1.26.tar.gz-sha256.haiRQShTeSnRBA9y5Nr6Xbfb76IzP8mBl5UwcR5RvSl4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/gdbm/gdbm-1.26.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -36947,6 +37492,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/generic-deriving-1.14.7.tar.gz-sha256.hyRYgpckVm7163eGDUg6sIsLQb04Hbf.sk4LhlAZHl2Mo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/generic-deriving-1.14.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -37073,6 +37623,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/generically-0.1.1-r5.cabal-sha256.hf.pQVI01FXrWEAkd4mayWnkY3TQuqsJ6N3TGfY5Sko2k.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/generically-0.1.1/revision/5.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -37139,6 +37694,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/generically-0.1.1.tar.gz-sha256.hBMWkNr7EsEH3GnM.sVqG9f0NfY93o0.ptcH0jVW028Q88.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/generically-0.1.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -37985,6 +38545,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/getopt-1.1.6.tar.gz-sha256.h0L8dxkKpk.pc4ihzd.p5QJvtN1wh1SeAVszKOgrNCdxf4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://frodo.looijaard.name/system/files/software/getopt/getopt-1.1.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -38321,6 +38886,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gettext-1.0.tar.gz-sha256.hhdmbecmBpASHTALgNCF2z3XHaY4rUf5BAxz2Um2XTxo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/gettext/gettext-1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -38387,6 +38957,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gettext-1.07.tar.gz-sha256.hkJ1HlUaX58BCGPlykVt4e9EkTXXjvQFiC8Fn1bvEnBU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://cpan/authors/id/P/PV/PVANDRY/gettext-1.07.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -38651,6 +39226,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gevent-25.9.1.tar.gz-sha256.hrfnNVS3kSk5nVMUf8ueNkZO3.pm6rEj25V4ohDmVyNd0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/g/gevent/gevent-25.9.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -38843,6 +39423,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-9.10.3-src.tar.xz-sha256.h0maGS54Le3QavoydankNfAHCHPQ6FBmDkRklWHjrxZo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://downloads.haskell.org/ghc/9.10.3/ghc-9.10.3-src.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -38909,6 +39494,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-9.4-llvm-support-16-17-18.patch-sha256.hU1znWqXZTORmAg480p5TjTL53T2Zn.p1.p9Fnk2V1Drfs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.haskell.org/ghc/ghc/-/commit/ae170155e82f1e5f78882f7a682d02a8e46a5823.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -38975,6 +39565,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-9.4-llvm-support-19.patch-sha256.hv8T.sFtriDPbibcIDZmU2yotBoDVo.pwU2.pgw.pCCdQlm0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.haskell.org/ghc/ghc/-/commit/36bbb167f354a2fbc6c4842755f2b1e374e3580e.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -39041,6 +39636,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-9.4-llvm-support-20.patch-sha256.h7cO049DQtJHUAhwPujoFO.pzQtXsMg6VFTHtMDwenrKs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.haskell.org/ghc/ghc/-/commit/ca03226db2db2696460bfcb8035dd3268d546706.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -39107,6 +39707,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-9.8.4-x86_64-deb11-linux.tar.xz-sha256.hrxUduGgrjHY.sWkT5YPZUU9eUyVtg8VGryC2978vm.pK0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://downloads.haskell.org/ghc/9.8.4/ghc-9.8.4-x86_64-deb11-linux.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -39293,6 +39898,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-paths-0.1.0.12-r8.cabal-sha256.hQk1QoqOMb.sW4RU7eXaf7RupTcMLZ4YhsSApRQiPAsPo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/ghc-paths-0.1.0.12/revision/8.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -39359,6 +39969,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-paths-0.1.0.12.tar.gz-sha256.hbsvmdtBzyweYnGHOTFcJxOZ8vv3S1VpAlfk4i2.sixIQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/ghc-paths-0.1.0.12.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -39479,6 +40094,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-ppc-support-elf-v2-on-powerpc64-big-endian.patch-sha256.hvtjT.pTL.s7sYPu4rcVV3xCqJQ.puqkyBbf9l0KIi97j.s0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.haskell.org/ghc/ghc/-/commit/ead75532c9dc915bfa9ebaef0ef5d148e793cc0a.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -39545,6 +40165,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-rts-Fix-compile-on-powerpc64-elf-v1.patch-sha256.hxP5v3cKhXeTRSFvRiKEn9hPxGXgVgykjTILKjh.spdDU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.haskell.org/ghc/ghc/-/commit/05e5785a3157c71e327a8e9bdc80fa7082918739.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -39611,6 +40236,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ghc-rts-adjustor-fix-i386-stack-overrun.patch-sha256.hQOd464ZVr.sylsa8sVALOsPerOqHB6xxFXESkPwLprnA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.haskell.org/ghc/ghc/-/commit/39bb6e583d64738db51441a556d499aa93a4fc4a.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -39785,6 +40415,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/git-2.54.0.tar.xz-sha256.h9okWI2TBDeee.pJqo2.sSHMesFfjTtu9IKylEM4BVGgaM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://www.kernel.org/pub/software/scm/git/git-2.54.0.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -40061,6 +40696,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/glibc-2.26.patch-sha256.heSDA0hIIfQbXx0DP1dTQU2uIqBxIXjbB6O.pE134g91Y.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://raw.githubusercontent.com/lede-project/source/0fb14a2b1ab2f82ce63f4437b062229d73d90516/tools/flex/patches/200-build-AC_USE_SYSTEM_EXTENSIONS-in-configure.ac.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -40928,6 +41568,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gmp-6.3.0.tar.bz2-sha256.hrCghGnz7YJuuLiyNYFjWbI.spZDT3QM9v4uR7AA0cIMs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/gmp/gmp-6.3.0.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -43303,6 +43948,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gnutls-3.8.13.tar.xz-sha256.h.s.p2Owb8JwkJtTxSq43feR1O1PlN9aF5gTpmosWypyX4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnupg/gnutls/v3.8/gnutls-3.8.13.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -43423,6 +44073,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/greenlet-3.3.0.tar.gz-sha256.hqCuyJaTp5NZT3S.p3uLLTbk.pyW8AWVCKhHki4jp5vePs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/g/greenlet/greenlet-3.3.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -44217,6 +44872,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/haddock-library-1.11.0-r5.cabal-sha256.h0Y.pqMir4A0.pDhSXTH5t1kc76R8YzCnqJCfhHz1cwKL4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/haddock-library-1.11.0/revision/5.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -44283,6 +44943,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/haddock-library-1.11.0.tar.gz-sha256.hfAdeyaN4sKLZ1gXnITUgHmx.s8xZWTyyXQRNYL0O.pogo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/haddock-library-1.11.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -44463,6 +45128,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/happy-2.1.7.tar.gz-sha256.hnjkPCrCC0R1GWY9iFbL26CUwWXIYYPgQgkCQkVMtfio.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/happy-2.1.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -44589,6 +45259,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/happy-lib-2.1.7.tar.gz-sha256.h9iWyxKPytfr6PFYPqHV1AsyN6D2ahMJpL8lDOAkA8mk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/happy-lib-2.1.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -44799,6 +45474,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hashable-1.5.1.0.tar.gz-sha256.h7Qt8EM6Syf.skVCDa3DjG0520hv82M.s8TVnzJ9195sRI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hashable-1.5.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -44937,6 +45617,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/haskell-lexer-1.2.1.tar.gz-sha256.hnXbhUoEGsbMubkZSZOOTgcpLRQtypLUzHn5RJ2QKGkE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/haskell-lexer-1.2.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -45057,6 +45742,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hatch_vcs-0.5.0.tar.gz-sha256.hA5X6EmlANAIVCQw0Siv04qd7y.pfaqxb0Gze5jJWAn.sk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/h/hatch_vcs/hatch_vcs-0.5.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -45177,6 +45867,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hatchling-1.29.0.tar.gz-sha256.heTwxgW2VLO5AW4NIjOABxxnzJdnNpp8fxM11BSdkDqY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/h/hatchling/hatchling-1.29.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -45303,6 +45998,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/heaps-0.4.1.tar.gz-sha256.hh2OkZjotCzyRJAClR9Zq4RtGqVRAO2dHJyFI6VCqA4I.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/heaps-0.4.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -45823,6 +46523,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/help2man-1.49.3.tar.xz-sha256.hTX5P3vLspq.sgeiaCFRzqeHgeCk6PliIULZ9wwIOi.sU8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/help2man/help2man-1.49.3.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -46680,6 +47385,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hostname-1.0.tar.gz-sha256.hm0PasbbaUh81aFsgVV2gBzjI4TbrlyRYx4YkJAapz1w.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hostname-1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -46812,6 +47522,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hscolour-1.25.tar.gz-sha256.hVM4w2lVZnocv042SeqUYNp4pcbKErMZ.p0MqsauFMx3w.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hscolour-1.25.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -46878,6 +47593,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hspec-2.11.17.tar.gz-sha256.hOeTIw7sr4IpMYXR93.sA2XGoH78YYWzqAp7iPu2vsl1Y.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hspec-2.11.17.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -46944,6 +47664,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hspec-core-2.11.17.tar.gz-sha256.hhLUXalJcsN.pYBwRAIBIggUUXtdUeb9FaUsC8edo7ioU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hspec-core-2.11.17.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47010,6 +47735,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hspec-discover-2.11.17.tar.gz-sha256.hNWydjfeN8wMzSL5hfd9AiRSkHdh8ErXteHsEgPrORlI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hspec-discover-2.11.17.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47076,6 +47806,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hspec-expectations-0.8.4-r2.cabal-sha256.hQjfwlKeTEgL.sV6xkdVQrCzFLUKcCRVDituuHz7DU.s5M.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hspec-expectations-0.8.4/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47142,6 +47877,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hspec-expectations-0.8.4.tar.gz-sha256.he43efiMOz9qQyV.sYBHiyRKReaGAvs91KdvRxBhm.pIf8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hspec-expectations-0.8.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47208,6 +47948,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hspec-golden-0.2.2.0-r1.cabal-sha256.hirXA4qqsQ6nvLrkz2n1lbpmXNQikFbuEn0qxgLF3wR4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hspec-golden-0.2.2.0/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47274,6 +48019,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hspec-golden-0.2.2.0.tar.gz-sha256.hevEcb1zK.pnYtYBudA6FhVJLUjRFJF2eQB.smNjihN9vI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hspec-golden-0.2.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47400,6 +48150,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/hspec-meta-2.11.17.tar.gz-sha256.hUu410bf6utu8W54PzndRIMpRY3BA3G1WqwQHnRshpnw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/hspec-meta-2.11.17.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47574,6 +48329,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/imagesize-1.4.1.tar.gz-sha256.haRUERK.s7nLDVzFqSs2dvCy.p3zZrjnpR6XhGja0SXzUo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/i/imagesize/imagesize-1.4.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47694,6 +48454,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/importlib_metadata-9.0.0.tar.gz-sha256.hpPV6tZnmouMBbXWVz9cutGYaUQbnh6lbzJDHEFuDHvw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/i/importlib_metadata/importlib_metadata-9.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47760,6 +48525,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/include-modern-utimbuf.patch-sha256.hsb.pAHdkGkCu8MW0xoQIpD5kEc0zYX8udAMDoC.pTWc0Q.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.haskell.org/ghc/ghc/-/commit/7e75928ed0f1c4654de6ddd13d0b00bf4b5c6411.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47886,6 +48656,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/indexed-traversable-0.1.4-r2.cabal-sha256.hirrAuSeVSJA51zEgUNE5N1em9nhZ.s2pPNiImChuTG84.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/indexed-traversable-0.1.4/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -47952,6 +48727,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/indexed-traversable-0.1.4.tar.gz-sha256.hWL4Jr9861aJcKqDSp9.pA1gLfCfTnbTq.sK3zbDnXQOyI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/indexed-traversable-0.1.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -48078,6 +48858,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/indexed-traversable-instances-0.1.2.1.tar.gz-sha256.h5p1B8jqVRjwuA67gM3Sk9InHL3vyNb4lFJnEzKlBH.pw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/indexed-traversable-instances-0.1.2.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -48198,6 +48983,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/iniconfig-2.3.0.tar.gz-sha256.hx2MVx32waGUNScW1YxR3SngE3xb.p5EAsHxnW0V2MRzA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/i/iniconfig/iniconfig-2.3.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -48324,6 +49114,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/inspection-testing-0.6.3.tar.gz-sha256.heEW6kDblFS6oPiF0RmEG.pEeoTA0m5S4.s1UuHi7Hw5RI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/inspection-testing-0.6.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -48564,6 +49359,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/integer-conversion-0.1.1-r2.cabal-sha256.hEj0bCIQE8JdlAMaNgQWXiqLjKQjOVQjjKuvSN.sBEfJ8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/integer-conversion-0.1.1/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -48630,6 +49430,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/integer-conversion-0.1.1.tar.gz-sha256.hwYFkoEgHMxD2NT68ZMkDe1KkuCmZY84F4Ce89g4iFVo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/integer-conversion-0.1.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -48756,6 +49561,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/integer-logarithms-1.0.5.tar.gz-sha256.hZt.s28fd4.sh7GiROf4SXNTmqVZDc0xlHIker6LFBmlFk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/integer-logarithms-1.0.5.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -48882,6 +49692,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/invariant-0.6.5.tar.gz-sha256.hYmvex8kl.pw8ViW3Md2mSywCl.sPmSEVKME.pdTXnI5bjo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/invariant-0.6.5.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -50506,6 +51321,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/jailbreak-cabal-1.4.1.tar.gz-sha256.hvVDyM4.pdMPB5XgyXBWPurGw1xT51qS5GMrqYVBEw1GA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/jailbreak-cabal-1.4.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -50626,6 +51446,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/jinja2-3.1.6.tar.gz-sha256.hATf7BZkNNfEnWlh.pmu5tVtqCH8g0kaD7g4GDvkP2bW0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/j/jinja2/jinja2-3.1.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -50752,6 +51577,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/js-dgtable-0.5.2.tar.gz-sha256.h4o3WW.p6Ag7FyEBNOIuAcY0ncM8O3vRdwWXPNAU6fIKw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/js-dgtable-0.5.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -50878,6 +51708,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/js-flot-0.8.3.tar.gz-sha256.hG6LyprjYXadsQfUmyYkDy7EH.pGQuUGwHLB5.pPCD.pXno.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/js-flot-0.8.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -51004,6 +51839,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/js-jquery-3.7.1.tar.gz-sha256.hoIf6AaHFL1OG1D9TVfZIQcWktWtTcgCQ1mtaoAv.psQY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/js-jquery-3.7.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -51484,6 +52324,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/kan-extensions-5.2.8.tar.gz-sha256.h922qRKgNQjyEnV.p1UuKiCx4vR7Y4yImjTLGlvRqwjSE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/kan-extensions-5.2.8.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -51616,6 +52461,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/keyutils-1.6.3.tar.gz-sha256.hph1XBhNq5MBb1I.pGGGvP29iN2L1RB.pPhlckkz8Gzm7Q.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git/snapshot/keyutils-1.6.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -51880,6 +52730,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/krb5-1.22.1.tar.gz-sha256.hGogyuMrZI.pu.sE5T2fi789B46SfRgKFpm41reyPoAU68.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://kerberos.org/dist/krb5/1.22/krb5-1.22.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -52150,6 +53005,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/lens-5.3.6.tar.gz-sha256.h00Xc8f2k1KEnuE1CY4ti94PPUnUL2P0UqxY3UQwQI8I.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/lens-5.3.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -53763,6 +54623,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libedit-20251016-3.1.tar.gz-sha256.hITYrAGU7v8HHH3GnV42ma1tSA1WdQxNNLddxnjE84EE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://thrysoee.dk/editline/libedit-20251016-3.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -53889,6 +54754,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libev-4.33.tar.gz-sha256.hUH63uNEBX77FuTXzTr7RW.sNGvtBKEauCuO7oSMQgWuo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -54015,6 +54885,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libevent-2.1.12-stable.tar.gz-sha256.hkubeG.pnsF2Qo.sSNnZ35hzv.sC7hyxGQNQN6J9NGsEA7s.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -54147,6 +55022,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libffi-3.5.2.tar.gz-sha256.h86MIKiOzfCk6T80QUxR7Nx8v.pR.pn6hsqUuM1Z2usgtw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -54279,6 +55159,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libgcrypt-1.11.2.tar.bz2-sha256.ha6Wd0ZInDowdIt20GgfZXc28Hw.pwLQPEtUsjWBQzCqw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnupg/libgcrypt/libgcrypt-1.11.2.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -55551,6 +56436,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libgpg-error-1.59.tar.bz2-sha256.hoZvFCH.sZcCbZPLS0XVFjjRolICpeH7w5BXmfQkz6YTQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnupg/libgpg-error/libgpg-error-1.59.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -55820,6 +56710,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libmicrohttpd-1.0.2.tar.gz-sha256.h3zJPzQg0F12rB0gxM5Atl3SmBb.pimAJfaYgyiP0gqMc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/libmicrohttpd/libmicrohttpd-1.0.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -56000,6 +56895,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libpsl-0.21.5.tar.lz-sha256.hmp9qjG7bplDPnqVUdc0XLdKEhzFoBOnHMgLZdXLNOi0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/rockdaboot/libpsl/releases/download/0.21.5/libpsl-0.21.5.tar.lz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -56186,6 +57086,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libssh2-1.11.1.tar.gz-sha256.h2ex2y.pNNuY7sNTn.pLImdJrDIN8s.ptGalaw8QnKv2WPc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://www.libssh2.org/download/libssh2-1.11.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -56366,6 +57271,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libtasn1-4.21.0.tar.gz-sha256.hHYpESiI8xUZCQHdzRuEl3lHY5qvwuLrHQqyEYJFn3Ic.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/libtasn1/libtasn1-4.21.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -58181,6 +59091,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/libxslt-1.1.45.tar.xz-sha256.hms.smhBnE0GpFxVAyGzISdi2S9BRlBiyk6hnmMu5dIW4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnome/sources/libxslt/1.1/libxslt-1.1.45.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -59204,6 +60119,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/logging-facade-0.3.1.tar.gz-sha256.hKxazNTt3xquSqC3D8EckRHpn8Cx21QwnQXfYd44UwWY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/logging-facade-0.3.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -59330,6 +60250,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/logict-0.8.2.0.tar.gz-sha256.hGJrm.pByOaNlOz4zmRAlU48fKPyN5c.p9mAIlu6PxGq.p8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/logict-0.8.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -60282,6 +61207,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/lzo-2.10.tar.gz-sha256.hwPiSlDIIJm.pbZUOzrjCPq2KExckOYnkxRG.p0m0IhoHI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -60348,6 +61278,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/m4-1.4.21.tar.bz2-sha256.h3Eh.pEdLwyeAVVbsa8mvk6umD7I8HJnRlBbQycYbrIfw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/m4/m4-1.4.21.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -60545,6 +61480,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/mailcap-2.1.54.tar.xz-sha256.hmkAyIC.sA0rCFj0GxZzianP5SrCTsKC5kebkHZTGd4RM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://releases.pagure.org/mailcap/mailcap-2.1.54.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -61147,6 +62087,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/man-fix.patch-sha256.hi.piv.powUXbKU3UtZBsjfj86kFB3TDlpcVDNsDX8dyZE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/facebook/zstd/commit/6af3842118ea5325480b403213b2a9fbed3d3d74.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -64851,6 +65796,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/mockery-0.3.5.tar.gz-sha256.ht6HtrNPTLcfw4oxnh3IJ08o1UdHaGG9kRfgl80d91yc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/mockery-0.3.5.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -65399,6 +66349,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/mpdecimal-4.0.1.tar.gz-sha256.hltM6u0uwBwx74P7UJGzThBYYgyX4IEaCFEcZOFRbGsg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://www.bytereef.org/software/mpdecimal/releases/mpdecimal-4.0.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -65936,6 +66891,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/musl-asm-ptrace-h.patch-sha256.h8D1wPcdgAkE.sTNBOgsHaeTZYhd9l.p9TrZg8d5C7kG6k.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://git.alpinelinux.org/aports/plain/main/elfutils/musl-asm-ptrace-h.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -66002,6 +66962,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/musl-macros.patch-sha256.htp6O1TRsTAMsFe8vw3LMENT.svAu6OmyA8.ppzgThHeA8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://git.alpinelinux.org/aports/plain/main/elfutils/musl-macros.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -66134,6 +67099,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/musl-strndupa.patch-sha256.h7daehJj1t0wPtQzTv.p.sRpuqqs5Ng.sEYnZzrcf2o.sLb0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://git.alpinelinux.org/aports/plain/main/elfutils/musl-strndupa.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -66512,6 +67482,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/nanospec-0.2.2.tar.gz-sha256.hzxTMwrKWyRAADNw.ptRs3OJs.puUE5OEuVVdt5uBKFleU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/nanospec-0.2.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -66644,6 +67619,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ncurses-6.6.tar.gz-sha256.hNVtMu.p2ICwOBoExGYXt2VuNiWF1S6c.pEpn4gCbdJ.sxE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://invisible-island.net/archives/ncurses/ncurses-6.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -66770,6 +67750,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/net-tools-2.10.tar.xz-sha256.hsmJDWlJB6Jv6UcPKvVEzdTlS96e3uT8y4Iy52W9YDWk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://sourceforge/net-tools/net-tools-2.10.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -66902,6 +67887,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/nettle-3.10.2.tar.gz-sha256.h.sp.s1HLHyq7XmWmuMEKktoKtaturybn.sCtnXEXx.p1GbU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/nettle/nettle-3.10.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -67028,6 +68018,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/network-uri-2.6.4.2-r1.cabal-sha256.hb.s.p1c3OWK1ZRotuLCvcyCYs78CmnztdqmFVhXeICZYg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/network-uri-2.6.4.2/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -67094,6 +68089,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/network-uri-2.6.4.2.tar.gz-sha256.hnBiJcxJuiTJQuIHyDogR3KBsIjwjQCsG96Hy6ZV5cig.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/network-uri-2.6.4.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -67220,6 +68220,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/nghttp2-1.69.0.tar.bz2-sha256.hPxhfWxw.pd4heuc8.sLE2ksan3OiS.sWVe4KRg60Tf4Lcg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/nghttp2/nghttp2/releases/download/v1.69.0/nghttp2-1.69.0.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -67340,6 +68345,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/nghttp3-1.15.0.tar.bz2-sha256.hxsSRpSgEgUCY5EZjDm78RZr8DT2nlS.s.pbL3As.smbK2I.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/ngtcp2/nghttp3/releases/download/v1.15.0/nghttp3-1.15.0.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -67466,6 +68476,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ngtcp2-1.22.1.tar.bz2-sha256.hhzVHltWssZvzEMt3vgS9IgDDImWmvnyUuGMeJsjpPKQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/ngtcp2/ngtcp2/releases/download/v1.22.1/ngtcp2-1.22.1.tar.bz2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -67652,6 +68667,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/nothunks-0.3.1-r2.cabal-sha256.hg.pylmy1nocaN9eeiDd2wmMos34Le5DHjOKTDs68nPWw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/nothunks-0.3.1/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -67718,6 +68738,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/nothunks-0.3.1.tar.gz-sha256.hN4P5Uv5EjtND9U.sBh7G3wGJEODjO9xxUnpGCe8l.pl10.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/nothunks-0.3.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -68647,6 +69672,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/old-locale-1.0.0.7-r2.cabal-sha256.h.ppmL4sfgDNJqbpB1vqeQyq85Msqj6Ul61pvCA4DdaRE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/old-locale-1.0.0.7/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -68713,6 +69743,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/old-locale-1.0.0.7.tar.gz-sha256.h26.pL9riI.p5iEVwUHkpaiPD9A7i9EnfcxL39.sHeGNe1A.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/old-locale-1.0.0.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -68839,6 +69874,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/old-time-1.1.1.0.tar.gz-sha256.hLEQNO8JoDe.sLN5pLXmRpxd.sx00ADdKrGBSPO94w9lqs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/old-time-1.1.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -69336,6 +70376,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/optparse-applicative-0.18.1-allow-QuickCheck-2.15.patch-sha256.h198TfBUR3ygPpvKPvtH69UmbMmoRagmzr9UURPr6Kj4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pcapriotti/optparse-applicative/commit/2c2a39ed53e6339d8dc717efeb7d44f4c2b69cab.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -69402,6 +70447,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/optparse-applicative-0.18.1.0-r1.cabal-sha256.h8wlzhhrH5.pv.sBf.pMfD0eTSg6HzhQ4cwUEGsGk.pwbbYI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/optparse-applicative-0.18.1.0/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -69468,6 +70518,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/optparse-applicative-0.18.1.0.tar.gz-sha256.hY4EatP0m6Cm4hoNkMlqIvjrMeYGfW7UAWy3TuWHsxJE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/optparse-applicative-0.18.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -69882,6 +70937,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/os-string-2.0.10.tar.gz-sha256.h9oK4phIaCfyCDOadmeM7.ppsalZUFZj7y.st6.pe5XHWqU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/os-string-2.0.10.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -69948,6 +71008,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:p11-kit_project:p11-kit:0.26.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "git+https://github.com/p11-glue/p11-kit.git@refs/tags/0.26.2",
+          "referenceType": "vcs"
         }
       ],
       "filesAnalyzed": false,
@@ -70068,6 +71133,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/packaging-26.1.tar.gz-sha256.h8EIVK2gcS.srFyuJ0KlXhA9J6suwPPYgDcTa2v.pfJxd4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/packaging/packaging-26.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -70194,6 +71264,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/parallel-3.2.2.0-r10.cabal-sha256.hPfRuwkfhK15AagrblXcpRDGySBSzDfQgVR0Xb9ESqWY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/parallel-3.2.2.0/revision/10.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -70260,6 +71335,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/parallel-3.2.2.0.tar.gz-sha256.hFwRTpxoqizHMpjElUz93cdfevrY5cAvavdd5w02KbvY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/parallel-3.2.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -70386,6 +71466,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/parsers-0.12.12-r1.cabal-sha256.hxrUOF.pn1SeCYCq0qskYlHPhIt7xI68Y7jpRhvpQuxoc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/parsers-0.12.12/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -70452,6 +71537,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/parsers-0.12.12.tar.gz-sha256.h3Z5Ti3qecypaQkHW3gHSmK.s0uxmpWC6UZO5LpmDGJrw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/parsers-0.12.12.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -70726,6 +71816,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/patch-ev.c-sha256.hjaeJuCYM.sU2ZNbbyA.s7YOKvo0lj7Dc9L3LNJfZwcaw0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://raw.githubusercontent.com/freebsd/freebsd-ports/21a6f0f5829384117dfc1ed11ad67954562ef7d6/devel/libev/files/patch-ev.c",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -71246,6 +72341,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/patchutils-0.3.3.tar.xz-sha256.hkfToRRsu.sKxdQMlm5CwXWANFDw3pTJJr.sswSyQBwrTw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://cyberelk.net/tim/data/patchutils/stable/patchutils-0.3.3.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -71312,6 +72412,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/patchutils-0.4.2.tar.xz-sha256.hiHWwll.sjPeYriQ9s15O.pf6.skGk5VLtv2QfH.p1eu.sRe0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://cyberelk.net/tim/data/patchutils/stable/patchutils-0.4.2.tar.xz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -71432,6 +72537,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/pathspec-1.0.4.tar.gz-sha256.hAhDiroohqRN8DUcFeMsOWVr4ftqm6.sEv8XbxSgLg5kU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/pathspec/pathspec-1.0.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -71838,6 +72948,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/pexpect-4.9.0.tar.gz-sha256.h7n1BEj88mREFDqLC2sEHVo3EOy07DHVXozISw5jq0w8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/pexpect/pexpect-4.9.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -72634,6 +73749,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/prettyprinter-1.7.1.tar.gz-sha256.hXm6mkDEU.phGPzDWWM9.p37N3suSwGyFPQKne3KyUfC0U.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/prettyprinter-1.7.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -72700,6 +73820,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/prettyprinter-ansi-terminal-1.1.3.tar.gz-sha256.hgTc5MIrWBQYgV4mU7.s4hBYoXCjQXFqz1JXP65CtbHbM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/prettyprinter-ansi-terminal-1.1.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -72826,6 +73951,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/prettyprinter-compat-ansi-wl-pprint-1.0.2.tar.gz-sha256.hBbJyUfGLke.p.sFMaHwoUTI7kgMiIDN80Eqx90GoQBnlU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/prettyprinter-compat-ansi-wl-pprint-1.0.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -72892,6 +74022,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/primitive-0.9.1.0-r1.cabal-sha256.hdWsiLHFbxu9bqB.pmnNuqIMXFO.ptvFvF0uLrMk6bSOfA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/primitive-0.9.1.0/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -72958,6 +74093,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/primitive-0.9.1.0.tar.gz-sha256.hRLTeQYE8e8Xbilf4fDYSoGm2UIaUYmi6FlCXJS69PXY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/primitive-0.9.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -73228,6 +74368,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/profunctors-5.6.3.tar.gz-sha256.hucb0JzaNLoEeTEi1kAUhhnJFj9LwCgLL77i.pnHUcDvM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/profunctors-5.6.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -73408,6 +74553,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ptyprocess-0.7.0.tar.gz-sha256.hXF0KO0jO7gtISF4MJgN8Cs19KXZco.su1yzgx00dCMiA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/ptyprocess/ptyprocess-0.7.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -74212,6 +75362,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/pygments-2.20.0.tar.gz-sha256.hZ1fNA3aAU.s.pZ8wOcGjbWwKoLJjQ4.sKsXUgswowOoK18.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/pygments/pygments-2.20.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -74440,6 +75595,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/pyproject_hooks-1.2.0.tar.gz-sha256.hHoWb1cQPrpRIZC3Yca30WeXiCEGG6NLCp5qCTJcNofg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/pyproject_hooks/pyproject_hooks-1.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -74668,6 +75828,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/pytest-9.0.3.tar.gz-sha256.huGraUIr4HRnt6yE8aBsdSCRsGpHTBMbIGkJ2dMF.puRw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/pytest/pytest-9.0.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -74968,6 +76133,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/pytest-instafail-0.5.0.tar.gz-sha256.hM6YG9.pDI5kbcO.s7g1eOkt7eO98NhaM.ph89k698pwbJ4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/pytest-instafail/pytest-instafail-0.5.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -75202,6 +76372,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/pytest9-compat-1.patch-sha256.hBQfcr5f4S.pe8xZP2UQwr65hp.piVzmbXYAzO.s7iE9lmw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pytest-dev/pytest-xdist/commit/44f4bea2652e06e7cd5d4a063aa2673b5ef701ee.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -75268,6 +76443,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/pytest9-compat-2.patch-sha256.hzxdKy7Z0m5UB4qwmdrolSYeBUTgMe2bQkkeX.pM0RRHs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pytest-dev/pytest-xdist/commit/0c984478f39d7a01aa24c061f2581bdfd071cb6a.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -75502,6 +76682,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/python-dateutil-2.9.0.post0.tar.gz-sha256.hN91UII2n4c2HU4ghfV4A69QXkkn5D7ckN.pkaNUWaCtM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/python-dateutil/python-dateutil-2.9.0.post0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -76774,6 +77959,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/pytz-2026.1.post1.tar.gz-sha256.hM3jd5qDD0mcZGCFCxW5gx.smvfpaAdvMarladcqA1juE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/p/pytz/pytz-2026.1.post1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -77044,6 +78234,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/quickcheck-instances-0.3.33-r1.cabal-sha256.hcJ.pxJ5nxtbABEhUBaNu1c2jObHQewB8jz0T553Q.pbPY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/quickcheck-instances-0.3.33/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -77110,6 +78305,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/quickcheck-instances-0.3.33.tar.gz-sha256.haAPNVHsCe8q3sCmmmthCjiivhCt3CRE.ptqQ6svLwiGY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/quickcheck-instances-0.3.33.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -77176,6 +78376,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/quickcheck-io-0.2.0.tar.gz-sha256.h.p3eRGdef4I.s01QL7aGmnDJqNX9iuCVn2BcPJN.p.sZZCI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/quickcheck-io-0.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -77302,6 +78507,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/quickcheck-unicode-1.0.1.0.tar.gz-sha256.hEyAF6n7f816VE5w2IypwaYzQ9PTXnfqk5m.p89VfQg2g.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/quickcheck-unicode-1.0.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -77512,6 +78722,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/random-1.2.1.3.tar.gz-sha256.h6cgZJqfR5AMo9kX3NZKzHvycYxWJZpp.sEwaHucwwUdw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/random-1.2.1.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -78063,6 +79278,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/readline-8.3.tar.gz-sha256.h.slODIERngozUle6NHTwDen66E4nCK8agQfYnl2.pQYcw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/readline/readline-8.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -78129,6 +79349,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/readline83-001-sha256.hIfCgMQbb5pczfNJccOsO26or221ZW0X4MoXN01ushN4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/readline/readline-8.3-patches/readline83-001",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -78195,6 +79420,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/readline83-002-sha256.h4nNkOWup9t6.sfLqvGmaeKyhUJBrgf37KdMqKi6DJdHI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/readline/readline-8.3-patches/readline83-002",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -78261,6 +79491,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/readline83-003-sha256.hct7hNgHOOPZ0brFSOZmafFb44f9eseyBU6HyE.pSs2yk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://gnu/readline/readline-8.3-patches/readline83-003",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -78675,6 +79910,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/reducers-3.12.5-r1.cabal-sha256.haDsMsF1bsN.s31.pHWJvgSRb2BsMXwFBRlfr0hMEaRPho.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/reducers-3.12.5/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -78741,6 +79981,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/reducers-3.12.5.tar.gz-sha256.hEJVh1My81mKD4FMYIUjG.sMxyvh0NgLDp5rBK2ZPPghw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/reducers-3.12.5.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -78867,6 +80112,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/reflection-2.1.9-r1.cabal-sha256.h6vKNyYhHGKMG7R4MIVoks2xouKo75CVhf2bYhtQ.s4eA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/reflection-2.1.9/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -78933,6 +80183,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/reflection-2.1.9.tar.gz-sha256.hxqfV5BrQ7hoFxmCs9P00sh84Mw7sFl0ka3.s.ss5jln7M.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/reflection-2.1.9.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -79059,6 +80314,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/regex-base-0.94.0.3.tar.gz-sha256.h6Mot7lmMeQ3RwcQ1m90eSV2biB9aofU5wi8N1VY3R78.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/regex-base-0.94.0.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -79185,6 +80445,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/regex-posix-0.96.0.2.tar.gz-sha256.hflcEYMNcXe7FTRukYwXdtGecfUquhPYx3Qxh2q6qgVA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/regex-posix-0.96.0.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -79989,6 +81254,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/root.hints-sha256.h4lG.suPnNHBNIZ.sXIeDM1w3iukrpeW0JIjTnGSwkJ8U4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.nic.cz/knot/knot-resolver/raw/d9c96ae96f066a85d7/etc/root.hints",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -80115,6 +81385,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/scientific-0.3.8.1.tar.gz-sha256.hrTeBvhSd.sHk25i65w6143tDpmFtNrhbS9i2bqVfM3P4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/scientific-0.3.8.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -80740,6 +82015,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/semialign-1.3.1.1.tar.gz-sha256.hjOH3Ln8llCLDr3KZbiZWykpdaYKMrZAFulcblEdgegg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/semialign-1.3.1.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -80866,6 +82146,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/semigroupoids-6.0.2-r1.cabal-sha256.hUsWjRv33Q4Bhj2f.seEmJ75B4SY273.sCeTY4v7SAgLiw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/semigroupoids-6.0.2/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -80932,6 +82217,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/semigroupoids-6.0.2.tar.gz-sha256.h5IJY5JVCJF72xY1.sQZqD0dGrkbAT2Sw7XIx8BI2qoS4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/semigroupoids-6.0.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -81724,6 +83014,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/setuptools_scm-9.2.2.tar.gz-sha256.hHGdKtGZWhqCIfX4kwDqyXyQgHCE.pguponS8.pFp7371c.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/s/setuptools_scm/setuptools_scm-9.2.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -81850,6 +83145,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/shake-0.19.9.tar.gz-sha256.hQXbW44w7eBPwGfI3dGbZ8B24QgVu7BzaqKI7gM7dy4o.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/shake-0.19.9.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -82335,6 +83635,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/silently-1.2.5.4.tar.gz-sha256.hXiNgiWXBAEsAfcdxYEmYrm2lLBV3IwC.s3eMNi1ISdG4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/silently-1.2.5.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -82461,6 +83766,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/simple-reflect-0.3.3.tar.gz-sha256.hB4JeoEwTUpgAjPCAEz47.sI4Ey6zSRxnEasaiykrP2ys.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/simple-reflect-0.3.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -82641,6 +83951,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/smallcheck-1.2.1.1.tar.gz-sha256.h4EMiUAQHGEDRoT86LW.p6U3FEGI55lal4q4IIbOFY.sh8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/smallcheck-1.2.1.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -82761,6 +84076,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/snowballstemmer-3.0.1.tar.gz-sha256.hbV7u7I6fhNTVa4R2krrPebwsjpDH.pAykRE.s4tvLlKJU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/s/snowballstemmer/snowballstemmer-3.0.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83042,6 +84362,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h2d64cItemqVM25WJIKrjExKz6v4UW2wVxM6phH1g1sE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pallets/markupsafe/archive/refs/tags/3.0.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83108,6 +84433,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h2x3znm92wo8DCshf5sYK0stnESg0oVXbxsWRAaTj6oQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pytest-dev/pytest-xdist/archive/refs/tags/v3.8.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83174,6 +84504,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h3Zeavn6aW6920gM7yE73Ms1RPCP2GjX9IUL9YGmISfY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/mesonbuild/meson/archive/refs/tags/1.10.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83240,6 +84575,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h3oAlwvNSJ7NhPiHekh4SJI99cPFh29KCCR9314QzsvQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/python/typing_extensions/archive/refs/tags/4.15.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83306,6 +84646,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h6GlHCnx9dQtmViPnvHnMS.pl9Z.pg6M8ynrSxLhLtmAKU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/zlib-ng/zlib-ng/archive/2.3.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83372,6 +84717,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h6eKc.pp3xLyRPo3oCWP.sdbMpHlkBXLy8XiGR0gTEHI2E.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/eliben/pycparser/archive/refs/tags/release_v3.00.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83438,6 +84788,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h7Mzz3KmmmE2xQru1GA4aY0DZqn6vxykWiExQvnA1bjM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/python-cffi/cffi/archive/refs/tags/v2.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83504,6 +84859,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h8CfPQ4uMgKDqMMgutLdsjn.sMaAVBJQAp1KqUfxzNMQw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/di/calver/archive/refs/tags/2025.10.20.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83570,6 +84930,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h8J5EcaQXexWEA.pse5rCR06CwlEYao2XK5TnVNgFGHYQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/cython/cython/archive/refs/tags/3.2.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83636,6 +85001,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h9.skFI38PG3AKsdDqEV.swEzSel9IlQQ.spvOyhU.sN.saV0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/rhash/RHash/archive/v1.4.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83702,6 +85072,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.h9h5.scssWs4F0LKnFLjWDsEjB2AYczLvnSjiUdsaEcBQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pytest-dev/pytest-mock/archive/refs/tags/v3.15.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83768,6 +85143,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hBAqGNi5lfYYTQd7CPH0lssLc5.sAkeuKSVEFcrF.scNyc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/NLnetLabs/unbound/archive/refs/tags/release-1.25.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83834,6 +85214,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hD72KUEwiFA.sLdU.sxE3sN.pAbc6NpAsIlGSdB07V1nk68.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/kjd/idna/archive/refs/tags/v3.13.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83900,6 +85285,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hD9HsIjv8EJ1qAdXFAKy260K77cCvopgQ2Fx6uXpt6VI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/ninja-build/ninja/archive/refs/tags/v1.13.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -83966,6 +85356,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hEqU7lnBnOn3gR3hT95yjdTUb3cqX2XJK5UAKsFw2Q10.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.gnome.org/api/v4/projects/GNOME%2Fgtk-doc/repository/archive.tar.gz?sha=1.35.1",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84032,6 +85427,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hHIHMxAUR4bjmFLoltJeIAVSulVQ6kVuIT2Ku.plwAx.s4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/google/googletest/archive/v1.17.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84098,6 +85498,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hHNAFsWX4tU9hfZkKxLNJn1J.pH3uTesQflbRPlo3GQ4k.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/python/mypy_extensions/archive/refs/tags/1.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84164,6 +85569,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hJXv12im46xKabIRVZ4FMSZUbpw2k8WCcaZZLX2pFteY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/certifi/python-certifi/archive/2026.01.04.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84230,6 +85640,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hLWnvQrIyj.piq96T1u9WEq.pHGOZ5sJYN5nCintEr6sBk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/publicsuffix/list/archive/d333b72b39575da1ce6932b01d7c421a4107c620.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84296,6 +85711,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hLpD.plE.p0PZi.s3nYDVPXhBQL9A7mvqelOzRLskVtg9Y0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/libarchive/libarchive/archive/v3.8.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84362,6 +85782,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hMQZZyGu6xFh3wO.p0lWED.pmingjK92v.sonljtp9gylmM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/python/mypy/archive/refs/tags/v1.20.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84428,6 +85853,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hMWKMJkvxdvuOyxE8rNlf15j7C.pMwJibnNsbfS0biKwo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pytest-dev/pytest-asyncio/archive/refs/tags/v1.3.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84494,6 +85924,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hNGTy3Hua6yEMWXQDJQO2Z5DD3clXTZXEH6DNQBMSGtQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pytest-dev/pytest-timeout/archive/refs/tags/2.4.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84560,6 +85995,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hPOdE8aKvQqfIPEIkUppZPV8t9ApT4R1AyfHXxrKvq88.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/skvadrik/re2c/archive/4.5.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84626,6 +86066,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hPVYwCUGQSuCe5WMeOBJpGXiJ4keVllzg9H3y.pIl.pNr8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/hukkin/tomli/archive/2.4.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84692,6 +86137,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hPgqjCeyHOhWtZjyzSZyvsPT0Q7yRyNDiW3x1fQq0K.p8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/sphinx-doc/sphinx/archive/refs/tags/v9.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84758,6 +86208,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hQprU0sXL6FL0rSVJwu8cYpcPlnYKzKAbkyDaTV778js.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pypa/build/archive/refs/tags/1.4.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84824,6 +86279,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hRZGaOq8hmkwekCs1fKshDrx3vmHdJl.swI3IO9ZLH5rc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/mypyc/librt/archive/refs/tags/v0.9.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84890,6 +86350,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hRi5SzfQJFghRcMAKHS5QKD365OZlio895fSlumq83vs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/lxml/lxml/archive/refs/tags/lxml-6.0.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -84956,6 +86421,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hSC5aMiQsAPLNjCdOHDAMYX2iDSwZltjXxAJJgZnPlJ0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/jaraco/zipp/archive/refs/tags/v3.23.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85022,6 +86492,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hUyMXr8Vc6kDOx1.slD2YKPiHdaTotXAF9ak0yQuwrSUA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/json-c/json-c/archive/json-c-0.18-20240915.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85088,6 +86563,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hX88A5V9uXP3wJQ.polK6pZJT66LP2uCXLK8goa5bPARA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/tiran/defusedxml/archive/refs/tags/v0.8.0rc2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85154,6 +86634,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hY9Nph2LkT1qnOYTW3WCumWWwORnI4P7HxzBjUlGaL7M.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/libuv/libuv/archive/v1.52.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85220,6 +86705,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.haQEhFZUJs0TptfpjQVoIVI9V9a.pxKjE2OfStSaJKHGI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/sphinx-doc/alabaster/archive/refs/tags/1.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85286,6 +86776,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hanuPOBWp4Hlpo.pm6kYlSd2v7H3P7LQ9brZdq1lo7Po4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/stevegrubb/libcap-ng/archive/refs/tags/v0.9.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85352,6 +86847,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hc3ucbneUo5UBfdrd5Ktl4HriVusvWBEA1brrgahEQ9A.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/snowballstem/pystemmer/archive/refs/tags/v3.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85418,6 +86918,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hcQnCTMmpdkvWwt7RFAIhAfmhVwGVn0Y8Z5Tr6lzDmS8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/psf/requests/archive/refs/tags/v2.33.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85484,6 +86989,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hdOdJ4f98smCYdskp3BwtQG6aOyK.p2a73.px580FKRWDk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/jawah/charset_normalizer/archive/refs/tags/3.4.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85550,6 +87060,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hhOcg41lcdVWfmT2DqaYzzu4bJZYiG2y5boylJevBv6k.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/zopefoundation/zope.interface/archive/refs/tags/8.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85616,6 +87131,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hiyGfGr3pLVZSEIHetjsPbIIXkuXrmIPiSqqOw31l9Qw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pypa/wheel/archive/refs/tags/0.46.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85682,6 +87202,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hjsi83v9sg0n5kUfDACqdNAS2VuLSyxv.ppe2LRcO4Khc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/swig/swig/archive/v4.4.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85748,6 +87273,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hk5dZ75D.sBOouYAjrof9Jm2lY29XZhOqS1kudDGmGY9Q.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://gitlab.gnome.org/api/v4/projects/GNOME%2Flibxml2/repository/archive.tar.gz?sha=refs%2Ftags%2Fv2.15.2",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85814,6 +87344,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hkl8ZHt71v17QR2bDP.pad.s5uixf.pGStEPLQ5ooFoC5i8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/google/brotli/archive/refs/tags/v1.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85880,6 +87415,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hoWV.pKK22.piK99iCOCKCV1OCLq2Ef1bcYRKXT5GHwiL8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pypa/flit/archive/3.12.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -85946,6 +87486,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hpkQjPJuSASWmzwzp9H.sUTJBQDr2r2RiofxpF135lAgc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pytest-dev/pluggy/archive/refs/tags/1.6.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86012,6 +87557,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hplBv24QgNzmVMV2lFxCbNwHKtd620thJayWdjs4estw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/giampaolo/psutil/archive/refs/tags/release-7.2.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86078,6 +87628,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hqFanbp0KPc6.pCN4s5mMQNduzcxt.sSrMcYWvIMZ0XnGY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "git+https://github.com/p11-glue/p11-kit.git@refs/tags/0.26.2",
+          "referenceType": "vcs"
         }
       ],
       "filesAnalyzed": false,
@@ -86144,6 +87699,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hqXrypwv.sI.p5npvGHGsHveijoui0ZnoGYhskCfLkewVE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/snowballstem/snowball/archive/v2.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86210,6 +87770,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hry29RUNa0Hv5gIhy2RTVT94mHhgfdIwb5aqjBycxxj0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/numactl/numactl/archive/v2.0.18.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86276,6 +87841,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hs.sgfJc3yxvCE6cjP03vtIZqNFmoZKR3d7.p4gTPk1hQg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pypa/setuptools/archive/refs/tags/v80.10.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86342,6 +87912,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.htNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/facebook/zstd/archive/v1.5.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86408,6 +87983,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.htd3C7xTWfSzdo9Bbz0dHW2oPaCQYmUE9H2sUFfg5HH0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/asciidoc-py/asciidoc-py/archive/10.2.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86474,6 +88054,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.htz99C.pdz5xJhunoC45bl0NdSdV9NXWya9ti48Z.sKaHY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/benjaminp/six/archive/refs/tags/1.17.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86540,6 +88125,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hugyHPqqFcObgldThkkUQgZnl1fVEcXYFnXyAxNwUFIE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/zopefoundation/zope.event/archive/refs/tags/6.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86606,6 +88196,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hv.paPIcsggjRJ3l6Xfw97b3zcqpyWNY4XWy2.p5aWyitY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/AA-Turner/roman-numerals/archive/refs/tags/v4.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -86672,6 +88267,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/pypa/installer/archive/1.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87008,6 +88608,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/sphinxcontrib-jsmath-1.0.1.tar.gz-sha256.hqZJeSkWHJH7SGRoi319pcGVsuMor1ihDCVePIVPgxLg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/s/sphinxcontrib-jsmath/sphinxcontrib-jsmath-1.0.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87236,6 +88841,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/sphinxcontrib_applehelp-2.0.0.tar.gz-sha256.hLynvMxc1zpWO.pkc0hz8ISUGXCJTGCQQIsHnGGy4cBtE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/s/sphinxcontrib_applehelp/sphinxcontrib_applehelp-2.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87302,6 +88912,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/sphinxcontrib_devhelp-2.0.0.tar.gz-sha256.hQR9dltRF0dc7tdUhMzd7QkjsedtceTzn2.pWeB0tN0a0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/s/sphinxcontrib_devhelp/sphinxcontrib_devhelp-2.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87368,6 +88983,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/sphinxcontrib_htmlhelp-2.1.0.tar.gz-sha256.hyeKRas6KrWTME6DSM.p4iMX8rkCW5zzKVJJ.pphcxwguk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/s/sphinxcontrib_htmlhelp/sphinxcontrib_htmlhelp-2.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87434,6 +89054,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/sphinxcontrib_qthelp-2.0.0.tar.gz-sha256.hT.pfQrI.sBcQRb5iOro.pKo9hP4aCcx.pRU7suQOzha5u6s.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/s/sphinxcontrib_qthelp/sphinxcontrib_qthelp-2.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87500,6 +89125,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/sphinxcontrib_serializinghtml-2.0.0.tar.gz-sha256.h6dkSgn.pHLAKQF6U.sDvIYCzJ8P3.sSPIcin3qOi3ADHU0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/s/sphinxcontrib_serializinghtml/sphinxcontrib_serializinghtml-2.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87566,6 +89196,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/sphinxcontrib_websupport-2.0.0.tar.gz-sha256.hC3Nn07rGRUsfl.pQqqMTU1KG3VtUl.sHJuu.pVXHgM.pec0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/s/sphinxcontrib_websupport/sphinxcontrib_websupport-2.0.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87632,6 +89267,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/splitmix-0.1.3.2.tar.gz-sha256.hph1OizD1oWUm19MRcbZ0rnkk0iB.sN4Bg0TNjvYeU3ow.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/splitmix-0.1.3.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87908,6 +89548,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/sqlite-doc-3510200.zip-sha256.hxuMNB8XpwSaQHFTY18kKnBo3B4JFUX8GCzxpxN5Dv10.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://sqlite.org/2026/sqlite-doc-3510200.zip",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -87974,6 +89619,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/sqlite-src-3510200.zip-sha256.hhREPdi1QeUFNmd1deRe8P.sfgWHbmzL0T2ElqOBfyCCk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://sqlite.org/2026/sqlite-src-3510200.zip",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -88538,6 +90188,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/static.patch-sha256.h7Uu9gaVuA9Aly2mmnhUVgv2BYQTSBODJ2rDl5xp0uVY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/rockdaboot/libpsl/commit/490bd6f98a2addcade55028ea60c36cce07e21e4.patch",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -89300,6 +90955,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/strict-0.5.1-r1.cabal-sha256.hWMNzt8d0jLtKWmyMFQc.smaHBCpqbtolKwz9Dpc25AfI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/strict-0.5.1/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -89366,6 +91026,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/strict-0.5.1.tar.gz-sha256.hd3GSgMKoYxLnSCJ7.pnMu6q4OffSNV6zDwuW3sHr.pL4s.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/strict-0.5.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -89636,6 +91301,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/stringbuilder-0.5.1.tar.gz-sha256.h2Hi9xNqAbbzlq2hO8T0mNMF8FbmR0O07slozHrpmA7o.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/stringbuilder-0.5.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -91976,6 +93646,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/syb-0.7.2.4.tar.gz-sha256.h7HweiCLWKrkQOGNhzc7kCiKibNNEw0dB.pt2YIwIpHmA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/syb-0.7.2.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -92618,6 +94293,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/t7703-ignore-ls-total.patch-sha256.h44EPfEJ39LjPWjqjFb52EKNaJGzYxZzJaJOis8QnazU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://lore.kernel.org/git/20260504101429.340123-1-joerg@thalheim.io/raw",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -92684,6 +94364,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tagged-0.8.9.tar.gz-sha256.hbarYjrtBS6alVtKJjSy.pdlDkJ2AQ46bu2Tna9UuVZ4Q.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tagged-0.8.9.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -92963,6 +94648,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tasty-1.5.4.tar.gz-sha256.hx2EgFBvWHEQYs.p1e.sF.sjCUGG1Hz.pEte.pVSMgE59Sxsc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tasty-1.5.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -93089,6 +94779,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tasty-golden-2.3.6.tar.gz-sha256.hjzd.so6IXAMEPiJXgGrn.pPbaqFiQp.pK5Y.sADy05HXCrw.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tasty-golden-2.3.6.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -93215,6 +94910,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tasty-hunit-0.10.2.tar.gz-sha256.hWvAfp8HvmLMk2gYuNveZhqixuD.swz2.sVP5XZdrQeA.sY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tasty-hunit-0.10.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -93341,6 +95041,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tasty-inspection-testing-0.2.1-r3.cabal-sha256.h2.pSbBm.pcpAgR3bcCMqEptTxL.sCAXY2CMt3ItIDCafL8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tasty-inspection-testing-0.2.1/revision/3.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -93407,6 +95112,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tasty-inspection-testing-0.2.1.tar.gz-sha256.hXrF1ZZ5.pXApBQ7FFOgZ5OLlOCSbKsEgi5LPhuiztgnI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tasty-inspection-testing-0.2.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -93533,6 +95243,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tasty-quickcheck-0.11.1-r5.cabal-sha256.hEuprb.pzMwUa2mqw8SBD9XRNVZCRenAcI35skBxqLBYg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tasty-quickcheck-0.11.1/revision/5.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -93599,6 +95314,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tasty-quickcheck-0.11.1.tar.gz-sha256.h49TedFXtNC.pIdNhGht74l7ijFs4ZhGHaGBBtih9jJGo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tasty-quickcheck-0.11.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -93725,6 +95445,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tasty-smallcheck-0.8.2-r1.cabal-sha256.hsO6yQaTTRAHbwjeQtWmJpgibm5stwH97DuznxIWCYwA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tasty-smallcheck-0.8.2/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -93791,6 +95516,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tasty-smallcheck-0.8.2.tar.gz-sha256.h1cvXoqcQDkr9OqrAGo.pht4FPsHTZOu.sxtRJAtoflTzM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tasty-smallcheck-0.8.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -94163,6 +95893,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tcl8.6.16-src.tar.gz-sha256.hkcuPphdxxjwmLvtVMFm3x61nV6.plhXr2Jl5LC9wqFKU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://sourceforge/tcl/tcl8.6.16-src.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -94289,6 +96024,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/temporary-1.3.tar.gz-sha256.hjEQpk2lLX.syoI86GSvlb0oQftSZO5RHGHPSMxx2HmJA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/temporary-1.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -94415,6 +96155,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/test-framework-0.8.2.3.tar.gz-sha256.hMQp4bJAMOp6OodikRwifXBHYswKNIhgqI7NL9uHHxV4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/test-framework-0.8.2.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -94541,6 +96286,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/test-framework-hunit-0.3.0.3.tar.gz-sha256.hZnsGg2zU5S969i4QPzO8UbhMrLhBnL8dDHkmHNnUu0Y.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/test-framework-hunit-0.3.0.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -94667,6 +96417,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/test-framework-quickcheck2-0.3.0.7.tar.gz-sha256.hfn0MTr9Lkh.sjUCDiUbekLFmnvkCk.s4wXCuZtOmad95U.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/test-framework-quickcheck2-0.3.0.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -94924,6 +96679,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/text-iso8601-0.1.1.1.tar.gz-sha256.hYDto0RNek3Pt8sIKmT6iJrnx.ssERicGyuKZHJizriz4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/text-iso8601-0.1.1.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -95050,6 +96810,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/text-short-0.1.6.1.tar.gz-sha256.hg2afQCNUJ0.p83HUSZEOvczJnuVXkUfcsDG2Gro2odBY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/text-short-0.1.6.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -95116,6 +96881,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/th-abstraction-0.7.2.0.tar.gz-sha256.hlGZUvNjqLf99AFgGGGGoyJi.pmt3yDJLTz6U7Z55zdiI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/th-abstraction-0.7.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -95182,6 +96952,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/th-compat-0.1.7.tar.gz-sha256.hnibxIjDTiuVtz5T4wTl5ncO3N280NNNc50hHoKJP1f8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/th-compat-0.1.7.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -95308,6 +97083,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/these-1.2.1-r3.cabal-sha256.huhrsmlAusrP5DvJU9CBGijxOW5t.pgyTj3ccDUUPJJkA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/these-1.2.1/revision/3.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -95374,6 +97154,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/these-1.2.1.tar.gz-sha256.hF9bZMzZe2r.pAGhaELBQDvdN8xTAPqi.sMqYDezasi5N4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/these-1.2.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -95644,6 +97429,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/time-compat-1.9.9-r1.cabal-sha256.hDCkeDDyH7giyUXEHtikBsQKgQNyGIDtTvfB6lv9WMuA.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/time-compat-1.9.9/revision/1.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -95710,6 +97500,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/time-compat-1.9.9.tar.gz-sha256.hkPrd7VPPnBWFXuv4CelTavj4XQDjK4L3yLUG0vrffCU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/time-compat-1.9.9.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -99788,6 +101583,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/toml-0.10.2.tar.gz-sha256.hs72h0QjV3Zn0og0k2cNI6RxNt6sbdJIAve0vg5zL5o8.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/t/toml/toml-0.10.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -100254,6 +102054,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/transformers-base-0.4.6.1.tar.gz-sha256.htD3js7nWWNUE6KAwk1ZgLdxTyNrT.sbvDNZq8tUObQdg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/transformers-base-0.4.6.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -100320,6 +102125,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/transformers-compat-0.7.2.tar.gz-sha256.htixzBMnzy8lGPQc5qoXLlInyF.poJK51iXUF1FPvMnWo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/transformers-compat-0.7.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -100446,6 +102256,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tree-diff-0.3.4-r2.cabal-sha256.hUKFkGee4Lxc5jVY5znRDdwS5ml0TI1BefceOgZoVZsE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tree-diff-0.3.4/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -100512,6 +102327,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tree-diff-0.3.4.tar.gz-sha256.hXproBCB99iXPKDhZN6NRUrEmBd1O01DER8ktsFT2Djs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/tree-diff-0.3.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -100638,6 +102458,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/trifecta-2.1.4-r2.cabal-sha256.hzyzR2CmUY.p.p9foW3b.s7Vndwz0ZkSoqGGLV3p.sGnpweQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/trifecta-2.1.4/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -100704,6 +102529,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/trifecta-2.1.4.tar.gz-sha256.h1NhCr9saMzCHRzjFhzNtC1N0HTeRgRImm7Uf8YbcnCg.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/trifecta-2.1.4.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -100824,6 +102654,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/trove_classifiers-2026.4.28.13.tar.gz-sha256.hyFu4pTw95zMNFpm4RO2fuAmmAqCawV3HmtbRpQm.pBnY.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/t/trove_classifiers/trove_classifiers-2026.4.28.13.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -100950,6 +102785,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/typed-process-0.2.13.0.tar.gz-sha256.hlACWYBO1Qd8uVKyNV8OmcPwoveK.ph3Z86Y8Tu.pKqQ6A.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/typed-process-0.2.13.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -101124,6 +102964,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/types_psutil-7.2.1.20260116.tar.gz-sha256.hRmG.pXV16zV2K.pwKpLQUWCmy7LOdHIyRbUfe6ff25.pYE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/t/types_psutil/types_psutil-7.2.1.20260116.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -101190,6 +103035,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/types_setuptools-80.9.0.20251223.tar.gz-sha256.h00EQWa4vXwOYUhfYasYITv6iyenKzV8Iae.pVDzCBabI.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/t/types_setuptools/types_setuptools-80.9.0.20251223.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -101310,6 +103160,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tzcode2026b.tar.gz-sha256.hN.pnthCf101IcIvxY4pPL.pwQ9cO7fEAOHCzPzY.sYco0Q.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://data.iana.org/time-zones/releases/tzcode2026b.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -101430,6 +103285,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/tzdata2026b.tar.gz-sha256.hEUVD2fGaa.s61vKQ2hq6hc9OHVaPbHy7sESZHrpLG9UQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://data.iana.org/time-zones/releases/tzdata2026b.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -102383,6 +104243,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/unliftio-core-0.2.1.0-r4.cabal-sha256.h9qJzb4WLU5DZOE3KQ9PqTZbpyhchd5F5HKSVG6boByo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/unliftio-core-0.2.1.0/revision/4.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -102449,6 +104314,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/unliftio-core-0.2.1.0.tar.gz-sha256.hmThMuo1W2dYbheOKMTqT6823i.pZWY2fwkw71gFl.s4.pM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/unliftio-core-0.2.1.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -102659,6 +104529,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/unordered-containers-0.2.20.1.tar.gz-sha256.hcIpgUT1tph4JtguaSGEGr3A6iJtbQ0cqJ8O2C.sNSRqs.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/unordered-containers-0.2.20.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -102803,6 +104678,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/unzip60.tar.gz-sha256.hA22WmRZG0ESe0KqVLk.p.pIbR2zplKvCduSdMOaGcIvTc.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://sourceforge/infozip/unzip60.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -102989,6 +104869,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/urllib3-2.6.3.tar.gz-sha256.hG2K2iElEpX2.pMhUJq5T9TTswcHXgwurpkaxx7hWtOO0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://pypi/u/urllib3/urllib3-2.6.3.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -103115,6 +105000,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/utf8-string-1.0.2.tar.gz-sha256.h7kjeradgA3ByjEFWywAkQd53DQEhrjOmgTmp7ZwZsJo.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/utf8-string-1.0.2.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -103744,6 +105634,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/uuid-types-1.0.6.1.tar.gz-sha256.hnwDyeLlxEQS2rMFATZ8NRcEYO0mHz5wHQDvrwFwMMCQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/uuid-types-1.0.6.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -104026,6 +105921,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/vector-0.13.2.0-r2.cabal-sha256.hmsM4yNpS2KN9sIQ0ykSA.svLOpPmqwkD0.pZS7Rn9SdbQ.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/vector-0.13.2.0/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -104092,6 +105992,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/vector-0.13.2.0.tar.gz-sha256.hKPIDx4bL.pKxtw.s6jN47DbzQXPVBftKHdYPyEGK2RxCM.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/vector-0.13.2.0.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -104230,6 +106135,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/vector-stream-0.1.0.1-r4.cabal-sha256.hSDvm3xPHIWmpF2QFiWZvn.pznvqn6E.szUHQUtqzfqKJ4.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/vector-stream-0.1.0.1/revision/4.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -104296,6 +106206,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/vector-stream-0.1.0.1.tar.gz-sha256.h0PUHM0vepUMaLwf1Jal.sKedlIsMiEPXebVorTx1Cv3w.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/vector-stream-0.1.0.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -105682,6 +107597,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/wherefrom-compat-0.1.1.1-r4.cabal-sha256.hCSyLB3Iw81nMxIT1gAV.sLE2kV1SM48tGjVOWQ3jHT.sk.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/wherefrom-compat-0.1.1.1/revision/4.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -105748,6 +107668,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/wherefrom-compat-0.1.1.1.tar.gz-sha256.hwePiLpcwpoOn.p8RQtZRNl9w0ZQr4qMcgABcNVsqes4g.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/wherefrom-compat-0.1.1.1.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -106005,6 +107930,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/witherable-0.5-r2.cabal-sha256.hpWAEMd9dKX8JjDIsf7wuzoBORK3guyAiqDjeJGBNYnU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/witherable-0.5/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -106071,6 +108001,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/witherable-0.5.tar.gz-sha256.hSENMweRlsTy8ATOpDD7A2CfJO3fOlYB.s4KOLZfSRjNE.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/witherable-0.5.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -106659,6 +108594,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/xml-1.3.14-r2.cabal-sha256.hx6M9N8lox2lyOTGjPk55Xwqt2my2LnBz3tii21JQnZU.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/xml-1.3.14/revision/2.cabal",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -106725,6 +108665,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/xml-1.3.14.tar.gz-sha256.hMtGhqfIaWRdthGl.slq46E6AZhCDj5PHEirurfSQlAT0.e",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "mirror://hackage/xml-1.3.14.tar.gz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,

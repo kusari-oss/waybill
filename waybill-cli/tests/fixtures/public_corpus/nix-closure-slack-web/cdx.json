@@ -1897,83 +1897,6 @@
       "version": "2.11.14"
     },
     {
-      "bom-ref": "pkg:hackage/hspec-discover",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "slack-web.cabal"
-          }
-        ]
-      },
-      "name": "hspec-discover",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"slack-web.cabal\"]"
-        },
-        {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\">=2.6.0 && <2.11\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:cabal-build-tool-executable",
-          "value": "hspec-discover"
-        },
-        {
-          "name": "waybill:haskell-version-unresolved-reason",
-          "value": "nixpkgs-version-violates-requirement"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":null,\"nixpkgs\":\"2.11.14\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\">=2.6.0 && <2.11\"],\"revision\":\"5ae3b07d8d6527c42f17c876e404993199144b6a\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\".\"]"
-        }
-      ],
-      "purl": "pkg:hackage/hspec-discover",
-      "scope": "excluded",
-      "type": "library"
-    },
-    {
       "bom-ref": "pkg:hackage/hspec-golden@0.2.2.0",
       "evidence": {
         "identity": [
@@ -35618,6 +35541,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "slack-web.cabal"
+          }
         ]
       },
       "hashes": [
@@ -35637,12 +35566,24 @@
       "name": "hspec-discover",
       "properties": [
         {
+          "name": "waybill:source-files",
+          "value": "[\"slack-web.cabal\"]"
+        },
+        {
           "name": "waybill:scope-classification-source",
           "value": "runtime-closure"
         },
         {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=2.6.0 && <2.11\"]"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "build"
+        },
+        {
+          "name": "waybill:cabal-build-tool-executable",
+          "value": "hspec-discover"
         },
         {
           "name": "waybill:closure-contents",
@@ -35655,6 +35596,26 @@
         {
           "name": "waybill:closure-role",
           "value": "both"
+        },
+        {
+          "name": "waybill:nixpkgs-component-origin",
+          "value": "declared"
+        },
+        {
+          "name": "waybill:nixpkgs-version-disagreement",
+          "value": "{\"emitted\":null,\"nixpkgs\":\"2.11.14\",\"note\":\"the pinned revision's version does not satisfy the project's declared requirement, so it was not emitted; a flake overlay may pin another\",\"requirement-ranges\":[\">=2.6.0 && <2.11\"],\"revision\":\"5ae3b07d8d6527c42f17c876e404993199144b6a\"}"
+        },
+        {
+          "name": "waybill:requirement-unsatisfied",
+          "value": "{\"requirement-ranges\":[\">=2.6.0 && <2.11\"],\"version\":\"2.11.14\"}"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:hackage/hspec-discover@2.11.14",
@@ -47465,6 +47426,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/p11-glue/p11-kit.git@refs/tags/0.25.10"
+        }
+      ],
       "licenses": [
         {
           "license": {
@@ -59919,8 +59886,8 @@
       },
       "externalReferences": [
         {
-          "type": "distribution",
-          "url": "https://github.com/p11-glue/p11-kit.git"
+          "type": "vcs",
+          "url": "git+https://github.com/p11-glue/p11-kit.git@refs/tags/0.25.10"
         }
       ],
       "name": "source",
@@ -113837,14 +113804,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/base@4.20.2.0",
-        "pkg:hackage/directory@1.3.8.5",
-        "pkg:hackage/filepath@1.5.4.0"
-      ],
-      "ref": "pkg:hackage/hspec-discover"
-    },
-    {
-      "dependsOn": [
         "pkg:generic/acl@2.3.2",
         "pkg:generic/attr@2.5.2",
         "pkg:generic/bash@5.3p3",
@@ -114234,7 +114193,6 @@
         "pkg:hackage/ghc@9.10.3",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-core@2.11.14",
-        "pkg:hackage/hspec-discover",
         "pkg:hackage/hspec-discover@2.11.14",
         "pkg:hackage/hspec-expectations@0.8.4"
       ],
@@ -119483,7 +119441,6 @@
         "pkg:hackage/hashable@1.5.0.0",
         "pkg:hackage/hscolour@1.25",
         "pkg:hackage/hspec-core@2.11.14",
-        "pkg:hackage/hspec-discover",
         "pkg:hackage/hspec-discover@2.11.14",
         "pkg:hackage/hspec-golden@0.2.2.0",
         "pkg:hackage/hspec@2.11.14",
@@ -123202,7 +123159,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":316,\"excluded_files\":3,\"excluded_members\":697,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":180,\"with_candidates\":55}"
+        "value": "{\"addressable_without_cpe\":315,\"excluded_files\":3,\"excluded_members\":697,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":180,\"with_candidates\":55}"
       },
       {
         "name": "waybill:closure-graph-admission",

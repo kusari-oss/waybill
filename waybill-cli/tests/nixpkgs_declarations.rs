@@ -34,7 +34,12 @@ fn run_scan(extra: &[&str]) -> (Vec<u8>, String) {
     let out_dir = tempdir().expect("output tempdir");
     let home = tempdir().expect("home tempdir");
     let out_path = out_dir.path().join("out.cdx.json");
-    let mut cmd = Command::new(waybill_bin());
+    let mut cmd = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(waybill_bin());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        };
     cmd.env_remove("HOME")
         .env_remove("XDG_CACHE_HOME")
         .env("HOME", home.path())
@@ -202,7 +207,12 @@ fn the_three_formats_agree_about_whether_the_pass_ran() {
         ("spdx-3-json", "spdx3.json"),
     ] {
         let path = out_dir.path().join(name);
-        let out = Command::new(waybill_bin())
+        let out = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(waybill_bin());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
             .env_remove("HOME")
             .env("HOME", home.path())
             .env("WAYBILL_FIXTURES_DIR", env!("WAYBILL_FIXTURES_DIR"))

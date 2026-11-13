@@ -23,6 +23,7 @@ pub(crate) mod contents;
 pub(crate) mod derivation;
 pub(crate) mod ecosystem_identity;
 pub(crate) mod emit;
+pub(crate) mod fixed_output;
 pub(crate) mod graph;
 pub(crate) mod identifiers;
 /// Milestone 1282 — the four-role vocabulary for members declaring no

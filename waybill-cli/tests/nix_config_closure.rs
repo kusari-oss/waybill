@@ -157,7 +157,12 @@ fn run_args(root: &Path, stub: Option<&Stub>, extra: &[&str]) -> Scan {
     };
     let out = tempfile::tempdir().unwrap();
     let f = |n: &str| out.path().join(n);
-    let o = Command::new(binary_path())
+    let o = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "scan", "--no-deep-hash", "--path"])
         .arg(root)
         .args(extra)

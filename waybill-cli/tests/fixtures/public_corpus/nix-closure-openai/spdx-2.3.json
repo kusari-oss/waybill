@@ -62724,6 +62724,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:p11-kit_project:p11-kit:0.25.5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "git+https://github.com/p11-glue/p11-kit.git@0.25.5",
+          "referenceType": "vcs"
         }
       ],
       "filesAnalyzed": false,
@@ -76014,8 +76019,8 @@
         },
         {
           "referenceCategory": "OTHER",
-          "referenceLocator": "https://github.com/p11-glue/p11-kit.git",
-          "referenceType": "distribution"
+          "referenceLocator": "git+https://github.com/p11-glue/p11-kit.git@0.25.5",
+          "referenceType": "vcs"
         }
       ],
       "filesAnalyzed": false,
@@ -89839,8 +89844,8 @@
         },
         {
           "referenceCategory": "OTHER",
-          "referenceLocator": "https://pagure.io/xmlto.git",
-          "referenceType": "distribution"
+          "referenceLocator": "git+https://pagure.io/xmlto.git@0.0.29",
+          "referenceType": "vcs"
         }
       ],
       "filesAnalyzed": false,
@@ -89895,6 +89900,11 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/xmlto@0.0.29",
           "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "git+https://pagure.io/xmlto.git@0.0.29",
+          "referenceType": "vcs"
         }
       ],
       "filesAnalyzed": false,
