@@ -95,7 +95,6 @@ waybill-cli/src/scan_fs/package_db/nix/haskell_packages/closure_identity.rs  # H
 waybill-cli/src/scan_fs/package_db/nix/haskell_packages/twin_merge.rs        # new: select (FR-004), merge (R6), C221 (R7), rename edges
 waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs                       # source_url via attr_str (both carriers, urls list); vcs reference for url+rev members and for packages whose src is one
 waybill-cli/src/cli/scan_cmd.rs                                              # --no-hackage-lookup; call twin_merge after reclassify, before qualify_backport_identities
-waybill-cli/src/generate/{cyclonedx/metadata,spdx/annotations,spdx/v3_annotations}.rs  # C221 (per-component emitters)
 waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs                   # C221
 docs/reference/sbom-format-mapping.md                                        # C201 values, C221
 docs/reference/nix-evaluation.md                                             # overlays: the merge, the Hackage check, --no-hackage-lookup
