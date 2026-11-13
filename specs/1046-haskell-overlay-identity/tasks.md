@@ -88,7 +88,7 @@
 **Independent test**: with an injected Hackage source answering 200 for the overlaid version, the merged component is `pkg:hackage/waybill-fixture-overlaid@2.1.0.0?vcs_url=…`. Answering 404, it stays `pkg:generic` with `hackage-unpublished`.
 
 - [ ] T012 [P] [US2] Add `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/hackage.rs`, with a trait `HackageSource { fn published(&self, name, version) -> Published }` where `Published` is `Yes`, `No` or `Unreachable(String)`.
-  - **HTTP implementation:** `GET https://hackage.haskell.org/package/<name>-<version>/<name>.cabal` on a dedicated `std::thread` with a `reqwest::blocking` client and a timeout, as in `fetch.rs::HttpSource`. 200 means `Yes`, 404 means `No`, and anything else means `Unreachable`.
+  - **HTTP implementation:** `GET https://hackage.haskell.org/package/<name>-<version>/<name>.cabal` on a dedicated `std::thread` with a `reqwest::blocking` client, using the same per-request timeout the nixpkgs fetch uses (`HttpSource::new`'s caller), as in `fetch.rs::HttpSource`. 200 means `Yes`, 404 means `No`, and anything else means `Unreachable`.
   - **Name as given:** names are passed case-preserved (research R3: Hackage is case-sensitive).
   - **Memo:** a per-scan memo wrapper.
   - **No credentials:** no credential resolution.
@@ -110,6 +110,7 @@
   - opted out → `HackageUncheckedOptedOut` with no request made;
   - a non-GHC-built `version-disagrees` member (the `bash` collision shape) → `VersionDisagrees` with no request made;
   - a `confirmed` member makes no request.
+  - a GHC-built `not-in-package-set` member makes no request and keeps `pkg:generic` (FR-006a: a name the pinned set does not carry may be private).
 - [ ] T016 [US2] Implement the decision in `reclassify`, in `closure_identity.rs`.
   - **When:** only for a member that `decide` returns `VersionDisagrees` for and that `built_by_ghc` holds for.
   - **Lookup:** consult the source unless offline or opted out.
@@ -121,7 +122,7 @@
   - its qualifier value is encoded per the purl-spec rules (the `+` and `@` handling checked against the purl-spec test-suite vectors);
   - a tarball-built published member has no qualifier.
 - [ ] T018 [US2] Add the `--no-hackage-lookup` flag to `waybill-cli/src/cli/scan_cmd.rs`, with help text modelled on `--no-nixpkgs-haskell`: "disables this lookup only; `--offline` suppresses it too". Construct the HTTP `HackageSource`, or none under `--offline` or the flag, and pass it to `reclassify`. Add the flag to the test helpers' `ScanArgs` defaults (`no_hackage_lookup: false`).
-- [ ] T019 [US2] Extend `waybill-cli/tests/closure_haskell_overlay.rs` with an injected Hackage source. The stub harness needs a seam: pass it through an env-selected stub URL served by `wiremock`, following the existing deps.dev test pattern. Cases:
+- [ ] T019 [US2] Extend `waybill-cli/tests/closure_haskell_overlay.rs` with an injected Hackage source. The stub harness needs a seam: an env-selected base URL served by `wiremock`, set **on the spawned `Command` only**, never with `std::env::set_var` in the test process. A process-wide variable shared by concurrent tests is the race #1493 fixed. Cases:
   - **200:** the merged component is `pkg:hackage/waybill-fixture-overlaid@2.1.0.0?vcs_url=…`, and C201 is `hackage-published` in all three formats.
   - **404:** `pkg:generic`, with `hackage-unpublished`.
   - **`--offline`:** `hackage-unchecked-offline`, and wiremock received 0 requests.
@@ -169,7 +170,7 @@
   - **source references:** the count of `source` members with a reference rises above 111 on slacklinker (SC-003; record the number);
   - **edges and non-closure targets:** named-component edges change only where they named a merged twin (SC-004), and non-closure targets are byte-identical (SC-005).
 - [ ] T031 Commit the goldens, run a non-regenerating corpus check, and confirm the merged tree is byte-identical to a fresh regeneration.
-- [ ] T032 Re-run `specs/1046-haskell-overlay-identity/measurements/hackage-probe.sh` and append the output, dated, to the measurements directory, confirming that research R3 still holds at implementation time.
+- [ ] T032 Re-run `specs/1046-haskell-overlay-identity/measurements/hackage-probe.sh` and `qualifier-match-probe.sh` and append the output, dated, to the measurements directory, confirming that research R3 and R11 still hold at implementation time.
 
 ## Dependencies & Execution Order
 

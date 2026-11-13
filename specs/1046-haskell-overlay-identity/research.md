@@ -34,7 +34,7 @@ All measurements were taken on main `2aab3baf`, 2026-11-13, unless stated otherw
 
 `version-disagrees` is mostly the collision population m1275 documented (GNU `bash 5.3p9` against Hackage's `bash`). On slacklinker, only two of the 37 look like Haskell packages: `slack-web@2.3.0.0` and `tmp-postgres@1.35.0.0`, and both are overlays (`nix/deps/*.nix` at the pinned commit).
 
-**Decision.** A member is a candidate for the Hackage lookup only when it is `version-disagrees` **and** `built_by_ghc` holds for one of its derivations. That is the second signal m1275 already requires, which rejected 26 of 26 measured collisions. Everything else makes no request. So a scan makes about as many requests as it has Haskell overlays (inference from this one target; 2 on slacklinker).
+**Decision.** A member is a candidate for the Hackage lookup only when it is `version-disagrees` **and** `built_by_ghc` holds for one of its derivations. `version-disagrees` already means the pinned set carries the name, so only public names reach Hackage. A `not-in-package-set` member, which may be a private package such as the project itself, is never sent (spec FR-006a). That is the second signal m1275 already requires, which rejected 26 of 26 measured collisions. Everything else makes no request. So a scan makes about as many requests as it has Haskell overlays (inference from this one target; 2 on slacklinker).
 
 **Alternatives.** Looking up every `version-disagrees` member was rejected: it would send `bash`, `curl` and `zlib` to Hackage and invite exactly the collision m1275 exists to prevent.
 
@@ -116,7 +116,7 @@ All measurements were taken on main `2aab3baf`, 2026-11-13, unless stated otherw
 - `hackage-unreachable`.
 
 `version-disagrees` keeps its meaning for every other member, the collisions.
-- **The summary.** The document-scope summary (`ClosureIdentitySummary::to_document_value`) counts the new values with no code change to its shape.
+- **The summary.** The pass's summary (`ClosureIdentitySummary::to_document_value`) is logged, not emitted as a document row, and counts the new values with no code change to its shape.
 - **Provenance.** `hackage-published` is the provenance Principle XII.2 requires for an identity from an external source.
 
 **Alternatives.** A separate new row for the check was rejected. C201 already exists to answer "why does this closure member have, or lack, a Hackage identity", which is this question.
@@ -124,6 +124,14 @@ All measurements were taken on main `2aab3baf`, 2026-11-13, unless stated otherw
 ## R9. The opt-out flag
 
 **Decision.** `--no-hackage-lookup`, following `--no-deps-dev` and `--no-nixpkgs-haskell`: it disables this lookup only. `--offline` also refuses it. Neither flag changes the merge (FR-001); both leave `pkg:generic` with the C201 reason from R8.
+
+## R11. A `vcs_url` qualifier does not stop advisory matching (measured)
+
+`measurements/qualifier-match-probe.sh`, output in `measurements/qualifier-match-probe-2026-11-13.txt`.
+- **Positive control.** HSEC-2024-0003 affects `process` from 1.0.0.0, fixed in 1.6.23.0. `pkg:hackage/process@1.6.18.0` returns it from the OSV API with no qualifier, with a percent-encoded `vcs_url`, and with an unencoded one. osv-scanner 2.7.0 on a CycloneDX document returns it with and without the qualifier.
+- **Negative control.** `@1.6.23.0` returns nothing, with or without the qualifier, so the match is version-sensitive and not name-only.
+
+**Decision.** Option B's premise holds for the Hackage consumers measured: the qualifier records the provenance and costs no match.
 
 ## R10. Expected golden changes
 
