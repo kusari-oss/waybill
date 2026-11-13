@@ -6944,6 +6944,14 @@
           "content": "a26dd89e6b1cb2cbf061717bd37a8c27d9bc2660e632a8c786b5c0f48740af14"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "deque",
       "properties": [
         {
@@ -11024,6 +11032,14 @@
         {
           "alg": "SHA-256",
           "content": "756b16c12b5528cdb44ba905bdc78e5f4a749f33f630226645311a8d52207987"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "strict-list",
@@ -47325,6 +47341,14 @@
         {
           "alg": "SHA-256",
           "content": "02794279dd30282e7b0d45a860dda50ee26a92b1461f5da4545f62dab4172686"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "os-string",

@@ -40,11 +40,13 @@ printf '  %-42s %s\n' "bare list forms 'license = [ ... ]'" \
   "$(grep -cE 'license = \[' "$SET" || true)"
 echo
 
-echo "=== the three families (must sum to the declaration count) ==="
+echo "=== the four families (must sum to the declaration count) ==="
 printf '  %-42s %s\n' 'lib.licenses.<attr>' \
   "$(grep -cE 'license = lib\.licenses\.' "$SET")"
 printf '  %-42s %s\n' 'lib.meta.getLicenseFromSpdxId "<id>"' \
   "$(grep -cE 'license = lib\.meta\.getLicenseFromSpdxId ' "$SET")"
+printf '  %-42s %s\n' 'lib.licensesSpdx."<id>" (#1477)' \
+  "$(grep -cE 'license = lib\.licensesSpdx\.' "$SET" || true)"
 printf '  %-42s %s\n' 'a bare string' \
   "$(grep -cE 'license = "' "$SET")"
 echo
@@ -58,6 +60,11 @@ echo
 echo "=== family 2: distinct SPDX ids (pass-through, no mapping) ==="
 grep -oE 'getLicenseFromSpdxId "[^"]*"' "$SET" \
   | sed 's/.*Id //' | sort -u | tr -d '"' | tr '\n' ' ' | fold -s -w 72 | sed 's/^/  /'
+echo
+
+echo "=== family 4 (#1477): distinct lib.licensesSpdx ids (pass-through) ==="
+grep -oE 'licensesSpdx\."[^"]*"' "$SET" \
+  | sed 's/.*Spdx\.//' | sort -u | tr -d '"' | tr '\n' ' ' | fold -s -w 72 | sed 's/^/  /' || true
 echo
 
 echo "=== family 3: every bare-string value (FR-011's population) ==="

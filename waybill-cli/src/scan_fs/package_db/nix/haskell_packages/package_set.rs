@@ -100,13 +100,16 @@ fn spdx_for_attribute(attr: &str) -> Option<&'static str> {
 
 /// Classify one `license = ...;` right-hand side.
 ///
-/// Three families, measured to partition the file exactly (14,481 + 3,962 +
-/// 994 = 19,437 declarations at revision `a799d3e3`):
+/// Four families, measured to partition the file exactly (14,481 + 3,962 +
+/// 994 = 19,437 declarations at revision `a799d3e3`; 14,109 + 981 + 3,564 =
+/// 18,654 at `5ae3b07d`):
 ///
 /// 1. `lib.licenses.<attr>` — mapped through [`spdx_for_attribute`].
 /// 2. `lib.meta.getLicenseFromSpdxId "<id>"` — already SPDX; canonicalised.
 /// 3. a bare string — canonicalised if it parses (48 of 994 do), otherwise
 ///    preserved.
+/// 4. `lib.licensesSpdx."<id>"` (#1477) — family 2's spelling from 2025-11
+///    to 2026-03; treated identically.
 ///
 /// `None` for a declaration that asserts the license is **not known**
 /// (FR-011a). `"unknown"` is 360 of the 994 bare strings, and publishing the
@@ -125,8 +128,13 @@ fn classify_license(raw: &str) -> Option<DeclaredLicense> {
         }
     };
 
-    // Family 2 — an explicit SPDX id.
-    if let Some(rest) = t.strip_prefix("lib.meta.getLicenseFromSpdxId") {
+    // Family 2 — an explicit SPDX id. Family 4 (#1477), `lib.licensesSpdx."<id>"`,
+    // is the same declaration in the spelling nixpkgs used from 2025-11 to
+    // 2026-03 (`5ae3b07d`, `5b2c2d84`), where family 2 has 0 occurrences.
+    if let Some(rest) = t
+        .strip_prefix("lib.meta.getLicenseFromSpdxId")
+        .or_else(|| t.strip_prefix("lib.licensesSpdx."))
+    {
         let inner = rest.trim().trim_start_matches('"').trim_end_matches('"');
         if inner.is_empty() {
             return None;
@@ -1071,6 +1079,28 @@ mod license_tests {
         let l = classify_license("lib.licenses.somethingNewInNixpkgs").unwrap();
         assert!(!l.is_canonical());
         assert_eq!(l.as_declared(), "somethingNewInNixpkgs");
+    }
+
+    /// Family 4 (#1477) — `lib.licensesSpdx."<id>"`, the explicit-SPDX form
+    /// nixpkgs used in place of family 2 between revisions `5ae3b07d`
+    /// (2025-11-24, 3,564 declarations) and `5b2c2d84` (2026-03-16, 3,745),
+    /// both with 0 family-2 declarations. `nix-closure-slack-web` pins
+    /// `5ae3b07d`.
+    #[test]
+    fn m1477_family_4_licenses_spdx_ids_pass_through() {
+        for id in ["BSD-3-Clause", "MIT", "MPL-2.0", "Apache-2.0", "GPL-3.0-or-later"] {
+            let raw = format!("lib.licensesSpdx.\"{id}\"");
+            let l = classify_license(&raw)
+                .unwrap_or_else(|| panic!("{raw} must classify, not be dropped"));
+            assert!(l.is_canonical(), "{raw} is already an SPDX id");
+            assert_eq!(l.as_declared(), id);
+        }
+    }
+
+    /// An empty `lib.licensesSpdx.""` asserts nothing, like an empty family 2.
+    #[test]
+    fn m1477_family_4_an_empty_id_is_no_license() {
+        assert_eq!(declared(r#"lib.licensesSpdx."""#), None);
     }
 
     /// Family 2 — an explicit SPDX id, 3,962 declarations. Pass-through.

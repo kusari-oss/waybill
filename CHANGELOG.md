@@ -145,6 +145,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Hackage licenses from nixpkgs revisions that write `lib.licensesSpdx`
+  (#1477).** From 2025-11 to 2026-03, nixpkgs declared explicit SPDX
+  licenses as `license = lib.licensesSpdx."<id>";` instead of
+  `lib.meta.getLicenseFromSpdxId "<id>"`. The package-set reader did not read
+  that form, so those packages carried no license: 3,564 declarations at
+  `5ae3b07d`, which `nix-closure-slack-web` pins, and 3,745 at `5b2c2d84`.
+  `license-shapes.sh` now counts the form, and the four forms add up to every
+  declaration in both revisions.
+
 - **`--nix-eval` records why it did nothing when the nixpkgs package set
   is unavailable (#1418).** When the Haskell package set for the pinned
   revision could not be retrieved, the scan stopped before the eval tier and
