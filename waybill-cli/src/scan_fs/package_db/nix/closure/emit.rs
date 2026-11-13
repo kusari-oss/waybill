@@ -374,12 +374,61 @@ fn encode_hash_segment(hash: &str) -> String {
 /// rather than a `waybill:` property, per Constitution Principle V: a
 /// download location is a thing every format already has a slot for.
 /// Measured: 138 of 1,145 members record one.
-fn source_url(drv: &RawDerivation) -> Option<&str> {
-    drv.env
-        .get("urls")
+///
+/// #1046 — read through [`RawDerivation::attr_str`], so a fetch that keeps
+/// its URL under `structuredAttrs` is read too. At nixpkgs `a799d3e3`,
+/// `fetchgit` does exactly that, and an `env`-only read lost every git
+/// fetch's URL. Under structured attributes `urls` can be a JSON list, whose
+/// first string is taken for the same reason as the whitespace form's.
+pub(crate) fn source_url(drv: &RawDerivation) -> Option<&str> {
+    drv.attr_str("urls")
         .and_then(|v| v.split_whitespace().next())
-        .or_else(|| drv.env.get("url").map(String::as_str))
+        .or_else(|| {
+            drv.structured_attrs
+                .as_ref()
+                .and_then(|sa| sa.get("urls"))
+                .and_then(serde_json::Value::as_array)
+                .and_then(|list| list.iter().find_map(serde_json::Value::as_str))
+        })
+        .or_else(|| drv.attr_str("url"))
         .filter(|u| !u.is_empty())
+}
+
+/// #1046 — a fetch that records a repository URL **and** a revision: a VCS
+/// checkout, as `fetchgit` produces.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct VcsSource {
+    pub(crate) url: String,
+    pub(crate) rev: String,
+}
+
+impl VcsSource {
+    /// The SPDX VCS-location form, `git+<url>@<rev>`, which is also the
+    /// purl-spec `vcs_url` value and A10's `vcs` reference.
+    pub(crate) fn location(&self) -> String {
+        format!("git+{}@{}", self.url, self.rev)
+    }
+
+    /// The A10 external reference: CycloneDX `vcs`, SPDX 2.3 `externalRefs`
+    /// `OTHER`/`vcs`, SPDX 3 `software_sourceInfo`.
+    pub(crate) fn reference(&self) -> waybill_common::resolution::ExternalReference {
+        waybill_common::resolution::ExternalReference {
+            ref_type: "vcs".to_string(),
+            url: self.location(),
+        }
+    }
+}
+
+/// The VCS source a derivation fetched, when it records both a URL and a
+/// revision in either carrier. A URL without a revision is a download, and
+/// stays [`source_url`]'s `distribution` reference.
+pub(crate) fn vcs_source(drv: &RawDerivation) -> Option<VcsSource> {
+    let url = drv.attr_str("url").filter(|u| !u.is_empty())?;
+    let rev = drv.attr_str("rev").filter(|r| !r.is_empty())?;
+    Some(VcsSource {
+        url: url.to_string(),
+        rev: rev.to_string(),
+    })
 }
 
 /// The PURL coordinate a derivation is emitted under, and the identity hash
@@ -1352,5 +1401,76 @@ mod m1282_tests {
                 "unsafe character in {encoded:?}"
             );
         }
+    }
+
+
+    // ---------------------------------------------------------------
+    // #1046 — a fetch's VCS source, and its URL, from either carrier
+    // ---------------------------------------------------------------
+
+    fn one_drv(json: &str) -> super::super::derivation::RawDerivation {
+        serde_json::from_str(json).unwrap()
+    }
+
+    const REV: &str = "1111111111111111111111111111111111111111";
+
+    /// The `fetchgit` shape measured at nixpkgs `a799d3e3`: `env` holds only
+    /// `out`, and `url`/`rev` live under `structuredAttrs`.
+    #[test]
+    fn m1046_vcs_source_reads_structured_attributes() {
+        let d = one_drv(&format!(
+            r#"{{"name":"src","env":{{"out":"/nix/store/x"}},
+                "structuredAttrs":{{"url":"https://example.invalid/waybill-fixture.git","rev":"{REV}"}},
+                "outputs":{{"out":{{"path":"h-src","hash":"sha256-AAAA"}}}}}}"#
+        ));
+        let v = vcs_source(&d).expect("structured url+rev is a VCS source");
+        assert_eq!(v.url, "https://example.invalid/waybill-fixture.git");
+        assert_eq!(v.rev, REV);
+        assert_eq!(
+            v.reference().url,
+            format!("git+https://example.invalid/waybill-fixture.git@{REV}")
+        );
+        assert_eq!(v.reference().ref_type, "vcs");
+    }
+
+    #[test]
+    fn m1046_vcs_source_reads_the_environment_too() {
+        let d = one_drv(&format!(
+            r#"{{"env":{{"url":"https://example.invalid/waybill-fixture.git","rev":"{REV}"}}}}"#
+        ));
+        assert!(vcs_source(&d).is_some());
+    }
+
+    /// CONTROL: a URL without a revision is a download, not a checkout; a
+    /// revision without a URL names nothing; an empty value is absent.
+    #[test]
+    fn m1046_vcs_source_needs_both_and_neither_empty() {
+        let no_rev = one_drv(r#"{"env":{"url":"https://example.invalid/waybill-fixture.tar.gz"}}"#);
+        assert!(vcs_source(&no_rev).is_none());
+        let no_url = one_drv(&format!(r#"{{"structuredAttrs":{{"rev":"{REV}"}}}}"#));
+        assert!(vcs_source(&no_url).is_none());
+        let empty = one_drv(r#"{"structuredAttrs":{"url":"","rev":""}}"#);
+        assert!(vcs_source(&empty).is_none());
+    }
+
+    /// `source_url` reads `url` from structured attributes, and a structured
+    /// `urls` list's first entry; the `env` forms are unchanged.
+    #[test]
+    fn m1046_source_url_reads_both_carriers() {
+        let structured_url =
+            one_drv(r#"{"structuredAttrs":{"url":"https://example.invalid/a.tar.gz"}}"#);
+        assert_eq!(source_url(&structured_url), Some("https://example.invalid/a.tar.gz"));
+        let structured_list = one_drv(
+            r#"{"structuredAttrs":{"urls":["https://example.invalid/b.tar.gz","https://mirror.invalid/b.tar.gz"]}}"#,
+        );
+        assert_eq!(source_url(&structured_list), Some("https://example.invalid/b.tar.gz"));
+        // CONTROL: the env forms, as before.
+        let env_urls = one_drv(
+            r#"{"env":{"urls":"https://example.invalid/c.tar.gz https://mirror.invalid/c.tar.gz"}}"#,
+        );
+        assert_eq!(source_url(&env_urls), Some("https://example.invalid/c.tar.gz"));
+        let env_url = one_drv(r#"{"env":{"url":"https://example.invalid/d.tar.gz"}}"#);
+        assert_eq!(source_url(&env_url), Some("https://example.invalid/d.tar.gz"));
+        assert_eq!(source_url(&one_drv(r#"{"env":{"url":""}}"#)), None);
     }
 }

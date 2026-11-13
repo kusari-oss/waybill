@@ -1,0 +1,12 @@
+cabal-version:      2.4
+name:               waybill-fixture-proj
+version:            0.1.0
+
+-- #1046. Each dependency's pinned-set version violates its declared range or
+-- is absent, so the design tier emits a versionless `pkg:hackage/<name>`.
+library
+    build-depends:    waybill-fixture-overlaid >= 2.0.0.0,
+                      waybill-fixture-relaxed >=1.0 && <1.5,
+                      waybill-fixture-namesake,
+                      waybill-fixture-variants >= 3.0
+    default-language: Haskell2010

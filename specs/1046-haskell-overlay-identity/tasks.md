@@ -21,13 +21,13 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Create the fixture directory `waybill-cli/tests/fixtures/closure_haskell_overlay/`. Copy the stub-nix project layout from `waybill-cli/tests/fixtures/closure_role_scope/project`, and add a Haskell manifest (`package.yaml`) declaring `waybill-fixture-overlaid >= 2.0.0.0`, `waybill-fixture-relaxed >=1.0 && <1.5`, `waybill-fixture-namesake` and `waybill-fixture-variants >= 3.0`.
-- [ ] T002 [P] Add the catalog row **C221 `waybill:requirement-unsatisfied`** to `docs/reference/sbom-format-mapping.md`. Use the shape and the KEEP-NO-NATIVE audit text from research R7, and the format carriers of C172.
-- [ ] T003 [P] Extend the **C201** row in `docs/reference/sbom-format-mapping.md` with the five values from research R8 (`hackage-published`, `hackage-unpublished`, `hackage-unchecked-offline`, `hackage-unchecked-opted-out`, `hackage-unreachable`). State that they apply only to a GHC-built member whose version the pinned set does not carry, and that `version-disagrees` keeps its meaning for every other member.
+- [X] T001 Create the fixture directory `waybill-cli/tests/fixtures/closure_haskell_overlay/`. Copy the stub-nix project layout from `waybill-cli/tests/fixtures/closure_role_scope/project`, and add a Haskell manifest (`package.yaml`) declaring `waybill-fixture-overlaid >= 2.0.0.0`, `waybill-fixture-relaxed >=1.0 && <1.5`, `waybill-fixture-namesake` and `waybill-fixture-variants >= 3.0`.
+- [X] T002 [P] Add the catalog row **C221 `waybill:requirement-unsatisfied`** to `docs/reference/sbom-format-mapping.md`. Use the shape and the KEEP-NO-NATIVE audit text from research R7, and the format carriers of C172.
+- [X] T003 [P] Extend the **C201** row in `docs/reference/sbom-format-mapping.md` with the five values from research R8 (`hackage-published`, `hackage-unpublished`, `hackage-unchecked-offline`, `hackage-unchecked-opted-out`, `hackage-unreachable`). State that they apply only to a GHC-built member whose version the pinned set does not carry, and that `version-disagrees` keeps its meaning for every other member.
 
 ## Phase 2: Foundational (blocks US2 and US3)
 
-- [ ] T004 Write unit tests in `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs` (tests module) for a new `vcs_source(drv) -> Option<VcsSource { url, rev }>`. Cases:
+- [X] T004 Write unit tests in `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs` (tests module) for a new `vcs_source(drv) -> Option<VcsSource { url, rev }>`. Cases:
   - `url`/`rev` under `structuredAttrs` (the `fetchgit` shape measured in research R5);
   - both in `env`;
   - `rev` missing, which gives `None`;
@@ -40,8 +40,8 @@
   - its existing `env` behaviour is unchanged.
 
   Confirm the new tests fail before T005.
-- [ ] T005 Implement `vcs_source` and change `source_url` to read through `RawDerivation::attr_str` (both carriers), taking the first string of a structured `urls` list, in `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs`. `VcsSource::reference()` returns `ExternalReference { ref_type: "vcs", url: "git+<url>@<rev>" }`. Make T004 pass.
-- [ ] T006 Add a helper `src_derivation(drv, raw) -> Option<&str>` to `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`. It resolves a derivation's `src` attribute (via `attr_str`) to the key of the closure derivation whose output path it is. Build an output-path → drv-key index once per closure. Unit-test it: a `src` that is an output in the closure, one that is not, and a derivation with no `src`.
+- [X] T005 Implement `vcs_source` and change `source_url` to read through `RawDerivation::attr_str` (both carriers), taking the first string of a structured `urls` list, in `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs`. `VcsSource::reference()` returns `ExternalReference { ref_type: "vcs", url: "git+<url>@<rev>" }`. Make T004 pass.
+- [X] T006 Add a helper `src_derivation(drv, raw) -> Option<&str>` to `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`. It resolves a derivation's `src` attribute (via `attr_str`) to the key of the closure derivation whose output path it is. Build an output-path → drv-key index once per closure. Unit-test it: a `src` that is an output in the closure, one that is not, and a derivation with no `src`.
 
 **Checkpoint**: VCS facts and `src` resolution are available. US2 and US3 can start.
 
@@ -156,7 +156,7 @@
   - a range that does not parse (`Admits::Unknown`) gets no C221;
   - several ranges, one admitting, get no C221 (`version_range::contradicts` semantics).
 - [ ] T024 [US4] Implement C221 (`ANN_REQUIREMENT_UNSATISFIED = "waybill:requirement-unsatisfied"`) in `twin_merge.rs`, set on the survivor when `version_range::contradicts(&ranges, &version)`. Make T023 pass.
-- [ ] T025 [P] [US4] Add C221 parity extractors: `cdx_anno!`, `spdx23_anno!` and `spdx3_anno!` (`component` scope) in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`, and a `ParityExtractor` row `C221` (`SymmetricEqual`, `order_sensitive: false`) in `waybill-cli/src/parity/extractors/mod.rs`. The catalog row from T002 and the extractor must land together (the lib-target gate).
+- [X] T025 [P] [US4] Add C221 parity extractors: `cdx_anno!`, `spdx23_anno!` and `spdx3_anno!` (`component` scope) in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`, and a `ParityExtractor` row `C221` (`SymmetricEqual`, `order_sensitive: false`) in `waybill-cli/src/parity/extractors/mod.rs`. The catalog row from T002 and the extractor must land together (the lib-target gate).
 - [ ] T026 [US4] Extend `waybill-cli/tests/closure_haskell_overlay.rs` with `waybill-fixture-relaxed`. Assert one component, C221 in all three formats, and that the value is equal across them.
 
 ## Phase 7: Polish & Cross-Cutting

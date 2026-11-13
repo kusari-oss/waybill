@@ -403,6 +403,24 @@ pub(crate) fn store_basename(path: &str) -> &str {
     path.rsplit('/').next().unwrap_or(path)
 }
 
+/// #1046 — the key of the closure derivation whose output is `drv`'s `src`.
+///
+/// `src` is a store path, in either carrier; `index` is
+/// [`RawClosure::output_index`], built once per closure. `None` when the
+/// derivation has no `src`, or its `src` is not an output of anything in the
+/// closure (a path added to the store directly, say).
+///
+/// Resolved through `src` rather than through `inputs.drvs`, because a
+/// package's inputs also include the sources of its build tools: only `src`
+/// says which checkout the package itself was built from.
+pub(crate) fn src_derivation<'a>(
+    drv: &RawDerivation,
+    index: &BTreeMap<&str, &'a str>,
+) -> Option<&'a str> {
+    let src = drv.attr_str("src").filter(|s| !s.is_empty())?;
+    index.get(store_basename(src)).copied()
+}
+
 /// What the reader saw while reading a closure.
 ///
 /// The disclosure of FR-009, assembled once per closure. **Purely
@@ -1124,5 +1142,26 @@ mod tests {
                 );
             }
         }
+    }
+    /// #1046 — `src` resolves to the derivation that produced it, from either
+    /// carrier; a `src` outside the closure, and no `src`, resolve to nothing.
+    #[test]
+    fn m1046_src_derivation_resolves_through_the_output_index() {
+        let c = RawClosure::parse(
+            r#"{"derivations":{
+              "d-pkg.drv":{"env":{"pname":"p","version":"1","src":"/nix/store/h-src"},"outputs":{"out":{"path":"h-pkg"}}},
+              "d-structured.drv":{"structuredAttrs":{"src":"/nix/store/h-src"},"outputs":{"out":{"path":"h-s"}}},
+              "d-src.drv":{"name":"src","outputs":{"out":{"path":"h-src","hash":"sha256-AAAA"}}},
+              "d-elsewhere.drv":{"env":{"src":"/nix/store/h-not-in-closure"},"outputs":{"out":{"path":"h-e"}}},
+              "d-none.drv":{"env":{"pname":"n","version":"1"},"outputs":{"out":{"path":"h-n"}}}
+            }}"#,
+        )
+        .unwrap();
+        let index = c.output_index();
+        let at = |k: &str| src_derivation(&c.derivations[k], &index);
+        assert_eq!(at("d-pkg.drv"), Some("d-src.drv"));
+        assert_eq!(at("d-structured.drv"), Some("d-src.drv"));
+        assert_eq!(at("d-elsewhere.drv"), None);
+        assert_eq!(at("d-none.drv"), None);
     }
 }
