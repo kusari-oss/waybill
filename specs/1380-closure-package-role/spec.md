@@ -37,6 +37,8 @@ The "genuine packages" column is the census's `other` group, read by hand. Its e
 ### Session 2026-11-13
 
 - Q: Which C206 role do version-check (`*-get-version-*`) and test-program (`*-simple-program-*`) derivations carry? → A: A new fifth C206 value, `check`. It is a graph endpoint, so dependency edges are unchanged. It extends the frozen enum, so the catalog row, the parity extractors and C184's `member-roles` counts change with it.
+- Q: Which role do environments (`python3-3.13.12-env`) carry? → A: `package`. A `buildEnv` is built, version-bearing and made of packages.
+- Q: What makes a member a `check`? → A: Only the two observed groups: version checks (`*-get-version-*`) and test programs (`*-simple-program-*`). They are identified from derivation evidence where a derivation records any, and by these name shapes otherwise. A broader test detector is out of scope: it has no measured population.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -90,7 +92,7 @@ Version-check derivations (`*-get-version-<v>`) and test programs (`*-simple-pro
 
 - **A real package whose name also matches a misfit pattern.** For example, a package genuinely named `<x>-source`. The rule is checked against every census member on five closures. A collision is recorded rather than silently resolved.
 - **A version token in the middle of the name.** `clang-at-least-16-LLVMgold-path.patch` is a patch whatever number it contains.
-- **An environment** (`python3-3.13.12-env`). It is built from packages and is version-bearing. It stays `package` unless measurement shows a reason otherwise (Assumptions).
+- **An environment** (`python3-3.13.12-env`). It is built from packages and is version-bearing, so it carries `package` (FR-002).
 - **A darwin closure.** The goldens are Linux closures. The darwin bootstrap has no `mes`/`tinycc` chain, so the genuine-package population there may be near zero. That is a real state, not a failure.
 - **A member a nameless rung already claims** (content hash, then `text`). It is unaffected: only the third rung changes.
 
@@ -99,9 +101,9 @@ Version-check derivations (`*-get-version-<v>`) and test programs (`*-simple-pro
 ### Functional Requirements
 
 - **FR-001**: A closure member carries `package` only when it is a built, version-bearing package. On every census closure, no member of the census's version-check, test-program, source-tree, patch or vendor groups carries `package`.
-- **FR-002**: The members the census reads as genuine packages keep `package` on every census closure: the `mes`/`tinycc` bootstrap chain, `glibc-iconv`, `libidn2`, `llvm-binutils`, `auditable-cargo` and the `rustc` wrappers.
+- **FR-002**: The members the census reads as genuine packages keep `package` on every census closure: the `mes`/`tinycc` bootstrap chain, `glibc-iconv`, `libidn2`, `llvm-binutils`, `auditable-cargo`, the `rustc` wrappers, and environments (`-env`).
 - **FR-003**: A member that is a tree of source code, a patch or a vendored dependency tree carries `source`. A member that was not fetched keeps its recipe-hash identity. Only fixed-output members have a content-hash identity, as before.
-- **FR-004**: Version-check and test-program derivations carry a new fifth C206 value, `check`. `check` is a dependency-graph endpoint, as `source` and `package` are. The catalog row, the per-format parity extractors and C184's `member-roles` counts include it.
+- **FR-004**: Version-check (`*-get-version-<v>`) and test-program (`*-simple-program-<v>`) derivations carry a new fifth C206 value, `check`. These two groups are its whole scope. A derivation that is some other kind of test keeps whatever role the other rules give it. `check` is a dependency-graph endpoint, as `source` and `package` are. The catalog row, the per-format parity extractors and C184's `member-roles` counts include it.
 - **FR-005**: The classification uses derivation evidence where a derivation records any. A name-shape rule is admitted only for a group that has no such evidence. Each rule's membership is checked against the census on all five closure goldens, with the counts recorded. A rule that matches a member the census reads as genuine is rejected.
 - **FR-006**: The dependency graph does not change. The members and edges in every closure golden's `dependencies[]` stay identical: every reclassified member moves between graph-endpoint roles only.
 - **FR-007**: C184's `member-roles` counts change consistently with the per-component values in all three formats. The parity row for C206 stays `SymmetricEqual`.
@@ -118,7 +120,7 @@ Version-check derivations (`*-get-version-<v>`) and test programs (`*-simple-pro
 
 ### Measurable Outcomes
 
-- **SC-001**: On the moat and shellcheck goldens, `package` goes from 73 members to the census's 23 genuine packages. On slacklinker it goes from 93 to the 29 genuine packages, plus the 5 environments if they stay.
+- **SC-001**: On the moat and shellcheck goldens, `package` goes from 73 members to the census's 23 genuine packages. On slacklinker it goes from 93 to 34: the 29 genuine packages and the 5 environments.
 - **SC-002**: Zero members from the census's misfit groups carry `package` on any of the five closure goldens.
 - **SC-003**: Every member of the genuine-package group keeps `package`: 23 of 23 on moat.
 - **SC-004**: The dependency edges in all five closure goldens are identical before and after.
@@ -127,7 +129,6 @@ Version-check derivations (`*-get-version-<v>`) and test programs (`*-simple-pro
 
 ## Assumptions
 
-- **Environments stay `package`.** A `buildEnv` is built, version-bearing, and made of packages. A consumer looking for software would want it.
 - **"Source" widens to source trees that were not fetched.** That fits the role's name, and the role's catalog text is updated to say so. The identity basis keeps the difference (FR-003).
 - **The census is the oracle.** Its grouping comes from reading names, and it is checked by hand against what each derivation is. The rules this spec admits are measured against it on all five closures, not just the three the issue named.
-- **Out of scope.** Whether any of these members should be emitted at all (#1034's depth question, now settled by runtime scope), and CPEs for them (#1367, #1371).
+- **Out of scope.** Detecting tests in general (`passthru.tests` or similar): `check` covers only the two measured groups. Also out of scope: whether any of these members should be emitted at all (#1034's depth question, now settled by runtime scope), and CPEs for them (#1367, #1371).
