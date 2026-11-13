@@ -7304,7 +7304,7 @@ fn record_closure_cpe_sources(components: &mut [waybill_common::resolution::Reso
             let overrode = curated.first().filter(|cur| Some(*cur) != c.cpes.first()).cloned();
             c.extra_annotations.insert(
                 ids::ANN_DECLARED_CPE.to_string(),
-                ids::provenance(basis, overrode.as_deref()),
+                ids::provenance(basis, overrode.as_ref().map(|c| c.as_str())),
             );
             continue;
         }
@@ -7561,7 +7561,7 @@ fn merge_closure_components(
                                 .to_string(),
                             scan_fs::package_db::nix::closure::identifiers::provenance(
                                 basis,
-                                overrode.as_deref(),
+                                overrode.as_ref().map(|c| c.as_str()),
                             ),
                         );
                     }
@@ -9681,7 +9681,7 @@ mod tests {
     fn m1377_declared(purl: &str, cpe: &str, overrode: Option<&str>) -> ResolvedComponent {
         use crate::scan_fs::package_db::nix::closure::identifiers as ids;
         let mut c = make_component(purl);
-        c.cpes = vec![cpe.to_string()];
+        c.cpes = vec![waybill_common::types::cpe::Cpe::parse(cpe).unwrap()];
         c.extra_annotations.insert(
             ids::ANN_DECLARED_CPE.to_string(),
             ids::provenance(ids::JoinBasis::Drv, overrode),
@@ -9704,10 +9704,10 @@ mod tests {
             &mut existing,
             vec![m1377_declared("pkg:generic/zlib@9.9.9", M1377_DECLARED, None)],
         );
-        assert_eq!(existing[0].cpes, vec![M1377_DECLARED.to_string()]);
+        assert_eq!(existing[0].cpes, vec![waybill_common::types::cpe::Cpe::parse(M1377_DECLARED).unwrap()]);
         assert_eq!(
             existing[0].extra_annotations.get(ids::ANN_DECLARED_CPE),
-            Some(&ids::provenance(ids::JoinBasis::Drv, Some(&curated)))
+            Some(&ids::provenance(ids::JoinBasis::Drv, Some(curated.as_str())))
         );
     }
 
@@ -9721,7 +9721,7 @@ mod tests {
             &mut existing,
             vec![m1377_declared("pkg:generic/waybill-fixture-x@1.0", cpe, None)],
         );
-        assert_eq!(existing[0].cpes, vec![cpe.to_string()]);
+        assert_eq!(existing[0].cpes, vec![waybill_common::types::cpe::Cpe::parse(cpe).unwrap()]);
         assert_eq!(
             existing[0].extra_annotations.get(ids::ANN_DECLARED_CPE),
             Some(&ids::provenance(ids::JoinBasis::Drv, None))
@@ -9735,12 +9735,12 @@ mod tests {
         use crate::scan_fs::package_db::nix::closure::identifiers as ids;
         let reader = "cpe:2.3:a:zlib:zlib:9.9.9:*:*:*:*:*:*:arm64";
         let mut existing = vec![make_component("pkg:generic/zlib@9.9.9")];
-        existing[0].cpes = vec![reader.to_string()];
+        existing[0].cpes = vec![waybill_common::types::cpe::Cpe::parse(reader).unwrap()];
         merge_closure_components(
             &mut existing,
             vec![m1377_declared("pkg:generic/zlib@9.9.9", M1377_DECLARED, None)],
         );
-        assert_eq!(existing[0].cpes, vec![reader.to_string()]);
+        assert_eq!(existing[0].cpes, vec![waybill_common::types::cpe::Cpe::parse(reader).unwrap()]);
         assert!(!existing[0].extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
     }
 
@@ -11016,7 +11016,7 @@ mod cpe_coverage_tests {
         fill_missing_cpes(&mut c);
         let cov = cpe_coverage(&c);
         assert!(
-            c[0].cpes.iter().any(|v| v.starts_with("cpe:2.3:a:openssl:openssl:3.6.2")),
+            c[0].cpes.iter().any(|v| v.as_str().starts_with("cpe:2.3:a:openssl:openssl:3.6.2")),
             "got {:?}",
             c[0].cpes
         );
@@ -11033,14 +11033,14 @@ mod cpe_coverage_tests {
     fn an_operator_supplied_cpe_is_never_recomputed() {
         let supplied = "cpe:2.3:a:openssl_project:openssl:3.6.2:*:*:*:*:*:*:*";
         let mut c = vec![component("openssl", "3.6.2")];
-        c[0].cpes = vec![supplied.to_string()];
+        c[0].cpes = vec![waybill_common::types::cpe::Cpe::parse(supplied).unwrap()];
 
         fill_missing_cpes(&mut c);
         let cov = cpe_coverage(&c);
 
         assert_eq!(
             c[0].cpes,
-            vec![supplied.to_string()],
+            vec![waybill_common::types::cpe::Cpe::parse(supplied).unwrap()],
             "the operator's vendor slug must survive; the curated table would \
              have said `openssl:openssl`"
         );
@@ -11102,7 +11102,7 @@ mod cpe_coverage_tests {
     #[test]
     fn m1373_t008_a_cpe_bearing_addressable_component_is_counted_once() {
         let mut c = typed("pkg:pypi/urllib3@2.2.1", "urllib3", "2.2.1");
-        c.cpes = vec!["cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*".into()];
+        c.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*").unwrap()];
         assert_eq!(
             classify_addressability(&c),
             FeedAddressability::WithCandidates
@@ -11222,7 +11222,7 @@ mod cpe_coverage_tests {
     #[test]
     fn m1373_t016_the_counts_partition_the_component_set() {
         let mut cpe_bearing = typed("pkg:pypi/urllib3@2.2.1", "urllib3", "2.2.1");
-        cpe_bearing.cpes = vec!["cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*".into()];
+        cpe_bearing.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*").unwrap()];
 
         let mut v = vec![
             cpe_bearing,
@@ -11261,7 +11261,7 @@ mod cpe_coverage_tests {
     #[test]
     fn m1374_t007_a_member_is_excluded_even_carrying_a_cpe() {
         let mut c = typed("pkg:generic/bash@5.3", "bash", "5.3");
-        c.cpes = vec!["cpe:2.3:a:gnu:bash:5.3:*:*:*:*:*:*:*".into()];
+        c.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:gnu:bash:5.3:*:*:*:*:*:*:*").unwrap()];
         c.extra_annotations.insert(
             crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE.to_string(),
             serde_json::json!("source"),
@@ -11343,7 +11343,7 @@ mod cpe_coverage_tests {
             FeedAddressability::AddressableWithoutCpe
         );
         let mut withcpe = typed("pkg:pypi/urllib3@2.2.1", "urllib3", "2.2.1");
-        withcpe.cpes = vec!["cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*".into()];
+        withcpe.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*").unwrap()];
         assert_eq!(
             classify_addressability(&withcpe),
             FeedAddressability::WithCandidates
@@ -11354,7 +11354,7 @@ mod cpe_coverage_tests {
     #[test]
     fn m1374_t014_the_five_counts_partition_the_component_set() {
         let mut cpe_bearing = typed("pkg:pypi/urllib3@2.2.1", "urllib3", "2.2.1");
-        cpe_bearing.cpes = vec!["cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*".into()];
+        cpe_bearing.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:urllib3:urllib3:2.2.1:*:*:*:*:*:*:*").unwrap()];
         let mut member = typed("pkg:generic/aeson-2.2.4.1.tar.gz", "aeson-2.2.4.1.tar.gz", "");
         member.extra_annotations.insert(
             crate::scan_fs::package_db::nix::closure::member::ANN_MEMBER_ROLE.to_string(),

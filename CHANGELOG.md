@@ -74,6 +74,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **A supplement's malformed CPE is dropped with a warning (#1403).** CPEs
+  are now a validated type. A value must be a CPE 2.3 formatted string with a
+  named vendor and product. A `--supplement-cdx` component whose `cpe` is
+  anything else is emitted without it, and the scan logs a WARN naming the
+  component. Before, it was copied verbatim, and a CPE 2.2 URI or a
+  wildcard vendor matches nothing or everything. Every other emitted CPE is
+  unchanged.
+
 - **Four curated CPE rows put the vendor with more CVEs first (#1490).**
   `c-ares` (`c-ares_project` 9, `c-ares` 6), `flex` (`westes` 3,
   `flex_project` 0), `less` (`gnu` 3, `greenwoodsoftware` 2) and `unzip`
@@ -190,6 +198,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   attributes, and the closure reader looked only in `env`. A git checkout now
   carries a `vcs` reference (`git+<url>@<rev>`), and so does the package built
   from it. Fetches whose URL is structured gain their `distribution` reference.
+
+- **ncurses' first CPE vendor is the one NVD files its CVEs under (#1490).**
+  `invisible-island:ncurses` holds 28 CVEs, `ncurses_project` 2 and `gnu`
+  0 (measured 2026-11-13), and it is now the row's first vendor. A consumer
+  that reads only CycloneDX `component.cpe` was missing about 26 ncurses
+  CVEs. All three vendors are still emitted.
 
 - **Hackage licenses from nixpkgs revisions that write `lib.licensesSpdx`
   (#1477).** From 2025-11 to 2026-03, nixpkgs declared explicit SPDX

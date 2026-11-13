@@ -1,4 +1,5 @@
 pub mod bomref;
+pub mod cpe;
 pub mod hash;
 pub mod license;
 pub mod purl;

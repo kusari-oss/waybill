@@ -44926,7 +44926,7 @@
     },
     {
       "bom-ref": "pkg:generic/ncurses@6.5",
-      "cpe": "cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:invisible-island:ncurses:6.5:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -44940,7 +44940,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:invisible-island:ncurses:6.5:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
@@ -44972,7 +44972,11 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.5:*:*:*:*:*:*:*\"]"
+          "value": "[\"cpe:2.3:a:invisible-island:ncurses:6.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.5:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*"
         },
         {
           "name": "syft:cpe23",

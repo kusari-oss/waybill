@@ -740,12 +740,12 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                     // component, recorded when the declaration differs:
                     // bash's `5.3p9` against nixpkgs' `5.3` update `9`.
                     let curated = crate::generate::cpe::synthesize_cpes(&component);
-                    let overrode = curated.first().map(String::as_str).filter(|c| *c != cpe.as_str());
+                    let overrode = curated.first().map(|c| c.as_str()).filter(|c| *c != cpe.as_str());
                     component.extra_annotations.insert(
                         super::identifiers::ANN_DECLARED_CPE.to_string(),
                         super::identifiers::provenance(basis, overrode),
                     );
-                    component.cpes = vec![(*cpe).clone().into_string()];
+                    component.cpes = vec![(*cpe).clone()];
                 } else {
                     tracing::debug!(
                         name = %component.name,

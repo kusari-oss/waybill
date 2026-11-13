@@ -2618,8 +2618,8 @@ mod tests {
         let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
         let mut component = make_component("jq", "1.6-2.1");
         component.cpes = vec![
-            "cpe:2.3:a:debian:jq:1.6-2.1:*:*:*:*:*:*:*".to_string(),
-            "cpe:2.3:a:jq:jq:1.6-2.1:*:*:*:*:*:*:*".to_string(),
+            waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:debian:jq:1.6-2.1:*:*:*:*:*:*:*").unwrap(),
+            waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:jq:jq:1.6-2.1:*:*:*:*:*:*:*").unwrap(),
         ];
         let integrity = clean_integrity();
 
@@ -2668,7 +2668,7 @@ mod tests {
             "cpe:2.3:a:waybill-fixture-b:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*",
             "cpe:2.3:a:waybill-fixture-c:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*",
         ];
-        component.cpes = cpes.iter().map(|s| s.to_string()).collect();
+        component.cpes = cpes.iter().map(|s| waybill_common::types::cpe::Cpe::parse(s).unwrap()).collect();
         let bom = builder
             .build(&[component], &[], &clean_integrity(), "myapp", &[], None)
             .expect("build bom");
@@ -2687,8 +2687,8 @@ mod tests {
         let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
         let mut component = make_component("jq", "1.6-2.1");
         component.cpes = vec![
-            "cpe:2.3:a:debian:jq:1.6-2.1:*:*:*:*:*:*:*".to_string(),
-            "cpe:2.3:a:jq:jq:1.6-2.1:*:*:*:*:*:*:*".to_string(),
+            waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:debian:jq:1.6-2.1:*:*:*:*:*:*:*").unwrap(),
+            waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:jq:jq:1.6-2.1:*:*:*:*:*:*:*").unwrap(),
         ];
         let bom = builder
             .build(&[component], &[], &clean_integrity(), "myapp", &[], None)
@@ -2702,7 +2702,7 @@ mod tests {
     fn single_cpe_omits_candidates_property() {
         let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
         let mut component = make_component("serde", "1.0.197");
-        component.cpes = vec!["cpe:2.3:a:serde:serde:1.0.197:*:*:*:*:*:*:*".to_string()];
+        component.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:serde:serde:1.0.197:*:*:*:*:*:*:*").unwrap()];
         let integrity = clean_integrity();
 
         let bom = builder

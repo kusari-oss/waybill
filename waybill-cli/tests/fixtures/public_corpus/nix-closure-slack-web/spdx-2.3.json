@@ -52438,7 +52438,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.5:*:*:*:*:*:*:*\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:invisible-island:ncurses:6.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:ncurses_project:ncurses:6.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:gnu:ncurses:6.5:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -52477,6 +52477,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/ncurses@6.5",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:invisible-island:ncurses:6.5:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         },
         {
           "comment": "CPE from waybill's curated CPE table",
