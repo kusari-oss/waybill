@@ -127,12 +127,22 @@
 - [X] T016 [P] Add a CHANGELOG `Changed` entry: `check` is a new C206 value, and which members moved. Place it apart from other open PRs' entries, because CHANGELOG adjacency breaks stacking.
 - [X] T017 Mutation-check each rung: disable E1, E2, the source-name rule and the check-name rule, one at a time. Each must fail a test. Revert with `cp`, never `git checkout`. Record the results in the commit message.
   - **Observed:** failed tests per disabled rung (unit / integration): E1 3/3; E2 2/3; source-name 2/3; check-name 2/3. The graph test passes under every mutation, as it must. Every mutation was reverted with `cp`.
-- [ ] T018 Run `cargo clippy --workspace --all-targets` and the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_EXIT` and the pass/fail totals.
-- [ ] T019 Dispatch `public-corpus.yml` with `regen_goldens=true`, download `corpus-goldens-regen`, and verify against research's prediction table:
+- [X] T018 Run `cargo clippy --workspace --all-targets` and the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_EXIT` and the pass/fail totals.
+- [X] T019 Dispatch `public-corpus.yml` with `regen_goldens=true`, download `corpus-goldens-regen`, and verify against research's prediction table:
   - re-run the census on the new goldens: roles per group, with `package` 23/23/34/3/3 and `check` 46/46/47/0/0;
   - the named edges are identical (sorted, normalized diff);
   - non-closure targets are byte-identical.
-  - Record the observed numbers here.
+  - **Observed (run 43466336116 at `50d0934f`):**
+
+    | target | `package` | `check` | `source` | edges | members moved |
+    |---|---|---|---|---|---|
+    | moat | 23 | 46 | 502 → 506 | identical | 50 |
+    | shellcheck | 23 | 46 | 760 → 764 | identical | 50 |
+    | slacklinker | 34 | 47 | 902 → 914 | identical | 59 |
+    | openai | 3 | 0 | 702 → 703 | identical | 1 |
+    | slack-web | 3 | 0 | 613 → 614 | identical | 1 |
+
+    Every value matches research's prediction table. On every moved member only C206 changed. Of the metadata, only C184 changed, and its counts equal the per-component ones. Non-closure targets are byte-identical. T018's gate: `GATE_EXIT=0`, 8,037 passed, 0 failed.
 - [ ] T020 Commit the goldens, run a non-regenerating corpus check at that head, and confirm it passes. Then open the PR: no tool comparisons, no company names, and the AI-drafting footer.
 
 ---

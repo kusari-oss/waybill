@@ -124365,7 +124365,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HK625IFVXC5PSFZ6",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1193,\\\"components-without-member-role\\\":496,\\\"derivations\\\":1293,\\\"distinct-cves\\\":18,\\\"edge-ineligible-components\\\":80,\\\"edges\\\":44191,\\\"identifiers\\\":{\\\"by-drv\\\":362,\\\"by-name-version\\\":82,\\\"declared\\\":6,\\\"received\\\":444,\\\"rejected\\\":0,\\\"wanted\\\":1213},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":361,\\\"wanted\\\":1213,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":72,\\\"package\\\":4,\\\"scaffolding\\\":8,\\\"source\\\":613},\\\"patches\\\":190,\\\"patches-without-cve\\\":171,\\\"roles\\\":{\\\"artifact-input\\\":393,\\\"both\\\":49,\\\"build-tooling\\\":850,\\\"unreferenced\\\":1}}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1193,\\\"components-without-member-role\\\":496,\\\"derivations\\\":1293,\\\"distinct-cves\\\":18,\\\"edge-ineligible-components\\\":80,\\\"edges\\\":44191,\\\"identifiers\\\":{\\\"by-drv\\\":362,\\\"by-name-version\\\":82,\\\"declared\\\":6,\\\"received\\\":444,\\\"rejected\\\":0,\\\"wanted\\\":1213},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":361,\\\"wanted\\\":1213,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"check\\\":0,\\\"fragment\\\":72,\\\"package\\\":3,\\\"scaffolding\\\":8,\\\"source\\\":614},\\\"patches\\\":190,\\\"patches-without-cve\\\":171,\\\"roles\\\":{\\\"artifact-input\\\":393,\\\"both\\\":49,\\\"build-tooling\\\":850,\\\"unreferenced\\\":1}}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -141541,7 +141541,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OWIYQXTOK5XZ2FDU",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KMS3BW62SSNJXTNR",
       "type": "Annotation"
     },

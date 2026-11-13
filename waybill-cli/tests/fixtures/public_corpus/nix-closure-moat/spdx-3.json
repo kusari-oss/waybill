@@ -63602,7 +63602,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-32CBTOBKGED2MYYO",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CUHTW2JRXNPW6BEG",
       "type": "Annotation"
     },
@@ -68882,7 +68882,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4NFVPOOFZML75LBA",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GXLXELUTWFJR7E2O",
       "type": "Annotation"
     },
@@ -73202,7 +73202,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-62ZFQMZ43RPTGB5J",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Y7W4EWKZVEPFWUHK",
       "type": "Annotation"
     },
@@ -73650,7 +73650,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-67O3VRLTF5IKSZA5",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2F3HMIO7DNWUROGT",
       "type": "Annotation"
     },
@@ -74978,7 +74978,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6LPESG5FKWEGP7XO",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E3FKCWTZWIGWU755",
       "type": "Annotation"
     },
@@ -75626,7 +75626,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6RDNUDV62HIZW4DL",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4FVIN535EXXP5NS4",
       "type": "Annotation"
     },
@@ -78050,7 +78050,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7LMJNB6XXQJKWPOA",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-M4D5RXQEQD6THK2G",
       "type": "Annotation"
     },
@@ -80146,7 +80146,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AA546K437SJ2RF2K",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JHA4HOM4CWKB7L3J",
       "type": "Annotation"
     },
@@ -81634,7 +81634,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AOYDTQCLGGJBZDVS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2PABXRJVHQ7L7GM2",
       "type": "Annotation"
     },
@@ -82026,7 +82026,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ASSUD7C6ZVH375DO",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZR2SPFQZQBVBNKDP",
       "type": "Annotation"
     },
@@ -83666,7 +83666,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BDRKIU43N555Q2TE",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RD6VI4HRX753NTX6",
       "type": "Annotation"
     },
@@ -83882,7 +83882,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BFUOTIUGYDN5QOYB",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NMGQ6L62KTJCQOP6",
       "type": "Annotation"
     },
@@ -87690,7 +87690,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CKNFM4ZE3H7FLXQO",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3VHB4UEQ3AKMBHZ2",
       "type": "Annotation"
     },
@@ -92234,7 +92234,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DVZ4LNSLKXTXTIGV",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E7PBLEACOIEJMAWQ",
       "type": "Annotation"
     },
@@ -92682,7 +92682,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DZMCXYPBFN3GA2DR",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H6M5NM2UO3SECXQ5",
       "type": "Annotation"
     },
@@ -92706,7 +92706,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DZUKYQSGGFY43WXN",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YKYNKSNS7QVSYTE3",
       "type": "Annotation"
     },
@@ -96370,7 +96370,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-F56VBUBUCZJOK7KF",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-65K3DRLI5R7JEJWU",
       "type": "Annotation"
     },
@@ -99402,7 +99402,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-G5AAQLZX2AQOPYCY",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4O2SCTPTU3H7IUPP",
       "type": "Annotation"
     },
@@ -99650,7 +99650,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GA3BZQNIWAJ4C7KT",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MANFOQOCMAS7SYRU",
       "type": "Annotation"
     },
@@ -101426,7 +101426,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GQO62UZUXNMVWZD5",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7LJGAMCJCZTOBECT",
       "type": "Annotation"
     },
@@ -101458,7 +101458,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GQQXV4Q27XBUG7WF",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NDETOIVU7XFJJW3Z",
       "type": "Annotation"
     },
@@ -103938,7 +103938,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HJIIEHPKB3CTAYPG",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZKVFI65GCRAAFF5I",
       "type": "Annotation"
     },
@@ -104018,7 +104018,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HK625IFVXC5PSFZ6",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1590,\\\"components-without-member-role\\\":503,\\\"derivations\\\":1749,\\\"distinct-cves\\\":15,\\\"edge-ineligible-components\\\":512,\\\"edges\\\":6875,\\\"identifiers\\\":{\\\"by-drv\\\":231,\\\"by-name-version\\\":95,\\\"declared\\\":50,\\\"received\\\":326,\\\"rejected\\\":0,\\\"wanted\\\":1237},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":230,\\\"wanted\\\":1237,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"fragment\\\":245,\\\"package\\\":73,\\\"scaffolding\\\":267,\\\"source\\\":502},\\\"patches\\\":212,\\\"patches-without-cve\\\":196,\\\"roles\\\":{\\\"artifact-input\\\":268,\\\"both\\\":45,\\\"build-tooling\\\":1435,\\\"unreferenced\\\":1}}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nix-closure\",\"value\":\"{\\\"attribute\\\":\\\"default\\\",\\\"components-emitted\\\":1590,\\\"components-without-member-role\\\":503,\\\"derivations\\\":1749,\\\"distinct-cves\\\":15,\\\"edge-ineligible-components\\\":512,\\\"edges\\\":6875,\\\"identifiers\\\":{\\\"by-drv\\\":231,\\\"by-name-version\\\":95,\\\"declared\\\":50,\\\"received\\\":326,\\\"rejected\\\":0,\\\"wanted\\\":1237},\\\"licenses\\\":{\\\"degraded\\\":null,\\\"received\\\":230,\\\"wanted\\\":1237,\\\"withheld-ambiguous\\\":0},\\\"member-roles\\\":{\\\"check\\\":46,\\\"fragment\\\":245,\\\"package\\\":23,\\\"scaffolding\\\":267,\\\"source\\\":506},\\\"patches\\\":212,\\\"patches-without-cve\\\":196,\\\"roles\\\":{\\\"artifact-input\\\":268,\\\"both\\\":45,\\\"build-tooling\\\":1435,\\\"unreferenced\\\":1}}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -109146,7 +109146,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-J6MP5M2TVVEBLGHA",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3IEG6OCC6TSYJU7W",
       "type": "Annotation"
     },
@@ -109754,7 +109754,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JESTLMYEMI7NYH5S",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-P7ZFAB7LAJTHYQL7",
       "type": "Annotation"
     },
@@ -112578,7 +112578,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-KAQI3PFYTGDXE6ND",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YC2YQ6IK2SJRLOQF",
       "type": "Annotation"
     },
@@ -113810,7 +113810,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-KOU4XI3RZ4KBPRZ4",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6YXL5EDMDWMLODR3",
       "type": "Annotation"
     },
@@ -117242,7 +117242,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-LPLGILDKXX3OOUPR",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2QRYS3AHF6N7QBA3",
       "type": "Annotation"
     },
@@ -119754,7 +119754,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MK2FYUHUGYKY3FEF",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7W2AJFKC6SNNLYA3",
       "type": "Annotation"
     },
@@ -124194,7 +124194,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NXICYXHS3EQ5YDKZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TIUVZDXQ7ZMTQP5L",
       "type": "Annotation"
     },
@@ -124242,7 +124242,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NXWIRG6U3V5KG434",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6W54BU4OOK4M3BJG",
       "type": "Annotation"
     },
@@ -125314,7 +125314,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OCT7H3Q577IRYRS2",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-665HXTDBR5WVVKAM",
       "type": "Annotation"
     },
@@ -126858,7 +126858,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OSIOQNV4DGSRJKYJ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ELD5K7J5Q7LVB2XW",
       "type": "Annotation"
     },
@@ -129426,7 +129426,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PLJNREFZJMB5FN7K",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FX3FRTTE3NM35E2L",
       "type": "Annotation"
     },
@@ -129810,7 +129810,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PPNSCVOEDEAREKIS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WX43LVGZH7CWX4F2",
       "type": "Annotation"
     },
@@ -130018,7 +130018,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PRUCH3XKRKZWMVUV",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TDJDTGOR4KFPZZUR",
       "type": "Annotation"
     },
@@ -133674,7 +133674,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QVBFHKXUHHWVA2AV",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AJKUJSJKNB5US3TU",
       "type": "Annotation"
     },
@@ -137426,7 +137426,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RZYFWC23BKWXJ7UH",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ECZ7BBRGBI4Q25UK",
       "type": "Annotation"
     },
@@ -139138,7 +139138,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SMMUX4CNJUWYLMHX",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MY5UFBVP3RKQPMG2",
       "type": "Annotation"
     },
@@ -139410,7 +139410,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SPPCRRWKOTGV4CEB",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CAHXAL3BGARRJRNJ",
       "type": "Annotation"
     },
@@ -141658,7 +141658,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-THAKBGCZ2VKBZR2V",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7KIYOA7ALWEPQLMB",
       "type": "Annotation"
     },
@@ -142626,7 +142626,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TQUQP77QFHBE646H",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KSGRXPMRLZNLDGAT",
       "type": "Annotation"
     },
@@ -143346,7 +143346,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TWUDTEGIE5IJO2VX",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3TDWTHV3JMZKBPMM",
       "type": "Annotation"
     },
@@ -143834,7 +143834,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-U4T4PMXRS7O6ZNKQ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OZC3G4ZIGAWVXLOD",
       "type": "Annotation"
     },
@@ -152490,7 +152490,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WRZCCKNCNDYOIY3H",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZPOOZPFKZJRTZ72S",
       "type": "Annotation"
     },
@@ -153018,7 +153018,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WXAZVFQ45RK4MOTJ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E6PP6GVENZ3XLAGL",
       "type": "Annotation"
     },
@@ -155546,7 +155546,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XPB3KIHFZZKO6KPH",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2TXMWBAXOPYDQRNL",
       "type": "Annotation"
     },
@@ -158690,7 +158690,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YP44HLR3HWIUJFNE",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QEZ6TD4JOIQSJQG5",
       "type": "Annotation"
     },
@@ -158746,7 +158746,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YPQLSQRKXKVLPRQX",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DHS3CADPHTQ4EWLY",
       "type": "Annotation"
     },
@@ -159962,7 +159962,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Z3V7B5LJCC37EER7",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FWD5NFWJHDRNT4C5",
       "type": "Annotation"
     },
@@ -162098,7 +162098,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ZRDGDEO6MKOFEEFG",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"package\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:closure-member-role\",\"value\":\"check\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3LHG6ZPKABFDXOCH",
       "type": "Annotation"
     },
