@@ -1,0 +1,53 @@
+gnu:automake	2
+gnu:bc	0
+gnu:binutils	288
+gnu:bison	4
+bzip:bzip2	10
+cairographics:cairo	10
+llvm:clang	1
+gnu:cpio	12
+gnu:diffutils	0
+gnu:ed	4
+libexpat:expat	0
+fontforge:fontforge	31
+gnu:gettext	2
+giflib_project:giflib	14
+gnome:glib	37
+gnu:gzip	13
+harfbuzz_project:harfbuzz	8
+nlnetlabs:ldns	8
+libass_project:libass	6
+libffi_project:libffi	1
+gnu:libmicrohttpd	6
+libsndfile_project:libsndfile	32
+libssh:libssh	45
+libssh2:libssh2	25
+curl: (28) Operation timed out after 40009 milliseconds with 0 bytes received
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+libtiff:libtiff	ERR
+gnu:libtool	2
+gnu:libunistring	0
+lzo_project:lzo	0
+nghttp2:nghttp2	9
+tatsuhiro-t:ngtcp2	1
+oniguruma_project:oniguruma	13
+gnu:patch	15
+pixman:pixman	6
+re2c:re2c	3
+gnu:readline	1
+rhash_project:rhash	0
+xiph:speex	3
+tcl:tcl	1
+gnu:texinfo	2
+openssl:openssl	330
+waybill-fixture-vendor:waybill-fixture-product	0

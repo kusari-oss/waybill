@@ -1,0 +1,59 @@
+# Packages whose CPE comes from waybill's curated table and that declare no meta.identifiers.cpe at
+# nixos-unstable d4f25a3e (2026-11-12). Suggested upstream: meta.identifiers.cpeParts =
+#   lib.meta.cpeFullVersionWithVendor "<vendor>" version;   (product defaults to lower-cased pname)
+# Vendor = where NVD files the CVEs (probe-cpe-dictionary.sh --cves) when a curated row has several.
+# Already declared upstream (23 agree with waybill): bash brotli coreutils curl findutils gcc gnutls libarchive libuv
+#   libxml2 libxslt lua ncurses openssl p11-kit pcre2 perl python3 python3-minimal sqlite unbound xz zlib;
+#   glibc agrees on Linux; libidn2 upstream (gnu) is right and waybill's row was wrong (fixed in #1489).
+# CVE counts per pair: multivendor-cves.txt, single-vendor-cves.txt. Pairs with 0 CVEs (bc, diffutils,
+#   libunistring, lzo, rhash) match nothing today but are NVD's own vendors; expat's 0 was a wrong pair (fixed above).
+nixpkgs attribute	vendor	product	note
+automake	gnu	automake	
+bc	gnu	bc	
+binutils-unwrapped	gnu	binutils	
+bison	gnu	bison	
+bzip2	bzip	bzip2	
+c-ares	c-ares_project	c-ares	split: c-ares_project 9 CVEs, c-ares 6
+cairo	cairographics	cairo	
+cjson	davegamble	cjson	davegamble 14, cjson_project 3
+llvmPackages.clang-unwrapped	llvm	clang	
+llvmPackages.compiler-rt	llvm	compiler-rt	pname is compiler-rt-libc: set cpeParts.product = "compiler-rt"
+cpio	gnu	cpio	
+diffutils	gnu	diffutils	
+ed	gnu	ed	
+expat	libexpat_project	libexpat	pname is expat: set cpeParts.product = "libexpat"; NVD files all 68 expat CVEs here, 0 under libexpat:expat
+file	file_project	file	file_project 18, christos_zoulas 8, gentoo 1
+flex	westes	flex	westes 3, flex_project 0 (waybill's primary)
+fontforge	fontforge	fontforge	
+gawk	fossies	gawk	NVD's only gawk vendor is fossies (a source-archive site); flag in the nixpkgs PR or skip
+gettext	gnu	gettext	
+giflib	giflib_project	giflib	
+glib	gnome	glib	
+gzip	gnu	gzip	
+harfbuzz	harfbuzz_project	harfbuzz	
+jq	jqlang	jq	jqlang 22, jq_project 2
+ldns	nlnetlabs	ldns	
+less	gnu	less	split: gnu 3, greenwoodsoftware 2
+libass	libass_project	libass	
+libffi	libffi_project	libffi	
+libmicrohttpd	gnu	libmicrohttpd	
+libsndfile	libsndfile_project	libsndfile	
+libssh	libssh	libssh	
+libssh2	libssh2	libssh2	
+libtiff	libtiff	libtiff	
+libtool	gnu	libtool	
+libunistring	gnu	libunistring	
+lzo	lzo_project	lzo	
+nghttp2	nghttp2	nghttp2	
+ngtcp2	tatsuhiro-t	ngtcp2	
+oniguruma	oniguruma_project	oniguruma	
+patch	gnu	patch	
+pixman	pixman	pixman	
+pkgconf-unwrapped	pkgconf	pkgconf	patch pkgconf-unwrapped (the top-level attribute is pkgconf-wrapper)
+re2c	re2c	re2c	
+readline	gnu	readline	
+rhash	rhash_project	rhash	
+speex	xiph	speex	
+tcl	tcl	tcl	
+texinfo	gnu	texinfo	
+unzip	unzip_project	unzip	split: unzip_project 16, info-zip 11
