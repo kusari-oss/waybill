@@ -79,65 +79,9 @@ pub fn cpe_source(c: &waybill_common::resolution::ResolvedComponent) -> Option<C
     }
 }
 
-/// A CPE 2.3 formatted string that parsed (Constitution Principle IV).
-///
-/// Closure-local. The shared `ResolvedComponent.cpes` is `Vec<String>` for
-/// every ecosystem (#1403); this type is converted to `String` exactly once,
-/// where it is placed there.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct DeclaredCpe(String);
-
-impl DeclaredCpe {
-    /// Accept a CPE 2.3 formatted string: 13 colon-separated fields (a `\:`
-    /// is an escaped colon inside a field), `cpe:2.3:` first, `part` one of
-    /// `a`, `o`, `h`, and a vendor and product that are neither empty nor
-    /// `*`. A vendorless CPE would match every product of that name, which
-    /// is the heuristic a declared value is supposed to improve on.
-    pub(crate) fn parse(value: &str) -> Option<Self> {
-        let fields = split_fields(value);
-        if fields.len() != 13 || fields[0] != "cpe" || fields[1] != "2.3" {
-            return None;
-        }
-        if !matches!(fields[2].as_str(), "a" | "o" | "h") {
-            return None;
-        }
-        let named = |f: &str| !f.is_empty() && f != "*";
-        if !named(&fields[3]) || !named(&fields[4]) {
-            return None;
-        }
-        Some(Self(value.to_string()))
-    }
-
-    pub(crate) fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    /// The one conversion into the shared field's `String` (#1403).
-    pub(crate) fn into_string(self) -> String {
-        self.0
-    }
-}
-
-/// Split on unescaped colons, keeping escapes in the field text.
-fn split_fields(value: &str) -> Vec<String> {
-    let mut fields = vec![String::new()];
-    let mut escaped = false;
-    for ch in value.chars() {
-        let last = fields.len() - 1;
-        if escaped {
-            fields[last].push(ch);
-            escaped = false;
-        } else if ch == '\\' {
-            fields[last].push(ch);
-            escaped = true;
-        } else if ch == ':' {
-            fields.push(String::new());
-        } else {
-            fields[last].push(ch);
-        }
-    }
-    fields
-}
+/// A declared CPE is a [`Cpe`]: the same CPE 2.3 validation every
+/// component's CPEs now pass (#1403).
+pub(crate) use waybill_common::types::cpe::Cpe as DeclaredCpe;
 
 /// How a member was reached.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -251,7 +195,7 @@ pub(crate) fn join<'a>(
             continue;
         };
         let Some(value) = only else { continue };
-        match DeclaredCpe::parse(value) {
+        match DeclaredCpe::parse(value).ok() {
             Some(cpe) => {
                 out.coverage.declared += 1;
                 out.index.insert(m.key.to_string(), Declared { cpe, basis });
@@ -318,10 +262,10 @@ mod tests {
     #[test]
     fn a_well_formed_cpe_parses() {
         assert_eq!(DeclaredCpe::parse(OPENSSH).unwrap().as_str(), OPENSSH);
-        assert!(DeclaredCpe::parse(BASH).is_some());
-        assert!(DeclaredCpe::parse("cpe:2.3:o:linux:linux_kernel:6.1:*:*:*:*:*:*:*").is_some());
+        assert!(DeclaredCpe::parse(BASH).is_ok());
+        assert!(DeclaredCpe::parse("cpe:2.3:o:linux:linux_kernel:6.1:*:*:*:*:*:*:*").is_ok());
         // An escaped colon is part of a field, not a separator.
-        assert!(DeclaredCpe::parse(r"cpe:2.3:a:vendor:prod\:uct:1:*:*:*:*:*:*:*").is_some());
+        assert!(DeclaredCpe::parse(r"cpe:2.3:a:vendor:prod\:uct:1:*:*:*:*:*:*:*").is_ok());
     }
 
     #[test]
@@ -337,7 +281,7 @@ mod tests {
             "cpe:2.3:a:openbsd:*:10.3p1:*:*:*:*:*:*:*",           // any product
             "",
         ] {
-            assert!(DeclaredCpe::parse(bad).is_none(), "{bad:?} parsed");
+            assert!(DeclaredCpe::parse(bad).is_err(), "{bad:?} parsed");
         }
     }
 

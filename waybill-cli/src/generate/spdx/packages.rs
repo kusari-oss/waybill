@@ -450,7 +450,7 @@ fn cpe_external_ref(c: &ResolvedComponent) -> Option<SpdxExternalRef> {
     Some(SpdxExternalRef {
         category: SpdxExternalRefCategory::Security,
         ref_type: "cpe23Type".to_string(),
-        locator: primary_cpe.clone(),
+        locator: primary_cpe.as_str().to_string(),
         comment: crate::scan_fs::package_db::nix::closure::identifiers::cpe_source(c)
             .map(|s| s.comment().to_string()),
     })
@@ -765,7 +765,7 @@ mod tests {
     fn m1377_the_cpe_ref_comment_states_its_source() {
         use crate::scan_fs::package_db::nix::closure::identifiers as ids;
         let mut c = mk_component("pkg:generic/zlib@1.3.2", "zlib", "1.3.2");
-        c.cpes = vec!["cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*".to_string()];
+        c.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*").unwrap()];
         assert_eq!(cpe_external_ref(&c).unwrap().comment, None);
 
         c.extra_annotations.insert(ids::ANN_CURATED_CPE.to_string(), serde_json::json!(true));

@@ -1307,7 +1307,7 @@ pub fn build_metadata(
     let synthetic_component_cpe: Option<String> = if override_active {
         None
     } else {
-        main_module.and_then(|c| c.cpes.first().cloned())
+        main_module.and_then(|c| c.cpes.first().map(|p| p.as_str().to_string()))
     };
 
     // Milestone 080 — user-supplied creators routed by Type per the
@@ -1688,7 +1688,7 @@ pub fn build_metadata(
         // Milestone 1377 — the subject can be a closure component now, and
         // its CPE provenance belongs beside its CPE. Only when the subject
         // carries its own CPE: the placeholder fallback has no source.
-        if metadata["component"]["cpe"].as_str() == c.cpes.first().map(String::as_str) {
+        if metadata["component"]["cpe"].as_str() == c.cpes.first().map(|p| p.as_str()) {
             let mut ev = metadata["component"]
                 .get("evidence")
                 .cloned()

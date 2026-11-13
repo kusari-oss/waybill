@@ -246,7 +246,7 @@ pub fn append_cpe_identity(
     if !evidence.is_object() {
         *evidence = json!({});
     }
-    let entry = cpe_identity(cpe, source);
+    let entry = cpe_identity(cpe.as_str(), source);
     match evidence.get_mut("identity").and_then(|v| v.as_array_mut()) {
         Some(arr) => arr.push(entry),
         None => evidence["identity"] = json!([entry]),
@@ -327,7 +327,7 @@ mod tests {
         use crate::scan_fs::package_db::nix::closure::identifiers as ids;
         let base = || build_evidence(&make_evidence(ResolutionTechnique::UrlPattern, 0.95), &[], None, &[], None);
         let mut c = crate::generate::graph_completeness::test_support::mk_component("pkg:generic/zlib@1.3.2");
-        c.cpes = vec!["cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*".to_string()];
+        c.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*").unwrap()];
 
         let mut untouched = base();
         append_cpe_identity(&mut untouched, &c);

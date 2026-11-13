@@ -14,6 +14,7 @@
 //! <https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf>
 
 use waybill_common::resolution::ResolvedComponent;
+use waybill_common::types::cpe::Cpe;
 
 /// v1 mapping table for `pkg:generic/<library>@<version>` components per
 /// milestone-097 FR-001. Each row maps a library slug (the lowercase
@@ -471,7 +472,7 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
 /// Build the set of CPE 2.3 candidate strings for a resolved component.
 /// Returns empty when the component is in an ecosystem the synthesizer
 /// has no opinion on (generic/unknown PURLs).
-pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<String> {
+pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<Cpe> {
     let ecosystem = component.purl.ecosystem();
     let name = &component.name;
     let version = &component.version;
@@ -570,9 +571,11 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<String> {
                 // PURL (`pkg:golang/stdlib@v1.21.5`); strip it so the
                 // CPE matches NVD's bare-version convention.
                 let bare_version = version.trim_start_matches('v');
-                return vec![format!(
+                return Cpe::parse(&format!(
                     "cpe:2.3:a:golang:go:{bare_version}:*:*:*:*:*:*:*"
-                )];
+                ))
+                .into_iter()
+                .collect();
             }
             push_unique(&mut vendors, name);
             if let Some(namespace) = component.purl.namespace() {
@@ -632,7 +635,7 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<String> {
             };
             return pairs
                 .iter()
-                .map(|(vendor, product)| format_cpe(vendor, product, &cpe_version))
+                .filter_map(|(vendor, product)| format_cpe(vendor, product, &cpe_version))
                 .collect();
         }
         _ => {
@@ -643,7 +646,7 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<String> {
 
     vendors
         .into_iter()
-        .map(|vendor| format_cpe(&vendor, name, version))
+        .filter_map(|vendor| format_cpe(&vendor, name, version))
         .collect()
 }
 
@@ -675,7 +678,7 @@ pub fn secondary_cpes(component: &ResolvedComponent) -> Vec<&str> {
         .cpes
         .iter()
         .skip(1)
-        .map(String::as_str)
+        .map(Cpe::as_str)
         .filter(|cpe| crate::generate::spdx::v3_external_ids::is_fully_resolved_cpe23(cpe))
         .collect()
 }
@@ -696,13 +699,17 @@ fn push_unique(out: &mut Vec<String>, value: &str) {
 /// The remaining seven fields are `*` (any) per spec — we don't have
 /// update/edition/language/sw_edition/target_sw/target_hw/other info
 /// at SBOM time.
-fn format_cpe(vendor: &str, product: &str, version: &str) -> String {
-    format!(
+///
+/// `None` only when the result does not parse as a [`Cpe`], which an empty
+/// vendor or product would cause.
+fn format_cpe(vendor: &str, product: &str, version: &str) -> Option<Cpe> {
+    Cpe::parse(&format!(
         "cpe:2.3:a:{}:{}:{}:*:*:*:*:*:*:*",
         cpe_escape(vendor),
         cpe_escape(product),
         cpe_escape(version),
-    )
+    ))
+    .ok()
 }
 
 /// Escape the formatted-string special characters per CPE 2.3 §6.2.
@@ -833,9 +840,9 @@ mod tests {
     fn i1430_a_candidate_without_a_release_version_is_not_handed_on() {
         let mut c = make_component("pkg:generic/waybill-fixture-lib@9.9.9");
         c.cpes = vec![
-            "cpe:2.3:a:waybill-fixture-a:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*".to_string(),
-            "cpe:2.3:a:waybill-fixture-b:waybill-fixture-lib:*:*:*:*:*:*:*:*".to_string(),
-            "cpe:2.3:a:waybill-fixture-c:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*".to_string(),
+            Cpe::parse("cpe:2.3:a:waybill-fixture-a:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*").unwrap(),
+            Cpe::parse("cpe:2.3:a:waybill-fixture-b:waybill-fixture-lib:*:*:*:*:*:*:*:*").unwrap(),
+            Cpe::parse("cpe:2.3:a:waybill-fixture-c:waybill-fixture-lib:9.9.9:*:*:*:*:*:*:*").unwrap(),
         ];
         assert_eq!(
             secondary_cpes(&c),
@@ -848,16 +855,16 @@ mod tests {
         let c = make_component("pkg:deb/debian/jq@1.6-2.1+b1?distro=bookworm");
         let cpes = synthesize_cpes(&c);
         assert_eq!(cpes.len(), 2);
-        assert!(cpes[0].starts_with("cpe:2.3:a:debian:jq:"), "{cpes:?}");
-        assert!(cpes[1].starts_with("cpe:2.3:a:jq:jq:"), "{cpes:?}");
+        assert!(cpes[0].as_str().starts_with("cpe:2.3:a:debian:jq:"), "{cpes:?}");
+        assert!(cpes[1].as_str().starts_with("cpe:2.3:a:jq:jq:"), "{cpes:?}");
     }
 
     #[test]
     fn apk_produces_alpinelinux_and_product_vendor_candidates() {
         let c = make_component("pkg:apk/alpine/musl@1.2.4-r2");
         let cpes = synthesize_cpes(&c);
-        assert!(cpes.iter().any(|s| s.starts_with("cpe:2.3:a:alpinelinux:musl:")));
-        assert!(cpes.iter().any(|s| s.starts_with("cpe:2.3:a:musl:musl:")));
+        assert!(cpes.iter().any(|s| s.as_str().starts_with("cpe:2.3:a:alpinelinux:musl:")));
+        assert!(cpes.iter().any(|s| s.as_str().starts_with("cpe:2.3:a:musl:musl:")));
     }
 
     #[test]
@@ -875,8 +882,8 @@ mod tests {
     fn pypi_emits_name_and_python_prefixed_candidates() {
         let c = make_component("pkg:pypi/requests@2.31.0");
         let cpes = synthesize_cpes(&c);
-        assert!(cpes.iter().any(|s| s.starts_with("cpe:2.3:a:requests:requests:")));
-        assert!(cpes.iter().any(|s| s.starts_with("cpe:2.3:a:python-requests:requests:")));
+        assert!(cpes.iter().any(|s| s.as_str().starts_with("cpe:2.3:a:requests:requests:")));
+        assert!(cpes.iter().any(|s| s.as_str().starts_with("cpe:2.3:a:python-requests:requests:")));
     }
 
     #[test]
@@ -884,7 +891,7 @@ mod tests {
         let c = make_component("pkg:npm/%40angular/core@16.0.0");
         let cpes = synthesize_cpes(&c);
         assert!(
-            cpes.iter().any(|s| s.contains(":angular:core:")),
+            cpes.iter().any(|s| s.as_str().contains(":angular:core:")),
             "expected angular scope as vendor, got {cpes:?}"
         );
     }
@@ -896,7 +903,7 @@ mod tests {
         let primary = &cpes[0];
         // `+` must be escaped as `\+`.
         assert!(
-            primary.contains("1.6-2.1\\+b1"),
+            primary.as_str().contains("1.6-2.1\\+b1"),
             "expected escaped + in {primary}"
         );
     }
@@ -1046,14 +1053,14 @@ mod tests {
             );
             for cpe in &cpes {
                 assert!(
-                    cpe.starts_with("cpe:2.3:a:"),
+                    cpe.as_str().starts_with("cpe:2.3:a:"),
                     "row {slug:?} produced non-cpe23 string: {cpe}"
                 );
                 // CPE 2.3 formatted-string binding: 13 segments total,
                 // separated by 12 unescaped colons. Escaped colons
                 // (`\:`) inside an attribute don't count as separators.
                 let mut separator_count = 0usize;
-                let bytes = cpe.as_bytes();
+                let bytes = cpe.as_str().as_bytes();
                 let mut i = 0;
                 while i < bytes.len() {
                     if bytes[i] == b'\\' && i + 1 < bytes.len() {
@@ -1403,7 +1410,7 @@ mod tests {
             ("python3-minimal", "3.13.13", "cpe:2.3:a:python:python:3.13.13:*:*:*:*:*:*:*"),
         ] {
             let c = make_component(&format!("pkg:generic/{name}@{version}"));
-            assert_eq!(synthesize_cpes(&c), vec![want.to_string()], "{name}");
+            assert_eq!(synthesize_cpes(&c), vec![Cpe::parse(want).unwrap()], "{name}");
         }
     }
 

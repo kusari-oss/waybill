@@ -77,7 +77,7 @@ pub fn build_external_identifiers_for(component: &ResolvedComponent) -> Vec<Valu
     // the table.
     let source = crate::scan_fs::package_db::nix::closure::identifiers::cpe_source(component);
     for cpe in &component.cpes {
-        if is_fully_resolved_cpe23(cpe) {
+        if is_fully_resolved_cpe23(cpe.as_str()) {
             let mut entry = json!({
                 "type": "ExternalIdentifier",
                 "externalIdentifierType": "cpe23",
@@ -151,7 +151,7 @@ mod tests {
         let mut c = crate::generate::graph_completeness::test_support::mk_component(
             "pkg:generic/bash@5.3p9",
         );
-        c.cpes = vec!["cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*".to_string()];
+        c.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:gnu:bash:5.3:9:*:*:*:*:*:*").unwrap()];
         let cpe_comments = |c: &ResolvedComponent| -> Vec<Option<String>> {
             build_external_identifiers_for(c)
                 .into_iter()

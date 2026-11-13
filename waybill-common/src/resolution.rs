@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::types::cpe::Cpe;
 use crate::types::hash::ContentHash;
 use crate::types::license::SpdxExpression;
 use crate::types::purl::Purl;
@@ -40,7 +41,7 @@ pub struct ResolvedComponent {
     /// CycloneDX as the first entry on `component.cpe` plus the full
     /// set under `properties["waybill:cpe-candidates"]`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub cpes: Vec<String>,
+    pub cpes: Vec<Cpe>,
     pub advisories: Vec<AdvisoryRef>,
     /// Per-file occurrences when the component is sourced from an OS
     /// installed-package db with deep-hashing enabled. Each entry
