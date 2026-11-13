@@ -136,6 +136,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A closure edge into a nameless member reaches that member (#1473).**
+  Under `--nix-closure`, members that declare no `pname` (fetched sources,
+  mostly) share the name `source`, and edges were joined to components on
+  `(name, version)`. On the pinned `nix-closure-moat` closure, all 60 edges
+  into its 56 `source` members landed on one of them, so 55 looked orphaned.
+  Edges now join through the same derivation-to-component key the closure
+  tier uses elsewhere, which keys a nameless member on its hash-bearing PURL.
+
 - **expat and libidn2 now emit the CPE NVD files their CVEs under.** The
   curated rows pointed at `libexpat:expat` and `libidn2_project:libidn2`,
   which exist in NVD's dictionary but hold 0 CVEs. NVD files expat's 68 under
