@@ -55,6 +55,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **`--tier` now filters the Nix closure tier, and everything added after
+  it (#1360).** The filter ran before the `--nix-closure` and
+  nixpkgs-Haskell producers and the file-tier walker, so their components
+  were never filtered: on a nixpkgs `openssh` wrapper flake, `--tier
+  source-only --nix-closure` emitted all 457 build-tier closure components
+  and 2,455 edges. The filter is now applied a second time, beside
+  `--exclude-scope`, after the last producer. Scans without `--tier` are
+  unchanged.
+
 - **Nix closure backport VEX is now one claim that scanners honour (#1436, #1421).**
   - **What changed:**
     - A `--nix-closure` component whose nixpkgs backport patches resolve a CVE gets a build-identity PURL qualifier: `?nix_drv=` with the sorted store hashes of every patching derivation merged into it (nixpkgs often builds `unzip 6.0` twice).
@@ -143,6 +152,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `--nix-eval` not having been passed. C180 now records
   `package-set-unavailable`, a new value, or `offline-requested` under
   `--offline`. Scans without `--nix-eval` are unchanged.
+
+- **A closure edge into a nameless member reaches that member (#1473).**
+  Under `--nix-closure`, members that declare no `pname` (fetched sources,
+  mostly) share the name `source`, and edges were joined to components on
+  `(name, version)`. On the pinned `nix-closure-moat` closure, all 60 edges
+  into its 56 `source` members landed on one of them, so 55 looked orphaned.
+  Edges now join through the same derivation-to-component key the closure
+  tier uses elsewhere, which keys a nameless member on its hash-bearing PURL.
 
 - **expat and libidn2 now emit the CPE NVD files their CVEs under.** The
   curated rows pointed at `libexpat:expat` and `libidn2_project:libidn2`,

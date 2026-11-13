@@ -4125,10 +4125,10 @@ pub async fn execute(
     // why. The two filters are independent retain-on-predicate passes
     // over disjoint fields (`sbom_tier` vs `lifecycle_scope`) and
     // neither predicate reads what the other dropped, so their
-    // relative order does not change the surviving set. The `--tier`
-    // filter has an ordering gap of its own, untouched here: it runs
-    // ABOVE the nixpkgs-haskell and m1035 nix-closure producers, so
-    // the components those tiers add are never tier-filtered. See
+    // relative order does not change the surviving set. This call runs
+    // ABOVE the nixpkgs-haskell and m1035 nix-closure producers and the
+    // file-tier walker, so it is applied a second time beside
+    // `--exclude-scope` (#1360) over what those add. See
     // `specs/232-tier-filter-flag/data-model.md § New helper` for the
     // FR-003/FR-004/FR-005/FR-006/FR-008 contract.
     apply_tier_filter(&mut components, &mut relationships, args.tier);
@@ -5612,10 +5612,14 @@ pub async fn execute(
     //      the propagation pass is: one filter upstream is what makes
     //      the three formats agree by construction.
     //
-    // The `--tier` filter is NOT moved with it. Doing so would newly
-    // subject the nixpkgs and nix-closure components to `--tier`,
-    // which is a change to a different operator-visible flag; the two
-    // filters commute, so leaving it above costs nothing here.
+    // #1360 — `--tier` again, here, over every component added since its
+    // first call: the nixpkgs-haskell and m1035 nix-closure producers and
+    // the file-tier walker all run below that call, so `--tier source-only
+    // --nix-closure` emitted every build-tier closure component. The first
+    // call stays where it is, because the passes between the two read the
+    // set it leaves; this one is idempotent over what that call kept. The
+    // two filters commute (disjoint fields), so their order here is free.
+    apply_tier_filter(&mut components, &mut relationships, args.tier);
     // The counts are logged by the callee and not otherwise consumed;
     // they are returned so the unit tests can assert on them.
     let _ = apply_exclude_scope_filter(&mut components, &mut relationships, &exclude_scope);
