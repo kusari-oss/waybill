@@ -40,6 +40,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use super::derivation::{RawClosure, RawDerivation};
+use super::member_key::{key_of_component, key_of_derivation, MemberKey};
 
 /// The provenance [`relationships`] stamps on every edge it returns, and the
 /// only thing that tells those edges apart from every other source's once
@@ -52,10 +53,6 @@ const EDGE_DATA_TYPE: &str = "nix-build-graph";
 pub(crate) fn is_closure_edge(r: &waybill_common::resolution::Relationship) -> bool {
     r.provenance.source == EDGE_SOURCE && r.provenance.data_type == EDGE_DATA_TYPE
 }
-
-/// A component identity: the `(name, version)` pair several derivations may
-/// collapse onto.
-pub(crate) type Identity = (String, String);
 
 /// The projected graph, keyed on `.drv` paths.
 ///
@@ -273,22 +270,27 @@ pub(crate) fn relationships(
 ) -> (Vec<waybill_common::resolution::Relationship>, usize) {
     use waybill_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
 
-    let by_identity: HashMap<Identity, &str> = components
+    // #1473 — joined on `member_key`, the one join the closure tier defines
+    // between a derivation and its component. A member declaring no `pname`
+    // is matched on its hash-bearing PURL: 56 on the pinned closure are named
+    // `source` and share `("source", "")`, and a `(name, version)` join sent
+    // all 60 edges into them to one. A component that is not a closure member
+    // (the manifest reader's `pkg:hackage/moat@0.1`, which the closure root
+    // resolves to) is still matched on `(name, version)`.
+    let by_key: HashMap<MemberKey, &str> = components
         .iter()
-        .map(|c| ((c.name.clone(), c.version.clone()), c.purl.as_str()))
-        .collect();
-    let ident: HashMap<&str, Identity> = closure
-        .derivations
-        .iter()
-        .filter_map(|(key, drv)| {
-            let name = drv.pname()?;
-            Some((
-                key.as_str(),
-                (name.to_string(), drv.version().unwrap_or_default().to_string()),
-            ))
+        .map(|c| {
+            let key = key_of_component(c)
+                .unwrap_or_else(|| MemberKey::Named(c.name.clone(), c.version.clone()));
+            (key, c.purl.as_str())
         })
         .collect();
-    let purl_of = |key: &str| -> Option<&str> { by_identity.get(ident.get(key)?).copied() };
+    let key_of: HashMap<&str, MemberKey> = closure
+        .derivations
+        .iter()
+        .filter_map(|(key, drv)| Some((key.as_str(), key_of_derivation(drv, key)?)))
+        .collect();
+    let purl_of = |key: &str| -> Option<&str> { by_key.get(key_of.get(key)?).copied() };
 
     // A `BTreeSet` rather than a `Vec`: variant-merged components produce the
     // same pair several times at the `.drv` level (FR-003), and the dedup has
@@ -551,6 +553,84 @@ mod tests {
                 c.derivations.len()
             );
         }
+    }
+
+    /// #1473 — an edge into a member that declares no `pname` lands on the
+    /// component made from *that* derivation. Two `source` members share the
+    /// name `source` and an empty version, so joining edges to components on
+    /// `(name, version)` sent both packages' edges to one of them.
+    #[test]
+    fn m1473_edges_into_two_nameless_sources_land_on_their_own_components() {
+        let raw = RawClosure::parse(
+            r#"{"derivations":{
+              "app.drv":{"env":{"pname":"waybill-fixture-app","version":"1"},
+                "inputs":{"drvs":{"liba.drv":{"outputs":["out"]},"libb.drv":{"outputs":["out"]}}},
+                "outputs":{"out":{"path":"h-app"}}},
+              "liba.drv":{"env":{"pname":"waybill-fixture-liba","version":"1"},
+                "inputs":{"drvs":{"srca.drv":{"outputs":["out"]}}},
+                "outputs":{"out":{"path":"h-liba"}}},
+              "libb.drv":{"env":{"pname":"waybill-fixture-libb","version":"1"},
+                "inputs":{"drvs":{"srcb.drv":{"outputs":["out"]}}},
+                "outputs":{"out":{"path":"h-libb"}}},
+              "srca.drv":{"name":"source","env":{},
+                "outputs":{"out":{"path":"h-srca","hash":"sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}}},
+              "srcb.drv":{"name":"source","env":{},
+                "outputs":{"out":{"path":"h-srcb","hash":"sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="}}}
+            }}"#,
+        )
+        .unwrap();
+        let roles = super::super::classify::classify(&raw);
+        let graph = project(&raw, &super::super::emit::emitted_drv_keys(&raw, &roles));
+        let classified = super::super::ClassifiedClosure {
+            runtime: None,
+            attribute: "default".into(),
+            raw,
+            roles,
+            graph_admitted: Default::default(),
+            graph_admission: Default::default(),
+            read_outcome: Default::default(),
+            graph,
+            identifiers: Default::default(),
+            licenses: Default::default(),
+            degraded_licenses: None,
+            license_coverage: Default::default(),
+        };
+        let comps = super::super::emit::components(&classified);
+        let purl_of = |name: &str| -> String {
+            comps
+                .iter()
+                .find(|c| c.name == name)
+                .unwrap_or_else(|| panic!("no component named {name}"))
+                .purl
+                .as_str()
+                .to_string()
+        };
+        let sources: Vec<String> = comps
+            .iter()
+            .filter(|c| c.name == "source")
+            .map(|c| c.purl.as_str().to_string())
+            .collect();
+        // CONTROL: two distinct `source` components exist, so a collapse is
+        // observable rather than vacuous.
+        assert_eq!(sources.len(), 2, "both sources must emit; got {sources:?}");
+        assert_ne!(sources[0], sources[1], "each source carries its own purl");
+
+        let (edges, _) = relationships(&classified.graph, &classified.raw, &comps);
+        let target_of = |from: &str| -> Vec<String> {
+            edges
+                .iter()
+                .filter(|r| r.from == from && sources.contains(&r.to))
+                .map(|r| r.to.clone())
+                .collect()
+        };
+        let (a, b) = (target_of(&purl_of("waybill-fixture-liba")), target_of(&purl_of("waybill-fixture-libb")));
+        assert_eq!(a.len(), 1, "liba depends on exactly one source; got {a:?}");
+        assert_eq!(b.len(), 1, "libb depends on exactly one source; got {b:?}");
+        assert_ne!(
+            a[0], b[0],
+            "liba and libb were built from different sources, so their edges \
+             must not land on one component"
+        );
     }
 
     /// Milestone 1377 — the evaluated package is named only when the
