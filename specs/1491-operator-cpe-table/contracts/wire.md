@@ -17,6 +17,8 @@
 | `--supplement-cdx` | technique `other`, value `operator --supplement-cdx` | `CPE supplied by the operator with --supplement-cdx` |
 | `--cpe-map` | technique `other`, value `operator --cpe-map` | `CPE supplied by the operator with --cpe-map` |
 
+The CycloneDX `confidence` on an operator method is `1.0`, above nixpkgs-declared (`0.9`) and curated (`0.7`). These are ordinal, not calibrated: they rank the operator's statement first.
+
 The same `cpe_source` function feeds all three emitters, so the formats cannot disagree. This applies to every component an operator surface set, and to the subject, synthetic or not.
 
 ## C212 `waybill:cpe-provenance` (FR-009)

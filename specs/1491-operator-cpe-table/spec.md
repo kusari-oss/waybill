@@ -156,7 +156,9 @@ A maintainer adds or corrects a curated row. Today that is a Rust edit in three 
 
 **Subject (US1)**
 
-- **FR-001**: The scan command MUST accept `--root-cpe <cpe>`, repeatable. The first value is the subject's primary CPE, and the rest are secondary CPEs. It applies to the selected subject whether the subject is a selected main module, a synthetic placeholder, or an `--root-name`/`--root-purl` override.
+- **FR-001**: The scan command MUST accept `--root-cpe <cpe>`, repeatable. The first value is the subject's primary CPE, and the rest are secondary CPEs. It applies to the selected subject when that is a scanned main module or an `--root-name`/`--root-purl` override.
+
+  **Amended at implementation (2026-11-13):** a synthetic *placeholder* subject is rejected with a usage error, and no document is written. A placeholder is named after the scan directory, so a CPE on it names nothing the operator chose. On such a scan SPDX 2.3 also roots the document at the single top-level component, not at the placeholder that CycloneDX and SPDX 3 use, so the CPE would land on a dependency or nowhere (observed on a one-package dpkg fixture). The remedy is to name the subject. A Maven-coordinate subject is rejected for the same reason: each emitter builds it separately.
 - **FR-002**: When `--root-cpe` is given, the subject's CPE list MUST be exactly the operator's values. Any synthesized, curated or declared CPE the subject would otherwise carry is not kept.
 
 **Components (US2, US3)**
