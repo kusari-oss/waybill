@@ -40962,7 +40962,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:libexpat:expat:2.6.4:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:libexpat_project:libexpat:2.6.4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -54346,7 +54346,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:libidn2_project:libidn2:2.3.7:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:gnu:libidn2:2.3.7:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],

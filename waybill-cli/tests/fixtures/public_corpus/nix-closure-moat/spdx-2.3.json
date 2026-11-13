@@ -29413,7 +29413,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:libexpat:expat:2.8.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:libexpat_project:libexpat:2.8.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -55620,7 +55620,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\",\\\"overrode\\\":\\\"cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*\\\"}\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",

@@ -34637,7 +34637,7 @@
     },
     {
       "bom-ref": "pkg:generic/expat@2.6.4",
-      "cpe": "cpe:2.3:a:libexpat:expat:2.6.4:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:libexpat_project:libexpat:2.6.4:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -34651,7 +34651,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:libexpat:expat:2.6.4:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:libexpat_project:libexpat:2.6.4:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
@@ -46188,7 +46188,7 @@
     },
     {
       "bom-ref": "pkg:generic/libidn2@2.3.7",
-      "cpe": "cpe:2.3:a:libidn2_project:libidn2:2.3.7:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:gnu:libidn2:2.3.7:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -46202,7 +46202,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:libidn2_project:libidn2:2.3.7:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:gnu:libidn2:2.3.7:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
