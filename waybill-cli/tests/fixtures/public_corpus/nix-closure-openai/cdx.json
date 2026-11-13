@@ -53455,6 +53455,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/p11-glue/p11-kit.git@0.25.5"
+        }
+      ],
       "licenses": [
         {
           "license": {
@@ -64625,8 +64631,8 @@
       },
       "externalReferences": [
         {
-          "type": "distribution",
-          "url": "https://github.com/p11-glue/p11-kit.git"
+          "type": "vcs",
+          "url": "git+https://github.com/p11-glue/p11-kit.git@0.25.5"
         }
       ],
       "name": "source",
@@ -76185,8 +76191,8 @@
       },
       "externalReferences": [
         {
-          "type": "distribution",
-          "url": "https://pagure.io/xmlto.git"
+          "type": "vcs",
+          "url": "git+https://pagure.io/xmlto.git@0.0.29"
         }
       ],
       "name": "xmlto",
@@ -76240,6 +76246,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "git+https://pagure.io/xmlto.git@0.0.29"
+        }
+      ],
       "licenses": [
         {
           "license": {

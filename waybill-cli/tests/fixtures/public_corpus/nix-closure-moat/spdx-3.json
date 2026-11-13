@@ -144,6 +144,7 @@
         }
       ],
       "name": "transformers-compat-0.7.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/transformers-compat-0.7.2.tar.gz",
       "software_packageUrl": "pkg:generic/transformers-compat-0.7.2.tar.gz-sha256.htixzBMnzy8lGPQc5qoXLlInyF.poJK51iXUF1FPvMnWo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-24DCU6W5ACGM7ODR",
       "type": "software_Package"
@@ -315,6 +316,7 @@
         }
       ],
       "name": "tasty-inspection-testing-0.2.1-r3.cabal",
+      "software_downloadLocation": "mirror://hackage/tasty-inspection-testing-0.2.1/revision/3.cabal",
       "software_packageUrl": "pkg:generic/tasty-inspection-testing-0.2.1-r3.cabal-sha256.h2.pSbBm.pcpAgR3bcCMqEptTxL.sCAXY2CMt3ItIDCafL8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2CIPZQM3KMAZ2QYX",
       "type": "software_Package"
@@ -329,6 +331,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/tiran/defusedxml/archive/refs/tags/v0.8.0rc2.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hX88A5V9uXP3wJQ.polK6pZJT66LP2uCXLK8goa5bPARA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2DNOSF3XNHK3XXNR",
       "type": "software_Package"
@@ -365,6 +368,7 @@
         }
       ],
       "name": "libgpg-error-1.59.tar.bz2",
+      "software_downloadLocation": "mirror://gnupg/libgpg-error/libgpg-error-1.59.tar.bz2",
       "software_packageUrl": "pkg:generic/libgpg-error-1.59.tar.bz2-sha256.hoZvFCH.sZcCbZPLS0XVFjjRolICpeH7w5BXmfQkz6YTQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2EF7AHCFECDQFU42",
       "type": "software_Package"
@@ -479,6 +483,7 @@
         }
       ],
       "name": "filepattern-0.1.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/filepattern-0.1.3.tar.gz",
       "software_packageUrl": "pkg:generic/filepattern-0.1.3.tar.gz-sha256.hzERdQ56i9lysdgTTV4qiw6YuWpHcmJ9M5bM5DbnlljY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2HREUE7G226XMCXS",
       "type": "software_Package"
@@ -493,6 +498,7 @@
         }
       ],
       "name": "tzcode2026b.tar.gz",
+      "software_downloadLocation": "https://data.iana.org/time-zones/releases/tzcode2026b.tar.gz",
       "software_packageUrl": "pkg:generic/tzcode2026b.tar.gz-sha256.hN.pnthCf101IcIvxY4pPL.pwQ9cO7fEAOHCzPzY.sYco0Q.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2HUVGCE4CN7OEL3C",
       "type": "software_Package"
@@ -673,6 +679,7 @@
         }
       ],
       "name": "mpdecimal-4.0.1.tar.gz",
+      "software_downloadLocation": "https://www.bytereef.org/software/mpdecimal/releases/mpdecimal-4.0.1.tar.gz",
       "software_packageUrl": "pkg:generic/mpdecimal-4.0.1.tar.gz-sha256.hltM6u0uwBwx74P7UJGzThBYYgyX4IEaCFEcZOFRbGsg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2NNGF2ILAI2TLR4O",
       "type": "software_Package"
@@ -687,6 +694,7 @@
         }
       ],
       "name": "test-framework-quickcheck2-0.3.0.7.tar.gz",
+      "software_downloadLocation": "mirror://hackage/test-framework-quickcheck2-0.3.0.7.tar.gz",
       "software_packageUrl": "pkg:generic/test-framework-quickcheck2-0.3.0.7.tar.gz-sha256.hfn0MTr9Lkh.sjUCDiUbekLFmnvkCk.s4wXCuZtOmad95U.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2NNOKA7V2UMEJV6A",
       "type": "software_Package"
@@ -701,6 +709,7 @@
         }
       ],
       "name": "dlist-1.0-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/dlist-1.0/revision/2.cabal",
       "software_packageUrl": "pkg:generic/dlist-1.0-r2.cabal-sha256.hhUcnWUxagWqz0Q8VsbxP7a.peP30e9Reiu5AR8puiYdI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2O3YOJX2ZZLQJHKP",
       "type": "software_Package"
@@ -779,6 +788,7 @@
         }
       ],
       "name": "man-fix.patch",
+      "software_downloadLocation": "https://github.com/facebook/zstd/commit/6af3842118ea5325480b403213b2a9fbed3d3d74.patch",
       "software_packageUrl": "pkg:generic/man-fix.patch-sha256.hi.piv.powUXbKU3UtZBsjfj86kFB3TDlpcVDNsDX8dyZE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2QVMTQ5EUCTOEV2N",
       "type": "software_Package"
@@ -1137,6 +1147,7 @@
         }
       ],
       "name": "happy-2.1.7.tar.gz",
+      "software_downloadLocation": "mirror://hackage/happy-2.1.7.tar.gz",
       "software_packageUrl": "pkg:generic/happy-2.1.7.tar.gz-sha256.hnjkPCrCC0R1GWY9iFbL26CUwWXIYYPgQgkCQkVMtfio.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-37UFGRPDFOGJP4RL",
       "type": "software_Package"
@@ -1166,6 +1177,7 @@
         }
       ],
       "name": "autoconf-archive-2024.10.16.tar.xz",
+      "software_downloadLocation": "mirror://gnu/autoconf-archive/autoconf-archive-2024.10.16.tar.xz",
       "software_packageUrl": "pkg:generic/autoconf-archive-2024.10.16.tar.xz-sha256.he81dABkW86UO10NvT3AOPSsbrePtgDIZxZLWJQKlc2M.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3BDR5CHMQFOEXSHV",
       "type": "software_Package"
@@ -1239,6 +1251,7 @@
         }
       ],
       "name": "generically-0.1.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/generically-0.1.1.tar.gz",
       "software_packageUrl": "pkg:generic/generically-0.1.1.tar.gz-sha256.hBMWkNr7EsEH3GnM.sVqG9f0NfY93o0.ptcH0jVW028Q88.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3DLFNNQVCOL4H2MR",
       "type": "software_Package"
@@ -1253,6 +1266,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/python/mypy_extensions/archive/refs/tags/1.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hHNAFsWX4tU9hfZkKxLNJn1J.pH3uTesQflbRPlo3GQ4k.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3EHA7WZ2VNDDFVFY",
       "type": "software_Package"
@@ -1267,6 +1281,7 @@
         }
       ],
       "name": "blaze-markup-0.8.3.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/blaze-markup-0.8.3.0.tar.gz",
       "software_packageUrl": "pkg:generic/blaze-markup-0.8.3.0.tar.gz-sha256.hhgasi0off48bvAdwsnUum2.pIzMn73LszqiBXfQ5ZMOg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3G6X3DGJ5C4ZSPDD",
       "type": "software_Package"
@@ -1324,6 +1339,7 @@
         }
       ],
       "name": "CVE-2019-13232-2.patch",
+      "software_downloadLocation": "https://github.com/madler/unzip/commit/47b3ceae397d21bf822bc2ac73052a4b1daf8e1c.patch",
       "software_packageUrl": "pkg:generic/CVE-2019-13232-2.patch-sha256.hYmjpyVZfcx.sb1jGtvYLucrqC3mX86yjAlJn.s7SXjwkc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3K556C5IFZXHS36W",
       "type": "software_Package"
@@ -1432,6 +1448,7 @@
         }
       ],
       "name": "inspection-testing-0.6.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/inspection-testing-0.6.3.tar.gz",
       "software_packageUrl": "pkg:generic/inspection-testing-0.6.3.tar.gz-sha256.heEW6kDblFS6oPiF0RmEG.pEeoTA0m5S4.s1UuHi7Hw5RI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3O5JOC5GK3SN3OCT",
       "type": "software_Package"
@@ -1489,6 +1506,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/cython/cython/archive/refs/tags/3.2.4.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h8J5EcaQXexWEA.pse5rCR06CwlEYao2XK5TnVNgFGHYQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3PM2435FF2GGCQY7",
       "type": "software_Package"
@@ -1547,6 +1565,7 @@
         }
       ],
       "name": "libtasn1-4.21.0.tar.gz",
+      "software_downloadLocation": "mirror://gnu/libtasn1/libtasn1-4.21.0.tar.gz",
       "software_packageUrl": "pkg:generic/libtasn1-4.21.0.tar.gz-sha256.hHYpESiI8xUZCQHdzRuEl3lHY5qvwuLrHQqyEYJFn3Ic.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3SYRK442HEJIUDZG",
       "type": "software_Package"
@@ -1689,6 +1708,7 @@
         }
       ],
       "name": "prettyprinter-compat-ansi-wl-pprint-1.0.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/prettyprinter-compat-ansi-wl-pprint-1.0.2.tar.gz",
       "software_packageUrl": "pkg:generic/prettyprinter-compat-ansi-wl-pprint-1.0.2.tar.gz-sha256.hBbJyUfGLke.p.sFMaHwoUTI7kgMiIDN80Eqx90GoQBnlU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3Z4H6OWIYTBEU5TV",
       "type": "software_Package"
@@ -1817,6 +1837,7 @@
         }
       ],
       "name": "integer-logarithms-1.0.5.tar.gz",
+      "software_downloadLocation": "mirror://hackage/integer-logarithms-1.0.5.tar.gz",
       "software_packageUrl": "pkg:generic/integer-logarithms-1.0.5.tar.gz-sha256.hZt.s28fd4.sh7GiROf4SXNTmqVZDc0xlHIker6LFBmlFk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-452IZ6F3NJNCKEQC",
       "type": "software_Package"
@@ -1831,6 +1852,7 @@
         }
       ],
       "name": "certdata.txt",
+      "software_downloadLocation": "https://hg-edge.mozilla.org/projects/nss/raw-file/NSS_3_123_RTM/lib/ckfw/builtins/certdata.txt",
       "software_packageUrl": "pkg:generic/certdata.txt-sha256.hdxMO.pRITdyhEVh.p9OqMdQTslwqx.sV2.sqO8O7.s375NIk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-45JUXMYZ24NFKAPX",
       "type": "software_Package"
@@ -1859,6 +1881,7 @@
         }
       ],
       "name": "musl-strndupa.patch",
+      "software_downloadLocation": "https://git.alpinelinux.org/aports/plain/main/elfutils/musl-strndupa.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9",
       "software_packageUrl": "pkg:generic/musl-strndupa.patch-sha256.h7daehJj1t0wPtQzTv.p.sRpuqqs5Ng.sEYnZzrcf2o.sLb0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-46OMX6A2QQNTZWXG",
       "type": "software_Package"
@@ -1873,6 +1896,7 @@
         }
       ],
       "name": "call-stack-0.4.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/call-stack-0.4.0.tar.gz",
       "software_packageUrl": "pkg:generic/call-stack-0.4.0.tar.gz-sha256.hQwvPijQE9.pVTGVc8C4B7E1aUbwyPKJuz2a.pyecY2uHs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4723XN3VCPVMANOQ",
       "type": "software_Package"
@@ -1924,6 +1948,7 @@
         }
       ],
       "name": "a44312974bd9084aa568d2e18ce5b2a7e0e45983.patch",
+      "software_downloadLocation": "https://github.com/pexpect/ptyprocess/commit/a44312974bd9084aa568d2e18ce5b2a7e0e45983.patch",
       "software_packageUrl": "pkg:generic/a44312974bd9084aa568d2e18ce5b2a7e0e45983.patch-sha256.hDEO4FbzKNAXADYocSQhhwjQTGGu9V5pqd38u1sWhpOI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4BW3S3N4FS2WYJ75",
       "type": "software_Package"
@@ -1938,6 +1963,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/certifi/python-certifi/archive/2026.01.04.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hJXv12im46xKabIRVZ4FMSZUbpw2k8WCcaZZLX2pFteY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4CMML73IPC3PJTUM",
       "type": "software_Package"
@@ -1981,6 +2007,7 @@
         }
       ],
       "name": "comonad-5.0.10.tar.gz",
+      "software_downloadLocation": "mirror://hackage/comonad-5.0.10.tar.gz",
       "software_packageUrl": "pkg:generic/comonad-5.0.10.tar.gz-sha256.h6XOd8r9ZRJWAYqTqc73jvzXAh5zuCUTt9.sBb6.smT.pcE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4CYJZGGJGWRCGDOY",
       "type": "software_Package"
@@ -2052,6 +2079,7 @@
         }
       ],
       "name": "libssh2-1.11.1.tar.gz",
+      "software_downloadLocation": "https://www.libssh2.org/download/libssh2-1.11.1.tar.gz",
       "software_packageUrl": "pkg:generic/libssh2-1.11.1.tar.gz-sha256.h2ex2y.pNNuY7sNTn.pLImdJrDIN8s.ptGalaw8QnKv2WPc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4EZCT4EE3LLRJILJ",
       "type": "software_Package"
@@ -2209,6 +2237,7 @@
         }
       ],
       "name": "libevent-2.1.12-stable.tar.gz",
+      "software_downloadLocation": "https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz",
       "software_packageUrl": "pkg:generic/libevent-2.1.12-stable.tar.gz-sha256.hkubeG.pnsF2Qo.sSNnZ35hzv.sC7hyxGQNQN6J9NGsEA7s.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4K4UZTVZZUMMN6M2",
       "type": "software_Package"
@@ -2237,6 +2266,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/google/brotli/archive/refs/tags/v1.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hkl8ZHt71v17QR2bDP.pad.s5uixf.pGStEPLQ5ooFoC5i8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4KSF7XVZUKLNOHF5",
       "type": "software_Package"
@@ -2251,6 +2281,7 @@
         }
       ],
       "name": "network-uri-2.6.4.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/network-uri-2.6.4.2.tar.gz",
       "software_packageUrl": "pkg:generic/network-uri-2.6.4.2.tar.gz-sha256.hnBiJcxJuiTJQuIHyDogR3KBsIjwjQCsG96Hy6ZV5cig.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4NAD5O7LPAMIA3J5",
       "type": "software_Package"
@@ -2308,6 +2339,7 @@
         }
       ],
       "name": "reducers-3.12.5-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/reducers-3.12.5/revision/1.cabal",
       "software_packageUrl": "pkg:generic/reducers-3.12.5-r1.cabal-sha256.haDsMsF1bsN.s31.pHWJvgSRb2BsMXwFBRlfr0hMEaRPho.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4OCAGYEDPNDV3QQX",
       "type": "software_Package"
@@ -2380,6 +2412,7 @@
         }
       ],
       "name": "splitmix-0.1.3.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/splitmix-0.1.3.2.tar.gz",
       "software_packageUrl": "pkg:generic/splitmix-0.1.3.2.tar.gz-sha256.hph1OizD1oWUm19MRcbZ0rnkk0iB.sN4Bg0TNjvYeU3ow.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4RJ7W54TAXVDXMJA",
       "type": "software_Package"
@@ -2394,6 +2427,7 @@
         }
       ],
       "name": "shake-0.19.9.tar.gz",
+      "software_downloadLocation": "mirror://hackage/shake-0.19.9.tar.gz",
       "software_packageUrl": "pkg:generic/shake-0.19.9.tar.gz-sha256.hQXbW44w7eBPwGfI3dGbZ8B24QgVu7BzaqKI7gM7dy4o.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4RUQLEIZERUXCYW3",
       "type": "software_Package"
@@ -2422,6 +2456,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/snowballstem/snowball/archive/v2.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hqXrypwv.sI.p5npvGHGsHveijoui0ZnoGYhskCfLkewVE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4SVSSPC4BWHDFIP3",
       "type": "software_Package"
@@ -2517,6 +2552,7 @@
         }
       ],
       "name": "pytest9-compat-1.patch",
+      "software_downloadLocation": "https://github.com/pytest-dev/pytest-xdist/commit/44f4bea2652e06e7cd5d4a063aa2673b5ef701ee.patch",
       "software_packageUrl": "pkg:generic/pytest9-compat-1.patch-sha256.hBQfcr5f4S.pe8xZP2UQwr65hp.piVzmbXYAzO.s7iE9lmw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4UAKLGJ77JDFC6T3",
       "type": "software_Package"
@@ -2559,6 +2595,7 @@
         }
       ],
       "name": "expect-configure-c99.patch",
+      "software_downloadLocation": "https://sourceforge.net/p/expect/patches/_discuss/thread/b813ca9895/6759/attachment/expect-configure-c99.patch",
       "software_packageUrl": "pkg:generic/expect-configure-c99.patch-sha256.hPxQQ9roWgVXUoCMxkXEgu.pit26ES.sJuzHF6oML.snk54.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4WFTOYN4BW2GADZF",
       "type": "software_Package"
@@ -2594,6 +2631,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pytest-dev/pytest-asyncio/archive/refs/tags/v1.3.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hMWKMJkvxdvuOyxE8rNlf15j7C.pMwJibnNsbfS0biKwo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4X47ZBSNRYLKZMSK",
       "type": "software_Package"
@@ -2623,6 +2661,7 @@
         }
       ],
       "name": "tasty-quickcheck-0.11.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/tasty-quickcheck-0.11.1.tar.gz",
       "software_packageUrl": "pkg:generic/tasty-quickcheck-0.11.1.tar.gz-sha256.h49TedFXtNC.pIdNhGht74l7ijFs4ZhGHaGBBtih9jJGo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4XNK2VTIETCK2AVS",
       "type": "software_Package"
@@ -2755,6 +2794,7 @@
         }
       ],
       "name": "unliftio-core-0.2.1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/unliftio-core-0.2.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/unliftio-core-0.2.1.0.tar.gz-sha256.hmThMuo1W2dYbheOKMTqT6823i.pZWY2fwkw71gFl.s4.pM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-56AP4E2RUOOP6J4J",
       "type": "software_Package"
@@ -2799,6 +2839,7 @@
         }
       ],
       "name": "dlist-1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/dlist-1.0.tar.gz",
       "software_packageUrl": "pkg:generic/dlist-1.0.tar.gz-sha256.hFz1jcyi7Fz.sMNl8w0p.s0qUKSoeDlVYrrPfwR3oFRARU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-57EJAUSKUNGAZZQQ",
       "type": "software_Package"
@@ -2813,6 +2854,7 @@
         }
       ],
       "name": "fix-aarch64_attributes.patch",
+      "software_downloadLocation": "https://sourceware.org/git/?p=elfutils.git;a=patch;h=b27adc5262e807f341ca0a4910ce04294144f79a",
       "software_packageUrl": "pkg:generic/fix-aarch64_attributes.patch-sha256.hhksO5HXL9Jv5E4o2rI4NAgQp.p4z.pLg7Wn.sAdW7fpr0c.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5A3NVXE4WHUMSAFO",
       "type": "software_Package"
@@ -2922,6 +2964,7 @@
         }
       ],
       "name": "wherefrom-compat-0.1.1.1-r4.cabal",
+      "software_downloadLocation": "mirror://hackage/wherefrom-compat-0.1.1.1/revision/4.cabal",
       "software_packageUrl": "pkg:generic/wherefrom-compat-0.1.1.1-r4.cabal-sha256.hCSyLB3Iw81nMxIT1gAV.sLE2kV1SM48tGjVOWQ3jHT.sk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5DC3CKCXI5FZEGHV",
       "type": "software_Package"
@@ -2950,6 +2993,7 @@
         }
       ],
       "name": "stringbuilder-0.5.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/stringbuilder-0.5.1.tar.gz",
       "software_packageUrl": "pkg:generic/stringbuilder-0.5.1.tar.gz-sha256.h2Hi9xNqAbbzlq2hO8T0mNMF8FbmR0O07slozHrpmA7o.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5ERHXHGRQ7S5J2UH",
       "type": "software_Package"
@@ -2964,6 +3008,7 @@
         }
       ],
       "name": "readline83-002",
+      "software_downloadLocation": "mirror://gnu/readline/readline-8.3-patches/readline83-002",
       "software_packageUrl": "pkg:generic/readline83-002-sha256.h4nNkOWup9t6.sfLqvGmaeKyhUJBrgf37KdMqKi6DJdHI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5ETQKG2LAPO3ODFW",
       "type": "software_Package"
@@ -3000,6 +3045,7 @@
         }
       ],
       "name": "libxslt-1.1.45.tar.xz",
+      "software_downloadLocation": "mirror://gnome/sources/libxslt/1.1/libxslt-1.1.45.tar.xz",
       "software_packageUrl": "pkg:generic/libxslt-1.1.45.tar.xz-sha256.hms.smhBnE0GpFxVAyGzISdi2S9BRlBiyk6hnmMu5dIW4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FK45SO2JRMBJQ4Z",
       "type": "software_Package"
@@ -3044,6 +3090,7 @@
         }
       ],
       "name": "bifunctors-5.6.3-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/bifunctors-5.6.3/revision/1.cabal",
       "software_packageUrl": "pkg:generic/bifunctors-5.6.3-r1.cabal-sha256.hWPHWbbce2d1wZI6soaCYayk1Szpptb.sXKc4aiWdmRm4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FUWEIOCIJ63YETI",
       "type": "software_Package"
@@ -3058,6 +3105,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/swig/swig/archive/v4.4.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hjsi83v9sg0n5kUfDACqdNAS2VuLSyxv.ppe2LRcO4Khc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5FZCD6W72BWGTQSX",
       "type": "software_Package"
@@ -3152,6 +3200,7 @@
         }
       ],
       "name": "config.sub-948ae97",
+      "software_downloadLocation": "https://git.savannah.gnu.org/cgit/config.git/plain/config.sub?id=948ae97ca5703224bd3eada06b7a69f40dd15a02",
       "software_packageUrl": "pkg:generic/config.sub-948ae97-sha256.h.sjovMvuv9XhIcyVJ9I2YP9ZSYCTsLw9ancdcL0NZo6Y.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5NWVYXYGXSQQTJAX",
       "type": "software_Package"
@@ -3224,6 +3273,7 @@
         }
       ],
       "name": "unordered-containers-0.2.20.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/unordered-containers-0.2.20.1.tar.gz",
       "software_packageUrl": "pkg:generic/unordered-containers-0.2.20.1.tar.gz-sha256.hcIpgUT1tph4JtguaSGEGr3A6iJtbQ0cqJ8O2C.sNSRqs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5QCF77D2RTMOG737",
       "type": "software_Package"
@@ -3266,6 +3316,7 @@
         }
       ],
       "name": "attrs-26.1.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/a/attrs/attrs-26.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/attrs-26.1.0.tar.gz-sha256.h0DzricsyKo.sXBtT7kZQHN7ZkKqNpmP4TCpvJbJhe.szI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5SAU32VT2U3NPWTQ",
       "type": "software_Package"
@@ -3324,6 +3375,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/asciidoc-py/asciidoc-py/archive/10.2.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.htd3C7xTWfSzdo9Bbz0dHW2oPaCQYmUE9H2sUFfg5HH0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5V7VAPV644WCNCPT",
       "type": "software_Package"
@@ -3338,6 +3390,7 @@
         }
       ],
       "name": "trifecta-2.1.4-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/trifecta-2.1.4/revision/2.cabal",
       "software_packageUrl": "pkg:generic/trifecta-2.1.4-r2.cabal-sha256.hzyzR2CmUY.p.p9foW3b.s7Vndwz0ZkSoqGGLV3p.sGnpweQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5WDWRB7O5PLYEIOU",
       "type": "software_Package"
@@ -3409,6 +3462,7 @@
         }
       ],
       "name": "reflection-2.1.9.tar.gz",
+      "software_downloadLocation": "mirror://hackage/reflection-2.1.9.tar.gz",
       "software_packageUrl": "pkg:generic/reflection-2.1.9.tar.gz-sha256.hxqfV5BrQ7hoFxmCs9P00sh84Mw7sFl0ka3.s.ss5jln7M.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5XWCN7SL43DXC6N7",
       "type": "software_Package"
@@ -3452,6 +3506,7 @@
         }
       ],
       "name": "sphinxcontrib-jsmath-1.0.1.tar.gz",
+      "software_downloadLocation": "mirror://pypi/s/sphinxcontrib-jsmath/sphinxcontrib-jsmath-1.0.1.tar.gz",
       "software_packageUrl": "pkg:generic/sphinxcontrib-jsmath-1.0.1.tar.gz-sha256.hqZJeSkWHJH7SGRoi319pcGVsuMor1ihDCVePIVPgxLg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5ZTEPHULQD6Q5IPS",
       "type": "software_Package"
@@ -3466,6 +3521,7 @@
         }
       ],
       "name": "pyproject_hooks-1.2.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/pyproject_hooks/pyproject_hooks-1.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/pyproject_hooks-1.2.0.tar.gz-sha256.hHoWb1cQPrpRIZC3Yca30WeXiCEGG6NLCp5qCTJcNofg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-62CG75ZUR4YWTKFJ",
       "type": "software_Package"
@@ -3494,6 +3550,7 @@
         }
       ],
       "name": "git-2.54.0.tar.xz",
+      "software_downloadLocation": "https://www.kernel.org/pub/software/scm/git/git-2.54.0.tar.xz",
       "software_packageUrl": "pkg:generic/git-2.54.0.tar.xz-sha256.h9okWI2TBDeee.pJqo2.sSHMesFfjTtu9IKylEM4BVGgaM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-63ZM2DP3NQ4X2QSD",
       "type": "software_Package"
@@ -3508,6 +3565,7 @@
         }
       ],
       "name": "mailcap-2.1.54.tar.xz",
+      "software_downloadLocation": "https://releases.pagure.org/mailcap/mailcap-2.1.54.tar.xz",
       "software_packageUrl": "pkg:generic/mailcap-2.1.54.tar.xz-sha256.hmkAyIC.sA0rCFj0GxZzianP5SrCTsKC5kebkHZTGd4RM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-64C43MDCHIET43NW",
       "type": "software_Package"
@@ -3565,6 +3623,7 @@
         }
       ],
       "name": "docbook-xsl-1.79.2.tar.bz2",
+      "software_downloadLocation": "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-1.79.2.tar.bz2",
       "software_packageUrl": "pkg:generic/docbook-xsl-1.79.2.tar.bz2-sha256.hMWUk6kROUyCKL7kO62dq91XaluFBeDW6X163Gcgfo3E.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-65MBUWT6LZHGYPN5",
       "type": "software_Package"
@@ -3629,6 +3688,7 @@
         }
       ],
       "name": "hashable-1.5.1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/hashable-1.5.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/hashable-1.5.1.0.tar.gz-sha256.h7Qt8EM6Syf.skVCDa3DjG0520hv82M.s8TVnzJ9195sRI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-67HOK7U66MI764YK",
       "type": "software_Package"
@@ -3687,6 +3747,7 @@
         }
       ],
       "name": "hspec-core-2.11.17.tar.gz",
+      "software_downloadLocation": "mirror://hackage/hspec-core-2.11.17.tar.gz",
       "software_packageUrl": "pkg:generic/hspec-core-2.11.17.tar.gz-sha256.hhLUXalJcsN.pYBwRAIBIggUUXtdUeb9FaUsC8edo7ioU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6CSK2ICKCX47VAAD",
       "type": "software_Package"
@@ -3962,6 +4023,7 @@
         }
       ],
       "name": "case-insensitive-1.2.1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/case-insensitive-1.2.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/case-insensitive-1.2.1.0.tar.gz-sha256.hKW3BfgxfPfs9gs7YPkycRMM47N50myeLbq5RLx0E5AY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6Q52TGB67DSINSHT",
       "type": "software_Package"
@@ -3990,6 +4052,7 @@
         }
       ],
       "name": "patch-ev.c",
+      "software_downloadLocation": "https://raw.githubusercontent.com/freebsd/freebsd-ports/21a6f0f5829384117dfc1ed11ad67954562ef7d6/devel/libev/files/patch-ev.c",
       "software_packageUrl": "pkg:generic/patch-ev.c-sha256.hjaeJuCYM.sU2ZNbbyA.s7YOKvo0lj7Dc9L3LNJfZwcaw0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6QFGO6P56NEAGKLJ",
       "type": "software_Package"
@@ -4120,6 +4183,7 @@
         }
       ],
       "name": "gevent-25.9.1.tar.gz",
+      "software_downloadLocation": "mirror://pypi/g/gevent/gevent-25.9.1.tar.gz",
       "software_packageUrl": "pkg:generic/gevent-25.9.1.tar.gz-sha256.hrfnNVS3kSk5nVMUf8ueNkZO3.pm6rEj25V4ohDmVyNd0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6VRDWS3BK2W66OCT",
       "type": "software_Package"
@@ -4148,6 +4212,7 @@
         }
       ],
       "name": "docbook-xml-4.3.zip",
+      "software_downloadLocation": "https://www.oasis-open.org/docbook/xml/4.3/docbook-xml-4.3.zip",
       "software_packageUrl": "pkg:generic/docbook-xml-4.3.zip-sha256.hIwaKlOpv1ISwBMWnPsNqZqpH6o8Na2LMFpWTH1wUNGQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6WJE6UM6KPTKANJZ",
       "type": "software_Package"
@@ -4204,6 +4269,7 @@
         }
       ],
       "name": "quickcheck-io-0.2.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/quickcheck-io-0.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/quickcheck-io-0.2.0.tar.gz-sha256.h.p3eRGdef4I.s01QL7aGmnDJqNX9iuCVn2BcPJN.p.sZZCI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6YAZNJFVIZLCFSQT",
       "type": "software_Package"
@@ -4218,6 +4284,7 @@
         }
       ],
       "name": "cmark-gfm-0.2.6.tar.gz",
+      "software_downloadLocation": "mirror://hackage/cmark-gfm-0.2.6.tar.gz",
       "software_packageUrl": "pkg:generic/cmark-gfm-0.2.6.tar.gz-sha256.hlYz7O9VLG.sqeHi2c0XSOdsENKzCjzO6rP2qFIgXBqGk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6YBXF3SSMS6E4YZQ",
       "type": "software_Package"
@@ -4246,6 +4313,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/NLnetLabs/unbound/archive/refs/tags/release-1.25.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hBAqGNi5lfYYTQd7CPH0lssLc5.sAkeuKSVEFcrF.scNyc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6YQNPI5MILIHZQ6F",
       "type": "software_Package"
@@ -4396,6 +4464,7 @@
         }
       ],
       "name": "old-locale-1.0.0.7.tar.gz",
+      "software_downloadLocation": "mirror://hackage/old-locale-1.0.0.7.tar.gz",
       "software_packageUrl": "pkg:generic/old-locale-1.0.0.7.tar.gz-sha256.h26.pL9riI.p5iEVwUHkpaiPD9A7i9EnfcxL39.sHeGNe1A.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-76N5LZJKYAUZW4LC",
       "type": "software_Package"
@@ -4438,6 +4507,7 @@
         }
       ],
       "name": "xml-1.3.14-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/xml-1.3.14/revision/2.cabal",
       "software_packageUrl": "pkg:generic/xml-1.3.14-r2.cabal-sha256.hx6M9N8lox2lyOTGjPk55Xwqt2my2LnBz3tii21JQnZU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7ANGSOM56SZIJD2M",
       "type": "software_Package"
@@ -4582,6 +4652,7 @@
         }
       ],
       "name": "contravariant-1.5.6.tar.gz",
+      "software_downloadLocation": "mirror://hackage/contravariant-1.5.6.tar.gz",
       "software_packageUrl": "pkg:generic/contravariant-1.5.6.tar.gz-sha256.hZfMmA1TuX9Hyx.s.sFTP.pZ0it5TCVPBTc0l5rTeCDm7.pM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7FTSP7X5FCMSR226",
       "type": "software_Package"
@@ -4596,6 +4667,7 @@
         }
       ],
       "name": "musl-macros.patch",
+      "software_downloadLocation": "https://git.alpinelinux.org/aports/plain/main/elfutils/musl-macros.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9",
       "software_packageUrl": "pkg:generic/musl-macros.patch-sha256.htp6O1TRsTAMsFe8vw3LMENT.svAu6OmyA8.ppzgThHeA8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7G4X2IFT7Q6QQK5W",
       "type": "software_Package"
@@ -4661,6 +4733,7 @@
         }
       ],
       "name": "network-uri-2.6.4.2-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/network-uri-2.6.4.2/revision/1.cabal",
       "software_packageUrl": "pkg:generic/network-uri-2.6.4.2-r1.cabal-sha256.hb.s.p1c3OWK1ZRotuLCvcyCYs78CmnztdqmFVhXeICZYg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7HOIHDQJKPNJIRC4",
       "type": "software_Package"
@@ -4689,6 +4762,7 @@
         }
       ],
       "name": "readline83-003",
+      "software_downloadLocation": "mirror://gnu/readline/readline-8.3-patches/readline83-003",
       "software_packageUrl": "pkg:generic/readline83-003-sha256.hct7hNgHOOPZ0brFSOZmafFb44f9eseyBU6HyE.pSs2yk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7HVJZR2PJYYZR5T5",
       "type": "software_Package"
@@ -4718,6 +4792,7 @@
         }
       ],
       "name": "setuptools_scm-9.2.2.tar.gz",
+      "software_downloadLocation": "mirror://pypi/s/setuptools_scm/setuptools_scm-9.2.2.tar.gz",
       "software_packageUrl": "pkg:generic/setuptools_scm-9.2.2.tar.gz-sha256.hHGdKtGZWhqCIfX4kwDqyXyQgHCE.pguponS8.pFp7371c.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7I3SR7YDHDMC76VJ",
       "type": "software_Package"
@@ -4840,6 +4915,7 @@
         }
       ],
       "name": "m4-1.4.21.tar.bz2",
+      "software_downloadLocation": "mirror://gnu/m4/m4-1.4.21.tar.bz2",
       "software_packageUrl": "pkg:generic/m4-1.4.21.tar.bz2-sha256.h3Eh.pEdLwyeAVVbsa8mvk6umD7I8HJnRlBbQycYbrIfw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7OHIEU4W6TI5O7RN",
       "type": "software_Package"
@@ -4854,6 +4930,7 @@
         }
       ],
       "name": "tasty-hunit-0.10.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/tasty-hunit-0.10.2.tar.gz",
       "software_packageUrl": "pkg:generic/tasty-hunit-0.10.2.tar.gz-sha256.hWvAfp8HvmLMk2gYuNveZhqixuD.swz2.sVP5XZdrQeA.sY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7OTQAHMJXHICLAMB",
       "type": "software_Package"
@@ -4868,6 +4945,7 @@
         }
       ],
       "name": "net-tools-2.10.tar.xz",
+      "software_downloadLocation": "mirror://sourceforge/net-tools/net-tools-2.10.tar.xz",
       "software_packageUrl": "pkg:generic/net-tools-2.10.tar.xz-sha256.hsmJDWlJB6Jv6UcPKvVEzdTlS96e3uT8y4Iy52W9YDWk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7P5BZW74CJMBOGTF",
       "type": "software_Package"
@@ -5235,6 +5313,7 @@
         }
       ],
       "name": "attoparsec-0.14.4-r6.cabal",
+      "software_downloadLocation": "mirror://hackage/attoparsec-0.14.4/revision/6.cabal",
       "software_packageUrl": "pkg:generic/attoparsec-0.14.4-r6.cabal-sha256.hNRKdCrF0HwAPGn0vyDlUSRnub7uPLW5.sCmKcQfkQNfM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AE6NCGQW3JP56FZV",
       "type": "software_Package"
@@ -5264,6 +5343,7 @@
         }
       ],
       "name": "glibc-2.26.patch",
+      "software_downloadLocation": "https://raw.githubusercontent.com/lede-project/source/0fb14a2b1ab2f82ce63f4437b062229d73d90516/tools/flex/patches/200-build-AC_USE_SYSTEM_EXTENSIONS-in-configure.ac.patch",
       "software_packageUrl": "pkg:generic/glibc-2.26.patch-sha256.heSDA0hIIfQbXx0DP1dTQU2uIqBxIXjbB6O.pE134g91Y.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AJCN7DNOC3XHNCZX",
       "type": "software_Package"
@@ -5306,6 +5386,7 @@
         }
       ],
       "name": "tasty-inspection-testing-0.2.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/tasty-inspection-testing-0.2.1.tar.gz",
       "software_packageUrl": "pkg:generic/tasty-inspection-testing-0.2.1.tar.gz-sha256.hXrF1ZZ5.pXApBQ7FFOgZ5OLlOCSbKsEgi5LPhuiztgnI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AKXYOL5KIV3LT6CA",
       "type": "software_Package"
@@ -5334,6 +5415,7 @@
         }
       ],
       "name": "ptyprocess-0.7.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/ptyprocess/ptyprocess-0.7.0.tar.gz",
       "software_packageUrl": "pkg:generic/ptyprocess-0.7.0.tar.gz-sha256.hXF0KO0jO7gtISF4MJgN8Cs19KXZco.su1yzgx00dCMiA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ALENTRHRXFPDKALO",
       "type": "software_Package"
@@ -5477,6 +5559,7 @@
         }
       ],
       "name": "th-compat-0.1.7.tar.gz",
+      "software_downloadLocation": "mirror://hackage/th-compat-0.1.7.tar.gz",
       "software_packageUrl": "pkg:generic/th-compat-0.1.7.tar.gz-sha256.hnibxIjDTiuVtz5T4wTl5ncO3N280NNNc50hHoKJP1f8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-APXRUXJGKGVA53N3",
       "type": "software_Package"
@@ -5549,6 +5632,7 @@
         }
       ],
       "name": "base64-bytestring-1.2.1.0-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/base64-bytestring-1.2.1.0/revision/1.cabal",
       "software_packageUrl": "pkg:generic/base64-bytestring-1.2.1.0-r1.cabal-sha256.hRTBcz4kUxm04W1GHIUcse4yFjxmGlFN390.pFweDUmAM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AQOGDMWK4AYF75BC",
       "type": "software_Package"
@@ -5649,6 +5733,7 @@
         }
       ],
       "name": "PySocks-1.7.1.tar.gz",
+      "software_downloadLocation": "mirror://pypi/P/PySocks/PySocks-1.7.1.tar.gz",
       "software_packageUrl": "pkg:generic/PySocks-1.7.1.tar.gz-sha256.hP4gEVx6.pFZw4CsbeN2Q7tGhZcGVdO7okNTDWVYt5mqA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ASHA4DZIZQG3QYNL",
       "type": "software_Package"
@@ -5677,6 +5762,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/zlib-ng/zlib-ng/archive/2.3.3.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h6GlHCnx9dQtmViPnvHnMS.pl9Z.pg6M8ynrSxLhLtmAKU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AULWNYB5LY5LY4MS",
       "type": "software_Package"
@@ -5691,6 +5777,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pytest-dev/pytest-timeout/archive/refs/tags/2.4.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hNGTy3Hua6yEMWXQDJQO2Z5DD3clXTZXEH6DNQBMSGtQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AVTCF7RT4FHIF6KZ",
       "type": "software_Package"
@@ -5705,6 +5792,7 @@
         }
       ],
       "name": "editables-0.5.tar.gz",
+      "software_downloadLocation": "mirror://pypi/e/editables/editables-0.5.tar.gz",
       "software_packageUrl": "pkg:generic/editables-0.5.tar.gz-sha256.hMJYn2bXErcDmaNjG.pnusG6fIxdQVwtJ.sYPCB.pOgNHeI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AVTJXGPHVXZQYT5C",
       "type": "software_Package"
@@ -5719,6 +5807,7 @@
         }
       ],
       "name": "bluez-5.86.tar.xz",
+      "software_downloadLocation": "mirror://kernel/linux/bluetooth/bluez-5.86.tar.xz",
       "software_packageUrl": "pkg:generic/bluez-5.86.tar.xz-sha256.hmfFEVAxgcFkeTFO8uXfrQmZMYrezbLNaKc9y3tM5Yh0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AXUHFYU4UEAWMHYL",
       "type": "software_Package"
@@ -5733,6 +5822,7 @@
         }
       ],
       "name": "python-dateutil-2.9.0.post0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/python-dateutil/python-dateutil-2.9.0.post0.tar.gz",
       "software_packageUrl": "pkg:generic/python-dateutil-2.9.0.post0.tar.gz-sha256.hN91UII2n4c2HU4ghfV4A69QXkkn5D7ckN.pkaNUWaCtM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AXWWFYSVHHC33T72",
       "type": "software_Package"
@@ -5762,6 +5852,7 @@
         }
       ],
       "name": "Diff-1.0.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/Diff-1.0.2.tar.gz",
       "software_packageUrl": "pkg:generic/Diff-1.0.2.tar.gz-sha256.hzX4m09Xr9.sLBp1Ja6.pJR.p8v.s7ipjYttjS0viO541TYU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AYAQKKZLQC67KVXD",
       "type": "software_Package"
@@ -5826,6 +5917,7 @@
         }
       ],
       "name": "syb-0.7.2.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/syb-0.7.2.4.tar.gz",
       "software_packageUrl": "pkg:generic/syb-0.7.2.4.tar.gz-sha256.h7HweiCLWKrkQOGNhzc7kCiKibNNEw0dB.pt2YIwIpHmA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-B237INH77KFVBZYZ",
       "type": "software_Package"
@@ -5884,6 +5976,7 @@
         }
       ],
       "name": "blaze-html-0.9.2.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/blaze-html-0.9.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/blaze-html-0.9.2.0.tar.gz-sha256.hZVQu8592RKPXavyt65dtPjNMaUdRa3MT.sLWRZc6hYI8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-B4ED73A3QURFQYOU",
       "type": "software_Package"
@@ -5913,6 +6006,7 @@
         }
       ],
       "name": "hscolour-1.25.tar.gz",
+      "software_downloadLocation": "mirror://hackage/hscolour-1.25.tar.gz",
       "software_packageUrl": "pkg:generic/hscolour-1.25.tar.gz-sha256.hVM4w2lVZnocv042SeqUYNp4pcbKErMZ.p0MqsauFMx3w.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-B674CWJM6FWK2DPE",
       "type": "software_Package"
@@ -5970,6 +6064,7 @@
         }
       ],
       "name": "docutils-0.22.4.tar.gz",
+      "software_downloadLocation": "mirror://sourceforge/docutils/docutils-0.22.4.tar.gz",
       "software_packageUrl": "pkg:generic/docutils-0.22.4.tar.gz-sha256.hTbU7H96avsu3TZEjDTKrYm2U9rrfxXXW25GUpJ3ymWg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BAYO6IAWRPHA6KAW",
       "type": "software_Package"
@@ -6020,6 +6115,7 @@
         }
       ],
       "name": "simple-reflect-0.3.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/simple-reflect-0.3.3.tar.gz",
       "software_packageUrl": "pkg:generic/simple-reflect-0.3.3.tar.gz-sha256.hB4JeoEwTUpgAjPCAEz47.sI4Ey6zSRxnEasaiykrP2ys.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BEDN7O2QWKIWE5ZB",
       "type": "software_Package"
@@ -6063,6 +6159,7 @@
         }
       ],
       "name": "hspec-meta-2.11.17.tar.gz",
+      "software_downloadLocation": "mirror://hackage/hspec-meta-2.11.17.tar.gz",
       "software_packageUrl": "pkg:generic/hspec-meta-2.11.17.tar.gz-sha256.hUu410bf6utu8W54PzndRIMpRY3BA3G1WqwQHnRshpnw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BIFZSWV5QOIMLCVV",
       "type": "software_Package"
@@ -6077,6 +6174,7 @@
         }
       ],
       "name": "nothunks-0.3.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/nothunks-0.3.1.tar.gz",
       "software_packageUrl": "pkg:generic/nothunks-0.3.1.tar.gz-sha256.hN4P5Uv5EjtND9U.sBh7G3wGJEODjO9xxUnpGCe8l.pl10.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BL6P5YFEZ4OH5QBR",
       "type": "software_Package"
@@ -6148,6 +6246,7 @@
         }
       ],
       "name": "cmark-gfm-0.2.6-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/cmark-gfm-0.2.6/revision/1.cabal",
       "software_packageUrl": "pkg:generic/cmark-gfm-0.2.6-r1.cabal-sha256.hhnK5OI9d36js5pHlm0Jy.poB6Ld8GmJcM1zr5vruYBY0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BN4OMZW2GY6KWAVR",
       "type": "software_Package"
@@ -6213,6 +6312,7 @@
         }
       ],
       "name": "ghc-ppc-support-elf-v2-on-powerpc64-big-endian.patch",
+      "software_downloadLocation": "https://gitlab.haskell.org/ghc/ghc/-/commit/ead75532c9dc915bfa9ebaef0ef5d148e793cc0a.patch",
       "software_packageUrl": "pkg:generic/ghc-ppc-support-elf-v2-on-powerpc64-big-endian.patch-sha256.hvtjT.pTL.s7sYPu4rcVV3xCqJQ.puqkyBbf9l0KIi97j.s0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BPATBHBQJ22QH2YO",
       "type": "software_Package"
@@ -6227,6 +6327,7 @@
         }
       ],
       "name": "nettle-3.10.2.tar.gz",
+      "software_downloadLocation": "mirror://gnu/nettle/nettle-3.10.2.tar.gz",
       "software_packageUrl": "pkg:generic/nettle-3.10.2.tar.gz-sha256.h.sp.s1HLHyq7XmWmuMEKktoKtaturybn.sCtnXEXx.p1GbU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BR6OBMN3VNJACMPP",
       "type": "software_Package"
@@ -6299,6 +6400,7 @@
         }
       ],
       "name": "bifunctors-5.6.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/bifunctors-5.6.3.tar.gz",
       "software_packageUrl": "pkg:generic/bifunctors-5.6.3.tar.gz-sha256.hrXo1fwIvTHgMUFBA1z8cBqT9aXtKC6thI7vXO1XYEVw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BTLWDC7NHSQCVUYP",
       "type": "software_Package"
@@ -6313,6 +6415,7 @@
         }
       ],
       "name": "indexed-traversable-0.1.4-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/indexed-traversable-0.1.4/revision/2.cabal",
       "software_packageUrl": "pkg:generic/indexed-traversable-0.1.4-r2.cabal-sha256.hirrAuSeVSJA51zEgUNE5N1em9nhZ.s2pPNiImChuTG84.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BWM53BWJGO3AIZEY",
       "type": "software_Package"
@@ -6327,6 +6430,7 @@
         }
       ],
       "name": "babel-2.17.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/b/babel/babel-2.17.0.tar.gz",
       "software_packageUrl": "pkg:generic/babel-2.17.0.tar.gz-sha256.hDFTP.pxn2kM3MUqO1C8v3HgeoCNHIDVSfJFm50s8K.p50.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BXLKVRCZZDPESTJZ",
       "type": "software_Package"
@@ -6341,6 +6445,7 @@
         }
       ],
       "name": "these-1.2.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/these-1.2.1.tar.gz",
       "software_packageUrl": "pkg:generic/these-1.2.1.tar.gz-sha256.hF9bZMzZe2r.pAGhaELBQDvdN8xTAPqi.sMqYDezasi5N4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BYC34YX5JOPOGAGF",
       "type": "software_Package"
@@ -6482,6 +6587,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/snowballstem/pystemmer/archive/refs/tags/v3.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hc3ucbneUo5UBfdrd5Ktl4HriVusvWBEA1brrgahEQ9A.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C5FJLRHKISBDU6Z2",
       "type": "software_Package"
@@ -6626,6 +6732,7 @@
         }
       ],
       "name": "sqlite-src-3510200.zip",
+      "software_downloadLocation": "https://sqlite.org/2026/sqlite-src-3510200.zip",
       "software_packageUrl": "pkg:generic/sqlite-src-3510200.zip-sha256.hhREPdi1QeUFNmd1deRe8P.sfgWHbmzL0T2ElqOBfyCCk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CAJ5SVBM7G33AJQ6",
       "type": "software_Package"
@@ -6704,6 +6811,7 @@
         }
       ],
       "name": "strict-0.5.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/strict-0.5.1.tar.gz",
       "software_packageUrl": "pkg:generic/strict-0.5.1.tar.gz-sha256.hd3GSgMKoYxLnSCJ7.pnMu6q4OffSNV6zDwuW3sHr.pL4s.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CE4SLIXIVU52PU67",
       "type": "software_Package"
@@ -6733,6 +6841,7 @@
         }
       ],
       "name": "tree-diff-0.3.4-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/tree-diff-0.3.4/revision/2.cabal",
       "software_packageUrl": "pkg:generic/tree-diff-0.3.4-r2.cabal-sha256.hUKFkGee4Lxc5jVY5znRDdwS5ml0TI1BefceOgZoVZsE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CFCM4NFNEHU4ULMS",
       "type": "software_Package"
@@ -6927,6 +7036,7 @@
         }
       ],
       "name": "bash53-005",
+      "software_downloadLocation": "mirror://gnu/bash/bash-5.3-patches/bash53-005",
       "software_packageUrl": "pkg:generic/bash53-005-sha256.hzKHvUtu.sQzvJjjMmm2SyyBQCjv4lOL4eLJo3fakLyZ0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CKEGDFJYF4ZSKMDF",
       "type": "software_Package"
@@ -6969,6 +7079,7 @@
         }
       ],
       "name": "bash53-001",
+      "software_downloadLocation": "mirror://gnu/bash/bash-5.3-patches/bash53-001",
       "software_packageUrl": "pkg:generic/bash53-001-sha256.hH2CENDZK.pGubRciw6j.pzsWX7gw0naX5s38esF97jKH8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CLGMJAFE4UE7MVGU",
       "type": "software_Package"
@@ -7030,6 +7141,7 @@
         }
       ],
       "name": "greenlet-3.3.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/g/greenlet/greenlet-3.3.0.tar.gz",
       "software_packageUrl": "pkg:generic/greenlet-3.3.0.tar.gz-sha256.hqCuyJaTp5NZT3S.p3uLLTbk.pyW8AWVCKhHki4jp5vePs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CNVXXGDSPCZ6ZGMB",
       "type": "software_Package"
@@ -7059,6 +7171,7 @@
         }
       ],
       "name": "extra-1.8.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/extra-1.8.1.tar.gz",
       "software_packageUrl": "pkg:generic/extra-1.8.1.tar.gz-sha256.hZqfW1xhkanvagi1nVQ3BhcbiWtH3.ss8G.sBMuMACYtZg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CPE4CECOBXUD6ISA",
       "type": "software_Package"
@@ -7138,6 +7251,7 @@
         }
       ],
       "name": "filelock-3.20.3.tar.gz",
+      "software_downloadLocation": "mirror://pypi/f/filelock/filelock-3.20.3.tar.gz",
       "software_packageUrl": "pkg:generic/filelock-3.20.3.tar.gz-sha256.hGMV.p6RXH7GHP8Oz38Phpk2x8MBkbsM9AbxNBd40INOE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CRR336HR2MWXJ5GK",
       "type": "software_Package"
@@ -7273,6 +7387,7 @@
         }
       ],
       "name": "ghc-9.4-llvm-support-19.patch",
+      "software_downloadLocation": "https://gitlab.haskell.org/ghc/ghc/-/commit/36bbb167f354a2fbc6c4842755f2b1e374e3580e.patch",
       "software_packageUrl": "pkg:generic/ghc-9.4-llvm-support-19.patch-sha256.hv8T.sFtriDPbibcIDZmU2yotBoDVo.pwU2.pgw.pCCdQlm0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CVSE7S3MQSG2NBK5",
       "type": "software_Package"
@@ -7317,6 +7432,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/numactl/numactl/archive/v2.0.18.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hry29RUNa0Hv5gIhy2RTVT94mHhgfdIwb5aqjBycxxj0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CWQCBV3QKDYR6UCL",
       "type": "software_Package"
@@ -7418,6 +7534,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/google/googletest/archive/v1.17.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hHIHMxAUR4bjmFLoltJeIAVSulVQ6kVuIT2Ku.plwAx.s4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D5CRO3ZAGCFV225J",
       "type": "software_Package"
@@ -7475,6 +7592,7 @@
         }
       ],
       "name": "jinja2-3.1.6.tar.gz",
+      "software_downloadLocation": "mirror://pypi/j/jinja2/jinja2-3.1.6.tar.gz",
       "software_packageUrl": "pkg:generic/jinja2-3.1.6.tar.gz-sha256.hATf7BZkNNfEnWlh.pmu5tVtqCH8g0kaD7g4GDvkP2bW0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DAALPWBVACKBZ573",
       "type": "software_Package"
@@ -7570,6 +7688,7 @@
         }
       ],
       "name": "iniconfig-2.3.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/i/iniconfig/iniconfig-2.3.0.tar.gz",
       "software_packageUrl": "pkg:generic/iniconfig-2.3.0.tar.gz-sha256.hx2MVx32waGUNScW1YxR3SngE3xb.p5EAsHxnW0V2MRzA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DDEY5D7THOJH3KM2",
       "type": "software_Package"
@@ -7584,6 +7703,7 @@
         }
       ],
       "name": "cryptohash-sha256-0.11.102.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/cryptohash-sha256-0.11.102.1.tar.gz",
       "software_packageUrl": "pkg:generic/cryptohash-sha256-0.11.102.1.tar.gz-sha256.hc6fccWOHGoCDdJUDmgmZZ7EfXE.snChGCd4QvenE8a.sY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DEDBGAP3DLRNUJ6S",
       "type": "software_Package"
@@ -7783,6 +7903,7 @@
         }
       ],
       "name": "krb5-1.22.1.tar.gz",
+      "software_downloadLocation": "https://kerberos.org/dist/krb5/1.22/krb5-1.22.1.tar.gz",
       "software_packageUrl": "pkg:generic/krb5-1.22.1.tar.gz-sha256.hGogyuMrZI.pu.sE5T2fi789B46SfRgKFpm41reyPoAU68.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DN7W3RPL33KCPPVD",
       "type": "software_Package"
@@ -7797,6 +7918,7 @@
         }
       ],
       "name": "profunctors-5.6.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/profunctors-5.6.3.tar.gz",
       "software_packageUrl": "pkg:generic/profunctors-5.6.3.tar.gz-sha256.hucb0JzaNLoEeTEi1kAUhhnJFj9LwCgLL77i.pnHUcDvM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNEKF67R6OCBKRP7",
       "type": "software_Package"
@@ -7913,6 +8035,7 @@
         }
       ],
       "name": "trove_classifiers-2026.4.28.13.tar.gz",
+      "software_downloadLocation": "mirror://pypi/t/trove_classifiers/trove_classifiers-2026.4.28.13.tar.gz",
       "software_packageUrl": "pkg:generic/trove_classifiers-2026.4.28.13.tar.gz-sha256.hyFu4pTw95zMNFpm4RO2fuAmmAqCawV3HmtbRpQm.pBnY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DTLKZOTBMTKMJYVD",
       "type": "software_Package"
@@ -7927,6 +8050,7 @@
         }
       ],
       "name": "attoparsec-0.14.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/attoparsec-0.14.4.tar.gz",
       "software_packageUrl": "pkg:generic/attoparsec-0.14.4.tar.gz-sha256.hPzN.s5YYkVl3hJCb2B8I.pYMewnIa04638gnyhiMmXnmw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DV6X45PHCUFZPR27",
       "type": "software_Package"
@@ -7941,6 +8065,7 @@
         }
       ],
       "name": "character-ps-0.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/character-ps-0.1.tar.gz",
       "software_packageUrl": "pkg:generic/character-ps-0.1.tar.gz-sha256.hIt5x.seOLI20.pkWioMrXh510ftPQChme990eztMjBUpw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DV764LDOO7LB7AIB",
       "type": "software_Package"
@@ -8006,6 +8131,7 @@
         }
       ],
       "name": "hspec-expectations-0.8.4-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/hspec-expectations-0.8.4/revision/2.cabal",
       "software_packageUrl": "pkg:generic/hspec-expectations-0.8.4-r2.cabal-sha256.hQjfwlKeTEgL.sV6xkdVQrCzFLUKcCRVDituuHz7DU.s5M.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DYAYJEDNBNL5IURR",
       "type": "software_Package"
@@ -8049,6 +8175,7 @@
         }
       ],
       "name": "c-ares-1.34.6.tar.gz",
+      "software_downloadLocation": "https://github.com/c-ares/c-ares/releases/download/v1.34.6/c-ares-1.34.6.tar.gz",
       "software_packageUrl": "pkg:generic/c-ares-1.34.6.tar.gz-sha256.hkS3XzDs.pinnFL9f7nA9Ozwqqc.pRe.saiAJmotbia4TvU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E2SW3XHBI5EPJJXV",
       "type": "software_Package"
@@ -8063,6 +8190,7 @@
         }
       ],
       "name": "sphinxcontrib_htmlhelp-2.1.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/s/sphinxcontrib_htmlhelp/sphinxcontrib_htmlhelp-2.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/sphinxcontrib_htmlhelp-2.1.0.tar.gz-sha256.hyeKRas6KrWTME6DSM.p4iMX8rkCW5zzKVJJ.pphcxwguk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E3D4L6QRZLJWEZMW",
       "type": "software_Package"
@@ -8106,6 +8234,7 @@
         }
       ],
       "name": "assoc-1.1.1-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/assoc-1.1.1/revision/2.cabal",
       "software_packageUrl": "pkg:generic/assoc-1.1.1-r2.cabal-sha256.hdmsQQO2lJVv88Q4amFnAbQ7WrQ4qyH7ZFbsDVXTRCuQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E3U3ZS3ZIOZ5GGKP",
       "type": "software_Package"
@@ -8198,6 +8327,7 @@
         }
       ],
       "name": "random-1.2.1.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/random-1.2.1.3.tar.gz",
       "software_packageUrl": "pkg:generic/random-1.2.1.3.tar.gz-sha256.h6cgZJqfR5AMo9kX3NZKzHvycYxWJZpp.sEwaHucwwUdw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E5BM4DOHAX4FNQ3Q",
       "type": "software_Package"
@@ -8269,6 +8399,7 @@
         }
       ],
       "name": "expat-2.8.0.tar.xz",
+      "software_downloadLocation": "https://github.com/libexpat/libexpat/releases/download/R_2_8_0/expat-2.8.0.tar.xz",
       "software_packageUrl": "pkg:generic/expat-2.8.0.tar.xz-sha256.ho3v64KqXdb2FIevYXcRW1Ibw.szETj2yR.sZAupzJiRUI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E6RSKKQKLZC6G2UY",
       "type": "software_Package"
@@ -8283,6 +8414,7 @@
         }
       ],
       "name": "ChasingBottoms-1.3.1.17-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/ChasingBottoms-1.3.1.17/revision/1.cabal",
       "software_packageUrl": "pkg:generic/ChasingBottoms-1.3.1.17-r1.cabal-sha256.hMDZDkpK0oVee3PK1ThQcYEIUPiAIjahsf3.pJOeLl4fc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E725TAO6NROKCB5Y",
       "type": "software_Package"
@@ -8326,6 +8458,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/eliben/pycparser/archive/refs/tags/release_v3.00.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h6eKc.pp3xLyRPo3oCWP.sdbMpHlkBXLy8XiGR0gTEHI2E.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EAYRY5Y5A5ZWDZZ6",
       "type": "software_Package"
@@ -8340,6 +8473,7 @@
         }
       ],
       "name": "charset-0.3.12.tar.gz",
+      "software_downloadLocation": "mirror://hackage/charset-0.3.12.tar.gz",
       "software_packageUrl": "pkg:generic/charset-0.3.12.tar.gz-sha256.hHOjG1ESunVaFCZ.shGP2idExKYDdVlQfYIT.s2ht.sKci0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EB3LACMYBLGPHG6N",
       "type": "software_Package"
@@ -8403,6 +8537,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pypa/wheel/archive/refs/tags/0.46.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hiyGfGr3pLVZSEIHetjsPbIIXkuXrmIPiSqqOw31l9Qw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EDUC7M5UORUY4DNG",
       "type": "software_Package"
@@ -8431,6 +8566,7 @@
         }
       ],
       "name": "time-compat-1.9.9.tar.gz",
+      "software_downloadLocation": "mirror://hackage/time-compat-1.9.9.tar.gz",
       "software_packageUrl": "pkg:generic/time-compat-1.9.9.tar.gz-sha256.hkPrd7VPPnBWFXuv4CelTavj4XQDjK4L3yLUG0vrffCU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EF3WDMYVXIDFQEZF",
       "type": "software_Package"
@@ -8460,6 +8596,7 @@
         }
       ],
       "name": "pytest-9.0.3.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/pytest/pytest-9.0.3.tar.gz",
       "software_packageUrl": "pkg:generic/pytest-9.0.3.tar.gz-sha256.huGraUIr4HRnt6yE8aBsdSCRsGpHTBMbIGkJ2dMF.puRw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EFU5IXJLUVKTNSDK",
       "type": "software_Package"
@@ -8474,6 +8611,7 @@
         }
       ],
       "name": "sphinxcontrib_qthelp-2.0.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/s/sphinxcontrib_qthelp/sphinxcontrib_qthelp-2.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/sphinxcontrib_qthelp-2.0.0.tar.gz-sha256.hT.pfQrI.sBcQRb5iOro.pKo9hP4aCcx.pRU7suQOzha5u6s.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EG2CHFTSWHS3ZLX5",
       "type": "software_Package"
@@ -8488,6 +8626,7 @@
         }
       ],
       "name": "include-modern-utimbuf.patch",
+      "software_downloadLocation": "https://gitlab.haskell.org/ghc/ghc/-/commit/7e75928ed0f1c4654de6ddd13d0b00bf4b5c6411.patch",
       "software_packageUrl": "pkg:generic/include-modern-utimbuf.patch-sha256.hsb.pAHdkGkCu8MW0xoQIpD5kEc0zYX8udAMDoC.pTWc0Q.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EGQ2QTWRIEJEV76T",
       "type": "software_Package"
@@ -8502,6 +8641,7 @@
         }
       ],
       "name": "types_psutil-7.2.1.20260116.tar.gz",
+      "software_downloadLocation": "mirror://pypi/t/types_psutil/types_psutil-7.2.1.20260116.tar.gz",
       "software_packageUrl": "pkg:generic/types_psutil-7.2.1.20260116.tar.gz-sha256.hRmG.pXV16zV2K.pwKpLQUWCmy7LOdHIyRbUfe6ff25.pYE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EH2QXWH7SZ3HCK2P",
       "type": "software_Package"
@@ -8610,6 +8750,7 @@
         }
       ],
       "name": "cmake-4.1.2.tar.gz",
+      "software_downloadLocation": "https://cmake.org/files/v4.1/cmake-4.1.2.tar.gz",
       "software_packageUrl": "pkg:generic/cmake-4.1.2.tar.gz-sha256.hZD8EGCt7oyOrMfUm94UTT7ecujGIqFIgbvBHP.p4oKhU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EN7ZRUVDNFIWLS66",
       "type": "software_Package"
@@ -8624,6 +8765,7 @@
         }
       ],
       "name": "sphinxcontrib_websupport-2.0.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/s/sphinxcontrib_websupport/sphinxcontrib_websupport-2.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/sphinxcontrib_websupport-2.0.0.tar.gz-sha256.hC3Nn07rGRUsfl.pQqqMTU1KG3VtUl.sHJuu.pVXHgM.pec0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EO4KWECTNCZVGAOZ",
       "type": "software_Package"
@@ -8695,6 +8837,7 @@
         }
       ],
       "name": "importlib_metadata-9.0.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/i/importlib_metadata/importlib_metadata-9.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/importlib_metadata-9.0.0.tar.gz-sha256.hpPV6tZnmouMBbXWVz9cutGYaUQbnh6lbzJDHEFuDHvw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ER2B7FEW4IE5ZUPG",
       "type": "software_Package"
@@ -8754,6 +8897,7 @@
         }
       ],
       "name": "lzo-2.10.tar.gz",
+      "software_downloadLocation": "https://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz",
       "software_packageUrl": "pkg:generic/lzo-2.10.tar.gz-sha256.hwPiSlDIIJm.pbZUOzrjCPq2KExckOYnkxRG.p0m0IhoHI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EUQKYGOB7FDT6LNB",
       "type": "software_Package"
@@ -8783,6 +8927,7 @@
         }
       ],
       "name": "blaze-html-0.9.2.0-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/blaze-html-0.9.2.0/revision/1.cabal",
       "software_packageUrl": "pkg:generic/blaze-html-0.9.2.0-r1.cabal-sha256.hhcQvhPTq0sSIRPvghlBprdO7O7MyLThgfpPVUVpMnFg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EVZJB5QBS46433DG",
       "type": "software_Package"
@@ -8826,6 +8971,7 @@
         }
       ],
       "name": "indexed-traversable-instances-0.1.2.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/indexed-traversable-instances-0.1.2.1.tar.gz",
       "software_packageUrl": "pkg:generic/indexed-traversable-instances-0.1.2.1.tar.gz-sha256.h5p1B8jqVRjwuA67gM3Sk9InHL3vyNb4lFJnEzKlBH.pw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EZWFQAUTYPF62R5J",
       "type": "software_Package"
@@ -8840,6 +8986,7 @@
         }
       ],
       "name": "flex-2.6.4.tar.gz",
+      "software_downloadLocation": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz",
       "software_packageUrl": "pkg:generic/flex-2.6.4.tar.gz-sha256.h6HquAyvwfCb4WsDtMlCZjDdiHZX4vXSLMfFbM8Re6ZU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EZZTWNZYSIL33GQE",
       "type": "software_Package"
@@ -8854,6 +9001,7 @@
         }
       ],
       "name": "tasty-smallcheck-0.8.2-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/tasty-smallcheck-0.8.2/revision/1.cabal",
       "software_packageUrl": "pkg:generic/tasty-smallcheck-0.8.2-r1.cabal-sha256.hsO6yQaTTRAHbwjeQtWmJpgibm5stwH97DuznxIWCYwA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-F24KCMQPDUE5GIZL",
       "type": "software_Package"
@@ -8943,6 +9091,7 @@
         }
       ],
       "name": "sphinxcontrib_devhelp-2.0.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/s/sphinxcontrib_devhelp/sphinxcontrib_devhelp-2.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/sphinxcontrib_devhelp-2.0.0.tar.gz-sha256.hQR9dltRF0dc7tdUhMzd7QkjsedtceTzn2.pWeB0tN0a0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-F5GZHN25TMR4EE7A",
       "type": "software_Package"
@@ -8971,6 +9120,7 @@
         }
       ],
       "name": "ghc-rts-Fix-compile-on-powerpc64-elf-v1.patch",
+      "software_downloadLocation": "https://gitlab.haskell.org/ghc/ghc/-/commit/05e5785a3157c71e327a8e9bdc80fa7082918739.patch",
       "software_packageUrl": "pkg:generic/ghc-rts-Fix-compile-on-powerpc64-elf-v1.patch-sha256.hxP5v3cKhXeTRSFvRiKEn9hPxGXgVgykjTILKjh.spdDU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-F6PRGWIMWZMZ2IRP",
       "type": "software_Package"
@@ -9057,6 +9207,7 @@
         }
       ],
       "name": "CVE-2025-46836.patch",
+      "software_downloadLocation": "https://github.com/ecki/net-tools/commit/7a8f42fb20013a1493d8cae1c43436f85e656f2d.patch",
       "software_packageUrl": "pkg:generic/CVE-2025-46836.patch-sha256.h2R9giETNN3e2t1DPQj0kb4uYCXpkBxnF8grWIBLM7s0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FARJVYB2ITF6ELML",
       "type": "software_Package"
@@ -9114,6 +9265,7 @@
         }
       ],
       "name": "nghttp2-1.69.0.tar.bz2",
+      "software_downloadLocation": "https://github.com/nghttp2/nghttp2/releases/download/v1.69.0/nghttp2-1.69.0.tar.bz2",
       "software_packageUrl": "pkg:generic/nghttp2-1.69.0.tar.bz2-sha256.hPxhfWxw.pd4heuc8.sLE2ksan3OiS.sWVe4KRg60Tf4Lcg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FE7QZ2QQ5HXTRSSH",
       "type": "software_Package"
@@ -9157,6 +9309,7 @@
         }
       ],
       "name": "free-5.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/free-5.2.tar.gz",
       "software_packageUrl": "pkg:generic/free-5.2.tar.gz-sha256.hcoZ.sfIkXMmN2Vzbo05XpQpHxqupibssdZz1yzpC5T4k.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FFKX7CXHN5SPNCOK",
       "type": "software_Package"
@@ -9185,6 +9338,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/psf/requests/archive/refs/tags/v2.33.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hcQnCTMmpdkvWwt7RFAIhAfmhVwGVn0Y8Z5Tr6lzDmS8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FG5HHDYPSJZXEMQX",
       "type": "software_Package"
@@ -9236,6 +9390,7 @@
         }
       ],
       "name": "vector-stream-0.1.0.1-r4.cabal",
+      "software_downloadLocation": "mirror://hackage/vector-stream-0.1.0.1/revision/4.cabal",
       "software_packageUrl": "pkg:generic/vector-stream-0.1.0.1-r4.cabal-sha256.hSDvm3xPHIWmpF2QFiWZvn.pznvqn6E.szUHQUtqzfqKJ4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FHNYR534VP74PNFV",
       "type": "software_Package"
@@ -9336,6 +9491,7 @@
         }
       ],
       "name": "base16-bytestring-1.0.2.0-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/base16-bytestring-1.0.2.0/revision/1.cabal",
       "software_packageUrl": "pkg:generic/base16-bytestring-1.0.2.0-r1.cabal-sha256.hppToj57J.sHnwsD8jPT.sqWSto9wo0qsLdtbyuy2Vi4v0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FJRY3RS4MFTAEJUM",
       "type": "software_Package"
@@ -9365,6 +9521,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/di/calver/archive/refs/tags/2025.10.20.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h8CfPQ4uMgKDqMMgutLdsjn.sMaAVBJQAp1KqUfxzNMQw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FKPDDCG36QEBT4YX",
       "type": "software_Package"
@@ -9429,6 +9586,7 @@
         }
       ],
       "name": "base16-bytestring-1.0.2.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/base16-bytestring-1.0.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/base16-bytestring-1.0.2.0.tar.gz-sha256.hHVqRFD7w4iFXU2CT7I5Z0iamgiDsiTeNXcruqGRyx4Q.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FOF6LSOYWRZHEB77",
       "type": "software_Package"
@@ -9558,6 +9716,7 @@
         }
       ],
       "name": "quickcheck-instances-0.3.33.tar.gz",
+      "software_downloadLocation": "mirror://hackage/quickcheck-instances-0.3.33.tar.gz",
       "software_packageUrl": "pkg:generic/quickcheck-instances-0.3.33.tar.gz-sha256.haAPNVHsCe8q3sCmmmthCjiivhCt3CRE.ptqQ6svLwiGY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FR64BWHQSDXMRHJE",
       "type": "software_Package"
@@ -9892,6 +10051,7 @@
         }
       ],
       "name": "temporary-1.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/temporary-1.3.tar.gz",
       "software_packageUrl": "pkg:generic/temporary-1.3.tar.gz-sha256.hjEQpk2lLX.syoI86GSvlb0oQftSZO5RHGHPSMxx2HmJA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G5UCHKCRFYUOLBKM",
       "type": "software_Package"
@@ -9906,6 +10066,7 @@
         }
       ],
       "name": "hspec-discover-2.11.17.tar.gz",
+      "software_downloadLocation": "mirror://hackage/hspec-discover-2.11.17.tar.gz",
       "software_packageUrl": "pkg:generic/hspec-discover-2.11.17.tar.gz-sha256.hNWydjfeN8wMzSL5hfd9AiRSkHdh8ErXteHsEgPrORlI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G74BUW26C2O2EUDM",
       "type": "software_Package"
@@ -10007,6 +10168,7 @@
         }
       ],
       "name": "bash53-006",
+      "software_downloadLocation": "mirror://gnu/bash/bash-5.3-patches/bash53-006",
       "software_packageUrl": "pkg:generic/bash53-006-sha256.hKRGa3e.stjv.pRrjf9UYIsMXgO4w1KKDdulgAnBsmV.sxA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GDMNVFEGKNYF7IRE",
       "type": "software_Package"
@@ -10079,6 +10241,7 @@
         }
       ],
       "name": "unzip60.tar.gz",
+      "software_downloadLocation": "mirror://sourceforge/infozip/unzip60.tar.gz",
       "software_packageUrl": "pkg:generic/unzip60.tar.gz-sha256.hA22WmRZG0ESe0KqVLk.p.pIbR2zplKvCduSdMOaGcIvTc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GGYAFRBH6LOGEKP3",
       "type": "software_Package"
@@ -10093,6 +10256,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/giampaolo/psutil/archive/refs/tags/release-7.2.2.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hplBv24QgNzmVMV2lFxCbNwHKtd620thJayWdjs4estw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GH2WBQZ2CHHQNAJC",
       "type": "software_Package"
@@ -10258,6 +10422,7 @@
         }
       ],
       "name": "integer-conversion-0.1.1-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/integer-conversion-0.1.1/revision/2.cabal",
       "software_packageUrl": "pkg:generic/integer-conversion-0.1.1-r2.cabal-sha256.hEj0bCIQE8JdlAMaNgQWXiqLjKQjOVQjjKuvSN.sBEfJ8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GM66Q33L5OH4OWNW",
       "type": "software_Package"
@@ -10272,6 +10437,7 @@
         }
       ],
       "name": "readline83-001",
+      "software_downloadLocation": "mirror://gnu/readline/readline-8.3-patches/readline83-001",
       "software_packageUrl": "pkg:generic/readline83-001-sha256.hIfCgMQbb5pczfNJccOsO26or221ZW0X4MoXN01ushN4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GMX3NUYIWBWTF6CO",
       "type": "software_Package"
@@ -10300,6 +10466,7 @@
         }
       ],
       "name": "text-short-0.1.6.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/text-short-0.1.6.1.tar.gz",
       "software_packageUrl": "pkg:generic/text-short-0.1.6.1.tar.gz-sha256.hg2afQCNUJ0.p83HUSZEOvczJnuVXkUfcsDG2Gro2odBY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GNTTLPVDB27PZQ3Y",
       "type": "software_Package"
@@ -10343,6 +10510,7 @@
         }
       ],
       "name": "ghc-9.4-llvm-support-16-17-18.patch",
+      "software_downloadLocation": "https://gitlab.haskell.org/ghc/ghc/-/commit/ae170155e82f1e5f78882f7a682d02a8e46a5823.patch",
       "software_packageUrl": "pkg:generic/ghc-9.4-llvm-support-16-17-18.patch-sha256.hU1znWqXZTORmAg480p5TjTL53T2Zn.p1.p9Fnk2V1Drfs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GOZQPI7WQFW5JPPL",
       "type": "software_Package"
@@ -10424,6 +10592,7 @@
         }
       ],
       "name": "lens-5.3.6.tar.gz",
+      "software_downloadLocation": "mirror://hackage/lens-5.3.6.tar.gz",
       "software_packageUrl": "pkg:generic/lens-5.3.6.tar.gz-sha256.h00Xc8f2k1KEnuE1CY4ti94PPUnUL2P0UqxY3UQwQI8I.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GU3TLFU3QMCMB66X",
       "type": "software_Package"
@@ -10524,6 +10693,7 @@
         }
       ],
       "name": "nghttp3-1.15.0.tar.bz2",
+      "software_downloadLocation": "https://github.com/ngtcp2/nghttp3/releases/download/v1.15.0/nghttp3-1.15.0.tar.bz2",
       "software_packageUrl": "pkg:generic/nghttp3-1.15.0.tar.bz2-sha256.hxsSRpSgEgUCY5EZjDm78RZr8DT2nlS.s.pbL3As.smbK2I.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GXVCWVX23WDC24QY",
       "type": "software_Package"
@@ -10611,6 +10781,7 @@
         }
       ],
       "name": "help2man-1.49.3.tar.xz",
+      "software_downloadLocation": "mirror://gnu/help2man/help2man-1.49.3.tar.xz",
       "software_packageUrl": "pkg:generic/help2man-1.49.3.tar.xz-sha256.hTX5P3vLspq.sgeiaCFRzqeHgeCk6PliIULZ9wwIOi.sU8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H2YPN7UTGX4SPWAL",
       "type": "software_Package"
@@ -10646,6 +10817,7 @@
         }
       ],
       "name": "07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch",
+      "software_downloadLocation": "https://github.com/docbook/xslt10-stylesheets/commit/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch",
       "software_packageUrl": "pkg:generic/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch-sha256.hA89dikDVDJGXZ702nq3MbVBfYEChaWk1bp59aDKD7kU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H3PXITEEYMNTN6LP",
       "type": "software_Package"
@@ -10718,6 +10890,7 @@
         }
       ],
       "name": "integer-conversion-0.1.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/integer-conversion-0.1.1.tar.gz",
       "software_packageUrl": "pkg:generic/integer-conversion-0.1.1.tar.gz-sha256.hwYFkoEgHMxD2NT68ZMkDe1KkuCmZY84F4Ce89g4iFVo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H7QA3Y3ZJTHGBZ4J",
       "type": "software_Package"
@@ -10732,6 +10905,7 @@
         }
       ],
       "name": "fix-aarch64_fregs.patch",
+      "software_downloadLocation": "https://git.alpinelinux.org/aports/plain/main/elfutils/fix-aarch64_fregs.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9",
       "software_packageUrl": "pkg:generic/fix-aarch64_fregs.patch-sha256.hzvncoRkQx3AwPx52ehjA2vcFroF.pyDC2MQR5uS6DATs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-H7VWNR4FVJKY5OMT",
       "type": "software_Package"
@@ -10832,6 +11006,7 @@
         }
       ],
       "name": "test-framework-0.8.2.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/test-framework-0.8.2.3.tar.gz",
       "software_packageUrl": "pkg:generic/test-framework-0.8.2.3.tar.gz-sha256.hMQp4bJAMOp6OodikRwifXBHYswKNIhgqI7NL9uHHxV4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HEW3W3XKHEITBOZP",
       "type": "software_Package"
@@ -10897,6 +11072,7 @@
         }
       ],
       "name": "musl-asm-ptrace-h.patch",
+      "software_downloadLocation": "https://git.alpinelinux.org/aports/plain/main/elfutils/musl-asm-ptrace-h.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9",
       "software_packageUrl": "pkg:generic/musl-asm-ptrace-h.patch-sha256.h8D1wPcdgAkE.sTNBOgsHaeTZYhd9l.p9TrZg8d5C7kG6k.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HGBNLWKDHDEW7S5X",
       "type": "software_Package"
@@ -10940,6 +11116,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/sphinx-doc/sphinx/archive/refs/tags/v9.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hPgqjCeyHOhWtZjyzSZyvsPT0Q7yRyNDiW3x1fQq0K.p8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HH4Z57OP4MWVXW6T",
       "type": "software_Package"
@@ -10954,6 +11131,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pytest-dev/pluggy/archive/refs/tags/1.6.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hpkQjPJuSASWmzwzp9H.sUTJBQDr2r2RiofxpF135lAgc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HHCFXDIJEA4RBZV3",
       "type": "software_Package"
@@ -10968,6 +11146,7 @@
         }
       ],
       "name": "optparse-applicative-0.18.1.0-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/optparse-applicative-0.18.1.0/revision/1.cabal",
       "software_packageUrl": "pkg:generic/optparse-applicative-0.18.1.0-r1.cabal-sha256.h8wlzhhrH5.pv.sBf.pMfD0eTSg6HzhQ4cwUEGsGk.pwbbYI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HHS6CU7NUC22K2WC",
       "type": "software_Package"
@@ -11039,6 +11218,7 @@
         }
       ],
       "name": "StateVar-1.2.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/StateVar-1.2.2.tar.gz",
       "software_packageUrl": "pkg:generic/StateVar-1.2.2.tar.gz-sha256.hXks52jlWVqWYJ7AoBQiq.sccDNXmLUOXW.sVJZYCYlGCU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HKIOIDYMJCHCW4IB",
       "type": "software_Package"
@@ -11089,6 +11269,7 @@
         }
       ],
       "name": "haddock-library-1.11.0-r5.cabal",
+      "software_downloadLocation": "mirror://hackage/haddock-library-1.11.0/revision/5.cabal",
       "software_packageUrl": "pkg:generic/haddock-library-1.11.0-r5.cabal-sha256.h0Y.pqMir4A0.pDhSXTH5t1kc76R8YzCnqJCfhHz1cwKL4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HMIKH57QXGEHEYNV",
       "type": "software_Package"
@@ -11131,6 +11312,7 @@
         }
       ],
       "name": "tasty-golden-2.3.6.tar.gz",
+      "software_downloadLocation": "mirror://hackage/tasty-golden-2.3.6.tar.gz",
       "software_packageUrl": "pkg:generic/tasty-golden-2.3.6.tar.gz-sha256.hjzd.so6IXAMEPiJXgGrn.pPbaqFiQp.pK5Y.sADy05HXCrw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HNH4JMGEYLN3FYBP",
       "type": "software_Package"
@@ -11311,6 +11493,7 @@
         }
       ],
       "name": "optparse-applicative-0.18.1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/optparse-applicative-0.18.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/optparse-applicative-0.18.1.0.tar.gz-sha256.hY4EatP0m6Cm4hoNkMlqIvjrMeYGfW7UAWy3TuWHsxJE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HUJOXOQBSOQCFAJJ",
       "type": "software_Package"
@@ -11354,6 +11537,7 @@
         }
       ],
       "name": "cryptohash-sha256-0.11.102.1-r6.cabal",
+      "software_downloadLocation": "mirror://hackage/cryptohash-sha256-0.11.102.1/revision/6.cabal",
       "software_packageUrl": "pkg:generic/cryptohash-sha256-0.11.102.1-r6.cabal-sha256.hDp3izM4mHnpbAn6EL29H9Q6w5gWaDemKVHn3WqgWQQc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HY3X7TAVAO5TYTZS",
       "type": "software_Package"
@@ -11448,6 +11632,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/skvadrik/re2c/archive/4.5.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hPOdE8aKvQqfIPEIkUppZPV8t9ApT4R1AyfHXxrKvq88.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I52KVLKKYJPFB2CZ",
       "type": "software_Package"
@@ -11462,6 +11647,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/jaraco/zipp/archive/refs/tags/v3.23.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hSC5aMiQsAPLNjCdOHDAMYX2iDSwZltjXxAJJgZnPlJ0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I5ZW4TUF2Y32DYSW",
       "type": "software_Package"
@@ -11491,6 +11677,7 @@
         }
       ],
       "name": "tree-diff-0.3.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/tree-diff-0.3.4.tar.gz",
       "software_packageUrl": "pkg:generic/tree-diff-0.3.4.tar.gz-sha256.hXproBCB99iXPKDhZN6NRUrEmBd1O01DER8ktsFT2Djs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I6ZCUZNSLWR4OYYV",
       "type": "software_Package"
@@ -11505,6 +11692,7 @@
         }
       ],
       "name": "aeson-2.2.4.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/aeson-2.2.4.1.tar.gz",
       "software_packageUrl": "pkg:generic/aeson-2.2.4.1.tar.gz-sha256.hQHHxqnz0.p.pbIiH0k7S.p9V7J0QRSZSwNWFs5iC3wC.pmA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I726G2QY6VLZLEJ6",
       "type": "software_Package"
@@ -11519,6 +11707,7 @@
         }
       ],
       "name": "quickcheck-unicode-1.0.1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/quickcheck-unicode-1.0.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/quickcheck-unicode-1.0.1.0.tar.gz-sha256.hEyAF6n7f816VE5w2IypwaYzQ9PTXnfqk5m.p89VfQg2g.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I74BLVVQMTGQR2TT",
       "type": "software_Package"
@@ -11598,6 +11787,7 @@
         }
       ],
       "name": "ansi-terminal-1.1.5.tar.gz",
+      "software_downloadLocation": "mirror://hackage/ansi-terminal-1.1.5.tar.gz",
       "software_packageUrl": "pkg:generic/ansi-terminal-1.1.5.tar.gz-sha256.hnPCDzvLiuoikJfEyyKgr.ppMetLDDgjKyAX.pPzqLiMHM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IDJCPTJLM57EJH4E",
       "type": "software_Package"
@@ -11719,6 +11909,7 @@
         }
       ],
       "name": "clock-0.8.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/clock-0.8.4.tar.gz",
       "software_packageUrl": "pkg:generic/clock-0.8.4.tar.gz-sha256.haumJiv54il4zTNX61dGKPC6OWfoJqve5V9uzikdn3y4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IJP54CHNLP6ITI22",
       "type": "software_Package"
@@ -11784,6 +11975,7 @@
         }
       ],
       "name": "tasty-quickcheck-0.11.1-r5.cabal",
+      "software_downloadLocation": "mirror://hackage/tasty-quickcheck-0.11.1/revision/5.cabal",
       "software_packageUrl": "pkg:generic/tasty-quickcheck-0.11.1-r5.cabal-sha256.hEuprb.pzMwUa2mqw8SBD9XRNVZCRenAcI35skBxqLBYg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IKCEWBD6YGIHJKU6",
       "type": "software_Package"
@@ -11798,6 +11990,7 @@
         }
       ],
       "name": "bash53-004",
+      "software_downloadLocation": "mirror://gnu/bash/bash-5.3-patches/bash53-004",
       "software_packageUrl": "pkg:generic/bash53-004-sha256.hlZHSRQRVKfMvCBL5QYC52c6QI.sWnZcA5uFLl38mXR9A.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IKI4VVHB5MFGLNBB",
       "type": "software_Package"
@@ -11899,6 +12092,7 @@
         }
       ],
       "name": "prettyprinter-ansi-terminal-1.1.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/prettyprinter-ansi-terminal-1.1.3.tar.gz",
       "software_packageUrl": "pkg:generic/prettyprinter-ansi-terminal-1.1.3.tar.gz-sha256.hgTc5MIrWBQYgV4mU7.s4hBYoXCjQXFqz1JXP65CtbHbM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-INAX4MSV5SLQFPL6",
       "type": "software_Package"
@@ -11913,6 +12107,7 @@
         }
       ],
       "name": "colour-2.3.7.tar.gz",
+      "software_downloadLocation": "mirror://hackage/colour-2.3.7.tar.gz",
       "software_packageUrl": "pkg:generic/colour-2.3.7.tar.gz-sha256.hHzsQVWdavk4zYoAMyb96ubkt.sfIaH2yCslJhEnC.ploA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IOIAHPSHEKOKVCQO",
       "type": "software_Package"
@@ -11957,6 +12152,7 @@
         }
       ],
       "name": "witherable-0.5.tar.gz",
+      "software_downloadLocation": "mirror://hackage/witherable-0.5.tar.gz",
       "software_packageUrl": "pkg:generic/witherable-0.5.tar.gz-sha256.hSENMweRlsTy8ATOpDD7A2CfJO3fOlYB.s4KOLZfSRjNE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IRIVSAK6INGL432J",
       "type": "software_Package"
@@ -12037,6 +12233,7 @@
         }
       ],
       "name": "primitive-0.9.1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/primitive-0.9.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/primitive-0.9.1.0.tar.gz-sha256.hRLTeQYE8e8Xbilf4fDYSoGm2UIaUYmi6FlCXJS69PXY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ISW6PRZSGEYX7CU3",
       "type": "software_Package"
@@ -12051,6 +12248,7 @@
         }
       ],
       "name": "urllib3-2.6.3.tar.gz",
+      "software_downloadLocation": "mirror://pypi/u/urllib3/urllib3-2.6.3.tar.gz",
       "software_packageUrl": "pkg:generic/urllib3-2.6.3.tar.gz-sha256.hG2K2iElEpX2.pMhUJq5T9TTswcHXgwurpkaxx7hWtOO0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ITJR3IABCPHRTDNT",
       "type": "software_Package"
@@ -12201,6 +12399,7 @@
         }
       ],
       "name": "libmicrohttpd-1.0.2.tar.gz",
+      "software_downloadLocation": "mirror://gnu/libmicrohttpd/libmicrohttpd-1.0.2.tar.gz",
       "software_packageUrl": "pkg:generic/libmicrohttpd-1.0.2.tar.gz-sha256.h3zJPzQg0F12rB0gxM5Atl3SmBb.pimAJfaYgyiP0gqMc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IZYSFIJHULB6CFWM",
       "type": "software_Package"
@@ -12244,6 +12443,7 @@
         }
       ],
       "name": "free-5.2-r8.cabal",
+      "software_downloadLocation": "mirror://hackage/free-5.2/revision/8.cabal",
       "software_packageUrl": "pkg:generic/free-5.2-r8.cabal-sha256.hOcoBZF98Lwj.s1kImiRxRS9ySSofaSPgV.pf53wuCsEWQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J3NNCCBAG57IBWEU",
       "type": "software_Package"
@@ -12303,6 +12503,7 @@
         }
       ],
       "name": "logging-facade-0.3.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/logging-facade-0.3.1.tar.gz",
       "software_packageUrl": "pkg:generic/logging-facade-0.3.1.tar.gz-sha256.hKxazNTt3xquSqC3D8EckRHpn8Cx21QwnQXfYd44UwWY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J4ZNMTA7OYIIE2VY",
       "type": "software_Package"
@@ -12412,6 +12613,7 @@
         }
       ],
       "name": "ghc-paths-0.1.0.12-r8.cabal",
+      "software_downloadLocation": "mirror://hackage/ghc-paths-0.1.0.12/revision/8.cabal",
       "software_packageUrl": "pkg:generic/ghc-paths-0.1.0.12-r8.cabal-sha256.hQk1QoqOMb.sW4RU7eXaf7RupTcMLZ4YhsSApRQiPAsPo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JCMEQ5VLYRIVR2FF",
       "type": "software_Package"
@@ -12455,6 +12657,7 @@
         }
       ],
       "name": "sqlite-doc-3510200.zip",
+      "software_downloadLocation": "https://sqlite.org/2026/sqlite-doc-3510200.zip",
       "software_packageUrl": "pkg:generic/sqlite-doc-3510200.zip-sha256.hxuMNB8XpwSaQHFTY18kKnBo3B4JFUX8GCzxpxN5Dv10.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JDZZCQEIJP67XFBZ",
       "type": "software_Package"
@@ -12469,6 +12672,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/rhash/RHash/archive/v1.4.6.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h9.skFI38PG3AKsdDqEV.swEzSel9IlQQ.spvOyhU.sN.saV0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JE5GR5BGK246MS6S",
       "type": "software_Package"
@@ -12634,6 +12838,7 @@
         }
       ],
       "name": "pygments-2.20.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/pygments/pygments-2.20.0.tar.gz",
       "software_packageUrl": "pkg:generic/pygments-2.20.0.tar.gz-sha256.hZ1fNA3aAU.s.pZ8wOcGjbWwKoLJjQ4.sKsXUgswowOoK18.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JKMESMOS45OQFKRP",
       "type": "software_Package"
@@ -12677,6 +12882,7 @@
         }
       ],
       "name": "invariant-0.6.5.tar.gz",
+      "software_downloadLocation": "mirror://hackage/invariant-0.6.5.tar.gz",
       "software_packageUrl": "pkg:generic/invariant-0.6.5.tar.gz-sha256.hYmvex8kl.pw8ViW3Md2mSywCl.sPmSEVKME.pdTXnI5bjo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JLP3N4A7IFYVZMDQ",
       "type": "software_Package"
@@ -12895,6 +13101,7 @@
         }
       ],
       "name": "packaging-26.1.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/packaging/packaging-26.1.tar.gz",
       "software_packageUrl": "pkg:generic/packaging-26.1.tar.gz-sha256.h8EIVK2gcS.srFyuJ0KlXhA9J6suwPPYgDcTa2v.pfJxd4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JSFGUFFSPEUVTIDW",
       "type": "software_Package"
@@ -12923,6 +13130,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pypa/installer/archive/1.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JV7IYNPXSDO4YWBA",
       "type": "software_Package"
@@ -13024,6 +13232,7 @@
         }
       ],
       "name": "toml-0.10.2.tar.gz",
+      "software_downloadLocation": "mirror://pypi/t/toml/toml-0.10.2.tar.gz",
       "software_packageUrl": "pkg:generic/toml-0.10.2.tar.gz-sha256.hs72h0QjV3Zn0og0k2cNI6RxNt6sbdJIAve0vg5zL5o8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JX5IHLEQJKY4TZAD",
       "type": "software_Package"
@@ -13038,6 +13247,7 @@
         }
       ],
       "name": "prettyprinter-1.7.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/prettyprinter-1.7.1.tar.gz",
       "software_packageUrl": "pkg:generic/prettyprinter-1.7.1.tar.gz-sha256.hXm6mkDEU.phGPzDWWM9.p37N3suSwGyFPQKne3KyUfC0U.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JY5SKGZVIGBNKY63",
       "type": "software_Package"
@@ -13052,6 +13262,7 @@
         }
       ],
       "name": "docbook-xsl-nons-1.79.2.tar.bz2",
+      "software_downloadLocation": "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-nons-1.79.2.tar.bz2",
       "software_packageUrl": "pkg:generic/docbook-xsl-nons-1.79.2.tar.bz2-sha256.h7oueygt6j4kHWDKi2nU0vOjFR4.sI.sCZ29RLV2H2DIQI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JY65NFINPO4I3RC5",
       "type": "software_Package"
@@ -13102,6 +13313,7 @@
         }
       ],
       "name": "libgcrypt-1.11.2.tar.bz2",
+      "software_downloadLocation": "mirror://gnupg/libgcrypt/libgcrypt-1.11.2.tar.bz2",
       "software_packageUrl": "pkg:generic/libgcrypt-1.11.2.tar.bz2-sha256.ha6Wd0ZInDowdIt20GgfZXc28Hw.pwLQPEtUsjWBQzCqw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JZ3DHZ73X7CE562N",
       "type": "software_Package"
@@ -13267,6 +13479,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/python-cffi/cffi/archive/refs/tags/v2.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h7Mzz3KmmmE2xQru1GA4aY0DZqn6vxykWiExQvnA1bjM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KBFFY5MFZI6G7ZHS",
       "type": "software_Package"
@@ -13397,6 +13610,7 @@
         }
       ],
       "name": "ghc-9.10.3-src.tar.xz",
+      "software_downloadLocation": "https://downloads.haskell.org/ghc/9.10.3/ghc-9.10.3-src.tar.xz",
       "software_packageUrl": "pkg:generic/ghc-9.10.3-src.tar.xz-sha256.h0maGS54Le3QavoydankNfAHCHPQ6FBmDkRklWHjrxZo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KJEGIGT34TESRDQ4",
       "type": "software_Package"
@@ -13520,6 +13734,7 @@
         }
       ],
       "name": "static.patch",
+      "software_downloadLocation": "https://github.com/rockdaboot/libpsl/commit/490bd6f98a2addcade55028ea60c36cce07e21e4.patch",
       "software_packageUrl": "pkg:generic/static.patch-sha256.h7Uu9gaVuA9Aly2mmnhUVgv2BYQTSBODJ2rDl5xp0uVY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KNSNLGMY4BOBNTBS",
       "type": "software_Package"
@@ -13549,6 +13764,7 @@
         }
       ],
       "name": "buildcatrust-0.5.1.tar.gz",
+      "software_downloadLocation": "mirror://pypi/b/buildcatrust/buildcatrust-0.5.1.tar.gz",
       "software_packageUrl": "pkg:generic/buildcatrust-0.5.1.tar.gz-sha256.hI7f2LCQ8dGFOX.sd04mOUll7IL7y5Qn1EPu9UO5496So.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KP3VBK4RZ7QAXHQW",
       "type": "software_Package"
@@ -13585,6 +13801,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/kjd/idna/archive/refs/tags/v3.13.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hD72KUEwiFA.sLdU.sxE3sN.pAbc6NpAsIlGSdB07V1nk68.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KR5QG7YFH3USGUBL",
       "type": "software_Package"
@@ -13599,6 +13816,7 @@
         }
       ],
       "name": "hspec-golden-0.2.2.0-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/hspec-golden-0.2.2.0/revision/1.cabal",
       "software_packageUrl": "pkg:generic/hspec-golden-0.2.2.0-r1.cabal-sha256.hirXA4qqsQ6nvLrkz2n1lbpmXNQikFbuEn0qxgLF3wR4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KR7B6SIEOVTUTK72",
       "type": "software_Package"
@@ -13642,6 +13860,7 @@
         }
       ],
       "name": "base-compat-0.14.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/base-compat-0.14.1.tar.gz",
       "software_packageUrl": "pkg:generic/base-compat-0.14.1.tar.gz-sha256.hdOZVVB5kXo.sHqt4eahtpc1Yb4LypNpvBYjqjRQGaNek.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KTMDSY3YGHQHI45W",
       "type": "software_Package"
@@ -13693,6 +13912,7 @@
         }
       ],
       "name": "fingertree-0.1.6.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/fingertree-0.1.6.3.tar.gz",
       "software_packageUrl": "pkg:generic/fingertree-0.1.6.3.tar.gz-sha256.hh.pCuX9jf5XEZuKaikfZrKql1H.pPG3.p.s3996H2fzborg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KUMY2KYXZITMNFNH",
       "type": "software_Package"
@@ -13787,6 +14007,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/ninja-build/ninja/archive/refs/tags/v1.13.2.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hD9HsIjv8EJ1qAdXFAKy260K77cCvopgQ2Fx6uXpt6VI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KXSR5KEZMUUKG6CE",
       "type": "software_Package"
@@ -13816,6 +14037,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/python/mypy/archive/refs/tags/v1.20.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hMQZZyGu6xFh3wO.p0lWED.pmingjK92v.sonljtp9gylmM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KYA7GNHY2CUUEMNW",
       "type": "software_Package"
@@ -13887,6 +14109,7 @@
         }
       ],
       "name": "nothunks-0.3.1-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/nothunks-0.3.1/revision/2.cabal",
       "software_packageUrl": "pkg:generic/nothunks-0.3.1-r2.cabal-sha256.hg.pylmy1nocaN9eeiDd2wmMos34Le5DHjOKTDs68nPWw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-L3XIPCVCN4WXSZSM",
       "type": "software_Package"
@@ -14114,6 +14337,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/zopefoundation/zope.interface/archive/refs/tags/8.2.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hhOcg41lcdVWfmT2DqaYzzu4bJZYiG2y5boylJevBv6k.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LICQ7J6EB52PKRH4",
       "type": "software_Package"
@@ -14128,6 +14352,7 @@
         }
       ],
       "name": "wherefrom-compat-0.1.1.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/wherefrom-compat-0.1.1.1.tar.gz",
       "software_packageUrl": "pkg:generic/wherefrom-compat-0.1.1.1.tar.gz-sha256.hwePiLpcwpoOn.p8RQtZRNl9w0ZQr4qMcgABcNVsqes4g.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LIGPYFIH534HBPL5",
       "type": "software_Package"
@@ -14177,6 +14402,7 @@
         }
       ],
       "name": "imagesize-1.4.1.tar.gz",
+      "software_downloadLocation": "mirror://pypi/i/imagesize/imagesize-1.4.1.tar.gz",
       "software_packageUrl": "pkg:generic/imagesize-1.4.1.tar.gz-sha256.haRUERK.s7nLDVzFqSs2dvCy.p3zZrjnpR6XhGja0SXzUo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LN4EFUXA25B5EAAQ",
       "type": "software_Package"
@@ -14205,6 +14431,7 @@
         }
       ],
       "name": "async-2.2.6.tar.gz",
+      "software_downloadLocation": "mirror://hackage/async-2.2.6.tar.gz",
       "software_packageUrl": "pkg:generic/async-2.2.6.tar.gz-sha256.hFIVxvBiAAxASQdpsSRMdBzJOY6iO0oOoTe8ulpRZlhk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LON3IQOQ4HE67PZC",
       "type": "software_Package"
@@ -14314,6 +14541,7 @@
         }
       ],
       "name": "CVE-2019-13232-1.patch",
+      "software_downloadLocation": "https://github.com/madler/unzip/commit/41beb477c5744bc396fa1162ee0c14218ec12213.patch",
       "software_packageUrl": "pkg:generic/CVE-2019-13232-1.patch-sha256.hJFgv89zZJtGkbK.pFBvdpmdJSXdZuNvULJdylB5lpXxI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LVGNPYFIBUYNYUAF",
       "type": "software_Package"
@@ -14515,6 +14743,7 @@
         }
       ],
       "name": "os-string-2.0.10.tar.gz",
+      "software_downloadLocation": "mirror://hackage/os-string-2.0.10.tar.gz",
       "software_packageUrl": "pkg:generic/os-string-2.0.10.tar.gz-sha256.h9oK4phIaCfyCDOadmeM7.ppsalZUFZj7y.st6.pe5XHWqU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MAQGA2LNA3XVVFGV",
       "type": "software_Package"
@@ -14588,6 +14817,7 @@
         }
       ],
       "name": "trifecta-2.1.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/trifecta-2.1.4.tar.gz",
       "software_packageUrl": "pkg:generic/trifecta-2.1.4.tar.gz-sha256.h1NhCr9saMzCHRzjFhzNtC1N0HTeRgRImm7Uf8YbcnCg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MDRP7E7PUESG72NZ",
       "type": "software_Package"
@@ -14624,6 +14854,7 @@
         }
       ],
       "name": "Python-3.13.13.tar.xz",
+      "software_downloadLocation": "https://www.python.org/ftp/python/3.13.13/Python-3.13.13.tar.xz",
       "software_packageUrl": "pkg:generic/Python-3.13.13.tar.xz-sha256.hKrkf9AF4PMymT3XRDIgulXvf1g4r9acvhCF5Nym3inE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ME3JW4CYDFTQ4K3F",
       "type": "software_Package"
@@ -14689,6 +14920,7 @@
         }
       ],
       "name": "data-fix-0.3.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/data-fix-0.3.4.tar.gz",
       "software_packageUrl": "pkg:generic/data-fix-0.3.4.tar.gz-sha256.hjfBS0YwEernpIAU2qHmbWvOZfr7Luwkac4S2voQWqzc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MFTUHFIETZRI6YKB",
       "type": "software_Package"
@@ -14718,6 +14950,7 @@
         }
       ],
       "name": "haddock-library-1.11.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/haddock-library-1.11.0.tar.gz",
       "software_packageUrl": "pkg:generic/haddock-library-1.11.0.tar.gz-sha256.hfAdeyaN4sKLZ1gXnITUgHmx.s8xZWTyyXQRNYL0O.pogo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MHEWQSRS3ZEC4TL4",
       "type": "software_Package"
@@ -14732,6 +14965,7 @@
         }
       ],
       "name": "these-1.2.1-r3.cabal",
+      "software_downloadLocation": "mirror://hackage/these-1.2.1/revision/3.cabal",
       "software_packageUrl": "pkg:generic/these-1.2.1-r3.cabal-sha256.huhrsmlAusrP5DvJU9CBGijxOW5t.pgyTj3ccDUUPJJkA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MHQQLY6NU4XNIUTE",
       "type": "software_Package"
@@ -14855,6 +15089,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pallets/markupsafe/archive/refs/tags/3.0.3.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h2d64cItemqVM25WJIKrjExKz6v4UW2wVxM6phH1g1sE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MNM4RSNNBYMLSZK2",
       "type": "software_Package"
@@ -14942,6 +15177,7 @@
         }
       ],
       "name": "automake-1.16.5.tar.xz",
+      "software_downloadLocation": "mirror://gnu/automake/automake-1.16.5.tar.xz",
       "software_packageUrl": "pkg:generic/automake-1.16.5.tar.xz-sha256.h8B1YzW2dd.svcqetLvV6tGYgij9tz1veiAfX41rEYtGk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MSBDE5L5DCNBADSY",
       "type": "software_Package"
@@ -14956,6 +15192,7 @@
         }
       ],
       "name": "gmp-6.3.0.tar.bz2",
+      "software_downloadLocation": "mirror://gnu/gmp/gmp-6.3.0.tar.bz2",
       "software_packageUrl": "pkg:generic/gmp-6.3.0.tar.bz2-sha256.hrCghGnz7YJuuLiyNYFjWbI.spZDT3QM9v4uR7AA0cIMs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MSS5NZDMPBKRKAEN",
       "type": "software_Package"
@@ -15026,6 +15263,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://gitlab.gnome.org/api/v4/projects/GNOME%2Fgtk-doc/repository/archive.tar.gz?sha=1.35.1",
       "software_packageUrl": "pkg:generic/source-sha256.hEqU7lnBnOn3gR3hT95yjdTUb3cqX2XJK5UAKsFw2Q10.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MUMSNX6FDSPPF5FH",
       "type": "software_Package"
@@ -15112,6 +15350,7 @@
         }
       ],
       "name": "pytz-2026.1.post1.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/pytz/pytz-2026.1.post1.tar.gz",
       "software_packageUrl": "pkg:generic/pytz-2026.1.post1.tar.gz-sha256.hM3jd5qDD0mcZGCFCxW5gx.smvfpaAdvMarladcqA1juE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MY5GGHWTY6VVZFBA",
       "type": "software_Package"
@@ -15264,6 +15503,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/mesonbuild/meson/archive/refs/tags/1.10.2.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h3Zeavn6aW6920gM7yE73Ms1RPCP2GjX9IUL9YGmISfY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-N5V7SZITOBSURJ2V",
       "type": "software_Package"
@@ -15443,6 +15683,7 @@
         }
       ],
       "name": "pathspec-1.0.4.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/pathspec/pathspec-1.0.4.tar.gz",
       "software_packageUrl": "pkg:generic/pathspec-1.0.4.tar.gz-sha256.hAhDiroohqRN8DUcFeMsOWVr4ftqm6.sEv8XbxSgLg5kU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NEESH4YRBLN3NAI6",
       "type": "software_Package"
@@ -15494,6 +15735,7 @@
         }
       ],
       "name": "CVE-2019-13232-3.patch",
+      "software_downloadLocation": "https://github.com/madler/unzip/commit/6d351831be705cc26d897db44f878a978f4138fc.patch",
       "software_packageUrl": "pkg:generic/CVE-2019-13232-3.patch-sha256.h7p4mAYGQpRVXK2aiYRiRaEOqEAITGoa1xSdp3GY7ess.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NGCFGCKEU5FQMGPH",
       "type": "software_Package"
@@ -15679,6 +15921,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/libuv/libuv/archive/v1.52.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hY9Nph2LkT1qnOYTW3WCumWWwORnI4P7HxzBjUlGaL7M.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NMBJRJAZQ73J4LZI",
       "type": "software_Package"
@@ -15801,6 +16044,7 @@
         }
       ],
       "name": "blaze-builder-0.4.4.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/blaze-builder-0.4.4.1.tar.gz",
       "software_packageUrl": "pkg:generic/blaze-builder-0.4.4.1.tar.gz-sha256.hlx02BCisl6.paTlXk8sI2SfbO3Azl1ulNUg5mPzPqURM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NOQVKBGISOMWYBXW",
       "type": "software_Package"
@@ -15815,6 +16059,7 @@
         }
       ],
       "name": "js-jquery-3.7.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/js-jquery-3.7.1.tar.gz",
       "software_packageUrl": "pkg:generic/js-jquery-3.7.1.tar.gz-sha256.hoIf6AaHFL1OG1D9TVfZIQcWktWtTcgCQ1mtaoAv.psQY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NPBZMPASOBVM5WDK",
       "type": "software_Package"
@@ -15879,6 +16124,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pytest-dev/pytest-xdist/archive/refs/tags/v3.8.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h2x3znm92wo8DCshf5sYK0stnESg0oVXbxsWRAaTj6oQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NRX7RAOPKNGGND2A",
       "type": "software_Package"
@@ -15893,6 +16139,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/publicsuffix/list/archive/d333b72b39575da1ce6932b01d7c421a4107c620.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hLWnvQrIyj.piq96T1u9WEq.pHGOZ5sJYN5nCintEr6sBk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NVJXTY7LPBBVA246",
       "type": "software_Package"
@@ -15935,6 +16182,7 @@
         }
       ],
       "name": "semialign-1.3.1.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/semialign-1.3.1.1.tar.gz",
       "software_packageUrl": "pkg:generic/semialign-1.3.1.1.tar.gz-sha256.hjOH3Ln8llCLDr3KZbiZWykpdaYKMrZAFulcblEdgegg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NWX7GIP6VKGQUZZI",
       "type": "software_Package"
@@ -15949,6 +16197,7 @@
         }
       ],
       "name": "tasty-smallcheck-0.8.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/tasty-smallcheck-0.8.2.tar.gz",
       "software_packageUrl": "pkg:generic/tasty-smallcheck-0.8.2.tar.gz-sha256.h1cvXoqcQDkr9OqrAGo.pht4FPsHTZOu.sxtRJAtoflTzM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NWZMG2ED4CUCJMLR",
       "type": "software_Package"
@@ -15963,6 +16212,7 @@
         }
       ],
       "name": "test-framework-hunit-0.3.0.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/test-framework-hunit-0.3.0.3.tar.gz",
       "software_packageUrl": "pkg:generic/test-framework-hunit-0.3.0.3.tar.gz-sha256.hZnsGg2zU5S969i4QPzO8UbhMrLhBnL8dDHkmHNnUu0Y.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NZJLOLH7VADJTYKY",
       "type": "software_Package"
@@ -16130,6 +16380,7 @@
         }
       ],
       "name": "expect5.45.4.tar.gz",
+      "software_downloadLocation": "mirror://sourceforge/expect/Expect/5.45.4/expect5.45.4.tar.gz",
       "software_packageUrl": "pkg:generic/expect5.45.4.tar.gz-sha256.hSafag7C92fRtBKBN7sGcd2e7mjI.pQMR4H4nK92C5LDQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-O7RNAQEFGG34HNGP",
       "type": "software_Package"
@@ -16144,6 +16395,7 @@
         }
       ],
       "name": "vector-stream-0.1.0.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/vector-stream-0.1.0.1.tar.gz",
       "software_packageUrl": "pkg:generic/vector-stream-0.1.0.1.tar.gz-sha256.h0PUHM0vepUMaLwf1Jal.sKedlIsMiEPXebVorTx1Cv3w.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OAFRINS4KXL5YUIC",
       "type": "software_Package"
@@ -16426,6 +16678,7 @@
         }
       ],
       "name": "base64-bytestring-1.2.1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/base64-bytestring-1.2.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/base64-bytestring-1.2.1.0.tar.gz-sha256.h.p.sjtMO3eJx62BTUgIUMdjxsFX5WlavMf4urPa9.scSck.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OKHY2ECBVEJCL655",
       "type": "software_Package"
@@ -16556,6 +16809,7 @@
         }
       ],
       "name": "libedit-20251016-3.1.tar.gz",
+      "software_downloadLocation": "https://thrysoee.dk/editline/libedit-20251016-3.1.tar.gz",
       "software_packageUrl": "pkg:generic/libedit-20251016-3.1.tar.gz-sha256.hITYrAGU7v8HHH3GnV42ma1tSA1WdQxNNLddxnjE84EE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ONVCXDJ722U5VO6A",
       "type": "software_Package"
@@ -16585,6 +16839,7 @@
         }
       ],
       "name": "tagged-0.8.9.tar.gz",
+      "software_downloadLocation": "mirror://hackage/tagged-0.8.9.tar.gz",
       "software_packageUrl": "pkg:generic/tagged-0.8.9.tar.gz-sha256.hbarYjrtBS6alVtKJjSy.pdlDkJ2AQ46bu2Tna9UuVZ4Q.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OOCBKLVDWEVXMQEF",
       "type": "software_Package"
@@ -16635,6 +16890,7 @@
         }
       ],
       "name": "old-locale-1.0.0.7-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/old-locale-1.0.0.7/revision/2.cabal",
       "software_packageUrl": "pkg:generic/old-locale-1.0.0.7-r2.cabal-sha256.h.ppmL4sfgDNJqbpB1vqeQyq85Msqj6Ul61pvCA4DdaRE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OQIQLNKC7UMGM2DX",
       "type": "software_Package"
@@ -16765,6 +17021,7 @@
         }
       ],
       "name": "reducers-3.12.5.tar.gz",
+      "software_downloadLocation": "mirror://hackage/reducers-3.12.5.tar.gz",
       "software_packageUrl": "pkg:generic/reducers-3.12.5.tar.gz-sha256.hEJVh1My81mKD4FMYIUjG.sMxyvh0NgLDp5rBK2ZPPghw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OV4G4KOXVJ7POPME",
       "type": "software_Package"
@@ -16794,6 +17051,7 @@
         }
       ],
       "name": "pytest9-compat-2.patch",
+      "software_downloadLocation": "https://github.com/pytest-dev/pytest-xdist/commit/0c984478f39d7a01aa24c061f2581bdfd071cb6a.patch",
       "software_packageUrl": "pkg:generic/pytest9-compat-2.patch-sha256.hzxdKy7Z0m5UB4qwmdrolSYeBUTgMe2bQkkeX.pM0RRHs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OWA7QNGXZN7LZ6AO",
       "type": "software_Package"
@@ -16851,6 +17109,7 @@
         }
       ],
       "name": "file-5.47.tar.gz",
+      "software_downloadLocation": "https://astron.com/pub/file/file-5.47.tar.gz",
       "software_packageUrl": "pkg:generic/file-5.47.tar.gz-sha256.hRWcv7BZctMwTWKLXa11X0ih23Ll6sWlCesOFy.pHVWXo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OY3JRYLPKR4BAX6Q",
       "type": "software_Package"
@@ -17068,6 +17327,7 @@
         }
       ],
       "name": "code-page-0.2.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/code-page-0.2.1.tar.gz",
       "software_packageUrl": "pkg:generic/code-page-0.2.1.tar.gz-sha256.hsvkOGcYe2Kb.scpX38SPUqZE8eQ1M8sYCm8KZKT.sbKqo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-P4NYUJHV3II2AONK",
       "type": "software_Package"
@@ -17082,6 +17342,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/json-c/json-c/archive/json-c-0.18-20240915.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hUyMXr8Vc6kDOx1.slD2YKPiHdaTotXAF9ak0yQuwrSUA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-P5VEAURHSU4YY3F6",
       "type": "software_Package"
@@ -17147,6 +17408,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/stevegrubb/libcap-ng/archive/refs/tags/v0.9.3.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hanuPOBWp4Hlpo.pm6kYlSd2v7H3P7LQ9brZdq1lo7Po4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-P6WZKRYYKHNQQQQ4",
       "type": "software_Package"
@@ -17175,6 +17437,7 @@
         }
       ],
       "name": "uuid-types-1.0.6.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/uuid-types-1.0.6.1.tar.gz",
       "software_packageUrl": "pkg:generic/uuid-types-1.0.6.1.tar.gz-sha256.hnwDyeLlxEQS2rMFATZ8NRcEYO0mHz5wHQDvrwFwMMCQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PBQWKDZ3DP2LBODS",
       "type": "software_Package"
@@ -17203,6 +17466,7 @@
         }
       ],
       "name": "snowballstemmer-3.0.1.tar.gz",
+      "software_downloadLocation": "mirror://pypi/s/snowballstemmer/snowballstemmer-3.0.1.tar.gz",
       "software_packageUrl": "pkg:generic/snowballstemmer-3.0.1.tar.gz-sha256.hbV7u7I6fhNTVa4R2krrPebwsjpDH.pAykRE.s4tvLlKJU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PD6IQLACBHZGMN5K",
       "type": "software_Package"
@@ -17255,6 +17519,7 @@
       "name": "p11-kit",
       "software_packageUrl": "pkg:generic/p11-kit@0.26.2",
       "software_packageVersion": "0.26.2",
+      "software_sourceInfo": "git+https://github.com/p11-glue/p11-kit.git@refs/tags/0.26.2",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PERTJ5AY63XTKTTB",
       "type": "software_Package"
     },
@@ -17304,6 +17569,7 @@
         }
       ],
       "name": "old-time-1.1.1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/old-time-1.1.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/old-time-1.1.1.0.tar.gz-sha256.hLEQNO8JoDe.sLN5pLXmRpxd.sx00ADdKrGBSPO94w9lqs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PFTKRFMCS6COKPQB",
       "type": "software_Package"
@@ -17339,6 +17605,7 @@
         }
       ],
       "name": "gcc-15.patch",
+      "software_downloadLocation": "https://github.com/westes/flex/commit/bf254c75b1e0d2641ebbd7fc85fb183f36a62ea7.patch",
       "software_packageUrl": "pkg:generic/gcc-15.patch-sha256.hBnv23M2K1Qf7pEaEz0ueSNzTCdjMTDiMm.pH7JaxUISs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PHGFSDCV64V2IQ7M",
       "type": "software_Package"
@@ -17390,6 +17657,7 @@
         }
       ],
       "name": "assoc-1.1.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/assoc-1.1.1.tar.gz",
       "software_packageUrl": "pkg:generic/assoc-1.1.1.tar.gz-sha256.hIxFJt.s7wn13ZWvUSKGFeOyltvQ.pq3soFPgZEpLE7D.sY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PJMJLE7UL66V4ZL4",
       "type": "software_Package"
@@ -17404,6 +17672,7 @@
         }
       ],
       "name": "ansi-wl-pprint-1.0.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/ansi-wl-pprint-1.0.2.tar.gz",
       "software_packageUrl": "pkg:generic/ansi-wl-pprint-1.0.2.tar.gz-sha256.hI04YE6F45UZtEhY14ZDm.szPqbwnEUSATiCTV3navJ0c.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PKZUGW5QFIJ5TUX6",
       "type": "software_Package"
@@ -17418,6 +17687,7 @@
         }
       ],
       "name": "hatchling-1.29.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/h/hatchling/hatchling-1.29.0.tar.gz",
       "software_packageUrl": "pkg:generic/hatchling-1.29.0.tar.gz-sha256.heTwxgW2VLO5AW4NIjOABxxnzJdnNpp8fxM11BSdkDqY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PLDPMEYHWAKFMEC6",
       "type": "software_Package"
@@ -17462,6 +17732,7 @@
         }
       ],
       "name": "libev-4.33.tar.gz",
+      "software_downloadLocation": "https://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz",
       "software_packageUrl": "pkg:generic/libev-4.33.tar.gz-sha256.hUH63uNEBX77FuTXzTr7RW.sNGvtBKEauCuO7oSMQgWuo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PPCTIHPE2XFROXRQ",
       "type": "software_Package"
@@ -17541,6 +17812,7 @@
         }
       ],
       "name": "sphinxcontrib_serializinghtml-2.0.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/s/sphinxcontrib_serializinghtml/sphinxcontrib_serializinghtml-2.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/sphinxcontrib_serializinghtml-2.0.0.tar.gz-sha256.h6dkSgn.pHLAKQF6U.sDvIYCzJ8P3.sSPIcin3qOi3ADHU0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PS2HX7SCDHYQIDUN",
       "type": "software_Package"
@@ -17634,6 +17906,7 @@
         }
       ],
       "name": "generically-0.1.1-r5.cabal",
+      "software_downloadLocation": "mirror://hackage/generically-0.1.1/revision/5.cabal",
       "software_packageUrl": "pkg:generic/generically-0.1.1-r5.cabal-sha256.hf.pQVI01FXrWEAkd4mayWnkY3TQuqsJ6N3TGfY5Sko2k.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PU2HQUJJMCYDYHZG",
       "type": "software_Package"
@@ -17707,6 +17980,7 @@
         }
       ],
       "name": "primitive-0.9.1.0-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/primitive-0.9.1.0/revision/1.cabal",
       "software_packageUrl": "pkg:generic/primitive-0.9.1.0-r1.cabal-sha256.hdWsiLHFbxu9bqB.pmnNuqIMXFO.ptvFvF0uLrMk6bSOfA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PZEBSRBUL7RCREJK",
       "type": "software_Package"
@@ -17721,6 +17995,7 @@
         }
       ],
       "name": "generic-deriving-1.14.7.tar.gz",
+      "software_downloadLocation": "mirror://hackage/generic-deriving-1.14.7.tar.gz",
       "software_packageUrl": "pkg:generic/generic-deriving-1.14.7.tar.gz-sha256.hyRYgpckVm7163eGDUg6sIsLQb04Hbf.sk4LhlAZHl2Mo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Q2YP57GRJUAATRFH",
       "type": "software_Package"
@@ -17763,6 +18038,7 @@
         }
       ],
       "name": "root.hints",
+      "software_downloadLocation": "https://gitlab.nic.cz/knot/knot-resolver/raw/d9c96ae96f066a85d7/etc/root.hints",
       "software_packageUrl": "pkg:generic/root.hints-sha256.h4lG.suPnNHBNIZ.sXIeDM1w3iukrpeW0JIjTnGSwkJ8U4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Q3UKGXI6QBFTQVET",
       "type": "software_Package"
@@ -17777,6 +18053,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pypa/flit/archive/3.12.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hoWV.pKK22.piK99iCOCKCV1OCLq2Ef1bcYRKXT5GHwiL8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Q7LWJI55ZV3JXMVM",
       "type": "software_Package"
@@ -17935,6 +18212,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://gitlab.gnome.org/api/v4/projects/GNOME%2Flibxml2/repository/archive.tar.gz?sha=refs%2Ftags%2Fv2.15.2",
       "software_packageUrl": "pkg:generic/source-sha256.hk5dZ75D.sBOouYAjrof9Jm2lY29XZhOqS1kudDGmGY9Q.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QFU7SL7LJXZEFHWC",
       "type": "software_Package"
@@ -17971,6 +18249,7 @@
         }
       ],
       "name": "strict-0.5.1-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/strict-0.5.1/revision/1.cabal",
       "software_packageUrl": "pkg:generic/strict-0.5.1-r1.cabal-sha256.hWMNzt8d0jLtKWmyMFQc.smaHBCpqbtolKwz9Dpc25AfI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QHHHHKUAWI5XGWST",
       "type": "software_Package"
@@ -18072,6 +18351,7 @@
         }
       ],
       "name": "ghc-9.8.4-x86_64-deb11-linux.tar.xz",
+      "software_downloadLocation": "https://downloads.haskell.org/ghc/9.8.4/ghc-9.8.4-x86_64-deb11-linux.tar.xz",
       "software_packageUrl": "pkg:generic/ghc-9.8.4-x86_64-deb11-linux.tar.xz-sha256.hrxUduGgrjHY.sWkT5YPZUU9eUyVtg8VGryC2978vm.pK0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QL3F2OPMAECNYFF4",
       "type": "software_Package"
@@ -18086,6 +18366,7 @@
         }
       ],
       "name": "gnutls-3.8.13.tar.xz",
+      "software_downloadLocation": "mirror://gnupg/gnutls/v3.8/gnutls-3.8.13.tar.xz",
       "software_packageUrl": "pkg:generic/gnutls-3.8.13.tar.xz-sha256.h.s.p2Owb8JwkJtTxSq43feR1O1PlN9aF5gTpmosWypyX4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QLR5S3EPGTO7ESGZ",
       "type": "software_Package"
@@ -18287,6 +18568,7 @@
         }
       ],
       "name": "QuickCheck-2.15.0.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/QuickCheck-2.15.0.1.tar.gz",
       "software_packageUrl": "pkg:generic/QuickCheck-2.15.0.1.tar.gz-sha256.ho7IhbduvSB28gkFLYSD4tybZads.sC1HyCnpFQl7zbn8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QTR3IXXFNEV6ANQS",
       "type": "software_Package"
@@ -18301,6 +18583,7 @@
         }
       ],
       "name": "smallcheck-1.2.1.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/smallcheck-1.2.1.1.tar.gz",
       "software_packageUrl": "pkg:generic/smallcheck-1.2.1.1.tar.gz-sha256.h4EMiUAQHGEDRoT86LW.p6U3FEGI55lal4q4IIbOFY.sh8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QUNLZM52GM4GWEG4",
       "type": "software_Package"
@@ -18403,6 +18686,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/mypyc/librt/archive/refs/tags/v0.9.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hRZGaOq8hmkwekCs1fKshDrx3vmHdJl.swI3IO9ZLH5rc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QXWZORWSJ4GT4VCQ",
       "type": "software_Package"
@@ -18460,6 +18744,7 @@
         }
       ],
       "name": "ChasingBottoms-1.3.1.17.tar.gz",
+      "software_downloadLocation": "mirror://hackage/ChasingBottoms-1.3.1.17.tar.gz",
       "software_packageUrl": "pkg:generic/ChasingBottoms-1.3.1.17.tar.gz-sha256.hr3rC.sIsVSEwe5B1HVru.pjikGVfMioBhwSz22cNqrIxw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R327GYNO2XSBNXII",
       "type": "software_Package"
@@ -18489,6 +18774,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/libarchive/libarchive/archive/v3.8.7.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hLpD.plE.p0PZi.s3nYDVPXhBQL9A7mvqelOzRLskVtg9Y0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R4FWE23VQFCTX46G",
       "type": "software_Package"
@@ -18518,6 +18804,7 @@
         }
       ],
       "name": "e230f474b87134e8c6c85b630084c612057f253e.patch",
+      "software_downloadLocation": "https://github.com/google/brotli/commit/e230f474b87134e8c6c85b630084c612057f253e.patch",
       "software_packageUrl": "pkg:generic/e230f474b87134e8c6c85b630084c612057f253e.patch-sha256.hQERl8RHJz7tFr.p.phZIYwdj1.sogPpjArC.pia8S.sbWxKk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R4R6VFYPR27RR2NZ",
       "type": "software_Package"
@@ -18532,6 +18819,7 @@
         }
       ],
       "name": "readline-8.3.tar.gz",
+      "software_downloadLocation": "mirror://gnu/readline/readline-8.3.tar.gz",
       "software_packageUrl": "pkg:generic/readline-8.3.tar.gz-sha256.h.slODIERngozUle6NHTwDen66E4nCK8agQfYnl2.pQYcw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R53FTNEYVVL3SDPY",
       "type": "software_Package"
@@ -18664,6 +18952,7 @@
         }
       ],
       "name": "optparse-applicative-0.18.1-allow-QuickCheck-2.15.patch",
+      "software_downloadLocation": "https://github.com/pcapriotti/optparse-applicative/commit/2c2a39ed53e6339d8dc717efeb7d44f4c2b69cab.patch",
       "software_packageUrl": "pkg:generic/optparse-applicative-0.18.1-allow-QuickCheck-2.15.patch-sha256.h198TfBUR3ygPpvKPvtH69UmbMmoRagmzr9UURPr6Kj4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RBIPAB2ZCZF32RO3",
       "type": "software_Package"
@@ -18721,6 +19010,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/python/typing_extensions/archive/refs/tags/4.15.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h3oAlwvNSJ7NhPiHekh4SJI99cPFh29KCCR9314QzsvQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RDB22S5QZ2B24ZXR",
       "type": "software_Package"
@@ -18735,6 +19025,7 @@
         }
       ],
       "name": "text-iso8601-0.1.1.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/text-iso8601-0.1.1.1.tar.gz",
       "software_packageUrl": "pkg:generic/text-iso8601-0.1.1.1.tar.gz-sha256.hYDto0RNek3Pt8sIKmT6iJrnx.ssERicGyuKZHJizriz4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RDBAPXZZUTND72DM",
       "type": "software_Package"
@@ -18764,6 +19055,7 @@
         }
       ],
       "name": "quickcheck-instances-0.3.33-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/quickcheck-instances-0.3.33/revision/1.cabal",
       "software_packageUrl": "pkg:generic/quickcheck-instances-0.3.33-r1.cabal-sha256.hcJ.pxJ5nxtbABEhUBaNu1c2jObHQewB8jz0T553Q.pbPY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-REDLGZRAR6VBJLMM",
       "type": "software_Package"
@@ -18928,6 +19220,7 @@
         }
       ],
       "name": "pexpect-4.9.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/pexpect/pexpect-4.9.0.tar.gz",
       "software_packageUrl": "pkg:generic/pexpect-4.9.0.tar.gz-sha256.h7n1BEj88mREFDqLC2sEHVo3EOy07DHVXozISw5jq0w8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RMCXKSPYETWJL46S",
       "type": "software_Package"
@@ -18942,6 +19235,7 @@
         }
       ],
       "name": "th-abstraction-0.7.2.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/th-abstraction-0.7.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/th-abstraction-0.7.2.0.tar.gz-sha256.hlGZUvNjqLf99AFgGGGGoyJi.pmt3yDJLTz6U7Z55zdiI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RMLSOFDQHUAXTZ3W",
       "type": "software_Package"
@@ -18971,6 +19265,7 @@
         }
       ],
       "name": "QuickCheck-2.15.0.1-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/QuickCheck-2.15.0.1/revision/1.cabal",
       "software_packageUrl": "pkg:generic/QuickCheck-2.15.0.1-r1.cabal-sha256.hDP0ze7nm.p.sCSVb0ku0mKFW8dm81GU5ashleyUDS57jE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RNDN7G42OCXWHEYP",
       "type": "software_Package"
@@ -19050,6 +19345,7 @@
         }
       ],
       "name": "jailbreak-cabal-1.4.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/jailbreak-cabal-1.4.1.tar.gz",
       "software_packageUrl": "pkg:generic/jailbreak-cabal-1.4.1.tar.gz-sha256.hvVDyM4.pdMPB5XgyXBWPurGw1xT51qS5GMrqYVBEw1GA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ROJL3FHTDSTXZKHP",
       "type": "software_Package"
@@ -19164,6 +19460,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/sphinx-doc/alabaster/archive/refs/tags/1.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.haQEhFZUJs0TptfpjQVoIVI9V9a.pxKjE2OfStSaJKHGI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RVU2KI5JLRK73GCX",
       "type": "software_Package"
@@ -19178,6 +19475,7 @@
         }
       ],
       "name": "elfutils-0.194.tar.bz2",
+      "software_downloadLocation": "https://sourceware.org/elfutils/ftp/0.194/elfutils-0.194.tar.bz2",
       "software_packageUrl": "pkg:generic/elfutils-0.194.tar.bz2-sha256.hCeL.sAz05uqiziKLX.p8U5C.s3pmuO3xnx9qvdDP7zw8B4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RWDVTN5NEQGKITT7",
       "type": "software_Package"
@@ -19272,6 +19570,7 @@
         }
       ],
       "name": "silently-1.2.5.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/silently-1.2.5.4.tar.gz",
       "software_packageUrl": "pkg:generic/silently-1.2.5.4.tar.gz-sha256.hXiNgiWXBAEsAfcdxYEmYrm2lLBV3IwC.s3eMNi1ISdG4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RZ3Y4QC2MBRHFL7C",
       "type": "software_Package"
@@ -19344,6 +19643,7 @@
         }
       ],
       "name": "freezegun-1.5.5.tar.gz",
+      "software_downloadLocation": "mirror://pypi/f/freezegun/freezegun-1.5.5.tar.gz",
       "software_packageUrl": "pkg:generic/freezegun-1.5.5.tar.gz-sha256.hrHdCpsxsJaLDXpKS39VUuJe1F9LewmiRoujevyBcuUo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-S44BT3M2QZ6BVZ2Q",
       "type": "software_Package"
@@ -19443,6 +19743,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/lxml/lxml/archive/refs/tags/lxml-6.0.2.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hRi5SzfQJFghRcMAKHS5QKD365OZlio895fSlumq83vs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SAYQPAIL2T6L55WW",
       "type": "software_Package"
@@ -19487,6 +19788,7 @@
         }
       ],
       "name": "libffi-3.5.2.tar.gz",
+      "software_downloadLocation": "https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz",
       "software_packageUrl": "pkg:generic/libffi-3.5.2.tar.gz-sha256.h86MIKiOzfCk6T80QUxR7Nx8v.pR.pn6hsqUuM1Z2usgtw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SDEH3RFX5IYAYSKT",
       "type": "software_Package"
@@ -19501,6 +19803,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/hukkin/tomli/archive/2.4.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hPVYwCUGQSuCe5WMeOBJpGXiJ4keVllzg9H3y.pIl.pNr8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SDYYAO6VEN5XA4EY",
       "type": "software_Package"
@@ -19530,6 +19833,7 @@
         }
       ],
       "name": "data-fix-0.3.4-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/data-fix-0.3.4/revision/2.cabal",
       "software_packageUrl": "pkg:generic/data-fix-0.3.4-r2.cabal-sha256.hIANgxJzIHPi4u99Jr9Su4D.s.s0J0zlbCAp.pfGX88B0xM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SF5LJNZYSBV73FUZ",
       "type": "software_Package"
@@ -19544,6 +19848,7 @@
         }
       ],
       "name": "enable-ignore-build-platform-mismatch.patch",
+      "software_downloadLocation": "https://gitlab.haskell.org/ghc/ghc/-/commit/4ee094d46effd06093090fcba70f0a80d2a57e6c.patch",
       "software_packageUrl": "pkg:generic/enable-ignore-build-platform-mismatch.patch-sha256.hL3FQvcm9QB59BOiR2g5.sHACAufIG08HiT53EIOjj64g.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SFINO7XEOPKQBB5X",
       "type": "software_Package"
@@ -19558,6 +19863,7 @@
         }
       ],
       "name": "types_setuptools-80.9.0.20251223.tar.gz",
+      "software_downloadLocation": "mirror://pypi/t/types_setuptools/types_setuptools-80.9.0.20251223.tar.gz",
       "software_packageUrl": "pkg:generic/types_setuptools-80.9.0.20251223.tar.gz-sha256.h00EQWa4vXwOYUhfYasYITv6iyenKzV8Iae.pVDzCBabI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SFNTLLP6Z2V3T5MF",
       "type": "software_Package"
@@ -19572,6 +19878,7 @@
         }
       ],
       "name": "kan-extensions-5.2.8.tar.gz",
+      "software_downloadLocation": "mirror://hackage/kan-extensions-5.2.8.tar.gz",
       "software_packageUrl": "pkg:generic/kan-extensions-5.2.8.tar.gz-sha256.h922qRKgNQjyEnV.p1UuKiCx4vR7Y4yImjTLGlvRqwjSE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SGCU3VWMM6IPB5QV",
       "type": "software_Package"
@@ -19673,6 +19980,7 @@
         }
       ],
       "name": "gdbm-1.26.tar.gz",
+      "software_downloadLocation": "mirror://gnu/gdbm/gdbm-1.26.tar.gz",
       "software_packageUrl": "pkg:generic/gdbm-1.26.tar.gz-sha256.haiRQShTeSnRBA9y5Nr6Xbfb76IzP8mBl5UwcR5RvSl4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SIIZ6RJ3CMJDVPX4",
       "type": "software_Package"
@@ -19687,6 +19995,7 @@
         }
       ],
       "name": "utf8-string-1.0.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/utf8-string-1.0.2.tar.gz",
       "software_packageUrl": "pkg:generic/utf8-string-1.0.2.tar.gz-sha256.h7kjeradgA3ByjEFWywAkQd53DQEhrjOmgTmp7ZwZsJo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SJLV5DCFL6OV5PC6",
       "type": "software_Package"
@@ -19767,6 +20076,7 @@
         }
       ],
       "name": "40c1ccf3432a6787be1801ced721540e34c6cd87.patch",
+      "software_downloadLocation": "https://github.com/pexpect/ptyprocess/commit/40c1ccf3432a6787be1801ced721540e34c6cd87.patch",
       "software_packageUrl": "pkg:generic/40c1ccf3432a6787be1801ced721540e34c6cd87.patch-sha256.hIemngBqBq3QRCmVscWtsuXHiFgvTOJIIB9SyAvsqHd0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SLS3YA3NQ2DGAO6H",
       "type": "software_Package"
@@ -19795,6 +20105,7 @@
         }
       ],
       "name": "hatch_vcs-0.5.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/h/hatch_vcs/hatch_vcs-0.5.0.tar.gz",
       "software_packageUrl": "pkg:generic/hatch_vcs-0.5.0.tar.gz-sha256.hA5X6EmlANAIVCQw0Siv04qd7y.pfaqxb0Gze5jJWAn.sk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SMPBIAQRKSIV4NHF",
       "type": "software_Package"
@@ -19904,6 +20215,7 @@
         }
       ],
       "name": "adjunctions-4.4.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/adjunctions-4.4.4.tar.gz",
       "software_packageUrl": "pkg:generic/adjunctions-4.4.4.tar.gz-sha256.hIUCNm9PHQzG1V86GKB5ZL1ZGbhnSp.pPzfkBlIDpmMUU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SQHXZICI7KHVAHU4",
       "type": "software_Package"
@@ -19940,6 +20252,7 @@
         }
       ],
       "name": "time-compat-1.9.9-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/time-compat-1.9.9/revision/1.cabal",
       "software_packageUrl": "pkg:generic/time-compat-1.9.9-r1.cabal-sha256.hDCkeDDyH7giyUXEHtikBsQKgQNyGIDtTvfB6lv9WMuA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SS6HTRLJDSIH66JO",
       "type": "software_Package"
@@ -19982,6 +20295,7 @@
         }
       ],
       "name": "docbook-xml-4.5.zip",
+      "software_downloadLocation": "https://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip",
       "software_packageUrl": "pkg:generic/docbook-xml-4.5.zip-sha256.hTk4DeiuDyYxslIGDkNS90.sbhD27GLdeRiFlOJhkNx7Q.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SSJRKDGRKKEUIO53",
       "type": "software_Package"
@@ -20092,6 +20406,7 @@
         }
       ],
       "name": "blaze-markup-0.8.3.0-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/blaze-markup-0.8.3.0/revision/2.cabal",
       "software_packageUrl": "pkg:generic/blaze-markup-0.8.3.0-r2.cabal-sha256.hAn8hi4HSinwKM7k9RWxOWqktFF6dzuFINPutc6Oa1.pQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SY3DE3BPJIK7J5WM",
       "type": "software_Package"
@@ -20106,6 +20421,7 @@
         }
       ],
       "name": "ghc-9.4-llvm-support-20.patch",
+      "software_downloadLocation": "https://gitlab.haskell.org/ghc/ghc/-/commit/ca03226db2db2696460bfcb8035dd3268d546706.patch",
       "software_packageUrl": "pkg:generic/ghc-9.4-llvm-support-20.patch-sha256.h7cO049DQtJHUAhwPujoFO.pzQtXsMg6VFTHtMDwenrKs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SYA5VV4NYKBNCQCZ",
       "type": "software_Package"
@@ -20171,6 +20487,7 @@
         }
       ],
       "name": "regex-posix-0.96.0.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/regex-posix-0.96.0.2.tar.gz",
       "software_packageUrl": "pkg:generic/regex-posix-0.96.0.2.tar.gz-sha256.hflcEYMNcXe7FTRukYwXdtGecfUquhPYx3Qxh2q6qgVA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SZPHYLIV34BE6UH6",
       "type": "software_Package"
@@ -20200,6 +20517,7 @@
         }
       ],
       "name": "patchutils-0.4.2.tar.xz",
+      "software_downloadLocation": "https://cyberelk.net/tim/data/patchutils/stable/patchutils-0.4.2.tar.xz",
       "software_packageUrl": "pkg:generic/patchutils-0.4.2.tar.xz-sha256.hiHWwll.sjPeYriQ9s15O.pf6.skGk5VLtv2QfH.p1eu.sRe0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T2QCUKFUXKURBKUR",
       "type": "software_Package"
@@ -20214,6 +20532,7 @@
         }
       ],
       "name": "hspec-golden-0.2.2.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/hspec-golden-0.2.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/hspec-golden-0.2.2.0.tar.gz-sha256.hevEcb1zK.pnYtYBudA6FhVJLUjRFJF2eQB.smNjihN9vI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T3PC4PLBXXEAWBOL",
       "type": "software_Package"
@@ -20242,6 +20561,7 @@
         }
       ],
       "name": "f9deba0c8404529772468d6dd01389f7dbfa5ba9.patch",
+      "software_downloadLocation": "https://github.com/numactl/numactl/commit/f9deba0c8404529772468d6dd01389f7dbfa5ba9.patch",
       "software_packageUrl": "pkg:generic/f9deba0c8404529772468d6dd01389f7dbfa5ba9.patch-sha256.hTmWfD99YaSIHA5PSsWHE91GSsdsVgVU.pqIow7LOwOGw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T4EIQEG2SOTAT6DC",
       "type": "software_Package"
@@ -20277,6 +20597,7 @@
         }
       ],
       "name": "happy-lib-2.1.7.tar.gz",
+      "software_downloadLocation": "mirror://hackage/happy-lib-2.1.7.tar.gz",
       "software_packageUrl": "pkg:generic/happy-lib-2.1.7.tar.gz-sha256.h9iWyxKPytfr6PFYPqHV1AsyN6D2ahMJpL8lDOAkA8mk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T55V4MHHMF2YSNQ5",
       "type": "software_Package"
@@ -20376,6 +20697,7 @@
         }
       ],
       "name": "CUnit-2.1-3.tar.bz2",
+      "software_downloadLocation": "mirror://sourceforge/cunit/CUnit/2.1-3/CUnit-2.1-3.tar.bz2",
       "software_packageUrl": "pkg:generic/CUnit-2.1-3.tar.bz2-sha256.h9bKRN.shFuwi3fsYFhP23KLTljxAj5vJJpGTvpJpA8hQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TGNA3ZGFWVXUE7P2",
       "type": "software_Package"
@@ -20419,6 +20741,7 @@
         }
       ],
       "name": "883630f76cbf512003b81de25cd96cb75c6cf0f9.patch",
+      "software_downloadLocation": "https://github.com/libevent/libevent/commit/883630f76cbf512003b81de25cd96cb75c6cf0f9.patch",
       "software_packageUrl": "pkg:generic/883630f76cbf512003b81de25cd96cb75c6cf0f9.patch-sha256.hVPJqJUAovw6V92jpqIXkIR1xYGbxIWxaHr8cePWI2SU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TIVKS7B2PMWBZM2F",
       "type": "software_Package"
@@ -20462,6 +20785,7 @@
         }
       ],
       "name": "hspec-2.11.17.tar.gz",
+      "software_downloadLocation": "mirror://hackage/hspec-2.11.17.tar.gz",
       "software_packageUrl": "pkg:generic/hspec-2.11.17.tar.gz-sha256.hOeTIw7sr4IpMYXR93.sA2XGoH78YYWzqAp7iPu2vsl1Y.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TKKWXZVLDOXXLSEB",
       "type": "software_Package"
@@ -20505,6 +20829,7 @@
         }
       ],
       "name": "haskell-lexer-1.2.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/haskell-lexer-1.2.1.tar.gz",
       "software_packageUrl": "pkg:generic/haskell-lexer-1.2.1.tar.gz-sha256.hnXbhUoEGsbMubkZSZOOTgcpLRQtypLUzHn5RJ2QKGkE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TMVPJJAS5V6FUSIM",
       "type": "software_Package"
@@ -20548,6 +20873,7 @@
         }
       ],
       "name": "heaps-0.4.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/heaps-0.4.1.tar.gz",
       "software_packageUrl": "pkg:generic/heaps-0.4.1.tar.gz-sha256.hh2OkZjotCzyRJAClR9Zq4RtGqVRAO2dHJyFI6VCqA4I.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TPV2OFPDFR7XIZSM",
       "type": "software_Package"
@@ -20821,6 +21147,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/zopefoundation/zope.event/archive/refs/tags/6.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hugyHPqqFcObgldThkkUQgZnl1fVEcXYFnXyAxNwUFIE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-U7IKU2A4VLLZSBHV",
       "type": "software_Package"
@@ -20857,6 +21184,7 @@
         }
       ],
       "name": "ncurses-6.6.tar.gz",
+      "software_downloadLocation": "https://invisible-island.net/archives/ncurses/ncurses-6.6.tar.gz",
       "software_packageUrl": "pkg:generic/ncurses-6.6.tar.gz-sha256.hNVtMu.p2ICwOBoExGYXt2VuNiWF1S6c.pEpn4gCbdJ.sxE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UAUI6MT7Q2TSDO34",
       "type": "software_Package"
@@ -20886,6 +21214,7 @@
         }
       ],
       "name": "xml-1.3.14.tar.gz",
+      "software_downloadLocation": "mirror://hackage/xml-1.3.14.tar.gz",
       "software_packageUrl": "pkg:generic/xml-1.3.14.tar.gz-sha256.hMtGhqfIaWRdthGl.slq46E6AZhCDj5PHEirurfSQlAT0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UCPRHZ4P6JKT2253",
       "type": "software_Package"
@@ -21015,6 +21344,7 @@
         }
       ],
       "name": "gettext-1.0.tar.gz",
+      "software_downloadLocation": "mirror://gnu/gettext/gettext-1.0.tar.gz",
       "software_packageUrl": "pkg:generic/gettext-1.0.tar.gz-sha256.hhdmbecmBpASHTALgNCF2z3XHaY4rUf5BAxz2Um2XTxo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UH3KDCSGY24WFMZL",
       "type": "software_Package"
@@ -21051,6 +21381,7 @@
         }
       ],
       "name": "sphinxcontrib_applehelp-2.0.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/s/sphinxcontrib_applehelp/sphinxcontrib_applehelp-2.0.0.tar.gz",
       "software_packageUrl": "pkg:generic/sphinxcontrib_applehelp-2.0.0.tar.gz-sha256.hLynvMxc1zpWO.pkc0hz8ISUGXCJTGCQQIsHnGGy4cBtE.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UHIU6BB5NYB4YIUW",
       "type": "software_Package"
@@ -21065,6 +21396,7 @@
         }
       ],
       "name": "0001-Add-prototype-to-function-definitions.patch",
+      "software_downloadLocation": "https://sourceforge.net/p/expect/patches/24/attachment/0001-Add-prototype-to-function-definitions.patch",
       "software_packageUrl": "pkg:generic/0001-Add-prototype-to-function-definitions.patch-sha256.hX2Vv6VVM3KjmBHo2ukVWe5YTVXRmqe.s.sKw2kr73OpZs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UI7FWR43626PHXOY",
       "type": "software_Package"
@@ -21079,6 +21411,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/facebook/zstd/archive/v1.5.7.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.htNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UIJ5N3NCSZ6QIJ5T",
       "type": "software_Package"
@@ -21150,6 +21483,7 @@
         }
       ],
       "name": "libpsl-0.21.5.tar.lz",
+      "software_downloadLocation": "https://github.com/rockdaboot/libpsl/releases/download/0.21.5/libpsl-0.21.5.tar.lz",
       "software_packageUrl": "pkg:generic/libpsl-0.21.5.tar.lz-sha256.hmp9qjG7bplDPnqVUdc0XLdKEhzFoBOnHMgLZdXLNOi0.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ULVZUCQIJBWAJXPB",
       "type": "software_Package"
@@ -21164,6 +21498,7 @@
         }
       ],
       "name": "ghc-paths-0.1.0.12.tar.gz",
+      "software_downloadLocation": "mirror://hackage/ghc-paths-0.1.0.12.tar.gz",
       "software_packageUrl": "pkg:generic/ghc-paths-0.1.0.12.tar.gz-sha256.hbsvmdtBzyweYnGHOTFcJxOZ8vv3S1VpAlfk4i2.sixIQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UM3Z6I5OHNPQVPBB",
       "type": "software_Package"
@@ -21178,6 +21513,7 @@
         }
       ],
       "name": "vector-0.13.2.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/vector-0.13.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/vector-0.13.2.0.tar.gz-sha256.hKPIDx4bL.pKxtw.s6jN47DbzQXPVBftKHdYPyEGK2RxCM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UM4LKVUU4Z53OTUP",
       "type": "software_Package"
@@ -21383,6 +21719,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pypa/build/archive/refs/tags/1.4.4.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hQprU0sXL6FL0rSVJwu8cYpcPlnYKzKAbkyDaTV778js.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UY32OU4FQEMXIXJG",
       "type": "software_Package"
@@ -21412,6 +21749,7 @@
         }
       ],
       "name": "js-flot-0.8.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/js-flot-0.8.3.tar.gz",
       "software_packageUrl": "pkg:generic/js-flot-0.8.3.tar.gz-sha256.hG6LyprjYXadsQfUmyYkDy7EH.pGQuUGwHLB5.pPCD.pXno.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-V3L27MCVPQ5FGBZQ",
       "type": "software_Package"
@@ -21492,6 +21830,7 @@
         }
       ],
       "name": "scientific-0.3.8.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/scientific-0.3.8.1.tar.gz",
       "software_packageUrl": "pkg:generic/scientific-0.3.8.1.tar.gz-sha256.hrTeBvhSd.sHk25i65w6143tDpmFtNrhbS9i2bqVfM3P4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-V7437NMTF656DREX",
       "type": "software_Package"
@@ -21613,6 +21952,7 @@
         }
       ],
       "name": "logict-0.8.2.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/logict-0.8.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/logict-0.8.2.0.tar.gz-sha256.hGJrm.pByOaNlOz4zmRAlU48fKPyN5c.p9mAIlu6PxGq.p8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VGSHJT76Q4VEVSGV",
       "type": "software_Package"
@@ -21669,6 +22009,7 @@
         }
       ],
       "name": "mockery-0.3.5.tar.gz",
+      "software_downloadLocation": "mirror://hackage/mockery-0.3.5.tar.gz",
       "software_packageUrl": "pkg:generic/mockery-0.3.5.tar.gz-sha256.ht6HtrNPTLcfw4oxnh3IJ08o1UdHaGG9kRfgl80d91yc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VLMONQKKPGLT5SYV",
       "type": "software_Package"
@@ -21764,6 +22105,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/benjaminp/six/archive/refs/tags/1.17.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.htz99C.pdz5xJhunoC45bl0NdSdV9NXWya9ti48Z.sKaHY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VRKKAJD4HZARNHGU",
       "type": "software_Package"
@@ -21814,6 +22156,7 @@
         }
       ],
       "name": "ngtcp2-1.22.1.tar.bz2",
+      "software_downloadLocation": "https://github.com/ngtcp2/ngtcp2/releases/download/v1.22.1/ngtcp2-1.22.1.tar.bz2",
       "software_packageUrl": "pkg:generic/ngtcp2-1.22.1.tar.bz2-sha256.hhzVHltWssZvzEMt3vgS9IgDDImWmvnyUuGMeJsjpPKQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VSU7IHCDZ23YEAH3",
       "type": "software_Package"
@@ -21829,6 +22172,7 @@
       ],
       "name": "source",
       "software_packageUrl": "pkg:generic/source-sha256.hqFanbp0KPc6.pCN4s5mMQNduzcxt.sSrMcYWvIMZ0XnGY.e",
+      "software_sourceInfo": "git+https://github.com/p11-glue/p11-kit.git@refs/tags/0.26.2",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VSWSGARTXYM22S5K",
       "type": "software_Package"
     },
@@ -21857,6 +22201,7 @@
         }
       ],
       "name": "semigroupoids-6.0.2-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/semigroupoids-6.0.2/revision/1.cabal",
       "software_packageUrl": "pkg:generic/semigroupoids-6.0.2-r1.cabal-sha256.hUsWjRv33Q4Bhj2f.seEmJ75B4SY273.sCeTY4v7SAgLiw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VTE5GQV4XJ43HFMG",
       "type": "software_Package"
@@ -21871,6 +22216,7 @@
         }
       ],
       "name": "nanospec-0.2.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/nanospec-0.2.2.tar.gz",
       "software_packageUrl": "pkg:generic/nanospec-0.2.2.tar.gz-sha256.hzxTMwrKWyRAADNw.ptRs3OJs.puUE5OEuVVdt5uBKFleU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VVHWEZPFSTJOACR7",
       "type": "software_Package"
@@ -21942,6 +22288,7 @@
         }
       ],
       "name": "docbook-style-xsl-non-recursive-string-subst.patch",
+      "software_downloadLocation": "https://src.fedoraproject.org/rpms/docbook-style-xsl/raw/e3ae7a97ed1d185594dd35954e1a02196afb205a/f/docbook-style-xsl-non-recursive-string-subst.patch",
       "software_packageUrl": "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VWLRGJWWCDU636CX",
       "type": "software_Package"
@@ -22027,6 +22374,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pypa/setuptools/archive/refs/tags/v80.10.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hs.sgfJc3yxvCE6cjP03vtIZqNFmoZKR3d7.p4gTPk1hQg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W3HW6RKMYS5AQ2VP",
       "type": "software_Package"
@@ -22198,6 +22546,7 @@
         }
       ],
       "name": "parallel-3.2.2.0-r10.cabal",
+      "software_downloadLocation": "mirror://hackage/parallel-3.2.2.0/revision/10.cabal",
       "software_packageUrl": "pkg:generic/parallel-3.2.2.0-r10.cabal-sha256.hPfRuwkfhK15AagrblXcpRDGySBSzDfQgVR0Xb9ESqWY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WEC4LBUNWDUQG3EL",
       "type": "software_Package"
@@ -22254,6 +22603,7 @@
         }
       ],
       "name": "parsers-0.12.12-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/parsers-0.12.12/revision/1.cabal",
       "software_packageUrl": "pkg:generic/parsers-0.12.12-r1.cabal-sha256.hxrUOF.pn1SeCYCq0qskYlHPhIt7xI68Y7jpRhvpQuxoc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WHBU65S7N3I6EHYN",
       "type": "software_Package"
@@ -22282,6 +22632,7 @@
         }
       ],
       "name": "HUnit-1.6.2.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/HUnit-1.6.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/HUnit-1.6.2.0.tar.gz-sha256.hsLdTiHH.swFhIb8AHQIhtLzFy.pPpoaZNr.soOl4QvXRKs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WJ3OKL5D5PWMW44P",
       "type": "software_Package"
@@ -22310,6 +22661,7 @@
         }
       ],
       "name": "tasty-1.5.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/tasty-1.5.4.tar.gz",
       "software_packageUrl": "pkg:generic/tasty-1.5.4.tar.gz-sha256.hx2EgFBvWHEQYs.p1e.sF.sjCUGG1Hz.pEte.pVSMgE59Sxsc.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WLB3BMUYDOKOU7YW",
       "type": "software_Package"
@@ -22324,6 +22676,7 @@
         }
       ],
       "name": "OneTuple-0.4.2.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/OneTuple-0.4.2.1.tar.gz",
       "software_packageUrl": "pkg:generic/OneTuple-0.4.2.1.tar.gz-sha256.hxQQTJVHpyPWv5sjI1b8e0gj02piwy0r1lAC9m9g24D4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WLHOOO7TSXZF7XZG",
       "type": "software_Package"
@@ -22526,6 +22879,7 @@
         }
       ],
       "name": "reflection-2.1.9-r1.cabal",
+      "software_downloadLocation": "mirror://hackage/reflection-2.1.9/revision/1.cabal",
       "software_packageUrl": "pkg:generic/reflection-2.1.9-r1.cabal-sha256.h6vKNyYhHGKMG7R4MIVoks2xouKo75CVhf2bYhtQ.s4eA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WVB6ZKHVFMOKZUMX",
       "type": "software_Package"
@@ -22555,6 +22909,7 @@
         }
       ],
       "name": "transformers-base-0.4.6.1.tar.gz",
+      "software_downloadLocation": "mirror://hackage/transformers-base-0.4.6.1.tar.gz",
       "software_packageUrl": "pkg:generic/transformers-base-0.4.6.1.tar.gz-sha256.htD3js7nWWNUE6KAwk1ZgLdxTyNrT.sbvDNZq8tUObQdg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WVEWBMQ5GBJ5SIEU",
       "type": "software_Package"
@@ -22660,6 +23015,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/jawah/charset_normalizer/archive/refs/tags/3.4.7.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hdOdJ4f98smCYdskp3BwtQG6aOyK.p2a73.px580FKRWDk.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WXCBMDHNMJ4FRVRG",
       "type": "software_Package"
@@ -22818,6 +23174,7 @@
         }
       ],
       "name": "js-dgtable-0.5.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/js-dgtable-0.5.2.tar.gz",
       "software_packageUrl": "pkg:generic/js-dgtable-0.5.2.tar.gz-sha256.h4o3WW.p6Ag7FyEBNOIuAcY0ncM8O3vRdwWXPNAU6fIKw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XAHHTI4ZOJBJZ63S",
       "type": "software_Package"
@@ -22832,6 +23189,7 @@
         }
       ],
       "name": "parallel-3.2.2.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/parallel-3.2.2.0.tar.gz",
       "software_packageUrl": "pkg:generic/parallel-3.2.2.0.tar.gz-sha256.hFwRTpxoqizHMpjElUz93cdfevrY5cAvavdd5w02KbvY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XBM2N74LYHXFQBRD",
       "type": "software_Package"
@@ -22846,6 +23204,7 @@
         }
       ],
       "name": "t7703-ignore-ls-total.patch",
+      "software_downloadLocation": "https://lore.kernel.org/git/20260504101429.340123-1-joerg@thalheim.io/raw",
       "software_packageUrl": "pkg:generic/t7703-ignore-ls-total.patch-sha256.h44EPfEJ39LjPWjqjFb52EKNaJGzYxZzJaJOis8QnazU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XBSYETQIBAIVMXMI",
       "type": "software_Package"
@@ -22948,6 +23307,7 @@
         }
       ],
       "name": "expect-gui--askyesno-failure-in-t1517.patch",
+      "software_downloadLocation": "https://lore.kernel.org/git/20251201031040.1120091-1-brianmlyles@gmail.com/raw",
       "software_packageUrl": "pkg:generic/expect-gui--askyesno-failure-in-t1517.patch-sha256.hvvhbvg74OIMzfksHiErSnjOZ.pW0M.sT9J8GOQ4E4wKbU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XHKWRFRMFYYS6BKZ",
       "type": "software_Package"
@@ -22977,6 +23337,7 @@
         }
       ],
       "name": "tzdata2026b.tar.gz",
+      "software_downloadLocation": "https://data.iana.org/time-zones/releases/tzdata2026b.tar.gz",
       "software_packageUrl": "pkg:generic/tzdata2026b.tar.gz-sha256.hEUVD2fGaa.s61vKQ2hq6hc9OHVaPbHy7sESZHrpLG9UQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XISDBH5USYPTQ4QN",
       "type": "software_Package"
@@ -23036,6 +23397,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/AA-Turner/roman-numerals/archive/refs/tags/v4.1.0.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.hv.paPIcsggjRJ3l6Xfw97b3zcqpyWNY4XWy2.p5aWyitY.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XKGYYXBKRPPOWBZJ",
       "type": "software_Package"
@@ -23142,6 +23504,7 @@
         }
       ],
       "name": "dejagnu-1.6.3.tar.gz",
+      "software_downloadLocation": "mirror://gnu/dejagnu/dejagnu-1.6.3.tar.gz",
       "software_packageUrl": "pkg:generic/dejagnu-1.6.3.tar.gz-sha256.hh9rvrNeVi0pp.pIxoVtvRY0JhljxBQHnQw3H1ic1mouM.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XMWRT2JBDGSAOUL6",
       "type": "software_Package"
@@ -23156,6 +23519,7 @@
         }
       ],
       "name": "typed-process-0.2.13.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/typed-process-0.2.13.0.tar.gz",
       "software_packageUrl": "pkg:generic/typed-process-0.2.13.0.tar.gz-sha256.hlACWYBO1Qd8uVKyNV8OmcPwoveK.ph3Z86Y8Tu.pKqQ6A.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XOJUIGU3RMUI6BHS",
       "type": "software_Package"
@@ -23198,6 +23562,7 @@
         }
       ],
       "name": "alex-3.5.4.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/alex-3.5.4.2.tar.gz",
       "software_packageUrl": "pkg:generic/alex-3.5.4.2.tar.gz-sha256.h30gdyWDixZowOV9zNQMf1O.pHc7ikKJSk8jIOAP9HRBg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XS56VPCI7FH6H3BV",
       "type": "software_Package"
@@ -23254,6 +23619,7 @@
         }
       ],
       "name": "hostname-1.0.tar.gz",
+      "software_downloadLocation": "mirror://hackage/hostname-1.0.tar.gz",
       "software_packageUrl": "pkg:generic/hostname-1.0.tar.gz-sha256.hm0PasbbaUh81aFsgVV2gBzjI4TbrlyRYx4YkJAapz1w.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XTQPJF6EFRHM5T7P",
       "type": "software_Package"
@@ -23333,6 +23699,7 @@
         }
       ],
       "name": "bison-3.8.2.tar.gz",
+      "software_downloadLocation": "mirror://gnu/bison/bison-3.8.2.tar.gz",
       "software_packageUrl": "pkg:generic/bison-3.8.2.tar.gz-sha256.hBsnhO99.psk1M62tZIFpPZ8LH5yExGWREMP6C.p9FKCrs.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XW5AQ775GNV35P6J",
       "type": "software_Package"
@@ -23383,6 +23750,7 @@
         }
       ],
       "name": "call-stack-tests-normalize-pkg-name.patch",
+      "software_downloadLocation": "https://github.com/sol/call-stack/commit/cbbee23ce309d18201951e16a8b6d30b57e2bdf9.patch",
       "software_packageUrl": "pkg:generic/call-stack-tests-normalize-pkg-name.patch-sha256.hxkdjf8zXW.pUMxot2Z8WYYmvAJsT.pVGKXWGt19mZZwCg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XWLZNATJNMMYR4UP",
       "type": "software_Package"
@@ -23397,6 +23765,7 @@
         }
       ],
       "name": "ghc-rts-adjustor-fix-i386-stack-overrun.patch",
+      "software_downloadLocation": "https://gitlab.haskell.org/ghc/ghc/-/commit/39bb6e583d64738db51441a556d499aa93a4fc4a.patch",
       "software_packageUrl": "pkg:generic/ghc-rts-adjustor-fix-i386-stack-overrun.patch-sha256.hQOd464ZVr.sylsa8sVALOsPerOqHB6xxFXESkPwLprnA.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XWSKALDUTA3NIJD3",
       "type": "software_Package"
@@ -23453,6 +23822,7 @@
         }
       ],
       "name": "ansi-terminal-types-1.1.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/ansi-terminal-types-1.1.3.tar.gz",
       "software_packageUrl": "pkg:generic/ansi-terminal-types-1.1.3.tar.gz-sha256.hn8nOIVfxiJvZmk0iyfHGRYlZC.pD3l8Pv5xyPoXoRpok.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Y2PAJIQKHJOCLWYI",
       "type": "software_Package"
@@ -23481,6 +23851,7 @@
         }
       ],
       "name": "getopt-1.1.6.tar.gz",
+      "software_downloadLocation": "https://frodo.looijaard.name/system/files/software/getopt/getopt-1.1.6.tar.gz",
       "software_packageUrl": "pkg:generic/getopt-1.1.6.tar.gz-sha256.h0L8dxkKpk.pc4ihzd.p5QJvtN1wh1SeAVszKOgrNCdxf4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Y4353IOCSNFXAN5C",
       "type": "software_Package"
@@ -23495,6 +23866,7 @@
         }
       ],
       "name": "parsers-0.12.12.tar.gz",
+      "software_downloadLocation": "mirror://hackage/parsers-0.12.12.tar.gz",
       "software_packageUrl": "pkg:generic/parsers-0.12.12.tar.gz-sha256.h3Z5Ti3qecypaQkHW3gHSmK.s0uxmpWC6UZO5LpmDGJrw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Y6HAHGV4XNZN2VMY",
       "type": "software_Package"
@@ -23523,6 +23895,7 @@
         }
       ],
       "name": "hspec-expectations-0.8.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/hspec-expectations-0.8.4.tar.gz",
       "software_packageUrl": "pkg:generic/hspec-expectations-0.8.4.tar.gz-sha256.he43efiMOz9qQyV.sYBHiyRKReaGAvs91KdvRxBhm.pIf8.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Y7CAPE52X5GIROSA",
       "type": "software_Package"
@@ -23637,6 +24010,7 @@
         }
       ],
       "name": "doctest-0.24.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/doctest-0.24.3.tar.gz",
       "software_packageUrl": "pkg:generic/doctest-0.24.3.tar.gz-sha256.hZSQPDxGFauWM9e6rjW3fJKJq3ArNlcmGYApGjnQrEjg.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YB647NCWROPPHDM6",
       "type": "software_Package"
@@ -23665,6 +24039,7 @@
         }
       ],
       "name": "indexed-traversable-0.1.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/indexed-traversable-0.1.4.tar.gz",
       "software_packageUrl": "pkg:generic/indexed-traversable-0.1.4.tar.gz-sha256.hWL4Jr9861aJcKqDSp9.pA1gLfCfTnbTq.sK3zbDnXQOyI.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YBSHXAPQ4NNSK2CN",
       "type": "software_Package"
@@ -23742,6 +24117,7 @@
         }
       ],
       "name": "distributive-0.6.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/distributive-0.6.3.tar.gz",
       "software_packageUrl": "pkg:generic/distributive-0.6.3.tar.gz-sha256.hrusCiiPbn5sHPiSmvXZrebnVjCtAewa.sMylsJ.pkmS6o.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YDNKG4TKPWRYFPSR",
       "type": "software_Package"
@@ -23973,6 +24349,7 @@
         }
       ],
       "name": "vector-0.13.2.0-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/vector-0.13.2.0/revision/2.cabal",
       "software_packageUrl": "pkg:generic/vector-0.13.2.0-r2.cabal-sha256.hmsM4yNpS2KN9sIQ0ykSA.svLOpPmqwkD0.pZS7Rn9SdbQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YJQU4K4RKQQRNSA3",
       "type": "software_Package"
@@ -24118,6 +24495,7 @@
         }
       ],
       "name": "tcl8.6.16-src.tar.gz",
+      "software_downloadLocation": "mirror://sourceforge/tcl/tcl8.6.16-src.tar.gz",
       "software_packageUrl": "pkg:generic/tcl8.6.16-src.tar.gz-sha256.hkcuPphdxxjwmLvtVMFm3x61nV6.plhXr2Jl5LC9wqFKU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YMU7XA5JRXUPPUUP",
       "type": "software_Package"
@@ -24160,6 +24538,7 @@
         }
       ],
       "name": "unliftio-core-0.2.1.0-r4.cabal",
+      "software_downloadLocation": "mirror://hackage/unliftio-core-0.2.1.0/revision/4.cabal",
       "software_packageUrl": "pkg:generic/unliftio-core-0.2.1.0-r4.cabal-sha256.h9qJzb4WLU5DZOE3KQ9PqTZbpyhchd5F5HKSVG6boByo.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YQYAOQB45P2ASZQO",
       "type": "software_Package"
@@ -24188,6 +24567,7 @@
         }
       ],
       "name": "witherable-0.5-r2.cabal",
+      "software_downloadLocation": "mirror://hackage/witherable-0.5/revision/2.cabal",
       "software_packageUrl": "pkg:generic/witherable-0.5-r2.cabal-sha256.hpWAEMd9dKX8JjDIsf7wuzoBORK3guyAiqDjeJGBNYnU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YRVSZ633TNQENCBB",
       "type": "software_Package"
@@ -24268,6 +24648,7 @@
         }
       ],
       "name": "gettext-1.07.tar.gz",
+      "software_downloadLocation": "mirror://cpan/authors/id/P/PV/PVANDRY/gettext-1.07.tar.gz",
       "software_packageUrl": "pkg:generic/gettext-1.07.tar.gz-sha256.hkJ1HlUaX58BCGPlykVt4e9EkTXXjvQFiC8Fn1bvEnBU.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YVRGLCYN62HGCTFS",
       "type": "software_Package"
@@ -24363,6 +24744,7 @@
         }
       ],
       "name": "patchutils-0.3.3.tar.xz",
+      "software_downloadLocation": "https://cyberelk.net/tim/data/patchutils/stable/patchutils-0.3.3.tar.xz",
       "software_packageUrl": "pkg:generic/patchutils-0.3.3.tar.xz-sha256.hkfToRRsu.sKxdQMlm5CwXWANFDw3pTJJr.sswSyQBwrTw.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YXJZO62EOAXRP3CW",
       "type": "software_Package"
@@ -24377,6 +24759,7 @@
         }
       ],
       "name": "regex-base-0.94.0.3.tar.gz",
+      "software_downloadLocation": "mirror://hackage/regex-base-0.94.0.3.tar.gz",
       "software_packageUrl": "pkg:generic/regex-base-0.94.0.3.tar.gz-sha256.h6Mot7lmMeQ3RwcQ1m90eSV2biB9aofU5wi8N1VY3R78.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YYPUQOISEBOU5VJ5",
       "type": "software_Package"
@@ -24451,6 +24834,7 @@
         }
       ],
       "name": "keyutils-1.6.3.tar.gz",
+      "software_downloadLocation": "https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git/snapshot/keyutils-1.6.3.tar.gz",
       "software_packageUrl": "pkg:generic/keyutils-1.6.3.tar.gz-sha256.hph1XBhNq5MBb1I.pGGGvP29iN2L1RB.pPhlckkz8Gzm7Q.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Z6NQFXMGHBVRQID2",
       "type": "software_Package"
@@ -24508,6 +24892,7 @@
         }
       ],
       "name": "pytest-instafail-0.5.0.tar.gz",
+      "software_downloadLocation": "mirror://pypi/p/pytest-instafail/pytest-instafail-0.5.0.tar.gz",
       "software_packageUrl": "pkg:generic/pytest-instafail-0.5.0.tar.gz-sha256.hM6YG9.pDI5kbcO.s7g1eOkt7eO98NhaM.ph89k698pwbJ4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZA35WSJAX4LLLJZU",
       "type": "software_Package"
@@ -24581,6 +24966,7 @@
         }
       ],
       "name": "source",
+      "software_downloadLocation": "https://github.com/pytest-dev/pytest-mock/archive/refs/tags/v3.15.1.tar.gz",
       "software_packageUrl": "pkg:generic/source-sha256.h9h5.scssWs4F0LKnFLjWDsEjB2AYczLvnSjiUdsaEcBQ.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZCGYGFXQ6IYDJAWF",
       "type": "software_Package"
@@ -24609,6 +24995,7 @@
         }
       ],
       "name": "execnet-2.1.2.tar.gz",
+      "software_downloadLocation": "mirror://pypi/e/execnet/execnet-2.1.2.tar.gz",
       "software_packageUrl": "pkg:generic/execnet-2.1.2.tar.gz-sha256.hY9g7.sdmiPjW5xqMmFBIyT5ZMLsjc2NPGkW7pNz4L780.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZDFOXZQMRU2VPTYP",
       "type": "software_Package"
@@ -24897,6 +25284,7 @@
         }
       ],
       "name": "base-orphans-0.9.4.tar.gz",
+      "software_downloadLocation": "mirror://hackage/base-orphans-0.9.4.tar.gz",
       "software_packageUrl": "pkg:generic/base-orphans-0.9.4.tar.gz-sha256.hCMwoOjE1D3vSiypdMa9pPuM38lk9PnIimZty3UlUxys.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZWCUVJORUGM6H4B3",
       "type": "software_Package"
@@ -24911,6 +25299,7 @@
         }
       ],
       "name": "semigroupoids-6.0.2.tar.gz",
+      "software_downloadLocation": "mirror://hackage/semigroupoids-6.0.2.tar.gz",
       "software_packageUrl": "pkg:generic/semigroupoids-6.0.2.tar.gz-sha256.h5IJY5JVCJF72xY1.sQZqD0dGrkbAT2Sw7XIx8BI2qoS4.e",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZWGI3QJVWH5F3IBA",
       "type": "software_Package"

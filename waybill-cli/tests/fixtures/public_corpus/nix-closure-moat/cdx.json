@@ -3440,6 +3440,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://sourceforge.net/p/expect/patches/24/attachment/0001-Add-prototype-to-function-definitions.patch"
+        }
+      ],
       "name": "0001-Add-prototype-to-function-definitions.patch",
       "properties": [
         {
@@ -3546,6 +3552,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/docbook/xslt10-stylesheets/commit/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch"
+        }
+      ],
       "name": "07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch",
       "properties": [
         {
@@ -3597,6 +3609,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pexpect/ptyprocess/commit/40c1ccf3432a6787be1801ced721540e34c6cd87.patch"
+        }
+      ],
       "name": "40c1ccf3432a6787be1801ced721540e34c6cd87.patch",
       "properties": [
         {
@@ -3648,6 +3666,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/libevent/libevent/commit/883630f76cbf512003b81de25cd96cb75c6cf0f9.patch"
+        }
+      ],
       "name": "883630f76cbf512003b81de25cd96cb75c6cf0f9.patch",
       "properties": [
         {
@@ -3743,6 +3767,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://sourceforge/cunit/CUnit/2.1-3/CUnit-2.1-3.tar.bz2"
+        }
+      ],
       "name": "CUnit-2.1-3.tar.bz2",
       "properties": [
         {
@@ -3794,6 +3824,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/madler/unzip/commit/41beb477c5744bc396fa1162ee0c14218ec12213.patch"
+        }
+      ],
       "name": "CVE-2019-13232-1.patch",
       "properties": [
         {
@@ -3845,6 +3881,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/madler/unzip/commit/47b3ceae397d21bf822bc2ac73052a4b1daf8e1c.patch"
+        }
+      ],
       "name": "CVE-2019-13232-2.patch",
       "properties": [
         {
@@ -3896,6 +3938,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/madler/unzip/commit/6d351831be705cc26d897db44f878a978f4138fc.patch"
+        }
+      ],
       "name": "CVE-2019-13232-3.patch",
       "properties": [
         {
@@ -3947,6 +3995,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/ecki/net-tools/commit/7a8f42fb20013a1493d8cae1c43436f85e656f2d.patch"
+        }
+      ],
       "name": "CVE-2025-46836.patch",
       "properties": [
         {
@@ -4055,6 +4109,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/ChasingBottoms-1.3.1.17/revision/1.cabal"
+        }
+      ],
       "name": "ChasingBottoms-1.3.1.17-r1.cabal",
       "properties": [
         {
@@ -4106,6 +4166,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/ChasingBottoms-1.3.1.17.tar.gz"
+        }
+      ],
       "name": "ChasingBottoms-1.3.1.17.tar.gz",
       "properties": [
         {
@@ -4214,6 +4280,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/Diff-1.0.2.tar.gz"
+        }
+      ],
       "name": "Diff-1.0.2.tar.gz",
       "properties": [
         {
@@ -4265,6 +4337,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/HUnit-1.6.2.0.tar.gz"
+        }
+      ],
       "name": "HUnit-1.6.2.0.tar.gz",
       "properties": [
         {
@@ -5237,6 +5315,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/OneTuple-0.4.2.1.tar.gz"
+        }
+      ],
       "name": "OneTuple-0.4.2.1.tar.gz",
       "properties": [
         {
@@ -5288,6 +5372,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/P/PySocks/PySocks-1.7.1.tar.gz"
+        }
+      ],
       "name": "PySocks-1.7.1.tar.gz",
       "properties": [
         {
@@ -5339,6 +5429,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://www.python.org/ftp/python/3.13.13/Python-3.13.13.tar.xz"
+        }
+      ],
       "name": "Python-3.13.13.tar.xz",
       "properties": [
         {
@@ -5447,6 +5543,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/QuickCheck-2.15.0.1/revision/1.cabal"
+        }
+      ],
       "name": "QuickCheck-2.15.0.1-r1.cabal",
       "properties": [
         {
@@ -5498,6 +5600,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/QuickCheck-2.15.0.1.tar.gz"
+        }
+      ],
       "name": "QuickCheck-2.15.0.1.tar.gz",
       "properties": [
         {
@@ -5606,6 +5714,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/StateVar-1.2.2.tar.gz"
+        }
+      ],
       "name": "StateVar-1.2.2.tar.gz",
       "properties": [
         {
@@ -6922,6 +7036,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pexpect/ptyprocess/commit/a44312974bd9084aa568d2e18ce5b2a7e0e45983.patch"
+        }
+      ],
       "name": "a44312974bd9084aa568d2e18ce5b2a7e0e45983.patch",
       "properties": [
         {
@@ -7595,6 +7715,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/adjunctions-4.4.4.tar.gz"
+        }
+      ],
       "name": "adjunctions-4.4.4.tar.gz",
       "properties": [
         {
@@ -7703,6 +7829,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/aeson-2.2.4.1.tar.gz"
+        }
+      ],
       "name": "aeson-2.2.4.1.tar.gz",
       "properties": [
         {
@@ -7856,6 +7988,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/alex-3.5.4.2.tar.gz"
+        }
+      ],
       "name": "alex-3.5.4.2.tar.gz",
       "properties": [
         {
@@ -7907,6 +8045,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/ansi-terminal-1.1.5.tar.gz"
+        }
+      ],
       "name": "ansi-terminal-1.1.5.tar.gz",
       "properties": [
         {
@@ -7958,6 +8102,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/ansi-terminal-types-1.1.3.tar.gz"
+        }
+      ],
       "name": "ansi-terminal-types-1.1.3.tar.gz",
       "properties": [
         {
@@ -8066,6 +8216,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/ansi-wl-pprint-1.0.2.tar.gz"
+        }
+      ],
       "name": "ansi-wl-pprint-1.0.2.tar.gz",
       "properties": [
         {
@@ -8336,6 +8492,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/assoc-1.1.1/revision/2.cabal"
+        }
+      ],
       "name": "assoc-1.1.1-r2.cabal",
       "properties": [
         {
@@ -8387,6 +8549,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/assoc-1.1.1.tar.gz"
+        }
+      ],
       "name": "assoc-1.1.1.tar.gz",
       "properties": [
         {
@@ -8495,6 +8663,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/async-2.2.6.tar.gz"
+        }
+      ],
       "name": "async-2.2.6.tar.gz",
       "properties": [
         {
@@ -8713,6 +8887,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/attoparsec-0.14.4/revision/6.cabal"
+        }
+      ],
       "name": "attoparsec-0.14.4-r6.cabal",
       "properties": [
         {
@@ -8764,6 +8944,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/attoparsec-0.14.4.tar.gz"
+        }
+      ],
       "name": "attoparsec-0.14.4.tar.gz",
       "properties": [
         {
@@ -8998,6 +9184,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/a/attrs/attrs-26.1.0.tar.gz"
+        }
+      ],
       "name": "attrs-26.1.0.tar.gz",
       "properties": [
         {
@@ -9324,6 +9516,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/autoconf-archive/autoconf-archive-2024.10.16.tar.xz"
+        }
+      ],
       "name": "autoconf-archive-2024.10.16.tar.xz",
       "properties": [
         {
@@ -9497,6 +9695,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/automake/automake-1.16.5.tar.xz"
+        }
+      ],
       "name": "automake-1.16.5.tar.xz",
       "properties": [
         {
@@ -9693,6 +9897,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/b/babel/babel-2.17.0.tar.gz"
+        }
+      ],
       "name": "babel-2.17.0.tar.gz",
       "properties": [
         {
@@ -9801,6 +10011,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/base-compat-0.14.1.tar.gz"
+        }
+      ],
       "name": "base-compat-0.14.1.tar.gz",
       "properties": [
         {
@@ -9909,6 +10125,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/base-orphans-0.9.4.tar.gz"
+        }
+      ],
       "name": "base-orphans-0.9.4.tar.gz",
       "properties": [
         {
@@ -10017,6 +10239,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/base16-bytestring-1.0.2.0/revision/1.cabal"
+        }
+      ],
       "name": "base16-bytestring-1.0.2.0-r1.cabal",
       "properties": [
         {
@@ -10068,6 +10296,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/base16-bytestring-1.0.2.0.tar.gz"
+        }
+      ],
       "name": "base16-bytestring-1.0.2.0.tar.gz",
       "properties": [
         {
@@ -10176,6 +10410,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/base64-bytestring-1.2.1.0/revision/1.cabal"
+        }
+      ],
       "name": "base64-bytestring-1.2.1.0-r1.cabal",
       "properties": [
         {
@@ -10227,6 +10467,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/base64-bytestring-1.2.1.0.tar.gz"
+        }
+      ],
       "name": "base64-bytestring-1.2.1.0.tar.gz",
       "properties": [
         {
@@ -11025,6 +11271,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/bash/bash-5.3-patches/bash53-001"
+        }
+      ],
       "name": "bash53-001",
       "properties": [
         {
@@ -11190,6 +11442,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/bash/bash-5.3-patches/bash53-004"
+        }
+      ],
       "name": "bash53-004",
       "properties": [
         {
@@ -11241,6 +11499,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/bash/bash-5.3-patches/bash53-005"
+        }
+      ],
       "name": "bash53-005",
       "properties": [
         {
@@ -11292,6 +11556,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/bash/bash-5.3-patches/bash53-006"
+        }
+      ],
       "name": "bash53-006",
       "properties": [
         {
@@ -11571,6 +11841,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/bifunctors-5.6.3/revision/1.cabal"
+        }
+      ],
       "name": "bifunctors-5.6.3-r1.cabal",
       "properties": [
         {
@@ -11622,6 +11898,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/bifunctors-5.6.3.tar.gz"
+        }
+      ],
       "name": "bifunctors-5.6.3.tar.gz",
       "properties": [
         {
@@ -12300,6 +12582,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/bison/bison-3.8.2.tar.gz"
+        }
+      ],
       "name": "bison-3.8.2.tar.gz",
       "properties": [
         {
@@ -12516,6 +12804,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/blaze-builder-0.4.4.1.tar.gz"
+        }
+      ],
       "name": "blaze-builder-0.4.4.1.tar.gz",
       "properties": [
         {
@@ -12624,6 +12918,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/blaze-html-0.9.2.0/revision/1.cabal"
+        }
+      ],
       "name": "blaze-html-0.9.2.0-r1.cabal",
       "properties": [
         {
@@ -12675,6 +12975,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/blaze-html-0.9.2.0.tar.gz"
+        }
+      ],
       "name": "blaze-html-0.9.2.0.tar.gz",
       "properties": [
         {
@@ -12783,6 +13089,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/blaze-markup-0.8.3.0/revision/2.cabal"
+        }
+      ],
       "name": "blaze-markup-0.8.3.0-r2.cabal",
       "properties": [
         {
@@ -12834,6 +13146,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/blaze-markup-0.8.3.0.tar.gz"
+        }
+      ],
       "name": "blaze-markup-0.8.3.0.tar.gz",
       "properties": [
         {
@@ -13125,6 +13443,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://kernel/linux/bluetooth/bluez-5.86.tar.xz"
+        }
+      ],
       "name": "bluez-5.86.tar.xz",
       "properties": [
         {
@@ -14518,6 +14842,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/b/buildcatrust/buildcatrust-0.5.1.tar.gz"
+        }
+      ],
       "name": "buildcatrust-0.5.1.tar.gz",
       "properties": [
         {
@@ -15203,6 +15533,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/c-ares/c-ares/releases/download/v1.34.6/c-ares-1.34.6.tar.gz"
+        }
+      ],
       "name": "c-ares-1.34.6.tar.gz",
       "properties": [
         {
@@ -15364,6 +15700,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/call-stack-0.4.0.tar.gz"
+        }
+      ],
       "name": "call-stack-0.4.0.tar.gz",
       "properties": [
         {
@@ -15415,6 +15757,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/sol/call-stack/commit/cbbee23ce309d18201951e16a8b6d30b57e2bdf9.patch"
+        }
+      ],
       "name": "call-stack-tests-normalize-pkg-name.patch",
       "properties": [
         {
@@ -15620,6 +15968,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/case-insensitive-1.2.1.0.tar.gz"
+        }
+      ],
       "name": "case-insensitive-1.2.1.0.tar.gz",
       "properties": [
         {
@@ -16250,6 +16604,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://hg-edge.mozilla.org/projects/nss/raw-file/NSS_3_123_RTM/lib/ckfw/builtins/certdata.txt"
+        }
+      ],
       "name": "certdata.txt",
       "properties": [
         {
@@ -16453,6 +16813,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/character-ps-0.1.tar.gz"
+        }
+      ],
       "name": "character-ps-0.1.tar.gz",
       "properties": [
         {
@@ -16561,6 +16927,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/charset-0.3.12.tar.gz"
+        }
+      ],
       "name": "charset-0.3.12.tar.gz",
       "properties": [
         {
@@ -16934,6 +17306,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/clock-0.8.4.tar.gz"
+        }
+      ],
       "name": "clock-0.8.4.tar.gz",
       "properties": [
         {
@@ -17380,6 +17758,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://cmake.org/files/v4.1/cmake-4.1.2.tar.gz"
+        }
+      ],
       "name": "cmake-4.1.2.tar.gz",
       "properties": [
         {
@@ -17488,6 +17872,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/cmark-gfm-0.2.6/revision/1.cabal"
+        }
+      ],
       "name": "cmark-gfm-0.2.6-r1.cabal",
       "properties": [
         {
@@ -17539,6 +17929,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/cmark-gfm-0.2.6.tar.gz"
+        }
+      ],
       "name": "cmark-gfm-0.2.6.tar.gz",
       "properties": [
         {
@@ -17647,6 +18043,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/code-page-0.2.1.tar.gz"
+        }
+      ],
       "name": "code-page-0.2.1.tar.gz",
       "properties": [
         {
@@ -17698,6 +18100,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/colour-2.3.7.tar.gz"
+        }
+      ],
       "name": "colour-2.3.7.tar.gz",
       "properties": [
         {
@@ -17863,6 +18271,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/comonad-5.0.10.tar.gz"
+        }
+      ],
       "name": "comonad-5.0.10.tar.gz",
       "properties": [
         {
@@ -17971,6 +18385,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://git.savannah.gnu.org/cgit/config.git/plain/config.sub?id=948ae97ca5703224bd3eada06b7a69f40dd15a02"
+        }
+      ],
       "name": "config.sub-948ae97",
       "properties": [
         {
@@ -18079,6 +18499,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/contravariant-1.5.6.tar.gz"
+        }
+      ],
       "name": "contravariant-1.5.6.tar.gz",
       "properties": [
         {
@@ -19631,6 +20057,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/cryptohash-sha256-0.11.102.1/revision/6.cabal"
+        }
+      ],
       "name": "cryptohash-sha256-0.11.102.1-r6.cabal",
       "properties": [
         {
@@ -19682,6 +20114,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/cryptohash-sha256-0.11.102.1.tar.gz"
+        }
+      ],
       "name": "cryptohash-sha256-0.11.102.1.tar.gz",
       "properties": [
         {
@@ -19959,6 +20397,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/data-fix-0.3.4/revision/2.cabal"
+        }
+      ],
       "name": "data-fix-0.3.4-r2.cabal",
       "properties": [
         {
@@ -20010,6 +20454,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/data-fix-0.3.4.tar.gz"
+        }
+      ],
       "name": "data-fix-0.3.4.tar.gz",
       "properties": [
         {
@@ -20157,6 +20607,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/dejagnu/dejagnu-1.6.3.tar.gz"
+        }
+      ],
       "name": "dejagnu-1.6.3.tar.gz",
       "properties": [
         {
@@ -20880,6 +21336,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/distributive-0.6.3.tar.gz"
+        }
+      ],
       "name": "distributive-0.6.3.tar.gz",
       "properties": [
         {
@@ -20988,6 +21450,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/dlist-1.0/revision/2.cabal"
+        }
+      ],
       "name": "dlist-1.0-r2.cabal",
       "properties": [
         {
@@ -21039,6 +21507,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/dlist-1.0.tar.gz"
+        }
+      ],
       "name": "dlist-1.0.tar.gz",
       "properties": [
         {
@@ -21146,6 +21620,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://src.fedoraproject.org/rpms/docbook-style-xsl/raw/e3ae7a97ed1d185594dd35954e1a02196afb205a/f/docbook-style-xsl-non-recursive-string-subst.patch"
+        }
+      ],
       "name": "docbook-style-xsl-non-recursive-string-subst.patch",
       "properties": [
         {
@@ -21285,6 +21765,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://www.oasis-open.org/docbook/xml/4.3/docbook-xml-4.3.zip"
+        }
+      ],
       "name": "docbook-xml-4.3.zip",
       "properties": [
         {
@@ -21336,6 +21822,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip"
+        }
+      ],
       "name": "docbook-xml-4.5.zip",
       "properties": [
         {
@@ -21387,6 +21879,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-1.79.2.tar.bz2"
+        }
+      ],
       "name": "docbook-xsl-1.79.2.tar.bz2",
       "properties": [
         {
@@ -21503,6 +22001,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-nons-1.79.2.tar.bz2"
+        }
+      ],
       "name": "docbook-xsl-nons-1.79.2.tar.bz2",
       "properties": [
         {
@@ -21680,6 +22184,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/doctest-0.24.3.tar.gz"
+        }
+      ],
       "name": "doctest-0.24.3.tar.gz",
       "properties": [
         {
@@ -21801,6 +22311,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://sourceforge/docutils/docutils-0.22.4.tar.gz"
+        }
+      ],
       "name": "docutils-0.22.4.tar.gz",
       "properties": [
         {
@@ -22182,6 +22698,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/google/brotli/commit/e230f474b87134e8c6c85b630084c612057f253e.patch"
+        }
+      ],
       "name": "e230f474b87134e8c6c85b630084c612057f253e.patch",
       "properties": [
         {
@@ -22391,6 +22913,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/e/editables/editables-0.5.tar.gz"
+        }
+      ],
       "name": "editables-0.5.tar.gz",
       "properties": [
         {
@@ -22547,6 +23075,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://sourceware.org/elfutils/ftp/0.194/elfutils-0.194.tar.bz2"
+        }
+      ],
       "name": "elfutils-0.194.tar.bz2",
       "properties": [
         {
@@ -22598,6 +23132,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.haskell.org/ghc/ghc/-/commit/4ee094d46effd06093090fcba70f0a80d2a57e6c.patch"
+        }
+      ],
       "name": "enable-ignore-build-platform-mismatch.patch",
       "properties": [
         {
@@ -23122,6 +23662,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/e/execnet/execnet-2.1.2.tar.gz"
+        }
+      ],
       "name": "execnet-2.1.2.tar.gz",
       "properties": [
         {
@@ -24015,6 +24561,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/libexpat/libexpat/releases/download/R_2_8_0/expat-2.8.0.tar.xz"
+        }
+      ],
       "name": "expat-2.8.0.tar.xz",
       "properties": [
         {
@@ -24140,6 +24692,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://sourceforge.net/p/expect/patches/_discuss/thread/b813ca9895/6759/attachment/expect-configure-c99.patch"
+        }
+      ],
       "name": "expect-configure-c99.patch",
       "properties": [
         {
@@ -24191,6 +24749,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://lore.kernel.org/git/20251201031040.1120091-1-brianmlyles@gmail.com/raw"
+        }
+      ],
       "name": "expect-gui--askyesno-failure-in-t1517.patch",
       "properties": [
         {
@@ -24242,6 +24806,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://sourceforge/expect/Expect/5.45.4/expect5.45.4.tar.gz"
+        }
+      ],
       "name": "expect5.45.4.tar.gz",
       "properties": [
         {
@@ -24408,6 +24978,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/extra-1.8.1.tar.gz"
+        }
+      ],
       "name": "extra-1.8.1.tar.gz",
       "properties": [
         {
@@ -24459,6 +25035,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/numactl/numactl/commit/f9deba0c8404529772468d6dd01389f7dbfa5ba9.patch"
+        }
+      ],
       "name": "f9deba0c8404529772468d6dd01389f7dbfa5ba9.patch",
       "properties": [
         {
@@ -25697,6 +26279,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://astron.com/pub/file/file-5.47.tar.gz"
+        }
+      ],
       "name": "file-5.47.tar.gz",
       "properties": [
         {
@@ -25792,6 +26380,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/f/filelock/filelock-3.20.3.tar.gz"
+        }
+      ],
       "name": "filelock-3.20.3.tar.gz",
       "properties": [
         {
@@ -25901,6 +26495,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/filepattern-0.1.3.tar.gz"
+        }
+      ],
       "name": "filepattern-0.1.3.tar.gz",
       "properties": [
         {
@@ -26342,6 +26942,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/fingertree-0.1.6.3.tar.gz"
+        }
+      ],
       "name": "fingertree-0.1.6.3.tar.gz",
       "properties": [
         {
@@ -26393,6 +26999,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://sourceware.org/git/?p=elfutils.git;a=patch;h=b27adc5262e807f341ca0a4910ce04294144f79a"
+        }
+      ],
       "name": "fix-aarch64_attributes.patch",
       "properties": [
         {
@@ -26444,6 +27056,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://git.alpinelinux.org/aports/plain/main/elfutils/fix-aarch64_fregs.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9"
+        }
+      ],
       "name": "fix-aarch64_fregs.patch",
       "properties": [
         {
@@ -26690,6 +27308,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz"
+        }
+      ],
       "name": "flex-2.6.4.tar.gz",
       "properties": [
         {
@@ -27557,6 +28181,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/free-5.2/revision/8.cabal"
+        }
+      ],
       "name": "free-5.2-r8.cabal",
       "properties": [
         {
@@ -27608,6 +28238,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/free-5.2.tar.gz"
+        }
+      ],
       "name": "free-5.2.tar.gz",
       "properties": [
         {
@@ -27758,6 +28394,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/f/freezegun/freezegun-1.5.5.tar.gz"
+        }
+      ],
       "name": "freezegun-1.5.5.tar.gz",
       "properties": [
         {
@@ -29345,6 +29987,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/westes/flex/commit/bf254c75b1e0d2641ebbd7fc85fb183f36a62ea7.patch"
+        }
+      ],
       "name": "gcc-15.patch",
       "properties": [
         {
@@ -29938,6 +30586,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/gdbm/gdbm-1.26.tar.gz"
+        }
+      ],
       "name": "gdbm-1.26.tar.gz",
       "properties": [
         {
@@ -30046,6 +30700,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/generic-deriving-1.14.7.tar.gz"
+        }
+      ],
       "name": "generic-deriving-1.14.7.tar.gz",
       "properties": [
         {
@@ -30154,6 +30814,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/generically-0.1.1/revision/5.cabal"
+        }
+      ],
       "name": "generically-0.1.1-r5.cabal",
       "properties": [
         {
@@ -30205,6 +30871,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/generically-0.1.1.tar.gz"
+        }
+      ],
       "name": "generically-0.1.1.tar.gz",
       "properties": [
         {
@@ -30854,6 +31526,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://frodo.looijaard.name/system/files/software/getopt/getopt-1.1.6.tar.gz"
+        }
+      ],
       "name": "getopt-1.1.6.tar.gz",
       "properties": [
         {
@@ -31146,6 +31824,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/gettext/gettext-1.0.tar.gz"
+        }
+      ],
       "name": "gettext-1.0.tar.gz",
       "properties": [
         {
@@ -31197,6 +31881,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://cpan/authors/id/P/PV/PVANDRY/gettext-1.07.tar.gz"
+        }
+      ],
       "name": "gettext-1.07.tar.gz",
       "properties": [
         {
@@ -31402,6 +32092,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/g/gevent/gevent-25.9.1.tar.gz"
+        }
+      ],
       "name": "gevent-25.9.1.tar.gz",
       "properties": [
         {
@@ -31559,6 +32255,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://downloads.haskell.org/ghc/9.10.3/ghc-9.10.3-src.tar.xz"
+        }
+      ],
       "name": "ghc-9.10.3-src.tar.xz",
       "properties": [
         {
@@ -31610,6 +32312,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.haskell.org/ghc/ghc/-/commit/ae170155e82f1e5f78882f7a682d02a8e46a5823.patch"
+        }
+      ],
       "name": "ghc-9.4-llvm-support-16-17-18.patch",
       "properties": [
         {
@@ -31661,6 +32369,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.haskell.org/ghc/ghc/-/commit/36bbb167f354a2fbc6c4842755f2b1e374e3580e.patch"
+        }
+      ],
       "name": "ghc-9.4-llvm-support-19.patch",
       "properties": [
         {
@@ -31712,6 +32426,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.haskell.org/ghc/ghc/-/commit/ca03226db2db2696460bfcb8035dd3268d546706.patch"
+        }
+      ],
       "name": "ghc-9.4-llvm-support-20.patch",
       "properties": [
         {
@@ -31763,6 +32483,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://downloads.haskell.org/ghc/9.8.4/ghc-9.8.4-x86_64-deb11-linux.tar.xz"
+        }
+      ],
       "name": "ghc-9.8.4-x86_64-deb11-linux.tar.xz",
       "properties": [
         {
@@ -31922,6 +32648,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/ghc-paths-0.1.0.12/revision/8.cabal"
+        }
+      ],
       "name": "ghc-paths-0.1.0.12-r8.cabal",
       "properties": [
         {
@@ -31973,6 +32705,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/ghc-paths-0.1.0.12.tar.gz"
+        }
+      ],
       "name": "ghc-paths-0.1.0.12.tar.gz",
       "properties": [
         {
@@ -32068,6 +32806,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.haskell.org/ghc/ghc/-/commit/ead75532c9dc915bfa9ebaef0ef5d148e793cc0a.patch"
+        }
+      ],
       "name": "ghc-ppc-support-elf-v2-on-powerpc64-big-endian.patch",
       "properties": [
         {
@@ -32119,6 +32863,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.haskell.org/ghc/ghc/-/commit/05e5785a3157c71e327a8e9bdc80fa7082918739.patch"
+        }
+      ],
       "name": "ghc-rts-Fix-compile-on-powerpc64-elf-v1.patch",
       "properties": [
         {
@@ -32170,6 +32920,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.haskell.org/ghc/ghc/-/commit/39bb6e583d64738db51441a556d499aa93a4fc4a.patch"
+        }
+      ],
       "name": "ghc-rts-adjustor-fix-i386-stack-overrun.patch",
       "properties": [
         {
@@ -32309,6 +33065,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://www.kernel.org/pub/software/scm/git/git-2.54.0.tar.xz"
+        }
+      ],
       "name": "git-2.54.0.tar.xz",
       "properties": [
         {
@@ -32597,6 +33359,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://raw.githubusercontent.com/lede-project/source/0fb14a2b1ab2f82ce63f4437b062229d73d90516/tools/flex/patches/200-build-AC_USE_SYSTEM_EXTENSIONS-in-configure.ac.patch"
+        }
+      ],
       "name": "glibc-2.26.patch",
       "properties": [
         {
@@ -33308,6 +34076,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/gmp/gmp-6.3.0.tar.bz2"
+        }
+      ],
       "name": "gmp-6.3.0.tar.bz2",
       "properties": [
         {
@@ -35267,6 +36041,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnupg/gnutls/v3.8/gnutls-3.8.13.tar.xz"
+        }
+      ],
       "name": "gnutls-3.8.13.tar.xz",
       "properties": [
         {
@@ -35362,6 +36142,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/g/greenlet/greenlet-3.3.0.tar.gz"
+        }
+      ],
       "name": "greenlet-3.3.0.tar.gz",
       "properties": [
         {
@@ -36039,6 +36825,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/haddock-library-1.11.0/revision/5.cabal"
+        }
+      ],
       "name": "haddock-library-1.11.0-r5.cabal",
       "properties": [
         {
@@ -36090,6 +36882,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/haddock-library-1.11.0.tar.gz"
+        }
+      ],
       "name": "haddock-library-1.11.0.tar.gz",
       "properties": [
         {
@@ -36243,6 +37041,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/happy-2.1.7.tar.gz"
+        }
+      ],
       "name": "happy-2.1.7.tar.gz",
       "properties": [
         {
@@ -36352,6 +37156,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/happy-lib-2.1.7.tar.gz"
+        }
+      ],
       "name": "happy-lib-2.1.7.tar.gz",
       "properties": [
         {
@@ -36513,6 +37323,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hashable-1.5.1.0.tar.gz"
+        }
+      ],
       "name": "hashable-1.5.1.0.tar.gz",
       "properties": [
         {
@@ -36619,6 +37435,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/haskell-lexer-1.2.1.tar.gz"
+        }
+      ],
       "name": "haskell-lexer-1.2.1.tar.gz",
       "properties": [
         {
@@ -36714,6 +37536,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/h/hatch_vcs/hatch_vcs-0.5.0.tar.gz"
+        }
+      ],
       "name": "hatch_vcs-0.5.0.tar.gz",
       "properties": [
         {
@@ -36809,6 +37637,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/h/hatchling/hatchling-1.29.0.tar.gz"
+        }
+      ],
       "name": "hatchling-1.29.0.tar.gz",
       "properties": [
         {
@@ -36918,6 +37752,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/heaps-0.4.1.tar.gz"
+        }
+      ],
       "name": "heaps-0.4.1.tar.gz",
       "properties": [
         {
@@ -37337,6 +38177,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/help2man/help2man-1.49.3.tar.xz"
+        }
+      ],
       "name": "help2man-1.49.3.tar.xz",
       "properties": [
         {
@@ -38030,6 +38876,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hostname-1.0.tar.gz"
+        }
+      ],
       "name": "hostname-1.0.tar.gz",
       "properties": [
         {
@@ -38143,6 +38995,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hscolour-1.25.tar.gz"
+        }
+      ],
       "name": "hscolour-1.25.tar.gz",
       "properties": [
         {
@@ -38194,6 +39052,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hspec-2.11.17.tar.gz"
+        }
+      ],
       "name": "hspec-2.11.17.tar.gz",
       "properties": [
         {
@@ -38245,6 +39109,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hspec-core-2.11.17.tar.gz"
+        }
+      ],
       "name": "hspec-core-2.11.17.tar.gz",
       "properties": [
         {
@@ -38296,6 +39166,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hspec-discover-2.11.17.tar.gz"
+        }
+      ],
       "name": "hspec-discover-2.11.17.tar.gz",
       "properties": [
         {
@@ -38347,6 +39223,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hspec-expectations-0.8.4/revision/2.cabal"
+        }
+      ],
       "name": "hspec-expectations-0.8.4-r2.cabal",
       "properties": [
         {
@@ -38398,6 +39280,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hspec-expectations-0.8.4.tar.gz"
+        }
+      ],
       "name": "hspec-expectations-0.8.4.tar.gz",
       "properties": [
         {
@@ -38449,6 +39337,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hspec-golden-0.2.2.0/revision/1.cabal"
+        }
+      ],
       "name": "hspec-golden-0.2.2.0-r1.cabal",
       "properties": [
         {
@@ -38500,6 +39394,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hspec-golden-0.2.2.0.tar.gz"
+        }
+      ],
       "name": "hspec-golden-0.2.2.0.tar.gz",
       "properties": [
         {
@@ -38608,6 +39508,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/hspec-meta-2.11.17.tar.gz"
+        }
+      ],
       "name": "hspec-meta-2.11.17.tar.gz",
       "properties": [
         {
@@ -38747,6 +39653,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/i/imagesize/imagesize-1.4.1.tar.gz"
+        }
+      ],
       "name": "imagesize-1.4.1.tar.gz",
       "properties": [
         {
@@ -38842,6 +39754,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/i/importlib_metadata/importlib_metadata-9.0.0.tar.gz"
+        }
+      ],
       "name": "importlib_metadata-9.0.0.tar.gz",
       "properties": [
         {
@@ -38893,6 +39811,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.haskell.org/ghc/ghc/-/commit/7e75928ed0f1c4654de6ddd13d0b00bf4b5c6411.patch"
+        }
+      ],
       "name": "include-modern-utimbuf.patch",
       "properties": [
         {
@@ -39001,6 +39925,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/indexed-traversable-0.1.4/revision/2.cabal"
+        }
+      ],
       "name": "indexed-traversable-0.1.4-r2.cabal",
       "properties": [
         {
@@ -39052,6 +39982,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/indexed-traversable-0.1.4.tar.gz"
+        }
+      ],
       "name": "indexed-traversable-0.1.4.tar.gz",
       "properties": [
         {
@@ -39160,6 +40096,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/indexed-traversable-instances-0.1.2.1.tar.gz"
+        }
+      ],
       "name": "indexed-traversable-instances-0.1.2.1.tar.gz",
       "properties": [
         {
@@ -39255,6 +40197,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/i/iniconfig/iniconfig-2.3.0.tar.gz"
+        }
+      ],
       "name": "iniconfig-2.3.0.tar.gz",
       "properties": [
         {
@@ -39363,6 +40311,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/inspection-testing-0.6.3.tar.gz"
+        }
+      ],
       "name": "inspection-testing-0.6.3.tar.gz",
       "properties": [
         {
@@ -39566,6 +40520,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/integer-conversion-0.1.1/revision/2.cabal"
+        }
+      ],
       "name": "integer-conversion-0.1.1-r2.cabal",
       "properties": [
         {
@@ -39617,6 +40577,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/integer-conversion-0.1.1.tar.gz"
+        }
+      ],
       "name": "integer-conversion-0.1.1.tar.gz",
       "properties": [
         {
@@ -39725,6 +40691,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/integer-logarithms-1.0.5.tar.gz"
+        }
+      ],
       "name": "integer-logarithms-1.0.5.tar.gz",
       "properties": [
         {
@@ -39833,6 +40805,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/invariant-0.6.5.tar.gz"
+        }
+      ],
       "name": "invariant-0.6.5.tar.gz",
       "properties": [
         {
@@ -41094,6 +42072,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/jailbreak-cabal-1.4.1.tar.gz"
+        }
+      ],
       "name": "jailbreak-cabal-1.4.1.tar.gz",
       "properties": [
         {
@@ -41189,6 +42173,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/j/jinja2/jinja2-3.1.6.tar.gz"
+        }
+      ],
       "name": "jinja2-3.1.6.tar.gz",
       "properties": [
         {
@@ -41298,6 +42288,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/js-dgtable-0.5.2.tar.gz"
+        }
+      ],
       "name": "js-dgtable-0.5.2.tar.gz",
       "properties": [
         {
@@ -41407,6 +42403,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/js-flot-0.8.3.tar.gz"
+        }
+      ],
       "name": "js-flot-0.8.3.tar.gz",
       "properties": [
         {
@@ -41516,6 +42518,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/js-jquery-3.7.1.tar.gz"
+        }
+      ],
       "name": "js-jquery-3.7.1.tar.gz",
       "properties": [
         {
@@ -41907,6 +42915,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/kan-extensions-5.2.8.tar.gz"
+        }
+      ],
       "name": "kan-extensions-5.2.8.tar.gz",
       "properties": [
         {
@@ -42029,6 +43043,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git/snapshot/keyutils-1.6.3.tar.gz"
+        }
+      ],
       "name": "keyutils-1.6.3.tar.gz",
       "properties": [
         {
@@ -42241,6 +43261,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://kerberos.org/dist/krb5/1.22/krb5-1.22.1.tar.gz"
+        }
+      ],
       "name": "krb5-1.22.1.tar.gz",
       "properties": [
         {
@@ -42459,6 +43485,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/lens-5.3.6.tar.gz"
+        }
+      ],
       "name": "lens-5.3.6.tar.gz",
       "properties": [
         {
@@ -43727,6 +44759,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://thrysoee.dk/editline/libedit-20251016-3.1.tar.gz"
+        }
+      ],
       "name": "libedit-20251016-3.1.tar.gz",
       "properties": [
         {
@@ -43836,6 +44874,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz"
+        }
+      ],
       "name": "libev-4.33.tar.gz",
       "properties": [
         {
@@ -43945,6 +44989,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz"
+        }
+      ],
       "name": "libevent-2.1.12-stable.tar.gz",
       "properties": [
         {
@@ -44067,6 +45117,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz"
+        }
+      ],
       "name": "libffi-3.5.2.tar.gz",
       "properties": [
         {
@@ -44186,6 +45242,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnupg/libgcrypt/libgcrypt-1.11.2.tar.bz2"
+        }
+      ],
       "name": "libgcrypt-1.11.2.tar.bz2",
       "properties": [
         {
@@ -45168,6 +46230,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnupg/libgpg-error/libgpg-error-1.59.tar.bz2"
+        }
+      ],
       "name": "libgpg-error-1.59.tar.bz2",
       "properties": [
         {
@@ -45424,6 +46492,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/libmicrohttpd/libmicrohttpd-1.0.2.tar.gz"
+        }
+      ],
       "name": "libmicrohttpd-1.0.2.tar.gz",
       "properties": [
         {
@@ -45577,6 +46651,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/rockdaboot/libpsl/releases/download/0.21.5/libpsl-0.21.5.tar.lz"
+        }
+      ],
       "name": "libpsl-0.21.5.tar.lz",
       "properties": [
         {
@@ -45749,6 +46829,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://www.libssh2.org/download/libssh2-1.11.1.tar.gz"
+        }
+      ],
       "name": "libssh2-1.11.1.tar.gz",
       "properties": [
         {
@@ -45907,6 +46993,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/libtasn1/libtasn1-4.21.0.tar.gz"
+        }
+      ],
       "name": "libtasn1-4.21.0.tar.gz",
       "properties": [
         {
@@ -47433,6 +48525,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnome/sources/libxslt/1.1/libxslt-1.1.45.tar.xz"
+        }
+      ],
       "name": "libxslt-1.1.45.tar.xz",
       "properties": [
         {
@@ -48244,6 +49342,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/logging-facade-0.3.1.tar.gz"
+        }
+      ],
       "name": "logging-facade-0.3.1.tar.gz",
       "properties": [
         {
@@ -48352,6 +49456,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/logict-0.8.2.0.tar.gz"
+        }
+      ],
       "name": "logict-0.8.2.0.tar.gz",
       "properties": [
         {
@@ -49117,6 +50227,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz"
+        }
+      ],
       "name": "lzo-2.10.tar.gz",
       "properties": [
         {
@@ -49168,6 +50284,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/m4/m4-1.4.21.tar.bz2"
+        }
+      ],
       "name": "m4-1.4.21.tar.bz2",
       "properties": [
         {
@@ -49332,6 +50454,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://releases.pagure.org/mailcap/mailcap-2.1.54.tar.xz"
+        }
+      ],
       "name": "mailcap-2.1.54.tar.xz",
       "properties": [
         {
@@ -49809,6 +50937,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/facebook/zstd/commit/6af3842118ea5325480b403213b2a9fbed3d3d74.patch"
+        }
+      ],
       "name": "man-fix.patch",
       "properties": [
         {
@@ -52716,6 +53850,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/mockery-0.3.5.tar.gz"
+        }
+      ],
       "name": "mockery-0.3.5.tar.gz",
       "properties": [
         {
@@ -53157,6 +54297,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://www.bytereef.org/software/mpdecimal/releases/mpdecimal-4.0.1.tar.gz"
+        }
+      ],
       "name": "mpdecimal-4.0.1.tar.gz",
       "properties": [
         {
@@ -53581,6 +54727,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://git.alpinelinux.org/aports/plain/main/elfutils/musl-asm-ptrace-h.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9"
+        }
+      ],
       "name": "musl-asm-ptrace-h.patch",
       "properties": [
         {
@@ -53632,6 +54784,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://git.alpinelinux.org/aports/plain/main/elfutils/musl-macros.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9"
+        }
+      ],
       "name": "musl-macros.patch",
       "properties": [
         {
@@ -53734,6 +54892,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://git.alpinelinux.org/aports/plain/main/elfutils/musl-strndupa.patch?id=2e3d4976eeffb4704cf83e2cc3306293b7c7b2e9"
+        }
+      ],
       "name": "musl-strndupa.patch",
       "properties": [
         {
@@ -54048,6 +55212,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/nanospec-0.2.2.tar.gz"
+        }
+      ],
       "name": "nanospec-0.2.2.tar.gz",
       "properties": [
         {
@@ -54167,6 +55337,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://invisible-island.net/archives/ncurses/ncurses-6.6.tar.gz"
+        }
+      ],
       "name": "ncurses-6.6.tar.gz",
       "properties": [
         {
@@ -54283,6 +55459,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://sourceforge/net-tools/net-tools-2.10.tar.xz"
+        }
+      ],
       "name": "net-tools-2.10.tar.xz",
       "properties": [
         {
@@ -54402,6 +55584,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/nettle/nettle-3.10.2.tar.gz"
+        }
+      ],
       "name": "nettle-3.10.2.tar.gz",
       "properties": [
         {
@@ -54510,6 +55698,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/network-uri-2.6.4.2/revision/1.cabal"
+        }
+      ],
       "name": "network-uri-2.6.4.2-r1.cabal",
       "properties": [
         {
@@ -54561,6 +55755,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/network-uri-2.6.4.2.tar.gz"
+        }
+      ],
       "name": "network-uri-2.6.4.2.tar.gz",
       "properties": [
         {
@@ -54676,6 +55876,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/nghttp2/nghttp2/releases/download/v1.69.0/nghttp2-1.69.0.tar.bz2"
+        }
+      ],
       "name": "nghttp2-1.69.0.tar.bz2",
       "properties": [
         {
@@ -54778,6 +55984,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/ngtcp2/nghttp3/releases/download/v1.15.0/nghttp3-1.15.0.tar.bz2"
+        }
+      ],
       "name": "nghttp3-1.15.0.tar.bz2",
       "properties": [
         {
@@ -54893,6 +56105,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/ngtcp2/ngtcp2/releases/download/v1.22.1/ngtcp2-1.22.1.tar.bz2"
+        }
+      ],
       "name": "ngtcp2-1.22.1.tar.bz2",
       "properties": [
         {
@@ -55060,6 +56278,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/nothunks-0.3.1/revision/2.cabal"
+        }
+      ],
       "name": "nothunks-0.3.1-r2.cabal",
       "properties": [
         {
@@ -55111,6 +56335,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/nothunks-0.3.1.tar.gz"
+        }
+      ],
       "name": "nothunks-0.3.1.tar.gz",
       "properties": [
         {
@@ -55860,6 +57090,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/old-locale-1.0.0.7/revision/2.cabal"
+        }
+      ],
       "name": "old-locale-1.0.0.7-r2.cabal",
       "properties": [
         {
@@ -55911,6 +57147,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/old-locale-1.0.0.7.tar.gz"
+        }
+      ],
       "name": "old-locale-1.0.0.7.tar.gz",
       "properties": [
         {
@@ -56019,6 +57261,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/old-time-1.1.1.0.tar.gz"
+        }
+      ],
       "name": "old-time-1.1.1.0.tar.gz",
       "properties": [
         {
@@ -56428,6 +57676,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pcapriotti/optparse-applicative/commit/2c2a39ed53e6339d8dc717efeb7d44f4c2b69cab.patch"
+        }
+      ],
       "name": "optparse-applicative-0.18.1-allow-QuickCheck-2.15.patch",
       "properties": [
         {
@@ -56479,6 +57733,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/optparse-applicative-0.18.1.0/revision/1.cabal"
+        }
+      ],
       "name": "optparse-applicative-0.18.1.0-r1.cabal",
       "properties": [
         {
@@ -56530,6 +57790,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/optparse-applicative-0.18.1.0.tar.gz"
+        }
+      ],
       "name": "optparse-applicative-0.18.1.0.tar.gz",
       "properties": [
         {
@@ -56858,6 +58124,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/os-string-2.0.10.tar.gz"
+        }
+      ],
       "name": "os-string-2.0.10.tar.gz",
       "properties": [
         {
@@ -56922,6 +58194,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/p11-glue/p11-kit.git@refs/tags/0.26.2"
+        }
+      ],
       "licenses": [
         {
           "license": {
@@ -57021,6 +58299,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/packaging/packaging-26.1.tar.gz"
+        }
+      ],
       "name": "packaging-26.1.tar.gz",
       "properties": [
         {
@@ -57129,6 +58413,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/parallel-3.2.2.0/revision/10.cabal"
+        }
+      ],
       "name": "parallel-3.2.2.0-r10.cabal",
       "properties": [
         {
@@ -57180,6 +58470,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/parallel-3.2.2.0.tar.gz"
+        }
+      ],
       "name": "parallel-3.2.2.0.tar.gz",
       "properties": [
         {
@@ -57288,6 +58584,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/parsers-0.12.12/revision/1.cabal"
+        }
+      ],
       "name": "parsers-0.12.12-r1.cabal",
       "properties": [
         {
@@ -57339,6 +58641,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/parsers-0.12.12.tar.gz"
+        }
+      ],
       "name": "parsers-0.12.12.tar.gz",
       "properties": [
         {
@@ -57573,6 +58881,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://raw.githubusercontent.com/freebsd/freebsd-ports/21a6f0f5829384117dfc1ed11ad67954562ef7d6/devel/libev/files/patch-ev.c"
+        }
+      ],
       "name": "patch-ev.c",
       "properties": [
         {
@@ -58005,6 +59319,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://cyberelk.net/tim/data/patchutils/stable/patchutils-0.3.3.tar.xz"
+        }
+      ],
       "name": "patchutils-0.3.3.tar.xz",
       "properties": [
         {
@@ -58056,6 +59376,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://cyberelk.net/tim/data/patchutils/stable/patchutils-0.4.2.tar.xz"
+        }
+      ],
       "name": "patchutils-0.4.2.tar.xz",
       "properties": [
         {
@@ -58151,6 +59477,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/pathspec/pathspec-1.0.4.tar.gz"
+        }
+      ],
       "name": "pathspec-1.0.4.tar.gz",
       "properties": [
         {
@@ -58509,6 +59841,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/pexpect/pexpect-4.9.0.tar.gz"
+        }
+      ],
       "name": "pexpect-4.9.0.tar.gz",
       "properties": [
         {
@@ -59148,6 +60486,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/prettyprinter-1.7.1.tar.gz"
+        }
+      ],
       "name": "prettyprinter-1.7.1.tar.gz",
       "properties": [
         {
@@ -59199,6 +60543,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/prettyprinter-ansi-terminal-1.1.3.tar.gz"
+        }
+      ],
       "name": "prettyprinter-ansi-terminal-1.1.3.tar.gz",
       "properties": [
         {
@@ -59307,6 +60657,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/prettyprinter-compat-ansi-wl-pprint-1.0.2.tar.gz"
+        }
+      ],
       "name": "prettyprinter-compat-ansi-wl-pprint-1.0.2.tar.gz",
       "properties": [
         {
@@ -59358,6 +60714,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/primitive-0.9.1.0/revision/1.cabal"
+        }
+      ],
       "name": "primitive-0.9.1.0-r1.cabal",
       "properties": [
         {
@@ -59409,6 +60771,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/primitive-0.9.1.0.tar.gz"
+        }
+      ],
       "name": "primitive-0.9.1.0.tar.gz",
       "properties": [
         {
@@ -59627,6 +60995,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/profunctors-5.6.3.tar.gz"
+        }
+      ],
       "name": "profunctors-5.6.3.tar.gz",
       "properties": [
         {
@@ -59776,6 +61150,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/ptyprocess/ptyprocess-0.7.0.tar.gz"
+        }
+      ],
       "name": "ptyprocess-0.7.0.tar.gz",
       "properties": [
         {
@@ -60406,6 +61786,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/pygments/pygments-2.20.0.tar.gz"
+        }
+      ],
       "name": "pygments-2.20.0.tar.gz",
       "properties": [
         {
@@ -60589,6 +61975,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/pyproject_hooks/pyproject_hooks-1.2.0.tar.gz"
+        }
+      ],
       "name": "pyproject_hooks-1.2.0.tar.gz",
       "properties": [
         {
@@ -60772,6 +62164,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/pytest/pytest-9.0.3.tar.gz"
+        }
+      ],
       "name": "pytest-9.0.3.tar.gz",
       "properties": [
         {
@@ -61010,6 +62408,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/pytest-instafail/pytest-instafail-0.5.0.tar.gz"
+        }
+      ],
       "name": "pytest-instafail-0.5.0.tar.gz",
       "properties": [
         {
@@ -61203,6 +62607,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pytest-dev/pytest-xdist/commit/44f4bea2652e06e7cd5d4a063aa2673b5ef701ee.patch"
+        }
+      ],
       "name": "pytest9-compat-1.patch",
       "properties": [
         {
@@ -61254,6 +62664,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pytest-dev/pytest-xdist/commit/0c984478f39d7a01aa24c061f2581bdfd071cb6a.patch"
+        }
+      ],
       "name": "pytest9-compat-2.patch",
       "properties": [
         {
@@ -61441,6 +62857,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/python-dateutil/python-dateutil-2.9.0.post0.tar.gz"
+        }
+      ],
       "name": "python-dateutil-2.9.0.post0.tar.gz",
       "properties": [
         {
@@ -62496,6 +63918,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/p/pytz/pytz-2026.1.post1.tar.gz"
+        }
+      ],
       "name": "pytz-2026.1.post1.tar.gz",
       "properties": [
         {
@@ -62714,6 +64142,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/quickcheck-instances-0.3.33/revision/1.cabal"
+        }
+      ],
       "name": "quickcheck-instances-0.3.33-r1.cabal",
       "properties": [
         {
@@ -62765,6 +64199,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/quickcheck-instances-0.3.33.tar.gz"
+        }
+      ],
       "name": "quickcheck-instances-0.3.33.tar.gz",
       "properties": [
         {
@@ -62816,6 +64256,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/quickcheck-io-0.2.0.tar.gz"
+        }
+      ],
       "name": "quickcheck-io-0.2.0.tar.gz",
       "properties": [
         {
@@ -62924,6 +64370,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/quickcheck-unicode-1.0.1.0.tar.gz"
+        }
+      ],
       "name": "quickcheck-unicode-1.0.1.0.tar.gz",
       "properties": [
         {
@@ -63085,6 +64537,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/random-1.2.1.3.tar.gz"
+        }
+      ],
       "name": "random-1.2.1.3.tar.gz",
       "properties": [
         {
@@ -63561,6 +65019,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/readline/readline-8.3.tar.gz"
+        }
+      ],
       "name": "readline-8.3.tar.gz",
       "properties": [
         {
@@ -63612,6 +65076,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/readline/readline-8.3-patches/readline83-001"
+        }
+      ],
       "name": "readline83-001",
       "properties": [
         {
@@ -63663,6 +65133,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/readline/readline-8.3-patches/readline83-002"
+        }
+      ],
       "name": "readline83-002",
       "properties": [
         {
@@ -63714,6 +65190,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://gnu/readline/readline-8.3-patches/readline83-003"
+        }
+      ],
       "name": "readline83-003",
       "properties": [
         {
@@ -64042,6 +65524,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/reducers-3.12.5/revision/1.cabal"
+        }
+      ],
       "name": "reducers-3.12.5-r1.cabal",
       "properties": [
         {
@@ -64093,6 +65581,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/reducers-3.12.5.tar.gz"
+        }
+      ],
       "name": "reducers-3.12.5.tar.gz",
       "properties": [
         {
@@ -64201,6 +65695,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/reflection-2.1.9/revision/1.cabal"
+        }
+      ],
       "name": "reflection-2.1.9-r1.cabal",
       "properties": [
         {
@@ -64252,6 +65752,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/reflection-2.1.9.tar.gz"
+        }
+      ],
       "name": "reflection-2.1.9.tar.gz",
       "properties": [
         {
@@ -64360,6 +65866,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/regex-base-0.94.0.3.tar.gz"
+        }
+      ],
       "name": "regex-base-0.94.0.3.tar.gz",
       "properties": [
         {
@@ -64468,6 +65980,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/regex-posix-0.96.0.2.tar.gz"
+        }
+      ],
       "name": "regex-posix-0.96.0.2.tar.gz",
       "properties": [
         {
@@ -65108,6 +66626,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.nic.cz/knot/knot-resolver/raw/d9c96ae96f066a85d7/etc/root.hints"
+        }
+      ],
       "name": "root.hints",
       "properties": [
         {
@@ -65216,6 +66740,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/scientific-0.3.8.1.tar.gz"
+        }
+      ],
       "name": "scientific-0.3.8.1.tar.gz",
       "properties": [
         {
@@ -65719,6 +67249,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/semialign-1.3.1.1.tar.gz"
+        }
+      ],
       "name": "semialign-1.3.1.1.tar.gz",
       "properties": [
         {
@@ -65827,6 +67363,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/semigroupoids-6.0.2/revision/1.cabal"
+        }
+      ],
       "name": "semigroupoids-6.0.2-r1.cabal",
       "properties": [
         {
@@ -65878,6 +67420,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/semigroupoids-6.0.2.tar.gz"
+        }
+      ],
       "name": "semigroupoids-6.0.2.tar.gz",
       "properties": [
         {
@@ -66497,6 +68045,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/s/setuptools_scm/setuptools_scm-9.2.2.tar.gz"
+        }
+      ],
       "name": "setuptools_scm-9.2.2.tar.gz",
       "properties": [
         {
@@ -66606,6 +68160,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/shake-0.19.9.tar.gz"
+        }
+      ],
       "name": "shake-0.19.9.tar.gz",
       "properties": [
         {
@@ -66991,6 +68551,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/silently-1.2.5.4.tar.gz"
+        }
+      ],
       "name": "silently-1.2.5.4.tar.gz",
       "properties": [
         {
@@ -67099,6 +68665,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/simple-reflect-0.3.3.tar.gz"
+        }
+      ],
       "name": "simple-reflect-0.3.3.tar.gz",
       "properties": [
         {
@@ -67251,6 +68823,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/smallcheck-1.2.1.1.tar.gz"
+        }
+      ],
       "name": "smallcheck-1.2.1.1.tar.gz",
       "properties": [
         {
@@ -67346,6 +68924,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/s/snowballstemmer/snowballstemmer-3.0.1.tar.gz"
+        }
+      ],
       "name": "snowballstemmer-3.0.1.tar.gz",
       "properties": [
         {
@@ -67564,6 +69148,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pallets/markupsafe/archive/refs/tags/3.0.3.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -67615,6 +69205,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pytest-dev/pytest-xdist/archive/refs/tags/v3.8.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -67666,6 +69262,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/mesonbuild/meson/archive/refs/tags/1.10.2.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -67717,6 +69319,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/python/typing_extensions/archive/refs/tags/4.15.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -67768,6 +69376,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/zlib-ng/zlib-ng/archive/2.3.3.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -67819,6 +69433,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/eliben/pycparser/archive/refs/tags/release_v3.00.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -67870,6 +69490,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/python-cffi/cffi/archive/refs/tags/v2.0.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -67921,6 +69547,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/di/calver/archive/refs/tags/2025.10.20.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -67972,6 +69604,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/cython/cython/archive/refs/tags/3.2.4.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68023,6 +69661,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/rhash/RHash/archive/v1.4.6.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68074,6 +69718,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pytest-dev/pytest-mock/archive/refs/tags/v3.15.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68125,6 +69775,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/NLnetLabs/unbound/archive/refs/tags/release-1.25.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68176,6 +69832,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/kjd/idna/archive/refs/tags/v3.13.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68227,6 +69889,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/ninja-build/ninja/archive/refs/tags/v1.13.2.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68278,6 +69946,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.gnome.org/api/v4/projects/GNOME%2Fgtk-doc/repository/archive.tar.gz?sha=1.35.1"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68329,6 +70003,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/google/googletest/archive/v1.17.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68380,6 +70060,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/python/mypy_extensions/archive/refs/tags/1.1.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68431,6 +70117,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/certifi/python-certifi/archive/2026.01.04.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68482,6 +70174,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/publicsuffix/list/archive/d333b72b39575da1ce6932b01d7c421a4107c620.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68533,6 +70231,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/libarchive/libarchive/archive/v3.8.7.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68584,6 +70288,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/python/mypy/archive/refs/tags/v1.20.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68635,6 +70345,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pytest-dev/pytest-asyncio/archive/refs/tags/v1.3.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68686,6 +70402,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pytest-dev/pytest-timeout/archive/refs/tags/2.4.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68737,6 +70459,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/skvadrik/re2c/archive/4.5.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68788,6 +70516,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/hukkin/tomli/archive/2.4.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68839,6 +70573,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/sphinx-doc/sphinx/archive/refs/tags/v9.1.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68890,6 +70630,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pypa/build/archive/refs/tags/1.4.4.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68941,6 +70687,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/mypyc/librt/archive/refs/tags/v0.9.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -68992,6 +70744,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/lxml/lxml/archive/refs/tags/lxml-6.0.2.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69043,6 +70801,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/jaraco/zipp/archive/refs/tags/v3.23.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69094,6 +70858,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/json-c/json-c/archive/json-c-0.18-20240915.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69145,6 +70915,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/tiran/defusedxml/archive/refs/tags/v0.8.0rc2.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69196,6 +70972,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/libuv/libuv/archive/v1.52.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69247,6 +71029,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/sphinx-doc/alabaster/archive/refs/tags/1.0.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69298,6 +71086,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/stevegrubb/libcap-ng/archive/refs/tags/v0.9.3.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69349,6 +71143,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/snowballstem/pystemmer/archive/refs/tags/v3.0.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69400,6 +71200,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/psf/requests/archive/refs/tags/v2.33.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69451,6 +71257,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/jawah/charset_normalizer/archive/refs/tags/3.4.7.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69502,6 +71314,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/zopefoundation/zope.interface/archive/refs/tags/8.2.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69553,6 +71371,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pypa/wheel/archive/refs/tags/0.46.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69604,6 +71428,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/swig/swig/archive/v4.4.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69655,6 +71485,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://gitlab.gnome.org/api/v4/projects/GNOME%2Flibxml2/repository/archive.tar.gz?sha=refs%2Ftags%2Fv2.15.2"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69706,6 +71542,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/google/brotli/archive/refs/tags/v1.2.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69757,6 +71599,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pypa/flit/archive/3.12.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69808,6 +71656,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pytest-dev/pluggy/archive/refs/tags/1.6.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69859,6 +71713,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/giampaolo/psutil/archive/refs/tags/release-7.2.2.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69910,6 +71770,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/p11-glue/p11-kit.git@refs/tags/0.26.2"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -69961,6 +71827,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/snowballstem/snowball/archive/v2.2.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -70012,6 +71884,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/numactl/numactl/archive/v2.0.18.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -70063,6 +71941,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pypa/setuptools/archive/refs/tags/v80.10.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -70114,6 +71998,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/facebook/zstd/archive/v1.5.7.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -70165,6 +72055,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/asciidoc-py/asciidoc-py/archive/10.2.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -70216,6 +72112,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/benjaminp/six/archive/refs/tags/1.17.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -70267,6 +72169,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/zopefoundation/zope.event/archive/refs/tags/6.1.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -70318,6 +72226,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/AA-Turner/roman-numerals/archive/refs/tags/v4.1.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -70369,6 +72283,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/pypa/installer/archive/1.0.0.tar.gz"
+        }
+      ],
       "name": "source",
       "properties": [
         {
@@ -70648,6 +72568,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/s/sphinxcontrib-jsmath/sphinxcontrib-jsmath-1.0.1.tar.gz"
+        }
+      ],
       "name": "sphinxcontrib-jsmath-1.0.1.tar.gz",
       "properties": [
         {
@@ -70831,6 +72757,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/s/sphinxcontrib_applehelp/sphinxcontrib_applehelp-2.0.0.tar.gz"
+        }
+      ],
       "name": "sphinxcontrib_applehelp-2.0.0.tar.gz",
       "properties": [
         {
@@ -70882,6 +72814,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/s/sphinxcontrib_devhelp/sphinxcontrib_devhelp-2.0.0.tar.gz"
+        }
+      ],
       "name": "sphinxcontrib_devhelp-2.0.0.tar.gz",
       "properties": [
         {
@@ -70933,6 +72871,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/s/sphinxcontrib_htmlhelp/sphinxcontrib_htmlhelp-2.1.0.tar.gz"
+        }
+      ],
       "name": "sphinxcontrib_htmlhelp-2.1.0.tar.gz",
       "properties": [
         {
@@ -70984,6 +72928,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/s/sphinxcontrib_qthelp/sphinxcontrib_qthelp-2.0.0.tar.gz"
+        }
+      ],
       "name": "sphinxcontrib_qthelp-2.0.0.tar.gz",
       "properties": [
         {
@@ -71035,6 +72985,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/s/sphinxcontrib_serializinghtml/sphinxcontrib_serializinghtml-2.0.0.tar.gz"
+        }
+      ],
       "name": "sphinxcontrib_serializinghtml-2.0.0.tar.gz",
       "properties": [
         {
@@ -71086,6 +73042,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/s/sphinxcontrib_websupport/sphinxcontrib_websupport-2.0.0.tar.gz"
+        }
+      ],
       "name": "sphinxcontrib_websupport-2.0.0.tar.gz",
       "properties": [
         {
@@ -71137,6 +73099,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/splitmix-0.1.3.2.tar.gz"
+        }
+      ],
       "name": "splitmix-0.1.3.2.tar.gz",
       "properties": [
         {
@@ -71366,6 +73334,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://sqlite.org/2026/sqlite-doc-3510200.zip"
+        }
+      ],
       "name": "sqlite-doc-3510200.zip",
       "properties": [
         {
@@ -71417,6 +73391,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://sqlite.org/2026/sqlite-src-3510200.zip"
+        }
+      ],
       "name": "sqlite-src-3510200.zip",
       "properties": [
         {
@@ -71849,6 +73829,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/rockdaboot/libpsl/commit/490bd6f98a2addcade55028ea60c36cce07e21e4.patch"
+        }
+      ],
       "name": "static.patch",
       "properties": [
         {
@@ -72445,6 +74431,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/strict-0.5.1/revision/1.cabal"
+        }
+      ],
       "name": "strict-0.5.1-r1.cabal",
       "properties": [
         {
@@ -72496,6 +74488,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/strict-0.5.1.tar.gz"
+        }
+      ],
       "name": "strict-0.5.1.tar.gz",
       "properties": [
         {
@@ -72714,6 +74712,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/stringbuilder-0.5.1.tar.gz"
+        }
+      ],
       "name": "stringbuilder-0.5.1.tar.gz",
       "properties": [
         {
@@ -74524,6 +76528,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/syb-0.7.2.4.tar.gz"
+        }
+      ],
       "name": "syb-0.7.2.4.tar.gz",
       "properties": [
         {
@@ -75015,6 +77025,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://lore.kernel.org/git/20260504101429.340123-1-joerg@thalheim.io/raw"
+        }
+      ],
       "name": "t7703-ignore-ls-total.patch",
       "properties": [
         {
@@ -75066,6 +77082,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tagged-0.8.9.tar.gz"
+        }
+      ],
       "name": "tagged-0.8.9.tar.gz",
       "properties": [
         {
@@ -75288,6 +77310,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tasty-1.5.4.tar.gz"
+        }
+      ],
       "name": "tasty-1.5.4.tar.gz",
       "properties": [
         {
@@ -75396,6 +77424,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tasty-golden-2.3.6.tar.gz"
+        }
+      ],
       "name": "tasty-golden-2.3.6.tar.gz",
       "properties": [
         {
@@ -75504,6 +77538,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tasty-hunit-0.10.2.tar.gz"
+        }
+      ],
       "name": "tasty-hunit-0.10.2.tar.gz",
       "properties": [
         {
@@ -75612,6 +77652,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tasty-inspection-testing-0.2.1/revision/3.cabal"
+        }
+      ],
       "name": "tasty-inspection-testing-0.2.1-r3.cabal",
       "properties": [
         {
@@ -75663,6 +77709,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tasty-inspection-testing-0.2.1.tar.gz"
+        }
+      ],
       "name": "tasty-inspection-testing-0.2.1.tar.gz",
       "properties": [
         {
@@ -75771,6 +77823,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tasty-quickcheck-0.11.1/revision/5.cabal"
+        }
+      ],
       "name": "tasty-quickcheck-0.11.1-r5.cabal",
       "properties": [
         {
@@ -75822,6 +77880,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tasty-quickcheck-0.11.1.tar.gz"
+        }
+      ],
       "name": "tasty-quickcheck-0.11.1.tar.gz",
       "properties": [
         {
@@ -75930,6 +77994,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tasty-smallcheck-0.8.2/revision/1.cabal"
+        }
+      ],
       "name": "tasty-smallcheck-0.8.2-r1.cabal",
       "properties": [
         {
@@ -75981,6 +78051,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tasty-smallcheck-0.8.2.tar.gz"
+        }
+      ],
       "name": "tasty-smallcheck-0.8.2.tar.gz",
       "properties": [
         {
@@ -76291,6 +78367,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://sourceforge/tcl/tcl8.6.16-src.tar.gz"
+        }
+      ],
       "name": "tcl8.6.16-src.tar.gz",
       "properties": [
         {
@@ -76399,6 +78481,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/temporary-1.3.tar.gz"
+        }
+      ],
       "name": "temporary-1.3.tar.gz",
       "properties": [
         {
@@ -76507,6 +78595,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/test-framework-0.8.2.3.tar.gz"
+        }
+      ],
       "name": "test-framework-0.8.2.3.tar.gz",
       "properties": [
         {
@@ -76615,6 +78709,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/test-framework-hunit-0.3.0.3.tar.gz"
+        }
+      ],
       "name": "test-framework-hunit-0.3.0.3.tar.gz",
       "properties": [
         {
@@ -76723,6 +78823,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/test-framework-quickcheck2-0.3.0.7.tar.gz"
+        }
+      ],
       "name": "test-framework-quickcheck2-0.3.0.7.tar.gz",
       "properties": [
         {
@@ -76953,6 +79059,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/text-iso8601-0.1.1.1.tar.gz"
+        }
+      ],
       "name": "text-iso8601-0.1.1.1.tar.gz",
       "properties": [
         {
@@ -77061,6 +79173,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/text-short-0.1.6.1.tar.gz"
+        }
+      ],
       "name": "text-short-0.1.6.1.tar.gz",
       "properties": [
         {
@@ -77112,6 +79230,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/th-abstraction-0.7.2.0.tar.gz"
+        }
+      ],
       "name": "th-abstraction-0.7.2.0.tar.gz",
       "properties": [
         {
@@ -77163,6 +79287,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/th-compat-0.1.7.tar.gz"
+        }
+      ],
       "name": "th-compat-0.1.7.tar.gz",
       "properties": [
         {
@@ -77271,6 +79401,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/these-1.2.1/revision/3.cabal"
+        }
+      ],
       "name": "these-1.2.1-r3.cabal",
       "properties": [
         {
@@ -77322,6 +79458,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/these-1.2.1.tar.gz"
+        }
+      ],
       "name": "these-1.2.1.tar.gz",
       "properties": [
         {
@@ -77540,6 +79682,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/time-compat-1.9.9/revision/1.cabal"
+        }
+      ],
       "name": "time-compat-1.9.9-r1.cabal",
       "properties": [
         {
@@ -77591,6 +79739,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/time-compat-1.9.9.tar.gz"
+        }
+      ],
       "name": "time-compat-1.9.9.tar.gz",
       "properties": [
         {
@@ -80744,6 +82898,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/t/toml/toml-0.10.2.tar.gz"
+        }
+      ],
       "name": "toml-0.10.2.tar.gz",
       "properties": [
         {
@@ -81120,6 +83280,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/transformers-base-0.4.6.1.tar.gz"
+        }
+      ],
       "name": "transformers-base-0.4.6.1.tar.gz",
       "properties": [
         {
@@ -81171,6 +83337,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/transformers-compat-0.7.2.tar.gz"
+        }
+      ],
       "name": "transformers-compat-0.7.2.tar.gz",
       "properties": [
         {
@@ -81279,6 +83451,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tree-diff-0.3.4/revision/2.cabal"
+        }
+      ],
       "name": "tree-diff-0.3.4-r2.cabal",
       "properties": [
         {
@@ -81330,6 +83508,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/tree-diff-0.3.4.tar.gz"
+        }
+      ],
       "name": "tree-diff-0.3.4.tar.gz",
       "properties": [
         {
@@ -81438,6 +83622,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/trifecta-2.1.4/revision/2.cabal"
+        }
+      ],
       "name": "trifecta-2.1.4-r2.cabal",
       "properties": [
         {
@@ -81489,6 +83679,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/trifecta-2.1.4.tar.gz"
+        }
+      ],
       "name": "trifecta-2.1.4.tar.gz",
       "properties": [
         {
@@ -81584,6 +83780,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/t/trove_classifiers/trove_classifiers-2026.4.28.13.tar.gz"
+        }
+      ],
       "name": "trove_classifiers-2026.4.28.13.tar.gz",
       "properties": [
         {
@@ -81692,6 +83894,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/typed-process-0.2.13.0.tar.gz"
+        }
+      ],
       "name": "typed-process-0.2.13.0.tar.gz",
       "properties": [
         {
@@ -81831,6 +84039,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/t/types_psutil/types_psutil-7.2.1.20260116.tar.gz"
+        }
+      ],
       "name": "types_psutil-7.2.1.20260116.tar.gz",
       "properties": [
         {
@@ -81882,6 +84096,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/t/types_setuptools/types_setuptools-80.9.0.20251223.tar.gz"
+        }
+      ],
       "name": "types_setuptools-80.9.0.20251223.tar.gz",
       "properties": [
         {
@@ -81977,6 +84197,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://data.iana.org/time-zones/releases/tzcode2026b.tar.gz"
+        }
+      ],
       "name": "tzcode2026b.tar.gz",
       "properties": [
         {
@@ -82086,6 +84312,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://data.iana.org/time-zones/releases/tzdata2026b.tar.gz"
+        }
+      ],
       "name": "tzdata2026b.tar.gz",
       "properties": [
         {
@@ -82850,6 +85082,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/unliftio-core-0.2.1.0/revision/4.cabal"
+        }
+      ],
       "name": "unliftio-core-0.2.1.0-r4.cabal",
       "properties": [
         {
@@ -82901,6 +85139,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/unliftio-core-0.2.1.0.tar.gz"
+        }
+      ],
       "name": "unliftio-core-0.2.1.0.tar.gz",
       "properties": [
         {
@@ -83062,6 +85306,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/unordered-containers-0.2.20.1.tar.gz"
+        }
+      ],
       "name": "unordered-containers-0.2.20.1.tar.gz",
       "properties": [
         {
@@ -83329,6 +85579,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://sourceforge/infozip/unzip60.tar.gz"
+        }
+      ],
       "name": "unzip60.tar.gz",
       "properties": [
         {
@@ -83476,6 +85732,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://pypi/u/urllib3/urllib3-2.6.3.tar.gz"
+        }
+      ],
       "name": "urllib3-2.6.3.tar.gz",
       "properties": [
         {
@@ -83584,6 +85846,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/utf8-string-1.0.2.tar.gz"
+        }
+      ],
       "name": "utf8-string-1.0.2.tar.gz",
       "properties": [
         {
@@ -84085,6 +86353,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/uuid-types-1.0.6.1.tar.gz"
+        }
+      ],
       "name": "uuid-types-1.0.6.1.tar.gz",
       "properties": [
         {
@@ -84301,6 +86575,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/vector-0.13.2.0/revision/2.cabal"
+        }
+      ],
       "name": "vector-0.13.2.0-r2.cabal",
       "properties": [
         {
@@ -84352,6 +86632,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/vector-0.13.2.0.tar.gz"
+        }
+      ],
       "name": "vector-0.13.2.0.tar.gz",
       "properties": [
         {
@@ -84458,6 +86744,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/vector-stream-0.1.0.1/revision/4.cabal"
+        }
+      ],
       "name": "vector-stream-0.1.0.1-r4.cabal",
       "properties": [
         {
@@ -84509,6 +86801,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/vector-stream-0.1.0.1.tar.gz"
+        }
+      ],
       "name": "vector-stream-0.1.0.1.tar.gz",
       "properties": [
         {
@@ -85585,6 +87883,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/wherefrom-compat-0.1.1.1/revision/4.cabal"
+        }
+      ],
       "name": "wherefrom-compat-0.1.1.1-r4.cabal",
       "properties": [
         {
@@ -85636,6 +87940,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/wherefrom-compat-0.1.1.1.tar.gz"
+        }
+      ],
       "name": "wherefrom-compat-0.1.1.1.tar.gz",
       "properties": [
         {
@@ -85860,6 +88170,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/witherable-0.5/revision/2.cabal"
+        }
+      ],
       "name": "witherable-0.5-r2.cabal",
       "properties": [
         {
@@ -85911,6 +88227,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/witherable-0.5.tar.gz"
+        }
+      ],
       "name": "witherable-0.5.tar.gz",
       "properties": [
         {
@@ -86400,6 +88722,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/xml-1.3.14/revision/2.cabal"
+        }
+      ],
       "name": "xml-1.3.14-r2.cabal",
       "properties": [
         {
@@ -86451,6 +88779,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "mirror://hackage/xml-1.3.14.tar.gz"
+        }
+      ],
       "name": "xml-1.3.14.tar.gz",
       "properties": [
         {

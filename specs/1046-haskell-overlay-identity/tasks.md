@@ -164,11 +164,12 @@
 - [X] T027 [P] Document the merge, the Hackage check (its outcomes, `--no-hackage-lookup`, `--offline`) and the `vcs` references for overlays in `docs/reference/nix-evaluation.md`.
 - [X] T028 [P] Add CHANGELOG entries under `[Unreleased]` in `CHANGELOG.md`. Do not name any other tool.
 - [X] T029 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Read the `passed= failed=` totals and every `---- … stdout ----` block.
-- [ ] T030 Dispatch `public-corpus.yml` with `regen_goldens=true`, download `corpus-goldens-regen`, and review the diff semantically against research R10. Expect:
+- [X] T030 Dispatch `public-corpus.yml` with `regen_goldens=true`, download `corpus-goldens-regen`, and review the diff semantically against research R10. Expect:
   - **slacklinker:** `slack-web` is a single `pkg:hackage/slack-web@2.3.0.0?vcs_url=…` component (SC-001, SC-002a), and `tmp-postgres@1.35.0.0` has `hackage-unpublished`;
   - **slack-web:** `hspec-discover` is merged, with C221 (SC-002);
   - **source references:** the count of `source` members with a reference rises above 111 on slacklinker (SC-003; record the number);
   - **edges and non-closure targets:** named-component edges change only where they named a merged twin (SC-004), and non-closure targets are byte-identical (SC-005).
+  - **Observed (run 43434793971, after T033).** All four held. Source members with a reference on slacklinker: 111 → 898 of 902, 4 of them `vcs`. Every removed named edge (5 on slack-web, 31 on slacklinker) reappears on the merged survivor. slacklinker gains 9 edges, which are `slack-web`'s declared dependencies carried from its design-tier twin. Only the 5 `nix-closure-*` targets changed. The first regeneration (run 43389225175) found the T033 defect.
 - [ ] T031 Commit the goldens, run a non-regenerating corpus check, and confirm the merged tree is byte-identical to a fresh regeneration.
 - [X] T033 Compute fixed-output paths for the `src` join (research R5 correction): `waybill-cli/src/scan_fs/package_db/nix/closure/fixed_output.rs`, `src_derivation` in `derivation.rs`; fixture fetches carry no `path`; re-run T030.
 - [X] T032 Re-run `specs/1046-haskell-overlay-identity/measurements/hackage-probe.sh` and `qualifier-match-probe.sh` and append the output, dated, to the measurements directory, confirming that research R3 and R11 still hold at implementation time.
