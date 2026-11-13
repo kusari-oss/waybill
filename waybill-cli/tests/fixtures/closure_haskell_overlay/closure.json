@@ -3,7 +3,7 @@
     "d-namesake.drv": {
       "env": {
         "pname": "waybill-fixture-namesake",
-        "src": "/nix/store/h-src-namesake",
+        "src": "/nix/store/v8vkxnkp0faz74a2j1ddjkp8srdpx8fy-waybill-fixture-namesake-1.0.tar.gz",
         "version": "1.0"
       },
       "inputs": {
@@ -27,7 +27,7 @@
       "env": {
         "nativeBuildInputs": "/nix/store/zzz-ghc-99.0.1",
         "pname": "waybill-fixture-overlaid",
-        "src": "/nix/store/h-src-overlaid",
+        "src": "/nix/store/naf09vimr6h5zqzhz0ncshj0vk3k6rkc-waybill-fixture-overlaid-1111111",
         "version": "2.1.0.0"
       },
       "inputs": {
@@ -68,8 +68,7 @@
       "outputs": {
         "out": {
           "hash": "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
-          "method": "flat",
-          "path": "h-src-namesake"
+          "method": "flat"
         }
       }
     },
@@ -79,8 +78,7 @@
       "outputs": {
         "out": {
           "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-          "method": "nar",
-          "path": "h-src-overlaid"
+          "method": "nar"
         }
       },
       "structuredAttrs": {

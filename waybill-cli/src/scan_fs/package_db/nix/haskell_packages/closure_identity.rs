@@ -978,7 +978,7 @@ pub(crate) fn reclassify(
             // the first variant whose `src` resolves to a fetch recording a
             // URL and a revision.
             let vcs = drvs.iter().find_map(|d| {
-                crate::scan_fs::package_db::nix::closure::derivation::src_derivation(d, &out_index)
+                crate::scan_fs::package_db::nix::closure::derivation::src_derivation(d, &out_index, &closure.raw.derivations)
                     .and_then(|k| closure.raw.derivations.get(k))
                     .and_then(crate::scan_fs::package_db::nix::closure::emit::vcs_source)
             });

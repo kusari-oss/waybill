@@ -423,7 +423,7 @@ fn source_references(
             })
             .unwrap_or_default();
     }
-    super::derivation::src_derivation(drv, out_index)
+    super::derivation::src_derivation(drv, out_index, &raw.derivations)
         .and_then(|k| raw.derivations.get(k))
         .and_then(vcs_source)
         .map(|v| vec![v.reference()])

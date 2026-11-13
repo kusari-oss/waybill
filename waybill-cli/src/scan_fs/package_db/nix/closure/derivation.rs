@@ -79,6 +79,11 @@ pub(crate) struct RawOutput {
     /// which is how 549 was once measured as 139 (measurements README).
     #[serde(default)]
     pub(crate) hash: Option<String>,
+    /// #1046 — the ingestion method beside `hash` (`nar`, `flat`, …). With
+    /// `hash` and the derivation's name it determines the output path, which
+    /// format 4 omits for fixed-output derivations ([`super::fixed_output`]).
+    #[serde(default)]
+    pub(crate) method: Option<String>,
 }
 
 /// The top-level shape: `{"derivations": {...}, "version": N}`.
@@ -413,12 +418,41 @@ pub(crate) fn store_basename(path: &str) -> &str {
 /// Resolved through `src` rather than through `inputs.drvs`, because a
 /// package's inputs also include the sources of its build tools: only `src`
 /// says which checkout the package itself was built from.
+///
+/// A fetch is a fixed-output derivation, and format 4 records no `path` for
+/// those, so `index` cannot hold it. Those are matched by computing each
+/// fixed-output input's path from its hash, method and name, under the store
+/// directory `src` itself names: an exact path match, never a name match.
 pub(crate) fn src_derivation<'a>(
     drv: &RawDerivation,
     index: &BTreeMap<&str, &'a str>,
+    closure: &'a BTreeMap<String, RawDerivation>,
 ) -> Option<&'a str> {
     let src = drv.attr_str("src").filter(|s| !s.is_empty())?;
-    index.get(store_basename(src)).copied()
+    let base = store_basename(src);
+    if let Some(k) = index.get(base) {
+        return Some(k);
+    }
+    let store_dir = src.strip_suffix(base)?.trim_end_matches('/');
+    let (hash_part, name) = base.split_once('-')?;
+    if store_dir.is_empty() {
+        return None;
+    }
+    drv.inputs.drvs.keys().find_map(|k| {
+        let (key, input) = closure.get_key_value(k)?;
+        let out = input.outputs.get("out")?;
+        let input_name = input.name.as_deref().or_else(|| input.attr_str("name"))?;
+        if input.outputs.len() != 1 || out.path.is_some() || input_name != name {
+            return None;
+        }
+        let computed = super::fixed_output::path_hash(
+            store_dir,
+            input_name,
+            out.method.as_deref()?,
+            out.hash.as_deref()?,
+        )?;
+        (computed == hash_part).then_some(key.as_str())
+    })
 }
 
 /// What the reader saw while reading a closure.
@@ -1158,10 +1192,42 @@ mod tests {
         )
         .unwrap();
         let index = c.output_index();
-        let at = |k: &str| src_derivation(&c.derivations[k], &index);
+        let at = |k: &str| src_derivation(&c.derivations[k], &index, &c.derivations);
         assert_eq!(at("d-pkg.drv"), Some("d-src.drv"));
         assert_eq!(at("d-structured.drv"), Some("d-src.drv"));
         assert_eq!(at("d-elsewhere.drv"), None);
         assert_eq!(at("d-none.drv"), None);
+    }
+
+    /// #1046 — format 4 records a fixed-output derivation's output with no
+    /// `path`, so a fetch is found by computing its path. The path is
+    /// `nix-store --print-fixed-path --recursive sha256 <hash> <name>`.
+    #[test]
+    fn m1046_a_fetch_with_no_recorded_path_is_found_by_its_computed_path() {
+        let c = RawClosure::parse(
+            r#"{"derivations":{
+              "d-pkg.drv":{"env":{"src":"/nix/store/naf09vimr6h5zqzhz0ncshj0vk3k6rkc-waybill-fixture-overlaid-1111111"},
+                "inputs":{"drvs":{"d-fetch.drv":{"outputs":["out"]},"d-other.drv":{"outputs":["out"]}}},
+                "outputs":{"out":{"path":"h-pkg"}}},
+              "d-not-an-input.drv":{"env":{"src":"/nix/store/naf09vimr6h5zqzhz0ncshj0vk3k6rkc-waybill-fixture-overlaid-1111111"},
+                "inputs":{"drvs":{"d-other.drv":{"outputs":["out"]}}},
+                "outputs":{"out":{"path":"h-n"}}},
+              "d-wrong-hash.drv":{"env":{"src":"/nix/store/naf09vimr6h5zqzhz0ncshj0vk3k6rkc-waybill-fixture-overlaid-1111111"},
+                "inputs":{"drvs":{"d-other.drv":{"outputs":["out"]}}},
+                "outputs":{"out":{"path":"h-w"}}},
+              "d-fetch.drv":{"name":"waybill-fixture-overlaid-1111111",
+                "outputs":{"out":{"hash":"sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","method":"nar"}}},
+              "d-other.drv":{"name":"waybill-fixture-overlaid-1111111",
+                "outputs":{"out":{"hash":"sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","method":"flat"}}}
+            }}"#,
+        )
+        .unwrap();
+        let index = c.output_index();
+        let at = |k: &str| src_derivation(&c.derivations[k], &index, &c.derivations);
+        assert_eq!(at("d-pkg.drv"), Some("d-fetch.drv"));
+        // The fetch exists, but this package does not consume it.
+        assert_eq!(at("d-not-an-input.drv"), None);
+        // Same name and hash, other method: another store object.
+        assert_eq!(at("d-wrong-hash.drv"), None);
     }
 }

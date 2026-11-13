@@ -83,6 +83,13 @@ All measurements were taken on main `2aab3baf`, 2026-11-13, unless stated otherw
 2. A source member that records both `url` and `rev` gets a `vcs` external reference `git+<url>@<rev>`, beside (not instead of) any `distribution` reference.
 3. A package component gets the same `vcs` reference when its derivation's `src` is the output of such a member, joined by output path.
 
+**Correction found at T030 (measured).** Item 3 was not measured when it was written, and as written it joins nothing. `nix derivation show` format 4 records a fixed-output derivation's output as `{hash, method}` with **no `path`**: nix omits it because it is computable. Every fetch is a fixed-output derivation, so an index of recorded output paths holds no fetch.
+- **Evidence.** nixpkgs `5b2c2d84` (slacklinker's pin), Nix 2.34.6: `haskellPackages.hspec-discover`'s closure has 386 fixed-output derivations (278 `flat`, 108 `nar`, all sha256). Every one carries `hash` and `method`; none carries `path`.
+- **Symptom.** The first regeneration (run 43389225175) gave `slack-web-1ea1e48` its `vcs` reference. But `slack-web` was `hackage-published` with no `vcs_url`, and no package component in any target gained a `vcs` reference. The test fixture had given its fetches a `path`, so every test passed.
+- **Fix.** For a `src` the index does not hold, compute the path of each fixed-output input the package declares, using nix's `makeFixedOutputPath` (sha256, `nar` or `flat`), under the store directory `src` names. A match is an exact path match. Any other algorithm or method computes nothing.
+- **Vectors.** `hspec-discover-2.11.16.tar.gz` (flat) → `72m2wa52…`, and `source` (nar) → `0rwfc8gn…`. Each was checked against `nix-store --query --outputs` and `nix-store --print-fixed-path`. The fixture's fetches now carry no `path`. A mutation that disables the computation fails US2's published case and US3's `vcs` case.
+- **Not changed here.** `output_index` has other consumers (`walk`, `runtime`, `classify`, `patches`, `static_link`) that share the gap for fixed-output derivations. Their scope is beyond #1046.
+
 **The `vcs` reference needs no new catalog row.** A10 already maps it natively in all three formats:
 - CycloneDX `externalReferences[type=vcs]`;
 - SPDX 2.3 `externalRefs` `OTHER`/`vcs`;
