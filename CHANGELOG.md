@@ -74,6 +74,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **The curated CPE table is a data file (#1491).** The table moved from Rust
+  source to `waybill-cli/src/generate/cpe_table.toml`, which is embedded in
+  the binary. It has 82 rows for `pkg:generic` components.
+  - **Evidence on every pair.** Each pair records its NVD dictionary entry
+    count, the observation date, and two committed evidence files: one for
+    the count and one for the title query. Tests check that both files exist
+    and that the recorded count matches its evidence.
+  - **No vulnerability data.** The file holds identifiers and dictionary
+    evidence only. A test enforces it.
+  - **Output is unchanged.** Every CPE waybill emits is the same, and the
+    corpus goldens are byte-identical.
+
 - **A supplement's malformed CPE is dropped with a warning (#1403).** CPEs
   are now a validated type. A value must be a CPE 2.3 formatted string with a
   named vendor and product. A `--supplement-cdx` component whose `cpe` is

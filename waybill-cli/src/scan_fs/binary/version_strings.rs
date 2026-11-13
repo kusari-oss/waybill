@@ -541,7 +541,7 @@ mod tests {
     use super::*;
 
     /// Two variants sharing a slug would make the slug ambiguous as a
-    /// mapping-table key, and `GENERIC_LIBRARY_CPES` is keyed by slug.
+    /// mapping-table key, and the curated CPE table (`generate/cpe_table.toml`) is keyed by slug.
     ///
     /// `CuratedLibrary::iter()` rather than any list of variants: see
     /// the derive's comment above the enum, and

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Ask NVD whether each `(vendor, product)` pair in `GENERIC_LIBRARY_CPES`
+# Ask NVD whether each `(vendor, product)` pair in the curated CPE table
+# (`waybill-cli/src/generate/cpe_table.toml`)
 # exists in its CPE dictionary (#1246).
 #
 # Usage:  scripts/probe-cpe-dictionary.sh [vendor:product ...]
@@ -7,7 +8,7 @@
 # Prints: one `vendor:product<TAB>entries` line per pair, plus a positive
 #         and a negative control. Exit 1 if any pair returned zero.
 #
-# WHY THIS EXISTS. `GENERIC_LIBRARY_CPES` is what makes a binary-derived
+# WHY THIS EXISTS. The curated table is what makes a binary-derived
 # `pkg:generic/<slug>@<version>` component reachable by a CPE matcher, and
 # a wrong vendor or product there fails *silently*: the matcher returns
 # zero, indistinguishable from a clean component. Upstream has shipped
@@ -17,9 +18,10 @@
 # matched nothing while `google:chrome` matches thousands (#5429).
 #
 # So a row may only exist in the table if NVD's dictionary has the pair.
-# This script is how that is established, and `NVD_DICTIONARY_OBSERVED`
-# in `waybill-cli/src/generate/cpe.rs` is where its output is recorded so
-# the test suite can enforce it without a network call.
+# This script is how that is established. Its output is recorded on each
+# pair in `cpe_table.toml` (`dictionary_entries`, `observed`, and the
+# committed `dictionary_evidence` file), so the test suite can enforce it
+# without a network call (spec 1491).
 #
 # WHAT THIS DOES NOT ESTABLISH. A pair in the dictionary may carry no
 # advisories at all — dictionary presence and advisory coverage are
@@ -38,13 +40,22 @@ pairs=("$@")
 if [ "${#pairs[@]}" -eq 0 ]; then
   # Read the table rather than restating it: a pair added to the source
   # without being probed is the thing this script exists to catch.
-  src="$(dirname "$0")/../waybill-cli/src/generate/cpe.rs"
+  src="$(dirname "$0")/../waybill-cli/src/generate/cpe_table.toml"
   mapfile -t pairs < <(python3 -I - "$src" <<'PY'
+# One pair per line, `{ vendor = "...", product = "...", ... }`; read by
+# pattern because `tomllib` needs Python 3.11, and the shape is fixed by
+# the tests in `generate/cpe.rs`.
 import re, sys
-src = open(sys.argv[1]).read()
-table = re.search(r'GENERIC_LIBRARY_CPES[^=]*= &\[(.*?)\n\];', src, re.S).group(1)
-for vendor, product in re.findall(r'\("([^"]+)", "([^"]+)"\)', table):
-    print(f"{vendor}:{product}")
+seen = set()
+for vendor, product in re.findall(
+    r'^\s*\{\s*vendor\s*=\s*"([^"]+)",\s*product\s*=\s*"([^"]+)"',
+    open(sys.argv[1], encoding="utf-8").read(),
+    re.M,
+):
+    key = f"{vendor}:{product}"
+    if key not in seen:
+        seen.add(key)
+        print(key)
 PY
   )
 fi

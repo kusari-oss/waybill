@@ -23,6 +23,9 @@ blocks, and serializes.
 - `waybill-cli/src/generate/cyclonedx/serializer.rs` — final JSON write.
 - `waybill-cli/src/generate/cpe.rs` — CPE 2.3 multi-candidate synthesizer
   (see [purls-and-cpes.md](purls-and-cpes.md)).
+- `waybill-cli/src/generate/cpe_table.toml` — the curated CPE table for
+  `pkg:generic` components, with each pair's NVD dictionary evidence; parsed
+  by `generate/cpe_table.rs`.
 
 ## Output format
 
