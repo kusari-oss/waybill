@@ -350,6 +350,56 @@ On openai it also reports HSEC-2024-0003, which affects `process` on
 Windows only. That match is correct for the version; whether it applies is
 a VEX question.
 
+### Overlays: one component, and a Hackage identity (#1046)
+
+When an overlay pins a Haskell package at a version the pinned nixpkgs set
+does not carry, the manifest's dependency and the closure's build used to be
+two components:
+
+- a versionless design-tier `pkg:hackage/<name>`, because the set's version
+  violates the declared range;
+- the build-tier closure member, often `pkg:generic`.
+
+Now they are one.
+
+**The merge.** The build-tier member survives, keeping its PURL, version,
+tier and scope, and gains the declared ranges (`waybill:requirement-ranges`)
+and source-file evidence. Edges that named the design-tier component name it
+instead.
+- **Only Haskell packages merge.** A build-tier member merges only if it is a
+  Haskell package: `pkg:hackage` already, or built by a GHC. A same-named C
+  library never merges.
+- **Build variants.** With several build variants, the one the ranges admit
+  merges, if exactly one does.
+- **Relaxed bounds.** nixpkgs routinely builds outside a package's declared
+  bounds. When every declared range rejects the built version, the merged
+  component records `waybill:requirement-unsatisfied` (C221).
+
+**The Hackage check.** A GHC-built member whose name the pinned set carries,
+at a version it does not, is checked against Hackage with one request:
+`GET /package/<name>-<version>/<name>.cabal`.
+- **Published (200):** the member becomes `pkg:hackage/<name>@<version>`, so a
+  Haskell advisory can match it. When its `src` is a git checkout, a
+  `vcs_url` qualifier names the repository and revision
+  (`pkg:hackage/<name>@<v>?vcs_url=git+https://…%40<rev>`). The qualifier
+  changes no OSV answer
+  (`specs/1046-haskell-overlay-identity/measurements/qualifier-match-probe-2026-11-13.txt`).
+- **Not published (404):** it stays `pkg:generic`, as for a fork's own version
+  number.
+- **Not checked or no answer:** it stays `pkg:generic`.
+
+`waybill:closure-identity` (C201) says which of these applied.
+- **Only public names are sent.** A name the pinned set does not carry may be
+  a private package, so it is never sent.
+- **`--no-hackage-lookup`** disables the check alone.
+- **Under `--offline`** the closure tier does not run at all.
+
+**The source.** A git-fetched source member carries a `vcs` external reference
+(`git+<url>@<rev>`), and so does the package whose `src` it is. Where it
+lands: CycloneDX `externalReferences`, SPDX 2.3 `externalRefs` `OTHER`/`vcs`,
+SPDX 3 `software_sourceInfo`. nixpkgs' `fetchgit` records its URL and revision
+under structured attributes, which the closure reader now reads.
+
 ### The document's subject (milestone 1377)
 
 When the closure resolves, the derivation the evaluated attribute built is

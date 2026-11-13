@@ -9,6 +9,25 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **A Nix overlay's Haskell dependency is one component, with an identity
+  advisories can match (#1046).** Under `--nix-closure`, when an overlay pins a
+  Haskell package at a version the pinned nixpkgs set does not carry, two
+  things change.
+  - **One component.** The manifest's versionless `pkg:hackage/<name>` and the
+    closure's build are now one component. It carries the build's version
+    and the declared ranges, plus `waybill:requirement-unsatisfied` (C221) when
+    nixpkgs built outside them.
+  - **A Hackage identity.** One request to Hackage settles the identity. If
+    Hackage publishes that version, the component is
+    `pkg:hackage/<name>@<version>`, with a `vcs_url` qualifier when it was built
+    from a git checkout. Otherwise it stays `pkg:generic`, and
+    `waybill:closure-identity` says why.
+  - **What is sent.** Only names the pinned set carries, of packages a GHC
+    built, are ever sent. `--no-hackage-lookup` turns the check off.
+  - **Measured on the corpus:** slacklinker builds `slack-web` 2.3.0.0 from
+    a git checkout one commit before the release tag, differing only in
+    `CHANGELOG.md`.
+
 - **Curated CPE rows for ldns, rubygems, pixman, cairo, harfbuzz, speex,
   libtiff and glib.** These were the packages behind the findings sbomnix
   1.9.0 reported and waybill did not, in the 2026-11-12 comparison
@@ -154,6 +173,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   changes.
 
 ### Fixed
+
+- **A git-fetched Nix source keeps its URL and revision (#1046).** At
+  nixpkgs `a799d3e3`, `fetchgit` records `url` and `rev` under structured
+  attributes, and the closure reader looked only in `env`. A git checkout now
+  carries a `vcs` reference (`git+<url>@<rev>`), and so does the package built
+  from it. Fetches whose URL is structured gain their `distribution` reference.
 
 - **Hackage licenses from nixpkgs revisions that write `lib.licensesSpdx`
   (#1477).** From 2025-11 to 2026-03, nixpkgs declared explicit SPDX
