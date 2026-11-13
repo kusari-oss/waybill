@@ -1,0 +1,72 @@
+# 2026-11-12: curated rows for the packages behind sbomnix's remaining findings
+# (docs/audits/2026-11-12-nix-vs-sbomnix.md, 'The 11 findings only sbomnix has').
+# Candidate pairs are the CPEs grype 0.120.0 matched on sbomnix 1.9.0's documents.
+# Not added: intel:openmp (nixpkgs openmp is LLVM's; a name collision), lapack_project:lapack
+# (nixpkgs 'lapack' is a provider wrapper versioned '3'; the match is an open range).
+
+## scripts/probe-cpe-dictionary.sh <pairs>   (dictionary entries)
+nlnetlabs:ldns	64
+rubygems:rubygems	188
+pixman:pixman	39
+cairographics:cairo	51
+harfbuzz_project:harfbuzz	205
+xiph:speex	45
+libtiff:libtiff	113
+gnome:glib	593
+openssl:openssl	387   (positive control)
+waybill-fixture-vendor:waybill-fixture-product	0   (negative control)
+
+## scripts/probe-cpe-dictionary.sh --cves  (advisories filed under the pair)
+libtiff:libtiff	262
+libtiff_project:libtiff	0
+cairographics:cairo	10
+redhat:cairo	1
+openssl:openssl	330   (positive control)
+waybill-fixture-vendor:waybill-fixture-product	0   (negative control)
+
+## specs/1375-generic-cpe-table/measurements/cpe-titles.py <products>  (every vendor filing the product, with title)
+=== ldns (64 entries) ===
+    nlnetlabs                    nlnetlabs  ldns 1.4.1
+=== rubygems (188 entries) ===
+    rubygems                     RubyGems RubyGems 1.8.22
+=== pixman (39 entries) ===
+    pixman                       Pixman
+=== cairo (53 entries) ===
+    redhat                       Red Hat Cairo
+    cairographics                Cairographics Cairo
+=== harfbuzz (205 entries) ===
+    harfbuzz_project             Harfbuzz Project Harfbuzz 1.0.5
+=== speex (45 entries) ===
+    xiph                         Xiph Speex 1.2
+=== libtiff (115 entries) ===
+    libtiff                      LibTIFF 3.4
+    libtiff_project              Libtiff Project Libtiff 4.0.6
+=== glib (593 entries) ===
+    gnome                        GNOME Glib 2.16.4
+
+## libidn2: the row's vendor was wrong (found comparing with nixpkgs' declared CPEs)
+# nixos-unstable d4f25a3e declares cpe:2.3:a:gnu:libidn2; waybill's row said libidn2_project:libidn2.
+# scripts/probe-cpe-dictionary.sh gnu:libidn2 libidn2_project:libidn2   (dictionary entries)
+gnu:libidn2	23
+libidn2_project:libidn2	23
+# scripts/probe-cpe-dictionary.sh --cves gnu:libidn2 libidn2_project:libidn2   (advisories)
+gnu:libidn2	4
+libidn2_project:libidn2	0
+# NVD CVE API, virtualMatchString=cpe:2.3:a:gnu:libidn2 (total 4):
+CVE-2017-14061  Integer overflow in the _isBidi function in bidi.c in Libidn2 before 2.0.4 ...
+CVE-2017-14062  Integer overflow in the decode_digit function in puny_decode.c in Libidn2 before 2.0.4 ...
+CVE-2019-18224  idn2_to_ascii_4i in lib/lookup.c in GNU libidn2 before 2.1.1 has a heap-based buffer overflow ...
+CVE-2019-12290  GNU libidn2 before 2.2.0 fails to perform the roundtrip checks specified in RFC3490 ...
+# virtualMatchString=cpe:2.3:a:libidn2_project:libidn2: total 0.
+# cpe-titles.py libidn2: libidn2_project "Libidn2 Project Libidn2 0.3"; gnu "GNU libidn 0.3" (the misleading title).
+
+## expat: the row's pair had no CVEs (found by a CVE census of the curated rows nixpkgs does not declare)
+# scripts/probe-cpe-dictionary.sh --cves libexpat_project:libexpat libexpat:expat
+libexpat_project:libexpat	68
+libexpat:expat	0
+# scripts/probe-cpe-dictionary.sh libexpat_project:libexpat   (dictionary entries)
+libexpat_project:libexpat	52
+# cpe-titles.py libexpat expat:
+#   === libexpat (52 entries) ===  libexpat_project  "libexpat Project libexpat 1.95.0"
+#   === expat (25 entries) ===     libexpat          "libexpat Expat 2.1.0"
+# lzo was checked the same way and is not an error: lzo_project:lzo and oberhumer:lzo both have 0 CVEs.

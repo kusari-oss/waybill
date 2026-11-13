@@ -48760,7 +48760,7 @@
     },
     {
       "bom-ref": "pkg:generic/expat@2.7.4",
-      "cpe": "cpe:2.3:a:libexpat:expat:2.7.4:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:libexpat_project:libexpat:2.7.4:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -48774,7 +48774,7 @@
             ]
           },
           {
-            "concludedValue": "cpe:2.3:a:libexpat:expat:2.7.4:*:*:*:*:*:*:*",
+            "concludedValue": "cpe:2.3:a:libexpat_project:libexpat:2.7.4:*:*:*:*:*:*:*",
             "confidence": 0.7,
             "field": "cpe",
             "methods": [
@@ -74089,7 +74089,7 @@
         },
         {
           "name": "waybill:cpe-provenance",
-          "value": "{\"basis\":\"drv\",\"overrode\":\"cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*\"}"
+          "value": "{\"basis\":\"drv\"}"
         }
       ],
       "purl": "pkg:generic/libidn2@2.3.8",

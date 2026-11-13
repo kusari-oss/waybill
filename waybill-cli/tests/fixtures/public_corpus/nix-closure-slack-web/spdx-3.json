@@ -2271,7 +2271,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*",
+          "identifier": "cpe:2.3:a:gnu:libidn2:2.3.8:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
@@ -13147,7 +13147,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:libexpat:expat:2.7.3:*:*:*:*:*:*:*",
+          "identifier": "cpe:2.3:a:libexpat_project:libexpat:2.7.3:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {

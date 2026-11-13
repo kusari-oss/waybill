@@ -33219,7 +33219,7 @@
         {
           "comment": "CPE from waybill's curated CPE table",
           "externalIdentifierType": "cpe23",
-          "identifier": "cpe:2.3:a:libexpat:expat:2.7.4:*:*:*:*:*:*:*",
+          "identifier": "cpe:2.3:a:libexpat_project:libexpat:2.7.4:*:*:*:*:*:*:*",
           "type": "ExternalIdentifier"
         },
         {
@@ -201799,7 +201799,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JLQ6AYECDY5I2Q5J",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\",\\\"overrode\\\":\\\"cpe:2.3:a:libidn2_project:libidn2:2.3.8:*:*:*:*:*:*:*\\\"}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-provenance\",\"value\":\"{\\\"basis\\\":\\\"drv\\\"}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4WJ4KEGGV6M23OMP",
       "type": "Annotation"
     },
