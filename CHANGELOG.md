@@ -188,6 +188,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   carries a `vcs` reference (`git+<url>@<rev>`), and so does the package built
   from it. Fetches whose URL is structured gain their `distribution` reference.
 
+- **ncurses' first CPE vendor is the one NVD files its CVEs under (#1490).**
+  `invisible-island:ncurses` holds 28 CVEs, `ncurses_project` 2 and `gnu`
+  0 (measured 2026-11-13), and it is now the row's first vendor. A consumer
+  that reads only CycloneDX `component.cpe` was missing about 26 ncurses
+  CVEs. All three vendors are still emitted.
+
 - **Hackage licenses from nixpkgs revisions that write `lib.licensesSpdx`
   (#1477).** From 2025-11 to 2026-03, nixpkgs declared explicit SPDX
   licenses as `license = lib.licensesSpdx."<id>";` instead of

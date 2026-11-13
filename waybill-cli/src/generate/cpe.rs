@@ -213,7 +213,10 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("llvm", &[("llvm", "llvm")]),
     ("lua", &[("lua", "lua")]),
     ("lzo", &[("lzo_project", "lzo")]),
-    ("ncurses", &[("ncurses_project", "ncurses"), ("gnu", "ncurses")]),
+    // #1490 — NVD files ncurses' CVEs under the maintainer's vendor slug:
+    // `invisible-island` 28, `ncurses_project` 2, `gnu` 0, measured
+    // 2026-11-13 (specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv).
+    ("ncurses", &[("invisible-island", "ncurses"), ("ncurses_project", "ncurses"), ("gnu", "ncurses")]),
     ("nghttp2", &[("nghttp2", "nghttp2")]),
     ("ngtcp2", &[("tatsuhiro-t", "ngtcp2")]),
     // Node.js (issue #1244) — the product segment is `node.js`, not
@@ -407,6 +410,8 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("harfbuzz_project", "harfbuzz", 205),
     ("haxx", "curl", 228),
     ("info-zip", "unzip", 5),
+    // Probed 2026-11-13, specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv.
+    ("invisible-island", "ncurses", 321),
     ("jq_project", "jq", 1),
     ("jqlang", "jq", 25),
     ("libarchive", "libarchive", 53),
