@@ -73,7 +73,7 @@ waybill-cli/src/scan_fs/package_db/nix/closure/
 └── summary.rs       # C184 member-roles gains "check" via MemberRole::ALL (no code change expected)
 waybill-cli/src/cli/debug_cmd.rs   # closure-dump passes PatchOutputs
 waybill-cli/tests/closure_member_role.rs   # new fixture test (US1–US3)
-waybill-cli/tests/fixtures/closure_member_role/closure.json
+waybill-cli/tests/fixtures/nix_closure_member_role/closure.json
 docs/reference/sbom-format-mapping.md     # C206 row: five values, rules; C184 note
 docs/reference/nix-evaluation.md          # role section
 waybill-cli/tests/fixtures/public_corpus/nix-closure-*/   # regenerated
