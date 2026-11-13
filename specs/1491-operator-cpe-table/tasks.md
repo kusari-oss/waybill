@@ -217,7 +217,7 @@ Story order follows delivery, not priority. US4 (P2) ships first, because US1–
   5. Swap `Operator` below `Curated` in `cpe_source`.
   6. Accept a wildcard vendor in `--root-cpe`.
   7. Accept a versioned key in `--cpe-map`.
-- [ ] T036 Run the gate, then the non-regenerating corpus check at PR B's head. Every target must be identical (FR-016). Open PR B with the footer, recording the gate totals and the corpus run ID.
+- [X] T036 **Observed:** gate `GATE_EXIT=0`, 393 suites ok, 8,073 passed, 0 failed; corpus run 43509740203 at `86c594d9`: 158 passed, 0 failed. PR B is #1506. **Stacking:** a squash-land of PR A drops its ancestry, so PR B must not edit lines PR A added. The final spec documents therefore live in PR A, and PR B's module line sits apart from PR A's. Run the gate, then the non-regenerating corpus check at PR B's head. Every target must be identical (FR-016). Open PR B with the footer, recording the gate totals and the corpus run ID.
 
 ---
 
