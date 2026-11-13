@@ -29740,10 +29740,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/gcc-simple-program-15.2.0-h5c3h1i4pn51c6d9jnm0hc0fb30apx1n",
@@ -32734,10 +32730,6 @@
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/glibc-iconv-2.42-2bkgnravj3d7ybvh9704visgl070gnqd",
@@ -49426,10 +49418,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/main.mk-sha256.hRIJW46RIcYo77d0k7UTf.sizq0t53do3CBWcMfAdOQkI.e",
@@ -49487,10 +49475,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/main.mk-sha256.hytfBjQhTmdZA4jp.s63CzajeO1.sfdUFPDUPSXB2IuLnA.e",
@@ -67609,10 +67593,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h2d64cItemqVM25WJIKrjExKz6v4UW2wVxM6phH1g1sE.e",
@@ -67664,10 +67644,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h2x3znm92wo8DCshf5sYK0stnESg0oVXbxsWRAaTj6oQ.e",
@@ -67719,10 +67695,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h3Zeavn6aW6920gM7yE73Ms1RPCP2GjX9IUL9YGmISfY.e",
@@ -67774,10 +67746,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h3oAlwvNSJ7NhPiHekh4SJI99cPFh29KCCR9314QzsvQ.e",
@@ -67829,10 +67797,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h6GlHCnx9dQtmViPnvHnMS.pl9Z.pg6M8ynrSxLhLtmAKU.e",
@@ -67884,10 +67848,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h6eKc.pp3xLyRPo3oCWP.sdbMpHlkBXLy8XiGR0gTEHI2E.e",
@@ -67939,10 +67899,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h7Mzz3KmmmE2xQru1GA4aY0DZqn6vxykWiExQvnA1bjM.e",
@@ -67994,10 +67950,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h8CfPQ4uMgKDqMMgutLdsjn.sMaAVBJQAp1KqUfxzNMQw.e",
@@ -68049,10 +68001,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h8J5EcaQXexWEA.pse5rCR06CwlEYao2XK5TnVNgFGHYQ.e",
@@ -68104,10 +68052,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h9.skFI38PG3AKsdDqEV.swEzSel9IlQQ.spvOyhU.sN.saV0.e",
@@ -68159,10 +68103,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.h9h5.scssWs4F0LKnFLjWDsEjB2AYczLvnSjiUdsaEcBQ.e",
@@ -68214,10 +68154,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hBAqGNi5lfYYTQd7CPH0lssLc5.sAkeuKSVEFcrF.scNyc.e",
@@ -68269,10 +68205,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hD72KUEwiFA.sLdU.sxE3sN.pAbc6NpAsIlGSdB07V1nk68.e",
@@ -68324,10 +68256,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hD9HsIjv8EJ1qAdXFAKy260K77cCvopgQ2Fx6uXpt6VI.e",
@@ -68379,10 +68307,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hEqU7lnBnOn3gR3hT95yjdTUb3cqX2XJK5UAKsFw2Q10.e",
@@ -68434,10 +68358,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hHIHMxAUR4bjmFLoltJeIAVSulVQ6kVuIT2Ku.plwAx.s4.e",
@@ -68489,10 +68409,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hHNAFsWX4tU9hfZkKxLNJn1J.pH3uTesQflbRPlo3GQ4k.e",
@@ -68544,10 +68460,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hJXv12im46xKabIRVZ4FMSZUbpw2k8WCcaZZLX2pFteY.e",
@@ -68599,10 +68511,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hLWnvQrIyj.piq96T1u9WEq.pHGOZ5sJYN5nCintEr6sBk.e",
@@ -68654,10 +68562,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hLpD.plE.p0PZi.s3nYDVPXhBQL9A7mvqelOzRLskVtg9Y0.e",
@@ -68709,10 +68613,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hMQZZyGu6xFh3wO.p0lWED.pmingjK92v.sonljtp9gylmM.e",
@@ -68764,10 +68664,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hMWKMJkvxdvuOyxE8rNlf15j7C.pMwJibnNsbfS0biKwo.e",
@@ -68819,10 +68715,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hNGTy3Hua6yEMWXQDJQO2Z5DD3clXTZXEH6DNQBMSGtQ.e",
@@ -68874,10 +68766,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hPOdE8aKvQqfIPEIkUppZPV8t9ApT4R1AyfHXxrKvq88.e",
@@ -68929,10 +68817,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hPVYwCUGQSuCe5WMeOBJpGXiJ4keVllzg9H3y.pIl.pNr8.e",
@@ -68984,10 +68868,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hPgqjCeyHOhWtZjyzSZyvsPT0Q7yRyNDiW3x1fQq0K.p8.e",
@@ -69039,10 +68919,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hQprU0sXL6FL0rSVJwu8cYpcPlnYKzKAbkyDaTV778js.e",
@@ -69094,10 +68970,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hRZGaOq8hmkwekCs1fKshDrx3vmHdJl.swI3IO9ZLH5rc.e",
@@ -69149,10 +69021,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hRi5SzfQJFghRcMAKHS5QKD365OZlio895fSlumq83vs.e",
@@ -69204,10 +69072,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hSC5aMiQsAPLNjCdOHDAMYX2iDSwZltjXxAJJgZnPlJ0.e",
@@ -69259,10 +69123,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hUyMXr8Vc6kDOx1.slD2YKPiHdaTotXAF9ak0yQuwrSUA.e",
@@ -69314,10 +69174,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hX88A5V9uXP3wJQ.polK6pZJT66LP2uCXLK8goa5bPARA.e",
@@ -69369,10 +69225,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hY9Nph2LkT1qnOYTW3WCumWWwORnI4P7HxzBjUlGaL7M.e",
@@ -69424,10 +69276,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.haQEhFZUJs0TptfpjQVoIVI9V9a.pxKjE2OfStSaJKHGI.e",
@@ -69479,10 +69327,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hanuPOBWp4Hlpo.pm6kYlSd2v7H3P7LQ9brZdq1lo7Po4.e",
@@ -69534,10 +69378,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hc3ucbneUo5UBfdrd5Ktl4HriVusvWBEA1brrgahEQ9A.e",
@@ -69589,10 +69429,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hcQnCTMmpdkvWwt7RFAIhAfmhVwGVn0Y8Z5Tr6lzDmS8.e",
@@ -69644,10 +69480,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hdOdJ4f98smCYdskp3BwtQG6aOyK.p2a73.px580FKRWDk.e",
@@ -69699,10 +69531,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hhOcg41lcdVWfmT2DqaYzzu4bJZYiG2y5boylJevBv6k.e",
@@ -69754,10 +69582,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hiyGfGr3pLVZSEIHetjsPbIIXkuXrmIPiSqqOw31l9Qw.e",
@@ -69809,10 +69633,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hjsi83v9sg0n5kUfDACqdNAS2VuLSyxv.ppe2LRcO4Khc.e",
@@ -69864,10 +69684,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hk5dZ75D.sBOouYAjrof9Jm2lY29XZhOqS1kudDGmGY9Q.e",
@@ -69919,10 +69735,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hkl8ZHt71v17QR2bDP.pad.s5uixf.pGStEPLQ5ooFoC5i8.e",
@@ -69974,10 +69786,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hoWV.pKK22.piK99iCOCKCV1OCLq2Ef1bcYRKXT5GHwiL8.e",
@@ -70029,10 +69837,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hpkQjPJuSASWmzwzp9H.sUTJBQDr2r2RiofxpF135lAgc.e",
@@ -70084,10 +69888,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hplBv24QgNzmVMV2lFxCbNwHKtd620thJayWdjs4estw.e",
@@ -70139,10 +69939,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hqFanbp0KPc6.pCN4s5mMQNduzcxt.sSrMcYWvIMZ0XnGY.e",
@@ -70194,10 +69990,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hqXrypwv.sI.p5npvGHGsHveijoui0ZnoGYhskCfLkewVE.e",
@@ -70249,10 +70041,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hry29RUNa0Hv5gIhy2RTVT94mHhgfdIwb5aqjBycxxj0.e",
@@ -70304,10 +70092,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hs.sgfJc3yxvCE6cjP03vtIZqNFmoZKR3d7.p4gTPk1hQg.e",
@@ -70359,10 +70143,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.htNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44.e",
@@ -70414,10 +70194,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.htd3C7xTWfSzdo9Bbz0dHW2oPaCQYmUE9H2sUFfg5HH0.e",
@@ -70469,10 +70245,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.htz99C.pdz5xJhunoC45bl0NdSdV9NXWya9ti48Z.sKaHY.e",
@@ -70524,10 +70296,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hugyHPqqFcObgldThkkUQgZnl1fVEcXYFnXyAxNwUFIE.e",
@@ -70579,10 +70347,6 @@
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "reachable-only-through-unemitted-package"
         }
       ],
       "purl": "pkg:generic/source-sha256.hv.paPIcsggjRJ3l6Xfw97b3zcqpyWNY4XWy2.p5aWyitY.e",
@@ -88497,7 +88261,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.haQEhFZUJs0TptfpjQVoIVI9V9a.pxKjE2OfStSaJKHGI.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -88559,7 +88323,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.htd3C7xTWfSzdo9Bbz0dHW2oPaCQYmUE9H2sUFfg5HH0.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r",
         "pkg:generic/wrap-python-hook@26.05pre-git"
@@ -89026,7 +88790,7 @@
         "pkg:generic/gnupatch@2.5.9",
         "pkg:generic/kaem@1.9.1",
         "pkg:generic/locale.patch-sha256.hqS9r9z98NQr7Wiy20x13BftsYLK3gUk6kk87BakOONw.e",
-        "pkg:generic/main.mk-sha256.hzdGb.pWebOqRY5X1bQXqrzlJo4NEULVoz1Rm7zlgnT1o.e",
+        "pkg:generic/main.mk-sha256.hRIJW46RIcYo77d0k7UTf.sizq0t53do3CBWcMfAdOQkI.e",
         "pkg:generic/mes-libc.patch-sha256.hXwQ7PVtoXsuO222epR6E0BwfhsH0mochuWOtb5xsen4.e",
         "pkg:generic/mescc-tools-extra@1.9.1",
         "pkg:generic/mescc-tools@1.9.1",
@@ -89643,7 +89407,7 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/cmake@4.1.2",
         "pkg:generic/e230f474b87134e8c6c85b630084c612057f253e.patch-sha256.hQERl8RHJz7tFr.p.phZIYwdj1.sogPpjArC.pia8S.sbWxKk.e",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hkl8ZHt71v17QR2bDP.pad.s5uixf.pGStEPLQ5ooFoC5i8.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/brotli@1.2.0"
@@ -89673,7 +89437,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hQprU0sXL6FL0rSVJwu8cYpcPlnYKzKAbkyDaTV778js.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -89853,7 +89617,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h8CfPQ4uMgKDqMMgutLdsjn.sMaAVBJQAp1KqUfxzNMQw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -89949,7 +89713,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hJXv12im46xKabIRVZ4FMSZUbpw2k8WCcaZZLX2pFteY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -89974,7 +89738,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h7Mzz3KmmmE2xQru1GA4aY0DZqn6vxykWiExQvnA1bjM.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -90013,7 +89777,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hdOdJ4f98smCYdskp3BwtQG6aOyK.p2a73.px580FKRWDk.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -90370,7 +90134,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h8J5EcaQXexWEA.pse5rCR06CwlEYao2XK5TnVNgFGHYQ.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -90408,7 +90172,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hX88A5V9uXP3wJQ.polK6pZJT66LP2uCXLK8goa5bPARA.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -91276,7 +91040,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hoWV.pKK22.piK99iCOCKCV1OCLq2Ef1bcYRKXT5GHwiL8.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -91608,7 +91372,13 @@
       "ref": "pkg:generic/gcc-simple-program-10.4.0-yynym470zj9cl8d4n6m2zs6glypdrayy"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3",
+        "pkg:generic/binutils@2.46.0",
+        "pkg:generic/bootstrap-coreutils-musl@9.10",
+        "pkg:generic/gcc@15.2.0",
+        "pkg:generic/musl@1.2.6"
+      ],
       "ref": "pkg:generic/gcc-simple-program-15.2.0-h5c3h1i4pn51c6d9jnm0hc0fb30apx1n"
     },
     {
@@ -91616,8 +91386,7 @@
         "pkg:generic/bash@5.3",
         "pkg:generic/binutils@2.46.0",
         "pkg:generic/bootstrap-coreutils-musl@9.10",
-        "pkg:generic/gcc@15.2.0",
-        "pkg:generic/musl@1.2.6"
+        "pkg:generic/gcc@15.2.0"
       ],
       "ref": "pkg:generic/gcc-simple-program-15.2.0-sv664h9bg5xkpnqa3ia7mw7fsdwp8isa"
     },
@@ -92122,14 +91891,16 @@
       "ref": "pkg:generic/glibc-2.42.tar.xz-sha256.h0XdeMuRijmTvkw9DW2e7Y691may2viszW58Z8WUJ8X8.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash-static@5.3",
+        "pkg:generic/bootstrap-stage4-stdenv-linux@26.05pre-git",
+        "pkg:generic/glibc@2.42-61"
+      ],
       "ref": "pkg:generic/glibc-iconv-2.42-2bkgnravj3d7ybvh9704visgl070gnqd"
     },
     {
       "dependsOn": [
-        "pkg:generic/bash-static@5.3",
         "pkg:generic/bash@5.3p9",
-        "pkg:generic/bootstrap-stage4-stdenv-linux@26.05pre-git",
         "pkg:generic/glibc@2.42-61",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
@@ -92333,7 +92104,7 @@
         "pkg:generic/bash-static@5.3",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/bootstrap-stage4-stdenv-linux@26.05pre-git",
-        "pkg:generic/glibc-iconv-2.42-cc7v7pw1q359kfnkw3g4mcx0dldycpwy",
+        "pkg:generic/glibc-iconv-2.42-2bkgnravj3d7ybvh9704visgl070gnqd",
         "pkg:generic/glibc-locales@2.42-61",
         "pkg:generic/grep-3.12.tar.xz-sha256.hJkmyfA6Q5jLq3NdXvgbG6aT0jZQd5R58D4P.sdkCKB7k.e",
         "pkg:generic/pcre2@10.46",
@@ -92516,7 +92287,7 @@
         "pkg:generic/bash@2.05b",
         "pkg:generic/bootstrap-coreutils@5.0",
         "pkg:generic/gnumake@4.4.1",
-        "pkg:generic/main.mk-sha256.hzdGb.pWebOqRY5X1bQXqrzlJo4NEULVoz1Rm7zlgnT1o.e",
+        "pkg:generic/main.mk-sha256.hytfBjQhTmdZA4jp.s63CzajeO1.sfdUFPDUPSXB2IuLnA.e",
         "pkg:generic/mescc-tools-extra@1.9.1",
         "pkg:generic/sed-4.0.9.tar.gz-sha256.hw2WHR5QYf4RE5dIpmM1YiP.pkfzbe9Ld1F6gI3sJ8BgA.e",
         "pkg:generic/tinycc-bootstrappable-libs-unstable-2024-07-07-xi8dy016hq7842iplkgfdmzribiy8a3m",
@@ -92756,7 +92527,7 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/cmake@4.1.2",
         "pkg:generic/ninja@1.13.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hHIHMxAUR4bjmFLoltJeIAVSulVQ6kVuIT2Ku.plwAx.s4.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/gtest@1.17.0"
@@ -92780,7 +92551,7 @@
         "pkg:generic/python-remove-bin-bytecode-hook@26.05pre-git",
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hEqU7lnBnOn3gR3hT95yjdTUb3cqX2XJK5UAKsFw2Q10.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -93260,7 +93031,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hD72KUEwiFA.sLdU.sxE3sN.pAbc6NpAsIlGSdB07V1nk68.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -93614,7 +93385,7 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/cmake@4.1.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hUyMXr8Vc6kDOx1.slD2YKPiHdaTotXAF9ak0yQuwrSUA.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/json-c@0.18"
@@ -93752,7 +93523,7 @@
         "pkg:generic/lzo@2.10",
         "pkg:generic/openssl@3.6.2",
         "pkg:generic/pkg-config-wrapper@0.29.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hLpD.plE.p0PZi.s3nYDVPXhBQL9A7mvqelOzRLskVtg9Y0.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/xz@5.8.3",
         "pkg:generic/zlib@1.3.2",
@@ -93829,7 +93600,7 @@
         "pkg:generic/autoreconf-hook@26.05pre-git",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/pkg-config-wrapper@0.29.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hanuPOBWp4Hlpo.pm6kYlSd2v7H3P7LQ9brZdq1lo7Po4.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/swig@4.4.1"
       ],
@@ -94103,7 +93874,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hRZGaOq8hmkwekCs1fKshDrx3vmHdJl.swI3IO9ZLH5rc.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -94131,7 +93902,7 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/perl@5.42.0",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hqXrypwv.sI.p5npvGHGsHveijoui0ZnoGYhskCfLkewVE.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/libstemmer@2.2.0"
@@ -94261,7 +94032,7 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/libtool@2.5.4",
         "pkg:generic/pkg-config-wrapper@0.29.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hY9Nph2LkT1qnOYTW3WCumWWwORnI4P7HxzBjUlGaL7M.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/libuv@1.52.1"
@@ -94288,7 +94059,7 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
         "pkg:generic/pkg-config-wrapper@0.29.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hk5dZ75D.sBOouYAjrof9Jm2lY29XZhOqS1kudDGmGY9Q.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/libxml2@2.15.2"
@@ -94470,7 +94241,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hRi5SzfQJFghRcMAKHS5QKD365OZlio895fSlumq83vs.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git",
         "pkg:generic/zlib@1.3.2"
@@ -94608,7 +94379,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h2d64cItemqVM25WJIKrjExKz6v4UW2wVxM6phH1g1sE.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -94896,7 +94667,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools-build-hook@26.05pre-git",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h3Zeavn6aW6920gM7yE73Ms1RPCP2GjX9IUL9YGmISfY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git",
         "pkg:generic/zlib@1.3.2"
@@ -95088,7 +94859,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hHNAFsWX4tU9hfZkKxLNJn1J.pH3uTesQflbRPlo3GQ4k.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -95118,7 +94889,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hMQZZyGu6xFh3wO.p0lWED.pmingjK92v.sonljtp9gylmM.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tomli@2.4.0",
         "pkg:generic/types-psutil@7.2.1.20260116",
@@ -95287,7 +95058,7 @@
         "pkg:generic/libxslt@1.1.45",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/re2c@4.5.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hD9HsIjv8EJ1qAdXFAKy260K77cCvopgQ2Fx6uXpt6VI.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/ninja@1.13.2"
@@ -95350,7 +95121,7 @@
         "pkg:generic/autoreconf-hook@26.05pre-git",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/f9deba0c8404529772468d6dd01389f7dbfa5ba9.patch-sha256.hTmWfD99YaSIHA5PSsWHE91GSsdsVgVU.pqIow7LOwOGw.e",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hry29RUNa0Hv5gIhy2RTVT94mHhgfdIwb5aqjBycxxj0.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/numactl@2.0.18"
@@ -95492,7 +95263,7 @@
         "pkg:generic/meson@1.10.2",
         "pkg:generic/ninja@1.13.2",
         "pkg:generic/pkg-config-wrapper@0.29.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hqFanbp0KPc6.pCN4s5mMQNduzcxt.sSrMcYWvIMZ0XnGY.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/p11-kit@0.26.2"
@@ -95810,6 +95581,7 @@
         "pkg:generic/bash-static@5.3",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/bootstrap-stage4-stdenv-linux@26.05pre-git",
+        "pkg:generic/glibc-iconv-2.42-2bkgnravj3d7ybvh9704visgl070gnqd",
         "pkg:generic/glibc-iconv-2.42-cc7v7pw1q359kfnkw3g4mcx0dldycpwy",
         "pkg:generic/pkg-config-0.29.2.tar.gz-sha256.hb8acAWiMlFilfrmhZkyaujcszaQgoCv0Qp.smEOfn1ZE.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
@@ -95840,7 +95612,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools-scm@9.2.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hpkQjPJuSASWmzwzp9H.sUTJBQDr2r2RiofxpF135lAgc.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -95928,7 +95700,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hplBv24QgNzmVMV2lFxCbNwHKtd620thJayWdjs4estw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -95969,7 +95741,7 @@
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hLWnvQrIyj.piq96T1u9WEq.pHGOZ5sJYN5nCintEr6sBk.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/publicsuffix-list@0-unstable-2026-03-26"
@@ -96021,7 +95793,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h6eKc.pp3xLyRPo3oCWP.sdbMpHlkBXLy8XiGR0gTEHI2E.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/unittest-check-hook@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
@@ -96140,7 +95912,7 @@
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools-build-hook@26.05pre-git",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hc3ucbneUo5UBfdrd5Ktl4HriVusvWBEA1brrgahEQ9A.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -96171,7 +95943,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools-scm@9.2.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hMWKMJkvxdvuOyxE8rNlf15j7C.pMwJibnNsbfS0biKwo.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -96238,7 +96010,7 @@
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools-scm@9.2.2",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h9h5.scssWs4F0LKnFLjWDsEjB2AYczLvnSjiUdsaEcBQ.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -96262,7 +96034,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hNGTy3Hua6yEMWXQDJQO2Z5DD3clXTZXEH6DNQBMSGtQ.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -96290,7 +96062,7 @@
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools-scm@9.2.2",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h2x3znm92wo8DCshf5sYK0stnESg0oVXbxsWRAaTj6oQ.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -96480,7 +96252,7 @@
         "pkg:generic/python3.13-bootstrap-pyproject-hooks@1.2.0",
         "pkg:generic/python3.13-bootstrap-tomli@2.4.0",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hQprU0sXL6FL0rSVJwu8cYpcPlnYKzKAbkyDaTV778js.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/python3.13-bootstrap-build@1.4.4"
@@ -96489,7 +96261,7 @@
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hoWV.pKK22.piK99iCOCKCV1OCLq2Ef1bcYRKXT5GHwiL8.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/python3.13-bootstrap-flit-core@3.12.0"
@@ -96535,7 +96307,7 @@
         "pkg:generic/python3.13-bootstrap-flit-core@3.12.0",
         "pkg:generic/python3.13-bootstrap-installer@1.0.0",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hPVYwCUGQSuCe5WMeOBJpGXiJ4keVllzg9H3y.pIl.pNr8.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/python3.13-bootstrap-tomli@2.4.0"
@@ -96688,7 +96460,7 @@
         "pkg:generic/autoreconf-hook@26.05pre-git",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hPOdE8aKvQqfIPEIkUppZPV8t9ApT4R1AyfHXxrKvq88.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/re2c@4.5.1"
@@ -96864,7 +96636,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hcQnCTMmpdkvWwt7RFAIhAfmhVwGVn0Y8Z5Tr6lzDmS8.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/urllib3@2.6.3",
         "pkg:generic/wrap-python-hook@26.05pre-git"
@@ -96874,7 +96646,7 @@
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h9.skFI38PG3AKsdDqEV.swEzSel9IlQQ.spvOyhU.sN.saV0.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/which@2.23"
       ],
@@ -96904,7 +96676,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hv.paPIcsggjRJ3l6Xfw97b3zcqpyWNY4XWy2.p5aWyitY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -97059,7 +96831,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hs.sgfJc3yxvCE6cjP03vtIZqNFmoZKR3d7.p4gTPk1hQg.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -97133,7 +96905,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.htz99C.pdz5xJhunoC45bl0NdSdV9NXWya9ti48Z.sKaHY.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -97188,234 +96960,455 @@
       "ref": "pkg:generic/sort-locale.patch-sha256.hzEShwIcwdMa6b.sjHEDJ16apLFgfaYf8M9d37W1GArC0.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h2d64cItemqVM25WJIKrjExKz6v4UW2wVxM6phH1g1sE.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h2x3znm92wo8DCshf5sYK0stnESg0oVXbxsWRAaTj6oQ.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h3Zeavn6aW6920gM7yE73Ms1RPCP2GjX9IUL9YGmISfY.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h3oAlwvNSJ7NhPiHekh4SJI99cPFh29KCCR9314QzsvQ.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h6GlHCnx9dQtmViPnvHnMS.pl9Z.pg6M8ynrSxLhLtmAKU.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h6eKc.pp3xLyRPo3oCWP.sdbMpHlkBXLy8XiGR0gTEHI2E.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h7Mzz3KmmmE2xQru1GA4aY0DZqn6vxykWiExQvnA1bjM.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h8CfPQ4uMgKDqMMgutLdsjn.sMaAVBJQAp1KqUfxzNMQw.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h8J5EcaQXexWEA.pse5rCR06CwlEYao2XK5TnVNgFGHYQ.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h9.skFI38PG3AKsdDqEV.swEzSel9IlQQ.spvOyhU.sN.saV0.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.h9h5.scssWs4F0LKnFLjWDsEjB2AYczLvnSjiUdsaEcBQ.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hBAqGNi5lfYYTQd7CPH0lssLc5.sAkeuKSVEFcrF.scNyc.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hD72KUEwiFA.sLdU.sxE3sN.pAbc6NpAsIlGSdB07V1nk68.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hD9HsIjv8EJ1qAdXFAKy260K77cCvopgQ2Fx6uXpt6VI.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/glibc-locales@2.42-61",
+        "pkg:generic/stdenv-linux@26.05pre-git",
+        "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
+      ],
       "ref": "pkg:generic/source-sha256.hEqU7lnBnOn3gR3hT95yjdTUb3cqX2XJK5UAKsFw2Q10.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hHIHMxAUR4bjmFLoltJeIAVSulVQ6kVuIT2Ku.plwAx.s4.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hHNAFsWX4tU9hfZkKxLNJn1J.pH3uTesQflbRPlo3GQ4k.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hJXv12im46xKabIRVZ4FMSZUbpw2k8WCcaZZLX2pFteY.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hLWnvQrIyj.piq96T1u9WEq.pHGOZ5sJYN5nCintEr6sBk.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hLpD.plE.p0PZi.s3nYDVPXhBQL9A7mvqelOzRLskVtg9Y0.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hMQZZyGu6xFh3wO.p0lWED.pmingjK92v.sonljtp9gylmM.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hMWKMJkvxdvuOyxE8rNlf15j7C.pMwJibnNsbfS0biKwo.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hNGTy3Hua6yEMWXQDJQO2Z5DD3clXTZXEH6DNQBMSGtQ.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hPOdE8aKvQqfIPEIkUppZPV8t9ApT4R1AyfHXxrKvq88.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hPVYwCUGQSuCe5WMeOBJpGXiJ4keVllzg9H3y.pIl.pNr8.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hPgqjCeyHOhWtZjyzSZyvsPT0Q7yRyNDiW3x1fQq0K.p8.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hQprU0sXL6FL0rSVJwu8cYpcPlnYKzKAbkyDaTV778js.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hRZGaOq8hmkwekCs1fKshDrx3vmHdJl.swI3IO9ZLH5rc.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hRi5SzfQJFghRcMAKHS5QKD365OZlio895fSlumq83vs.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hSC5aMiQsAPLNjCdOHDAMYX2iDSwZltjXxAJJgZnPlJ0.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hUyMXr8Vc6kDOx1.slD2YKPiHdaTotXAF9ak0yQuwrSUA.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hX88A5V9uXP3wJQ.polK6pZJT66LP2uCXLK8goa5bPARA.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hY9Nph2LkT1qnOYTW3WCumWWwORnI4P7HxzBjUlGaL7M.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.haQEhFZUJs0TptfpjQVoIVI9V9a.pxKjE2OfStSaJKHGI.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hanuPOBWp4Hlpo.pm6kYlSd2v7H3P7LQ9brZdq1lo7Po4.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hc3ucbneUo5UBfdrd5Ktl4HriVusvWBEA1brrgahEQ9A.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hcQnCTMmpdkvWwt7RFAIhAfmhVwGVn0Y8Z5Tr6lzDmS8.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hdOdJ4f98smCYdskp3BwtQG6aOyK.p2a73.px580FKRWDk.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hhOcg41lcdVWfmT2DqaYzzu4bJZYiG2y5boylJevBv6k.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hiyGfGr3pLVZSEIHetjsPbIIXkuXrmIPiSqqOw31l9Qw.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hjsi83v9sg0n5kUfDACqdNAS2VuLSyxv.ppe2LRcO4Khc.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/glibc-locales@2.42-61",
+        "pkg:generic/stdenv-linux@26.05pre-git",
+        "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
+      ],
       "ref": "pkg:generic/source-sha256.hk5dZ75D.sBOouYAjrof9Jm2lY29XZhOqS1kudDGmGY9Q.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hkl8ZHt71v17QR2bDP.pad.s5uixf.pGStEPLQ5ooFoC5i8.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hoWV.pKK22.piK99iCOCKCV1OCLq2Ef1bcYRKXT5GHwiL8.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hpkQjPJuSASWmzwzp9H.sUTJBQDr2r2RiofxpF135lAgc.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hplBv24QgNzmVMV2lFxCbNwHKtd620thJayWdjs4estw.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/git-minimal@2.54.0",
+        "pkg:generic/nss-cacert@3.123",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hqFanbp0KPc6.pCN4s5mMQNduzcxt.sSrMcYWvIMZ0XnGY.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hqXrypwv.sI.p5npvGHGsHveijoui0ZnoGYhskCfLkewVE.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hry29RUNa0Hv5gIhy2RTVT94mHhgfdIwb5aqjBycxxj0.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hs.sgfJc3yxvCE6cjP03vtIZqNFmoZKR3d7.p4gTPk1hQg.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.htNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.htd3C7xTWfSzdo9Bbz0dHW2oPaCQYmUE9H2sUFfg5HH0.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.htz99C.pdz5xJhunoC45bl0NdSdV9NXWya9ti48Z.sKaHY.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hugyHPqqFcObgldThkkUQgZnl1fVEcXYFnXyAxNwUFIE.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/curl@8.20.0",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/source-sha256.hv.paPIcsggjRJ3l6Xfw97b3zcqpyWNY4XWy2.p5aWyitY.e"
     },
     {
       "dependsOn": [
         "pkg:generic/bash@5.3p9",
         "pkg:generic/curl@8.20.0",
-        "pkg:generic/git-minimal@2.54.0",
-        "pkg:generic/glibc-locales@2.42-61",
-        "pkg:generic/nss-cacert@3.123",
-        "pkg:generic/stdenv-linux@26.05pre-git",
-        "pkg:generic/unzip@6.0?nix_drv=ix825513704wd029zvg5rqakizag6w2r"
+        "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e"
     },
@@ -97447,7 +97440,7 @@
         "pkg:generic/requests@2.33.1",
         "pkg:generic/roman-numerals@4.1.0",
         "pkg:generic/snowballstemmer@3.0.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hPgqjCeyHOhWtZjyzSZyvsPT0Q7yRyNDiW3x1fQq0K.p8.e",
         "pkg:generic/sphinxcontrib-applehelp@2.0.0",
         "pkg:generic/sphinxcontrib-devhelp@2.0.0",
         "pkg:generic/sphinxcontrib-htmlhelp@2.1.0",
@@ -97799,6 +97792,7 @@
         "pkg:generic/gcc-cxx@4.6.4",
         "pkg:generic/gcc-get-version-4.6.4-dpx3qn66di2g74234vi7xq4iizknmicd",
         "pkg:generic/gcc-simple-program-10.4.0-yynym470zj9cl8d4n6m2zs6glypdrayy",
+        "pkg:generic/gcc-simple-program-15.2.0-h5c3h1i4pn51c6d9jnm0hc0fb30apx1n",
         "pkg:generic/gcc-simple-program-15.2.0-sv664h9bg5xkpnqa3ia7mw7fsdwp8isa",
         "pkg:generic/gcc-wrapper@15.2.0",
         "pkg:generic/gcc@10.4.0",
@@ -98072,7 +98066,7 @@
         "pkg:generic/bison@3.8.2",
         "pkg:generic/libtool@2.5.4",
         "pkg:generic/pcre2@10.46",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hjsi83v9sg0n5kUfDACqdNAS2VuLSyxv.ppe2LRcO4Khc.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/swig@4.4.1"
@@ -98866,7 +98860,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hPVYwCUGQSuCe5WMeOBJpGXiJ4keVllzg9H3y.pIl.pNr8.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/unittest-check-hook@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
@@ -99046,7 +99040,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h3oAlwvNSJ7NhPiHekh4SJI99cPFh29KCCR9314QzsvQ.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -99117,7 +99111,7 @@
         "pkg:generic/nettle@3.10.2",
         "pkg:generic/openssl@3.6.2",
         "pkg:generic/pkg-config-wrapper@0.29.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hBAqGNi5lfYYTQd7CPH0lssLc5.sAkeuKSVEFcrF.scNyc.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/version-check-hook@26.05pre-git"
       ],
@@ -99440,7 +99434,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hiyGfGr3pLVZSEIHetjsPbIIXkuXrmIPiSqqOw31l9Qw.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -99631,7 +99625,7 @@
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools-scm@9.2.2",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hSC5aMiQsAPLNjCdOHDAMYX2iDSwZltjXxAJJgZnPlJ0.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -99651,7 +99645,7 @@
         "pkg:generic/cmake@4.1.2",
         "pkg:generic/gtest@1.17.0",
         "pkg:generic/pkg-config-wrapper@0.29.2",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.h6GlHCnx9dQtmViPnvHnMS.pl9Z.pg6M8ynrSxLhLtmAKU.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/zlib-ng@2.3.3"
@@ -99692,7 +99686,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hugyHPqqFcObgldThkkUQgZnl1fVEcXYFnXyAxNwUFIE.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -99713,7 +99707,7 @@
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
         "pkg:generic/setuptools@80.10.1",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.hhOcg41lcdVWfmT2DqaYzzu4bJZYiG2y5boylJevBv6k.e",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -99726,7 +99720,7 @@
         "pkg:generic/file@5.47",
         "pkg:generic/gnugrep@3.12",
         "pkg:generic/man-fix.patch-sha256.hi.piv.powUXbKU3UtZBsjfj86kFB3TDlpcVDNsDX8dyZE.e",
-        "pkg:generic/source-sha256.hzOnDOaH.p9h78Z1667n1Cr8HIm8.pOPn2Vc1Zl4XksiCM.e",
+        "pkg:generic/source-sha256.htNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44.e",
         "pkg:generic/stdenv-linux@26.05pre-git"
       ],
       "ref": "pkg:generic/zstd@1.5.7"
@@ -102736,7 +102730,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 572 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
+        "value": "orphaned-components-detected: 513 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -102760,7 +102754,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":1590,\"components-without-member-role\":503,\"derivations\":1749,\"distinct-cves\":15,\"edge-ineligible-components\":512,\"edges\":6702,\"identifiers\":{\"by-drv\":231,\"by-name-version\":95,\"declared\":50,\"received\":326,\"rejected\":0,\"wanted\":1237},\"licenses\":{\"degraded\":null,\"received\":230,\"wanted\":1237,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":245,\"package\":73,\"scaffolding\":267,\"source\":502},\"patches\":212,\"patches-without-cve\":196,\"roles\":{\"artifact-input\":268,\"both\":45,\"build-tooling\":1435,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":1590,\"components-without-member-role\":503,\"derivations\":1749,\"distinct-cves\":15,\"edge-ineligible-components\":512,\"edges\":6875,\"identifiers\":{\"by-drv\":231,\"by-name-version\":95,\"declared\":50,\"received\":326,\"rejected\":0,\"wanted\":1237},\"licenses\":{\"degraded\":null,\"received\":230,\"wanted\":1237,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":245,\"package\":73,\"scaffolding\":267,\"source\":502},\"patches\":212,\"patches-without-cve\":196,\"roles\":{\"artifact-input\":268,\"both\":45,\"build-tooling\":1435,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",
