@@ -65,7 +65,7 @@ Applied to every member, E1 would move them to `source`, an endpoint, and add ed
 **Decision.** E1, E2 and the name rules are consulted only for a member the version-token rung already claims. They split today's `package` population into `source`, `check` and `package`.
 - Every move is between endpoint roles, so the graph is unchanged by construction.
 - A member outside today's `package` population is untouched.
-- The four fragment patches are a separate defect (fragment means "live-bootstrap C function"). It is filed as a follow-up and out of scope here.
+- The four fragment patches are a separate defect (fragment means "live-bootstrap C function"). It is filed as #1502 and out of scope here.
 
 **Alternative.** Fix all patches now, and accept the edge change. Rejected: the spec fixes the edges, and a graph change deserves its own measured review.
 

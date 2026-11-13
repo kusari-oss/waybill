@@ -95,7 +95,7 @@ Version-check derivations (`*-get-version-<v>`) and test programs (`*-simple-pro
 - **An environment** (`python3-3.13.12-env`). It is built from packages and is version-bearing, so it carries `package` (FR-002).
 - **A darwin closure.** The goldens are Linux closures. The darwin bootstrap has no `mes`/`tinycc` chain, so the genuine-package population there may be near zero. That is a real state, not a failure.
 - **A member a nameless rung already claims** (content hash, then `text`). It is unaffected: only the third rung changes.
-- **A patch with no version token** (`001-fix-rpath.patch`, `catalog-legacy-uris.patch`). It is `fragment` today, a role the graph walks through. Moving it to `source` would change edges, so it is out of scope here and tracked separately (research R5). The new rules only split today's `package` population.
+- **A patch with no version token** (`001-fix-rpath.patch`, `catalog-legacy-uris.patch`). It is `fragment` today, a role the graph walks through. Moving it to `source` would change edges, so it is out of scope here and tracked in #1502 (research R5). The new rules only split today's `package` population.
 
 ## Requirements *(mandatory)*
 
