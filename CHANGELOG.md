@@ -192,11 +192,7 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `invisible-island:ncurses` holds 28 CVEs, `ncurses_project` 2 and `gnu`
   0 (measured 2026-11-13), and it is now the row's first vendor. A consumer
   that reads only CycloneDX `component.cpe` was missing about 26 ncurses
-  CVEs. All three vendors are still emitted. The curated table now records
-  the CVE count of every NVD vendor of each product. A test rejects a row
-  whose first vendor holds fewer CVEs than another vendor of the same
-  product, unless that vendor is recorded as a different product sharing
-  the name (`uutils:coreutils`).
+  CVEs. All three vendors are still emitted.
 
 - **Hackage licenses from nixpkgs revisions that write `lib.licensesSpdx`
   (#1477).** From 2025-11 to 2026-03, nixpkgs declared explicit SPDX
