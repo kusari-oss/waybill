@@ -1,8 +1,11 @@
 # Feature Specification: A closure member is a `package` only when it is one
 
-**Feature Branch**: `1374-closure-package-role`
+**Feature Branch**: `1380-closure-package-role`
 **Created**: 2026-11-13
 **Status**: Draft
+**Issue**: #1374
+
+> **Numbering note.** This is spec **1380**, and it resolves issue **#1374**. Spec 1374 (`1374-exclude-members-from-coverage`) resolved issue #1380.
 **Input**: User description: "#1374 — The Nix closure member role `package` (C206 waybill:closure-member-role) is assigned by a version-shaped token anywhere in the name, so on nix-closure-moat all 12 `package` members are source trees, a patch file or an env (clang-src-21.1.8, clang-at-least-16-LLVMgold-path.patch, python3-3.13.13-env). Decide, from measurements on at least three closures (moat, slacklinker, shellcheck), whether the role has a real population (bootstrap packages like mes-libc-mini-0.27.1) and whether it is separable by name (suffix-only version token; exclusions for .patch, -src-<v>, -source, -env), or whether it folds into `source`. The role is a frozen four-value enum that a consumer can observe, and the change regenerates corpus goldens. Dependency edges must not change, because is_edge_endpoint() is true for both roles."
 
 ## Context
