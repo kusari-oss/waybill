@@ -170,7 +170,7 @@
   - **source references:** the count of `source` members with a reference rises above 111 on slacklinker (SC-003; record the number);
   - **edges and non-closure targets:** named-component edges change only where they named a merged twin (SC-004), and non-closure targets are byte-identical (SC-005).
 - [ ] T031 Commit the goldens, run a non-regenerating corpus check, and confirm the merged tree is byte-identical to a fresh regeneration.
-- [ ] T032 Re-run `specs/1046-haskell-overlay-identity/measurements/hackage-probe.sh` and `qualifier-match-probe.sh` and append the output, dated, to the measurements directory, confirming that research R3 and R11 still hold at implementation time.
+- [X] T032 Re-run `specs/1046-haskell-overlay-identity/measurements/hackage-probe.sh` and `qualifier-match-probe.sh` and append the output, dated, to the measurements directory, confirming that research R3 and R11 still hold at implementation time.
 
 ## Dependencies & Execution Order
 
