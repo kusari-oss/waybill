@@ -62221,7 +62221,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2PJIPUFTP2SMEROV",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:flex_project:flex:2.6.4:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6L64FJMTKZQUYC24",
       "type": "Annotation"
     },
@@ -68837,7 +68837,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4RJS5VCKEGEMDJ3Z",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:c-ares_project:c-ares:1.34.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:c-ares:c-ares:1.34.6:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ADV66E44VY5S4BKY",
       "type": "Annotation"
     },
@@ -156549,7 +156549,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Y66EFAMV2PW6PB62",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:unzip_project:unzip:6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:info-zip:unzip:6.0:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2AF7EKYM4KPAYFOH",
       "type": "Annotation"
     },

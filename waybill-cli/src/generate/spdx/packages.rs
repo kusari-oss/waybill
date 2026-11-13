@@ -794,7 +794,7 @@ mod tests {
         c.extra_annotations.insert(ids::ANN_CURATED_CPE.to_string(), serde_json::json!(true));
         let refs = secondary_cpe_external_refs(&c);
         let locators: Vec<&str> = refs.iter().map(|r| r.locator.as_str()).collect();
-        assert_eq!(locators, vec!["cpe:2.3:a:unzip_project:unzip:9.9.9:*:*:*:*:*:*:*"]);
+        assert_eq!(locators, vec!["cpe:2.3:a:info-zip:unzip:9.9.9:*:*:*:*:*:*:*"]);
         assert!(refs.iter().all(|r| r.ref_type == "cpe23Type"
             && matches!(r.category, SpdxExternalRefCategory::Security)
             && r.comment.as_deref() == Some("CPE from waybill's curated CPE table")));

@@ -1,8 +1,9 @@
 //! #1430 — a curated CPE row's second vendor reaches a scanner.
 //!
-//! The curated `unzip` row is `info-zip:unzip` then `unzip_project:unzip`.
-//! NVD files every unzip CVE grype knows under the second, and the second was
-//! emitted only in `waybill:cpe-candidates`, which grype does not read. Its
+//! The curated `unzip` row is `unzip_project:unzip` then `info-zip:unzip`
+//! (#1490). When this was written the order was reversed: NVD files every
+//! unzip CVE grype knew under `unzip_project`, then the second vendor, and the
+//! second was emitted only in `waybill:cpe-candidates`, which grype does not read. Its
 //! CycloneDX decoder reads `component.cpe` and `syft:cpe23` properties; its
 //! SPDX 2.3 decoder reads every `cpe23Type` reference
 //! (`specs/1430-secondary-cpe-carrier/`).
@@ -21,8 +22,8 @@ use std::path::{Path, PathBuf};
 use common::nix_stub::{NixStub, Rows, Scan, DEFAULT_ATTR};
 use serde_json::Value;
 
-const INFO_ZIP: &str = "cpe:2.3:a:info-zip:unzip:9.9.9:*:*:*:*:*:*:*";
-const UNZIP_PROJECT: &str = "cpe:2.3:a:unzip_project:unzip:9.9.9:*:*:*:*:*:*:*";
+const PRIMARY: &str = "cpe:2.3:a:unzip_project:unzip:9.9.9:*:*:*:*:*:*:*";
+const SECOND: &str = "cpe:2.3:a:info-zip:unzip:9.9.9:*:*:*:*:*:*:*";
 const ZLIB: &str = "cpe:2.3:a:zlib:zlib:9.9.9:*:*:*:*:*:*:*";
 
 const CLOSURE: &str = r#"{
@@ -129,11 +130,11 @@ fn i1430_control_the_curated_primaries_are_emitted() {
         "C184 absent: the closure tier degraded, so nothing here is evidence\n{}",
         s.stderr
     );
-    assert_eq!(component(&s, "unzip")["cpe"].as_str(), Some(INFO_ZIP));
+    assert_eq!(component(&s, "unzip")["cpe"].as_str(), Some(PRIMARY));
     assert_eq!(component(&s, "zlib")["cpe"].as_str(), Some(ZLIB));
     assert_eq!(
         properties(component(&s, "unzip"), "waybill:cpe-candidates"),
-        vec![serde_json::to_string(&[INFO_ZIP, UNZIP_PROJECT]).unwrap()],
+        vec![serde_json::to_string(&[PRIMARY, SECOND]).unwrap()],
         "C19 is unchanged"
     );
 }
@@ -142,7 +143,7 @@ fn i1430_control_the_curated_primaries_are_emitted() {
 #[test]
 fn i1430_the_second_vendor_rides_syft_cpe23() {
     let s = scan();
-    assert_eq!(properties(component(&s, "unzip"), "syft:cpe23"), vec![UNZIP_PROJECT]);
+    assert_eq!(properties(component(&s, "unzip"), "syft:cpe23"), vec![SECOND]);
 }
 
 /// A single-vendor row has nothing to add.
@@ -157,9 +158,10 @@ fn i1430_a_single_vendor_row_gets_no_syft_cpe23() {
 #[test]
 fn i1430_both_spdx_formats_carry_every_vendor() {
     let s = scan();
-    assert_eq!(spdx23_cpes(&s, "unzip"), vec![INFO_ZIP, UNZIP_PROJECT]);
+    assert_eq!(spdx23_cpes(&s, "unzip"), vec![PRIMARY, SECOND]);
     assert_eq!(spdx23_cpes(&s, "zlib"), vec![ZLIB]);
-    assert_eq!(spdx3_cpes(&s, "unzip"), vec![INFO_ZIP, UNZIP_PROJECT]);
+    // `spdx3_cpes` sorts, so this compares the set, in sorted order.
+    assert_eq!(spdx3_cpes(&s, "unzip"), vec![SECOND, PRIMARY]);
 }
 
 /// A12's parity extractor sees the further vendor in CycloneDX, and every
@@ -174,7 +176,7 @@ fn i1430_a12_parity_covers_the_second_vendor() {
     let cdx = (a12.cdx)(&s.cdx);
     let spdx23 = (a12.spdx23)(&s.spdx23);
     let spdx3 = (a12.spdx3)(&s.spdx3);
-    assert!(cdx.contains(UNZIP_PROJECT), "{cdx:?}");
+    assert!(cdx.contains(SECOND), "{cdx:?}");
     assert!(cdx.is_subset(&spdx23), "CDX {cdx:?}\nSPDX 2.3 {spdx23:?}");
     assert!(cdx.is_subset(&spdx3), "CDX {cdx:?}\nSPDX 3 {spdx3:?}");
 }
