@@ -471,6 +471,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-13
 - one committed TSV (1,407 rows across 36 releases in the 2026-11-12 Stack snapshot), embedded in the binary. No runtime state and no scan-time network. (966-ghc-boot-versions)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only — `waybill_common::types::purl::Purl` (qualifier encoding), `serde`/`serde_json`, `tracing`. The derivation map is already parsed by the closure tier. **Zero new Cargo dependencies** (FR-012). (1436-vex-build-identity)
 - N/A. A per-scan memo of Hackage answers; no disk cache (R3). (1046-haskell-overlay-identity)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `serde_json` for the C184 counts, and the closure parser's `RawDerivation::paths_in`. **Zero new Cargo dependencies.** (1380-closure-package-role)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -703,9 +704,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1380-closure-package-role: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `serde_json` for the C184 counts, and the closure parser's `RawDerivation::paths_in`. **Zero new Cargo dependencies.**
 - 1046-haskell-overlay-identity: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only.
 - 1436-vex-build-identity: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only — `waybill_common::types::purl::Purl` (qualifier encoding), `serde`/`serde_json`, `tracing`. The derivation map is already parsed by the closure tier. **Zero new Cargo dependencies** (FR-012).
-- 966-ghc-boot-versions: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only. The table is `include_str!` data parsed with std, `serde_json` serializes C219, and `tracing` is used. The probe is Python 3 stdlib, run with `-I -B`. **Zero new Cargo dependencies** (FR-012).
 
 
 <!-- MANUAL ADDITIONS START -->

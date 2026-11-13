@@ -1,0 +1,147 @@
+## R1 builder shape: checks vs genuine packages (env keys minus common ones)
+bash-get-version-2.05b	kaem	PATH
+bash-get-version-5.3	bash	PATH,SHELL,buildCommand,passAsFile
+bash-static-get-version-5.3	bash	PATH,SHELL,buildCommand,passAsFile
+binutils-get-version-2.42	bash	PATH,SHELL,buildCommand,passAsFile
+binutils-get-version-2.46.0	bash	PATH,SHELL,buildCommand,passAsFile
+binutils-static-get-version-2.45.1	bash	PATH,SHELL,buildCommand,passAsFile
+binutils-static-get-version-2.46.0	bash	PATH,SHELL,buildCommand,passAsFile
+bison-get-version-3.8.2	bash	PATH,SHELL,buildCommand,passAsFile
+bootstrap-coreutils-musl-get-version-9.10	bash	PATH,SHELL,buildCommand,passAsFile
+bootstrap-coreutils-musl-get-version-9.9	bash	PATH,SHELL,buildCommand,passAsFile
+busybox-static-get-version-1.36.1	bash	PATH,SHELL,buildCommand,passAsFile
+bzip2-get-version-1.0.8	bash	PATH,SHELL,buildCommand,passAsFile
+bzip2-static-get-version-1.0.8	bash	PATH,SHELL,buildCommand,passAsFile
+coreutils-static-get-version-9.10	bash	PATH,SHELL,buildCommand,passAsFile
+coreutils-static-get-version-9.9	bash	PATH,SHELL,buildCommand,passAsFile
+diffutils-get-version-3.8	bash	PATH,SHELL,buildCommand,passAsFile
+diffutils-static-get-version-3.12	bash	PATH,SHELL,buildCommand,passAsFile
+findutils-get-version-4.10.0	bash	PATH,SHELL,buildCommand,passAsFile
+findutils-static-get-version-4.10.0	bash	PATH,SHELL,buildCommand,passAsFile
+gawk-get-version-5.3.2	bash	PATH,SHELL,buildCommand,passAsFile
+gawk-mes-get-version-3.0.6	bash	PATH,SHELL,buildCommand,passAsFile
+gawk-static-get-version-5.3.2	bash	PATH,SHELL,buildCommand,passAsFile
+gcc-cxx-simple-program-4.6.4	bash	PATH,SHELL,buildCommand,passAsFile
+gcc-get-version-4.6.4	bash	PATH,SHELL,buildCommand,passAsFile
+gcc-simple-program-10.4.0	bash	PATH,SHELL,buildCommand,passAsFile
+gcc-simple-program-15.2.0	bash	PATH,SHELL,buildCommand,passAsFile
+glibc-iconv-2.42	bash	__structuredAttrs,buildCommand,buildInputs,cmakeFlags,configureFlags,doCheck,doI
+glibc-simple-program-2.42	bash	PATH,SHELL,buildCommand,passAsFile
+gnugrep-get-version-2.4	bash	PATH,SHELL,buildCommand,passAsFile
+gnugrep-static-get-version-3.12	bash	PATH,SHELL,buildCommand,passAsFile
+gnum4-get-version-1.4.20	bash	PATH,SHELL,buildCommand,passAsFile
+gnum4-get-version-1.4.21	bash	PATH,SHELL,buildCommand,passAsFile
+gnumake-musl-get-version-4.4.1	bash	PATH,SHELL,buildCommand,passAsFile
+gnumake-static-get-version-4.4.1	bash	PATH,SHELL,buildCommand,passAsFile
+gnupatch-static-get-version-2.8	bash	PATH,SHELL,buildCommand,passAsFile
+gnused-get-version-4.2	bash	PATH,SHELL,buildCommand,passAsFile
+gnused-mes-get-version-4.0.9	bash	PATH,SHELL,buildCommand,passAsFile
+gnused-static-get-version-4.9	bash	PATH,SHELL,buildCommand,passAsFile
+gnutar-get-version-1.12	bash	PATH,SHELL,buildCommand,passAsFile
+gnutar-get-version-1.35	bash	PATH,SHELL,buildCommand,passAsFile
+gnutar-musl-get-version-1.12	bash	PATH,SHELL,buildCommand,passAsFile
+gnutar-static-get-version-1.35	bash	PATH,SHELL,buildCommand,passAsFile
+gzip-get-version-1.2.4	bash	PATH,SHELL,buildCommand,passAsFile
+gzip-static-get-version-1.14	bash	PATH,SHELL,buildCommand,passAsFile
+heirloom-get-version-070715	bash	PATH,SHELL,buildCommand,passAsFile
+mes-get-version-0.27.1	kaem	PATH
+mes-libc-0.27.1	kaem	PATH
+mes-libc-0.27.1	kaem	PATH,pname,version
+mes-libc-mini-0.27.1	kaem	PATH
+mes-libc+tcc-0.27.1	kaem	PATH
+musl-simple-program-1.2.5	bash	PATH,SHELL,buildCommand,passAsFile
+musl-simple-program-1.2.6	bash	PATH,SHELL,buildCommand,passAsFile
+patchelf-static-get-version-0.18.0	bash	PATH,SHELL,buildCommand,passAsFile
+python-get-version-3.14.2	bash	PATH,SHELL,buildCommand,passAsFile
+python-get-version-3.14.4	bash	PATH,SHELL,buildCommand,passAsFile
+tinycc-boot-mes-get-version-unstable-2024-07-07	kaem	PATH
+tinycc-boot-mes-libs-unstable-2024-07-07	kaem	PATH
+tinycc-boot0-chain-unstable-2024-07-07	kaem	PATH
+tinycc-boot0-libs-unstable-2024-07-07	kaem	PATH
+tinycc-boot1-chain-unstable-2024-07-07	kaem	PATH
+tinycc-boot1-libs-unstable-2024-07-07	kaem	PATH
+tinycc-boot2-chain-unstable-2024-07-07	kaem	PATH
+tinycc-boot2-libs-unstable-2024-07-07	kaem	PATH
+tinycc-boot3-chain-unstable-2024-07-07	kaem	PATH
+tinycc-boot3-libs-unstable-2024-07-07	kaem	PATH
+tinycc-bootstrappable-chain-unstable-2024-07-07	kaem	PATH
+tinycc-bootstrappable-libs-unstable-2024-07-07	kaem	PATH
+tinycc-mes-boot-chain-unstable-2025-12-03	kaem	PATH
+tinycc-mes-boot-libs-unstable-2025-12-03	kaem	PATH
+tinycc-mes-chain-unstable-2025-12-03	kaem	PATH
+tinycc-mes-libs-unstable-2025-12-03	kaem	PATH
+tinycc-musl-simple-program-unstable-2025-12-03	bash	PATH,SHELL,buildCommand,passAsFile
+xz-get-version-5.4.7	bash	PATH,SHELL,buildCommand,passAsFile
+xz-get-version-5.8.3	bash	PATH,SHELL,buildCommand,passAsFile
+## R2 E1: non-fixed-output members whose output another derivation lists in patches
+   3 001-fix-rpath.patch
+   6 catalog-legacy-uris.patch
+   1 clang-at-least-16-LLVMgold-path.patch
+   3 fix-build-time-run-tcl.patch
+   2 remove-hatch-plugins.patch
+## R3 E2: srcOnly (phases = unpackPhase patchPhase installPhase)
+   1 ghc-9.10.3-source
+## R4 name rules over every non-fixed-output, non-text derivation
+check	bash-get-version-2.05b
+check	bash-get-version-5.3
+check	bash-static-get-version-5.3
+check	binutils-get-version-2.42
+check	binutils-get-version-2.46.0
+check	binutils-static-get-version-2.45.1
+check	binutils-static-get-version-2.46.0
+check	bison-get-version-3.8.2
+check	bootstrap-coreutils-musl-get-version-9.10
+check	bootstrap-coreutils-musl-get-version-9.9
+check	busybox-static-get-version-1.36.1
+check	bzip2-get-version-1.0.8
+check	bzip2-static-get-version-1.0.8
+check	coreutils-static-get-version-9.10
+check	coreutils-static-get-version-9.9
+check	diffutils-get-version-3.8
+check	diffutils-static-get-version-3.12
+check	findutils-get-version-4.10.0
+check	findutils-static-get-version-4.10.0
+check	gawk-get-version-5.3.2
+check	gawk-mes-get-version-3.0.6
+check	gawk-static-get-version-5.3.2
+check	gcc-cxx-simple-program-4.6.4
+check	gcc-get-version-4.6.4
+check	gcc-simple-program-10.4.0
+check	gcc-simple-program-15.2.0
+check	glibc-simple-program-2.42
+check	gnugrep-get-version-2.4
+check	gnugrep-static-get-version-3.12
+check	gnum4-get-version-1.4.20
+check	gnum4-get-version-1.4.21
+check	gnumake-musl-get-version-4.4.1
+check	gnumake-static-get-version-4.4.1
+check	gnupatch-static-get-version-2.8
+check	gnused-get-version-4.2
+check	gnused-mes-get-version-4.0.9
+check	gnused-static-get-version-4.9
+check	gnutar-get-version-1.12
+check	gnutar-get-version-1.35
+check	gnutar-musl-get-version-1.12
+check	gnutar-static-get-version-1.35
+check	gzip-get-version-1.2.4
+check	gzip-static-get-version-1.14
+check	heirloom-get-version-070715
+check	mes-get-version-0.27.1
+check	musl-simple-program-1.2.5
+check	musl-simple-program-1.2.6
+check	patchelf-static-get-version-0.18.0
+check	python-get-version-3.14.2
+check	python-get-version-3.14.4
+check	tinycc-boot-mes-get-version-unstable-2024-07-07
+check	tinycc-musl-simple-program-unstable-2025-12-03
+check	xz-get-version-5.4.7
+check	xz-get-version-5.8.3
+source-name	cargo-auditable-0.7.2-vendor
+source-name	cargo-auditable-bootstrap-0.7.2-vendor
+source-name	clang-src-21.1.8
+source-name	ghc-9.10.3-source
+source-name	llvm-src-21.1.8
+source-name	llvm-tblgen-src-21.1.8
+source-name	mes-src-0.27.1
+source-name	tinycc-bootstrappable-unstable-2024-07-07-source
+source-name	tinycc-unstable-2025-12-03-source

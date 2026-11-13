@@ -31435,7 +31435,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -31541,7 +31541,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -31743,7 +31743,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -32986,7 +32986,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -33177,7 +33177,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -33520,7 +33520,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -34589,7 +34589,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -36208,7 +36208,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -36561,7 +36561,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -36660,7 +36660,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -37519,7 +37519,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -37669,7 +37669,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -39794,7 +39794,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -39845,7 +39845,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -41035,7 +41035,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -42066,7 +42066,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -45568,7 +45568,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -45667,7 +45667,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -52501,7 +52501,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -52600,7 +52600,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -55114,7 +55114,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -55213,7 +55213,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -55312,7 +55312,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -55960,7 +55960,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -56068,7 +56068,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -56119,7 +56119,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -56170,7 +56170,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -56221,7 +56221,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -58303,7 +58303,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -59860,7 +59860,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -60644,7 +60644,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -60743,7 +60743,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -60969,7 +60969,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -61190,7 +61190,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -61289,7 +61289,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -61491,7 +61491,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -61646,7 +61646,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -61745,7 +61745,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -61844,7 +61844,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -62006,7 +62006,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -62057,7 +62057,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -62156,7 +62156,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -62255,7 +62255,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -63473,7 +63473,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -63572,7 +63572,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -65331,7 +65331,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -79827,7 +79827,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -80073,7 +80073,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -80185,7 +80185,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -84410,7 +84410,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -85155,7 +85155,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -88090,7 +88090,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -93425,7 +93425,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -100142,7 +100142,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -123684,7 +123684,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -125577,7 +125577,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -126418,7 +126418,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -126469,7 +126469,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
@@ -134448,7 +134448,7 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "package"
+          "value": "check"
         },
         {
           "name": "waybill:closure-role",
@@ -199267,7 +199267,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":2351,\"components-without-member-role\":833,\"derivations\":2518,\"distinct-cves\":21,\"edge-ineligible-components\":523,\"edges\":12149,\"identifiers\":{\"by-drv\":492,\"by-name-version\":103,\"declared\":54,\"received\":595,\"rejected\":0,\"wanted\":1995},\"licenses\":{\"degraded\":null,\"received\":490,\"wanted\":1995,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":256,\"package\":93,\"scaffolding\":267,\"source\":902},\"patches\":285,\"patches-without-cve\":263,\"roles\":{\"artifact-input\":555,\"both\":60,\"build-tooling\":1902,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":2351,\"components-without-member-role\":833,\"derivations\":2518,\"distinct-cves\":21,\"edge-ineligible-components\":523,\"edges\":12149,\"identifiers\":{\"by-drv\":492,\"by-name-version\":103,\"declared\":54,\"received\":595,\"rejected\":0,\"wanted\":1995},\"licenses\":{\"degraded\":null,\"received\":490,\"wanted\":1995,\"withheld-ambiguous\":0},\"member-roles\":{\"check\":47,\"fragment\":256,\"package\":34,\"scaffolding\":267,\"source\":914},\"patches\":285,\"patches-without-cve\":263,\"roles\":{\"artifact-input\":555,\"both\":60,\"build-tooling\":1902,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",

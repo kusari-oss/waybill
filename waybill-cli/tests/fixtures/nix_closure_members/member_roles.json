@@ -1,0 +1,222 @@
+{
+  "derivations": {
+    "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-waybill-fixture-app-2.0.drv": {
+      "name": "waybill-fixture-app-2.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "2.0",
+        "out": "/nix/store/o-app",
+        "buildInputs": "/nix/store/om1-waybill-fixture-fix-16.patch /nix/store/om2-waybill-fixture-local.patch /nix/store/om3-waybill-fixture-tree-9.10.3 /nix/store/om4-waybill-fixture-clang-src-21.1.8 /nix/store/om5-waybill-fixture-tool-0.7.2-vendor /nix/store/om6-waybill-fixture-bash-get-version-5.3 /nix/store/om7-waybill-fixture-gcc-simple-program-15.2.0 /nix/store/om8-waybill-fixture-libc-mini-0.27.1 /nix/store/om9-waybill-fixture-python3-3.13.12-env",
+        "patches": "/nix/store/om1-waybill-fixture-fix-16.patch /nix/store/om2-waybill-fixture-local.patch"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-app"
+        }
+      },
+      "inputs": {
+        "drvs": {
+          "/nix/store/m1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-fix-16.patch.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/m2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-local.patch.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/m3xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-tree-9.10.3.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/m4xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-clang-src-21.1.8.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/m5xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-tool-0.7.2-vendor.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/m6xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-bash-get-version-5.3.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/m7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-gcc-simple-program-15.2.0.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/m8xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-libc-mini-0.27.1.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/m9xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-python3-3.13.12-env.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      }
+    },
+    "/nix/store/m1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-fix-16.patch.drv": {
+      "name": "waybill-fixture-fix-16.patch",
+      "env": {
+        "dontUnpack": "1",
+        "out": "/nix/store/om1-waybill-fixture-fix-16.patch"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/om1-waybill-fixture-fix-16.patch"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    },
+    "/nix/store/m2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-local.patch.drv": {
+      "name": "waybill-fixture-local.patch",
+      "env": {
+        "dontUnpack": "1",
+        "out": "/nix/store/om2-waybill-fixture-local.patch"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/om2-waybill-fixture-local.patch"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    },
+    "/nix/store/m3xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-tree-9.10.3.drv": {
+      "name": "waybill-fixture-tree-9.10.3",
+      "env": {
+        "phases": "unpackPhase patchPhase installPhase",
+        "out": "/nix/store/om3-waybill-fixture-tree-9.10.3"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/om3-waybill-fixture-tree-9.10.3"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    },
+    "/nix/store/m4xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-clang-src-21.1.8.drv": {
+      "name": "waybill-fixture-clang-src-21.1.8",
+      "env": {
+        "buildCommand": "cp -r",
+        "out": "/nix/store/om4-waybill-fixture-clang-src-21.1.8"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/om4-waybill-fixture-clang-src-21.1.8"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    },
+    "/nix/store/m5xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-tool-0.7.2-vendor.drv": {
+      "name": "waybill-fixture-tool-0.7.2-vendor",
+      "env": {
+        "buildCommand": "create-vendor",
+        "out": "/nix/store/om5-waybill-fixture-tool-0.7.2-vendor"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/om5-waybill-fixture-tool-0.7.2-vendor"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    },
+    "/nix/store/m6xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-bash-get-version-5.3.drv": {
+      "name": "waybill-fixture-bash-get-version-5.3",
+      "env": {
+        "buildCommand": "bash --version",
+        "out": "/nix/store/om6-waybill-fixture-bash-get-version-5.3"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/om6-waybill-fixture-bash-get-version-5.3"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    },
+    "/nix/store/m7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-gcc-simple-program-15.2.0.drv": {
+      "name": "waybill-fixture-gcc-simple-program-15.2.0",
+      "env": {
+        "buildCommand": "cc hello.c",
+        "out": "/nix/store/om7-waybill-fixture-gcc-simple-program-15.2.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/om7-waybill-fixture-gcc-simple-program-15.2.0"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    },
+    "/nix/store/m8xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-libc-mini-0.27.1.drv": {
+      "name": "waybill-fixture-libc-mini-0.27.1",
+      "env": {
+        "PATH": "/nix/store/k-kaem/bin",
+        "out": "/nix/store/om8-waybill-fixture-libc-mini-0.27.1"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/om8-waybill-fixture-libc-mini-0.27.1"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    },
+    "/nix/store/m9xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-python3-3.13.12-env.drv": {
+      "name": "waybill-fixture-python3-3.13.12-env",
+      "env": {
+        "out": "/nix/store/om9-waybill-fixture-python3-3.13.12-env"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/om9-waybill-fixture-python3-3.13.12-env"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    }
+  },
+  "version": 4
+}
