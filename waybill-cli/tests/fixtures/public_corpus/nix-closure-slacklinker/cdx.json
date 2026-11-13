@@ -14433,6 +14433,14 @@
           "content": "8d4fe34b5475dd0c8339b5c05506111a10214ea18a10cd366e5440eaac95b2d8"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "postgresql-libpq-configure",
       "properties": [
         {
@@ -89797,6 +89805,14 @@
         {
           "alg": "SHA-256",
           "content": "f682b8a6121a09fc820ce69d99e33bfa9b1a959505663ef2fedebe7b95c75aa5"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "os-string",
