@@ -67576,6 +67576,16 @@
       "pedigree": {
         "patches": [
           {
+            "resolves": [
+              {
+                "id": "CVE-2022-0529",
+                "type": "security"
+              },
+              {
+                "id": "CVE-2022-0530",
+                "type": "security"
+              }
+            ],
             "type": "backport"
           },
           {
@@ -121231,7 +121241,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":1193,\"components-without-member-role\":496,\"derivations\":1293,\"distinct-cves\":16,\"edge-ineligible-components\":80,\"edges\":41999,\"identifiers\":{\"by-drv\":362,\"by-name-version\":82,\"declared\":6,\"received\":444,\"rejected\":0,\"wanted\":1213},\"licenses\":{\"degraded\":null,\"received\":361,\"wanted\":1213,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":72,\"package\":4,\"scaffolding\":8,\"source\":613},\"patches\":190,\"patches-without-cve\":172,\"roles\":{\"artifact-input\":393,\"both\":49,\"build-tooling\":850,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":1193,\"components-without-member-role\":496,\"derivations\":1293,\"distinct-cves\":18,\"edge-ineligible-components\":80,\"edges\":41999,\"identifiers\":{\"by-drv\":362,\"by-name-version\":82,\"declared\":6,\"received\":444,\"rejected\":0,\"wanted\":1213},\"licenses\":{\"degraded\":null,\"received\":361,\"wanted\":1213,\"withheld-ambiguous\":0},\"member-roles\":{\"fragment\":72,\"package\":4,\"scaffolding\":8,\"source\":613},\"patches\":190,\"patches-without-cve\":171,\"roles\":{\"artifact-input\":393,\"both\":49,\"build-tooling\":850,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",
@@ -121396,6 +121406,30 @@
         "state": "resolved"
       },
       "id": "CVE-2021-4217"
+    },
+    {
+      "affects": [
+        {
+          "ref": "pkg:generic/unzip@6.0?nix_drv=jp6bsbi52wn0clkppl39nxwywchm3dlc"
+        }
+      ],
+      "analysis": {
+        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2022-0529 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "state": "resolved"
+      },
+      "id": "CVE-2022-0529"
+    },
+    {
+      "affects": [
+        {
+          "ref": "pkg:generic/unzip@6.0?nix_drv=jp6bsbi52wn0clkppl39nxwywchm3dlc"
+        }
+      ],
+      "analysis": {
+        "detail": "Resolved by a nixpkgs backport applied to this build. The patch-to-CVE-2022-0530 association is filename-derived: it comes from the patch filename, which is evidence the maintainers believed this version vulnerable, but not proof the patch fully resolves the issue.",
+        "state": "resolved"
+      },
+      "id": "CVE-2022-0530"
     },
     {
       "affects": [
