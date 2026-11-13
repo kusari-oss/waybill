@@ -143,7 +143,7 @@
     | slack-web | 3 | 0 | 613 → 614 | identical | 1 |
 
     Every value matches research's prediction table. On every moved member only C206 changed. Of the metadata, only C184 changed, and its counts equal the per-component ones. Non-closure targets are byte-identical. T018's gate: `GATE_EXIT=0`, 8,037 passed, 0 failed.
-- [ ] T020 Commit the goldens, run a non-regenerating corpus check at that head, and confirm it passes. Then open the PR: no tool comparisons, no company names, and the AI-drafting footer.
+- [X] T020 Commit the goldens, run a non-regenerating corpus check at that head, and confirm it passes. Then open the PR: no tool comparisons, no company names, and the AI-drafting footer.
 
 ---
 
