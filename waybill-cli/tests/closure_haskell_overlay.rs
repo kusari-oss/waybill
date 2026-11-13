@@ -151,3 +151,64 @@ fn m1046_us1_without_the_closure_the_design_twin_remains() {
     assert_eq!(o[0]["purl"], "pkg:hackage/waybill-fixture-overlaid");
     assert_eq!(prop(o[0], "waybill:sbom-tier").as_deref(), Some("design"));
 }
+
+// ---------------------------------------------------------------
+// US3 — the VCS source is in the document
+// ---------------------------------------------------------------
+
+const VCS: &str = "git+https://example.invalid/waybill-fixture-overlaid.git@1111111111111111111111111111111111111111";
+
+fn cdx_refs(c: &Value) -> Vec<(String, String)> {
+    c["externalReferences"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|r| (r["type"].as_str().unwrap_or("").to_string(), r["url"].as_str().unwrap_or("").to_string()))
+        .collect()
+}
+
+fn by_name<'a>(cdx: &'a Value, name: &str) -> &'a Value {
+    let found: Vec<&Value> = components(cdx).into_iter().filter(|c| c["name"] == name).collect();
+    assert_eq!(found.len(), 1, "one component named {name}");
+    found[0]
+}
+
+/// The git checkout (`url`/`rev` under `structuredAttrs`), and the package
+/// whose `src` it is, both carry the `vcs` reference, in all three formats.
+#[test]
+fn m1046_us3_a_git_checkout_and_its_package_carry_a_vcs_reference() {
+    let s = scan_with(&[]);
+    let member = by_name(&s.cdx, "waybill-fixture-overlaid-1111111");
+    assert_eq!(cdx_refs(member), vec![("vcs".to_string(), VCS.to_string())], "a checkout is not a download");
+    let pkg = named(&s.cdx, "overlaid")[0];
+    assert_eq!(cdx_refs(pkg), vec![("vcs".to_string(), VCS.to_string())]);
+
+    // SPDX 2.3: externalRefs OTHER/vcs (A10).
+    let p23 = s.spdx23["packages"].as_array().unwrap().iter()
+        .find(|p| p["name"] == "waybill-fixture-overlaid").unwrap();
+    assert!(
+        p23["externalRefs"].as_array().into_iter().flatten().any(|r| {
+            r["referenceCategory"] == "OTHER" && r["referenceType"] == "vcs" && r["referenceLocator"] == VCS
+        }),
+        "SPDX 2.3 carries the vcs reference: {}", p23["externalRefs"]
+    );
+    // SPDX 3: software_sourceInfo (A10).
+    let p3 = s.spdx3["@graph"].as_array().unwrap().iter()
+        .find(|e| e["type"] == "software_Package" && e["name"] == "waybill-fixture-overlaid").unwrap();
+    assert_eq!(p3["software_sourceInfo"], VCS);
+}
+
+/// CONTROL: a tarball fetch (`urls` in `env`, no `rev`) keeps its download
+/// reference and gains no `vcs`; a package built from it carries none.
+#[test]
+fn m1046_us3_a_tarball_source_keeps_its_distribution_reference() {
+    let s = scan_with(&[]);
+    let member = by_name(&s.cdx, "waybill-fixture-namesake-1.0.tar.gz");
+    assert_eq!(
+        cdx_refs(member),
+        vec![("distribution".to_string(), "https://example.invalid/waybill-fixture-namesake-1.0.tar.gz".to_string())]
+    );
+    for c in named(&s.cdx, "namesake") {
+        assert!(cdx_refs(c).iter().all(|(t, _)| t != "vcs"), "{c}");
+    }
+}

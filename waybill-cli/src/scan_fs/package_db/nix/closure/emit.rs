@@ -394,6 +394,42 @@ pub(crate) fn source_url(drv: &RawDerivation) -> Option<&str> {
         .filter(|u| !u.is_empty())
 }
 
+/// The external references a closure component carries for where it came
+/// from.
+///
+/// - A nameless member (`is_member`) that is a VCS checkout carries a `vcs`
+///   reference (#1046). One that records only a URL carries the `distribution`
+///   reference FR-008 of m1282 introduced. A repository URL is not a download,
+///   so a checkout never carries `distribution`.
+/// - A package carries the `vcs` reference of the checkout its `src` is
+///   (#1046 FR-009). Through `src` only: its other inputs include the sources
+///   of its build tools, which it was not built from.
+fn source_references(
+    drv: &RawDerivation,
+    is_member: bool,
+    out_index: &std::collections::BTreeMap<&str, &str>,
+    raw: &super::derivation::RawClosure,
+) -> Vec<waybill_common::resolution::ExternalReference> {
+    if is_member {
+        if let Some(v) = vcs_source(drv) {
+            return vec![v.reference()];
+        }
+        return source_url(drv)
+            .map(|url| {
+                vec![waybill_common::resolution::ExternalReference {
+                    ref_type: "distribution".to_string(),
+                    url: url.to_string(),
+                }]
+            })
+            .unwrap_or_default();
+    }
+    super::derivation::src_derivation(drv, out_index)
+        .and_then(|k| raw.derivations.get(k))
+        .and_then(vcs_source)
+        .map(|v| vec![v.reference()])
+        .unwrap_or_default()
+}
+
 /// #1046 — a fetch that records a repository URL **and** a revision: a VCS
 /// checkout, as `fetchgit` produces.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -548,6 +584,9 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
     // stands for, including ones that apply no patch.
     let mut drvs_for: std::collections::BTreeMap<MergeKey, std::collections::BTreeSet<&str>> =
         std::collections::BTreeMap::new();
+    // #1046 — output basename → `.drv`, so a package's `src` resolves to the
+    // fetch it was built from. Built once, for every derivation.
+    let out_index = closure.raw.output_index();
     for (key, drv) in &closure.raw.derivations {
         let Some(role) = closure.roles.get(key).copied() else {
             continue;
@@ -618,13 +657,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
             parent_purl: None,
             co_owned_by: None,
             shade_relocation: None,
-            external_references: match member_role.and(source_url(drv)) {
-                Some(url) => vec![waybill_common::resolution::ExternalReference {
-                    ref_type: "distribution".to_string(),
-                    url: url.to_string(),
-                }],
-                None => vec![],
-            },
+            external_references: source_references(drv, member_role.is_some(), &out_index, &closure.raw),
             extra_annotations: Default::default(),
             binary_role: None,
         };

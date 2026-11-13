@@ -138,8 +138,8 @@
 
 **Independent test**: a closure with a `fetchgit` source under `structuredAttrs`. The member, and the package whose `src` it is, each have `externalReferences[type=vcs]` `git+<url>@<rev>`. The SPDX 2.3 and SPDX 3 carriers per A10 match.
 
-- [ ] T021 [US3] In `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs::components`, give a source member with a `vcs_source` a `vcs` external reference **in addition to** any `distribution` reference. Give a package component the same `vcs` reference when its derivation's `src` resolves (T006) to such a member. Keep the order `distribution`, then `vcs`, for byte-stable output.
-- [ ] T022 [US3] Add integration cases to `waybill-cli/tests/closure_haskell_overlay.rs`:
+- [X] T021 [US3] In `waybill-cli/src/scan_fs/package_db/nix/closure/emit.rs::components`, give a source member with a `vcs_source` a `vcs` external reference **in addition to** any `distribution` reference. Give a package component the same `vcs` reference when its derivation's `src` resolves (T006) to such a member. Keep the order `distribution`, then `vcs`, for byte-stable output.
+- [X] T022 [US3] Add integration cases to `waybill-cli/tests/closure_haskell_overlay.rs`:
   - a `fetchgit`-shaped source (`url`/`rev` under `structuredAttrs`) consumed as `src` by `waybill-fixture-overlaid` → `vcs` on both, in CDX `externalReferences`, SPDX 2.3 `externalRefs` (`OTHER`/`vcs`) and SPDX 3 `software_sourceInfo`;
   - a `fetchurl`-shaped source (`urls` in `env`) → `distribution` only, unchanged;
   - **control:** a source with `url` but no `rev` → no `vcs`.
