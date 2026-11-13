@@ -265,7 +265,12 @@ fn scan(store: &Path, extra: &[&str]) -> Run {
     let cdx_path = dir.path().join("out.cdx.json");
     let spdx23_path = dir.path().join("out.spdx23.json");
     let spdx3_path = dir.path().join("out.spdx3.json");
-    let output = Command::new(binary_path())
+    let output = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "scan", "--path", project().to_str().unwrap()])
         .args(["--no-deep-hash", "--no-deps-dev", "--nix-closure"])
         .args(["--format", "cyclonedx-json", "--format", "spdx-2.3-json", "--format", "spdx-3-json"])
@@ -642,7 +647,12 @@ fn us2_strict_passes_on_a_root_that_was_read_and_embeds_nothing() {
 
 #[test]
 fn us2_the_strict_flag_requires_the_closure_flag() {
-    let out = Command::new(binary_path())
+    let out = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "scan", "--path", ".", "--nix-closure-require-root-contents"])
         .output()
         .unwrap();

@@ -25,6 +25,7 @@ pub(crate) mod closure_compilers;
 pub(crate) mod closure_identity;
 pub(crate) mod cache;
 pub(crate) mod fetch;
+pub(crate) mod hackage;
 pub(crate) mod nix_base32;
 pub(crate) mod package_set;
 pub(crate) mod twin_merge;

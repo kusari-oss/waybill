@@ -138,6 +138,33 @@ impl Purl {
         })
     }
 
+    /// Build a PURL from its parts, with qualifier values encoded by the
+    /// reference `packageurl` serializer rather than by hand.
+    ///
+    /// #1046: a `vcs_url` value carries `+`, `:`, `/` and `@`, and a
+    /// hand-assembled string would encode them however the call site guessed.
+    /// The crate encodes the `@` (`git+https://…%40<rev>`) and round-trips
+    /// the value; OSV matches that form exactly as it matches the unqualified
+    /// PURL (`specs/1046-haskell-overlay-identity/measurements/
+    /// qualifier-match-probe-2026-11-13.txt`).
+    pub fn from_parts(
+        ty: &str,
+        name: &str,
+        version: Option<&str>,
+        qualifiers: &[(&str, &str)],
+    ) -> Result<Self, PurlError> {
+        let mut p = packageurl::PackageUrl::new(ty, name)
+            .map_err(|e| PurlError::Invalid(format!("{e}")))?;
+        if let Some(v) = version {
+            p.with_version(v);
+        }
+        for (k, v) in qualifiers {
+            p.add_qualifier(*k, *v)
+                .map_err(|e| PurlError::Invalid(format!("{e}")))?;
+        }
+        Self::new(&p.to_string())
+    }
+
     pub fn ecosystem(&self) -> &str {
         &self.ecosystem
     }
@@ -187,6 +214,28 @@ impl From<Purl> for String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// #1046 — `from_parts` encodes a `vcs_url` value the way the reference
+    /// serializer does, and the value round-trips.
+    #[test]
+    fn m1046_from_parts_encodes_a_vcs_url_qualifier() {
+        let rev = "1111111111111111111111111111111111111111";
+        let value = format!("git+https://example.invalid/waybill-fixture.git@{rev}");
+        let p = Purl::from_parts("hackage", "waybill-fixture-a", Some("2.3.0.0"), &[("vcs_url", &value)]).unwrap();
+        assert_eq!(
+            p.as_str(),
+            format!("pkg:hackage/waybill-fixture-a@2.3.0.0?vcs_url=git+https://example.invalid/waybill-fixture.git%40{rev}")
+        );
+        let back: packageurl::PackageUrl = p.as_str().parse().unwrap();
+        assert_eq!(back.qualifiers().get("vcs_url").map(|v| v.as_ref()), Some(value.as_str()));
+        assert_eq!((p.ecosystem(), p.name(), p.version()), ("hackage", "waybill-fixture-a", Some("2.3.0.0")));
+    }
+
+    #[test]
+    fn m1046_from_parts_without_qualifiers_is_the_plain_purl() {
+        let p = Purl::from_parts("hackage", "waybill-fixture-a", Some("2.3.0.0"), &[]).unwrap();
+        assert_eq!(p.as_str(), "pkg:hackage/waybill-fixture-a@2.3.0.0");
+    }
 
     #[test]
     fn valid_cargo_purl() {

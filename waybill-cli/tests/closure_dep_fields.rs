@@ -264,7 +264,12 @@ fn scan_closure(closure_json: &str) -> Scan {
     let cdx_path = dir.path().join("out.cdx.json");
     let spdx23_path = dir.path().join("out.spdx23.json");
     let spdx3_path = dir.path().join("out.spdx3.json");
-    let out = Command::new(binary_path())
+    let out = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args([
             "sbom",
             "scan",

@@ -108,6 +108,11 @@ pub struct NixStub<'a> {
     /// kv}]}`. `None`: it is unhandled and fails, as before, and the pass
     /// degrades.
     pub declarations: Option<&'a str>,
+    /// #1046 — the Hackage base URL the scan asks whether an overlay's
+    /// version is published. `None` is a closed port, so no test reaches
+    /// Hackage (Principle VII); a test that wants answers points it at a
+    /// `wiremock` server.
+    pub hackage_url: Option<String>,
 }
 
 impl Default for NixStub<'_> {
@@ -132,6 +137,7 @@ impl Default for NixStub<'_> {
             json_miss_is_null: false,
             closure_stderr: None,
             declarations: None,
+            hackage_url: None,
         }
     }
 }
@@ -373,6 +379,10 @@ esac
                 ),
             )
             .env("WAYBILL_NIXPKGS_CACHE", cache.path())
+            .env(
+                "WAYBILL_HACKAGE_URL",
+                self.hackage_url.as_deref().unwrap_or("http://127.0.0.1:9"),
+            )
             .output()
             .expect("spawn waybill");
         let stdout = String::from_utf8_lossy(&out.stdout).into_owned();

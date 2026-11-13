@@ -212,3 +212,142 @@ fn m1046_us3_a_tarball_source_keeps_its_distribution_reference() {
         assert!(cdx_refs(c).iter().all(|(t, _)| t != "vcs"), "{c}");
     }
 }
+
+// ---------------------------------------------------------------
+// US2 — a VCS-built released version is reachable by advisories
+// ---------------------------------------------------------------
+
+const OVERLAID_PATH: &str = "/package/waybill-fixture-overlaid-2.1.0.0/waybill-fixture-overlaid.cabal";
+const PUBLISHED: &str = "pkg:hackage/waybill-fixture-overlaid@2.1.0.0?vcs_url=git+https://example.invalid/waybill-fixture-overlaid.git%401111111111111111111111111111111111111111";
+
+/// A Hackage stub answering `status` for the overlaid version and 404 for
+/// everything else.
+async fn hackage(status: u16) -> wiremock::MockServer {
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+    let s = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path(OVERLAID_PATH))
+        .respond_with(ResponseTemplate::new(status))
+        .mount(&s)
+        .await;
+    Mock::given(method("GET")).respond_with(ResponseTemplate::new(404)).mount(&s).await;
+    s
+}
+
+fn scan_against(server: &wiremock::MockServer, extra: &[&str]) -> Scan {
+    let closure = read("closure.json");
+    let packages = read("hackage-packages.nix");
+    let mut args = vec!["--nix-closure", "--no-deps-dev", "--no-clearly-defined"];
+    args.extend_from_slice(extra);
+    NixStub {
+        project: dir().join("project"),
+        closure: &closure,
+        package_set: Some((&packages, "{ }\n")),
+        hackage_url: Some(server.uri()),
+        ..Default::default()
+    }
+    .scan(&args)
+}
+
+fn requested_paths(reqs: &[wiremock::Request]) -> Vec<String> {
+    let mut v: Vec<String> = reqs.iter().map(|r| r.url.path().to_string()).collect();
+    v.sort();
+    v
+}
+
+/// 200: the overlaid version is published, so the merged component is
+/// `pkg:hackage`, with the checkout it was built from as `vcs_url`, in all
+/// three formats.
+#[tokio::test]
+async fn m1046_us2_a_published_overlay_version_is_a_hackage_package() {
+    let server = hackage(200).await;
+    let s = scan_against(&server, &[]);
+    let o = named(&s.cdx, "overlaid");
+    assert_eq!(o.len(), 1, "merged");
+    assert_eq!(o[0]["purl"], PUBLISHED);
+    assert_eq!(prop(o[0], "waybill:closure-identity").as_deref(), Some("hackage-published"));
+    let p23 = s.spdx23["packages"].as_array().unwrap().iter()
+        .find(|p| p["name"] == "waybill-fixture-overlaid").unwrap();
+    assert!(
+        p23["externalRefs"].as_array().into_iter().flatten()
+            .any(|r| r["referenceType"] == "purl" && r["referenceLocator"] == PUBLISHED),
+        "SPDX 2.3 carries the identity: {}", p23["externalRefs"]
+    );
+    assert!(s.spdx3.to_string().contains(PUBLISHED), "SPDX 3 carries the identity");
+    // No edge names the old generic PURL.
+    assert!(common::endpoints::dangling(&s.cdx, &s.spdx23, &s.spdx3).is_empty());
+}
+
+/// 404: not published (a fork's own version number) — `pkg:generic`.
+#[tokio::test]
+async fn m1046_us2_an_unpublished_version_stays_generic() {
+    let server = hackage(404).await;
+    let s = scan_against(&server, &[]);
+    let o = named(&s.cdx, "overlaid");
+    assert_eq!(o[0]["purl"], "pkg:generic/waybill-fixture-overlaid@2.1.0.0");
+    assert_eq!(prop(o[0], "waybill:closure-identity").as_deref(), Some("hackage-unpublished"));
+}
+
+/// Only GHC-built members whose name the pinned set carries are asked about:
+/// `overlaid` and the two `variants`, never `namesake` (not in the set, and
+/// not GHC-built) and never `relaxed` (`confirmed` from the set).
+#[tokio::test]
+async fn m1046_us2_only_ghc_built_members_the_set_carries_are_asked_about() {
+    let server = hackage(200).await;
+    let _ = scan_against(&server, &[]);
+    let reqs = server.received_requests().await.unwrap();
+    assert_eq!(
+        requested_paths(&reqs),
+        vec![
+            OVERLAID_PATH.to_string(),
+            "/package/waybill-fixture-variants-3.1/waybill-fixture-variants.cabal".to_string(),
+            "/package/waybill-fixture-variants-3.2/waybill-fixture-variants.cabal".to_string(),
+        ]
+    );
+}
+
+/// `--no-hackage-lookup`: nothing is asked, the component stays generic and
+/// says why, and the merge still happens.
+#[tokio::test]
+async fn m1046_us2_the_opt_out_asks_nothing() {
+    let server = hackage(200).await;
+    let s = scan_against(&server, &["--no-hackage-lookup"]);
+    assert_eq!(server.received_requests().await.unwrap().len(), 0);
+    let o = named(&s.cdx, "overlaid");
+    assert_eq!(o.len(), 1, "the merge does not depend on the lookup");
+    assert_eq!(o[0]["purl"], "pkg:generic/waybill-fixture-overlaid@2.1.0.0");
+    assert_eq!(prop(o[0], "waybill:closure-identity").as_deref(), Some("hackage-unchecked-opted-out"));
+}
+
+/// The default `NixStub` points at a closed port: unreachable, generic.
+#[test]
+fn m1046_us2_an_unreachable_hackage_stays_generic() {
+    let s = scan_with(&[]);
+    let o = named(&s.cdx, "overlaid");
+    assert_eq!(o[0]["purl"], "pkg:generic/waybill-fixture-overlaid@2.1.0.0");
+    assert_eq!(prop(o[0], "waybill:closure-identity").as_deref(), Some("hackage-unreachable"));
+}
+
+// ---------------------------------------------------------------
+// US4 — a build outside the declared range
+// ---------------------------------------------------------------
+
+/// `relaxed` declares `>=1.0 && <1.5` and was built at 1.6: one component,
+/// recording C221 identically in all three formats; `overlaid`, in range,
+/// records none.
+#[test]
+fn m1046_us4_an_out_of_range_build_records_c221_in_every_format() {
+    let s = scan_with(&[]);
+    let want = r#"{"requirement-ranges":[">=1.0 && <1.5"],"version":"1.6"}"#;
+    let r = named(&s.cdx, "relaxed");
+    assert_eq!(r.len(), 1);
+    assert_eq!(prop(r[0], "waybill:requirement-unsatisfied").as_deref(), Some(want));
+    assert_eq!(prop(named(&s.cdx, "overlaid")[0], "waybill:requirement-unsatisfied"), None, "in range: no C221");
+
+    let e = waybill::parity::extractors::EXTRACTORS.iter().find(|e| e.row_id == "C221").expect("C221 registered");
+    let (a, b, c) = ((e.cdx)(&s.cdx), (e.spdx23)(&s.spdx23), (e.spdx3)(&s.spdx3));
+    assert!(!a.is_empty(), "C221: CycloneDX extractor found nothing");
+    assert_eq!(a, b, "C221: CycloneDX and SPDX 2.3 disagree");
+    assert_eq!(a, c, "C221: CycloneDX and SPDX 3 disagree");
+}

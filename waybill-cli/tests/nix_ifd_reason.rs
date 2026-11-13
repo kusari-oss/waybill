@@ -156,7 +156,12 @@ fn run(stub: &Stub, extra: &[&str]) -> Scan {
 
     let out = tempfile::tempdir().unwrap();
     let f = |n: &str| -> PathBuf { out.path().join(n) };
-    let o = Command::new(binary_path())
+    let o = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "scan", "--no-deep-hash", "--nix-closure", "--path"])
         .arg(root.path())
         .args(extra)
@@ -393,7 +398,12 @@ fn issue_1446_offline_keeps_the_chosen_level() {
 fn issue_1446_no_warning_when_the_closure_was_not_requested() {
     let root = flake_root();
     let out = tempfile::tempdir().unwrap();
-    let o = Command::new(binary_path())
+    let o = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "scan", "--no-deep-hash", "--offline", "--path"])
         .arg(root.path())
         .arg("--output")

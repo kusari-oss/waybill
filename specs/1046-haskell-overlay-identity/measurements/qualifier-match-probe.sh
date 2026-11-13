@@ -7,10 +7,12 @@ set -uo pipefail
 R=$(printf '1%.0s' $(seq 40))
 ENC="?vcs_url=git%2Bhttps://example.invalid/waybill-fixture.git%40$R"
 RAW="?vcs_url=git+https://example.invalid/waybill-fixture.git@$R"
+# The form waybill emits: the packageurl crate encodes only the `@`.
+PKG="?vcs_url=git+https://example.invalid/waybill-fixture.git%40$R"
 api() { curl -s --max-time 30 -X POST https://api.osv.dev/v1/query -d "{\"package\":{\"purl\":\"$1\"}}" \
   | python3 -I -B -c 'import json,sys; d=json.load(sys.stdin); print(sorted(x["id"] for x in d.get("vulns",[])))'; }
 for v in 1.6.18.0 1.6.23.0; do
-  for q in "" "$ENC" "$RAW"; do p="pkg:hackage/process@$v$q"; printf 'OSV API\t%s\t%s\n' "$p" "$(api "$p")"; done
+  for q in "" "$ENC" "$RAW" "$PKG"; do p="pkg:hackage/process@$v$q"; printf 'OSV API\t%s\t%s\n' "$p" "$(api "$p")"; done
 done
 D=$(mktemp -d)
 for n in plain enc; do q=""; [ $n = enc ] && q="$ENC"

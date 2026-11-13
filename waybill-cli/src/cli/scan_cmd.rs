@@ -1351,6 +1351,23 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_nixpkgs_haskell_closure: bool,
 
+    /// Do not ask Hackage whether a Nix overlay's Haskell version is
+    /// published.
+    ///
+    /// #1046. Under `--nix-closure`, a Haskell package the pinned nixpkgs set
+    /// carries at another version (an overlay pinned its own) is checked
+    /// against Hackage with one request: published, it gets a
+    /// `pkg:hackage` identity a Haskell advisory can match, with a `vcs_url`
+    /// qualifier when it was built from a git checkout. Only names the pinned
+    /// set carries are ever sent, and only for packages a GHC built.
+    ///
+    /// Distinct from `--offline`: this disables this lookup only and leaves
+    /// every other network enrichment active. `--offline` suppresses it too.
+    /// Either way the component stays `pkg:generic`, and
+    /// `waybill:closure-identity` says why.
+    #[arg(long)]
+    pub no_hackage_lookup: bool,
+
     /// Skip reading what nixpkgs declares about the closure's packages.
     ///
     /// Milestone 1050 (#1039). Under `--nix-closure`, waybill evaluates each
@@ -4924,6 +4941,16 @@ pub async fn execute(
                 },
             };
             closure_package_set_available = loaded_set.is_some();
+            // #1046 — the Hackage publication check, gated like every other
+            // network source: refused under `--offline`, and by its own flag.
+            let hackage_http = nhp::hackage::HttpHackage::new(args.nixpkgs_timeout_secs);
+            let hackage = if offline {
+                nhp::closure_identity::HackageLookup::Offline
+            } else if args.no_hackage_lookup {
+                nhp::closure_identity::HackageLookup::OptedOut
+            } else {
+                nhp::closure_identity::HackageLookup::Source(&hackage_http)
+            };
             let identity = nhp::closure_identity::reclassify(
                 &mut components,
                 &mut relationships,
@@ -4931,6 +4958,7 @@ pub async fn execute(
                 loaded_set.as_ref(),
                 &boot,
                 closure_compilers.as_ref(),
+                &hackage,
             );
             tracing::info!(
                 confirmed = identity.confirmed(),
@@ -8770,6 +8798,7 @@ mod tests {
             nix_allow_ifd: false,
             no_nixpkgs_haskell: false,
             no_nixpkgs_haskell_closure: false,
+            no_hackage_lookup: false,
             no_nixpkgs_security: false,
             nixpkgs_timeout_secs: 30,
             image: None,

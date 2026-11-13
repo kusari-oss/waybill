@@ -203,7 +203,12 @@ fn t012d_a_failed_ifd_build_is_distinct_from_the_refusal() {
 #[test]
 fn t012e_the_flag_without_a_nix_tier_is_rejected() {
     let out = tempfile::tempdir().unwrap();
-    let o = Command::new(env!("CARGO_BIN_EXE_waybill"))
+    let o = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(env!("CARGO_BIN_EXE_waybill"));
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "scan", "--no-deep-hash", "--offline", "--nix-allow-ifd", "--path"])
         .arg(dir().join("project"))
         .arg("--output")
@@ -218,7 +223,12 @@ fn t012e_the_flag_without_a_nix_tier_is_rejected() {
 
     // CONTROL: each tier alone admits it.
     for tier in ["--nix-closure", "--nix-eval"] {
-        let o = Command::new(env!("CARGO_BIN_EXE_waybill"))
+        let o = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(env!("CARGO_BIN_EXE_waybill"));
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
             .args(["sbom", "scan", "--no-deep-hash", "--offline", "--nix-allow-ifd", tier])
             .arg("--path")
             .arg(dir().join("project"))
@@ -304,7 +314,12 @@ fn t012f_prime_the_output_selection_allows_ifd_under_the_opt_in() {
 
 #[test]
 fn t021g_help_names_the_flag_and_its_cautions() {
-    let o = Command::new(env!("CARGO_BIN_EXE_waybill"))
+    let o = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(env!("CARGO_BIN_EXE_waybill"));
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "scan", "--help"])
         .output()
         .unwrap();

@@ -451,7 +451,12 @@ fn parity_check_reports_c212_in_every_format() {
     ] {
         std::fs::write(dir.path().join(f), v.to_string()).unwrap();
     }
-    let out = std::process::Command::new(env!("CARGO_BIN_EXE_waybill"))
+    let out = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = std::process::Command::new(env!("CARGO_BIN_EXE_waybill"));
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        }
         .args(["sbom", "parity-check", "--format", "json", "--scan-dir"])
         .arg(dir.path())
         .output()

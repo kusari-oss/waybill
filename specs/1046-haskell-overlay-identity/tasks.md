@@ -87,22 +87,22 @@
 
 **Independent test**: with an injected Hackage source answering 200 for the overlaid version, the merged component is `pkg:hackage/waybill-fixture-overlaid@2.1.0.0?vcs_url=…`. Answering 404, it stays `pkg:generic` with `hackage-unpublished`.
 
-- [ ] T012 [P] [US2] Add `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/hackage.rs`, with a trait `HackageSource { fn published(&self, name, version) -> Published }` where `Published` is `Yes`, `No` or `Unreachable(String)`.
+- [X] T012 [P] [US2] Add `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/hackage.rs`, with a trait `HackageSource { fn published(&self, name, version) -> Published }` where `Published` is `Yes`, `No` or `Unreachable(String)`.
   - **HTTP implementation:** `GET https://hackage.haskell.org/package/<name>-<version>/<name>.cabal` on a dedicated `std::thread` with a `reqwest::blocking` client, using the same per-request timeout the nixpkgs fetch uses (`HttpSource::new`'s caller), as in `fetch.rs::HttpSource`. 200 means `Yes`, 404 means `No`, and anything else means `Unreachable`.
   - **Name as given:** names are passed case-preserved (research R3: Hackage is case-sensitive).
   - **Memo:** a per-scan memo wrapper.
   - **No credentials:** no credential resolution.
-- [ ] T013 [P] [US2] Write unit tests in `hackage.rs` against a `wiremock` server:
+- [X] T013 [P] [US2] Write unit tests in `hackage.rs` against a `wiremock` server:
   - 200 → `Yes`;
   - 404 → `No`;
   - 503 → `Unreachable`;
   - timeout → `Unreachable`;
   - the requested path is `/package/<name>-<version>/<name>.cabal`, with the name's case preserved;
   - the memo issues one request for two identical lookups.
-- [ ] T014 [US2] Extend `HackageIdentity` in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/closure_identity.rs`:
+- [X] T014 [US2] Extend `HackageIdentity` in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/closure_identity.rs`:
   - **New variants:** `HackagePublished { vcs: Option<VcsSource> }`, `HackageUnpublished`, `HackageUncheckedOffline`, `HackageUncheckedOptedOut` and `HackageUnreachable`, with their `wire()` values from research R8. Keep the `match` exhaustive.
   - **Tests (`wire()`):** every variant maps to a distinct value, and `version-disagrees` is unchanged.
-- [ ] T015 [US2] Write unit tests in `closure_identity.rs` for the decision with an injected `HackageSource` and an `--offline` / opt-out setting:
+- [X] T015 [US2] Write unit tests in `closure_identity.rs` for the decision with an injected `HackageSource` and an `--offline` / opt-out setting:
   - a GHC-built `version-disagrees` member at 200 → `HackagePublished`;
   - at 404 → `HackageUnpublished`;
   - unreachable → `HackageUnreachable`;
@@ -111,24 +111,24 @@
   - a non-GHC-built `version-disagrees` member (the `bash` collision shape) → `VersionDisagrees` with no request made;
   - a `confirmed` member makes no request.
   - a GHC-built `not-in-package-set` member makes no request and keeps `pkg:generic` (FR-006a: a name the pinned set does not carry may be private).
-- [ ] T016 [US2] Implement the decision in `reclassify`, in `closure_identity.rs`.
+- [X] T016 [US2] Implement the decision in `reclassify`, in `closure_identity.rs`.
   - **When:** only for a member that `decide` returns `VersionDisagrees` for and that `built_by_ghc` holds for.
   - **Lookup:** consult the source unless offline or opted out.
   - **On `HackagePublished`:** mint `pkg:hackage/<n>@<v>` through `Purl::new`. Add the `vcs_url` qualifier when the member's derivation's `src` (T006) is a derivation with a `vcs_source` (T005). Push the rename onto `summary.renames`, so edges follow (#980).
 
   Make T015 pass.
-- [ ] T017 [US2] Write a unit test in `closure_identity.rs` for the `vcs_url` encoding (research R4). Build the PURL for `url = https://example.invalid/waybill-fixture.git`, `rev = 40 hex`, and assert:
+- [X] T017 [US2] Write a unit test in `closure_identity.rs` for the `vcs_url` encoding (research R4). Build the PURL for `url = https://example.invalid/waybill-fixture.git`, `rev = 40 hex`, and assert:
   - it round-trips through `Purl::new`;
   - its qualifier value is encoded per the purl-spec rules (the `+` and `@` handling checked against the purl-spec test-suite vectors);
   - a tarball-built published member has no qualifier.
-- [ ] T018 [US2] Add the `--no-hackage-lookup` flag to `waybill-cli/src/cli/scan_cmd.rs`, with help text modelled on `--no-nixpkgs-haskell`: "disables this lookup only; `--offline` suppresses it too". Construct the HTTP `HackageSource`, or none under `--offline` or the flag, and pass it to `reclassify`. Add the flag to the test helpers' `ScanArgs` defaults (`no_hackage_lookup: false`).
-- [ ] T019 [US2] Extend `waybill-cli/tests/closure_haskell_overlay.rs` with an injected Hackage source. The stub harness needs a seam: an env-selected base URL served by `wiremock`, set **on the spawned `Command` only**, never with `std::env::set_var` in the test process. A process-wide variable shared by concurrent tests is the race #1493 fixed. Cases:
+- [X] T018 [US2] Add the `--no-hackage-lookup` flag to `waybill-cli/src/cli/scan_cmd.rs`, with help text modelled on `--no-nixpkgs-haskell`: "disables this lookup only; `--offline` suppresses it too". Construct the HTTP `HackageSource`, or none under `--offline` or the flag, and pass it to `reclassify`. Add the flag to the test helpers' `ScanArgs` defaults (`no_hackage_lookup: false`).
+- [X] T019 [US2] Extend `waybill-cli/tests/closure_haskell_overlay.rs` with an injected Hackage source. The stub harness needs a seam: an env-selected base URL served by `wiremock`, set **on the spawned `Command` only**, never with `std::env::set_var` in the test process. A process-wide variable shared by concurrent tests is the race #1493 fixed. Cases:
   - **200:** the merged component is `pkg:hackage/waybill-fixture-overlaid@2.1.0.0?vcs_url=…`, and C201 is `hackage-published` in all three formats.
   - **404:** `pkg:generic`, with `hackage-unpublished`.
   - **`--offline`:** `hackage-unchecked-offline`, and wiremock received 0 requests.
   - **`--no-hackage-lookup`:** `hackage-unchecked-opted-out`, and 0 requests.
   - **The namesake:** never requested.
-- [ ] T020 [US2] Add the new C201 values to the parity tests if they enumerate values (`waybill-cli/src/parity/extractors/mod.rs` row C201 is `SymmetricEqual` and needs no change; verify), and to any test that asserts C201's closed set.
+- [X] T020 [US2] Add the new C201 values to the parity tests if they enumerate values (`waybill-cli/src/parity/extractors/mod.rs` row C201 is `SymmetricEqual` and needs no change; verify), and to any test that asserts C201's closed set.
 
 **Checkpoint**: US1 and US2 together satisfy SC-001 and SC-002a on the fixture.
 
@@ -157,7 +157,7 @@
   - several ranges, one admitting, get no C221 (`version_range::contradicts` semantics).
 - [X] T024 [US4] Implement C221 (`ANN_REQUIREMENT_UNSATISFIED = "waybill:requirement-unsatisfied"`) in `twin_merge.rs`, set on the survivor when `version_range::contradicts(&ranges, &version)`. Make T023 pass.
 - [X] T025 [P] [US4] Add C221 parity extractors: `cdx_anno!`, `spdx23_anno!` and `spdx3_anno!` (`component` scope) in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`, and a `ParityExtractor` row `C221` (`SymmetricEqual`, `order_sensitive: false`) in `waybill-cli/src/parity/extractors/mod.rs`. The catalog row from T002 and the extractor must land together (the lib-target gate).
-- [ ] T026 [US4] Extend `waybill-cli/tests/closure_haskell_overlay.rs` with `waybill-fixture-relaxed`. Assert one component, C221 in all three formats, and that the value is equal across them.
+- [X] T026 [US4] Extend `waybill-cli/tests/closure_haskell_overlay.rs` with `waybill-fixture-relaxed`. Assert one component, C221 in all three formats, and that the value is equal across them.
 
 ## Phase 7: Polish & Cross-Cutting
 

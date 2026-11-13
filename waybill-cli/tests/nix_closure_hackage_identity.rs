@@ -354,7 +354,12 @@ fn scan(root: &Path, cache: Option<&Path>, closure_json: &str, extra: &[&str]) -
 
     let out = tempfile::tempdir().unwrap();
     let f = |n: &str| out.path().join(n);
-    let mut cmd = Command::new(binary_path());
+    let mut cmd = {
+            // #1046: never reach Hackage from a test (Principle VII).
+            let mut c = Command::new(binary_path());
+            c.env("WAYBILL_HACKAGE_URL", "http://127.0.0.1:9");
+            c
+        };
     cmd.args(["sbom", "scan", "--no-deep-hash", "--nix-closure", "--path"])
         .arg(root)
         // Suppress every OTHER network enrichment. `--offline` cannot be used:
