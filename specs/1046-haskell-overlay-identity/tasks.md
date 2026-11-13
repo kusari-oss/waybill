@@ -163,7 +163,7 @@
 
 - [X] T027 [P] Document the merge, the Hackage check (its outcomes, `--no-hackage-lookup`, `--offline`) and the `vcs` references for overlays in `docs/reference/nix-evaluation.md`.
 - [X] T028 [P] Add CHANGELOG entries under `[Unreleased]` in `CHANGELOG.md`. Do not name any other tool.
-- [ ] T029 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Read the `passed= failed=` totals and every `---- … stdout ----` block.
+- [X] T029 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` (no `+toolchain`). Read the `passed= failed=` totals and every `---- … stdout ----` block.
 - [ ] T030 Dispatch `public-corpus.yml` with `regen_goldens=true`, download `corpus-goldens-regen`, and review the diff semantically against research R10. Expect:
   - **slacklinker:** `slack-web` is a single `pkg:hackage/slack-web@2.3.0.0?vcs_url=…` component (SC-001, SC-002a), and `tmp-postgres@1.35.0.0` has `hackage-unpublished`;
   - **slack-web:** `hspec-discover` is merged, with C221 (SC-002);
