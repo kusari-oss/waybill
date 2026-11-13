@@ -136,6 +136,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **`--nix-eval` records why it did nothing when the nixpkgs package set
+  is unavailable (#1418).** When the Haskell package set for the pinned
+  revision could not be retrieved, the scan stopped before the eval tier and
+  the document carried no C178 or C180 record, which read the same as
+  `--nix-eval` not having been passed. C180 now records
+  `package-set-unavailable`, a new value, or `offline-requested` under
+  `--offline`. Scans without `--nix-eval` are unchanged.
+
 - **expat and libidn2 now emit the CPE NVD files their CVEs under.** The
   curated rows pointed at `libexpat:expat` and `libidn2_project:libidn2`,
   which exist in NVD's dictionary but hold 0 CVEs. NVD files expat's 68 under

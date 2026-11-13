@@ -880,7 +880,29 @@ pub(crate) fn enrich(
         source,
     ) {
         PackageSetLoad::NoLockfile => return None,
-        PackageSetLoad::Degraded(reason) => return Some(degrade_all(components, reason)),
+        PackageSetLoad::Degraded(reason) => {
+            let mut s = degrade_all(components, reason);
+            // #1418 — a requested eval tier records why it contributed
+            // nothing even when the pass stopped before reaching it. Under
+            // `--offline` that is the refusal the tier records anyway.
+            if opts.nix_eval.is_some() {
+                use super::eval::reason::DegradationReason;
+                let r = if opts.offline {
+                    DegradationReason::OfflineRequested
+                } else {
+                    DegradationReason::PackageSetUnavailable
+                };
+                tracing::info!(
+                    reason = r.wire(),
+                    "nix-eval: not reached, the nixpkgs Haskell package set was unavailable"
+                );
+                s.nix_eval = Some(NixEvalSummary {
+                    degraded_reason: Some(r.wire().to_string()),
+                    ..Default::default()
+                });
+            }
+            return Some(s);
+        }
         PackageSetLoad::Loaded(l) => (l.pinned, l.location, l.packages),
     };
     let mut nix_eval_divergences = Vec::new();
@@ -2351,6 +2373,81 @@ mod enrich_tests {
 
         assert!(enrich(root.path(), &mut comps, ResolveOptions { disabled: true, ..opts() }, &src).is_none());
         assert_eq!(src.request_count(), 0);
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// #1418 — `--nix-eval` was requested and the package set could not be
+    /// retrieved, so the enrichment stopped before the tier. The tier still
+    /// records why it contributed nothing; before, it recorded nothing, which
+    /// read the same as `--nix-eval` not having been passed.
+    #[test]
+    fn m1418_an_unreachable_package_set_records_why_the_eval_tier_did_not_run() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), None);
+        let src = StubSource::failing(FetchError::Unauthorized);
+        let mut comps = vec![comp("waybill-fixture-liba")];
+        let eval = super::super::eval::TierConfig::from_flags(
+            None,
+            None,
+            super::super::eval::preflight::IfdPolicy::Refuse,
+        );
+
+        let s = enrich(root.path(), &mut comps, ResolveOptions { nix_eval: Some(eval), ..opts() }, &src)
+            .unwrap();
+
+        // CONTROL: the package set really was unreachable.
+        assert_eq!(s.degraded_reason.as_deref(), Some("source-unreachable"));
+        let n = s.nix_eval.expect("a requested eval tier must leave a record");
+        assert_eq!(n.degraded_reason.as_deref(), Some("package-set-unavailable"));
+        assert_eq!((n.evaluated, n.superseded), (0, 0));
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// #1418 — under `--offline` the same early stop records the tier's
+    /// offline refusal, which is what it records when the package set loads.
+    #[test]
+    fn m1418_offline_with_no_package_set_records_offline_requested() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), None);
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![comp("waybill-fixture-liba")];
+        let eval = super::super::eval::TierConfig::from_flags(
+            None,
+            None,
+            super::super::eval::preflight::IfdPolicy::Refuse,
+        );
+
+        let s = enrich(
+            root.path(),
+            &mut comps,
+            ResolveOptions { offline: true, nix_eval: Some(eval), ..opts() },
+            &src,
+        )
+        .unwrap();
+
+        assert_eq!(s.degraded_reason.as_deref(), Some("offline"), "CONTROL");
+        assert_eq!(
+            s.nix_eval.and_then(|n| n.degraded_reason).as_deref(),
+            Some("offline-requested")
+        );
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// Without `--nix-eval` the early stop records no tier, as before.
+    #[test]
+    fn m1418_no_eval_tier_requested_records_none() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), None);
+        let src = StubSource::failing(FetchError::Unauthorized);
+        let mut comps = vec![comp("waybill-fixture-liba")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(s.degraded_reason.as_deref(), Some("source-unreachable"));
+        assert!(s.nix_eval.is_none());
         std::env::remove_var(cache::CACHE_ENV);
     }
 

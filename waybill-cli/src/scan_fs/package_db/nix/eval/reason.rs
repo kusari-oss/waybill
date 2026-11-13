@@ -131,6 +131,15 @@ pub(crate) enum DegradationReason {
     /// seconds unimpeded in the research probe (R4).
     #[error("evaluation exceeded its {budget_secs}s budget")]
     BudgetExceeded { budget_secs: u64 },
+
+    /// #1418 — `--nix-eval` was requested and the nixpkgs Haskell package
+    /// set could not be acquired, so the enrichment stopped before reaching
+    /// the tier. Without this the document recorded no tier at all, which
+    /// reads the same as `--nix-eval` not having been passed. Why the set
+    /// was unavailable is C173's to say (`waybill:nixpkgs-haskell-degraded`),
+    /// so this variant carries no detail of its own.
+    #[error("the nixpkgs Haskell package set was unavailable, so evaluation was not reached")]
+    PackageSetUnavailable,
 }
 
 impl DegradationReason {
@@ -153,6 +162,7 @@ impl DegradationReason {
             Self::ImportFromDerivationBuildFailed(_) => "import-from-derivation-build-failed",
             Self::EvaluationFailed(_) => "evaluation-failed",
             Self::BudgetExceeded { .. } => "budget-exceeded",
+            Self::PackageSetUnavailable => "package-set-unavailable",
         }
     }
 
@@ -173,7 +183,10 @@ impl DegradationReason {
     /// [`Display`]: std::fmt::Display
     pub(crate) fn detail(&self) -> Option<&str> {
         match self {
-            Self::OfflineRequested | Self::ToolAbsent | Self::NoEvaluableAttribute => None,
+            Self::OfflineRequested
+            | Self::ToolAbsent
+            | Self::NoEvaluableAttribute
+            | Self::PackageSetUnavailable => None,
             Self::AmbiguousSystemConfiguration { .. } | Self::BudgetExceeded { .. } => None,
             Self::ToolUnusable(d)
             | Self::IfdRefusalUnverified(d)
@@ -212,7 +225,8 @@ impl DegradationReason {
             | Self::AmbiguousSystemConfiguration { .. }
             | Self::ImportFromDerivationBuildFailed(_)
             | Self::EvaluationFailed(_)
-            | Self::BudgetExceeded { .. } => None,
+            | Self::BudgetExceeded { .. }
+            | Self::PackageSetUnavailable => None,
         }
     }
 
