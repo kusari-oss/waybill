@@ -116,7 +116,7 @@ fn stops(drv: &RawDerivation) -> bool {
         // [`member::classify`] here rather than re-deriving the test is what
         // keeps this in step with `emit::emitted_drv_keys`, which asks the
         // same question of the same function.
-        None => super::member::classify(drv).is_edge_endpoint(),
+        None => super::member::is_edge_endpoint(drv),
     }
 }
 

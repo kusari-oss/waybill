@@ -511,6 +511,7 @@ These members now become components, each carrying
 |---|---|---|
 | `source` | 549 | a fixed-output fetch — a tarball or patch the build consumed |
 | `package` | 83 | a version-bearing bootstrap package (`mes-libc-mini-0.27.1`) |
+| `check` | — | a version check or test program (`bash-get-version-5.3`), since spec 1380 |
 | `scaffolding` | 267 | `writeText` output — `itoa-builder`, `setup-hook.sh` |
 | `fragment` | 246 | a live-bootstrap C function — `strncpy`, `memcpy`, `malloc` |
 
@@ -532,7 +533,23 @@ Classification reads the closure alone — no network, no second evaluation, no
 maintained name list — in a **fixed evidence order**: a content hash makes it
 `source`, else `env.text` makes it `scaffolding`, else a version-shaped name
 makes it `package`, else `fragment`. The order is load-bearing; swapping the
-middle two describes a different classifier producing different counts. The
+middle two describes a different classifier producing different counts.
+
+**Spec 1380 (#1374) splits the version-name rung.** It is the only rung that
+read nothing but a name, and on the moat golden 50 of its 73 members were not
+packages: version checks, test programs and source trees. Within that rung:
+
+- **By evidence:** a member whose output another derivation lists in
+  `patches`, or whose `phases` are nixpkgs `srcOnly`'s
+  (`unpackPhase patchPhase installPhase`), is `source`.
+- **By name**, for the groups nothing in a derivation records: a name ending
+  `-source`, `-src-<v>` or `-vendor` is `source`, and a `-get-version-<v>`
+  or `-simple-program-<v>` is `check`.
+- **Everything else** stays `package`, including environments (`-env`).
+
+A member outside the rung keeps its role. That includes four local patches
+with no version token, which are `fragment` today (#1502). The measurements
+are in `specs/1380-closure-package-role/`. The
 content hash is read from **both** `outputs[<name>].hash` and the older
 `env.outputHash`, because the second alone carries 139 of the 549 and reading
 only it undercounts the population fourfold.
@@ -546,7 +563,8 @@ qualifiers, and under such a comparison the 56 distinct artifacts named
 derivation's own name unmodified, so no reader has to read a digest to learn
 what something is.
 
-Only `source` and `package` members are dependency-edge endpoints. The
+Only `source`, `package` and `check` members are dependency-edge endpoints.
+`check` is split out of `package`, so the endpoint set is the one it was. The
 projection walks *through* scaffolding and fragments, so an edge names the
 source a package was built from rather than the build script between them.
 **This reshapes the graph rather than growing it** — stopping earlier replaces

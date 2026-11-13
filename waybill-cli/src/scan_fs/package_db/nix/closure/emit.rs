@@ -255,7 +255,7 @@ pub(crate) fn emitted_drv_keys<'a>(
                 // **superset** of edge participation, and
                 // [`edge_endpoint_keys_are_a_subset_of_emitted`] holds the
                 // two in that relation rather than trusting them to agree.
-                && (!is_1282_member(drv) || member::classify(drv).is_edge_endpoint())
+                && (!is_1282_member(drv) || member::is_edge_endpoint(drv))
         })
         .map(|(key, _)| key.as_str())
         .collect()
@@ -587,6 +587,8 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
     // #1046 — output basename → `.drv`, so a package's `src` resolves to the
     // fetch it was built from. Built once, for every derivation.
     let out_index = closure.raw.output_index();
+    // Spec 1380 — what the closure lists in `patches`, for the member roles.
+    let patches = member::PatchOutputs::of(&closure.raw);
     for (key, drv) in &closure.raw.derivations {
         let Some(role) = closure.roles.get(key).copied() else {
             continue;
@@ -603,7 +605,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
         // Milestone 1282 — `None` for every member emitted before this
         // feature, which is what keeps their identity and their key exactly
         // as they were.
-        let member_role = is_1282_member(drv).then(|| member::classify(drv));
+        let member_role = is_1282_member(drv).then(|| member::classify(drv, &patches));
         let Some((coordinate, identity_key)) = coordinate(drv, key) else {
             continue;
         };

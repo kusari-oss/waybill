@@ -940,3 +940,117 @@ fn m1282_t038_a_scan_without_the_closure_flag_contributes_nothing() {
         s.added().iter().map(|c| &c["name"]).collect::<Vec<_>>()
     );
 }
+
+// ---------------------------------------------------------------------
+// Spec 1380 (#1374) — `package` only for packages; `check` for checks
+// ---------------------------------------------------------------------
+
+/// One nameless member per rung of the split `package` rung, consumed by one
+/// named package (`member_roles.json`). The two patches are also listed in
+/// the consumer's `patches`. One has a version token and one does not (R5).
+fn scan_roles() -> Scan {
+    scan_closure(&closure("member_roles.json"))
+}
+
+impl Scan {
+    fn role_by_name(&self) -> std::collections::BTreeMap<String, String> {
+        self.added()
+            .into_iter()
+            .filter_map(|c| Some((c["name"].as_str()?.to_string(), self.member_role_of(c)?)))
+            .collect()
+    }
+}
+
+/// T011 — every member's C206 value, in CycloneDX.
+#[test]
+fn s1380_each_member_carries_the_role_it_is() {
+    let s = scan_roles();
+    let want: std::collections::BTreeMap<String, String> = [
+        ("waybill-fixture-fix-16.patch", "source"),
+        ("waybill-fixture-local.patch", "fragment"),
+        ("waybill-fixture-tree-9.10.3", "source"),
+        ("waybill-fixture-clang-src-21.1.8", "source"),
+        ("waybill-fixture-tool-0.7.2-vendor", "source"),
+        ("waybill-fixture-bash-get-version-5.3", "check"),
+        ("waybill-fixture-gcc-simple-program-15.2.0", "check"),
+        ("waybill-fixture-libc-mini-0.27.1", "package"),
+        ("waybill-fixture-python3-3.13.12-env", "package"),
+    ]
+    .into_iter()
+    .map(|(n, r)| (n.to_string(), r.to_string()))
+    .collect();
+    assert_eq!(s.role_by_name(), want);
+}
+
+/// US1 — filtering C206 on `package` yields packages only.
+#[test]
+fn s1380_filtering_package_yields_packages_only() {
+    let s = scan_roles();
+    let packages: Vec<String> = s
+        .role_by_name()
+        .into_iter()
+        .filter(|(_, r)| r == "package")
+        .map(|(n, _)| n)
+        .collect();
+    assert_eq!(
+        packages,
+        ["waybill-fixture-libc-mini-0.27.1", "waybill-fixture-python3-3.13.12-env"]
+    );
+}
+
+/// FR-007 — the role is the same in all three formats (C206 parity), and
+/// C184 counts each of the five values.
+#[test]
+fn s1380_the_role_and_its_count_agree_across_formats() {
+    let s = scan_roles();
+    let e = waybill::parity::extractors::EXTRACTORS
+        .iter()
+        .find(|e| e.row_id == "C206")
+        .expect("C206 registered");
+    let (a, b, c) = ((e.cdx)(&s.cdx), (e.spdx23)(&s.spdx23), (e.spdx3)(&s.spdx3));
+    assert!(!a.is_empty(), "C206: CycloneDX extractor found nothing");
+    assert_eq!(a, b, "C206: CycloneDX and SPDX 2.3 disagree");
+    assert_eq!(a, c, "C206: CycloneDX and SPDX 3 disagree");
+
+    let counts = &s.closure_record()["member-roles"];
+    for (role, n) in [("source", 4), ("package", 2), ("check", 2), ("fragment", 1), ("scaffolding", 0)] {
+        assert_eq!(counts[role], n, "C184 member-roles[{role}] in {counts}");
+    }
+}
+
+/// FR-006 — the edges are those the pre-1380 ladder gives. Every member it
+/// called `package` is still an endpoint. The fragment patch is walked
+/// through and named by no edge, as before.
+#[test]
+fn s1380_the_graph_is_unchanged() {
+    let s = scan_roles();
+    let name_of: std::collections::HashMap<String, String> = s
+        .components()
+        .iter()
+        .filter_map(|c| Some((c["bom-ref"].as_str()?.to_string(), c["name"].as_str()?.to_string())))
+        .collect();
+    // Closure members only: the shared fixture project contributes its own
+    // manifest components and edges, which this spec does not touch.
+    let members: std::collections::BTreeSet<String> = s.role_by_name().into_keys().collect();
+    assert_eq!(members.len(), 9, "CONTROL: every fixture member is emitted");
+    let targets: std::collections::BTreeSet<String> = s
+        .cdx_edges()
+        .into_iter()
+        .filter_map(|(_, to)| name_of.get(&to).cloned())
+        .filter(|n| members.contains(n))
+        .collect();
+    let want: std::collections::BTreeSet<String> = [
+        "waybill-fixture-fix-16.patch",
+        "waybill-fixture-tree-9.10.3",
+        "waybill-fixture-clang-src-21.1.8",
+        "waybill-fixture-tool-0.7.2-vendor",
+        "waybill-fixture-bash-get-version-5.3",
+        "waybill-fixture-gcc-simple-program-15.2.0",
+        "waybill-fixture-libc-mini-0.27.1",
+        "waybill-fixture-python3-3.13.12-env",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+    assert_eq!(targets, want);
+}

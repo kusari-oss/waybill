@@ -102,6 +102,7 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
     let mut n_pypi_candidates = 0usize;
     let mut pypi_identities: std::collections::BTreeSet<String> = Default::default();
 
+    let patches = member::PatchOutputs::of(&closure);
     for (key, drv) in &closure.derivations {
         let Some(role) = roles.get(key).copied() else {
             continue;
@@ -133,7 +134,7 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
             }
         }
 
-        let member_role = declared.is_none().then(|| member::classify(drv));
+        let member_role = declared.is_none().then(|| member::classify(drv, &patches));
         let basis = member_role.is_some().then(|| member::identity(drv, key));
         if let Some(r) = member_role {
             n_members += 1;

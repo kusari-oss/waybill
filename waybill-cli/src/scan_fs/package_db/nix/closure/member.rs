@@ -42,6 +42,12 @@ pub(crate) enum MemberRole {
     Source,
     /// A version-bearing bootstrap package (`mes-libc-mini-0.27.1`). 83.
     Package,
+    /// Spec 1380 (#1374): a version check (`bash-get-version-5.3`) or test
+    /// program (`gcc-simple-program-15.2.0`), which verifies a bootstrap
+    /// stage rather than being one. 46 on moat, where all of them were
+    /// `package` before. A graph endpoint like `package`, so reclassifying
+    /// them moves no edge.
+    Check,
     /// `writeText` output — `itoa-builder`, `setup-hook.sh`. 267.
     Scaffolding,
     /// A live-bootstrap C function — `strncpy`, `memcpy`, `malloc`. 246.
@@ -54,12 +60,14 @@ impl MemberRole {
         match self {
             Self::Source => "source",
             Self::Package => "package",
+            Self::Check => "check",
             Self::Scaffolding => "scaffolding",
             Self::Fragment => "fragment",
         }
     }
 
-    /// FR-013 — only these two may be dependency-edge endpoints.
+    /// FR-013 — only these may be dependency-edge endpoints. Spec 1380 adds
+    /// `check`, split out of `package`, so the endpoint set is unchanged.
     ///
     /// The projection stops at them and walks *through* the other two, so the
     /// emitted graph shows which source a package was built from rather than
@@ -67,7 +75,7 @@ impl MemberRole {
     /// fragment components are orphans by construction as a result, which is
     /// why FR-014 requires each to carry a reason saying so.
     pub(crate) fn is_edge_endpoint(self) -> bool {
-        matches!(self, Self::Source | Self::Package)
+        matches!(self, Self::Source | Self::Package | Self::Check)
     }
 
     /// Every variant, for the FR-009 count record.
@@ -75,9 +83,10 @@ impl MemberRole {
     /// An array rather than a `matches!` allowlist at each call site: a
     /// variant added later is a compile error in the array's length, and
     /// silently absent from an allowlist (`feedback_enum_allowlist_falls_out_of_date`).
-    pub(crate) const ALL: [Self; 4] = [
+    pub(crate) const ALL: [Self; 5] = [
         Self::Source,
         Self::Package,
+        Self::Check,
         Self::Scaffolding,
         Self::Fragment,
     ];
@@ -168,7 +177,70 @@ fn name_encodes_a_version(name: &str) -> bool {
     false
 }
 
-/// Which of the four kinds this member is.
+/// Spec 1380 (#1374) research R2 — the store basenames every closure
+/// derivation lists in `patches`, in either carrier. Built once per closure.
+///
+/// A member whose output is listed here is a patch, by the closure's own
+/// record rather than by its name.
+#[derive(Debug, Default)]
+pub(crate) struct PatchOutputs<'a>(std::collections::BTreeSet<&'a str>);
+
+impl<'a> PatchOutputs<'a> {
+    pub(crate) fn of(closure: &'a super::derivation::RawClosure) -> Self {
+        Self(
+            closure
+                .derivations
+                .values()
+                .flat_map(|d| d.paths_in("patches"))
+                .map(super::derivation::store_basename)
+                .collect(),
+        )
+    }
+
+    fn lists(&self, drv: &RawDerivation) -> bool {
+        drv.output_paths()
+            .any(|p| self.0.contains(super::derivation::store_basename(p)))
+    }
+}
+
+/// Spec 1380 research R3 — nixpkgs `srcOnly`: unpack, patch, copy out.
+fn is_src_only(drv: &RawDerivation) -> bool {
+    let phases = match drv.attr_str("phases") {
+        Some(p) => p.split_whitespace().collect::<Vec<_>>(),
+        None => drv
+            .structured_attrs
+            .as_ref()
+            .and_then(|sa| sa.get("phases"))
+            .and_then(|v| v.as_array())
+            .map(|a| a.iter().filter_map(|x| x.as_str()).collect())
+            .unwrap_or_default(),
+    };
+    phases == ["unpackPhase", "patchPhase", "installPhase"]
+}
+
+/// Spec 1380 research R4 — a source tree with no derivation evidence:
+/// `clang-src-21.1.8` (a `runCommand` copy), `mes-src-0.27.1` and
+/// `tinycc-…-source` (`kaem`), `cargo-auditable-0.7.2-vendor`.
+fn names_a_source_tree(name: &str) -> bool {
+    name.ends_with("-source")
+        || name.ends_with("-vendor")
+        || name
+            .rsplit_once("-src-")
+            .is_some_and(|(_, v)| v.starts_with(|c: char| c.is_ascii_digit()) && !v.contains('-'))
+}
+
+/// Spec 1380 research R1 — a version check or test program. Nothing in the
+/// derivation marks one, so the name is all there is: the segment, then a
+/// version or an `unstable-` date.
+fn names_a_check(name: &str) -> bool {
+    ["-get-version-", "-simple-program-"].iter().any(|seg| {
+        name.split_once(seg).is_some_and(|(_, v)| {
+            v.starts_with(|c: char| c.is_ascii_digit()) || v.starts_with("unstable-")
+        })
+    })
+}
+
+/// Which of the five kinds this member is.
 ///
 /// **Total** (FR-005): never errors, never declines, every input gets exactly
 /// one role. The four counts must therefore sum to the member count, which is
@@ -180,17 +252,40 @@ fn name_encodes_a_version(name: &str) -> bool {
 /// different classifier producing different counts — the data-model's role
 /// table had them the other way round until the analyze pass caught it
 /// against this probe.
-pub(crate) fn classify(drv: &RawDerivation) -> MemberRole {
+///
+/// Spec 1380 (#1374) splits the version-name rung and touches nothing else
+/// (research R5): evidence first (listed in `patches`, then `srcOnly`), then
+/// the source-tree names, then the check names, and `package` for the rest.
+/// Every outcome of that rung is a graph endpoint, so the split moves no edge.
+pub(crate) fn classify(drv: &RawDerivation, patches: &PatchOutputs<'_>) -> MemberRole {
     if content_hash(drv).is_some() {
         return MemberRole::Source;
     }
     if drv.env.contains_key("text") {
         return MemberRole::Scaffolding;
     }
-    if name_encodes_a_version(drv.name.as_deref().unwrap_or_default()) {
+    let name = drv.name.as_deref().unwrap_or_default();
+    if name_encodes_a_version(name) {
+        if patches.lists(drv) || is_src_only(drv) || names_a_source_tree(name) {
+            return MemberRole::Source;
+        }
+        if names_a_check(name) {
+            return MemberRole::Check;
+        }
         return MemberRole::Package;
     }
     MemberRole::Fragment
+}
+
+/// Whether this member is a dependency-graph endpoint (FR-013).
+///
+/// Asked without the closure's patch set, and the answer cannot differ from
+/// [`classify`]'s with it. The patch set is consulted only inside the
+/// version-name rung, and every outcome of that rung (`source`, `check`,
+/// `package`) is an endpoint. `the_patch_set_never_changes_the_endpoint_answer`
+/// holds that.
+pub(crate) fn is_edge_endpoint(drv: &RawDerivation) -> bool {
+    classify(drv, &PatchOutputs::default()).is_edge_endpoint()
 }
 
 /// This member's identity basis (FR-003 / FR-004).
@@ -254,7 +349,7 @@ mod tests {
 
         let mut counts = std::collections::BTreeMap::new();
         for d in &nameless {
-            *counts.entry(classify(d).wire()).or_insert(0usize) += 1;
+            *counts.entry(classify(d, &PatchOutputs::default()).wire()).or_insert(0usize) += 1;
         }
 
         // The four counts, not merely the total: a classifier returning one
@@ -283,7 +378,7 @@ mod tests {
             r##"{"name":"both","env":{"text":"#!/bin/sh"},
                 "outputs":{"out":{"path":"p","hash":"deadbeef"}}}"##,
         );
-        assert_eq!(classify(&d), MemberRole::Source);
+        assert_eq!(classify(&d, &PatchOutputs::default()), MemberRole::Source);
     }
 
     #[test]
@@ -291,20 +386,20 @@ mod tests {
         // The case the data-model table had backwards. Only the probe and the
         // contract were right, and nothing tested it until now.
         let d = drv(r#"{"name":"helper-1.2.3","env":{"text":"echo"}}"#);
-        assert_eq!(classify(&d), MemberRole::Scaffolding);
+        assert_eq!(classify(&d, &PatchOutputs::default()), MemberRole::Scaffolding);
     }
 
     #[test]
     fn m1282_t012_a_version_shaped_name_with_no_other_signal_is_a_package() {
         assert_eq!(
-            classify(&drv(r#"{"name":"mes-libc-mini-0.27.1","env":{}}"#)),
+            classify(&drv(r#"{"name":"mes-libc-mini-0.27.1","env":{}}"#), &PatchOutputs::default()),
             MemberRole::Package
         );
     }
 
     #[test]
     fn m1282_t012_a_bare_name_is_a_fragment() {
-        assert_eq!(classify(&drv(r#"{"name":"strncpy","env":{}}"#)), MemberRole::Fragment);
+        assert_eq!(classify(&drv(r#"{"name":"strncpy","env":{}}"#), &PatchOutputs::default()), MemberRole::Fragment);
     }
 
     #[test]
@@ -342,14 +437,16 @@ mod tests {
         // argument. A classifier that reached outside it could not compile
         // against this call.
         let d = drv(r#"{"name":"strncpy","env":{}}"#);
-        assert_eq!(classify(&d), MemberRole::Fragment);
-        assert!(!classify(&d).is_edge_endpoint());
+        assert_eq!(classify(&d, &PatchOutputs::default()), MemberRole::Fragment);
+        assert!(!classify(&d, &PatchOutputs::default()).is_edge_endpoint());
     }
 
     #[test]
     fn m1282_only_sources_and_packages_are_edge_endpoints() {
         assert!(MemberRole::Source.is_edge_endpoint());
         assert!(MemberRole::Package.is_edge_endpoint());
+        // Spec 1380 — `check` is split out of `package` and keeps its place.
+        assert!(MemberRole::Check.is_edge_endpoint());
         assert!(!MemberRole::Scaffolding.is_edge_endpoint());
         assert!(!MemberRole::Fragment.is_edge_endpoint());
     }
@@ -392,7 +489,7 @@ mod tests {
         // it. Dropping the member would make the FR-009 counts fail to
         // reconcile, which is why absence must not be a skip.
         let anon = drv(r#"{"env":{}}"#);
-        assert_eq!(classify(&anon), MemberRole::Fragment);
+        assert_eq!(classify(&anon, &PatchOutputs::default()), MemberRole::Fragment);
         assert_eq!(
             identity(&anon, "/nix/store/anon123-.drv"),
             IdentityBasis::Recipe("anon123".into())
@@ -407,5 +504,132 @@ mod tests {
         for no in ["strncpy", "memcpy", "setup-hook.sh", "source", "crt-builder", ""] {
             assert!(!name_encodes_a_version(no), "{no} should not look versioned");
         }
+    }
+
+    // ---- Spec 1380 (#1374) ----
+
+    /// The pre-1380 ladder, kept only so T005 can compare against it.
+    fn classify_before_1380(drv: &RawDerivation) -> MemberRole {
+        if content_hash(drv).is_some() {
+            return MemberRole::Source;
+        }
+        if drv.env.contains_key("text") {
+            return MemberRole::Scaffolding;
+        }
+        if name_encodes_a_version(drv.name.as_deref().unwrap_or_default()) {
+            return MemberRole::Package;
+        }
+        MemberRole::Fragment
+    }
+
+    fn none() -> PatchOutputs<'static> {
+        PatchOutputs::default()
+    }
+
+    fn role(json: &str) -> MemberRole {
+        classify(&drv(json), &none())
+    }
+
+    /// One member per rung, plus a consumer that lists two patches: one with
+    /// a version token (rung 3a) and one without (stays a fragment, R5).
+    const CASES: &str = r#"{"derivations":{
+      "c.drv":{"name":"waybill-fixture-consumer-1.0","env":{"pname":"waybill-fixture-consumer",
+        "patches":"/nix/store/h1-waybill-fixture-fix-16.patch /nix/store/h2-waybill-fixture-local.patch"},
+        "outputs":{"out":{"path":"hc-waybill-fixture-consumer-1.0"}}},
+      "p.drv":{"name":"waybill-fixture-fix-16.patch","env":{"dontUnpack":"1"},"outputs":{"out":{"path":"h1-waybill-fixture-fix-16.patch"}}},
+      "q.drv":{"name":"waybill-fixture-local.patch","env":{"dontUnpack":"1"},"outputs":{"out":{"path":"h2-waybill-fixture-local.patch"}}},
+      "s.drv":{"name":"waybill-fixture-ghc-9.10.3-tree","env":{"phases":"unpackPhase patchPhase installPhase"},"outputs":{"out":{"path":"hs"}}},
+      "t.drv":{"name":"waybill-fixture-tree-1.2","structuredAttrs":{"phases":["unpackPhase","patchPhase","installPhase"]},"outputs":{"out":{"path":"ht"}}},
+      "r.drv":{"name":"waybill-fixture-clang-src-21.1.8","env":{"buildCommand":"cp -r"},"outputs":{"out":{"path":"hr"}}},
+      "v.drv":{"name":"waybill-fixture-tool-0.7.2-vendor","env":{},"outputs":{"out":{"path":"hv"}}},
+      "o.drv":{"name":"waybill-fixture-tinycc-unstable-2025-12-03-source","env":{"PATH":"x"},"outputs":{"out":{"path":"ho"}}},
+      "g.drv":{"name":"waybill-fixture-bash-get-version-5.3","env":{"buildCommand":"x"},"outputs":{"out":{"path":"hg"}}},
+      "u.drv":{"name":"waybill-fixture-tcc-boot-get-version-unstable-2024-07-07","env":{"PATH":"x"},"outputs":{"out":{"path":"hu"}}},
+      "x.drv":{"name":"waybill-fixture-gcc-cxx-simple-program-4.6.4","env":{"buildCommand":"x"},"outputs":{"out":{"path":"hx"}}},
+      "k.drv":{"name":"waybill-fixture-libc-mini-0.27.1","env":{"PATH":"x"},"outputs":{"out":{"path":"hk"}}},
+      "e.drv":{"name":"waybill-fixture-python3-3.13.12-env","env":{},"outputs":{"out":{"path":"he"}}},
+      "f.drv":{"name":"waybill-fixture-src-3510200.zip","outputs":{"out":{"hash":"sha256-AAAA","method":"flat"}}}
+    }}"#;
+
+    fn cases() -> RawClosure {
+        RawClosure::parse(CASES).unwrap()
+    }
+
+    /// T005 — only `package` members move, and only to endpoint roles. So
+    /// the endpoint set, and with it the graph, is the same as before.
+    #[test]
+    fn s1380_only_package_members_move_and_only_between_endpoints() {
+        let raw = cases();
+        let patches = PatchOutputs::of(&raw);
+        let mut moved = 0;
+        for d in raw.derivations.values().filter(|d| d.declared_pname().is_none()) {
+            let (before, after) = (classify_before_1380(d), classify(d, &patches));
+            if before != after {
+                moved += 1;
+                assert_eq!(before, MemberRole::Package, "{:?} moved from {before:?}", d.name);
+            }
+            assert_eq!(before.is_edge_endpoint(), after.is_edge_endpoint(), "{:?}", d.name);
+        }
+        assert!(moved >= 9, "CONTROL: the fixture must exercise every new rung, moved {moved}");
+    }
+
+    /// The endpoint helper agrees with the full classification, with the
+    /// patch set or without it.
+    #[test]
+    fn s1380_the_patch_set_never_changes_the_endpoint_answer() {
+        let raw = cases();
+        let patches = PatchOutputs::of(&raw);
+        for d in raw.derivations.values() {
+            assert_eq!(is_edge_endpoint(d), classify(d, &patches).is_edge_endpoint(), "{:?}", d.name);
+        }
+    }
+
+    /// T006 — US2: patches, `srcOnly` trees and named source trees are
+    /// `source`, and keep a recipe identity (FR-003).
+    #[test]
+    fn s1380_source_trees_and_patches_are_source() {
+        let raw = cases();
+        let patches = PatchOutputs::of(&raw);
+        let at = |k: &str| classify(&raw.derivations[k], &patches);
+        assert_eq!(at("p.drv"), MemberRole::Source, "listed in patches (E1)");
+        assert_eq!(at("s.drv"), MemberRole::Source, "srcOnly in env (E2)");
+        assert_eq!(at("t.drv"), MemberRole::Source, "srcOnly in structuredAttrs (E2)");
+        assert_eq!(at("r.drv"), MemberRole::Source, "-src-<v>");
+        assert_eq!(at("v.drv"), MemberRole::Source, "-vendor");
+        assert_eq!(at("o.drv"), MemberRole::Source, "-source");
+        assert!(matches!(identity(&raw.derivations["r.drv"], "r.drv"), IdentityBasis::Recipe(_)));
+        // R5: a listed patch with no version token is outside the split.
+        assert_eq!(at("q.drv"), MemberRole::Fragment);
+        // Controls: a fetch is `source` by rung 1; a genuine bootstrap package
+        // and an environment stay `package`.
+        assert_eq!(at("f.drv"), MemberRole::Source);
+        assert_eq!(at("k.drv"), MemberRole::Package);
+        assert_eq!(at("e.drv"), MemberRole::Package);
+        // Without the patch set, the versioned patch is a package by name.
+        assert_eq!(classify(&raw.derivations["p.drv"], &none()), MemberRole::Package);
+    }
+
+    /// T008 — US3: version checks and test programs are `check`.
+    #[test]
+    fn s1380_checks_are_check() {
+        let raw = cases();
+        let patches = PatchOutputs::of(&raw);
+        for k in ["g.drv", "u.drv", "x.drv"] {
+            assert_eq!(classify(&raw.derivations[k], &patches), MemberRole::Check, "{k}");
+        }
+        // A check segment with no version after it is not a check.
+        assert_eq!(role(r#"{"name":"waybill-fixture-get-version-tool-1.0","env":{}}"#), MemberRole::Package);
+        // Evidence outranks the check name (R6).
+        let both = r#"{"derivations":{
+          "c.drv":{"name":"w-1","env":{"pname":"w","patches":"/nix/store/hz-waybill-fixture-get-version-1.0"}},
+          "z.drv":{"name":"waybill-fixture-get-version-1.0","env":{},"outputs":{"out":{"path":"hz-waybill-fixture-get-version-1.0"}}}}}"#;
+        let raw = RawClosure::parse(both).unwrap();
+        assert_eq!(classify(&raw.derivations["z.drv"], &PatchOutputs::of(&raw)), MemberRole::Source);
+    }
+
+    #[test]
+    fn s1380_the_wire_value_and_the_count_set() {
+        assert_eq!(MemberRole::Check.wire(), "check");
+        assert_eq!(MemberRole::ALL.len(), 5);
     }
 }

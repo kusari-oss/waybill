@@ -93,6 +93,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `--exclude-scope`, after the last producer. Scans without `--tier` are
   unchanged.
 
+- **A closure member is `package` only when it is one; checks are `check` (#1374).**
+  C206 `waybill:closure-member-role` gave `package` to any nameless member
+  whose name held a version token. On the moat closure, 50 of 73 were not
+  packages: 39 version checks, 7 test programs and 4 source trees. Within
+  that rule, a member another derivation lists in `patches`, a nixpkgs
+  `srcOnly` tree, and a `-source`, `-src-<v>` or `-vendor` tree are now
+  `source`. `*-get-version-<v>` and `*-simple-program-<v>` derivations get a
+  new fifth value, `check`, and C184's `member-roles` counts it. `check` is
+  a dependency-graph endpoint, so no edge changes. Members outside that rule
+  keep their roles (#1502).
+
 - **Nix closure backport VEX is now one claim that scanners honour (#1436, #1421).**
   - **What changed:**
     - A `--nix-closure` component whose nixpkgs backport patches resolve a CVE gets a build-identity PURL qualifier: `?nix_drv=` with the sorted store hashes of every patching derivation merged into it (nixpkgs often builds `unzip 6.0` twice).
