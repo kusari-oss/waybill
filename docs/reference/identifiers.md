@@ -1052,7 +1052,7 @@ waybill sbom scan --image acme/internal-bld:v1 \
 | Version | `metadata.component.version` | Synthesized root `Package.versionInfo` | Synthesized root element `software_packageVersion` |
 | `bom-ref`/SPDXID | `metadata.component.bom-ref = <name>@<version>` | `Package.SPDXID` (hash-derived from override) | Element `spdxId` (hash-derived from override) |
 | PURL | `metadata.component.purl = pkg:generic/<percent-encoded(name)>@<percent-encoded(version)>` | `Package.externalRefs[purl]` | Element `software_packageUrl` |
-| CPE | none: an override names the subject and does not invent a CPE (#1402; operator-supplied CPEs are #1413) | none | none |
+| CPE | `metadata.component.cpe` from `--root-cpe` only; an override does not invent one (#1402) | `Package.externalRefs[cpe23Type]` from `--root-cpe` | Element `externalIdentifier[cpe23]` from `--root-cpe` |
 
 When the override is active, manifest-derived main-module components
 (identified by `properties[waybill:component-role=main-module]`) are

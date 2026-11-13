@@ -541,6 +541,21 @@ pub fn build_document(
         },
     };
 
+    // Spec 1491 (FR-001, FR-007) — a synthetic subject's `--root-cpe`
+    // values, as SECURITY/cpe23Type references with the operator comment.
+    // A scanned subject carries them on its component instead.
+    let synthetic_root = synthetic_root.map(|mut root| {
+        for cpe in &artifacts.root_override.cpes {
+            root.external_refs.push(super::packages::SpdxExternalRef {
+                category: super::packages::SpdxExternalRefCategory::Security,
+                ref_type: "cpe23Type".to_string(),
+                locator: cpe.as_str().to_string(),
+                comment: Some(crate::generate::cpe_source::ROOT_CPE_COMMENT.to_string()),
+            });
+        }
+        root
+    });
+
     // Prepend the synthetic-root package (if any) so it precedes
     // every component-derived package in the output.
     let mut packages = packages;

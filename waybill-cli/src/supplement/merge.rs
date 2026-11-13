@@ -131,6 +131,14 @@ pub(crate) fn merge(
                 // Synthesize a ResolvedComponent and append.
                 let mut resolved = synthesize_resolved(supp_component);
                 annotation::stamp_source_tier_declared(&mut resolved.extra_annotations);
+                // Spec 1491 (T025): the operator's CPEs are final, and say so.
+                if !resolved.cpes.is_empty() {
+                    crate::generate::cpe_source::mark_operator(
+                        &mut resolved,
+                        crate::generate::cpe_source::OperatorSurface::Supplement,
+                        None,
+                    );
+                }
                 let new_idx = components.len();
                 purl_index.insert(resolved.purl.clone(), new_idx);
                 components.push(resolved);
@@ -177,7 +185,7 @@ pub(crate) fn merge(
 /// vendor and product (#1403). Anything else is dropped with a WARN: the
 /// `cpes` field holds only validated values, and a malformed CPE would match
 /// nothing or everything.
-fn valid_cpes(supp: &SupplementComponent) -> Vec<Cpe> {
+pub(super) fn valid_cpes(supp: &SupplementComponent) -> Vec<Cpe> {
     supp.cpes
         .iter()
         .flatten()

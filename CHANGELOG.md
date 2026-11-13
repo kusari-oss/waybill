@@ -9,6 +9,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **Operators can supply CPEs (#1413).** Three surfaces, highest
+  precedence first, each beating nixpkgs-declared, curated and heuristic CPEs:
+  - **`--root-cpe <CPE>`** gives the document subject its CPE. It is
+    repeatable, and needs a named subject: a scanned main module, or
+    `--root-name` / `--root-purl`.
+  - **`--supplement-cdx` CPEs now win.** A supplement's CPE for a component
+    the scanner also found used to lose to the scanner's, which at that point
+    is always synthesized, so a guess such as `debian:<name>` beat the
+    operator's explicit identifier. The supplement now wins on `cpe`, and
+    the conflict record keeps the displaced value.
+  - **`--cpe-map <PATH>`** is a TOML file in the curated table's schema,
+    keyed by versionless PURL, applied at each component's own version.
+
+  Each format records the source natively ("CPE supplied by the operator
+  with <flag>"). `waybill:cpe-provenance` (C212) is now emitted on any
+  operator-sourced CPE, with basis `purl`, `cpe-map` or `root-cpe` and the
+  CPE it overrode. A malformed `--root-cpe` or map row stops the scan before
+  it starts; a malformed supplement CPE is still dropped with a warning.
+  Output without these flags is unchanged.
+
 - **A Nix overlay's Haskell dependency is one component, with an identity
   advisories can match (#1046).** Under `--nix-closure`, when an overlay pins a
   Haskell package at a version the pinned nixpkgs set does not carry, two

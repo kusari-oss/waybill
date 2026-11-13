@@ -4,10 +4,16 @@
 // Field-set partition per research Decision 3:
 //
 // - Scanner wins (bytes-derived):
-//     `hashes`, `cpe`, `purl`, `version`, `binary_role`
+//     `hashes`, `purl`, `version`, `binary_role`
 // - Developer wins (operator-domain metadata):
 //     `licenses`, `concluded_licenses`, `supplier`, `copyright`,
-//     `name`, `description`, `externalReferences`
+//     `name`, `description`, `externalReferences`, `cpe`
+//
+// `cpe` moved to developer-wins in spec 1491 (FR-003). It was listed as
+// bytes-derived, but no reader derives a CPE from bytes: every scanner CPE
+// at merge time is synthesized, a curated row or an ecosystem guess. Keeping
+// it meant a guess beat the operator's explicit identifier, which survived
+// only as an annotation.
 // - Catch-all default (FR-015 safety property): scanner wins.
 //
 // Justification derivation is mechanical: each `ConflictField` maps to
@@ -25,7 +31,7 @@ use super::parser::SupplementComponent;
 /// runtime path uses `ConflictField::winner()` directly.
 #[allow(dead_code)]
 pub(crate) const SCANNER_AUTHORITATIVE_FIELDS: &[&str] =
-    &["hashes", "cpe", "purl", "version", "binary_role"];
+    &["hashes", "purl", "version", "binary_role"];
 
 /// Fields that operator authoritatively wins on (FR-007). Same caveat
 /// as `SCANNER_AUTHORITATIVE_FIELDS`.
@@ -38,6 +44,7 @@ pub(crate) const DEVELOPER_AUTHORITATIVE_FIELDS: &[&str] = &[
     "name",
     "description",
     "externalReferences",
+    "cpe",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -88,7 +95,8 @@ impl ConflictField {
             | Self::Copyright
             | Self::Name
             | Self::Description
-            | Self::ExternalReferences => ConflictWinner::Supplement,
+            | Self::ExternalReferences
+            | Self::Cpe => ConflictWinner::Supplement,
             // All scanner-authoritative variants AND `Other(_)`
             // catch-all → scanner wins.
             _ => ConflictWinner::Scanner,
@@ -352,20 +360,33 @@ pub(crate) fn resolve_component(
         }
     }
 
-    // cpe — scanner wins.
-    if let Some(supp_cpes) = supplement.cpes.as_ref() {
-        let scanner_val = serde_json::to_value(&scanner.cpes).unwrap_or(serde_json::Value::Null);
-        let supplement_val =
-            serde_json::Value::Array(supp_cpes.iter().map(|s| serde_json::json!(s)).collect());
-        if scanner_val != supplement_val && !scanner.cpes.is_empty() {
-            conflicts.push(ConflictRecord {
-                field: ConflictField::Cpe,
-                scanner_value: scanner_val,
-                supplement_value: supplement_val.clone(),
-            });
-            scanner
-                .extra_annotations
-                .insert("waybill:declared-cpe".to_string(), supplement_val);
+    // cpe — the operator wins (spec 1491 FR-003). Only validated CPEs take
+    // part: a malformed one is dropped with a WARN (#1403), and if none is
+    // left the scanner's CPEs stand. The conflict record keeps the value the
+    // operator displaced; C212's `overrode` names its primary.
+    if supplement.cpes.is_some() {
+        let valid = super::merge::valid_cpes(supplement);
+        if !valid.is_empty() {
+            let scanner_val =
+                serde_json::to_value(&scanner.cpes).unwrap_or(serde_json::Value::Null);
+            let supplement_val = serde_json::to_value(&valid).unwrap_or(serde_json::Value::Null);
+            if scanner_val != supplement_val && !scanner.cpes.is_empty() {
+                conflicts.push(ConflictRecord {
+                    field: ConflictField::Cpe,
+                    scanner_value: scanner_val,
+                    supplement_value: supplement_val,
+                });
+            }
+            crate::generate::cpe_source::warn_on_version_mismatch(
+                &scanner,
+                &valid,
+                crate::generate::cpe_source::OperatorSurface::Supplement,
+            );
+            crate::generate::cpe_source::set_operator_cpes(
+                &mut scanner,
+                valid,
+                crate::generate::cpe_source::OperatorSurface::Supplement,
+            );
         }
     }
 
@@ -631,5 +652,87 @@ mod tests {
             ConflictField::Other("anything".into()).winner().justification(),
             "bytes-evident-detection-preserved"
         );
+        // Spec 1491 FR-003: `cpe` is the operator's.
+        assert_eq!(ConflictField::Cpe.winner(), ConflictWinner::Supplement);
+    }
+
+    const GUESS: &str = "cpe:2.3:a:debian:waybill-fixture-lib:1.0:*:*:*:*:*:*:*";
+    const OPERATOR: &str =
+        "cpe:2.3:a:waybill-fixture-vendor:waybill-fixture-lib:1.0:*:*:*:*:*:*:*";
+
+    fn deb_with_guess() -> ResolvedComponent {
+        let mut c = scanner_component("pkg:deb/debian/waybill-fixture-lib@1.0");
+        c.version = "1.0".to_string();
+        c.cpes = vec![waybill_common::types::cpe::Cpe::parse(GUESS).unwrap()];
+        c
+    }
+
+    /// Spec 1491 (T021, FR-003) — the operator's CPE replaces a synthesized
+    /// guess. The conflict record keeps the guess, with the developer as
+    /// winner; C212 names the displaced primary; the marker is set; and the
+    /// value no longer survives only as `waybill:declared-cpe`.
+    #[test]
+    fn s1491_a_supplement_cpe_replaces_a_synthesized_one() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut supp = supp_component("pkg:deb/debian/waybill-fixture-lib@1.0");
+        supp.cpes = Some(vec![OPERATOR.to_string()]);
+        let (merged, conflicts) = resolve_component(deb_with_guess(), &supp);
+
+        assert_eq!(merged.cpes.len(), 1);
+        assert_eq!(merged.cpes[0].as_str(), OPERATOR);
+        assert_eq!(conflicts.len(), 1);
+        assert_eq!(conflicts[0].field, ConflictField::Cpe);
+        assert_eq!(conflicts[0].winner(), ConflictWinner::Supplement);
+        assert_eq!(conflicts[0].scanner_value, serde_json::json!([GUESS]));
+        assert_eq!(
+            merged.extra_annotations.get(ids::ANN_DECLARED_CPE),
+            Some(&ids::provenance_with("purl", Some(GUESS)))
+        );
+        assert_eq!(
+            crate::generate::cpe_source::cpe_source(&merged),
+            Some(crate::generate::cpe_source::CpeSource::Operator(
+                crate::generate::cpe_source::OperatorSurface::Supplement
+            ))
+        );
+        assert!(!merged.extra_annotations.contains_key("waybill:declared-cpe"));
+    }
+
+    /// T021 — the operator stating the CPE the scanner already had: no
+    /// conflict, no `overrode`, but the source is still the operator's.
+    #[test]
+    fn s1491_an_identical_supplement_cpe_is_still_the_operators() {
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut supp = supp_component("pkg:deb/debian/waybill-fixture-lib@1.0");
+        supp.cpes = Some(vec![GUESS.to_string()]);
+        let (merged, conflicts) = resolve_component(deb_with_guess(), &supp);
+        assert!(conflicts.is_empty());
+        assert_eq!(merged.cpes[0].as_str(), GUESS);
+        assert_eq!(
+            merged.extra_annotations.get(ids::ANN_DECLARED_CPE),
+            Some(&ids::provenance_with("purl", None))
+        );
+    }
+
+    /// T021 — a malformed supplement CPE is dropped (#1403), and with none
+    /// left the scanner's CPEs stand, unmarked.
+    #[test]
+    fn s1491_a_malformed_supplement_cpe_leaves_the_scanners() {
+        let mut supp = supp_component("pkg:deb/debian/waybill-fixture-lib@1.0");
+        supp.cpes = Some(vec!["cpe:/a:waybill-fixture-vendor:waybill-fixture-lib:1.0".to_string()]);
+        let (merged, conflicts) = resolve_component(deb_with_guess(), &supp);
+        assert!(conflicts.is_empty());
+        assert_eq!(merged.cpes[0].as_str(), GUESS);
+        assert!(crate::generate::cpe_source::operator_surface(&merged).is_none());
+    }
+
+    /// T021 / spec edge case — a CPE whose version differs from the
+    /// component's is emitted as given.
+    #[test]
+    fn s1491_a_version_mismatch_is_emitted_as_given() {
+        let other = "cpe:2.3:a:waybill-fixture-vendor:waybill-fixture-lib:2.0:*:*:*:*:*:*:*";
+        let mut supp = supp_component("pkg:deb/debian/waybill-fixture-lib@1.0");
+        supp.cpes = Some(vec![other.to_string()]);
+        let (merged, _) = resolve_component(deb_with_guess(), &supp);
+        assert_eq!(merged.cpes[0].as_str(), other);
     }
 }

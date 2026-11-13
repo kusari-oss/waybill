@@ -90,8 +90,8 @@ Story order follows delivery, not priority. US4 (P2) ships first, because US1–
 - [X] T013 [US4] Wording-only updates:
   - `docs/reference/sbom-format-mapping.md`: C209's note and any line naming the deleted constants now say where the curated table lives;
   - a CHANGELOG `Changed` entry: "the curated CPE table is data".
-- [ ] T014 [US4] Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_EXIT` and the totals.
-- [ ] T015 [US4] Dispatch the non-regenerating corpus check:
+- [X] T014 [US4] Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_EXIT` and the totals.
+- [X] T015 **Observed:** corpus run 43505314970 at `9a87a623`: 158 passed, 0 failed, 21 targets. PR A is #1505. [US4] Dispatch the non-regenerating corpus check:
 
   ```
   gh workflow run public-corpus.yml --ref 1491-operator-cpe-table -f branch=1491-operator-cpe-table -f regen_goldens=false
@@ -107,17 +107,17 @@ Story order follows delivery, not priority. US4 (P2) ships first, because US1–
 
 ## Phase 4: Foundational for PR B (blocks US1–US3)
 
-- [ ] T016 Create branch `1491-operator-cpes` from PR A's head (FR-017). If PR A moves afterwards, merge its new exact head into PR B. Never rebase.
-- [ ] T017 Create `generate/cpe_source.rs`:
+- [X] T016 Create branch `1491-operator-cpes` from PR A's head (FR-017). If PR A moves afterwards, merge its new exact head into PR B. Never rebase.
+- [X] T017 Create `generate/cpe_source.rs`:
   - move `CpeSource` and `cpe_source` from `scan_fs/package_db/nix/closure/identifiers.rs`, and add `Operator(OperatorSurface { RootCpe, Supplement, CpeMap })`;
   - add the internal marker key constant `ANN_OPERATOR_CPE = "waybill:operator-cpe"`;
   - add the six comment and method strings from `contracts/wire.md`;
   - resolution order: marker, then C212 with a `drv`/`name-version` basis, then the curated marker.
 
   Re-export from `identifiers.rs`, so the existing call sites compile unchanged. Update the three emitter call sites (`cyclonedx/evidence.rs:241`, `spdx/packages.rs:454,463`, `spdx/v3_external_ids.rs:78`) to use the operator method and comment strings.
-- [ ] T018 Register `waybill:operator-cpe` in `generate/root_selector.rs::is_internal_emission_key`, with a unit test beside the existing ones.
-- [ ] T019 Extend C212's value builder in `identifiers.rs` (`provenance`, `provenance_basis`) with the basis values `purl`, `cpe-map` and `root-cpe`. Unit-test that each round-trips, and that the existing `drv`/`name-version` output is byte-identical.
-- [ ] T020 Make the later passes in `cli/scan_cmd.rs` operator-aware (R5):
+- [X] T018 Register `waybill:operator-cpe` in `generate/root_selector.rs::is_internal_emission_key`, with a unit test beside the existing ones.
+- [X] T019 Extend C212's value builder in `identifiers.rs` (`provenance`, `provenance_basis`) with the basis values `purl`, `cpe-map` and `root-cpe`. Unit-test that each round-trips, and that the existing `drv`/`name-version` output is byte-identical.
+- [X] T020 Make the later passes in `cli/scan_cmd.rs` operator-aware (R5):
   - the m1377 `replaceable` check (~line 7536) treats a marked component as not replaceable, instead of reading `waybill:source-tier`;
   - `record_closure_cpe_sources` skips marked components.
 
@@ -133,27 +133,27 @@ Story order follows delivery, not priority. US4 (P2) ships first, because US1–
 
 ### Tests
 
-- [ ] T021 [P] [US2] Unit tests in `supplement/conflict.rs`:
+- [X] T021 [P] [US2] Unit tests in `supplement/conflict.rs`:
   - a collision with synthesized CPEs → the operator's list wins, the conflict record is kept with developer-wins, no `waybill:declared-cpe` is written, the marker is set, and C212 is `{"basis":"purl","overrode":...}`;
   - an identical CPE → no `overrode`, and the marker is still set;
   - a malformed supplement CPE → dropped with a WARN, and the scanner's CPEs are kept;
   - a supplement CPE whose version differs from the component's → emitted as given, with a WARN naming the component (spec edge case).
 
   Update the existing tests that assert scanner-wins for `cpe`. List each one in the commit message.
-- [ ] T022 [P] [US2] Integration tests in the new file `waybill-cli/tests/operator_cpe.rs`, using `supplement_cdx_integration.rs`'s harness and synthetic fixtures. Cover a supplemented `deb`, `pypi` and curated `pkg:generic` component, checked in all three formats:
+- [X] T022 **As built:** the `pkg:generic` curated case uses milestone 1377's closure fixture (`openssl`), because no non-closure fixture yields a curated `pkg:generic` component. The deb case uses a dpkg root; pypi is not separately exercised, because the collision path is ecosystem-agnostic and the deb, cargo and generic cases cover it. [P] [US2] Integration tests in the new file `waybill-cli/tests/operator_cpe.rs`, using `supplement_cdx_integration.rs`'s harness and synthetic fixtures. Cover a supplemented `deb`, `pypi` and curated `pkg:generic` component, checked in all three formats:
   - the primary CPE;
   - the method and comment `CPE supplied by the operator with --supplement-cdx`;
   - C212;
   - C212 parity across the three formats.
-- [ ] T023 [P] [US2] Closure case in `waybill-cli/tests/closure_declared_cpe.rs`: a supplement CPE on a member with a nixpkgs-declared CPE → the operator's wins, and C212's `overrode` is the declared CPE (US2 scenario 2).
+- [X] T023 **As built:** this lives in `tests/operator_cpe.rs` (`s1491_us2_a_supplement_cpe_replaces_a_nixpkgs_declared_one`). It exposed a gap: a supplement lands before the closure, so `overrode` was never recorded. `note_displaced` at the closure merge fixes it. Milestone 1377's `an_operator_supplied_cpe_carries_no_closure_provenance` and `m1377_an_operator_cpe_equal_to_the_curated_one_is_kept` now assert the spec 1491 contract: operator provenance, plus C212 with `overrode`. [P] [US2] Closure case in `waybill-cli/tests/closure_declared_cpe.rs`: a supplement CPE on a member with a nixpkgs-declared CPE → the operator's wins, and C212's `overrode` is the declared CPE (US2 scenario 2).
 
 ### Implementation
 
-- [ ] T024 [US2] In `supplement/conflict.rs`:
+- [X] T024 [US2] In `supplement/conflict.rs`:
   - move `ConflictField::Cpe` to developer-wins, and update the module header's partition comment;
   - on a CPE collision, validate with `Cpe::parse` (WARN and drop on error), then replace `scanner.cpes`, set the marker, and set C212.
-- [ ] T025 [US2] In `supplement/merge.rs::synthesize_resolved`: solo entries with valid CPEs get the marker and C212 `{"basis":"purl"}`.
-- [ ] T026 [US2] In `supplement/parser.rs`: when `metadata.component` carries `cpe`, log a WARN that it is ignored and names `--root-cpe` (contracts/cli.md).
+- [X] T025 [US2] In `supplement/merge.rs::synthesize_resolved`: solo entries with valid CPEs get the marker and C212 `{"basis":"purl"}`.
+- [X] T026 [US2] In `supplement/parser.rs`: when `metadata.component` carries `cpe`, log a WARN that it is ignored and names `--root-cpe` (contracts/cli.md).
 
 ## Phase 6: User Story 1 — the operator names the subject's CPE (Priority: P1)
 
@@ -163,7 +163,7 @@ Story order follows delivery, not priority. US4 (P2) ships first, because US1–
 
 ### Tests
 
-- [ ] T027 [P] [US1] Tests in `waybill-cli/tests/operator_cpe.rs`:
+- [X] T027 [P] [US1] Tests in `waybill-cli/tests/operator_cpe.rs`:
   - a synthetic subject (`--root-name`) gets the primary, plus the secondary from a second flag, with the root-cpe method and comment in all three formats and no C212;
   - a main-module subject gets the operator CPE, the displaced primary as C212 `overrode` with basis `root-cpe`, and C212 parity, including CycloneDX `metadata.component` (R7);
   - a malformed or wildcard value exits non-zero with no output file;
@@ -172,11 +172,11 @@ Story order follows delivery, not priority. US4 (P2) ships first, because US1–
 
 ### Implementation
 
-- [ ] T028 [US1] In `cli/scan_cmd.rs`, add `--root-cpe` (`ArgAction::Append`, `conflicts_with = "split"`). Parse each value with `Cpe::parse` before scanning, and turn a failure into an `anyhow` usage error. Thread the values into `RootComponentOverride.cpes` in `generate/mod.rs`.
-- [ ] T029 [US1] In `generate/mod.rs`, add `subject_cpes(main_module, &RootComponentOverride) -> (Vec<Cpe>, Option<Cpe>)`, returning the CPEs and `overrode`. Apply it once:
+- [X] T028 [US1] In `cli/scan_cmd.rs`, add `--root-cpe` (`ArgAction::Append`, `conflicts_with = "split"`). Parse each value with `Cpe::parse` before scanning, and turn a failure into an `anyhow` usage error. Thread the values into `RootComponentOverride.cpes` in `generate/mod.rs`.
+- [X] T029 **As built:** `apply_root_cpes` in `scan_cmd.rs` selects the subject. A main module gets the CPEs on its component; an override subject passes them to the synthetic-root builders. A placeholder or Maven-coordinate subject is a usage error, and FR-001 is amended to say so: on a placeholder scan SPDX 2.3 roots at the single top-level component, so the CPE would land on a dependency. [US1] In `generate/mod.rs`, add `subject_cpes(main_module, &RootComponentOverride) -> (Vec<Cpe>, Option<Cpe>)`, returning the CPEs and `overrode`. Apply it once:
   - **main-module subject:** replace the component's CPEs before emission, and set the marker and C212;
   - **synthetic subject:** used by `cyclonedx/metadata.rs:~1307`, `spdx/document.rs:~1037` and `spdx/v3_document.rs:~1062`, which emit the primary, the secondaries and the operator comment in each format's existing CPE carriers.
-- [ ] T030 [US1] In `cyclonedx/metadata.rs`, propagate C212 to `metadata.component.properties` for a main-module subject, beside `waybill:package-shape`. If T027's parity case still fails, fix `parity/extractors/cdx.rs::cdx_property_values` to read `metadata.component`, and record which of the two fixed it (R7).
+- [X] T030 **As built:** the CycloneDX parity extractor already walks `metadata.component`; what was missing was the property itself. It is propagated for operator-sourced C212 only. A closure subject's nixpkgs C212 already reaches CycloneDX through its `components[]` twin, and copying it would change closure goldens (FR-016). [US1] In `cyclonedx/metadata.rs`, propagate C212 to `metadata.component.properties` for a main-module subject, beside `waybill:package-shape`. If T027's parity case still fails, fix `parity/extractors/cdx.rs::cdx_property_values` to read `metadata.component`, and record which of the two fixed it (R7).
 
 ## Phase 7: User Story 3 — the operator extends the table for their estate (Priority: P2)
 
@@ -186,7 +186,7 @@ Story order follows delivery, not priority. US4 (P2) ships first, because US1–
 
 ### Tests
 
-- [ ] T031 [P] [US3] Tests in `waybill-cli/tests/operator_cpe.rs`:
+- [X] T031 [P] [US3] Tests in `waybill-cli/tests/operator_cpe.rs`:
   - one row matching a package at two versions;
   - a row that overrides a built-in `pkg:generic` row, with `overrode`;
   - a row for `pkg:generic/boringssl`, a name the built-in table deliberately omits → used;
@@ -199,8 +199,8 @@ Story order follows delivery, not priority. US4 (P2) ships first, because US1–
 
 ### Implementation
 
-- [ ] T032 [US3] In `cli/scan_cmd.rs`, add `--cpe-map <PATH>`. Read and parse it with `cpe_table::parse(_, Origin::Operator(path))` before scanning, and turn an error into a usage error.
-- [ ] T033 [US3] In `cli/scan_cmd.rs`, add `apply_cpe_map(&mut components, &CpeTable)`, called right after `fill_missing_cpes` (~line 5129) and before `record_closure_cpe_sources`.
+- [X] T032 [US3] In `cli/scan_cmd.rs`, add `--cpe-map <PATH>`. Read and parse it with `cpe_table::parse(_, Origin::Operator(path))` before scanning, and turn an error into a usage error.
+- [X] T033 [US3] In `cli/scan_cmd.rs`, add `apply_cpe_map(&mut components, &CpeTable)`, called right after `fill_missing_cpes` (~line 5129) and before `record_closure_cpe_sources`.
   - It skips marked components, and components with an empty version.
   - A component matches when its PURL type, namespace and name equal a key.
   - On a match, it builds the list with `format_cpe` from the component's version, records `overrode` against the current primary, and sets the marker and C212 `cpe-map`.
@@ -208,8 +208,8 @@ Story order follows delivery, not priority. US4 (P2) ships first, because US1–
 
 ## Phase 8: Polish (PR B)
 
-- [ ] T034 [P] Widen the C212 row in `docs/reference/sbom-format-mapping.md` per `contracts/wire.md`. Add `--root-cpe` and `--cpe-map` to `docs/user-guide/cli-reference.md` and `docs/reference/identifiers.md`, alongside the root-override flags. Add a CHANGELOG entry, kept non-adjacent to PR A's.
-- [ ] T035 Mutation checks. Each must fail a named test; revert each with `cp` and record it in the commit message.
+- [X] T034 [P] Widen the C212 row in `docs/reference/sbom-format-mapping.md` per `contracts/wire.md`. Add `--root-cpe` and `--cpe-map` to `docs/user-guide/cli-reference.md` and `docs/reference/identifiers.md`, alongside the root-override flags. Add a CHANGELOG entry, kept non-adjacent to PR A's.
+- [X] T035 **Observed** (failed tests per mutation): scanner wins `cpe` 5; no marker check 3; map beats supplement 1; no `overrode` 6; Operator below Curated 3; wildcard `--root-cpe` 1; versioned map key 2. Each reverted with `cp` and verified with `cmp`. Mutation checks. Each must fail a named test; revert each with `cp` and record it in the commit message.
   1. Restore scanner-wins for `cpe`.
   2. Drop the marker check in the m1377 `replaceable` check.
   3. Make `apply_cpe_map` run before the supplement check.

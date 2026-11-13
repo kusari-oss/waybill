@@ -1678,6 +1678,32 @@ pub struct ScanArgs {
     )]
     pub root_purl: Option<String>,
 
+    /// Spec 1491 (#1413): the document subject's CPE. Repeatable: the first
+    /// value is the primary CPE, the rest secondary. It replaces any CPE the
+    /// subject would otherwise carry, and the source is recorded natively
+    /// ("CPE supplied by the operator with --root-cpe").
+    ///
+    /// Each value must be a CPE 2.3 formatted string with a named vendor and
+    /// product; anything else stops the scan before it starts. Not allowed
+    /// with `--split`, which emits one document per subject.
+    #[arg(
+        long = "root-cpe",
+        value_name = "CPE",
+        value_parser = validate_root_cpe,
+        action = clap::ArgAction::Append,
+        conflicts_with = "split",
+    )]
+    pub root_cpe: Vec<String>,
+
+    /// Spec 1491 (#1413): a CPE mapping file. Same TOML schema as the
+    /// built-in curated table (`generate/cpe_table.toml`), each row keyed by
+    /// a versionless PURL; the evidence fields are optional. A matching
+    /// component's CPEs are built from the row's pairs and its own version,
+    /// and replace every non-operator CPE (FR-005). A malformed file stops
+    /// the scan before it starts. Local file only; never fetched.
+    #[arg(long = "cpe-map", value_name = "PATH")]
+    pub cpe_map: Option<PathBuf>,
+
     /// Milestone 149 (issue #151): when set together with `--root-name`
     /// / `--root-version` / `--root-purl`, preserve the manifest-derived
     /// main-module identity as a `library`-typed entry in
@@ -2297,6 +2323,14 @@ pub(crate) fn validate_root_purl_type(value: &str) -> Result<String, String> {
 /// same error class clap surfaces for every other PURL-shaped input.
 /// Returns the canonicalized form on success so emission uses the same
 /// representation `Purl::new` would produce internally.
+/// Spec 1491 — `--root-cpe <CPE>` validator: a CPE 2.3 formatted string
+/// with a named vendor and product (#1403's `Cpe`).
+pub(crate) fn validate_root_cpe(value: &str) -> Result<String, String> {
+    waybill_common::types::cpe::Cpe::parse(value)
+        .map(waybill_common::types::cpe::Cpe::into_string)
+        .map_err(|e| format!("--root-cpe: {e}"))
+}
+
 pub(crate) fn validate_root_purl(value: &str) -> Result<String, String> {
     waybill_common::types::purl::Purl::new(value)
         .map(|p| p.as_str().to_string())
@@ -3240,6 +3274,23 @@ pub async fn execute(
             std::env::set_var("WAYBILL_INCLUDE_VENDORED", "1");
         }
     }
+
+    // Spec 1491 (FR-006) — a malformed `--cpe-map` stops the scan here,
+    // before any scanning, so no document is ever written from it.
+    let cpe_map = match args.cpe_map.as_deref() {
+        Some(path) => {
+            let text = std::fs::read_to_string(path)
+                .map_err(|e| anyhow::anyhow!("--cpe-map {}: {e}", path.display()))?;
+            Some(
+                crate::generate::cpe_table::parse(
+                    &text,
+                    crate::generate::cpe_table::Origin::Operator(path),
+                )
+                .map_err(anyhow::Error::msg)?,
+            )
+        }
+        None => None,
+    };
 
     // Milestone 235 — validate + propagate Gradle ladder flags.
     // Validation rejects shell metacharacters in
@@ -5127,6 +5178,20 @@ pub async fn execute(
     // Unlike the identity pass there is no edge-ordering constraint: CPEs are
     // per-component metadata and no relationship endpoint is derived from them.
     fill_missing_cpes(&mut components);
+    // Spec 1491 (FR-005) — the operator surfaces, after every synthesized
+    // and nixpkgs-declared CPE has landed, so they outrank all of them.
+    // `--supplement-cdx` already set its CPEs at the merge, and marked them
+    // final; the map skips those. `--root-cpe` comes last and beats both.
+    if let Some(map) = &cpe_map {
+        apply_cpe_map(&mut components, map);
+    }
+    let synthetic_subject_cpes = apply_root_cpes(
+        &args,
+        &mut components,
+        scan_target_coord.as_ref(),
+        &target_name,
+        scan_target_kind,
+    )?;
     // Milestone 1377 US3 — record where each closure component's CPE came
     // from, now that both sources have run and identities are final.
     record_closure_cpe_sources(&mut components);
@@ -5210,6 +5275,7 @@ pub async fn execute(
             full_purl: args.root_purl.clone(),
             full_purl_name: None,
             full_purl_version: None,
+            cpes: Vec::new(),
         };
         let selection = crate::generate::root_selector::select_root(
             &components,
@@ -6051,6 +6117,10 @@ pub async fn execute(
                 full_purl,
                 full_purl_name: full_name,
                 full_purl_version: full_version,
+                // Spec 1491: the subject's operator CPEs, for a subject that
+                // is not a scanned component. A main-module subject got them
+                // on its component in `apply_root_cpes`, and this stays empty.
+                cpes: synthetic_subject_cpes.clone(),
             }
         },
         // Milestone 149 (issue #151): opt-in flag to preserve the
@@ -7274,6 +7344,138 @@ fn fill_missing_cpes(components: &mut [waybill_common::resolution::ResolvedCompo
     }
 }
 
+/// Spec 1491 (T033, FR-004) — apply an operator's `--cpe-map`.
+///
+/// A row matches a component when the component's PURL type, namespace and
+/// name equal the row's versionless key. Its pairs build the CPEs with the
+/// component's own version, and they replace whatever the component carries:
+/// nixpkgs-declared, curated or heuristic (FR-005). A component the
+/// supplement already set is skipped, because the exact-PURL statement is
+/// the more specific one; so is one with no version, as a curated row would
+/// be (a wildcard-version CPE matches a product's whole history).
+fn apply_cpe_map(
+    components: &mut [waybill_common::resolution::ResolvedComponent],
+    map: &crate::generate::cpe_table::CpeTable,
+) {
+    use crate::generate::cpe_source::{operator_surface, set_operator_cpes, OperatorSurface};
+    let key_of = |ty: &str, ns: Option<&str>, name: &str| {
+        format!("{ty}\u{0}{}\u{0}{name}", ns.unwrap_or(""))
+    };
+    let mut rows = std::collections::HashMap::new();
+    for (i, row) in map.row.iter().enumerate() {
+        // `parse` already accepted every key as a versionless PURL.
+        if let Ok(p) = waybill_common::types::purl::Purl::new(&row.key) {
+            rows.insert(key_of(p.ecosystem(), p.namespace(), p.name()), i);
+        }
+    }
+    let mut used = vec![false; map.row.len()];
+    let mut changed = 0usize;
+    for c in components.iter_mut() {
+        if operator_surface(c).is_some() || c.version.is_empty() {
+            continue;
+        }
+        let Some(&i) = rows.get(&key_of(c.purl.ecosystem(), c.purl.namespace(), c.purl.name()))
+        else {
+            continue;
+        };
+        used[i] = true;
+        let cpes: Vec<_> = map.row[i]
+            .pair
+            .iter()
+            .filter_map(|p| crate::generate::cpe::format_cpe(&p.vendor, &p.product, &c.version))
+            .collect();
+        if cpes.is_empty() {
+            continue;
+        }
+        set_operator_cpes(c, cpes, OperatorSurface::CpeMap);
+        changed += 1;
+    }
+    let unused: Vec<&str> = map
+        .row
+        .iter()
+        .zip(&used)
+        .filter(|(_, u)| !**u)
+        .map(|(r, _)| r.key.as_str())
+        .collect();
+    tracing::info!(
+        rows = map.row.len(),
+        rows_matched = map.row.len() - unused.len(),
+        components_changed = changed,
+        unused_rows = unused.len(),
+        "--cpe-map applied{}",
+        if unused.is_empty() { String::new() } else { format!("; rows that matched nothing: {}", unused.join(", ")) },
+    );
+}
+
+/// Spec 1491 (T029, FR-001/FR-002) — apply `--root-cpe`.
+///
+/// Selects the subject the way the emitters will. A subject that is a
+/// scanned main module gets the CPEs on its component, marked and with C212,
+/// so every emitter carries them as it carries any component's. A subject
+/// named by `--root-name`/`--root-purl` is synthetic: the CPEs are returned,
+/// and travel to the three synthetic-root builders on
+/// `RootComponentOverride::cpes`.
+///
+/// Any other subject is an error, before a document is written. A
+/// placeholder is named after the scan directory, so a CPE on it names
+/// nothing the operator chose, and SPDX 2.3 roots such a scan at its single
+/// top-level component instead, so the CPE would land on a dependency or
+/// nowhere. A Maven coordinate subject is built inside each emitter. In both
+/// cases the fix is to name the subject.
+fn apply_root_cpes(
+    args: &ScanArgs,
+    components: &mut [waybill_common::resolution::ResolvedComponent],
+    scan_target_coord: Option<&crate::scan_fs::package_db::maven::ScanTargetCoord>,
+    target_name: &str,
+    scan_target_kind: crate::generate::root_selector::ScanTargetKind,
+) -> anyhow::Result<Vec<waybill_common::types::cpe::Cpe>> {
+    use crate::generate::cpe_source::{set_operator_cpes, warn_on_version_mismatch, OperatorSurface};
+    use crate::generate::root_selector::ResolvedRootSubject;
+    // Validated at parse time (`validate_root_cpe`); a value that somehow
+    // fails here is dropped rather than emitted.
+    let cpes: Vec<_> = args
+        .root_cpe
+        .iter()
+        .filter_map(|v| waybill_common::types::cpe::Cpe::parse(v).ok())
+        .collect();
+    if cpes.is_empty() {
+        return Ok(Vec::new());
+    }
+    let selector_override = crate::generate::RootComponentOverride {
+        name: args.root_name.clone(),
+        version: args.root_version.clone(),
+        purl_type: args.root_purl_type.clone(),
+        omit_purl: args.no_root_purl,
+        full_purl: args.root_purl.clone(),
+        full_purl_name: None,
+        full_purl_version: None,
+        cpes: Vec::new(),
+    };
+    let selection = crate::generate::root_selector::select_root(
+        components,
+        &selector_override,
+        scan_target_coord,
+        target_name,
+        "0.0.0",
+        scan_target_kind,
+    );
+    match selection.subject {
+        ResolvedRootSubject::OperatorOverride => Ok(cpes),
+        ResolvedRootSubject::MainModule(idx) if !selector_override.is_active() => {
+            let c = components.get_mut(idx).ok_or_else(|| {
+                anyhow::anyhow!("--root-cpe: the selected subject is not in the component set")
+            })?;
+            warn_on_version_mismatch(c, &cpes, OperatorSurface::RootCpe);
+            set_operator_cpes(c, cpes, OperatorSurface::RootCpe);
+            Ok(Vec::new())
+        }
+        _ => anyhow::bail!(
+            "--root-cpe: this scan has no named subject to give a CPE to. Name it with \
+             --root-name (and --root-version) or --root-purl"
+        ),
+    }
+}
+
 /// Milestone 1377 US3 (FR-008) — record each closure component's CPE source.
 ///
 /// Runs after `fill_missing_cpes` and after the milestone-1366 identity pass,
@@ -7296,6 +7498,12 @@ fn record_closure_cpe_sources(components: &mut [waybill_common::resolution::Reso
     use scan_fs::package_db::nix::closure::identifiers as ids;
     for c in components.iter_mut() {
         if c.cpes.is_empty() {
+            continue;
+        }
+        // Spec 1491: an operator surface recorded its own C212 when it set
+        // the CPEs, against the value it displaced. Recomputing it here
+        // would read an operator basis as a closure join.
+        if crate::generate::cpe_source::operator_surface(c).is_some() {
             continue;
         }
         if let Some(prov) = c.extra_annotations.get(ids::ANN_DECLARED_CPE) {
@@ -7417,6 +7625,7 @@ fn warn_if_root_heuristic_outranked(
         full_purl: args.root_purl.clone(),
         full_purl_name: None,
         full_purl_version: None,
+        cpes: Vec::new(),
     };
     let selection = crate::generate::root_selector::select_root(
         components,
@@ -7508,6 +7717,21 @@ fn merge_closure_components(
             .flatten();
         match existing {
             Some(&i) => {
+                // Spec 1491 (FR-009) — a supplement lands before the closure
+                // does, as a component with nothing to displace. Now it
+                // stands for this member, which would have emitted nixpkgs'
+                // CPE or else the curated one: that is what the operator
+                // overrode.
+                if crate::generate::cpe_source::operator_surface(&components[i]).is_some() {
+                    let would_have = if c.extra_annotations.contains_key(
+                        scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE,
+                    ) {
+                        c.cpes.first().cloned()
+                    } else {
+                        crate::generate::cpe::synthesize_cpes(&c).first().cloned()
+                    };
+                    crate::generate::cpe_source::note_displaced(&mut components[i], would_have.as_ref());
+                }
                 // Milestone 1281 (#1346), FR-004 — reconcile declared
                 // licenses without replacing an existing declaration.
                 //
@@ -7533,14 +7757,14 @@ fn merge_closure_components(
                     .remove(scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE)
                 {
                     let existing = &components[i];
-                    let operator_asserted = existing
-                        .extra_annotations
-                        .get("waybill:source-tier")
-                        .and_then(|v| v.as_str())
-                        == Some("declared");
-                    let replaceable = existing.cpes.is_empty()
-                        || (!operator_asserted
-                            && existing.cpes == crate::generate::cpe::synthesize_cpes(existing));
+                    // Spec 1491 (research R5): an operator surface's CPEs
+                    // are final. The marker covers a supplement collision
+                    // too, which `source-tier` never did.
+                    let operator_asserted =
+                        crate::generate::cpe_source::operator_surface(existing).is_some();
+                    let replaceable = !operator_asserted
+                        && (existing.cpes.is_empty()
+                            || existing.cpes == crate::generate::cpe::synthesize_cpes(existing));
                     if replaceable {
                         // `overrode` describes THIS component: what the
                         // curated table gave it, if that differs.
@@ -8892,6 +9116,8 @@ mod tests {
             root_purl_type: None,
             no_root_purl: false,
             root_purl: None,
+            root_cpe: vec![],
+            cpe_map: None,
             preserve_manifest_main_module: false,
             // Milestone 080 — defaults for new fields keep the test
             // helper's "minimal flags" contract intact.
@@ -9746,22 +9972,89 @@ mod tests {
 
     /// FR-013 — an operator's `--supplement-cdx` CPE is kept even when it
     /// equals the curated value: who asserted it is what matters.
+    ///
+    /// Spec 1491 (T020): "who asserted it" is the operator marker, which
+    /// the supplement merge sets. The component keeps the operator's own
+    /// C212, never the closure's.
     #[test]
     fn m1377_an_operator_cpe_equal_to_the_curated_one_is_kept() {
+        use crate::generate::cpe_source::{mark_operator, OperatorSurface};
         use crate::scan_fs::package_db::nix::closure::identifiers as ids;
         let mut existing = vec![make_component("pkg:generic/zlib@9.9.9")];
         existing[0].cpes = crate::generate::cpe::synthesize_cpes(&existing[0]);
         let operator = existing[0].cpes.clone();
-        existing[0].extra_annotations.insert(
-            "waybill:source-tier".to_string(),
-            serde_json::Value::String("declared".to_string()),
-        );
+        mark_operator(&mut existing[0], OperatorSurface::Supplement, None);
         merge_closure_components(
             &mut existing,
             vec![m1377_declared("pkg:generic/zlib@9.9.9", M1377_DECLARED, None)],
         );
         assert_eq!(existing[0].cpes, operator);
-        assert!(!existing[0].extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
+        // Spec 1491 FR-009: the member would have carried nixpkgs' CPE, and
+        // the operator's displaced it.
+        assert_eq!(
+            existing[0].extra_annotations.get(ids::ANN_DECLARED_CPE),
+            Some(&ids::provenance_with("purl", Some(M1377_DECLARED)))
+        );
+    }
+
+    /// Spec 1491 (T020) — an operator's EMPTY-slot claim is final too: a
+    /// marked component with no CPE is not filled by nixpkgs. (Only `--root-
+    /// cpe` or a map row could leave one; the marker is what decides.)
+    ///
+    /// CONTROL: the same component unmarked is filled, so the marker is the
+    /// variable.
+    #[test]
+    fn s1491_a_marked_component_is_never_replaced_by_a_declared_cpe() {
+        use crate::generate::cpe_source::{mark_operator, OperatorSurface};
+        let operator = "cpe:2.3:a:waybill-fixture-vendor:zlib:9.9.9:*:*:*:*:*:*:*";
+        let mut existing = vec![make_component("pkg:generic/zlib@9.9.9")];
+        existing[0].cpes = vec![waybill_common::types::cpe::Cpe::parse(operator).unwrap()];
+        mark_operator(&mut existing[0], OperatorSurface::CpeMap, None);
+        merge_closure_components(
+            &mut existing,
+            vec![m1377_declared(
+                "pkg:generic/zlib@9.9.9",
+                "cpe:2.3:a:zlib:zlib:9.9.9:*:*:*:*:*:*:*",
+                None,
+            )],
+        );
+        assert_eq!(existing[0].cpes[0].as_str(), operator);
+
+        let mut control = vec![make_component("pkg:generic/zlib@9.9.9")];
+        merge_closure_components(
+            &mut control,
+            vec![m1377_declared(
+                "pkg:generic/zlib@9.9.9",
+                "cpe:2.3:a:zlib:zlib:9.9.9:*:*:*:*:*:*:*",
+                None,
+            )],
+        );
+        assert_eq!(control[0].cpes[0].as_str(), "cpe:2.3:a:zlib:zlib:9.9.9:*:*:*:*:*:*:*");
+    }
+
+    /// Spec 1491 (T020) — `record_closure_cpe_sources` leaves an operator's
+    /// C212 alone. Without the skip it would parse `cpe-map` as a closure
+    /// join, fall back to `name-version`, and rewrite the record.
+    #[test]
+    fn s1491_the_closure_record_pass_skips_operator_cpes() {
+        use crate::generate::cpe_source::{set_operator_cpes, OperatorSurface};
+        use crate::scan_fs::package_db::nix::closure::identifiers as ids;
+        let mut c = make_component("pkg:generic/zlib@9.9.9");
+        c.cpes = crate::generate::cpe::synthesize_cpes(&c);
+        let curated = c.cpes[0].as_str().to_string();
+        set_operator_cpes(
+            &mut c,
+            vec![waybill_common::types::cpe::Cpe::parse(
+                "cpe:2.3:a:waybill-fixture-vendor:zlib:9.9.9:*:*:*:*:*:*:*",
+            )
+            .unwrap()],
+            OperatorSurface::CpeMap,
+        );
+        let before = c.extra_annotations.get(ids::ANN_DECLARED_CPE).cloned();
+        assert_eq!(before, Some(ids::provenance_with("cpe-map", Some(&curated))));
+        let mut v = vec![c];
+        record_closure_cpe_sources(&mut v);
+        assert_eq!(v[0].extra_annotations.get(ids::ANN_DECLARED_CPE).cloned(), before);
     }
 
     fn make_alias(lhs: &str, rhs: &str) -> PurlAlias {

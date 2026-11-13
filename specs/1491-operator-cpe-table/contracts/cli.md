@@ -7,6 +7,7 @@
 - **Order.** The first value is the subject's primary CPE, and later values are its secondary CPEs (FR-001).
 - **Validation.** Each value is checked with `Cpe::parse`. A value that fails is a usage error raised before scanning: exit non-zero and write no document (FR-006). The message names the flag, the value and the parse error.
 - **Conflicts with** `--split` (research R8).
+- **Needs a named subject.** A scanned main module, or `--root-name` / `--root-purl`. A placeholder or Maven-coordinate subject is a usage error raised after discovery and before any document is written (spec FR-001, as amended).
 - **Effect.** The subject's CPE list becomes exactly these values (FR-002).
 
 ## `--cpe-map <PATH>` (single)

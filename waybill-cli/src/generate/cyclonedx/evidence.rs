@@ -219,11 +219,7 @@ pub fn cpe_identity(
     cpe: &str,
     source: crate::scan_fs::package_db::nix::closure::identifiers::CpeSource,
 ) -> serde_json::Value {
-    use crate::scan_fs::package_db::nix::closure::identifiers::CpeSource;
-    let (technique, value, confidence) = match source {
-        CpeSource::NixpkgsDeclared => ("manifest-analysis", "nixpkgs meta.identifiers.cpe", 0.9),
-        CpeSource::Curated => ("other", "waybill curated CPE table", 0.7),
-    };
+    let (technique, value, confidence) = source.cdx_method();
     json!({
         "field": "cpe",
         "concludedValue": cpe,
