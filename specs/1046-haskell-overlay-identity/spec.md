@@ -32,6 +32,7 @@ Under `--nix-closure`, a Haskell project's document describes one dependency twi
 
 - Q: What identity does a component built from a VCS checkout at a version Hackage publishes carry? → A: `pkg:hackage/<name>@<version>` with a `vcs_url` qualifier naming the repository and revision (option B). It applies whenever Hackage publishes that version. Tying the commit to the release is not required.
 - Q: A design-tier requirement and a build-tier component of the same Haskell package whose version is outside the declared range (nixpkgs relaxed the bound): merge or keep both? → A: Merge into one component, and record that the build's version does not satisfy the declared range.
+- Q: How is the scan-time Hackage lookup (FR-006a) gated? → A: It is on by default. It is refused under `--offline`, and it has its own opt-out flag, following the one-opt-out-per-network-source convention. Declining leaves `pkg:generic`, with the reason recorded.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -103,7 +104,7 @@ A consumer can tell that the build used a version outside the range the project 
 - **A design-tier component that already has a version.** It is not a twin. That is today's reconciliation, and it is unchanged.
 - **A VCS revision that is not a full commit hash** (a tag or branch name in the expression). It is recorded as given, and never used to tie the checkout to a release.
 - **A git checkout fetched as a forge archive** (a tarball URL that embeds the revision) rather than with `fetchgit`. It keeps its download reference, and is not treated as a VCS checkout.
-- **Offline scans.** Anything that needs Hackage or the forge (option C) degrades to the offline answer, and the document records that it did.
+- **Offline scans, the opt-out, and an unreachable Hackage.** The publication check is not made: the component stays `pkg:generic`, the merge still happens, and the document records which of the three applied.
 - **The same name in another ecosystem** (a Python or C namesake). The existing rule holds: a declared dependency never binds to a namesake that is not a Haskell package (#1466).
 
 ## Requirements *(mandatory)*
@@ -116,7 +117,7 @@ A consumer can tell that the build used a version outside the range the project 
 - **FR-004**: When several build-tier components of the name exist, the merge MUST take the one that satisfies the declared range, if exactly one does. If none or several do, it MUST leave the components unmerged and record the reason. A single build-tier component is merged whether or not it satisfies the range.
 - **FR-005**: Every dependency edge that named either twin MUST name the merged component afterwards, so no endpoint dangles.
 - **FR-006**: A component built from a VCS checkout at a version Hackage publishes MUST carry `pkg:hackage/<name>@<version>` with a `vcs_url` qualifier naming the repository and revision. A component built from the Hackage tarball at a version the package set does not carry MUST carry `pkg:hackage/<name>@<version>` without the qualifier.
-- **FR-006a**: Whether Hackage publishes a version MUST come from Hackage itself, not from the pinned package set, which records one version per package. When that cannot be determined (`--offline`, or Hackage unreachable), the component MUST keep `pkg:generic`, and the document MUST record why.
+- **FR-006a**: Whether Hackage publishes a version MUST come from Hackage itself, not from the pinned package set, which records one version per package. The lookup is on by default. It MUST NOT run under `--offline` or when its dedicated opt-out flag is given. When the answer cannot be determined (`--offline`, the opt-out, or Hackage unreachable), the component MUST keep `pkg:generic`, and the document MUST record which of the three applied.
 - **FR-007**: A component built from a VCS checkout at a version Hackage does not publish MUST NOT carry a Hackage release identity.
 - **FR-008**: A source member whose fetch records a repository URL and a revision, in the environment or in structured attributes, MUST carry them as a native VCS reference in all three formats.
 - **FR-009**: A package component whose dependency edge reaches such a source member MUST carry the same VCS reference.
