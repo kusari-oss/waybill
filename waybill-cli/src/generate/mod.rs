@@ -21,9 +21,9 @@
 //!     use `BTreeMap` or an explicitly sorted `Vec`.
 
 pub mod compiler_pipeline_annotation;
+pub mod cpe_source;
 pub mod cpe;
 pub(crate) mod cpe_table;
-pub mod cpe_source;
 pub mod cross_ecosystem_edges;
 pub mod cyclonedx;
 pub mod divergence_annotation;
