@@ -21,6 +21,7 @@
 //!     use `BTreeMap` or an explicitly sorted `Vec`.
 
 pub mod compiler_pipeline_annotation;
+pub mod cpe_source;
 pub mod cpe;
 pub(crate) mod cpe_table;
 pub mod cross_ecosystem_edges;
@@ -654,6 +655,13 @@ pub struct RootComponentOverride {
     /// / `software_packageVersion`. Set only when `full_purl` is
     /// `Some(_)`.
     pub full_purl_version: Option<String>,
+    /// Spec 1491 (#1413): `--root-cpe` values, for a subject that is not a
+    /// scanned component (a synthetic placeholder, or one named by
+    /// `--root-name` / `--root-purl`). The first is the primary CPE. Empty
+    /// for a main-module subject, whose component carries them instead.
+    /// Not part of `is_active`: a CPE names the subject, it does not replace
+    /// it.
+    pub cpes: Vec<waybill_common::types::cpe::Cpe>,
 }
 
 impl RootComponentOverride {

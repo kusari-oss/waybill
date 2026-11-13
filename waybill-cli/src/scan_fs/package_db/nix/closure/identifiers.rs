@@ -45,39 +45,10 @@ pub const DECLARED_CPE_COMMENT: &str = "CPE declared by nixpkgs meta.identifiers
 /// The same, on a CPE from waybill's curated table.
 pub const CURATED_CPE_COMMENT: &str = "CPE from waybill's curated CPE table";
 
-/// Where a closure component's CPE came from.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CpeSource {
-    NixpkgsDeclared,
-    Curated,
-}
-
-impl CpeSource {
-    /// The comment both SPDX formats carry on the CPE.
-    pub fn comment(self) -> &'static str {
-        match self {
-            Self::NixpkgsDeclared => DECLARED_CPE_COMMENT,
-            Self::Curated => CURATED_CPE_COMMENT,
-        }
-    }
-}
-
-/// The recorded source of `c`'s CPEs, or `None` when nothing recorded one:
-/// every non-closure component, and a closure component whose CPE another
-/// reader or the operator supplied (FR-013). One function for all three
-/// emitters, so the formats agree by construction.
-pub fn cpe_source(c: &waybill_common::resolution::ResolvedComponent) -> Option<CpeSource> {
-    if c.cpes.is_empty() {
-        return None;
-    }
-    if c.extra_annotations.contains_key(ANN_DECLARED_CPE) {
-        Some(CpeSource::NixpkgsDeclared)
-    } else if c.extra_annotations.contains_key(ANN_CURATED_CPE) {
-        Some(CpeSource::Curated)
-    } else {
-        None
-    }
-}
+/// Where a component's CPE came from. Spec 1491 moved this to
+/// `generate::cpe_source`, because an operator CPE can sit on any component;
+/// re-exported so milestone 1377's call sites are unchanged.
+pub use crate::generate::cpe_source::{cpe_source, CpeSource};
 
 /// A declared CPE is a [`Cpe`]: the same CPE 2.3 validation every
 /// component's CPEs now pass (#1403).
@@ -218,7 +189,13 @@ pub(crate) fn join<'a>(
 /// per-component closure row is, so CycloneDX and both SPDX envelopes carry
 /// the same bytes.
 pub(crate) fn provenance(basis: JoinBasis, overrode: Option<&str>) -> serde_json::Value {
-    let mut v = serde_json::json!({ "basis": basis.wire() });
+    provenance_with(basis.wire(), overrode)
+}
+
+/// C212's value for any `basis` wire string: the closure joins above, and
+/// spec 1491's operator bases (`purl`, `cpe-map`, `root-cpe`).
+pub(crate) fn provenance_with(basis: &str, overrode: Option<&str>) -> serde_json::Value {
+    let mut v = serde_json::json!({ "basis": basis });
     if let Some(o) = overrode {
         v["overrode"] = serde_json::Value::String(o.to_string());
     }
@@ -231,6 +208,8 @@ pub(crate) fn provenance_basis(value: &serde_json::Value) -> Option<JoinBasis> {
     match parsed.get("basis")?.as_str()? {
         "drv" => Some(JoinBasis::Drv),
         "name-version" => Some(JoinBasis::NameVersion),
+        // Spec 1491's operator bases are not closure joins; a marked
+        // component is never re-read here (`record_closure_cpe_sources`).
         _ => None,
     }
 }
@@ -390,5 +369,7 @@ mod tests {
         for b in [JoinBasis::Drv, JoinBasis::NameVersion] {
             assert_eq!(provenance_basis(&provenance(b, Some("x"))), Some(b));
         }
+        // Spec 1491: an operator basis is not a closure join.
+        assert_eq!(provenance_basis(&provenance_with("cpe-map", None)), None);
     }
 }

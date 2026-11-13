@@ -172,6 +172,21 @@ pub(crate) fn load(path: &Path) -> Result<Supplement, SupplementError> {
         })
         .unwrap_or_default();
 
+    // Spec 1491 (T026): the subject is not imported (m119 FR-014), so a CPE
+    // on it would vanish silently. Say so, and name the flag that does it.
+    if obj
+        .get("metadata")
+        .and_then(|m| m.get("component"))
+        .and_then(|c| c.get("cpe"))
+        .is_some()
+    {
+        tracing::warn!(
+            "supplement-cdx {}: metadata.component.cpe is ignored, as all of \
+             metadata.component is; pass the subject's CPE with --root-cpe",
+            path.display()
+        );
+    }
+
     let components = parse_components(path, obj.get("components"))?;
     let services = parse_services(path, obj.get("services"))?;
     let dependencies = parse_dependencies(path, obj.get("dependencies"))?;

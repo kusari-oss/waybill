@@ -384,7 +384,7 @@ Per-component (supplement → emitted SBOM):
 - `name`, `version`, `supplier.name`
 - `licenses[]`, `copyright`, `description`
 - `externalReferences[]` (all types)
-- `hashes[]`, `cpe`
+- `hashes[]`, `cpe` (CPE 2.3 formatted string; a malformed one is dropped with a WARN)
 
 Per-service:
 
@@ -408,11 +408,19 @@ When a supplement PURL matches a scanner-discovered PURL, fields
 partition into two sets:
 
 - **Scanner wins** (bytes-derived facts the developer can't gainsay):
-  `hashes[]`, `cpe`, canonical `purl`, `version`, binary role.
+  `hashes[]`, canonical `purl`, `version`, binary role.
 - **Developer wins** (operator-domain metadata the scanner can only
   guess at): `licenses[]`, `concluded_licenses[]`, `supplier`,
   `copyright`, `name` (display), `description`,
-  `externalReferences[]` (all types).
+  `externalReferences[]` (all types), `cpe`.
+
+`cpe` moved to developer-wins in spec 1491. Every CPE the scanner holds
+at merge time is synthesized, from the curated table or an ecosystem
+guess such as `debian:<name>`, so the operator's explicit CPE replaces
+the scanner's list. The displaced primary is recorded in
+`waybill:cpe-provenance` (C212) as `overrode`, and the CPE's source as
+"CPE supplied by the operator with --supplement-cdx" in each format's
+native field.
 - **Catch-all default**: scanner wins.
 
 Each disagreement is recorded as a `waybill:assertion-conflict`
@@ -784,6 +792,8 @@ Exactly one of `--path` or `--image` is required.
 | `--root-version <VERSION>` | string | auto-derived | Override `metadata.component.version`. |
 | `--root-purl-type <TYPE>` | string | (none) | Override the type segment of the root PURL. Defaults to `generic` when `--root-name` is set; this flag replaces that default. REQUIRES `--root-name`. Mutually exclusive with `--no-root-purl`. See [`--root-purl-type`](#--root-purl-type-type). |
 | `--no-root-purl` | bool | off | Omit the root component's PURL entirely from the emitted SBOM. REQUIRES `--root-name`. Mutually exclusive with `--root-purl-type`. See [`--no-root-purl`](#--no-root-purl). |
+| `--root-cpe <CPE>` | string (repeatable) | (none) | The subject's CPE. The first value is the primary CPE, the rest secondary; they replace any CPE the subject would otherwise carry. Needs a named subject: a scanned main module, or `--root-name`/`--root-purl`. Not with `--split`. Spec 1491. See [`--root-cpe`](#--root-cpe-cpe). |
+| `--cpe-map <PATH>` | path | (none) | A local TOML file mapping versionless PURLs to NVD vendor/product pairs, in the curated CPE table's schema. A matching component's CPEs are built with its own version and replace every non-operator CPE. Spec 1491. See [`--cpe-map`](#--cpe-map-path). |
 | `--preserve-manifest-main-module` | bool | off | When set together with `--root-name` / `--root-version` / `--root-purl`, preserve the manifest-derived main-module identity as a `library`-typed entry in `components[]` rather than dropping it per the milestone-077 clean-replacement default. The demoted entry carries a `waybill:demoted-from-main-module = "true"` annotation per Constitution V parity-bridging audit (C102 row in `docs/reference/sbom-format-mapping.md`). No-op without an active root-override flag (silent + INFO log) and on multi-main-module scans (silent + INFO log). Milestone 149 / issue #151. |
 | `--creator <TYPE: NAME>` | string (repeatable) | (none) | Attach a creator entry to the SBOM. |
 | `--annotator <TYPE: NAME>` | string (repeatable, paired) | (none) | Document-level annotator. Pair 1:1 with `--annotation-comment`. |
@@ -1407,6 +1417,65 @@ Applied identically across all three output formats: CycloneDX
 `metadata.component.purl`, SPDX 2.3 root Package
 `externalRefs[purl]`, SPDX 3 root `software_packageUrl` +
 `externalIdentifier[packageUrl]`.
+
+### `--root-cpe <CPE>`
+
+The document subject's CPE (spec 1491, #1413). Repeatable: the first value
+is the primary CPE, and the rest are secondary. They replace any CPE the
+subject would otherwise carry, and each format records the source natively
+("CPE supplied by the operator with --root-cpe").
+
+- **A scanned main module** gets the CPE on its component, and
+  `waybill:cpe-provenance` records the CPE it displaced.
+- **A subject named with `--root-name` or `--root-purl`** gets it on the
+  synthesized root, in CycloneDX `metadata.component.cpe` (with
+  `waybill:cpe-candidates` when there are several), SPDX 2.3
+  `externalRefs[cpe23Type]` and SPDX 3 `externalIdentifier[cpe23]`.
+- **Anything else is an error.** A placeholder subject is named after the
+  scan directory, so name the subject first. `--root-cpe` cannot be used
+  with `--split`, which emits one document per subject.
+
+Each value must be a CPE 2.3 formatted string with a named vendor and
+product. Anything else stops the scan before it starts, and no document is
+written. A CPE whose version differs from the subject's is emitted as given,
+with a WARN.
+
+```bash
+waybill sbom scan --path . --root-name widget-svc --root-version 1.2.3 \
+  --root-cpe 'cpe:2.3:a:acme:widget_svc:1.2.3:*:*:*:*:*:*:*' \
+  --output svc.cdx.json
+```
+
+### `--cpe-map <PATH>`
+
+A CPE mapping file for components (spec 1491, #1413). It uses the schema of
+waybill's built-in curated table, `waybill-cli/src/generate/cpe_table.toml`,
+with the evidence fields optional:
+
+```toml
+[[row]]
+key = "pkg:deb/debian/libfoo"
+pair = [
+  { vendor = "foo_project", product = "libfoo" },
+  { vendor = "example", product = "libfoo" },
+]
+```
+
+- **Matching.** A row's `key` is a versionless PURL. It matches a component
+  with the same type, namespace and name, and builds
+  `cpe:2.3:a:<vendor>:<product>:<component version>:*:*:*:*:*:*:*` for each
+  pair, primary first. A component with no version gets nothing.
+- **Precedence.** A row replaces nixpkgs-declared, curated and heuristic CPEs.
+  `--supplement-cdx` for the exact PURL beats a row, and `--root-cpe` beats
+  both. The source is recorded as "CPE supplied by the operator with
+  --cpe-map", and `waybill:cpe-provenance` records the displaced primary.
+- **Errors.** An unreadable or malformed file, an unknown field, a duplicate
+  key, a key with a version, qualifiers or subpath, or a pair that does not
+  form a valid CPE stops the scan before it starts. The message names the row.
+- **Unused rows.** Rows that match nothing are listed in one INFO line at the
+  end of the scan.
+
+The file is read from disk only, and never fetched.
 
 ### `--no-root-purl`
 

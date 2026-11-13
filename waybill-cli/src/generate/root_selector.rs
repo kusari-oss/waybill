@@ -579,6 +579,8 @@ pub fn is_internal_emission_key(key: &str) -> bool {
             | crate::scan_fs::package_db::pip::uv_lock::ARTIFACT_URL_KEY
             | NIX_EVALUATED_PACKAGE_KEY
             | crate::scan_fs::package_db::nix::closure::identifiers::ANN_CURATED_CPE
+            // Spec 1491: the operator marker; the source is carried natively.
+            | crate::generate::cpe_source::ANN_OPERATOR_CPE
             // #1436: the identity is in the PURL, the claims in the VEX, the
             // unscoped count in C220.
             | crate::scan_fs::package_db::nix::closure::emit::ANN_BACKPORT_IDENTITY
@@ -806,6 +808,15 @@ mod tests {
         // Guardrail: filter must not over-broaden.
         assert!(!is_internal_emission_key("waybill:some-other-annotation"));
         assert!(!is_internal_emission_key("waybill:lifecycle-scope"));
+    }
+
+    /// Spec 1491 (T018): the operator-CPE marker is internal. The CPE's
+    /// source is emitted natively and C212 carries the rest, so the marker
+    /// never reaches a document; C212 itself still does.
+    #[test]
+    fn is_internal_emission_key_filters_the_operator_cpe_marker_s1491() {
+        assert!(is_internal_emission_key(crate::generate::cpe_source::ANN_OPERATOR_CPE));
+        assert!(!is_internal_emission_key("waybill:cpe-provenance"));
     }
 
     fn make_main_module(

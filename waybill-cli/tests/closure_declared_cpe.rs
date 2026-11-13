@@ -480,6 +480,11 @@ fn parity_check_reports_c212_in_every_format() {
 }
 
 /// FR-013 — an operator's CPE carries no closure provenance of any kind.
+///
+/// Spec 1491 (FR-007, FR-009) replaced "no provenance" with the operator's
+/// own: the source is `--supplement-cdx` in every format, and C212 records
+/// the nixpkgs-declared CPE the operator overrode. Still no closure
+/// provenance: nothing says `nixpkgs` or `curated`.
 #[test]
 fn an_operator_supplied_cpe_carries_no_closure_provenance() {
     let dir = tempfile::tempdir().unwrap();
@@ -497,9 +502,22 @@ fn an_operator_supplied_cpe_carries_no_closure_provenance() {
         project(),
         &["--supplement-cdx", supp.to_str().unwrap()],
     );
-    assert!(cdx_cpe_identity(&s, "zlib").is_none());
-    assert_eq!(spdx23_cpe_comment(&s, "zlib"), None);
-    assert_eq!(spdx3_cpe_comment(&s, "zlib"), None);
+    let supplied = "CPE supplied by the operator with --supplement-cdx";
+    let id = cdx_cpe_identity(&s, "zlib").expect("the operator's source");
+    assert_eq!(id["methods"][0]["value"], "operator --supplement-cdx");
+    assert_eq!(spdx23_cpe_comment(&s, "zlib").as_deref(), Some(supplied));
+    assert_eq!(spdx3_cpe_comment(&s, "zlib").as_deref(), Some(supplied));
     let props = component(&s, "zlib")["properties"].as_array().cloned().unwrap_or_default();
-    assert!(!props.iter().any(|p| p["name"] == C212), "{props:?}");
+    let c212: Vec<&str> = props
+        .iter()
+        .filter(|p| p["name"] == C212)
+        .filter_map(|p| p["value"].as_str())
+        .collect();
+    assert_eq!(
+        c212,
+        vec![serde_json::json!({ "basis": "purl", "overrode": declared("zlib", "9.9.9") })
+            .to_string()
+            .as_str()],
+        "{props:?}"
+    );
 }

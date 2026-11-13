@@ -1304,7 +1304,11 @@ pub fn build_metadata(
     // The sbomqs concern that kept the placeholder was re-measured: sbomqs
     // v2.1.1's overall score and NTIA 2026 profile do not move without it;
     // the Interlynk profile moves by -0.005 (rust-ripgrep corpus golden).
-    let synthetic_component_cpe: Option<String> = if override_active {
+    let synthetic_component_cpe: Option<String> = if let Some(first) = root_override.cpes.first() {
+        // Spec 1491: `--root-cpe` on a subject that is not a scanned
+        // component. (A main-module subject carries it on its component.)
+        Some(first.as_str().to_string())
+    } else if override_active {
         None
     } else {
         main_module.and_then(|c| c.cpes.first().map(|p| p.as_str().to_string()))
@@ -1430,6 +1434,33 @@ pub fn build_metadata(
             .and_then(|v| v.as_object_mut())
         {
             comp_obj.remove("cpe");
+        }
+    }
+
+    // Spec 1491 (FR-001, FR-007) — a synthetic subject's `--root-cpe`
+    // values: the source natively, and the full list when there is more than
+    // one, as a scanned subject's `waybill:cpe-candidates` carries it. No
+    // C212: a synthetic subject has no component scope and nothing it
+    // overrode (spec FR-009).
+    if let (Some(first), Some(comp)) = (
+        root_override.cpes.first(),
+        metadata.get_mut("component").and_then(|v| v.as_object_mut()),
+    ) {
+        let identity = crate::generate::cyclonedx::evidence::cpe_identity(
+            first.as_str(),
+            crate::generate::cpe_source::CpeSource::Operator(
+                crate::generate::cpe_source::OperatorSurface::RootCpe,
+            ),
+        );
+        comp.insert("evidence".to_string(), json!({ "identity": [identity] }));
+        if root_override.cpes.len() > 1 {
+            comp.insert(
+                "properties".to_string(),
+                json!([{
+                    "name": "waybill:cpe-candidates",
+                    "value": serde_json::to_string(&root_override.cpes).unwrap_or_default(),
+                }]),
+            );
         }
     }
 
@@ -1634,6 +1665,23 @@ pub fn build_metadata(
         // #1430 — the second-vendor carrier grype reads, as in builder.rs.
         for cpe in crate::generate::cpe::secondary_cpes(c) {
             comp_props.push(json!({ "name": "syft:cpe23", "value": cpe }));
+        }
+        // Spec 1491 (T030, research R7) — an operator CPE's C212 belongs
+        // beside it. SPDX emits a main-module subject's annotations with its
+        // package; the promoted CycloneDX subject carries only what this
+        // block copies, and a non-closure main module has no `components[]`
+        // twin to carry it. Operator-sourced only: a closure subject's
+        // nixpkgs C212 already reaches CycloneDX through its `components[]`
+        // entry, and copying it here too would change every closure golden
+        // for no consumer-visible gain (FR-016).
+        if let (Some(value), Some(_)) = (
+            c.extra_annotations.get(crate::scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE),
+            crate::generate::cpe_source::operator_surface(c),
+        ) {
+            comp_props.push(json!({
+                "name": crate::scan_fs::package_db::nix::closure::identifiers::ANN_DECLARED_CPE,
+                "value": value.as_str().map(str::to_string).unwrap_or_else(|| value.to_string()),
+            }));
         }
         metadata["component"]["properties"] = json!(comp_props);
 

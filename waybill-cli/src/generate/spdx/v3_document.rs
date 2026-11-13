@@ -1094,6 +1094,7 @@ fn pick_root_iri(
                 }
             }
         }
+        add_root_cpes(&mut synth_pkg, &scan.root_override.cpes);
         packages.insert(0, synth_pkg);
         return (vec![synth_iri], true);
     }
@@ -1153,7 +1154,7 @@ fn pick_root_iri(
         "{doc_iri}/pkg-root-{}",
         hash_prefix(synth_purl.as_bytes(), 16)
     );
-    let synth_pkg = json!({
+    let mut synth_pkg = json!({
         "type": "software_Package",
         "spdxId": synth_iri,
         "creationInfo": CREATION_INFO_ID,
@@ -1168,6 +1169,7 @@ fn pick_root_iri(
             },
         ],
     });
+    add_root_cpes(&mut synth_pkg, &scan.root_override.cpes);
     packages.insert(0, synth_pkg);
     (vec![synth_iri], true)
 }
@@ -1211,4 +1213,27 @@ fn scan_fingerprint(scan: &ScanArtifacts<'_>, cfg: &OutputConfig) -> String {
     }
     let digest = hasher.finalize();
     BASE32_NOPAD.encode(&digest)[..24].to_string()
+}
+
+/// Spec 1491 (FR-001, FR-007) — a synthetic subject's `--root-cpe` values,
+/// as `cpe23` identifiers with the operator comment, after the PURL. A
+/// scanned subject carries them on its component instead.
+fn add_root_cpes(pkg: &mut serde_json::Value, cpes: &[waybill_common::types::cpe::Cpe]) {
+    if cpes.is_empty() {
+        return;
+    }
+    let Some(obj) = pkg.as_object_mut() else { return };
+    let ids = obj
+        .entry("externalIdentifier")
+        .or_insert_with(|| serde_json::Value::Array(Vec::new()));
+    if let Some(arr) = ids.as_array_mut() {
+        for cpe in cpes {
+            arr.push(json!({
+                "type": "ExternalIdentifier",
+                "externalIdentifierType": "cpe23",
+                "identifier": cpe.as_str(),
+                "comment": crate::generate::cpe_source::ROOT_CPE_COMMENT,
+            }));
+        }
+    }
 }
