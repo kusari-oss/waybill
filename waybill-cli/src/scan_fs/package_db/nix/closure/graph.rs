@@ -660,4 +660,191 @@ mod tests {
         assert_eq!(g.root.as_deref(), Some("a-lib.drv"), "edge anchoring keeps its first pick");
         assert_eq!(g.evaluated, None, "two candidates name no evaluated package");
     }
+
+    /// #1367 — where a closure's `inputs.drvs` edges go.
+    ///
+    /// Every derivation-level edge `a -> b` lands in exactly one bucket:
+    /// - `from-unemitted`: `a` is neither an edge endpoint nor the root, so
+    ///   nothing emits an edge from it (its consumers walk through it, or it
+    ///   is a package that was not emitted);
+    /// - `walked-through`: `b` does not stop the walk (a scaffolding or
+    ///   fragment member), so the edge is replaced by edges to `b`'s nearest
+    ///   stopping descendants;
+    /// - `to-unemitted-stop`: `b` stops the walk but is not emitted, so the
+    ///   edge is dropped (FR-011's population);
+    /// - `direct`: kept as it is.
+    ///
+    /// `collapsed` is the 2026-11-05 prediction's quantity: every derivation
+    /// edge mapped to member identities, with no projection. `shipped` is
+    /// the projection at identity level. Both use the reader's own
+    /// `project`, `emitted_drv_keys`, `stops` and `key_of_derivation`.
+    #[derive(Debug, Default, PartialEq, Eq)]
+    struct EdgeAccounting {
+        total: usize,
+        /// Indexed by [`BUCKETS`].
+        buckets: [usize; 4],
+        self_loops: usize,
+        keyless: usize,
+        collapsed: usize,
+        projected_drv_level: usize,
+        shipped: usize,
+        shipped_also_collapsed: usize,
+        /// Collapsed edges not shipped, by the buckets of the derivation
+        /// edges producing them: produced only by bucket `i`, and by any
+        /// edge in bucket `i`.
+        lost: usize,
+        lost_only: [usize; 4],
+        lost_any: [usize; 4],
+        /// Distinct sources of `from-unemitted` edges, and how many of them
+        /// stop the walk: a stopping source here would be a package the
+        /// projection fails to emit, rather than a member it walks through.
+        unemitted_sources: usize,
+        unemitted_sources_that_stop: usize,
+    }
+
+    const BUCKETS: [&str; 4] = ["from-unemitted", "walked-through", "to-unemitted-stop", "direct"];
+
+    fn account(c: &RawClosure) -> EdgeAccounting {
+        let em = emitted(c);
+        let g = project(c, &em);
+        let drvs = &c.derivations;
+        let key = |k: &str| drvs.get(k).and_then(|d| key_of_derivation(d, k));
+        let root = g.root.as_deref();
+        let is_source = |k: &str| em.contains(k) || Some(k) == root;
+
+        let mut out = EdgeAccounting::default();
+        // Identity edge -> bitmask of the buckets producing it.
+        let mut collapsed: BTreeMap<(MemberKey, MemberKey), u8> = BTreeMap::new();
+        let mut unemitted_sources: BTreeSet<&str> = BTreeSet::new();
+        for (a, drv) in drvs {
+            for b in drv.input_drvs(drvs) {
+                out.total += 1;
+                let bucket = if !is_source(a) {
+                    unemitted_sources.insert(a.as_str());
+                    0
+                } else if !stops(&drvs[b]) {
+                    1
+                } else if !em.contains(b) {
+                    2
+                } else {
+                    3
+                };
+                out.buckets[bucket] += 1;
+                match (key(a), key(b)) {
+                    (Some(ka), Some(kb)) if ka == kb => out.self_loops += 1,
+                    (Some(ka), Some(kb)) => *collapsed.entry((ka, kb)).or_default() |= 1 << bucket,
+                    _ => out.keyless += 1,
+                }
+            }
+        }
+        let shipped: BTreeSet<(MemberKey, MemberKey)> = g
+            .edges
+            .iter()
+            .filter_map(|(a, b)| Some((key(a)?, key(b)?)))
+            .filter(|(x, y)| x != y)
+            .collect();
+        out.unemitted_sources = unemitted_sources.len();
+        out.unemitted_sources_that_stop = unemitted_sources.iter().filter(|k| stops(&drvs[**k])).count();
+        out.collapsed = collapsed.len();
+        out.projected_drv_level = g.edges.len();
+        out.shipped = shipped.len();
+        out.shipped_also_collapsed = shipped.iter().filter(|e| collapsed.contains_key(*e)).count();
+        for (e, mask) in &collapsed {
+            if shipped.contains(e) {
+                continue;
+            }
+            out.lost += 1;
+            for i in 0..4 {
+                if *mask == 1 << i {
+                    out.lost_only[i] += 1;
+                }
+                if *mask & (1 << i) != 0 {
+                    out.lost_any[i] += 1;
+                }
+            }
+        }
+        out
+    }
+
+    /// CONTROL for [`account`]: the buckets fire where they should.
+    ///
+    /// `root` consumes a wrapper (scaffolding: `env.text`, no `pname`) and a
+    /// package named in no dependency attribute (`stdenv`). The wrapper and
+    /// `stdenv` both consume `lib`, which `root` names in `buildInputs` but
+    /// does not consume directly.
+    /// - `root -> wrap` is walked through and `wrap -> lib` starts at a
+    ///   member that is not an edge endpoint: both are lost.
+    /// - The walk through `wrap` adds `root -> lib`, which nix never recorded
+    ///   as one edge.
+    /// - `root -> stdenv` and `stdenv -> lib` are direct.
+    ///
+    /// **`to-unemitted-stop` is structurally empty**, and the control
+    /// asserts it. Milestone 1372 gives any derivation another's
+    /// `inputs.drvs` names at least `BuildTooling`, which emits it, and an
+    /// edge target is named there by definition. That is why `stdenv` is
+    /// emitted here and why milestone 1280's residual orphans (`stdenv-linux`,
+    /// `patch`, `build`) no longer occur.
+    #[test]
+    fn s1367_the_buckets_fire_on_a_control_closure() {
+        let c = RawClosure::parse(
+            r#"{"derivations":{
+              "root.drv":{"name":"waybill-fixture-app-1.0","env":{"pname":"waybill-fixture-app","version":"1.0","buildInputs":"/nix/store/hl-lib"},
+                "inputs":{"drvs":{"wrap.drv":{"outputs":["out"]},"stdenv.drv":{"outputs":["out"]}}},
+                "outputs":{"out":{"path":"/nix/store/hr-app"}}},
+              "wrap.drv":{"name":"waybill-fixture-wrapper","env":{"text":"exec lib"},
+                "inputs":{"drvs":{"lib.drv":{"outputs":["out"]}}},
+                "outputs":{"out":{"path":"/nix/store/hw-wrapper"}}},
+              "stdenv.drv":{"name":"waybill-fixture-stdenv-1.0","env":{"pname":"waybill-fixture-stdenv","version":"1.0"},
+                "inputs":{"drvs":{"lib.drv":{"outputs":["out"]}}},
+                "outputs":{"out":{"path":"/nix/store/hs-stdenv"}}},
+              "lib.drv":{"name":"waybill-fixture-lib-2.0","env":{"pname":"waybill-fixture-lib","version":"2.0"},
+                "outputs":{"out":{"path":"/nix/store/hl-lib"}}}
+            },"version":4}"#,
+        )
+        .unwrap();
+        let a = account(&c);
+        assert_eq!(a.total, 4, "{a:?}");
+        assert_eq!(a.buckets, [1, 1, 0, 2], "{a:?}");
+        assert_eq!((a.collapsed, a.shipped, a.shipped_also_collapsed), (4, 3, 2), "{a:?}");
+        assert_eq!(a.lost, 2, "{a:?}");
+        assert_eq!(a.lost_only, [1, 1, 0, 0], "{a:?}");
+        assert_eq!((a.unemitted_sources, a.unemitted_sources_that_stop), (1, 0), "{a:?}");
+    }
+
+    /// #1367 — the accounting over a real closure. A measurement, not a
+    /// regression test: it skips unless `WAYBILL_TEST_CLOSURE_JSON` names a
+    /// `nix derivation show -r` dump, and prints what it finds.
+    #[test]
+    fn s1367_edge_accounting_over_a_real_closure() {
+        let Ok(path) = std::env::var("WAYBILL_TEST_CLOSURE_JSON") else {
+            eprintln!("skipping: set WAYBILL_TEST_CLOSURE_JSON to a closure dump");
+            return;
+        };
+        let json = std::fs::read_to_string(&path).expect("closure json");
+        let c = RawClosure::parse(&json).expect("parses");
+        let a = account(&c);
+        eprintln!("\n#1367 edge accounting: {path}");
+        eprintln!("  derivations {}", c.derivations.len());
+        eprintln!("  inputs.drvs edges, derivation level   {}", a.total);
+        for (i, name) in BUCKETS.iter().enumerate() {
+            eprintln!("    {name:<20} {}", a.buckets[i]);
+        }
+        eprintln!("    (self-loops after collapse {}, keyless endpoint {})", a.self_loops, a.keyless);
+        eprintln!(
+            "    from-unemitted sources {}, of which stop the walk {}",
+            a.unemitted_sources, a.unemitted_sources_that_stop
+        );
+        eprintln!("  collapsed to identities (prediction) {}", a.collapsed);
+        eprintln!("  projected, derivation level          {}", a.projected_drv_level);
+        eprintln!("  projected, identity level (shipped)  {}", a.shipped);
+        eprintln!("    also in collapsed                  {}", a.shipped_also_collapsed);
+        eprintln!("    added by walking through           {}", a.shipped - a.shipped_also_collapsed);
+        eprintln!("  collapsed edges not shipped          {}", a.lost);
+        for (i, name) in BUCKETS.iter().enumerate() {
+            eprintln!("    {name:<20} only {:>6}   any {:>6}", a.lost_only[i], a.lost_any[i]);
+        }
+        eprintln!();
+        assert_eq!(a.buckets.iter().sum::<usize>(), a.total, "conservation");
+        assert_eq!(a.lost_only[3], 0, "a direct edge was not shipped");
+    }
 }
