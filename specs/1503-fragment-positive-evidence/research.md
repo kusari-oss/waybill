@@ -95,7 +95,7 @@ Only the name suffix separates the populations on moat.
 
 ## R6 — Which rung decided, exposed by the binary
 
-**Decision.** `waybill debug closure-dump` rows gain a `member_role_rung` field. Its values are `content-hash`, `patches`, `env-text`, `version-name`, `live-bootstrap-builder`, `script-name` and `default`.
+**Decision.** `waybill debug closure-dump` rows gain a `member_role_rung` field. Its values are `content-hash`, `patches`, `env-text`, `version-name`, `live-bootstrap-builder`, `setup-hook-package`, `script-name` and `default`.
 
 **Rationale.**
 - FR-007, and the edge case for scripts without evidence, require listing every member that took the `package` default. That list has to come from the binary, not from a re-model of it.

@@ -5,10 +5,11 @@
 
 ## Summary
 
-The C206 classifier's last rung, "else `fragment`", becomes three rungs in this order:
+The C206 classifier's last rung, "else `fragment`", becomes four rungs in this order:
 1. **`fragment`**, when the derivation's `builder` is live-bootstrap's `kaem` (FR-001, research R1).
-2. **`scaffolding`**, when the member's name carries a script extension (FR-004, R2).
-3. **`package`** otherwise, the conservative default (FR-004, R3).
+2. **`package`**, when the member is a `makeSetupHook` output, i.e. its `buildCommand` installs `nix-support/setup-hook` (FR-004, R2/R7, user decision).
+3. **`scaffolding`**, when the member's name ends in `.sh`, `.bash` or `.pl` (FR-004, R2/R7).
+4. **`package`** otherwise, the conservative default (FR-004, R3).
 
 `package` is an edge endpoint. The projection therefore stops at `stdenv-linux`, the stdenv stages and the build utilities, instead of walking through them to the whole toolchain. The projection code does not change (FR-005).
 
@@ -68,7 +69,7 @@ specs/1503-fragment-positive-evidence/
 ```text
 waybill-cli/src/scan_fs/package_db/nix/closure/
 ├── derivation.rs   # RawDerivation.builder (R5)
-└── member.rs       # classify(): rungs 5–7; classify_with_rung() + MemberRung (R6); MemberRole docs
+└── member.rs       # classify(): rungs 5–8; classify_with_rung() + MemberRung (R6); MemberRole docs
 waybill-cli/src/cli/debug_cmd.rs        # closure-dump: member_role_rung
 docs/reference/sbom-format-mapping.md   # C206 row
 docs/reference/nix-evaluation.md        # role table, evidence order, the fragment sentence
@@ -84,7 +85,7 @@ The projection (`graph.rs`) and the emitter (`emit.rs`) are not edited. Both rea
 
 1. **Parse.** Add `builder: Option<String>` to `RawDerivation` with `#[serde(default)]`.
 2. **Classify.**
-   - Introduce a `MemberRung` enum with the seven rungs and their kebab-case `wire()` strings.
+   - Introduce a `MemberRung` enum with the eight rungs and their kebab-case `wire()` strings.
    - Introduce `classify_with_rung(drv, patches) -> (MemberRole, MemberRung)` holding the evidence order. `classify` becomes `classify_with_rung(..).0`.
    - The last rung tests, in this order:
      - `builder`'s final path component `== "kaem"` → `Fragment`;
@@ -95,7 +96,7 @@ The projection (`graph.rs`) and the emitter (`emit.rs`) are not edited. Both rea
 4. **Tests.**
    - **Audit every existing test** that asserts `MemberRole::Fragment` on a constructed derivation with no `builder`, for example `{"name":"strncpy","env":{}}`. Each one now gets `package`. Each is rewritten either to carry a `kaem` builder (where it tests something else) or to assert the new default (where it tests the last rung).
    - **The spec-1380 equivalence tests** (`classify_before_1380`) compare against an older classifier. Re-establish which population they cover, and give the old classifier the same last rung where the test means "the version rung is unchanged".
-   - **Add `s1503` tests:** the three new rungs, the `stdenv-linux` endpoint case, and the earlier rungs outranking the new ones (FR-002).
+   - **Add `s1503` tests:** the four new rungs, the `stdenv-linux` endpoint case, and the earlier rungs outranking the new ones (FR-002).
    - **Control (SC-005):** a mutation that drops the builder test turns the bash-built fixture member back into `fragment`. Record it in `measurements/mutations.md`. Revert with `cp`.
 5. **Measure (FR-006, FR-007).** For each of the five captures:
    - run `closure-dump` and the `s1367` accounting on ac2bd28 and on the change;
@@ -110,9 +111,9 @@ The projection (`graph.rs`) and the emitter (`emit.rs`) are not edited. Both rea
 7. **Docs.** The C206 row, `nix-evaluation.md` and the CHANGELOG (not adjacent to another unreleased entry).
 8. **Gate.** `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`.
 
-## Open before `/speckit-tasks`
+## Resolved during implementation
 
-- **R7.** The four captures must be read, and R1 (the stage0 builders) and R2 (the script extensions, `builder.pl`, the pname-less `makeSetupHook` outputs) confirmed or amended. If R2's rule changes, data-model rung 6 and the contract change with it.
+- **R7.** It was settled by tasks T005 and T006 from the CI captures. R1 held. R2 gained the setup-hook rung and `.pl`, by the user's decisions recorded in the spec's Clarifications.
 
 ## Complexity Tracking
 

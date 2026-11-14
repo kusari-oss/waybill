@@ -1,6 +1,6 @@
 # Data Model: `fragment` requires evidence of a live-bootstrap function
 
-This feature adds no entity, annotation or wire field. It adds one parsed field (`builder`) and one debug field (`member_role_rung`). The C206 classifier's last rung becomes three rungs.
+This feature adds no entity, annotation or wire field. It adds one parsed field (`builder`) and one debug field (`member_role_rung`). The C206 classifier's last rung becomes four rungs.
 
 ## `RawDerivation` (`closure/derivation.rs`)
 

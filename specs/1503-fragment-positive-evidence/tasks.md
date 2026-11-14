@@ -35,6 +35,7 @@
 - [X] T002 Build the base binary at ac2bd28 with `cargo build --release -p waybill`. Copy `target/release/waybill` to `$CAP/waybill-ac2bd28` so the before-measurements stay reproducible after code changes.
 - [X] T003 [P] For each target in {moat, shellcheck, slack-web, openai, slacklinker}, run `$CAP/waybill-ac2bd28 debug closure-dump --closure-json "$CAP/<target>-closure.json"` and save the output to `specs/1503-fragment-positive-evidence/measurements/<target>/closure-dump-before.json`.
   - Record its `member_roles` object in `measurements/<target>/README.md`, along with the capture run ID and sha256.
+  - *As done:* the full dump JSON (about 1 MB, and its `source` field records a local path) is not committed. `measurements/<target>/members-before.tsv` holds every member row as drv, name and role, and is regenerable from the capture with the saved base binary.
 - [X] T004 [P] At ac2bd28, for each target, run `WAYBILL_TEST_CLOSURE_JSON="$CAP/<target>-closure.json" cargo test --release --bin waybill s1367_edge_accounting -- --nocapture`. Save the accounting block to `measurements/<target>/edge-accounting-before.txt`.
   - Run moat 3 times and record whether the outputs are byte-identical.
 - [X] T005 Fill research R7 in `specs/1503-fragment-positive-evidence/research.md` from T003 and the probe, run per target as `python3 -I -B specs/1503-fragment-positive-evidence/measurements/probe/attrs.py "$CAP/<target>-closure.json" measurements/<target>/closure-dump-before.json`. Record per target:
@@ -66,7 +67,7 @@
 - [X] T008 In `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`, add `#[serde(default)] pub(crate) builder: Option<String>` to `RawDerivation`, with a doc comment.
   - The comment cites research R5 and says `builder` is top-level in `nix derivation show`, unaffected by `__structuredAttrs`.
   - Add a unit test showing that a derivation with `"builder": "/nix/store/<32 chars>-kaem-1.9.1/bin/kaem"` parses to `Some(..)` and one without it parses to `None`.
-- [X] T009 In `waybill-cli/src/scan_fs/package_db/nix/closure/member.rs`, add `pub(crate) enum MemberRung` with seven variants: `ContentHash`, `Patches`, `EnvText`, `VersionName`, `LiveBootstrapBuilder`, `ScriptName` and `Default`.
+- [X] T009 In `waybill-cli/src/scan_fs/package_db/nix/closure/member.rs`, add `pub(crate) enum MemberRung` with seven variants (an eighth, `SetupHookPackage`, was added in US2 after R7): `ContentHash`, `Patches`, `EnvText`, `VersionName`, `LiveBootstrapBuilder`, `ScriptName` and `Default`.
   - It has `wire()` returning the kebab-case strings in data-model.md, and `pub(crate) const ALL: [Self; 7]`.
   - Add `pub(crate) fn classify_with_rung(drv, patches) -> (MemberRole, MemberRung)` holding today's evidence order, with today's last rung returning `(Fragment, Default)`.
   - `classify` becomes `classify_with_rung(drv, patches).0`.
@@ -164,6 +165,7 @@
 - [X] T021 [P] [US3] With the post-US2 binary, run `debug closure-dump` on each capture and save it as `measurements/<target>/closure-dump-after.json`.
   - From it, write `measurements/<target>/default-members.tsv`: every row with `member_role_rung == "default"`, as drv, name and the probe's builder column.
   - Run moat's dump 3 times and require byte-identical output.
+  - *As done:* `members-after.tsv` (drv, name, role, rung) instead of the full dump JSON, for the reason given at T003. Three moat runs gave byte-identical output.
 - [X] T022 [P] [US3] With the post-US2 code, run the `s1367` accounting (as T004) on each capture and save it as `measurements/<target>/edge-accounting-after.txt`. Run moat 3 times.
 - [X] T023 [US3] For each target, write `measurements/<target>/delta.md`.
   - **Role transitions**, by joining before and after dump rows on `drv` and counting each transition (for example `fragment → package`).
@@ -176,6 +178,7 @@
 - [X] T024 [US3] Push the branch. Dispatch `gh workflow run public-corpus.yml --ref main -f branch=1503-fragment-positive-evidence -f regen_goldens=true`.
   - Watch the run with `gh run watch <id>` in the background. When it finishes, enumerate every job's conclusion.
   - Download the `corpus-goldens-regen` artifact. Confirm it holds 67 files, the same set as `waybill-cli/tests/fixtures/public_corpus/`, missing nothing in either direction.
+  - *As done:* the first dispatch, run 43633286041, hit the 45-minute job timeout with `nix-closure-slacklinker` still running. Its other four closure targets regenerated. The re-run on the same commit, 43637780760, passed, and slacklinker took 8 minutes. The diagnosis is in `golden-review.md`. The 12 files the two runs share are byte-identical.
 - [X] T025 [US3] Review the regenerated goldens and write `specs/1503-fragment-positive-evidence/measurements/golden-review.md` in the shape of `specs/1492-patch-member-source/measurements/golden-review.md`.
   - **SC-006:** exactly the 15 closure SBOM files differ. The 49 other files and the three `recall-truth.json` are byte-identical.
   - **Per closure target**, compare CDX components (recursively, nested included), `dependencies[].dependsOn` edges and properties, using a normalized `LC_ALL=C`-sorted diff.
@@ -201,8 +204,8 @@
   - Make sure the parity extractor for C206 still matches. Read it before editing the row.
 - [X] T028 [P] In `docs/reference/nix-evaluation.md`, update the role table (definitions, and the moat counts from T021), the evidence-order paragraph, and any sentence that says `fragment` is the fall-through or cites #1502/#1511 as open.
 - [X] T029 Add a `Changed` entry under Unreleased in `CHANGELOG.md`, placed so it is not adjacent to any other unreleased entry added by an open PR. Cite #1511 and the measured moat transitions.
-- [ ] T030 Run the gate one final time. Confirm the log's last lines read `GATE_EXIT=0` and `>>> all pre-PR checks passed.`, and keep the per-target `test result: ok. N passed; 0 failed` lines for the PR body.
-- [ ] T031 Verify every task's claim, not just its tick.
+- [X] T030 Run the gate one final time. Confirm the log's last lines read `GATE_EXIT=0` and `>>> all pre-PR checks passed.`, and keep the per-target `test result: ok. N passed; 0 failed` lines for the PR body.
+- [X] T031 Verify every task's claim, not just its tick.
   - Re-read each `[X]` task and check that its artifact exists and says what the task requires.
   - Compare the `measurements/` file list with the task list.
 - [ ] T032 Open the PR against `main`, titled `fix(nix-closure): fragment requires live-bootstrap evidence (#1511)`. The body must:
@@ -212,7 +215,7 @@
   - end with the `---` attribution line.
 
   The PR must contain no session URLs and no tool comparisons.
-- [ ] T033 Delete the branch-only capture branch with `git push origin --delete 1503-closure-capture` and `git worktree remove` for its worktree. This runs after T001's artifacts are saved and T024's run has passed.
+- [X] T033 Delete the branch-only capture branch with `git push origin --delete 1503-closure-capture` and `git worktree remove` for its worktree. This runs after T001's artifacts are saved and T024's run has passed.
 
 ---
 

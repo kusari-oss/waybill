@@ -12,7 +12,7 @@ No new key, value, field or annotation. Every wire change is a value or count ch
   - Otherwise it is `package` (data-model rungs 5–8).
 - **Carriers.** Unchanged in all three formats, and the parity row is unchanged (FR-008).
 - **Catalog row** (`docs/reference/sbom-format-mapping.md`):
-  - The evidence-order sentence ends with the three new rungs instead of "else `fragment`".
+  - The evidence-order sentence ends with the four new rungs instead of "else `fragment`".
   - The `package`, `scaffolding` and `fragment` definitions are rewritten as in data-model.md.
   - "`fragment` is now said only of live-bootstrap functions" becomes a sentence that is true of all five regenerated goldens (FR-011).
 
