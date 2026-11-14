@@ -137,3 +137,33 @@ fn the_summary_agrees_with_the_rows() {
     assert_eq!(d["members_1282"], members);
     assert_eq!(d["derivations"], rows.len());
 }
+
+/// Spec 1503 (#1511, research R6) — every member row names the rung that
+/// decided its role, drawn from the classifier's seven; a non-member names
+/// none. The measurement's list of members that took the default is read
+/// from this field, so a member without it would silently drop out.
+#[test]
+fn s1503_every_member_row_names_its_deciding_rung() {
+    const RUNGS: [&str; 7] = [
+        "content-hash",
+        "patches",
+        "env-text",
+        "version-name",
+        "live-bootstrap-builder",
+        "script-name",
+        "default",
+    ];
+    let d = dump(&[]);
+    let rows = d["rows"].as_array().unwrap();
+    let mut members = 0;
+    for r in rows {
+        if r["member_role"].is_null() {
+            assert_eq!(r["member_role_rung"], Value::Null, "{}", r["drv"]);
+            continue;
+        }
+        members += 1;
+        let rung = r["member_role_rung"].as_str().unwrap_or_default();
+        assert!(RUNGS.contains(&rung), "{}: rung {rung:?}", r["drv"]);
+    }
+    assert!(members > 0, "CONTROL: the fixture must hold members");
+}

@@ -33,6 +33,21 @@ pub(crate) struct RawDerivation {
     pub(crate) structured_attrs: Option<Value>,
     #[serde(default)]
     pub(crate) outputs: BTreeMap<String, RawOutput>,
+    /// Spec 1503 (#1511) — the program nix ran to build this derivation, as
+    /// a store path (`/nix/store/<hash>-kaem-1.9.1/bin/kaem`).
+    ///
+    /// **The positive evidence that live-bootstrap built a member.** Without
+    /// it, `fragment` was the classifier's fall-through and took every member
+    /// no earlier rung claimed. Measured on the `nix-closure-moat` closure,
+    /// 215 of its 240 fragments name `kaem` here, and the other 25 name bash:
+    /// setup hooks, `nuke-refs`, `stdenv`-built utilities
+    /// (`specs/1503-fragment-positive-evidence/research.md` R1).
+    ///
+    /// A top-level field of `nix derivation show`, beside `env`.
+    /// `__structuredAttrs` moves `env`'s values, never this one, so there is
+    /// no second place to look.
+    #[serde(default)]
+    pub(crate) builder: Option<String>,
     /// Milestone 1280 (#1346) — the derivations whose outputs this build
     /// consumed, as nix records them.
     ///
@@ -1229,5 +1244,24 @@ mod tests {
         assert_eq!(at("d-not-an-input.drv"), None);
         // Same name and hash, other method: another store object.
         assert_eq!(at("d-wrong-hash.drv"), None);
+    }
+
+    /// Spec 1503 (#1511, research R5) — `builder` is read from the top level,
+    /// and its absence is `None` rather than an error. A member without one
+    /// has no live-bootstrap evidence, which the classifier must see as such.
+    #[test]
+    fn s1503_builder_is_read_and_absence_is_none() {
+        let c = RawClosure::parse(
+            r#"{"derivations":{
+              "k.drv":{"name":"waybill-fixture-strncpy","builder":"/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-kaem-1.9.1/bin/kaem","env":{}},
+              "b.drv":{"name":"waybill-fixture-nuke-refs","env":{"stdenv":"/nix/store/s"}}
+            }}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            c.derivations["k.drv"].builder.as_deref(),
+            Some("/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-kaem-1.9.1/bin/kaem")
+        );
+        assert_eq!(c.derivations["b.drv"].builder, None);
     }
 }

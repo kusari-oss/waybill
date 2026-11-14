@@ -1148,6 +1148,10 @@ impl Scan {
 
 /// T010 (US1, FR-001, FR-006) — the listed patch is `source` and its
 /// unlisted twin `fragment`, identically in all three formats.
+///
+/// Spec 1503 (#1511): the twin's fixture carries a `kaem` builder, so the
+/// listing stays the only difference between the two. A builder-less twin is
+/// the `package` default, an edge endpoint, which this pair would not isolate.
 #[test]
 fn s1492_a_listed_local_patch_is_source_in_every_format() {
     let s = scan_local_patch();

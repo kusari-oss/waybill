@@ -672,6 +672,11 @@ mod tests {
     /// CONTROL: the same closure with the patch unlisted walks through it, so
     /// the consumer's edge goes straight to the builder. The listing is the
     /// only difference between the two.
+    ///
+    /// Spec 1503 (#1511): the patch carries a `kaem` builder so that, unlisted,
+    /// it is a walked-through `fragment`. Without one it would be the
+    /// `package` default, where the walk also stops, and the control would
+    /// show no difference.
     #[test]
     fn s1492_the_walk_stops_at_a_listed_patch() {
         let closure = |patches: &str| {
@@ -679,7 +684,7 @@ mod tests {
                 r#"{{"derivations":{{
                   "app.drv":{{"name":"waybill-fixture-app-1.0","env":{{"pname":"waybill-fixture-app","version":"1.0","patches":"{patches}"}},
                     "inputs":{{"drvs":{{"patch.drv":{{"outputs":["out"]}}}}}},"outputs":{{"out":{{"path":"/nix/store/ha-app"}}}}}},
-                  "patch.drv":{{"name":"waybill-fixture-fix-rpath.patch","env":{{"dontUnpack":"1"}},
+                  "patch.drv":{{"name":"waybill-fixture-fix-rpath.patch","builder":"/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem","env":{{"dontUnpack":"1"}},
                     "inputs":{{"drvs":{{"sub.drv":{{"outputs":["out"]}}}}}},"outputs":{{"out":{{"path":"/nix/store/hp-waybill-fixture-fix-rpath.patch"}}}}}},
                   "sub.drv":{{"name":"waybill-fixture-substitute-1.0","env":{{"pname":"waybill-fixture-substitute","version":"1.0"}},
                     "outputs":{{"out":{{"path":"/nix/store/hs-substitute"}}}}}}

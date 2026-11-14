@@ -84,12 +84,14 @@
 
     "/nix/store/44444444-waybill-fixture-strncpy.drv": {
       "name": "waybill-fixture-strncpy",
+      "builder": "/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem",
       "env": {},
       "outputs": { "out": { "path": "/nix/store/o-strncpy" } }
     },
 
     "/nix/store/55555555-waybill-fixture-memcpy.drv": {
       "name": "waybill-fixture-memcpy",
+      "builder": "/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem",
       "env": {},
       "outputs": { "out": { "path": "/nix/store/o-memcpy" } }
     }

@@ -132,6 +132,13 @@ fn spdx23_depends_on(spdx: &Value, from: &str) -> Vec<String> {
 /// The nameless member is in the document, under its own hash-bearing PURL.
 /// Asserted before any absence, so an edge missing because the member was
 /// never emitted cannot pass for one the binding declined.
+///
+/// Spec 1503 (#1511): the fixture's namesakes carry a `kaem` builder, as the
+/// real one does: the nameless `time` the shellcheck golden carries is a
+/// live-bootstrap function, built by `kaem` (measured on the pinned moat
+/// closure, which holds the same member). That keeps them walked-through fragments, so the
+/// absences below are about the declared-dependency binding (#1466) and not
+/// about a `package` endpoint receiving its `inputs.drvs` edge.
 fn require_nameless(scan: &Scan, prefix: &str) -> String {
     let found: Vec<String> =
         purls(&scan.cdx).into_iter().filter(|p| p.starts_with(prefix)).collect();
