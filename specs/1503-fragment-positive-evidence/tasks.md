@@ -164,7 +164,7 @@
 - [X] T021 [P] [US3] With the post-US2 binary, run `debug closure-dump` on each capture and save it as `measurements/<target>/closure-dump-after.json`.
   - From it, write `measurements/<target>/default-members.tsv`: every row with `member_role_rung == "default"`, as drv, name and the probe's builder column.
   - Run moat's dump 3 times and require byte-identical output.
-- [ ] T022 [P] [US3] With the post-US2 code, run the `s1367` accounting (as T004) on each capture and save it as `measurements/<target>/edge-accounting-after.txt`. Run moat 3 times.
+- [X] T022 [P] [US3] With the post-US2 code, run the `s1367` accounting (as T004) on each capture and save it as `measurements/<target>/edge-accounting-after.txt`. Run moat 3 times.
 - [ ] T023 [US3] For each target, write `measurements/<target>/delta.md`.
   - **Role transitions**, by joining before and after dump rows on `drv` and counting each transition (for example `fragment → package`).
   - **Assert:** every changed row was `fragment` before. Any other transition is a defect, and the task stops.

@@ -17,8 +17,3 @@
     walked-through       only   3327   any   3327
     to-unemitted-stop    only      0   any      0
     direct               only      0   any      0
-
-test scan_fs::package_db::nix::closure::graph::tests::s1367_edge_accounting_over_a_real_closure ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5021 filtered out; finished in 0.09s
-

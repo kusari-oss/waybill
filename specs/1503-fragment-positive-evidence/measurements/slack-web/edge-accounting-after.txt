@@ -1,0 +1,19 @@
+#1367 edge accounting: <capture>/slack-web-closure.json
+  derivations 1293
+  inputs.drvs edges, derivation level   9307
+    from-unemitted       23
+    walked-through       295
+    to-unemitted-stop    0
+    direct               8989
+    (self-loops after collapse 1, keyless endpoint 0)
+    from-unemitted sources 11, of which stop the walk 0
+  collapsed to identities (prediction) 8981
+  projected, derivation level          9282
+  projected, identity level (shipped)  8956
+    also in collapsed                  8676
+    added by walking through           280
+  collapsed edges not shipped          305
+    from-unemitted       only     23   any     23
+    walked-through       only    282   any    282
+    to-unemitted-stop    only      0   any      0
+    direct               only      0   any      0
