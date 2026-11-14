@@ -114,6 +114,29 @@ jobs:
           cargo test --test public_corpus --release -- --nocapture --include-ignored --test-threads=3 \
             2>&1 | tee corpus-artifacts/corpus-run.log
 
+      # MEASUREMENT ONLY (#1367), branch-local; never merged. Captures the
+      # x86_64-linux moat closure with the reader's own argv, from a COPY of
+      # the pinned clone, so the edge accounting can run over the real input.
+      - name: Capture moat closure (#1367 measurement)
+        if: always()
+        run: |
+          set -o pipefail
+          src="$HOME/.cache/waybill/corpus/53983fe1021353b3/d06905558ba68b49b17f36c875e97f7234a9c19b/repo"
+          test -f "$src/flake.lock"
+          cp -r "$src" "$RUNNER_TEMP/moat"
+          nix derivation show -r --option allow-import-from-derivation false \
+            "$RUNNER_TEMP/moat#packages.x86_64-linux.default" > "$RUNNER_TEMP/moat-closure.json"
+          python3 -I -B -c 'import json,sys; d=json.load(open(sys.argv[1])); print("version", d.get("version"), "derivations", len(d["derivations"]))' "$RUNNER_TEMP/moat-closure.json"
+          sha256sum "$RUNNER_TEMP/moat-closure.json" "$src/flake.lock"
+
+      - name: Upload moat closure (#1367 measurement)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: moat-closure-x86_64-linux
+          path: ${{ runner.temp }}/moat-closure.json
+          retention-days: 7
+
       # Milestone 966 (#966, FR-004) — the GHC boot-library table against
       # every GHC package database in the store.
       #
