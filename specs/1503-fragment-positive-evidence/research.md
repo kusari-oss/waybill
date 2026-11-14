@@ -34,7 +34,12 @@ The other four closures are captured by public-corpus run 43629708718, on the br
 
 ## R2 — The script evidence (FR-004 `scaffolding`)
 
-**Decision (provisional until R7).** A member that reaches the last rung without `kaem` evidence is `scaffolding` when its name ends in `.sh` or `.bash`.
+**Decision (final after R7, with the user's answers recorded in the spec's Clarifications).** A member that reaches the last rung without `kaem` evidence is taken in this order:
+1. **`package`** if its `buildCommand` writes `nix-support/setup-hook`. This marks a `makeSetupHook` output, a setup-hook package (rung `setup-hook-package`).
+2. **`scaffolding`** if its name ends in `.sh`, `.bash` or `.pl` (rung `script-name`).
+3. **`package`** otherwise (rung `default`).
+
+The rest of this section is the moat analysis that produced the name rule. R7 shows why the setup-hook rung must come before it.
 
 For a single-file output, the derivation's `name` is the output's file name. `substituteAll` and `replaceVars` name the output after the template. The suffix is therefore a property of the artifact, not a guess about it.
 
@@ -100,7 +105,36 @@ The rung is debug output only and is not emitted into any SBOM.
 
 ## R7 — The four captures (FR-006)
 
-*Filled in from run 43629708718 before tasks are generated. The table below sets out what must be recorded.*
+**Captured** by public-corpus run 43629708718 on the branch-only `1503-closure-capture` (commit `99f9e0e4`). The step used the reader's own argv: `derivation show -r --option allow-import-from-derivation <false|true> <copy>#packages.x86_64-linux.default`, with `true` for the three IFD targets.
+
+**Control.** moat's recapture has sha256 `898fcdd3…44ab`, identical to run 43535531153, so the capture method is unchanged.
+
+| target | derivations | sha256 | fragments before | `kaem`-built | bash, `stdenv` | bash, no `stdenv` | other builder |
+|---|---|---|---|---|---|---|---|
+| moat | 1,749 | `898fcdd3…44ab` | 240 | 215 | 25 | 0 | 0 |
+| shellcheck | 2,209 | `e2d8d769…38e7` | 241 | 215 | 26 | 0 | 0 |
+| slack-web | 1,293 | `7732d430…c084` | 66 | 0 | 52 | 13 | 1 (busybox: `bootstrap-tools`) |
+| openai | 1,448 | `a810dc53…d01e` | 67 | 0 | 53 | 13 | 1 (busybox: `bootstrap-tools`) |
+| slacklinker | 2,518 | `ec11ed0a…0772` | 250 | 215 | 35 | 0 | 0 |
+
+**R1 holds.**
+- On the three closures that contain live-bootstrap, exactly 215 fragments each are `kaem`-built. On openai and slack-web, none is.
+- No last-rung member on any closure has a stage0 seed builder.
+- The rejected "no `stdenv` attribute" signal would have kept **14 fragments** on each of openai and slack-web: the 13 `stdenv-linux` and bootstrap-stage derivations, and `bootstrap-tools`. This is the failure R1 predicted.
+
+**R2 needed the setup-hook rung.** Non-`kaem` fragments are split below by a `buildCommand` that writes `nix-support/setup-hook`, and by the `.sh`/`.bash` suffix. "On moat" means a same-named member declares a `pname` on moat, where it is a package component.
+
+| target | setup-hook package, `.sh` name | setup-hook package, other name | `.sh`/`.bash` single file | other |
+|---|---|---|---|---|
+| moat | 0 | 0 | 10 | 15 |
+| shellcheck | 0 | 0 | 11 (adds `utils.sh`) | 15 |
+| slack-web | 6 (all on moat) | 30 (all on moat) | 3 (`python-setup-hook.sh`) | 27 |
+| openai | 6 (all on moat) | 31 (all on moat) | 3 (`python-setup-hook.sh`) | 27 |
+| slacklinker | 0 | 0 | 14 | 21 |
+
+- **Setup-hook packages.** The suffix rule alone would have made 6 setup-hook packages `scaffolding` (`pypa-build-hook.sh` ×2, `python-runtime-deps-check-hook.sh` ×2, `python-imports-check-hook.sh`, `python-namespaces-hook.sh`). It would have made the 30 or 31 others `package`. That splits one kind of artifact by its name. The setup-hook rung makes all of them `package`, which matches moat (user decision).
+- **Other script extensions.** The only one observed on any closure is slacklinker's `builder.pl`. `.pl` joins the list (user decision).
+- **Every closure, per member:** `measurements/<target>/fragments-before.tsv`.
 
 For each of the five closures, record:
 - run ID, derivation count and sha256;

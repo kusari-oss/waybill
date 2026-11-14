@@ -36,6 +36,8 @@ The classifier's evidence order is: content hash → `source`; listed in a `patc
 ### Session 2026-11-14
 
 - Q: Which role do members that lose `fragment` get? → A: A split by evidence. Hook and helper scripts → `scaffolding`; programs, data, bootstrap stages and `stdenv-linux` → `package` (FR-004).
+- Q: On openai and slack-web, 37 and 36 pname-less fragments are `makeSetupHook` outputs (setup-hook packages, whose `buildCommand` writes `nix-support/setup-hook`). On moat the same-named hooks declare a `pname` and are package endpoints. Which role? → A: `package`, on that positive evidence, whatever the name. Only single-file scripts are `scaffolding` (FR-004).
+- Q: Does the script rung include `.pl` (slacklinker's `builder.pl`)? → A: Yes. The extensions are `.sh`, `.bash` and `.pl`, which are all the script extensions observed on the five closures.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -107,6 +109,7 @@ A reviewer can see, for each of the five closure targets, how many dependency ed
 - **FR-003**: The classifier MUST stay total: every member gets exactly one role. The value set stays the five frozen values. A sixth value MUST NOT be added unless this spec is amended to say so.
 - **FR-004**: A member that reaches the last rung without live-bootstrap evidence MUST get a role by evidence:
   - **`scaffolding`** when the closure records positive evidence that its output is a hook or helper script that a build sources or runs, as `setup-hook.sh`, `add-flags.sh`, `utils.bash` and `python-setup-hook.sh` are. The plan chooses the evidence after reading all five captures, and records why.
+  - **`package`** for a setup-hook package (`makeSetupHook` output, evidenced by `buildCommand` writing `nix-support/setup-hook`) whatever its name, consistent with the same hooks on closures where they declare a `pname`.
   - **`package`** otherwise: programs (`nuke-refs`, `expand-response-params`), data (`mirrors-list`), bootstrap stages and `stdenv-linux`. `package` is the default because it is the conservative graph choice: the walk stops there, so no consumer is fanned out through a member whose nature is unestablished.
   - **Both definitions change.** The C206 catalog row MUST describe each role truthfully. "A version-bearing bootstrap package" is not true of `nuke-refs`, and "`writeText` output" is not true of `add-flags.sh`.
 - **FR-005**: The projection MUST NOT change. The edge change MUST follow from the roles alone, as in spec 1492.

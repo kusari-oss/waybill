@@ -19,8 +19,9 @@ For a closure member that declares no `pname`, the first matching rule wins.
 | 3 | `env.text` | `scaffolding` | `env-text` | no |
 | 4 | version-shaped name: `srcOnly` or a source-tree name → `source`; a check name → `check`; otherwise `package` | `source` / `check` / `package` | `version-name` | no |
 | 5 | `builder`'s final path component is `kaem` | `fragment` | `live-bootstrap-builder` | **new** (was: no evidence) |
-| 6 | `name` ends in `.sh` or `.bash` | `scaffolding` | `script-name` | **new** (R2, final after R7) |
-| 7 | none | `package` | `default` | **new** (was `fragment`) |
+| 6 | `buildCommand` writes `nix-support/setup-hook` (a `makeSetupHook` output) | `package` | `setup-hook-package` | **new** (R2, R7) |
+| 7 | `name` ends in `.sh`, `.bash` or `.pl` | `scaffolding` | `script-name` | **new** (R2) |
+| 8 | none | `package` | `default` | **new** (was `fragment`) |
 
 The classifier stays total over the five frozen values (FR-003). No sixth value is added.
 
@@ -28,7 +29,7 @@ The classifier stays total over the five frozen values (FR-003). No sixth value 
 
 | Role | Before | After |
 |---|---|---|
-| `package` | a version-bearing bootstrap package | a built member that is none of the others: a version-bearing bootstrap package, a program, data, or a stdenv stage |
+| `package` | a version-bearing bootstrap package | a built member that is none of the others: a version-bearing bootstrap package, a setup-hook package, a program, data, or a stdenv stage |
 | `scaffolding` | `writeText` output | a build script: `writeText` output, or a hook or helper script named as one |
 | `fragment` | a live-bootstrap C function | a member built by live-bootstrap's `kaem`: C functions (`strncpy`), libraries (`libc.a`) and tools (`mes`) |
 
@@ -38,7 +39,7 @@ The 215 moat members built by `kaem` include `libc.a` and `mes` as well as funct
 
 ## Edge endpoint
 
-A member is an edge endpoint iff its role is `source`, `package` or `check`. That rule is unchanged. Members on rung 7 are endpoints. Members on rungs 5 and 6 are not, as before.
+A member is an edge endpoint iff its role is `source`, `package` or `check`. That rule is unchanged. Members on rungs 6 and 8 are endpoints. Members on rungs 5 and 7 are not.
 
 ## Expected effect on the pinned moat closure
 

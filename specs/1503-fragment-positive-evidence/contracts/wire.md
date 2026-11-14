@@ -7,8 +7,9 @@ No new key, value, field or annotation. Every wire change is a value or count ch
 - **Values.** Unchanged: the five frozen values (FR-003).
 - **Behaviour.**
   - A member reaching the last rung is `fragment` only if its builder is `kaem`.
-  - Otherwise it is `scaffolding` if its name carries a script extension.
-  - Otherwise it is `package` (data-model rungs 5–7).
+  - Otherwise it is `package` if its `buildCommand` writes `nix-support/setup-hook`.
+  - Otherwise it is `scaffolding` if its name ends in `.sh`, `.bash` or `.pl`.
+  - Otherwise it is `package` (data-model rungs 5–8).
 - **Carriers.** Unchanged in all three formats, and the parity row is unchanged (FR-008).
 - **Catalog row** (`docs/reference/sbom-format-mapping.md`):
   - The evidence-order sentence ends with the three new rungs instead of "else `fragment`".

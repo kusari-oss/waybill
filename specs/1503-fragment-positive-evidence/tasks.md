@@ -27,17 +27,17 @@
 
 **Purpose**: Settle R1 and R2 on all five closures and record the pre-change state, before any code changes.
 
-- [ ] T001 Download artifact `nix-closures-x86_64-linux` from public-corpus run 43629708718 into `$CAP` with `gh run download 43629708718 -n nix-closures-x86_64-linux -D "$CAP"`.
+- [X] T001 Download artifact `nix-closures-x86_64-linux` from public-corpus run 43629708718 into `$CAP` with `gh run download 43629708718 -n nix-closures-x86_64-linux -D "$CAP"`.
   - Verify with `(cd "$CAP" && sha256sum -c SHA256SUMS)`.
   - Assert that `moat-closure.json`'s sha256 equals `898fcdd38aa235840cc2a76b9ee4048ef826a853ce8abe19efdfb3076c8744ab`, the capture-method control.
   - If the moat sha differs, stop. The capture method changed, and no measurement taken from this run can be compared with run 43535531153.
   - Also read the run's "Capture nix-closure closures" step log and confirm every `cap` printed a derivation count, which means none failed silently.
 - [X] T002 Build the base binary at ac2bd28 with `cargo build --release -p waybill`. Copy `target/release/waybill` to `$CAP/waybill-ac2bd28` so the before-measurements stay reproducible after code changes.
-- [ ] T003 [P] For each target in {moat, shellcheck, slack-web, openai, slacklinker}, run `$CAP/waybill-ac2bd28 debug closure-dump --closure-json "$CAP/<target>-closure.json"` and save the output to `specs/1503-fragment-positive-evidence/measurements/<target>/closure-dump-before.json`.
+- [X] T003 [P] For each target in {moat, shellcheck, slack-web, openai, slacklinker}, run `$CAP/waybill-ac2bd28 debug closure-dump --closure-json "$CAP/<target>-closure.json"` and save the output to `specs/1503-fragment-positive-evidence/measurements/<target>/closure-dump-before.json`.
   - Record its `member_roles` object in `measurements/<target>/README.md`, along with the capture run ID and sha256.
-- [ ] T004 [P] At ac2bd28, for each target, run `WAYBILL_TEST_CLOSURE_JSON="$CAP/<target>-closure.json" cargo test --release --bin waybill s1367_edge_accounting -- --nocapture`. Save the accounting block to `measurements/<target>/edge-accounting-before.txt`.
+- [X] T004 [P] At ac2bd28, for each target, run `WAYBILL_TEST_CLOSURE_JSON="$CAP/<target>-closure.json" cargo test --release --bin waybill s1367_edge_accounting -- --nocapture`. Save the accounting block to `measurements/<target>/edge-accounting-before.txt`.
   - Run moat 3 times and record whether the outputs are byte-identical.
-- [ ] T005 Fill research R7 in `specs/1503-fragment-positive-evidence/research.md` from T003 and the probe, run per target as `python3 -I -B specs/1503-fragment-positive-evidence/measurements/probe/attrs.py "$CAP/<target>-closure.json" measurements/<target>/closure-dump-before.json`. Record per target:
+- [X] T005 Fill research R7 in `specs/1503-fragment-positive-evidence/research.md` from T003 and the probe, run per target as `python3 -I -B specs/1503-fragment-positive-evidence/measurements/probe/attrs.py "$CAP/<target>-closure.json" measurements/<target>/closure-dump-before.json`. Record per target:
   - fragment count;
   - how many fragments have a `kaem` builder, and how many have a `stdenv` attribute;
   - how many members on the last rung have a stage0 builder that is neither `kaem` nor `bash` (R1);
@@ -45,7 +45,7 @@
   - how many fragment names end in `-hook`, with a sample of up to 10 names (R2).
 
   Write the per-target table into R7 and save the raw probe TSVs as `measurements/<target>/fragments-before.tsv`.
-- [ ] T006 Settle R1 and R2 against T005.
+- [X] T006 Settle R1 and R2 against T005.
   - If R1 or R2 hold as written, mark them final in `research.md`.
   - If R2 needs amending (for example `.pl`, or the `-hook` population), update data-model rung 6, the R2 decision, and `contracts/wire.md` together.
   - **If the pname-less `-hook` members on openai and slack-web number more than a handful, stop and ask the user.** The question is whether FR-004's "hooks → scaffolding" governs them or cross-closure consistency with moat (`package`) does. Record the answer under the spec's Clarifications.
@@ -133,23 +133,23 @@
 
 ### Tests for User Story 2 (write first)
 
-- [ ] T017 [P] [US2] Add tests in the `#[cfg(test)]` module of `waybill-cli/src/scan_fs/package_db/nix/closure/member.rs`:
+- [X] T017 [P] [US2] Add tests in the `#[cfg(test)]` module of `waybill-cli/src/scan_fs/package_db/nix/closure/member.rs`:
   - `s1503_a_hook_script_is_scaffolding`: `setup-hook.sh`, `utils.bash` and `python-setup-hook.sh`, each bash-built, give `(Scaffolding, ScriptName)`.
   - `s1503_programs_data_and_stages_are_package`: `nuke-refs`, `expand-response-params`, `mirrors-list`, `bootstrap-stage0-glibc-iconv-minimal-bootstrap` and `stdenv-linux` give `(Package, Default)`.
   - `s1503_the_builder_outranks_the_script_name`: a `kaem`-built `foo.sh` is `Fragment`, and the order is stated in a comment.
   - `s1503_a_suffix_is_not_a_substring`: a member named `sh-utils` or `bash` is `Package`.
 
   Add one case for each extension R2 settled on in T006.
-- [ ] T018 [P] [US2] Add `s1503_the_walk_stops_at_stdenv_linux` to the test module of `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`. It uses a constructed closure: `app` (pname) → `stdenv-linux` (no pname, bash builder) → `gcc` (pname).
+- [X] T018 [P] [US2] Add `s1503_the_walk_stops_at_stdenv_linux` to the test module of `waybill-cli/src/scan_fs/package_db/nix/closure/graph.rs`. It uses a constructed closure: `app` (pname) → `stdenv-linux` (no pname, bash builder) → `gcc` (pname).
   - Assert that the projection contains `app → stdenv-linux` and not `app → gcc`.
   - **CONTROL:** the same closure with `stdenv-linux` given a `kaem` builder walks through it and yields `app → gcc`. This proves the test can see the difference.
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] In `classify_with_rung` in `waybill-cli/src/scan_fs/package_db/nix/closure/member.rs`, insert rung 6 between the builder test and the default: if the name ends with one of R2's extensions, return `(Scaffolding, ScriptName)`.
+- [X] T019 [US2] In `classify_with_rung` in `waybill-cli/src/scan_fs/package_db/nix/closure/member.rs`, insert rung 6 between the builder test and the default: if the name ends with one of R2's extensions, return `(Scaffolding, ScriptName)`.
   - Keep the extension list a `const` slice with a doc comment citing R2's measured table.
   - Update the `MemberRole::Scaffolding` variant doc to data-model.md's definition.
-- [ ] T020 [US2] Re-run `cargo test --workspace --no-fail-fast`. Any newly failing test is handled under T014's rules, and the outcome is appended to `measurements/us1-broken-tests.txt` under a `US2` heading. Then run the gate. Commit: `fix(nix-closure): hook and helper scripts are scaffolding (#1511)`.
+- [X] T020 [US2] Re-run `cargo test --workspace --no-fail-fast`. Any newly failing test is handled under T014's rules, and the outcome is appended to `measurements/us1-broken-tests.txt` under a `US2` heading. Then run the gate. Commit: `fix(nix-closure): hook and helper scripts are scaffolding (#1511)`.
 
 **Checkpoint**: Rungs 5–7 are complete, and the T018 control proves the stop at `stdenv-linux`.
 
@@ -161,7 +161,7 @@
 
 **Independent Test**: For each target, `delta.md` attributes all differing edges to reclassified members, with 0 unexplained.
 
-- [ ] T021 [P] [US3] With the post-US2 binary, run `debug closure-dump` on each capture and save it as `measurements/<target>/closure-dump-after.json`.
+- [X] T021 [P] [US3] With the post-US2 binary, run `debug closure-dump` on each capture and save it as `measurements/<target>/closure-dump-after.json`.
   - From it, write `measurements/<target>/default-members.tsv`: every row with `member_role_rung == "default"`, as drv, name and the probe's builder column.
   - Run moat's dump 3 times and require byte-identical output.
 - [ ] T022 [P] [US3] With the post-US2 code, run the `s1367` accounting (as T004) on each capture and save it as `measurements/<target>/edge-accounting-after.txt`. Run moat 3 times.

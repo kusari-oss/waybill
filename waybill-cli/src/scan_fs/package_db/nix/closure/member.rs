@@ -43,8 +43,9 @@ pub(crate) enum MemberRole {
     /// A built member that is none of the others. A version-bearing bootstrap
     /// package (`mes-libc-mini-0.27.1`), and since spec 1503 (#1511) every
     /// member that reaches the last rung without live-bootstrap or script
-    /// evidence: programs (`nuke-refs`), data (`mirrors-list`), stdenv stages
-    /// and `stdenv-linux`. An edge endpoint, so the projection stops here.
+    /// evidence: setup-hook packages (`makeSetupHook` outputs), programs
+    /// (`nuke-refs`), data (`mirrors-list`), stdenv stages and `stdenv-linux`.
+    /// An edge endpoint, so the projection stops here.
     Package,
     /// Spec 1380 (#1374): a version check (`bash-get-version-5.3`) or test
     /// program (`gcc-simple-program-15.2.0`), which verifies a bootstrap
@@ -52,7 +53,9 @@ pub(crate) enum MemberRole {
     /// `package` before. A graph endpoint like `package`, so reclassifying
     /// them moves no edge.
     Check,
-    /// `writeText` output — `itoa-builder`, `setup-hook.sh`. 267.
+    /// A build script: `writeText` output (`itoa-builder`), and since spec
+    /// 1503 (#1511) a single-file hook or helper script named as one
+    /// (`setup-hook.sh`, `utils.bash`, `builder.pl`). Walked through.
     Scaffolding,
     /// Built by live-bootstrap's `kaem` — C functions (`strncpy`, `memcpy`),
     /// libraries (`libc.a`) and tools (`mes`). Spec 1503 (#1511) requires the
@@ -117,6 +120,9 @@ pub(crate) enum MemberRung {
     VersionName,
     /// Built by live-bootstrap's `kaem` (spec 1503).
     LiveBootstrapBuilder,
+    /// A `makeSetupHook` output: its `buildCommand` writes
+    /// `nix-support/setup-hook` (spec 1503).
+    SetupHookPackage,
     /// Named as a hook or helper script (spec 1503).
     ScriptName,
     /// No evidence: the last rung.
@@ -132,6 +138,7 @@ impl MemberRung {
             Self::EnvText => "env-text",
             Self::VersionName => "version-name",
             Self::LiveBootstrapBuilder => "live-bootstrap-builder",
+            Self::SetupHookPackage => "setup-hook-package",
             Self::ScriptName => "script-name",
             Self::Default => "default",
         }
@@ -139,12 +146,13 @@ impl MemberRung {
 
     /// Every variant; a later one is a compile error in the length.
     #[cfg(test)]
-    pub(crate) const ALL: [Self; 7] = [
+    pub(crate) const ALL: [Self; 8] = [
         Self::ContentHash,
         Self::Patches,
         Self::EnvText,
         Self::VersionName,
         Self::LiveBootstrapBuilder,
+        Self::SetupHookPackage,
         Self::ScriptName,
         Self::Default,
     ];
@@ -306,8 +314,9 @@ fn names_a_check(name: &str) -> bool {
 ///
 /// **The evidence order is fixed and load-bearing**: content hash, then a
 /// listing in another derivation's `patches` (spec 1492), then `env.text`,
-/// then a version-shaped name, then a `kaem` builder (`fragment`), then
-/// `package` (spec 1503). A member bearing
+/// then a version-shaped name, then a `kaem` builder (`fragment`), then a
+/// `makeSetupHook` output (`package`), then a script name (`scaffolding`),
+/// then `package` (spec 1503). A member bearing
 /// several signals takes the strongest. Reversing the middle two describes a
 /// different classifier producing different counts — the data-model's role
 /// table had them the other way round until the analyze pass caught it
@@ -369,10 +378,46 @@ pub(crate) fn classify_with_rung(drv: &RawDerivation, patches: &PatchOutputs<'_>
     if built_by_kaem(drv) {
         return (MemberRole::Fragment, MemberRung::LiveBootstrapBuilder);
     }
+    // A `makeSetupHook` output is a setup-hook package whatever it is named.
+    // Where the same hook declares a `pname` it is an ordinary package
+    // component, so it is `package` here too; checked before the script name
+    // because six such packages on openai and slack-web are named `*.sh`.
+    if writes_a_setup_hook(drv) {
+        return (MemberRole::Package, MemberRung::SetupHookPackage);
+    }
+    // FR-004 — a single-file hook or helper script, named after its template
+    // (`substituteAll`, `replaceVars`): `scaffolding`, walked through like
+    // `writeText` output.
+    if names_a_script(name) {
+        return (MemberRole::Scaffolding, MemberRung::ScriptName);
+    }
     // FR-004 — no evidence of what it is: `package`, an edge endpoint, so the
     // projection stops here rather than fanning a consumer out through a
     // member whose nature is unestablished (research R3).
     (MemberRole::Package, MemberRung::Default)
+}
+
+/// The script extensions of spec 1503's script rung: every one observed on a
+/// pname-less, non-`kaem` member of the five captured closures (research R7).
+/// `.pl` is slacklinker's `builder.pl`; nothing else carries one.
+const SCRIPT_EXTENSIONS: &[&str] = &[".sh", ".bash", ".pl"];
+
+/// Whether `name` ends in a script extension, with something before it.
+fn names_a_script(name: &str) -> bool {
+    SCRIPT_EXTENSIONS
+        .iter()
+        .any(|ext| name.len() > ext.len() && name.ends_with(ext))
+}
+
+/// Whether this derivation is a `makeSetupHook` output: its `buildCommand`
+/// installs a file as `nix-support/setup-hook`.
+///
+/// Measured (research R7): 37 such members on openai and 36 on slack-web,
+/// every one with a same-named `pname`-declaring counterpart on moat; none on
+/// moat, shellcheck or slacklinker, where these hooks declare a `pname`.
+fn writes_a_setup_hook(drv: &RawDerivation) -> bool {
+    drv.attr_str("buildCommand")
+        .is_some_and(|cmd| cmd.contains("$out/nix-support/setup-hook"))
 }
 
 /// Whether live-bootstrap's shell `kaem` built this derivation.
@@ -958,5 +1003,90 @@ mod tests {
             classify_with_rung(&raw.derivations["p.drv"], &none()),
             (MemberRole::Fragment, MemberRung::LiveBootstrapBuilder)
         );
+    }
+
+    // ---- Spec 1503 (#1511) US2: the members that leave `fragment` ---------
+
+    fn bash_built(name: &str) -> RawDerivation {
+        built(name, BASH)
+    }
+
+    /// FR-004 — single-file hook and helper scripts are `scaffolding`, as
+    /// `writeText` output is: a build sources or runs them, so the graph walks
+    /// through them. The extensions are every script extension observed on
+    /// the five closures (research R7; `.pl` is slacklinker's `builder.pl`).
+    #[test]
+    fn s1503_a_hook_script_is_scaffolding() {
+        for name in ["setup-hook.sh", "utils.bash", "python-setup-hook.sh", "pythoncheck.sh", "builder.pl"] {
+            assert_eq!(
+                classify_with_rung(&bash_built(name), &none()),
+                (MemberRole::Scaffolding, MemberRung::ScriptName),
+                "{name}"
+            );
+        }
+    }
+
+    /// FR-004 — programs, data, stdenv stages and `stdenv-linux` itself are
+    /// the `package` default. `stdenv-linux` is the case #1511 turns on: as a
+    /// `fragment` it fanned every consumer out to the whole toolchain.
+    #[test]
+    fn s1503_programs_data_and_stages_are_package() {
+        for name in [
+            "nuke-refs",
+            "expand-response-params",
+            "mirrors-list",
+            "bootstrap-stage0-glibc-iconv-minimal-bootstrap",
+            "bootstrap-stage1-stdenv-linux",
+            "stdenv-linux",
+        ] {
+            let d = bash_built(name);
+            assert_eq!(classify_with_rung(&d, &none()), (MemberRole::Package, MemberRung::Default), "{name}");
+            assert!(is_edge_endpoint(&d, &none()), "{name}");
+        }
+    }
+
+    /// A `makeSetupHook` output is a setup-hook *package*, whatever its name:
+    /// on closures where it declares a `pname` it is an ordinary package
+    /// component, so here it is `package` too (spec Clarifications). Without
+    /// this rung the `.sh`-named ones would be `scaffolding` and the rest
+    /// `package`: one kind of artifact split by its name (research R7).
+    #[test]
+    fn s1503_a_setup_hook_package_is_a_package_whatever_its_name() {
+        let hook = |name: &str, carrier: &str| {
+            let cmd = "mkdir -p $out/nix-support\\ncp /nix/store/ffffffffffffffffffffffffffffffff-hook.sh $out/nix-support/setup-hook\\nrecordPropagatedDependencies\\n";
+            let attrs = format!(r#"{{"buildCommand":"{cmd}"}}"#);
+            let (env, sa) = if carrier == "env" { (attrs.as_str(), "null") } else { ("{}", attrs.as_str()) };
+            drv(&format!(r#"{{"name":"{name}","builder":"{BASH}","env":{env},"structuredAttrs":{sa}}}"#))
+        };
+        for name in ["pypa-build-hook.sh", "die-hook", "update-autotools-gnu-config-scripts-hook", "install-shell-files"] {
+            for carrier in ["env", "structuredAttrs"] {
+                assert_eq!(
+                    classify_with_rung(&hook(name, carrier), &none()),
+                    (MemberRole::Package, MemberRung::SetupHookPackage),
+                    "{name} ({carrier})"
+                );
+            }
+        }
+        // CONTROL: the same `.sh` name with no such buildCommand is a script.
+        assert_eq!(classify(&bash_built("pypa-build-hook.sh"), &none()), MemberRole::Scaffolding);
+    }
+
+    /// The builder outranks the name: a `kaem`-built member named like a
+    /// script is a live-bootstrap fragment.
+    #[test]
+    fn s1503_the_builder_outranks_the_script_name() {
+        assert_eq!(
+            classify_with_rung(&built("waybill-fixture-build.sh", KAEM), &none()),
+            (MemberRole::Fragment, MemberRung::LiveBootstrapBuilder)
+        );
+    }
+
+    /// A suffix, not a substring: names that merely contain `sh` or `bash`
+    /// are not scripts.
+    #[test]
+    fn s1503_a_suffix_is_not_a_substring() {
+        for name in ["sh-utils", "bash", "bash-completion", "x.shell", "pl", "perl"] {
+            assert_eq!(classify(&bash_built(name), &none()), MemberRole::Package, "{name}");
+        }
     }
 }

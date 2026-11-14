@@ -139,17 +139,18 @@ fn the_summary_agrees_with_the_rows() {
 }
 
 /// Spec 1503 (#1511, research R6) — every member row names the rung that
-/// decided its role, drawn from the classifier's seven; a non-member names
+/// decided its role, drawn from the classifier's eight; a non-member names
 /// none. The measurement's list of members that took the default is read
 /// from this field, so a member without it would silently drop out.
 #[test]
 fn s1503_every_member_row_names_its_deciding_rung() {
-    const RUNGS: [&str; 7] = [
+    const RUNGS: [&str; 8] = [
         "content-hash",
         "patches",
         "env-text",
         "version-name",
         "live-bootstrap-builder",
+        "setup-hook-package",
         "script-name",
         "default",
     ];
