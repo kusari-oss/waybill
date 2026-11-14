@@ -251,6 +251,21 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   that reads only CycloneDX `component.cpe` was missing about 26 ncurses
   CVEs. All three vendors are still emitted.
 
+- **A Nix closure member is a `fragment` only if live-bootstrap built it
+  (#1511).** `waybill:closure-member-role` used `fragment` as its
+  fall-through, so a setup hook, `nuke-refs` or `stdenv-linux` itself was
+  labelled a live-bootstrap C function whenever no other evidence applied.
+  `fragment` now requires a `kaem` builder. Otherwise:
+  - a `makeSetupHook` output is `package`;
+  - a `.sh`, `.bash` or `.pl` script is `scaffolding`;
+  - anything else is `package`.
+
+  On the pinned moat closure, 25 members moved: 10 to `scaffolding` and 15 to
+  `package`. On `nix-closure-openai` and `nix-closure-slack-web`, all 67 and
+  66 moved. There the graph now stops at `stdenv-linux` instead of fanning
+  every consumer out to the toolchain, and shipped edges fell from 48,336 to
+  9,478 and from 44,426 to 8,956.
+
 - **Hackage licenses from nixpkgs revisions that write `lib.licensesSpdx`
   (#1477).** From 2025-11 to 2026-03, nixpkgs declared explicit SPDX
   licenses as `license = lib.licensesSpdx."<id>";` instead of
