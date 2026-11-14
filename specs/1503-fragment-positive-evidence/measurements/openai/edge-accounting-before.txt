@@ -1,0 +1,19 @@
+#1367 edge accounting: <capture>/openai-closure.json
+  derivations 1448
+  inputs.drvs edges, derivation level   10041
+    from-unemitted       293
+    walked-through       3420
+    to-unemitted-stop    0
+    direct               6328
+    (self-loops after collapse 1, keyless endpoint 0)
+    from-unemitted sources 75, of which stop the walk 0
+  collapsed to identities (prediction) 9503
+  projected, derivation level          58556
+  projected, identity level (shipped)  48336
+    also in collapsed                  5883
+    added by walking through           42453
+  collapsed edges not shipped          3620
+    from-unemitted       only    293   any    293
+    walked-through       only   3327   any   3327
+    to-unemitted-stop    only      0   any      0
+    direct               only      0   any      0

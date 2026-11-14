@@ -1,0 +1,27 @@
+# Spec 1503 T012: the s1503 member tests on the Phase 2 code (before T013).
+# All four rung tests fail for the reason #1511 names: the fall-through returns (Fragment, Default).
+# The earlier-rungs test fails only at its final (kaem, no patch set) assertion: its content-hash,
+# env.text, version-name and patches assertions already pass, so FR-002's order holds before the change.
+test scan_fs::package_db::nix::closure::member::tests::s1503_rung_wire_strings_are_distinct ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_a_bash_built_bare_member_is_a_package ... FAILED
+test scan_fs::package_db::nix::closure::member::tests::s1503_a_kaem_built_bare_member_is_a_fragment ... FAILED
+test scan_fs::package_db::nix::closure::member::tests::s1503_the_builder_test_reads_the_file_name ... FAILED
+test scan_fs::package_db::nix::closure::member::tests::s1503_no_builder_is_not_evidence ... FAILED
+test scan_fs::package_db::nix::closure::derivation::tests::s1503_builder_is_read_and_absence_is_none ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_earlier_rungs_outrank_the_builder ... FAILED
+thread 'scan_fs::package_db::nix::closure::member::tests::s1503_a_bash_built_bare_member_is_a_package' panicked at waybill-cli/src/scan_fs/package_db/nix/closure/member.rs:849:9:
+  left: (Fragment, Default)
+ right: (Package, Default)
+thread 'scan_fs::package_db::nix::closure::member::tests::s1503_a_kaem_built_bare_member_is_a_fragment' panicked at waybill-cli/src/scan_fs/package_db/nix/closure/member.rs:840:9:
+  left: (Fragment, Default)
+ right: (Fragment, LiveBootstrapBuilder)
+thread 'scan_fs::package_db::nix::closure::member::tests::s1503_the_builder_test_reads_the_file_name' panicked at waybill-cli/src/scan_fs/package_db/nix/closure/member.rs:869:9:
+  left: Fragment
+ right: Fragment
+thread 'scan_fs::package_db::nix::closure::member::tests::s1503_no_builder_is_not_evidence' panicked at waybill-cli/src/scan_fs/package_db/nix/closure/member.rs:858:9:
+  left: (Fragment, Default)
+ right: (Package, Default)
+thread 'scan_fs::package_db::nix::closure::member::tests::s1503_earlier_rungs_outrank_the_builder' panicked at waybill-cli/src/scan_fs/package_db/nix/closure/member.rs:904:9:
+  left: (Fragment, Default)
+ right: (Fragment, LiveBootstrapBuilder)
+test result: FAILED. 2 passed; 5 failed; 0 ignored; 0 measured; 5022 filtered out; finished in 0.00s

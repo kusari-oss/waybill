@@ -1,0 +1,19 @@
+#1367 edge accounting: <capture>/shellcheck-closure.json
+  derivations 2209
+  inputs.drvs edges, derivation level   14366
+    from-unemitted       2186
+    walked-through       1454
+    to-unemitted-stop    0
+    direct               10726
+    (self-loops after collapse 9, keyless endpoint 0)
+    from-unemitted sources 508, of which stop the walk 0
+  collapsed to identities (prediction) 13643
+  projected, derivation level          11337
+  projected, identity level (shipped)  10224
+    also in collapsed                  10038
+    added by walking through           186
+  collapsed edges not shipped          3605
+    from-unemitted       only   2184   any   2184
+    walked-through       only   1421   any   1421
+    to-unemitted-stop    only      0   any      0
+    direct               only      0   any      0

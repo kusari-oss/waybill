@@ -34,11 +34,13 @@
     },
     "c10ck-waybill-fixture-clock.drv": {
       "name": "waybill-fixture-clock",
+      "builder": "/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem",
       "env": {},
       "outputs": { "out": { "path": "h-clock" } }
     },
     "g0ne-waybill-fixture-gone.drv": {
       "name": "waybill-fixture-gone",
+      "builder": "/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem",
       "env": {},
       "outputs": { "out": { "path": "h-gone" } }
     }

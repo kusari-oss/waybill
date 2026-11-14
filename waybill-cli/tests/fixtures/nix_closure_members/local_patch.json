@@ -57,6 +57,7 @@
     },
     "/nix/store/p2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-unlisted.patch.drv": {
       "name": "waybill-fixture-unlisted.patch",
+      "builder": "/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem",
       "env": {
         "dontUnpack": "1",
         "src": "/nix/store/s2-unlisted.patch",

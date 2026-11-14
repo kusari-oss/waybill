@@ -1,0 +1,19 @@
+#1367 edge accounting: <capture>/slacklinker-closure.json
+  derivations 2518
+  inputs.drvs edges, derivation level   16657
+    from-unemitted       2225
+    walked-through       1706
+    to-unemitted-stop    0
+    direct               12726
+    (self-loops after collapse 9, keyless endpoint 0)
+    from-unemitted sources 517, of which stop the walk 0
+  collapsed to identities (prediction) 15849
+  projected, derivation level          13467
+  projected, identity level (shipped)  12169
+    also in collapsed                  11952
+    added by walking through           217
+  collapsed edges not shipped          3897
+    from-unemitted       only   2223   any   2223
+    walked-through       only   1674   any   1674
+    to-unemitted-stop    only      0   any      0
+    direct               only      0   any      0

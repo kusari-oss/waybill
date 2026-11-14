@@ -40,7 +40,12 @@ pub(crate) enum MemberRole {
     /// 549 on the pinned closure, and the clearest part of the gap: a
     /// consumer asking "what source did this come from" gets silence today.
     Source,
-    /// A version-bearing bootstrap package (`mes-libc-mini-0.27.1`). 83.
+    /// A built member that is none of the others. A version-bearing bootstrap
+    /// package (`mes-libc-mini-0.27.1`), and since spec 1503 (#1511) every
+    /// member that reaches the last rung without live-bootstrap or script
+    /// evidence: setup-hook packages (`makeSetupHook` outputs), programs
+    /// (`nuke-refs`), data (`mirrors-list`), stdenv stages and `stdenv-linux`.
+    /// An edge endpoint, so the projection stops here.
     Package,
     /// Spec 1380 (#1374): a version check (`bash-get-version-5.3`) or test
     /// program (`gcc-simple-program-15.2.0`), which verifies a bootstrap
@@ -48,9 +53,14 @@ pub(crate) enum MemberRole {
     /// `package` before. A graph endpoint like `package`, so reclassifying
     /// them moves no edge.
     Check,
-    /// `writeText` output — `itoa-builder`, `setup-hook.sh`. 267.
+    /// A build script: `writeText` output (`itoa-builder`), and since spec
+    /// 1503 (#1511) a single-file hook or helper script named as one
+    /// (`setup-hook.sh`, `utils.bash`, `builder.pl`). Walked through.
     Scaffolding,
-    /// A live-bootstrap C function — `strncpy`, `memcpy`, `malloc`. 246.
+    /// Built by live-bootstrap's `kaem` — C functions (`strncpy`, `memcpy`),
+    /// libraries (`libc.a`) and tools (`mes`). Spec 1503 (#1511) requires the
+    /// `kaem` builder as evidence; before it this was the classifier's
+    /// fall-through. 215 on moat.
     Fragment,
 }
 
@@ -89,6 +99,62 @@ impl MemberRole {
         Self::Check,
         Self::Scaffolding,
         Self::Fragment,
+    ];
+}
+
+/// Which rung of [`classify_with_rung`]'s evidence order decided a role.
+///
+/// Debug output only (`waybill debug closure-dump`), never emitted into a
+/// document. It exists so a measurement can list the members a rung decided —
+/// in particular every member that took the default — from the binary rather
+/// than from a re-model of it (spec 1503, research R6).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub(crate) enum MemberRung {
+    /// The derivation records a content hash.
+    ContentHash,
+    /// Another closure derivation lists the output in `patches` (spec 1492).
+    Patches,
+    /// `env.text`: a `writeText` output.
+    EnvText,
+    /// A version-shaped name (spec 1380's split).
+    VersionName,
+    /// Built by live-bootstrap's `kaem` (spec 1503).
+    LiveBootstrapBuilder,
+    /// A `makeSetupHook` output: its `buildCommand` writes
+    /// `nix-support/setup-hook` (spec 1503).
+    SetupHookPackage,
+    /// Named as a hook or helper script (spec 1503).
+    ScriptName,
+    /// No evidence: the last rung.
+    Default,
+}
+
+impl MemberRung {
+    /// The string `debug closure-dump` prints.
+    pub(crate) fn wire(self) -> &'static str {
+        match self {
+            Self::ContentHash => "content-hash",
+            Self::Patches => "patches",
+            Self::EnvText => "env-text",
+            Self::VersionName => "version-name",
+            Self::LiveBootstrapBuilder => "live-bootstrap-builder",
+            Self::SetupHookPackage => "setup-hook-package",
+            Self::ScriptName => "script-name",
+            Self::Default => "default",
+        }
+    }
+
+    /// Every variant; a later one is a compile error in the length.
+    #[cfg(test)]
+    pub(crate) const ALL: [Self; 8] = [
+        Self::ContentHash,
+        Self::Patches,
+        Self::EnvText,
+        Self::VersionName,
+        Self::LiveBootstrapBuilder,
+        Self::SetupHookPackage,
+        Self::ScriptName,
+        Self::Default,
     ];
 }
 
@@ -248,7 +314,9 @@ fn names_a_check(name: &str) -> bool {
 ///
 /// **The evidence order is fixed and load-bearing**: content hash, then a
 /// listing in another derivation's `patches` (spec 1492), then `env.text`,
-/// then a version-shaped name, then fragment. A member bearing
+/// then a version-shaped name, then a `kaem` builder (`fragment`), then a
+/// `makeSetupHook` output (`package`), then a script name (`scaffolding`),
+/// then `package` (spec 1503). A member bearing
 /// several signals takes the strongest. Reversing the middle two describes a
 /// different classifier producing different counts — the data-model's role
 /// table had them the other way round until the analyze pass caught it
@@ -263,31 +331,107 @@ fn names_a_check(name: &str) -> bool {
 /// only inside that rung, to its own rung ahead of `env.text`. That **does**
 /// move edges: a patch that was `fragment` is walked through no longer. The
 /// change is measured in `specs/1492-patch-member-source/measurements/`.
+///
+/// Spec 1503 (#1511) replaces the last rung, "else `fragment`", with
+/// evidence: a `kaem` builder for `fragment`, and `package` when there is
+/// none. Moving a member from `fragment` (walked through) to `package` (an
+/// endpoint) moves edges; it is what stops the projection at `stdenv-linux`.
+/// Measured in `specs/1503-fragment-positive-evidence/measurements/`.
 pub(crate) fn classify(drv: &RawDerivation, patches: &PatchOutputs<'_>) -> MemberRole {
+    classify_with_rung(drv, patches).0
+}
+
+/// [`classify`], and which rung of the evidence order decided it.
+///
+/// One function rather than a classifier and a separate explainer, so the
+/// role a document carries and the reason `debug closure-dump` gives for it
+/// cannot disagree (spec 1503, research R6).
+pub(crate) fn classify_with_rung(drv: &RawDerivation, patches: &PatchOutputs<'_>) -> (MemberRole, MemberRung) {
     if content_hash(drv).is_some() {
-        return MemberRole::Source;
+        return (MemberRole::Source, MemberRung::ContentHash);
     }
     // Spec 1492 (#1502) — the closure's record that this path is applied as a
     // patch, whatever its name and however it was built. A `replaceVars`
     // patch carries no version token and fell to `fragment`; a generated one
     // carries `env.text` and would be `scaffolding`.
     if patches.lists(drv) {
-        return MemberRole::Source;
+        return (MemberRole::Source, MemberRung::Patches);
     }
     if drv.env.contains_key("text") {
-        return MemberRole::Scaffolding;
+        return (MemberRole::Scaffolding, MemberRung::EnvText);
     }
     let name = drv.name.as_deref().unwrap_or_default();
     if name_encodes_a_version(name) {
         if is_src_only(drv) || names_a_source_tree(name) {
-            return MemberRole::Source;
+            return (MemberRole::Source, MemberRung::VersionName);
         }
         if names_a_check(name) {
-            return MemberRole::Check;
+            return (MemberRole::Check, MemberRung::VersionName);
         }
-        return MemberRole::Package;
+        return (MemberRole::Package, MemberRung::VersionName);
     }
-    MemberRole::Fragment
+    // Spec 1503 (#1511) — `fragment` only on positive evidence that
+    // live-bootstrap built the member. This rung used to be the fall-through,
+    // and took the 25 stdenv-built members of moat's 240 fragments and every
+    // fragment of a closure pinning a bootstrap with no `kaem`, `stdenv-linux`
+    // among them (research R1).
+    if built_by_kaem(drv) {
+        return (MemberRole::Fragment, MemberRung::LiveBootstrapBuilder);
+    }
+    // A `makeSetupHook` output is a setup-hook package whatever it is named.
+    // Where the same hook declares a `pname` it is an ordinary package
+    // component, so it is `package` here too; checked before the script name
+    // because six such packages on openai and slack-web are named `*.sh`.
+    if writes_a_setup_hook(drv) {
+        return (MemberRole::Package, MemberRung::SetupHookPackage);
+    }
+    // FR-004 — a single-file hook or helper script, named after its template
+    // (`substituteAll`, `replaceVars`): `scaffolding`, walked through like
+    // `writeText` output.
+    if names_a_script(name) {
+        return (MemberRole::Scaffolding, MemberRung::ScriptName);
+    }
+    // FR-004 — no evidence of what it is: `package`, an edge endpoint, so the
+    // projection stops here rather than fanning a consumer out through a
+    // member whose nature is unestablished (research R3).
+    (MemberRole::Package, MemberRung::Default)
+}
+
+/// The script extensions of spec 1503's script rung: every one observed on a
+/// pname-less, non-`kaem` member of the five captured closures (research R7).
+/// `.pl` is slacklinker's `builder.pl`; nothing else carries one.
+const SCRIPT_EXTENSIONS: &[&str] = &[".sh", ".bash", ".pl"];
+
+/// Whether `name` ends in a script extension, with something before it.
+fn names_a_script(name: &str) -> bool {
+    SCRIPT_EXTENSIONS
+        .iter()
+        .any(|ext| name.len() > ext.len() && name.ends_with(ext))
+}
+
+/// Whether this derivation is a `makeSetupHook` output: its `buildCommand`
+/// installs a file as `nix-support/setup-hook`.
+///
+/// Measured (research R7): 37 such members on openai and 36 on slack-web,
+/// every one with a same-named `pname`-declaring counterpart on moat; none on
+/// moat, shellcheck or slacklinker, where these hooks declare a `pname`.
+fn writes_a_setup_hook(drv: &RawDerivation) -> bool {
+    drv.attr_str("buildCommand")
+        .is_some_and(|cmd| cmd.contains("$out/nix-support/setup-hook"))
+}
+
+/// Whether live-bootstrap's shell `kaem` built this derivation.
+///
+/// The builder's **file name**, not its store path: the store object's name
+/// is free text, and a bash shipped under a name mentioning `kaem` is bash.
+/// Exactly `kaem`: stage0's `kaem-unwrapped` and other seed builders reach
+/// the version rung on every measured closure (research R1, R7), so they are
+/// not claimed here without evidence that they reach this one.
+fn built_by_kaem(drv: &RawDerivation) -> bool {
+    drv.builder
+        .as_deref()
+        .and_then(|b| b.rsplit('/').next())
+        .is_some_and(|program| program == "kaem")
 }
 
 /// Whether this member is a dependency-graph endpoint (FR-013).
@@ -410,9 +554,14 @@ mod tests {
         );
     }
 
+    /// Spec 1503 (#1511) — a bare name is `fragment` only when `kaem` built
+    /// it. The same name with no builder is `package`: the name was never the
+    /// evidence, and treating it as such is the defect #1511 reports.
     #[test]
-    fn m1282_t012_a_bare_name_is_a_fragment() {
-        assert_eq!(classify(&drv(r#"{"name":"strncpy","env":{}}"#), &PatchOutputs::default()), MemberRole::Fragment);
+    fn m1282_t012_a_bare_kaem_built_name_is_a_fragment() {
+        let kaem = drv(r#"{"name":"strncpy","builder":"/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem","env":{}}"#);
+        assert_eq!(classify(&kaem, &PatchOutputs::default()), MemberRole::Fragment);
+        assert_eq!(classify(&drv(r#"{"name":"strncpy","env":{}}"#), &PatchOutputs::default()), MemberRole::Package);
     }
 
     #[test]
@@ -449,7 +598,7 @@ mod tests {
         // revision, so there is nothing for `classify` to consult but its
         // argument. A classifier that reached outside it could not compile
         // against this call.
-        let d = drv(r#"{"name":"strncpy","env":{}}"#);
+        let d = drv(r#"{"name":"strncpy","builder":"/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem","env":{}}"#);
         assert_eq!(classify(&d, &PatchOutputs::default()), MemberRole::Fragment);
         assert!(!classify(&d, &PatchOutputs::default()).is_edge_endpoint());
     }
@@ -501,8 +650,10 @@ mod tests {
         // under test, so the test constructs one rather than waiting to meet
         // it. Dropping the member would make the FR-009 counts fail to
         // reconcile, which is why absence must not be a skip.
+        // Spec 1503 (#1511): with no name and no builder there is no
+        // evidence, so the role is the `package` default.
         let anon = drv(r#"{"env":{}}"#);
-        assert_eq!(classify(&anon, &PatchOutputs::default()), MemberRole::Fragment);
+        assert_eq!(classify(&anon, &PatchOutputs::default()), MemberRole::Package);
         assert_eq!(
             identity(&anon, "/nix/store/anon123-.drv"),
             IdentityBasis::Recipe("anon123".into())
@@ -550,7 +701,7 @@ mod tests {
         "patches":"/nix/store/h1-waybill-fixture-fix-16.patch /nix/store/h2-waybill-fixture-local.patch"},
         "outputs":{"out":{"path":"hc-waybill-fixture-consumer-1.0"}}},
       "p.drv":{"name":"waybill-fixture-fix-16.patch","env":{"dontUnpack":"1"},"outputs":{"out":{"path":"h1-waybill-fixture-fix-16.patch"}}},
-      "q.drv":{"name":"waybill-fixture-local.patch","env":{"dontUnpack":"1"},"outputs":{"out":{"path":"h2-waybill-fixture-local.patch"}}},
+      "q.drv":{"name":"waybill-fixture-local.patch","builder":"/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem","env":{"dontUnpack":"1"},"outputs":{"out":{"path":"h2-waybill-fixture-local.patch"}}},
       "s.drv":{"name":"waybill-fixture-ghc-9.10.3-tree","env":{"phases":"unpackPhase patchPhase installPhase"},"outputs":{"out":{"path":"hs"}}},
       "t.drv":{"name":"waybill-fixture-tree-1.2","structuredAttrs":{"phases":["unpackPhase","patchPhase","installPhase"]},"outputs":{"out":{"path":"ht"}}},
       "r.drv":{"name":"waybill-fixture-clang-src-21.1.8","env":{"buildCommand":"cp -r"},"outputs":{"out":{"path":"hr"}}},
@@ -610,7 +761,10 @@ mod tests {
     ///
     /// CONTROL: for `q.drv`, the listed bare-named patch, the patch set
     /// changes the answer. Without that, agreement would hold even if the
-    /// helper still ignored its argument.
+    /// helper still ignored its argument. Spec 1503 (#1511): `q.drv` carries a
+    /// `kaem` builder so that, unlisted, it is a non-endpoint `fragment`; a
+    /// builder-less member would be the `package` default, an endpoint either
+    /// way, and the control would compare two equal answers.
     #[test]
     fn s1492_the_endpoint_helper_agrees_with_classify_given_the_patch_set() {
         let raw = cases();
@@ -693,7 +847,7 @@ mod tests {
       "w.drv":{"name":"waybill-fixture-generated.patch","env":{"text":"--- a\n+++ b\n"},
         "outputs":{"out":{"path":"/nix/store/hw-waybill-fixture-generated.patch"}}},
       "h.drv":{"name":"waybill-fixture-fetched.patch","outputs":{"out":{"hash":"sha256-AAAA","method":"flat"}}},
-      "n.drv":{"name":"waybill-fixture-unlisted.patch","env":{"dontUnpack":"1","src":"/nix/store/hs-unlisted.patch"},
+      "n.drv":{"name":"waybill-fixture-unlisted.patch","builder":"/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem","env":{"dontUnpack":"1","src":"/nix/store/hs-unlisted.patch"},
         "outputs":{"out":{"path":"/nix/store/hn-waybill-fixture-unlisted.patch"}}}
     }}"#;
 
@@ -710,6 +864,10 @@ mod tests {
     }
 
     /// FR-002 — the same shape, listed by nothing, keeps its role.
+    ///
+    /// Spec 1503 (#1511): the twin carries a `kaem` builder, so the listing is
+    /// still the only difference between it and `l.drv`. Without one it would
+    /// be the `package` default (`s1503_a_bash_built_bare_member_is_a_package`).
     #[test]
     fn s1492_an_unlisted_twin_stays_fragment() {
         let raw = local_patches();
@@ -752,6 +910,183 @@ mod tests {
             }
             assert_eq!(counts.values().sum::<usize>(), members.len());
             assert!(counts.keys().all(|r| MemberRole::ALL.contains(r)));
+        }
+    }
+
+    /// Spec 1503 (research R6) — the rung strings `debug closure-dump` prints
+    /// are distinct, so a measurement filtering on one cannot catch another.
+    #[test]
+    fn s1503_rung_wire_strings_are_distinct() {
+        let wires: std::collections::BTreeSet<_> = MemberRung::ALL.iter().map(|r| r.wire()).collect();
+        assert_eq!(wires.len(), MemberRung::ALL.len());
+    }
+
+    // ---- Spec 1503 (#1511): `fragment` requires a `kaem` builder ----------
+
+    const KAEM: &str = "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-kaem-1.9.1/bin/kaem";
+    const BASH: &str = "/nix/store/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-bash-5.3p9/bin/bash";
+
+    fn built(name: &str, builder: &str) -> RawDerivation {
+        drv(&format!(
+            r#"{{"name":"{name}","builder":"{builder}","env":{{"stdenv":"/nix/store/cccccccccccccccccccccccccccccccc-stdenv-linux"}}}}"#
+        ))
+    }
+
+    #[test]
+    fn s1503_a_kaem_built_bare_member_is_a_fragment() {
+        let d = drv(&format!(r#"{{"name":"waybill-fixture-strncpy","builder":"{KAEM}","env":{{}}}}"#));
+        assert_eq!(classify_with_rung(&d, &none()), (MemberRole::Fragment, MemberRung::LiveBootstrapBuilder));
+    }
+
+    /// The defect #1511 reports: a stdenv-built member with no other evidence
+    /// was `fragment` by default. It is now `package`, and an edge endpoint, so
+    /// the projection stops there instead of walking through it.
+    #[test]
+    fn s1503_a_bash_built_bare_member_is_a_package() {
+        let d = built("waybill-fixture-nuke-refs", BASH);
+        assert_eq!(classify_with_rung(&d, &none()), (MemberRole::Package, MemberRung::Default));
+        assert!(is_edge_endpoint(&d, &none()));
+    }
+
+    /// FR-001 — absence of other evidence is not evidence. A member with no
+    /// `builder` at all is not `fragment`.
+    #[test]
+    fn s1503_no_builder_is_not_evidence() {
+        let d = drv(r#"{"name":"waybill-fixture-nuke-refs","env":{}}"#);
+        assert_eq!(classify_with_rung(&d, &none()), (MemberRole::Package, MemberRung::Default));
+    }
+
+    /// The builder test reads the program's file name, not the store path:
+    /// a bash shipped in a store object whose name mentions `kaem` is bash.
+    #[test]
+    fn s1503_the_builder_test_reads_the_file_name() {
+        let d = built(
+            "waybill-fixture-wrapped",
+            "/nix/store/dddddddddddddddddddddddddddddddd-kaem-wrapper/bin/bash",
+        );
+        assert_ne!(classify(&d, &none()), MemberRole::Fragment);
+        let d = built("waybill-fixture-kaemish", "/nix/store/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee-x/bin/kaem-unwrapped");
+        assert_ne!(classify(&d, &none()), MemberRole::Fragment);
+    }
+
+    /// FR-002 — every earlier rung outranks the builder. A `kaem`-built
+    /// member with a content hash, a `patches` listing, `env.text` or a
+    /// version-shaped name keeps the role that evidence gives it.
+    #[test]
+    fn s1503_earlier_rungs_outrank_the_builder() {
+        let hashed = drv(&format!(
+            r#"{{"name":"waybill-fixture-src","builder":"{KAEM}","env":{{}},"outputs":{{"out":{{"hash":"sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}}}}}}"#
+        ));
+        assert_eq!(classify_with_rung(&hashed, &none()), (MemberRole::Source, MemberRung::ContentHash));
+
+        let text = drv(&format!(r#"{{"name":"waybill-fixture-crt-builder","builder":"{KAEM}","env":{{"text":"x"}}}}"#));
+        assert_eq!(classify_with_rung(&text, &none()), (MemberRole::Scaffolding, MemberRung::EnvText));
+
+        let versioned = drv(&format!(r#"{{"name":"waybill-fixture-mes-libc-0.27.1","builder":"{KAEM}","env":{{}}}}"#));
+        assert_eq!(classify_with_rung(&versioned, &none()), (MemberRole::Package, MemberRung::VersionName));
+
+        let raw = RawClosure::parse(&format!(
+            r#"{{"derivations":{{
+              "c.drv":{{"name":"waybill-fixture-app","env":{{"pname":"waybill-fixture-app","patches":"/nix/store/pppppppppppppppppppppppppppppppp-waybill-fixture-fix.patch"}},
+                "outputs":{{"out":{{"path":"/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab-waybill-fixture-app"}}}}}},
+              "p.drv":{{"name":"waybill-fixture-fix.patch","builder":"{KAEM}","env":{{}},
+                "outputs":{{"out":{{"path":"/nix/store/pppppppppppppppppppppppppppppppp-waybill-fixture-fix.patch"}}}}}}
+            }}}}"#
+        ))
+        .unwrap();
+        assert_eq!(
+            classify_with_rung(&raw.derivations["p.drv"], &PatchOutputs::of(&raw)),
+            (MemberRole::Source, MemberRung::Patches),
+            "CONTROL: the patch set must be what lists it"
+        );
+        assert_eq!(
+            classify_with_rung(&raw.derivations["p.drv"], &none()),
+            (MemberRole::Fragment, MemberRung::LiveBootstrapBuilder)
+        );
+    }
+
+    // ---- Spec 1503 (#1511) US2: the members that leave `fragment` ---------
+
+    fn bash_built(name: &str) -> RawDerivation {
+        built(name, BASH)
+    }
+
+    /// FR-004 — single-file hook and helper scripts are `scaffolding`, as
+    /// `writeText` output is: a build sources or runs them, so the graph walks
+    /// through them. The extensions are every script extension observed on
+    /// the five closures (research R7; `.pl` is slacklinker's `builder.pl`).
+    #[test]
+    fn s1503_a_hook_script_is_scaffolding() {
+        for name in ["setup-hook.sh", "utils.bash", "python-setup-hook.sh", "pythoncheck.sh", "builder.pl"] {
+            assert_eq!(
+                classify_with_rung(&bash_built(name), &none()),
+                (MemberRole::Scaffolding, MemberRung::ScriptName),
+                "{name}"
+            );
+        }
+    }
+
+    /// FR-004 — programs, data, stdenv stages and `stdenv-linux` itself are
+    /// the `package` default. `stdenv-linux` is the case #1511 turns on: as a
+    /// `fragment` it fanned every consumer out to the whole toolchain.
+    #[test]
+    fn s1503_programs_data_and_stages_are_package() {
+        for name in [
+            "nuke-refs",
+            "expand-response-params",
+            "mirrors-list",
+            "bootstrap-stage0-glibc-iconv-minimal-bootstrap",
+            "bootstrap-stage1-stdenv-linux",
+            "stdenv-linux",
+        ] {
+            let d = bash_built(name);
+            assert_eq!(classify_with_rung(&d, &none()), (MemberRole::Package, MemberRung::Default), "{name}");
+            assert!(is_edge_endpoint(&d, &none()), "{name}");
+        }
+    }
+
+    /// A `makeSetupHook` output is a setup-hook *package*, whatever its name:
+    /// on closures where it declares a `pname` it is an ordinary package
+    /// component, so here it is `package` too (spec Clarifications). Without
+    /// this rung the `.sh`-named ones would be `scaffolding` and the rest
+    /// `package`: one kind of artifact split by its name (research R7).
+    #[test]
+    fn s1503_a_setup_hook_package_is_a_package_whatever_its_name() {
+        let hook = |name: &str, carrier: &str| {
+            let cmd = "mkdir -p $out/nix-support\\ncp /nix/store/ffffffffffffffffffffffffffffffff-hook.sh $out/nix-support/setup-hook\\nrecordPropagatedDependencies\\n";
+            let attrs = format!(r#"{{"buildCommand":"{cmd}"}}"#);
+            let (env, sa) = if carrier == "env" { (attrs.as_str(), "null") } else { ("{}", attrs.as_str()) };
+            drv(&format!(r#"{{"name":"{name}","builder":"{BASH}","env":{env},"structuredAttrs":{sa}}}"#))
+        };
+        for name in ["pypa-build-hook.sh", "die-hook", "update-autotools-gnu-config-scripts-hook", "install-shell-files"] {
+            for carrier in ["env", "structuredAttrs"] {
+                assert_eq!(
+                    classify_with_rung(&hook(name, carrier), &none()),
+                    (MemberRole::Package, MemberRung::SetupHookPackage),
+                    "{name} ({carrier})"
+                );
+            }
+        }
+        // CONTROL: the same `.sh` name with no such buildCommand is a script.
+        assert_eq!(classify(&bash_built("pypa-build-hook.sh"), &none()), MemberRole::Scaffolding);
+    }
+
+    /// The builder outranks the name: a `kaem`-built member named like a
+    /// script is a live-bootstrap fragment.
+    #[test]
+    fn s1503_the_builder_outranks_the_script_name() {
+        assert_eq!(
+            classify_with_rung(&built("waybill-fixture-build.sh", KAEM), &none()),
+            (MemberRole::Fragment, MemberRung::LiveBootstrapBuilder)
+        );
+    }
+
+    /// A suffix, not a substring: names that merely contain `sh` or `bash`
+    /// are not scripts.
+    #[test]
+    fn s1503_a_suffix_is_not_a_substring() {
+        for name in ["sh-utils", "bash", "bash-completion", "x.shell", "pl", "perl"] {
+            assert_eq!(classify(&bash_built(name), &none()), MemberRole::Package, "{name}");
         }
     }
 }

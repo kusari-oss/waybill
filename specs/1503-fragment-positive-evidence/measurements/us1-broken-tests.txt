@@ -1,0 +1,29 @@
+# Spec 1503 T014 — tests broken by rungs 5 and 7 (US1), and how each was fixed.
+# Source: `cargo test --workspace --no-fail-fast` after T013. 390 targets ok, 3 failed:
+#   waybill (bin), closure_boot_namesake, closure_members. 15 failing tests.
+# Every failure is a fixture member with no `builder`, all 8 of them in fixture-fragments.tsv (T007)
+# plus 4 inline derivations. No assertion was weakened; each fix keeps what the test measures.
+#
+# test | cause | fix
+member::m1282_t012_a_bare_name_is_a_fragment | asserted the old fall-through on a builder-less `strncpy` | renamed m1282_t012_a_bare_kaem_built_name_is_a_fragment; kaem-built strncpy is Fragment, the builder-less one Package
+member::m1282_t050_classification_reads_one_record_and_nothing_else | builder-less `strncpy` expected Fragment; the test is about what classify reads | inline derivation gets a kaem builder
+member::m1282_t051_a_member_with_no_name_is_still_uniquely_identified | an empty record expected Fragment | expectation is Package (no evidence: the default); the identity assertion is unchanged
+member::m1282_t011_classification_is_total_and_reproduces_the_distribution | fixture strncpy/memcpy builder-less: package 3, expected 1 | nix_closure_members/closure.json: both get a kaem builder (they stand for live-bootstrap functions)
+member::s1492_an_unlisted_twin_stays_fragment | LOCAL_PATCHES n.drv builder-less: Package | n.drv gets a kaem builder, so the listing stays the only difference from l.drv; doc comment says why
+member::s1492_the_endpoint_helper_agrees_with_classify_given_the_patch_set | CONTROL compared two equal answers: unlisted q.drv is now an endpoint (Package) | CASES q.drv gets a kaem builder: unlisted it is a non-endpoint Fragment again; doc comment says why
+graph::s1492_the_walk_stops_at_a_listed_patch | CONTROL: the unlisted patch is now Package and stops the walk | patch.drv gets a kaem builder, so unlisted it is walked through; doc comment says why
+closure_members::m1282_us2_every_added_component_carries_exactly_one_role | fixture strncpy/memcpy (as m1282_t011) | fixed by the same fixture change
+closure_members::m1282_t056_the_orphan_count_is_a_lower_bound_not_an_equality | same: 2 edge-ineligible instead of 4 | fixed by the same fixture change
+closure_members::m1282_us2_filtering_to_sources_and_packages_leaves_no_scaffolding | same: 7 sources+packages instead of 5 | fixed by the same fixture change
+closure_members::s1492_a_listed_local_patch_is_source_in_every_format | local_patch.json twin builder-less: Package | the twin gets a kaem builder (fixture), as in member.rs; doc comment says why
+closure_members::s1492_a_listed_local_patch_is_an_edge_target_in_every_format | same twin, now an endpoint, names edges | fixed by the same fixture change
+closure_boot_namesake::a_boot_target_binds_to_the_compiler_supplied_library_not_a_nameless_namesake | clock/gone builder-less: Package, an endpoint, receives lib's inputs.drvs edge | the namesakes get a kaem builder: the real namesake (`time` on the shellcheck golden) is kaem-built on moat, measured; the absences stay about binding (#1466)
+closure_boot_namesake::a_non_boot_target_binds_to_nothing_rather_than_a_nameless_namesake | same | same fixture change
+closure_boot_namesake::a_nameless_member_never_merges_into_the_manifest_component_of_its_name | same | same fixture change
+#
+# Probe for the boot-namesake decision: with only the role expectation changed to `package`, all three
+# boot-namesake tests then failed at their edge assertions (lines 154, 182, 215) — `lib` depends on the
+# nameless member via inputs.drvs. Reverted with cp; the builder fix was chosen instead.
+#
+# classify_before_1380 was NOT given rungs 5 and 7 (T014 allowed it): s1380_only_package_members_move_and_only_between_endpoints
+# passed unchanged, because CASES' only bare member (q.drv) is listed and moves to Source either way.

@@ -672,6 +672,11 @@ mod tests {
     /// CONTROL: the same closure with the patch unlisted walks through it, so
     /// the consumer's edge goes straight to the builder. The listing is the
     /// only difference between the two.
+    ///
+    /// Spec 1503 (#1511): the patch carries a `kaem` builder so that, unlisted,
+    /// it is a walked-through `fragment`. Without one it would be the
+    /// `package` default, where the walk also stops, and the control would
+    /// show no difference.
     #[test]
     fn s1492_the_walk_stops_at_a_listed_patch() {
         let closure = |patches: &str| {
@@ -679,7 +684,7 @@ mod tests {
                 r#"{{"derivations":{{
                   "app.drv":{{"name":"waybill-fixture-app-1.0","env":{{"pname":"waybill-fixture-app","version":"1.0","patches":"{patches}"}},
                     "inputs":{{"drvs":{{"patch.drv":{{"outputs":["out"]}}}}}},"outputs":{{"out":{{"path":"/nix/store/ha-app"}}}}}},
-                  "patch.drv":{{"name":"waybill-fixture-fix-rpath.patch","env":{{"dontUnpack":"1"}},
+                  "patch.drv":{{"name":"waybill-fixture-fix-rpath.patch","builder":"/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem","env":{{"dontUnpack":"1"}},
                     "inputs":{{"drvs":{{"sub.drv":{{"outputs":["out"]}}}}}},"outputs":{{"out":{{"path":"/nix/store/hp-waybill-fixture-fix-rpath.patch"}}}}}},
                   "sub.drv":{{"name":"waybill-fixture-substitute-1.0","env":{{"pname":"waybill-fixture-substitute","version":"1.0"}},
                     "outputs":{{"out":{{"path":"/nix/store/hs-substitute"}}}}}}
@@ -699,6 +704,45 @@ mod tests {
         let edges = edges_of(&unlisted);
         assert!(edges.contains(&pair("app.drv", "sub.drv")), "CONTROL: {edges:?}");
         assert!(edges.iter().all(|(f, t)| f != "patch.drv" && t != "patch.drv"), "CONTROL: {edges:?}");
+    }
+
+    /// Spec 1503 (#1511, US2) — the walk stops at a stdenv-built `stdenv-linux`.
+    ///
+    /// On the closures that pin a bootstrap with no `kaem`, `stdenv-linux` was
+    /// a pname-less `fragment`, so every consumer was walked through it to the
+    /// whole toolchain: about 38 edges per patch on openai and slack-web,
+    /// against 2–4 on moat. It is now the `package` default, an endpoint.
+    ///
+    /// CONTROL: the same closure with `stdenv-linux` built by `kaem` walks
+    /// through it, so the consumer's edge reaches the compiler. The builder
+    /// is the only difference between the two.
+    #[test]
+    fn s1503_the_walk_stops_at_stdenv_linux() {
+        let closure = |builder: &str| {
+            RawClosure::parse(&format!(
+                r#"{{"derivations":{{
+                  "app.drv":{{"name":"waybill-fixture-app-1.0","env":{{"pname":"waybill-fixture-app","version":"1.0"}},
+                    "inputs":{{"drvs":{{"stdenv.drv":{{"outputs":["out"]}}}}}},"outputs":{{"out":{{"path":"/nix/store/ha-app"}}}}}},
+                  "stdenv.drv":{{"name":"stdenv-linux","builder":"{builder}","env":{{}},
+                    "inputs":{{"drvs":{{"gcc.drv":{{"outputs":["out"]}}}}}},"outputs":{{"out":{{"path":"/nix/store/hs-stdenv-linux"}}}}}},
+                  "gcc.drv":{{"name":"waybill-fixture-gcc-1.0","env":{{"pname":"waybill-fixture-gcc","version":"1.0"}},
+                    "outputs":{{"out":{{"path":"/nix/store/hg-gcc"}}}}}}
+                }}}}"#
+            ))
+            .unwrap()
+        };
+        let pair = |a: &str, b: &str| (a.to_string(), b.to_string());
+
+        let bash = closure("/nix/store/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-bash-5.3p9/bin/bash");
+        let edges = edges_of(&bash);
+        assert!(edges.contains(&pair("app.drv", "stdenv.drv")), "{edges:?}");
+        assert!(edges.contains(&pair("stdenv.drv", "gcc.drv")), "{edges:?}");
+        assert!(!edges.contains(&pair("app.drv", "gcc.drv")), "the walk passed stdenv-linux: {edges:?}");
+
+        let kaem = closure("/nix/store/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk-kaem-1.9.1/bin/kaem");
+        let edges = edges_of(&kaem);
+        assert!(edges.contains(&pair("app.drv", "gcc.drv")), "CONTROL: {edges:?}");
+        assert!(edges.iter().all(|(f, t)| f != "stdenv.drv" && t != "stdenv.drv"), "CONTROL: {edges:?}");
     }
 
     /// #1367 — where a closure's `inputs.drvs` edges go.

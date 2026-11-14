@@ -1,0 +1,22 @@
+# Spec 1503 T017: the US2 tests on the US1 code (before T019).
+# The two tests for the new rungs fail because both members reach the default; every other s1503 test passes.
+test scan_fs::package_db::nix::closure::member::tests::s1503_no_builder_is_not_evidence ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_the_builder_test_reads_the_file_name ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_a_bash_built_bare_member_is_a_package ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_a_kaem_built_bare_member_is_a_fragment ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_rung_wire_strings_are_distinct ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_the_builder_outranks_the_script_name ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_programs_data_and_stages_are_package ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_a_suffix_is_not_a_substring ... ok
+test scan_fs::package_db::nix::closure::derivation::tests::s1503_builder_is_read_and_absence_is_none ... ok
+test scan_fs::package_db::nix::closure::member::tests::s1503_a_setup_hook_package_is_a_package_whatever_its_name ... FAILED
+test scan_fs::package_db::nix::closure::member::tests::s1503_a_hook_script_is_scaffolding ... FAILED
+test scan_fs::package_db::nix::closure::member::tests::s1503_earlier_rungs_outrank_the_builder ... ok
+test scan_fs::package_db::nix::closure::graph::tests::s1503_the_walk_stops_at_stdenv_linux ... ok
+thread 'scan_fs::package_db::nix::closure::member::tests::s1503_a_setup_hook_package_is_a_package_whatever_its_name' panicked at waybill-cli/src/scan_fs/package_db/nix/closure/member.rs:1023:17:
+  left: (Package, Default)
+ right: (Package, SetupHookPackage)
+thread 'scan_fs::package_db::nix::closure::member::tests::s1503_a_hook_script_is_scaffolding' panicked at waybill-cli/src/scan_fs/package_db/nix/closure/member.rs:981:13:
+  left: (Package, Default)
+ right: (Scaffolding, ScriptName)
+test result: FAILED. 11 passed; 2 failed; 0 ignored; 0 measured; 5022 filtered out; finished in 0.01s

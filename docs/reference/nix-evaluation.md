@@ -507,15 +507,15 @@ gate was the C182 role filter above. The evidence is in the golden: 1,315
 These members now become components, each carrying
 `waybill:closure-member-role` — a **second, independent vocabulary**. Counts
 are components on the regenerated moat golden (C184 `member-roles`,
-2026-11-14, after spec 1492):
+2026-11-14, after spec 1503):
 
 | Role | Count | What it is |
 |---|---|---|
 | `source` | 511 | a fixed-output fetch (a tarball or patch the build consumed), a source tree, or a patch another derivation lists in `patches` |
-| `package` | 23 | a version-bearing bootstrap package (`mes-libc-mini-0.27.1`) |
+| `package` | 38 | a built member that is none of the others: a version-bearing bootstrap package (`mes-libc-mini-0.27.1`), a setup-hook package, a program (`nuke-refs`), data (`mirrors-list`) or a stdenv stage |
 | `check` | 46 | a version check or test program (`bash-get-version-5.3`), since spec 1380 |
-| `scaffolding` | 267 | `writeText` output — `itoa-builder`, `setup-hook.sh` |
-| `fragment` | 240 | a live-bootstrap C function — `strncpy`, `memcpy`, `malloc` |
+| `scaffolding` | 277 | a build script: `writeText` output (`itoa-builder`) or a hook or helper script (`setup-hook.sh`, `utils.bash`) |
+| `fragment` | 215 | built by live-bootstrap's `kaem`: C functions (`strncpy`, `memcpy`), libraries (`libc.a`) and tools (`mes`) |
 
 **Do not confuse this with `waybill:closure-role`.** The two have been
 confused once already, and it falsified a clarification before measurement
@@ -535,8 +535,11 @@ Classification reads the closure alone — no network, no second evaluation, no
 maintained name list — in a **fixed evidence order**: a content hash makes it
 `source`, else a listing in another closure derivation's `patches` makes it
 `source` (spec 1492), else `env.text` makes it `scaffolding`, else a
-version-shaped name makes it `package`, else `fragment`. The order is load-bearing; swapping the
-middle two describes a different classifier producing different counts.
+version-shaped name makes it `package`, else a `kaem` builder makes it
+`fragment`, else a `makeSetupHook` output is `package`, else a `.sh`, `.bash`
+or `.pl` name makes it `scaffolding`, else `package` (spec 1503). The order is
+load-bearing; swapping the middle two describes a different classifier
+producing different counts.
 
 **Spec 1380 (#1374) splits the version-name rung.** It is the only rung that
 read nothing but a name, and on the moat golden 50 of its 73 members were not
@@ -565,9 +568,36 @@ closure:
   was removed.
 
 The other closure goldens moved 5 or 6 members each. On openai and slack-web
-each patch gained about 38 edges, because there `stdenv-linux` is itself
+each patch gained about 38 edges, because there `stdenv-linux` was itself
 walked through to its toolchain. See
 `specs/1492-patch-member-source/measurements/`.
+
+**Spec 1503 (#1511) gives `fragment` evidence.** The last rung used to be
+"else `fragment`", so `fragment` took every member no earlier rung claimed:
+- on moat, 25 of the 240 were stdenv-built setup hooks and utilities;
+- on openai and slack-web, which pin a bootstrap with no live-bootstrap stage,
+  all of them were, `stdenv-linux` included.
+
+A member is now `fragment` only if its builder is live-bootstrap's shell
+`kaem`. Otherwise:
+- **a `makeSetupHook` output**, whose `buildCommand` installs
+  `nix-support/setup-hook`, is `package` whatever its name. The same hooks
+  declare a `pname` on moat, where they are package components;
+- **a single-file script** named `.sh`, `.bash` or `.pl` is `scaffolding`;
+- **anything else is `package`**, the conservative default, because the walk
+  stops there.
+
+**This moves edges in both directions.** Measured on the captured closures of
+all five closure goldens:
+- every changed member left `fragment`, and nothing else moved;
+- on moat, shellcheck and slacklinker, shipped edges rose (moat 6,891 →
+  7,489), because consumers now reach `nuke-refs`, `mirrors-list` and the
+  other new endpoints directly;
+- on openai and slack-web they fell, from 48,336 to 9,478 and from 44,426 to
+  8,956, because the walk now stops at `stdenv-linux` instead of fanning each
+  consumer out to the toolchain.
+
+See `specs/1503-fragment-positive-evidence/measurements/`.
 
 A fetched patch is untouched by this rung. It is a fixed-output derivation,
 which records no output path for a `patches` listing to match, and its
@@ -590,8 +620,8 @@ Only `source`, `package` and `check` members are dependency-edge endpoints.
 projection walks *through* scaffolding and fragments, so an edge names the
 source a package was built from rather than the build script between them.
 **This reshapes the graph rather than growing it** — stopping earlier replaces
-wide transitive fan-outs with direct edges — and leaves 507 components on the
-moat golden (2026-11-14) as orphans by construction, each carrying
+wide transitive fan-outs with direct edges — and leaves 492 components on the
+moat golden (2026-11-14, after spec 1503) as orphans by construction, each carrying
 `waybill:orphan-reason = closure-member-not-an-edge-endpoint`. An orphan
 *without* a reason is the defect; this population is not one.
 

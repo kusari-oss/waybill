@@ -1,0 +1,15 @@
+# Spec 1503 T007: fixture members that ac2bd28's `debug closure-dump` classifies `fragment`.
+# 53 JSON files scanned under nix_closure_*/, nix_config_closure/, nix_ifd/, nix_eval/; 4 rejected as not closures
+# (nix_closure_declared_cpe/rows.json, nix_closure_licenses/rows{,-compound}.json, nix_closure_subject/rows.json).
+# None of the 8 carries a `builder`, so every one leaves `fragment` under rung 5 unless given one.
+# Inline-JSON test derivations are enumerated by the failing-test list in us1-broken-tests.txt (T014), not here:
+# 32 inline `"name"` sites lack `pname`/`builder`, most with version-shaped names that the version rung decides first.
+file	drv	name	intent
+waybill-cli/tests/fixtures/nix_closure_boot_namesake/closure.json	c10ck-waybill-fixture-clock.drv	waybill-fixture-clock	boot-namesake bare member: no live-bootstrap intent; expectation changes if a test depends on fragment (T014)
+waybill-cli/tests/fixtures/nix_closure_boot_namesake/closure.json	g0ne-waybill-fixture-gone.drv	waybill-fixture-gone	boot-namesake bare member: as above
+waybill-cli/tests/fixtures/nix_closure_members/closure.json	/nix/store/44444444-waybill-fixture-strncpy.drv	waybill-fixture-strncpy	live-bootstrap function: gets a kaem builder (T014)
+waybill-cli/tests/fixtures/nix_closure_members/closure.json	/nix/store/55555555-waybill-fixture-memcpy.drv	waybill-fixture-memcpy	live-bootstrap function: gets a kaem builder (T014)
+waybill-cli/tests/fixtures/nix_closure_members/local_patch.json	/nix/store/p2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-unlisted.patch.drv	waybill-fixture-unlisted.patch	spec-1492 unlisted twin: no live-bootstrap intent; expectation changes to package, and the graph walk-through control moves to a kaem-built member (T014)
+waybill-cli/tests/fixtures/nix_closure_runtime/closure-walk-libc.json	l-bootstdenv.drv	waybill-fixture-bootstdenv	stdenv stage: the population #1511 moves; expectation changes to package if a test depends on it (T014)
+waybill-cli/tests/fixtures/nix_closure_runtime/closure-walk-libc.json	l-stage2stdenv.drv	waybill-fixture-stage2stdenv	stdenv stage: as above
+waybill-cli/tests/fixtures/nix_closure_runtime/closure-walk-libc.json	l-stdenv.drv	waybill-fixture-stdenv	stdenv: as above

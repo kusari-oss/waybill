@@ -134,7 +134,8 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
             }
         }
 
-        let member_role = declared.is_none().then(|| member::classify(drv, &patches));
+        let classified = declared.is_none().then(|| member::classify_with_rung(drv, &patches));
+        let member_role = classified.map(|(r, _)| r);
         let basis = member_role.is_some().then(|| member::identity(drv, key));
         if let Some(r) = member_role {
             n_members += 1;
@@ -164,6 +165,10 @@ fn closure_dump(args: ClosureDumpArgs) -> anyhow::Result<ExitCode> {
             "evaluated_package": evaluated.as_deref() == Some(key.as_str()),
             "in_coverage_population": coverage.contains(key.as_str()),
             "member_role": member_role.map(|r| r.wire()),
+            // Spec 1503 (#1511, research R6) — which rung decided the role, so
+            // a measurement lists the members that took the default from the
+            // binary, not from a re-model of the classifier.
+            "member_role_rung": classified.map(|(_, rung)| rung.wire()),
             "edge_endpoint": member_role.map(|r| r.is_edge_endpoint()),
             "identity_hash": basis.as_ref().map(|b| b.hash()),
             "pypi_candidate": py_candidate,

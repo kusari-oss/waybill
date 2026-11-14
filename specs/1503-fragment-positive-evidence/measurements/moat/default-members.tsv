@@ -1,0 +1,16 @@
+drv	name	builder
+2sijrnn5rfzwq8hla21y9agsza9x2lg6-nuke-refs.drv	nuke-refs	bash-static-5.3/bin/bash
+2vndm8lhy4mcfh408i00c6604c021fwp-uname.drv	uname	bash-5.3p9/bin/bash
+4dld0775zm21fbclv6rx3v6c6mfqvsvf-expand-response-params.drv	expand-response-params	bash-static-5.3/bin/bash
+4p5vrjdw8zl1kc7fl593dm7vrj6n7yn5-nuke-refs.drv	nuke-refs	bash-static-5.3/bin/bash
+5x0ni3m200vsr0a38nlhp6grwspa3bwc-expand-response-params.drv	expand-response-params	bash-static-5.3/bin/bash
+6dkd05snil6kxm0ml3ljisxrigr5wlza-expand-response-params.drv	expand-response-params	bash-static-5.3/bin/bash
+84w0zzmqzl2bn5s4rx7axsh9znws1rdf-mirrors-list.drv	mirrors-list	bash-5.3p9/bin/bash
+898agdpj8623c7hn7xwm4qb3nlkckb2l-expand-response-params.drv	expand-response-params	bash-static-5.3/bin/bash
+f2yqpqsk58h7c7a0sv2q296a1b88svqc-bootstrap-stage0-glibc-iconv-minimal-bootstrap.drv	bootstrap-stage0-glibc-iconv-minimal-bootstrap	bash-static-5.3/bin/bash
+flxbh2drlvipjlaabnkzij8dxcv56ayl-nuke-refs.drv	nuke-refs	bash-static-5.3/bin/bash
+iixshw8nhrf8cb503b57s9p94cl35k8n-nuke-refs.drv	nuke-refs	bash-static-5.3/bin/bash
+j1m6zig83ddsdmj4cfc6pj1bddsc6k49-nuke-refs.drv	nuke-refs	bash-5.3p9/bin/bash
+msxx3fjwf8cqfwbhpxrqlwmnb75v31w8-remove-references-to.drv	remove-references-to	bash-5.3p9/bin/bash
+p0h6a81w4c00c94ac7wmzlbldh8v635c-expand-response-params.drv	expand-response-params	bash-5.3p9/bin/bash
+x44jj7p878adq57sn3w36gklljk4vlfl-expand-response-params.drv	expand-response-params	bash-static-5.3/bin/bash
