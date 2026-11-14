@@ -118,7 +118,7 @@ A reviewer can see, for each of the five closure targets, how many dependency ed
 - **FR-008**: The three formats MUST agree on the changed C206 values and edges. The C206 and C184 parity rows stay as they are.
 - **FR-009**: The C184 `waybill:nix-closure` counts MUST describe the new documents: `member-roles`, `edge-ineligible-components` and `edges`.
 - **FR-010**: The five closure goldens MUST be regenerated. Each diff MUST be reviewed component by component and edge by edge against the FR-007 measurement. A change no reclassified member explains is a defect, not churn. Non-closure goldens MUST be byte-identical.
-- **FR-011**: The C206 catalog row and `docs/reference/nix-evaluation.md` MUST state the new last rung and its evidence. The sentence "`fragment` is now said only of live-bootstrap functions" MUST be true of all five regenerated goldens.
+- **FR-011**: The C206 catalog row and `docs/reference/nix-evaluation.md` MUST state the new last rung and its evidence. The catalog's sentence about what `fragment` is said of MUST be true of all five regenerated goldens. The 215 `kaem`-built members on moat include libraries and tools (`libc.a`, `mes`) as well as functions, so "only of live-bootstrap functions" is reworded to "only of what live-bootstrap's `kaem` built" (amended during implementation; analysis finding I1).
 
 ### Key Entities
 

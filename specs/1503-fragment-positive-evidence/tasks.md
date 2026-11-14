@@ -165,7 +165,7 @@
   - From it, write `measurements/<target>/default-members.tsv`: every row with `member_role_rung == "default"`, as drv, name and the probe's builder column.
   - Run moat's dump 3 times and require byte-identical output.
 - [X] T022 [P] [US3] With the post-US2 code, run the `s1367` accounting (as T004) on each capture and save it as `measurements/<target>/edge-accounting-after.txt`. Run moat 3 times.
-- [ ] T023 [US3] For each target, write `measurements/<target>/delta.md`.
+- [X] T023 [US3] For each target, write `measurements/<target>/delta.md`.
   - **Role transitions**, by joining before and after dump rows on `drv` and counting each transition (for example `fragment → package`).
   - **Assert:** every changed row was `fragment` before. Any other transition is a defect, and the task stops.
   - **The bucket deltas** from the accounting before and after, attributed as in `specs/1492-patch-member-source/measurements/edge-delta.md`.
@@ -173,10 +173,10 @@
   - **SC-002:** on every target, every `fragment` row has rung `live-bootstrap-builder`.
   - **SC-004 (openai, slack-web):** the edges each spec-1492 patch contributes before and after, and whether the `stdenv-linux` fan-out remains.
   - Write the five-target summary table to `measurements/edge-delta.md`.
-- [ ] T024 [US3] Push the branch. Dispatch `gh workflow run public-corpus.yml --ref main -f branch=1503-fragment-positive-evidence -f regen_goldens=true`.
+- [X] T024 [US3] Push the branch. Dispatch `gh workflow run public-corpus.yml --ref main -f branch=1503-fragment-positive-evidence -f regen_goldens=true`.
   - Watch the run with `gh run watch <id>` in the background. When it finishes, enumerate every job's conclusion.
   - Download the `corpus-goldens-regen` artifact. Confirm it holds 67 files, the same set as `waybill-cli/tests/fixtures/public_corpus/`, missing nothing in either direction.
-- [ ] T025 [US3] Review the regenerated goldens and write `specs/1503-fragment-positive-evidence/measurements/golden-review.md` in the shape of `specs/1492-patch-member-source/measurements/golden-review.md`.
+- [X] T025 [US3] Review the regenerated goldens and write `specs/1503-fragment-positive-evidence/measurements/golden-review.md` in the shape of `specs/1492-patch-member-source/measurements/golden-review.md`.
   - **SC-006:** exactly the 15 closure SBOM files differ. The 49 other files and the three `recall-truth.json` are byte-identical.
   - **Per closure target**, compare CDX components (recursively, nested included), `dependencies[].dependsOn` edges and properties, using a normalized `LC_ALL=C`-sorted diff.
   - Every changed component must be a member in that target's `delta.md`, and its only changed properties must be `waybill:closure-member-role`, `waybill:orphan-reason` and the explained C184 and graph-completeness values.
@@ -185,7 +185,7 @@
   - No `bom-ref` or PURL may change (R4).
   - Run `waybill sbom parity-check` on the old and new triples, and confirm the parity result is unchanged (FR-008).
   - List every explained difference beyond FR-007's list, as 1492's review did.
-- [ ] T026 [US3] Copy the regenerated closure goldens into `waybill-cli/tests/fixtures/public_corpus/nix-closure-*/`, the 15 files only.
+- [X] T026 [US3] Copy the regenerated closure goldens into `waybill-cli/tests/fixtures/public_corpus/nix-closure-*/`, the 15 files only.
   - Commit with the measurements: `test(corpus): regenerate the nix-closure goldens for #1511, reviewed edge by edge`.
 
 **Checkpoint**: SC-001 to SC-004 and SC-006 are each stated with their measured value in `measurements/`.
@@ -194,13 +194,13 @@
 
 ## Phase 6: Polish & cross-cutting
 
-- [ ] T027 [P] Edit the C206 row in `docs/reference/sbom-format-mapping.md` per `contracts/wire.md`.
+- [X] T027 [P] Edit the C206 row in `docs/reference/sbom-format-mapping.md` per `contracts/wire.md`.
   - Change the evidence-order sentence to end with the three rungs.
   - Use data-model.md's definitions for `package`, `scaffolding` and `fragment`.
   - Replace "`fragment` is now said only of live-bootstrap functions" with a sentence true of all five regenerated goldens. Check it against T023's SC-002 result.
   - Make sure the parity extractor for C206 still matches. Read it before editing the row.
-- [ ] T028 [P] In `docs/reference/nix-evaluation.md`, update the role table (definitions, and the moat counts from T021), the evidence-order paragraph, and any sentence that says `fragment` is the fall-through or cites #1502/#1511 as open.
-- [ ] T029 Add a `Changed` entry under Unreleased in `CHANGELOG.md`, placed so it is not adjacent to any other unreleased entry added by an open PR. Cite #1511 and the measured moat transitions.
+- [X] T028 [P] In `docs/reference/nix-evaluation.md`, update the role table (definitions, and the moat counts from T021), the evidence-order paragraph, and any sentence that says `fragment` is the fall-through or cites #1502/#1511 as open.
+- [X] T029 Add a `Changed` entry under Unreleased in `CHANGELOG.md`, placed so it is not adjacent to any other unreleased entry added by an open PR. Cite #1511 and the measured moat transitions.
 - [ ] T030 Run the gate one final time. Confirm the log's last lines read `GATE_EXIT=0` and `>>> all pre-PR checks passed.`, and keep the per-target `test result: ok. N passed; 0 failed` lines for the PR body.
 - [ ] T031 Verify every task's claim, not just its tick.
   - Re-read each `[X]` task and check that its artifact exists and says what the task requires.
