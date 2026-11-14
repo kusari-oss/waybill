@@ -117,8 +117,8 @@
   - 0 unexplained changes (SC-003, SC-004). *As built:* `golden-review.md`. 67/67 files present; 15 differ, all `nix-closure-*`, and the other 52 are byte-identical. On every target, every role change is `fragment → source` and every changed edge touches a moved member: 0 unexplained. Moat C184 `edges` is 6,891, equal to T015, with 0 edges removed. Parity is unchanged (A5 fails before and after). Four further differences are each explained in the file: C184 `wanted` +N; shellcheck's 5 subject fan-out edges; the openai/slack-web stdenv fan-out; the graph-completeness orphan count. The C2 deduction is stated in the file.
 
   For moat, the C184 `edges` must equal T015's `projected, identity level`. Then commit the goldens.
-- [ ] T022 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Confirm `GATE_RESULT=pass`, and confirm the per-target `test result: ok` lines with 0 failed.
-- [ ] T023 Tick every task with an as-built note. Then open the PR, stacked on #1509 (`--base 1367-closure-edge-count`, or `main` once #1509 lands), with "Closes #1502" and the measurement summary.
+- [X] T022 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Confirm `GATE_RESULT=pass`, and confirm the per-target `test result: ok` lines with 0 failed. *As built:* re-run on the final tree, with goldens and docs: `GATE_RESULT=pass`, 393 test targets, 8,085 passed, 0 failed.
+- [X] T023 Tick every task with an as-built note. Then open the PR, stacked on #1509 (`--base 1367-closure-edge-count`, or `main` once #1509 lands), with "Closes #1502" and the measurement summary. *As built:* the PR is stacked on #1509. A simulated squash-land of #1509 followed by a merge of this branch conflicts in `graph.rs` `account()`, because the `stops` calls #1509 added now take the patch set. The resolution is mechanical (take this side) and is recorded in the PR body.
 
 ---
 
