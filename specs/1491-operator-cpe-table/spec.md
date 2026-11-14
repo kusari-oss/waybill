@@ -190,9 +190,9 @@ A maintainer adds or corrects a curated row. Today that is a Rust edit in three 
 
   The fixed strings name the surface (`--root-cpe`, `--supplement-cdx`, `--cpe-map`). This applies to every component, not only closure members.
 - **FR-008**: The three formats MUST agree on which components carry operator provenance, and on its value. The existing C212 parity row stays `SymmetricEqual`.
-- **FR-009**: C212 `waybill:cpe-provenance` MUST be emitted on every component whose CPE an operator surface supplied. That includes a subject that is a scanned component. A synthetic or `--root-name`/`--root-purl` subject has no component scope and nothing to override, because it has carried no CPE since #1402. Its source is recorded natively only (FR-007).
+- **FR-009**: C212 `waybill:cpe-provenance` MUST be emitted on every component whose CPE an operator surface supplied **in place of a different primary**. That includes a subject that is a scanned component. *Amended 2026-11-13:* an operator CPE that displaced nothing (no prior CPE, the same primary, or a supplement-only component) carries no C212, and any C212 a lower source attached is removed. Its `basis` alone would restate the surface the native comment and CycloneDX method already name (Principle V); `overrode` is the part no format can carry. A synthetic or `--root-name`/`--root-purl` subject has no component scope and nothing to override, because it has carried no CPE since #1402. Its source is recorded natively only (FR-007).
   - `basis` names how the operator value was joined: `root-cpe`, `purl` for a supplement exact-PURL match, or `cpe-map` for a mapping row.
-  - `overrode` is the primary CPE the next-highest source (FR-005) would have emitted. It is present only when that differs from the emitted primary.
+  - `overrode` is the primary CPE the next-highest source (FR-005) would have emitted. On an operator CPE it is always present, since its absence means no C212.
   - C212's existing `drv`/`name-version` values and their meaning are unchanged.
   - The catalog row in `docs/reference/sbom-format-mapping.md` is updated to say C212 is no longer closure-only.
 - **FR-010**: A curated or heuristic CPE on a non-closure component MUST stay without recorded provenance, as today. Extending curated provenance beyond closure members would change every golden, and is out of scope.

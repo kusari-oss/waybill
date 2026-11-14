@@ -58,11 +58,11 @@ The source is resolved in this order: the operator marker, then C212 with a `drv
 | `basis` | Source | Emitted on |
 |---|---|---|
 | `drv`, `name-version` | nixpkgs-declared (unchanged) | closure components |
-| `purl` | `--supplement-cdx` | any component the supplement set |
-| `cpe-map` | `--cpe-map` | any component a row matched |
-| `root-cpe` | `--root-cpe` | the subject, when it is a scanned main module |
+| `purl` | `--supplement-cdx` | a component the supplement set, when it displaced a different primary |
+| `cpe-map` | `--cpe-map` | a component a row matched, when it displaced a different primary |
+| `root-cpe` | `--root-cpe` | the subject, when it is a scanned main module that had a different primary |
 
-`overrode` is the primary CPE the component would have emitted without this source. It is omitted when equal or absent.
+`overrode` is the primary CPE the component would have emitted without this source. It is omitted when equal or absent; for an operator basis, C212 is then omitted entirely (FR-009, amended 2026-11-13).
 
 ## Precedence (FR-005)
 
