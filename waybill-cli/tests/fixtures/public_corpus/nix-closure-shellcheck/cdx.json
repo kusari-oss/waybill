@@ -160,15 +160,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/001-fix-rpath.patch-x2ypihwzypmn2zsam2c9fqg7gvzv64rh",
@@ -15945,15 +15941,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/catalog-legacy-uris.patch-36dpg26bkw1vcwb66m7xxcabbgcjpz39",
@@ -16000,15 +15992,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/catalog-legacy-uris.patch-i5blxpryq4pcmwc35bkwijgj4887895s",
@@ -31877,15 +31865,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/fix-build-time-run-tcl.patch-sxj3ir7ggypf7y5kwgggbni2z6abbdxv",
@@ -81917,15 +81901,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/remove-hatch-plugins.patch-rwmi96f3mdgllmy40bm0i1iwn44ansya",
@@ -115612,7 +115592,6 @@
   "dependencies": [
     {
       "dependsOn": [
-        "pkg:generic/001-fix-rpath.patch-x2ypihwzypmn2zsam2c9fqg7gvzv64rh",
         "pkg:generic/UserSettings.hs-sybz8461rnzgd36s3ligcjs4l4ddrqly",
         "pkg:generic/__assert_fail-63ylg04cgw4dqrlxy6zxx58l0mvc28qf",
         "pkg:generic/__assert_fail-builder-zg19fm6fzvh5787swpwfrwj7gciidrj6",
@@ -115664,8 +115643,6 @@
         "pkg:generic/calloc-pn63pwy6gv617hpy7r33m6l4zifafzfj",
         "pkg:generic/cast-builder-w4vpchc8ps72xfmi6gbbrs6iw7y9kqjn",
         "pkg:generic/cast-zy9kmif499i10lh2hqcpjmw0lgjv57wj",
-        "pkg:generic/catalog-legacy-uris.patch-36dpg26bkw1vcwb66m7xxcabbgcjpz39",
-        "pkg:generic/catalog-legacy-uris.patch-i5blxpryq4pcmwc35bkwijgj4887895s",
         "pkg:generic/cc-builder-lz4nn74jnxg612cl2jzpd49baqsl19mc",
         "pkg:generic/cc-gp0g0x7dg0gvjh98xfkyajni6qa5v1n2",
         "pkg:generic/chdir-builder-d4p16n5n0kx7hss8kqa8dmrlf8zxf356",
@@ -115747,7 +115724,6 @@
         "pkg:generic/fflush-gnm4qxbivv7y2n112w898rdabc0q6pxa",
         "pkg:generic/fgetc-8gjrq7nfvdhlpbc4licbbqfn291ikq85",
         "pkg:generic/fgetc-builder-fk7844pynkdlf9121b12ipbrf55c9g9h",
-        "pkg:generic/fix-build-time-run-tcl.patch-sxj3ir7ggypf7y5kwgggbni2z6abbdxv",
         "pkg:generic/fopen-builder-70pnb6xgjxzj6v6v27sxfjsbbbpaa3jy",
         "pkg:generic/fopen-gh33z218ga15qwxb7vr31yfi774rbbly",
         "pkg:generic/fork-builder-mwr39jx5bysz6lgcj42dp70q1yvjr4dh",
@@ -115973,7 +115949,6 @@
         "pkg:generic/realpath-builder-ymd4zqgir8lilx0q7l1djvgjp6v8cjyp",
         "pkg:generic/realpath-l5s22qij435ycw3f6is0bwyf5m67fs7m",
         "pkg:generic/remove-builder-bmlz5dr8h49pdq0dn4xdxsw3r9z1wx1z",
-        "pkg:generic/remove-hatch-plugins.patch-rwmi96f3mdgllmy40bm0i1iwn44ansya",
         "pkg:generic/remove-jyh0vzwz039ffsgmysy34jsbp0mq3w3v",
         "pkg:generic/remove-references-to-msxx3fjwf8cqfwbhpxrqlwmnb75v31w8",
         "pkg:generic/rename-builder-07f6ncaqrcmwjki20pq4y0v1cf31zbz7",
@@ -116141,7 +116116,10 @@
       "ref": "pkg:generic/0001-Add-prototype-to-function-definitions.patch-sha256.hX2Vv6VVM3KjmBHo2ukVWe5YTVXRmqe.s.sKw2kr73OpZs.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/001-fix-rpath.patch-x2ypihwzypmn2zsam2c9fqg7gvzv64rh"
     },
     {
@@ -116912,6 +116890,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
+        "pkg:generic/remove-hatch-plugins.patch-rwmi96f3mdgllmy40bm0i1iwn44ansya",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -118226,11 +118205,17 @@
       "ref": "pkg:generic/cast-zy9kmif499i10lh2hqcpjmw0lgjv57wj"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/catalog-legacy-uris.patch-36dpg26bkw1vcwb66m7xxcabbgcjpz39"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/catalog-legacy-uris.patch-i5blxpryq4pcmwc35bkwijgj4887895s"
     },
     {
@@ -119262,6 +119247,7 @@
       "dependsOn": [
         "pkg:generic/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch-sha256.hA89dikDVDJGXZ702nq3MbVBfYEChaWk1bp59aDKD7kU.e",
         "pkg:generic/bash@5.3p9",
+        "pkg:generic/catalog-legacy-uris.patch-i5blxpryq4pcmwc35bkwijgj4887895s",
         "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
         "pkg:generic/docbook-xsl-nons-1.79.2.tar.bz2-sha256.h7oueygt6j4kHWDKi2nU0vOjFR4.sI.sCZ29RLV2H2DIQI.e",
         "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
@@ -119273,6 +119259,7 @@
       "dependsOn": [
         "pkg:generic/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch-sha256.hA89dikDVDJGXZ702nq3MbVBfYEChaWk1bp59aDKD7kU.e",
         "pkg:generic/bash@5.3p9",
+        "pkg:generic/catalog-legacy-uris.patch-36dpg26bkw1vcwb66m7xxcabbgcjpz39",
         "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
         "pkg:generic/docbook-xsl-1.79.2.tar.bz2-sha256.hMWUk6kROUyCKL7kO62dq91XaluFBeDW6X163Gcgfo3E.e",
         "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
@@ -119674,6 +119661,7 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/expect-configure-c99.patch-sha256.hPxQQ9roWgVXUoCMxkXEgu.pit26ES.sJuzHF6oML.snk54.e",
         "pkg:generic/expect5.45.4.tar.gz-sha256.hSafag7C92fRtBKBN7sGcd2e7mjI.pQMR4H4nK92C5LDQ.e",
+        "pkg:generic/fix-build-time-run-tcl.patch-sxj3ir7ggypf7y5kwgggbni2z6abbdxv",
         "pkg:generic/make-shell-wrapper-hook@26.05pre-git",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tcl-package-hook@26.05pre-git",
@@ -119969,7 +119957,11 @@
       "ref": "pkg:generic/fix-aarch64_fregs.patch-sha256.hzvncoRkQx3AwPx52ehjA2vcFroF.pyDC2MQR5uS6DATs.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git",
+        "pkg:generic/tcl@8.6.16"
+      ],
       "ref": "pkg:generic/fix-build-time-run-tcl.patch-sxj3ir7ggypf7y5kwgggbni2z6abbdxv"
     },
     {
@@ -124116,6 +124108,7 @@
     },
     {
       "dependsOn": [
+        "pkg:generic/001-fix-rpath.patch-x2ypihwzypmn2zsam2c9fqg7gvzv64rh",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ensure-newer-sources-hook@26.05pre-git",
@@ -126366,7 +126359,10 @@
       "ref": "pkg:generic/remove-builder-bmlz5dr8h49pdq0dn4xdxsw3r9z1wx1z"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/remove-hatch-plugins.patch-rwmi96f3mdgllmy40bm0i1iwn44ansya"
     },
     {
@@ -137482,7 +137478,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":2045,\"components-without-member-role\":699,\"derivations\":2209,\"distinct-cves\":15,\"edge-ineligible-components\":513,\"edges\":10208,\"identifiers\":{\"by-drv\":431,\"by-name-version\":96,\"declared\":50,\"received\":527,\"rejected\":0,\"wanted\":1696},\"licenses\":{\"degraded\":null,\"received\":430,\"wanted\":1696,\"withheld-ambiguous\":0},\"member-roles\":{\"check\":46,\"fragment\":246,\"package\":23,\"scaffolding\":267,\"source\":764},\"patches\":225,\"patches-without-cve\":209,\"roles\":{\"artifact-input\":462,\"both\":47,\"build-tooling\":1699,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":2045,\"components-without-member-role\":699,\"derivations\":2209,\"distinct-cves\":15,\"edge-ineligible-components\":508,\"edges\":10224,\"identifiers\":{\"by-drv\":431,\"by-name-version\":96,\"declared\":50,\"received\":527,\"rejected\":0,\"wanted\":1701},\"licenses\":{\"degraded\":null,\"received\":430,\"wanted\":1701,\"withheld-ambiguous\":0},\"member-roles\":{\"check\":46,\"fragment\":241,\"package\":23,\"scaffolding\":267,\"source\":769},\"patches\":225,\"patches-without-cve\":209,\"roles\":{\"artifact-input\":462,\"both\":47,\"build-tooling\":1699,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",

@@ -95,6 +95,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **A locally built Nix patch is a source, not a C function (#1502).** Under
+  `--nix-closure`, a closure member that another derivation lists in its
+  `patches` attribute is `waybill:closure-member-role` `source` whatever its
+  name. A `replaceVars` patch carries no version token and used to fall
+  through to `fragment`, the role for live-bootstrap C functions such as
+  `strncpy`, and a generated patch would have been `scaffolding`.
+  - **Edges change.** The dependency graph walks through `fragment` members
+    and stops at `source` ones. A patch is therefore now an edge target of the
+    package it patches, and its own inputs are its edges.
+  - **Measured** on the pinned moat closure: 5 members moved, and the
+    closure's edges went from 6,875 to 6,891. Every changed edge involves one
+    of the 5.
+
 - **The curated CPE table is a data file (#1491).** The table moved from Rust
   source to `waybill-cli/src/generate/cpe_table.toml`, which is embedded in
   the binary. It has 82 rows for `pkg:generic` components.

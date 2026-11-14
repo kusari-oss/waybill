@@ -1,0 +1,94 @@
+{
+  "derivations": {
+    "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-waybill-fixture-app-3.0.drv": {
+      "name": "waybill-fixture-app-3.0",
+      "env": {
+        "pname": "waybill-fixture-app",
+        "version": "3.0",
+        "patches": "/nix/store/op1-waybill-fixture-fix-rpath.patch",
+        "out": "/nix/store/o-app3"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/o-app3"
+        }
+      },
+      "inputs": {
+        "drvs": {
+          "/nix/store/p1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-fix-rpath.patch.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          },
+          "/nix/store/p2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-unlisted.patch.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      }
+    },
+    "/nix/store/p1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-fix-rpath.patch.drv": {
+      "name": "waybill-fixture-fix-rpath.patch",
+      "env": {
+        "dontUnpack": "1",
+        "src": "/nix/store/s1-fix-rpath.patch",
+        "out": "/nix/store/op1-waybill-fixture-fix-rpath.patch"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/op1-waybill-fixture-fix-rpath.patch"
+        }
+      },
+      "inputs": {
+        "drvs": {
+          "/nix/store/p3xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-substitute-1.0.drv": {
+            "dynamicOutputs": {},
+            "outputs": [
+              "out"
+            ]
+          }
+        },
+        "srcs": []
+      }
+    },
+    "/nix/store/p2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-unlisted.patch.drv": {
+      "name": "waybill-fixture-unlisted.patch",
+      "env": {
+        "dontUnpack": "1",
+        "src": "/nix/store/s2-unlisted.patch",
+        "out": "/nix/store/op2-waybill-fixture-unlisted.patch"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/op2-waybill-fixture-unlisted.patch"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    },
+    "/nix/store/p3xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-waybill-fixture-substitute-1.0.drv": {
+      "name": "waybill-fixture-substitute-1.0",
+      "env": {
+        "pname": "waybill-fixture-substitute",
+        "version": "1.0",
+        "out": "/nix/store/op3-waybill-fixture-substitute-1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "/nix/store/op3-waybill-fixture-substitute-1.0"
+        }
+      },
+      "inputs": {
+        "drvs": {},
+        "srcs": []
+      }
+    }
+  },
+  "version": 4
+}

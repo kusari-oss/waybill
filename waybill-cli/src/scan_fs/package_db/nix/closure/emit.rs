@@ -236,6 +236,9 @@ pub(crate) fn emitted_drv_keys<'a>(
     raw: &'a super::derivation::RawClosure,
     roles: &std::collections::BTreeMap<String, DerivationRole>,
 ) -> std::collections::HashSet<&'a str> {
+    // Spec 1492 — the closure's own patch set, so a locally built patch is an
+    // endpoint here exactly when the emitted role says `source`.
+    let patches = member::PatchOutputs::of(raw);
     raw.derivations
         .iter()
         .filter(|(key, drv)| {
@@ -255,7 +258,7 @@ pub(crate) fn emitted_drv_keys<'a>(
                 // **superset** of edge participation, and
                 // [`edge_endpoint_keys_are_a_subset_of_emitted`] holds the
                 // two in that relation rather than trusting them to agree.
-                && (!is_1282_member(drv) || member::is_edge_endpoint(drv))
+                && (!is_1282_member(drv) || member::is_edge_endpoint(drv, &patches))
         })
         .map(|(key, _)| key.as_str())
         .collect()

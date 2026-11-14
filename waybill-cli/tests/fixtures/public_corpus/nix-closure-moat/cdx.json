@@ -3521,15 +3521,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/001-fix-rpath.patch-x2ypihwzypmn2zsam2c9fqg7gvzv64rh",
@@ -16159,15 +16155,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/catalog-legacy-uris.patch-36dpg26bkw1vcwb66m7xxcabbgcjpz39",
@@ -16214,15 +16206,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/catalog-legacy-uris.patch-i5blxpryq4pcmwc35bkwijgj4887895s",
@@ -27137,15 +27125,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/fix-build-time-run-tcl.patch-sxj3ir7ggypf7y5kwgggbni2z6abbdxv",
@@ -66171,15 +66155,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/remove-hatch-plugins.patch-rwmi96f3mdgllmy40bm0i1iwn44ansya",
@@ -90116,7 +90096,10 @@
       "ref": "pkg:generic/0001-Add-prototype-to-function-definitions.patch-sha256.hX2Vv6VVM3KjmBHo2ukVWe5YTVXRmqe.s.sKw2kr73OpZs.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/001-fix-rpath.patch-x2ypihwzypmn2zsam2c9fqg7gvzv64rh"
     },
     {
@@ -90757,6 +90740,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.13",
+        "pkg:generic/remove-hatch-plugins.patch-rwmi96f3mdgllmy40bm0i1iwn44ansya",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -91974,11 +91958,17 @@
       "ref": "pkg:generic/cast-zy9kmif499i10lh2hqcpjmw0lgjv57wj"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/catalog-legacy-uris.patch-36dpg26bkw1vcwb66m7xxcabbgcjpz39"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/catalog-legacy-uris.patch-i5blxpryq4pcmwc35bkwijgj4887895s"
     },
     {
@@ -92720,6 +92710,7 @@
       "dependsOn": [
         "pkg:generic/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch-sha256.hA89dikDVDJGXZ702nq3MbVBfYEChaWk1bp59aDKD7kU.e",
         "pkg:generic/bash@5.3p9",
+        "pkg:generic/catalog-legacy-uris.patch-i5blxpryq4pcmwc35bkwijgj4887895s",
         "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
         "pkg:generic/docbook-xsl-nons-1.79.2.tar.bz2-sha256.h7oueygt6j4kHWDKi2nU0vOjFR4.sI.sCZ29RLV2H2DIQI.e",
         "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
@@ -92731,6 +92722,7 @@
       "dependsOn": [
         "pkg:generic/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch-sha256.hA89dikDVDJGXZ702nq3MbVBfYEChaWk1bp59aDKD7kU.e",
         "pkg:generic/bash@5.3p9",
+        "pkg:generic/catalog-legacy-uris.patch-36dpg26bkw1vcwb66m7xxcabbgcjpz39",
         "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
         "pkg:generic/docbook-xsl-1.79.2.tar.bz2-sha256.hMWUk6kROUyCKL7kO62dq91XaluFBeDW6X163Gcgfo3E.e",
         "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
@@ -93068,6 +93060,7 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/expect-configure-c99.patch-sha256.hPxQQ9roWgVXUoCMxkXEgu.pit26ES.sJuzHF6oML.snk54.e",
         "pkg:generic/expect5.45.4.tar.gz-sha256.hSafag7C92fRtBKBN7sGcd2e7mjI.pQMR4H4nK92C5LDQ.e",
+        "pkg:generic/fix-build-time-run-tcl.patch-sxj3ir7ggypf7y5kwgggbni2z6abbdxv",
         "pkg:generic/make-shell-wrapper-hook@26.05pre-git",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tcl-package-hook@26.05pre-git",
@@ -93331,7 +93324,11 @@
       "ref": "pkg:generic/fix-aarch64_fregs.patch-sha256.hzvncoRkQx3AwPx52ehjA2vcFroF.pyDC2MQR5uS6DATs.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git",
+        "pkg:generic/tcl@8.6.16"
+      ],
       "ref": "pkg:generic/fix-build-time-run-tcl.patch-sxj3ir7ggypf7y5kwgggbni2z6abbdxv"
     },
     {
@@ -96986,6 +96983,7 @@
     },
     {
       "dependsOn": [
+        "pkg:generic/001-fix-rpath.patch-x2ypihwzypmn2zsam2c9fqg7gvzv64rh",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.11",
         "pkg:generic/ensure-newer-sources-hook@26.05pre-git",
@@ -98929,7 +98927,10 @@
       "ref": "pkg:generic/remove-builder-bmlz5dr8h49pdq0dn4xdxsw3r9z1wx1z"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/remove-hatch-plugins.patch-rwmi96f3mdgllmy40bm0i1iwn44ansya"
     },
     {
@@ -105064,7 +105065,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 513 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
+        "value": "orphaned-components-detected: 508 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -105088,7 +105089,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":1590,\"components-without-member-role\":503,\"derivations\":1749,\"distinct-cves\":15,\"edge-ineligible-components\":512,\"edges\":6875,\"identifiers\":{\"by-drv\":231,\"by-name-version\":95,\"declared\":50,\"received\":326,\"rejected\":0,\"wanted\":1237},\"licenses\":{\"degraded\":null,\"received\":230,\"wanted\":1237,\"withheld-ambiguous\":0},\"member-roles\":{\"check\":46,\"fragment\":245,\"package\":23,\"scaffolding\":267,\"source\":506},\"patches\":212,\"patches-without-cve\":196,\"roles\":{\"artifact-input\":268,\"both\":45,\"build-tooling\":1435,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":1590,\"components-without-member-role\":503,\"derivations\":1749,\"distinct-cves\":15,\"edge-ineligible-components\":507,\"edges\":6891,\"identifiers\":{\"by-drv\":231,\"by-name-version\":95,\"declared\":50,\"received\":326,\"rejected\":0,\"wanted\":1242},\"licenses\":{\"degraded\":null,\"received\":230,\"wanted\":1242,\"withheld-ambiguous\":0},\"member-roles\":{\"check\":46,\"fragment\":240,\"package\":23,\"scaffolding\":267,\"source\":511},\"patches\":212,\"patches-without-cve\":196,\"roles\":{\"artifact-input\":268,\"both\":45,\"build-tooling\":1435,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",

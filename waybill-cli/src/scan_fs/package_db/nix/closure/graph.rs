@@ -103,7 +103,7 @@ pub(crate) struct ProjectedGraph {
 /// A derivation declaring a `pname` is a package. The test is on the
 /// *declaration* and not on whether it was emitted, which is the distinction
 /// that produces FR-011's residual-orphan population rather than hiding it.
-fn stops(drv: &RawDerivation) -> bool {
+fn stops(drv: &RawDerivation, patches: &super::member::PatchOutputs<'_>) -> bool {
     match drv.declared_pname() {
         // A derivation declaring a `pname` is a package, as before.
         Some(_) => true,
@@ -116,7 +116,7 @@ fn stops(drv: &RawDerivation) -> bool {
         // [`member::classify`] here rather than re-deriving the test is what
         // keeps this in step with `emit::emitted_drv_keys`, which asks the
         // same question of the same function.
-        None => super::member::is_edge_endpoint(drv),
+        None => super::member::is_edge_endpoint(drv, patches),
     }
 }
 
@@ -128,12 +128,15 @@ fn stops(drv: &RawDerivation) -> bool {
 /// measured closure — and FR-012 exists because both measured closures are
 /// small enough to hide the difference.
 pub(crate) fn project(closure: &RawClosure, emitted: &HashSet<&str>) -> ProjectedGraph {
+    // Spec 1492 — built once; it decides whether a locally built patch stops
+    // the walk, exactly as it decides the role `emit` writes.
+    let patches = super::member::PatchOutputs::of(closure);
     debug_assert!(
         emitted.iter().all(|k| {
             closure
                 .derivations
                 .get(*k)
-                .is_some_and(stops)
+                .is_some_and(|d| stops(d, &patches))
         }),
         "every edge endpoint must be a derivation the walk stops at"
     );
@@ -142,7 +145,7 @@ pub(crate) fn project(closure: &RawClosure, emitted: &HashSet<&str>) -> Projecte
     let mut visits = 0usize;
 
     for key in drvs.keys() {
-        nearest_stopping(drvs, key, &mut memo, &mut HashSet::new(), &mut visits);
+        nearest_stopping(drvs, key, &patches, &mut memo, &mut HashSet::new(), &mut visits);
     }
 
     let mut edges: BTreeSet<(String, String)> = BTreeSet::new();
@@ -183,6 +186,7 @@ pub(crate) fn project(closure: &RawClosure, emitted: &HashSet<&str>) -> Projecte
 fn nearest_stopping<'a>(
     drvs: &'a BTreeMap<String, RawDerivation>,
     key: &'a str,
+    patches: &super::member::PatchOutputs<'_>,
     memo: &mut HashMap<&'a str, BTreeSet<&'a str>>,
     in_progress: &mut HashSet<&'a str>,
     visits: &mut usize,
@@ -202,10 +206,10 @@ fn nearest_stopping<'a>(
             // `input_drvs` has already dropped entries naming a derivation
             // outside this closure (FR-005), so the lookup cannot miss.
             let Some(target) = drvs.get(input) else { continue };
-            if stops(target) {
+            if stops(target, patches) {
                 out.insert(input);
             } else {
-                out.extend(nearest_stopping(drvs, input, memo, in_progress, visits));
+                out.extend(nearest_stopping(drvs, input, patches, memo, in_progress, visits));
             }
         }
     }
@@ -661,6 +665,42 @@ mod tests {
         assert_eq!(g.evaluated, None, "two candidates name no evaluated package");
     }
 
+    /// Spec 1492 (#1502, FR-004) — the walk stops at a locally built patch
+    /// that the consumer lists in `patches`. The consumer depends on the
+    /// patch, and the patch depends on what built it.
+    ///
+    /// CONTROL: the same closure with the patch unlisted walks through it, so
+    /// the consumer's edge goes straight to the builder. The listing is the
+    /// only difference between the two.
+    #[test]
+    fn s1492_the_walk_stops_at_a_listed_patch() {
+        let closure = |patches: &str| {
+            RawClosure::parse(&format!(
+                r#"{{"derivations":{{
+                  "app.drv":{{"name":"waybill-fixture-app-1.0","env":{{"pname":"waybill-fixture-app","version":"1.0","patches":"{patches}"}},
+                    "inputs":{{"drvs":{{"patch.drv":{{"outputs":["out"]}}}}}},"outputs":{{"out":{{"path":"/nix/store/ha-app"}}}}}},
+                  "patch.drv":{{"name":"waybill-fixture-fix-rpath.patch","env":{{"dontUnpack":"1"}},
+                    "inputs":{{"drvs":{{"sub.drv":{{"outputs":["out"]}}}}}},"outputs":{{"out":{{"path":"/nix/store/hp-waybill-fixture-fix-rpath.patch"}}}}}},
+                  "sub.drv":{{"name":"waybill-fixture-substitute-1.0","env":{{"pname":"waybill-fixture-substitute","version":"1.0"}},
+                    "outputs":{{"out":{{"path":"/nix/store/hs-substitute"}}}}}}
+                }}}}"#
+            ))
+            .unwrap()
+        };
+        let pair = |a: &str, b: &str| (a.to_string(), b.to_string());
+
+        let listed = closure("/nix/store/hp-waybill-fixture-fix-rpath.patch");
+        let edges = edges_of(&listed);
+        assert!(edges.contains(&pair("app.drv", "patch.drv")), "{edges:?}");
+        assert!(edges.contains(&pair("patch.drv", "sub.drv")), "{edges:?}");
+        assert!(!edges.contains(&pair("app.drv", "sub.drv")), "{edges:?}");
+
+        let unlisted = closure("");
+        let edges = edges_of(&unlisted);
+        assert!(edges.contains(&pair("app.drv", "sub.drv")), "CONTROL: {edges:?}");
+        assert!(edges.iter().all(|(f, t)| f != "patch.drv" && t != "patch.drv"), "CONTROL: {edges:?}");
+    }
+
     /// #1367 — where a closure's `inputs.drvs` edges go.
     ///
     /// Every derivation-level edge `a -> b` lands in exactly one bucket:
@@ -711,6 +751,7 @@ mod tests {
         let key = |k: &str| drvs.get(k).and_then(|d| key_of_derivation(d, k));
         let root = g.root.as_deref();
         let is_source = |k: &str| em.contains(k) || Some(k) == root;
+        let patches = super::super::member::PatchOutputs::of(c);
 
         let mut out = EdgeAccounting::default();
         // Identity edge -> bitmask of the buckets producing it.
@@ -722,7 +763,7 @@ mod tests {
                 let bucket = if !is_source(a) {
                     unemitted_sources.insert(a.as_str());
                     0
-                } else if !stops(&drvs[b]) {
+                } else if !stops(&drvs[b], &patches) {
                     1
                 } else if !em.contains(b) {
                     2
@@ -744,7 +785,7 @@ mod tests {
             .filter(|(x, y)| x != y)
             .collect();
         out.unemitted_sources = unemitted_sources.len();
-        out.unemitted_sources_that_stop = unemitted_sources.iter().filter(|k| stops(&drvs[**k])).count();
+        out.unemitted_sources_that_stop = unemitted_sources.iter().filter(|k| stops(&drvs[**k], &patches)).count();
         out.collapsed = collapsed.len();
         out.projected_drv_level = g.edges.len();
         out.shipped = shipped.len();

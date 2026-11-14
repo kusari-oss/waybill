@@ -1,0 +1,30 @@
+{
+  "c182_roles": {
+    "artifact-input": 268,
+    "both": 45,
+    "build-tooling": 1435,
+    "unreferenced": 1
+  },
+  "coverage_population": 1237,
+  "derivations": 1749,
+  "distinct_member_identities": 1087,
+  "distinct_pypi_identities": 76,
+  "emitted_as_component": 1748,
+  "evaluated_package": "w5sj90fh9b8gmkx4ij0fnckvg6k8vfry-moat-0.1.drv",
+  "member_roles": {
+    "check": 46,
+    "fragment": 245,
+    "package": 23,
+    "scaffolding": 267,
+    "source": 553
+  },
+  "members_1282": 1134,
+  "pname_carrier": {
+    "env": 604,
+    "none": 1134,
+    "structuredAttrs": 11
+  },
+  "pypi_candidates": 76,
+  "rows": [],
+  "schema": "waybill-closure-dump/v1"
+}

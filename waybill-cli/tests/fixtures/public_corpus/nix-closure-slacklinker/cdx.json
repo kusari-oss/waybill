@@ -18821,15 +18821,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/001-fix-rpath.patch-57acajrfkp2iaas1d1z6xi9d7xmdkxqm",
@@ -38264,15 +38260,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/catalog-legacy-uris.patch-6vk4kmxg00z64bgw0s99h14kl74p8b0s",
@@ -38319,15 +38311,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/catalog-legacy-uris.patch-kwj4f804wb8rh3yy2rvdy98vaf5ylqq5",
@@ -52765,15 +52753,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/fix-build-time-run-tcl.patch-ac0far8v0bnfcw7g5fvbv80ca8a0k521",
@@ -80339,15 +80323,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/locale-binary-path.patch-rvjfyp68q9gl13ziivfvnkh1bjwda1vn",
@@ -104410,15 +104390,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/remove-hatch-plugins.patch-n4y9wxij7pcbqrhm4k4kzj8yg5lxrigx",
@@ -173628,7 +173604,10 @@
       "ref": "pkg:generic/0001-Add-prototype-to-function-definitions.patch-sha256.hX2Vv6VVM3KjmBHo2ukVWe5YTVXRmqe.s.sKw2kr73OpZs.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/001-fix-rpath.patch-57acajrfkp2iaas1d1z6xi9d7xmdkxqm"
     },
     {
@@ -175123,6 +175102,7 @@
         "pkg:generic/python-remove-tests-dir-hook@26.05pre-git",
         "pkg:generic/python-runtime-deps-check-hook.sh@26.05pre-git",
         "pkg:generic/python3@3.13.12",
+        "pkg:generic/remove-hatch-plugins.patch-n4y9wxij7pcbqrhm4k4kzj8yg5lxrigx",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/wrap-python-hook@26.05pre-git"
       ],
@@ -177167,11 +177147,17 @@
       "ref": "pkg:generic/cast-zy9kmif499i10lh2hqcpjmw0lgjv57wj"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/catalog-legacy-uris.patch-6vk4kmxg00z64bgw0s99h14kl74p8b0s"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/catalog-legacy-uris.patch-kwj4f804wb8rh3yy2rvdy98vaf5ylqq5"
     },
     {
@@ -178314,6 +178300,7 @@
       "dependsOn": [
         "pkg:generic/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch-sha256.hA89dikDVDJGXZ702nq3MbVBfYEChaWk1bp59aDKD7kU.e",
         "pkg:generic/bash@5.3p9",
+        "pkg:generic/catalog-legacy-uris.patch-kwj4f804wb8rh3yy2rvdy98vaf5ylqq5",
         "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
         "pkg:generic/docbook-xsl-nons-1.79.2.tar.bz2-sha256.h7oueygt6j4kHWDKi2nU0vOjFR4.sI.sCZ29RLV2H2DIQI.e",
         "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
@@ -178325,6 +178312,7 @@
       "dependsOn": [
         "pkg:generic/07631601e6602bc49b8eac3aab9d2b35968d3e7a.patch-sha256.hA89dikDVDJGXZ702nq3MbVBfYEChaWk1bp59aDKD7kU.e",
         "pkg:generic/bash@5.3p9",
+        "pkg:generic/catalog-legacy-uris.patch-6vk4kmxg00z64bgw0s99h14kl74p8b0s",
         "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
         "pkg:generic/docbook-xsl-1.79.2.tar.bz2-sha256.hMWUk6kROUyCKL7kO62dq91XaluFBeDW6X163Gcgfo3E.e",
         "pkg:generic/find-xml-catalogs-hook@26.05pre-git",
@@ -178775,6 +178763,7 @@
         "pkg:generic/bash@5.3p9",
         "pkg:generic/expect-configure-c99.patch-sha256.hPxQQ9roWgVXUoCMxkXEgu.pit26ES.sJuzHF6oML.snk54.e",
         "pkg:generic/expect5.45.4.tar.gz-sha256.hSafag7C92fRtBKBN7sGcd2e7mjI.pQMR4H4nK92C5LDQ.e",
+        "pkg:generic/fix-build-time-run-tcl.patch-ac0far8v0bnfcw7g5fvbv80ca8a0k521",
         "pkg:generic/make-shell-wrapper-hook@26.05pre-git",
         "pkg:generic/stdenv-linux@26.05pre-git",
         "pkg:generic/tcl-package-hook@26.05pre-git",
@@ -179084,7 +179073,11 @@
       "ref": "pkg:generic/fix-aarch64_fregs.patch-sha256.hzvncoRkQx3AwPx52ehjA2vcFroF.pyDC2MQR5uS6DATs.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git",
+        "pkg:generic/tcl@8.6.16"
+      ],
       "ref": "pkg:generic/fix-build-time-run-tcl.patch-ac0far8v0bnfcw7g5fvbv80ca8a0k521"
     },
     {
@@ -183061,7 +183054,11 @@
       "ref": "pkg:generic/ln-boot@unstable-2023-05-22"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/glibc@2.42-51",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/locale-binary-path.patch-rvjfyp68q9gl13ziivfvnkh1bjwda1vn"
     },
     {
@@ -183710,6 +183707,7 @@
     },
     {
       "dependsOn": [
+        "pkg:generic/001-fix-rpath.patch-57acajrfkp2iaas1d1z6xi9d7xmdkxqm",
         "pkg:generic/bash@5.3p9",
         "pkg:generic/coreutils@9.10",
         "pkg:generic/ensure-newer-sources-hook@26.05pre-git",
@@ -185201,6 +185199,7 @@
         "pkg:generic/libxslt@1.1.45",
         "pkg:generic/linux-pam@1.7.1",
         "pkg:generic/llvm@21.1.8",
+        "pkg:generic/locale-binary-path.patch-rvjfyp68q9gl13ziivfvnkh1bjwda1vn",
         "pkg:generic/lz4@1.10.0?nix_drv=4zp0wspxbz2ixn8blg0k1dkrmgz7jnad",
         "pkg:generic/make-binary-wrapper-hook@26.05pre-git",
         "pkg:generic/openssl@3.6.1",
@@ -186708,7 +186707,10 @@
       "ref": "pkg:generic/remove-builder-bmlz5dr8h49pdq0dn4xdxsw3r9z1wx1z"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/bash@5.3p9",
+        "pkg:generic/stdenv-linux@26.05pre-git"
+      ],
       "ref": "pkg:generic/remove-hatch-plugins.patch-n4y9wxij7pcbqrhm4k4kzj8yg5lxrigx"
     },
     {
@@ -199247,7 +199249,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 524 component(s) not reachable from root; transitive-edges-unresolvable: cargo, hackage"
+        "value": "orphaned-components-detected: 518 component(s) not reachable from root; transitive-edges-unresolvable: cargo, hackage"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -199267,7 +199269,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":2351,\"components-without-member-role\":833,\"derivations\":2518,\"distinct-cves\":21,\"edge-ineligible-components\":523,\"edges\":12149,\"identifiers\":{\"by-drv\":492,\"by-name-version\":103,\"declared\":54,\"received\":595,\"rejected\":0,\"wanted\":1995},\"licenses\":{\"degraded\":null,\"received\":490,\"wanted\":1995,\"withheld-ambiguous\":0},\"member-roles\":{\"check\":47,\"fragment\":256,\"package\":34,\"scaffolding\":267,\"source\":914},\"patches\":285,\"patches-without-cve\":263,\"roles\":{\"artifact-input\":555,\"both\":60,\"build-tooling\":1902,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":2351,\"components-without-member-role\":833,\"derivations\":2518,\"distinct-cves\":21,\"edge-ineligible-components\":517,\"edges\":12169,\"identifiers\":{\"by-drv\":492,\"by-name-version\":103,\"declared\":54,\"received\":595,\"rejected\":0,\"wanted\":2001},\"licenses\":{\"degraded\":null,\"received\":490,\"wanted\":2001,\"withheld-ambiguous\":0},\"member-roles\":{\"check\":47,\"fragment\":250,\"package\":34,\"scaffolding\":267,\"source\":920},\"patches\":285,\"patches-without-cve\":263,\"roles\":{\"artifact-input\":555,\"both\":60,\"build-tooling\":1902,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",

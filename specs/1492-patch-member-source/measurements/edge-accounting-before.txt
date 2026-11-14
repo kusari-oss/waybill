@@ -1,0 +1,19 @@
+#1367 edge accounting: <CLOSURE moat-closure.json>
+  derivations 1749
+  inputs.drvs edges, derivation level   10342
+    from-unemitted       2195
+    walked-through       802
+    to-unemitted-stop    0
+    direct               7345
+    (self-loops after collapse 9, keyless endpoint 0)
+    from-unemitted sources 512, of which stop the walk 0
+  collapsed to identities (prediction) 9661
+  projected, derivation level          7761
+  projected, identity level (shipped)  6875
+    also in collapsed                  6689
+    added by walking through           186
+  collapsed edges not shipped          2972
+    from-unemitted       only   2193   any   2193
+    walked-through       only    779   any    779
+    to-unemitted-stop    only      0   any      0
+    direct               only      0   any      0

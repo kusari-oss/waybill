@@ -246,19 +246,32 @@ fn names_a_check(name: &str) -> bool {
 /// one role. The four counts must therefore sum to the member count, which is
 /// how the probe confirmed there is no residue.
 ///
-/// **The evidence order is fixed and load-bearing**: content hash, then
-/// `env.text`, then a version-shaped name, then fragment. A member bearing
+/// **The evidence order is fixed and load-bearing**: content hash, then a
+/// listing in another derivation's `patches` (spec 1492), then `env.text`,
+/// then a version-shaped name, then fragment. A member bearing
 /// several signals takes the strongest. Reversing the middle two describes a
 /// different classifier producing different counts — the data-model's role
 /// table had them the other way round until the analyze pass caught it
 /// against this probe.
 ///
-/// Spec 1380 (#1374) splits the version-name rung and touches nothing else
-/// (research R5): evidence first (listed in `patches`, then `srcOnly`), then
-/// the source-tree names, then the check names, and `package` for the rest.
-/// Every outcome of that rung is a graph endpoint, so the split moves no edge.
+/// Spec 1380 (#1374) splits the version-name rung (research R5): evidence
+/// first (`srcOnly`), then the source-tree names, then the check names, and
+/// `package` for the rest. Every outcome of that rung is a graph endpoint, so
+/// the split moves no edge.
+///
+/// Spec 1492 (#1502) lifts the `patches` evidence, which spec 1380 applied
+/// only inside that rung, to its own rung ahead of `env.text`. That **does**
+/// move edges: a patch that was `fragment` is walked through no longer. The
+/// change is measured in `specs/1492-patch-member-source/measurements/`.
 pub(crate) fn classify(drv: &RawDerivation, patches: &PatchOutputs<'_>) -> MemberRole {
     if content_hash(drv).is_some() {
+        return MemberRole::Source;
+    }
+    // Spec 1492 (#1502) — the closure's record that this path is applied as a
+    // patch, whatever its name and however it was built. A `replaceVars`
+    // patch carries no version token and fell to `fragment`; a generated one
+    // carries `env.text` and would be `scaffolding`.
+    if patches.lists(drv) {
         return MemberRole::Source;
     }
     if drv.env.contains_key("text") {
@@ -266,7 +279,7 @@ pub(crate) fn classify(drv: &RawDerivation, patches: &PatchOutputs<'_>) -> Membe
     }
     let name = drv.name.as_deref().unwrap_or_default();
     if name_encodes_a_version(name) {
-        if patches.lists(drv) || is_src_only(drv) || names_a_source_tree(name) {
+        if is_src_only(drv) || names_a_source_tree(name) {
             return MemberRole::Source;
         }
         if names_a_check(name) {
@@ -279,13 +292,13 @@ pub(crate) fn classify(drv: &RawDerivation, patches: &PatchOutputs<'_>) -> Membe
 
 /// Whether this member is a dependency-graph endpoint (FR-013).
 ///
-/// Asked without the closure's patch set, and the answer cannot differ from
-/// [`classify`]'s with it. The patch set is consulted only inside the
-/// version-name rung, and every outcome of that rung (`source`, `check`,
-/// `package`) is an endpoint. `the_patch_set_never_changes_the_endpoint_answer`
-/// holds that.
-pub(crate) fn is_edge_endpoint(drv: &RawDerivation) -> bool {
-    classify(drv, &PatchOutputs::default()).is_edge_endpoint()
+/// `patches` must be the closure's own set ([`PatchOutputs::of`]). Spec 1492
+/// (#1502) makes it decide between `fragment`, which is walked through, and
+/// `source`, which is an endpoint: a locally built patch is one only because
+/// another derivation lists it. The projection and the emitter each pass the
+/// set they built, so neither can disagree with the emitted C206 value.
+pub(crate) fn is_edge_endpoint(drv: &RawDerivation, patches: &PatchOutputs<'_>) -> bool {
+    classify(drv, patches).is_edge_endpoint()
 }
 
 /// This member's identity basis (FR-003 / FR-004).
@@ -555,33 +568,58 @@ mod tests {
         RawClosure::parse(CASES).unwrap()
     }
 
-    /// T005 — only `package` members move, and only to endpoint roles. So
-    /// the endpoint set, and with it the graph, is the same as before.
+    /// T005 — spec 1380 moves only `package` members, and only between
+    /// endpoint roles.
+    ///
+    /// Spec 1492 adds exactly one other move: a member listed in `patches`
+    /// goes `fragment → source`. It is the only move that changes endpoint
+    /// status, and so the only one that changes the graph.
     #[test]
     fn s1380_only_package_members_move_and_only_between_endpoints() {
         let raw = cases();
         let patches = PatchOutputs::of(&raw);
-        let mut moved = 0;
+        let (mut moved, mut listed) = (0, 0);
         for d in raw.derivations.values().filter(|d| d.declared_pname().is_none()) {
             let (before, after) = (classify_before_1380(d), classify(d, &patches));
-            if before != after {
-                moved += 1;
-                assert_eq!(before, MemberRole::Package, "{:?} moved from {before:?}", d.name);
+            if before == after {
+                continue;
             }
-            assert_eq!(before.is_edge_endpoint(), after.is_edge_endpoint(), "{:?}", d.name);
+            moved += 1;
+            if before == MemberRole::Fragment {
+                listed += 1;
+                assert!(patches.lists(d), "{:?}: only a listed patch leaves fragment", d.name);
+                assert_eq!(after, MemberRole::Source, "{:?}", d.name);
+                assert!(!before.is_edge_endpoint() && after.is_edge_endpoint());
+            } else {
+                assert_eq!(before, MemberRole::Package, "{:?} moved from {before:?}", d.name);
+                assert_eq!(before.is_edge_endpoint(), after.is_edge_endpoint(), "{:?}", d.name);
+            }
         }
-        assert!(moved >= 9, "CONTROL: the fixture must exercise every new rung, moved {moved}");
+        assert!(moved >= 10, "CONTROL: the fixture must exercise every new rung, moved {moved}");
+        assert_eq!(listed, 1, "CONTROL: `q.drv` is the one listed bare patch");
     }
 
-    /// The endpoint helper agrees with the full classification, with the
-    /// patch set or without it.
+    /// The endpoint helper agrees with the full classification when both are
+    /// given the closure's patch set.
+    ///
+    /// Spec 1492 (#1502) replaces spec 1380's
+    /// `s1380_the_patch_set_never_changes_the_endpoint_answer`. That test
+    /// pinned the helper to an empty patch set, which was sound while the set
+    /// was read only inside the version-name rung. A locally built patch is
+    /// now an endpoint only because another derivation lists it.
+    ///
+    /// CONTROL: for `q.drv`, the listed bare-named patch, the patch set
+    /// changes the answer. Without that, agreement would hold even if the
+    /// helper still ignored its argument.
     #[test]
-    fn s1380_the_patch_set_never_changes_the_endpoint_answer() {
+    fn s1492_the_endpoint_helper_agrees_with_classify_given_the_patch_set() {
         let raw = cases();
         let patches = PatchOutputs::of(&raw);
         for d in raw.derivations.values() {
-            assert_eq!(is_edge_endpoint(d), classify(d, &patches).is_edge_endpoint(), "{:?}", d.name);
+            assert_eq!(is_edge_endpoint(d, &patches), classify(d, &patches).is_edge_endpoint(), "{:?}", d.name);
         }
+        let q = &raw.derivations["q.drv"];
+        assert_ne!(is_edge_endpoint(q, &patches), is_edge_endpoint(q, &none()), "CONTROL");
     }
 
     /// T006 — US2: patches, `srcOnly` trees and named source trees are
@@ -598,8 +636,10 @@ mod tests {
         assert_eq!(at("v.drv"), MemberRole::Source, "-vendor");
         assert_eq!(at("o.drv"), MemberRole::Source, "-source");
         assert!(matches!(identity(&raw.derivations["r.drv"], "r.drv"), IdentityBasis::Recipe(_)));
-        // R5: a listed patch with no version token is outside the split.
-        assert_eq!(at("q.drv"), MemberRole::Fragment);
+        // Spec 1492 (#1502): a listed patch with no version token is `source`
+        // too. Spec 1380's R5 kept it `fragment` to move no edge. Its unlisted
+        // twin is `s1492_an_unlisted_twin_stays_fragment`.
+        assert_eq!(at("q.drv"), MemberRole::Source);
         // Controls: a fetch is `source` by rung 1; a genuine bootstrap package
         // and an environment stay `package`.
         assert_eq!(at("f.drv"), MemberRole::Source);
@@ -631,5 +671,87 @@ mod tests {
     fn s1380_the_wire_value_and_the_count_set() {
         assert_eq!(MemberRole::Check.wire(), "check");
         assert_eq!(MemberRole::ALL.len(), 5);
+    }
+
+    // ---- Spec 1492 (#1502) ----
+
+    /// A consumer that lists three patches, shaped like the real closure
+    /// (research R1):
+    /// - `l.drv`, a `replaceVars` output: `dontUnpack`, no hash, no version
+    ///   token;
+    /// - `w.drv`, a generated patch, which carries `env.text`;
+    /// - `h.drv`, a fetched patch: a fixed-output derivation with **no
+    ///   output path**, as nix records one.
+    ///
+    /// `n.drv` is `l.drv`'s twin, listed by nothing.
+    const LOCAL_PATCHES: &str = r#"{"derivations":{
+      "c.drv":{"name":"waybill-fixture-consumer-1.0","env":{"pname":"waybill-fixture-consumer",
+        "patches":"/nix/store/hl-waybill-fixture-fix-rpath.patch /nix/store/hw-waybill-fixture-generated.patch /nix/store/hh-waybill-fixture-fetched.patch"},
+        "outputs":{"out":{"path":"/nix/store/hc-waybill-fixture-consumer-1.0"}}},
+      "l.drv":{"name":"waybill-fixture-fix-rpath.patch","env":{"dontUnpack":"1","src":"/nix/store/hs-fix-rpath.patch"},
+        "outputs":{"out":{"path":"/nix/store/hl-waybill-fixture-fix-rpath.patch"}}},
+      "w.drv":{"name":"waybill-fixture-generated.patch","env":{"text":"--- a\n+++ b\n"},
+        "outputs":{"out":{"path":"/nix/store/hw-waybill-fixture-generated.patch"}}},
+      "h.drv":{"name":"waybill-fixture-fetched.patch","outputs":{"out":{"hash":"sha256-AAAA","method":"flat"}}},
+      "n.drv":{"name":"waybill-fixture-unlisted.patch","env":{"dontUnpack":"1","src":"/nix/store/hs-unlisted.patch"},
+        "outputs":{"out":{"path":"/nix/store/hn-waybill-fixture-unlisted.patch"}}}
+    }}"#;
+
+    fn local_patches() -> RawClosure {
+        RawClosure::parse(LOCAL_PATCHES).unwrap()
+    }
+
+    /// FR-001 — listed in another derivation's `patches`, so a patch,
+    /// however bare its name.
+    #[test]
+    fn s1492_a_listed_patch_is_source_whatever_its_name() {
+        let raw = local_patches();
+        assert_eq!(classify(&raw.derivations["l.drv"], &PatchOutputs::of(&raw)), MemberRole::Source);
+    }
+
+    /// FR-002 — the same shape, listed by nothing, keeps its role.
+    #[test]
+    fn s1492_an_unlisted_twin_stays_fragment() {
+        let raw = local_patches();
+        assert_eq!(classify(&raw.derivations["n.drv"], &PatchOutputs::of(&raw)), MemberRole::Fragment);
+    }
+
+    /// FR-010 — the `patches` rung precedes `env.text`, so a generated patch
+    /// is a patch rather than a build script.
+    ///
+    /// CONTROL: without the patch set it is `scaffolding`, so the listing is
+    /// what moved it.
+    #[test]
+    fn s1492_a_listed_generated_patch_is_source_not_scaffolding() {
+        let raw = local_patches();
+        let w = &raw.derivations["w.drv"];
+        assert_eq!(classify(w, &PatchOutputs::of(&raw)), MemberRole::Source);
+        assert_eq!(classify(w, &none()), MemberRole::Scaffolding, "CONTROL");
+    }
+
+    /// Research R1 — a fetched patch records no output path, so the listing
+    /// cannot see it; the content hash makes it `source` first.
+    #[test]
+    fn s1492_a_fetched_patch_is_source_by_its_hash() {
+        let raw = local_patches();
+        let h = &raw.derivations["h.drv"];
+        assert!(!PatchOutputs::of(&raw).lists(h), "a fetch has no output path to match");
+        assert_eq!(classify(h, &PatchOutputs::of(&raw)), MemberRole::Source);
+    }
+
+    /// FR-003 — still total: every member gets exactly one of the five
+    /// values, so the per-role counts sum to the member count.
+    #[test]
+    fn s1492_the_classifier_stays_total() {
+        for raw in [cases(), local_patches()] {
+            let patches = PatchOutputs::of(&raw);
+            let members: Vec<_> = raw.derivations.values().filter(|d| d.declared_pname().is_none()).collect();
+            let mut counts = std::collections::BTreeMap::new();
+            for d in &members {
+                *counts.entry(classify(d, &patches)).or_insert(0usize) += 1;
+            }
+            assert_eq!(counts.values().sum::<usize>(), members.len());
+            assert!(counts.keys().all(|r| MemberRole::ALL.contains(r)));
+        }
     }
 }
