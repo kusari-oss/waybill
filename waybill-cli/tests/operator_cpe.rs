@@ -609,7 +609,8 @@ fn s1491_us3_map_precedence_on_a_closure() {
             &op_cpe(product, version),
             MAP_COMMENT,
             "operator --cpe-map",
-            Some(c212_json("cpe-map", displaced)),
+            // FR-009: nothing displaced on the plain member, so no C212.
+            displaced.map(|o| c212_json("cpe-map", Some(o))),
         );
     }
 

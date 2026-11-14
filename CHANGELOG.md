@@ -23,10 +23,11 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
     keyed by versionless PURL, applied at each component's own version.
 
   Each format records the source natively ("CPE supplied by the operator
-  with <flag>"). `waybill:cpe-provenance` (C212) is now emitted on any
-  operator-sourced CPE, with basis `purl`, `cpe-map` or `root-cpe` and the
-  CPE it overrode. A malformed `--root-cpe` or map row stops the scan before
-  it starts; a malformed supplement CPE is still dropped with a warning.
+  with <flag>"). When an operator CPE displaces a different one,
+  `waybill:cpe-provenance` (C212) records the displaced CPE as `overrode`,
+  with basis `purl`, `cpe-map` or `root-cpe`; with nothing displaced it is
+  omitted, since the native fields already name the flag. A malformed
+  `--root-cpe` or map row stops the scan before it starts; a malformed supplement CPE is still dropped with a warning.
   Output without these flags is unchanged.
 
 - **A Nix overlay's Haskell dependency is one component, with an identity

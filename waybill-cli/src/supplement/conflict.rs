@@ -698,7 +698,8 @@ mod tests {
     }
 
     /// T021 — the operator stating the CPE the scanner already had: no
-    /// conflict, no `overrode`, but the source is still the operator's.
+    /// conflict and no C212 (nothing was displaced), but the source is still
+    /// the operator's.
     #[test]
     fn s1491_an_identical_supplement_cpe_is_still_the_operators() {
         use crate::scan_fs::package_db::nix::closure::identifiers as ids;
@@ -707,9 +708,12 @@ mod tests {
         let (merged, conflicts) = resolve_component(deb_with_guess(), &supp);
         assert!(conflicts.is_empty());
         assert_eq!(merged.cpes[0].as_str(), GUESS);
+        assert!(!merged.extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
         assert_eq!(
-            merged.extra_annotations.get(ids::ANN_DECLARED_CPE),
-            Some(&ids::provenance_with("purl", None))
+            crate::generate::cpe_source::cpe_source(&merged),
+            Some(crate::generate::cpe_source::CpeSource::Operator(
+                crate::generate::cpe_source::OperatorSurface::Supplement
+            ))
         );
     }
 

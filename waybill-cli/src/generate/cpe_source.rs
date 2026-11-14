@@ -153,21 +153,33 @@ pub(crate) fn set_operator_cpes(c: &mut ResolvedComponent, cpes: Vec<Cpe>, surfa
 }
 
 /// Record that an operator surface set `c`'s CPEs: the marker, and C212
-/// with that surface's basis and the displaced primary.
+/// when there is a displaced primary to record.
+///
+/// With nothing displaced C212 is omitted (Principle V): its `basis` would
+/// only restate the surface the native comment and CycloneDX method already
+/// name. Any C212 already present is removed then, because it described a
+/// CPE from another source.
 pub(crate) fn mark_operator(c: &mut ResolvedComponent, surface: OperatorSurface, overrode: Option<&str>) {
     c.extra_annotations.remove(ids::ANN_CURATED_CPE);
     c.extra_annotations.insert(
         ANN_OPERATOR_CPE.to_string(),
         serde_json::Value::String(surface.wire().to_string()),
     );
-    c.extra_annotations.insert(
-        ids::ANN_DECLARED_CPE.to_string(),
-        ids::provenance_with(surface.basis(), overrode),
-    );
+    match overrode {
+        Some(_) => {
+            c.extra_annotations.insert(
+                ids::ANN_DECLARED_CPE.to_string(),
+                ids::provenance_with(surface.basis(), overrode),
+            );
+        }
+        None => {
+            c.extra_annotations.remove(ids::ANN_DECLARED_CPE);
+        }
+    }
 }
 
 /// Record `displaced` as the CPE an operator source overrode, when the
-/// component's C212 names none yet and it differs from the emitted primary.
+/// component carries no C212 yet and it differs from the emitted primary.
 ///
 /// For a supplement entry that only later turns out to stand for a closure
 /// member: the supplement merge saw nothing to displace, and the closure
@@ -179,12 +191,7 @@ pub(crate) fn note_displaced(c: &mut ResolvedComponent, displaced: Option<&Cpe>)
     if c.cpes.first() == Some(displaced) {
         return;
     }
-    let recorded = c
-        .extra_annotations
-        .get(ids::ANN_DECLARED_CPE)
-        .and_then(|v| v.as_str())
-        .and_then(|s| serde_json::from_str::<serde_json::Value>(s).ok());
-    if recorded.as_ref().is_some_and(|v| v.get("overrode").is_some()) {
+    if c.extra_annotations.contains_key(ids::ANN_DECLARED_CPE) {
         return;
     }
     c.extra_annotations.insert(
@@ -316,17 +323,66 @@ mod tests {
         );
     }
 
-    /// No `overrode` when the operator's primary equals the old one, or when
-    /// there was none.
+    /// No C212 when the operator's primary equals the old one, or when there
+    /// was none: nothing was displaced, and the native fields already name
+    /// the surface. The source is still the operator's.
     #[test]
-    fn overrode_is_recorded_only_for_a_displaced_primary() {
+    fn c212_is_emitted_only_for_a_displaced_primary() {
         let mut same = component(&[OPERATOR]);
         set_operator_cpes(&mut same, vec![Cpe::parse(OPERATOR).unwrap()], OperatorSurface::Supplement);
-        assert_eq!(same.extra_annotations[ids::ANN_DECLARED_CPE], serde_json::json!(r#"{"basis":"purl"}"#));
+        assert!(!same.extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
+        assert_eq!(cpe_source(&same), Some(CpeSource::Operator(OperatorSurface::Supplement)));
 
         let mut empty = component(&[]);
         set_operator_cpes(&mut empty, vec![Cpe::parse(OPERATOR).unwrap()], OperatorSurface::RootCpe);
-        assert_eq!(empty.extra_annotations[ids::ANN_DECLARED_CPE], serde_json::json!(r#"{"basis":"root-cpe"}"#));
+        assert!(!empty.extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
+        assert_eq!(cpe_source(&empty), Some(CpeSource::Operator(OperatorSurface::RootCpe)));
+    }
+
+    /// A nixpkgs C212 on a component whose CPE the operator restates is
+    /// removed: it described nixpkgs' CPE, and the emitted one is the
+    /// operator's.
+    ///
+    /// CONTROL: with a different operator CPE the record is replaced, not
+    /// removed, so the equality is what decides.
+    #[test]
+    fn an_operator_restating_a_declared_cpe_drops_its_c212() {
+        let declared = || {
+            let mut c = component(&[OPERATOR]);
+            c.extra_annotations.insert(
+                ids::ANN_DECLARED_CPE.to_string(),
+                ids::provenance(ids::JoinBasis::Drv, Some(GUESS)),
+            );
+            c
+        };
+        let mut c = declared();
+        set_operator_cpes(&mut c, vec![Cpe::parse(OPERATOR).unwrap()], OperatorSurface::CpeMap);
+        assert!(!c.extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
+
+        let mut control = declared();
+        set_operator_cpes(&mut control, vec![Cpe::parse(GUESS).unwrap()], OperatorSurface::CpeMap);
+        assert_eq!(
+            control.extra_annotations[ids::ANN_DECLARED_CPE],
+            serde_json::json!(format!(r#"{{"basis":"cpe-map","overrode":"{OPERATOR}"}}"#))
+        );
+    }
+
+    /// A supplement that later turns out to stand for a closure member
+    /// records what that member would have emitted, once.
+    #[test]
+    fn note_displaced_fills_an_absent_record_only() {
+        let mut c = component(&[OPERATOR]);
+        mark_operator(&mut c, OperatorSurface::Supplement, None);
+        note_displaced(&mut c, Some(&Cpe::parse(OPERATOR).unwrap()));
+        assert!(!c.extra_annotations.contains_key(ids::ANN_DECLARED_CPE));
+
+        note_displaced(&mut c, Some(&Cpe::parse(GUESS).unwrap()));
+        let first = serde_json::json!(format!(r#"{{"basis":"purl","overrode":"{GUESS}"}}"#));
+        assert_eq!(c.extra_annotations[ids::ANN_DECLARED_CPE], first);
+
+        let other = "cpe:2.3:a:waybill-fixture-other:waybill-fixture-lib:1.0:*:*:*:*:*:*:*";
+        note_displaced(&mut c, Some(&Cpe::parse(other).unwrap()));
+        assert_eq!(c.extra_annotations[ids::ANN_DECLARED_CPE], first);
     }
 
     /// The version field is read past escaped colons, and `*`/`-` are none.

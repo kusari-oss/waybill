@@ -23,7 +23,7 @@ The same `cpe_source` function feeds all three emitters, so the formats cannot d
 
 ## C212 `waybill:cpe-provenance` (FR-009)
 
-The value is a JSON string: `{"basis":"<b>","overrode":"<cpe>"}`, with `overrode` optional.
+The value is a JSON string: `{"basis":"<b>","overrode":"<cpe>"}`. `overrode` is optional for the nixpkgs bases. An operator basis is emitted only with `overrode`: an operator CPE that displaced nothing carries no C212 (FR-009, amended 2026-11-13).
 
 - **`basis`** is one of:
   - `drv` or `name-version`: nixpkgs-declared, unchanged;

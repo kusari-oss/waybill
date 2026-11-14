@@ -417,7 +417,7 @@ partition into two sets:
 `cpe` moved to developer-wins in spec 1491. Every CPE the scanner holds
 at merge time is synthesized, from the curated table or an ecosystem
 guess such as `debian:<name>`, so the operator's explicit CPE replaces
-the scanner's list. The displaced primary is recorded in
+the scanner's list. A displaced primary that differs is recorded in
 `waybill:cpe-provenance` (C212) as `overrode`, and the CPE's source as
 "CPE supplied by the operator with --supplement-cdx" in each format's
 native field.
@@ -1426,7 +1426,8 @@ subject would otherwise carry, and each format records the source natively
 ("CPE supplied by the operator with --root-cpe").
 
 - **A scanned main module** gets the CPE on its component, and
-  `waybill:cpe-provenance` records the CPE it displaced.
+  `waybill:cpe-provenance` records the CPE it displaced, if it had a
+  different one.
 - **A subject named with `--root-name` or `--root-purl`** gets it on the
   synthesized root, in CycloneDX `metadata.component.cpe` (with
   `waybill:cpe-candidates` when there are several), SPDX 2.3
@@ -1468,7 +1469,8 @@ pair = [
 - **Precedence.** A row replaces nixpkgs-declared, curated and heuristic CPEs.
   `--supplement-cdx` for the exact PURL beats a row, and `--root-cpe` beats
   both. The source is recorded as "CPE supplied by the operator with
-  --cpe-map", and `waybill:cpe-provenance` records the displaced primary.
+  --cpe-map", and `waybill:cpe-provenance` records the displaced primary
+  when there was a different one.
 - **Errors.** An unreadable or malformed file, an unknown field, a duplicate
   key, a key with a version, qualifiers or subpath, or a pair that does not
   form a valid CPE stops the scan before it starts. The message names the row.
