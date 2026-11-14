@@ -505,15 +505,17 @@ gate was the C182 role filter above. The evidence is in the golden: 1,315
 `pname` test will change nothing and the build will stay green.
 
 These members now become components, each carrying
-`waybill:closure-member-role` — a **second, independent vocabulary**:
+`waybill:closure-member-role` — a **second, independent vocabulary**. Counts
+are components on the regenerated moat golden (C184 `member-roles`,
+2026-11-14, after spec 1492):
 
 | Role | Count | What it is |
 |---|---|---|
-| `source` | 549 | a fixed-output fetch — a tarball or patch the build consumed |
-| `package` | 83 | a version-bearing bootstrap package (`mes-libc-mini-0.27.1`) |
-| `check` | — | a version check or test program (`bash-get-version-5.3`), since spec 1380 |
+| `source` | 511 | a fixed-output fetch (a tarball or patch the build consumed), a source tree, or a patch another derivation lists in `patches` |
+| `package` | 23 | a version-bearing bootstrap package (`mes-libc-mini-0.27.1`) |
+| `check` | 46 | a version check or test program (`bash-get-version-5.3`), since spec 1380 |
 | `scaffolding` | 267 | `writeText` output — `itoa-builder`, `setup-hook.sh` |
-| `fragment` | 246 | a live-bootstrap C function — `strncpy`, `memcpy`, `malloc` |
+| `fragment` | 240 | a live-bootstrap C function — `strncpy`, `memcpy`, `malloc` |
 
 **Do not confuse this with `waybill:closure-role`.** The two have been
 confused once already, and it falsified a clarification before measurement
@@ -531,25 +533,45 @@ one against the other reconciles nothing.
 
 Classification reads the closure alone — no network, no second evaluation, no
 maintained name list — in a **fixed evidence order**: a content hash makes it
-`source`, else `env.text` makes it `scaffolding`, else a version-shaped name
-makes it `package`, else `fragment`. The order is load-bearing; swapping the
+`source`, else a listing in another closure derivation's `patches` makes it
+`source` (spec 1492), else `env.text` makes it `scaffolding`, else a
+version-shaped name makes it `package`, else `fragment`. The order is load-bearing; swapping the
 middle two describes a different classifier producing different counts.
 
 **Spec 1380 (#1374) splits the version-name rung.** It is the only rung that
 read nothing but a name, and on the moat golden 50 of its 73 members were not
 packages: version checks, test programs and source trees. Within that rung:
 
-- **By evidence:** a member whose output another derivation lists in
-  `patches`, or whose `phases` are nixpkgs `srcOnly`'s
-  (`unpackPhase patchPhase installPhase`), is `source`.
+- **By evidence:** a member whose `phases` are nixpkgs `srcOnly`'s
+  (`unpackPhase patchPhase installPhase`) is `source`.
 - **By name**, for the groups nothing in a derivation records: a name ending
   `-source`, `-src-<v>` or `-vendor` is `source`, and a `-get-version-<v>`
   or `-simple-program-<v>` is `check`.
 - **Everything else** stays `package`, including environments (`-env`).
 
-A member outside the rung keeps its role. That includes four local patches
-with no version token, which are `fragment` today (#1502). The measurements
-are in `specs/1380-closure-package-role/`. The
+The measurements are in `specs/1380-closure-package-role/`.
+
+**Spec 1492 (#1502) lifts the `patches` evidence out of that rung**, ahead of
+`env.text`. A patch built locally carries no version token: it is a
+`replaceVars` output with `dontUnpack` and a local `.patch` as `src`. So it fell
+through to `fragment` and the graph walked through it. It is `source` now,
+whatever its name, and so is a generated patch that carries `env.text`.
+
+**Unlike spec 1380, this moves edges.** The patch is an edge target of the
+package it patches, and its own inputs are its edges. Measured on the moat
+closure:
+- **Roles:** 5 members moved.
+- **Edges:** 6,875 → 6,891. All 16 new edges involve one of the 5, and none
+  was removed.
+
+The other closure goldens moved 5 or 6 members each. On openai and slack-web
+each patch gained about 38 edges, because there `stdenv-linux` is itself
+walked through to its toolchain. See
+`specs/1492-patch-member-source/measurements/`.
+
+A fetched patch is untouched by this rung. It is a fixed-output derivation,
+which records no output path for a `patches` listing to match, and its
+content hash makes it `source` first. The
 content hash is read from **both** `outputs[<name>].hash` and the older
 `env.outputHash`, because the second alone carries 139 of the 549 and reading
 only it undercounts the population fourfold.
@@ -568,8 +590,8 @@ Only `source`, `package` and `check` members are dependency-edge endpoints.
 projection walks *through* scaffolding and fragments, so an edge names the
 source a package was built from rather than the build script between them.
 **This reshapes the graph rather than growing it** — stopping earlier replaces
-wide transitive fan-outs with direct edges — and leaves 513 components as
-orphans by construction, each carrying
+wide transitive fan-outs with direct edges — and leaves 507 components on the
+moat golden (2026-11-14) as orphans by construction, each carrying
 `waybill:orphan-reason = closure-member-not-an-edge-endpoint`. An orphan
 *without* a reason is the defect; this population is not one.
 

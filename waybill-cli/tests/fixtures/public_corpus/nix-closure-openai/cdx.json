@@ -10948,15 +10948,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/001-fix-rpath.patch-9hmyq60b3zf0yc26jfi603x3cmn7zr9a",
@@ -28498,15 +28494,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/catalog-legacy-uris.patch-dwzd4zjymz9wn6jikvzr996bhpbf1b22",
@@ -28554,15 +28546,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/catalog-legacy-uris.patch-spmz4h0s2xz8ncdd15rwficvv4vjmma3",
@@ -35984,15 +35972,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/fix-build-time-run-tcl.patch-gdjqjmbapfwg8dymmkgddkxi3r4vijpc",
@@ -74878,15 +74862,11 @@
         },
         {
           "name": "waybill:closure-member-role",
-          "value": "fragment"
+          "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "closure-member-not-an-edge-endpoint"
         }
       ],
       "purl": "pkg:generic/version.patch-f0vxl2i4v0crk7k18am3jk8rx6658ba9",
@@ -77682,7 +77662,46 @@
       "ref": "pkg:generic/0001-Add-prototype-to-function-definitions.patch-sha256.hX2Vv6VVM3KjmBHo2ukVWe5YTVXRmqe.s.sKw2kr73OpZs.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/acl@2.3.2",
+        "pkg:generic/attr@2.5.2",
+        "pkg:generic/bash@5.2p37",
+        "pkg:generic/binutils-wrapper@2.43.1",
+        "pkg:generic/binutils@2.43.1",
+        "pkg:generic/bootstrap-stage3-gcc-wrapper@13.3.0",
+        "pkg:generic/bootstrap-tools.tar.xz-sha256.hYQlr088HPoVWBU2jpPhpIMyOyoEDZYDw1y60SGGbUM0.e",
+        "pkg:generic/busybox-sha256.hQrTEnQTBM1Y.sqV9odq8irZkQSD9uOMbs2Q5NgCvKCNQ.e",
+        "pkg:generic/bzip2@1.0.8",
+        "pkg:generic/coreutils@9.5",
+        "pkg:generic/diffutils@3.10",
+        "pkg:generic/ed@1.20.2",
+        "pkg:generic/file@5.45",
+        "pkg:generic/findutils@4.10.0",
+        "pkg:generic/gawk@5.3.1",
+        "pkg:generic/gcc-wrapper@13.3.0",
+        "pkg:generic/gcc@13.3.0",
+        "pkg:generic/glibc@2.40-36",
+        "pkg:generic/gmp-with-cxx@6.3.0",
+        "pkg:generic/gmp@6.3.0",
+        "pkg:generic/gnu-config@2024-01-01",
+        "pkg:generic/gnugrep@3.11",
+        "pkg:generic/gnumake@4.4.1",
+        "pkg:generic/gnused@4.9",
+        "pkg:generic/gnutar@1.35",
+        "pkg:generic/gzip@1.13",
+        "pkg:generic/isl@0.20",
+        "pkg:generic/libidn2@2.3.7",
+        "pkg:generic/libmpc@1.3.1",
+        "pkg:generic/libunistring@1.2",
+        "pkg:generic/linux-headers@6.10",
+        "pkg:generic/mpfr@4.2.1",
+        "pkg:generic/patch@2.7.6?nix_drv=qg2mlfvjfqi1a038a5k9pwdchc5ghxy2",
+        "pkg:generic/patchelf@0.15.0",
+        "pkg:generic/pcre2@10.44",
+        "pkg:generic/xgcc@13.3.0",
+        "pkg:generic/xz@5.6.3",
+        "pkg:generic/zlib@1.3.1"
+      ],
       "ref": "pkg:generic/001-fix-rpath.patch-9hmyq60b3zf0yc26jfi603x3cmn7zr9a"
     },
     {
@@ -88709,11 +88728,89 @@
       "ref": "pkg:generic/case-insensitive-1.2.1.0.tar.gz-sha256.hKW3BfgxfPfs9gs7YPkycRMM47N50myeLbq5RLx0E5AY.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/acl@2.3.2",
+        "pkg:generic/attr@2.5.2",
+        "pkg:generic/bash@5.2p37",
+        "pkg:generic/binutils-wrapper@2.43.1",
+        "pkg:generic/binutils@2.43.1",
+        "pkg:generic/bootstrap-stage3-gcc-wrapper@13.3.0",
+        "pkg:generic/bootstrap-tools.tar.xz-sha256.hYQlr088HPoVWBU2jpPhpIMyOyoEDZYDw1y60SGGbUM0.e",
+        "pkg:generic/busybox-sha256.hQrTEnQTBM1Y.sqV9odq8irZkQSD9uOMbs2Q5NgCvKCNQ.e",
+        "pkg:generic/bzip2@1.0.8",
+        "pkg:generic/coreutils@9.5",
+        "pkg:generic/diffutils@3.10",
+        "pkg:generic/ed@1.20.2",
+        "pkg:generic/file@5.45",
+        "pkg:generic/findutils@4.10.0",
+        "pkg:generic/gawk@5.3.1",
+        "pkg:generic/gcc-wrapper@13.3.0",
+        "pkg:generic/gcc@13.3.0",
+        "pkg:generic/glibc@2.40-36",
+        "pkg:generic/gmp-with-cxx@6.3.0",
+        "pkg:generic/gmp@6.3.0",
+        "pkg:generic/gnu-config@2024-01-01",
+        "pkg:generic/gnugrep@3.11",
+        "pkg:generic/gnumake@4.4.1",
+        "pkg:generic/gnused@4.9",
+        "pkg:generic/gnutar@1.35",
+        "pkg:generic/gzip@1.13",
+        "pkg:generic/isl@0.20",
+        "pkg:generic/libidn2@2.3.7",
+        "pkg:generic/libmpc@1.3.1",
+        "pkg:generic/libunistring@1.2",
+        "pkg:generic/linux-headers@6.10",
+        "pkg:generic/mpfr@4.2.1",
+        "pkg:generic/patch@2.7.6?nix_drv=qg2mlfvjfqi1a038a5k9pwdchc5ghxy2",
+        "pkg:generic/patchelf@0.15.0",
+        "pkg:generic/pcre2@10.44",
+        "pkg:generic/xgcc@13.3.0",
+        "pkg:generic/xz@5.6.3",
+        "pkg:generic/zlib@1.3.1"
+      ],
       "ref": "pkg:generic/catalog-legacy-uris.patch-dwzd4zjymz9wn6jikvzr996bhpbf1b22"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/acl@2.3.2",
+        "pkg:generic/attr@2.5.2",
+        "pkg:generic/bash@5.2p37",
+        "pkg:generic/binutils-wrapper@2.43.1",
+        "pkg:generic/binutils@2.43.1",
+        "pkg:generic/bootstrap-stage3-gcc-wrapper@13.3.0",
+        "pkg:generic/bootstrap-tools.tar.xz-sha256.hYQlr088HPoVWBU2jpPhpIMyOyoEDZYDw1y60SGGbUM0.e",
+        "pkg:generic/busybox-sha256.hQrTEnQTBM1Y.sqV9odq8irZkQSD9uOMbs2Q5NgCvKCNQ.e",
+        "pkg:generic/bzip2@1.0.8",
+        "pkg:generic/coreutils@9.5",
+        "pkg:generic/diffutils@3.10",
+        "pkg:generic/ed@1.20.2",
+        "pkg:generic/file@5.45",
+        "pkg:generic/findutils@4.10.0",
+        "pkg:generic/gawk@5.3.1",
+        "pkg:generic/gcc-wrapper@13.3.0",
+        "pkg:generic/gcc@13.3.0",
+        "pkg:generic/glibc@2.40-36",
+        "pkg:generic/gmp-with-cxx@6.3.0",
+        "pkg:generic/gmp@6.3.0",
+        "pkg:generic/gnu-config@2024-01-01",
+        "pkg:generic/gnugrep@3.11",
+        "pkg:generic/gnumake@4.4.1",
+        "pkg:generic/gnused@4.9",
+        "pkg:generic/gnutar@1.35",
+        "pkg:generic/gzip@1.13",
+        "pkg:generic/isl@0.20",
+        "pkg:generic/libidn2@2.3.7",
+        "pkg:generic/libmpc@1.3.1",
+        "pkg:generic/libunistring@1.2",
+        "pkg:generic/linux-headers@6.10",
+        "pkg:generic/mpfr@4.2.1",
+        "pkg:generic/patch@2.7.6?nix_drv=qg2mlfvjfqi1a038a5k9pwdchc5ghxy2",
+        "pkg:generic/patchelf@0.15.0",
+        "pkg:generic/pcre2@10.44",
+        "pkg:generic/xgcc@13.3.0",
+        "pkg:generic/xz@5.6.3",
+        "pkg:generic/zlib@1.3.1"
+      ],
       "ref": "pkg:generic/catalog-legacy-uris.patch-spmz4h0s2xz8ncdd15rwficvv4vjmma3"
     },
     {
@@ -91708,6 +91805,7 @@
         "pkg:generic/bootstrap-tools.tar.xz-sha256.hYQlr088HPoVWBU2jpPhpIMyOyoEDZYDw1y60SGGbUM0.e",
         "pkg:generic/busybox-sha256.hQrTEnQTBM1Y.sqV9odq8irZkQSD9uOMbs2Q5NgCvKCNQ.e",
         "pkg:generic/bzip2@1.0.8",
+        "pkg:generic/catalog-legacy-uris.patch-spmz4h0s2xz8ncdd15rwficvv4vjmma3",
         "pkg:generic/coreutils@9.5",
         "pkg:generic/diffutils@3.10",
         "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
@@ -91754,6 +91852,7 @@
         "pkg:generic/bootstrap-tools.tar.xz-sha256.hYQlr088HPoVWBU2jpPhpIMyOyoEDZYDw1y60SGGbUM0.e",
         "pkg:generic/busybox-sha256.hQrTEnQTBM1Y.sqV9odq8irZkQSD9uOMbs2Q5NgCvKCNQ.e",
         "pkg:generic/bzip2@1.0.8",
+        "pkg:generic/catalog-legacy-uris.patch-dwzd4zjymz9wn6jikvzr996bhpbf1b22",
         "pkg:generic/coreutils@9.5",
         "pkg:generic/diffutils@3.10",
         "pkg:generic/docbook-style-xsl-non-recursive-string-subst.patch-sha256.hI8aqrTR5rCofFuzDlvPW1Kwa6y.sR.sN8nXJXzO8uTMlM.e",
@@ -92808,6 +92907,7 @@
         "pkg:generic/expect5.45.4.tar.gz-sha256.hSafag7C92fRtBKBN7sGcd2e7mjI.pQMR4H4nK92C5LDQ.e",
         "pkg:generic/file@5.45",
         "pkg:generic/findutils@4.10.0",
+        "pkg:generic/fix-build-time-run-tcl.patch-gdjqjmbapfwg8dymmkgddkxi3r4vijpc",
         "pkg:generic/gawk@5.3.1",
         "pkg:generic/gcc-wrapper@13.3.0",
         "pkg:generic/gcc@13.3.0",
@@ -93356,7 +93456,47 @@
       "ref": "pkg:generic/fix-aarch64_fregs.patch-sha256.hzvncoRkQx3AwPx52ehjA2vcFroF.pyDC2MQR5uS6DATs.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/acl@2.3.2",
+        "pkg:generic/attr@2.5.2",
+        "pkg:generic/bash@5.2p37",
+        "pkg:generic/binutils-wrapper@2.43.1",
+        "pkg:generic/binutils@2.43.1",
+        "pkg:generic/bootstrap-stage3-gcc-wrapper@13.3.0",
+        "pkg:generic/bootstrap-tools.tar.xz-sha256.hYQlr088HPoVWBU2jpPhpIMyOyoEDZYDw1y60SGGbUM0.e",
+        "pkg:generic/busybox-sha256.hQrTEnQTBM1Y.sqV9odq8irZkQSD9uOMbs2Q5NgCvKCNQ.e",
+        "pkg:generic/bzip2@1.0.8",
+        "pkg:generic/coreutils@9.5",
+        "pkg:generic/diffutils@3.10",
+        "pkg:generic/ed@1.20.2",
+        "pkg:generic/file@5.45",
+        "pkg:generic/findutils@4.10.0",
+        "pkg:generic/gawk@5.3.1",
+        "pkg:generic/gcc-wrapper@13.3.0",
+        "pkg:generic/gcc@13.3.0",
+        "pkg:generic/glibc@2.40-36",
+        "pkg:generic/gmp-with-cxx@6.3.0",
+        "pkg:generic/gmp@6.3.0",
+        "pkg:generic/gnu-config@2024-01-01",
+        "pkg:generic/gnugrep@3.11",
+        "pkg:generic/gnumake@4.4.1",
+        "pkg:generic/gnused@4.9",
+        "pkg:generic/gnutar@1.35",
+        "pkg:generic/gzip@1.13",
+        "pkg:generic/isl@0.20",
+        "pkg:generic/libidn2@2.3.7",
+        "pkg:generic/libmpc@1.3.1",
+        "pkg:generic/libunistring@1.2",
+        "pkg:generic/linux-headers@6.10",
+        "pkg:generic/mpfr@4.2.1",
+        "pkg:generic/patch@2.7.6?nix_drv=qg2mlfvjfqi1a038a5k9pwdchc5ghxy2",
+        "pkg:generic/patchelf@0.15.0",
+        "pkg:generic/pcre2@10.44",
+        "pkg:generic/tcl@8.6.13",
+        "pkg:generic/xgcc@13.3.0",
+        "pkg:generic/xz@5.6.3",
+        "pkg:generic/zlib@1.3.1"
+      ],
       "ref": "pkg:generic/fix-build-time-run-tcl.patch-gdjqjmbapfwg8dymmkgddkxi3r4vijpc"
     },
     {
@@ -98020,6 +98160,7 @@
         "pkg:generic/patchelf@0.15.0",
         "pkg:generic/pcre2@10.44",
         "pkg:generic/python3@3.12.7",
+        "pkg:generic/version.patch-f0vxl2i4v0crk7k18am3jk8rx6658ba9",
         "pkg:generic/wheel@0.44.0",
         "pkg:generic/xgcc@13.3.0",
         "pkg:generic/xz@5.6.3",
@@ -102145,6 +102286,7 @@
     },
     {
       "dependsOn": [
+        "pkg:generic/001-fix-rpath.patch-9hmyq60b3zf0yc26jfi603x3cmn7zr9a",
         "pkg:generic/acl@2.3.2",
         "pkg:generic/attr@2.5.2",
         "pkg:generic/bash@5.2p37",
@@ -118105,7 +118247,46 @@
       "ref": "pkg:generic/vector-stream-0.1.0.1.tar.gz-sha256.h0PUHM0vepUMaLwf1Jal.sKedlIsMiEPXebVorTx1Cv3w.e"
     },
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:generic/acl@2.3.2",
+        "pkg:generic/attr@2.5.2",
+        "pkg:generic/bash@5.2p37",
+        "pkg:generic/binutils-wrapper@2.43.1",
+        "pkg:generic/binutils@2.43.1",
+        "pkg:generic/bootstrap-stage3-gcc-wrapper@13.3.0",
+        "pkg:generic/bootstrap-tools.tar.xz-sha256.hYQlr088HPoVWBU2jpPhpIMyOyoEDZYDw1y60SGGbUM0.e",
+        "pkg:generic/busybox-sha256.hQrTEnQTBM1Y.sqV9odq8irZkQSD9uOMbs2Q5NgCvKCNQ.e",
+        "pkg:generic/bzip2@1.0.8",
+        "pkg:generic/coreutils@9.5",
+        "pkg:generic/diffutils@3.10",
+        "pkg:generic/ed@1.20.2",
+        "pkg:generic/file@5.45",
+        "pkg:generic/findutils@4.10.0",
+        "pkg:generic/gawk@5.3.1",
+        "pkg:generic/gcc-wrapper@13.3.0",
+        "pkg:generic/gcc@13.3.0",
+        "pkg:generic/glibc@2.40-36",
+        "pkg:generic/gmp-with-cxx@6.3.0",
+        "pkg:generic/gmp@6.3.0",
+        "pkg:generic/gnu-config@2024-01-01",
+        "pkg:generic/gnugrep@3.11",
+        "pkg:generic/gnumake@4.4.1",
+        "pkg:generic/gnused@4.9",
+        "pkg:generic/gnutar@1.35",
+        "pkg:generic/gzip@1.13",
+        "pkg:generic/isl@0.20",
+        "pkg:generic/libidn2@2.3.7",
+        "pkg:generic/libmpc@1.3.1",
+        "pkg:generic/libunistring@1.2",
+        "pkg:generic/linux-headers@6.10",
+        "pkg:generic/mpfr@4.2.1",
+        "pkg:generic/patch@2.7.6?nix_drv=qg2mlfvjfqi1a038a5k9pwdchc5ghxy2",
+        "pkg:generic/patchelf@0.15.0",
+        "pkg:generic/pcre2@10.44",
+        "pkg:generic/xgcc@13.3.0",
+        "pkg:generic/xz@5.6.3",
+        "pkg:generic/zlib@1.3.1"
+      ],
       "ref": "pkg:generic/version.patch-f0vxl2i4v0crk7k18am3jk8rx6658ba9"
     },
     {
@@ -133432,7 +133613,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 81 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
+        "value": "orphaned-components-detected: 76 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -133452,7 +133633,7 @@
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":1330,\"components-without-member-role\":544,\"derivations\":1448,\"distinct-cves\":21,\"edge-ineligible-components\":80,\"edges\":48140,\"identifiers\":{\"by-drv\":353,\"by-name-version\":97,\"declared\":0,\"received\":450,\"rejected\":0,\"wanted\":1368},\"licenses\":{\"degraded\":null,\"received\":352,\"wanted\":1368,\"withheld-ambiguous\":0},\"member-roles\":{\"check\":0,\"fragment\":72,\"package\":3,\"scaffolding\":8,\"source\":703},\"patches\":248,\"patches-without-cve\":226,\"roles\":{\"artifact-input\":446,\"both\":56,\"build-tooling\":945,\"unreferenced\":1}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":1330,\"components-without-member-role\":544,\"derivations\":1448,\"distinct-cves\":21,\"edge-ineligible-components\":75,\"edges\":48336,\"identifiers\":{\"by-drv\":353,\"by-name-version\":97,\"declared\":0,\"received\":450,\"rejected\":0,\"wanted\":1373},\"licenses\":{\"degraded\":null,\"received\":352,\"wanted\":1373,\"withheld-ambiguous\":0},\"member-roles\":{\"check\":0,\"fragment\":67,\"package\":3,\"scaffolding\":8,\"source\":708},\"patches\":248,\"patches-without-cve\":226,\"roles\":{\"artifact-input\":446,\"both\":56,\"build-tooling\":945,\"unreferenced\":1}}"
       },
       {
         "name": "waybill:patch-evidence-grade",
