@@ -947,7 +947,8 @@ fn m1282_t038_a_scan_without_the_closure_flag_contributes_nothing() {
 
 /// One nameless member per rung of the split `package` rung, consumed by one
 /// named package (`member_roles.json`). The two patches are also listed in
-/// the consumer's `patches`. One has a version token and one does not (R5).
+/// the consumer's `patches`. One has a version token and one does not; since
+/// spec 1492 (#1502) both are `source`.
 fn scan_roles() -> Scan {
     scan_closure(&closure("member_roles.json"))
 }
@@ -967,7 +968,10 @@ fn s1380_each_member_carries_the_role_it_is() {
     let s = scan_roles();
     let want: std::collections::BTreeMap<String, String> = [
         ("waybill-fixture-fix-16.patch", "source"),
-        ("waybill-fixture-local.patch", "fragment"),
+        // Spec 1492 (#1502): listed in the consumer's `patches`, so a patch,
+        // although its name has no version token. Spec 1380 left it
+        // `fragment` (R5).
+        ("waybill-fixture-local.patch", "source"),
         ("waybill-fixture-tree-9.10.3", "source"),
         ("waybill-fixture-clang-src-21.1.8", "source"),
         ("waybill-fixture-tool-0.7.2-vendor", "source"),
@@ -1013,16 +1017,20 @@ fn s1380_the_role_and_its_count_agree_across_formats() {
     assert_eq!(a, c, "C206: CycloneDX and SPDX 3 disagree");
 
     let counts = &s.closure_record()["member-roles"];
-    for (role, n) in [("source", 4), ("package", 2), ("check", 2), ("fragment", 1), ("scaffolding", 0)] {
+    for (role, n) in [("source", 5), ("package", 2), ("check", 2), ("fragment", 0), ("scaffolding", 0)] {
         assert_eq!(counts[role], n, "C184 member-roles[{role}] in {counts}");
     }
 }
 
-/// FR-006 — the edges are those the pre-1380 ladder gives. Every member it
-/// called `package` is still an endpoint. The fragment patch is walked
-/// through and named by no edge, as before.
+/// Spec 1380 FR-006 kept the edges the pre-1380 ladder gives: every member it
+/// called `package` is still an endpoint.
+///
+/// Spec 1492 (#1502) changes exactly one thing. The listed bare patch is
+/// `source` now, so the walk stops at it and it is an edge target; before, it
+/// was walked through and named by no edge. This replaces
+/// `s1380_the_graph_is_unchanged`.
 #[test]
-fn s1380_the_graph_is_unchanged() {
+fn s1492_the_graph_gains_only_the_listed_bare_patch() {
     let s = scan_roles();
     let name_of: std::collections::HashMap<String, String> = s
         .components()
@@ -1041,6 +1049,7 @@ fn s1380_the_graph_is_unchanged() {
         .collect();
     let want: std::collections::BTreeSet<String> = [
         "waybill-fixture-fix-16.patch",
+        "waybill-fixture-local.patch",
         "waybill-fixture-tree-9.10.3",
         "waybill-fixture-clang-src-21.1.8",
         "waybill-fixture-tool-0.7.2-vendor",
@@ -1053,4 +1062,134 @@ fn s1380_the_graph_is_unchanged() {
     .map(str::to_string)
     .collect();
     assert_eq!(targets, want);
+}
+
+// ---------------------------------------------------------------------
+// Spec 1492 (#1502) — a locally built patch is a source, and an edge target
+// ---------------------------------------------------------------------
+
+/// `local_patch.json`, shaped like the 5 members research R1 measured:
+/// - `waybill-fixture-app-3.0` lists `waybill-fixture-fix-rpath.patch` in
+///   `patches` and consumes it through `inputs.drvs`;
+/// - the patch is a `replaceVars` output (`dontUnpack`, a local `src`, no
+///   hash, no version token) that consumes `waybill-fixture-substitute-1.0`;
+/// - `waybill-fixture-unlisted.patch` is the same shape, consumed but listed
+///   by no `patches`. As a `fragment` it is never an edge endpoint, so it is
+///   an orphan by construction and the orphan-reason assertion always runs.
+fn scan_local_patch() -> Scan {
+    scan_closure(&closure("local_patch.json"))
+}
+
+const PATCH: &str = "waybill-fixture-fix-rpath.patch";
+const TWIN: &str = "waybill-fixture-unlisted.patch";
+const SUBSTITUTE: &str = "waybill-fixture-substitute";
+
+impl Scan {
+    /// Dependency edges as `(from name, to name)` in each format.
+    fn named_edges(&self) -> [std::collections::BTreeSet<(String, String)>; 3] {
+        let mut cdx_name: std::collections::HashMap<String, String> = self
+            .components()
+            .iter()
+            .filter_map(|c| Some((c["bom-ref"].as_str()?.to_string(), c["name"].as_str()?.to_string())))
+            .collect();
+        let subject = &self.cdx["metadata"]["component"];
+        if let (Some(r), Some(n)) = (subject["bom-ref"].as_str(), subject["name"].as_str()) {
+            cdx_name.insert(r.to_string(), n.to_string());
+        }
+        let cdx = self
+            .cdx_edges()
+            .into_iter()
+            .filter_map(|(f, t)| Some((cdx_name.get(&f)?.clone(), cdx_name.get(&t)?.clone())))
+            .collect();
+
+        let spdx23_name: std::collections::HashMap<String, String> = self.spdx23["packages"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|p| Some((p["SPDXID"].as_str()?.to_string(), p["name"].as_str()?.to_string())))
+            .collect();
+        let spdx23 = self.spdx23["relationships"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|r| r["relationshipType"] == "DEPENDS_ON")
+            .filter_map(|r| {
+                Some((
+                    spdx23_name.get(r["spdxElementId"].as_str()?)?.clone(),
+                    spdx23_name.get(r["relatedSpdxElement"].as_str()?)?.clone(),
+                ))
+            })
+            .collect();
+
+        let graph = self.spdx3["@graph"].as_array().unwrap();
+        let spdx3_name: std::collections::HashMap<String, String> = graph
+            .iter()
+            .filter_map(|e| Some((e["spdxId"].as_str()?.to_string(), e["name"].as_str()?.to_string())))
+            .collect();
+        let mut spdx3 = std::collections::BTreeSet::new();
+        for r in graph.iter().filter(|e| e["type"] == "Relationship" && e["relationshipType"] == "dependsOn") {
+            let Some(from) = r["from"].as_str().and_then(|f| spdx3_name.get(f)) else { continue };
+            for to in r["to"].as_array().into_iter().flatten() {
+                if let Some(t) = to.as_str().and_then(|t| spdx3_name.get(t)) {
+                    spdx3.insert((from.clone(), t.clone()));
+                }
+            }
+        }
+        [cdx, spdx23, spdx3]
+    }
+
+    fn component_named(&self, name: &str) -> &Value {
+        self.components()
+            .iter()
+            .find(|c| c["name"].as_str() == Some(name))
+            .unwrap_or_else(|| panic!("no component named {name}"))
+    }
+}
+
+/// T010 (US1, FR-001, FR-006) — the listed patch is `source` and its
+/// unlisted twin `fragment`, identically in all three formats.
+#[test]
+fn s1492_a_listed_local_patch_is_source_in_every_format() {
+    let s = scan_local_patch();
+    let roles = s.role_by_name();
+    assert_eq!(roles.get(PATCH).map(String::as_str), Some("source"), "{roles:?}");
+    assert_eq!(roles.get(TWIN).map(String::as_str), Some("fragment"), "{roles:?}");
+
+    let e = waybill::parity::extractors::EXTRACTORS
+        .iter()
+        .find(|e| e.row_id == "C206")
+        .expect("C206 registered");
+    let (a, b, c) = ((e.cdx)(&s.cdx), (e.spdx23)(&s.spdx23), (e.spdx3)(&s.spdx3));
+    assert!(!a.is_empty(), "C206: CycloneDX extractor found nothing");
+    assert_eq!(a, b, "C206: CycloneDX and SPDX 2.3 disagree");
+    assert_eq!(a, c, "C206: CycloneDX and SPDX 3 disagree");
+}
+
+/// T013 (US2, FR-004) — the walk stops at the listed patch, so it is an edge
+/// target, and the edge past it starts at it. Identical in all three formats.
+///
+/// The twin is walked through, so it names no edge, and it carries the
+/// not-an-edge-endpoint orphan reason that the patch no longer does.
+#[test]
+fn s1492_a_listed_local_patch_is_an_edge_target_in_every_format() {
+    let s = scan_local_patch();
+    let [cdx, spdx23, spdx3] = s.named_edges();
+    let into_patch: Vec<_> = cdx.iter().filter(|(_, t)| t == PATCH).collect();
+    assert!(!into_patch.is_empty(), "nothing depends on the patch: {cdx:?}");
+    assert!(
+        cdx.iter().any(|(f, t)| f == PATCH && t.starts_with(SUBSTITUTE)),
+        "the patch's own edge is missing: {cdx:?}"
+    );
+    assert!(cdx.iter().all(|(f, t)| f != TWIN && t != TWIN), "the twin names an edge: {cdx:?}");
+
+    for (name, other) in [("SPDX 2.3", &spdx23), ("SPDX 3", &spdx3)] {
+        let touching = |set: &std::collections::BTreeSet<(String, String)>| -> std::collections::BTreeSet<(String, String)> {
+            set.iter().filter(|(f, t)| f == PATCH || t == PATCH).cloned().collect()
+        };
+        assert_eq!(touching(other), touching(&cdx), "{name} disagrees about the patch's edges");
+    }
+
+    let not_endpoint = Some("closure-member-not-an-edge-endpoint".to_string());
+    assert_ne!(s.orphan_reason_of(s.component_named(PATCH)), not_endpoint);
+    assert_eq!(s.orphan_reason_of(s.component_named(TWIN)), not_endpoint, "CONTROL");
 }
