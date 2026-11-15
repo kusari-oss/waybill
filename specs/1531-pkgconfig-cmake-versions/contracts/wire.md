@@ -25,9 +25,9 @@ An unresolved entry produces no edge.
 
 ## New rows
 
-Numbers are assigned at implementation as the next free rows; C224 and C225 are expected, because PR #1561 claims C223.
+**C224** and **C225**: confirmed free at implementation (T004). Main ends at C222, and the only open PR touching the catalog, #1561, claims C223.
 
-### `waybill:pkg-config-private-requires`, component scope
+### C224 `waybill:pkg-config-private-requires`, component scope
 
 **Value.** A JSON array of exact PURL strings, sorted and deduplicated. It holds the targets of this component's edges that came only from `Requires.private`, not also from `Requires`. It is emitted only when non-empty.
 
@@ -38,7 +38,7 @@ Numbers are assigned at implementation as the next free rows; C224 and C225 are 
 
 **Parity.** `SymmetricEqual` across the three formats.
 
-### `waybill:installed-library-coverage`, document scope
+### C225 `waybill:installed-library-coverage`, document scope
 
 **Value.** A JSON object with the keys of the data model's coverage record, in a fixed key order. It is emitted only when the walker matched at least one `*.pc`, `*ConfigVersion.cmake` or `*-config-version.cmake` file. Every skip reason is present, including zero counts.
 

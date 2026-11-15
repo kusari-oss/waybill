@@ -337,6 +337,15 @@ pub struct DbScanResult {
     /// physical file — no path-level reasoning required.
     #[cfg(unix)]
     pub claimed_inodes: std::collections::HashSet<(u64, u64)>,
+    /// #1531 (spec 1531, research R3): the claims made by an OS package
+    /// database — dpkg, apk, alpm, opkg and rpm — and by nothing else.
+    /// `claimed_paths` also holds pip `RECORD` and `.ipk` archive claims,
+    /// so it cannot answer "does an OS package own this file?". Every
+    /// entry here is also in `claimed_paths`.
+    pub os_claimed_paths: std::collections::HashSet<std::path::PathBuf>,
+    /// The (device, inode) pairs of `os_claimed_paths`.
+    #[cfg(unix)]
+    pub os_claimed_inodes: std::collections::HashSet<(u64, u64)>,
     /// Feature 005 — non-fatal diagnostics collected during `read_all`.
     /// Surfaced into the SBOM's `metadata.properties` so consumers can
     /// detect degraded output without needing the scanner's log stream.
@@ -1640,6 +1649,13 @@ pub fn read_all(
     #[cfg(unix)]
     let mut claimed_inodes: std::collections::HashSet<(u64, u64)> =
         std::collections::HashSet::new();
+    // #1531: OS-package claims are collected separately, then folded into
+    // `claimed` right after the rpm claims, before anything reads it.
+    let mut os_claimed: std::collections::HashSet<std::path::PathBuf> =
+        std::collections::HashSet::new();
+    #[cfg(unix)]
+    let mut os_claimed_inodes: std::collections::HashSet<(u64, u64)> =
+        std::collections::HashSet::new();
     let mut diagnostics = ScanDiagnostics::default();
 
     // Feature 005 US2/US3: read os-release once per scan. `ID`
@@ -1698,9 +1714,9 @@ pub fn read_all(
             // don't produce duplicate pkg:generic/ components.
             dpkg::collect_claimed_paths(
                 rootfs,
-                &mut claimed,
+                &mut os_claimed,
                 #[cfg(unix)]
-                &mut claimed_inodes,
+                &mut os_claimed_inodes,
             );
         }
         Err(e) => tracing::debug!(error = %e, "dpkg db read failed (expected if no dpkg)"),
@@ -1711,9 +1727,9 @@ pub fn read_all(
             // Milestone 004 post-ship: collect apk-owned file paths.
             apk::collect_claimed_paths(
                 rootfs,
-                &mut claimed,
+                &mut os_claimed,
                 #[cfg(unix)]
-                &mut claimed_inodes,
+                &mut os_claimed_inodes,
             );
         }
         Err(e) => tracing::debug!(error = %e, "apk db read failed (expected if no apk)"),
@@ -1731,9 +1747,9 @@ pub fn read_all(
             // files owned by an Arch package.
             alpm::collect_claimed_paths(
                 rootfs,
-                &mut claimed,
+                &mut os_claimed,
                 #[cfg(unix)]
-                &mut claimed_inodes,
+                &mut os_claimed_inodes,
             );
         }
         Err(e) => {
@@ -1766,9 +1782,9 @@ pub fn read_all(
     out.extend(opkg_entries);
     let _ = opkg::collect_claimed_paths(
         rootfs,
-        &mut claimed,
+        &mut os_claimed,
         #[cfg(unix)]
-        &mut claimed_inodes,
+        &mut os_claimed_inodes,
     );
     // Milestone 169 T029 (US4, FR-011): every `.ipk` archive-file's
     // `data.tar.gz` payload declares the paths its package installs.
@@ -2049,10 +2065,17 @@ pub fn read_all(
     // inserted with `insert_claim_with_canonical`.
     rpm::collect_claimed_paths(
         rootfs,
-        &mut claimed,
+        &mut os_claimed,
         #[cfg(unix)]
-        &mut claimed_inodes,
+        &mut os_claimed_inodes,
     );
+    // #1531: fold the OS claims into the shared set. Nothing reads
+    // `claimed` before this point, so its contents for every consumer
+    // below are exactly what they were when OS readers wrote to it
+    // directly.
+    claimed.extend(os_claimed.iter().cloned());
+    #[cfg(unix)]
+    claimed_inodes.extend(os_claimed_inodes.iter().copied());
     // v9 Phase O: go_binary runs AFTER rpm's claim-path collection so
     // its diagnostic emissions (Unsupported / Missing BuildInfo) can
     // be suppressed for Go toolchain binaries owned by an rpm/deb/apk
@@ -2445,6 +2468,9 @@ pub fn read_all(
         claimed_paths: claimed,
         #[cfg(unix)]
         claimed_inodes,
+        os_claimed_paths: os_claimed,
+        #[cfg(unix)]
+        os_claimed_inodes,
         diagnostics,
         scan_target_coord,
         // Milestone 664 US2 T047: BUILD files collected by the pilot for
@@ -3332,6 +3358,68 @@ mod tests {
     /// back to `namespace = "debian"` AND record `"ID"` in
     /// diagnostics. Same test also covers the VERSION_ID-missing
     /// diagnostic since both fields are derived from the same file.
+    /// #1531 (spec 1531, T007): `os_claimed_paths` holds OS-package claims
+    /// only. A dpkg `.list` entry is in both sets; a pip `RECORD` entry is in
+    /// `claimed_paths` and NOT in `os_claimed_paths` — the control that the
+    /// two sets differ.
+    #[test]
+    fn os_claimed_paths_hold_os_package_claims_only() {
+        let dir = tempfile::tempdir().unwrap();
+        let rootfs = dir.path();
+        let dpkg_dir = rootfs.join("var/lib/dpkg");
+        std::fs::create_dir_all(dpkg_dir.join("info")).unwrap();
+        std::fs::write(
+            dpkg_dir.join("status"),
+            "Package: waybill-fixture-z-dev\nStatus: install ok installed\nVersion: 1.0\nArchitecture: amd64\n",
+        )
+        .unwrap();
+        let owned = "usr/lib/x86_64-linux-gnu/pkgconfig/waybill-fixture-z.pc";
+        std::fs::write(
+            dpkg_dir.join("info/waybill-fixture-z-dev:amd64.list"),
+            format!("/{owned}\n"),
+        )
+        .unwrap();
+        std::fs::create_dir_all(rootfs.join(owned).parent().unwrap()).unwrap();
+        std::fs::write(rootfs.join(owned), "Version: 1.0\n").unwrap();
+
+        let site = rootfs.join(".venv/lib/python3.12/site-packages");
+        let in_wheel = "waybill_fixture_sdk/lib/pkgconfig/waybill-fixture-w.pc";
+        std::fs::create_dir_all(site.join(in_wheel).parent().unwrap()).unwrap();
+        std::fs::write(site.join(in_wheel), "Version: 2.0\n").unwrap();
+        let dist_info = site.join("waybill_fixture_sdk-1.0.dist-info");
+        std::fs::create_dir_all(&dist_info).unwrap();
+        std::fs::write(dist_info.join("RECORD"), format!("{in_wheel},,\n")).unwrap();
+        std::fs::write(
+            dist_info.join("METADATA"),
+            "Metadata-Version: 2.1\nName: waybill-fixture-sdk\nVersion: 1.0\n",
+        )
+        .unwrap();
+
+        let result = read_all(
+            rootfs,
+            None,
+            false,
+            false,
+            crate::scan_fs::ScanMode::Path,
+            true,
+            None,
+            &Default::default(),
+            None,
+        )
+        .unwrap();
+
+        let dpkg_path = rootfs.join(owned);
+        let pip_path = site.join(in_wheel);
+        assert!(result.claimed_paths.contains(&dpkg_path), "dpkg claim in the shared set");
+        assert!(result.os_claimed_paths.contains(&dpkg_path), "dpkg claim in the OS set");
+        assert!(result.claimed_paths.contains(&pip_path), "control: pip claim in the shared set");
+        assert!(!result.os_claimed_paths.contains(&pip_path), "pip claim kept out of the OS set");
+        assert!(
+            result.os_claimed_paths.is_subset(&result.claimed_paths),
+            "every OS claim is also a shared claim"
+        );
+    }
+
     #[test]
     fn read_all_falls_back_to_debian_namespace_when_id_missing() {
         let dir = tempfile::tempdir().unwrap();

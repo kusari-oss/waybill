@@ -73,6 +73,12 @@ The walker skips any dot-directory and `node_modules`, `bower_components`, `vend
 - **Order the entries so the reader wins.** The post-pass inserts its entries into `db_entries` ahead of the binary entries, with `.pc` entries before CMake ones. Then a merge keeps `deployed` tier and the reader's C55, with `pkg-config` ahead of `cmake-package-version`, ahead of the embedded-version scanner's `analyzed`.
 - **Spec amendments.** SC-003 and US1 scenario 5 said a merged component carries "both mechanisms". That requires C56, which is deferred to #1558, as spec 1530 also found. They are amended to "one component, with the first reader's C55 and the union of both readers' evidence paths".
 
+**Re-verified at `d8723f62` (T001).**
+- `deduplicate` groups by `(ecosystem, name, version, parent_purl, pants-namespace)` (`resolve/deduplicator.rs:13, 44-53`).
+- It sorts by confidence with a stable `sort_by`, so the first of equal-confidence entries wins (`:65-72`).
+
+Unchanged.
+
 ## R5 — Identity
 
 **Decision.**
@@ -81,7 +87,7 @@ The walker skips any dot-directory and `node_modules`, `bower_components`, `vend
   - For `.pc`: the file stem, which is the module name `Requires` refers to.
   - For CMake: the file name minus `ConfigVersion.cmake` or `-config-version.cmake`.
 
-**Case.** `ZLIBConfigVersion.cmake` and `zlib.pc` both give `zlib`. The declared case is kept in a `waybill:cmake-package-name` annotation only when it differs, mirroring `waybill:cmake-find-package-name`. Task T003 decides whether to reuse that existing row rather than add one.
+**Case.** `ZLIBConfigVersion.cmake` and `zlib.pc` both give `zlib`. The declared case is kept in a `waybill:cmake-package-name` annotation only when it differs, mirroring `waybill:cmake-find-package-name`. **Decided (T003): reuse C103.** Its definition is "the original casing … emitted only when it differs from the lowercased PURL name segment". That is exactly this value. The definition is widened to name the package version file as a second source, and no new row is added.
 
 ## R6 — Edges (FR-004, FR-011)
 
@@ -160,3 +166,9 @@ The C55 catalog text gains two values, `pkg-config` and `cmake-package-version`.
 - records both component counts and the scan time in `measurements/rocm-sdk.md`.
 
 Which payload to use is chosen in task T036, with a pinned digest and nothing executed from it.
+
+## R7 addendum — the CMake version-file fixture (T002)
+
+Generated with CMake 4.4.5 by running `write_basic_package_version_file(… VERSION 4.5.6 COMPATIBILITY SameMajorVersion)` on a three-line project. It is saved as `installed_lib/testdata/BasicConfigVersion-SameMajor.cmake.txt`; the `.txt` suffix keeps it out of the CMake reader's `*.cmake` glob in a self-scan.
+
+The file confirms the literal form `set(PACKAGE_VERSION "4.5.6")`. It also holds `set(PACKAGE_VERSION_COMPATIBLE …)` lines and `PACKAGE_VERSION` inside `#` comments. So the parser matches the first argument exactly, not as a prefix, and skips comments.
