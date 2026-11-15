@@ -75,6 +75,33 @@ thread_local! {
     /// dependencies. Each emitter anchors them to the root it selects.
     static ACTIVE_ROOT_ANCHORS: std::cell::RefCell<Option<Vec<String>>> =
         const { std::cell::RefCell::new(None) };
+    /// Spec 1530 (#1515), research R5 — PURLs a *reader* needs anchored to
+    /// the chosen root whatever other edges it has: top-level git
+    /// submodules. Separate from the supplement's cell so either can be
+    /// active without the other.
+    static READER_ROOT_ANCHORS: std::cell::RefCell<Option<Vec<String>>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// Clears the reader root anchors on drop (spec 1530).
+pub(crate) struct ReaderAnchorGuard;
+
+impl Drop for ReaderAnchorGuard {
+    fn drop(&mut self) {
+        READER_ROOT_ANCHORS.with(|cell| {
+            *cell.borrow_mut() = None;
+        });
+    }
+}
+
+/// Install the PURLs a reader needs anchored to the document root (spec
+/// 1530, research R5). Hold the guard for as long as emission runs.
+#[allow(dead_code)] // TEMP(1530): first caller is scan_cmd's submodule anchoring (T023)
+pub(crate) fn install_reader_root_anchors(anchors: Vec<String>) -> ReaderAnchorGuard {
+    READER_ROOT_ANCHORS.with(|cell| {
+        *cell.borrow_mut() = Some(anchors);
+    });
+    ReaderAnchorGuard
 }
 
 pub(crate) struct InstalledSupplementGuard;
@@ -118,10 +145,48 @@ pub(crate) fn current_provenance() -> Option<SupplementProvenance> {
 /// supplement whose dependency graph is rooted at its own subject.
 /// Empty/None when no supplement is active, so the default path is
 /// byte-identical.
+///
+/// Spec 1530: also the reader-contributed anchors (top-level git
+/// submodules). The union is sorted and deduplicated; empty when neither a
+/// supplement nor a reader installed any, so the default path stays
+/// byte-identical.
 pub(crate) fn current_root_anchors() -> Vec<String> {
-    ACTIVE_ROOT_ANCHORS.with(|cell| cell.borrow().clone()).unwrap_or_default()
+    let mut all: Vec<String> =
+        ACTIVE_ROOT_ANCHORS.with(|cell| cell.borrow().clone()).unwrap_or_default();
+    all.extend(READER_ROOT_ANCHORS.with(|cell| cell.borrow().clone()).unwrap_or_default());
+    all.sort();
+    all.dedup();
+    all
 }
 
 pub(crate) fn current_services() -> Option<Vec<SupplementService>> {
     ACTIVE_SERVICES.with(|cell| cell.borrow().clone())
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1530_reader_anchor_tests {
+    use super::*;
+
+    #[test]
+    fn empty_when_nothing_installed() {
+        assert!(current_root_anchors().is_empty());
+    }
+
+    #[test]
+    fn reader_anchors_alone_and_cleared_on_drop() {
+        {
+            let _g = install_reader_root_anchors(vec!["pkg:github/o/b@1".into(), "pkg:github/o/a@1".into()]);
+            assert_eq!(current_root_anchors(), ["pkg:github/o/a@1", "pkg:github/o/b@1"]);
+        }
+        assert!(current_root_anchors().is_empty(), "the guard clears the cell");
+    }
+
+    #[test]
+    fn union_with_supplement_anchors_is_sorted_and_deduplicated() {
+        let _r = install_reader_root_anchors(vec!["pkg:generic/b@1".into(), "pkg:generic/a@1".into()]);
+        ACTIVE_ROOT_ANCHORS.with(|cell| *cell.borrow_mut() = Some(vec!["pkg:generic/a@1".into(), "pkg:generic/c@1".into()]));
+        assert_eq!(current_root_anchors(), ["pkg:generic/a@1", "pkg:generic/b@1", "pkg:generic/c@1"]);
+        ACTIVE_ROOT_ANCHORS.with(|cell| *cell.borrow_mut() = None);
+    }
 }

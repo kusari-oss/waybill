@@ -852,9 +852,14 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
                 .as_ref()
                 .and_then(|r| r.captures(g))
                 .and_then(|m| {
+                    // Spec 1530 FR-015: purl-spec's `github` definition is
+                    // case-insensitive and lowercased, so a CMake fetch and a
+                    // git submodule of `ROCm/x` at one commit share a PURL.
+                    let fold = super::forge::lowercases_owner_and_name("github");
+                    let case = |s: &str| if fold { s.to_lowercase() } else { s.to_string() };
                     let owner = m.get(1)?.as_str();
                     let repo = m.get(2)?.as_str();
-                    Some((owner.to_string(), repo.to_string()))
+                    Some((case(owner), case(repo)))
                 });
             let purl = match github_pair {
                 Some((owner, repo)) => format!(
@@ -2030,5 +2035,16 @@ add_subdirectory(tests)"#,
                 Some(CMAKE_FIND_PACKAGE_REASON),
             );
         }
+    }
+
+    /// Spec 1530 FR-015: a mixed-case GitHub repository is lowercased, as
+    /// purl-spec's `github` definition requires.
+    #[test]
+    fn s1530_fetchcontent_github_purl_is_lowercased() {
+        let out = s1517_read(
+            "FetchContent_Declare(waybill-fixture-mixed\n  GIT_REPOSITORY https://github.com/ROCm/Waybill-Fixture-Mixed.git\n  GIT_TAG v1.0.0)\n",
+        );
+        let purls: Vec<&str> = out.iter().map(|e| e.purl.as_str()).collect();
+        assert_eq!(purls, ["pkg:github/rocm/waybill-fixture-mixed@v1.0.0"]);
     }
 }

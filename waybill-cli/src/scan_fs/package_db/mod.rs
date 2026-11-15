@@ -19,6 +19,8 @@ pub mod cmake;
 pub mod cocoapods;
 pub mod composer;
 pub mod conan;
+pub(crate) mod forge;
+pub mod git_submodule;
 pub mod dart;
 pub mod declared_license;
 pub mod nix;

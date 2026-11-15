@@ -29,9 +29,9 @@
 
 **Purpose**: Confirm the research claims still hold on this base, before any code depends on them.
 
-- [ ] T001 Re-run research R6's check. Run `grep -rnE 'depends(\.push|:).*"pkg:|depends\.push\(.*purl' waybill-cli/src/scan_fs --include='*.rs'` and confirm it returns no production line. Record the command and its full output in `specs/1530-git-submodule-reader/measurements/r6-depends-grep.txt`.
-- [ ] T002 Re-run `specs/1530-git-submodule-reader/measurements/probe/git-safety.sh "$(mktemp -d)"`. Diff its R1, R2 and R3 lines against `measurements/git-safety.txt`, after replacing the scratch path with `<scratch>`, and record any difference in `measurements/git-safety-recheck.txt`. Stop and report if `ls-tree` now runs the payload, or if `ls-files` no longer does: the positive control must still fire.
-- [ ] T003 Create the module skeleton `waybill-cli/src/scan_fs/package_db/git_submodule/{mod.rs,gitmodules.rs,gitlinks.rs,identity.rs}`, with module docs citing spec 1530 and research R1. Add `pub const GIT_SUBMODULE: ReaderId = ReaderId::new("git-submodule");` beside `CONAN` in `waybill-cli/src/scan_fs/walk_registry/mod.rs`, and the `mod git_submodule;` declaration in `waybill-cli/src/scan_fs/package_db/mod.rs`. It must compile with no behaviour change.
+- [X] T001 Re-run research R6's check. Run `grep -rnE 'depends(\.push|:).*"pkg:|depends\.push\(.*purl' waybill-cli/src/scan_fs --include='*.rs'` and confirm it returns no production line. Record the command and its full output in `specs/1530-git-submodule-reader/measurements/r6-depends-grep.txt`.
+- [X] T002 Re-run `specs/1530-git-submodule-reader/measurements/probe/git-safety.sh "$(mktemp -d)"`. Diff its R1, R2 and R3 lines against `measurements/git-safety.txt`, after replacing the scratch path with `<scratch>`, and record any difference in `measurements/git-safety-recheck.txt`. Stop and report if `ls-tree` now runs the payload, or if `ls-files` no longer does: the positive control must still fire.
+- [X] T003 Create the module skeleton `waybill-cli/src/scan_fs/package_db/git_submodule/{mod.rs,gitmodules.rs,gitlinks.rs,identity.rs}`, with module docs citing spec 1530 and research R1. Add `pub const GIT_SUBMODULE: ReaderId = ReaderId::new("git-submodule");` beside `CONAN` in `waybill-cli/src/scan_fs/walk_registry/mod.rs`, and the `mod git_submodule;` declaration in `waybill-cli/src/scan_fs/package_db/mod.rs`. It must compile with no behaviour change.
 
 ---
 

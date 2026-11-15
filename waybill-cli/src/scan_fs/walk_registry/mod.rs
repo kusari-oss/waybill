@@ -231,6 +231,11 @@ impl ReaderId {
     /// finalize. Migrated in milestone-664 US2 T054.
     pub const CONAN: ReaderId = ReaderId::new("conan");
 
+    /// Git submodule reader (spec 1530, #1515) — marker-detect
+    /// registration on `**/.gitmodules`; finalize reads gitlinks with a
+    /// hardened `git ls-tree` per repository.
+    pub const GIT_SUBMODULE: ReaderId = ReaderId::new("git-submodule");
+
     /// Vcpkg reader — marker-detect registration. The reader itself
     /// has no tree walker (fixed-root scan of `vcpkg.json` at scan
     /// root only); registering it here lets the shared walker gate
@@ -354,6 +359,7 @@ pub(crate) const ALL_READER_IDS: &[ReaderId] = &[
     ReaderId::SWIFT,
     ReaderId::VCPKG,
     ReaderId::CONAN,
+    ReaderId::GIT_SUBMODULE,
     ReaderId::BAZEL,
     ReaderId::CMAKE,
     ReaderId::GOLANG,
