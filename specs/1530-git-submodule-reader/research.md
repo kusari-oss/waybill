@@ -108,10 +108,22 @@ Values reach `git` only as data after `--`, never as options.
 
 ## R9 — Forge mapping
 
-**Decision.** Use one host table, shared with the Yocto reader (clarification 3): `github.com` → `github`, `gitlab.com` → `gitlab`, `bitbucket.org` → `bitbucket`, `codeberg.org` → `codeberg`.
+**Decision.** Use one host table, shared with the Yocto reader (clarification 3). Sharing the table does not make every identity match. Yocto truncates commit versions to 12 characters (`yocto/recipe.rs`), so a Yocto component and a submodule at the same commit still differ in version. Casing is R16. The table: `github.com` → `github`, `gitlab.com` → `gitlab`, `bitbucket.org` → `bitbucket`, `codeberg.org` → `codeberg`.
 - Lift the `match host` from `yocto/recipe.rs::parse_git_src_uri` into a shared function that both readers call, so the mapping cannot drift. Yocto's output must stay byte-identical, and its tests guard that.
 - The submodule reader adds the URL forms Yocto does not see: scp style (`git@host:owner/repo.git`), `ssh://`, and `https://` with or without `.git`.
 - A path with more than two segments (nested GitLab groups) falls back to generic, as Yocto's parser already does.
+
+## R16 — Forge PURL case (FR-004, FR-015; analysis remediation)
+
+**Measured.** purl-spec's `types/` directory (43 files, 2026-11-15) has `github-definition`, `bitbucket-definition` and `generic-definition`, and no `gitlab`, `codeberg` or `sourcehut` definition. `nix/identity.rs` records from the `github` and `bitbucket` definitions: "It is not case sensitive and shall be lowercased", for both namespace and name.
+
+**Finding.** `Purl::new` does not fold case. The CMake reader builds `pkg:github/<owner>/<repo>` from the URL as written (`cmake.rs`, `parse_fetch_block`), and so does the Yocto reader. Only the Nix reader lowercases.
+
+**Decision** (user, analysis remediation).
+- Submodule PURLs lowercase `github` and `bitbucket` owner and repository, and keep the declared case for `gitlab` and `codeberg`.
+- The CMake reader's `pkg:github` and `pkg:bitbucket` PURLs are lowercased in this feature, so a submodule and a CMake fetch of `ROCm/x` at one commit merge (SC-011).
+- Yocto is filed separately.
+- The `golden/*/cmake.*` goldens are unaffected: their one GitHub PURL is `google/googletest`, already lowercase.
 
 ## R10 — C57 path references (FR-008)
 

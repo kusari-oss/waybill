@@ -51,17 +51,20 @@ One per document, present only if a `.gitmodules` file was seen (FR-011, researc
 | `pinned` | count of SubmoduleComponents emitted |
 | `skipped.no-gitlink` | declarations with no gitlink |
 | `skipped.no-url` | gitlinks with no declaration |
-| `skipped.no-repository-data` | `.gitmodules` files whose directory is not a repository top level |
+| `skipped.no-repository-data` | entries of `.gitmodules` files with no enclosing repository at or below the scan root |
 | `skipped.git-unavailable` | repositories that could not be read because `git` is absent or timed out |
 | `skipped.git-refused` | repositories git refused (`safe.directory`, research R2) |
 | `skipped.unsafe-path-or-url` | declarations rejected by research R7 |
 
-A gitlink with no declaration is still emitted (spec edge case) and is counted under both `pinned` and `no-url`. That is the only overlap between the counts, and the contract states it.
+A gitlink with no declaration is still emitted (spec edge case) and is counted under both `pinned` and `no-url`. That is the only overlap between the counts, and FR-011 and the contract both state it. Every other reason counts entries that produced no component.
 
 ## Transitions
 
 ```
-.gitmodules seen by walker ─┬─ dir is not a repo top level ─► count no-repository-data (each entry)
+.gitmodules seen by walker ─┬─ no enclosing repo at or below the scan root ─► count no-repository-data (each entry)
+                            ├─ inside a repo, below its top level (vendored project, monorepo project)
+                            │     ─► join against the enclosing repo's gitlinks under this directory's prefix;
+                            │        matches dedupe with the top-level declaration; unmatched ─► no-gitlink
                             └─ dir is a repo top level ─► git ls-tree ─┬─ git absent / timeout ─► git-unavailable (each entry)
                                                                        ├─ dubious ownership ─────► git-refused (each entry)
                                                                        └─ gitlinks ─► join with declarations by path

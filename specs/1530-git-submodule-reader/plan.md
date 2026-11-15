@@ -52,7 +52,7 @@ Wiring:
 | I. Pure Rust, Statically Linked | Pass. No new crates. `git` is invoked as an external tool, as the golang and gem readers already do. |
 | III. Fail Closed | Pass. Nothing is guessed: no gitlink, no component. Missing `git`, a refused repository, or missing repository data is recorded in C222, never filled in from `.gitmodules`. A hostile config cannot run code (R1). |
 | IV. Type-Driven Correctness | Pass. The skip reason is a closed enum serialised in one place. C57 stays a closed two-value enum. |
-| V. Specification Compliance | Pass. PURLs use registered types (`github`, `gitlab`, `bitbucket`, `codeberg`, `generic` with `vcs_url`), with no invented `git+https` type. C222 is added with extractors in all three formats, per the catalog rule. |
+| V. Specification Compliance | Pass with one recorded deviation (see Complexity Tracking). purl-spec's `types/` directory, checked 2026-11-15, defines `github`, `bitbucket` and `generic`, and those follow their definitions: `github` and `bitbucket` owner and repository are lowercased (FR-004), and `generic` carries `vcs_url`. `gitlab` and `codeberg` have no definition and are used for consistency with the existing Yocto and Nix readers (clarification 3). No `git+https` type is invented. C222 is added with extractors in all three formats, per the catalog rule. |
 | VII. Test Isolation | Pass. Tests build local repositories in tempdirs over `file://`, with no network and no clone of a remote. TheRock is measured only in CI. |
 | VIII. Completeness | Pass. This closes #1515's zero-component gap. A top-level submodule is anchored to the root even when the root has other edges, the #1009 lesson. |
 | IX. Accuracy | Pass. Counting gitlinks, not `.gitmodules` lines, avoids 26 false components on the tree #1515 measured. Different PURLs are not merged by guesswork (FR-009). |
@@ -92,7 +92,7 @@ waybill-cli/src/scan_fs/package_db/
 │   └── identity.rs                # URL → PURL, relative-URL resolution (R8, R9)
 ├── forge.rs                       # NEW shared host → PURL-type table (R9); yocto/recipe.rs calls it
 ├── yocto/recipe.rs                # uses forge.rs; output byte-identical
-├── cmake.rs                       # wire collect_find_package_targets; add path-reference collector (R10)
+├── cmake.rs                       # wire collect_find_package_targets; add path-reference collector (R10); lowercase pkg:github/pkg:bitbucket owner+repo (FR-015, R16)
 └── mod.rs                         # register + finalize the reader
 waybill-cli/src/scan_fs/mod.rs           # exact-PURL `depends` resolution (R6)
 waybill-cli/src/scan_fs/package_db/nix/eval/invoke.rs   # run_bounded generalised over the program (R15)
@@ -150,4 +150,6 @@ CHANGELOG.md
 
 ## Complexity Tracking
 
-None.
+| Deviation | Why needed | Simpler alternative rejected because |
+|---|---|---|
+| `pkg:gitlab` and `pkg:codeberg` are emitted although purl-spec publishes no definition for them (checked 2026-11-15). | The Yocto (`yocto/recipe.rs`) and Nix (`nix/identity.rs`) readers already emit them. One repository should have one identity across readers (clarification 3). | `pkg:generic/…?vcs_url=` for those hosts would split one repository's identity between this reader and the two existing ones. If the deviation should be removed, it should be removed for all three readers together, in a separate change. |
