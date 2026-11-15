@@ -126,7 +126,7 @@
 - [X] T042 [US1] Write a no-escape test in `waybill-cli/tests/installed_lib_us1.rs` (spec G1, FR-012).
   - **Escaping links:** create `<tmp>/outside/waybill-fixture-x.pc` with `Version: 9.9.9` beside the scan root, and two links to it in `<root>/usr/lib/pkgconfig/`: one relative (`../../../outside/…`) and one absolute (`<tmp>/outside/waybill-fixture-x.pc`, which is outside the root when read root-relatively). Assert that no component has version `9.9.9`, and that the coverage record counts both links as `malformed`.
   - **Positive control:** an absolute link whose root-relative target exists inside the root (`/opt/sdk/lib/pkgconfig/waybill-fixture-y.pc` → `<root>/opt/sdk/lib/pkgconfig/waybill-fixture-y.pc`) is emitted.
-- [ ] T043 [US1] Write an image-mode test in `waybill-cli/tests/installed_lib_image.rs` (spec FR-014, G2). Build an image tarball in a tempdir with the existing helper pattern in `waybill-cli/tests/binding_spdx_conformance.rs::build_image_tarball` (a docker-archive layout). Its single layer holds `opt/sdk/lib/pkgconfig/waybill-fixture-a.pc`, plus `var/lib/dpkg/status` and `var/lib/dpkg/info/waybill-fixture-z.list` owning `usr/lib/x86_64-linux-gnu/pkgconfig/waybill-fixture-z.pc`. Scan it with `--image`, and assert:
+- [X] T043 [US1] Write an image-mode test in `waybill-cli/tests/installed_lib_image.rs` (spec FR-014, G2). Build an image tarball in a tempdir with the existing helper pattern in `waybill-cli/tests/binding_spdx_conformance.rs::build_image_tarball` (a docker-archive layout). Its single layer holds `opt/sdk/lib/pkgconfig/waybill-fixture-a.pc`, plus `var/lib/dpkg/status` and `var/lib/dpkg/info/waybill-fixture-z.list` owning `usr/lib/x86_64-linux-gnu/pkgconfig/waybill-fixture-z.pc`. Scan it with `--image`, and assert:
   - `pkg:generic/waybill-fixture-a@<v>` is present;
   - no `waybill-fixture-z` component exists;
   - the coverage record shows `owned-by-os-package: 1`.
@@ -139,27 +139,27 @@
 **Goal**: `Requires` and `Requires.private` become `DependsOn` edges by exact PURL, with private-only targets annotated.
 **Independent test**: SC-002.
 
-- [ ] T021 [P] [US2] Write the `Requires` grammar unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/pkgconfig.rs`:
+- [X] T021 [P] [US2] Write the `Requires` grammar unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/pkgconfig.rs`:
   - `a, b` and `a b` give `[a, b]`;
   - `a >= 1.0, b` gives `[a, b]`, so the `1.0` is consumed and is not a module;
   - `a>=1.0` with no spaces gives `[a]`;
   - `a != 2 b < 3` gives `[a, b]`;
   - an empty `Requires:` gives `[]`;
   - duplicates are preserved in order.
-- [ ] T022 [P] [US2] Write the resolution unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/resolve.rs` (data-model "Resolution of `Requires`"):
+- [X] T022 [P] [US2] Write the resolution unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/resolve.rs` (data-model "Resolution of `Requires`"):
   - same-prefix wins over another prefix;
   - a name unique across the scan resolves;
   - a name with two candidates in other prefixes is unresolved;
   - a missing name is unresolved and counted;
   - an OS-owned target is unresolved;
   - a module in both `Requires` and `Requires.private` gives one edge and is not private.
-- [ ] T023 [US2] Write the integration test `waybill-cli/tests/installed_lib_us2.rs` (SC-002). Build the US1 prefix plus the `Requires` and `Requires.private` lines from quickstart.md, and one requirement naming a module absent from the scan. In all three formats, assert:
+- [X] T023 [US2] Write the integration test `waybill-cli/tests/installed_lib_us2.rs` (SC-002). Build the US1 prefix plus the `Requires` and `Requires.private` lines from quickstart.md, and one requirement naming a module absent from the scan. In all three formats, assert:
   - the edge set equals the union exactly;
   - `waybill:pkg-config-private-requires` equals the private-only PURLs exactly;
   - no component exists for the missing module;
   - a second prefix holding a different-version `waybill-fixture-c` is not the edge target, because the same prefix wins.
-- [ ] T024 [US2] Implement the `Requires` grammar in `pkgconfig.rs` (T021) and resolution in `resolve.rs` (T022). Write exact target PURLs into `depends`, sorted and deduplicated, and never write unresolved names (research R6). Set the private-requires annotation per `contracts/wire.md`.
-- [ ] T025 [US2] Add the `waybill:pkg-config-private-requires` catalog row, using the number from T004:
+- [X] T024 [US2] Implement the `Requires` grammar in `pkgconfig.rs` (T021) and resolution in `resolve.rs` (T022). Write exact target PURLs into `depends`, sorted and deduplicated, and never write unresolved names (research R6). Set the private-requires annotation per `contracts/wire.md`.
+- [X] T025 [US2] Add the `waybill:pkg-config-private-requires` catalog row, using the number from T004:
   - the row and its definition in `docs/reference/sbom-format-mapping.md`;
   - emission in the CycloneDX component properties, the SPDX 2.3 package annotations and the SPDX 3 package annotations (follow an existing component-scope JSON-array row's emitters; find one with `grep -n 'JSON array' docs/reference/sbom-format-mapping.md`);
   - `SymmetricEqual` extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`.
@@ -171,27 +171,27 @@
 **Goal**: a library component's evidence lists its prefix's matching shared-library files. The binaries' own components are unchanged.
 **Independent test**: SC-008.
 
-- [ ] T026 [P] [US3] Write the matching unit tests in `resolve.rs`:
+- [X] T026 [P] [US3] Write the matching unit tests in `resolve.rs`:
   - `libwaybill-fixture-a.so`, `libwaybill-fixture-a.so.1` and `libwaybill-fixture-a.so.1.2.3` match module `waybill-fixture-a`;
   - `libwaybill-fixture-a.dylib` and `libwaybill-fixture-a.1.dylib` match;
   - `libfoo.so.1` matches module `libfoo`;
   - `libwaybill-fixture-ab.so` does not match `waybill-fixture-a`;
   - a binary in another prefix does not match;
   - a binary matching two modules lists under neither.
-- [ ] T027 [US3] Write the integration test `waybill-cli/tests/installed_lib_us3.rs` (SC-008). In the US1 prefix, add minimal ELF64 `ET_DYN` files at `lib/libwaybill-fixture-a.so.1.2.3` and `lib/libwaybill-fixture-zz.so`; follow the hand-built ELF helper in `waybill-cli/tests/binary_test_inputs.rs` (PR #1561) or the existing binary tests. Assert:
+- [X] T027 [US3] Write the integration test `waybill-cli/tests/installed_lib_us3.rs` (SC-008). In the US1 prefix, add minimal ELF64 `ET_DYN` files at `lib/libwaybill-fixture-a.so.1.2.3` and `lib/libwaybill-fixture-zz.so`; follow the hand-built ELF helper in `waybill-cli/tests/binary_test_inputs.rs` (PR #1561) or the existing binary tests. Assert:
   - `pkg:generic/waybill-fixture-a@1.2.3` lists the `.so` in its source files and occurrences;
   - the `.so`'s own file component is byte-identical to a scan of the same tree with the `.pc` files removed. That is the control showing the binary component is untouched;
   - `libwaybill-fixture-zz.so` is listed under nothing.
-- [ ] T028 [US3] Implement the matching in `resolve.rs` against `db_entries` whose `binary_role` is a shared library and whose `source_path` is in the record's prefix. Append matches to `extra_source_paths`, sorted (research R9). T026 and T027 must pass.
-- [ ] T029 [US3] Add a zlib merge test to `waybill-cli/tests/installed_lib_us3.rs` (SC-003). Use a `zlib.pc` with `Version: 1.3.1` beside a binary carrying zlib's embedded version string for `1.3.1`; reuse the string fixture the #1525 tests use (`grep -rn 'deflate 1' waybill-cli/src/scan_fs/binary/`). Assert one `pkg:generic/zlib@1.3.1` component with C55 `pkg-config`, tier `deployed` and the binary's path in its source files. The control: without the `.pc`, the component has tier `analyzed`.
+- [X] T028 [US3] Implement the matching in `resolve.rs` against `db_entries` whose `binary_role` is a shared library and whose `source_path` is in the record's prefix. Append matches to `extra_source_paths`, sorted (research R9). T026 and T027 must pass.
+- [X] T029 [US3] Add a zlib merge test to `waybill-cli/tests/installed_lib_us3.rs` (SC-003). Use a `zlib.pc` with `Version: 1.3.1` beside a binary carrying zlib's embedded version string for `1.3.1`; reuse the string fixture the #1525 tests use (`grep -rn 'deflate 1' waybill-cli/src/scan_fs/binary/`). Assert one `pkg:generic/zlib@1.3.1` component with C55 `pkg-config`, tier `deployed` and the binary's path in its source files. The control: without the `.pc`, the component has tier `analyzed`.
 - [ ] T040 [US3] Measure the walk cost of entering virtual environments (research R1, spec C1). Build a synthetic `.venv/lib/python3.12/site-packages/` holding 50,000 empty files across 2,000 directories, and no `.pc`. Time a `--path` scan 3 times each with T018's `descend_into` and with it removed, and report min, median and max. Record the result in `specs/1531-pkgconfig-cmake-versions/measurements/venv-walk-timing.md`. If the median rises by more than 20%, restrict descent to `site-packages` subtrees (`descend_into` patterns `.venv`, `venv`, then let `on_dir` ignore everything but `lib/python*/site-packages/**`) and re-measure.
 - [ ] T030 [US3] Measure the evidence re-hashing risk (research R9). Time a scan of the US3 fixture with `lib/libwaybill-fixture-a.so.1.2.3` replaced by a 200 MiB sparse ELF file, with and without the `.pc`. Take 3 runs each and report min, median and max (memory rule: a single run is not a measurement). Record the times in `specs/1531-pkgconfig-cmake-versions/measurements/rehash-timing.md`. If the `.pc` arm's median is more than 1.5× the other's, take the occurrence hash from the matched binary component's `file-sha256` qualifier instead of re-reading the file, then re-measure.
 
 ## Phase 6: Coverage record (cross-cutting; needed by SC-001 and SC-007)
 
-- [ ] T031 Implement the coverage record in `resolve.rs` per `data-model.md`: counts per kind, every skip reason with zeros, `unresolved-requires` and `version-disagreements`. It is present only when phase 1 matched at least one file. Log a warning per skip naming the path.
-- [ ] T032 Add the `waybill:installed-library-coverage` catalog row (number from T004). Emit it in the CycloneDX `metadata.properties`, the SPDX 2.3 document annotations and the SPDX 3 document annotations, following C222 `waybill:git-submodule-coverage`'s emitters, and add `SymmetricEqual` extractors. Extend T014 and T023 to assert the exact coverage JSON in all three formats, including the `owned-by-os-package: 1` from T014's dpkg file.
-- [ ] T033 Write a byte-identity test in `waybill-cli/tests/installed_lib_us1.rs`. Ten repeated scans of the US1 to US3 fixture are byte-identical in all three formats, and a tree with no matching file carries no coverage record (contracts invariants).
+- [X] T031 Implement the coverage record in `resolve.rs` per `data-model.md`: counts per kind, every skip reason with zeros, `unresolved-requires` and `version-disagreements`. It is present only when phase 1 matched at least one file. Log a warning per skip naming the path.
+- [X] T032 Add the `waybill:installed-library-coverage` catalog row (number from T004). Emit it in the CycloneDX `metadata.properties`, the SPDX 2.3 document annotations and the SPDX 3 document annotations, following C222 `waybill:git-submodule-coverage`'s emitters, and add `SymmetricEqual` extractors. Extend T014 and T023 to assert the exact coverage JSON in all three formats, including the `owned-by-os-package: 1` from T014's dpkg file.
+- [X] T033 Write a byte-identity test in `waybill-cli/tests/installed_lib_us1.rs`. Ten repeated scans of the US1 to US3 fixture are byte-identical in all three formats, and a tree with no matching file carries no coverage record (contracts invariants).
 
 ## Phase 7: Polish and cross-cutting
 

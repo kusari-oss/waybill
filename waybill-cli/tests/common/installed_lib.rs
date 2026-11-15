@@ -198,3 +198,54 @@ pub fn coverage(docs: &Docs) -> Option<Value> {
 pub fn skipped(cov: &Value, reason: &str) -> u64 {
     cov["skipped"][reason].as_u64().unwrap_or(u64::MAX)
 }
+
+/// A minimal ELF64 shared library (`ET_DYN`, no program headers, so no
+/// `PT_INTERP`) whose `.rodata` section holds `rodata`. Adapted from the
+/// cargo-auditable fixture in `closure_binary_contents.rs`.
+pub fn elf_shared_lib(rodata: &[u8]) -> Vec<u8> {
+    let mut shstrtab = vec![0u8];
+    let name_off = shstrtab.len() as u32;
+    shstrtab.extend_from_slice(b".rodata\0");
+    let shstr_off = shstrtab.len() as u32;
+    shstrtab.extend_from_slice(b".shstrtab\0");
+    let data_off = 64u64;
+    let pad = 1024usize.saturating_sub(rodata.len());
+    let strtab_off = data_off + rodata.len() as u64 + pad as u64;
+    let shoff = strtab_off + shstrtab.len() as u64;
+    let mut f = Vec::new();
+    f.extend_from_slice(b"\x7fELF");
+    f.extend_from_slice(&[2, 1, 1, 0]);
+    f.extend_from_slice(&[0u8; 8]);
+    f.extend_from_slice(&3u16.to_le_bytes()); // ET_DYN
+    f.extend_from_slice(&62u16.to_le_bytes()); // x86_64
+    f.extend_from_slice(&1u32.to_le_bytes());
+    f.extend_from_slice(&0u64.to_le_bytes());
+    f.extend_from_slice(&0u64.to_le_bytes());
+    f.extend_from_slice(&shoff.to_le_bytes());
+    f.extend_from_slice(&0u32.to_le_bytes());
+    f.extend_from_slice(&64u16.to_le_bytes());
+    f.extend_from_slice(&0u16.to_le_bytes());
+    f.extend_from_slice(&0u16.to_le_bytes());
+    f.extend_from_slice(&64u16.to_le_bytes());
+    f.extend_from_slice(&3u16.to_le_bytes());
+    f.extend_from_slice(&2u16.to_le_bytes());
+    f.extend_from_slice(rodata);
+    f.extend(std::iter::repeat_n(0u8, pad));
+    f.extend_from_slice(&shstrtab);
+    let mut sh = |name: u32, ty: u32, flags: u64, off: u64, size: u64| {
+        f.extend_from_slice(&name.to_le_bytes());
+        f.extend_from_slice(&ty.to_le_bytes());
+        f.extend_from_slice(&flags.to_le_bytes());
+        f.extend_from_slice(&0u64.to_le_bytes());
+        f.extend_from_slice(&off.to_le_bytes());
+        f.extend_from_slice(&size.to_le_bytes());
+        f.extend_from_slice(&0u32.to_le_bytes());
+        f.extend_from_slice(&0u32.to_le_bytes());
+        f.extend_from_slice(&1u64.to_le_bytes());
+        f.extend_from_slice(&0u64.to_le_bytes());
+    };
+    sh(0, 0, 0, 0, 0);
+    sh(name_off, 1, 2, data_off, rodata.len() as u64); // PROGBITS, SHF_ALLOC
+    sh(shstr_off, 3, 0, strtab_off, shstrtab.len() as u64);
+    f
+}
