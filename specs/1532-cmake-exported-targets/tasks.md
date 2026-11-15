@@ -97,8 +97,8 @@
   - add a sentence to the installed-library section of `docs/ecosystems.md`;
   - add a CHANGELOG entry under Unreleased `### Added`, separated from other unreleased entries.
 - [X] T017 Gate. Record `GATE_RESULT` and the `test result: ok.` count in `specs/1532-cmake-exported-targets/measurements/gate-log.md`.
-- [ ] T018 Push the branch. Dispatch `public-corpus.yml` with `regen_goldens=true` on it. Compare all goldens byte for byte, then do a normalised diff of any that differ. The prediction is that none change (research R7). Record the result in `measurements/golden-review.md`, and commit any regenerated goldens only after review.
-- [ ] T019 ROCm measurement, CI only (SC-003, SC-006, research R8). In `kusari-sandbox/waybill-fixture-therock-sdk`, add a `measure-full` job to `.github/workflows/measure.yml`. It:
+- [X] T018 Push the branch. Dispatch `public-corpus.yml` with `regen_goldens=true` on it. Compare all goldens byte for byte, then do a normalised diff of any that differ. The prediction is that none change (research R7). Record the result in `measurements/golden-review.md`, and commit any regenerated goldens only after review.
+- [X] T019 ROCm measurement, CI only (SC-003, SC-006, research R8). In `kusari-sandbox/waybill-fixture-therock-sdk`, add a `measure-full` job to `.github/workflows/measure.yml`. It:
   - checks `df -h / /mnt`;
   - downloads the pinned tarball, with the same URL, version id and size check as `capture`;
   - extracts it where 25 GB is free, or else only `lib/`, `bin/` and `libexec/`, recording which;
@@ -107,7 +107,7 @@
   - reports median times and their ratio, the `exported-targets` C225 object, and the number of files in package components' evidence that come from exported targets.
 
   Record the result in `specs/1532-cmake-exported-targets/measurements/therock-full.md`. SC-003 expects 903 attached, 4 `not-shipped` and 7 `no-package-version` (the census counts distinct shipped files). SC-006 expects a ratio of at most 1.25. If it exceeds that, implement FR-005a's path-only fallback for attributed static archives, re-measure, and record both.
-- [ ] T020 Close-out. Verify each task's claim against the code, tick `tasks.md`, and draft the PR body with the attribution line.
+- [X] T020 Close-out. Verify each task's claim against the code, tick `tasks.md`, and draft the PR body with the attribution line.
 
 ## Dependencies
 
