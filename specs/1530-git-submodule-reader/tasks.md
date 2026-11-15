@@ -218,12 +218,12 @@
   - that `git` runs with config-executed programs disabled.
 - [X] T041 Run quickstart §1–§5 end to end with the release build, and record the outputs in `specs/1530-git-submodule-reader/measurements/quickstart-run.txt`.
 - [X] T042 Run clippy, then the gate. Record the positive signal and the `test result: ok` count. Never pipe through `head`.
-- [ ] T043 Corpus goldens (SC-007, research R13):
+- [X] T043 Corpus goldens (SC-007, research R13):
   - push the branch and dispatch `public-corpus.yml` with `regen_goldens=true`;
   - download the artifact and run a normalised, sorted diff against the committed goldens;
   - assert that exactly the three `public_corpus/haskell-language-server/*` files differ, each only by gaining the C222 record with `pinned: 0`;
   - commit them with `measurements/golden-review.md`. Any other difference is a defect to explain before committing.
-- [ ] T044 TheRock (SC-003), in CI only. Add a branch-only workflow step that:
+- [X] T044 TheRock (SC-003), in CI only. Add a branch-only workflow step that:
   - clones `ROCm/TheRock` at `b1cae390cc745283dce25581415353f9bc906162` without submodules;
   - records `git ls-tree -r HEAD | awk '$1=="160000"' | wc -l`;
   - scans with the branch binary and records the count of `git-submodule` components and the C222 record.
