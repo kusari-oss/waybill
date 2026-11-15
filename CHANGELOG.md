@@ -9,36 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
-- **zlib's embedded version string is recognised in real builds (#1525).**
-  zlib's literal is `" deflate X.Y.Z Copyright ..."`, with a leading space,
-  and the scanner required the byte before `deflate` to be NUL, so it never
-  matched. A Nix-built `libz.1.3.2.dylib` now gives `pkg:generic/zlib@1.3.2`
-  instead of an unversioned `pkg:generic/zlib`.
-
-- **A cget `requirements.txt` no longer fabricates PyPI packages (#1522).**
-  cget, a C/C++ package manager, also uses `requirements.txt`, with lines
-  such as `owner/repo@ref` and `name@version`. The pip reader parsed them as
-  PEP 508 and emitted components such as `pkg:pypi/facebook/zstd`. A line
-  whose name is not a PEP 508 name, or whose `@` directly follows the name
-  without a URL after it, is now skipped. A file in which most lines are
-  skipped is not read as pip at all, and a WARN names it.
-
 - **An unpacked wheel scanned at its own root is identified (#1529).** The
   dist-info reader looked only inside `site-packages` directories, so a tree
   whose top level holds `<name>-<version>.dist-info/` gave
   `pkg:generic/<dir>@0.0.0` and no PyPI component. The scan root is now read
   as a site-packages directory when it directly holds a `.dist-info`. When it
   holds exactly one, that package is the main module and the document root.
-
-- **CMake fetches keep quoted and SHA-512 hashes, and resolve same-file
-  variables (#1517).** `URL_HASH "SHA256=<hex>"` and `URL_HASH SHA512=<hex>`
-  were dropped, and a `URL` built from `${VAR}` gave `@unknown`. Quoted
-  hashes and SHA-512, SHA-1 and MD5 are now kept. A variable with one
-  literal `set()` in the same file is substituted into `URL`,
-  `GIT_REPOSITORY`, `GIT_TAG` and `URL_HASH`. A variable with no such value
-  gives an unversioned design-tier component whose `waybill:unresolved-reason`
-  says so, instead of an invented `@unknown`. SHA-384 has no representation
-  yet and is still dropped.
 
 - **A `find_package` version is a requirement, not a resolution (#1520).**
   `find_package(X 3.9)` declares a minimum, but it emitted
@@ -51,6 +27,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   requirement and a `FetchContent` of the same package in the same
   directory still collapse into the fetch.
 
+- **zlib's embedded version string is recognised in real builds (#1525).**
+  zlib's literal is `" deflate X.Y.Z Copyright ..."`, with a leading space,
+  and the scanner required the byte before `deflate` to be NUL, so it never
+  matched. A Nix-built `libz.1.3.2.dylib` now gives `pkg:generic/zlib@1.3.2`
+  instead of an unversioned `pkg:generic/zlib`.
+
 - **Nested Conan and vcpkg manifests are read, and so is `self.requires()`
   (#1521).** Both readers opened only the manifest at the scan root, although
   the walker found every nested one. They now read each `conanfile.txt`,
@@ -61,6 +43,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   scope) and `self.test_requires()` (test scope), with a literal argument. A
   `self.requires()` nested under a conditional or loop is optional, with
   `waybill:optional-derivation: conan-conditional-requires` (C122).
+
+- **A cget `requirements.txt` no longer fabricates PyPI packages (#1522).**
+  cget, a C/C++ package manager, also uses `requirements.txt`, with lines
+  such as `owner/repo@ref` and `name@version`. The pip reader parsed them as
+  PEP 508 and emitted components such as `pkg:pypi/facebook/zstd`. A line
+  whose name is not a PEP 508 name, or whose `@` directly follows the name
+  without a URL after it, is now skipped. A file in which most lines are
+  skipped is not read as pip at all, and a WARN names it.
+
+- **CMake fetches keep quoted and SHA-512 hashes, and resolve same-file
+  variables (#1517).** `URL_HASH "SHA256=<hex>"` and `URL_HASH SHA512=<hex>`
+  were dropped, and a `URL` built from `${VAR}` gave `@unknown`. Quoted
+  hashes and SHA-512, SHA-1 and MD5 are now kept. A variable with one
+  literal `set()` in the same file is substituted into `URL`,
+  `GIT_REPOSITORY`, `GIT_TAG` and `URL_HASH`. A variable with no such value
+  gives an unversioned design-tier component whose `waybill:unresolved-reason`
+  says so, instead of an invented `@unknown`. SHA-384 has no representation
+  yet and is still dropped.
 
 ## [0.16.0] - 2026-11-14
 
