@@ -112,6 +112,11 @@ fn locked_reason_strings() -> Vec<(&'static str, &'static str)> {
             "waybill-cli/src/scan_fs/package_db/cmake.rs",
             "URL or GIT_TAG uses a CMake variable with no literal set() in the same file",
         ),
+        // #1520.
+        (
+            "waybill-cli/src/scan_fs/package_db/cmake.rs",
+            "find_package() states a requirement; the version found at build time is not in source",
+        ),
     ]
 }
 

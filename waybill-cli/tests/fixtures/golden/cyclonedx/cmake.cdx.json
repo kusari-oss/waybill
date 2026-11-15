@@ -80,7 +80,7 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "source"
+          "value": "design"
         },
         {
           "name": "waybill:cmake-find-package-name",
@@ -89,6 +89,10 @@
         {
           "name": "waybill:source-mechanism",
           "value": "cmake-find-package"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "find_package() states a requirement; the version found at build time is not in source"
         },
         {
           "name": "waybill:workspace-member",
@@ -261,6 +265,9 @@
     ],
     "lifecycles": [
       {
+        "phase": "design"
+      },
+      {
         "phase": "pre-build"
       }
     ],
@@ -299,7 +306,11 @@
       },
       {
         "name": "waybill:graph-completeness",
-        "value": "complete"
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "transitive-edges-unresolvable: generic"
       },
       {
         "name": "waybill:workspaces-detected",

@@ -1,12 +1,14 @@
-//! Milestone 155 SC-003 integration — same-PURL cross-mechanism dedup.
+//! Milestone 155 SC-003 integration — a package both required with
+//! `find_package(<Name> <Version>)` and fetched with
+//! `FetchContent_Declare(<name> URL ...-<version>.tar.gz)`.
 //!
-//! Verifies that when the same package is declared via BOTH
-//! `find_package(<Name> <Version>)` and `FetchContent_Declare(<name> URL
-//! ...archive-with-embedded-version.tar.gz)`, the production
-//! `resolve::deduplicator` pass merges them into exactly ONE emitted
-//! component. The surviving `waybill:source-mechanism` value is one of
-//! `{"cmake-find-package", "cmake-fetchcontent-url"}` — the winner is
-//! confidence-tie-break-dependent and NOT prescribed by the spec.
+//! Until #1520 both produced `pkg:generic/<name>@<version>` and the
+//! deduplicator merged them by PURL. Since #1520 a `find_package` version
+//! is a requirement: the call emits a versionless design-tier
+//! `pkg:generic/<name>`, and the fetch is what resolves it. The milestone-191
+//! reconciler collapses the requirement into the fetch when both are
+//! declared in the same directory, its match scope. Declared in different
+//! directories, they stay two components.
 //!
 //! NOTE: cross-namespace scenarios (e.g., cmake vs dpkg) are OUT OF
 //! SCOPE for milestone 155 — those require milestone-111 alias-binding
@@ -53,7 +55,7 @@ fn openssl_components(doc: &Value) -> Vec<&Value> {
     let mut out = Vec::new();
     if let Some(arr) = doc.get("components").and_then(|v| v.as_array()) {
         for c in arr {
-            if c.get("purl").and_then(|v| v.as_str()) == Some("pkg:generic/openssl@1.1.0") {
+            if c.get("name").and_then(|v| v.as_str()) == Some("openssl") {
                 out.push(c);
             }
         }
@@ -72,13 +74,45 @@ fn property_value<'a>(component: &'a Value, key: &str) -> Option<&'a str> {
         })
 }
 
+fn purls_and_mechanisms(doc: &Value) -> Vec<(String, String)> {
+    let mut out: Vec<(String, String)> = openssl_components(doc)
+        .into_iter()
+        .map(|c| {
+            (
+                c.get("purl").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+                property_value(c, "waybill:source-mechanism").unwrap_or("").to_string(),
+            )
+        })
+        .collect();
+    out.sort();
+    out
+}
+
 #[test]
-fn cmake_find_package_and_fetchcontent_url_same_purl_dedup() {
+fn cmake_find_package_requirement_collapses_into_a_same_directory_fetch() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::write(
+        tmp.path().join("CMakeLists.txt"),
+        r#"
+cmake_minimum_required(VERSION 3.10)
+project(openssl-dedup C)
+find_package(openssl 1.1.0)
+FetchContent_Declare(openssl URL https://example.com/openssl-1.1.0.tar.gz)
+"#,
+    )
+    .unwrap();
+    let doc = run_scan(tmp.path());
+    assert_eq!(
+        purls_and_mechanisms(&doc),
+        [("pkg:generic/openssl@1.1.0".to_string(), "cmake-fetchcontent-url".to_string())],
+        "SC-003: the requirement collapses into the fetch that resolves it",
+    );
+}
+
+#[test]
+fn cmake_find_package_requirement_and_fetch_in_different_directories_stay_apart() {
     let tmp = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(tmp.path().join("cmake")).unwrap();
-
-    // Depth-0 discoverable: find_package(openssl 1.1.0)
-    // → pkg:generic/openssl@1.1.0 (cmake-find-package).
     std::fs::write(
         tmp.path().join("CMakeLists.txt"),
         r#"
@@ -89,10 +123,6 @@ include(cmake/deps.cmake)
 "#,
     )
     .unwrap();
-
-    // Depth-1 discoverable: FetchContent_Declare with URL containing
-    // a semver-shaped version → pkg:generic/openssl@1.1.0
-    // (cmake-fetchcontent-url).
     std::fs::write(
         tmp.path().join("cmake").join("deps.cmake"),
         r#"
@@ -100,23 +130,13 @@ FetchContent_Declare(openssl URL https://example.com/openssl-1.1.0.tar.gz)
 "#,
     )
     .unwrap();
-
     let doc = run_scan(tmp.path());
-    let openssls = openssl_components(&doc);
     assert_eq!(
-        openssls.len(),
-        1,
-        "SC-003: exactly ONE pkg:generic/openssl@1.1.0 component expected after dedup; got {}: {}",
-        openssls.len(),
-        serde_json::to_string_pretty(&openssls).unwrap()
-    );
-
-    // The winner's waybill:source-mechanism must be one of the two
-    // possible values. The spec does NOT prescribe which one.
-    let mechanism = property_value(openssls[0], "waybill:source-mechanism");
-    assert!(
-        matches!(mechanism, Some("cmake-find-package") | Some("cmake-fetchcontent-url")),
-        "expected waybill:source-mechanism ∈ {{cmake-find-package, cmake-fetchcontent-url}}; got {:?}",
-        mechanism
+        purls_and_mechanisms(&doc),
+        [
+            ("pkg:generic/openssl".to_string(), "cmake-find-package".to_string()),
+            ("pkg:generic/openssl@1.1.0".to_string(), "cmake-fetchcontent-url".to_string()),
+        ],
+        "#1520: outside the reconciler's directory scope the requirement is its own component",
     );
 }

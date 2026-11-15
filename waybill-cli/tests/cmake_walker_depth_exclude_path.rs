@@ -11,7 +11,7 @@
 //!   F6 remediation from /speckit-analyze: FR-017 forbids walking
 //!   src/, so this MUST NOT emit regardless of exclude-path.
 //!
-//! Asserts exactly ONE `pkg:generic/bar@1.0` component + ZERO
+//! Asserts exactly ONE `pkg:generic/bar` component + ZERO
 //! `pkg:generic/foo` (excluded) + ZERO `pkg:generic/notemitted`
 //! (FR-017 boundary).
 
