@@ -60,6 +60,25 @@ package version files (`*ConfigVersion.cmake`, `*-config-version.cmake`) in
   archives, executables. Each one that ships is listed in the evidence of
   the package's versioned component, with its SHA-256. The hash is reused
   from the binary scan where it computed one.
+- **Test payload** (spec 1533, #1564). Binary file components, file-tier
+  components and installed-library components get the test scope
+  (CycloneDX `scope: "excluded"`, SPDX 3 `software_primaryPurpose: "test"`,
+  C42 `test`) when:
+  - an installed `CTestTestfile.cmake` names the file in an `add_test`, or
+    the exported targets of a test package (`<name>-tests`, `_tests`,
+    `-test`, `_test`) name it. The test package's own component is scoped
+    too;
+  - in an installed tree, every path of the component lies under a
+    directory named exactly `test`, `tests`, `unittests`, `test_plugins` or
+    `.upstream-tests`.
+
+  An installed tree is an image, or a directory holding an installed
+  library no OS package owns or an OS package database. Such a directory
+  scan reports the test binaries #1524 skips in source trees. C62 records
+  the rule, and `waybill:test-scope-coverage` (C226) counts declarations,
+  their locations by outcome, and what was scoped. Name patterns are not
+  used, and tests discovered at run time through `include()`d scripts are
+  counted as unresolved.
 
 ## SBOM tiers: source, design, binary
 

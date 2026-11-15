@@ -36,6 +36,8 @@ use std::path::Path;
 use super::package_db::PackageDbEntry;
 
 mod discover;
+/// Spec 1533 FR-012: the directory names #1524 skips in a directory scan.
+pub(crate) use discover::TEST_INPUT_DIRS;
 /// Milestone 1378 (#1396) — the two embedded-build-information readers, for a
 /// caller that wants a binary's contents and not a scan of its directory.
 pub(crate) mod embedded;

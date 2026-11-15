@@ -12,6 +12,7 @@
 //!   resolves `Requires`, builds entries and the coverage record (C225).
 
 pub(crate) mod cmake_version;
+pub(crate) mod ctest;
 pub(crate) mod location;
 pub(crate) mod pkgconfig;
 pub(crate) mod resolve;
@@ -110,17 +111,43 @@ pub(crate) struct TargetsFile {
     pub(crate) resolved: Option<PathBuf>,
     /// `None` when the file could not be read (`malformed`).
     pub(crate) parsed: Option<targets::Parsed>,
+    /// Spec 1533 FR-004: the package the file is named for declares itself a
+    /// test package (`-tests`, `_tests`, `-test`, `_test`).
+    pub(crate) test_package: bool,
 }
+
+/// One installed `CTestTestfile.cmake` (spec 1533, research R1).
+#[derive(Debug, Clone)]
+pub(crate) struct CtestFile {
+    pub(crate) path: PathBuf,
+    /// The directory its relative test paths are resolved from.
+    pub(crate) dir: PathBuf,
+    /// The file's own location after root-relative resolution.
+    pub(crate) resolved: Option<PathBuf>,
+    /// `None` when the file could not be read.
+    pub(crate) parsed: Option<ctest::Parsed>,
+}
+
+/// The file name of an installed CTest file.
+pub(crate) const CTEST_FILE_NAME: &str = "CTestTestfile.cmake";
 
 /// Phase 1's output: #1531 records and spec 1532 exported-targets files.
 #[derive(Debug, Default)]
 pub(crate) struct Phase1 {
     pub(crate) records: Vec<Record>,
     pub(crate) targets: Vec<TargetsFile>,
+    /// Spec 1533: installed CTest files.
+    pub(crate) ctest: Vec<CtestFile>,
 }
 
-/// Whether the reader wants a file of this name.
+/// Whether the walker wants a file of this name.
 fn wanted(file_name: &str) -> bool {
+    wanted_metadata(file_name) || file_name == CTEST_FILE_NAME
+}
+
+/// The package metadata files, which the virtual-environment probe also
+/// reads. CTest files are not installed into site-packages.
+fn wanted_metadata(file_name: &str) -> bool {
     classify_name(file_name).is_some() || targets::classify(file_name).is_some()
 }
 
@@ -176,6 +203,8 @@ pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
         "**/*-targets-*.cmake",
         "**/*Exports.cmake",
         "**/*Exports-*.cmake",
+        // Spec 1533: installed CTest files (test declarations).
+        "**/CTestTestfile.cmake",
     ])?;
     Ok(ReaderRegistration {
         reader_id: ReaderId::INSTALLED_LIB,
@@ -256,7 +285,7 @@ fn collect_matching(dir: &Path, depth: usize, out: &mut BTreeSet<PathBuf>) {
             if depth > 0 {
                 collect_matching(&p, depth - 1, out);
             }
-        } else if p.file_name().and_then(|s| s.to_str()).is_some_and(wanted) {
+        } else if p.file_name().and_then(|s| s.to_str()).is_some_and(wanted_metadata) {
             out.insert(p);
         }
     }
@@ -291,6 +320,8 @@ pub(crate) fn finalize(
             out.records.push(r);
         } else if let Some(t) = read_targets(&p, scan_root) {
             out.targets.push(t);
+        } else if let Some(c) = read_ctest(&p, scan_root) {
+            out.ctest.push(c);
         }
     }
     out
@@ -311,7 +342,24 @@ fn read_targets(path: &Path, scan_root: &Path) -> Option<TargetsFile> {
         .map(|p| if p.as_os_str().is_empty() { scan_root.to_path_buf() } else { scan_root.join(p) });
     let resolved = location::resolve_in_root(scan_root, &rel);
     let parsed = resolved.as_deref().and_then(read_bounded).map(|c| targets::parse(&c));
-    Some(TargetsFile { path: path.to_path_buf(), dir, role, prefix, resolved, parsed })
+    let test_package = is_test_package(base);
+    Some(TargetsFile { path: path.to_path_buf(), dir, role, prefix, resolved, parsed, test_package })
+}
+
+/// Spec 1533 FR-004: a package named as a test package.
+pub(crate) fn is_test_package(name: &str) -> bool {
+    let n = name.to_ascii_lowercase();
+    ["-tests", "_tests", "-test", "_test"].iter().any(|s| n.len() > s.len() && n.ends_with(s))
+}
+
+fn read_ctest(path: &Path, scan_root: &Path) -> Option<CtestFile> {
+    if path.file_name()?.to_str()? != CTEST_FILE_NAME {
+        return None;
+    }
+    let rel = location::relative_to_root(path, scan_root)?;
+    let resolved = location::resolve_in_root(scan_root, &rel);
+    let parsed = resolved.as_deref().and_then(read_bounded).map(|c| ctest::parse(&c));
+    Some(CtestFile { path: path.to_path_buf(), dir: path.parent()?.to_path_buf(), resolved, parsed })
 }
 
 fn read_record(path: &Path, scan_root: &Path) -> Option<Record> {
@@ -385,5 +433,19 @@ mod tests {
         for n in ["FooTargets.cmake.in", "FooConfig.cmake", "targets.cmake"] {
             assert!(!wanted(n), "{n}");
         }
+    }
+
+    /// Spec 1533 FR-004 and research R9.
+    #[test]
+    fn test_packages_and_ctest_files() {
+        for n in ["rocprofiler-sdk-tests", "waybill_fixture_p_tests", "Waybill-Fixture-Test", "x_test"] {
+            assert!(is_test_package(n), "{n}");
+        }
+        for n in ["hipdnn_test_sdk", "attest", "contest", "testing", "-tests", "tests", "latest"] {
+            assert!(!is_test_package(n), "{n}");
+        }
+        assert!(wanted(CTEST_FILE_NAME));
+        assert!(!wanted_metadata(CTEST_FILE_NAME));
+        assert!(!wanted("CTestTestfile.cmake.in"));
     }
 }

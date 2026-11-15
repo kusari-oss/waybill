@@ -131,7 +131,15 @@ pub fn build_packages(
                 }
             }
         };
-        if let Some(p) = primary_purpose {
+        // Spec 1533 FR-002 (research R8): test payload in an installed tree is
+        // `test` first; the role it would otherwise carry is kept as an
+        // additional purpose, so nothing milestone 104 emitted is lost.
+        if crate::scan_fs::test_scope::scoped_by_this_feature(c) {
+            pkg.insert("software_primaryPurpose".to_string(), json!("test"));
+            if let Some(p) = primary_purpose {
+                pkg.insert("software_additionalPurpose".to_string(), json!([p]));
+            }
+        } else if let Some(p) = primary_purpose {
             pkg.insert("software_primaryPurpose".to_string(), json!(p));
         }
 
@@ -403,5 +411,33 @@ fn spdx3_external_ref_type(kind: &str) -> Option<&'static str> {
         "documentation" => Some("documentation"),
         "attestation" => Some("buildMeta"),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::*;
+    use crate::generate::openvex::tests::mk_component;
+    use waybill_common::resolution::{BinaryRole, LifecycleScope};
+
+    fn purposes(c: ResolvedComponent) -> (Option<Value>, Option<Value>) {
+        let (pkgs, _) = build_packages(&[c], "https://x/doc", "_:ci", &BTreeMap::new(), &[], &mut BTreeMap::new(), true);
+        (pkgs[0].get("software_primaryPurpose").cloned(), pkgs[0].get("software_additionalPurpose").cloned())
+    }
+
+    /// Spec 1533 FR-002 (research R8): `test` first, the role kept.
+    #[test]
+    fn a_test_scoped_binary_keeps_its_role_as_an_additional_purpose() {
+        let mut c = mk_component("pkg:generic/t?file-sha256=1");
+        c.binary_role = Some(BinaryRole::Application);
+        assert_eq!(purposes(c.clone()), (Some(json!("application")), None));
+        c.lifecycle_scope = Some(LifecycleScope::Test);
+        // Test-scoped by a reader, not by spec 1533: unchanged.
+        assert_eq!(purposes(c.clone()), (Some(json!("application")), None));
+        c.extra_annotations.insert("waybill:lifecycle-scope-derivation".into(), json!("ctest-declaration"));
+        assert_eq!(purposes(c.clone()), (Some(json!("test")), Some(json!(["application"]))));
+        c.binary_role = None;
+        assert_eq!(purposes(c), (Some(json!("test")), None));
     }
 }

@@ -9,6 +9,39 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **An installed tree's test payload is reported with the test scope
+  (#1564).** An installed SDK can ship as much test and benchmark payload as
+  product, and it was reported exactly like the libraries it tests.
+  - **What is scoped.** Files a test declaration names:
+    - an installed `CTestTestfile.cmake`'s `add_test` commands;
+    - the exported targets of a package that declares itself a test package
+      (`-tests`, `_tests`, `-test`, `_test`), together with that package's
+      own component.
+
+    In an installed tree, also files under a directory named exactly
+    `test`, `tests`, `unittests`, `test_plugins` or `.upstream-tests`.
+  - **How it is carried.** CycloneDX `scope: "excluded"`; SPDX 3
+    `software_primaryPurpose: "test"`, with the binary role kept in
+    `software_additionalPurpose`; C42 `test` in all three formats.
+    C62 records which rule applied, and the new document-scope C226 counts
+    what was read and scoped.
+  - **What is not.** No name pattern is used (`rocblas-bench` may be a
+    shipped tool). Tests discovered at run time through `include()`d scripts
+    are counted, not followed. The scope never flows to what a test links
+    or requires, and an OS-package-owned file is never scoped.
+  - **Installed tree.** An image, or a directory holding an installed
+    library no OS package owns or an OS package database. Such a directory
+    scan no longer applies #1524's test-input skip, so its test binaries are
+    reported, scoped. Source trees are unchanged.
+  - **Measured on a ROCm 7.14 SDK install tree, in CI.** 542 components
+    (2.85 GB) are scoped:
+    - 432 named by its 28 installed CTest files;
+    - 23 by the `rocprofiler-sdk-tests` export set;
+    - 87 under test directories.
+
+    No product library is scoped. The scan takes 1.04× the base median. The
+    public-corpus goldens are byte-identical.
+
 - **Installed files are attributed to their package through CMake exported
   targets (#1563).** A CMake package that exports its targets installs
   `<Pkg>Targets-<config>.cmake` (or `<pkg>-targets-…`, or `…Exports-…`),

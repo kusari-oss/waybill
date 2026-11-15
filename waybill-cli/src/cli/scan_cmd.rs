@@ -3927,6 +3927,7 @@ pub async fn execute(
         go_mod_why,
         git_submodule_coverage,
         installed_library_coverage,
+        test_scope_inputs,
         go_workspace_mode,
         go_toolchains_detected,
         cross_ecosystem_edges_report,
@@ -5724,6 +5725,18 @@ pub async fn execute(
         } // end `else` branch for !root_excluded
     }
 
+    // Spec 1533 (#1564): the test scope for an installed tree's test payload.
+    // Here, after the file-tier walker (so file-tier components are scoped
+    // too) and after `propagate_non_runtime_scope` (so a scope this sets can
+    // never seed propagation: a library linked only by a test executable
+    // stays a product library, FR-007, research R2), and before
+    // `--exclude-scope` (so `--exclude-scope test` drops what it scoped).
+    let test_scope_coverage: Option<String> = {
+        let canonical = std::fs::canonicalize(&root_path).unwrap_or_else(|_| root_path.clone());
+        let roots = if canonical == root_path { vec![canonical] } else { vec![canonical, root_path.clone()] };
+        scan_fs::test_scope::apply(&mut components, &test_scope_inputs, &roots)
+    };
+
     // Milestone 134 — aggregate divergent-PURL collision records
     // into a `CollisionsSummary` when at least one was detected.
     // `None` when empty so the document-scope annotation is
@@ -6005,6 +6018,7 @@ pub async fn execute(
         git_submodule_coverage: git_submodule_coverage.as_deref(),
         binary_test_inputs_skipped: binary_test_inputs_skipped.len(),
         installed_library_coverage: installed_library_coverage.as_deref(),
+        test_scope_coverage: test_scope_coverage.as_deref(),
         closure_ecosystem_identity: closure_ecosystem_identity_value,
         cpe_coverage: Some(cpe_coverage_json.as_str()),
         closure_graph_admission: closure_graph_admission_json.as_deref(),
