@@ -55,6 +55,11 @@ package version files (`*ConfigVersion.cmake`, `*-config-version.cmake`) in
   (C224) marks private-only targets.
 - **Coverage.** `waybill:installed-library-coverage` (C225) records what was
   read and skipped, by reason.
+- **Installed files** (spec 1532, #1563). A package's CMake exported-targets
+  files name the exact files it installs: shared libraries, static
+  archives, executables. Each one that ships is listed in the evidence of
+  the package's versioned component, with its SHA-256. The hash is reused
+  from the binary scan where it computed one.
 
 ## SBOM tiers: source, design, binary
 

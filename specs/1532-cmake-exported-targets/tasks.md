@@ -92,7 +92,7 @@
 - [X] T015 Byte-identity tests in `installed_lib_targets.rs` (SC-004):
   - ten scans of the US1 tree are identical, with CycloneDX `serialNumber` masked;
   - a tree with only #1531 files (no targets) produces C225 without `exported-targets`, byte-identical to its pre-feature shape. Compare against a literal expected string.
-- [ ] T016 Docs:
+- [X] T016 Docs:
   - extend C225's row in `docs/reference/sbom-format-mapping.md` with the `exported-targets` object and its counts;
   - add a sentence to the installed-library section of `docs/ecosystems.md`;
   - add a CHANGELOG entry under Unreleased `### Added`, separated from other unreleased entries.
