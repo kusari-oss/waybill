@@ -137,6 +137,9 @@ pub struct ScanResult {
     /// #1154: the `go mod why` pass's outcome (C195/C196). `None` iff no
     /// Go main module was found.
     pub go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
+    /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage, as its
+    /// wire value. `None` when no `.gitmodules` file was seen.
+    pub git_submodule_coverage: Option<String>,
     /// Milestone 161 (T012): workspace-mode detection outcome from
     /// `go.work` at scanned root. Distinct from
     /// `go_transitive_coverage` and `go_graph_completeness` per
@@ -392,6 +395,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut go_cache_warming:
         Option<package_db::golang::CacheWarmingResult> = None;
     let mut go_mod_why: Option<package_db::GoModWhyStatus> = None;
+    let mut git_submodule_coverage: Option<String> = None;
     // Milestone 161 (T012): doc-scope go-workspace-mode signal.
     // Distinct from `go_transitive_coverage` per research.md R1.
     // Carried through ScanResult into the format emitters for the
@@ -468,6 +472,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         }
         let mut scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name, exclude_set, no_binary_scan)?;
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
+        git_submodule_coverage = scan_result.diagnostics.git_submodule_coverage.as_ref().map(|c| c.wire());
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
         // Milestone 172: mirror gosum_fallback_count from
         // ScanDiagnostics into the local for the ScanResult return.
@@ -1433,6 +1438,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_transitive_fallback_count,
         go_cache_warming,
         go_mod_why,
+        git_submodule_coverage,
         go_workspace_mode,
         go_toolchains_detected,
         cross_ecosystem_edges_report,

@@ -30,7 +30,6 @@ use gitmodules::SubmoduleDeclaration;
 /// C55 value for every component this reader emits.
 pub(crate) const SOURCE_MECHANISM: &str = "git-submodule";
 /// C222 (spec 1530 FR-011).
-#[allow(dead_code)] // TEMP(1530): emitters gain C222 in US2 (T032)
 pub(crate) const ANN_GIT_SUBMODULE_COVERAGE: &str = "waybill:git-submodule-coverage";
 
 /// Why a submodule entry produced no component, or (for `NoUrl`) produced

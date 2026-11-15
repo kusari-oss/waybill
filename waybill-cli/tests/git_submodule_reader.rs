@@ -254,5 +254,223 @@ fn sc008_build_reference_classification() {
             (format!("pkg:github/waybill-org/waybill-fixture-c@{}", "3".repeat(40)), "declared-only".into()),
         ]
     );
-    let _ = coverage;
+}
+
+/// C222 from an SPDX 2.3 or SPDX 3 document's annotations.
+fn spdx_coverage(doc: &Value) -> Option<Value> {
+    let anns: Vec<&Value> = doc["annotations"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .chain(doc["@graph"].as_array().into_iter().flatten().filter(|e| e["type"] == "Annotation"))
+        .collect();
+    anns.iter().find_map(|a| {
+        let env = a["comment"].as_str().or_else(|| a["statement"].as_str())?;
+        let env: Value = serde_json::from_str(env).ok()?;
+        if env["field"] != "waybill:git-submodule-coverage" {
+            return None;
+        }
+        serde_json::from_str(env["value"].as_str()?).ok()
+    })
+}
+
+fn skipped(cov: &Value, reason: &str) -> u64 {
+    cov["skipped"][reason].as_u64().unwrap_or(u64::MAX)
+}
+
+/// SC-002 and FR-001 (#1515's monorepo/vendored shape): a top-level
+/// `.gitmodules` declaring three paths, two with gitlinks, and a vendored
+/// project's own `.gitmodules` repeating one and adding one with nothing
+/// behind it.
+#[test]
+fn sc002_declarations_without_gitlinks_are_skipped() {
+    let fx = GitFixture::new();
+    fx.repo("app");
+    fx.write(
+        "app/.gitmodules",
+        "[submodule \"x\"]\n\tpath = projects/a/third_party/x\n\turl = https://github.com/waybill-org/waybill-fixture-x.git\n\
+         [submodule \"y\"]\n\tpath = projects/a/third_party/y\n\turl = https://github.com/waybill-org/waybill-fixture-y.git\n\
+         [submodule \"z\"]\n\tpath = projects/a/third_party/z\n\turl = https://github.com/waybill-org/waybill-fixture-z.git\n",
+    );
+    fx.write(
+        "app/projects/a/.gitmodules",
+        "[submodule \"x\"]\n\tpath = third_party/x\n\turl = https://github.com/waybill-org/waybill-fixture-x.git\n\
+         [submodule \"w\"]\n\tpath = third_party/w\n\turl = https://github.com/waybill-org/waybill-fixture-w.git\n",
+    );
+    let app = fx.path("app");
+    fx.git(&app, &["add", ".gitmodules", "projects/a/.gitmodules"]);
+    fx.add_gitlink("app", "projects/a/third_party/x", &"a".repeat(40));
+    fx.add_gitlink("app", "projects/a/third_party/y", &"b".repeat(40));
+    let docs = scan(&fx, &app);
+    let purls: Vec<String> = submodules(&docs.cdx).into_iter().map(|(p, _, _)| p).collect();
+    assert_eq!(
+        purls,
+        vec![
+            format!("pkg:github/waybill-org/waybill-fixture-x@{}", "a".repeat(40)),
+            format!("pkg:github/waybill-org/waybill-fixture-y@{}", "b".repeat(40)),
+        ]
+    );
+    let cov = coverage(&docs.cdx).expect("C222 present");
+    assert_eq!(cov["pinned"], 2);
+    assert_eq!(skipped(&cov, "no-gitlink"), 2, "z (top level) and w (vendored); {cov}");
+    assert_eq!(skipped(&cov, "no-repository-data"), 0, "{cov}");
+}
+
+/// FR-006, FR-010 and the checkout-differs edge case: an initialised
+/// submodule's own submodule is emitted at the commit the inner repository
+/// pins, depended on by the outer component; after `deinit`, it is gone.
+#[test]
+fn nested_submodules_follow_initialised_only() {
+    let fx = GitFixture::new();
+    let inner_commit = fx.repo("inner");
+    let first_outer = fx.repo("outer");
+    fx.add_submodule("outer", "inner", "third_party/inner");
+    let outer_commit = fx.git(&fx.path("outer"), &["rev-parse", "HEAD"]);
+    assert_ne!(first_outer, outer_commit);
+    fx.repo("app");
+    fx.add_submodule("app", "outer", "third_party/outer");
+    let app = fx.path("app");
+    fx.git(&app, &["submodule", "-q", "update", "--init", "--recursive"]);
+
+    let docs = scan(&fx, &app);
+    let subs = submodules(&docs.cdx);
+    let outer_purl = subs.iter().find(|(p, _, _)| p.contains("/outer@")).map(|s| s.0.clone()).expect("outer");
+    let inner_purl = subs.iter().find(|(p, _, _)| p.contains("/inner@")).map(|s| s.0.clone()).expect("inner");
+    assert!(outer_purl.contains(&format!("@{outer_commit}")), "{outer_purl}");
+    assert!(inner_purl.contains(&format!("@{inner_commit}")), "{inner_purl}");
+    let outer_deps: Vec<String> = docs.cdx["dependencies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["ref"] == outer_purl.as_str())
+        .and_then(|d| d["dependsOn"].as_array())
+        .map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect())
+        .unwrap_or_default();
+    assert!(outer_deps.contains(&inner_purl), "outer depends on inner; got {outer_deps:?}");
+    assert!(!root_depends_on(&docs.cdx).contains(&inner_purl), "the root does not depend on the nested submodule directly");
+
+    // The checkout moved without a commit: the pinned commit is kept, with a WARN.
+    fx.git(&app.join("third_party/outer"), &["checkout", "-q", &first_outer]);
+    let moved = scan(&fx, &app);
+    assert!(submodules(&moved.cdx).iter().any(|(p, _, _)| p == &outer_purl), "the pinned commit is still emitted");
+    assert!(moved.stderr.contains("checkout differs"), "a WARN reports the moved checkout");
+
+    // After deinit, the nested submodule is not enumerated.
+    fx.git(&app.join("third_party/outer"), &["checkout", "-q", &outer_commit]);
+    fx.git(&app, &["submodule", "-q", "deinit", "-f", "third_party/outer"]);
+    let after = scan(&fx, &app);
+    let after_subs: Vec<String> = submodules(&after.cdx).into_iter().map(|(p, _, _)| p).collect();
+    assert_eq!(after_subs, vec![outer_purl], "only the outer gitlink remains");
+}
+
+/// A gitlink with no `.gitmodules` entry is emitted without a URL and
+/// counted under `no-url` (and `pinned`).
+#[test]
+fn gitlink_without_declaration() {
+    let fx = GitFixture::new();
+    fx.repo("app");
+    fx.write("app/.gitmodules", "[submodule \"x\"]\n\tpath = third_party/x\n\turl = https://github.com/waybill-org/waybill-fixture-x.git\n");
+    let app = fx.path("app");
+    fx.git(&app, &["add", ".gitmodules"]);
+    fx.add_gitlink("app", "third_party/x", &"c".repeat(40));
+    fx.add_gitlink("app", "vendor/waybill-fixture-orphan", &"d".repeat(40));
+    let docs = scan(&fx, &app);
+    let purls: Vec<String> = submodules(&docs.cdx).into_iter().map(|(p, _, _)| p).collect();
+    assert!(purls.contains(&format!("pkg:generic/waybill-fixture-orphan@{}", "d".repeat(40))), "{purls:?}");
+    let cov = coverage(&docs.cdx).expect("C222 present");
+    assert_eq!(cov["pinned"], 2, "{cov}");
+    assert_eq!(skipped(&cov, "no-url"), 1, "{cov}");
+}
+
+/// SC-009: with no repository data, nothing is pinned and C222 says why,
+/// identically in all three formats; with it, every entry is pinned.
+#[test]
+fn sc009_no_repository_data() {
+    let fx = GitFixture::new();
+    app_with_github_submodule(&fx);
+    let bare = fx.fresh_clone("app", "bare");
+    std::fs::remove_dir_all(bare.join(".git")).unwrap();
+    let docs = scan(&fx, &bare);
+    assert!(submodules(&docs.cdx).is_empty());
+    let cdx = coverage(&docs.cdx).expect("C222 in CycloneDX");
+    assert_eq!(cdx["pinned"], 0);
+    assert_eq!(skipped(&cdx, "no-repository-data"), 1, "{cdx}");
+    assert_eq!(spdx_coverage(&docs.spdx23).as_ref(), Some(&cdx), "SPDX 2.3 agrees");
+    assert_eq!(spdx_coverage(&docs.spdx3).as_ref(), Some(&cdx), "SPDX 3 agrees");
+
+    let with_git = fx.fresh_clone("app", "with-git");
+    let cov = coverage(&scan(&fx, &with_git).cdx).expect("C222");
+    assert_eq!(cov["pinned"], 1);
+    assert_eq!(skipped(&cov, "no-repository-data"), 0);
+}
+
+/// `git-refused` (safe.directory) and `git-unavailable` (no git on PATH):
+/// nothing pinned, the reason recorded, the scan still succeeds.
+#[test]
+fn git_refused_and_git_unavailable() {
+    let fx = GitFixture::new();
+    app_with_github_submodule(&fx);
+    let app = fx.path("app");
+
+    let probe = Command::new("git")
+        .current_dir(&app)
+        .env("HOME", fx.home())
+        .env("GIT_TEST_ASSUME_DIFFERENT_OWNER", "1")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+        .unwrap();
+    if probe.status.code() == Some(128) {
+        let docs = scan_env(&fx, &app, &[("GIT_TEST_ASSUME_DIFFERENT_OWNER", "1")]);
+        assert!(submodules(&docs.cdx).is_empty());
+        let cov = coverage(&docs.cdx).expect("C222");
+        assert_eq!(skipped(&cov, "git-refused"), 1, "{cov}");
+    } else {
+        eprintln!("skip git-refused half: this git does not honour GIT_TEST_ASSUME_DIFFERENT_OWNER (exit {:?})", probe.status.code());
+    }
+
+    let empty_path = fx.path("empty-path");
+    std::fs::create_dir_all(&empty_path).unwrap();
+    let docs = scan_env(&fx, &app, &[("PATH", empty_path.to_str().unwrap())]);
+    assert!(submodules(&docs.cdx).is_empty());
+    let cov = coverage(&docs.cdx).expect("C222");
+    assert_eq!(skipped(&cov, "git-unavailable"), 1, "{cov}");
+}
+
+/// SC-006 / FR-014: C55, C57 and C222 agree across the three formats, read
+/// with the parity suite's own extractors, on a nested tree and on the
+/// SC-002 monorepo tree. Control: each extractor finds something.
+#[test]
+fn sc006_cross_format_parity() {
+    let fx = GitFixture::new();
+    fx.repo("inner");
+    fx.repo("outer");
+    fx.add_submodule("outer", "inner", "third_party/inner");
+    fx.repo("app");
+    fx.add_submodule("app", "outer", "third_party/outer");
+    let app = fx.path("app");
+    fx.git(&app, &["submodule", "-q", "update", "--init", "--recursive"]);
+
+    fx.repo("mono");
+    fx.write(
+        "mono/.gitmodules",
+        "[submodule \"x\"]\n\tpath = projects/a/third_party/x\n\turl = https://github.com/waybill-org/waybill-fixture-x.git\n\
+         [submodule \"z\"]\n\tpath = projects/a/third_party/z\n\turl = https://github.com/waybill-org/waybill-fixture-z.git\n",
+    );
+    let mono = fx.path("mono");
+    fx.git(&mono, &["add", ".gitmodules"]);
+    fx.add_gitlink("mono", "projects/a/third_party/x", &"e".repeat(40));
+
+    for tree in [app, mono] {
+        let docs = scan(&fx, &tree);
+        for row in ["C55", "C57", "C222"] {
+            let e = waybill::parity::extractors::EXTRACTORS
+                .iter()
+                .find(|e| e.row_id == row)
+                .unwrap_or_else(|| panic!("{row} registered"));
+            let (a, b, c) = ((e.cdx)(&docs.cdx), (e.spdx23)(&docs.spdx23), (e.spdx3)(&docs.spdx3));
+            assert!(!a.is_empty(), "{row} on {}: CycloneDX extractor found nothing", tree.display());
+            assert_eq!(a, b, "{row} on {}: CycloneDX and SPDX 2.3 disagree", tree.display());
+            assert_eq!(a, c, "{row} on {}: CycloneDX and SPDX 3 disagree", tree.display());
+        }
+    }
 }

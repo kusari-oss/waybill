@@ -1045,6 +1045,8 @@ cdx_anno!(c193_cdx, "waybill:vex-claims-omitted", document);
 cdx_anno!(c220_cdx, "waybill:vex-claims-unscoped", document);
 // Milestone 1046 (#1046): C221 — a merged twin built outside its declared range.
 cdx_anno!(c221_cdx, "waybill:requirement-unsatisfied", component);
+// Spec 1530 (#1515): C222 — git-submodule coverage, document scope.
+cdx_anno!(c222_cdx, "waybill:git-submodule-coverage", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

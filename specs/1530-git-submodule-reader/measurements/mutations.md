@@ -15,3 +15,9 @@ Each mutation was applied to the source, the named tests were run, and the file 
 
 - **M1, first form.** The mutated argument list was `["-c", "core.fsmonitor=", "ls-files", …]`. The empty `core.fsmonitor=` override itself disables fsmonitor, so the payload never ran. The tests failed only because `ls-tree`'s parser rejects `ls-files` output. Re-run as above without any override, the SC-010 marker assertion fires.
 - **M4, first form.** No US1 fixture had a root with any other edge, so the emitters' "root depends on every parentless component" fallback attached the submodule and the anchor was redundant. That is #1009's trap. `root_with_other_edges_still_depends_on_the_submodule` was added, with a `pyproject.toml` main module and one dependency, plus a control asserting that edge exists. M4 now fails it.
+
+## US2 (task T035)
+
+| # | Mutation | Failing test | Failure message |
+|---|---|---|---|
+| M5 | One component per `.gitmodules` declaration: each declared path without a gitlink gets a synthetic gitlink at commit `000…0` | `sc002_declarations_without_gitlinks_are_skipped` | the emitted component list includes the undeclared-commit entries |

@@ -145,43 +145,43 @@
 
 ### Tests for User Story 2 (write first, see them fail)
 
-- [ ] T025 [P] [US2] Write SC-002 in `waybill-cli/tests/git_submodule_reader.rs::sc002_declarations_without_gitlinks_are_skipped`. The super-project's top-level `.gitmodules` declares three paths, `projects/a/third_party/x`, `projects/a/third_party/y` and `projects/a/third_party/z`, and only the first two have gitlinks. A plain directory `projects/a/` (not a repository) carries its own `.gitmodules` declaring `third_party/x`, the same gitlink, plus `third_party/w`, which has none. This is #1515's monorepo and vendored shape (FR-001). Assert:
+- [X] T025 [P] [US2] Write SC-002 in `waybill-cli/tests/git_submodule_reader.rs::sc002_declarations_without_gitlinks_are_skipped`. The super-project's top-level `.gitmodules` declares three paths, `projects/a/third_party/x`, `projects/a/third_party/y` and `projects/a/third_party/z`, and only the first two have gitlinks. A plain directory `projects/a/` (not a repository) carries its own `.gitmodules` declaring `third_party/x`, the same gitlink, plus `third_party/w`, which has none. This is #1515's monorepo and vendored shape (FR-001). Assert:
   - two components;
   - C222 `{"pinned":2, …, "no-gitlink":2, "no-repository-data":0, …}` (`z` from the top level, `w` from the vendored file);
   - `x` is emitted once.
-- [ ] T026 [P] [US2] Write `waybill-cli/tests/git_submodule_reader.rs::nested_submodules_follow_initialised_only`. It also covers the spec edge case of a checkout that differs from its gitlink: moving the initialised submodule to another commit without committing keeps the gitlink's commit as the version and logs a WARN. Assert on stderr.
+- [X] T026 [P] [US2] Write `waybill-cli/tests/git_submodule_reader.rs::nested_submodules_follow_initialised_only`. It also covers the spec edge case of a checkout that differs from its gitlink: moving the initialised submodule to another commit without committing keeps the gitlink's commit as the version and logs a WARN. Assert on stderr.
   - an initialised submodule that itself pins `waybill-fixture-inner` gives an inner component whose version is the inner repository's gitlink;
   - the inner component's edge comes from the outer component, not from the root;
   - after `git submodule deinit`, the inner component is absent.
-- [ ] T027 [P] [US2] Write `waybill-cli/tests/git_submodule_reader.rs::gitlink_without_declaration`. A gitlink added with `add_gitlink` has no `.gitmodules` entry, while another submodule does. Assert `pkg:generic/<basename>@<commit>` with no `vcs_url`, and C222 `no-url: 1`, with that gitlink also counted in `pinned`.
-- [ ] T028 [P] [US2] Write SC-009 in `waybill-cli/tests/git_submodule_reader.rs::sc009_no_repository_data`. Remove `.git` from a fresh clone and scan. Assert zero submodule components and C222 `{"pinned":0,…"no-repository-data":<entry count>…}`, identical in all three formats. Rescan the same tree with `.git` present and assert every entry is pinned.
-- [ ] T029 [P] [US2] Write `waybill-cli/tests/git_submodule_reader.rs::git_refused_and_git_unavailable`. First assert that `GIT_TEST_ASSUME_DIFFERENT_OWNER=1 git -C <repo> rev-parse` exits 128 on this host's git. If it does not, the git is too old to simulate the case: skip the `git-refused` half with a printed reason, so it never passes vacuously. Then:
+- [X] T027 [P] [US2] Write `waybill-cli/tests/git_submodule_reader.rs::gitlink_without_declaration`. A gitlink added with `add_gitlink` has no `.gitmodules` entry, while another submodule does. Assert `pkg:generic/<basename>@<commit>` with no `vcs_url`, and C222 `no-url: 1`, with that gitlink also counted in `pinned`.
+- [X] T028 [P] [US2] Write SC-009 in `waybill-cli/tests/git_submodule_reader.rs::sc009_no_repository_data`. Remove `.git` from a fresh clone and scan. Assert zero submodule components and C222 `{"pinned":0,…"no-repository-data":<entry count>…}`, identical in all three formats. Rescan the same tree with `.git` present and assert every entry is pinned.
+- [X] T029 [P] [US2] Write `waybill-cli/tests/git_submodule_reader.rs::git_refused_and_git_unavailable`. First assert that `GIT_TEST_ASSUME_DIFFERENT_OWNER=1 git -C <repo> rev-parse` exits 128 on this host's git. If it does not, the git is too old to simulate the case: skip the `git-refused` half with a printed reason, so it never passes vacuously. Then:
   - with `GIT_TEST_ASSUME_DIFFERENT_OWNER=1` set on the waybill process, C222 shows `git-refused`;
   - with `PATH` set to an empty tempdir, C222 shows `git-unavailable`;
   - in both cases there are zero submodule components, and the scan exits 0.
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] Implement recursion and the per-gitlink join in `waybill-cli/src/scan_fs/package_db/git_submodule/mod.rs` (FR-001, FR-002, FR-006, data-model transitions):
+- [X] T030 [US2] Implement recursion and the per-gitlink join in `waybill-cli/src/scan_fs/package_db/git_submodule/mod.rs` (FR-001, FR-002, FR-006, data-model transitions):
   - a `.gitmodules` below its repository's top level is joined against the enclosing repository's gitlinks under its directory prefix, and only one with no enclosing repository at or below the scan root is `no-repository-data`;
   - deduplicate repositories by canonical top level;
   - for an initialised gitlink, read its own `.gitmodules` and gitlinks;
   - set the outer entry's `depends` to the inner entries' canonical PURLs (T006);
   - collapse duplicate declarations of one path, first URL in path order, and warn when the URLs disagree.
-- [ ] T031 [US2] Implement `SubmoduleCoverage` in `waybill-cli/src/scan_fs/package_db/git_submodule/mod.rs`, to data-model.md:
+- [X] T031 [US2] Implement `SubmoduleCoverage` in `waybill-cli/src/scan_fs/package_db/git_submodule/mod.rs`, to data-model.md:
   - a closed `SkipReason` enum with `as_wire()` for the six reasons;
   - `fn wire(&self) -> String`, a sorted-key JSON object with all six reasons always present;
   - one INFO summary log;
   - a WARN for each skip, naming the `.gitmodules` file (contracts/wire.md, Diagnostics).
-- [ ] T032 [US2] Carry the coverage to the emitters the way `nix_closure_summary` already travels:
+- [X] T032 [US2] Carry the coverage to the emitters the way `nix_closure_summary` already travels:
   - add `pub git_submodule_coverage: Option<…>` to `ScanArtifacts` in `waybill-cli/src/generate/mod.rs`;
   - set it in `waybill-cli/src/cli/scan_cmd.rs` from T021's `finalize` result, routed through `scan_fs`'s return value;
   - emit it as `waybill:git-submodule-coverage` in `waybill-cli/src/generate/cyclonedx/metadata.rs` (beside the C184 property), `waybill-cli/src/generate/spdx/annotations.rs` and `waybill-cli/src/generate/spdx/v3_annotations.rs` (beside `ANN_NIX_CLOSURE`).
 
   It is absent when `None`.
-- [ ] T033 [US2] Add catalog row **C222** `waybill:git-submodule-coverage` to `docs/reference/sbom-format-mapping.md` (contracts/wire.md, C222 section), and add the extractors `c222_cdx`, `c222_spdx23` and `c222_spdx3` with the `cdx_anno!` / `spdx23_anno!` / `spdx3_anno!` document macros in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`. Register a `ParityExtractor { row_id: "C222", … }` in `waybill-cli/src/parity/extractors/mod.rs`. Both land in the same commit: the catalog gate is in the lib target. `sbom_format_mapping_coverage` and `every_catalog_row_has_an_extractor` must pass.
-- [ ] T034 [US2] Cross-format parity on fixture output (SC-006, FR-014). In `waybill-cli/tests/git_submodule_reader.rs::sc006_cross_format_parity`, scan the T025 and T026 trees once with `--format cyclonedx-json,spdx-2.3-json,spdx-3-json`. Run the C55, C57 and C222 extractors from `waybill_cli::parity::extractors`, the same functions the parity suite uses, over each output. Assert per-component equality across the three formats for C55 and C57, and document equality for C222. C56 is out of scope (#1558). Use `waybill sbom parity-check` instead if the extractors aren't reachable from an integration test.
-- [ ] T035 [US2] Run T025–T029. All pass. Mutation: emit one component per declaration instead of per gitlink, and T025 must fail. Record it in `measurements/mutations.md`. Revert with `cp`.
+- [X] T033 [US2] Add catalog row **C222** `waybill:git-submodule-coverage` to `docs/reference/sbom-format-mapping.md` (contracts/wire.md, C222 section), and add the extractors `c222_cdx`, `c222_spdx23` and `c222_spdx3` with the `cdx_anno!` / `spdx23_anno!` / `spdx3_anno!` document macros in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`. Register a `ParityExtractor { row_id: "C222", … }` in `waybill-cli/src/parity/extractors/mod.rs`. Both land in the same commit: the catalog gate is in the lib target. `sbom_format_mapping_coverage` and `every_catalog_row_has_an_extractor` must pass.
+- [X] T034 [US2] Cross-format parity on fixture output (SC-006, FR-014). In `waybill-cli/tests/git_submodule_reader.rs::sc006_cross_format_parity`, scan the T025 and T026 trees once with `--format cyclonedx-json,spdx-2.3-json,spdx-3-json`. Run the C55, C57 and C222 extractors from `waybill_cli::parity::extractors`, the same functions the parity suite uses, over each output. Assert per-component equality across the three formats for C55 and C57, and document equality for C222. C56 is out of scope (#1558). Use `waybill sbom parity-check` instead if the extractors aren't reachable from an integration test.
+- [X] T035 [US2] Run T025–T029. All pass. Mutation: emit one component per declaration instead of per gitlink, and T025 must fail. Record it in `measurements/mutations.md`. Revert with `cp`.
 
 **Checkpoint**: US1 and US2 both work. Quickstart §1–§4 pass.
 

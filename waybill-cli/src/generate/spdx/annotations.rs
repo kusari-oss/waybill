@@ -690,6 +690,10 @@ pub fn annotate_document(
             json!(reason),
         );
     }
+    // C222 (spec 1530 FR-011).
+    if let Some(record) = artifacts.git_submodule_coverage {
+        push(&mut out, crate::scan_fs::package_db::git_submodule::ANN_GIT_SUBMODULE_COVERAGE, json!(record));
+    }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran.
     if let Some(g) = artifacts.go_mod_why {
