@@ -11,6 +11,9 @@
 
 - Q: When a submodule and another reader name the same library under different PURLs (a Conan `pkg:conan/abseil@20240722.0` against a submodule `pkg:github/abseil/abseil-cpp@<sha>`, or a CMake `GIT_TAG v1.2.3` against the submodule's commit of the same repository), what happens? → A: **They merge only on an identical canonical PURL.** Different PURLs stay two components. There is no guessed mapping between a package-manager name and a repository, or between a tag and a commit. The `dedup_collision` test is rewritten to assert this (FR-009).
 - Q: What counts as "used" for C57 `waybill:build-reference`? → A: **The milestone-105 `find_package` name match, or a CMake path reference.** A path reference is `add_subdirectory(<path>)`, or an `ExternalProject_Add` / `FetchContent_Declare` `SOURCE_DIR` naming the submodule's path. C57's documented definition is widened to say so (FR-008).
+- Q: Which hosts map to a forge PURL type, not `pkg:generic`? → A: **The forge set waybill already uses** (`yocto/recipe.rs`): `github.com` → `pkg:github`, `gitlab.com` → `pkg:gitlab`, `bitbucket.org` → `pkg:bitbucket`, `codeberg.org` → `pkg:codeberg`. Every other host gives `pkg:generic/…?vcs_url=`. One repository then has one identity across readers, which FR-009's identical-PURL merge depends on (FR-004).
+- Q: Where do skipped submodules get reported, given that a consumer never sees the log? → A: **In the document, through a new document-level catalog row.** It is emitted only when a `.gitmodules` file was seen, and records the count of submodules pinned and the count skipped by reason. Logs keep the per-file detail (FR-011).
+- Q: Does a `declared-only` submodule (C57) get a narrower scope in the document? → A: **No.** Every submodule is an ordinary dependency of whatever pins it. C57 is the only "probably unused" signal, because a build can consume a submodule through paths the CMake reader cannot see. Which submodules are built is #1544's question (FR-010).
 
 ## Background
 
@@ -31,7 +34,7 @@ Milestone 105 (spec `specs/105-cpp-ecosystem-expansion/`, User Story 6, FR-008/0
 | An uninitialised submodule gets `version: "unknown"` and `waybill:resolver-step: "uninitialized-submodule"`. | The gitlink gives the exact commit whether or not the submodule is initialised. | Initialised or not, the component carries its gitlink commit (FR-003). |
 | One component per `.gitmodules` entry. | `.gitmodules` can list paths with nothing behind them. On one large C++ tree the `.gitmodules` files listed 62 paths but only 36 gitlinks existed: a monorepo's top-level `.gitmodules` repeated its projects' entries, and one vendored project carried a `.gitmodules` with no gitlink behind it (issue #1515). | One component per gitlink (FR-002). |
 | Only the `.gitmodules` at the scan root. | Initialised submodules can carry their own submodules. | Initialised submodules are read recursively (FR-006). |
-| Non-GitHub URLs give `pkg:git+https://<url>@<sha>`. | `git+https` is not a PURL type. | A generic PURL with a `vcs_url` qualifier (FR-004). The elixir reader already uses this exact form for git dependencies, and the cocoapods, composer and dart readers use the same qualifier on their own types. |
+| Non-GitHub URLs give `pkg:git+https://<url>@<sha>`. | `git+https` is not a PURL type. | The forge hosts waybill already maps (GitHub, GitLab, Bitbucket, Codeberg) get their forge type. Other hosts get a generic PURL with a `vcs_url` qualifier (FR-004). The elixir reader already uses that exact form for git dependencies, and the cocoapods, composer and dart readers use the same qualifier on their own types. |
 | The `dedup_collision` fixture expects `pkg:conan/abseil@…` and `pkg:github/abseil/abseil-cpp@…` to merge after an unspecified "canonicalization". Its own README notes the two PURLs "technically wouldn't dedup". | No such canonicalization was ever specified, and any name-to-repository mapping would be a guess. | Only identical canonical PURLs merge (FR-009). The fixture's test asserts two components. |
 | C57 counts a submodule as used only when a `find_package` target matches its last path segment (FR-008a). | Super-builds consume submodules by path, through `add_subdirectory(<path>)` or `SOURCE_DIR`, which a name match cannot see. | A path reference also counts (FR-008). |
 
@@ -47,9 +50,9 @@ An engineer scans a C/C++ super-project that pins its third-party code as git su
 
 **Acceptance Scenarios**:
 
-1. **Given** a super-project with one submodule whose URL is a GitHub repository, **When** it is scanned with the submodule checked out, **Then** exactly one component is emitted as `pkg:github/<owner>/<repo>@<commit>`, where `<commit>` is the gitlink's full commit, carrying `waybill:source-mechanism: git-submodule` and `waybill:build-reference`.
+1. **Given** a super-project with one submodule whose URL is a GitHub repository, **When** it is scanned with the submodule checked out, **Then** exactly one component is emitted as `pkg:github/<owner>/<repo>@<commit>`, where `<commit>` is the gitlink's full commit, carrying `waybill:source-mechanism: git-submodule` and `waybill:build-reference`. A `gitlab.com`, `bitbucket.org` or `codeberg.org` URL gives `pkg:gitlab/…`, `pkg:bitbucket/…` or `pkg:codeberg/…` the same way.
 2. **Given** a fresh clone of that super-project with the submodule not initialised, **When** it is scanned, **Then** the same component is emitted with the same commit.
-3. **Given** a submodule whose URL is not a GitHub repository, **When** it is scanned, **Then** the component is `pkg:generic/<name>@<commit>?vcs_url=git+<url>`.
+3. **Given** a submodule whose URL is on any other host, **When** it is scanned, **Then** the component is `pkg:generic/<name>@<commit>?vcs_url=git+<url>`.
 4. **Given** a `.gitmodules` whose URL carries credentials (`https://user:token@host/…`), **When** it is scanned, **Then** no emitted string contains the credentials, and a warning names the `.gitmodules` file with the URL redacted.
 
 ---
@@ -89,13 +92,14 @@ An engineer's super-build pins a library as a submodule and also names it elsewh
 
 ### Edge Cases
 
-- **No repository metadata.** A source archive or exported tree has `.gitmodules` but no repository data. Nothing records a commit, so no submodule component is emitted. One warning names each `.gitmodules` file and its entry count.
+- **No repository metadata.** A source archive or exported tree has `.gitmodules` but no repository data. Nothing records a commit, so no submodule component is emitted. The document's FR-011 annotation counts the entries under `no-repository-data`, and a warning names each `.gitmodules` file.
 - **Relative submodule URLs** (`url = ../dep.git`) resolve against the super-project's own remote URL when one is recorded. Otherwise the component keeps the relative URL in `vcs_url`, with the gitlink commit as its version.
-- **SSH and scp-style URLs** (`git@github.com:owner/repo.git`, `ssh://git@github.com/owner/repo`) identify GitHub repositories the same way `https://` URLs do. A `.git` suffix is not part of the repository name.
+- **SSH and scp-style URLs** (`git@github.com:owner/repo.git`, `ssh://git@gitlab.com/owner/repo`) identify forge repositories the same way `https://` URLs do. A `.git` suffix is not part of the repository name.
+- **Nested GitLab groups** (`gitlab.com/group/subgroup/project`): only `<owner>/<repo>` is recognised, as in the Yocto reader, so a path with more segments falls back to `pkg:generic/…?vcs_url=` instead of truncating the path.
 - **A gitlink with no `.gitmodules` entry**, such as a submodule added and then removed from `.gitmodules`, has a commit but no URL. It is emitted as `pkg:generic/<path-basename>@<commit>` without a `vcs_url`, with a diagnostic.
 - **The scan root is a subdirectory of a working tree.** Only gitlinks under the scan root are emitted.
 - **The checked-out commit differs from the gitlink**, for example a submodule moved locally and not committed. The gitlink is what the super-project pins and is what is emitted. The difference is recorded as a diagnostic, not as a second component.
-- **The `git` tool is unavailable** on the host. The reader emits nothing and warns once. It never falls back to guessing from `.gitmodules`.
+- **The `git` tool is unavailable** on the host. The reader emits no submodule components, counts the entries under `git-unavailable` in the FR-011 annotation, and warns once. It never falls back to guessing from `.gitmodules`.
 - **Hostile `.gitmodules` content.** A path that escapes the scan root (`../`, absolute) or a URL that looks like a command-line option is skipped with a warning, and nothing from it reaches a subprocess argument.
 
 ## Requirements *(mandatory)*
@@ -106,7 +110,7 @@ An engineer's super-build pins a library as a submodule and also names it elsewh
 - **FR-002**: A component MUST be emitted for each gitlink, a tree entry recording a submodule commit, under the scan root. It MUST NOT be emitted for a `.gitmodules` entry that has no gitlink. A path listed by several `.gitmodules` files MUST give one component.
 - **FR-003**: The component's version MUST be the full commit recorded by the gitlink in the super-project's tree. It MUST be the same whether the submodule is initialised or not, and it MUST NOT be read from the submodule's own checkout.
 - **FR-004**: The component's identity MUST be:
-  - for a GitHub URL (https, ssh or scp form, with or without `.git`): `pkg:github/<owner>/<repo>@<commit>`;
+  - for a URL on a forge host waybill already maps, in https, ssh or scp form, with or without `.git`, and with exactly an `<owner>/<repo>` path: `pkg:<forge>/<owner>/<repo>@<commit>`. The hosts are `github.com` → `github`, `gitlab.com` → `gitlab`, `bitbucket.org` → `bitbucket` and `codeberg.org` → `codeberg`, the same mapping as the Yocto reader, so that a repository has one identity across readers;
   - for any other URL: `pkg:generic/<name>@<commit>?vcs_url=git+<url>`, where `<name>` is the URL's last path segment without `.git`;
   - for a gitlink with no URL: `pkg:generic/<path-basename>@<commit>`.
 - **FR-005**: Every URL MUST pass through the milestone-075 credential sanitizer before it appears in a PURL, an annotation or a log line. When sanitizing changes a URL, a warning MUST name the `.gitmodules` file and give the redacted URL.
@@ -118,8 +122,11 @@ An engineer's super-build pins a library as a submodule and also names it elsewh
 
   Classification MUST NOT depend on walk order, and the correlation MUST NOT itself emit components. C57's catalog definition MUST be updated to name both signals.
 - **FR-009**: A submodule component MUST merge with another reader's component only when their canonical PURLs are identical. Milestone-105 FR-015 then applies unchanged: one component, manifest-mode declarations outrank `git-submodule`, and the losing mechanisms are recorded in `waybill:also-detected-via` (C56). Components with different PURLs MUST stay separate, even when they plausibly name the same library. That covers a package-manager name against a repository, and a tag against a commit.
-- **FR-010**: A submodule component MUST be a dependency of the component that pins it: the document's root for a top-level submodule, and the enclosing submodule's component for a nested one.
-- **FR-011**: Every skip MUST be reported. That covers an entry with no gitlink, a gitlink with no URL, a hostile path or URL, a tree with no repository metadata, and an unavailable `git`. Each gets a warning naming the file, and the counts appear in the reader's log summary.
+- **FR-010**: A submodule component MUST be an ordinary dependency of the component that pins it: the document's root for a top-level submodule, and the enclosing submodule's component for a nested one. Its scope MUST NOT be narrowed by its C57 value: no optional lifecycle scope, no excluded scope, no removed edge. C57 is the only signal that a submodule may be unused.
+- **FR-011**: Every skip MUST be reported in the document and in the log.
+  - **In the document**: whenever a `.gitmodules` file was seen, the document MUST carry one document-level annotation, under a new catalog row with extractors in all three formats. It records the count of submodules pinned and the count skipped for each reason: `no-gitlink`, `no-url`, `no-repository-data`, `git-unavailable` and `unsafe-path-or-url`. A reason with a zero count is listed with zero, so an absent reason cannot be mistaken for one that was not checked.
+  - **In the log**: each skip also gets a warning naming the file.
+  - **When it is absent**: a document with no `.gitmodules` file in its tree carries no such annotation.
 - **FR-012**: Nothing from `.gitmodules` may be interpreted as a command-line option or as a path outside the scan root in any subprocess the reader runs.
 - **FR-013**: The reader MUST work offline. It reads only local repository data and fetches nothing.
 - **FR-014**: Output MUST be identical across CycloneDX 1.6, SPDX 2.3 and SPDX 3 for C55, C56 and C57, and byte-identical across repeated scans of the same tree.
@@ -129,6 +136,7 @@ An engineer's super-build pins a library as a submodule and also names it elsewh
 - **Gitlink**: a tree entry recording that a path is a submodule pinned at a commit. It is the authority for which submodules exist and at which commit.
 - **Submodule declaration**: a `.gitmodules` entry giving a name, path and URL. It supplies the URL, never the commit.
 - **Submodule component**: one per gitlink. Its identity comes from the declaration's URL and the gitlink's commit, and it carries C55 and C57.
+- **Submodule coverage record**: the document-level FR-011 annotation. It holds the count of submodules pinned and the count skipped for each reason, and is present only when a `.gitmodules` file was seen.
 
 ## Success Criteria *(mandatory)*
 
@@ -143,11 +151,12 @@ An engineer's super-build pins a library as a submodule and also names it elsewh
   - a second fixture, where a `FetchContent_Declare` pins the same repository at the gitlink's commit, gives one component with `git-submodule` in `also-detected-via`;
   - 10 repeated scans of each fixture are byte-identical.
 - **SC-006**: C55, C56 and C57 values agree across all three output formats for every submodule component in the fixtures.
+- **SC-007**: No committed golden changes except those whose input tree contains gitlinks. Each of those changes only by gaining submodule components and their edges.
 - **SC-008**: In a fixture with three submodules, the C57 classification is:
   - `declared-and-used` for the one consumed by `add_subdirectory(<path>)`;
   - `declared-and-used` for the one matched by `find_package`;
   - `declared-only` for the one referenced by neither.
-- **SC-007**: No committed golden changes except those whose input tree contains gitlinks. Each of those changes only by gaining submodule components and their edges.
+- **SC-009**: Scanning a fixture's `.gitmodules` with its repository data removed gives zero submodule components. The document's coverage record shows the entry count under `no-repository-data` and zero pinned, identically in all three formats. The same tree with its repository data present shows every entry pinned.
 
 ## Assumptions
 
