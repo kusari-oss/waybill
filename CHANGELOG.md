@@ -33,6 +33,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
     library no OS package owns or an OS package database. Such a directory
     scan no longer applies #1524's test-input skip, so its test binaries are
     reported, scoped. Source trees are unchanged.
+  - **Measured on a ROCm 7.14 SDK install tree, in CI.** 542 components
+    (2.85 GB) are scoped:
+    - 432 named by its 28 installed CTest files;
+    - 23 by the `rocprofiler-sdk-tests` export set;
+    - 87 under test directories.
+
+    No product library is scoped. The scan takes 1.04× the base median. The
+    public-corpus goldens are byte-identical.
 
 - **Installed files are attributed to their package through CMake exported
   targets (#1563).** A CMake package that exports its targets installs

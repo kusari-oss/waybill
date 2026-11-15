@@ -121,8 +121,8 @@ Paths are relative to the repository root. `[P]` means a different file with no 
   - **M7:** re-scope an already-scoped component;
   - **M8:** drop the A13 `additionalPurpose` fallback.
 - [x] T020 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record the result in `measurements/gate-log.md`.
-- [ ] T021 Regenerate the corpus goldens in CI (`public-corpus.yml` dispatch on the branch). Review the diff normalised and sorted. Record it in `measurements/golden-review.md` against research R5's prediction.
-- [ ] T022 In the fixture repo's `measure-full.yml`, report C226, the scoped components and bytes per C62 value, and the SC-003 check (no installed-library component of a non-test package, and no shared library a non-test component links, is scoped). Run it against `main` and this branch. Record SC-001 to SC-004 and SC-006 in `specs/1533-installed-test-scope/measurements/therock-full.md`.
+- [x] T021 Regenerate the corpus goldens in CI (`public-corpus.yml` dispatch on the branch). Review the diff normalised and sorted. Record it in `measurements/golden-review.md` against research R5's prediction.
+- [x] T022 In the fixture repo's `measure-full.yml`, report C226, the scoped components and bytes per C62 value, and the SC-003 check (no installed-library component of a non-test package, and no shared library a non-test component links, is scoped). Run it against `main` and this branch. Record SC-001 to SC-004 and SC-006 in `specs/1533-installed-test-scope/measurements/therock-full.md`.
 - [ ] T023 Open the PR. The body carries the measurements, the mutations, the gate result, and the attribution line.
 
 ## Dependencies
