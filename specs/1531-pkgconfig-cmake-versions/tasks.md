@@ -207,7 +207,7 @@
 
   Copy the output to `specs/1531-pkgconfig-cmake-versions/measurements/rocm-sdk.md`. Never fetch or scan the payload locally. Remove the step before the PR leaves draft.
 - [ ] T037 Corpus goldens (SC-007, research R10). Dispatch `public-corpus.yml` regeneration on the branch, and download all goldens. Compare them to the committed ones with a normalised, sorted diff: mask content-addressed IDs, `LC_ALL=C sort` (memory: `feedback_verify_golden_churn_normalized`). Confirm that exactly `image-postgres16`'s three files change, each gaining only the coverage record with `owned-by-os-package: 2`. Commit them, and record the review in `specs/1531-pkgconfig-cmake-versions/measurements/golden-review.md`. If the prediction fails, record why before committing anything.
-- [ ] T038 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT` and the `test result: ok.` count in `measurements/gate-log.md`.
+- [X] T038 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT` and the `test result: ok.` count in `measurements/gate-log.md`.
 - [ ] T039 Close-out. Verify each task's claim against the code, not just its checkbox (memory: a task can be unimplemented, not unticked). Tick `tasks.md`, and draft the PR body ending with the attribution line.
 
 ## Dependencies
