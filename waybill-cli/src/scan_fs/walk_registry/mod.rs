@@ -236,6 +236,12 @@ impl ReaderId {
     /// hardened `git ls-tree` per repository.
     pub const GIT_SUBMODULE: ReaderId = ReaderId::new("git-submodule");
 
+    /// Installed-library reader (spec 1531, #1531) — `*.pc`,
+    /// `*ConfigVersion.cmake` and `*-config-version.cmake`. The walker pass
+    /// only collects paths; parsing, OS-ownership filtering and `Requires`
+    /// resolution happen after the binary scan.
+    pub const INSTALLED_LIB: ReaderId = ReaderId::new("installed-lib");
+
     /// Vcpkg reader — marker-detect registration. The reader itself
     /// has no tree walker (fixed-root scan of `vcpkg.json` at scan
     /// root only); registering it here lets the shared walker gate
@@ -360,6 +366,7 @@ pub(crate) const ALL_READER_IDS: &[ReaderId] = &[
     ReaderId::VCPKG,
     ReaderId::CONAN,
     ReaderId::GIT_SUBMODULE,
+    ReaderId::INSTALLED_LIB,
     ReaderId::BAZEL,
     ReaderId::CMAKE,
     ReaderId::GOLANG,

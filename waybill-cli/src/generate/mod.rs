@@ -160,6 +160,9 @@ pub struct ScanArtifacts<'a> {
     /// under a test-input directory. Zero on image scans and under
     /// `--include-test-binaries`; the annotation is absent at zero.
     pub binary_test_inputs_skipped: usize,
+    /// Spec 1531 FR-008 (C225): the installed-library coverage record, as its wire
+    /// value. `None` when no `.pc` or CMake version file was matched.
+    pub installed_library_coverage: Option<&'a str>,
     /// Milestone 1366 (#1365; C208) — what the closure's ecosystem identity
     /// pass did: how many candidates it found, confirmed, declined and could
     /// not check, and why if any went unchecked. `None` when no closure was

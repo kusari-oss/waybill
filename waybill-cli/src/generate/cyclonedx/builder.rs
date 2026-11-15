@@ -203,6 +203,7 @@ pub struct CycloneDxBuilder {
     git_submodule_coverage: Option<String>,
     /// C223 (#1524) — binaries skipped under test-input directories.
     binary_test_inputs_skipped: usize,
+    installed_library_coverage: Option<String>,
     /// C208 (m1366) — the closure ecosystem identity record, pre-rendered.
     closure_ecosystem_identity: Option<String>,
     /// C209 (m1367) — the CPE synthesis coverage record, pre-rendered.
@@ -299,6 +300,7 @@ impl CycloneDxBuilder {
             nix_closure_degraded: None,
             git_submodule_coverage: None,
             binary_test_inputs_skipped: 0,
+            installed_library_coverage: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,
@@ -430,6 +432,11 @@ impl CycloneDxBuilder {
     /// C222 (spec 1530 FR-011).
     pub fn with_git_submodule_coverage(mut self, value: Option<String>) -> Self {
         self.git_submodule_coverage = value;
+        self
+    }
+    /// C225 (spec 1531 FR-008).
+    pub fn with_installed_library_coverage(mut self, value: Option<String>) -> Self {
+        self.installed_library_coverage = value;
         self
     }
 
@@ -1098,6 +1105,7 @@ impl CycloneDxBuilder {
                 nix_closure_degraded: self.nix_closure_degraded.as_deref(),
                 git_submodule_coverage: self.git_submodule_coverage.as_deref(),
                 binary_test_inputs_skipped: self.binary_test_inputs_skipped,
+                installed_library_coverage: self.installed_library_coverage.as_deref(),
                 closure_ecosystem_identity: self.closure_ecosystem_identity.as_deref(),
                 cpe_coverage: self.cpe_coverage.as_deref(),
                 closure_graph_admission: self.closure_graph_admission.as_deref(),

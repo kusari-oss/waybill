@@ -698,6 +698,10 @@ pub fn annotate_document(
     if artifacts.binary_test_inputs_skipped > 0 {
         push(&mut out, crate::scan_fs::binary::ANN_BINARY_SCAN_SKIPPED_TEST_INPUTS, json!(artifacts.binary_test_inputs_skipped.to_string()));
     }
+    // C225 (spec 1531 FR-008).
+    if let Some(record) = artifacts.installed_library_coverage {
+        push(&mut out, crate::scan_fs::package_db::installed_lib::resolve::ANN_INSTALLED_LIBRARY_COVERAGE, json!(record));
+    }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran.
     if let Some(g) = artifacts.go_mod_why {

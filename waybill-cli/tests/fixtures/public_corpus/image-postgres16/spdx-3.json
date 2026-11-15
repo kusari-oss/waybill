@@ -15604,6 +15604,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EZ3MCU5R2OKCZKLA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:installed-library-coverage\",\"value\":\"{\\\"cmake-version\\\":{\\\"emitted\\\":0,\\\"read\\\":1},\\\"pkg-config\\\":{\\\"emitted\\\":0,\\\"read\\\":1},\\\"skipped\\\":{\\\"computed-version\\\":0,\\\"malformed\\\":0,\\\"no-version\\\":0,\\\"owned-by-os-package\\\":2,\\\"unrecognised-location\\\":0,\\\"unresolved-version\\\":0},\\\"unresolved-requires\\\":0,\\\"version-disagreements\\\":0}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-F2Q5RS4IVOWCZWSQ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YKPGSUWQAV3XZXFW",

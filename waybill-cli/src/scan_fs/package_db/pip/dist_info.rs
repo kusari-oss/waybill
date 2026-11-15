@@ -159,7 +159,7 @@ pub(super) fn read_venv_dist_info(rootfs: &Path) -> Vec<PackageDbEntry> {
 /// - `<root>/opt/app/.venv/lib/python*/site-packages/`
 /// - `<root>` itself, when it directly holds a `*.dist-info` directory: an
 ///   unpacked wheel has a site-packages layout (#1529).
-fn candidate_site_packages_roots(rootfs: &Path) -> Vec<PathBuf> {
+pub(crate) fn candidate_site_packages_roots(rootfs: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     if holds_dist_info(rootfs) {
         out.push(rootfs.to_path_buf());

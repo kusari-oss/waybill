@@ -1049,6 +1049,10 @@ cdx_anno!(c221_cdx, "waybill:requirement-unsatisfied", component);
 cdx_anno!(c222_cdx, "waybill:git-submodule-coverage", document);
 // #1524: C223 — binaries a directory scan skipped as test inputs.
 cdx_anno!(c223_cdx, "waybill:binary-scan-skipped-test-inputs", document);
+// Spec 1531 (#1531): C224 — private-only pkg-config requirements; C225 —
+// installed-library coverage, document scope.
+cdx_anno!(c224_cdx, "waybill:pkg-config-private-requires", component);
+cdx_anno!(c225_cdx, "waybill:installed-library-coverage", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

@@ -205,6 +205,8 @@ pub struct MetadataExtras<'a> {
     pub git_submodule_coverage: Option<&'a str>,
     /// C223 (#1524) — binaries skipped under test-input directories.
     pub binary_test_inputs_skipped: usize,
+    /// C225 (spec 1531) — the installed-library coverage record.
+    pub installed_library_coverage: Option<&'a str>,
     /// C208 (m1366, #1365) — the closure ecosystem identity pass's record.
     pub closure_ecosystem_identity: Option<&'a str>,
     /// C209 (m1367, #1371) — the CPE synthesis coverage record.
@@ -300,6 +302,7 @@ pub fn build_metadata(
         nix_closure_degraded,
         git_submodule_coverage,
         binary_test_inputs_skipped,
+        installed_library_coverage,
         closure_ecosystem_identity,
         cpe_coverage,
         closure_graph_admission,
@@ -523,6 +526,14 @@ pub fn build_metadata(
         properties.push(json!({
             "name": crate::scan_fs::binary::ANN_BINARY_SCAN_SKIPPED_TEST_INPUTS,
             "value": binary_test_inputs_skipped.to_string(),
+        }));
+    }
+    // C225 (spec 1531 FR-008): present only when a `.pc` or CMake version
+    // file was matched.
+    if let Some(record) = installed_library_coverage {
+        properties.push(json!({
+            "name": crate::scan_fs::package_db::installed_lib::resolve::ANN_INSTALLED_LIBRARY_COVERAGE,
+            "value": record,
         }));
     }
 

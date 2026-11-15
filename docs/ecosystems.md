@@ -35,6 +35,27 @@ concluded licenses apply to the ecosystem. Both honour the global
 
 ---
 
+## Installed C/C++ libraries (pkg-config and CMake version files)
+
+Spec 1531 (#1531). An installed C/C++ SDK states each library's version in
+pkg-config files (`lib*/pkgconfig/*.pc`, `share/pkgconfig/*.pc`) and in CMake
+package version files (`*ConfigVersion.cmake`, `*-config-version.cmake`) in
+`find_package` search locations.
+
+- **Identity.** Each such file gives `pkg:generic/<lowercased name>@<version>`
+  at tier `deployed`.
+- **Versions.** `.pc` variables expand as pkg-config expands them, and only a
+  literal CMake `PACKAGE_VERSION` is read.
+- **Where files are read.** This includes inside `.venv` / `venv`
+  site-packages.
+- **What is skipped.** Files an OS package database owns: dpkg, rpm, apk,
+  alpm, opkg, or a Homebrew keg.
+- **Edges.** `Requires` and `Requires.private` become edges by exact PURL,
+  within the install prefix first. `waybill:pkg-config-private-requires`
+  (C224) marks private-only targets.
+- **Coverage.** `waybill:installed-library-coverage` (C225) records what was
+  read and skipped, by reason.
+
 ## SBOM tiers: source, design, binary
 
 Every component waybill emits carries a **tier** — a per-component classification

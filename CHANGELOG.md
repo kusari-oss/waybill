@@ -9,6 +9,34 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **Installed C/C++ libraries get exact versions from pkg-config and CMake
+  version files (#1531).** An installed SDK states each library's version in
+  `lib/pkgconfig/*.pc` and in CMake's `*ConfigVersion.cmake` /
+  `*-config-version.cmake` files. One ROCm payload held 44 of the first and
+  78 of the second. waybill read neither, so its libraries appeared only as
+  unversioned file components. Each such file in a pkg-config or
+  `find_package` search location now gives `pkg:generic/<name>@<version>`
+  at tier `deployed`.
+  - **Versions are read, never guessed.** `.pc` variables expand the way
+    pkg-config expands them, and a version left as a template is skipped.
+    Only a literal CMake `set(PACKAGE_VERSION …)` is read; nothing is
+    evaluated.
+  - **No duplicates on distro images.** A file an OS package database owns
+    is skipped: dpkg, rpm, apk, alpm, opkg, or a Homebrew keg. The `.pc`
+    files inside a Python wheel are still read, including in a project's
+    `.venv`.
+  - **Edges.** `Requires` and `Requires.private` become dependencies by exact
+    PURL, preferring the same install prefix. Private-only targets are
+    listed in `waybill:pkg-config-private-requires` (C224).
+  - **Binaries.** A matching shared library in the same prefix is listed in
+    the library's evidence. A zlib `.pc` and zlib's embedded version string
+    give one component.
+  - **C225.** `waybill:installed-library-coverage` records what was read and
+    what was skipped, by reason.
+  - **Symlinks resolve inside the scan root.** In an image, an absolute
+    link is followed within the image, never to the host's file of the same
+    name.
+
 - **Git submodules are components (#1515).** A C/C++ super-build that pins
   its dependencies as git submodules (ROCm's TheRock among them) produced
   none of them. Each *gitlink* (the commit a repository records for a
