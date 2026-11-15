@@ -1,5 +1,5 @@
 //! Curated embedded-version-string scanner. Per research R6 / FR-025.
-//! Twelve patterns for well-known self-identifying libraries:
+//! Patterns for well-known self-identifying libraries:
 //!
 //! | Library   | Signature                                                    |
 //! |-----------|--------------------------------------------------------------|
@@ -15,6 +15,8 @@
 //! | LLVM      | `LLVM version X.Y.Z`                                         |
 //! | OpenJDK   | `OpenJDK X.Y.Z[+B]` (modern) or `OpenJDK 8uX[-bY]` (legacy)  |
 //! | Node.js   | `node.js/vX.Y.Z` (the compiled-in default User-Agent)        |
+//! | expat     | `expat_X.Y.Z` (#1526)                                        |
+//! | ncurses   | `ncurses X.Y.YYYYMMDD`, emitted as `X.Y` (#1526)             |
 //!
 //! Scanning runs ONLY against format-appropriate read-only string sections (ELF `.rodata` + `.data.rel.ro`, Mach-O `__TEXT,__cstring` + `__TEXT,__const`, PE `.rdata`) — never against the full binary image (Q4 resolution / FR-025). This bounds the false-positive surface. Control-set validation per SC-005.
 //
@@ -74,6 +76,9 @@ pub enum CuratedLibrary {
     // Issue #1244 — the Node.js runtime, which official `node:*`
     // images install outside any package manager.
     Node,
+    // #1526 — libraries commonly bundled as private copies.
+    Expat,
+    Ncurses,
 }
 
 impl CuratedLibrary {
@@ -92,6 +97,8 @@ impl CuratedLibrary {
             CuratedLibrary::OpenJdk => "openjdk",
             CuratedLibrary::Php => "php",
             CuratedLibrary::Node => "node",
+            CuratedLibrary::Expat => "expat",
+            CuratedLibrary::Ncurses => "ncurses",
         }
     }
 }
@@ -143,6 +150,26 @@ fn match_prefix(
 
     if !at_boundary {
         return None;
+    }
+
+    // expat — "expat_X.Y.Z", a whole string (#1526).
+    if let Some(tail) = window.strip_prefix(b"expat_") {
+        if let Some(v) = parse_semver_triple(tail).filter(|v| tail.get(v.len()) == Some(&0)) {
+            return Some(EmbeddedVersionMatch {
+                library: CuratedLibrary::Expat,
+                version: v,
+            });
+        }
+    }
+    // ncurses — "ncurses X.Y.YYYYMMDD", a whole string (#1526). The
+    // version is the release, X.Y; the patch date is dropped.
+    if let Some(tail) = window.strip_prefix(b"ncurses ") {
+        if let Some(v) = parse_ncurses_version(tail) {
+            return Some(EmbeddedVersionMatch {
+                library: CuratedLibrary::Ncurses,
+                version: v,
+            });
+        }
     }
 
     // OpenSSL — "OpenSSL "
@@ -393,6 +420,25 @@ fn parse_semver_triple(tail: &[u8]) -> Option<String> {
         return None;
     }
     std::str::from_utf8(&tail[..end]).ok().map(str::to_string)
+}
+
+/// ncurses: `X.Y` then an optional `.YYYYMMDD` patch date, then NUL.
+/// Returns the release version `X.Y` (#1526).
+fn parse_ncurses_version(tail: &[u8]) -> Option<String> {
+    let end = tail.iter().position(|&b| b == 0)?;
+    let text = std::str::from_utf8(&tail[..end]).ok()?;
+    let mut parts = text.split('.');
+    let (major, minor) = (parts.next()?, parts.next()?);
+    let patch_date = parts.next();
+    let numeric = |p: &str| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit());
+    if parts.next().is_some()
+        || !numeric(major)
+        || !numeric(minor)
+        || patch_date.is_some_and(|d| d.len() != 8 || !numeric(d))
+    {
+        return None;
+    }
+    Some(format!("{major}.{minor}"))
 }
 
 /// PCRE version: `X.Y YYYY-MM-DD`.
@@ -647,6 +693,39 @@ mod tests {
         let mid_text = b"\0see deflate 1.3.2 Copyright 1995-2026 \0";
         assert!(scan(two_spaces).is_empty());
         assert!(scan(mid_text).is_empty());
+    }
+
+    /// #1526: bytes copied NUL to NUL from Nix builds: expat 2.9.0 and
+    /// 2.7.5 (`libexpat.1.13.0.dylib`, `libexpat.1.11.3.dylib`) and ncurses
+    /// 6.6 (`libncursesw.6.dylib`).
+    #[test]
+    fn s1526_expat_and_ncurses_real_literals() {
+        let cases: [(&[u8], CuratedLibrary, &str); 3] = [
+            (b"\0expat_2.9.0\0", CuratedLibrary::Expat, "2.9.0"),
+            (b"\0expat_2.7.5\0", CuratedLibrary::Expat, "2.7.5"),
+            // The release version; the patch date is dropped (NVD CPEs and
+            // nixpkgs both call this build 6.6).
+            (b"\0ncurses 6.6.20251230\0", CuratedLibrary::Ncurses, "6.6"),
+        ];
+        for (bytes, lib, want) in cases {
+            let hits = scan(bytes);
+            assert_eq!(hits.len(), 1, "{want}: {hits:?}");
+            assert_eq!(hits[0].library, lib);
+            assert_eq!(hits[0].version, want);
+        }
+    }
+
+    /// #1526: the same libraries' other strings, which share a prefix
+    /// but carry no version, do not match.
+    #[test]
+    fn s1526_prefixes_without_a_version_do_not_match() {
+        for bytes in [
+            &b"\0expat_heap_increase_tolerable\0"[..],
+            b"\0expat_free\0",
+            b"\0ncurses library\0",
+        ] {
+            assert!(scan(bytes).is_empty(), "{:?}", String::from_utf8_lossy(bytes));
+        }
     }
 
     #[test]

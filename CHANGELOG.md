@@ -52,6 +52,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   without a URL after it, is now skipped. A file in which most lines are
   skipped is not read as pip at all, and a WARN names it.
 
+- **expat and ncurses are versioned from their own binaries (#1526).** The
+  curated version scanner gained two self-identifying strings, each taken
+  from a real build: `expat_X.Y.Z` and `ncurses X.Y.YYYYMMDD`, emitted as
+  the release `X.Y`. A bundled copy now gives `pkg:generic/expat@2.9.0` or
+  `pkg:generic/ncurses@6.6`, each with its CPE. libcap needs a CPE-table row
+  first (#1556), and SQLite's bare version is not a clean string in real
+  builds (#1555).
+
 - **CMake fetches keep quoted and SHA-512 hashes, and resolve same-file
   variables (#1517).** `URL_HASH "SHA256=<hex>"` and `URL_HASH SHA512=<hex>`
   were dropped, and a `URL` built from `${VAR}` gave `@unknown`. Quoted
