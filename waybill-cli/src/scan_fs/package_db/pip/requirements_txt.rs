@@ -10,6 +10,7 @@ use waybill_common::types::purl::Purl;
 
 use waybill_common::types::hash::{ContentHash, HashAlgorithm};
 
+use super::super::name_validation::validate_pep508_name;
 use super::super::PackageDbEntry;
 use super::{build_pypi_purl_str, tokenise_requires_dist_name};
 
@@ -124,8 +125,23 @@ pub(super) fn read_requirements_files(rootfs: &Path) -> Option<Vec<PackageDbEntr
         // per FR-005a. All entries parsed from this file share the
         // same scope tag.
         let scope = classify_requirements_scope(&path);
-        let parsed = parse_requirements_file_text(&text);
-        for entry in parsed {
+        let parsed = parse_requirements(&text);
+        // #1522: `requirements.txt` is also cget's file name. A file most
+        // of whose lines are not PEP 508 is not a pip file; emitting its
+        // few PEP 508-looking lines would fabricate PyPI packages.
+        if parsed.rejected.len() * 2 > parsed.rejected.len() + parsed.entries.len() {
+            tracing::warn!(
+                path = %source_path,
+                rejected = parsed.rejected.len(),
+                accepted = parsed.entries.len(),
+                "pip: most lines are not PEP 508 requirements; not reading this file as pip",
+            );
+            continue;
+        }
+        for line in &parsed.rejected {
+            tracing::debug!(path = %source_path, line = %line, "pip: skipping a line that is not a PEP 508 requirement");
+        }
+        for entry in parsed.entries {
             if let Some(pdb) = entry.into_package_db_entry(&source_path, scope) {
                 out.push(pdb);
             }
@@ -415,7 +431,19 @@ impl RequirementsTxtEntry {
 /// - URL refs (`https://...`, `git+...`, `file:...`).
 /// - Pinned (`==`) and ranged (`>=`, `<`, `~=`, `!=`) requirements.
 pub(crate) fn parse_requirements_file_text(text: &str) -> Vec<RequirementsTxtEntry> {
-    let mut out = Vec::new();
+    parse_requirements(text).entries
+}
+
+/// The requirement lines of a `requirements.txt`-style file, split into
+/// the ones that parsed and the ones that are not PEP 508 (#1522).
+#[derive(Debug, Default)]
+pub(crate) struct ParsedRequirements {
+    pub entries: Vec<RequirementsTxtEntry>,
+    pub rejected: Vec<String>,
+}
+
+pub(crate) fn parse_requirements(text: &str) -> ParsedRequirements {
+    let mut out = ParsedRequirements::default();
     // Deal with line continuations: a trailing backslash joins to the
     // next line. Common in pinned-with-hash blocks.
     let joined = text.replace("\\\n", " ");
@@ -438,15 +466,36 @@ pub(crate) fn parse_requirements_file_text(text: &str) -> Vec<RequirementsTxtEnt
             continue;
         }
 
-        if let Some(entry) = parse_requirements_line(line) {
-            out.push(entry);
+        match parse_requirements_line(line) {
+            Line::Entry(entry) => out.entries.push(entry),
+            Line::Skipped => {}
+            Line::NotPep508 => out.rejected.push(line.to_string()),
         }
     }
     out
 }
 
+enum Line {
+    Entry(RequirementsTxtEntry),
+    /// A requirement whose environment marker excludes it.
+    Skipped,
+    /// Not a PEP 508 requirement, e.g. a cget `owner/repo@ref` line (#1522).
+    NotPep508,
+}
+
 /// Parse a single non-blank, non-comment, non-meta requirements line.
-fn parse_requirements_line(line: &str) -> Option<RequirementsTxtEntry> {
+fn parse_requirements_line(line: &str) -> Line {
+    match parse_requirements_line_inner(line) {
+        Some(entry) if validate_pep508_name(&entry.name).is_err() && entry.source_type.is_none() => {
+            Line::NotPep508
+        }
+        Some(entry) => Line::Entry(entry),
+        None if is_bare_at_reference(line) => Line::NotPep508,
+        None => Line::Skipped,
+    }
+}
+
+fn parse_requirements_line_inner(line: &str) -> Option<RequirementsTxtEntry> {
     // Split off `--hash=alg:hex` flags. pip allows MULTIPLE per
     // requirement (one for sdist + one per platform wheel) so collect
     // all of them. Each flag has form `--hash=<alg>:<hex>`.
@@ -522,6 +571,14 @@ fn parse_requirements_line(line: &str) -> Option<RequirementsTxtEntry> {
         });
     }
 
+    // `name@<not a URL>` with no whitespace is cget's `name@version` or
+    // `owner/repo@ref`, not PEP 508, whose direct reference needs a URL
+    // after the `@` (#1522). The spaced `name @ <not a URL>` form keeps
+    // its lenient registry parse (milestone 670).
+    if is_bare_at_reference(body) {
+        return None;
+    }
+
     // Registry-style: `name[extras] OP version, OP version; marker`.
     // Reuse the PEP 508 tokeniser for the name; detect `==` for pinning.
     let name = tokenise_requires_dist_name(body)?;
@@ -537,6 +594,21 @@ fn parse_requirements_line(line: &str) -> Option<RequirementsTxtEntry> {
         hashes,
         direct_url: None,
     })
+}
+
+/// `true` for `name@rest` where the `@` directly follows the name and
+/// `rest` is not a URL a PEP 508 direct reference accepts.
+fn is_bare_at_reference(body: &str) -> bool {
+    let body = body.split("--hash").next().unwrap_or(body).trim();
+    let Some(at) = body.find('@') else {
+        return false;
+    };
+    let name = &body[..at];
+    if name.is_empty() || name.contains(char::is_whitespace) || name.contains(['[', '<', '>', '=', '!', '~', ';']) {
+        return false;
+    }
+    let rest = body[at + 1..].split_whitespace().next().unwrap_or("");
+    DirectUrlRef::parse(rest).is_none()
 }
 
 /// Extract every `--hash=<alg>:<hex>` flag from a requirements line.
@@ -1177,5 +1249,62 @@ urllib3>=2 \\
                 .contains_key("waybill:python-req-file-scope"),
             "Main-scope entries omit the annotation",
         );
+    }
+
+    /// #1522: the issue's cget repro, plus an unpinned `owner/repo`. Each
+    /// line is rejected on its own: `owner/repo` is not a PEP 508 name, and
+    /// `name@version` is not a PEP 508 direct reference (that needs a URL).
+    #[test]
+    fn s1522_cget_lines_are_not_pep508_requirements() {
+        let text = "waybill-fixture-zlib@1.3.1\n\
+                    waybill-org/waybill-fixture-repo@v2.0.0 -DFOO=ON\n\
+                    waybill-org/waybill-fixture-sha@38c52448b1a4996b3e0e435a877d02441098b1dd\n\
+                    waybill-org/waybill-fixture-unpinned\n";
+        let parsed = parse_requirements(text);
+        assert!(parsed.entries.is_empty(), "{:?}", parsed.entries);
+        assert_eq!(parsed.rejected.len(), 4, "{:?}", parsed.rejected);
+    }
+
+    /// #1522 control: valid PEP 508 lines, including both direct-reference
+    /// shapes, are still accepted and nothing is rejected.
+    #[test]
+    fn s1522_valid_pep508_lines_still_parse() {
+        let text = "requests==2.31.0\n\
+                    numpy>=1.26; python_version >= \"3.9\"\n\
+                    waybill-fixture-direct @ https://example.invalid/waybill-fixture-direct-1.0.tar.gz\n\
+                    Django[bcrypt]~=5.0\n";
+        let parsed = parse_requirements(text);
+        let names: Vec<&str> = parsed.entries.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, ["requests", "numpy", "waybill-fixture-direct", "Django"]);
+        assert!(parsed.rejected.is_empty(), "{:?}", parsed.rejected);
+    }
+
+    /// #1522: a file most of whose lines are rejected is not a pip file.
+    /// It emits nothing, not even its one PEP 508-looking line.
+    #[test]
+    fn s1522_mostly_rejected_file_emits_nothing() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("requirements.txt"),
+            "waybill-org/waybill-fixture-repo@v2.0.0\n\
+             waybill-org/waybill-fixture-sha@38c52448b1a4996b3e0e435a877d02441098b1dd\n\
+             waybill-fixture-bare\n",
+        )
+        .unwrap();
+        assert!(read_requirements_files(dir.path()).is_none());
+    }
+
+    /// #1522 control: a pip file with one bad line keeps its good lines.
+    #[test]
+    fn s1522_one_bad_line_in_a_pip_file_is_dropped_alone() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("requirements.txt"),
+            "requests==2.31.0\nurllib3>=2\nwaybill-org/waybill-fixture-repo@v2.0.0\n",
+        )
+        .unwrap();
+        let out = read_requirements_files(dir.path()).unwrap();
+        let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, ["requests", "urllib3"]);
     }
 }
