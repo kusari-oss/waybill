@@ -66,7 +66,7 @@
 - [X] T010 [US1] Extend `Coverage::wire` in `resolve.rs` with the optional `exported-targets` object, keys sorted, present only when `read + owned-by-os-package > 0`. Extend the unit test `the_wire_value_lists_every_reason_with_sorted_keys` with a case including the object, and keep the existing case byte-identical.
 - [X] T011 [US1] Hash reuse (FR-005a, research R5) in `waybill-cli/src/scan_fs/mod.rs` and `installed_lib/resolve.rs`.
   - **Seed the cache.** Before the evidence loop that calls `manifest_occurrence` (~`:1056`), seed `manifest_sha_cache` from every `db_entries` entry whose PURL carries a `file-sha256` qualifier: key `source_path`, value `Some(hex)`.
-  - **Make the keys match** (analysis U2). In phase 2, when a resolved location is the same file as a binary file component, by `(dev, ino)` on unix and canonical path otherwise, put that component's exact `source_path` string into `extra_source_paths`.
+  - **Make the keys match** (analysis U2). In phase 2, when a resolved location is the same file as a binary file component, by `(dev, ino)` on unix and canonical path otherwise, put that component's exact `source_path` string into `extra_source_paths`. *(Implemented, then removed: mutation M7 showed the two spellings already agree. See `measurements/mutations.md`.)*
   - **Make reuse observable** (analysis U1). Count lookups that hit a seeded entry, and log `hash cache: seeded=<n> reused=<m>` once at INFO.
   - **Test,** in `installed_lib_targets.rs`. It asserts both that the attributed shared library's occurrence `sha256` equals its binary component's `file-sha256` (which proves the digest matches), and that the scan log reports `reused` ≥ 1 for a tree with one attributed shared library (which proves the hash was not recomputed). The second assertion is the one T014's no-reuse mutation must fail.
 
@@ -88,7 +88,7 @@
 
 ## Phase 5: Polish
 
-- [ ] T014 Run the mutations from plan.md Approach step 6, recording each failing test and message in `specs/1532-cmake-exported-targets/measurements/mutations.md`. The no-reuse mutation, which removes the cache seeding, must fail T011's `reused` assertion. Run the harness under bash with `--no-fail-fast` and parse the `---- <name> stdout ----` blocks; that is the spec 1531 lesson.
+- [X] T014 Run the mutations from plan.md Approach step 6, recording each failing test and message in `specs/1532-cmake-exported-targets/measurements/mutations.md`. The no-reuse mutation, which removes the cache seeding, must fail T011's `reused` assertion. Run the harness under bash with `--no-fail-fast` and parse the `---- <name> stdout ----` blocks; that is the spec 1531 lesson.
 - [X] T015 Byte-identity tests in `installed_lib_targets.rs` (SC-004):
   - ten scans of the US1 tree are identical, with CycloneDX `serialNumber` masked;
   - a tree with only #1531 files (no targets) produces C225 without `exported-targets`, byte-identical to its pre-feature shape. Compare against a literal expected string.

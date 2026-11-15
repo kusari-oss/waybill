@@ -163,7 +163,7 @@ pub(crate) fn resolve(
     let mut evidence = match_binaries(&live, binaries);
     if !targets_files.is_empty() {
         cov.exported_targets =
-            Some(attach_exported_targets(&live, targets_files, scan_root, claims, binaries, &mut evidence));
+            Some(attach_exported_targets(&live, targets_files, scan_root, claims, &mut evidence));
     }
 
     let entries: Vec<PackageDbEntry> = live
@@ -202,19 +202,6 @@ fn path_os_owned(path: &Path, resolved: Option<&Path>, scan_root: &Path, claims:
     resolved.is_some_and(|r| in_homebrew_keg(r, scan_root))
 }
 
-/// A file's identity for matching an attributed location to a binary file
-/// component (analysis U2): `(dev, ino)` on unix, the canonical path
-/// elsewhere.
-#[cfg(unix)]
-fn file_key(p: &Path) -> Option<(u64, u64)> {
-    use std::os::unix::fs::MetadataExt;
-    std::fs::metadata(p).ok().map(|m| (m.dev(), m.ino()))
-}
-#[cfg(not(unix))]
-fn file_key(p: &Path) -> Option<PathBuf> {
-    std::fs::canonicalize(p).ok()
-}
-
 /// Spec 1532 phase 2 (data-model.md "Resolution"): resolve each export
 /// set's locations, find its package's live record, and add each shipped
 /// file to that record's evidence.
@@ -223,7 +210,6 @@ fn attach_exported_targets(
     files: Vec<TargetsFile>,
     scan_root: &Path,
     claims: &OsClaims<'_>,
-    binaries: &[PackageDbEntry],
     evidence: &mut BTreeMap<usize, Vec<String>>,
 ) -> ExportedTargetsCoverage {
     let mut cov = ExportedTargetsCoverage::default();
@@ -240,11 +226,6 @@ fn attach_exported_targets(
         cov.read += 1;
         by_dir.entry(f.dir.clone()).or_default().push(f);
     }
-    let binary_by_key: BTreeMap<_, &str> = binaries
-        .iter()
-        .filter(|b| b.purl.as_str().contains("file-sha256="))
-        .filter_map(|b| file_key(Path::new(&b.source_path)).map(|k| (k, b.source_path.as_str())))
-        .collect();
     for (dir, set) in by_dir {
         let raise = set
             .iter()
@@ -277,9 +258,10 @@ fn attach_exported_targets(
                 cov.no_package_version += 1;
                 continue;
             };
-            let path = file_key(&resolved)
-                .and_then(|k| binary_by_key.get(&k).map(|s| s.to_string()))
-                .unwrap_or_else(|| resolved.to_string_lossy().into_owned());
+            // The binary scan reports a file under this same root-relative
+            // spelling, so the evidence-hash cache it seeds is hit
+            // (`an_attributed_binary_keeps_the_binary_components_spelling`).
+            let path = resolved.to_string_lossy().into_owned();
             evidence.entry(idx).or_default().push(path);
             cov.attached += 1;
         }

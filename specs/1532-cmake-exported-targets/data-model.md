@@ -47,5 +47,5 @@ The object is present only when at least one targets file was matched. Otherwise
 
 `manifest_sha_cache` (`scan_fs/mod.rs:868`) is seeded, before the evidence loop, with `(binary component source_path → file-sha256 qualifier)`. That holds for every binary file component carrying the qualifier.
 
-- **Key form (analysis U2).** The cache key is the path string. When an attributed location is the same file as a binary file component, compared by device and inode or by canonical path, the entry's `extra_source_paths` MUST carry that binary component's exact `source_path` string, so the lookup hits.
+- **Key form (analysis U2; resolved by measurement).** The cache key is the path string. The analysis feared one file could have two spellings, which would miss the key. Measured: the binary scan reports a file under the same root-relative spelling that `resolve_in_root` produces, even through a directory symlink. So no mapping is needed (`measurements/mutations.md`, M7), and `an_attributed_binary_keeps_the_binary_components_spelling` pins it.
 - **Observability (analysis U1).** The post-pass that builds the evidence logs one INFO line, `hash cache: seeded=<n> reused=<m>`. Here `reused` counts lookups answered from a seeded entry.

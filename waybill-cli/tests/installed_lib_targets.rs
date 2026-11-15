@@ -273,3 +273,53 @@ fn sc004_byte_identity_and_unchanged_shape_without_targets() {
         r#"{"cmake-version":{"emitted":0,"read":0},"pkg-config":{"emitted":1,"read":1},"skipped":{"computed-version":0,"malformed":0,"no-version":0,"owned-by-os-package":0,"unrecognised-location":0,"unresolved-version":0},"unresolved-requires":0,"version-disagreements":0}"#
     );
 }
+
+/// FR-004 (mutation M3): the same-name rule is confined to the targets
+/// file's own install prefix. A same-name component in another prefix
+/// does not take the files.
+#[test]
+fn the_same_name_rule_stays_within_its_prefix() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path().join("root");
+    write(&root, "opt/a/lib/pkgconfig/waybill-fixture-x.pc", "Version: 1.0\n");
+    write(&root, "opt/b/lib/cmake/waybill-fixture-x/waybill-fixture-x-targets.cmake", &main_file(3));
+    write(
+        &root,
+        "opt/b/lib/cmake/waybill-fixture-x/waybill-fixture-x-targets-release.cmake",
+        &release_file(&["${_IMPORT_PREFIX}/lib/libwaybill-fixture-x.a"]),
+    );
+    put_bytes(&root, "opt/b/lib/libwaybill-fixture-x.a", b"!<arch>\n");
+    let docs = scan(&root);
+    let x = component(&docs.cdx, "pkg:generic/waybill-fixture-x@1.0").expect("x from opt/a");
+    assert!(!source_files(x).iter().any(|f| f.ends_with("libwaybill-fixture-x.a")), "{:?}", source_files(x));
+    assert_eq!(exported(&docs)["no-package-version"], 1);
+}
+
+/// Analysis U2 (mutation M7): through a directory symlink one file has two
+/// spellings. The attributed file must be listed under the binary
+/// component's own spelling, so its hash is reused rather than recomputed.
+#[cfg(unix)]
+#[test]
+fn an_attributed_binary_keeps_the_binary_components_spelling() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path().join("root");
+    write(&root, "opt/rocm-7.0/lib/cmake/WaybillFixtureZ/WaybillFixtureZConfigVersion.cmake", "set(PACKAGE_VERSION \"7.0\")\n");
+    write(&root, "opt/rocm-7.0/lib/cmake/WaybillFixtureZ/WaybillFixtureZTargets.cmake", &main_file(3));
+    write(
+        &root,
+        "opt/rocm-7.0/lib/cmake/WaybillFixtureZ/WaybillFixtureZTargets-release.cmake",
+        &release_file(&["${_IMPORT_PREFIX}/lib/libwaybill-fixture-z7.so"]),
+    );
+    put_bytes(&root, "opt/rocm-7.0/lib/libwaybill-fixture-z7.so", &elf_shared_lib(b"\0z7\0"));
+    std::os::unix::fs::symlink("rocm-7.0", root.join("opt/rocm")).unwrap();
+    let docs = scan(&root);
+    let bin = components(&docs.cdx)
+        .into_iter()
+        .find(|c| c["name"] == "libwaybill-fixture-z7.so")
+        .expect("binary component");
+    let bin_files = source_files(bin);
+    let z = component(&docs.cdx, "pkg:generic/waybillfixturez@7.0").expect("Z");
+    let z_files: Vec<String> = source_files(z).into_iter().filter(|f| f.ends_with(".so")).collect();
+    assert_eq!(z_files.len(), 1, "{z_files:?}");
+    assert!(bin_files.contains(&z_files[0]), "attributed as {:?}; the binary component is {:?}", z_files, bin_files);
+}
