@@ -9,6 +9,13 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **An unpacked wheel scanned at its own root is identified (#1529).** The
+  dist-info reader looked only inside `site-packages` directories, so a tree
+  whose top level holds `<name>-<version>.dist-info/` gave
+  `pkg:generic/<dir>@0.0.0` and no PyPI component. The scan root is now read
+  as a site-packages directory when it directly holds a `.dist-info`. When it
+  holds exactly one, that package is the main module and the document root.
+
 - **zlib's embedded version string is recognised in real builds (#1525).**
   zlib's literal is `" deflate X.Y.Z Copyright ..."`, with a leading space,
   and the scanner required the byte before `deflate` to be NUL, so it never
@@ -22,13 +29,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   whose name is not a PEP 508 name, or whose `@` directly follows the name
   without a URL after it, is now skipped. A file in which most lines are
   skipped is not read as pip at all, and a WARN names it.
-
-- **An unpacked wheel scanned at its own root is identified (#1529).** The
-  dist-info reader looked only inside `site-packages` directories, so a tree
-  whose top level holds `<name>-<version>.dist-info/` gave
-  `pkg:generic/<dir>@0.0.0` and no PyPI component. The scan root is now read
-  as a site-packages directory when it directly holds a `.dist-info`. When it
-  holds exactly one, that package is the main module and the document root.
 
 - **CMake fetches keep quoted and SHA-512 hashes, and resolve same-file
   variables (#1517).** `URL_HASH "SHA256=<hex>"` and `URL_HASH SHA512=<hex>`
