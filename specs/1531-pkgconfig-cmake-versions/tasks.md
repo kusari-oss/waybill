@@ -96,7 +96,7 @@
 - [X] T016 [P] [US1] Implement the CMake version parser in `waybill-cli/src/scan_fs/package_db/installed_lib/cmake_version.rs` (research R7). It is literal-only and evaluates nothing. T012 must pass.
 - [X] T017 [P] [US1] Implement the location and prefix rules in `waybill-cli/src/scan_fs/package_db/installed_lib/location.rs`, including the multiarch-triplet test (research R7). T013 must pass.
 - [X] T018 [US1] Implement phase 1 in `waybill-cli/src/scan_fs/package_db/installed_lib/mod.rs` and wire it into `waybill-cli/src/scan_fs/package_db/mod.rs`:
-  - register patterns `*.pc`, `*ConfigVersion.cmake` and `*-config-version.cmake` with an `on_file` that only collects paths into `Arc<Mutex<BTreeSet<PathBuf>>>`, following `git_submodule/mod.rs:107-145`. Set `descend_into` to `.venv` and `venv`, following `go_binary.rs:624-637` (research R1, spec C1);
+  - register patterns `*.pc`, `*ConfigVersion.cmake` and `*-config-version.cmake` with an `on_file` that only collects paths into `Arc<Mutex<BTreeSet<PathBuf>>>`, following `git_submodule/mod.rs:107-145`. Set `descend_into` to `.venv` and `venv`, following `go_binary.rs:624-637` (research R1, spec C1). *(Done differently: T040 measured that at +68% median scan time, so the reader reaches virtual environments through the bounded `venv_candidates` probe instead, at +7.5%; see research R1 and `measurements/venv-walk-timing.md`.)*;
   - register it in `run_shared_walker_pilot`;
   - add a `SharedPilotOutput` field;
   - add `finalize(paths, scan_root) -> Vec<Record>`, which reads each file and applies T015 to T017. Each file is read only after root-relative symlink resolution (T041); an escaping link becomes `malformed`;
@@ -205,10 +205,10 @@
   - scans with and without this feature (the base commit's binary);
   - records the component counts with a version, the coverage record and the scan times.
 
-  Copy the output to `specs/1531-pkgconfig-cmake-versions/measurements/rocm-sdk.md`. Never fetch or scan the payload locally. Remove the step before the PR leaves draft.
+  Copy the output to `specs/1531-pkgconfig-cmake-versions/measurements/rocm-sdk.md`. Never fetch or scan the payload locally. Remove the step before the PR leaves draft. *(Done differently: the capture and the scan run in the public `kusari-sandbox/waybill-fixture-therock-sdk` repository's own workflows, so no waybill workflow step was added. Recorded in `measurements/therock-sdk.md`.)*
 - [X] T037 Corpus goldens (SC-007, research R10). Dispatch `public-corpus.yml` regeneration on the branch, and download all goldens. Compare them to the committed ones with a normalised, sorted diff: mask content-addressed IDs, `LC_ALL=C sort` (memory: `feedback_verify_golden_churn_normalized`). Confirm that exactly `image-postgres16`'s three files change, each gaining only the coverage record with `owned-by-os-package: 2`. Commit them, and record the review in `specs/1531-pkgconfig-cmake-versions/measurements/golden-review.md`. If the prediction fails, record why before committing anything.
 - [X] T038 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT` and the `test result: ok.` count in `measurements/gate-log.md`.
-- [ ] T039 Close-out. Verify each task's claim against the code, not just its checkbox (memory: a task can be unimplemented, not unticked). Tick `tasks.md`, and draft the PR body ending with the attribution line.
+- [X] T039 Close-out. Verify each task's claim against the code, not just its checkbox (memory: a task can be unimplemented, not unticked). Tick `tasks.md`, and draft the PR body ending with the attribution line.
 
 ## Dependencies
 
