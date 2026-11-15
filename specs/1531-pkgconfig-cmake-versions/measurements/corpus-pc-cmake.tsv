@@ -1,0 +1,21 @@
+target	repo	sha	truncated	pc_total	pc_in_pkgconfig_dir	cmake_version_total	cmake_version_in_cmake_dir	paths
+go-cobra	spf13/cobra	a655097faf7d54f78933a815984b9919d51a05d2	False	0	0	0	0	
+go-opentelemetry	open-telemetry/opentelemetry-go	55899e389dcbc559393069a2a46dac41a88b0772	False	0	0	0	0	
+nix-closure-moat	MercuryTechnologies/moat	d06905558ba68b49b17f36c875e97f7234a9c19b	False	0	0	0	0	
+nix-closure-shellcheck	kusari-sandbox/waybill-fixture-nix-shellcheck	dc4e4509686df76a2e060a019097e2b7a8167073	False	0	0	0	0	
+nix-closure-slack-web	MercuryTechnologies/slack-web	7b46273d3723ba37da26e4c4f7a3c5575ae9e837	False	0	0	0	0	
+nix-closure-openai	MercuryTechnologies/openai	8a357137b9d3f1727b1dbb6ea3574e7b1b0fb4b7	False	0	0	0	0	
+nix-closure-slacklinker	MercuryTechnologies/slacklinker	72af26a71622bcf1eb4b84d017677be711c6fc7b	False	0	0	0	0	
+rust-ripgrep	BurntSushi/ripgrep	0e8390a66fbcf6eeac1aeb0541b367663a597c79	False	0	0	0	0	
+npm-express	expressjs/express	e99649895f714c9dc9b3538e2cb0f58954f0ecfa	False	0	0	0	0	
+python-flask	pallets/flask	80be49be88b534d2a72ef6bf5ea4aabf89f3305b	False	0	0	0	0	
+maven-guice	google/guice	b0e1d0fab0167cd555ab8d262333c1a32db7d492	False	0	0	0	0	
+pants-example-python	kusari-sandbox/example-python	e8cfd79b5e2670b242d2e680515473fa48a2b6b2	False	0	0	0	0	
+pants-example-django	kusari-sandbox/example-django	7da716ffb9af72c9ab5d10d43c221ae7d6469ad9	False	0	0	0	0	
+pants-example-jvm	kusari-sandbox/example-jvm	675ee75d36f2c1b096b0def51efcfffd02bd1251	False	0	0	0	0	
+pants-clojure-polyglot	enragedginger/pants_backend_clojure	e068ffbaa61c83973ddad5c65a2002fde3025dfe	False	0	0	0	0	
+pants-example-golang	kusari-sandbox/example-golang	048c22e53f0fac68a4b1d49e1c99b8ce6746cf0a	False	0	0	0	0	
+pants-example-javascript	kusari-sandbox/example-javascript	da76d5dbb407d82c136cfe8f18dc06f3c8a440e5	False	0	0	0	0	
+haskell-aeson	haskell/aeson	682162c66d26a770fbfb6271c797e646bc5c4f2e	False	0	0	0	0	
+haskell-security-advisories	haskell/security-advisories	4dc0b9b921bd71688388b1cd8486c26fde568b76	False	0	0	0	0	
+haskell-language-server	haskell/haskell-language-server	1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80	False	0	0	0	0	
