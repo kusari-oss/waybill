@@ -21,6 +21,7 @@ pub mod composer;
 pub mod conan;
 pub(crate) mod forge;
 pub mod git_submodule;
+pub(crate) mod installed_lib;
 pub mod dart;
 pub mod declared_license;
 pub mod nix;
@@ -368,6 +369,11 @@ pub struct DbScanResult {
     /// return path) — `enrich` falls back to
     /// `pants_common::discover_build_files` in that case.
     pub pants_go_build_files: Vec<std::path::PathBuf>,
+    /// Spec 1531 (#1531): parsed `.pc` and CMake version-file records.
+    /// Not entries yet: `scan_fs::scan_path` turns them into entries after
+    /// the binary scan, when OS ownership and binaries are both known
+    /// (`installed_lib::resolve`).
+    pub(crate) installed_lib_records: Vec<installed_lib::Record>,
     /// Milestone 665: the active `--no-binary-scan` mode for this scan,
     /// echoed back from the CLI layer so the emitter can add a
     /// document-scope `waybill:binary-scan-suppressed=<mode>` annotation
@@ -2477,6 +2483,7 @@ pub fn read_all(
         // `pants_go::enrich` (called from `scan_fs/mod.rs` outside
         // `read_all`).
         pants_go_build_files: std::mem::take(&mut shared_pilot.pants_go_build_files),
+        installed_lib_records: std::mem::take(&mut shared_pilot.installed_lib),
         // Milestone 665: echo the operator's binary-scan suppression
         // mode back to the caller so the emitter can attach the
         // document-scope annotation. `None` when the flag was absent.
@@ -2589,6 +2596,8 @@ struct SharedPilotOutput {
     git_submodule: Vec<PackageDbEntry>,
     /// Spec 1530 FR-011 (C222): `None` when no `.gitmodules` was seen.
     git_submodule_coverage: Option<git_submodule::SubmoduleCoverage>,
+    /// Spec 1531 (#1531): parsed records, resolved after the binary scan.
+    installed_lib: Vec<installed_lib::Record>,
     bazel: Vec<PackageDbEntry>,
     cmake: Vec<PackageDbEntry>,
     /// Milestone 664 US2 T058: `go.mod` paths threaded to
@@ -2760,6 +2769,9 @@ fn run_shared_walker_pilot(
         builder = builder.register(r);
     }
     if let Some(r) = register("git-submodule", git_submodule::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("installed-lib", installed_lib::registration()) {
         builder = builder.register(r);
     }
     if let Some(r) = register("bazel", bazel::registration()) {
@@ -3083,6 +3095,15 @@ fn run_shared_walker_pilot(
         })
         .unwrap_or_default();
 
+    // Spec 1531 (#1531): parse every matched `.pc` / CMake version file.
+    // Entries are built later, in `scan_fs::scan_path` (research R2).
+    let installed_lib_records = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::INSTALLED_LIB)
+        .map(|reg| installed_lib::finalize(installed_lib::extract_marker(reg), rootfs))
+        .unwrap_or_default();
+
     // Bazel — marker-detect only; finalize gates the fixed-root read
     // (`MODULE.bazel` / `WORKSPACE.bazel` / `WORKSPACE` at scan root)
     // on the marker flag + fs fallback.
@@ -3178,6 +3199,7 @@ fn run_shared_walker_pilot(
         conan: conan_entries,
         git_submodule: git_submodule_entries,
         git_submodule_coverage,
+        installed_lib: installed_lib_records,
         bazel: bazel_entries,
         cmake: cmake_entries,
         golang_go_mod_paths,

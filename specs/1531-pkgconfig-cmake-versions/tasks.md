@@ -24,16 +24,16 @@
 
 ## Phase 2: Foundational (blocks every story)
 
-- [ ] T006 Add the OS-only claim set (research R3) to `waybill-cli/src/scan_fs/package_db/mod.rs`:
+- [X] T006 Add the OS-only claim set (research R3) to `waybill-cli/src/scan_fs/package_db/mod.rs`:
   - `DbScanResult` gains `os_claimed_paths: HashSet<PathBuf>` and `os_claimed_inodes: HashSet<(u64,u64)>`;
   - at the dpkg, apk, alpm, opkg and rpm claim call sites (`read_all`, ~`:1692-1782` and `:2044-2054`), insert the same paths and inodes into both sets. Do not insert at the pip `RECORD` or ipk call sites;
   - thread both sets out of `read_all` to `scan_fs::scan_path` in `waybill-cli/src/scan_fs/mod.rs`, unused for now.
-- [ ] T007 Add a unit test in `waybill-cli/src/scan_fs/package_db/mod.rs`, building a rootfs with a dpkg `.list` naming `usr/lib/x86_64-linux-gnu/pkgconfig/waybill-fixture-z.pc` and a pip `RECORD` naming `site-packages/sdk/lib/pkgconfig/waybill-fixture-w.pc`:
+- [X] T007 Add a unit test in `waybill-cli/src/scan_fs/package_db/mod.rs`, building a rootfs with a dpkg `.list` naming `usr/lib/x86_64-linux-gnu/pkgconfig/waybill-fixture-z.pc` and a pip `RECORD` naming `site-packages/sdk/lib/pkgconfig/waybill-fixture-w.pc`:
   - the dpkg path is in `os_claimed_paths`;
   - the pip path is in `claimed_paths` but not in `os_claimed_paths`. This is the control showing the sets differ.
-- [ ] T008 No-op control: run the full gate after T006 and T007. Confirm the `test result: ok.` count rises only by T007's tests, and that `git diff --stat` shows no golden or fixture changes. Record the pass count in `specs/1531-pkgconfig-cmake-versions/measurements/gate-log.md`.
-- [ ] T009 Add `ReaderId::INSTALLED_LIB` and append it to `ALL_READER_IDS` in `waybill-cli/src/scan_fs/walk_registry/mod.rs`.
-- [ ] T010 Create the module skeleton `waybill-cli/src/scan_fs/package_db/installed_lib/mod.rs` with `pkgconfig.rs`, `cmake_version.rs`, `location.rs` and `resolve.rs` as empty submodules. Declare `pub mod installed_lib;` in `waybill-cli/src/scan_fs/package_db/mod.rs`. Define `Record`, `RecordKind` and `SkipReason` per `data-model.md`, with `SkipReason::as_str()` as the single serialisation point.
+- [X] T008 No-op control: run the full gate after T006 and T007. Confirm the `test result: ok.` count rises only by T007's tests, and that `git diff --stat` shows no golden or fixture changes. Record the pass count in `specs/1531-pkgconfig-cmake-versions/measurements/gate-log.md`.
+- [X] T009 Add `ReaderId::INSTALLED_LIB` and append it to `ALL_READER_IDS` in `waybill-cli/src/scan_fs/walk_registry/mod.rs`.
+- [X] T010 Create the module skeleton `waybill-cli/src/scan_fs/package_db/installed_lib/mod.rs` with `pkgconfig.rs`, `cmake_version.rs`, `location.rs` and `resolve.rs` as empty submodules. Declare `pub mod installed_lib;` in `waybill-cli/src/scan_fs/package_db/mod.rs`. Define `Record`, `RecordKind` and `SkipReason` per `data-model.md`, with `SkipReason::as_str()` as the single serialisation point.
 
 ## Phase 3: User Story 1 — every library an installed prefix declares gets its exact version (P1, MVP)
 
@@ -42,7 +42,7 @@
 
 ### Tests (write first; they must fail before the implementation)
 
-- [ ] T011 [P] [US1] Write the `.pc` parser unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/pkgconfig.rs`, covering:
+- [X] T011 [P] [US1] Write the `.pc` parser unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/pkgconfig.rs`, covering:
   - a plain `Version: 1.2.3`;
   - `version=2.0.1` plus `Version: ${version}`;
   - a two-level variable chain;
@@ -55,14 +55,14 @@
   - a `\` line continuation;
   - CRLF line endings;
   - non-UTF-8 input or a file over 1 MiB, which gives `Err(Malformed)`.
-- [ ] T012 [P] [US1] Write the CMake version parser unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/cmake_version.rs`:
+- [X] T012 [P] [US1] Write the CMake version parser unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/cmake_version.rs`:
   - T002's real fixture gives `4.5.6`;
   - `set(PACKAGE_VERSION "1.0")` gives `1.0`;
   - `SET(PACKAGE_VERSION 1.0)` (bare, upper case) gives `1.0`;
   - `set(PACKAGE_VERSION ${FOO_VERSION})` gives `Err(ComputedVersion)`;
   - no `PACKAGE_VERSION`, or a version set only inside `if()`, gives `Err(ComputedVersion)`;
   - a commented-out `# set(PACKAGE_VERSION "9")` is ignored.
-- [ ] T013 [P] [US1] Write the location and prefix unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/location.rs`, for both recognised and rejected paths (research R7).
+- [X] T013 [P] [US1] Write the location and prefix unit tests in `waybill-cli/src/scan_fs/package_db/installed_lib/location.rs`, for both recognised and rejected paths (research R7).
   - These are recognised:
     - `opt/sdk/lib/pkgconfig/x.pc` (prefix `opt/sdk`);
     - `usr/lib/x86_64-linux-gnu/pkgconfig/x.pc` (prefix `usr`);
@@ -74,7 +74,7 @@
     - `src/tests/x.pc`;
     - `cmake/FooConfigVersion.cmake` at a repository root with no `lib*` or `share` parent.
   - Template names (`x.pc.in`) never reach the parser, because the glob does not match them.
-- [ ] T014 [US1] Write the integration test `waybill-cli/tests/installed_lib_us1.rs` (SC-001, SC-005, SC-009). Build a prefix in a tempdir:
+- [X] T014 [US1] Write the integration test `waybill-cli/tests/installed_lib_us1.rs` (SC-001, SC-005, SC-009). Build a prefix in a tempdir:
   - three `.pc` files, one of them unresolved;
   - two CMake version files, one computed;
   - one `.pc` and one CMake version file stating the same name and version (US1 scenario 5);
@@ -92,23 +92,23 @@
 
 ### Implementation
 
-- [ ] T015 [P] [US1] Implement the `.pc` parser in `waybill-cli/src/scan_fs/package_db/installed_lib/pkgconfig.rs` (research R7): variables, fields, recursive expansion with cycle detection, continuation and comments. Return `name`, `version: Result<String, SkipReason>`, `requires` and `requires_private` (the grammar is in T019). T011 must pass.
-- [ ] T016 [P] [US1] Implement the CMake version parser in `waybill-cli/src/scan_fs/package_db/installed_lib/cmake_version.rs` (research R7). It is literal-only and evaluates nothing. T012 must pass.
-- [ ] T017 [P] [US1] Implement the location and prefix rules in `waybill-cli/src/scan_fs/package_db/installed_lib/location.rs`, including the multiarch-triplet test (research R7). T013 must pass.
-- [ ] T018 [US1] Implement phase 1 in `waybill-cli/src/scan_fs/package_db/installed_lib/mod.rs` and wire it into `waybill-cli/src/scan_fs/package_db/mod.rs`:
+- [X] T015 [P] [US1] Implement the `.pc` parser in `waybill-cli/src/scan_fs/package_db/installed_lib/pkgconfig.rs` (research R7): variables, fields, recursive expansion with cycle detection, continuation and comments. Return `name`, `version: Result<String, SkipReason>`, `requires` and `requires_private` (the grammar is in T019). T011 must pass.
+- [X] T016 [P] [US1] Implement the CMake version parser in `waybill-cli/src/scan_fs/package_db/installed_lib/cmake_version.rs` (research R7). It is literal-only and evaluates nothing. T012 must pass.
+- [X] T017 [P] [US1] Implement the location and prefix rules in `waybill-cli/src/scan_fs/package_db/installed_lib/location.rs`, including the multiarch-triplet test (research R7). T013 must pass.
+- [X] T018 [US1] Implement phase 1 in `waybill-cli/src/scan_fs/package_db/installed_lib/mod.rs` and wire it into `waybill-cli/src/scan_fs/package_db/mod.rs`:
   - register patterns `*.pc`, `*ConfigVersion.cmake` and `*-config-version.cmake` with an `on_file` that only collects paths into `Arc<Mutex<BTreeSet<PathBuf>>>`, following `git_submodule/mod.rs:107-145`. Set `descend_into` to `.venv` and `venv`, following `go_binary.rs:624-637` (research R1, spec C1);
   - register it in `run_shared_walker_pilot`;
   - add a `SharedPilotOutput` field;
   - add `finalize(paths, scan_root) -> Vec<Record>`, which reads each file and applies T015 to T017. Each file is read only after root-relative symlink resolution (T041); an escaping link becomes `malformed`;
   - thread the records out of `read_all` to `scan_path`.
-- [ ] T019 [US1] Implement phase 2, entries only, in `waybill-cli/src/scan_fs/package_db/installed_lib/resolve.rs`. Call it from `waybill-cli/src/scan_fs/mod.rs` right after the `binary::read` extend (~`:514-521`). The step:
+- [X] T019 [US1] Implement phase 2, entries only, in `waybill-cli/src/scan_fs/package_db/installed_lib/resolve.rs`. Call it from `waybill-cli/src/scan_fs/mod.rs` right after the `binary::read` extend (~`:514-521`). The step:
   - drops unrecognised and failed records;
   - drops records owned per `os_claimed_*`, via `binary::is_path_claimed`, or per the Homebrew keg rule (research R3);
   - builds entries per `data-model.md`;
   - inserts them into `db_entries` immediately before the first binary-scan entry (research R4), with `.pc` entries before CMake ones and each group sorted by path.
 
   T014 must pass.
-- [ ] T041 [US1] Implement root-relative path resolution in `waybill-cli/src/scan_fs/package_db/installed_lib/location.rs` (research R3, spec FR-012):
+- [X] T041 [US1] Implement root-relative path resolution in `waybill-cli/src/scan_fs/package_db/installed_lib/location.rs` (research R3, spec FR-012):
   - a lexical join of absolute link targets onto the scan root;
   - `..` normalisation;
   - rejection when a component leaves the root;
@@ -123,14 +123,14 @@
   - a link cycle is rejected.
 
   This must be done before T018.
-- [ ] T042 [US1] Write a no-escape test in `waybill-cli/tests/installed_lib_us1.rs` (spec G1, FR-012).
+- [X] T042 [US1] Write a no-escape test in `waybill-cli/tests/installed_lib_us1.rs` (spec G1, FR-012).
   - **Escaping links:** create `<tmp>/outside/waybill-fixture-x.pc` with `Version: 9.9.9` beside the scan root, and two links to it in `<root>/usr/lib/pkgconfig/`: one relative (`../../../outside/…`) and one absolute (`<tmp>/outside/waybill-fixture-x.pc`, which is outside the root when read root-relatively). Assert that no component has version `9.9.9`, and that the coverage record counts both links as `malformed`.
   - **Positive control:** an absolute link whose root-relative target exists inside the root (`/opt/sdk/lib/pkgconfig/waybill-fixture-y.pc` → `<root>/opt/sdk/lib/pkgconfig/waybill-fixture-y.pc`) is emitted.
 - [ ] T043 [US1] Write an image-mode test in `waybill-cli/tests/installed_lib_image.rs` (spec FR-014, G2). Build an image tarball in a tempdir with the existing helper pattern in `waybill-cli/tests/binding_spdx_conformance.rs::build_image_tarball` (a docker-archive layout). Its single layer holds `opt/sdk/lib/pkgconfig/waybill-fixture-a.pc`, plus `var/lib/dpkg/status` and `var/lib/dpkg/info/waybill-fixture-z.list` owning `usr/lib/x86_64-linux-gnu/pkgconfig/waybill-fixture-z.pc`. Scan it with `--image`, and assert:
   - `pkg:generic/waybill-fixture-a@<v>` is present;
   - no `waybill-fixture-z` component exists;
   - the coverage record shows `owned-by-os-package: 1`.
-- [ ] T020 [US1] Add a Homebrew keg ownership test to `waybill-cli/tests/installed_lib_us1.rs`: a `.pc` under `opt/homebrew/Cellar/waybill-fixture-k/1.0/lib/pkgconfig/`, with `INSTALL_RECEIPT.json` in `Cellar/waybill-fixture-k/1.0/` and a symlink from `opt/homebrew/lib/pkgconfig/waybill-fixture-k.pc`. It must produce no component. The control is the same tree without `INSTALL_RECEIPT.json`, which emits it.
+- [X] T020 [US1] Add a Homebrew keg ownership test to `waybill-cli/tests/installed_lib_us1.rs`: a `.pc` under `opt/homebrew/Cellar/waybill-fixture-k/1.0/lib/pkgconfig/`, with `INSTALL_RECEIPT.json` in `Cellar/waybill-fixture-k/1.0/` and a symlink from `opt/homebrew/lib/pkgconfig/waybill-fixture-k.pc`. It must produce no component. The control is the same tree without `INSTALL_RECEIPT.json`, which emits it.
 
 **Checkpoint**: US1 is shippable alone. It provides versions for every non-OS-owned library, without edges or binary evidence.
 

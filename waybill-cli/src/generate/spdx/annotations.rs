@@ -694,6 +694,10 @@ pub fn annotate_document(
     if let Some(record) = artifacts.git_submodule_coverage {
         push(&mut out, crate::scan_fs::package_db::git_submodule::ANN_GIT_SUBMODULE_COVERAGE, json!(record));
     }
+    // C225 (spec 1531 FR-008).
+    if let Some(record) = artifacts.installed_library_coverage {
+        push(&mut out, crate::scan_fs::package_db::installed_lib::resolve::ANN_INSTALLED_LIBRARY_COVERAGE, json!(record));
+    }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran.
     if let Some(g) = artifacts.go_mod_why {

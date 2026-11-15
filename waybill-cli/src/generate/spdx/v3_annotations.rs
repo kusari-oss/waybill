@@ -706,6 +706,10 @@ fn push_document_fields(
     if let Some(record) = scan.git_submodule_coverage {
         push(out, crate::scan_fs::package_db::git_submodule::ANN_GIT_SUBMODULE_COVERAGE, json!(record));
     }
+    // C225 (spec 1531 FR-008).
+    if let Some(record) = scan.installed_library_coverage {
+        push(out, crate::scan_fs::package_db::installed_lib::resolve::ANN_INSTALLED_LIBRARY_COVERAGE, json!(record));
+    }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran.
     if let Some(g) = scan.go_mod_why {

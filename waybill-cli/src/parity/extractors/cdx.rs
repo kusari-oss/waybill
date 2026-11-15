@@ -1047,6 +1047,10 @@ cdx_anno!(c220_cdx, "waybill:vex-claims-unscoped", document);
 cdx_anno!(c221_cdx, "waybill:requirement-unsatisfied", component);
 // Spec 1530 (#1515): C222 — git-submodule coverage, document scope.
 cdx_anno!(c222_cdx, "waybill:git-submodule-coverage", document);
+// Spec 1531 (#1531): C224 — private-only pkg-config requirements; C225 —
+// installed-library coverage, document scope.
+cdx_anno!(c224_cdx, "waybill:pkg-config-private-requires", component);
+cdx_anno!(c225_cdx, "waybill:installed-library-coverage", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

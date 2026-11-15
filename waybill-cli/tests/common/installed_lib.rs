@@ -164,3 +164,37 @@ pub fn source_files(c: &Value) -> Vec<String> {
     out.sort();
     out
 }
+
+/// Catalog row `row`'s values from all three formats, through the parity
+/// extractors; panics if the formats disagree.
+pub fn row_all_formats(docs: &Docs, row: &str) -> std::collections::BTreeSet<String> {
+    let e = waybill::parity::extractors::EXTRACTORS
+        .iter()
+        .find(|e| e.row_id == row)
+        .unwrap_or_else(|| panic!("no extractor for {row}"));
+    let (a, b, c) = ((e.cdx)(&docs.cdx), (e.spdx23)(&docs.spdx23), (e.spdx3)(&docs.spdx3));
+    assert_eq!(a, b, "{row}: CycloneDX and SPDX 2.3 disagree");
+    assert_eq!(a, c, "{row}: CycloneDX and SPDX 3 disagree");
+    a
+}
+
+/// A dpkg database at `root` owning `owned` (paths relative to the root,
+/// without a leading `/`) through package `pkg`.
+pub fn dpkg_owning(root: &Path, pkg: &str, owned: &[&str]) {
+    write(
+        root,
+        "var/lib/dpkg/status",
+        &format!("Package: {pkg}\nStatus: install ok installed\nVersion: 1.0\nArchitecture: amd64\n"),
+    );
+    let list: String = owned.iter().map(|p| format!("/{p}\n")).collect();
+    write(root, &format!("var/lib/dpkg/info/{pkg}:amd64.list"), &list);
+}
+
+/// The `waybill:installed-library-coverage` record, agreeing across formats.
+pub fn coverage(docs: &Docs) -> Option<Value> {
+    doc_field_all_formats(docs, "waybill:installed-library-coverage")
+}
+
+pub fn skipped(cov: &Value, reason: &str) -> u64 {
+    cov["skipped"][reason].as_u64().unwrap_or(u64::MAX)
+}

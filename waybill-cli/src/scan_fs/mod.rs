@@ -140,6 +140,9 @@ pub struct ScanResult {
     /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage, as its
     /// wire value. `None` when no `.gitmodules` file was seen.
     pub git_submodule_coverage: Option<String>,
+    /// Spec 1531 FR-008 (C225): the installed-library coverage record, as its
+    /// wire value. `None` when no `.pc` or CMake version file was matched.
+    pub installed_library_coverage: Option<String>,
     /// Milestone 161 (T012): workspace-mode detection outcome from
     /// `go.work` at scanned root. Distinct from
     /// `go_transitive_coverage` and `go_graph_completeness` per
@@ -396,6 +399,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         Option<package_db::golang::CacheWarmingResult> = None;
     let mut go_mod_why: Option<package_db::GoModWhyStatus> = None;
     let mut git_submodule_coverage: Option<String> = None;
+    let mut installed_library_coverage: Option<String> = None;
     // Milestone 161 (T012): doc-scope go-workspace-mode signal.
     // Distinct from `go_transitive_coverage` per research.md R1.
     // Carried through ScanResult into the format emitters for the
@@ -505,6 +509,12 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let claimed_paths = scan_result.claimed_paths;
         #[cfg(unix)]
         let claimed_inodes = scan_result.claimed_inodes;
+        // Spec 1531 (#1531): resolved after the binary scan, below.
+        let os_claimed_paths = scan_result.os_claimed_paths;
+        #[cfg(unix)]
+        let os_claimed_inodes = scan_result.os_claimed_inodes;
+        let installed_lib_records = scan_result.installed_lib_records;
+        let binary_start = db_entries.len();
         // Milestone 004 US2 + post-ship claim-skip: generic-binary
         // reader consumes path + inode claim sets populated by dpkg
         // `.list`, apk `R:` / `F:`, and pip RECORD. Binaries whose
@@ -519,6 +529,26 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             exclude_set,
             no_binary_scan,
         ));
+        // Spec 1531 (#1531, research R2/R4): installed-library entries. They
+        // need the OS-package claims (FR-015) and the binary file components
+        // (FR-010), both known only now. They go in ahead of the binary
+        // entries so that an identical embedded-version match merges into
+        // them, keeping their tier and source mechanism.
+        {
+            let claims = package_db::installed_lib::resolve::OsClaims {
+                paths: &os_claimed_paths,
+                #[cfg(unix)]
+                inodes: &os_claimed_inodes,
+            };
+            let (lib_entries, coverage) = package_db::installed_lib::resolve::resolve(
+                installed_lib_records,
+                root,
+                &claims,
+                &db_entries[binary_start..],
+            );
+            installed_library_coverage = coverage.map(|c| c.wire());
+            db_entries.splice(binary_start..binary_start, lib_entries);
+        }
 
         // Record which ecosystems actually had a populated db — each
         // produces its own `aggregate: complete` compositions entry.
@@ -1439,6 +1469,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_cache_warming,
         go_mod_why,
         git_submodule_coverage,
+        installed_library_coverage,
         go_workspace_mode,
         go_toolchains_detected,
         cross_ecosystem_edges_report,

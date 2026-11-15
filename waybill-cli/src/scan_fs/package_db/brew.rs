@@ -50,7 +50,7 @@ use super::PackageDbEntry;
 
 /// Three documented Homebrew install prefixes, in priority order.
 /// Per research §R4 — gated on the `Cellar/` subdir existence.
-const HOMEBREW_PREFIXES: &[&str] = &[
+pub(crate) const HOMEBREW_PREFIXES: &[&str] = &[
     "opt/homebrew",
     "usr/local",
     "home/linuxbrew/.linuxbrew",

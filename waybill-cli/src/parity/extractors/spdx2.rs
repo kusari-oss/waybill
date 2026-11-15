@@ -746,6 +746,9 @@ spdx23_anno!(c220_spdx23, "waybill:vex-claims-unscoped", document);
 spdx23_anno!(c221_spdx23, "waybill:requirement-unsatisfied", component);
 // Spec 1530 (#1515): C222.
 spdx23_anno!(c222_spdx23, "waybill:git-submodule-coverage", document);
+// Spec 1531 (#1531): C224, C225.
+spdx23_anno!(c224_spdx23, "waybill:pkg-config-private-requires", component);
+spdx23_anno!(c225_spdx23, "waybill:installed-library-coverage", document);
 spdx23_anno!(c42_spdx23, "waybill:lifecycle-scope", component);
 spdx23_anno!(c194_spdx23_raw, "waybill:derivation", document);
 spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);

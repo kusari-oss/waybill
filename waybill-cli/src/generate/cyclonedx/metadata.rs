@@ -203,6 +203,8 @@ pub struct MetadataExtras<'a> {
     pub nix_closure_degraded: Option<&'a str>,
     /// C222 (spec 1530) — the git-submodule coverage record.
     pub git_submodule_coverage: Option<&'a str>,
+    /// C225 (spec 1531) — the installed-library coverage record.
+    pub installed_library_coverage: Option<&'a str>,
     /// C208 (m1366, #1365) — the closure ecosystem identity pass's record.
     pub closure_ecosystem_identity: Option<&'a str>,
     /// C209 (m1367, #1371) — the CPE synthesis coverage record.
@@ -297,6 +299,7 @@ pub fn build_metadata(
         nix_eval_degraded,
         nix_closure_degraded,
         git_submodule_coverage,
+        installed_library_coverage,
         closure_ecosystem_identity,
         cpe_coverage,
         closure_graph_admission,
@@ -512,6 +515,14 @@ pub fn build_metadata(
     if let Some(record) = git_submodule_coverage {
         properties.push(json!({
             "name": crate::scan_fs::package_db::git_submodule::ANN_GIT_SUBMODULE_COVERAGE,
+            "value": record,
+        }));
+    }
+    // C225 (spec 1531 FR-008): present only when a `.pc` or CMake version
+    // file was matched.
+    if let Some(record) = installed_library_coverage {
+        properties.push(json!({
+            "name": crate::scan_fs::package_db::installed_lib::resolve::ANN_INSTALLED_LIBRARY_COVERAGE,
             "value": record,
         }));
     }
