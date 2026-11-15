@@ -40,6 +40,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   says so, instead of an invented `@unknown`. SHA-384 has no representation
   yet and is still dropped.
 
+- **A `find_package` version is a requirement, not a resolution (#1520).**
+  `find_package(X 3.9)` declares a minimum, but it emitted
+  `pkg:generic/x@3.9` as if 3.9 were the version in use. The PURL no longer
+  carries a version. The requirement goes in `waybill:requirement-ranges`:
+  `>=3.9`, `==3.9` with `EXACT`, and `>=3.9, <=4.0` or `>=3.9, <4.0` for
+  CMake version ranges. Every `find_package` component, with or without a
+  version, is now design-tier with a `waybill:unresolved-reason`, so a
+  document with one reports `waybill:graph-completeness: partial`. A
+  requirement and a `FetchContent` of the same package in the same
+  directory still collapse into the fetch.
+
 ## [0.16.0] - 2026-11-14
 
 A minor. It adds surface: `--root-cpe`, `--cpe-map`, `--no-hackage-lookup`, the

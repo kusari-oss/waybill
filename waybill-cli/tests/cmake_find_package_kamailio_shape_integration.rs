@@ -103,9 +103,14 @@ fn kamailio_shape_emits_expected_cmake_components() {
     let openssl = fp
         .iter()
         .find(|c| {
-            c.get("purl").and_then(|v| v.as_str()) == Some("pkg:generic/openssl@1.1.0")
+            c.get("purl").and_then(|v| v.as_str()) == Some("pkg:generic/openssl")
         })
-        .expect("expected pkg:generic/openssl@1.1.0 in cmake-find-package emissions");
+        .expect("expected pkg:generic/openssl in cmake-find-package emissions");
+    // #1520: the version is a requirement, not a resolution.
+    assert_eq!(
+        property_value(openssl, "waybill:requirement-ranges"),
+        Some(r#"[">=1.1.0"]"#),
+    );
     assert_eq!(
         property_value(openssl, "waybill:cmake-find-package-name"),
         Some("OpenSSL"),

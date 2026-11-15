@@ -114,10 +114,11 @@ fn cmake_walker_symlink_cycle_bounded() {
         .and_then(|v| v.as_array())
         .unwrap_or(&Vec::new())
         .iter()
-        .filter(|c| c.get("purl").and_then(|v| v.as_str()) == Some("pkg:generic/foo@1.0"))
+        // #1520: `find_package(Foo 1.0)` is a requirement; the PURL is versionless.
+        .filter(|c| c.get("purl").and_then(|v| v.as_str()) == Some("pkg:generic/foo"))
         .count();
     assert_eq!(
         comps, 1,
-        "expected exactly one pkg:generic/foo@1.0 component (via safe_walk's dedup on the symlink loop)"
+        "expected exactly one pkg:generic/foo component (via safe_walk's dedup on the symlink loop)"
     );
 }

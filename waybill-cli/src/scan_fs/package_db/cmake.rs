@@ -61,7 +61,9 @@ use crate::scan_fs::walk_registry::{
 struct FindPackageHit {
     lowercased_name: String,
     original_casing: String,
-    declared_version: Option<String>,
+    /// The version requirement the call states, as a range (#1520):
+    /// `>=3.9`, `==2.1` with `EXACT`, or `>=3.9, <=4.0` for `3.9...4.0`.
+    requirement: Option<String>,
     source_path: String,
 }
 
@@ -73,53 +75,6 @@ struct PkgCheckHit {
     #[allow(dead_code)] // Reserved for future case-preservation traceability.
     original_casing: String,
     source_path: String,
-}
-
-/// Milestone 155 — pick the highest declared version across a group of
-/// same-name `find_package` sites (Q1 clarification: highest declared
-/// version wins). Component-wise numeric SemVer with zero-padding when
-/// every part parses as `u64`; otherwise lexicographic with a
-/// `tracing::warn` diagnostic. Returns `None` when all inputs are None.
-fn pick_highest_version(versions: &[Option<String>]) -> Option<String> {
-    let some_versions: Vec<&String> = versions.iter().filter_map(|v| v.as_ref()).collect();
-    if some_versions.is_empty() {
-        return None;
-    }
-    if some_versions.len() == 1 {
-        return Some(some_versions[0].clone());
-    }
-    // Check if EVERY segment of EVERY version parses as u64.
-    let parsed: Option<Vec<Vec<u64>>> = some_versions
-        .iter()
-        .map(|v| {
-            v.split('.')
-                .map(|seg| seg.parse::<u64>().ok())
-                .collect::<Option<Vec<u64>>>()
-        })
-        .collect();
-    if let Some(mut all_numeric) = parsed {
-        // Zero-pad to the same length for component-wise comparison.
-        let max_len = all_numeric.iter().map(|v| v.len()).max().unwrap_or(0);
-        for v in all_numeric.iter_mut() {
-            v.resize(max_len, 0);
-        }
-        // Find the index of the largest.
-        let (best_idx, _) = all_numeric
-            .iter()
-            .enumerate()
-            .max_by(|a, b| a.1.cmp(b.1))
-            .expect("some_versions non-empty");
-        return Some(some_versions[best_idx].clone());
-    }
-    // Fallback: lexicographic with a warn diagnostic.
-    tracing::warn!(
-        versions = ?some_versions,
-        "milestone-155: mixed-format version strings; lexicographic ordering used — highest may not be semantically correct"
-    );
-    some_versions
-        .iter()
-        .max()
-        .map(|s| (*s).clone())
 }
 
 /// Milestone 664 US2 T056: marker-detect state. CMake's discovery
@@ -274,7 +229,7 @@ fn parse_find_package_calls(content: &str, source_path: &str) -> Vec<FindPackage
     static FIND_PACKAGE_V155: OnceLock<Regex> = OnceLock::new();
     let re = FIND_PACKAGE_V155.get_or_init(|| {
         Regex::new(
-            r"(?im)^[^#\n]*?\bfind_package\s*\(\s*([A-Za-z0-9_:.+-]+)(?:\s+([0-9][A-Za-z0-9._-]*))?",
+            r"(?im)^[^#\n]*?\bfind_package\s*\(\s*([A-Za-z0-9_:.+-]+)(?:\s+([0-9][A-Za-z0-9._-]*(?:<[0-9][A-Za-z0-9._-]*)?))?([^)]*)",
         )
         .expect("find_package v155 regex compiles")
     });
@@ -300,17 +255,39 @@ fn parse_find_package_calls(content: &str, source_path: &str) -> Vec<FindPackage
             Some(m) => m.as_str(),
             None => continue,
         };
-        let version = cap.get(2).map(|m| m.as_str().to_string());
+        let exact = cap
+            .get(3)
+            .is_some_and(|m| m.as_str().split_whitespace().any(|t| t == "EXACT"));
+        let requirement = cap.get(2).map(|m| find_package_requirement(m.as_str(), exact));
         let lowercased = name_raw.to_lowercase();
         out.push(FindPackageHit {
             lowercased_name: lowercased,
             original_casing: name_raw.to_string(),
-            declared_version: version,
+            requirement,
             source_path: source_path.to_string(),
         });
     }
     out
 }
+
+/// The range a `find_package` version argument states (#1520). A bare
+/// version is a minimum unless `EXACT` follows; `min...max` includes `max`
+/// and `min...<max` excludes it (CMake 3.19 version ranges).
+fn find_package_requirement(version: &str, exact: bool) -> String {
+    match version.split_once("...") {
+        Some((min, max)) => match max.strip_prefix('<') {
+            Some(max) => format!(">={min}, <{max}"),
+            None => format!(">={min}, <={max}"),
+        },
+        None if exact => format!("=={version}"),
+        None => format!(">={version}"),
+    }
+}
+
+/// C151 reason for every `find_package` component (#1520): the call states
+/// a requirement, and which version satisfies it is decided at build time.
+pub(crate) const CMAKE_FIND_PACKAGE_REASON: &str =
+    "find_package() states a requirement; the version found at build time is not in source";
 
 /// Milestone 155 — parse `pkg_check_modules` / `pkg_search_module` call
 /// sites. Returns one hit per module in each call's module list.
@@ -383,29 +360,29 @@ fn parse_pkg_check_modules_calls(content: &str, source_path: &str) -> Vec<PkgChe
 }
 
 /// Milestone 155 — emit `PackageDbEntry` instances for `find_package`
-/// hits, applying the Q1 highest-declared-version-wins rule per group
-/// of same-lowercased-name hits. Emits ONE entry per input hit (with
-/// the group's chosen winning version) so downstream milestone-148
-/// source-file-paths union works naturally.
+/// hits: one entry per call site, so the milestone-148 source-file-paths
+/// union merges them by PURL.
+///
+/// #1520: a `find_package` version is a requirement, not a resolution, so
+/// the PURL carries no version. Every call site's range is recorded in
+/// `waybill:requirement-ranges`, and the component is design-tier with a
+/// C151 reason. Before #1520 the highest declared minimum became the
+/// component version (milestone 155, Q1).
 fn emit_find_package_entries(hits: Vec<FindPackageHit>) -> Vec<PackageDbEntry> {
-    use std::collections::BTreeMap;
+    use std::collections::{BTreeMap, BTreeSet};
     let mut groups: BTreeMap<String, Vec<FindPackageHit>> = BTreeMap::new();
     for hit in hits {
         groups.entry(hit.lowercased_name.clone()).or_default().push(hit);
     }
     let mut out = Vec::new();
     for (lowercased_name, group) in groups {
-        let versions: Vec<Option<String>> =
-            group.iter().map(|h| h.declared_version.clone()).collect();
-        let winner_version = pick_highest_version(&versions);
-        let purl_str = match &winner_version {
-            Some(v) => format!(
-                "pkg:generic/{}@{}",
-                encode_purl_segment(&lowercased_name),
-                encode_purl_segment(v)
-            ),
-            None => format!("pkg:generic/{}", encode_purl_segment(&lowercased_name)),
-        };
+        let ranges: Vec<String> = group
+            .iter()
+            .filter_map(|h| h.requirement.clone())
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        let purl_str = format!("pkg:generic/{}", encode_purl_segment(&lowercased_name));
         for hit in group {
             let purl = match Purl::new(&purl_str) {
                 Ok(p) => p,
@@ -413,13 +390,19 @@ fn emit_find_package_entries(hits: Vec<FindPackageHit>) -> Vec<PackageDbEntry> {
             };
             let mut entry = build_cmake_entry(
                 &lowercased_name,
-                winner_version.as_deref().unwrap_or(""),
+                "",
                 &hit.source_path,
                 purl,
                 None,
                 None,
                 false,
                 "cmake-find-package",
+            );
+            entry.requirement_ranges = ranges.clone();
+            entry.sbom_tier = Some("design".to_string());
+            entry.extra_annotations.insert(
+                "waybill:unresolved-reason".to_string(),
+                serde_json::Value::String(CMAKE_FIND_PACKAGE_REASON.to_string()),
             );
             // FR-008: preserve original casing when it differs from the
             // lowercased PURL name — parity-bridging annotation.
@@ -429,20 +412,6 @@ fn emit_find_package_entries(hits: Vec<FindPackageHit>) -> Vec<PackageDbEntry> {
                     serde_json::json!(hit.original_casing),
                 );
             }
-            // Preserve per-site version forensics when the site declared
-            // a different version than the group's chosen winner.
-            if let Some(site_v) = hit.declared_version.as_deref() {
-                if winner_version.as_deref() != Some(site_v) {
-                    entry.raw_version = Some(site_v.to_string());
-                }
-            }
-            // R10 correction: leave evidence_kind = None (matches
-            // existing cmake.rs FetchContent/ExternalProject/vendored
-            // precedent). The canonical evidence-kind enum in
-            // cyclonedx/builder.rs does not admit a "declared" value
-            // and rejects entries carrying non-enum strings. The
-            // manifest-declared semantic is already carried by
-            // sbom_tier = "source" set inside build_cmake_entry.
             out.push(entry);
         }
     }
@@ -1515,7 +1484,7 @@ add_subdirectory(tests)"#,
     }
 
     #[test]
-    fn find_package_with_version_emits_at_version() {
+    fn find_package_with_version_is_a_minimum_range() {
         let tmp = tempfile::tempdir().unwrap();
         std::fs::write(
             tmp.path().join("CMakeLists.txt"),
@@ -1525,7 +1494,8 @@ add_subdirectory(tests)"#,
         let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1);
-        assert_eq!(fp[0].purl.as_str(), "pkg:generic/openssl@1.1.0");
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/openssl");
+        assert_eq!(fp[0].requirement_ranges, [">=1.1.0"]);
         assert_eq!(
             fp[0].extra_annotations
                 .get("waybill:cmake-find-package-name")
@@ -1545,7 +1515,8 @@ add_subdirectory(tests)"#,
         let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1);
-        assert_eq!(fp[0].purl.as_str(), "pkg:generic/boost@1.75.0");
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/boost");
+        assert_eq!(fp[0].requirement_ranges, [">=1.75.0"]);
         assert_eq!(
             fp[0].extra_annotations
                 .get("waybill:cmake-find-package-name")
@@ -1555,7 +1526,7 @@ add_subdirectory(tests)"#,
     }
 
     #[test]
-    fn find_package_multiple_versions_highest_wins() {
+    fn find_package_multiple_versions_record_every_range() {
         let tmp = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(tmp.path().join("cmake")).unwrap();
         std::fs::write(
@@ -1570,12 +1541,13 @@ add_subdirectory(tests)"#,
         .unwrap();
         let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
-        // Two emissions (one per site) — but both carry the same
-        // winning-version PURL so downstream milestone-148 union
-        // merges them via same-canonical-PURL matching.
+        // Two emissions (one per site), with the same versionless PURL
+        // so the milestone-148 union merges them; each carries both
+        // sites' ranges (#1520).
         assert_eq!(fp.len(), 2);
         for e in &fp {
-            assert_eq!(e.purl.as_str(), "pkg:generic/openssl@3.0");
+            assert_eq!(e.purl.as_str(), "pkg:generic/openssl");
+            assert_eq!(e.requirement_ranges, [">=1.1.0", ">=3.0"]);
         }
     }
 
@@ -1597,11 +1569,8 @@ add_subdirectory(tests)"#,
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 2);
         for e in &fp {
-            assert_eq!(
-                e.purl.as_str(),
-                "pkg:generic/openssl@1.1.0",
-                "versioned declaration wins over version-less"
-            );
+            assert_eq!(e.purl.as_str(), "pkg:generic/openssl");
+            assert_eq!(e.requirement_ranges, [">=1.1.0"], "the version-less site adds no range");
         }
     }
 
@@ -1719,7 +1688,8 @@ add_subdirectory(tests)"#,
         let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1);
-        assert_eq!(fp[0].purl.as_str(), "pkg:generic/zlib@1.2.11");
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/zlib");
+        assert_eq!(fp[0].requirement_ranges, [">=1.2.11"]);
         assert!(
             !fp[0]
                 .extra_annotations
@@ -1756,7 +1726,8 @@ add_subdirectory(tests)"#,
         let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1, "single component per parent package; NO sub-component emission");
-        assert_eq!(fp[0].purl.as_str(), "pkg:generic/boost@1.75.0");
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/boost");
+        assert_eq!(fp[0].requirement_ranges, [">=1.75.0"]);
     }
 
     // ============================================================
@@ -1906,7 +1877,8 @@ add_subdirectory(tests)"#,
         let entries = read(tmp.path(), false, &empty_exclude_set());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1);
-        assert_eq!(fp[0].purl.as_str(), "pkg:generic/libev@1.4.0");
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/libev");
+        assert_eq!(fp[0].requirement_ranges, [">=1.4.0"]);
         assert!(
             fp[0]
                 .source_path
@@ -2023,5 +1995,40 @@ add_subdirectory(tests)"#,
         let purls: Vec<&str> = out.iter().map(|e| e.purl.as_str()).collect();
         assert_eq!(purls, ["pkg:generic/waybill-fixture-branchy", "pkg:generic/waybill-fixture-same@3.0.0"]);
         assert_eq!(out[0].sbom_tier.as_deref(), Some("design"));
+    }
+
+    /// #1520: the issue's repro, plus both CMake version-range forms.
+    #[test]
+    fn s1520_find_package_versions_are_requirements_not_resolutions() {
+        let out = s1517_read(
+            "cmake_minimum_required(VERSION 3.25)\nproject(p)\n\
+             find_package(WaybillFixtureLib 3.9 REQUIRED)\n\
+             find_package(WaybillFixtureExact 2.1 EXACT REQUIRED)\n\
+             find_package(WaybillFixtureRange 3.9...4.0)\n\
+             find_package(WaybillFixtureHalfOpen 3.9...<4.0 CONFIG)\n\
+             find_package(WaybillFixtureBare REQUIRED)\n",
+        );
+        let got: Vec<(&str, Vec<String>, Option<&str>)> = out
+            .iter()
+            .map(|e| (e.purl.as_str(), e.requirement_ranges.clone(), e.sbom_tier.as_deref()))
+            .collect();
+        let design = Some("design");
+        assert_eq!(
+            got,
+            vec![
+                ("pkg:generic/waybillfixturebare", vec![], design),
+                ("pkg:generic/waybillfixtureexact", vec!["==2.1".to_string()], design),
+                ("pkg:generic/waybillfixturehalfopen", vec![">=3.9, <4.0".to_string()], design),
+                ("pkg:generic/waybillfixturelib", vec![">=3.9".to_string()], design),
+                ("pkg:generic/waybillfixturerange", vec![">=3.9, <=4.0".to_string()], design),
+            ]
+        );
+        for e in &out {
+            assert_eq!(e.version, "");
+            assert_eq!(
+                e.extra_annotations.get("waybill:unresolved-reason").and_then(|v| v.as_str()),
+                Some(CMAKE_FIND_PACKAGE_REASON),
+            );
+        }
     }
 }

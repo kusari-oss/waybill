@@ -49,6 +49,14 @@ Locked reason strings per reader. Byte-stable within a waybill build. Display-on
 
 Emitted when a `${VAR}` in `URL`, `GIT_REPOSITORY` or `GIT_TAG` has no single literal `set()` in the same file. Such a fetch was previously emitted as `pkg:generic/<name>@unknown`, a source-tier component with an invented version.
 
+## Amendment — 2026-11-15 (issue #1520)
+
+| Reader | Reason string |
+|---|---|
+| **cmake** (`find_package`) | `find_package() states a requirement; the version found at build time is not in source` |
+
+Every `find_package` component is now design-tier, and a version argument is recorded as a range in `waybill:requirement-ranges` (`>=X`, `==X` with `EXACT`, `>=X, <=Y` or `>=X, <Y` for a CMake version range). Previously the highest declared minimum became the component version (milestone 155, Q1).
+
 ## Regression guard — NuGet (existing)
 
 | Reader | Reason string (unchanged) |

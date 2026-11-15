@@ -32,7 +32,7 @@
       "type": "simplelicensing_LicenseExpression"
     },
     {
-      "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in waybill:sbom-tier annotations.",
+      "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: design, pre-build. Per-component scope detail in waybill:sbom-tier annotations.",
       "creationInfo": "_:creation-info",
       "dataLicense": "https://spdx.org/licenses/CC0-1.0",
       "name": "Waybill source scan (identity unavailable)",
@@ -49,6 +49,7 @@
         "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/pkg-root-JTCRM6TWPTUATH5X"
       ],
       "software_sbomType": [
+        "design",
         "source"
       ],
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/sbom",
@@ -158,6 +159,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/anno-3LHXSAJRRUEJRQ6K",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"find_package() states a requirement; the version found at build time is not in source\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/pkg-JCUJXG5KKFFE45OL",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/anno-4MFNDUL2EJ4PFMM4",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/pkg-3ECZZDDDHD3O6FKS",
@@ -167,7 +176,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/anno-5ESNNJYTDDV6OKZA",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/pkg-JCUJXG5KKFFE45OL",
       "type": "Annotation"
     },
@@ -239,7 +248,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/anno-EFHKOK3QW4IMEQS4",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"partial\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF",
       "type": "Annotation"
     },
@@ -352,6 +361,14 @@
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/anno-MPVYNDEK6GNLRLCD",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF/anno-MVSJNKJPCFZTHVYE",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"transitive-edges-unresolvable: generic\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VYIG7WSKYWILQIHJJRK22GIF",
       "type": "Annotation"
     },

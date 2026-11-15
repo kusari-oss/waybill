@@ -5,10 +5,12 @@
 //! - `cmake/modules/FindOpenSSL.cmake` (depth-3) contains
 //!   `find_package(OpenSSL 3.0)`.
 //!
-//! Milestone-155's Q1 highest-version-wins consolidation fires across
-//! the depths that milestone-156's extended walker now sees together.
-//! Asserts one merged `pkg:generic/openssl@3.0` component with both
-//! source paths in `waybill:source-files`.
+//! Consolidation fires across the depths that milestone-156's extended
+//! walker now sees together. Asserts one merged `pkg:generic/openssl`
+//! component with both source paths in `waybill:source-files`. Since
+//! #1520 each `find_package` version is a requirement, so the merged
+//! component is versionless and carries both ranges; before it, the
+//! highest minimum (`3.0`) became the version (milestone 155, Q1).
 
 #![cfg(test)]
 #![allow(clippy::unwrap_used)]
@@ -63,13 +65,13 @@ fn cmake_walker_cross_depth_version_consolidation() {
         .filter(|c| {
             c.get("purl")
                 .and_then(|v| v.as_str())
-                .is_some_and(|p| p == "pkg:generic/openssl@3.0")
+                .is_some_and(|p| p == "pkg:generic/openssl")
         })
         .collect();
     assert_eq!(
         openssls.len(),
         1,
-        "expected exactly ONE pkg:generic/openssl@3.0 component after Q1 highest-version-wins consolidation across depths; got {}",
+        "expected exactly ONE pkg:generic/openssl component after consolidation across depths; got {}",
         openssls.len()
     );
 
@@ -84,6 +86,11 @@ fn cmake_walker_cross_depth_version_consolidation() {
         .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("waybill:source-files"))
         .and_then(|p| p.get("value").and_then(|v| v.as_str()))
         .expect("waybill:source-files annotation present");
+    let ranges = props
+        .iter()
+        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("waybill:requirement-ranges"))
+        .and_then(|p| p.get("value").and_then(|v| v.as_str()));
+    assert_eq!(ranges, Some(r#"[">=1.1.0",">=3.0"]"#), "#1520: both sites' ranges");
     assert!(
         source_files_prop.contains("CMakeLists.txt"),
         "source-files should include depth-0 CMakeLists.txt; got {source_files_prop:?}"

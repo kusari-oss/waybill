@@ -70,8 +70,11 @@ fn property_value<'a>(component: &'a Value, key: &str) -> Option<&'a str> {
 fn cmake_walker_depth3_emits_find_package() {
     let doc = run_scan(&fixture_root());
 
-    let foo = find_component(&doc, "pkg:generic/foo@2.5")
-        .expect("expected pkg:generic/foo@2.5 component from depth-3 find_package");
+    // #1520: `find_package(Foo 2.5)` is a requirement, so the PURL is
+    // versionless and the version is a range.
+    let foo = find_component(&doc, "pkg:generic/foo")
+        .expect("expected pkg:generic/foo component from depth-3 find_package");
+    assert_eq!(property_value(foo, "waybill:requirement-ranges"), Some(r#"[">=2.5"]"#));
     assert_eq!(
         property_value(foo, "waybill:source-mechanism"),
         Some("cmake-find-package")
