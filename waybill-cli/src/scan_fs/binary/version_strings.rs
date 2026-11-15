@@ -5,7 +5,7 @@
 //! |-----------|--------------------------------------------------------------|
 //! | OpenSSL   | `OpenSSL X.Y.Z[letter] [DD MMM YYYY]`                        |
 //! | BoringSSL | `BoringSSL <40-char-sha>`                                    |
-//! | zlib      | `deflate X.Y.Z[letter] Copyright ...`                        |
+//! | zlib      | ` deflate X.Y.Z[letter] Copyright ...` (one leading space)  |
 //! | SQLite    | `SQLite version X.Y.Z[.W]`                                   |
 //! | curl      | `libcurl/X.Y.Z`                                              |
 //! | PCRE      | `PCRE X.Y YYYY-MM-DD`                                        |
@@ -126,6 +126,21 @@ fn match_prefix(
     // prevents mid-string false positives that happen to contain a
     // library name substring.
     let at_boundary = pos == 0 || region[pos - 1] == 0;
+
+    // zlib — "deflate ". Its literal is " deflate X.Y.Z Copyright ...",
+    // so one leading space at the start of a string is accepted (#1525).
+    let after_one_space =
+        pos >= 1 && region[pos - 1] == b' ' && (pos == 1 || region[pos - 2] == 0);
+    if (at_boundary || after_one_space) && window.starts_with(b"deflate ") {
+        let tail = &region[pos + 8..];
+        if let Some(v) = parse_zlib_version(tail) {
+            return Some(EmbeddedVersionMatch {
+                library: CuratedLibrary::Zlib,
+                version: v,
+            });
+        }
+    }
+
     if !at_boundary {
         return None;
     }
@@ -147,16 +162,6 @@ fn match_prefix(
             return Some(EmbeddedVersionMatch {
                 library: CuratedLibrary::BoringSsl,
                 version: sha,
-            });
-        }
-    }
-    // zlib — "deflate "
-    if window.starts_with(b"deflate ") {
-        let tail = &region[pos + 8..];
-        if let Some(v) = parse_zlib_version(tail) {
-            return Some(EmbeddedVersionMatch {
-                library: CuratedLibrary::Zlib,
-                version: v,
             });
         }
     }
@@ -614,6 +619,34 @@ mod tests {
         assert_eq!(scan(&with_copyright)[0].library, CuratedLibrary::Zlib);
         assert_eq!(scan(&with_copyright)[0].version, "1.2.13");
         assert!(scan(&without).is_empty());
+    }
+
+    /// #1525: zlib's literal is `" deflate X.Y.Z Copyright ..."`, with a
+    /// leading space, so the byte before `deflate` is never NUL. These
+    /// bytes are copied from Nix builds of zlib 1.3.2 and 1.3.1
+    /// (`libz.1.3.2.dylib`, `libz.1.3.1.dylib`), NUL to NUL.
+    #[test]
+    fn s1525_zlib_real_literal_with_leading_space() {
+        let real_132 =
+            b"\0 deflate 1.3.2 Copyright 1995-2026 Jean-loup Gailly and Mark Adler \0";
+        let real_131 =
+            b"\0 deflate 1.3.1 Copyright 1995-2024 Jean-loup Gailly and Mark Adler \0";
+        for (bytes, want) in [(&real_132[..], "1.3.2"), (&real_131[..], "1.3.1")] {
+            let hits = scan(bytes);
+            assert_eq!(hits.len(), 1, "{want}: {hits:?}");
+            assert_eq!(hits[0].library, CuratedLibrary::Zlib);
+            assert_eq!(hits[0].version, want);
+        }
+    }
+
+    /// #1525: only a single leading space at the start of a string is
+    /// accepted; `deflate` in the middle of other text still is not.
+    #[test]
+    fn s1525_zlib_mid_string_still_rejected() {
+        let two_spaces = b"\0  deflate 1.3.2 Copyright 1995-2026 \0";
+        let mid_text = b"\0see deflate 1.3.2 Copyright 1995-2026 \0";
+        assert!(scan(two_spaces).is_empty());
+        assert!(scan(mid_text).is_empty());
     }
 
     #[test]
