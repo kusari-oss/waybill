@@ -23,6 +23,12 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:installed-library-coverage\",\"value\":\"{\\\"cmake-version\\\":{\\\"emitted\\\":0,\\\"read\\\":1},\\\"pkg-config\\\":{\\\"emitted\\\":0,\\\"read\\\":1},\\\"skipped\\\":{\\\"computed-version\\\":0,\\\"malformed\\\":0,\\\"no-version\\\":0,\\\"owned-by-os-package\\\":2,\\\"unrecognised-location\\\":0,\\\"unresolved-version\\\":0},\\\"unresolved-requires\\\":0,\\\"version-disagreements\\\":0}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-inventory-skipped-oversize\",\"value\":\"1\"}"
     },
     {
