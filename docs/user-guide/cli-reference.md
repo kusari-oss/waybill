@@ -765,7 +765,7 @@ Exactly one of `--path` or `--image` is required.
 | `--registry-credentials-dir <PATH>` | path | (unset) | Directory containing Docker-format registry credentials (issue #235; for in-cluster operation). |
 | `--output <[FMT=]PATH>` | string (repeatable) | per-format default | Output path override. |
 | `--format <FORMAT>` | enum (repeatable, comma-separated) | `cyclonedx-json` | Output format(s). |
-| `--max-file-size <BYTES>` | u64 | `268435456` (256 MB) | Skip files larger than this. |
+| `--max-file-size <BYTES>` | u64 | `268435456` (256 MB) | Do not hash artifacts larger than this; they are still identified. |
 | `--no-hashes` | bool | off | Omit per-component content hashes. |
 | `--deb-codename <VALUE>` | string | auto-detect | Override `distro=` qualifier on deb PURLs. |
 | `--no-package-db` | bool | off | Skip installed-package DB reads (dpkg/apk). |
@@ -1016,8 +1016,10 @@ field positions and CISA SBOM Types vocab.
 
 ### `--max-file-size <BYTES>`
 
-Maximum file size to hash, in bytes. Larger files are skipped. Default
-`268435456` (256 MB) covers the largest realistic package artifact.
+Maximum file size to hash, in bytes. A package artifact larger than this
+(a `.whl`, `.deb`, `.crate`, npm `.tgz` or Go module `.zip`) is still
+identified from its path and emitted, without a content hash, and a WARN
+names it with its size. Default `268435456` (256 MB).
 
 ### `--no-hashes`
 

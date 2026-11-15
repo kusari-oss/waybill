@@ -28,12 +28,17 @@ pub const DEFAULT_SIZE_CAP_BYTES: u64 = 256 * 1024 * 1024;
 
 /// A single artifact the walker found: absolute path, size on disk,
 /// SHA-256 content hash, and file modification time.
+///
+/// `hash` is `None` when the file is larger than the walker's size cap.
+/// The cap bounds hashing only: such an artifact is still returned, so
+/// callers that identify packages from the path (wheel, `.deb`, `.crate`
+/// filenames) still see it (#1528).
 #[allow(dead_code)] // size + mtime are diagnostic fields populated for downstream use; not consumed by the current trace flow.
 #[derive(Clone, Debug)]
 pub struct HashedArtifact {
     pub path: PathBuf,
     pub size: u64,
-    pub hash: ContentHash,
+    pub hash: Option<ContentHash>,
     pub mtime: SystemTime,
 }
 
@@ -44,7 +49,7 @@ pub struct HashedArtifact {
 /// * `since` — if `Some(t)`, skip any file whose mtime precedes `t`.
 ///   Used by the post-trace artifact scan to ignore pre-existing files
 ///   on disk. `None` returns every matching file.
-/// * `size_cap` — files larger than this are skipped with a debug log.
+/// * `size_cap` — files larger than this are returned without a hash.
 pub fn walk_and_hash(
     root: &Path,
     since: Option<SystemTime>,
@@ -77,9 +82,15 @@ pub fn walk_and_hash(
                 tracing::debug!(
                     path = %path.display(),
                     size = meta.len(),
-                    "walk_and_hash: skipping oversized artifact"
+                    size_cap,
+                    "walk_and_hash: artifact exceeds the size cap; not hashing it"
                 );
-                return None;
+                return Some(HashedArtifact {
+                    path: path.clone(),
+                    size: meta.len(),
+                    hash: None,
+                    mtime,
+                });
             }
             let hex = match sha256_file_hex(path, size_cap) {
                 Ok(h) => h,
@@ -98,7 +109,7 @@ pub fn walk_and_hash(
             Some(HashedArtifact {
                 path: path.clone(),
                 size: meta.len(),
-                hash,
+                hash: Some(hash),
                 mtime,
             })
         })
@@ -162,7 +173,7 @@ mod tests {
         assert_eq!(out.len(), 1);
         // ContentHash renders as a hex-encoded digest in its Display;
         // we compare via its underlying string representation.
-        let h = &out[0].hash;
+        let h = out[0].hash.as_ref().expect("under-cap artifact is hashed");
         assert!(
             format!("{h:?}").contains(expected) || format!("{h}").contains(expected),
             "hash should match NIST sha256 vector for 'abc': {h:?}"
@@ -183,12 +194,23 @@ mod tests {
     }
 
     #[test]
-    fn size_cap_drops_oversized_files() {
+    fn size_cap_skips_hashing_but_keeps_the_artifact() {
         let dir = tempfile::tempdir().expect("tempdir");
         std::fs::write(dir.path().join("big-1.0.0.crate"), vec![0u8; 4096]).unwrap();
+        // Control: a file under the cap in the same walk is hashed.
+        std::fs::write(dir.path().join("small-1.0.0.crate"), b"abc").unwrap();
 
-        let out = walk_and_hash(dir.path(), None, 1024); // cap below file size
-        assert!(out.is_empty(), "oversized file should be skipped");
+        let out = walk_and_hash(dir.path(), None, 1024); // cap below the big file
+        assert_eq!(out.len(), 2, "both artifacts must be returned: {out:?}");
+        let by_name = |n: &str| {
+            out.iter()
+                .find(|a| a.path.file_name().unwrap() == n)
+                .unwrap_or_else(|| panic!("{n} missing from {out:?}"))
+        };
+        let big = by_name("big-1.0.0.crate");
+        assert!(big.hash.is_none(), "oversized artifact must not be hashed");
+        assert_eq!(big.size, 4096);
+        assert!(by_name("small-1.0.0.crate").hash.is_some());
     }
 
     #[test]

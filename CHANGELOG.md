@@ -44,6 +44,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A package artifact larger than `--max-file-size` is still identified
+  (#1528).** The artifact walker dropped any file over the limit before its
+  path was resolved, so a 300 MB wheel produced no component and left only
+  the file-inventory oversize counter behind. The limit now bounds hashing
+  only: an oversized `.whl`, `.deb`, `.crate`, npm `.tgz` or Go module `.zip`
+  is emitted from its path without a content hash, and a WARN names its path
+  and size.
+
 - **An unpacked wheel scanned at its own root is identified (#1529).** The
   dist-info reader looked only inside `site-packages` directories, so a tree
   whose top level holds `<name>-<version>.dist-info/` gave

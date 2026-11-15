@@ -1001,8 +1001,8 @@ pub struct ScanArgs {
     )]
     pub format: Vec<String>,
 
-    /// Maximum file size to hash (bytes). Larger files are skipped. The
-    /// default (256 MB) covers the largest realistic package artifact.
+    /// Maximum file size to hash (bytes). A larger package artifact is
+    /// still identified from its path and emitted without a content hash.
     #[arg(long, default_value_t = scan_fs::walker::DEFAULT_SIZE_CAP_BYTES)]
     pub max_file_size: u64,
 

@@ -1254,7 +1254,7 @@ fn scan_artifact_dirs(
             agg.record_synthetic_file_op(
                 a.path.to_string_lossy().into_owned(),
                 a.size,
-                Some(a.hash),
+                a.hash,
                 ts,
             );
             added += 1;
