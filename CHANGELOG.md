@@ -33,6 +33,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   matched. A Nix-built `libz.1.3.2.dylib` now gives `pkg:generic/zlib@1.3.2`
   instead of an unversioned `pkg:generic/zlib`.
 
+- **Nested Conan and vcpkg manifests are read, and so is `self.requires()`
+  (#1521).** Both readers opened only the manifest at the scan root, although
+  the walker found every nested one. They now read each `conanfile.txt`,
+  `conanfile.py` and `vcpkg.json` the walker dispatches. A vcpkg port
+  manifest in a registry tree (`ports/<name>/vcpkg.json`) is skipped and
+  counted in the log. `conanfile.py` now also yields the Conan 2 method form:
+  `self.requires()`, `self.tool_requires()` / `self.build_requires()` (build
+  scope) and `self.test_requires()` (test scope), with a literal argument. A
+  `self.requires()` nested under a conditional or loop is optional, with
+  `waybill:optional-derivation: conan-conditional-requires` (C122).
+
 - **A cget `requirements.txt` no longer fabricates PyPI packages (#1522).**
   cget, a C/C++ package manager, also uses `requirements.txt`, with lines
   such as `owner/repo@ref` and `name@version`. The pip reader parsed them as

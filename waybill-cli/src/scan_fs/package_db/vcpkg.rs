@@ -61,14 +61,13 @@ struct Override {
     version: String,
 }
 
-/// Milestone 664 US2 T053: marker-detect state. Vcpkg has no tree
-/// walker (fixed-root scan); its shared-walker registration exists
-/// only to record whether ANY `vcpkg.json` was seen during descent.
-/// Finalize gates the O(1) `read()` on the flag + defensive fs
-/// fallback so non-vcpkg repos save the manifest-path stat.
+/// Milestone 664 US2 T053: marker-detect state, recording every
+/// `vcpkg.json` the shared walker dispatched. Until #1521 only the flag
+/// was kept and only the scan root's manifest was read.
 #[derive(Default, Debug)]
 pub(crate) struct VcpkgMarkerState {
     pub(crate) seen: bool,
+    pub(crate) paths: std::collections::BTreeSet<std::path::PathBuf>,
 }
 
 fn on_vcpkg_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
@@ -83,6 +82,7 @@ fn on_vcpkg_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
         Err(poisoned) => poisoned.into_inner(),
     };
     guard.seen = true;
+    guard.paths.insert(path.to_path_buf());
 }
 
 pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
@@ -119,22 +119,49 @@ pub(crate) fn finalize(
     marker: VcpkgMarkerState,
     scan_root: &Path,
 ) -> Vec<PackageDbEntry> {
-    if !marker.seen && !scan_root.join(VCPKG_MANIFEST).is_file() {
-        return Vec::new();
+    let mut paths = marker.paths;
+    let root = scan_root.join(VCPKG_MANIFEST);
+    if root.is_file() {
+        paths.insert(root);
     }
-    read(scan_root)
+    let unique: std::collections::BTreeSet<std::path::PathBuf> = paths
+        .into_iter()
+        .map(|p| std::fs::canonicalize(&p).unwrap_or(p))
+        .collect();
+    let (ports, manifests): (Vec<_>, Vec<_>) = unique.into_iter().partition(|p| is_registry_port(p));
+    if !ports.is_empty() {
+        tracing::info!(
+            skipped = ports.len(),
+            "vcpkg: skipping port manifests (ports/<name>/vcpkg.json) in a vcpkg registry tree",
+        );
+    }
+    manifests.iter().flat_map(|p| read_manifest(p)).collect()
 }
 
-/// Walk `scan_root` for `vcpkg.json` and emit one `PackageDbEntry`
+/// `…/ports/<name>/vcpkg.json` is a port definition in a vcpkg registry
+/// (a vendored vcpkg checkout holds thousands), not a project's manifest.
+fn is_registry_port(manifest: &Path) -> bool {
+    manifest
+        .parent()
+        .and_then(Path::parent)
+        .and_then(Path::file_name)
+        .is_some_and(|n| n == "ports")
+}
+
+/// Read the `vcpkg.json` at `scan_root` and emit one `PackageDbEntry`
 /// per declared dependency. Returns empty when no manifest is present
 /// or when parsing fails (parse errors logged via `tracing::warn!`).
+#[cfg(test)]
 pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
-    let manifest_path = scan_root.join(VCPKG_MANIFEST);
+    read_manifest(&scan_root.join(VCPKG_MANIFEST))
+}
+
+fn read_manifest(manifest_path: &Path) -> Vec<PackageDbEntry> {
     if !manifest_path.is_file() {
         return Vec::new();
     }
     let source_path = manifest_path.to_string_lossy().to_string();
-    let raw = match std::fs::read_to_string(&manifest_path) {
+    let raw = match std::fs::read_to_string(manifest_path) {
         Ok(s) => s,
         Err(e) => {
             tracing::warn!(
@@ -332,5 +359,29 @@ mod tests {
                 e.extra_annotations.get("waybill:source-mechanism"),
             );
         }
+    }
+
+    /// #1521: the issue's repro — a nested `vcpkg.json` is read; a port
+    /// manifest in a vcpkg registry tree (`ports/<name>/vcpkg.json`) is not.
+    #[test]
+    fn s1521_nested_manifest_is_read_and_registry_ports_are_not() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("vcpkg.json");
+        let nested = tmp.path().join("libs/a/vcpkg.json");
+        let port = tmp.path().join("third_party/vcpkg/ports/waybill-fixture-port/vcpkg.json");
+        for p in [&nested, &port] {
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        }
+        std::fs::write(&root, r#"{"name":"waybill-fixture-root","dependencies":["waybill-fixture-rootdep"]}"#).unwrap();
+        std::fs::write(&nested, r#"{"name":"waybill-fixture-a","dependencies":["waybill-fixture-nesteddep"]}"#).unwrap();
+        std::fs::write(&port, r#"{"name":"waybill-fixture-port","dependencies":["waybill-fixture-portdep"]}"#).unwrap();
+        let marker = VcpkgMarkerState {
+            seen: true,
+            paths: [root, nested, port].into_iter().collect(),
+        };
+        let mut purls: Vec<String> =
+            finalize(marker, tmp.path()).iter().map(|e| e.purl.as_str().to_string()).collect();
+        purls.sort();
+        assert_eq!(purls, ["pkg:vcpkg/waybill-fixture-nesteddep", "pkg:vcpkg/waybill-fixture-rootdep"]);
     }
 }

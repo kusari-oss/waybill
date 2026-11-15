@@ -13,7 +13,8 @@
 //!
 //! No new Cargo deps — uses workspace `regex` + std.
 
-use std::path::Path;
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use waybill_common::resolution::LifecycleScope;
@@ -30,13 +31,13 @@ use crate::scan_fs::walk_registry::{
 const CONANFILE_TXT: &str = "conanfile.txt";
 const CONANFILE_PY: &str = "conanfile.py";
 
-/// Milestone 664 US2 T054: marker-detect state. Conan has no tree
-/// walker (fixed-root scan of `conanfile.txt` + `conanfile.py` at
-/// scan root); registration exists to gate the two-file read on
-/// presence of either marker anywhere in the tree.
+/// Milestone 664 US2 T054: marker-detect state, recording every
+/// `conanfile.txt` / `conanfile.py` the shared walker dispatched. Until
+/// #1521 only the flag was kept and only the scan root's files were read.
 #[derive(Default, Debug)]
 pub(crate) struct ConanMarkerState {
     pub(crate) seen: bool,
+    pub(crate) paths: BTreeSet<PathBuf>,
 }
 
 fn on_conan_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
@@ -54,6 +55,7 @@ fn on_conan_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
         Err(poisoned) => poisoned.into_inner(),
     };
     guard.seen = true;
+    guard.paths.insert(path.to_path_buf());
 }
 
 pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
@@ -90,33 +92,45 @@ pub(crate) fn finalize(
     marker: ConanMarkerState,
     scan_root: &Path,
 ) -> Vec<PackageDbEntry> {
-    if !marker.seen
-        && !scan_root.join(CONANFILE_TXT).is_file()
-        && !scan_root.join(CONANFILE_PY).is_file()
-    {
-        return Vec::new();
-    }
-    read(scan_root)
+    let mut paths = marker.paths;
+    paths.extend(root_conanfiles(scan_root));
+    read_conanfiles(paths)
 }
 
-/// Walk `scan_root` for conanfile.txt and conanfile.py; emit one
-/// `PackageDbEntry` per declared dependency from both. `[tool_requires]`
-/// lines (txt) and `tool_requires =` (py) emit with
-/// `LifecycleScope::Build` per FR-008.
-pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
+fn root_conanfiles(scan_root: &Path) -> Vec<PathBuf> {
+    [CONANFILE_TXT, CONANFILE_PY]
+        .iter()
+        .map(|n| scan_root.join(n))
+        .filter(|p| p.is_file())
+        .collect()
+}
+
+/// Read each conanfile once, in path order. Paths are canonicalized so a
+/// root file reached both by the walker and by the root fallback is read
+/// once.
+fn read_conanfiles(paths: impl IntoIterator<Item = PathBuf>) -> Vec<PackageDbEntry> {
+    let unique: BTreeSet<PathBuf> = paths
+        .into_iter()
+        .map(|p| std::fs::canonicalize(&p).unwrap_or(p))
+        .collect();
     let mut entries = Vec::new();
-
-    let txt_path = scan_root.join(CONANFILE_TXT);
-    if txt_path.is_file() {
-        entries.extend(parse_conanfile_txt(&txt_path));
+    for path in unique {
+        match path.file_name().and_then(|s| s.to_str()) {
+            Some(CONANFILE_TXT) => entries.extend(parse_conanfile_txt(&path)),
+            Some(CONANFILE_PY) => entries.extend(parse_conanfile_py(&path)),
+            _ => {}
+        }
     }
-
-    let py_path = scan_root.join(CONANFILE_PY);
-    if py_path.is_file() {
-        entries.extend(parse_conanfile_py(&py_path));
-    }
-
     entries
+}
+
+/// Read only the scan root's conanfile.txt and conanfile.py (test helper;
+/// a scan reads every conanfile the walker dispatched, via `finalize`).
+/// `[tool_requires]` lines (txt) and `tool_requires =` (py) emit with
+/// `LifecycleScope::Build` per FR-008.
+#[cfg(test)]
+pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
+    read_conanfiles(root_conanfiles(scan_root))
 }
 
 /// Parse a conanfile.txt — INI-style section headers (`[requires]`,
@@ -228,7 +242,67 @@ fn parse_conanfile_py(path: &Path) -> Vec<PackageDbEntry> {
             }
         }
     }
+    entries.extend(parse_requires_method_calls(&content, &source_path));
     entries
+}
+
+/// #1521: the Conan 2 method form, `self.requires("name/version")` and its
+/// `tool_requires` / `build_requires` / `test_requires` siblings, with a
+/// literal first argument. An f-string or variable argument is skipped.
+/// A runtime `requires` nested under a conditional or loop depends on
+/// options, so it is marked optional (C122 `conan-conditional-requires`).
+fn parse_requires_method_calls(content: &str, source_path: &str) -> Vec<PackageDbEntry> {
+    static RE: std::sync::OnceLock<Option<Regex>> = std::sync::OnceLock::new();
+    let Some(re) = RE
+        .get_or_init(|| {
+            Regex::new(r#"^(\s*)self\.(requires|tool_requires|build_requires|test_requires)\(\s*["']([^"']+)["']"#).ok()
+        })
+        .as_ref()
+    else {
+        return Vec::new();
+    };
+    let lines: Vec<&str> = content.lines().collect();
+    let mut out = Vec::new();
+    for (i, line) in lines.iter().enumerate() {
+        let Some(c) = re.captures(line) else {
+            continue;
+        };
+        let conditional = c[2] == *"requires" && under_conditional(&lines, i, c[1].len());
+        let scope = match &c[2] {
+            "tool_requires" | "build_requires" => Some(LifecycleScope::Build),
+            "test_requires" => Some(LifecycleScope::Test),
+            _ if conditional => Some(LifecycleScope::Optional),
+            _ => None,
+        };
+        if let Some(mut entry) = parse_dep_token(&c[3], source_path, scope) {
+            if conditional {
+                entry.extra_annotations.insert(
+                    "waybill:optional-derivation".to_string(),
+                    serde_json::json!("conan-conditional-requires"),
+                );
+            }
+            out.push(entry);
+        }
+    }
+    out
+}
+
+/// Whether the line at `idx`, indented `indent` columns, sits inside an
+/// `if` / `elif` / `else` / `for` / `while` block rather than directly in
+/// its method body: the nearest less-indented line above opens the block.
+fn under_conditional(lines: &[&str], idx: usize, indent: usize) -> bool {
+    for line in lines[..idx].iter().rev() {
+        let trimmed = line.trim_start();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if line.len() - trimmed.len() < indent {
+            return ["if ", "elif ", "else", "for ", "while "]
+                .iter()
+                .any(|k| trimmed.starts_with(k));
+        }
+    }
+    false
 }
 
 /// Parse a `<name>/<version>` Conan dep token into a `PackageDbEntry`.
@@ -417,5 +491,83 @@ mod tests {
                 e.extra_annotations.get("waybill:source-mechanism"),
             );
         }
+    }
+
+    fn s1521_marker(paths: &[&Path]) -> ConanMarkerState {
+        ConanMarkerState {
+            seen: !paths.is_empty(),
+            paths: paths.iter().map(|p| p.to_path_buf()).collect(),
+        }
+    }
+
+    fn s1521_purls(entries: &[PackageDbEntry]) -> Vec<String> {
+        let mut v: Vec<String> = entries.iter().map(|e| e.purl.as_str().to_string()).collect();
+        v.sort();
+        v
+    }
+
+    /// #1521: the issue's repro — a nested conanfile the walker dispatched
+    /// is read, not only the one at the scan root.
+    #[test]
+    fn s1521_nested_conanfile_is_read() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("conanfile.py");
+        let nested = tmp.path().join("libs/a/conanfile.py");
+        std::fs::create_dir_all(nested.parent().unwrap()).unwrap();
+        std::fs::write(&root, "requires = [\"waybill-fixture-root/1.0.0\"]\n").unwrap();
+        std::fs::write(&nested, "requires = [\"waybill-fixture-nested-literal/2.0.0\"]\n").unwrap();
+        let out = finalize(s1521_marker(&[&root, &nested]), tmp.path());
+        assert_eq!(
+            s1521_purls(&out),
+            ["pkg:conan/waybill-fixture-nested-literal@2.0.0", "pkg:conan/waybill-fixture-root@1.0.0"]
+        );
+    }
+
+    /// #1521: the Conan 2 method form, with scopes, and a call under a
+    /// conditional marked optional (C122 `conan-conditional-requires`).
+    #[test]
+    fn s1521_self_requires_method_calls() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("conanfile.py"),
+            "from conan import ConanFile\n\n\
+             class Recipe(ConanFile):\n    \
+                 options = {\"with_x\": [True, False]}\n\n    \
+                 def requirements(self):\n        \
+                     self.requires(\"waybill-fixture-method/3.0.0\")\n        \
+                     self.requires('waybill-fixture-single/1.1', transitive_headers=True)\n        \
+                     if self.options.with_x:\n            \
+                         self.requires(\"waybill-fixture-cond/4.0.0\")\n        \
+                     self.requires(f\"waybill-fixture-fstring/{self.version}\")\n\n    \
+                 def build_requirements(self):\n        \
+                     self.tool_requires(\"waybill-fixture-tool/5.0.0\")\n        \
+                     self.test_requires(\"waybill-fixture-test/6.0.0\")\n",
+        )
+        .unwrap();
+        let out = read(tmp.path());
+        let mut got: Vec<(String, Option<LifecycleScope>, Option<String>)> = out
+            .iter()
+            .map(|e| {
+                (
+                    e.purl.as_str().to_string(),
+                    e.lifecycle_scope,
+                    e.extra_annotations
+                        .get("waybill:optional-derivation")
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string),
+                )
+            })
+            .collect();
+        got.sort_by(|a, b| a.0.cmp(&b.0));
+        assert_eq!(
+            got,
+            vec![
+                ("pkg:conan/waybill-fixture-cond@4.0.0".to_string(), Some(LifecycleScope::Optional), Some("conan-conditional-requires".to_string())),
+                ("pkg:conan/waybill-fixture-method@3.0.0".to_string(), None, None),
+                ("pkg:conan/waybill-fixture-single@1.1".to_string(), None, None),
+                ("pkg:conan/waybill-fixture-test@6.0.0".to_string(), Some(LifecycleScope::Test), None),
+                ("pkg:conan/waybill-fixture-tool@5.0.0".to_string(), Some(LifecycleScope::Build), None),
+            ]
+        );
     }
 }
