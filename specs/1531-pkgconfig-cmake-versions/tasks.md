@@ -200,7 +200,7 @@
   - add `pkg-config` and `cmake-package-version` to C55's documented values in `docs/reference/sbom-format-mapping.md`;
   - add a CHANGELOG entry under Unreleased `### Added` in `CHANGELOG.md`, separated from any other unreleased entry by at least one existing entry (memory: land-currency CHANGELOG adjacency);
   - document the reader in the user guide where the other installed-package readers are listed (`grep -rln 'dist-info' docs/user-guide/`).
-- [ ] T036 SC-006 in CI only. Choose a published ROCm SDK payload, either a release tarball or a wheel holding `lib/pkgconfig`, and pin it by digest. Add a branch-only workflow step that fetches it and:
+- [X] T036 SC-006 in CI only. Choose a published ROCm SDK payload, either a release tarball or a wheel holding `lib/pkgconfig`, and pin it by digest. Add a branch-only workflow step that fetches it and:
   - counts `*.pc` and CMake version files;
   - scans with and without this feature (the base commit's binary);
   - records the component counts with a version, the coverage record and the scan times.
