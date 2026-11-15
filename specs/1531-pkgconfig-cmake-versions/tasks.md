@@ -195,8 +195,8 @@
 
 ## Phase 7: Polish and cross-cutting
 
-- [ ] T034 Run the mutations from plan.md Approach step 7. For each: save with `cp`, apply, run the named tests, record the failing test and message, restore with `cp` and confirm with `cmp`. Record all of them in `specs/1531-pkgconfig-cmake-versions/measurements/mutations.md`, together with any first attempt that tested the wrong thing.
-- [ ] T035 Docs:
+- [X] T034 Run the mutations from plan.md Approach step 7. For each: save with `cp`, apply, run the named tests, record the failing test and message, restore with `cp` and confirm with `cmp`. Record all of them in `specs/1531-pkgconfig-cmake-versions/measurements/mutations.md`, together with any first attempt that tested the wrong thing.
+- [X] T035 Docs:
   - add `pkg-config` and `cmake-package-version` to C55's documented values in `docs/reference/sbom-format-mapping.md`;
   - add a CHANGELOG entry under Unreleased `### Added` in `CHANGELOG.md`, separated from any other unreleased entry by at least one existing entry (memory: land-currency CHANGELOG adjacency);
   - document the reader in the user guide where the other installed-package readers are listed (`grep -rln 'dist-info' docs/user-guide/`).
