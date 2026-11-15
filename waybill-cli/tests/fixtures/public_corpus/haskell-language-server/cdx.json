@@ -27394,6 +27394,10 @@
         "value": "{\"addressable_without_cpe\":364,\"excluded_files\":29,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":6,\"with_candidates\":0}"
       },
       {
+        "name": "waybill:git-submodule-coverage",
+        "value": "{\"pinned\":0,\"skipped\":{\"git-refused\":0,\"git-unavailable\":0,\"no-gitlink\":0,\"no-repository-data\":0,\"no-url\":0,\"unsafe-path-or-url\":0}}"
+      },
+      {
         "name": "waybill:nixpkgs-haskell-resolution",
         "value": "{\"disagreements\":11,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":91,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24,\"nixpkgs-version-violates-requirement\":6}}"
       },

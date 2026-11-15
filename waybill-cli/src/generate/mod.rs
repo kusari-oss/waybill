@@ -153,6 +153,9 @@ pub struct ScanArtifacts<'a> {
     /// recorded. Constitution XII.3: degraded enrichment is disclosed in the
     /// document, not only logged.
     pub nix_closure_degraded: Option<&'a str>,
+    /// Spec 1530 FR-011 (C222): the git-submodule coverage record, as its
+    /// wire value. `None` when no `.gitmodules` file was seen.
+    pub git_submodule_coverage: Option<&'a str>,
     /// Milestone 1366 (#1365; C208) — what the closure's ecosystem identity
     /// pass did: how many candidates it found, confirmed, declined and could
     /// not check, and why if any went unchecked. `None` when no closure was

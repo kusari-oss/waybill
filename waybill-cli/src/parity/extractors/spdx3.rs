@@ -809,6 +809,8 @@ spdx3_anno!(c192_spdx3, "waybill:deps-dev-outcomes", document);
 spdx3_anno!(c193_spdx3, "waybill:vex-claims-omitted", document);
 spdx3_anno!(c220_spdx3, "waybill:vex-claims-unscoped", document);
 spdx3_anno!(c221_spdx3, "waybill:requirement-unsatisfied", component);
+// Spec 1530 (#1515): C222.
+spdx3_anno!(c222_spdx3, "waybill:git-submodule-coverage", document);
 spdx3_anno!(c42_spdx3, "waybill:lifecycle-scope", component);
 spdx3_anno!(c194_spdx3_raw, "waybill:derivation", document);
 spdx3_anno!(c195_spdx3, "waybill:go-mod-why", document);

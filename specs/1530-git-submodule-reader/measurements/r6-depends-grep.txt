@@ -1,0 +1,12 @@
+# T001 (2026-11-15, base fbaf3a6d): re-run of research R6's check
+$ grep -rnE 'depends(\.push|:).*"pkg:|depends\.push\(.*purl' waybill-cli/src/scan_fs --include='*.rs'
+waybill-cli/src/scan_fs/package_db/pants/lockfile.rs:414:        depends.push(normalize_pypi_name_for_purl(&name));
+exit=0 (1 = no match)
+
+Disposition: the one hit is a false positive. `pants/lockfile.rs:414` pushes
+`normalize_pypi_name_for_purl(&name)`, a normalised *name* (the function's
+name contains "purl"); it never produces a `pkg:` string. No reader puts a
+`pkg:` string into `depends`. R6's safety argument does not rest on this grep
+alone: a `pkg:` entry resolves to nothing on the base, because no name key
+starts with `pkg:`, so exact-PURL resolution can only add edges that are
+absent today.

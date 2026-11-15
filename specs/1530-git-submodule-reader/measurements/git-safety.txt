@@ -1,0 +1,21 @@
+git version 2.56.0
+R3 dep commit:                 1ff399053343fa05d269240aa11447bd16bfc783
+R3 fresh ls-tree gitlink:      160000 commit 1ff399053343fa05d269240aa11447bd16bfc783 third_party/waybill-fixture-dep
+R3 fresh .git/modules exists:  no
+R3 fresh submodule dir empty:  yes
+R1 rev-parse --show-toplevel                                    exit=0 payload_ran=no
+R1 ls-tree -r -z HEAD                                           exit=0 payload_ran=no
+R1 ls-files --stage -z                                          exit=0 payload_ran=YES
+R1 status --porcelain                                           exit=0 payload_ran=YES
+R1 -c core.fsmonitor=false ls-files -s                          exit=0 payload_ran=no
+R1 -c core.fsmonitor=false status                               exit=0 payload_ran=no
+R1 --no-pager log -1                                            exit=0 payload_ran=no
+R1 existing: describe --tags --exact-match HEAD                 exit=128 payload_ran=no
+R1 existing: describe --tags --always                           exit=0 payload_ran=no
+R1 existing: rev-parse HEAD                                     exit=0 payload_ran=no
+R1 existing: remote get-url origin                              exit=0 payload_ran=no
+R1 existing: config --get remote.origin.url                     exit=0 payload_ran=no
+R1 control: describe --dirty                                    exit=0 payload_ran=YES
+R1 log -1 (pager config, stdout not a tty)                      exit=0 payload_ran=no
+R2 assume-different-owner ls-tree: exit=128 first-line=fatal: detected dubious ownership in repository at '<scratch>/fresh'
+R2 assume-different-owner rev-parse: exit=128 first-line=fatal: detected dubious ownership in repository at '<scratch>/fresh'

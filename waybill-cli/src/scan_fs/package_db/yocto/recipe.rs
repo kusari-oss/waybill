@@ -925,13 +925,8 @@ fn parse_git_src_uri(uri: &str) -> Option<(&'static str, String, String)> {
         return None;
     }
 
-    let host_token: &'static str = match host {
-        "github.com" => "github",
-        "gitlab.com" => "gitlab",
-        "bitbucket.org" => "bitbucket",
-        "codeberg.org" => "codeberg",
-        _ => return None,
-    };
+    // Shared with the git-submodule reader (spec 1530, research R9).
+    let host_token: &'static str = super::super::forge::forge_type(host)?;
 
     let segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
     if segments.len() < 2 {

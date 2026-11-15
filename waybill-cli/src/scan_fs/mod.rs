@@ -137,6 +137,9 @@ pub struct ScanResult {
     /// #1154: the `go mod why` pass's outcome (C195/C196). `None` iff no
     /// Go main module was found.
     pub go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
+    /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage, as its
+    /// wire value. `None` when no `.gitmodules` file was seen.
+    pub git_submodule_coverage: Option<String>,
     /// Milestone 161 (T012): workspace-mode detection outcome from
     /// `go.work` at scanned root. Distinct from
     /// `go_transitive_coverage` and `go_graph_completeness` per
@@ -216,6 +219,17 @@ pub struct ScanResult {
 // of it. The rationale is unchanged and now lives beside the accessor: any
 // reader that records a resolution scope gets scope-qualified edge lookup,
 // and a reader that records none is unaffected.
+
+/// Spec 1530 research R6: a `depends` entry that is a full canonical PURL
+/// matching an emitted component resolves to that component exactly.
+/// Anything else (a bare name, or a `pkg:` string matching nothing) returns
+/// `None` and goes through the name lookup as before.
+fn resolve_exact_purl_dep<'a>(
+    dep_name: &'a str,
+    emitted_purls: &std::collections::HashSet<&str>,
+) -> Option<&'a str> {
+    (dep_name.starts_with("pkg:") && emitted_purls.contains(dep_name)).then_some(dep_name)
+}
 
 /// Walk `root`, hash matching artifact files, match each against the path
 /// resolver, optionally consult OS package databases, and return
@@ -381,6 +395,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut go_cache_warming:
         Option<package_db::golang::CacheWarmingResult> = None;
     let mut go_mod_why: Option<package_db::GoModWhyStatus> = None;
+    let mut git_submodule_coverage: Option<String> = None;
     // Milestone 161 (T012): doc-scope go-workspace-mode signal.
     // Distinct from `go_transitive_coverage` per research.md R1.
     // Carried through ScanResult into the format emitters for the
@@ -457,6 +472,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         }
         let mut scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name, exclude_set, no_binary_scan)?;
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
+        git_submodule_coverage = scan_result.diagnostics.git_submodule_coverage.as_ref().map(|c| c.wire());
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
         // Milestone 172: mirror gosum_fallback_count from
         // ScanDiagnostics into the local for the ScanResult return.
@@ -880,6 +896,14 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             (0..db_entries.len()).map(|_| None).collect()
         };
 
+        // Spec 1530 (#1515), research R6: a `depends` entry that is a full
+        // canonical PURL resolves by exact match. Name keys never start with
+        // `pkg:`, so on the pre-1530 path such an entry resolved to nothing;
+        // this adds only edges that were absent. Lets a reader name a
+        // dependency of a different PURL type, or one whose bare name
+        // collides across namespaces (nested git submodules).
+        let emitted_purls: std::collections::HashSet<&str> =
+            db_entries.iter().map(|e| e.purl.as_str()).collect();
         for (entry_idx, entry) in db_entries.iter().enumerate() {
             let purl_str = entry.purl.as_str().to_string();
             let ecosystem = entry.purl.ecosystem().to_string();
@@ -1111,6 +1135,20 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             let dep_scope: Option<String> =
                 package_db::pants_resolve::read_single(&entry.extra_annotations);
             for dep_name in &entry.depends {
+                if let Some(exact) = resolve_exact_purl_dep(dep_name, &emitted_purls) {
+                    if exact != purl_str {
+                        relationships.push(Relationship {
+                            from: purl_str.clone(),
+                            to: exact.to_string(),
+                            relationship_type: RelationshipType::DependsOn,
+                            provenance: EnrichmentProvenance {
+                                source: entry.source_path.clone(),
+                                data_type: "package-database-depends".to_string(),
+                            },
+                        });
+                    }
+                    continue;
+                }
                 let normalized = normalize_dep_name(dep_ecosystem, dep_name);
                 let key = (dep_ecosystem.to_string(), normalized.clone());
                 // Scope-qualified lookup first, flat index second. The
@@ -1400,6 +1438,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_transitive_fallback_count,
         go_cache_warming,
         go_mod_why,
+        git_submodule_coverage,
         go_workspace_mode,
         go_toolchains_detected,
         cross_ecosystem_edges_report,
@@ -3694,5 +3733,30 @@ mod workspace_member_tagging_759 {
         assert!(super::binary::is_binary_derived(Some("elf-note-package")));
         assert!(!super::binary::is_binary_derived(None));
         assert!(!super::binary::is_binary_derived(Some("requirements-txt")));
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1530_exact_purl_depends_tests {
+    use super::resolve_exact_purl_dep;
+
+    #[test]
+    fn a_pkg_entry_resolves_exactly_across_purl_types() {
+        let emitted: std::collections::HashSet<&str> =
+            ["pkg:github/o/r@abc", "pkg:generic/x@1?vcs_url=git%2Bhttps://h/x"].into_iter().collect();
+        assert_eq!(resolve_exact_purl_dep("pkg:github/o/r@abc", &emitted), Some("pkg:github/o/r@abc"));
+        assert_eq!(
+            resolve_exact_purl_dep("pkg:generic/x@1?vcs_url=git%2Bhttps://h/x", &emitted),
+            Some("pkg:generic/x@1?vcs_url=git%2Bhttps://h/x"),
+        );
+    }
+
+    #[test]
+    fn a_pkg_entry_matching_nothing_and_a_bare_name_fall_through() {
+        let emitted: std::collections::HashSet<&str> = ["pkg:github/o/r@abc"].into_iter().collect();
+        assert_eq!(resolve_exact_purl_dep("pkg:github/o/r@other", &emitted), None);
+        assert_eq!(resolve_exact_purl_dep("r", &emitted), None, "bare names keep the name lookup");
+        assert_eq!(resolve_exact_purl_dep("pkg:github/o/r", &emitted), None, "no prefix or version matching");
     }
 }

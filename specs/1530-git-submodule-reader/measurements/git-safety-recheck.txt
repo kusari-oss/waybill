@@ -1,0 +1,7 @@
+# T002 re-run of probe/git-safety.sh vs measurements/git-safety.txt (commit hashes masked)
+lines compared: 20 | differing: 2 | count match: True
+WAS: R2 assume-different-owner ls-tree: exit=128 first-line=fatal: detected dubious ownership in repository at '<scratch>/fresh' 
+NOW: R2 assume-different-owner ls-tree: exit=128 first-line=fatal: detected dubious ownership in repository at '/private<scratch>/fresh'
+WAS: R2 assume-different-owner rev-parse: exit=128 first-line=fatal: detected dubious ownership in repository at '<scratch>/fresh' 
+NOW: R2 assume-different-owner rev-parse: exit=128 first-line=fatal: detected dubious ownership in repository at '/private<scratch>/fresh'
+Disposition: the 2 differing lines differ only by macOS's /private prefix on the temp path; every R1, R2 and R3 result (exit codes, payload_ran) is identical. ls-tree still runs nothing, and the ls-files control still fires.

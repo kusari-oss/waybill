@@ -1,0 +1,4 @@
+# git -c core.fsmonitor=false ls-tree -r -z HEAD: wall time over 5 runs; host aarch64-darwin; git 2.56.0 ; 2026-11-15
+malicious-packages: entries=227970 gitlinks=0 bytes=25676710 seconds min=0.311 median=0.314 max=0.318
+grafana: entries=21988 gitlinks=0 bytes=2492166 seconds min=0.023 median=0.024 max=0.024
+mikebom: entries=6599 gitlinks=0 bytes=756629 seconds min=0.011 median=0.012 max=0.012

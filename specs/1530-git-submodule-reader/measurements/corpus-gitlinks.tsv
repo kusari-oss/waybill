@@ -1,0 +1,23 @@
+# corpus git targets: gitlinks (mode 160000) in the pinned commit's tree (api.github.com, 2026-11-15)
+# target	entries	gitlinks	listing
+go-cobra	74	0	complete
+go-opentelemetry	2090	0	complete
+nix-closure-moat	281	0	complete
+nix-closure-shellcheck	3	0	complete
+nix-closure-slack-web	188	0	complete
+nix-closure-openai	106	0	complete
+nix-closure-slacklinker	144	0	complete
+rust-ripgrep	268	0	complete
+npm-express	294	0	complete
+python-flask	285	0	complete
+maven-guice	1010	0	complete
+pants-example-python	30	0	complete
+pants-example-django	121	0	complete
+pants-example-jvm	51	0	complete
+pants-clojure-polyglot	157	0	complete
+pants-example-golang	36	0	complete
+pants-example-javascript	20	0	complete
+haskell-aeson	1258	0	complete
+haskell-security-advisories	354	0	complete
+haskell-language-server	2419	0	complete
+# control grpc/grpc@v1.69.0	14926	16	complete

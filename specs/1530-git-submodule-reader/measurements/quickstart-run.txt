@@ -1,0 +1,17 @@
+# quickstart run, 2026-11-15, waybill 0.16.1
+## 1 (SC-001) dep commit 9472a1f3594082af1b35c6dc8c9797dbf14bd730
+app: pkg:generic/dep@9472a1f3594082af1b35c6dc8c9797dbf14bd730?vcs_url=git+../dep
+app coverage: {"pinned":1,"skipped":{"git-refused":0,"git-unavailable":0,"no-gitlink":0,"no-repository-data":0,"no-url":0,"unsafe-path-or-url":0}}
+fresh: pkg:generic/dep@9472a1f3594082af1b35c6dc8c9797dbf14bd730?vcs_url=git+<tmp>/dep
+fresh coverage: {"pinned":1,"skipped":{"git-refused":0,"git-unavailable":0,"no-gitlink":0,"no-repository-data":0,"no-url":0,"unsafe-path-or-url":0}}
+## 2 (SC-002): add a declaration with no gitlink
+components: 1
+coverage: {"pinned":1,"skipped":{"git-refused":0,"git-unavailable":0,"no-gitlink":1,"no-repository-data":0,"no-url":0,"unsafe-path-or-url":0}}
+## 3 (SC-009): no repository data
+components: 0
+coverage: {"pinned":0,"skipped":{"git-refused":0,"git-unavailable":0,"no-gitlink":0,"no-repository-data":1,"no-url":0,"unsafe-path-or-url":0}}
+## 4 (R1, SC-010): hostile core.fsmonitor
+payload did not run
+control: git ls-files ran it
+## 5: probe re-run is T002 (measurements/git-safety-recheck.txt)
+Note: in §1 the vcs_url differs between app and fresh because the clone resolves the relative ../dep against its origin remote (research R8); app has no origin. With a forge URL (the tests use GitHub) both scans give the same PURL.

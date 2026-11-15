@@ -19,6 +19,8 @@ pub mod cmake;
 pub mod cocoapods;
 pub mod composer;
 pub mod conan;
+pub(crate) mod forge;
+pub mod git_submodule;
 pub mod dart;
 pub mod declared_license;
 pub mod nix;
@@ -376,6 +378,9 @@ pub struct DbScanResult {
 /// cross-module signatures.
 #[derive(Default, Debug, Clone)]
 pub struct ScanDiagnostics {
+    /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage.
+    /// `None` when no `.gitmodules` file was seen.
+    pub git_submodule_coverage: Option<git_submodule::SubmoduleCoverage>,
     /// #1154: the `go mod why` pass's outcome (C195/C196). `None` when no
     /// Go main module was found.
     pub go_mod_why: Option<GoModWhyStatus>,
@@ -2209,6 +2214,9 @@ pub fn read_all(
     out.extend(std::mem::take(&mut shared_pilot.vcpkg));
     // Milestone 664 US2 T054: conan splice from shared-walker pilot.
     out.extend(std::mem::take(&mut shared_pilot.conan));
+    // Spec 1530 (#1515): git submodules, and their C222 coverage.
+    out.extend(std::mem::take(&mut shared_pilot.git_submodule));
+    diagnostics.git_submodule_coverage = shared_pilot.git_submodule_coverage.take();
 
     // Milestone 139: CocoaPods (iOS) ecosystem reader. One main-module
     // per project root (FR-012 + Q1 cascade) + lockfile-driven (FR-002)
@@ -2551,6 +2559,10 @@ struct SharedPilotOutput {
     swift: Vec<PackageDbEntry>,
     vcpkg: Vec<PackageDbEntry>,
     conan: Vec<PackageDbEntry>,
+    /// Spec 1530 (#1515): one entry per gitlink.
+    git_submodule: Vec<PackageDbEntry>,
+    /// Spec 1530 FR-011 (C222): `None` when no `.gitmodules` was seen.
+    git_submodule_coverage: Option<git_submodule::SubmoduleCoverage>,
     bazel: Vec<PackageDbEntry>,
     cmake: Vec<PackageDbEntry>,
     /// Milestone 664 US2 T058: `go.mod` paths threaded to
@@ -2719,6 +2731,9 @@ fn run_shared_walker_pilot(
         builder = builder.register(r);
     }
     if let Some(r) = register("conan", conan::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("git-submodule", git_submodule::registration()) {
         builder = builder.register(r);
     }
     if let Some(r) = register("bazel", bazel::registration()) {
@@ -3030,6 +3045,18 @@ fn run_shared_walker_pilot(
         })
         .unwrap_or_default();
 
+    // Spec 1530 (#1515): git submodules. Runs `git` only when the walker
+    // saw a `.gitmodules` file (research R4).
+    let (git_submodule_entries, git_submodule_coverage) = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::GIT_SUBMODULE)
+        .map(|reg| {
+            let marker = git_submodule::extract_marker(reg);
+            git_submodule::finalize(marker, rootfs)
+        })
+        .unwrap_or_default();
+
     // Bazel — marker-detect only; finalize gates the fixed-root read
     // (`MODULE.bazel` / `WORKSPACE.bazel` / `WORKSPACE` at scan root)
     // on the marker flag + fs fallback.
@@ -3123,6 +3150,8 @@ fn run_shared_walker_pilot(
         swift: swift_entries,
         vcpkg: vcpkg_entries,
         conan: conan_entries,
+        git_submodule: git_submodule_entries,
+        git_submodule_coverage,
         bazel: bazel_entries,
         cmake: cmake_entries,
         golang_go_mod_paths,

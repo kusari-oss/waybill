@@ -38,36 +38,62 @@ pub(crate) fn run_bounded(
     args: &[&str],
     budget: Duration,
 ) -> Result<BoundedOutput, DegradationReason> {
-    let mut child = Command::new("nix")
+    let out = run_bounded_program("nix", args, &[], budget)?;
+    // `String::from_utf8(..).unwrap_or_default()` is what `read_to_string`
+    // did here before the runner was generalised (spec 1530, research R15):
+    // on invalid UTF-8 it left its buffer empty.
+    Ok(BoundedOutput {
+        status_success: out.status_success,
+        stdout: String::from_utf8(out.stdout).unwrap_or_default(),
+        stderr: String::from_utf8(out.stderr).unwrap_or_default(),
+    })
+}
+
+/// Captured result of a bounded run of any program, as raw bytes.
+#[derive(Debug)]
+pub(crate) struct BoundedBytes {
+    pub(crate) status_success: bool,
+    pub(crate) stdout: Vec<u8>,
+    pub(crate) stderr: Vec<u8>,
+}
+
+/// Run `program` under a wall-clock budget, with the same kill-on-expiry and
+/// drain-on-threads behaviour as [`run_bounded`] (spec 1530, research R15).
+///
+/// Output is returned as bytes: `git ls-tree -z` separates entries with NUL
+/// and paths need not be UTF-8. `envs` are added to the inherited
+/// environment. stdin is null.
+pub(crate) fn run_bounded_program<S: AsRef<std::ffi::OsStr>>(
+    program: &str,
+    args: &[S],
+    envs: &[(&str, &str)],
+    budget: Duration,
+) -> Result<BoundedBytes, DegradationReason> {
+    let mut command = Command::new(program);
+    command
         .args(args)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| match e.kind() {
-            std::io::ErrorKind::NotFound => DegradationReason::ToolAbsent,
-            _ => DegradationReason::ToolUnusable(e.to_string()),
-        })?;
+        .stderr(Stdio::piped());
+    for (k, v) in envs {
+        command.env(k, v);
+    }
+    let mut child = command.spawn().map_err(|e| match e.kind() {
+        std::io::ErrorKind::NotFound => DegradationReason::ToolAbsent,
+        _ => DegradationReason::ToolUnusable(e.to_string()),
+    })?;
 
-    let mut out_pipe = child.stdout.take();
-    let mut err_pipe = child.stderr.take();
-    let drain = |pipe: &mut Option<std::process::ChildStdout>| {
-        pipe.take().map(|mut p| {
+    fn drain<R: Read + Send + 'static>(pipe: Option<R>) -> Option<std::thread::JoinHandle<Vec<u8>>> {
+        pipe.map(|mut p| {
             std::thread::spawn(move || {
-                let mut buf = String::new();
-                let _ = p.read_to_string(&mut buf);
+                let mut buf = Vec::new();
+                let _ = p.read_to_end(&mut buf);
                 buf
             })
         })
-    };
-    let out_thread = drain(&mut out_pipe);
-    let err_thread = err_pipe.take().map(|mut p| {
-        std::thread::spawn(move || {
-            let mut buf = String::new();
-            let _ = p.read_to_string(&mut buf);
-            buf
-        })
-    });
+    }
+    let out_thread = drain(child.stdout.take());
+    let err_thread = drain(child.stderr.take());
 
     let deadline = Instant::now() + budget;
     let status = loop {
@@ -90,10 +116,10 @@ pub(crate) fn run_bounded(
         }
     };
 
-    let join = |t: Option<std::thread::JoinHandle<String>>| {
+    let join = |t: Option<std::thread::JoinHandle<Vec<u8>>>| {
         t.and_then(|h| h.join().ok()).unwrap_or_default()
     };
-    Ok(BoundedOutput {
+    Ok(BoundedBytes {
         status_success: status.success(),
         stdout: join(out_thread),
         stderr: join(err_thread),

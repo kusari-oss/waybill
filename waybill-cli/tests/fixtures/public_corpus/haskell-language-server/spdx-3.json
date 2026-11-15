@@ -23905,6 +23905,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-F2UTLJDJZASE2VC6",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:git-submodule-coverage\",\"value\":\"{\\\"pinned\\\":0,\\\"skipped\\\":{\\\"git-refused\\\":0,\\\"git-unavailable\\\":0,\\\"no-gitlink\\\":0,\\\"no-repository-data\\\":0,\\\"no-url\\\":0,\\\"unsafe-path-or-url\\\":0}}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-F2WSM2DMHKQMTAWM",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"fmt.sh\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-S66SLAX4GHZALEN5",
