@@ -44,7 +44,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 
-use waybill_common::types::hash::ContentHash;
+use waybill_common::types::hash::{ContentHash, HashAlgorithm};
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 use regex::Regex;
 
@@ -760,6 +760,65 @@ fn discover_cmake_files(
 /// Parse a `FetchContent_Declare(...)` or `ExternalProject_Add(...)`
 /// block. Parameterized over `rule_name` so the same body handles both.
 /// Returns one `PackageDbEntry` per matched rule per research §3+§4.
+/// C151 reason for a fetch whose `URL`, `GIT_REPOSITORY` or `GIT_TAG` uses a
+/// variable with no single literal `set()` in the same file (#1517).
+pub(crate) const CMAKE_UNRESOLVED_VARIABLE_REASON: &str =
+    "URL or GIT_TAG uses a CMake variable with no literal set() in the same file";
+
+/// Same-file `set(<VAR> <value>)` calls with exactly one literal value
+/// (#1517). A variable set more than once is ambiguous without evaluating
+/// control flow, so it maps to `None` and stays unresolved.
+fn collect_set_vars(content: &str) -> std::collections::HashMap<String, Option<String>> {
+    static RE: OnceLock<Option<Regex>> = OnceLock::new();
+    let mut vars: std::collections::HashMap<String, Option<String>> = std::collections::HashMap::new();
+    let Some(re) = RE
+        .get_or_init(|| {
+            Regex::new(r#"(?im)^\s*set\s*\(\s*([A-Za-z_][A-Za-z0-9_.+-]*)\s+(?:"([^"\n]*)"|([^\s()"]+))\s*\)"#).ok()
+        })
+        .as_ref()
+    else {
+        return vars;
+    };
+    for c in re.captures_iter(content) {
+        let name = c[1].to_string();
+        let value = c.get(2).or_else(|| c.get(3)).map(|m| m.as_str().to_string());
+        vars.entry(name)
+            .and_modify(|seen| {
+                if *seen != value {
+                    *seen = None;
+                }
+            })
+            .or_insert(value);
+    }
+    vars
+}
+
+/// Substitute every `${VAR}` whose value is known, repeatedly, so a
+/// variable built from another resolves. Unknown references stay as written.
+fn expand_known_vars(text: &str, vars: &std::collections::HashMap<String, Option<String>>) -> String {
+    static RE: OnceLock<Option<Regex>> = OnceLock::new();
+    let Some(re) = RE
+        .get_or_init(|| Regex::new(r"\$\{([A-Za-z_][A-Za-z0-9_.+-]*)\}").ok())
+        .as_ref()
+    else {
+        return text.to_string();
+    };
+    let mut out = text.to_string();
+    for _ in 0..8 {
+        let next = re
+            .replace_all(&out, |c: &regex::Captures<'_>| match vars.get(&c[1]) {
+                Some(Some(v)) => v.clone(),
+                _ => c[0].to_string(),
+            })
+            .into_owned();
+        if next == out {
+            break;
+        }
+        out = next;
+    }
+    out
+}
+
 fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<PackageDbEntry> {
     // Outer envelope: rule_name + first whitespace-separated token
     // (the dep name) + everything until the matching `)`. Non-greedy
@@ -773,10 +832,12 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
         Err(_) => return Vec::new(),
     };
     let github_re = Regex::new(r"^https?://github\.com/([^/]+)/([^/\.\s]+)").ok();
+    let vars = collect_set_vars(content);
     let mut out = Vec::new();
     for c in outer.captures_iter(content) {
         let name = c.get(1).map(|m| m.as_str()).unwrap_or("").trim();
-        let body = c.get(2).map(|m| m.as_str()).unwrap_or("");
+        let body = expand_known_vars(c.get(2).map(|m| m.as_str()).unwrap_or(""), &vars);
+        let body = body.as_str();
         if name.is_empty() {
             continue;
         }
@@ -784,7 +845,34 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
         let git_repo = extract_keyword(body, "GIT_REPOSITORY");
         let git_tag = extract_keyword(body, "GIT_TAG");
         let url = extract_keyword(body, "URL");
-        let url_hash_sha256 = extract_url_hash_sha256(body);
+        let url_hash = extract_url_hash(body);
+
+        // #1517: a `${VAR}` left after expansion has no literal same-file
+        // value. Say so (C151) instead of guessing a version.
+        let unresolved = [&git_repo, &git_tag, &url]
+            .iter()
+            .any(|v| v.as_deref().is_some_and(|v| v.contains("${")));
+        if unresolved && (url.is_some() || (git_repo.is_some() && git_tag.is_some())) {
+            let Ok(purl) = Purl::new(&format!("pkg:generic/{}", encode_purl_segment(name))) else {
+                continue;
+            };
+            let source_mechanism = if rule_name == "ExternalProject_Add" {
+                "cmake-externalproject"
+            } else if git_repo.is_some() {
+                "cmake-fetchcontent-git"
+            } else {
+                "cmake-fetchcontent-url"
+            };
+            let mut entry =
+                build_cmake_entry(name, "", source_path, purl, None, url_hash, false, source_mechanism);
+            entry.sbom_tier = Some("design".to_string());
+            entry.extra_annotations.insert(
+                "waybill:unresolved-reason".to_string(),
+                serde_json::Value::String(CMAKE_UNRESOLVED_VARIABLE_REASON.to_string()),
+            );
+            out.push(entry);
+            continue;
+        }
 
         let (purl_str, download_url, version) = if let (Some(g), Some(t)) =
             (git_repo.as_deref(), git_tag.as_deref())
@@ -847,7 +935,7 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
                 source_path,
                 purl,
                 download_url.as_deref(),
-                url_hash_sha256.as_deref(),
+                url_hash,
                 false,
                 source_mechanism,
             ));
@@ -862,13 +950,30 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
 fn extract_keyword(body: &str, keyword: &str) -> Option<String> {
     let pattern = format!(r"\b{}\s+(\S+)", regex::escape(keyword));
     let re = Regex::new(&pattern).ok()?;
-    re.captures(body)?.get(1).map(|m| m.as_str().to_string())
+    let value = re.captures(body)?.get(1)?.as_str();
+    // A quoted argument is CMake's ordinary string form (#1517).
+    Some(value.trim_matches('"').to_string())
 }
 
-/// Extract `URL_HASH SHA256=<hex>` — CMake's compound-keyword form.
-fn extract_url_hash_sha256(body: &str) -> Option<String> {
-    let re = Regex::new(r"URL_HASH\s+SHA256\s*=\s*([0-9a-fA-F]+)").ok()?;
-    re.captures(body)?.get(1).map(|m| m.as_str().to_string())
+/// Extract `URL_HASH <ALGO>=<hex>`, quoted or not (#1517). Algorithms
+/// waybill has no representation for (SHA384, SHA224, SHA3_*) yield `None`.
+fn extract_url_hash(body: &str) -> Option<ContentHash> {
+    static RE: OnceLock<Option<Regex>> = OnceLock::new();
+    let re = RE
+        .get_or_init(|| Regex::new(r#"URL_HASH\s+"?\s*([A-Za-z0-9_]+)\s*=\s*([0-9a-fA-F]+)"#).ok())
+        .as_ref()?;
+    let c = re.captures(body)?;
+    let algorithm = match c[1].to_ascii_uppercase().as_str() {
+        "SHA256" => HashAlgorithm::Sha256,
+        "SHA512" => HashAlgorithm::Sha512,
+        "SHA1" => HashAlgorithm::Sha1,
+        "MD5" => HashAlgorithm::Md5,
+        other => {
+            tracing::debug!(algorithm = other, "cmake: URL_HASH algorithm has no representation; hash dropped");
+            return None;
+        }
+    };
+    ContentHash::with_algorithm(algorithm, &c[2]).ok()
 }
 
 /// Parse the vendored-dep block — `add_subdirectory(third_party/<name>)`
@@ -947,7 +1052,7 @@ fn build_cmake_entry(
     source_path: &str,
     purl: Purl,
     download_url: Option<&str>,
-    sha256_hex: Option<&str>,
+    hash: Option<ContentHash>,
     _vendored: bool,
     source_mechanism: &str,
 ) -> PackageDbEntry {
@@ -971,10 +1076,7 @@ fn build_cmake_entry(
         "waybill:source-mechanism".to_string(),
         serde_json::json!(source_mechanism),
     );
-    let hashes = sha256_hex
-        .and_then(|hex| ContentHash::sha256(hex).ok())
-        .map(|h| vec![h])
-        .unwrap_or_default();
+    let hashes = hash.into_iter().collect();
 
     PackageDbEntry {
         extra_source_paths: Vec::new(),
@@ -1813,5 +1915,113 @@ add_subdirectory(tests)"#,
             "source path should point at the depth-2 file; got {}",
             fp[0].source_path
         );
+    }
+
+    fn s1517_read(cmake: &str) -> Vec<PackageDbEntry> {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(tmp.path().join("CMakeLists.txt"), cmake).unwrap();
+        let mut out = read(
+            tmp.path(),
+            false,
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+        );
+        out.sort_by(|a, b| a.purl.as_str().cmp(b.purl.as_str()));
+        out
+    }
+
+    fn s1517_hashes(e: &PackageDbEntry) -> Vec<String> {
+        e.hashes.iter().map(|h| format!("{}:{}", h.algorithm, h.value.as_str())).collect()
+    }
+
+    /// #1517: the issue's repro, all four forms.
+    #[test]
+    fn s1517_quoted_and_sha512_hashes_and_set_variables() {
+        let h1 = "1".repeat(64);
+        let h2 = "2".repeat(64);
+        let h3 = "3".repeat(128);
+        let h4 = "4".repeat(64);
+        let out = s1517_read(&format!(
+            "cmake_minimum_required(VERSION 3.25)\nproject(p)\ninclude(FetchContent)\n\
+             FetchContent_Declare(waybill-fixture-plain\n  URL https://example.invalid/waybill-fixture-plain-1.2.3.tar.gz\n  URL_HASH SHA256={h1})\n\
+             FetchContent_Declare(waybill-fixture-quoted\n  URL https://example.invalid/waybill-fixture-quoted-2.0.0.tar.gz\n  URL_HASH \"SHA256={h2}\")\n\
+             FetchContent_Declare(waybill-fixture-sha512\n  URL https://example.invalid/waybill-fixture-sha512-3.0.0.tar.gz\n  URL_HASH SHA512={h3})\n\
+             set(FX_VERSION 4.5.6)\n\
+             FetchContent_Declare(waybill-fixture-var\n  URL https://example.invalid/waybill-fixture-var-${{FX_VERSION}}.tar.gz\n  URL_HASH SHA256={h4})\n"
+        ));
+        let got: Vec<(String, Vec<String>)> =
+            out.iter().map(|e| (e.purl.as_str().to_string(), s1517_hashes(e))).collect();
+        assert_eq!(
+            got,
+            vec![
+                ("pkg:generic/waybill-fixture-plain@1.2.3".to_string(), vec![format!("sha256:{h1}")]),
+                ("pkg:generic/waybill-fixture-quoted@2.0.0".to_string(), vec![format!("sha256:{h2}")]),
+                ("pkg:generic/waybill-fixture-sha512@3.0.0".to_string(), vec![format!("sha512:{h3}")]),
+                ("pkg:generic/waybill-fixture-var@4.5.6".to_string(), vec![format!("sha256:{h4}")]),
+            ]
+        );
+        let var = &out[3];
+        assert_eq!(
+            var.extra_annotations.get("waybill:download-url").and_then(|v| v.as_str()),
+            Some("https://example.invalid/waybill-fixture-var-4.5.6.tar.gz"),
+        );
+        assert_eq!(var.sbom_tier.as_deref(), Some("source"));
+    }
+
+    /// #1517: quoted `set()` values, a variable built from another, a
+    /// variable hash, and a variable `GIT_TAG`.
+    #[test]
+    fn s1517_nested_quoted_variables_and_git_tag() {
+        let h = "a".repeat(64);
+        let out = s1517_read(&format!(
+            "set(FX_BASE \"https://example.invalid/dl\")\nset(FX_VERSION 7.8.9)\n\
+             set(FX_FILE waybill-fixture-nested-${{FX_VERSION}}.tar.gz)\nset(FX_SHA {h})\nset(FX_TAG \"v1.2.3\")\n\
+             FetchContent_Declare(waybill-fixture-nested\n  URL \"${{FX_BASE}}/${{FX_FILE}}\"\n  URL_HASH SHA256=${{FX_SHA}})\n\
+             FetchContent_Declare(waybill-fixture-git\n  GIT_REPOSITORY https://github.com/waybill-org/waybill-fixture-git.git\n  GIT_TAG ${{FX_TAG}})\n"
+        ));
+        let purls: Vec<&str> = out.iter().map(|e| e.purl.as_str()).collect();
+        assert_eq!(
+            purls,
+            ["pkg:generic/waybill-fixture-nested@7.8.9", "pkg:github/waybill-org/waybill-fixture-git@v1.2.3"]
+        );
+        assert_eq!(s1517_hashes(&out[0]), vec![format!("sha256:{h}")]);
+        assert_eq!(
+            out[0].extra_annotations.get("waybill:download-url").and_then(|v| v.as_str()),
+            Some("https://example.invalid/dl/waybill-fixture-nested-7.8.9.tar.gz"),
+        );
+    }
+
+    /// #1517: a variable with no literal `set()` in the same file is
+    /// reported as unresolved (C151), never as `@unknown`.
+    #[test]
+    fn s1517_unresolved_variable_is_design_tier_with_reason() {
+        let out = s1517_read(
+            "FetchContent_Declare(waybill-fixture-unset\n  URL https://example.invalid/waybill-fixture-unset-${FX_UNSET}.tar.gz)\n",
+        );
+        assert_eq!(out.len(), 1, "{out:?}");
+        let e = &out[0];
+        assert_eq!(e.purl.as_str(), "pkg:generic/waybill-fixture-unset");
+        assert_eq!(e.version, "");
+        assert_eq!(e.sbom_tier.as_deref(), Some("design"));
+        assert_eq!(
+            e.extra_annotations.get("waybill:unresolved-reason").and_then(|v| v.as_str()),
+            Some(CMAKE_UNRESOLVED_VARIABLE_REASON),
+        );
+        assert!(!e.extra_annotations.contains_key("waybill:download-url"));
+    }
+
+    /// #1517: a variable set twice to different values depends on control
+    /// flow the reader does not evaluate, so it stays unresolved; set twice
+    /// to the same value, it resolves.
+    #[test]
+    fn s1517_variable_set_twice_resolves_only_when_both_agree() {
+        let out = s1517_read(
+            "if(WIN32)\n  set(FX_V 1.0.0)\nelse()\n  set(FX_V 2.0.0)\nendif()\n\
+             set(FX_SAME 3.0.0)\nset(FX_SAME 3.0.0)\n\
+             FetchContent_Declare(waybill-fixture-branchy URL https://example.invalid/waybill-fixture-branchy-${FX_V}.tar.gz)\n\
+             FetchContent_Declare(waybill-fixture-same URL https://example.invalid/waybill-fixture-same-${FX_SAME}.tar.gz)\n",
+        );
+        let purls: Vec<&str> = out.iter().map(|e| e.purl.as_str()).collect();
+        assert_eq!(purls, ["pkg:generic/waybill-fixture-branchy", "pkg:generic/waybill-fixture-same@3.0.0"]);
+        assert_eq!(out[0].sbom_tier.as_deref(), Some("design"));
     }
 }

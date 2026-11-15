@@ -107,6 +107,11 @@ fn locked_reason_strings() -> Vec<(&'static str, &'static str)> {
             "waybill-cli/src/scan_fs/package_db/pants_go/mod.rs",
             "pants_go expected_version declared; no matching go corpus component",
         ),
+        // #1517.
+        (
+            "waybill-cli/src/scan_fs/package_db/cmake.rs",
+            "URL or GIT_TAG uses a CMake variable with no literal set() in the same file",
+        ),
     ]
 }
 
@@ -215,10 +220,11 @@ fn m236_scope_matches_q2_clarification() {
     // than one string must not read as extra coverage.
     let entries: std::collections::BTreeSet<&str> =
         locked_reason_strings().into_iter().map(|(p, _)| p).collect();
+    // 17 from milestone 236, plus cmake (#1517, the 2026-11-15 amendment).
     assert_eq!(
         entries.len(),
-        17,
-        "m236 covers 17 reader source files (NuGet regression guard + 3 US1 + 5 US2 + 8 US3). \
-         If this count changes, the spec Q2 clarification is stale — update contracts/per-reader-strings.md.",
+        18,
+        "m236 covers 17 reader source files (NuGet regression guard + 3 US1 + 5 US2 + 8 US3), \
+         plus cmake (#1517). If this count changes, update contracts/per-reader-strings.md.",
     );
 }

@@ -41,6 +41,14 @@ Locked reason strings per reader. Byte-stable within a waybill build. Display-on
 | **pants_shell** | `pants shell tool pin without version specifier` |
 | **pants_go** | `pants_go expected_version declared; no matching go corpus component` |
 
+## Amendment — 2026-11-15 (issue #1517)
+
+| Reader | Reason string |
+|---|---|
+| **cmake** (`FetchContent_Declare` / `ExternalProject_Add`) | `URL or GIT_TAG uses a CMake variable with no literal set() in the same file` |
+
+Emitted when a `${VAR}` in `URL`, `GIT_REPOSITORY` or `GIT_TAG` has no single literal `set()` in the same file. Such a fetch was previously emitted as `pkg:generic/<name>@unknown`, a source-tier component with an invented version.
+
 ## Regression guard — NuGet (existing)
 
 | Reader | Reason string (unchanged) |
