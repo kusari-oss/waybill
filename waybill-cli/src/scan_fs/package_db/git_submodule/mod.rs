@@ -396,8 +396,7 @@ mod tests {
 
     #[test]
     fn s1530_coverage_wire_lists_every_reason_sorted() {
-        let mut c = SubmoduleCoverage::default();
-        c.pinned = 2;
+        let mut c = SubmoduleCoverage { pinned: 2, ..Default::default() };
         c.skip(SkipReason::NoGitlink, 1);
         assert_eq!(
             c.wire(),

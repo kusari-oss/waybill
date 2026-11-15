@@ -35,6 +35,7 @@ use std::process::Command;
 
 mod common;
 use common::normalize::{apply_fake_home_env, normalize_cdx_for_golden};
+use common::git_fixture::GitFixture;
 use common::{bin, workspace_root};
 
 /// Path to the local dedup_collision fixture. The milestone-090
@@ -119,78 +120,89 @@ fn dedup_collision_scans_deterministically_today() {
     }
 }
 
-/// SC-010 cornerstone test (gated until US6 wires the
-/// `git-submodule` reader through the dedup pipeline). Asserts that
-/// the dedup_collision fixture produces:
-///
-/// - Exactly ONE component for `abseil` (collision deduplicated).
-/// - `waybill:source-mechanism: "conan-recipe"` on that component
-///   (manifest-mode tier outranks filesystem-derived per FR-015).
-/// - `waybill:also-detected-via` containing `["git-submodule"]`
-///   (the losing reader, sorted lex order — single entry here).
-/// - Byte-identical output across multiple runs.
-///
-/// When activated, this test does the heavy lifting of SC-010. The
-/// `#[ignore]` gate is removed in the US6 PR (T085-T095) once the
-/// reader + dispatcher wiring is complete.
-#[test]
-#[ignore = "pending US6: git-submodule reader + dispatcher wiring (T085-T095)"]
-fn dedup_collision_emits_also_detected_via_after_us6() {
-    let workdir = tempfile::tempdir().expect("workdir tempdir");
-    let out_path = workdir.path().join("collision.cdx.json");
-    let _bytes = scan_fixture_cdx(&out_path);
-    let json: serde_json::Value = serde_json::from_slice(&std::fs::read(&out_path).expect("read"))
-        .expect("parse CDX JSON");
-    // Find the abseil component.
-    let components = json["components"]
-        .as_array()
-        .expect("components array present");
-    let abseil = components
-        .iter()
-        .find(|c| {
-            c["name"].as_str().unwrap_or("") == "abseil"
-                || c["purl"].as_str().unwrap_or("").contains("abseil")
-        })
-        .expect("abseil component present");
-    // Source-mechanism: conan-recipe (manifest-mode wins over git-submodule).
-    let sm = abseil["properties"]
-        .as_array()
-        .and_then(|props| {
-            props.iter().find_map(|p| {
-                if p["name"].as_str()? == "waybill:source-mechanism" {
-                    p["value"].as_str().map(str::to_string)
-                } else {
-                    None
-                }
-            })
-        })
-        .expect("waybill:source-mechanism property present");
-    assert_eq!(
-        sm, "conan-recipe",
-        "expected conan-recipe to win the manifest-mode tier; got {sm:?}"
-    );
-    // also-detected-via lives natively in evidence.identity[].methods[]
-    // on the CDX side per research R1. The C56 parity row reads
-    // `evidence.identity[0].methods[*].waybill-source-mechanism`
-    // (skipping the winner).
-    let methods = abseil["evidence"]["identity"][0]["methods"]
-        .as_array()
-        .expect("evidence.identity[0].methods[] present");
-    let losers: Vec<&str> = methods
-        .iter()
-        .skip(1)
-        .filter_map(|m| m["waybill-source-mechanism"].as_str())
-        .collect();
-    assert_eq!(
-        losers,
-        vec!["git-submodule"],
-        "expected git-submodule as the sole loser; got {losers:?}"
-    );
+/// Run `waybill sbom scan` (CycloneDX) against `tree`, normalized as
+/// [`scan_fixture_cdx`] does.
+fn scan_tree_cdx(fx: &GitFixture, tree: &Path, out_path: &Path) -> Vec<u8> {
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, &fx.home());
+    cmd.env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .args(["--offline", "sbom", "scan", "--path"])
+        .arg(tree)
+        .args(["--format", "cyclonedx-json", "--output"])
+        .arg(out_path);
+    let status = cmd.status().expect("spawn waybill");
+    assert!(status.success(), "waybill scan failed: {status:?}");
+    let raw = std::fs::read_to_string(out_path).expect("read emitted SBOM");
+    normalize_cdx_for_golden(&raw, &workspace_root()).into_bytes()
+}
 
-    // Determinism: re-scan, byte-identical (after normalization)
-    // to first run.
-    let second_path = workdir.path().join("collision-2.cdx.json");
-    let second = scan_fixture_cdx(&second_path);
-    let first = scan_fixture_cdx(&out_path);
-    assert_eq!(first, second, "non-deterministic SBOM bytes across runs");
+/// The `dedup_collision` fixture made a real repository: its files plus a
+/// gitlink at `third_party/abseil`, which the in-tree copy cannot carry.
+fn collision_repo(fx: &GitFixture) -> PathBuf {
+    fx.repo("collision");
+    let src = dedup_collision_fixture();
+    for f in [".gitmodules", "CMakeLists.txt", "conanfile.txt"] {
+        std::fs::copy(src.join(f), fx.path("collision").join(f)).expect("copy fixture file");
+    }
+    let tree = fx.path("collision");
+    fx.git(&tree, &["add", ".gitmodules", "CMakeLists.txt", "conanfile.txt"]);
+    fx.add_gitlink("collision", "third_party/abseil", ABSEIL_COMMIT);
+    tree
+}
+
+const ABSEIL_COMMIT: &str = "4447c7562e3bc702ade25105912dce503f0c4010";
+
+/// Spec 1530 FR-009 (#1515). Milestone 105 expected the Conan `abseil` and
+/// the `abseil-cpp` submodule to merge after an unspecified
+/// "canonicalization". There is none: a package-manager name and a
+/// repository are different identities, so both components are emitted,
+/// each with its own `waybill:source-mechanism`. C56 (also-detected-via) is
+/// not asserted; it is not yet emitted (#1558).
+#[test]
+fn dedup_collision_conan_and_submodule_stay_two_components() {
+    let fx = GitFixture::new();
+    let tree = collision_repo(&fx);
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let out = workdir.path().join("collision.cdx.json");
+    let bytes = scan_tree_cdx(&fx, &tree, &out);
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse CDX JSON");
+    let mech = |c: &serde_json::Value| {
+        c["properties"]
+            .as_array()
+            .and_then(|ps| ps.iter().find(|p| p["name"] == "waybill:source-mechanism"))
+            .and_then(|p| p["value"].as_str())
+            .map(str::to_string)
+    };
+    let mut abseil: Vec<(String, Option<String>)> = json["components"]
+        .as_array()
+        .expect("components")
+        .iter()
+        .filter(|c| {
+            let p = c["purl"].as_str().unwrap_or("");
+            p.starts_with("pkg:conan/abseil@") || p.starts_with("pkg:github/abseil/")
+        })
+        .map(|c| (c["purl"].as_str().unwrap_or("").to_string(), mech(c)))
+        .collect();
+    abseil.sort();
+    assert_eq!(
+        abseil,
+        vec![
+            ("pkg:conan/abseil@20240722.0".to_string(), Some("conan-recipe".to_string())),
+            (format!("pkg:github/abseil/abseil-cpp@{ABSEIL_COMMIT}"), Some("git-submodule".to_string())),
+        ]
+    );
+}
+
+/// SC-005: ten scans of the collision repository are byte-identical.
+#[test]
+fn dedup_collision_repository_scans_deterministically() {
+    let fx = GitFixture::new();
+    let tree = collision_repo(&fx);
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let first = scan_tree_cdx(&fx, &tree, &workdir.path().join("run-0.cdx.json"));
+    for i in 1..10 {
+        let bytes = scan_tree_cdx(&fx, &tree, &workdir.path().join(format!("run-{i}.cdx.json")));
+        assert!(first == bytes, "run {i} differs from run 0");
+    }
 }

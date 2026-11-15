@@ -193,15 +193,15 @@
 
 **Independent Test**: The un-ignored `dedup_collision` test and the merging fixture (SC-005).
 
-- [ ] T036 [US3] Rewrite `dedup_collision_emits_also_detected_via_after_us6` in `waybill-cli/tests/dedup_precedence_determinism.rs` and remove its `#[ignore]`:
+- [X] T036 [US3] Rewrite `dedup_collision_emits_also_detected_via_after_us6` in `waybill-cli/tests/dedup_precedence_determinism.rs` and remove its `#[ignore]`:
   - copy `tests/fixtures/golden_inputs/dedup_collision/` into a tempdir, `git init` it, and add the gitlink `third_party/abseil` with `add_gitlink` and a fixed commit;
   - assert two components: `pkg:conan/abseil@20240722.0` with mechanism `conan-recipe`, and `pkg:github/abseil/abseil-cpp@<commit>` with mechanism `git-submodule` (FR-009). C56 is not asserted: it is never emitted until #1558.
 
   Update the fixture's `README.md`, removing the "post-US6 canonicalization" expectation, and delete its stale `.git/modules/abseil/HEAD` description.
-- [ ] T037 [US3] Add `waybill-cli/tests/dedup_precedence_determinism.rs::submodule_and_fetchcontent_same_commit_merge`, which is SC-011. Use a gitlink `third_party/waybill-fixture-Mixed` with URL `https://github.com/ROCm/waybill-fixture-Mixed.git` at commit `<C>`, and a `FetchContent_Declare(waybill-fixture-mixed GIT_REPOSITORY https://github.com/ROCm/waybill-fixture-Mixed.git GIT_TAG <C>)`. Assert:
+- [X] T037 [US3] Add `waybill-cli/tests/git_submodule_reader.rs::sc011_submodule_and_fetchcontent_same_commit_merge`, which is SC-011. It moved to that file at implementation for its three-format scan helper. Use a gitlink `third_party/waybill-fixture-Mixed` with URL `https://github.com/ROCm/waybill-fixture-Mixed.git` at commit `<C>`, and a `FetchContent_Declare(waybill-fixture-mixed GIT_REPOSITORY https://github.com/ROCm/waybill-fixture-Mixed.git GIT_TAG <C>)`. Assert:
   - one component `pkg:github/rocm/waybill-fixture-mixed@<C>`, with mechanism `cmake-fetchcontent-git` and the submodule's C57, in all three formats (C56 deferred to #1558);
   - the root depends on it (FR-010, research R5).
-- [ ] T038 [US3] Determinism: scan each of the T036 and T037 trees 10 times and assert byte-identical outputs. Extend the existing `dedup_collision_scans_deterministically_today` pattern.
+- [X] T038 [US3] Determinism: scan each of the T036 and T037 trees 10 times and assert byte-identical outputs. Extend the existing `dedup_collision_scans_deterministically_today` pattern.
 
 **Checkpoint**: All three stories work.
 
@@ -209,14 +209,14 @@
 
 ## Phase 6: Polish & cross-cutting
 
-- [ ] T039 [P] Amend the C57 row in `docs/reference/sbom-format-mapping.md` to name both signals: `find_package` name, and `add_subdirectory` / `SOURCE_DIR` path. Note that #1516 limits it to the files `discover_cmake_files` returns.
-- [ ] T040 [P] Add a CHANGELOG entry under `## [Unreleased]` in `CHANGELOG.md`, not adjacent to another branch's unreleased entry. Cover:
+- [X] T039 [P] Amend the C57 row in `docs/reference/sbom-format-mapping.md` to name both signals: `find_package` name, and `add_subdirectory` / `SOURCE_DIR` path. Note that #1516 limits it to the files `discover_cmake_files` returns.
+- [X] T040 [P] Add a CHANGELOG entry under `## [Unreleased]` in `CHANGELOG.md`, not adjacent to another branch's unreleased entry. Cover:
   - submodules as components pinned to the gitlink commit;
   - forge PURL types;
   - C57 path references;
   - C222;
   - that `git` runs with config-executed programs disabled.
-- [ ] T041 Run quickstart §1–§5 end to end with the release build, and record the outputs in `specs/1530-git-submodule-reader/measurements/quickstart-run.txt`.
+- [X] T041 Run quickstart §1–§5 end to end with the release build, and record the outputs in `specs/1530-git-submodule-reader/measurements/quickstart-run.txt`.
 - [ ] T042 Run clippy, then the gate. Record the positive signal and the `test result: ok` count. Never pipe through `head`.
 - [ ] T043 Corpus goldens (SC-007, research R13):
   - push the branch and dispatch `public-corpus.yml` with `regen_goldens=true`;

@@ -474,3 +474,87 @@ fn sc006_cross_format_parity() {
         }
     }
 }
+
+/// SC-011 / FR-009 / FR-015: a submodule of `ROCm/waybill-fixture-Mixed`
+/// and a `FetchContent_Declare` of the same repository at the same commit
+/// merge into one lowercase PURL, which keeps the submodule's C57 and stays
+/// a root dependency even when the root has another edge (FR-010: the
+/// merged component is recognised by C57, since C56 is not emitted,
+/// #1558). Then ten scans are byte-identical (SC-005).
+#[test]
+fn sc011_submodule_and_fetchcontent_same_commit_merge() {
+    let fx = GitFixture::new();
+    fx.repo("app");
+    let c = "5".repeat(40);
+    fx.write(
+        "app/.gitmodules",
+        "[submodule \"m\"]\n\tpath = third_party/waybill-fixture-Mixed\n\turl = https://github.com/ROCm/waybill-fixture-Mixed.git\n",
+    );
+    fx.write(
+        "app/CMakeLists.txt",
+        &format!(
+            "cmake_minimum_required(VERSION 3.25)\nproject(p)\ninclude(FetchContent)\n\
+             FetchContent_Declare(waybill-fixture-mixed GIT_REPOSITORY https://github.com/ROCm/waybill-fixture-Mixed.git GIT_TAG {c})\n"
+        ),
+    );
+    fx.write(
+        "app/pyproject.toml",
+        "[project]\nname = \"waybill-fixture-app\"\nversion = \"1.0.0\"\ndependencies = [\"waybill-fixture-req==2.0.0\"]\n",
+    );
+    let app = fx.path("app");
+    fx.git(&app, &["add", ".gitmodules", "CMakeLists.txt", "pyproject.toml"]);
+    fx.add_gitlink("app", "third_party/waybill-fixture-Mixed", &c);
+    let docs = scan(&fx, &app);
+    let want = format!("pkg:github/rocm/waybill-fixture-mixed@{c}");
+    let matching: Vec<&Value> = docs.cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|x| x["purl"].as_str().is_some_and(|p| p.contains("waybill-fixture-mixed")))
+        .collect();
+    assert_eq!(matching.len(), 1, "one merged component: {matching:?}");
+    assert_eq!(matching[0]["purl"], want.as_str());
+    assert_eq!(prop(matching[0], "waybill:source-mechanism"), Some("cmake-fetchcontent-git"));
+    assert!(prop(matching[0], "waybill:build-reference").is_some(), "the submodule's C57 survives the merge");
+    let root = root_depends_on(&docs.cdx);
+    assert!(root.iter().any(|d| d.contains("waybill-fixture-req")), "control: the root has another edge");
+    assert!(root.contains(&want), "the merged submodule stays a root dependency: {root:?}");
+    for row in ["C55", "C57"] {
+        let e = waybill::parity::extractors::EXTRACTORS.iter().find(|e| e.row_id == row).unwrap();
+        let (a, b, cc) = ((e.cdx)(&docs.cdx), (e.spdx23)(&docs.spdx23), (e.spdx3)(&docs.spdx3));
+        assert!(!a.is_empty(), "{row}: CycloneDX extractor found nothing");
+        assert_eq!(a, b, "{row}: CycloneDX and SPDX 2.3 disagree");
+        assert_eq!(a, cc, "{row}: CycloneDX and SPDX 3 disagree");
+    }
+    // `serialNumber` is a fresh UUID per document by CycloneDX's rule; mask
+    // it, as `normalize_cdx_for_golden` does.
+    let masked = |mut v: Value| {
+        v["serialNumber"] = Value::Null;
+        v
+    };
+    let first = masked(docs.cdx.clone());
+    for i in 1..10 {
+        let again = masked(scan(&fx, &app).cdx);
+        if again != first {
+            let diff: Vec<String> = diff_paths(&first, &again, "");
+            panic!("run {i} differs at {diff:?}");
+        }
+    }
+}
+
+/// JSON paths at which two documents differ (test diagnostics).
+fn diff_paths(a: &Value, b: &Value, at: &str) -> Vec<String> {
+    match (a, b) {
+        (Value::Object(x), Value::Object(y)) => {
+            let keys: std::collections::BTreeSet<&String> = x.keys().chain(y.keys()).collect();
+            keys.into_iter()
+                .flat_map(|k| diff_paths(x.get(k).unwrap_or(&Value::Null), y.get(k).unwrap_or(&Value::Null), &format!("{at}/{k}")))
+                .collect()
+        }
+        (Value::Array(x), Value::Array(y)) if x.len() == y.len() => {
+            x.iter().zip(y).enumerate().flat_map(|(i, (p, q))| diff_paths(p, q, &format!("{at}/{i}"))).collect()
+        }
+        _ if a == b => vec![],
+        _ => vec![at.to_string()],
+    }
+}

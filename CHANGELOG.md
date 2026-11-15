@@ -7,6 +7,41 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added
+
+- **Git submodules are components (#1515).** A C/C++ super-build that pins
+  its dependencies as git submodules (ROCm's TheRock among them) produced
+  none of them. Each *gitlink* (the commit a repository records for a
+  submodule path) is now one component, pinned to that commit. This holds
+  on a fresh clone with the submodule uninitialised, because the commit is
+  read from the super-project's own tree, not the submodule's checkout.
+  - **Identity.** `.gitmodules` supplies only the URL. GitHub, GitLab,
+    Bitbucket and Codeberg URLs give `pkg:github/…`, `pkg:gitlab/…`,
+    `pkg:bitbucket/…` and `pkg:codeberg/…`. GitHub and Bitbucket owner and
+    repository are lowercased, as their purl-spec definitions require. Other
+    hosts give `pkg:generic/<name>@<commit>?vcs_url=git+<url>`. Credentials
+    are stripped.
+  - **What is counted.** One component per gitlink, not per `.gitmodules`
+    line: on one large tree the files listed 62 paths for 36 gitlinks.
+    Initialised submodules are read for their own submodules, which become
+    dependencies of the submodule that pins them. Top-level submodules are
+    dependencies of the document root.
+  - **C57.** `waybill:build-reference` now also counts a CMake
+    `add_subdirectory` or `SOURCE_DIR` that names the submodule's path, not
+    only a `find_package` name match.
+  - **C222.** A new document annotation, `waybill:git-submodule-coverage`,
+    records what was pinned and what was skipped, by reason: no gitlink, no
+    URL, no repository data, `git` unavailable, a repository git refuses
+    (`safe.directory`), or an unsafe path or URL.
+  - **Safety.** The scanned repository is untrusted. `git ls-files` and
+    `git status` run a program a repository names in its own
+    `core.fsmonitor`, so the reader runs only `ls-tree`, `rev-parse` and
+    `config --get`, with `core.fsmonitor` and hooks disabled on every call.
+    It never overrides `safe.directory`.
+  - **Related changes.** The CMake reader now lowercases `pkg:github`
+    owner and repository too, so a submodule and a `FetchContent` of the
+    same repository at the same commit share one component.
+
 ### Fixed
 
 - **zlib's embedded version string is recognised in real builds (#1525).**
