@@ -147,7 +147,9 @@ All six reasons are always present. Extractors go in all three formats, followin
 
 ## R12 — Merging with other readers (FR-009)
 
-**Finding.** `scan_fs/dedup.rs` already ranks `GitSubmodule` in the filesystem tier and groups by canonical PURL. A CMake `FetchContent_Declare(… GIT_REPOSITORY https://github.com/o/r GIT_TAG <40-hex commit>)` produces `pkg:github/o/r@<commit>`, identical to the submodule's PURL, so the existing pass merges them and records `git-submodule` in C56. No dedup change is needed. The `dedup_collision` test is rewritten to assert two components (Conan against GitHub), with a second fixture for the merging case.
+**Correction at implementation (2026-11-15).** `scan_fs::dedup::dedup` has no caller outside its own file, and the CycloneDX builder passes no winner or losers to `build_evidence`. C56 has therefore never been emitted. Measured: a submodule and a same-PURL CMake fetch merge through the general PURL deduplicator into one component, with C55 `cmake-fetchcontent-git` and the submodule's C57 kept, and no C56. Wiring C56 is deferred to #1558 (user decision), and the paragraph below describes the design as milestone 105 intended it.
+
+**Finding (as planned).** `scan_fs/dedup.rs` already ranks `GitSubmodule` in the filesystem tier and groups by canonical PURL. A CMake `FetchContent_Declare(… GIT_REPOSITORY https://github.com/o/r GIT_TAG <40-hex commit>)` produces `pkg:github/o/r@<commit>`, identical to the submodule's PURL, so the existing pass merges them and records `git-submodule` in C56. No dedup change is needed. The `dedup_collision` test is rewritten to assert two components (Conan against GitHub), with a second fixture for the merging case.
 
 ## R13 — Which committed goldens move (SC-007)
 

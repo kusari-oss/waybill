@@ -4431,6 +4431,37 @@ pub async fn execute(
         None
     };
 
+    // Spec 1530 (#1515) FR-010, research R5: every top-level git submodule
+    // is a dependency of the document root, whatever other edges the root
+    // has. "Top-level" = no other submodule component depends on it. Empty
+    // (and byte-identical) when the scan found no submodule.
+    //
+    // A submodule merged into another reader's component of the same PURL
+    // (FR-009) keeps that reader's C55, so it is recognised by C57
+    // (`waybill:build-reference`), which only the git-submodule reader
+    // emits. C56 would say so directly, but is not yet emitted (#1515
+    // clarification; follow-up issue).
+    let _reader_anchor_guard = {
+        let is_submodule = |c: &waybill_common::resolution::ResolvedComponent| {
+            c.extra_annotations.get("waybill:source-mechanism").and_then(|v| v.as_str())
+                == Some(crate::scan_fs::package_db::git_submodule::SOURCE_MECHANISM)
+                || c.extra_annotations.contains_key("waybill:build-reference")
+        };
+        let submodules: std::collections::BTreeSet<&str> =
+            components.iter().filter(|c| is_submodule(c)).map(|c| c.purl.as_str()).collect();
+        let nested: std::collections::BTreeSet<&str> = relationships
+            .iter()
+            .filter(|r| {
+                r.relationship_type == waybill_common::resolution::RelationshipType::DependsOn
+                    && submodules.contains(r.from.as_str())
+            })
+            .map(|r| r.to.as_str())
+            .collect();
+        let anchors: Vec<String> =
+            submodules.iter().filter(|p| !nested.contains(*p)).map(|p| p.to_string()).collect();
+        (!anchors.is_empty()).then(|| crate::supplement::install_reader_root_anchors(anchors))
+    };
+
     // Milestone 133 US2.2 (FR-013): stamp `waybill:layer-digest` on every
     // component whose `evidence.source_file_paths[0]` matches a path the
     // OCI layer extractor recorded. No-op for non-image scans (path map

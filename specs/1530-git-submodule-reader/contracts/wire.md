@@ -31,7 +31,7 @@ One per gitlink. Example CycloneDX component; SPDX 2.3 and SPDX 3 carry the same
 
 ## Edges
 
-- **Root.** The document root depends on every top-level submodule component, including one FR-009 merged into another reader's component (C56 lists `git-submodule`). Top-level means no other submodule component depends on it. This is unconditional, through the root-anchor channel (research R5), so it holds even when the root already has other edges.
+- **Root.** The document root depends on every top-level submodule component, including one FR-009 merged into another reader's component, which is recognised by C57 since C56 is not yet emitted (#1558). Top-level means no other submodule component depends on it. This is unconditional, through the root-anchor channel (research R5), so it holds even when the root already has other edges.
 - **Nested.** A nested submodule is depended on by its enclosing submodule's component, never by the root directly.
 
 ## C57 `waybill:build-reference` (amended definition)

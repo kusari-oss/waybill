@@ -96,7 +96,6 @@ impl Drop for ReaderAnchorGuard {
 
 /// Install the PURLs a reader needs anchored to the document root (spec
 /// 1530, research R5). Hold the guard for as long as emission runs.
-#[allow(dead_code)] // TEMP(1530): first caller is scan_cmd's submodule anchoring (T023)
 pub(crate) fn install_reader_root_anchors(anchors: Vec<String>) -> ReaderAnchorGuard {
     READER_ROOT_ANCHORS.with(|cell| {
         *cell.borrow_mut() = Some(anchors);

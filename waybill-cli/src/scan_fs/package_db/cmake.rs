@@ -479,7 +479,6 @@ fn emit_pkg_check_module_entries(hits: Vec<PkgCheckHit>) -> Vec<PackageDbEntry> 
 /// this milestone. Tests in this module exercise the collector now,
 /// but no production call site exists yet — clippy's `dead_code` lint
 /// would otherwise reject the public fn.
-#[allow(dead_code)]
 pub fn collect_find_package_targets(scan_root: &Path) -> BTreeSet<String> {
     // Milestone 156 — reuses the extended discover_cmake_files but
     // passes false for `include_third_party_recursive` (the collector's
@@ -514,7 +513,95 @@ pub fn collect_find_package_targets(scan_root: &Path) -> BTreeSet<String> {
 /// into the accumulator. Pure function — used by the public collector
 /// and by unit tests. `#[allow(dead_code)]` per the public fn's note
 /// (consumer lands in US6 / T089).
-#[allow(dead_code)]
+/// Spec 1530 FR-008, research R10: directories CMake files reference by
+/// path — `add_subdirectory(<dir>)`, and the `SOURCE_DIR <dir>` argument of
+/// `ExternalProject_Add` / `FetchContent_Declare`. Each is resolved against
+/// the referencing file's directory after substituting the common
+/// source-directory variables, and lexically normalised. A path that still
+/// holds `${` after substitution is ignored.
+///
+/// Reads the files [`discover_cmake_files`] returns, so it shares #1516's
+/// limit: nested projects outside the root, `cmake/`, `Modules/` and
+/// `third_party/` are not seen.
+pub fn collect_cmake_path_references(scan_root: &Path) -> BTreeSet<PathBuf> {
+    static RE: OnceLock<Option<Regex>> = OnceLock::new();
+    let mut out = BTreeSet::new();
+    let Some(re) = RE
+        .get_or_init(|| {
+            Regex::new(r#"(?i)(?:\badd_subdirectory\s*\(\s*|\bSOURCE_DIR\s+)(?:"([^"]*)"|([^\s)"]+))"#).ok()
+        })
+        .as_ref()
+    else {
+        return out;
+    };
+    let root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+    let files = discover_cmake_files(
+        scan_root,
+        false,
+        &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+    );
+    for file in files {
+        let Ok(content) = std::fs::read_to_string(&file) else { continue };
+        let dir = file
+            .parent()
+            .map(|d| std::fs::canonicalize(d).unwrap_or_else(|_| d.to_path_buf()))
+            .unwrap_or_else(|| root.clone());
+        let dir_s = dir.to_string_lossy().into_owned();
+        let root_s = root.to_string_lossy().into_owned();
+        for c in re.captures_iter(&content) {
+            let Some(raw) = c.get(1).or_else(|| c.get(2)).map(|m| m.as_str()) else { continue };
+            let v = raw
+                .replace("${CMAKE_CURRENT_SOURCE_DIR}", &dir_s)
+                .replace("${CMAKE_CURRENT_LIST_DIR}", &dir_s)
+                .replace("${PROJECT_SOURCE_DIR}", &root_s)
+                .replace("${CMAKE_SOURCE_DIR}", &root_s);
+            if v.contains("${") || v.is_empty() {
+                continue;
+            }
+            let p = Path::new(&v);
+            let abs = if p.is_absolute() { p.to_path_buf() } else { dir.join(p) };
+            out.insert(lexical_normalize(&abs));
+        }
+    }
+    out
+}
+
+fn lexical_normalize(p: &Path) -> PathBuf {
+    let mut out = PathBuf::new();
+    for c in p.components() {
+        match c {
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => {
+                out.pop();
+            }
+            other => out.push(other.as_os_str()),
+        }
+    }
+    out
+}
+
+/// Spec 1530 FR-008 (C57): `declared-and-used` when a `find_package` target
+/// name case-insensitively equals the submodule directory's last segment,
+/// or a CMake path reference names the submodule directory or a path
+/// inside it; `declared-only` otherwise. `submodule_dir` is absolute and
+/// normalised; `find_package_targets` are lowercased by the collector.
+pub(crate) fn build_reference(
+    submodule_dir: &Path,
+    find_package_targets: &BTreeSet<String>,
+    path_refs: &BTreeSet<PathBuf>,
+) -> &'static str {
+    let by_name = submodule_dir
+        .file_name()
+        .map(|n| find_package_targets.contains(&n.to_string_lossy().to_lowercase()))
+        .unwrap_or(false);
+    let by_path = path_refs.iter().any(|r| r.starts_with(submodule_dir));
+    if by_name || by_path {
+        "declared-and-used"
+    } else {
+        "declared-only"
+    }
+}
+
 fn collect_into(content: &str, out: &mut BTreeSet<String>) {
     // `find_package(<target> ...)` — target is the first token after
     // `(`. CMake target names per the language reference are letters
