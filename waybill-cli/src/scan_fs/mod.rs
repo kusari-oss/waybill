@@ -215,6 +215,11 @@ pub struct ScanResult {
     /// annotation. `None` when the flag was absent — the annotation
     /// is elided per FR-003 (byte-identity default path).
     pub no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
+    /// #1524: root-relative paths of the binaries the binary scan did not
+    /// read because they sit under a test-input directory. Empty on image
+    /// scans and under `--include-test-binaries`. Its length is the C223
+    /// count; the paths keep the file-tier walker from emitting them instead.
+    pub binary_test_inputs_skipped: Vec<std::path::PathBuf>,
 }
 
 // Issue #910's `DEPENDS_SCOPE_ANNOTATION` constant moved to
@@ -288,6 +293,18 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             continue;
         };
         let path_string = path_str.into_owned();
+        // #1528: the size cap bounds hashing, not identification. An
+        // artifact over it is still emitted, without a content hash,
+        // and named here so the missing hash is explained.
+        if artifact.hash.is_none() {
+            tracing::warn!(
+                path = %path_string,
+                size = artifact.size,
+                max_file_size = size_cap,
+                purl = %purl,
+                "artifact exceeds --max-file-size; identified from its path but not hashed"
+            );
+        }
         // G2: the `name` field must match the convention
         // installed-package-db readers use, or dedup misses coords
         // emitted by both paths. For Go, readers set
@@ -336,7 +353,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             },
             licenses: vec![],
             concluded_licenses: Vec::new(),
-            hashes: vec![artifact.hash],
+            hashes: artifact.hash.into_iter().collect(),
             supplier: None,
             cpes: vec![],
             advisories: vec![],
@@ -451,6 +468,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // pilot, hoisted here so `pants_go::enrich` (called outside the
     // `if read_package_db` block below) can pick it up.
     let mut pants_go_build_files: Vec<std::path::PathBuf> = Vec::new();
+    let mut binary_test_inputs_skipped: Vec<std::path::PathBuf> = Vec::new();
     if read_package_db {
         // Milestone 134 US2 — surface the `--deep-hash` choice to the
         // cargo reader via env var (same plumbing pattern as
@@ -521,6 +539,15 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // path OR inode match a claim skip file-level + linkage
         // emissions. `.note.package` + embedded-version-string
         // emissions remain unconditional (TLS preservation).
+        // #1524: a directory scan does not report the binaries under a
+        // test-input directory (core dumps, corrupt ELF, cross-platform
+        // objects in a toolchain's source tree). An image or rootfs scan
+        // does, because an installed system's `tests/` is not a fixture.
+        // `--include-test-binaries` sets the env var scan_cmd bridges.
+        let include_test_binaries = std::env::var("WAYBILL_INCLUDE_TEST_BINARIES")
+            .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false);
+        let skip_test_inputs = scan_mode == ScanMode::Path && !include_test_binaries;
         db_entries.extend(binary::read(
             root,
             &claimed_paths,
@@ -528,7 +555,15 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             &claimed_inodes,
             exclude_set,
             no_binary_scan,
+            skip_test_inputs.then_some(&mut binary_test_inputs_skipped),
         ));
+        if !binary_test_inputs_skipped.is_empty() {
+            tracing::info!(
+                skipped = binary_test_inputs_skipped.len(),
+                "binary scan: skipped binaries under test-input directories \
+                 (test, tests, unittests, Inputs); --include-test-binaries reads them (#1524)"
+            );
+        }
         // Spec 1531 (#1531, research R2/R4): installed-library entries. They
         // need the OS-package claims (FR-015) and the binary file components
         // (FR-010), both known only now. They go in ahead of the binary
@@ -1483,6 +1518,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // mode from DbScanResult (populated at read_all entry, drawn
         // from the same CLI arg the pilot's registration gate reads).
         no_binary_scan_mode: no_binary_scan,
+        binary_test_inputs_skipped,
     })
 }
 

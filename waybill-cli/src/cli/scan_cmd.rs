@@ -1001,8 +1001,8 @@ pub struct ScanArgs {
     )]
     pub format: Vec<String>,
 
-    /// Maximum file size to hash (bytes). Larger files are skipped. The
-    /// default (256 MB) covers the largest realistic package artifact.
+    /// Maximum file size to hash (bytes). A larger package artifact is
+    /// still identified from its path and emitted without a content hash.
     #[arg(long, default_value_t = scan_fs::walker::DEFAULT_SIZE_CAP_BYTES)]
     pub max_file_size: u64,
 
@@ -1283,6 +1283,20 @@ pub struct ScanArgs {
     /// clap's bool-env strictness).
     #[arg(long)]
     pub include_vendored: bool,
+
+    /// Issue #1524: read binaries under test-input directories in a
+    /// directory scan. By default a `--path` scan skips any ELF, Mach-O or
+    /// PE file whose path below the scan root passes through a directory
+    /// named `test`, `tests`, `unittests` or `Inputs` (exact names), because
+    /// toolchain source trees keep core dumps, deliberately corrupt objects
+    /// and cross-platform fixtures there, and each one otherwise becomes a
+    /// component the project does not ship. The number skipped is recorded
+    /// as the document-scope `waybill:binary-scan-skipped-test-inputs`
+    /// annotation. `--image` scans never skip, so this flag changes nothing
+    /// there. Also accepts `WAYBILL_INCLUDE_TEST_BINARIES=1`, read directly
+    /// by the scan (the `WAYBILL_INCLUDE_VENDORED` pattern).
+    #[arg(long)]
+    pub include_test_binaries: bool,
 
     /// Extend the CMake reader's recursive descent to `third_party/`.
     /// By default (unset) `third_party/` is walked at depth-1 only
@@ -3274,6 +3288,13 @@ pub async fn execute(
             std::env::set_var("WAYBILL_INCLUDE_VENDORED", "1");
         }
     }
+    // #1524: same bridge for `--include-test-binaries`, read by `scan_path`.
+    if args.include_test_binaries {
+        // SAFETY: see comment above — single-threaded.
+        unsafe {
+            std::env::set_var("WAYBILL_INCLUDE_TEST_BINARIES", "1");
+        }
+    }
 
     // Spec 1491 (FR-006) — a malformed `--cpe-map` stops the scan here,
     // before any scanning, so no document is ever written from it.
@@ -3916,6 +3937,7 @@ pub async fn execute(
         scan_target_coord,
         divergence_records,
         no_binary_scan_mode,
+        binary_test_inputs_skipped,
     } = scan_fs::scan_path(
 
         &root_path,
@@ -5655,7 +5677,11 @@ pub async fn execute(
                 // content-shape-passing file regardless of coverage.
                 scan_fs::file_tier::dedupe::DedupeIndex::default()
             }
-            _ => scan_fs::file_tier::dedupe::DedupeIndex::build(&components),
+            // #1524: the binaries the binary scan skipped as test inputs are
+            // accounted for by C223, so the file tier must not emit them
+            // in their place. `Full` above still does, by its contract.
+            _ => scan_fs::file_tier::dedupe::DedupeIndex::build(&components)
+                .with_claimed_paths(&binary_test_inputs_skipped),
         };
         // Milestone 671 T008: derive the source-tree-restriction
         // parameter from the effective mode. `SourceTree { restriction }`
@@ -5977,6 +6003,7 @@ pub async fn execute(
         nix_eval_degraded,
         nix_closure_degraded,
         git_submodule_coverage: git_submodule_coverage.as_deref(),
+        binary_test_inputs_skipped: binary_test_inputs_skipped.len(),
         installed_library_coverage: installed_library_coverage.as_deref(),
         closure_ecosystem_identity: closure_ecosystem_identity_value,
         cpe_coverage: Some(cpe_coverage_json.as_str()),
@@ -9168,6 +9195,7 @@ mod tests {
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
             // Milestone 102 — default vendored-deps emission OFF.
             include_vendored: false,
+            include_test_binaries: false,
             // Milestone 156 — default third_party/ recursive-walk OFF.
             cmake_third_party_recursive: false,
             // Milestone 235 — default Gradle ladder opt-out (subprocess off,

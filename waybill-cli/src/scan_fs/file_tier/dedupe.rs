@@ -129,6 +129,18 @@ impl DedupeIndex {
         }
     }
 
+    /// Add root-relative paths another tier accounted for without emitting a
+    /// component, so the walker does not emit them instead. #1524: the
+    /// binaries a directory scan skipped as test inputs are counted by
+    /// C223, and would otherwise reappear here as file-tier components.
+    pub(crate) fn with_claimed_paths(mut self, paths: &[PathBuf]) -> Self {
+        for p in paths {
+            let normalized = p.strip_prefix("/").unwrap_or(p);
+            self.claimed_paths.insert(fold_usrmerge(normalized));
+        }
+        self
+    }
+
     /// FR-011 hybrid coverage check. Returns `true` when the file
     /// is COVERED (skip file-tier emission), `false` when it's
     /// orphan (emit).
@@ -391,4 +403,14 @@ mod tests {
         assert_eq!(fold_usrmerge(Path::new("usrlib/x")), PathBuf::from("usrlib/x"));
     }
 
+    /// #1524: paths another tier accounted for are covered, in the same
+    /// no-leading-`/` form the walker looks up.
+    #[test]
+    fn with_claimed_paths_covers_those_paths_only() {
+        let idx = DedupeIndex::default()
+            .with_claimed_paths(&[PathBuf::from("tests/Inputs/core"), PathBuf::from("/test/x")]);
+        assert!(idx.is_covered(Path::new("tests/Inputs/core"), "00"));
+        assert!(idx.is_covered(Path::new("test/x"), "00"));
+        assert!(!idx.is_covered(Path::new("bin/tool"), "00"));
+    }
 }

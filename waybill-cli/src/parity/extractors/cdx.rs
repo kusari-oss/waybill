@@ -1047,6 +1047,8 @@ cdx_anno!(c220_cdx, "waybill:vex-claims-unscoped", document);
 cdx_anno!(c221_cdx, "waybill:requirement-unsatisfied", component);
 // Spec 1530 (#1515): C222 — git-submodule coverage, document scope.
 cdx_anno!(c222_cdx, "waybill:git-submodule-coverage", document);
+// #1524: C223 — binaries a directory scan skipped as test inputs.
+cdx_anno!(c223_cdx, "waybill:binary-scan-skipped-test-inputs", document);
 // Spec 1531 (#1531): C224 — private-only pkg-config requirements; C225 —
 // installed-library coverage, document scope.
 cdx_anno!(c224_cdx, "waybill:pkg-config-private-requires", component);

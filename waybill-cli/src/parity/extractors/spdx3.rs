@@ -811,6 +811,8 @@ spdx3_anno!(c220_spdx3, "waybill:vex-claims-unscoped", document);
 spdx3_anno!(c221_spdx3, "waybill:requirement-unsatisfied", component);
 // Spec 1530 (#1515): C222.
 spdx3_anno!(c222_spdx3, "waybill:git-submodule-coverage", document);
+// #1524: C223.
+spdx3_anno!(c223_spdx3, "waybill:binary-scan-skipped-test-inputs", document);
 // Spec 1531 (#1531): C224, C225.
 spdx3_anno!(c224_spdx3, "waybill:pkg-config-private-requires", component);
 spdx3_anno!(c225_spdx3, "waybill:installed-library-coverage", document);

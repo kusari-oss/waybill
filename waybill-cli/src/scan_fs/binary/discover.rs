@@ -29,10 +29,17 @@ const MAX_WALK_DEPTH: usize = 16;
 /// `is_claimed_binary` so correctness is preserved (a false-miss
 /// here just means the file falls through to the full probe + the
 /// downstream layered claim check).
+///
+/// `test_inputs` — #1524. `Some` in a directory scan: a binary whose
+/// root-relative parent path contains a [`TEST_INPUT_DIRS`] component is
+/// not returned, and its root-relative path is pushed here instead. `None`
+/// (image and rootfs scans, nix outputs) returns every binary, because an
+/// installed system's `/usr/lib/<pkg>/tests/` is not a fixture.
 pub(super) fn discover_binaries(
     root: &Path,
     claimed_paths: &HashSet<PathBuf>,
     exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
+    mut test_inputs: Option<&mut Vec<PathBuf>>,
 ) -> Vec<PathBuf> {
     let mut out = Vec::new();
     if root.is_file() {
@@ -71,16 +78,44 @@ pub(super) fn discover_binaries(
             return;
         }
         if path.is_file() && is_supported_binary(path) {
-            let reported = resolved
-                .relative(path)
+            let rel = resolved.relative(path);
+            let reported = rel
+                .as_ref()
                 .map(|rel| root.join(rel))
                 .unwrap_or_else(|| path.to_path_buf());
-            if !claimed_paths.contains(&reported) {
-                out.push(reported);
+            if claimed_paths.contains(&reported) {
+                return;
             }
+            if let (Some(skipped), Some(rel)) = (test_inputs.as_deref_mut(), rel) {
+                if is_under_test_input_dir(&rel) {
+                    skipped.push(rel);
+                    return;
+                }
+            }
+            out.push(reported);
         }
     });
     out
+}
+
+/// #1524 — directory names that hold toolchain test inputs: core dumps,
+/// deliberately corrupt ELF, cross-platform objects. On the llvm-project
+/// fork #1524 reports, every one of the 546 binary-analyzed components sat
+/// under one of these. Exact, case-sensitive component equality.
+pub(crate) const TEST_INPUT_DIRS: [&str; 4] = ["test", "tests", "unittests", "Inputs"];
+
+/// Whether a root-relative path lies under a [`TEST_INPUT_DIRS`] directory.
+/// Only the parent components count: a binary that is itself named `test`
+/// is not a test input.
+pub(crate) fn is_under_test_input_dir(rel: &Path) -> bool {
+    rel.parent().is_some_and(|parent| {
+        parent.components().any(|c| match c {
+            std::path::Component::Normal(name) => {
+                name.to_str().is_some_and(|n| TEST_INPUT_DIRS.contains(&n))
+            }
+            _ => false,
+        })
+    })
 }
 
 fn is_supported_binary(path: &Path) -> bool {
@@ -154,6 +189,7 @@ mod tests {
             tmp.path(),
             &std::collections::HashSet::new(),
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None,
         );
         assert!(result.is_empty());
     }
@@ -179,7 +215,110 @@ mod tests {
             tmp.path(),
             &std::collections::HashSet::new(),
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None,
         );
         assert_eq!(result, vec![tmp.path().join("usr/lib/app/tool")]);
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod test_input_tests {
+    //! #1524 — binaries under test-input directories in a directory scan.
+
+    use super::*;
+
+    fn elf(tag: u8) -> Vec<u8> {
+        let mut b = b"\x7FELF\x02\x01\x01\x00".to_vec();
+        b.resize(64, tag);
+        b
+    }
+
+    fn plant(root: &Path, rels: &[&str]) {
+        for (i, rel) in rels.iter().enumerate() {
+            let p = root.join(rel);
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            std::fs::write(p, elf(i as u8)).unwrap();
+        }
+    }
+
+    fn discover(root: &Path, skip: bool) -> (Vec<PathBuf>, Vec<PathBuf>) {
+        let mut skipped = Vec::new();
+        let mut found = discover_binaries(
+            root,
+            &HashSet::new(),
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            skip.then_some(&mut skipped),
+        );
+        found.sort();
+        skipped.sort();
+        (found, skipped)
+    }
+
+    /// Exact component equality on the parent path. Names that only contain
+    /// or resemble a test-input name, and a binary that is itself named
+    /// `test`, are not test inputs.
+    #[test]
+    fn matching_is_exact_on_parent_components() {
+        for rel in [
+            "test/x",
+            "tests/x",
+            "a/unittests/b/x",
+            "clang/test/Inputs/x",
+            "Inputs/x",
+        ] {
+            assert!(is_under_test_input_dir(Path::new(rel)), "{rel}");
+        }
+        for rel in [
+            "bin/test",
+            "tests",
+            "testing/x",
+            "contest/x",
+            "test-data/x",
+            "Tests/x",
+            "inputs/x",
+            "unittest/x",
+            "bin/x",
+        ] {
+            assert!(!is_under_test_input_dir(Path::new(rel)), "{rel}");
+        }
+    }
+
+    /// The fix, and its positive control in the same walk: the binary under
+    /// `tests/` is recorded and not returned; the one under `bin/` is
+    /// returned.
+    #[test]
+    fn a_directory_scan_records_test_inputs_instead_of_returning_them() {
+        let tmp = tempfile::tempdir().unwrap();
+        plant(tmp.path(), &["bin/tool", "tests/Inputs/core", "src/unittests/obj"]);
+        let (found, skipped) = discover(tmp.path(), true);
+        assert_eq!(found, vec![tmp.path().join("bin/tool")]);
+        assert_eq!(
+            skipped,
+            vec![PathBuf::from("src/unittests/obj"), PathBuf::from("tests/Inputs/core")]
+        );
+    }
+
+    /// `None` is the image, rootfs and nix-output path: every binary is
+    /// returned and nothing is recorded.
+    #[test]
+    fn without_a_sink_every_binary_is_returned() {
+        let tmp = tempfile::tempdir().unwrap();
+        plant(tmp.path(), &["bin/tool", "tests/Inputs/core"]);
+        let (found, skipped) = discover(tmp.path(), false);
+        assert_eq!(found, vec![tmp.path().join("bin/tool"), tmp.path().join("tests/Inputs/core")]);
+        assert!(skipped.is_empty());
+    }
+
+    /// Matching is relative to the scan root: scanning a directory that is
+    /// itself named `tests` reads what is in it.
+    #[test]
+    fn the_scan_root_s_own_name_does_not_count() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("tests");
+        plant(&root, &["tool", "sub/other"]);
+        let (found, skipped) = discover(&root, true);
+        assert_eq!(found, vec![root.join("sub/other"), root.join("tool")]);
+        assert!(skipped.is_empty());
     }
 }

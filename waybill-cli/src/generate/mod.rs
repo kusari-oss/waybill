@@ -156,6 +156,10 @@ pub struct ScanArtifacts<'a> {
     /// Spec 1530 FR-011 (C222): the git-submodule coverage record, as its
     /// wire value. `None` when no `.gitmodules` file was seen.
     pub git_submodule_coverage: Option<&'a str>,
+    /// #1524 (C223): binaries a directory scan did not read because they sit
+    /// under a test-input directory. Zero on image scans and under
+    /// `--include-test-binaries`; the annotation is absent at zero.
+    pub binary_test_inputs_skipped: usize,
     /// Spec 1531 FR-008 (C225): the installed-library coverage record, as its wire
     /// value. `None` when no `.pc` or CMake version file was matched.
     pub installed_library_coverage: Option<&'a str>,

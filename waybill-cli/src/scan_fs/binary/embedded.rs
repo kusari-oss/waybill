@@ -68,6 +68,7 @@ pub(crate) fn embedded_contents(path: &Path) -> EmbeddedContents {
         path,
         &HashSet::new(),
         &ExclusionSet::new_empty(),
+        None,
     );
 
     for binary in binaries {
