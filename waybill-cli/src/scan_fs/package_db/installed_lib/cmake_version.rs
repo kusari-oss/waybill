@@ -164,6 +164,11 @@ fn arguments(chars: &[char], mut i: usize) -> (Vec<Arg>, usize) {
             }
             i += 1;
             args.push(Arg { text });
+        } else if let Some((text, end)) = bracket_argument(chars, i) {
+            // `[=[ … ]=]`: CMake's generated CTest files name tests this way,
+            // and the content may hold spaces (spec 1533 research R1).
+            args.push(Arg { text });
+            i = end;
         } else {
             let start = i;
             while i < chars.len() && !chars[i].is_whitespace() && chars[i] != ')' && chars[i] != '(' {
@@ -173,6 +178,32 @@ fn arguments(chars: &[char], mut i: usize) -> (Vec<Arg>, usize) {
         }
     }
     (args, i)
+}
+
+/// A bracket argument starting at `i`: `[`, `=`×n, `[`, content, `]`, `=`×n,
+/// `]`. Returns its content and the index after it, or `None` when `i` does
+/// not open one or it is never closed.
+fn bracket_argument(chars: &[char], i: usize) -> Option<(String, usize)> {
+    if chars.get(i) != Some(&'[') {
+        return None;
+    }
+    let mut j = i + 1;
+    while chars.get(j) == Some(&'=') {
+        j += 1;
+    }
+    if chars.get(j) != Some(&'[') {
+        return None;
+    }
+    let eq = j - i - 1;
+    let start = j + 1;
+    let mut k = start;
+    while k < chars.len() {
+        if chars[k] == ']' && chars[k + 1..].iter().take(eq).all(|c| *c == '=') && chars.get(k + 1 + eq) == Some(&']') {
+            return Some((chars[start..k].iter().collect(), k + eq + 2));
+        }
+        k += 1;
+    }
+    None
 }
 
 #[cfg(test)]
@@ -236,5 +267,20 @@ mod tests {
     #[test]
     fn a_hash_inside_a_quoted_string_is_not_a_comment() {
         assert_eq!(parse("set(PACKAGE_VERSION \"1#2\")\n"), Ok("1#2".into()));
+    }
+
+    /// Spec 1533 R1: CMake writes test names as bracket arguments, which may
+    /// hold spaces and `]`; the arguments after them must not shift.
+    #[test]
+    fn bracket_arguments_are_one_argument() {
+        let texts = |s: &str| -> Vec<String> {
+            commands(s).into_iter().next().unwrap().1.into_iter().map(|a| a.text).collect()
+        };
+        assert_eq!(texts("add_test([=[a b]=] \"x\" y)"), vec!["a b", "x", "y"]);
+        assert_eq!(texts("add_test([[a]] x)"), vec!["a", "x"]);
+        assert_eq!(texts("add_test([==[a ]=] b]==] x)"), vec!["a ]=] b", "x"]);
+        // Not a bracket opener, and an unclosed one: ordinary text.
+        assert_eq!(texts("f([x] y)"), vec!["[x]", "y"]);
+        assert_eq!(texts("f([=[x y)"), vec!["[=[x", "y"]);
     }
 }

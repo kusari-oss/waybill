@@ -142,3 +142,7 @@ The binaries #1524 skips are those under `binary::discover::TEST_INPUT_DIRS` (`t
 **Decision:** with the flag, the post-pass scopes binary file components under exactly those directories, recorded as `test-directory`, whether or not the tree is recognised. #1524's set is reused, not copied.
 
 Note the difference: `Inputs` is in #1524's set but is not a path convention in FR-005. It is scoped only through this flag.
+
+**Found at implementation (FR-016):** #1524's skip ran on every `--path` scan, and the ROCm SDK is measured with `--path`. The 22 binaries `rocprofiler-sdk-tests` declares live under `share/rocprofiler-sdk/tests/`, so they would never become components, and SC-001 would hold vacuously. The integration test `us1_declared_test_payload_is_test_scoped` failed for this reason, with no component named `unit-t`.
+
+Recognition needs only the #1531 records and the OS claims, both known before the binary scan. So `scan_path` decides before it, and keeps #1524's skip only for a tree that is not recognised. A source tree, the case #1524 was written for, is unchanged.

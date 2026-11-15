@@ -1053,6 +1053,8 @@ cdx_anno!(c223_cdx, "waybill:binary-scan-skipped-test-inputs", document);
 // installed-library coverage, document scope.
 cdx_anno!(c224_cdx, "waybill:pkg-config-private-requires", component);
 cdx_anno!(c225_cdx, "waybill:installed-library-coverage", document);
+// Spec 1533 (#1564): C226 — test-scope coverage, document scope.
+cdx_anno!(c226_cdx, "waybill:test-scope-coverage", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

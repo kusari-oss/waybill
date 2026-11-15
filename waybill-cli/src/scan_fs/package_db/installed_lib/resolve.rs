@@ -16,8 +16,9 @@ use std::path::{Path, PathBuf};
 use waybill_common::resolution::BinaryRole;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
-use super::{location, targets, Phase1, Record, RecordKind, SkipReason, TargetsFile};
+use super::{ctest, location, targets, CtestFile, Phase1, Record, RecordKind, SkipReason, TargetsFile};
 use crate::scan_fs::package_db::PackageDbEntry;
+use crate::scan_fs::test_scope::{TestDeclarations, TestRule};
 
 /// C225: the document-scope coverage record.
 pub(crate) const ANN_INSTALLED_LIBRARY_COVERAGE: &str = "waybill:installed-library-coverage";
@@ -108,18 +109,37 @@ struct Live {
     purl: Purl,
 }
 
-/// Phase 2. `binaries` are the binary scan's entries. Returns the new
-/// entries (`.pc` first, then CMake, each in path order) and the coverage
-/// record, which is `None` when phase 1 matched no file.
+/// Phase 2's output.
+#[derive(Debug, Default)]
+pub(crate) struct Resolved {
+    /// `.pc` entries first, then CMake, each in path order.
+    pub(crate) entries: Vec<PackageDbEntry>,
+    /// C225; `None` when phase 1 matched no package metadata file.
+    pub(crate) coverage: Option<Coverage>,
+    /// Spec 1533: what installed test declarations name.
+    pub(crate) tests: TestDeclarations,
+}
+
+/// Spec 1533 FR-015 (research R5): a record sits in a recognised install
+/// location and no OS package owns it. Needs only phase 1 and the claims, so
+/// `scan_path` can decide before the binary scan whether #1524's test-input
+/// skip applies.
+pub(crate) fn has_installed_record(phase1: &Phase1, scan_root: &Path, claims: &OsClaims<'_>) -> bool {
+    phase1.records.iter().any(|r| r.prefix.is_some() && !os_owned(r, scan_root, claims))
+}
+
+/// Phase 2. `binaries` are the binary scan's entries.
 pub(crate) fn resolve(
     phase1: Phase1,
     scan_root: &Path,
     claims: &OsClaims<'_>,
     binaries: &[PackageDbEntry],
-) -> (Vec<PackageDbEntry>, Option<Coverage>) {
-    let Phase1 { records, targets: targets_files } = phase1;
+) -> Resolved {
+    let Phase1 { records, targets: targets_files, ctest: ctest_files } = phase1;
+    let mut out = Resolved::default();
+    resolve_ctest(ctest_files, scan_root, claims, &mut out.tests);
     if records.is_empty() && targets_files.is_empty() {
-        return (Vec::new(), None);
+        return out;
     }
     let mut cov = Coverage::default();
     let mut live: Vec<Live> = Vec::new();
@@ -128,9 +148,10 @@ pub(crate) fn resolve(
             RecordKind::PkgConfig => cov.pkg_config_read += 1,
             RecordKind::CmakeVersion => cov.cmake_read += 1,
         }
+        let owned = record.prefix.is_some() && os_owned(&record, scan_root, claims);
         let outcome = match (&record.prefix, &record.version) {
             (None, _) => Err(SkipReason::UnrecognisedLocation),
-            (Some(_), _) if os_owned(&record, scan_root, claims) => Err(SkipReason::OwnedByOsPackage),
+            (Some(_), _) if owned => Err(SkipReason::OwnedByOsPackage),
             (Some(_), Err(r)) => Err(*r),
             (Some(prefix), Ok(v)) => Ok((prefix.clone(), v.clone())),
         };
@@ -163,7 +184,7 @@ pub(crate) fn resolve(
     let mut evidence = match_binaries(&live, binaries);
     if !targets_files.is_empty() {
         cov.exported_targets =
-            Some(attach_exported_targets(&live, targets_files, scan_root, claims, &mut evidence));
+            Some(attach_exported_targets(&live, targets_files, scan_root, claims, &mut evidence, &mut out.tests));
     }
 
     let entries: Vec<PackageDbEntry> = live
@@ -179,7 +200,88 @@ pub(crate) fn resolve(
         })
         .collect();
     tracing::info!(reader = "installed-lib", coverage = %cov.wire(), "installed libraries");
-    (entries, Some(cov))
+    out.entries = entries;
+    out.coverage = Some(cov);
+    out
+}
+
+/// Spec 1533 (research R1): each installed CTest file's `add_test` locations,
+/// resolved from its own directory inside the root. Not tied to an install
+/// location: a declaration counts wherever it is found.
+fn resolve_ctest(files: Vec<CtestFile>, scan_root: &Path, claims: &OsClaims<'_>, tests: &mut TestDeclarations) {
+    for f in files {
+        if path_os_owned(&f.path, f.resolved.as_deref(), scan_root, claims) {
+            tests.coverage.owned_by_os_package += 1;
+            continue;
+        }
+        let (Some(parsed), Some(dir_rel)) = (f.parsed, location::relative_to_root(&f.dir, scan_root)) else {
+            continue;
+        };
+        tests.coverage.ctest += 1;
+        tests.coverage.unresolved += parsed.includes;
+        for command in &parsed.tests {
+            match ctest::named(command) {
+                ctest::Named::Unresolved => tests.coverage.unresolved += 1,
+                ctest::Named::Direct(word) => match join_within(&dir_rel, &word) {
+                    None => tests.coverage.outside_root += 1,
+                    Some(rel) => match shipped(scan_root, &rel) {
+                        Some(abs) => {
+                            tests.coverage.resolved += 1;
+                            declare(tests, scan_root, rel, &abs, TestRule::CtestDeclaration);
+                        }
+                        None => tests.coverage.not_shipped += 1,
+                    },
+                },
+                ctest::Named::Interpreter(words) => {
+                    let mut any = false;
+                    for word in words {
+                        let Some(rel) = join_within(&dir_rel, &word) else { continue };
+                        if let Some(abs) = shipped(scan_root, &rel) {
+                            declare(tests, scan_root, rel, &abs, TestRule::CtestDeclaration);
+                            any = true;
+                        }
+                    }
+                    if any {
+                        tests.coverage.resolved += 1;
+                    } else {
+                        tests.coverage.unresolved += 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// The regular file `rel` names inside the root, resolved.
+fn shipped(scan_root: &Path, rel: &Path) -> Option<PathBuf> {
+    location::resolve_in_root(scan_root, rel).filter(|p| p.is_file())
+}
+
+/// Declare both spellings of a file: as named, and resolved. The binary
+/// scan reports a file under its resolved root-relative spelling (spec 1532
+/// M7), and a file-tier path may be either.
+fn declare(tests: &mut TestDeclarations, scan_root: &Path, rel: PathBuf, abs: &Path, rule: TestRule) {
+    if let Ok(r) = abs.strip_prefix(scan_root) {
+        tests.declare(r.to_path_buf(), rule);
+    }
+    tests.declare(rel, rule);
+}
+
+/// `rest` joined onto the root-relative `dir_rel`, lexically. `None` when
+/// `..` climbs above the root or `rest` is not relative.
+fn join_within(dir_rel: &Path, rest: &str) -> Option<PathBuf> {
+    let mut parts: Vec<std::ffi::OsString> = dir_rel.components().map(|c| c.as_os_str().to_os_string()).collect();
+    for c in Path::new(rest).components() {
+        match c {
+            std::path::Component::Normal(s) => parts.push(s.to_os_string()),
+            std::path::Component::ParentDir => {
+                parts.pop()?;
+            }
+            std::path::Component::CurDir => {}
+            _ => return None,
+        }
+    }
+    Some(parts.iter().collect())
 }
 
 /// FR-015: listed by dpkg/apk/alpm/opkg/rpm, or inside a Homebrew keg.
@@ -211,6 +313,7 @@ fn attach_exported_targets(
     scan_root: &Path,
     claims: &OsClaims<'_>,
     evidence: &mut BTreeMap<usize, Vec<String>>,
+    tests: &mut TestDeclarations,
 ) -> ExportedTargetsCoverage {
     let mut cov = ExportedTargetsCoverage::default();
     // One export set per directory, OS-owned files skipped.
@@ -221,9 +324,15 @@ fn attach_exported_targets(
         }
         if path_os_owned(&f.path, f.resolved.as_deref(), scan_root, claims) {
             cov.owned_by_os_package += 1;
+            if f.test_package {
+                tests.coverage.owned_by_os_package += 1;
+            }
             continue;
         }
         cov.read += 1;
+        if f.test_package {
+            tests.coverage.exported_targets += 1;
+        }
         by_dir.entry(f.dir.clone()).or_default().push(f);
     }
     for (dir, set) in by_dir {
@@ -234,6 +343,12 @@ fn attach_exported_targets(
             .and_then(|p| p.raise);
         let prefix = set.iter().find_map(|f| f.prefix.clone());
         let component = package_record(live, &dir, prefix.as_deref());
+        // Spec 1533 FR-004: a test package's export set declares its files,
+        // and its own component, test payload.
+        let test_set = set.iter().any(|f| f.test_package);
+        if let (true, Some(idx)) = (test_set, component) {
+            tests.package_purls.insert(live[idx].purl.as_str().to_string());
+        }
         let locations: BTreeSet<&str> =
             set.iter().filter_map(|f| f.parsed.as_ref()).flat_map(|p| p.locations.iter().map(String::as_str)).collect();
         for loc in locations {
@@ -244,15 +359,21 @@ fn attach_exported_targets(
             };
             let Some(rel) = rel else {
                 cov.unresolved_location += 1;
+                if test_set {
+                    tests.coverage.unresolved += 1;
+                }
                 continue;
             };
-            let Some(resolved) = location::resolve_in_root(scan_root, &rel) else {
+            let Some(resolved) = shipped(scan_root, &rel) else {
                 cov.not_shipped += 1;
+                if test_set {
+                    tests.coverage.not_shipped += 1;
+                }
                 continue;
             };
-            if !resolved.is_file() {
-                cov.not_shipped += 1;
-                continue;
+            if test_set {
+                tests.coverage.resolved += 1;
+                declare(tests, scan_root, rel.clone(), &resolved, TestRule::ExportedTargetsTestPackage);
             }
             let Some(idx) = component else {
                 cov.no_package_version += 1;
@@ -549,8 +670,8 @@ mod tests {
             #[cfg(unix)]
             inodes: &inodes,
         };
-        let (e, c) = resolve(Phase1 { records, targets: Vec::new() }, Path::new("/nonexistent-root"), &claims, binaries);
-        (e, c.unwrap())
+        let r = resolve(Phase1 { records, ..Phase1::default() }, Path::new("/nonexistent-root"), &claims, binaries);
+        (r.entries, r.coverage.unwrap())
     }
 
     fn deps_of<'a>(entries: &'a [PackageDbEntry], purl: &str) -> &'a [String] {

@@ -181,7 +181,16 @@ pub(super) fn spdx3_binary_role(doc: &Value) -> BTreeSet<String> {
             let purl = p
                 .get("software_packageUrl")
                 .and_then(|v| v.as_str())?;
-            let purpose = p.get("software_primaryPurpose").and_then(|v| v.as_str())?;
+            let mut purpose = p.get("software_primaryPurpose").and_then(|v| v.as_str())?;
+            // Spec 1533 (research R8): a test-scoped binary's role moves to
+            // `software_additionalPurpose`.
+            if purpose == "test" {
+                purpose = p
+                    .get("software_additionalPurpose")
+                    .and_then(|v| v.as_array())
+                    .and_then(|a| a.first())
+                    .and_then(|v| v.as_str())?;
+            }
             match purpose {
                 "application" | "library" | "file" => {
                     Some(format!("{purl}={purpose}"))
@@ -816,6 +825,8 @@ spdx3_anno!(c223_spdx3, "waybill:binary-scan-skipped-test-inputs", document);
 // Spec 1531 (#1531): C224, C225.
 spdx3_anno!(c224_spdx3, "waybill:pkg-config-private-requires", component);
 spdx3_anno!(c225_spdx3, "waybill:installed-library-coverage", document);
+// Spec 1533 (#1564): C226.
+spdx3_anno!(c226_spdx3, "waybill:test-scope-coverage", document);
 spdx3_anno!(c42_spdx3, "waybill:lifecycle-scope", component);
 spdx3_anno!(c194_spdx3_raw, "waybill:derivation", document);
 spdx3_anno!(c195_spdx3, "waybill:go-mod-why", document);

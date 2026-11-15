@@ -29,6 +29,7 @@ pub mod oci_pull;
 pub mod os_release;
 pub mod package_db;
 pub(crate) mod produces_binaries;
+pub(crate) mod test_scope;
 pub mod sbom_path;
 pub(crate) mod walk;
 pub mod walker;
@@ -143,6 +144,10 @@ pub struct ScanResult {
     /// Spec 1531 FR-008 (C225): the installed-library coverage record, as its
     /// wire value. `None` when no `.pc` or CMake version file was matched.
     pub installed_library_coverage: Option<String>,
+    /// Spec 1533: what the test-scope post-pass needs (declarations, whether
+    /// this is an installed tree, the OS claims). Applied in `scan_cmd` after
+    /// file-tier emission.
+    pub(crate) test_scope_inputs: test_scope::Inputs,
     /// Milestone 161 (T012): workspace-mode detection outcome from
     /// `go.work` at scanned root. Distinct from
     /// `go_transitive_coverage` and `go_graph_completeness` per
@@ -417,6 +422,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut go_mod_why: Option<package_db::GoModWhyStatus> = None;
     let mut git_submodule_coverage: Option<String> = None;
     let mut installed_library_coverage: Option<String> = None;
+    let mut test_scope_inputs = test_scope::Inputs::default();
     // Milestone 161 (T012): doc-scope go-workspace-mode signal.
     // Distinct from `go_transitive_coverage` per research.md R1.
     // Carried through ScanResult into the format emitters for the
@@ -547,7 +553,27 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let include_test_binaries = std::env::var("WAYBILL_INCLUDE_TEST_BINARIES")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
-        let skip_test_inputs = scan_mode == ScanMode::Path && !include_test_binaries;
+        // Spec 1533 FR-015: an image, or a directory holding an installed
+        // library no OS package owns, or an OS package database that claimed
+        // files, is an installed tree. Its tests are reported (test-scoped by
+        // `test_scope`), not skipped: #1524's skip is for source trees.
+        let installed_tree = if scan_mode == ScanMode::Image {
+            test_scope::InstalledTree::Image
+        } else {
+            let claims = package_db::installed_lib::resolve::OsClaims {
+                paths: &os_claimed_paths,
+                #[cfg(unix)]
+                inodes: &os_claimed_inodes,
+            };
+            if !os_claimed_paths.is_empty()
+                || package_db::installed_lib::resolve::has_installed_record(&installed_lib_records, root, &claims)
+            {
+                test_scope::InstalledTree::Recognised
+            } else {
+                test_scope::InstalledTree::NotRecognised
+            }
+        };
+        let skip_test_inputs = installed_tree == test_scope::InstalledTree::NotRecognised && !include_test_binaries;
         db_entries.extend(binary::read(
             root,
             &claimed_paths,
@@ -575,14 +601,22 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 #[cfg(unix)]
                 inodes: &os_claimed_inodes,
             };
-            let (lib_entries, coverage) = package_db::installed_lib::resolve::resolve(
+            let resolved = package_db::installed_lib::resolve::resolve(
                 installed_lib_records,
                 root,
                 &claims,
                 &db_entries[binary_start..],
             );
-            installed_library_coverage = coverage.map(|c| c.wire());
-            db_entries.splice(binary_start..binary_start, lib_entries);
+            installed_library_coverage = resolved.coverage.map(|c| c.wire());
+            db_entries.splice(binary_start..binary_start, resolved.entries);
+            test_scope_inputs = test_scope::Inputs {
+                installed_tree,
+                declarations: resolved.tests,
+                os_claimed_paths,
+                #[cfg(unix)]
+                os_claimed_inodes,
+                include_test_binaries,
+            };
         }
 
         // Record which ecosystems actually had a populated db — each
@@ -1536,6 +1570,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_mod_why,
         git_submodule_coverage,
         installed_library_coverage,
+        test_scope_inputs,
         go_workspace_mode,
         go_toolchains_detected,
         cross_ecosystem_edges_report,

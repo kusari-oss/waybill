@@ -676,6 +676,7 @@ pub(crate) mod tests {
             git_submodule_coverage: None,
             binary_test_inputs_skipped: 0,
             installed_library_coverage: None,
+            test_scope_coverage: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,
