@@ -436,6 +436,7 @@ mod tests {
             nix_eval_degraded: None,
             nix_closure_degraded: None,
             git_submodule_coverage: None,
+            binary_test_inputs_skipped: 0,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,

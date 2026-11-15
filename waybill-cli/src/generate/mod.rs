@@ -156,6 +156,10 @@ pub struct ScanArtifacts<'a> {
     /// Spec 1530 FR-011 (C222): the git-submodule coverage record, as its
     /// wire value. `None` when no `.gitmodules` file was seen.
     pub git_submodule_coverage: Option<&'a str>,
+    /// #1524 (C223): binaries a directory scan did not read because they sit
+    /// under a test-input directory. Zero on image scans and under
+    /// `--include-test-binaries`; the annotation is absent at zero.
+    pub binary_test_inputs_skipped: usize,
     /// Milestone 1366 (#1365; C208) — what the closure's ecosystem identity
     /// pass did: how many candidates it found, confirmed, declined and could
     /// not check, and why if any went unchecked. `None` when no closure was

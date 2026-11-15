@@ -203,6 +203,8 @@ pub struct MetadataExtras<'a> {
     pub nix_closure_degraded: Option<&'a str>,
     /// C222 (spec 1530) — the git-submodule coverage record.
     pub git_submodule_coverage: Option<&'a str>,
+    /// C223 (#1524) — binaries skipped under test-input directories.
+    pub binary_test_inputs_skipped: usize,
     /// C208 (m1366, #1365) — the closure ecosystem identity pass's record.
     pub closure_ecosystem_identity: Option<&'a str>,
     /// C209 (m1367, #1371) — the CPE synthesis coverage record.
@@ -297,6 +299,7 @@ pub fn build_metadata(
         nix_eval_degraded,
         nix_closure_degraded,
         git_submodule_coverage,
+        binary_test_inputs_skipped,
         closure_ecosystem_identity,
         cpe_coverage,
         closure_graph_admission,
@@ -513,6 +516,13 @@ pub fn build_metadata(
         properties.push(json!({
             "name": crate::scan_fs::package_db::git_submodule::ANN_GIT_SUBMODULE_COVERAGE,
             "value": record,
+        }));
+    }
+    // C223 (#1524): absent at zero, as C168 is.
+    if binary_test_inputs_skipped > 0 {
+        properties.push(json!({
+            "name": crate::scan_fs::binary::ANN_BINARY_SCAN_SKIPPED_TEST_INPUTS,
+            "value": binary_test_inputs_skipped.to_string(),
         }));
     }
 
