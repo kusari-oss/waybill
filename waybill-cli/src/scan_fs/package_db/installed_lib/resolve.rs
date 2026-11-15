@@ -188,9 +188,12 @@ fn in_homebrew_keg(resolved: &Path, scan_root: &Path) -> bool {
     })
 }
 
+/// The `.pc` and CMake versions stated for one name in one prefix.
+type VersionsByKind<'a> = (BTreeSet<&'a str>, BTreeSet<&'a str>);
+
 /// Names whose `.pc` and CMake versions differ within one prefix.
 fn count_disagreements(live: &[Live]) -> usize {
-    let mut by_key: BTreeMap<(&Path, &str), (BTreeSet<&str>, BTreeSet<&str>)> = BTreeMap::new();
+    let mut by_key: BTreeMap<(&Path, &str), VersionsByKind<'_>> = BTreeMap::new();
     for l in live {
         let e = by_key.entry((l.prefix.as_path(), l.lname.as_str())).or_default();
         match l.record.kind {

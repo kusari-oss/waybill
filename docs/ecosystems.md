@@ -14,7 +14,6 @@ diving into the [architecture docs](architecture/overview.md).
 | [gem](#gem) | `Gemfile.lock` + `specifications/*.gemspec` | Lockfile indent-6 | — | — / ✓ | Implemented |
 | [golang](#golang) | `go.mod` / `go.sum` + module cache; `runtime/debug.BuildInfo` for binaries | Cache walker (source); **none** (binaries) | `go.sum` H1 (Merkle trie, not CDX) | ✓ / ✓ | Implemented |
 | [haskell](#haskell) | `cabal.project.freeze`, `cabal.project`, `stack.yaml.lock`, `stack.yaml`, `package.yaml`, `*.cabal` | Lockfile pin set (freeze / stack lock); `build-depends:` unioned across all stanzas for the main module; hpack `package.yaml` parsed and preferred over a generated `*.cabal` | — | — / — | Implemented (milestones 143, 895, 1273) |
-| installed C/C++ libraries | pkg-config `*.pc` in `lib*/pkgconfig` / `share/pkgconfig`, and CMake `*ConfigVersion.cmake` / `*-config-version.cmake` in `find_package` search locations, including inside `.venv` / `venv` site-packages. Files an OS package database owns (dpkg, rpm, apk, alpm, opkg, Homebrew keg) are skipped. | `Requires` + `Requires.private`, resolved by exact PURL within the install prefix first (`waybill:pkg-config-private-requires`, C224, marks private-only targets) | — | — / — | Implemented (spec 1531, #1531). `pkg:generic/<lowercased name>@<version>`, tier `deployed`. Coverage: `waybill:installed-library-coverage` (C225). |
 | [maven](#maven) | Project `pom.xml` + JAR `META-INF/maven` + `~/.m2` + deps.dev fallback + Gradle `gradle.lockfile` / `buildscript-gradle.lockfile` | Layered: local → JAR → `~/.m2` BFS → parent POM chain → deps.dev. Gradle lockfile = flat | JAR sidecar `.sha512` > `.sha256` > `.sha1` | ✓ / ✓ | Implemented |
 | [nix](#nix) | `flake.lock` + `flake.nix`; runtime-closure and `nix eval` tiers behind `--nix-closure` | `flake.lock` node graph (flake inputs). Closure references drive component *roles*, not `dependsOn` edges; a closure member the pinned package set identifies also carries the **declared** Haskell dependencies as `dependsOn` (m1275) | nixpkgs `hackage-packages.nix` SHA-256 **and declared license** (Haskell members, including closure members since m1275) | — / — | Implemented (milestones 925, 926, 1034, 1035, 1050, 1066, 1273, 1275) |
 | [npm](#npm) | `package-lock.json` v2/v3, `pnpm-lock.yaml`, `bun.lock`, `yarn.lock` (v1 + Berry), `node_modules/` | Lockfile (full tree) | Lockfile `integrity` (package-lock / pnpm-lock only) | ✓ / ✓ | Implemented |
@@ -35,6 +34,27 @@ concluded licenses apply to the ecosystem. Both honour the global
 `--clearly-defined` (off by default since #930).
 
 ---
+
+## Installed C/C++ libraries (pkg-config and CMake version files)
+
+Spec 1531 (#1531). An installed C/C++ SDK states each library's version in
+pkg-config files (`lib*/pkgconfig/*.pc`, `share/pkgconfig/*.pc`) and in CMake
+package version files (`*ConfigVersion.cmake`, `*-config-version.cmake`) in
+`find_package` search locations.
+
+- **Identity.** Each such file gives `pkg:generic/<lowercased name>@<version>`
+  at tier `deployed`.
+- **Versions.** `.pc` variables expand as pkg-config expands them, and only a
+  literal CMake `PACKAGE_VERSION` is read.
+- **Where files are read.** This includes inside `.venv` / `venv`
+  site-packages.
+- **What is skipped.** Files an OS package database owns: dpkg, rpm, apk,
+  alpm, opkg, or a Homebrew keg.
+- **Edges.** `Requires` and `Requires.private` become edges by exact PURL,
+  within the install prefix first. `waybill:pkg-config-private-requires`
+  (C224) marks private-only targets.
+- **Coverage.** `waybill:installed-library-coverage` (C225) records what was
+  read and skipped, by reason.
 
 ## SBOM tiers: source, design, binary
 

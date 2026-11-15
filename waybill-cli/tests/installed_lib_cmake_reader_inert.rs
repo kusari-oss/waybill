@@ -32,7 +32,12 @@ fn the_cmake_reader_emits_nothing_from_a_package_version_file() {
     assert!(fetched, "control: the CMake reader must read cmake/fetch.cmake");
     let from_cmake: Vec<String> = components(&docs.cdx)
         .into_iter()
-        .filter(|c| prop(c, "waybill:source-mechanism").is_some_and(|m| m.starts_with("cmake-")))
+        // `cmake-package-version` is the installed-library reader's own
+        // mechanism, not the CMake reader's.
+        .filter(|c| {
+            prop(c, "waybill:source-mechanism")
+                .is_some_and(|m| m.starts_with("cmake-") && m != "cmake-package-version")
+        })
         .filter(|c| !c["purl"].as_str().is_some_and(|p| p.contains("waybill-fixture-fetched")))
         .filter_map(|c| c["purl"].as_str().map(str::to_string))
         .collect();
