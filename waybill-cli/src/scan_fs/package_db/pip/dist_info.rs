@@ -129,11 +129,20 @@ pub(super) fn read_venv_dist_info(rootfs: &Path) -> Vec<PackageDbEntry> {
         // No seeds: METADATA does not record which extras the top-level
         // install asked for, only those one installed package asks of another.
         let active = active_extras([], &graph);
+        // #1529: the only package at the scan root itself (an unpacked
+        // wheel) is the project, so it is the main module (C40).
+        let is_project = root == rootfs && parsed.len() == 1;
         for (metadata_path, entry) in parsed {
             let own = active.get(&normalize_pypi_name_for_purl(&entry.name)).cloned();
-            if let Some(entry) =
+            if let Some(mut entry) =
                 entry.into_package_db_entry(metadata_path.to_string_lossy().into_owned(), own.as_ref())
             {
+                if is_project {
+                    entry.extra_annotations.insert(
+                        "waybill:component-role".to_string(),
+                        serde_json::Value::String("main-module".to_string()),
+                    );
+                }
                 out.push(entry);
             }
         }
@@ -148,8 +157,13 @@ pub(super) fn read_venv_dist_info(rootfs: &Path) -> Vec<PackageDbEntry> {
 /// - `<root>/usr/lib/python*/site-packages/`
 /// - `<root>/usr/local/lib/python*/site-packages/`
 /// - `<root>/opt/app/.venv/lib/python*/site-packages/`
+/// - `<root>` itself, when it directly holds a `*.dist-info` directory: an
+///   unpacked wheel has a site-packages layout (#1529).
 fn candidate_site_packages_roots(rootfs: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
+    if holds_dist_info(rootfs) {
+        out.push(rootfs.to_path_buf());
+    }
     for venv in [".venv", "venv"] {
         out.extend(find_site_packages_under(&rootfs.join(venv).join("lib")));
     }
@@ -157,6 +171,14 @@ fn candidate_site_packages_roots(rootfs: &Path) -> Vec<PathBuf> {
         out.extend(find_site_packages_under(&rootfs.join(sys)));
     }
     out
+}
+
+fn holds_dist_info(dir: &Path) -> bool {
+    std::fs::read_dir(dir).is_ok_and(|entries| {
+        entries.flatten().any(|e| {
+            e.path().extension().is_some_and(|ext| ext == "dist-info") && e.path().is_dir()
+        })
+    })
 }
 
 /// `<base>/python3.X/site-packages/` OR `<base>/python3.X/dist-packages/`.
@@ -715,5 +737,73 @@ Requires-Dist: pytest ; extra == 'dev'
         assert!(e.depends.contains(&"certifi".to_string()));
         assert!(e.depends.contains(&"charset-normalizer".to_string()));
         assert!(!e.depends.contains(&"pytest".to_string()));
+    }
+
+    /// #1529: an unpacked wheel has a site-packages layout. Scanned at its
+    /// own root, its `.dist-info` identifies the package.
+    #[test]
+    fn s1529_unpacked_wheel_at_scan_root_is_read() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("waybill_fixture_pkg")).unwrap();
+        fs::write(dir.path().join("waybill_fixture_pkg/__init__.py"), "").unwrap();
+        let di = dir.path().join("waybill_fixture_pkg-1.2.3.dist-info");
+        fs::create_dir_all(&di).unwrap();
+        fs::write(
+            di.join("METADATA"),
+            "Metadata-Version: 2.1\nName: waybill-fixture-pkg\nVersion: 1.2.3\n",
+        )
+        .unwrap();
+        fs::write(di.join("WHEEL"), "Wheel-Version: 1.0\n").unwrap();
+        fs::write(
+            di.join("RECORD"),
+            "waybill_fixture_pkg/__init__.py,,\nwaybill_fixture_pkg-1.2.3.dist-info/METADATA,,\n",
+        )
+        .unwrap();
+        let out = read(dir.path(), false, &Default::default());
+        let pypi: Vec<_> = out.iter().filter(|e| e.purl.as_str().starts_with("pkg:pypi/")).collect();
+        assert_eq!(pypi.len(), 1, "{out:?}");
+        assert_eq!(pypi[0].purl.as_str(), "pkg:pypi/waybill-fixture-pkg@1.2.3");
+        // The only package at the scan root is the project itself (C40).
+        assert_eq!(
+            pypi[0].extra_annotations.get("waybill:component-role").and_then(|v| v.as_str()),
+            Some("main-module"),
+        );
+    }
+
+    /// #1529 control: two `.dist-info` directories at the scan root (a
+    /// site-packages directory scanned directly) are installed packages,
+    /// and neither is the project.
+    #[test]
+    fn s1529_two_dist_infos_at_root_have_no_main_module() {
+        let dir = tempfile::tempdir().unwrap();
+        for (name, version) in [("waybill_fixture_a", "1.0.0"), ("waybill_fixture_b", "2.0.0")] {
+            let di = dir.path().join(format!("{name}-{version}.dist-info"));
+            fs::create_dir_all(&di).unwrap();
+            fs::write(
+                di.join("METADATA"),
+                format!("Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n"),
+            )
+            .unwrap();
+        }
+        let out = read(dir.path(), false, &Default::default());
+        let pypi: Vec<_> = out.iter().filter(|e| e.purl.as_str().starts_with("pkg:pypi/")).collect();
+        assert_eq!(pypi.len(), 2, "{out:?}");
+        assert!(pypi.iter().all(|e| !e.extra_annotations.contains_key("waybill:component-role")));
+    }
+
+    /// #1529 control: a `.dist-info` deeper than the scan root's own
+    /// directory is not a site-packages root by this rule.
+    #[test]
+    fn s1529_nested_dist_info_outside_site_packages_is_not_read() {
+        let dir = tempfile::tempdir().unwrap();
+        let di = dir.path().join("vendor/waybill_fixture_pkg-1.2.3.dist-info");
+        fs::create_dir_all(&di).unwrap();
+        fs::write(
+            di.join("METADATA"),
+            "Metadata-Version: 2.1\nName: waybill-fixture-pkg\nVersion: 1.2.3\n",
+        )
+        .unwrap();
+        let out = read(dir.path(), false, &Default::default());
+        assert!(out.iter().all(|e| !e.purl.as_str().starts_with("pkg:pypi/")), "{out:?}");
     }
 }

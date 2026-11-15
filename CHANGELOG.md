@@ -23,6 +23,13 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   without a URL after it, is now skipped. A file in which most lines are
   skipped is not read as pip at all, and a WARN names it.
 
+- **An unpacked wheel scanned at its own root is identified (#1529).** The
+  dist-info reader looked only inside `site-packages` directories, so a tree
+  whose top level holds `<name>-<version>.dist-info/` gave
+  `pkg:generic/<dir>@0.0.0` and no PyPI component. The scan root is now read
+  as a site-packages directory when it directly holds a `.dist-info`. When it
+  holds exactly one, that package is the main module and the document root.
+
 ## [0.16.0] - 2026-11-14
 
 A minor. It adds surface: `--root-cpe`, `--cpe-map`, `--no-hackage-lookup`, the
