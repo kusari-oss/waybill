@@ -15,6 +15,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   matched. A Nix-built `libz.1.3.2.dylib` now gives `pkg:generic/zlib@1.3.2`
   instead of an unversioned `pkg:generic/zlib`.
 
+- **A cget `requirements.txt` no longer fabricates PyPI packages (#1522).**
+  cget, a C/C++ package manager, also uses `requirements.txt`, with lines
+  such as `owner/repo@ref` and `name@version`. The pip reader parsed them as
+  PEP 508 and emitted components such as `pkg:pypi/facebook/zstd`. A line
+  whose name is not a PEP 508 name, or whose `@` directly follows the name
+  without a URL after it, is now skipped. A file in which most lines are
+  skipped is not read as pip at all, and a WARN names it.
+
 ## [0.16.0] - 2026-11-14
 
 A minor. It adds surface: `--root-cpe`, `--cpe-map`, `--no-hackage-lookup`, the
