@@ -323,3 +323,24 @@ fn an_attributed_binary_keeps_the_binary_components_spelling() {
     assert_eq!(z_files.len(), 1, "{z_files:?}");
     assert!(bin_files.contains(&z_files[0]), "attributed as {:?}; the binary component is {:?}", z_files, bin_files);
 }
+
+/// The `share/<pkg>/cmake/` layout (found on the ROCm SDK as
+/// `share/elfio/cmake/elfioTargets.cmake`): the targets files are read and
+/// their files attributed, although the directory is named `cmake`.
+#[test]
+fn the_share_pkg_cmake_layout_is_read() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path().join("sdk");
+    write(&root, "share/waybillfixturew/cmake/waybillfixturewConfigVersion.cmake", "set(PACKAGE_VERSION \"5.0\")\n");
+    write(&root, "share/waybillfixturew/cmake/waybillfixturewTargets.cmake", &main_file(3));
+    write(
+        &root,
+        "share/waybillfixturew/cmake/waybillfixturewTargets-release.cmake",
+        &release_file(&["${_IMPORT_PREFIX}/lib/libwaybillfixturew.a"]),
+    );
+    put_bytes(&root, "lib/libwaybillfixturew.a", b"!<arch>\n");
+    let docs = scan(&root);
+    let w = component(&docs.cdx, "pkg:generic/waybillfixturew@5.0").expect("W");
+    assert!(source_files(w).contains(&"lib/libwaybillfixturew.a".to_string()), "{:?}", source_files(w));
+    assert_eq!(exported(&docs)["read"], 2);
+}

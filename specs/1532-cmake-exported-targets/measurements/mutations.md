@@ -15,6 +15,7 @@ unintended change.
 | M4b | Both existence checks removed (root-relative resolution, then `is_file`) | `us1_…` | The missing `libnot-shipped.so` is attributed. |
 | M5 | The OS-ownership skip removed | `us2_…` | `owned-by-os-package: 0, read: 12`, where it should read 1 and 11. |
 | M6 | Hash-cache seeding disabled | `us1_…` | The log reads `hash cache: seeded=0 reused=0` (FR-005a, analysis U1). |
+| M8 | A targets file's location rule is given its directory's name instead of the package name it is named for | `the_share_pkg_cmake_layout_is_read` | `share/<pkg>/cmake/` targets are not read. This was a real bug, found by the ROCm measurement (`elfioTargets.cmake`) and fixed. |
 
 ## Mutations that did not test what they claimed
 

@@ -19,17 +19,24 @@ pub(crate) enum Role {
 /// The role a file name selects, or `None` when it is not an
 /// exported-targets file.
 pub(crate) fn classify(file_name: &str) -> Option<Role> {
+    classify_with_base(file_name).map(|(role, _)| role)
+}
+
+/// The role and the package name the file is named for (`elfioTargets.cmake`
+/// → `elfio`). The package name feeds the CMake search-location rules, which
+/// accept `<prefix>/(lib*|share)/<name>*/cmake/`.
+pub(crate) fn classify_with_base(file_name: &str) -> Option<(Role, &str)> {
     let stem = file_name.strip_suffix(".cmake")?;
     for marker in ["Targets", "Exports", "-targets"] {
         if let Some(base) = stem.strip_suffix(marker) {
-            return (!base.is_empty() && !base.ends_with('-')).then_some(Role::Main);
+            return (!base.is_empty() && !base.ends_with('-')).then_some((Role::Main, base));
         }
     }
     for marker in ["Targets-", "Exports-", "-targets-"] {
         if let Some(i) = stem.rfind(marker) {
             let (base, cfg) = (&stem[..i], &stem[i + marker.len()..]);
             if !base.is_empty() && !cfg.is_empty() && cfg.chars().all(|c| c.is_ascii_alphanumeric()) {
-                return Some(Role::Config(cfg.to_ascii_lowercase()));
+                return Some((Role::Config(cfg.to_ascii_lowercase()), base));
             }
         }
     }
@@ -101,6 +108,8 @@ mod tests {
         assert_eq!(classify("WaybillFixturePTargets-release.cmake"), Some(Role::Config("release".into())));
         assert_eq!(classify("waybill-fixture-q-targets-release.cmake"), Some(Role::Config("release".into())));
         assert_eq!(classify("LLVMExports-RelWithDebInfo.cmake"), Some(Role::Config("relwithdebinfo".into())));
+        assert_eq!(classify_with_base("elfioTargets.cmake").map(|x| x.1), Some("elfio"));
+        assert_eq!(classify_with_base("waybill-fixture-q-targets-release.cmake").map(|x| x.1), Some("waybill-fixture-q"));
         for n in ["FooTargets.cmake.in", "targets.cmake", "-targets.cmake", "FooConfig.cmake",
                   "FooConfigVersion.cmake", "Targets.cmake", "FooTargets-.cmake", "foo-targets-a.b.cmake"] {
             assert_eq!(classify(n), None, "{n}");

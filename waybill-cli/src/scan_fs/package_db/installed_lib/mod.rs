@@ -297,11 +297,13 @@ pub(crate) fn finalize(
 }
 
 fn read_targets(path: &Path, scan_root: &Path) -> Option<TargetsFile> {
-    let role = targets::classify(path.file_name()?.to_str()?)?;
+    let (role, base) = targets::classify_with_base(path.file_name()?.to_str()?)?;
     let rel = location::relative_to_root(path, scan_root)?;
     let dir = path.parent()?.to_path_buf();
-    let dir_name = rel.parent()?.file_name()?.to_str()?.to_string();
-    let prefix = location::prefix_of(&rel, RecordKind::CmakeVersion, &dir_name)
+    // The package the file is named for, not its directory's name: in the
+    // `share/<pkg>/cmake/` layout the directory is `cmake` (measured on the
+    // ROCm SDK: `share/elfio/cmake/elfioTargets.cmake`).
+    let prefix = location::prefix_of(&rel, RecordKind::CmakeVersion, base)
         .map(|p| if p.as_os_str().is_empty() { scan_root.to_path_buf() } else { scan_root.join(p) });
     let resolved = location::resolve_in_root(scan_root, &rel);
     let parsed = resolved.as_deref().and_then(read_bounded).map(|c| targets::parse(&c));
