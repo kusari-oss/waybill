@@ -711,9 +711,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1533-installed-test-scope: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only. The reused pieces:
 - 1532-cmake-exported-targets: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only. The reused pieces:
 - 1531-pkgconfig-cmake-versions: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `serde`/`serde_json`, `globset` (walker patterns), `tracing`; `waybill_common::types::purl::{Purl, encode_purl_segment}`; `binary::is_path_claimed`. **Zero new Cargo dependencies.** No subprocess.
-- 1530-git-submodule-reader: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `serde`/`serde_json`, `regex`, `tracing`; the milestone-075 `identifiers::sanitize::sanitize_userinfo`. External: the host's `git`, already a runtime assumption (milestone 053). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

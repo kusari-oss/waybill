@@ -1,0 +1,457 @@
+{
+ "ctest_add_test": {
+  "resolved": 1153,
+  "unresolved": 512
+ },
+ "ctest_files": 28,
+ "ctest_forms": {
+  "direct/relative": 1153,
+  "direct/variable": 474,
+  "interpreter:python3/bare-name": 38
+ },
+ "ctest_other_commands": {
+  "else": 473,
+  "elseif": 1,
+  "endif": 482,
+  "execute_process": 1,
+  "find_program": 2,
+  "if": 482,
+  "include": 54,
+  "math": 472,
+  "message": 3,
+  "set": 488,
+  "subdirs": 3
+ },
+ "ctest_per_file": {
+  "bin/MIOpen/CTestTestfile.cmake": {
+   "resolved": 20
+  },
+  "bin/hipRAND/CTestTestfile.cmake": {
+   "resolved": 4
+  },
+  "bin/hip_kernel_provider/CTestTestfile.cmake": {
+   "resolved": 2
+  },
+  "bin/hipblas/CTestTestfile.cmake": {
+   "resolved": 4
+  },
+  "bin/hipblaslt_plugin/CTestTestfile.cmake": {
+   "resolved": 2
+  },
+  "bin/hipcub/CTestTestfile.cmake": {
+   "resolved": 147
+  },
+  "bin/hipdnn/CTestTestfile.cmake": {
+   "resolved": 9
+  },
+  "bin/hipdnn_integration_tests_ctest/CTestTestfile.cmake": {
+   "resolved": 2
+  },
+  "bin/hipdnn_samples/CTestTestfile.cmake": {
+   "resolved": 15
+  },
+  "bin/hipsolver/CTestTestfile.cmake": {
+   "resolved": 6
+  },
+  "bin/hipsparse/CTestTestfile.cmake": {
+   "resolved": 10
+  },
+  "bin/hipsparselt/CTestTestfile.cmake": {
+   "resolved": 8
+  },
+  "bin/miopen_plugin/CTestTestfile.cmake": {
+   "resolved": 3
+  },
+  "bin/rocRAND/CTestTestfile.cmake": {
+   "resolved": 208
+  },
+  "bin/rocblas/CTestTestfile.cmake": {
+   "resolved": 4
+  },
+  "bin/rocprim/CTestTestfile.cmake": {
+   "resolved": 85
+  },
+  "bin/rocroller/CTestTestfile.cmake": {
+   "resolved": 8
+  },
+  "bin/rocrtst/CTestTestfile.cmake": {
+   "resolved": 8
+  },
+  "bin/rocsolver/CTestTestfile.cmake": {
+   "resolved": 6
+  },
+  "bin/rocsparse/CTestTestfile.cmake": {
+   "resolved": 10
+  },
+  "bin/rocthrust/CTestTestfile.cmake": {
+   "resolved": 504
+  },
+  "bin/rocwmma/CTestTestfile.cmake": {
+   "resolved": 29
+  },
+  "bin/rocwmma/regression/CTestTestfile.cmake": {
+   "resolved": 29
+  },
+  "bin/rocwmma/smoke/CTestTestfile.cmake": {
+   "resolved": 29
+  },
+  "libexec/rocprofiler-compute/CTestTestfile.cmake": {
+   "resolved": 1,
+   "unresolved": 38
+  },
+  "share/hip/CTestTestfile.cmake": {},
+  "share/hip/catch_tests/CTestTestfile.cmake": {},
+  "share/rocprofiler-systems/tests/CTestTestfile.cmake": {
+   "unresolved": 474
+  }
+ },
+ "name_pattern_candidates": {
+  "*-bench": {
+   "already_declared": 0,
+   "bytes": 167683136,
+   "files": 10,
+   "only_by_name": [
+    "dyna-rocfft-bench",
+    "hipblas-bench",
+    "hipblaslt-bench",
+    "hipsolver-bench",
+    "hipsparse-bench",
+    "hipsparselt-bench",
+    "rocblas-bench",
+    "rocfft-bench",
+    "rocsolver-bench",
+    "rocsparse-bench"
+   ]
+  },
+  "*-test": {
+   "already_declared": 7,
+   "bytes": 323564816,
+   "files": 10,
+   "only_by_name": [
+    "hipblaslt-test",
+    "hipfft-test",
+    "rocfft-test"
+   ]
+  },
+  "*-tests": {
+   "already_declared": 1,
+   "bytes": 29348656,
+   "files": 1,
+   "only_by_name": []
+  },
+  "*-tune": {
+   "already_declared": 0,
+   "bytes": 69587312,
+   "files": 1,
+   "only_by_name": [
+    "rocblas-gemm-tune"
+   ]
+  },
+  "*_gtest": {
+   "already_declared": 1,
+   "bytes": 38294248,
+   "files": 1,
+   "only_by_name": []
+  },
+  "*_gtest.data": {
+   "already_declared": 0,
+   "bytes": 1451631164,
+   "files": 4,
+   "only_by_name": [
+    "hipblas_gtest.data",
+    "hipblaslt_gtest.data",
+    "hipsparselt_gtest.data",
+    "rocblas_gtest.data"
+   ]
+  },
+  "*_test": {
+   "already_declared": 18,
+   "bytes": 242371104,
+   "files": 18,
+   "only_by_name": []
+  },
+  "*_tests": {
+   "already_declared": 19,
+   "bytes": 241476408,
+   "files": 20,
+   "only_by_name": [
+    "rocshmem_functional_tests"
+   ]
+  },
+  "benchmark_*": {
+   "already_declared": 0,
+   "bytes": 222868664,
+   "files": 80,
+   "only_by_name": [
+    "benchmark_block_adjacent_difference",
+    "benchmark_block_discontinuity",
+    "benchmark_block_exchange",
+    "benchmark_block_histogram",
+    "benchmark_block_merge_sort",
+    "benchmark_block_radix_rank",
+    "benchmark_block_radix_sort",
+    "benchmark_block_reduce",
+    "benchmark_block_run_length_decode",
+    "benchmark_block_scan",
+    "benchmark_block_shuffle",
+    "benchmark_device_adjacent_difference",
+    "benchmark_device_batch_copy",
+    "benchmark_device_batch_memcpy",
+    "benchmark_device_for",
+    "benchmark_device_histogram",
+    "benchmark_device_memory",
+    "benchmark_device_merge",
+    "benchmark_device_merge_sort",
+    "benchmark_device_partition",
+    "benchmark_device_radix_sort",
+    "benchmark_device_reduce",
+    "benchmark_device_reduce_by_key",
+    "benchmark_device_run_length_encode",
+    "benchmark_device_scan",
+    "benchmark_device_segmented_radix_sort",
+    "benchmark_device_segmented_reduce",
+    "benchmark_device_segmented_sort",
+    "benchmark_device_select",
+    "benchmark_device_spmv",
+    "benchmark_rocrand_device_api",
+    "benchmark_rocrand_generate",
+    "benchmark_rocrand_host_api",
+    "benchmark_rocrand_kernel",
+    "benchmark_thrust_adjacent_difference_basic",
+    "benchmark_thrust_adjacent_difference_custom",
+    "benchmark_thrust_adjacent_difference_in_place",
+    "benchmark_thrust_copy_basic",
+    "benchmark_thrust_copy_if",
+    "benchmark_thrust_equal_basic",
+    "benchmark_thrust_fill_basic",
+    "benchmark_thrust_for_each_basic",
+    "benchmark_thrust_inner_product_basic",
+    "benchmark_thrust_merge_basic",
+    "benchmark_thrust_partition_basic",
+    "benchmark_thrust_reduce_basic",
+    "benchmark_thrust_reduce_by_key",
+    "benchmark_thrust_scan_exclusive_by_key",
+    "benchmark_thrust_scan_exclusive_max",
+    "benchmark_thrust_scan_exclusive_sum",
+    "benchmark_thrust_scan_inclusive_by_key",
+    "benchmark_thrust_scan_inclusive_max",
+    "benchmark_thrust_scan_inclusive_sum",
+    "benchmark_thrust_set_operations_difference",
+    "benchmark_thrust_set_operations_difference_by_key",
+    "benchmark_thrust_set_operations_intersection",
+    "benchmark_thrust_set_operations_intersection_by_key",
+    "benchmark_thrust_set_operations_symmetric_difference",
+    "benchmark_thrust_set_operations_symmetric_difference_by_key",
+    "benchmark_thrust_set_operations_union",
+    "benchmark_thrust_set_operations_union_by_key",
+    "benchmark_thrust_shuffle_basic",
+    "benchmark_thrust_sort_keys",
+    "benchmark_thrust_sort_keys_custom",
+    "benchmark_thrust_sort_pairs",
+    "benchmark_thrust_sort_pairs_custom",
+    "benchmark_thrust_tabulate_basic",
+    "benchmark_thrust_transform_basic",
+    "benchmark_thrust_transform_reduce_sum",
+    "benchmark_thrust_unique_basic",
+    "benchmark_thrust_unique_by_key",
+    "benchmark_thrust_vectorized_search_basic",
+    "benchmark_thrust_vectorized_search_lower_bound",
+    "benchmark_thrust_vectorized_search_upper_bound",
+    "benchmark_warp_exchange",
+    "benchmark_warp_load",
+    "benchmark_warp_merge_sort",
+    "benchmark_warp_reduce",
+    "benchmark_warp_scan",
+    "benchmark_warp_store"
+   ]
+  },
+  "test_*": {
+   "already_declared": 190,
+   "bytes": 1180918568,
+   "files": 354,
+   "only_by_name": [
+    "test_thrust_address_stability",
+    "test_thrust_adjacent_difference",
+    "test_thrust_advance",
+    "test_thrust_alignment",
+    "test_thrust_allocator",
+    "test_thrust_allocator_aware_policies",
+    "test_thrust_async_copy",
+    "test_thrust_async_for_each",
+    "test_thrust_async_reduce",
+    "test_thrust_async_reduce_into",
+    "test_thrust_async_sort",
+    "test_thrust_async_transform",
+    "test_thrust_binary_search",
+    "test_thrust_binary_search_descending",
+    "test_thrust_binary_search_vector",
+    "test_thrust_binary_search_vector_descending",
+    "test_thrust_caching_allocator",
+    "test_thrust_complex",
+    "test_thrust_complex_transform",
+    "test_thrust_constant_iterator",
+    "test_thrust_copy",
+    "test_thrust_copy_n",
+    "test_thrust_count",
+    "test_thrust_counting_iterator",
+    "test_thrust_decompose",
+    "test_thrust_dependencies_aware_policies",
+    "test_thrust_dereference",
+    "test_thrust_device_delete",
+    "test_thrust_device_ptr",
+    "test_thrust_device_reference",
+    "test_thrust_discard_iterator",
+    "test_thrust_distance",
+    "test_thrust_equal",
+    "test_thrust_event",
+    "test_thrust_fill",
+    "test_thrust_find",
+    "test_thrust_for_each",
+    "test_thrust_functional",
+    "test_thrust_functional_arithmetic",
+    "test_thrust_functional_bitwise",
+    "test_thrust_functional_logical",
+    "test_thrust_functional_placeholders_arithmetic",
+    "test_thrust_functional_placeholders_bitwise",
+    "test_thrust_functional_placeholders_compound_assignment",
+    "test_thrust_functional_placeholders_logical",
+    "test_thrust_functional_placeholders_miscellaneous",
+    "test_thrust_functional_placeholders_relational",
+    "test_thrust_future",
+    "test_thrust_gather",
+    "test_thrust_generate",
+    "test_thrust_generate_const_iterators",
+    "test_thrust_inner_product",
+    "test_thrust_is_contiguous_iterator",
+    "test_thrust_is_operator_function_object",
+    "test_thrust_is_partitioned",
+    "test_thrust_is_sorted",
+    "test_thrust_is_sorted_until",
+    "test_thrust_logical",
+    "test_thrust_max_element",
+    "test_thrust_memory",
+    "test_thrust_merge",
+    "test_thrust_merge_by_key",
+    "test_thrust_merge_key_value",
+    "test_thrust_metaprogramming",
+    "test_thrust_min_and_max",
+    "test_thrust_min_element",
+    "test_thrust_minmax_element",
+    "test_thrust_mismatch",
+    "test_thrust_mr_disjoint_pool",
+    "test_thrust_mr_new",
+    "test_thrust_mr_pool",
+    "test_thrust_mr_pool_options",
+    "test_thrust_out_of_memory_recovery",
+    "test_thrust_pair",
+    "test_thrust_pair_reduce",
+    "test_thrust_pair_scan",
+    "test_thrust_pair_scan_by_key",
+    "test_thrust_pair_sort",
+    "test_thrust_pair_sort_by_key",
+    "test_thrust_pair_transform",
+    "test_thrust_partition",
+    "test_thrust_partition_point",
+    "test_thrust_permutation_iterator",
+    "test_thrust_preprocessor",
+    "test_thrust_random",
+    "test_thrust_reduce",
+    "test_thrust_reduce_by_key",
+    "test_thrust_reduce_large",
+    "test_thrust_remove",
+    "test_thrust_replace",
+    "test_thrust_reverse",
+    "test_thrust_reverse_iterator",
+    "test_thrust_scan",
+    "test_thrust_scan_by_key.exclusive",
+    "test_thrust_scan_by_key.inclusive",
+    "test_thrust_scatter",
+    "test_thrust_sequence",
+    "test_thrust_set_difference",
+    "test_thrust_set_difference_by_key",
+    "test_thrust_set_difference_by_key_descending",
+    "test_thrust_set_difference_descending",
+    "test_thrust_set_difference_key_value",
+    "test_thrust_set_intersection",
+    "test_thrust_set_intersection_by_key",
+    "test_thrust_set_intersection_by_key_descending",
+    "test_thrust_set_intersection_descending",
+    "test_thrust_set_intersection_key_value",
+    "test_thrust_set_symmetric_difference",
+    "test_thrust_set_symmetric_difference_by_key",
+    "test_thrust_set_symmetric_difference_by_key_descending",
+    "test_thrust_set_symmetric_difference_descending",
+    "test_thrust_set_union",
+    "test_thrust_set_union_by_key",
+    "test_thrust_set_union_by_key_descending",
+    "test_thrust_set_union_descending",
+    "test_thrust_set_union_key_value",
+    "test_thrust_shuffle",
+    "test_thrust_sort",
+    "test_thrust_sort_by_key",
+    "test_thrust_sort_by_key_variable_bits",
+    "test_thrust_sort_permutation_iterator",
+    "test_thrust_sort_variable_bits",
+    "test_thrust_stable_sort",
+    "test_thrust_stable_sort_by_key",
+    "test_thrust_stable_sort_by_key_large_keys",
+    "test_thrust_stable_sort_by_key_large_keys_and_values",
+    "test_thrust_stable_sort_by_key_large_values",
+    "test_thrust_stable_sort_large",
+    "test_thrust_swap_ranges",
+    "test_thrust_tabulate",
+    "test_thrust_tabulate_output_iterator",
+    "test_thrust_transform",
+    "test_thrust_transform_input_output_iterator",
+    "test_thrust_transform_iterator",
+    "test_thrust_transform_output_iterator",
+    "test_thrust_transform_output_iterator_reduce_by_key",
+    "test_thrust_transform_reduce",
+    "test_thrust_transform_scan",
+    "test_thrust_trivial_sequence",
+    "test_thrust_tuple",
+    "test_thrust_tuple_algorithms",
+    "test_thrust_tuple_reduce",
+    "test_thrust_tuple_scan",
+    "test_thrust_tuple_sort",
+    "test_thrust_tuple_transform",
+    "test_thrust_type_traits",
+    "test_thrust_uninitialized_copy",
+    "test_thrust_uninitialized_fill",
+    "test_thrust_unique",
+    "test_thrust_unique_by_key",
+    "test_thrust_unittest_static_assert",
+    "test_thrust_unittest_tester",
+    "test_thrust_universal_memory",
+    "test_thrust_vector",
+    "test_thrust_vector_allocators",
+    "test_thrust_vector_insert",
+    "test_thrust_vector_manipulation",
+    "test_thrust_zip_function",
+    "test_thrust_zip_iterator",
+    "test_thrust_zip_iterator_reduce",
+    "test_thrust_zip_iterator_reduce_by_key",
+    "test_thrust_zip_iterator_scan",
+    "test_thrust_zip_iterator_sort",
+    "test_thrust_zip_iterator_sort_by_key"
+   ]
+  }
+ },
+ "scoped_regular_files_by_rule": {
+  "ctest-declaration": {
+   "bytes": 2632210344,
+   "files": 432
+  },
+  "exported-targets-test-package": {
+   "bytes": 188293848,
+   "files": 22
+  },
+  "test-directory": {
+   "bytes": 235659055,
+   "files": 14465
+  }
+ },
+ "test_packages": [
+  "lib/cmake/rocprofiler-sdk-tests"
+ ]
+}
