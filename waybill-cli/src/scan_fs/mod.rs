@@ -290,6 +290,18 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             continue;
         };
         let path_string = path_str.into_owned();
+        // #1528: the size cap bounds hashing, not identification. An
+        // artifact over it is still emitted, without a content hash,
+        // and named here so the missing hash is explained.
+        if artifact.hash.is_none() {
+            tracing::warn!(
+                path = %path_string,
+                size = artifact.size,
+                max_file_size = size_cap,
+                purl = %purl,
+                "artifact exceeds --max-file-size; identified from its path but not hashed"
+            );
+        }
         // G2: the `name` field must match the convention
         // installed-package-db readers use, or dedup misses coords
         // emitted by both paths. For Go, readers set
@@ -338,7 +350,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             },
             licenses: vec![],
             concluded_licenses: Vec::new(),
-            hashes: vec![artifact.hash],
+            hashes: artifact.hash.into_iter().collect(),
             supplier: None,
             cpes: vec![],
             advisories: vec![],
