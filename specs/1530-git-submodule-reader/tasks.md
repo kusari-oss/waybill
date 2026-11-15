@@ -217,7 +217,7 @@
   - C222;
   - that `git` runs with config-executed programs disabled.
 - [X] T041 Run quickstart §1–§5 end to end with the release build, and record the outputs in `specs/1530-git-submodule-reader/measurements/quickstart-run.txt`.
-- [ ] T042 Run clippy, then the gate. Record the positive signal and the `test result: ok` count. Never pipe through `head`.
+- [X] T042 Run clippy, then the gate. Record the positive signal and the `test result: ok` count. Never pipe through `head`.
 - [ ] T043 Corpus goldens (SC-007, research R13):
   - push the branch and dispatch `public-corpus.yml` with `regen_goldens=true`;
   - download the artifact and run a normalised, sorted diff against the committed goldens;
