@@ -17,7 +17,6 @@
 //! | Node.js   | `node.js/vX.Y.Z` (the compiled-in default User-Agent)        |
 //! | expat     | `expat_X.Y.Z` (#1526)                                        |
 //! | ncurses   | `ncurses X.Y.YYYYMMDD`, emitted as `X.Y` (#1526)             |
-//! | libcap    | `%s is the shared library version: libcap-X.Y.` (#1526)      |
 //!
 //! Scanning runs ONLY against format-appropriate read-only string sections (ELF `.rodata` + `.data.rel.ro`, Mach-O `__TEXT,__cstring` + `__TEXT,__const`, PE `.rdata`) — never against the full binary image (Q4 resolution / FR-025). This bounds the false-positive surface. Control-set validation per SC-005.
 //
@@ -80,7 +79,6 @@ pub enum CuratedLibrary {
     // #1526 — libraries commonly bundled as private copies.
     Expat,
     Ncurses,
-    Libcap,
 }
 
 impl CuratedLibrary {
@@ -101,7 +99,6 @@ impl CuratedLibrary {
             CuratedLibrary::Node => "node",
             CuratedLibrary::Expat => "expat",
             CuratedLibrary::Ncurses => "ncurses",
-            CuratedLibrary::Libcap => "libcap",
         }
     }
 }
@@ -170,15 +167,6 @@ fn match_prefix(
         if let Some(v) = parse_ncurses_version(tail) {
             return Some(EmbeddedVersionMatch {
                 library: CuratedLibrary::Ncurses,
-                version: v,
-            });
-        }
-    }
-    // libcap — "%s is the shared library version: libcap-X.Y.\n…" (#1526).
-    if let Some(tail) = window.strip_prefix(b"%s is the shared library version: libcap-".as_slice()) {
-        if let Some(v) = parse_libcap_version(tail) {
-            return Some(EmbeddedVersionMatch {
-                library: CuratedLibrary::Libcap,
                 version: v,
             });
         }
@@ -453,16 +441,6 @@ fn parse_ncurses_version(tail: &[u8]) -> Option<String> {
     Some(format!("{major}.{minor}"))
 }
 
-/// libcap: `X.Y[.Z]` followed by the sentence's `.\n` (#1526).
-fn parse_libcap_version(tail: &[u8]) -> Option<String> {
-    let end = tail.windows(2).position(|w| w == b".\n")?;
-    let text = std::str::from_utf8(&tail[..end]).ok()?;
-    let parts: Vec<&str> = text.split('.').collect();
-    let ok = (2..=3).contains(&parts.len())
-        && parts.iter().all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()));
-    ok.then(|| text.to_string())
-}
-
 /// PCRE version: `X.Y YYYY-MM-DD`.
 fn parse_pcre_version(tail: &[u8]) -> Option<String> {
     let mut end = 0;
@@ -718,18 +696,16 @@ mod tests {
     }
 
     /// #1526: bytes copied NUL to NUL from Nix builds: expat 2.9.0 and
-    /// 2.7.5 (`libexpat.1.13.0.dylib`, `libexpat.1.11.3.dylib`), ncurses
-    /// 6.6 (`libncursesw.6.dylib`) and libcap 2.78 (x86_64-linux
-    /// `libcap.so.2.78`, substituted from the binary cache).
+    /// 2.7.5 (`libexpat.1.13.0.dylib`, `libexpat.1.11.3.dylib`) and ncurses
+    /// 6.6 (`libncursesw.6.dylib`).
     #[test]
-    fn s1526_expat_ncurses_libcap_real_literals() {
-        let cases: [(&[u8], CuratedLibrary, &str); 4] = [
+    fn s1526_expat_and_ncurses_real_literals() {
+        let cases: [(&[u8], CuratedLibrary, &str); 3] = [
             (b"\0expat_2.9.0\0", CuratedLibrary::Expat, "2.9.0"),
             (b"\0expat_2.7.5\0", CuratedLibrary::Expat, "2.7.5"),
             // The release version; the patch date is dropped (NVD CPEs and
             // nixpkgs both call this build 6.6).
             (b"\0ncurses 6.6.20251230\0", CuratedLibrary::Ncurses, "6.6"),
-            (b"\0%s is the shared library version: libcap-2.78.\nSee the License file for distribution information.\nMore information on this library is available from:\n\n    https://sites.google.com/site/fullycapable/\n\0", CuratedLibrary::Libcap, "2.78"),
         ];
         for (bytes, lib, want) in cases {
             let hits = scan(bytes);
@@ -747,7 +723,6 @@ mod tests {
             &b"\0expat_heap_increase_tolerable\0"[..],
             b"\0expat_free\0",
             b"\0ncurses library\0",
-            b"\0%s is the shared library version: libcap-unknown.\n\0",
         ] {
             assert!(scan(bytes).is_empty(), "{:?}", String::from_utf8_lossy(bytes));
         }

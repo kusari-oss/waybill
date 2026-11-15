@@ -62,14 +62,13 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `self.requires()` nested under a conditional or loop is optional, with
   `waybill:optional-derivation: conan-conditional-requires` (C122).
 
-- **expat, ncurses and libcap are versioned from their own binaries
-  (#1526).** The curated version scanner gained three self-identifying
-  strings, each taken from a real build: `expat_X.Y.Z`,
-  `ncurses X.Y.YYYYMMDD` (emitted as the release `X.Y`) and libcap's
-  `… shared library version: libcap-X.Y.`. A bundled copy of each now gives
-  `pkg:generic/expat@2.9.0`, `pkg:generic/ncurses@6.6` or
-  `pkg:generic/libcap@2.78`. SQLite's bare version is not a clean string in
-  real builds and is tracked separately (#1555).
+- **expat and ncurses are versioned from their own binaries (#1526).** The
+  curated version scanner gained two self-identifying strings, each taken
+  from a real build: `expat_X.Y.Z` and `ncurses X.Y.YYYYMMDD`, emitted as
+  the release `X.Y`. A bundled copy now gives `pkg:generic/expat@2.9.0` or
+  `pkg:generic/ncurses@6.6`, each with its CPE. libcap needs a CPE-table row
+  first (#1556), and SQLite's bare version is not a clean string in real
+  builds (#1555).
 
 ## [0.16.0] - 2026-11-14
 
