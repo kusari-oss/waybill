@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed
+
+- **zlib's embedded version string is recognised in real builds (#1525).**
+  zlib's literal is `" deflate X.Y.Z Copyright ..."`, with a leading space,
+  and the scanner required the byte before `deflate` to be NUL, so it never
+  matched. A Nix-built `libz.1.3.2.dylib` now gives `pkg:generic/zlib@1.3.2`
+  instead of an unversioned `pkg:generic/zlib`.
+
 ## [0.16.0] - 2026-11-14
 
 A minor. It adds surface: `--root-cpe`, `--cpe-map`, `--no-hackage-lookup`, the
