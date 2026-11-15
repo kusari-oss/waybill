@@ -96,7 +96,7 @@
   - extend C225's row in `docs/reference/sbom-format-mapping.md` with the `exported-targets` object and its counts;
   - add a sentence to the installed-library section of `docs/ecosystems.md`;
   - add a CHANGELOG entry under Unreleased `### Added`, separated from other unreleased entries.
-- [ ] T017 Gate. Record `GATE_RESULT` and the `test result: ok.` count in `specs/1532-cmake-exported-targets/measurements/gate-log.md`.
+- [X] T017 Gate. Record `GATE_RESULT` and the `test result: ok.` count in `specs/1532-cmake-exported-targets/measurements/gate-log.md`.
 - [ ] T018 Push the branch. Dispatch `public-corpus.yml` with `regen_goldens=true` on it. Compare all goldens byte for byte, then do a normalised diff of any that differ. The prediction is that none change (research R7). Record the result in `measurements/golden-review.md`, and commit any regenerated goldens only after review.
 - [ ] T019 ROCm measurement, CI only (SC-003, SC-006, research R8). In `kusari-sandbox/waybill-fixture-therock-sdk`, add a `measure-full` job to `.github/workflows/measure.yml`. It:
   - checks `df -h / /mnt`;
