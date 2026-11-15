@@ -771,6 +771,7 @@ Exactly one of `--path` or `--image` is required.
 | `--no-package-db` | bool | off | Skip installed-package DB reads (dpkg/apk). |
 | `--no-binary-scan <MODE>` | enum (`go`, `all`) | (unset) | Skip binary-scanning reader(s). `all` drops the entire binary tier for max speed; `go` is a component filter (deprecated as perf lever post-[#781](https://github.com/kusari-oss/waybill/issues/781)). Also via `WAYBILL_NO_BINARY_SCAN=<MODE>`. See [`--no-binary-scan`](#--no-binary-scan-mode). |
 | `--include-vendored` | bool | off | Emit CMake `add_subdirectory(third_party/\|vendor/...)` entries. |
+| `--include-test-binaries` | bool | off | In a `--path` scan, also read binaries under `test/`, `tests/`, `unittests/` and `Inputs/`. Also via `WAYBILL_INCLUDE_TEST_BINARIES=1`. See [`--include-test-binaries`](#--include-test-binaries). |
 | `--no-deep-hash` | bool | off | Skip per-file SHA-256 of installed-package contents. |
 | `--nix-allow-ifd` | bool | off | Allow import-from-derivation in Nix evaluation. Nix **builds** derivations while evaluating the flake; do not use on an untrusted flake. Requires `--nix-closure` or `--nix-eval`. See [`--nix-allow-ifd`](#--nix-allow-ifd). |
 | `--json` | bool | off | Print a JSON summary to stdout. |
@@ -1139,6 +1140,30 @@ waybill sbom scan --path . --output project.cdx.json --include-vendored
 
 # Opt in via env var (accepts "1", "true", etc.)
 WAYBILL_INCLUDE_VENDORED=1 waybill sbom scan --path . --output project.cdx.json
+```
+
+### `--include-test-binaries`
+
+Read binaries under test-input directories in a directory scan
+([#1524](https://github.com/kusari-oss/waybill/issues/1524)). By default a
+`--path` scan skips every ELF, Mach-O and PE file whose path below the scan
+root passes through a directory named exactly `test`, `tests`, `unittests` or
+`Inputs`. Toolchain source trees keep core dumps, deliberately corrupt objects
+and cross-platform fixtures there; read as binaries, each became a component
+the project does not ship, and Mach-O fixtures contributed their load commands
+as dependencies such as `pkg:generic/%2Fusr%2Flib%2FlibSystem.B.dylib`.
+
+The number of files skipped is recorded as the document-scope
+`waybill:binary-scan-skipped-test-inputs` annotation (C223), absent when it is
+zero. The skipped files are not re-emitted by the file tier either, except
+under `--file-inventory=full`. `--image` scans never skip, because an installed
+system's `tests/` directory is not a fixture, so the flag has no effect there.
+
+```bash
+waybill sbom scan --path . --output project.cdx.json --include-test-binaries
+
+# Or via env var (accepts "1" or "true")
+WAYBILL_INCLUDE_TEST_BINARIES=1 waybill sbom scan --path . --output project.cdx.json
 ```
 
 ### `--no-deep-hash`

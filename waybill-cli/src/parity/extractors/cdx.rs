@@ -1047,6 +1047,8 @@ cdx_anno!(c220_cdx, "waybill:vex-claims-unscoped", document);
 cdx_anno!(c221_cdx, "waybill:requirement-unsatisfied", component);
 // Spec 1530 (#1515): C222 — git-submodule coverage, document scope.
 cdx_anno!(c222_cdx, "waybill:git-submodule-coverage", document);
+// #1524: C223 — binaries a directory scan skipped as test inputs.
+cdx_anno!(c223_cdx, "waybill:binary-scan-skipped-test-inputs", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

@@ -159,6 +159,11 @@ mod binary_evidence_kind_drift {
 }
 
 use discover::discover_binaries;
+
+/// #1524 (C223): how many binaries a directory scan did not read because
+/// they sit under a test-input directory. Document scope; absent at zero.
+pub(crate) const ANN_BINARY_SCAN_SKIPPED_TEST_INPUTS: &str =
+    "waybill:binary-scan-skipped-test-inputs";
 use entry::{
     cargo_auditable_packages_to_entries, make_file_level_component, note_package_to_entry,
     symbol_match_to_entry, v2_match_to_entry, version_match_to_entry,
@@ -225,12 +230,17 @@ pub(crate) fn is_path_claimed(
 /// embedded-version-string emissions remain unconditional — those
 /// surface signals the package db can't produce (distro self-ID,
 /// static TLS-library versions).
+///
+/// `test_inputs` — #1524. `Some` skips binaries under test-input
+/// directories and records their root-relative paths there; see
+/// `discover::discover_binaries`.
 pub fn read(
     rootfs: &Path,
     claimed_paths: &std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
     exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
     no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
+    test_inputs: Option<&mut Vec<std::path::PathBuf>>,
 ) -> Vec<PackageDbEntry> {
     // Issue #775 — `--no-binary-scan=all` skips the entire binary-scanning
     // tier. On a large source tree (mongo: 886 MB, 55k files), the
@@ -342,7 +352,7 @@ pub fn read(
         source_binding::BuildAttributionRegistry::from_observations(Vec::new())
     };
 
-    for path in discover_binaries(rootfs, claimed_paths, exclude_set) {
+    for path in discover_binaries(rootfs, claimed_paths, exclude_set, test_inputs) {
         // Size bounds via metadata BEFORE the full-file read. A
         // multi-GB file that exceeds MAX_BINARY_SIZE_BYTES used to be
         // slurped into memory in its entirety just to be rejected by
@@ -898,6 +908,7 @@ mod tests {
             &Default::default(),
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
+            None, // test_inputs
         )
         .is_empty());
     }
@@ -914,6 +925,7 @@ mod tests {
             &Default::default(),
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
+            None, // test_inputs
         )
         .is_empty());
     }
@@ -948,6 +960,7 @@ mod tests {
             &Default::default(),
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
+            None, // test_inputs
         )
         .is_empty());
     }
@@ -969,6 +982,7 @@ mod tests {
             &Default::default(),
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
+            None, // test_inputs
         );
         assert_eq!(entries.len(), 1, "expected exactly the cpython umbrella");
         assert!(
@@ -994,6 +1008,7 @@ mod tests {
             &Default::default(),
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
+            None, // test_inputs
         )
         .is_empty());
     }

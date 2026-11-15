@@ -105,6 +105,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   says so, instead of an invented `@unknown`. SHA-384 has no representation
   yet and is still dropped.
 
+- **A directory scan no longer reports toolchain test inputs as binaries
+  (#1524).** Source trees such as LLVM's keep core dumps, deliberately
+  corrupt ELF and cross-platform objects under `test/`, `tests/`,
+  `unittests/` and `Inputs/`. Each became a component, and Mach-O test
+  objects added their load commands as dependencies such as
+  `pkg:generic/%2Fusr%2Flib%2FlibSystem.B.dylib`. A `--path` scan now skips
+  ELF, Mach-O and PE files under a directory with one of those exact names,
+  below the scan root. The file tier does not re-emit them, except under
+  `--file-inventory=full`. The number skipped is the new document-scope
+  `waybill:binary-scan-skipped-test-inputs` (C223), absent at zero.
+  `--include-test-binaries` turns the skip off. `--image` scans are
+  unchanged, since an installed system's `tests/` is not a fixture.
+
 ## [0.16.0] - 2026-11-14
 
 A minor. It adds surface: `--root-cpe`, `--cpe-map`, `--no-hackage-lookup`, the

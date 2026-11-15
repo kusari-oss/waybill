@@ -183,6 +183,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_nix_eval_degraded(scan.nix_eval_degraded.map(str::to_string))
             .with_nix_closure_degraded(scan.nix_closure_degraded.map(str::to_string))
             .with_git_submodule_coverage(scan.git_submodule_coverage.map(str::to_string))
+            .with_binary_test_inputs_skipped(scan.binary_test_inputs_skipped)
             .with_closure_ecosystem_identity(
                 scan.closure_ecosystem_identity.map(str::to_string),
             )

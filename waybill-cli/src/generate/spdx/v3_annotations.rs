@@ -706,6 +706,10 @@ fn push_document_fields(
     if let Some(record) = scan.git_submodule_coverage {
         push(out, crate::scan_fs::package_db::git_submodule::ANN_GIT_SUBMODULE_COVERAGE, json!(record));
     }
+    // C223 (#1524): absent at zero.
+    if scan.binary_test_inputs_skipped > 0 {
+        push(out, crate::scan_fs::binary::ANN_BINARY_SCAN_SKIPPED_TEST_INPUTS, json!(scan.binary_test_inputs_skipped.to_string()));
+    }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran.
     if let Some(g) = scan.go_mod_why {
