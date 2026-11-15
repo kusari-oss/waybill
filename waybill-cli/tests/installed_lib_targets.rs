@@ -344,3 +344,26 @@ fn the_share_pkg_cmake_layout_is_read() {
     assert!(source_files(w).contains(&"lib/libwaybillfixturew.a".to_string()), "{:?}", source_files(w));
     assert_eq!(exported(&docs)["read"], 2);
 }
+
+/// A package that exports one targets file per component, named
+/// `<pkg><component>Targets.cmake` in `lib/cmake/<pkg>/`, as
+/// `composable_kernel` does on the ROCm SDK. The directory's name, not the
+/// file's, matches the search location; both kinds must be read.
+#[test]
+fn per_component_targets_files_in_the_package_directory_are_read() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path().join("sdk");
+    let d = "lib/cmake/waybill_fixture_ck";
+    write(&root, &format!("{d}/waybill_fixture_ckConfigVersion.cmake"), "set(PACKAGE_VERSION \"1.2.0\")\n");
+    write(&root, &format!("{d}/waybill_fixture_ckdevice_opsTargets.cmake"), &main_file(3));
+    write(
+        &root,
+        &format!("{d}/waybill_fixture_ckdevice_opsTargets-release.cmake"),
+        &release_file(&["${_IMPORT_PREFIX}/lib/libdevice_ops.a"]),
+    );
+    put_bytes(&root, "lib/libdevice_ops.a", b"!<arch>\n");
+    let docs = scan(&root);
+    let ck = component(&docs.cdx, "pkg:generic/waybill_fixture_ck@1.2.0").expect("ck");
+    assert!(source_files(ck).contains(&"lib/libdevice_ops.a".to_string()), "{:?}", source_files(ck));
+    assert_eq!(exported(&docs)["read"], 2);
+}

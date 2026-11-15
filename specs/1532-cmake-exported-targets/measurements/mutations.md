@@ -16,6 +16,8 @@ unintended change.
 | M5 | The OS-ownership skip removed | `us2_…` | `owned-by-os-package: 0, read: 12`, where it should read 1 and 11. |
 | M6 | Hash-cache seeding disabled | `us1_…` | The log reads `hash cache: seeded=0 reused=0` (FR-005a, analysis U1). |
 | M8 | A targets file's location rule is given its directory's name instead of the package name it is named for | `the_share_pkg_cmake_layout_is_read` | `share/<pkg>/cmake/` targets are not read. This was a real bug, found by the ROCm measurement (`elfioTargets.cmake`) and fixed. |
+| M9 | The fallback to the directory's name removed (package name only) | `per_component_targets_files_in_the_package_directory_are_read` | `composable_kernel`-style per-component targets files go unread. The first fix for M8 did exactly this and was caught by re-measuring: `read` fell from 148 to 129 and `attached` from 906 to 898 (run 43755366841). |
+| M10 | The package name removed (directory name only) | `the_share_pkg_cmake_layout_is_read` | `share/<pkg>/cmake/` targets go unread again (M8). |
 
 ## Mutations that did not test what they claimed
 

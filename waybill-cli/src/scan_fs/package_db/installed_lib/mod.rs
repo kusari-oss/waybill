@@ -300,10 +300,14 @@ fn read_targets(path: &Path, scan_root: &Path) -> Option<TargetsFile> {
     let (role, base) = targets::classify_with_base(path.file_name()?.to_str()?)?;
     let rel = location::relative_to_root(path, scan_root)?;
     let dir = path.parent()?.to_path_buf();
-    // The package the file is named for, not its directory's name: in the
-    // `share/<pkg>/cmake/` layout the directory is `cmake` (measured on the
-    // ROCm SDK: `share/elfio/cmake/elfioTargets.cmake`).
+    // A `find_package` location matches either the package the file is
+    // named for or its directory's name. Both occur on the ROCm SDK:
+    // `share/elfio/cmake/elfioTargets.cmake` (directory `cmake`), and
+    // `lib/cmake/composable_kernel/composable_kerneldevice_conv_operationsTargets.cmake`
+    // (file named for a component of the package in its directory).
+    let dir_name = rel.parent().and_then(|p| p.file_name()).and_then(|s| s.to_str()).unwrap_or("");
     let prefix = location::prefix_of(&rel, RecordKind::CmakeVersion, base)
+        .or_else(|| location::prefix_of(&rel, RecordKind::CmakeVersion, dir_name))
         .map(|p| if p.as_os_str().is_empty() { scan_root.to_path_buf() } else { scan_root.join(p) });
     let resolved = location::resolve_in_root(scan_root, &rel);
     let parsed = resolved.as_deref().and_then(read_bounded).map(|c| targets::parse(&c));
