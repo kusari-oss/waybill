@@ -1,0 +1,16 @@
+{
+  "attached_via_same_name": 3,
+  "attached_via_version_file": 900,
+  "configurations": {
+    "release": 67
+  },
+  "location_forms": {
+    "${_IMPORT_PREFIX}": 917
+  },
+  "locations": 914,
+  "no_package_version": 7,
+  "not_shipped": 4,
+  "shipped": 910,
+  "shipped_regular_bytes": 6948893408,
+  "targets_files": 150
+}
