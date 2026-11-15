@@ -30,6 +30,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   without a URL after it, is now skipped. A file in which most lines are
   skipped is not read as pip at all, and a WARN names it.
 
+- **CMake fetches keep quoted and SHA-512 hashes, and resolve same-file
+  variables (#1517).** `URL_HASH "SHA256=<hex>"` and `URL_HASH SHA512=<hex>`
+  were dropped, and a `URL` built from `${VAR}` gave `@unknown`. Quoted
+  hashes and SHA-512, SHA-1 and MD5 are now kept. A variable with one
+  literal `set()` in the same file is substituted into `URL`,
+  `GIT_REPOSITORY`, `GIT_TAG` and `URL_HASH`. A variable with no such value
+  gives an unversioned design-tier component whose `waybill:unresolved-reason`
+  says so, instead of an invented `@unknown`. SHA-384 has no representation
+  yet and is still dropped.
+
 ## [0.16.0] - 2026-11-14
 
 A minor. It adds surface: `--root-cpe`, `--cpe-map`, `--no-hackage-lookup`, the
