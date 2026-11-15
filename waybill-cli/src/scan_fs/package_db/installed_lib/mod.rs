@@ -131,19 +131,95 @@ fn on_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
     guard.paths.insert(path.to_path_buf());
 }
 
-/// Research R1: three basename patterns, and descent into the Python
-/// virtual environments the pip reader reads (spec FR-001, analysis C1).
+/// Research R1: three basename patterns. Python virtual environments, which
+/// the shared walker skips, are reached by [`venv_candidates`] instead of a
+/// `descend_into` override: walking a whole environment measured +44% scan
+/// time on 50,000 files (task T040, `measurements/venv-walk-timing.md`).
 pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
     let patterns = globset_from_patterns(&["**/*.pc", "**/*ConfigVersion.cmake", "**/*-config-version.cmake"])?;
-    let descend_into = globset_from_patterns(&[".venv", "venv"])?;
     Ok(ReaderRegistration {
         reader_id: ReaderId::INSTALLED_LIB,
         state: Some(Arc::new(Mutex::new(InstalledLibMarker::default()))),
         patterns,
         on_file: Some(on_file),
         on_dir: None,
-        descend_into: Some(descend_into),
+        descend_into: None,
     })
+}
+
+/// Library-directory names probed below a site-packages directory.
+const PROBE_LIB_DIRS: [&str; 5] = ["lib", "lib64", "lib32", "libx32", "share"];
+/// How many directory levels below site-packages a wheel's `lib*` may sit:
+/// `<pkg>/lib`, `<ns>/<pkg>/lib`, `<ns>/<pkg>/<sub>/lib`.
+const PROBE_DEPTH: usize = 3;
+
+/// Spec FR-001 (analysis C1): matching files inside the Python virtual
+/// environments the pip reader reads (`.venv`, `venv`), which the shared
+/// walker skips. A bounded probe, not a walk: below each site-packages
+/// directory it lists directories up to [`PROBE_DEPTH`] levels deep, and
+/// reads only `<lib*>/pkgconfig/` and `<lib*>/cmake/` (two levels) where it
+/// finds one. Real directories only, no symlinks followed; directories the
+/// operator excluded are skipped.
+pub(crate) fn venv_candidates(
+    scan_root: &Path,
+    exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
+) -> BTreeSet<PathBuf> {
+    let mut out = BTreeSet::new();
+    let is_venv = |p: &Path| p.components().any(|c| c.as_os_str() == ".venv" || c.as_os_str() == "venv");
+    for sp in crate::scan_fs::package_db::pip::candidate_site_packages_roots(scan_root) {
+        let Some(rel) = location::relative_to_root(&sp, scan_root) else { continue };
+        if !is_venv(&rel) || !sp.is_dir() {
+            continue;
+        }
+        let mut frontier = vec![sp];
+        for _ in 0..PROBE_DEPTH {
+            let mut next = Vec::new();
+            for dir in &frontier {
+                for child in real_subdirs(dir) {
+                    let excluded = location::relative_to_root(&child, scan_root)
+                        .and_then(|r| r.to_str().map(|s| exclude_set.matches(s)))
+                        .unwrap_or(false);
+                    if excluded {
+                        continue;
+                    }
+                    let name = child.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                    if PROBE_LIB_DIRS.contains(&name) {
+                        collect_matching(&child.join("pkgconfig"), 0, &mut out);
+                        collect_matching(&child.join("cmake"), 2, &mut out);
+                    }
+                    next.push(child);
+                }
+            }
+            frontier = next;
+        }
+    }
+    out
+}
+
+/// Real (non-symlink) subdirectories of `dir`, sorted.
+fn real_subdirs(dir: &Path) -> Vec<PathBuf> {
+    let Ok(rd) = std::fs::read_dir(dir) else { return Vec::new() };
+    let mut v: Vec<PathBuf> =
+        rd.flatten().filter(|e| e.file_type().is_ok_and(|t| t.is_dir())).map(|e| e.path()).collect();
+    v.sort();
+    v
+}
+
+/// Matching files in `dir` and, `depth` more levels down, its real
+/// subdirectories.
+fn collect_matching(dir: &Path, depth: usize, out: &mut BTreeSet<PathBuf>) {
+    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    for e in rd.flatten() {
+        let Ok(t) = e.file_type() else { continue };
+        let p = e.path();
+        if t.is_dir() {
+            if depth > 0 {
+                collect_matching(&p, depth - 1, out);
+            }
+        } else if p.file_name().and_then(|s| s.to_str()).is_some_and(|n| classify_name(n).is_some()) {
+            out.insert(p);
+        }
+    }
 }
 
 pub(crate) fn extract_marker(registration: &ReaderRegistration) -> InstalledLibMarker {
@@ -160,8 +236,14 @@ pub(crate) fn extract_marker(registration: &ReaderRegistration) -> InstalledLibM
     std::mem::take(&mut *guard)
 }
 
-/// Parse every matched file into a record, in path order.
-pub(crate) fn finalize(marker: InstalledLibMarker, scan_root: &Path) -> Vec<Record> {
+/// Parse every matched file, plus those in virtual environments
+/// ([`venv_candidates`]), into a record, in path order.
+pub(crate) fn finalize(
+    mut marker: InstalledLibMarker,
+    scan_root: &Path,
+    exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
+) -> Vec<Record> {
+    marker.paths.extend(venv_candidates(scan_root, exclude_set));
     marker.paths.into_iter().filter_map(|p| read_record(&p, scan_root)).collect()
 }
 

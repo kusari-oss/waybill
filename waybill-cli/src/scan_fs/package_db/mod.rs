@@ -3101,7 +3101,7 @@ fn run_shared_walker_pilot(
         .registrations()
         .iter()
         .find(|r| r.reader_id == ReaderId::INSTALLED_LIB)
-        .map(|reg| installed_lib::finalize(installed_lib::extract_marker(reg), rootfs))
+        .map(|reg| installed_lib::finalize(installed_lib::extract_marker(reg), rootfs, exclude_set))
         .unwrap_or_default();
 
     // Bazel — marker-detect only; finalize gates the fixed-root read

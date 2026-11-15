@@ -81,6 +81,7 @@ use std::sync::{Arc, Mutex};
 // helper.
 
 mod dist_info;
+pub(crate) use dist_info::candidate_site_packages_roots;
 pub(crate) mod extras;
 mod pipfile;
 mod poetry;
