@@ -97,9 +97,11 @@ An engineer's super-build pins a library as a submodule and also names it elsewh
 - **SSH and scp-style URLs** (`git@github.com:owner/repo.git`, `ssh://git@gitlab.com/owner/repo`) identify forge repositories the same way `https://` URLs do. A `.git` suffix is not part of the repository name.
 - **Nested GitLab groups** (`gitlab.com/group/subgroup/project`): only `<owner>/<repo>` is recognised, as in the Yocto reader, so a path with more segments falls back to `pkg:generic/…?vcs_url=` instead of truncating the path.
 - **A gitlink with no `.gitmodules` entry**, such as a submodule added and then removed from `.gitmodules`, has a commit but no URL. It is emitted as `pkg:generic/<path-basename>@<commit>` without a `vcs_url`, with a diagnostic.
-- **The scan root is a subdirectory of a working tree.** Only gitlinks under the scan root are emitted.
+- **The scan root is a subdirectory of a working tree** whose `.gitmodules` lies above the scan root. Nothing is emitted, and no coverage record is written. The reader never reads a repository above the scan root, as the golang reader already avoids a parent `.git`. *(Amended during planning: research R14.)*
 - **The checked-out commit differs from the gitlink**, for example a submodule moved locally and not committed. The gitlink is what the super-project pins and is what is emitted. The difference is recorded as a diagnostic, not as a second component.
 - **The `git` tool is unavailable** on the host. The reader emits no submodule components, counts the entries under `git-unavailable` in the FR-011 annotation, and warns once. It never falls back to guessing from `.gitmodules`.
+- **Git refuses the repository** ("dubious ownership", `safe.directory`). The reader emits nothing for it, counts the entries under `git-refused`, and warns with the remedy. It never overrides `safe.directory` itself, because that check exists to stop a foreign repository's config from running code. *(Amended during planning: research R2.)*
+- **A hostile repository config** (for example `core.fsmonitor` naming a program). It MUST NOT run. The reader uses only commands measured not to load the index, and also disables `core.fsmonitor` and hooks on the command line. *(Research R1.)*
 - **Hostile `.gitmodules` content.** A path that escapes the scan root (`../`, absolute) or a URL that looks like a command-line option is skipped with a warning, and nothing from it reaches a subprocess argument.
 
 ## Requirements *(mandatory)*
@@ -124,10 +126,10 @@ An engineer's super-build pins a library as a submodule and also names it elsewh
 - **FR-009**: A submodule component MUST merge with another reader's component only when their canonical PURLs are identical. Milestone-105 FR-015 then applies unchanged: one component, manifest-mode declarations outrank `git-submodule`, and the losing mechanisms are recorded in `waybill:also-detected-via` (C56). Components with different PURLs MUST stay separate, even when they plausibly name the same library. That covers a package-manager name against a repository, and a tag against a commit.
 - **FR-010**: A submodule component MUST be an ordinary dependency of the component that pins it: the document's root for a top-level submodule, and the enclosing submodule's component for a nested one. Its scope MUST NOT be narrowed by its C57 value: no optional lifecycle scope, no excluded scope, no removed edge. C57 is the only signal that a submodule may be unused.
 - **FR-011**: Every skip MUST be reported in the document and in the log.
-  - **In the document**: whenever a `.gitmodules` file was seen, the document MUST carry one document-level annotation, under a new catalog row with extractors in all three formats. It records the count of submodules pinned and the count skipped for each reason: `no-gitlink`, `no-url`, `no-repository-data`, `git-unavailable` and `unsafe-path-or-url`. A reason with a zero count is listed with zero, so an absent reason cannot be mistaken for one that was not checked.
+  - **In the document**: whenever a `.gitmodules` file was seen, the document MUST carry one document-level annotation, under a new catalog row with extractors in all three formats. It records the count of submodules pinned and the count skipped for each reason: `no-gitlink`, `no-url`, `no-repository-data`, `git-unavailable`, `git-refused` and `unsafe-path-or-url`. `git-refused` was amended in during planning (research R2). A reason with a zero count is listed with zero, so an absent reason cannot be mistaken for one that was not checked.
   - **In the log**: each skip also gets a warning naming the file.
   - **When it is absent**: a document with no `.gitmodules` file in its tree carries no such annotation.
-- **FR-012**: Nothing from `.gitmodules` may be interpreted as a command-line option or as a path outside the scan root in any subprocess the reader runs.
+- **FR-012**: Nothing from `.gitmodules` may be interpreted as a command-line option or as a path outside the scan root in any subprocess the reader runs. Nothing a scanned repository configures may run either. The reader MUST NOT run a `git` command that loads the index, since R1 measured `ls-files` and `status` running `core.fsmonitor` from repository config. It MUST pass `-c core.fsmonitor=false` and an empty hooks path on every invocation.
 - **FR-013**: The reader MUST work offline. It reads only local repository data and fetches nothing.
 - **FR-014**: Output MUST be identical across CycloneDX 1.6, SPDX 2.3 and SPDX 3 for C55, C56 and C57, and byte-identical across repeated scans of the same tree.
 
@@ -151,12 +153,13 @@ An engineer's super-build pins a library as a submodule and also names it elsewh
   - a second fixture, where a `FetchContent_Declare` pins the same repository at the gitlink's commit, gives one component with `git-submodule` in `also-detected-via`;
   - 10 repeated scans of each fixture are byte-identical.
 - **SC-006**: C55, C56 and C57 values agree across all three output formats for every submodule component in the fixtures.
-- **SC-007**: No committed golden changes except those whose input tree contains gitlinks. Each of those changes only by gaining submodule components and their edges.
+- **SC-007**: No committed golden changes except those whose input tree contains a `.gitmodules` file. Each of those changes only by gaining submodule components, their edges and the coverage record. Research R13 measured the public corpus: no target pins a submodule, and only `haskell-language-server` has a (comment-only) `.gitmodules`. So exactly its three goldens are predicted to change, each gaining a coverage record of `pinned: 0`. *(Amended during planning: research R13.)*
 - **SC-008**: In a fixture with three submodules, the C57 classification is:
   - `declared-and-used` for the one consumed by `add_subdirectory(<path>)`;
   - `declared-and-used` for the one matched by `find_package`;
   - `declared-only` for the one referenced by neither.
 - **SC-009**: Scanning a fixture's `.gitmodules` with its repository data removed gives zero submodule components. The document's coverage record shows the entry count under `no-repository-data` and zero pinned, identically in all three formats. The same tree with its repository data present shows every entry pinned.
+- **SC-010**: With a hostile `core.fsmonitor` configured in the scanned repository, a scan runs no program the repository names. A test asserts that the payload's marker file is absent.
 
 ## Assumptions
 

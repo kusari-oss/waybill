@@ -475,6 +475,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-14
 - One committed data file, embedded at build time. The operator file is read once per scan. No cache, no network (FR-015). (1491-operator-cpe-table)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only. **Zero new Cargo dependencies.** (1492-patch-member-source)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only (`serde`/`serde_json`). **Zero new Cargo dependencies.** (1503-fragment-positive-evidence)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `serde`/`serde_json`, `regex`, `tracing`; the milestone-075 `identifiers::sanitize::sanitize_userinfo`. External: the host's `git`, already a runtime assumption (milestone 053). **Zero new Cargo dependencies.** (1530-git-submodule-reader)
+- N/A. Everything is in process for one scan. (1530-git-submodule-reader)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -707,9 +709,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1530-git-submodule-reader: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `serde`/`serde_json`, `regex`, `tracing`; the milestone-075 `identifiers::sanitize::sanitize_userinfo`. External: the host's `git`, already a runtime assumption (milestone 053). **Zero new Cargo dependencies.**
 - 1503-fragment-positive-evidence: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only (`serde`/`serde_json`). **Zero new Cargo dependencies.**
 - 1492-patch-member-source: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only. **Zero new Cargo dependencies.**
-- 1491-operator-cpe-table: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only.
 
 
 <!-- MANUAL ADDITIONS START -->
