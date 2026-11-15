@@ -373,7 +373,7 @@ pub struct DbScanResult {
     /// Not entries yet: `scan_fs::scan_path` turns them into entries after
     /// the binary scan, when OS ownership and binaries are both known
     /// (`installed_lib::resolve`).
-    pub(crate) installed_lib_records: Vec<installed_lib::Record>,
+    pub(crate) installed_lib_records: installed_lib::Phase1,
     /// Milestone 665: the active `--no-binary-scan` mode for this scan,
     /// echoed back from the CLI layer so the emitter can add a
     /// document-scope `waybill:binary-scan-suppressed=<mode>` annotation
@@ -2597,7 +2597,7 @@ struct SharedPilotOutput {
     /// Spec 1530 FR-011 (C222): `None` when no `.gitmodules` was seen.
     git_submodule_coverage: Option<git_submodule::SubmoduleCoverage>,
     /// Spec 1531 (#1531): parsed records, resolved after the binary scan.
-    installed_lib: Vec<installed_lib::Record>,
+    installed_lib: installed_lib::Phase1,
     bazel: Vec<PackageDbEntry>,
     cmake: Vec<PackageDbEntry>,
     /// Milestone 664 US2 T058: `go.mod` paths threaded to

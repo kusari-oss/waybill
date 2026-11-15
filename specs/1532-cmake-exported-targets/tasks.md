@@ -11,13 +11,13 @@
 
 ## Phase 1: Setup and re-verification
 
-- [ ] T001 [P] Extend `waybill-cli/tests/installed_lib_cmake_reader_inert.rs` with a case asserting the CMake reader emits no component from an exported-targets file (research R2). Use a `cmake/WaybillFixturePTargets.cmake` and a `cmake/waybill-fixture-q-targets-release.cmake`, placed where the CMake reader does parse, beside the existing live control. Run it on main first; it must pass. If it fails, record the finding in research R2 and stop.
-- [ ] T002 [P] Write a test in `waybill-cli/tests/installed_lib_targets.rs` that confirms research R5's inferred claim: the `file-sha256` qualifier of a binary file component equals the SHA-256 of the same file. Use `common::installed_lib::elf_shared_lib`, and compute the reference digest in the test with `sha2`, which is already a dev-dependency of `waybill-cli`; check `Cargo.toml` before relying on it. If the two differ, stop and record the finding in research R5.
+- [X] T001 [P] Extend `waybill-cli/tests/installed_lib_cmake_reader_inert.rs` with a case asserting the CMake reader emits no component from an exported-targets file (research R2). Use a `cmake/WaybillFixturePTargets.cmake` and a `cmake/waybill-fixture-q-targets-release.cmake`, placed where the CMake reader does parse, beside the existing live control. Run it on main first; it must pass. If it fails, record the finding in research R2 and stop.
+- [X] T002 [P] Write a test in `waybill-cli/tests/installed_lib_targets.rs` that confirms research R5's inferred claim: the `file-sha256` qualifier of a binary file component equals the SHA-256 of the same file. Use `common::installed_lib::elf_shared_lib`, and compute the reference digest in the test with `sha2`, which is already a dev-dependency of `waybill-cli`; check `Cargo.toml` before relying on it. If the two differ, stop and record the finding in research R5.
 
 ## Phase 2: Foundational
 
-- [ ] T003 Make `commands()` and the `Arg` type in `waybill-cli/src/scan_fs/package_db/installed_lib/cmake_version.rs` `pub(crate)`, with no behaviour change.
-- [ ] T004 Extend `classify_name` in `waybill-cli/src/scan_fs/package_db/installed_lib/mod.rs` with `RecordKind::ExportedTargets` for the six patterns in research R1: `*Targets.cmake`, `*Targets-*.cmake`, `*-targets.cmake`, `*-targets-*.cmake`, `*Exports.cmake`, `*Exports-*.cmake`. Add those globs to `registration()`. `venv_candidates`' `collect_matching` uses `classify_name`, so it picks them up. Extend the `classify_name_selects_kind_and_stem` unit test with:
+- [X] T003 Make `commands()` and the `Arg` type in `waybill-cli/src/scan_fs/package_db/installed_lib/cmake_version.rs` `pub(crate)`, with no behaviour change.
+- [X] T004 Extend `classify_name` in `waybill-cli/src/scan_fs/package_db/installed_lib/mod.rs` with `RecordKind::ExportedTargets` for the six patterns in research R1: `*Targets.cmake`, `*Targets-*.cmake`, `*-targets.cmake`, `*-targets-*.cmake`, `*Exports.cmake`, `*Exports-*.cmake`. Add those globs to `registration()`. `venv_candidates`' `collect_matching` uses `classify_name`, so it picks them up. Extend the `classify_name_selects_kind_and_stem` unit test with:
   - every pattern;
   - non-matches: `FooTargets.cmake.in`, `targets.cmake`, `FooConfig.cmake`;
   - the existing #1531 kinds, which must classify unchanged.
@@ -28,7 +28,7 @@
 
 ### Tests first
 
-- [ ] T005 [P] [US1] Write unit tests for the targets parser in the new file `waybill-cli/src/scan_fs/package_db/installed_lib/targets.rs`:
+- [X] T005 [P] [US1] Write unit tests for the targets parser in the new file `waybill-cli/src/scan_fs/package_db/installed_lib/targets.rs`:
   - a CMake-generated main file with 3 raise lines gives `raise = Some(3)`;
   - a `<config>` file gives its `IMPORTED_LOCATION_RELEASE` strings in order;
   - a file with both `IMPORTED_LOCATION` and `IMPORTED_LOCATION_DEBUG` gives both;
@@ -36,7 +36,7 @@
   - `INTERFACE_*` properties and `IMPORTED_SONAME` / `IMPORTED_IMPLIB` values are not locations;
   - a truncated statement yields what was read before it, without panicking;
   - the role is `Main` for `XTargets.cmake` / `x-targets.cmake` / `XExports.cmake`, and `Config("release")` for `XTargets-release.cmake` / `x-targets-release.cmake`.
-- [ ] T006 [P] [US1] Write integration tests in `waybill-cli/tests/installed_lib_targets.rs` covering US1 scenarios 1–5 and SC-001:
+- [X] T006 [P] [US1] Write integration tests in `waybill-cli/tests/installed_lib_targets.rs` covering US1 scenarios 1–5 and SC-001:
   - the `WaybillFixtureP` package from `quickstart.md`, plus a shared library `lib/libwaybill-fixture-p.so.4` built with `elf_shared_lib`;
   - the lower-case `waybill-fixture-q` package;
   - an `Exports` package;
@@ -52,9 +52,9 @@
 
 ### Implementation
 
-- [ ] T007 [US1] Implement `targets.rs`: `parse(content) -> TargetsFile { raise: Option<usize>, locations: Vec<String> }`, using `cmake_version::commands`, per research R3. T005 must pass.
-- [ ] T008 [US1] Phase 1 in `installed_lib/mod.rs`. `finalize` returns `TargetsFile` records next to the #1531 records, through a new `targets` field on the records container. Each carries `path`, `dir`, `role`, `prefix` (from `location::prefix_of` with CMake rules), `resolved` (root-relative) and the parsed fields. Thread them to phase 2 the same way as the #1531 records, through `DbScanResult`.
-- [ ] T009 [US1] Phase 2 in `installed_lib/resolve.rs`, per the data model:
+- [X] T007 [US1] Implement `targets.rs`: `parse(content) -> TargetsFile { raise: Option<usize>, locations: Vec<String> }`, using `cmake_version::commands`, per research R3. T005 must pass.
+- [X] T008 [US1] Phase 1 in `installed_lib/mod.rs`. `finalize` returns `TargetsFile` records next to the #1531 records, through a new `targets` field on the records container. Each carries `path`, `dir`, `role`, `prefix` (from `location::prefix_of` with CMake rules), `resolved` (root-relative) and the parsed fields. Thread them to phase 2 the same way as the #1531 records, through `DbScanResult`.
+- [X] T009 [US1] Phase 2 in `installed_lib/resolve.rs`, per the data model:
   - group targets by `dir`, and take the raise count from the `Main` file;
   - resolve each location: `${_IMPORT_PREFIX}/` only, then `location::resolve_in_root`, then an existence check;
   - associate the package: the version-record live entry in the same directory, else a same-prefix, same-`lname` live entry;
@@ -63,8 +63,8 @@
   - skip OS-owned targets files with the #1531 `os_owned` check.
 
   T006 must pass.
-- [ ] T010 [US1] Extend `Coverage::wire` in `resolve.rs` with the optional `exported-targets` object, keys sorted, present only when `read + owned-by-os-package > 0`. Extend the unit test `the_wire_value_lists_every_reason_with_sorted_keys` with a case including the object, and keep the existing case byte-identical.
-- [ ] T011 [US1] Hash reuse (FR-005a, research R5) in `waybill-cli/src/scan_fs/mod.rs` and `installed_lib/resolve.rs`.
+- [X] T010 [US1] Extend `Coverage::wire` in `resolve.rs` with the optional `exported-targets` object, keys sorted, present only when `read + owned-by-os-package > 0`. Extend the unit test `the_wire_value_lists_every_reason_with_sorted_keys` with a case including the object, and keep the existing case byte-identical.
+- [X] T011 [US1] Hash reuse (FR-005a, research R5) in `waybill-cli/src/scan_fs/mod.rs` and `installed_lib/resolve.rs`.
   - **Seed the cache.** Before the evidence loop that calls `manifest_occurrence` (~`:1056`), seed `manifest_sha_cache` from every `db_entries` entry whose PURL carries a `file-sha256` qualifier: key `source_path`, value `Some(hex)`.
   - **Make the keys match** (analysis U2). In phase 2, when a resolved location is the same file as a binary file component, by `(dev, ino)` on unix and canonical path otherwise, put that component's exact `source_path` string into `extra_source_paths`.
   - **Make reuse observable** (analysis U1). Count lookups that hit a seeded entry, and log `hash cache: seeded=<n> reused=<m>` once at INFO.
@@ -76,7 +76,7 @@
 
 **Independent test**: SC-002. Each uncertainty yields zero attributions and one count under its reason.
 
-- [ ] T012 [P] [US2] Write integration tests in `waybill-cli/tests/installed_lib_targets.rs`, covering US2 scenarios 1–5. Each case is a separate prefix:
+- [X] T012 [P] [US2] Write integration tests in `waybill-cli/tests/installed_lib_targets.rs`, covering US2 scenarios 1–5. Each case is a separate prefix:
   - a computed version file beside its targets, giving `no-package-version`;
   - a `.pc`-only package `waybill-fixture-r` (`lib/pkgconfig/waybill-fixture-r.pc`) with `lib/cmake/waybill-fixture-r/waybill-fixture-r-targets*.cmake` and no version file, which attaches through the same-name rule;
   - `${CMAKE_INSTALL_PREFIX}/lib/x.so` and `${FOO}/x.so`, each giving `unresolved-location`;
@@ -84,12 +84,12 @@
   - a dpkg `.list` owning the targets file, giving `owned-by-os-package`, with no attribution;
   - a `<config>` file with no main file in its directory, giving `unresolved-location` (FR-003);
   - two packages in different directories naming the same shipped file. It is listed under both, and `attached` counts 2 (analysis I1).
-- [ ] T013 [US2] Make T012 pass. The logic is already in T009; this task fixes what the tests expose.
+- [X] T013 [US2] Make T012 pass. The logic is already in T009; this task fixes what the tests expose.
 
 ## Phase 5: Polish
 
 - [ ] T014 Run the mutations from plan.md Approach step 6, recording each failing test and message in `specs/1532-cmake-exported-targets/measurements/mutations.md`. The no-reuse mutation, which removes the cache seeding, must fail T011's `reused` assertion. Run the harness under bash with `--no-fail-fast` and parse the `---- <name> stdout ----` blocks; that is the spec 1531 lesson.
-- [ ] T015 Byte-identity tests in `installed_lib_targets.rs` (SC-004):
+- [X] T015 Byte-identity tests in `installed_lib_targets.rs` (SC-004):
   - ten scans of the US1 tree are identical, with CycloneDX `serialNumber` masked;
   - a tree with only #1531 files (no targets) produces C225 without `exported-targets`, byte-identical to its pre-feature shape. Compare against a literal expected string.
 - [ ] T016 Docs:

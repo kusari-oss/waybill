@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use waybill_common::resolution::BinaryRole;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
-use super::{location, Record, RecordKind, SkipReason};
+use super::{location, targets, Phase1, Record, RecordKind, SkipReason, TargetsFile};
 use crate::scan_fs::package_db::PackageDbEntry;
 
 /// C225: the document-scope coverage record.
@@ -43,6 +43,22 @@ pub(crate) struct Coverage {
     pub(crate) skipped: BTreeMap<SkipReason, usize>,
     pub(crate) unresolved_requires: usize,
     pub(crate) version_disagreements: usize,
+    /// Spec 1532 FR-007: present only when an exported-targets file was
+    /// matched.
+    pub(crate) exported_targets: Option<ExportedTargetsCoverage>,
+}
+
+/// Spec 1532 FR-007 (data-model.md). Counts after `read` and
+/// `owned_by_os_package` are per (directory, resolved location) pair.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(crate) struct ExportedTargetsCoverage {
+    pub(crate) read: usize,
+    pub(crate) owned_by_os_package: usize,
+    pub(crate) locations: usize,
+    pub(crate) attached: usize,
+    pub(crate) not_shipped: usize,
+    pub(crate) no_package_version: usize,
+    pub(crate) unresolved_location: usize,
 }
 
 impl Coverage {
@@ -54,13 +70,27 @@ impl Coverage {
             skipped.insert(r.as_str().to_string(), self.skipped.get(&r).copied().unwrap_or(0).into());
         }
         let kind = |read: usize, emitted: usize| serde_json::json!({"emitted": emitted, "read": read});
-        let v: BTreeMap<&str, serde_json::Value> = BTreeMap::from([
+        let mut v: BTreeMap<&str, serde_json::Value> = BTreeMap::from([
             ("cmake-version", kind(self.cmake_read, self.cmake_emitted)),
             ("pkg-config", kind(self.pkg_config_read, self.pkg_config_emitted)),
             ("skipped", serde_json::Value::Object(skipped)),
             ("unresolved-requires", self.unresolved_requires.into()),
             ("version-disagreements", self.version_disagreements.into()),
         ]);
+        if let Some(t) = &self.exported_targets {
+            v.insert(
+                "exported-targets",
+                serde_json::json!({
+                    "attached": t.attached,
+                    "locations": t.locations,
+                    "no-package-version": t.no_package_version,
+                    "not-shipped": t.not_shipped,
+                    "owned-by-os-package": t.owned_by_os_package,
+                    "read": t.read,
+                    "unresolved-location": t.unresolved_location,
+                }),
+            );
+        }
         serde_json::to_string(&v).unwrap_or_default()
     }
 
@@ -82,12 +112,13 @@ struct Live {
 /// entries (`.pc` first, then CMake, each in path order) and the coverage
 /// record, which is `None` when phase 1 matched no file.
 pub(crate) fn resolve(
-    records: Vec<Record>,
+    phase1: Phase1,
     scan_root: &Path,
     claims: &OsClaims<'_>,
     binaries: &[PackageDbEntry],
 ) -> (Vec<PackageDbEntry>, Option<Coverage>) {
-    if records.is_empty() {
+    let Phase1 { records, targets: targets_files } = phase1;
+    if records.is_empty() && targets_files.is_empty() {
         return (Vec::new(), None);
     }
     let mut cov = Coverage::default();
@@ -129,7 +160,11 @@ pub(crate) fn resolve(
 
     cov.version_disagreements = count_disagreements(&live);
     let deps = resolve_requires(&live, &mut cov);
-    let evidence = match_binaries(&live, binaries);
+    let mut evidence = match_binaries(&live, binaries);
+    if !targets_files.is_empty() {
+        cov.exported_targets =
+            Some(attach_exported_targets(&live, targets_files, scan_root, claims, binaries, &mut evidence));
+    }
 
     let entries: Vec<PackageDbEntry> = live
         .iter()
@@ -149,6 +184,10 @@ pub(crate) fn resolve(
 
 /// FR-015: listed by dpkg/apk/alpm/opkg/rpm, or inside a Homebrew keg.
 fn os_owned(record: &Record, scan_root: &Path, claims: &OsClaims<'_>) -> bool {
+    path_os_owned(&record.path, record.resolved.as_deref(), scan_root, claims)
+}
+
+fn path_os_owned(path: &Path, resolved: Option<&Path>, scan_root: &Path, claims: &OsClaims<'_>) -> bool {
     let claimed = |p: &Path| {
         crate::scan_fs::binary::is_path_claimed(
             p,
@@ -157,10 +196,139 @@ fn os_owned(record: &Record, scan_root: &Path, claims: &OsClaims<'_>) -> bool {
             claims.inodes,
         )
     };
-    if claimed(&record.path) || record.resolved.as_deref().is_some_and(claimed) {
+    if claimed(path) || resolved.is_some_and(claimed) {
         return true;
     }
-    record.resolved.as_deref().is_some_and(|r| in_homebrew_keg(r, scan_root))
+    resolved.is_some_and(|r| in_homebrew_keg(r, scan_root))
+}
+
+/// A file's identity for matching an attributed location to a binary file
+/// component (analysis U2): `(dev, ino)` on unix, the canonical path
+/// elsewhere.
+#[cfg(unix)]
+fn file_key(p: &Path) -> Option<(u64, u64)> {
+    use std::os::unix::fs::MetadataExt;
+    std::fs::metadata(p).ok().map(|m| (m.dev(), m.ino()))
+}
+#[cfg(not(unix))]
+fn file_key(p: &Path) -> Option<PathBuf> {
+    std::fs::canonicalize(p).ok()
+}
+
+/// Spec 1532 phase 2 (data-model.md "Resolution"): resolve each export
+/// set's locations, find its package's live record, and add each shipped
+/// file to that record's evidence.
+fn attach_exported_targets(
+    live: &[Live],
+    files: Vec<TargetsFile>,
+    scan_root: &Path,
+    claims: &OsClaims<'_>,
+    binaries: &[PackageDbEntry],
+    evidence: &mut BTreeMap<usize, Vec<String>>,
+) -> ExportedTargetsCoverage {
+    let mut cov = ExportedTargetsCoverage::default();
+    // One export set per directory, OS-owned files skipped.
+    let mut by_dir: BTreeMap<PathBuf, Vec<TargetsFile>> = BTreeMap::new();
+    for f in files {
+        if f.prefix.is_none() {
+            continue;
+        }
+        if path_os_owned(&f.path, f.resolved.as_deref(), scan_root, claims) {
+            cov.owned_by_os_package += 1;
+            continue;
+        }
+        cov.read += 1;
+        by_dir.entry(f.dir.clone()).or_default().push(f);
+    }
+    let binary_by_key: BTreeMap<_, &str> = binaries
+        .iter()
+        .filter(|b| b.purl.as_str().contains("file-sha256="))
+        .filter_map(|b| file_key(Path::new(&b.source_path)).map(|k| (k, b.source_path.as_str())))
+        .collect();
+    for (dir, set) in by_dir {
+        let raise = set
+            .iter()
+            .find(|f| f.role == targets::Role::Main)
+            .and_then(|f| f.parsed.as_ref())
+            .and_then(|p| p.raise);
+        let prefix = set.iter().find_map(|f| f.prefix.clone());
+        let component = package_record(live, &dir, prefix.as_deref());
+        let locations: BTreeSet<&str> =
+            set.iter().filter_map(|f| f.parsed.as_ref()).flat_map(|p| p.locations.iter().map(String::as_str)).collect();
+        for loc in locations {
+            cov.locations += 1;
+            let rel = match (raise, location::relative_to_root(&dir, scan_root)) {
+                (Some(n), Some(dir_rel)) => import_location(&dir_rel, n, loc),
+                _ => None,
+            };
+            let Some(rel) = rel else {
+                cov.unresolved_location += 1;
+                continue;
+            };
+            let Some(resolved) = location::resolve_in_root(scan_root, &rel) else {
+                cov.not_shipped += 1;
+                continue;
+            };
+            if !resolved.is_file() {
+                cov.not_shipped += 1;
+                continue;
+            }
+            let Some(idx) = component else {
+                cov.no_package_version += 1;
+                continue;
+            };
+            let path = file_key(&resolved)
+                .and_then(|k| binary_by_key.get(&k).map(|s| s.to_string()))
+                .unwrap_or_else(|| resolved.to_string_lossy().into_owned());
+            evidence.entry(idx).or_default().push(path);
+            cov.attached += 1;
+        }
+    }
+    for v in evidence.values_mut() {
+        v.sort();
+        v.dedup();
+    }
+    cov
+}
+
+/// FR-004: the live record a targets directory belongs to. First the CMake
+/// version record in the same directory, then a same-prefix record whose
+/// name is the directory's lowercased name.
+fn package_record(live: &[Live], dir: &Path, prefix: Option<&Path>) -> Option<usize> {
+    if let Some(i) = live
+        .iter()
+        .position(|l| l.record.kind == RecordKind::CmakeVersion && l.record.path.parent() == Some(dir))
+    {
+        return Some(i);
+    }
+    let name = dir.file_name()?.to_str()?.to_lowercase();
+    let prefix = prefix?;
+    live.iter().position(|l| l.prefix == prefix && l.lname == name)
+}
+
+/// FR-003: `${_IMPORT_PREFIX}/<rest>` with `_IMPORT_PREFIX` = `dir_rel` raised
+/// `raise` times, as a root-relative path. `None` for any other variable,
+/// for raising above the root, or for `..` that climbs above the root.
+fn import_location(dir_rel: &Path, raise: usize, loc: &str) -> Option<PathBuf> {
+    let rest = loc.strip_prefix("${_IMPORT_PREFIX}/")?;
+    if rest.contains("${") || rest.contains("$<") {
+        return None;
+    }
+    let mut parts: Vec<std::ffi::OsString> = dir_rel.components().map(|c| c.as_os_str().to_os_string()).collect();
+    for _ in 0..raise {
+        parts.pop()?;
+    }
+    for c in Path::new(rest).components() {
+        match c {
+            std::path::Component::Normal(s) => parts.push(s.to_os_string()),
+            std::path::Component::ParentDir => {
+                parts.pop()?;
+            }
+            std::path::Component::CurDir => {}
+            _ => return None,
+        }
+    }
+    Some(parts.iter().collect())
 }
 
 /// `<root>/<brew-prefix>/Cellar/<name>/<version>/…` with that version
@@ -399,7 +567,7 @@ mod tests {
             #[cfg(unix)]
             inodes: &inodes,
         };
-        let (e, c) = resolve(records, Path::new("/nonexistent-root"), &claims, binaries);
+        let (e, c) = resolve(Phase1 { records, targets: Vec::new() }, Path::new("/nonexistent-root"), &claims, binaries);
         (e, c.unwrap())
     }
 
@@ -523,6 +691,35 @@ mod tests {
             c.wire(),
             r#"{"cmake-version":{"emitted":0,"read":0},"pkg-config":{"emitted":2,"read":3},"skipped":{"computed-version":0,"malformed":0,"no-version":0,"owned-by-os-package":0,"unrecognised-location":0,"unresolved-version":1},"unresolved-requires":0,"version-disagreements":0}"#
         );
+    }
+
+    // Spec 1532 (T010): the exported-targets object, present only when set.
+    #[test]
+    fn the_wire_value_gains_exported_targets_only_when_present() {
+        let c = Coverage {
+            exported_targets: Some(ExportedTargetsCoverage {
+                read: 2, owned_by_os_package: 1, locations: 3, attached: 2, not_shipped: 1, ..Default::default()
+            }),
+            ..Default::default()
+        };
+        assert_eq!(
+            c.wire(),
+            r#"{"cmake-version":{"emitted":0,"read":0},"exported-targets":{"attached":2,"locations":3,"no-package-version":0,"not-shipped":1,"owned-by-os-package":1,"read":2,"unresolved-location":0},"pkg-config":{"emitted":0,"read":0},"skipped":{"computed-version":0,"malformed":0,"no-version":0,"owned-by-os-package":0,"unrecognised-location":0,"unresolved-version":0},"unresolved-requires":0,"version-disagreements":0}"#
+        );
+    }
+
+    // Spec 1532 FR-003: prefix arithmetic.
+    #[test]
+    fn import_locations() {
+        let d = Path::new("opt/sdk/lib/cmake/WaybillFixtureP");
+        assert_eq!(import_location(d, 3, "${_IMPORT_PREFIX}/lib/libops.a"), Some(PathBuf::from("opt/sdk/lib/libops.a")));
+        assert_eq!(import_location(d, 3, "${_IMPORT_PREFIX}/bin/tool"), Some(PathBuf::from("opt/sdk/bin/tool")));
+        assert_eq!(import_location(d, 5, "${_IMPORT_PREFIX}/x"), Some(PathBuf::from("x")), "raised to the root");
+        assert_eq!(import_location(d, 6, "${_IMPORT_PREFIX}/x"), None, "raised above the root");
+        assert_eq!(import_location(d, 3, "${_IMPORT_PREFIX}/../../../../x"), None, "climbs above the root");
+        assert_eq!(import_location(d, 3, "${CMAKE_INSTALL_PREFIX}/lib/x.so"), None);
+        assert_eq!(import_location(d, 3, "${_IMPORT_PREFIX}/lib/${FOO}.so"), None);
+        assert_eq!(import_location(d, 3, "/usr/lib/x.so"), None);
     }
 
     // T026: binary matching.

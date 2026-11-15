@@ -15,6 +15,7 @@ pub(crate) mod cmake_version;
 pub(crate) mod location;
 pub(crate) mod pkgconfig;
 pub(crate) mod resolve;
+pub(crate) mod targets;
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -95,6 +96,34 @@ pub(crate) struct Record {
     pub(crate) requires_private: Vec<String>,
 }
 
+/// One exported-targets file (spec 1532, data-model.md `TargetsFile`).
+#[derive(Debug, Clone)]
+pub(crate) struct TargetsFile {
+    pub(crate) path: PathBuf,
+    /// The directory holding it: one export set per directory.
+    pub(crate) dir: PathBuf,
+    pub(crate) role: targets::Role,
+    /// The install prefix (CMake search-location rules), or `None` for an
+    /// unrecognised location.
+    pub(crate) prefix: Option<PathBuf>,
+    /// The file's own location after root-relative resolution.
+    pub(crate) resolved: Option<PathBuf>,
+    /// `None` when the file could not be read (`malformed`).
+    pub(crate) parsed: Option<targets::Parsed>,
+}
+
+/// Phase 1's output: #1531 records and spec 1532 exported-targets files.
+#[derive(Debug, Default)]
+pub(crate) struct Phase1 {
+    pub(crate) records: Vec<Record>,
+    pub(crate) targets: Vec<TargetsFile>,
+}
+
+/// Whether the reader wants a file of this name.
+fn wanted(file_name: &str) -> bool {
+    classify_name(file_name).is_some() || targets::classify(file_name).is_some()
+}
+
 /// Walker state: every matched path.
 #[derive(Default, Debug)]
 pub(crate) struct InstalledLibMarker {
@@ -118,7 +147,7 @@ fn on_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
     let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
         return;
     };
-    if classify_name(name).is_none() {
+    if !wanted(name) {
         return;
     }
     let Some(state) = ctx.state::<Mutex<InstalledLibMarker>>(ReaderId::INSTALLED_LIB) else {
@@ -136,7 +165,18 @@ fn on_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
 /// `descend_into` override: walking a whole environment measured +44% scan
 /// time on 50,000 files (task T040, `measurements/venv-walk-timing.md`).
 pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
-    let patterns = globset_from_patterns(&["**/*.pc", "**/*ConfigVersion.cmake", "**/*-config-version.cmake"])?;
+    let patterns = globset_from_patterns(&[
+        "**/*.pc",
+        "**/*ConfigVersion.cmake",
+        "**/*-config-version.cmake",
+        // Spec 1532: CMake exported-targets files.
+        "**/*Targets.cmake",
+        "**/*Targets-*.cmake",
+        "**/*-targets.cmake",
+        "**/*-targets-*.cmake",
+        "**/*Exports.cmake",
+        "**/*Exports-*.cmake",
+    ])?;
     Ok(ReaderRegistration {
         reader_id: ReaderId::INSTALLED_LIB,
         state: Some(Arc::new(Mutex::new(InstalledLibMarker::default()))),
@@ -216,7 +256,7 @@ fn collect_matching(dir: &Path, depth: usize, out: &mut BTreeSet<PathBuf>) {
             if depth > 0 {
                 collect_matching(&p, depth - 1, out);
             }
-        } else if p.file_name().and_then(|s| s.to_str()).is_some_and(|n| classify_name(n).is_some()) {
+        } else if p.file_name().and_then(|s| s.to_str()).is_some_and(wanted) {
             out.insert(p);
         }
     }
@@ -237,14 +277,35 @@ pub(crate) fn extract_marker(registration: &ReaderRegistration) -> InstalledLibM
 }
 
 /// Parse every matched file, plus those in virtual environments
-/// ([`venv_candidates`]), into a record, in path order.
+/// ([`venv_candidates`]), in path order: #1531 records and spec 1532
+/// exported-targets files.
 pub(crate) fn finalize(
     mut marker: InstalledLibMarker,
     scan_root: &Path,
     exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
-) -> Vec<Record> {
+) -> Phase1 {
     marker.paths.extend(venv_candidates(scan_root, exclude_set));
-    marker.paths.into_iter().filter_map(|p| read_record(&p, scan_root)).collect()
+    let mut out = Phase1::default();
+    for p in marker.paths {
+        if let Some(r) = read_record(&p, scan_root) {
+            out.records.push(r);
+        } else if let Some(t) = read_targets(&p, scan_root) {
+            out.targets.push(t);
+        }
+    }
+    out
+}
+
+fn read_targets(path: &Path, scan_root: &Path) -> Option<TargetsFile> {
+    let role = targets::classify(path.file_name()?.to_str()?)?;
+    let rel = location::relative_to_root(path, scan_root)?;
+    let dir = path.parent()?.to_path_buf();
+    let dir_name = rel.parent()?.file_name()?.to_str()?.to_string();
+    let prefix = location::prefix_of(&rel, RecordKind::CmakeVersion, &dir_name)
+        .map(|p| if p.as_os_str().is_empty() { scan_root.to_path_buf() } else { scan_root.join(p) });
+    let resolved = location::resolve_in_root(scan_root, &rel);
+    let parsed = resolved.as_deref().and_then(read_bounded).map(|c| targets::parse(&c));
+    Some(TargetsFile { path: path.to_path_buf(), dir, role, prefix, resolved, parsed })
 }
 
 fn read_record(path: &Path, scan_root: &Path) -> Option<Record> {
@@ -309,5 +370,14 @@ mod tests {
         assert_eq!(classify_name(".pc"), None);
         assert_eq!(classify_name("ConfigVersion.cmake"), None);
         assert_eq!(classify_name("FooConfig.cmake"), None);
+        // Spec 1532: exported-targets files are not #1531 records, but the
+        // reader wants them.
+        assert_eq!(classify_name("FooTargets.cmake"), None);
+        for n in ["FooTargets.cmake", "foo-targets-release.cmake", "LLVMExports.cmake", "zlib.pc", "FooConfigVersion.cmake"] {
+            assert!(wanted(n), "{n}");
+        }
+        for n in ["FooTargets.cmake.in", "FooConfig.cmake", "targets.cmake"] {
+            assert!(!wanted(n), "{n}");
+        }
     }
 }

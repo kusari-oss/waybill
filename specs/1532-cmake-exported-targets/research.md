@@ -34,7 +34,7 @@ Line numbers are at `cba55f7b` (main after #1562). **Read** means the claim was 
 - a phase-2 post-pass called after the binary scan (`resolve::resolve`, from `scan_fs/mod.rs`) that holds the live #1531 records with their path and prefix, the OS claims, and the binary entries.
 
 **Decision.**
-- **Classification.** A third file classification, `ExportedTargets`, is added to `classify_name`. The walker, the venv probe, location rules (spec 1531 FR-006, the CMake search locations) and OS ownership apply unchanged.
+- **Classification.** A targets classification is added next to `classify_name`. The walker, the venv probe, location rules (spec 1531 FR-006, the CMake search locations) and OS ownership apply unchanged.
 - **Phase 1** parses each targets file into a `TargetsFile`: its directory, whether it is the main file or a `<config>` file, its raise count (main file only), and its raw `IMPORTED_LOCATION*` strings.
 - **Phase 2** groups them by directory, resolves locations, finds the package component (R4), and appends the files to that entry's `extra_source_paths`.
 
@@ -76,7 +76,7 @@ The targets file's prefix comes from `location::prefix_of` with CMake rules. Bot
 - **Seeding.** Before the evidence loop, `manifest_sha_cache` is seeded with each binary file component's `source_path` and the `file-sha256` qualifier of its PURL. An attributed shared library or executable is then not hashed a second time. Static archives, for which the binary scan emits nothing (#1534), are hashed through the existing path.
 - **Paths.** Evidence paths are root-resolved locations, normalised as every other evidence path is.
 
-**Inferred, to verify in a task:** the qualifier's hash is the same SHA-256 that `manifest_occurrence` would compute. Both hash the whole file, and a test compares the two on one file.
+**Verified (T002).** The qualifier is the SHA-256 of the whole file: the binary scan reads the whole file with `std::fs::read` (`binary/mod.rs:414`) and skips any file outside its size range. `a_binary_components_file_sha256_is_the_whole_file_digest` compares it with an independent digest.
 
 ## R6 — Coverage (FR-007)
 
@@ -99,3 +99,8 @@ The targets file's prefix comes from `location::prefix_of` with CMake rules. Bot
 - it reports the scan-time ratio (SC-006) and the attached-file count (SC-003).
 
 If neither filesystem has room, the job extracts only `lib/`, `bin/` and `libexec/`, which hold every named file, and records that it did so.
+
+## Re-verification log
+
+- **R2 (T001).** The CMake reader emits nothing from `cmake/WaybillFixturePTargets.cmake` or `cmake/waybill-fixture-q-targets-release.cmake`, while a `FetchContent_Declare` in the same `cmake/` directory is emitted as the live control. `the_cmake_reader_emits_nothing_from_an_exported_targets_file` passes.
+- **R5 (T002).** Verified, as above.

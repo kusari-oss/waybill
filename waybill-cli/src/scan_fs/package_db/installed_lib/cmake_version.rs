@@ -32,13 +32,13 @@ pub(crate) fn parse(content: &str) -> Result<String, SkipReason> {
     Err(SkipReason::ComputedVersion)
 }
 
-struct Arg {
-    text: String,
+pub(crate) struct Arg {
+    pub(crate) text: String,
 }
 
 /// Remove `#` line comments and `#[[ … ]]` / `#[=[ … ]=]` bracket comments,
 /// leaving quoted strings intact.
-fn strip_comments(content: &str) -> String {
+pub(crate) fn strip_comments(content: &str) -> String {
     let mut out = String::with_capacity(content.len());
     let chars: Vec<char> = content.chars().collect();
     let mut i = 0;
@@ -104,7 +104,7 @@ fn strip_comments(content: &str) -> String {
 
 /// `name(args…)` invocations, in order. Arguments are whitespace-separated;
 /// a quoted argument keeps its inner text with the quotes removed.
-fn commands(text: &str) -> Vec<(String, Vec<Arg>)> {
+pub(crate) fn commands(text: &str) -> Vec<(String, Vec<Arg>)> {
     let chars: Vec<char> = text.chars().collect();
     let mut out = Vec::new();
     let mut i = 0;
