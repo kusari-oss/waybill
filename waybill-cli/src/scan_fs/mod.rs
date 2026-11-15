@@ -867,6 +867,37 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // (graceful skip per FR-014 second paragraph).
         let mut manifest_sha_cache: std::collections::HashMap<String, Option<String>> =
             std::collections::HashMap::new();
+        // Spec 1532 FR-005a (research R5): a binary file component already
+        // carries its file's SHA-256 in the `file-sha256` qualifier, computed
+        // over the whole file. Seed the evidence-hash cache with it, so a
+        // file attributed to a package (or the binary's own occurrence) is
+        // not hashed again. Only files within `manifest_occurrence`'s 256 MB
+        // cap are seeded, so an oversized file still gets no hash.
+        {
+            const SEED_CAP_BYTES: u64 = 256 * 1024 * 1024;
+            let mut seeded: std::collections::HashSet<&str> = std::collections::HashSet::new();
+            for e in &db_entries {
+                let Some(hex) = e
+                    .purl
+                    .as_str()
+                    .split_once("file-sha256=")
+                    .map(|(_, rest)| rest.split(['&', '#']).next().unwrap_or(rest))
+                else {
+                    continue;
+                };
+                let within_cap = std::fs::metadata(&e.source_path).is_ok_and(|m| m.len() <= SEED_CAP_BYTES);
+                if within_cap && !hex.is_empty() {
+                    manifest_sha_cache.insert(e.source_path.clone(), Some(hex.to_string()));
+                    seeded.insert(e.source_path.as_str());
+                }
+            }
+            let reused = db_entries
+                .iter()
+                .flat_map(|e| e.extra_source_paths.iter())
+                .filter(|p| seeded.contains(p.as_str()))
+                .count();
+            tracing::info!(seeded = seeded.len(), reused, "hash cache: seeded={} reused={}", seeded.len(), reused);
+        }
 
         // Milestone 218 (waybill#633): FR-003 data-model E7 sibling-
         // ecosystem set = every ecosystem appearing on a non-generic

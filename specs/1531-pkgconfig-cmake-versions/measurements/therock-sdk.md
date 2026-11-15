@@ -99,15 +99,24 @@ waybill reported none.
 - The rest (`libhipcxx`, `libcudacxx`, `TensileConfigVersion`) compute
   their version.
 
-**The 14 unresolved requirements.**
-- **10 name a library the tarball does not ship:** `openssl`, `re2` and
-  `opentelemetry_api`, required by the gRPC `.pc` files.
-- **4 come from TheRock's prefix renaming.** The `rocm_sysdeps` ncurses
-  files declare `Name: rocm_sysdeps_formw` and
-  `Requires.private: rocm_sysdeps_ncursesw`, but the files are named
-  `formw.pc` and `ncursesw.pc`. pkg-config resolves `Requires` by file
-  name, so it could not resolve these either. Recognising the renaming is
-  the TheRock installed-artifact cataloger's concern (#1541), not core.
+**The 14 unresolved requirements.** *(Corrected 2026-11-15: this first read
+"10 name a library the tarball does not ship; 4 come from the renaming". A
+recount of the scan log, and of the member listing, gives the figures
+below.)*
+- **7 come from TheRock's prefix renaming.** The `rocm_sysdeps` ncurses
+  files (`formw`, `menuw`, `ncurses++w`, `panelw`) require
+  `rocm_sysdeps_*` modules, but the files are named `formw.pc`,
+  `ncursesw.pc` and so on. pkg-config resolves `Requires` by file name, so
+  it could not resolve them either. Recognising the renaming is the TheRock
+  installed-artifact cataloger's concern (#1541), not core.
+- **6 name libraries that ship without a `.pc` file:**
+  - `openssl` ×3, while `libssl.a` and `libcrypto.a` sit in
+    `lib/rdc/grpc/lib/`;
+  - `re2` ×3, while `libre2.a` is there too.
+
+  gRPC's `.pc` files require pkg-config modules that the bundle does not
+  install. #1563's exported targets do name `libre2.a`.
+- **1 names a library the tarball does not ship:** `opentelemetry_api`.
 
 **The 1 version disagreement: gRPC.** `grpc.pc` states `52.0.0`, gRPC
 core's library version, while `gRPCConfigVersion.cmake` states the release,

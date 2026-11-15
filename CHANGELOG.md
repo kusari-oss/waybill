@@ -9,6 +9,25 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **Installed files are attributed to their package through CMake exported
+  targets (#1563).** A CMake package that exports its targets installs
+  `<Pkg>Targets-<config>.cmake` (or `<pkg>-targets-…`, or `…Exports-…`),
+  naming every library and executable it installs.
+  - **What changes.** waybill now reads them and lists each shipped file in
+    the evidence of the package's #1531 component, with its SHA-256,
+    reused from the binary scan where it computed one. That includes static
+    archives and executables whose names never mention the package.
+  - **Measured on a ROCm 7.14 SDK install tree, in CI.** The files listed
+    in installed-library components' evidence rise from 131 to 1,006, and
+    the scan is faster, at 0.84× the base median. The first hash computed
+    for a binary is now reused instead of computed again. A census of the
+    same tree puts the product bytes attributed to a versioned component at
+    15.8% before and 64.6% after. `composable_kernel`'s 2.34 GB of static
+    archives and LLVM's roughly 700 archives were previously unattributed.
+  - **Nothing is evaluated.** A location with a variable other than
+    `${_IMPORT_PREFIX}` is never resolved, and a package with no versioned
+    component gets nothing. C225 counts every outcome.
+
 - **Installed C/C++ libraries get exact versions from pkg-config and CMake
   version files (#1531).** An installed SDK states each library's version in
   `lib/pkgconfig/*.pc` and in CMake's `*ConfigVersion.cmake` /
