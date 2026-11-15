@@ -9,6 +9,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **An unpacked wheel scanned at its own root is identified (#1529).** The
+  dist-info reader looked only inside `site-packages` directories, so a tree
+  whose top level holds `<name>-<version>.dist-info/` gave
+  `pkg:generic/<dir>@0.0.0` and no PyPI component. The scan root is now read
+  as a site-packages directory when it directly holds a `.dist-info`. When it
+  holds exactly one, that package is the main module and the document root.
+
+- **A `find_package` version is a requirement, not a resolution (#1520).**
+  `find_package(X 3.9)` declares a minimum, but it emitted
+  `pkg:generic/x@3.9` as if 3.9 were the version in use. The PURL no longer
+  carries a version. The requirement goes in `waybill:requirement-ranges`:
+  `>=3.9`, `==3.9` with `EXACT`, and `>=3.9, <=4.0` or `>=3.9, <4.0` for
+  CMake version ranges. Every `find_package` component, with or without a
+  version, is now design-tier with a `waybill:unresolved-reason`, so a
+  document with one reports `waybill:graph-completeness: partial`. A
+  requirement and a `FetchContent` of the same package in the same
+  directory still collapse into the fetch.
+
 - **zlib's embedded version string is recognised in real builds (#1525).**
   zlib's literal is `" deflate X.Y.Z Copyright ..."`, with a leading space,
   and the scanner required the byte before `deflate` to be NUL, so it never
@@ -23,13 +41,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   without a URL after it, is now skipped. A file in which most lines are
   skipped is not read as pip at all, and a WARN names it.
 
-- **An unpacked wheel scanned at its own root is identified (#1529).** The
-  dist-info reader looked only inside `site-packages` directories, so a tree
-  whose top level holds `<name>-<version>.dist-info/` gave
-  `pkg:generic/<dir>@0.0.0` and no PyPI component. The scan root is now read
-  as a site-packages directory when it directly holds a `.dist-info`. When it
-  holds exactly one, that package is the main module and the document root.
-
 - **CMake fetches keep quoted and SHA-512 hashes, and resolve same-file
   variables (#1517).** `URL_HASH "SHA256=<hex>"` and `URL_HASH SHA512=<hex>`
   were dropped, and a `URL` built from `${VAR}` gave `@unknown`. Quoted
@@ -39,17 +50,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   gives an unversioned design-tier component whose `waybill:unresolved-reason`
   says so, instead of an invented `@unknown`. SHA-384 has no representation
   yet and is still dropped.
-
-- **A `find_package` version is a requirement, not a resolution (#1520).**
-  `find_package(X 3.9)` declares a minimum, but it emitted
-  `pkg:generic/x@3.9` as if 3.9 were the version in use. The PURL no longer
-  carries a version. The requirement goes in `waybill:requirement-ranges`:
-  `>=3.9`, `==3.9` with `EXACT`, and `>=3.9, <=4.0` or `>=3.9, <4.0` for
-  CMake version ranges. Every `find_package` component, with or without a
-  version, is now design-tier with a `waybill:unresolved-reason`, so a
-  document with one reports `waybill:graph-completeness: partial`. A
-  requirement and a `FetchContent` of the same package in the same
-  directory still collapse into the fetch.
 
 ## [0.16.0] - 2026-11-14
 
