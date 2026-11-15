@@ -14,21 +14,21 @@
 //! deterministically (lexicographic ordering of losing source-
 //! mechanism strings per FR-015).
 //!
-//! Two test functions:
+//! Three test functions:
 //!
-//! 1. `dedup_collision_scans_deterministically_today` — active. Runs
-//!    10 sequential scans against the same fixture, asserts byte-
-//!    identical SBOM output across all 10. Catches the most common
-//!    determinism bugs (HashMap-iteration-order, time-dependent
-//!    fields, file-discovery ordering) under the readers wired today
-//!    (only conan-recipe fires on this fixture pre-US6).
+//! 1. `dedup_collision_scans_deterministically_today`: 10 sequential scans
+//!    of the in-tree fixture, byte-identical. The in-tree copy cannot carry
+//!    a gitlink, so its `.gitmodules` counts as `no-repository-data` (C222).
 //!
-//! 2. `dedup_collision_emits_also_detected_via_after_us6` — gated
-//!    `#[ignore]`. The full SC-010 test. Activated when the
-//!    git-submodule reader is wired AND the dispatcher feeds
-//!    DetectionRecords through the dedup pipeline. Asserts the
-//!    `waybill:also-detected-via` annotation appears with the
-//!    expected payload across multiple runs.
+//! 2. `dedup_collision_conan_and_submodule_stay_two_components` (spec 1530,
+//!    #1515, FR-009): the fixture made a real repository with a gitlink.
+//!    The Conan `abseil` and the `abseil-cpp` submodule have different
+//!    PURLs, so both are emitted. Milestone 105 expected a merge here, after
+//!    a "canonicalization" that was never specified. C56
+//!    (`waybill:also-detected-via`) is not emitted yet (#1558).
+//!
+//! 3. `dedup_collision_repository_scans_deterministically`: 10 scans of
+//!    that repository, byte-identical.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

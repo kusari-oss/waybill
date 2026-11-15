@@ -13,7 +13,7 @@
 ## Standing rules for every task
 
 - **Base.** `main` at `fbaf3a6d` (v0.16.1 development).
-- **Fixtures** are git repositories built at test time in a `tempfile::tempdir()`, from local `file://` repositories, with `protocol.file.allow=always` set on the command line, `GIT_CONFIG_NOSYSTEM=1` and `HOME` pointed at the tempdir. No test clones a remote. TheRock is never cloned or scanned locally (SC-003 is a CI step, T045). Package names are synthetic (`waybill-fixture-*`).
+- **Fixtures** are git repositories built at test time in a `tempfile::tempdir()`, from local `file://` repositories, with `protocol.file.allow=always` set on the command line, `GIT_CONFIG_NOSYSTEM=1` and `HOME` pointed at the tempdir. No test clones a remote. TheRock is never cloned or scanned locally (SC-003 is a CI step, T044). Package names are synthetic (`waybill-fixture-*`).
 - **Gitlinks without a real submodule repository** can be made with `git update-index --add --cacheinfo 160000,<40-hex>,<path>` followed by a commit. Use this wherever a test only needs the gitlink.
 - **The reader never runs an index-reading git command** (`ls-files`, `status`, `diff`, `describe --dirty`). Research R1 measured those running a repository's `core.fsmonitor`.
 - **Revert mutations with `cp`**, never `git checkout`.
@@ -229,7 +229,7 @@
   - scans with the branch binary and records the count of `git-submodule` components and the C222 record.
 
   Upload both. Remove the step before the PR. Record the run ID and the counts in `measurements/therock.md`. The counts must be equal, with `pinned` equal to the gitlink count.
-- [ ] T045 Close-out:
+- [X] T045 Close-out:
   - verify every task's claim against the code and the measurements, not the checkbox;
   - confirm `measurements/` holds the probe, its outputs, the mutation log, the golden review and the TheRock record;
   - add the #1545 cataloger notes from `plan.md` to the PR description.
