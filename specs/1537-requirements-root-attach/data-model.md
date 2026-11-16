@@ -16,7 +16,7 @@ Maps each directory to the project that owns the files in it (research R3).
 
 **Precedence within one directory (V1):** a `pkg:pypi` main module, then any other main module with the lowest PURL first, then a submodule.
 
-**The walk stops below the scan root.** The scan root's own project is never returned as an owner, so a requirements file at the scan root is a declared root anchor (FR-002), even beside a main module.
+**The walk includes the scan root.** A scan-root main module owns a scan-root file (FR-002, corrected at implementation, R15). A file becomes a declared root anchor only when no project encloses it.
 
 ## DeclaredAttachment (new, the pass's output)
 
@@ -29,6 +29,11 @@ Maps each directory to the project that owns the files in it (research R3).
 - **V2:** one candidate per declaring file. A package declared in N files can produce up to N edges and at most one root anchor.
 - **V3:** no self-edge, and no edge that already exists.
 - **V4:** only `pkg:pypi` components whose declaring file's basename matches `requirements*.txt`.
+- **V7 (FR-002a):** per file, only the pins no sibling reaches. A sibling edge is any relationship between two pins of the same file, and the pip reader writes those from `# via`. A pin in a sibling-only cycle is direct.
+
+## pip `# via` (new, `pip/requirements_txt.rs`)
+
+`parse_via(text) -> BTreeMap<pin, Vec<parent>>`, with PEP 503 names. `link_via_annotations` adds each parent pin's `depends` the pin's exact PURL. A parent that is not a pin of the same file is ignored.
 
 ## root_edges (new, `generate/root_edges.rs`)
 
@@ -60,4 +65,4 @@ targets   = { r.to | r.from == root_ref, r is a dependency edge }
 
 ## pip merge change (`pip/mod.rs`)
 
-`merge_without_override`: when an addition's PURL is already present, the addition's `source_path` is appended to the kept entry's `extra_source_paths`, unless it is already there. The entry itself is still not replaced (research R5).
+`merge_without_override`: when an addition's PURL is already present, the addition's `source_path` is appended to the kept entry's `extra_source_paths`, unless it is already there. The entry itself is still not replaced (research R5). Its `depends` are unioned into the kept entry's, so a pin repeated in a second compiled file keeps its `# via` edges.

@@ -711,3 +711,22 @@ fn c15_a_compiled_requirements_file_keeps_its_depth() {
     assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
+
+/// C-16 (FR-002, FR-004): a scan-root file with no project enclosing it is a
+/// declared root anchor, and the anchor is what attaches it once the root
+/// has a real edge. Under `--root-name` the nested npm project is retained
+/// as a root edge, which closes the no-declarations fallback, so without the
+/// anchor `a` and `b` would be stranded: #1566's shape, with a project
+/// instead of a submodule. Mutation M11.
+#[test]
+fn c16_a_root_anchor_attaches_what_no_project_encloses() {
+    let fx = GitFixture::new();
+    fx.repo("app");
+    fx.write("app/requirements.txt", REQ_AB);
+    fx.write("app/tools/package.json", TOOLS_JSON);
+    commit_all(&fx, "app");
+    let docs = scan(&fx, &fx.path("app"), &["--root-name", "waybill-fixture-root", "--root-version", "1"]);
+    assert_eq!(package_targets(&docs), set(&[TOOLS_PKG, A, B]));
+    assert_declared_reachable(&docs);
+    assert_verdict(&docs, "complete");
+}

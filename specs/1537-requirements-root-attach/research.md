@@ -77,9 +77,11 @@ All three shift output in some format. R9 predicts where, and T019 checks it.
 - **Where the walk starts:** the declaring file's directory.
 
 **Rule, per declaring file:**
-1. **At the scan root:** the component becomes a *declared root anchor* (R4, FR-002).
-2. **Otherwise,** walk the ancestors from the file's directory up to, but excluding, the scan root. The first directory with an owner wins, and the pass adds `owner DependsOn component` (FR-003).
-3. **No owner below the scan root:** a declared root anchor (FR-003: "ultimately the root").
+1. Walk the ancestors from the file's directory up to **and including** the scan root. The first directory with an owner wins, and the pass adds `owner DependsOn component` (FR-002, FR-003).
+2. **No owner anywhere:** a declared root anchor (R4; FR-003: "ultimately the root").
+3. **Only direct pins (FR-002a, R15):** a pin that another pin of the same file reaches is skipped.
+
+*Corrected at implementation.* The rule first stopped the walk below the scan root, so a scan-root file went to the subject even beside a scan-root main module. See R15.
 
 **Owners, built into an `OwnerIndex` from directory to owner PURL:**
 - **Main modules:** every component whose `waybill:component-role` is `main-module`. Its directory is the parent of its manifest path, `source_file_paths[0]`. All 21 readers that emit main modules qualify (`cargo`, `npm`, `pip`, `gem`, `maven`, `golang`, `nuget`, …).
@@ -177,3 +179,29 @@ For each corpus target, a committed probe (`measurements/root_only.py`, run with
 The spec's "not a declaration" edge case applies to files reached through `-c`, and those are not read today. FR-008's population stays empty (R7).
 
 **Vendored directories (arm c11):** `vendor/x/requirements.txt` is not read, so there is nothing to attach (spec edge case: "whether such a file is read is unchanged").
+
+## R15. Two corrections the corpora found (implementation, 2026-11-16)
+
+Both corpora went red at `502231ff` (quality run 43939691749, public corpus run 43939649463). The cause was this feature in both cases. The evidence is local harness runs at `main` and the branch, with one variable changed (`measurements/quality.md`).
+
+**1. FR-002 flattened scan-root projects.** A scan-root file went to the subject even beside a scan-root main module. Both harnesses scan with `--root-name`, so the subject is a synthetic root and the main module is its child. Every package the main module already depended on also got a direct edge from the named root:
+- `python-ansible`: `ansible-core` already declares its five requirements through PEP 621 dynamic metadata (#883). Depth went from 2 to 1, which is flat, and edges from 7 to 18.
+- `python-pytorch`: 54 packages that were orphans at `main` were attached to the root rather than to `torch`.
+
+**Decision.** The owner walk includes the scan root, and the subject gets a file only when no project encloses it. The unit test that asserted the old rule, and mutation M6, which guarded it, are inverted. The contract never had the corpus shape, a scan-root project under a named root. C-14 adds it, and it fails under M6.
+
+**Why it survived:**
+- Every contract case with a scan-root project let the root selector promote that project to subject. There, "the subject" and "the scan-root project" are the same component, so they cannot tell the two rules apart.
+- Corpus step 1 ran before US1 existed.
+
+**A diagnostic trap:** the first local repro used a binary built between `16959878` and `10c2660a`. That binary had neither copy of the scan-root guard, so it showed the correct shape. The repro was rebuilt at `HEAD` before the cause was named.
+
+**2. Every pin of a compiled file was made direct.** pip-compile pins the whole closure. flask's `examples/celery/requirements.txt` has 19 pins, and only `celery` and `flask` are `# via flask-example-celery (pyproject.toml)`. The pass gave the example all 19.
+
+**Decision.** The pip reader reads `# via` in both forms, block (pip-compile ≥ 6) and inline (older versions). Each record becomes an exact-PURL `depends` edge from the parent pin to the pin. A scan can hold several versions of one name (flask has three `click`), so a name-only edge could bind to the wrong one. The pass then attaches to the owner only the pins no sibling reaches, plus any pin in a sibling-only cycle. A `via` that is not a pin (`-r requirements.in`, or the project itself) matches nothing, and that pin stays direct.
+
+On flask, the 26 new edges match the file's `# via` lines one for one. The thirteen unreachable pins of #1234 are now reached through their real parents, and that I7 declaration is removed.
+
+**Alternatives considered:**
+- **Leave compiled files flat and give the 17 an orphan reason.** Rejected. The file states the edges, and a reason would describe waybill's omission as a property of the repository. #1234's declaration says exactly that.
+**Recorded.** A sibling edge is any relationship between two pins of the same file, whatever its source. Today only the file's own `# via` writes such edges. Another reader, such as venv metadata, could add one between two packages that one hand-written file both lists. That pin would then lose its direct edge, but it is still reached, through the sibling.

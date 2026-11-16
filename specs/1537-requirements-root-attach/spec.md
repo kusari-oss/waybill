@@ -50,6 +50,7 @@ The submodule edge would be a fifth exemption, applied four times. The table abo
 - Q: Which unreachable components must carry an orphan reason? → A: Only those this feature's rule declines to attach. Other ecosystems remain #1214 (FR-008).
 - Q: Is `complete` measured from the document root alone, or from today's multi-root seed set? → A: Keep the multi-root definition in this feature. The verdict must match the graph the emitters actually produce, under that definition. Measure in CI how many corpus documents a root-only definition would change, and file a follow-up with the numbers (FR-007, SC-003, SC-008).
 - Q: What counts as a project that can own a nested requirements file? → A: Any project waybill emits for that directory, meaning a main module of any ecosystem or a git submodule. CMake emits none (research R3). Cross-ecosystem edges are expected (FR-003).
+- Correction at implementation, not a clarification: a scan-root file belongs to a scan-root project when there is one (FR-002), and a compiled file's `# via` lines are its edges (FR-002a). Both corpora found the original rule flattening graphs (`measurements/quality.md`).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -130,7 +131,12 @@ An engineer scans a C/C++ super-project with its submodules checked out. The sup
 ### Functional Requirements
 
 - **FR-001**: A package declared by a pip requirements file is a **direct dependency of the project that declares it**. The edge exists because of the declaration. Whether the root or that project has other edges must not matter.
-- **FR-002**: A requirements file at the **scan root** is declared by the document's subject. Its packages are direct dependencies of the root in every format.
+- **FR-002**: A requirements file at the **scan root** is declared by the **scan root's own project** when it has one: a main module whose directory is the scan root. Only when the scan root has no project is the file declared by the document's subject, and then its packages are direct dependencies of the root in every format.
+
+  *Corrected at implementation (2026-11-16).* As first written, FR-002 gave a scan-root file to the subject even beside a scan-root main module. Under `--root-name`, which both corpus harnesses use, that put every package a second time directly under the named root, beside the main module's own edges. The quality corpus's `python-ansible` went from depth 2 to a flat graph (edges 7 → 18), and pytorch's newly attached packages hung off the root rather than `torch` (`measurements/quality.md`). The scan root is simply the top of FR-003's walk.
+- **FR-002a** (#1234): A **compiled** requirements file (pip-compile, `uv pip compile`) pins the whole closure and records, for each pin, the pins that pull it in (`# via kombu`, block or inline). Those records are edges between the pins. The declaring project depends directly only on the pins that no other pin of the same file reaches. A pin in a cycle among siblings only, with no way in, is direct, so the rule never strands a pin. A hand-written file has no `# via`, and every pin stays direct.
+
+  *Added at implementation (2026-11-16).* Without it, FR-001 made all 19 pins of flask's `examples/celery/requirements.txt` direct dependencies of the example, 17 of them transitive.
 - **FR-003**: A requirements file in a **nested directory that contains a project** is declared by that project. A project is any component waybill emits for that directory: a main module of **any ecosystem** (Python, Cargo, npm, Go, Maven, …) or a git submodule. A `pkg:pypi` dependency of a Cargo or npm project is an expected cross-ecosystem edge. CMake, Conan and vcpkg emit no project component, so a directory with only a `CMakeLists.txt` owns nothing and the walk continues upward (research R3). When one directory holds several main modules, the plan settles the choice deterministically and records it in research.
 
   A requirements file in a **nested directory with no project of its own** is declared by the **nearest enclosing project**. Walk up the directory tree to the first directory that contains a project; at the top, that is the root. For example, `build_tools/requirements.txt` in a super-project with no project at `build_tools/` belongs to the super-project. A file under a submodule's tree belongs to that submodule.
