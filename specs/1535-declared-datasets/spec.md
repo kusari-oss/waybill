@@ -38,7 +38,7 @@ An installed SDK can ship third-party datasets: benchmark inputs, test matrices 
 
 ### Session 2026-11-16
 
-- Q: Are datasets emitted from an installed tree without a declaration? → A: [NEEDS CLARIFICATION: (A) No. Datasets come only from a declaration, which a source-tree scan reads, and an installed tree's data files are unchanged. (B) Also on an installed tree: files under a recognised dataset location get a data component with file identity only (path, digest, named by stem, encodings grouped), and no upstream identity. That is a guess from a directory name; on ROCm it would rest on one witness, `clients/matrices/`. (C) A, plus linking: when the same scan holds both a declaration and installed files whose stems match the declared names, the installed files become the declared dataset's evidence. On ROCm that needs the source and the install in one scan, which is not how the SDK is shipped.]
+- Q: Are datasets emitted from an installed tree without a declaration? → A: (A) No. Datasets come only from a declaration, read by a source-tree scan. An installed tree's data files are unchanged: no component is created from a directory name or file shape. Linking installed files to a declaration is out of scope.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -106,7 +106,7 @@ Every data component this feature emits carries each format's native kind:
 - **FR-006**: The dataset type MUST be chosen from SPDX 3's `DatasetType` vocabulary by a documented rule. When the declaration does not support a specific value, it MUST be `noAssertion`.
 - **FR-007**: The document MUST record the downloads read, the datasets emitted, the unresolved downloads, and the digest mismatches.
 - **FR-008**: A download MUST be classified as a dataset only by a rule the plan measures on the ROCm source and the public corpus. The rule MUST NOT classify any download the corpus shows to be source or tooling.
-- **FR-009**: Installed-tree behaviour follows the clarification above.
+- **FR-009**: A data component MUST come only from a declaration. An installed tree's data files without one (for example the ROCm install's `clients/matrices/`) MUST be unchanged: no component from a directory name or file shape (clarified).
 - **FR-010**: Zero new Cargo dependencies, no network access at scan time, synthetic `waybill-fixture-*` names in committed fixtures, and ROCm measured in CI only.
 
 ### Key Entities
@@ -130,3 +130,4 @@ Every data component this feature emits carries each format's native kind:
 - A dataset has no version unless one is declared. A SuiteSparse URL carries none.
 - The SuiteSparse coordinates (`Group/Name`) are the upstream identity. A PURL type for them does not exist, so the plan chooses the representation, for example `pkg:generic` with `download_url` and `checksum` qualifiers.
 - Licensing of the matrices is out of scope. The declaration states none.
+- Linking installed data files to a declaration seen in another scan is out of scope (clarified); cross-tier binding (milestone 072) is the existing route if it is ever wanted.

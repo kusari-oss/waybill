@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -32,5 +32,5 @@
 ## Notes
 
 - **Domain terms are the subject.** CMake commands and SBOM fields are the inputs and the wire contract, as in specs 1531–1534.
-- **One clarification is open:** whether an installed tree's data files become datasets without a declaration.
+- **Clarified 2026-11-16:** datasets come only from declarations; installed data files without one are unchanged (FR-009).
 - **FR-008 defers a measurement, not a decision.** How a dataset download is told from a source or tool download is measured in the plan on the ROCm source and the public corpus.
