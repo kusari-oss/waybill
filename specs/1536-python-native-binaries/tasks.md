@@ -168,7 +168,7 @@
   - wall time for both scans.
 
   Record SC-004 in `measurements/wheels.md`.
-- [ ] T022 Open the PR. The body carries the measurements, the mutations, the gate result and the attribution line, ending `Closes #1567`.
+- [X] T022 Open the PR. The body carries the measurements, the mutations, the gate result and the attribution line, ending `Closes #1567`.
 
 ## Dependencies
 
