@@ -91,7 +91,7 @@
 
 ## Phase 5: Polish and cross-cutting
 
-- [ ] T013 [P] Docs:
+- [x] T013 [P] Docs:
   - `docs/ecosystems.md`, installed C/C++ libraries section: an "embedded source paths" bullet;
   - `CHANGELOG.md` `[Unreleased]` Added.
 - [ ] T014 Mutations, each reverted with `cp` and each required to fail a test. Record them in `specs/1534-embedded-path-attribution/measurements/mutations.md`:
