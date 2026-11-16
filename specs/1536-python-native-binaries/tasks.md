@@ -117,20 +117,20 @@
 **Goal:** dpkg, rpm, apk, alpm, opkg and `.ipk` claims keep today's output.
 **Independent test:** spec US2, compared with `main` output.
 
-- [ ] T012 [P] [US2] Add tests to `waybill-cli/tests/python_owned_binaries.rs`:
+- [X] T012 [P] [US2] Add tests to `waybill-cli/tests/python_owned_binaries.rs`:
   - **dpkg plus `RECORD`:** a rootfs whose dpkg `.list` (`common::installed_lib::dpkg_owning`) and a `site-packages` `RECORD` both list one library. Assert no file-level, linkage or identification components for it, no nesting, and no C230, exactly as for a dpkg-only claim (FR-005).
   - **`.ipk` plus `RECORD`:** the same, for an `.ipk` claim (FR-007).
   - **CPython `lib-dynload`:** the CPython collapse is unchanged.
   - **An owned Go binary whose build info doesn't parse:** no diagnostic `pkg:generic` component, only its nested file-level component (research R1).
   - **A binary the package doesn't own links a pip-owned library on a standard search path:** a linkage component is emitted (research R1, accepted).
-- [ ] T013 [US2] If T012 fails, fix it in the ownership decision in `waybill-cli/src/scan_fs/binary/mod.rs`, never in the tests. Record the outcome either way in `specs/1536-python-native-binaries/measurements/us2.md`.
+- [X] T013 [US2] If T012 fails, fix it in the ownership decision in `waybill-cli/src/scan_fs/binary/mod.rs`, never in the tests. Record the outcome either way in `specs/1536-python-native-binaries/measurements/us2.md`.
 
 ## Phase 5: User Story 3, repaired-wheel layouts (P2)
 
 **Goal:** auditwheel `<pkg>.libs/` and delocate `<pkg>/.dylibs/` are owned and analysed, and auditwheel's hash is stripped from names.
 **Independent test:** spec US3, with synthetic wheels in each layout.
 
-- [ ] T014 [US3] Write tests first: unit tests in `waybill-cli/src/scan_fs/binary/entry.rs`, integration tests in `waybill-cli/tests/python_owned_binaries.rs`. Cover:
+- [X] T014 [US3] Write tests first: unit tests in `waybill-cli/src/scan_fs/binary/entry.rs`, integration tests in `waybill-cli/tests/python_owned_binaries.rs`. Cover:
   - **The suffix pattern:** `libfoo-0123abcd.so.1` → `libfoo.so.1` under `waybill_fixture_pkg.libs/`.
   - **No strip outside `*.libs/`:** the same name elsewhere is not stripped.
   - **No strip on a non-hex or non-8-character suffix.**
@@ -138,7 +138,7 @@
   - **A delocate wheel:** `waybill_fixture_pkg/.dylibs/`. It is owned and nested.
 
   Use T001's census for the pattern, if it corrected R6.
-- [ ] T015 [US3] Implement the strip in the file-level name built in `waybill-cli/src/scan_fs/binary/entry.rs`. It applies only to owned binaries directly under a directory whose name ends in `.libs` (R6). The `file-sha256` qualifier is unchanged. Make T014 pass.
+- [X] T015 [US3] Implement the strip in the file-level name built in `waybill-cli/src/scan_fs/binary/entry.rs`. It applies only to owned binaries directly under a directory whose name ends in `.libs` (R6). The `file-sha256` qualifier is unchanged. Make T014 pass.
 
 ## Phase 6: Polish and cross-cutting
 

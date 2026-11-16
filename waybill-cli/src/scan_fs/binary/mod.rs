@@ -646,7 +646,15 @@ pub fn read(
         // those crates are real, even when the file-level component
         // is shadowed by an authoritative package-db entry). Build
         // it once outside the skip branch.
-        let file_level = make_file_level_component(&path, &bytes, &scan, go_in_linux);
+        let mut file_level = make_file_level_component(&path, &bytes, &scan, go_in_linux);
+        // Spec 1536 FR-008: an owned library auditwheel renamed is named
+        // without the hash. Only owned binaries: elsewhere the name is left
+        // as the file has it.
+        if owner.is_some() {
+            if let Some(name) = entry::auditwheel_unhashed_name(&path) {
+                entry::rename_file_level(&mut file_level, &name);
+            }
+        }
         let file_level_purl = file_level.purl.clone();
         // Spec 1536: what an owned binary links and identifies, for
         // `owned::attach`. Unused for every other binary.

@@ -1555,6 +1555,32 @@ don't carry per-component hashes yet.
 - deps.dev: licenses + VCS.
 - ClearlyDefined: concluded licenses via CD's `pypi` provider.
 
+**Native binaries a package ships (spec 1536, #1567).** A file a
+`.dist-info/RECORD` lists names its owner; it does not stop binary
+analysis, as an OS package claim does.
+- **Nesting:** each ELF, Mach-O or PE file the `RECORD` lists, and no OS
+  package database (dpkg, rpm, apk, alpm, opkg) or `.ipk` archive claims, is
+  one component nested under the `pkg:pypi` component. What binary analysis
+  identifies in it (embedded version strings, symbol fingerprints, ELF
+  package notes, bundled source trees, cargo-auditable crates, Go build
+  info) nests under the binary.
+- **Edges:** package → binary → {its linked libraries, its identifications,
+  the package's other binaries it links}. A library vendored in the same
+  package is matched by file name, since auditwheel and delocate reach it
+  through an rpath.
+- **Layouts:** an unpacked wheel and a `site-packages` install give the same
+  tree; in an unpacked wheel the package is the document root, so its
+  binaries head `components[]`. auditwheel's `<pkg>.libs/` libraries lose
+  the `-<8 hex>` hash from their names; delocate's `<pkg>/.dylibs/` needs no
+  renaming. One library two packages vendor is one copy under each in
+  CycloneDX and one element both `CONTAINS` in SPDX.
+- **Counts:** `waybill:python-owned-binaries` (C230),
+  `{"analysed":N,"identified":M}`, present when any was analysed.
+- **Limit:** `site-packages` is found only where the pip reader looks
+  (`.venv`, `venv`, `usr/lib`, `usr/local/lib`, `opt/app/.venv`, or a
+  `.dist-info` at the scan root). A bare `lib/python3.X/site-packages/` at
+  the scan root is not read.
+
 ### uv lockfile (milestone 106)
 
 **Module:** `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs`

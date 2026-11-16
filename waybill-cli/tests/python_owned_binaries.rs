@@ -608,3 +608,225 @@ fn t011_self_identifying_binary_is_nested_not_merged() {
     assert!(own[0].1.as_deref().is_some_and(|p| p.starts_with("pkg:generic/_native.so")));
     assert_eq!(find_with_parent(&docs.cdx, PKG).len(), 1, "the pypi component is still one component");
 }
+
+// ---------------------------------------------------------------------
+// US2: binaries an OS package or an `.ipk` also claims are unchanged
+// ---------------------------------------------------------------------
+
+const DIST: &str = "usr/lib/python3/dist-packages";
+const NATIVE: &str = "waybill_fixture_pkg/_native.so";
+
+/// A Debian-style install: the package in `dist-packages` with a `RECORD`
+/// listing an ELF carrying the zlib version string. `dpkg_lists_it` decides
+/// whether dpkg also lists the library; dpkg is present either way, so the
+/// tree is a Linux rootfs in both arms.
+fn debian_tree(root: &Path, dpkg_lists_it: bool) {
+    let site = root.join(DIST);
+    let di = site.join("waybill_fixture_pkg-1.2.3.dist-info");
+    std::fs::create_dir_all(&di).unwrap();
+    std::fs::write(di.join("METADATA"), "Metadata-Version: 2.1\nName: waybill-fixture-pkg\nVersion: 1.2.3\n").unwrap();
+    std::fs::write(di.join("RECORD"), format!("{NATIVE},,\n")).unwrap();
+    plant(&site, NATIVE, &elf_shared_lib(ZLIB));
+    let listed = format!("{DIST}/{NATIVE}");
+    let other = format!("{DIST}/waybill_fixture_pkg-1.2.3.dist-info/METADATA");
+    common::installed_lib::dpkg_owning(root, "python3-waybill-fixture-pkg", &[if dpkg_lists_it { &listed } else { &other }]);
+}
+
+/// FR-005: dpkg and a `RECORD` both list the library; the OS claim wins and
+/// nothing about the library is reported. The control drops the dpkg claim
+/// and the same ELF is analysed and nested, so the claim is what suppressed it.
+#[test]
+fn us2_os_claim_wins_over_record() {
+    let control = tempfile::tempdir().unwrap();
+    debian_tree(control.path(), false);
+    let docs = scan(control.path());
+    let zlib = find_with_parent(&docs.cdx, "pkg:generic/zlib@");
+    assert_eq!(zlib.len(), 1, "control: the ELF is analysed in this rootfs: {zlib:?}");
+    assert_eq!(c230(&docs), Some(serde_json::json!({"analysed": 1, "identified": 1})), "control");
+
+    let dir = tempfile::tempdir().unwrap();
+    debian_tree(dir.path(), true);
+    let docs = scan(dir.path());
+    assert!(purls_with_prefix(&docs.cdx, "pkg:generic/zlib@").is_empty(), "OS-claimed: no identification");
+    assert!(purls_with_prefix(&docs.cdx, "pkg:generic/_native.so").is_empty(), "OS-claimed: no binary component");
+    assert_eq!(c230(&docs), None);
+}
+
+/// An `.ipk` archive in the tree whose `data.tar.gz` installs `paths`, in
+/// the pre-2015 gzip-tar layout (from `ipk_yocto_reader_fixes.rs`).
+fn ipk_installing(paths: &[&str]) -> Vec<u8> {
+    let gz = |raw: Vec<u8>| {
+        let mut e = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        e.write_all(&raw).unwrap();
+        e.finish().unwrap()
+    };
+    let tar_of = |entries: &[(&str, &[u8])]| {
+        let mut b = tar::Builder::new(Vec::new());
+        for (name, body) in entries {
+            let mut h = tar::Header::new_gnu();
+            h.set_path(name).unwrap();
+            h.set_size(body.len() as u64);
+            h.set_mode(0o644);
+            h.set_cksum();
+            b.append(&h, *body).unwrap();
+        }
+        b.into_inner().unwrap()
+    };
+    let control = gz(tar_of(&[("./control", b"Package: waybill-fixture-ipk\nVersion: 1.0-r0\nArchitecture: core2-64\n")]));
+    let data_entries: Vec<(String, Vec<u8>)> = paths.iter().map(|p| (format!("./{p}"), b"x".to_vec())).collect();
+    let data_refs: Vec<(&str, &[u8])> = data_entries.iter().map(|(n, b)| (n.as_str(), b.as_slice())).collect();
+    let data = gz(tar_of(&data_refs));
+    gz(tar_of(&[("debian-binary", b"2.0\n"), ("control.tar.gz", &control), ("data.tar.gz", &data)]))
+}
+
+/// FR-007: an `.ipk` claim keeps today's behaviour, `RECORD` or not.
+#[test]
+fn us2_ipk_claim_wins_over_record() {
+    for ipk_claims in [false, true] {
+        let dir = tempfile::tempdir().unwrap();
+        let site = package(dir.path(), Layout::Site, &[(LIB, elf_shared_lib(ZLIB))], &[]);
+        let claimed = site.join(LIB).strip_prefix(dir.path()).unwrap().to_string_lossy().into_owned();
+        let paths: Vec<&str> = if ipk_claims { vec![claimed.as_str()] } else { vec!["usr/share/waybill-fixture/x"] };
+        plant(dir.path(), "deploy/waybill-fixture-ipk_1.0-r0_core2-64.ipk", &ipk_installing(&paths));
+        let docs = scan(dir.path());
+        let zlib = purls_with_prefix(&docs.cdx, "pkg:generic/zlib@");
+        if ipk_claims {
+            assert!(zlib.is_empty(), "ipk-claimed: no identification: {zlib:?}");
+            assert_eq!(c230(&docs), None);
+        } else {
+            assert_eq!(zlib.len(), 1, "control: analysed when the ipk claims something else");
+        }
+    }
+}
+
+/// The CPython collapse is unchanged: `lib-dynload` modules are not
+/// `RECORD`-claimed and still fold into the `cpython` umbrella.
+#[test]
+fn us2_cpython_lib_dynload_still_collapses() {
+    let dir = tempfile::tempdir().unwrap();
+    plant(dir.path(), "usr/lib/python3.12/lib-dynload/_waybill_fixture.cpython-312-x86_64-linux-gnu.so", &elf_shared_lib(b"\0x\0"));
+    package(dir.path(), Layout::Site, &[(LIB, zlib_library())], &[]);
+    let docs = scan(dir.path());
+    assert_eq!(purls_with_prefix(&docs.cdx, "pkg:generic/cpython@"), vec!["pkg:generic/cpython@3.12"]);
+    assert!(purls_with_prefix(&docs.cdx, "pkg:generic/_waybill_fixture").is_empty());
+}
+
+/// An ELF whose Go build-info header uses the pre-1.18 pointer format, which
+/// `go_binary` reports as unsupported and, for an unclaimed file, emits a
+/// diagnostic component for.
+fn legacy_go_elf() -> Vec<u8> {
+    let mut data = b"\0\xff Go buildinf:".to_vec();
+    data.push(8);
+    data.push(0); // flags: not inline → legacy pointer format
+    data.extend_from_slice(&[0u8; 32]);
+    elf_with_section(b".go.buildinfo", 1, &data)
+}
+
+/// Research R1: an owned Go binary keeps `go_binary`'s diagnostic
+/// suppression; the binary scan already reports it, nested. The control
+/// leaves it out of `RECORD`, and the diagnostic appears.
+#[test]
+fn us2_owned_go_binary_gets_no_second_diagnostic_component() {
+    let tool = "waybill_fixture_pkg/waybill-fixture-gotool";
+    let count = |unlisted: &[&str]| {
+        let dir = tempfile::tempdir().unwrap();
+        package(dir.path(), Layout::Site, &[(tool, legacy_go_elf())], unlisted);
+        let docs = scan(dir.path());
+        find_with_parent(&docs.cdx, "pkg:generic/waybill-fixture-gotool")
+            .into_iter()
+            .map(|(c, p)| (c["purl"].as_str().unwrap().to_string(), p))
+            .collect::<Vec<_>>()
+    };
+    let unowned = count(&[tool]);
+    assert!(unowned.len() >= 2, "control: unclaimed, the diagnostic is a second component: {unowned:?}");
+    let owned = count(&[]);
+    assert_eq!(owned.len(), 1, "owned: one component: {owned:?}");
+    assert_eq!(owned[0].1.as_deref(), Some(PKG));
+}
+
+/// Research R1, accepted: a binary the package does not own, linking a
+/// pip-installed library on a standard search path, gets a linkage
+/// component (the pip claim no longer hides it).
+#[test]
+fn us2_unowned_binary_linking_a_pip_library_reports_linkage() {
+    let dir = tempfile::tempdir().unwrap();
+    let site = package(dir.path(), Layout::Site, &[], &[]);
+    plant(dir.path(), "usr/lib/libwaybill-fixture-shared.dylib", &macho_dylib(&[], b"\0shared\0"));
+    let rec = site.join("waybill_fixture_pkg-1.2.3.dist-info/RECORD");
+    let mut body = std::fs::read_to_string(&rec).unwrap();
+    body.push_str("../../libwaybill-fixture-shared.dylib,,\n");
+    std::fs::write(&rec, body).unwrap();
+    plant(dir.path(), "usr/bin/waybill-fixture-app", &macho_dylib(&["libwaybill-fixture-shared.dylib"], b"\0app\0"));
+    let docs = scan(dir.path());
+    assert_eq!(purls_with_prefix(&docs.cdx, "pkg:generic/libwaybill-fixture-shared.dylib").iter().filter(|p| !p.contains("file-sha256")).count(), 1);
+}
+
+// ---------------------------------------------------------------------
+// US3: repaired-wheel layouts
+// ---------------------------------------------------------------------
+//
+// The binaries are the Mach-O fixture under `.so` names: a minimal ELF
+// cannot carry its imports (see `macho_dylib`), and what is under test is
+// the layout and the names, not the object format.
+
+/// US3 scenario 1 and FR-008: an auditwheel wheel. The vendored library in
+/// `<pkg>.libs/` is owned, analysed, named without its hash, and linked
+/// internally from the extension module.
+#[test]
+fn us3_auditwheel_layout() {
+    let dir = tempfile::tempdir().unwrap();
+    let hashed = "libwaybill-fixture-z-0123abcd.so.1";
+    let vendored = format!("waybill_fixture_pkg.libs/{hashed}");
+    let ext = "waybill_fixture_pkg/_core.cpython-312-x86_64-linux-gnu.so";
+    package(
+        dir.path(),
+        Layout::Wheel,
+        &[
+            (ext, macho_dylib(&[&format!("$ORIGIN/../waybill_fixture_pkg.libs/{hashed}")], b"\0core\0")),
+            (&vendored, macho_dylib(&[], ZLIB)),
+        ],
+        &[],
+    );
+    let docs = scan(dir.path());
+    let cdx = &docs.cdx;
+    assert!(purls_with_prefix(cdx, "pkg:generic/libwaybill-fixture-z-0123abcd").is_empty(), "the hash is not in the name");
+    let lib = find_with_parent(cdx, "pkg:generic/libwaybill-fixture-z.so.1?file-sha256=");
+    assert_eq!(lib.len(), 1, "{lib:?}");
+    assert_eq!(lib[0].0["name"], "libwaybill-fixture-z.so.1");
+    let zlib = find_with_parent(cdx, "pkg:generic/zlib@");
+    assert!(zlib[0].1.as_deref().is_some_and(|p| p.starts_with("pkg:generic/libwaybill-fixture-z.so.1")));
+    let lib_ref = lib[0].0["bom-ref"].as_str().unwrap();
+    assert!(depends_on_refs(cdx, bom_ref_of(cdx, "pkg:generic/_core.cpython")).iter().any(|d| d == lib_ref), "internal link");
+    assert!(purls_with_prefix(cdx, "pkg:generic/%24ORIGIN").is_empty(), "no linkage component for the sibling");
+    assert_eq!(c230(&docs), Some(serde_json::json!({"analysed": 2, "identified": 1})));
+}
+
+/// US3 scenario 3: the same hashed name outside `*.libs/` keeps its hash.
+#[test]
+fn us3_hash_kept_outside_a_libs_directory() {
+    let dir = tempfile::tempdir().unwrap();
+    package(dir.path(), Layout::Wheel, &[("waybill_fixture_pkg/libwaybill-fixture-z-0123abcd.so.1", macho_dylib(&[], ZLIB))], &[]);
+    let docs = scan(dir.path());
+    assert_eq!(find_with_parent(&docs.cdx, "pkg:generic/libwaybill-fixture-z-0123abcd.so.1?").len(), 1);
+}
+
+/// US3 scenario 2: a delocate wheel; `<pkg>/.dylibs/` is owned and nested,
+/// and needs no renaming.
+#[test]
+fn us3_delocate_layout() {
+    let dir = tempfile::tempdir().unwrap();
+    let ext = "waybill_fixture_pkg/_core.cpython-312-darwin.so";
+    package(
+        dir.path(),
+        Layout::Site,
+        &[(ext, macho_dylib(&["@loader_path/.dylibs/libwaybill-fixture-z.dylib"], b"\0core\0")), (LIB, macho_dylib(&[], ZLIB))],
+        &[],
+    );
+    let docs = scan(dir.path());
+    let lib = find_with_parent(&docs.cdx, "pkg:generic/libwaybill-fixture-z.dylib?");
+    assert_eq!(lib.len(), 1);
+    assert_eq!(lib[0].1.as_deref(), Some(PKG));
+    let lib_ref = lib[0].0["bom-ref"].as_str().unwrap();
+    assert!(depends_on_refs(&docs.cdx, bom_ref_of(&docs.cdx, "pkg:generic/_core.cpython")).iter().any(|d| d == lib_ref));
+    assert_conformant(&docs, "us3 delocate");
+}
