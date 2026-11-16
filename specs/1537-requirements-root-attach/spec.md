@@ -48,6 +48,8 @@ The submodule edge would be a fifth exemption, applied four times. The table abo
 
 - Q: Who owns a requirements file in a nested directory with no project of its own? → A: The nearest enclosing project, which is ultimately the root (FR-003).
 - Q: Which unreachable components must carry an orphan reason? → A: Only those this feature's rule declines to attach. Other ecosystems remain #1214 (FR-008).
+- Q: Is `complete` measured from the document root alone, or from today's multi-root seed set? → A: Keep the multi-root definition in this feature. The verdict must match the graph the emitters actually produce, under that definition. Measure in CI how many corpus documents a root-only definition would change, and file a follow-up with the numbers (FR-007, SC-003, SC-008).
+- Q: What counts as a project that can own a nested requirements file? → A: Any project waybill emits for that directory, meaning a main module of any ecosystem (Python, CMake, Cargo, npm, …) or a git submodule. Cross-ecosystem edges are expected (FR-003).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -73,12 +75,12 @@ A consumer comparing the CycloneDX, SPDX 2.3 and SPDX 3 documents from one scan 
 
 **Why this priority**: A document that claims `complete` while components are unreachable is a false claim. Measured today, all three formats make it. The formats disagreeing means a consumer's answer depends on which file they opened.
 
-**Independent Test**: For each fixture and each corpus target, compare the set of components the root directly depends on across the three formats. Then recompute reachability from the root and compare it with the completeness verdict.
+**Independent Test**: For each fixture and each corpus target, compare the set of components the root directly depends on across the three formats. Then recompute reachability over the emitted graph from the verdict's seed set and compare it with the completeness verdict.
 
 **Acceptance Scenarios**:
 
 1. **Given** any scan, **When** it is emitted in all three formats, **Then** the components the root directly depends on are the same set in each.
-2. **Given** a document in which any component is unreachable from the root, **When** its completeness is read, **Then** it does not say `complete`.
+2. **Given** a document in which any component is unreachable from the completeness seed set the verdict is defined over, **When** its completeness is read, **Then** it does not say `complete`. Today that seed set is the document root plus the per-ecosystem roots.
 
 ---
 
@@ -129,13 +131,16 @@ An engineer scans a C/C++ super-project with its submodules checked out. The sup
 
 - **FR-001**: A package declared by a pip requirements file is a **direct dependency of the project that declares it**. The edge exists because of the declaration. Whether the root or that project has other edges must not matter.
 - **FR-002**: A requirements file at the **scan root** is declared by the document's subject. Its packages are direct dependencies of the root in every format.
-- **FR-003**: A requirements file in a **nested directory that contains a project** (a Python main module, or a component waybill already emits for that directory, such as a git submodule) is declared by that project.
+- **FR-003**: A requirements file in a **nested directory that contains a project** is declared by that project. A project is any component waybill emits for that directory: a main module of **any ecosystem** (Python, CMake, Cargo, npm, …) or a git submodule. A `pkg:pypi` dependency of a CMake or npm project is an expected cross-ecosystem edge. When one directory holds several main modules, the plan settles the choice deterministically and records it in research.
 
   A requirements file in a **nested directory with no project of its own** is declared by the **nearest enclosing project**. Walk up the directory tree to the first directory that contains a project; at the top, that is the root. For example, `build_tools/requirements.txt` in a super-project with no project at `build_tools/` belongs to the super-project. A file under a submodule's tree belongs to that submodule.
 - **FR-004**: **No root-to-everything star.** The root gains an edge only to a component that a declaration places there, or to one the existing no-declarations fallback covers (FR-005). Components with no declaration must not be attached to the root because something else made the graph non-empty. This is #870 Class B.
 - **FR-005**: The existing fallback for scans whose root declares nothing is unchanged for those scans. Examples are image scans, OS-package scans and placeholder roots (#236).
 - **FR-006**: CycloneDX, SPDX 2.3 and SPDX 3 emitted from one scan agree on the set of components the root directly depends on. They also agree on every edge this feature creates.
-- **FR-007**: `waybill:graph-completeness` is computed against the graph the document emits. A document with any component unreachable from its root does not report `complete`.
+- **FR-007**: `waybill:graph-completeness` is computed against the graph the document emits, not against a separately maintained copy of the emitters' attachment rule.
+  - The definition is unchanged: reachability from the existing multi-root seed set, which is the document root plus the per-ecosystem roots.
+  - Under that definition, a document with a component unreachable from every seed does not report `complete`.
+  - Redefining `complete` as reachability from the document root alone is out of scope. SC-008 measures its effect.
 - **FR-008**: A component that this feature's rule declines to attach carries `waybill:orphan-reason`. That covers constraint-only files (Edge Cases) and anything FR-004 forbids attaching to the root. Explaining unreachable components in other ecosystems remains #1214's scope.
 - **FR-009**: The submodule reader's own output (#1515) is unchanged: one component per submodule, with its edge from the root.
 - **FR-010**: Edges created by this feature keep the lifecycle scope the declaring file already implies: runtime, development, test or optional.
@@ -143,7 +148,7 @@ An engineer scans a C/C++ super-project with its submodules checked out. The sup
 
 ### Key Entities
 
-- **Declaring project**: The component that a requirements file's packages are direct dependencies of. That is the document root, a Python main module, or a project component such as a submodule, decided by the file's location (FR-002, FR-003).
+- **Declaring project**: The component that a requirements file's packages are direct dependencies of. That is the document root, a main module of any ecosystem, or a git submodule, decided by the file's location (FR-002, FR-003).
 - **Declared edge**: An edge that exists because a manifest names its target. This is distinct from a fallback edge, which exists because nothing else reached the target.
 - **Orphan**: A component unreachable from the document root. It carries a reason (FR-008).
 
@@ -153,13 +158,14 @@ An engineer scans a C/C++ super-project with its submodules checked out. The sup
 
 - **SC-001**: #1566's reproduction attaches **2 of 2** declared packages to the root in all three formats, with and without the submodule. Today: 0 of 2 in CycloneDX and SPDX 2.3 with it.
 - **SC-002**: For every synthetic fixture and every public-corpus target, the set of the root's direct dependencies is identical across the three formats.
-- **SC-003**: Recomputing reachability from the root over each emitted document agrees with its `waybill:graph-completeness` verdict in every fixture and corpus document. That means none is `complete` with an unreachable component.
+- **SC-003**: Recomputing reachability from the verdict's seed set over each emitted document agrees with its `waybill:graph-completeness` verdict in every fixture and corpus document. #1566's reproduction, with its declared packages unreachable as at `main` today, must not be graded `complete`. No document is `complete` with a component unreachable from every seed.
 - **SC-004**: Public-corpus goldens are regenerated in CI. Every changed file is explained by one of three things: a declared requirement now attached, an orphan reason now present, or a completeness verdict corrected. No component gains a root edge without a declaration naming it (FR-004).
 - **SC-005**: The SBOM quality corpus is run in CI. Every metric outside its authored range is explained by the same three causes, and is re-authored with the runs cited.
 - **SC-006**: Measured in CI on the C/C++ super-project in the public fixture repository, with and without submodules checked out:
   - the super-project's own requirements-declared components unreachable without a reason go from **73** (without) and **62 of 66** (with) to **0**;
   - the root's direct dependencies are reported before and after, and each change is explained.
 - **SC-007**: Every functional requirement has at least one test that fails when the requirement is broken (mutation-checked).
+- **SC-008**: Measured in CI over the public corpus at the feature branch: the number of documents whose verdict would change if `complete` meant reachability from the document root alone, with each change's component counts. The numbers are recorded and filed as a follow-up issue. Nothing ships on them in this feature.
 
 ## Assumptions
 
@@ -167,4 +173,4 @@ An engineer scans a C/C++ super-project with its submodules checked out. The sup
 - **Python first.** pip requirements files are the reported case. Other manifest kinds whose components reach the root only through the fallback are found and listed during research. Whether they move to declared edges in this feature or a follow-up is decided there, not assumed.
 - **#1538's root cause is not established.** SC-006 measures it. If the attachment rule does not resolve it, the remainder is recorded with its cause, and the feature does not claim to close #1538.
 - **Measurement constraints.** The super-project is measured only in CI, through the public fixture repository. TheRock is never cloned or scanned locally. Fixtures use synthetic `waybill-fixture-*` names.
-- **#1214's wider classifier work is out of scope** (FR-008). SC-003 still holds for every component: an unexplained orphan in another ecosystem must still stop the document from reporting `complete`.
+- **#1214's wider classifier work is out of scope** (FR-008). SC-003 still holds for every component: an orphan in another ecosystem that is unreachable from every seed must still stop the document from reporting `complete`.
