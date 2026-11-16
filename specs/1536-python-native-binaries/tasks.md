@@ -161,7 +161,7 @@
 - [X] T018 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record it in `measurements/gate-log.md` with the positive signals counted (`test result: ok.` lines and `python_owned_binaries` N of N), with no `head`.
 - [ ] T019 Regenerate the corpus goldens in CI (`public-corpus.yml`, `regen_goldens=true`). Diff them normalised and sorted, and explain every changed file by a `RECORD`-only claimed binary (SC-002, research R9). Record the result in `measurements/golden-review.md`.
 - [X] T020 [P] Run the ROCm SDK fixture's `measure` workflow at `main` and at the branch. Assert byte-identical output (SC-003), and record it in `measurements/rocm-sdk.md`.
-- [ ] T021 [P] Run `measure-wheels.yml` (T001) with `waybill_ref` set to the branch. For each wheel, report:
+- [X] T021 [P] Run `measure-wheels.yml` (T001) with `waybill_ref` set to the branch. For each wheel, report:
   - owned binaries analysed and identified (C230);
   - the identifications and linkage that the no-`.dist-info` scan yields, all present and nested;
   - no binary reported twice;
