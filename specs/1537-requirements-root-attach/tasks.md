@@ -168,7 +168,7 @@
   - `CHANGELOG.md` `[Unreleased]`:
     - Fixed: #1566 and #1538, with SC-006's numbers;
     - Changed: one root-edge rule for all formats, listing R2's three parity corrections and their measured corpus counts from T010.
-- [ ] T024 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record it in `measurements/gate-log.md`, counting the `test result: ok.` lines and `declared_requirements` N of N, with no `head`. Also record `git diff --quiet main -- Cargo.lock Cargo.toml '*/Cargo.toml'` exiting 0 (FR-011).
+- [X] T024 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record it in `measurements/gate-log.md`, counting the `test result: ok.` lines and `declared_requirements` N of N, with no `head`. Also record `git diff --quiet main -- Cargo.lock Cargo.toml '*/Cargo.toml'` exiting 0 (FR-011).
 - [ ] T025 Open the PR. The body carries:
   - the repro table before and after;
   - the R2 decisions, with T010's counts;
