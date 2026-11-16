@@ -89,7 +89,7 @@
 - [x] T012 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record it in `measurements/gate-log.md`, with the positive signals counted.
 - [x] T013 Regenerate the corpus goldens in CI (`public-corpus.yml`, `regen_goldens=true`). Byte-compare every file, and record the result in `measurements/golden-review.md`. Byte-identity is predicted: no CMake target (research R2).
 - [x] T014 Measure the ROCm source in CI. Extend the fixture repo's `census-downloads.yml` to build waybill at a given ref and scan `src/rocm-libraries/projects/rocsparse` and `projects/hipsparse`. Report the dataset components (name, URL, checksum) and C229, then compare them with the 24 installed stems (`measurements/README.md`). Record SC-001 in `measurements/rocm-source.md`.
-- [ ] T015 Open the PR. The body carries the measurements, the mutations, the gate result and the attribution line. `Closes #1565`.
+- [x] T015 Open the PR. The body carries the measurements, the mutations, the gate result and the attribution line. `Closes #1565`.
 
 ## Dependencies
 
