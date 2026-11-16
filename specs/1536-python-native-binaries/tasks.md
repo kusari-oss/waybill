@@ -32,7 +32,8 @@
   - `../../bin/<tool>` entries;
   - lookup by raw path, canonical path, and (Unix) inode;
   - `files_by_owner`;
-  - a `RECORD` line with an empty path is skipped.
+  - a `RECORD` line with an empty path is skipped;
+  - a `RECORD` entry naming a missing file is skipped (spec edge case).
 - [ ] T004 Implement `RecordOwners` in `waybill-cli/src/scan_fs/package_db/pip/dist_info.rs`. Replace `collect_claimed_paths`'s insert into the shared set with a fill of `RecordOwners`, using `candidate_site_packages_roots` and sorted `.dist-info` iteration.
   - Add `record_owners: RecordOwners` to `DbScanResult` in `waybill-cli/src/scan_fs/package_db/mod.rs`, and remove the pip call's writes into `claimed`.
   - Update the test at `package_db/mod.rs:3398`: the pip claim is in `record_owners`, and in neither `claimed_paths` nor `os_claimed_paths`. Keep the subset assertion.
@@ -42,6 +43,8 @@
   - **Owned:** a binary is owned when the shared set does not claim it and `RecordOwners` resolves it. For such a binary, set `path_claimed = false` and skip both collapsers. `rpm_dir_heuristic` and `go_in_linux` stay as they are (R3).
   - **Record:** collect, per owned binary, its file-level PURL, the linkage PURLs of its imports, its internal-link file names (soname base name ∈ the owner's `files_by_owner`), and whether a content-derived identification fired.
   - **Internal links:** sonames that are internal links are not passed to `LinkageAggregator`.
+
+  Pass `&RecordOwners` to `go_binary`'s finalize (`waybill-cli/src/scan_fs/package_db/go_binary.rs:662`, `:739`). There an owned path counts as claimed for diagnostic suppression only (research R1).
 
   Define `OwnedBinary` in a new `waybill-cli/src/scan_fs/binary/owned.rs`. Update the call site in `waybill-cli/src/scan_fs/mod.rs:598` and every other caller (find them with `grep -rn "binary::read(" waybill-cli/`; count the whole output, no `head`).
 - [ ] T006 [P] Write emitter unit tests:
@@ -71,6 +74,7 @@
   - **Internal link:** two owned libraries, one `DT_NEEDED` on the other, give an edge to the other's component and no linkage component for it.
   - **A Python-only `RECORD`:** the output equals today's.
   - **An owned library with no identification:** it appears once, nested, and there is no `file`-tier component for its path.
+  - **FR-001's other signals:** an owned library carrying an ELF `.note.package` gives a note component nested under it. An owned library whose strings hold a source path that spec 1534 attributes gives the attributed component nested under it. Reuse the builders in `waybill-cli/tests/common/installed_lib.rs` and `installed_lib_embedded_paths.rs`.
 
   Also cover:
   - the wire contract C-1 to C-4 in `contracts/wire.md`;
@@ -84,6 +88,11 @@
   - V2: an unresolved owner is analysed, not nested and not counted.
 
   Call it in `waybill-cli/src/scan_fs/mod.rs` after `binary::read` and the installed-library splice, and before the name index is built.
+
+  Unit-test the pass in `owned.rs` with synthetic entries:
+  - a `go_binary` module whose `source_path` is an owned path nests under the binary (spec edge case, Go build info);
+  - a symbol-fingerprint entry nests the same way;
+  - an entry from another path is untouched.
 - [ ] T010 [US1] Plumb C230 `waybill:python-owned-binaries` (the C228/C229 pattern):
   - `scan_fs::ScanResult` → `cli/scan_cmd.rs` → `generate::ScanArtifacts` → `generate/cyclonedx/{metadata,builder,mod}.rs` and `generate/spdx/{annotations,v3_annotations}.rs`, plus every test constructor of `ScanArtifacts`;
   - its parity extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`;
@@ -95,6 +104,7 @@
   - **`../../bin/<tool>`:** a `RECORD` entry holding the cargo-auditable fixture from `closure_binary_contents.rs`. It is owned and nested, with its crates under it.
   - **One file in two `RECORD`s:** the owner is the sorted-first `.dist-info` (FR-010).
   - **No owner:** a `.dist-info` with a `RECORD` and unreadable `METADATA`. The library is analysed top-level, and C230 is absent (V2).
+  - **A library that identifies its own package:** a version string naming `waybill-fixture-pkg`. It is nested under the binary, not merged into the `pkg:pypi` component (spec edge case).
 
 **Checkpoint:** US1 is complete and independently demonstrable with `quickstart.md`.
 
@@ -107,6 +117,8 @@
   - **dpkg plus `RECORD`:** a rootfs whose dpkg `.list` (`common::installed_lib::dpkg_owning`) and a `site-packages` `RECORD` both list one library. Assert no file-level, linkage or identification components for it, no nesting, and no C230, exactly as for a dpkg-only claim (FR-005).
   - **`.ipk` plus `RECORD`:** the same, for an `.ipk` claim (FR-007).
   - **CPython `lib-dynload`:** the CPython collapse is unchanged.
+  - **An owned Go binary whose build info doesn't parse:** no diagnostic `pkg:generic` component, only its nested file-level component (research R1).
+  - **A binary the package doesn't own links a pip-owned library on a standard search path:** a linkage component is emitted (research R1, accepted).
 - [ ] T013 [US2] If T012 fails, fix it in the ownership decision in `waybill-cli/src/scan_fs/binary/mod.rs`, never in the tests. Record the outcome either way in `specs/1536-python-native-binaries/measurements/us2.md`.
 
 ## Phase 5: User Story 3, repaired-wheel layouts (P2)
@@ -128,7 +140,7 @@
 
 - [ ] T016 [P] Docs:
   - in `docs/ecosystems.md`, a Python section entry on owned native binaries: nesting, edges, C230, the OS-claim rule, and the bare `lib/python3.X/site-packages` limit;
-  - in `CHANGELOG.md`, `[Unreleased]` entries: a Fixed entry for the #1529 regression, and an Added entry for the `site-packages` inventory and C230.
+  - in `CHANGELOG.md`, `[Unreleased]` entries: a Fixed entry for the #1529 regression; an Added entry for the `site-packages` inventory and C230; and a Changed entry for nesting depth. That entry says that all nested components, cargo-auditable and shade jars included, now have CycloneDX `dependencies` refs that match their `bom-ref`, and SPDX identifiers that include the parent chain.
 - [ ] T017 Mutations, each reverted with `cp` and each required to fail a named test. Record them in `specs/1536-python-native-binaries/measurements/mutations.md`:
   - **M1:** the OS claim no longer wins;
   - **M2:** no `parent_purl` on the binary;

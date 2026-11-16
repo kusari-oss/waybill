@@ -26,6 +26,10 @@ All file references are at `main` `1ae157d5` plus the spec commits on this branc
 
 **Consequence:** the test at `package_db/mod.rs:3445` changes. It now asserts that the pip claim is in `RecordOwners` and is in neither claim set. Its subset assertion is unchanged.
 
+**Other consumers of the shared set.** I enumerated them all with a full, untruncated grep. Two besides `binary::read` lose the pip claims:
+- **`go_binary`** (`go_binary.rs:662`, `:739`) uses the set only to suppress the diagnostic `pkg:generic/<name>` it emits for a Go binary whose build info doesn't parse. The binary scan already emits a file-level component for that binary, so for an owned binary a diagnostic would be a second component for the same file. **Decision:** `go_binary` takes `&RecordOwners` and treats an owned path as claimed for diagnostics only. Parsed modules are emitted regardless, as today, and R4 nests them.
+- **`LinkageAggregator::add_with_claim_check`** probes standard library search paths for a soname. A pip-owned file is on such a path only when a package installs outside `site-packages`. Then a binary the package doesn't own, linking it, emits a linkage component where it was suppressed before. That is the accurate report: the library is not part of the linking binary's package. **Decision:** accept this. A test in T012 pins the behaviour.
+
 ## R2. The owner's identity and determinism
 
 **Observed:**

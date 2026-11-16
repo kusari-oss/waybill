@@ -113,7 +113,7 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 
 1. **Given** an auditwheel layout, **When** it is scanned, **Then** the libraries in `<pkg>.libs/` are owned by the package and analysed as in US1.
 2. **Given** a delocate layout, **When** it is scanned, **Then** the libraries in `<pkg>/.dylibs/` are owned by the package and analysed as in US1.
-3. **Given** a library named `libfoo-0123abcd.so.1`, **When** a name is derived from its file name, **Then** the hash suffix is not part of that name.
+3. **Given** an owned library named `libfoo-0123abcd.so.1` directly in `<pkg>.libs/`, **When** its name is derived from its file name, **Then** the hash suffix is not part of that name. The same file name anywhere else keeps the suffix.
 
 ### Edge Cases
 
@@ -137,7 +137,7 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 - **FR-005**: A file claimed by an OS package database (dpkg, rpm, apk, alpm, opkg) MUST keep today's behaviour, whether or not a `RECORD` also claims it.
 - **FR-006**: An unpacked wheel's root `.dist-info` and a `site-packages` `.dist-info` MUST take the same path. The layout does not change what is analysed or how it is reported.
 - **FR-007**: Claims other than `RECORD` and the OS package databases (for example `.ipk` archives) MUST keep today's behaviour.
-- **FR-008**: A name derived from a file name MUST drop an auditwheel content-hash suffix (`-<8 hex>` before `.so`).
+- **FR-008**: For an owned binary directly in an auditwheel `<pkg>.libs/` directory, the name derived from its file name MUST drop the content-hash suffix (`-<8 hex>` before `.so`). A name anywhere else MUST NOT be changed.
 - **FR-009**: When one or more `RECORD`-claimed binaries are analysed, the document MUST say how many there were and how many yielded at least one identification, so a consumer can tell "analysed, nothing found" from "not analysed". An identification is a component derived from the binary's own content: an embedded version string, an ELF note, a symbol fingerprint, embedded-path attribution, or build metadata (cargo-auditable, Go build info). Linkage alone is not an identification.
 - **FR-010**: Output MUST be deterministic, including the choice of owner when two `RECORD`s claim one file.
 - **FR-011**: No network access at scan time, and zero new Cargo dependencies. Test fixtures use synthetic `waybill-fixture-*` names.
@@ -151,7 +151,7 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 
 ### Measurable Outcomes
 
-- **SC-001**: On the synthetic wheel, in both layouts with a `.dist-info`, the zlib identification and the linkage that the no-`.dist-info` scan reports are all present. The library appears once, nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`; the zlib identification is nested under the library. The edges form the chain package → library → {`zlib@1.3.2`, `libSystem.B.dylib`}. The two layouts give the same components and edges.
+- **SC-001**: On the synthetic wheel, in both layouts with a `.dist-info`, the zlib identification and the linkage that the no-`.dist-info` scan reports are all present. The library appears once, nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`; the zlib identification is nested under the library. The edges form the chain package → library → {the zlib identification, the fixture's linked libraries}. The two layouts give the same components and edges. The measured Mach-O case (`zlib@1.3.2`, `libSystem.B.dylib`) is checked by hand in `quickstart.md`.
 - **SC-002**: On the public corpus, with goldens regenerated in CI, every changed file is explained by a `RECORD`-only claimed binary. No component of an OS package changes.
 - **SC-003**: On the ROCm SDK fixture in CI, which contains no `.dist-info`, the output is unchanged.
 - **SC-004**: Measured in CI on real wheels, each pinned:
@@ -165,7 +165,7 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 ## Assumptions
 
 - The binary scan's existing analysis is reused unchanged. This feature changes which files reach it and where its results attach, not what it finds.
-- The nesting construct is the one cargo-auditable already uses. No new format carrier is needed for nesting; FR-009 may need a document-scope row.
+- The nesting construct is the one cargo-auditable already uses, CycloneDX nested components and SPDX `CONTAINS`, so no new format carrier is needed; FR-009 needs a document-scope row. The emitters carry only one level of nesting today, so they gain depth (research R5). That also changes how *existing* nested components are emitted: CycloneDX `dependencies` refs become their `bom-ref`s, and nested SPDX identifiers include the parent chain. No corpus golden holds a nested component (measured), and the CHANGELOG states the change.
 - `site-packages` locations stay as the pip reader finds them today.
 - #1528 (wheels over `--max-file-size`) and #1530 (archives inside packages) are separate.
 - Measurements on TheRock's artifacts run in CI only. Nothing from TheRock is cloned or downloaded locally.
