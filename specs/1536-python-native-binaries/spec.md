@@ -55,6 +55,8 @@ The pip reader searches `site-packages` only under `usr/lib`, `usr/local/lib`, `
 - Q: Which real wheel(s) does CI measure? → A: Both of these:
   - a pinned ROCm Python wheel published by TheRock, scanned in the fixture repo's CI;
   - the auditwheel `manylinux` wheel and the delocate macOS wheel of one widely used numerical package from PyPI, pinned and scanned in CI.
+- Q: Where do the dependency edges start? → A: In a chain. The package depends on each binary it owns. Each binary depends on the libraries it links and on what was identified in it. Today every edge starts at the document root, and the binary has no edges of its own.
+- Q: What counts as "identified" for FR-009's counts? → A: A component derived from the binary's own content: an embedded version string, an ELF note, a symbol fingerprint, embedded-path attribution, or build metadata (cargo-auditable, Go build info). Linkage alone does not count.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -73,8 +75,8 @@ A consumer scans an unpacked wheel or an installed `site-packages` tree. A share
 
 1. **Given** an unpacked wheel whose `RECORD` lists a library with an embedded zlib version, **When** it is scanned, **Then** the library appears as a component nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`, with its path as the occurrence. `pkg:generic/zlib@1.3.2` is nested under the library, and the root stays the Python package.
 2. **Given** the same package under `usr/lib/python3.12/site-packages/`, **When** it is scanned, **Then** the same nesting appears under the package.
-3. **Given** a library with dynamic dependencies outside the package, **When** it is scanned, **Then** those dependencies are reported as they are for an unclaimed binary, and the dependency edges start from the owning package.
-4. **Given** a vendored library that links another library vendored in the same package, **When** it is scanned, **Then** the linked library is not reported as an external dependency.
+3. **Given** a library with dynamic dependencies outside the package, **When** it is scanned, **Then** those dependencies are reported as they are for an unclaimed binary, and the edges to them start from the library's own component, which the package depends on.
+4. **Given** a vendored library that links another library vendored in the same package, **When** it is scanned, **Then** the edge goes to the other library's component, and the linked library is not reported as an external dependency.
 5. **Given** a package whose `RECORD` lists only Python files, **When** it is scanned, **Then** the output is unchanged.
 6. **Given** an owned library in which analysis identifies nothing, **When** it is scanned, **Then** it still appears once, nested under the package. No top-level `file` component is emitted for its path.
 
@@ -131,12 +133,12 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 - **FR-001**: A file claimed by a Python package's `RECORD`, and by no OS package database, MUST go through binary analysis as an unclaimed file does. That covers dynamic linkage, ELF notes, embedded version strings, symbol fingerprints, embedded-path attribution, binary role, and build metadata (cargo-auditable, Go build info).
 - **FR-002**: Each such file that analysis recognises as a binary MUST appear exactly once, as its own component nested under the Python package that owns it, with the file's path as its occurrence. Every component identified from it MUST nest under that binary component (package → binary → identified), the way cargo-auditable crates nest under their binary.
 - **FR-003**: The owning Python package MUST remain the owner, and the document root MUST NOT change. An owned binary MUST NOT also appear anywhere else; in particular, the file tier MUST NOT emit a top-level `file` component for its path. An owned binary in which nothing is identified still appears, nested.
-- **FR-004**: Dependency edges from linkage MUST start at the owning package. A library resolved to another file the same package owns MUST NOT be reported as an external dependency.
+- **FR-004**: The owning package MUST depend on each binary it owns. Each owned binary MUST depend on the libraries it links and on each component identified in it. When a linked library resolves to another binary the same package owns, the edge MUST go to that binary's component, and the library MUST NOT be reported as an external dependency.
 - **FR-005**: A file claimed by an OS package database (dpkg, rpm, apk, alpm, opkg) MUST keep today's behaviour, whether or not a `RECORD` also claims it.
 - **FR-006**: An unpacked wheel's root `.dist-info` and a `site-packages` `.dist-info` MUST take the same path. The layout does not change what is analysed or how it is reported.
 - **FR-007**: Claims other than `RECORD` and the OS package databases (for example `.ipk` archives) MUST keep today's behaviour.
 - **FR-008**: A name derived from a file name MUST drop an auditwheel content-hash suffix (`-<8 hex>` before `.so`).
-- **FR-009**: When one or more `RECORD`-claimed binaries are analysed, the document MUST say how many there were and how many yielded at least one identification, so a consumer can tell "analysed, nothing found" from "not analysed".
+- **FR-009**: When one or more `RECORD`-claimed binaries are analysed, the document MUST say how many there were and how many yielded at least one identification, so a consumer can tell "analysed, nothing found" from "not analysed". An identification is a component derived from the binary's own content: an embedded version string, an ELF note, a symbol fingerprint, embedded-path attribution, or build metadata (cargo-auditable, Go build info). Linkage alone is not an identification.
 - **FR-010**: Output MUST be deterministic, including the choice of owner when two `RECORD`s claim one file.
 - **FR-011**: No network access at scan time, and zero new Cargo dependencies. Test fixtures use synthetic `waybill-fixture-*` names.
 
@@ -149,7 +151,7 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 
 ### Measurable Outcomes
 
-- **SC-001**: On the synthetic wheel, in both layouts with a `.dist-info`, the zlib identification and the linkage that the no-`.dist-info` scan reports are all present. The library appears once, nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`; the zlib identification is nested under the library, and the linkage edges start from the package. The two layouts give the same components and edges.
+- **SC-001**: On the synthetic wheel, in both layouts with a `.dist-info`, the zlib identification and the linkage that the no-`.dist-info` scan reports are all present. The library appears once, nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`; the zlib identification is nested under the library. The edges form the chain package → library → {`zlib@1.3.2`, `libSystem.B.dylib`}. The two layouts give the same components and edges.
 - **SC-002**: On the public corpus, with goldens regenerated in CI, every changed file is explained by a `RECORD`-only claimed binary. No component of an OS package changes.
 - **SC-003**: On the ROCm SDK fixture in CI, which contains no `.dist-info`, the output is unchanged.
 - **SC-004**: Measured in CI on real wheels, each pinned:
@@ -157,7 +159,7 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
   - the auditwheel `manylinux` wheel and the delocate macOS wheel of one widely used numerical package from PyPI, chosen at plan time.
 
   For each wheel, the identifications and linkage that the same tree yields without its `.dist-info` are all present, nested as FR-002 says. No binary is reported twice.
-- **SC-005**: Each rule has a mutation that makes a test fail: the OS claim winning, nesting, the owner-rooted edges, the internal-link exclusion, the hash-suffix strip, the same path for both layouts, the single listing of each owned binary, and the FR-009 counts.
+- **SC-005**: Each rule has a mutation that makes a test fail: the OS claim winning, nesting, the edge chain, the internal-link exclusion, the hash-suffix strip, the same path for both layouts, the single listing of each owned binary, and the FR-009 counts.
 - **SC-006**: Every output passes the CycloneDX 1.6 schema and `spdx3-validate`.
 
 ## Assumptions
