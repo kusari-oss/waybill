@@ -75,7 +75,7 @@
 
 ## Phase 5: Polish and cross-cutting
 
-- [ ] T010 [P] Docs:
+- [x] T010 [P] Docs:
   - in `docs/ecosystems.md`, a CMake section bullet on declared datasets, noting the #1516 discovery limit;
   - in `CHANGELOG.md`, an `[Unreleased]` Added entry.
 - [ ] T011 Mutations, each reverted with `cp` and each required to fail a test. Record them in `specs/1535-declared-datasets/measurements/mutations.md`:
