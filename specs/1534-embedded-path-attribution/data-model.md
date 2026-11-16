@@ -54,7 +54,7 @@ There is one per (binary, name) pair. The same name in two binaries gives two co
 
 ## Coverage
 
-**C225, `embedded-paths` object.** Present only when `read` > 0 (contracts/wire.md):
+**C225, `embedded-paths` object.** Present only when `with-paths` > 0 (contracts/wire.md, FR-008):
 
 ```json
 {"attributed":N,"header-only":N,"no-versioned-match":N,"read":N,"shared":N,"toolchain-only":N,"with-paths":N}

@@ -574,6 +574,19 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             }
         };
         let skip_test_inputs = installed_tree == test_scope::InstalledTree::NotRecognised && !include_test_binaries;
+        // Spec 1534 (#1532, research R5): the versioned package names the
+        // binary scan matches embedded source paths against. Extraction runs
+        // even when this is empty: bundled-tree detection needs no names.
+        let embedded_names = {
+            let claims = package_db::installed_lib::resolve::OsClaims {
+                paths: &os_claimed_paths,
+                #[cfg(unix)]
+                inodes: &os_claimed_inodes,
+            };
+            package_db::installed_lib::resolve::versioned_names(&installed_lib_records, root, &claims)
+        };
+        let mut embedded_findings: std::collections::BTreeMap<String, binary::embedded_paths::EmbeddedPathFinding> =
+            std::collections::BTreeMap::new();
         db_entries.extend(binary::read(
             root,
             &claimed_paths,
@@ -582,6 +595,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             exclude_set,
             no_binary_scan,
             skip_test_inputs.then_some(&mut binary_test_inputs_skipped),
+            Some(binary::embedded_paths::EmbeddedPathsCtx { names: &embedded_names, findings: &mut embedded_findings }),
         ));
         if !binary_test_inputs_skipped.is_empty() {
             tracing::info!(
@@ -606,6 +620,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 root,
                 &claims,
                 &db_entries[binary_start..],
+                &embedded_findings,
             );
             installed_library_coverage = resolved.coverage.map(|c| c.wire());
             db_entries.splice(binary_start..binary_start, resolved.entries);

@@ -24,6 +24,8 @@ use crate::scan_fs::test_scope::{TestDeclarations, TestRule};
 pub(crate) const ANN_INSTALLED_LIBRARY_COVERAGE: &str = "waybill:installed-library-coverage";
 /// C224: the private-only `Requires.private` targets of a component.
 pub(crate) const PRIVATE_REQUIRES: &str = "waybill:pkg-config-private-requires";
+/// C227 (spec 1534): which evidence files came from embedded source paths.
+pub(crate) const EMBEDDED_PATH_BINARIES: &str = "waybill:embedded-path-binaries";
 /// C103, widened (research R5): the declared case of a CMake package name.
 const CMAKE_DECLARED_NAME: &str = "waybill:cmake-find-package-name";
 
@@ -47,6 +49,22 @@ pub(crate) struct Coverage {
     /// Spec 1532 FR-007: present only when an exported-targets file was
     /// matched.
     pub(crate) exported_targets: Option<ExportedTargetsCoverage>,
+    /// Spec 1534 FR-007: present only when an examined binary carried a
+    /// source path (FR-008).
+    pub(crate) embedded_paths: Option<EmbeddedPathsCoverage>,
+}
+
+/// Spec 1534 FR-007 (contracts/wire.md). One binary counts in exactly one
+/// of the outcome buckets after `read` and `with_paths`.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(crate) struct EmbeddedPathsCoverage {
+    pub(crate) read: usize,
+    pub(crate) with_paths: usize,
+    pub(crate) attributed: usize,
+    pub(crate) shared: usize,
+    pub(crate) header_only: usize,
+    pub(crate) toolchain_only: usize,
+    pub(crate) no_versioned_match: usize,
 }
 
 /// Spec 1532 FR-007 (data-model.md). Counts after `read` and
@@ -92,6 +110,20 @@ impl Coverage {
                 }),
             );
         }
+        if let Some(e) = &self.embedded_paths {
+            v.insert(
+                "embedded-paths",
+                serde_json::json!({
+                    "attributed": e.attributed,
+                    "header-only": e.header_only,
+                    "no-versioned-match": e.no_versioned_match,
+                    "read": e.read,
+                    "shared": e.shared,
+                    "toolchain-only": e.toolchain_only,
+                    "with-paths": e.with_paths,
+                }),
+            );
+        }
         serde_json::to_string(&v).unwrap_or_default()
     }
 
@@ -128,12 +160,27 @@ pub(crate) fn has_installed_record(phase1: &Phase1, scan_root: &Path, claims: &O
     phase1.records.iter().any(|r| r.prefix.is_some() && !os_owned(r, scan_root, claims))
 }
 
+/// Spec 1534 (research R5): the lowercased names of the records phase 2
+/// will turn into versioned components, minus the embedded-path stoplist.
+/// Computed before the binary scan so that each binary keeps only the names
+/// its embedded paths match.
+pub(crate) fn versioned_names(phase1: &Phase1, scan_root: &Path, claims: &OsClaims<'_>) -> BTreeSet<String> {
+    phase1
+        .records
+        .iter()
+        .filter(|r| r.prefix.is_some() && r.version.is_ok() && !os_owned(r, scan_root, claims))
+        .map(|r| r.name.to_lowercase())
+        .filter(|n| !crate::scan_fs::binary::embedded_paths::STOPLIST.contains(&n.as_str()))
+        .collect()
+}
+
 /// Phase 2. `binaries` are the binary scan's entries.
 pub(crate) fn resolve(
     phase1: Phase1,
     scan_root: &Path,
     claims: &OsClaims<'_>,
     binaries: &[PackageDbEntry],
+    embedded: &BTreeMap<String, crate::scan_fs::binary::embedded_paths::EmbeddedPathFinding>,
 ) -> Resolved {
     let Phase1 { records, targets: targets_files, ctest: ctest_files } = phase1;
     let mut out = Resolved::default();
@@ -186,6 +233,11 @@ pub(crate) fn resolve(
         cov.exported_targets =
             Some(attach_exported_targets(&live, targets_files, scan_root, claims, &mut evidence, &mut out.tests));
     }
+    let mut embedded_evidence: BTreeMap<usize, Vec<serde_json::Value>> = BTreeMap::new();
+    let embedded_cov = attach_embedded_paths(&live, binaries, embedded, scan_root, &mut evidence, &mut embedded_evidence);
+    // FR-008: present only when some binary carried a source path, so a scan
+    // whose binaries carry none keeps C225 byte-identical.
+    cov.embedded_paths = (embedded_cov.with_paths > 0).then_some(embedded_cov);
 
     let entries: Vec<PackageDbEntry> = live
         .iter()
@@ -196,13 +248,91 @@ pub(crate) fn resolve(
                 RecordKind::CmakeVersion => cov.cmake_emitted += 1,
             }
             let (depends, private_only) = deps[i].clone();
-            entry(l, depends, private_only, evidence.get(&i).cloned().unwrap_or_default())
+            let mut e = entry(l, depends, private_only, evidence.get(&i).cloned().unwrap_or_default());
+            if let Some(mut list) = embedded_evidence.remove(&i) {
+                list.sort_by(|a, b| a["path"].as_str().cmp(&b["path"].as_str()));
+                e.extra_annotations.insert(EMBEDDED_PATH_BINARIES.to_string(), serde_json::Value::Array(list));
+            }
+            e
         })
         .collect();
     tracing::info!(reader = "installed-lib", coverage = %cov.wire(), "installed libraries");
     out.entries = entries;
     out.coverage = Some(cov);
     out
+}
+
+/// Spec 1534 (#1532, data-model "Attribution"): attach each binary file
+/// component whose compiled-source paths name versioned package(s) to those
+/// packages' records. A binary already in some record's evidence (#1531 name
+/// match, #1563 exported targets) is not examined. `findings` is keyed by the
+/// binary's `source_path`.
+fn attach_embedded_paths(
+    live: &[Live],
+    binaries: &[PackageDbEntry],
+    findings: &BTreeMap<String, crate::scan_fs::binary::embedded_paths::EmbeddedPathFinding>,
+    scan_root: &Path,
+    evidence: &mut BTreeMap<usize, Vec<String>>,
+    c227: &mut BTreeMap<usize, Vec<serde_json::Value>>,
+) -> EmbeddedPathsCoverage {
+    let mut cov = EmbeddedPathsCoverage::default();
+    if live.is_empty() {
+        return cov;
+    }
+    // The record a name attributes to: the CMake version record first, then a
+    // same-name `.pc` (as spec 1532's `package_record`).
+    let mut by_name: BTreeMap<&str, usize> = BTreeMap::new();
+    for (i, l) in live.iter().enumerate() {
+        let slot = by_name.entry(l.lname.as_str()).or_insert(i);
+        if l.record.kind == RecordKind::CmakeVersion && live[*slot].record.kind != RecordKind::CmakeVersion {
+            *slot = i;
+        }
+    }
+    let attributed: HashSet<String> = evidence.values().flatten().cloned().collect();
+    let mut seen: HashSet<&str> = HashSet::new();
+    for b in binaries.iter().filter(|b| b.binary_class.is_some()) {
+        let sp = b.source_path.as_str();
+        if attributed.contains(sp) || !seen.insert(sp) {
+            continue;
+        }
+        cov.read += 1;
+        let Some(f) = findings.get(sp) else { continue };
+        if f.has_paths {
+            cov.with_paths += 1;
+        }
+        let matched: Vec<(&str, usize)> =
+            f.packages.iter().filter_map(|n| by_name.get(n.as_str()).map(|i| (n.as_str(), *i))).collect();
+        let rel = location::relative_to_root(Path::new(sp), scan_root)
+            .map(|r| r.to_string_lossy().into_owned())
+            .unwrap_or_else(|| sp.to_string());
+        match matched.len() {
+            0 if f.header_only => cov.header_only += 1,
+            0 if f.toolchain_only => cov.toolchain_only += 1,
+            0 if f.has_paths => cov.no_versioned_match += 1,
+            0 => {}
+            n => {
+                if n == 1 {
+                    cov.attributed += 1;
+                } else {
+                    cov.shared += 1;
+                }
+                for (name, i) in &matched {
+                    evidence.entry(*i).or_default().push(sp.to_string());
+                    let mut v = serde_json::json!({ "path": rel });
+                    if n > 1 {
+                        let others: Vec<&str> = matched.iter().map(|(m, _)| *m).filter(|m| m != name).collect();
+                        v["shared-with"] = serde_json::json!(others);
+                    }
+                    c227.entry(*i).or_default().push(v);
+                }
+            }
+        }
+    }
+    for v in evidence.values_mut() {
+        v.sort();
+        v.dedup();
+    }
+    cov
 }
 
 /// Spec 1533 (research R1): each installed CTest file's `add_test` locations,
@@ -670,7 +800,7 @@ mod tests {
             #[cfg(unix)]
             inodes: &inodes,
         };
-        let r = resolve(Phase1 { records, ..Phase1::default() }, Path::new("/nonexistent-root"), &claims, binaries);
+        let r = resolve(Phase1 { records, ..Phase1::default() }, Path::new("/nonexistent-root"), &claims, binaries, &BTreeMap::new());
         (r.entries, r.coverage.unwrap())
     }
 
@@ -884,5 +1014,36 @@ mod tests {
             &[shared_lib("/r/a/lib/libfoo.so")],
         );
         assert!(e.iter().all(|e| e.extra_source_paths.is_empty()), "an ambiguous binary is listed under none");
+    }
+
+    /// Spec 1534 T005: the names handed to the binary scan are exactly the
+    /// versioned components phase 2 emits, minus the stoplist.
+    #[test]
+    fn versioned_names_are_the_emitted_components() {
+        let mut no_prefix = pc("/r/x/a.pc", "WaybillFixtureNoPrefix", "/r/x", "1", &[], &[]);
+        no_prefix.prefix = None;
+        let mut no_version = pc("/r/lib/pkgconfig/b.pc", "waybill-fixture-nover", "/r", "1", &[], &[]);
+        no_version.version = Err(SkipReason::NoVersion);
+        let records = vec![
+            pc("/r/lib/pkgconfig/WaybillFixtureP.pc", "WaybillFixtureP", "/r", "1.2.3", &[], &[]),
+            pc("/r/lib/pkgconfig/amd.pc", "AMD", "/r", "3.3.3", &[], &[]),
+            no_prefix,
+            no_version,
+        ];
+        let paths = HashSet::new();
+        #[cfg(unix)]
+        let inodes = HashSet::new();
+        let claims = OsClaims {
+            paths: &paths,
+            #[cfg(unix)]
+            inodes: &inodes,
+        };
+        let phase1 = Phase1 { records: records.clone(), ..Phase1::default() };
+        let names = versioned_names(&phase1, Path::new("/nonexistent-root"), &claims);
+        assert_eq!(names, ["waybillfixturep".to_string()].into_iter().collect());
+        let (entries, _) = run(records, &[]);
+        let emitted: BTreeSet<String> = entries.iter().map(|e| e.name.to_lowercase()).collect();
+        let stop: BTreeSet<String> = ["amd".to_string()].into_iter().collect();
+        assert_eq!(names, emitted.difference(&stop).cloned().collect());
     }
 }

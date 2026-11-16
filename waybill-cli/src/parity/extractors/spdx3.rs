@@ -827,6 +827,8 @@ spdx3_anno!(c224_spdx3, "waybill:pkg-config-private-requires", component);
 spdx3_anno!(c225_spdx3, "waybill:installed-library-coverage", document);
 // Spec 1533 (#1564): C226.
 spdx3_anno!(c226_spdx3, "waybill:test-scope-coverage", document);
+// Spec 1534 (#1532): C227.
+spdx3_anno!(c227_spdx3, "waybill:embedded-path-binaries", component);
 spdx3_anno!(c42_spdx3, "waybill:lifecycle-scope", component);
 spdx3_anno!(c194_spdx3_raw, "waybill:derivation", document);
 spdx3_anno!(c195_spdx3, "waybill:go-mod-why", document);

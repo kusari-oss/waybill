@@ -51,7 +51,7 @@ This extends the document-scope C225 record:
 | `no-versioned-match` | those whose compiled-source paths name no versioned package |
 
 **Presence:**
-- The object is present only when `read` > 0.
+- The object is present only when `with-paths` > 0. A scan whose binaries carry no source path keeps C225 byte-identical (FR-008); the implementation's control test found that `read` > 0 did not.
 - Absent the object, C225 is byte-identical to today's.
 - A scan with no versioned installed-library components emits no C225, as today.
 
