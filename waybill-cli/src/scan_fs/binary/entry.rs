@@ -21,6 +21,47 @@ use super::symbol_fingerprint;
 use super::version_strings;
 use super::super::package_db::{rpm_vendor_from_id, PackageDbEntry};
 
+/// Spec 1534 (#1532, US2): a bundled third-party tree a binary's embedded
+/// source paths name (`third_party/<name>/`, `_deps/<name>-src/`, …). A
+/// component with no version, nested under the binary that names it, with
+/// the same shape as the other identities read from a binary's contents.
+pub(super) fn bundled_tree_to_entry(name: &str, path: &Path, parent_purl: &str) -> Option<PackageDbEntry> {
+    let purl = Purl::new(&format!("pkg:generic/{}", waybill_common::types::purl::encode_purl_segment(name))).ok()?;
+    Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
+        depends_ecosystem: None,
+        build_inclusion: None,
+        purl,
+        name: name.to_string(),
+        version: String::new(),
+        arch: None,
+        source_path: path.to_string_lossy().into_owned(),
+        depends: Vec::new(),
+        maintainer: None,
+        licenses: vec![],
+        lifecycle_scope: None,
+        requirement_ranges: Vec::new(),
+        source_type: None,
+        sbom_tier: Some("analyzed".to_string()),
+        shade_relocation: None,
+        buildinfo_status: None,
+        evidence_kind: Some("embedded-source-path".to_string()),
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: Some("heuristic".to_string()),
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: Some(parent_purl.to_string()),
+        npm_role: None,
+        co_owned_by: None,
+        hashes: Vec::new(),
+        extra_annotations: Default::default(),
+        binary_role: None,
+    })
+}
+
 /// Convert a symbol-fingerprint match into a `PackageDbEntry`. Milestone
 /// 096 FR-004 / US3. PURL has no `@<version>` segment — symbol presence
 /// alone can't pin a release. Confidence is intentionally lower than

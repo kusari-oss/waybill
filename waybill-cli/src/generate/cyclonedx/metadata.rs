@@ -209,6 +209,8 @@ pub struct MetadataExtras<'a> {
     pub installed_library_coverage: Option<&'a str>,
     /// C226 (spec 1533) — the test-scope coverage record.
     pub test_scope_coverage: Option<&'a str>,
+    /// C228 (spec 1534) — bundled trees named by binaries' embedded paths.
+    pub bundled_source_trees: Option<&'a str>,
     /// C208 (m1366, #1365) — the closure ecosystem identity pass's record.
     pub closure_ecosystem_identity: Option<&'a str>,
     /// C209 (m1367, #1371) — the CPE synthesis coverage record.
@@ -306,6 +308,7 @@ pub fn build_metadata(
         binary_test_inputs_skipped,
         installed_library_coverage,
         test_scope_coverage,
+        bundled_source_trees,
         closure_ecosystem_identity,
         cpe_coverage,
         closure_graph_admission,
@@ -543,6 +546,10 @@ pub fn build_metadata(
     // component was test-scoped.
     if let Some(record) = test_scope_coverage {
         properties.push(json!({ "name": crate::scan_fs::test_scope::ANN_TEST_SCOPE_COVERAGE, "value": record }));
+    }
+    // C228 (spec 1534): present only when a binary named a bundled tree.
+    if let Some(record) = bundled_source_trees {
+        properties.push(json!({ "name": crate::scan_fs::binary::embedded_paths::ANN_BUNDLED_SOURCE_TREES, "value": record }));
     }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran,

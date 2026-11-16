@@ -1057,6 +1057,8 @@ cdx_anno!(c225_cdx, "waybill:installed-library-coverage", document);
 cdx_anno!(c226_cdx, "waybill:test-scope-coverage", document);
 // Spec 1534 (#1532): C227 — evidence files attributed through embedded paths.
 cdx_anno!(c227_cdx, "waybill:embedded-path-binaries", component);
+// Spec 1534 (#1532): C228 — bundled trees named by embedded paths, document scope.
+cdx_anno!(c228_cdx, "waybill:bundled-source-trees", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

@@ -186,6 +186,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_binary_test_inputs_skipped(scan.binary_test_inputs_skipped)
             .with_installed_library_coverage(scan.installed_library_coverage.map(str::to_string))
             .with_test_scope_coverage(scan.test_scope_coverage.map(str::to_string))
+            .with_bundled_source_trees(scan.bundled_source_trees.map(str::to_string))
             .with_closure_ecosystem_identity(
                 scan.closure_ecosystem_identity.map(str::to_string),
             )

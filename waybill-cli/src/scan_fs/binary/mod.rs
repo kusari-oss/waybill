@@ -67,6 +67,8 @@ pub(crate) const BINARY_EVIDENCE_KINDS: &[&str] = &[
     "cargo-auditable",
     "dynamic-linkage",
     "elf-note-package",
+    // Spec 1534 (#1532): a bundled tree named by embedded source paths.
+    "embedded-source-path",
     "embedded-version-string",
     "jdk-runtime-collapsed",
     "python-stdlib-collapsed",
@@ -643,6 +645,12 @@ pub fn read(
             if !skip_secondary_evidence {
                 if let Some(ctx) = embedded.as_mut() {
                     let finding = embedded_paths::extract(&scan.string_region, ctx.names);
+                    // US2: each bundled tree, nested under this binary.
+                    for name in &finding.bundled {
+                        if let Some(entry) = entry::bundled_tree_to_entry(name, &path, &parent_bom_ref) {
+                            out.push(entry);
+                        }
+                    }
                     if finding.has_paths || !finding.bundled_excluded.is_empty() {
                         ctx.findings.insert(path.to_string_lossy().into_owned(), finding);
                     }

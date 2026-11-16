@@ -148,6 +148,9 @@ pub struct ScanResult {
     /// this is an installed tree, the OS claims). Applied in `scan_cmd` after
     /// file-tier emission.
     pub(crate) test_scope_inputs: test_scope::Inputs,
+    /// Spec 1534 (C228): the bundled-tree count, as its wire value. `None`
+    /// when no binary named a bundled tree.
+    pub bundled_source_trees: Option<String>,
     /// Milestone 161 (T012): workspace-mode detection outcome from
     /// `go.work` at scanned root. Distinct from
     /// `go_transitive_coverage` and `go_graph_completeness` per
@@ -423,6 +426,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut git_submodule_coverage: Option<String> = None;
     let mut installed_library_coverage: Option<String> = None;
     let mut test_scope_inputs = test_scope::Inputs::default();
+    let mut bundled_source_trees: Option<String> = None;
     // Milestone 161 (T012): doc-scope go-workspace-mode signal.
     // Distinct from `go_transitive_coverage` per research.md R1.
     // Carried through ScanResult into the format emitters for the
@@ -597,6 +601,17 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             skip_test_inputs.then_some(&mut binary_test_inputs_skipped),
             Some(binary::embedded_paths::EmbeddedPathsCtx { names: &embedded_names, findings: &mut embedded_findings }),
         ));
+        // Spec 1534 FR-006: C228, from the findings the binary scan reported.
+        {
+            let binaries = embedded_findings.values().filter(|f| !f.bundled.is_empty()).count();
+            let components: usize = embedded_findings.values().map(|f| f.bundled.len()).sum();
+            let excluded: usize = embedded_findings.values().map(|f| f.bundled_excluded.len()).sum();
+            if binaries > 0 || excluded > 0 {
+                bundled_source_trees = Some(
+                    serde_json::json!({ "binaries": binaries, "components": components, "excluded": excluded }).to_string(),
+                );
+            }
+        }
         if !binary_test_inputs_skipped.is_empty() {
             tracing::info!(
                 skipped = binary_test_inputs_skipped.len(),
@@ -1586,6 +1601,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         git_submodule_coverage,
         installed_library_coverage,
         test_scope_inputs,
+        bundled_source_trees,
         go_workspace_mode,
         go_toolchains_detected,
         cross_ecosystem_edges_report,

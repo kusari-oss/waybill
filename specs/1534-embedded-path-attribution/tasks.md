@@ -10,7 +10,7 @@
 
 ## Phase 2: Foundational (blocks both stories)
 
-- [ ] T003 Write the unit tests first, in a new `waybill-cli/src/scan_fs/binary/embedded_paths.rs`. Each test feeds a NUL-separated byte region into `extract(region, &names) -> EmbeddedPathFinding`. Cover:
+- [x] T003 Write the unit tests first, in a new `waybill-cli/src/scan_fs/binary/embedded_paths.rs`. Each test feeds a NUL-separated byte region into `extract(region, &names) -> EmbeddedPathFinding`. Cover:
   - compiled vs header extensions;
   - the toolchain prefixes `/usr/`, `/builddir/`, `/opt/`;
   - each vendoring marker (`third_party`, `third-party`, `thirdparty`, `3rdparty`, `external`, `extern`, `vendor`) and `_deps/<name>-src`;
@@ -22,19 +22,19 @@
   - `has_paths` and `toolchain_only`.
 
   Use only synthetic `waybill-fixture-*` names.
-- [ ] T004 Implement `embedded_paths.rs`:
+- [x] T004 Implement `embedded_paths.rs`:
   - `EmbeddedPathFinding { packages: BTreeSet<String>, header_only: bool, bundled: BTreeSet<String>, has_paths: bool, toolchain_only: bool }`;
   - `STOPLIST = ["amd"]` and `BUNDLED_EXCLUSIONS = ["sysdeps"]`, each with a comment citing research R2/R4;
   - a byte-level scanner (split on NUL, then walk path components), with no regex.
 
   Make T003 pass.
-- [ ] T005 Add `pub(crate) fn versioned_names(phase1: &Phase1, scan_root: &Path, claims: &OsClaims<'_>) -> BTreeSet<String>` to `waybill-cli/src/scan_fs/package_db/installed_lib/resolve.rs`. It returns the lowercased names of records with a recognised prefix, an `Ok` version and no OS owner, minus the stoplist. Unit-test that it equals the set of names phase 2 emits for a mixed fixture.
-- [ ] T006 Run the extraction in `waybill-cli/src/scan_fs/binary/scan.rs::scan_binary`:
+- [x] T005 Add `pub(crate) fn versioned_names(phase1: &Phase1, scan_root: &Path, claims: &OsClaims<'_>) -> BTreeSet<String>` to `waybill-cli/src/scan_fs/package_db/installed_lib/resolve.rs`. It returns the lowercased names of records with a recognised prefix, an `Ok` version and no OS owner, minus the stoplist. Unit-test that it equals the set of names phase 2 emits for a mixed fixture.
+- [x] T006 Run the extraction in `waybill-cli/src/scan_fs/binary/scan.rs::scan_binary`:
   - call `embedded_paths::extract` on the existing `string_region`, always, with the (possibly empty) names set;
   - carry the finding on `BinaryScan`.
 
   Then, in `waybill-cli/src/scan_fs/binary/mod.rs`, thread an optional `(&BTreeSet<String>, &mut BTreeMap<String, EmbeddedPathFinding>)` through `read()`, keyed by the binary file component's `source_path`. Follow the #1524 `test_inputs` out-parameter. Update every caller of `read()`.
-- [ ] T007 In `waybill-cli/src/scan_fs/mod.rs`:
+- [x] T007 In `waybill-cli/src/scan_fs/mod.rs`:
   - compute `versioned_names` before `binary::read` (beside the #1564 recognition);
   - pass names and a findings map into `binary::read`;
   - pass the findings into `installed_lib::resolve::resolve`.
@@ -48,7 +48,7 @@
 **Goal:** a binary whose compiled-source paths name versioned package(s) joins their evidence.
 **Independent test:** spec US1. Synthetic `waybill-fixture-p` and `waybill-fixture-q`, with five binaries.
 
-- [ ] T008 [US1] Write the integration tests first, in a new `waybill-cli/tests/installed_lib_embedded_paths.rs`. Use `common::installed_lib` helpers (`write`, `elf_shared_lib`, `scan`, `component`, `source_files`, `row_all_formats`, `coverage`). Test US1 scenarios 1–6, each in CycloneDX, SPDX 2.3 and SPDX 3:
+- [x] T008 [US1] Write the integration tests first, in a new `waybill-cli/tests/installed_lib_embedded_paths.rs`. Use `common::installed_lib` helpers (`write`, `elf_shared_lib`, `scan`, `component`, `source_files`, `row_all_formats`, `coverage`). Test US1 scenarios 1–6, each in CycloneDX, SPDX 2.3 and SPDX 3:
   - one package;
   - shared, with `shared-with` in C227;
   - header-only, not attributed;
@@ -60,14 +60,14 @@
   - the control: the same binaries without paths, nothing attributed and C225 byte-identical;
   - an OS-owned binary, not read;
   - the exact C225 `embedded-paths` object.
-- [ ] T009 [US1] Implement attribution in `waybill-cli/src/scan_fs/package_db/installed_lib/resolve.rs`:
+- [x] T009 [US1] Implement attribution in `waybill-cli/src/scan_fs/package_db/installed_lib/resolve.rs`:
   - skip binaries whose path is already in any live record's evidence (#1531 name match, #1563 exported targets);
   - for each name in `packages`, find the live record (CMake version record first, then a same-name `.pc`) and push the binary's absolute path to its evidence;
   - build C227 per record (sorted `{"path"}` / `{"path","shared-with"}`) into `extra_annotations` under `waybill:embedded-path-binaries`;
   - count `ExportedTargetsCoverage`-style into a new `EmbeddedPathsCoverage`, serialised as C225's `embedded-paths` object only when `read` > 0.
 
   Make T008 pass.
-- [ ] T010 [US1] Add C227's parity extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs` (`component` scope, `SymmetricEqual`). In the same change, add the C227 row to `docs/reference/sbom-format-mapping.md` and extend C225's row text with `embedded-paths`. The lib-target gate requires the row and its extractor together.
+- [x] T010 [US1] Add C227's parity extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs` (`component` scope, `SymmetricEqual`). In the same change, add the C227 row to `docs/reference/sbom-format-mapping.md` and extend C225's row text with `embedded-paths`. The lib-target gate requires the row and its extractor together.
 
 **Checkpoint:** US1 is complete and shippable.
 
@@ -76,12 +76,12 @@
 **Goal:** each bundled tree a binary names becomes a versionless component nested under that binary.
 **Independent test:** spec US2. A synthetic binary naming `third_party/waybill-fixture-fmt/` and `third_party/sysdeps/`.
 
-- [ ] T011 [US2] Write the integration tests first, in `waybill-cli/tests/installed_lib_embedded_paths.rs`, for US2 scenarios 1–3:
+- [x] T011 [US2] Write the integration tests first, in `waybill-cli/tests/installed_lib_embedded_paths.rs`, for US2 scenarios 1–3:
   - `waybill-fixture-fmt` is nested, with no version, `waybill:evidence-kind: embedded-source-path`, CycloneDX nesting, and SPDX 2.3/3 `CONTAINS`/`contains`;
   - `sysdeps` gives nothing;
   - two binaries naming the same tree give two components, one under each;
   - C228 `waybill:bundled-source-trees` counts them, including in a tree with no installed-library components (no C225).
-- [ ] T012 [US2] Implement bundled components:
+- [x] T012 [US2] Implement bundled components:
   - in `waybill-cli/src/scan_fs/binary/entry.rs`, add a constructor in the symbol-fingerprint entry's shape (tier `analyzed`, confidence `heuristic`, version absent, `parent_purl` = the binary file component's PURL, `source_path` = the binary);
   - emit them from `binary::read` for each finding's `bundled`;
   - register `embedded-source-path` in `BINARY_EVIDENCE_KINDS` in `waybill-cli/src/scan_fs/binary/mod.rs`, and add the value to the evidence-kind row in `docs/reference/sbom-format-mapping.md`;

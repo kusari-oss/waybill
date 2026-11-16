@@ -718,6 +718,10 @@ fn push_document_fields(
     if let Some(record) = scan.test_scope_coverage {
         push(out, crate::scan_fs::test_scope::ANN_TEST_SCOPE_COVERAGE, json!(record));
     }
+    // C228 (spec 1534).
+    if let Some(record) = scan.bundled_source_trees {
+        push(out, crate::scan_fs::binary::embedded_paths::ANN_BUNDLED_SOURCE_TREES, json!(record));
+    }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran.
     if let Some(g) = scan.go_mod_why {

@@ -131,3 +131,46 @@ fn an_os_owned_binary_is_not_attributed() {
     assert!(!source_files(p).iter().any(|f| f.ends_with("libowned.so")));
     assert_eq!(c227(p), Value::Null);
 }
+
+/// US2 scenarios 1-3 and C228. No installed-library component exists here:
+/// bundled detection runs on every binary scan (analysis I1).
+#[test]
+fn us2_bundled_trees_are_nested_versionless_components() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path().join("src");
+    binary(&root, "out/lib/libbundle.so", &["/w/app/third_party/waybill-fixture-fmt/src/format.cc", "/w/app/third_party/sysdeps/zlib/inflate.c"]);
+    binary(&root, "out/lib/libbundle2.so", &["/w/app2/_deps/waybill-fixture-fmt-src/f.cc"]);
+    let docs = scan(&root);
+
+    // CycloneDX: one versionless `waybill-fixture-fmt` nested under each binary.
+    for bin in ["libbundle.so", "libbundle2.so"] {
+        let b = components(&docs.cdx).into_iter().find(|c| c["name"] == bin).unwrap_or_else(|| panic!("{bin}"));
+        let kids: Vec<&Value> = b["components"].as_array().into_iter().flatten().collect();
+        let fmt: Vec<&&Value> = kids.iter().filter(|c| c["name"] == "waybill-fixture-fmt").collect();
+        assert_eq!(fmt.len(), 1, "{bin}: {kids:?}");
+        assert!(fmt[0].get("version").is_none() || fmt[0]["version"] == "", "{:?}", fmt[0]);
+        assert_eq!(prop(fmt[0], "waybill:evidence-kind"), Some("embedded-source-path"));
+    }
+    assert!(!components(&docs.cdx).iter().any(|c| c["name"] == "sysdeps"), "an excluded name is not a component");
+
+    // SPDX 2.3: each bundled package is contained by its binary.
+    let spdx = &docs.spdx23;
+    let name_of = |id: &str| spdx["packages"].as_array().unwrap().iter().find(|p| p["SPDXID"] == id).map(|p| p["name"].as_str().unwrap().to_string());
+    let contains: Vec<(String, String)> = spdx["relationships"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|r| r["relationshipType"] == "CONTAINS")
+        .filter_map(|r| Some((name_of(r["spdxElementId"].as_str()?)?, name_of(r["relatedSpdxElement"].as_str()?)?)))
+        .filter(|(_, to)| to == "waybill-fixture-fmt")
+        .collect();
+    assert_eq!(contains.len(), 2, "{contains:?}");
+    assert!(contains.iter().all(|(from, _)| from.starts_with("libbundle")));
+
+    assert_eq!(
+        doc_field_all_formats(&docs, "waybill:bundled-source-trees").expect("C228"),
+        serde_json::json!({"binaries": 2, "components": 2, "excluded": 1})
+    );
+    // No installed-library component, so no C225.
+    assert!(doc_field_all_formats(&docs, "waybill:installed-library-coverage").is_none());
+}

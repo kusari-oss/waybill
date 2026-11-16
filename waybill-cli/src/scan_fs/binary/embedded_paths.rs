@@ -22,6 +22,9 @@ use std::collections::BTreeSet;
 /// directories). Grows only with a measurement.
 pub(crate) const STOPLIST: &[&str] = &["amd"];
 
+/// C228: the document-scope count of bundled trees (spec 1534 FR-006).
+pub(crate) const ANN_BUNDLED_SOURCE_TREES: &str = "waybill:bundled-source-trees";
+
 /// Vendoring directory names that are not projects (research R4: TheRock's
 /// own `third_party/sysdeps/`). Grows only with a measurement.
 pub(crate) const BUNDLED_EXCLUSIONS: &[&str] = &["sysdeps"];
