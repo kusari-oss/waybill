@@ -95,9 +95,9 @@
 **Goal**: declared edges from the owning project (research R3–R5).
 **Independent test**: C-2, C-3, C-5, C-7 and C-8 pass in all three formats, with I-1 to I-4.
 
-- [ ] T011 [P] [US1] In `waybill-cli/src/scan_fs/package_db/git_submodule/mod.rs`, return the `purl_of_dir` map with the reader's output. In `waybill-cli/src/scan_fs/package_db/mod.rs`, carry it as `diagnostics.git_submodule_dirs: BTreeMap<PathBuf, String>`, next to `git_submodule_coverage`. No wire change. Unit test: the reader's map holds the submodule's canonical directory.
-- [ ] T012 [P] [US1] In `waybill-cli/src/scan_fs/package_db/pip/mod.rs`, change `merge_without_override` (`:572`): on a duplicate PURL, append the addition's `source_path` to the kept entry's `extra_source_paths` if absent (research R5). Unit test: two requirements files pinning the same package give one entry carrying both paths.
-- [ ] T013 [US1] Create `waybill-cli/src/scan_fs/declared_attach.rs`:
+- [X] T011 [P] [US1] In `waybill-cli/src/scan_fs/package_db/git_submodule/mod.rs`, return the `purl_of_dir` map with the reader's output. In `waybill-cli/src/scan_fs/package_db/mod.rs`, carry it as `diagnostics.git_submodule_dirs: BTreeMap<PathBuf, String>`, next to `git_submodule_coverage`. No wire change. Unit test: the reader's map holds the submodule's canonical directory.
+- [X] T012 [P] [US1] In `waybill-cli/src/scan_fs/package_db/pip/mod.rs`, change `merge_without_override` (`:572`): on a duplicate PURL, append the addition's `source_path` to the kept entry's `extra_source_paths` if absent (research R5). Unit test: two requirements files pinning the same package give one entry carrying both paths.
+- [X] T013 [US1] Create `waybill-cli/src/scan_fs/declared_attach.rs`:
   - `OwnerIndex::build(components, submodule_dirs, scan_root)`, with V1 precedence: `pkg:pypi` main module, then other main modules with the lowest PURL first, then a submodule. The scan root is excluded.
   - `attach(components, relationships, owner_index, scan_root) -> DeclaredAttachment`, following data-model V2–V4: one candidate per declaring file; an ancestor walk up to the scan root; no self-edge or duplicate edge; `pkg:pypi` only; basename `requirements*.txt`.
 
@@ -109,16 +109,23 @@
   - a nested file under a submodule's `pyproject.toml` goes to the main module;
   - a CMake-only directory is skipped (R3);
   - a cget `requirements.txt` produces nothing.
-- [ ] T014 [US1] In `waybill-cli/src/scan_fs/mod.rs`, run `declared_attach::attach` after component resolution and **before** `apply_lifecycle_scope_to_edges`. Append its edges to the relationships, and set `ScanResult.declared_root_anchors`. Plumb `git_submodule_dirs` from the DB scan.
-- [ ] T015 [US1] In `waybill-cli/src/cli/scan_cmd.rs` (`:4462–4490`), extend the reader-anchor set with `scan.declared_root_anchors`. Install the guard whenever either set is non-empty, so the default path stays byte-identical.
-- [ ] T016 [US1] Run `waybill-cli/tests/declared_requirements.rs`. C-1 to C-13 must pass with I-1, I-2 and I-4. C-8 must show development scope in all three formats. Run the gate. Commit and push.
+- [X] T014 [US1] In `waybill-cli/src/scan_fs/mod.rs`, run `declared_attach::attach` after component resolution and **before** `apply_lifecycle_scope_to_edges`. Append its edges to the relationships, and set `ScanResult.declared_root_anchors`. Plumb `git_submodule_dirs` from the DB scan.
+- [X] T015 [US1] In `waybill-cli/src/cli/scan_cmd.rs` (`:4462–4490`), extend the reader-anchor set with `scan.declared_root_anchors`. Install the guard whenever either set is non-empty, so the default path stays byte-identical.
+- [X] T016 [US1] Run `waybill-cli/tests/declared_requirements.rs`. C-1 to C-13 must pass with I-1, I-2 and I-4. C-8 must show development scope in all three formats. Run the gate. Commit and push.
+
+  **Done (T011–T016).** C-1 to C-13 pass in all three formats, with I-1, I-2 and I-4. The gate passed at `16959878`: `GATE_RESULT=pass`, 408 `test result: ok.` lines, 0 failed.
+
+  **Two implementation findings, both recorded in code comments:**
+  - **Main-module source paths are directories.** At the scan stage, a main module's first source path is its project *directory*, as `path+file://<abs dir>` (npm, pip), not a manifest file. `OwnerIndex` derives it with `workspace_root::derive_workspace_root`, the function behind the `waybill:workspace-member` annotation, rather than a new parser.
+  - **C-3's verdict is `partial` for an existing reason.** It is `transitive-edges-unresolvable: pypi`, because `c` is declared without a lockfile. It is not an orphan; the contract was corrected.
 
 ## Phase 4: User Story 3 — what stays unreachable says why (P2)
 
 **Goal**: FR-008's population is empty by construction (research R7), and that is enforced.
 **Independent test**: I-3 holds on every fixture and on every corpus document.
 
-- [ ] T017 [US3] Add an I-3 helper to `waybill-cli/tests/declared_requirements.rs`, and assert it in every C-case: no component whose C18 `waybill:source-files` includes a `requirements*.txt` path is unreachable from the seed set. Add a negative control that switches attachment off through a test-only path. It must make I-3 fail, which proves the check can fire.
+- [X] T017 [US3] Add an I-3 helper to `waybill-cli/tests/declared_requirements.rs`, and assert it in every C-case: no component whose C18 `waybill:source-files` includes a `requirements*.txt` path is unreachable from the seed set. Add a negative control that switches attachment off through a test-only path. It must make I-3 fail, which proves the check can fire.
+  **Done.** No test-only switch in production code is needed. I-3 checks reachability from the root alone, which is stricter than the seed set, so it needs no classifier model. The negative control (`i3_detects_a_stranded_requirements_package`) removes the root's edge from a correct document and asserts that the check reports the package.
 - [ ] T018 [US3] Regenerate the corpus goldens in CI again (as T010). Explain every change against the T010 goldens by R9 cases 1, 2 and 4. Run `root_targets.py` (I-1) again and check I-3 on every regenerated CycloneDX document. The I-2 corpus check follows in T021. Record the results under "Step 2: declared attachment" in `measurements/golden-review.md`, and commit the goldens.
 
 ## Phase 5: User Story 4 — a super-project with its submodules checked out (P2)

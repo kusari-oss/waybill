@@ -186,6 +186,51 @@ fn verdict_spdx(doc: &Value) -> Option<String> {
     })
 }
 
+/// I-3 (FR-008, research R7): every component a `requirements*.txt`
+/// declares is reachable from the root over CycloneDX `dependencies`.
+/// Reachability from the root alone is stricter than from the verdict's
+/// seed set, so this needs no model of the classifier. Returns the
+/// unreachable ones.
+fn unreachable_declared(cdx: &Value) -> Vec<String> {
+    let root = cdx["metadata"]["component"]["bom-ref"].as_str().unwrap().to_string();
+    let mut adj: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    for d in cdx["dependencies"].as_array().into_iter().flatten() {
+        let from = d["ref"].as_str().unwrap_or("").to_string();
+        adj.entry(from)
+            .or_default()
+            .extend(d["dependsOn"].as_array().into_iter().flatten().filter_map(|t| t.as_str().map(str::to_string)));
+    }
+    let mut seen: BTreeSet<String> = BTreeSet::from([root.clone()]);
+    let mut stack = vec![root];
+    while let Some(n) = stack.pop() {
+        for t in adj.get(&n).into_iter().flatten() {
+            if seen.insert(t.clone()) {
+                stack.push(t.clone());
+            }
+        }
+    }
+    cdx_components(cdx)
+        .into_iter()
+        .filter(|c| {
+            prop(c, "waybill:source-files")
+                .and_then(|v| serde_json::from_str::<Vec<String>>(v).ok())
+                .is_some_and(|files| {
+                    files.iter().any(|f| {
+                        let name = f.rsplit('/').next().unwrap_or(f);
+                        name.starts_with("requirements") && name.ends_with(".txt")
+                    })
+                })
+        })
+        .filter(|c| !seen.contains(c["bom-ref"].as_str().unwrap_or("")))
+        .filter_map(|c| c["purl"].as_str().map(strip))
+        .collect()
+}
+
+fn assert_declared_reachable(docs: &Docs) {
+    let missing = unreachable_declared(&docs.cdx);
+    assert!(missing.is_empty(), "I-3: requirements-declared components unreachable from the root: {missing:?}");
+}
+
 /// I-2 (FR-007): the verdict is the contract's expected value, in every
 /// format. The classifier's seed set is never recomputed here (contract I-2).
 fn assert_verdict(docs: &Docs, want: &str) {
@@ -272,6 +317,7 @@ fn c1_requirements_only() {
     commit_all(&fx, "app");
     let docs = scan(&fx, &fx.path("app"), &[]);
     assert_eq!(root_targets(&docs), set(&[A, B]));
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -284,6 +330,7 @@ fn c4_nested_requirements_without_a_project() {
     commit_all(&fx, "app");
     let docs = scan(&fx, &fx.path("app"), &[]);
     assert_eq!(root_targets(&docs), set(&[A, B, "pkg:pypi/waybill-fixture-t@9.0.0"]));
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -302,6 +349,7 @@ fn c9_os_packages_with_a_placeholder_root() {
     let targets = root_targets(&docs);
     assert_eq!(targets.len(), 2, "both OS packages attach to the placeholder root: {targets:?}");
     assert!(targets.iter().all(|t| t.starts_with("pkg:deb/")), "{targets:?}");
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -321,6 +369,7 @@ fn c2_requirements_and_a_submodule() {
     let docs = scan(&fx, &fx.path("app"), &[]);
     let dep = the_purl(&docs, "pkg:generic/dep@");
     assert_eq!(root_targets(&docs), set(&[A, B, dep.as_str()]));
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -341,6 +390,7 @@ fn c3_requirements_next_to_a_pyproject() {
     assert_eq!(root_targets(&docs), set(&[A, B, "pkg:pypi/waybill-fixture-c@unresolved"]));
     // `partial` for an existing reason: `c` is declared by the pyproject
     // without a lockfile, so its version is unresolved. Not an orphan.
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "partial");
     let reason = prop(&docs.cdx["metadata"], "waybill:graph-completeness-reason").unwrap_or("");
     assert!(reason.starts_with("transitive-edges-unresolvable"), "{reason}");
@@ -365,6 +415,7 @@ fn c5_nested_requirements_owned_by_another_ecosystems_project() {
     assert_eq!(docs.cdx["metadata"]["component"]["purl"], APP);
     assert_eq!(package_targets(&docs), set(&[A, B, TOOLS_PKG]));
     assert_eq!(depends_of(&docs.cdx, TOOLS_PKG), set(&["pkg:pypi/waybill-fixture-t@9.0.0"]));
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -392,6 +443,7 @@ fn c6_requirements_inside_a_submodules_python_project() {
     assert!(targets.contains(&x) && targets.contains(A) && targets.contains(B), "{targets:?}");
     assert!(!targets.contains("pkg:pypi/waybill-fixture-r@6.0.0"), "r is the submodule project's, not the root's: {targets:?}");
     assert_eq!(depends_of(&docs.cdx, "pkg:pypi/waybill-fixture-xpy@"), set(&["pkg:pypi/waybill-fixture-r@6.0.0"]));
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -413,6 +465,7 @@ fn c7_one_package_declared_by_two_projects() {
     let a = cdx_components(&docs.cdx).into_iter().find(|c| c["purl"] == A).unwrap();
     let files: Vec<String> = serde_json::from_str(prop(a, "waybill:source-files").unwrap()).unwrap();
     assert_eq!(files, vec!["requirements.txt".to_string(), "tools/requirements.txt".to_string()]);
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -447,6 +500,7 @@ fn c8_dev_requirements_keep_their_optional_scope() {
     );
     let d_cdx = cdx_components(&docs.cdx).into_iter().find(|c| c["purl"] == d).unwrap();
     assert_eq!(d_cdx["scope"], "excluded", "CycloneDX keeps the optional scope as `excluded`");
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -470,6 +524,7 @@ fn c10_requirements_and_a_supplement_anchor() {
     .unwrap();
     let docs = scan(&fx, &fx.path("app"), &["--supplement-cdx", supp.to_str().unwrap()]);
     assert_eq!(root_targets(&docs), set(&[A, B, "pkg:generic/waybill-fixture-s@1.0.0"]));
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -484,6 +539,7 @@ fn c11_vendored_requirements_are_not_read() {
     let docs = scan(&fx, &fx.path("app"), &[]);
     assert_eq!(root_targets(&docs), set(&[A, B]));
     assert!(cdx_components(&docs.cdx).iter().all(|c| c["purl"] != "pkg:pypi/waybill-fixture-v@4.0.0"));
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -498,6 +554,7 @@ fn c12_constraints_named_file_is_a_declaration() {
     commit_all(&fx, "app");
     let docs = scan(&fx, &fx.path("app"), &[]);
     assert_eq!(root_targets(&docs), set(&[A, B, "pkg:pypi/waybill-fixture-k@5.0.0"]));
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
 
@@ -536,5 +593,30 @@ fn c13_submodule_also_declared_by_fetchcontent() {
         .filter(|t| t.as_str().is_some_and(|t| cdx_purl_of(&docs.cdx, t) == mixed))
         .collect();
     assert_eq!(edges.len(), 1, "one root edge to the merged component");
+    assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
+}
+
+/// T017 negative control: I-3 can fire. Remove the root's edge to a
+/// requirements package from a correct document; the check must report it.
+#[test]
+fn i3_detects_a_stranded_requirements_package() {
+    let fx = GitFixture::new();
+    fx.repo("app");
+    fx.write("app/requirements.txt", REQ_AB);
+    commit_all(&fx, "app");
+    let mut docs = scan(&fx, &fx.path("app"), &[]);
+    assert!(unreachable_declared(&docs.cdx).is_empty(), "control: the real document passes");
+    let a_ref = cdx_components(&docs.cdx)
+        .into_iter()
+        .find(|c| c["purl"] == A)
+        .and_then(|c| c["bom-ref"].as_str())
+        .unwrap()
+        .to_string();
+    for d in docs.cdx["dependencies"].as_array_mut().unwrap() {
+        if let Some(arr) = d["dependsOn"].as_array_mut() {
+            arr.retain(|t| t != a_ref.as_str());
+        }
+    }
+    assert_eq!(unreachable_declared(&docs.cdx), vec![A.to_string()]);
 }
