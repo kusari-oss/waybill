@@ -620,3 +620,42 @@ fn i3_detects_a_stranded_requirements_package() {
     }
     assert_eq!(unreachable_declared(&docs.cdx), vec![A.to_string()]);
 }
+
+/// C-8b (FR-010): an owner edge keeps the declaring file's scope too. The
+/// edge is typed by the lifecycle-scope pass, so the declared-requirements
+/// pass must run before it (data-model, plan T014). C-8's file is at the
+/// scan root, where the edge is a root anchor typed by the emitters, so it
+/// cannot tell the order apart; this case can.
+#[test]
+fn c8b_nested_dev_requirements_keep_their_scope_on_the_owner_edge() {
+    let fx = GitFixture::new();
+    fx.repo("app");
+    fx.write("app/requirements.txt", REQ_AB);
+    fx.write("app/tools/requirements-dev.txt", "waybill-fixture-d==7.0.0\n");
+    fx.write("app/tools/package.json", TOOLS_JSON);
+    fx.write("app/pyproject.toml", ROOT_PYPROJECT);
+    commit_all(&fx, "app");
+    let docs = scan(&fx, &fx.path("app"), &[]);
+    let d = "pkg:pypi/waybill-fixture-d@7.0.0";
+    assert_eq!(depends_of(&docs.cdx, TOOLS_PKG), set(&[d]));
+    let id_of = |name: &str| -> String {
+        docs.spdx23["packages"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|p| p["name"] == name)
+            .and_then(|p| p["SPDXID"].as_str())
+            .unwrap()
+            .to_string()
+    };
+    let (d_id, tools_id) = (id_of("waybill-fixture-d"), id_of("waybill-fixture-tools"));
+    let rels = docs.spdx23["relationships"].as_array().unwrap();
+    assert!(
+        rels.iter().any(|r| r["spdxElementId"] == d_id.as_str()
+            && r["relatedSpdxElement"] == tools_id.as_str()
+            && r["relationshipType"] == "OPTIONAL_DEPENDENCY_OF"),
+        "the owner edge is typed optional, not a plain DEPENDS_ON"
+    );
+    assert_declared_reachable(&docs);
+    assert_verdict(&docs, "complete");
+}
