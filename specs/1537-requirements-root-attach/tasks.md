@@ -133,7 +133,7 @@
 **Goal**: SC-006 on #1538's super-project, in CI only.
 **Independent test**: `measure-source.yml` at the branch.
 
-- [ ] T019 [US4] Run `measure-source.yml` (T003) with `base_ref=main` and `waybill_ref=1537-requirements-root-attach`. Record in `measurements/source.md`, against T003's baselines:
+- [X] T019 [US4] Run `measure-source.yml` (T003) with `base_ref=main` and `waybill_ref=1537-requirements-root-attach`. Record in `measurements/source.md`, against T003's baselines:
   - requirements-declared components unreachable without a reason, before and after, with and without submodules (target 0);
   - the root's direct-target counts in all three formats, and whether they are equal;
   - the completeness verdicts.
@@ -142,7 +142,7 @@
 
 ## Phase 6: Polish and cross-cutting
 
-- [ ] T020 [P] Run the SBOM quality corpus in CI at the branch (`quality-corpus.yml`, `-f branch=<branch>`). Explain every metric outside its range by the same R9 causes. Re-author those ranges in `xtask/corpus/quality-corpus.toml`, with dated comments citing the runs, as #1581 did. Record the results in `measurements/quality.md`.
+- [X] T020 [P] Run the SBOM quality corpus in CI at the branch (`quality-corpus.yml`, `-f branch=<branch>`). Explain every metric outside its range by the same R9 causes. Re-author those ranges in `xtask/corpus/quality-corpus.toml`, with dated comments citing the runs, as #1581 did. Record the results in `measurements/quality.md`.
 - [ ] T021 [P] Commit `specs/1537-requirements-root-attach/measurements/root_only.py`, run with `python3 -I -B` (research R11).
   - **What it does:** for each regenerated CycloneDX document from T018's artifact, compute reachability from `metadata.component` alone and list the documents marked `complete` with an unreachable component.
   - **Validation:** check it first against one target where both definitions must agree.
