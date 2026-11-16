@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -32,7 +32,5 @@
 ## Notes
 
 - **Domain terms are the subject, not implementation.** DWARF, `.comment`, build-id and vendoring directory conventions are the evidence the feature reads, as CMake files were in specs 1531–1533.
-- **Two clarifications are open:**
-  - the mapping rule: generic only, or also TheRock's manifest;
-  - how bundled third-party trees are reported.
+- **Clarified 2026-11-16:** generic mapping only, with no TheRock manifest. Bundled trees become versionless components nested under the binary, with a measured exclusion list.
 - **The measurements are committed.** `measurements/` holds the census script, its 708-file input list, its output (`census.json`, from run 43784750746) and the summariser.

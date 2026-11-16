@@ -49,14 +49,14 @@ The paths carry no versions. On this tree, a version can only come from a compon
 
 ### Session 2026-11-16
 
-- Q: How does a path become a component? → A: [NEEDS CLARIFICATION: Generic rule only, or also TheRock's manifest? (A) a path's source-root-relative directory names a versioned component already in the document, and only that one; this reaches 291 files, 1.349 GB, and is project-agnostic. (B) A plus TheRock's `therock_manifest.json` mapping submodule paths to pins, which would reach `llvm-project`, `rocgdb`, `rocprofiler-systems` and the other submodules without a versioned component, but is project-specific and is what #1541 (TheRock cataloger, installed artifacts) and the #1545 plugin interface are for.]
-- Q: Bundled third-party trees? → A: [NEEDS CLARIFICATION: Report each bundled tree a binary names (`fmt`, `abseil-cpp`, `pybind11`, …) as a component with no version, nested under the binary (the issue's original scope), or record the names on the binary only, or defer? A versionless component per bundled library is new inventory nothing else finds, but `packages`, `sysdeps` and `json` show that directory names are not always project names.]
+- Q: How does a path become a component? → A: (A) Generic only. A binary is attributed to a versioned component already in the document when its project paths name that component, and only that one. `therock_manifest.json` is not read; submodules without a versioned component are left to #1541.
+- Q: Bundled third-party trees? → A: (A) A component with no version for each bundled library a binary's paths name under a vendoring convention, nested under that binary. Directory names that are not projects (`packages`, `sysdeps` and the like) are excluded by a measured list.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A binary built from a known package's source is attributed to it (Priority: P1)
 
-A consumer scans an installed tree. A binary that no package metadata names carries embedded source paths, all of whose project directories name one versioned component already in the document. The binary is listed in that component's evidence, the way #1563 lists the files a package's exported targets name. The evidence kind is recorded.
+A consumer scans an installed tree. A binary that no package metadata names carries embedded source paths, all of whose project directories name one versioned component already in the document. The binary is listed in that component's evidence, the way #1563 lists the files a package's exported targets name. The evidence kind is recorded. The generic rule only: the build's own pin manifest is not read (clarified).
 
 **Why this priority**: It is the largest measured gain that invents nothing. On ROCm it covers 291 files, 1.349 GB, including the 0.353 GB MIOpen library. The version comes from the component, never from a path.
 
@@ -88,7 +88,8 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
 
 **Acceptance Scenarios**:
 
-1. **Given** a binary naming `third_party/<name>/`, `external/<name>/` or `_deps/<name>-src/`, **When** the tree is scanned, **Then** `<name>` is recorded for that binary, in the form the clarification chooses, with no version.
+1. **Given** a binary naming `third_party/<name>/`, `external/<name>/` or `_deps/<name>-src/`, **When** the tree is scanned, **Then** a component `<name>` with no version is nested under that binary, with the embedded path as its evidence.
+3. **Given** two binaries naming the same bundled tree, **When** the tree is scanned, **Then** each gets its own nested component. A bundled copy is not assumed to be the same build in both.
 2. **Given** a vendoring directory whose name is a known non-project (`packages`, `sysdeps`, `src`, `include`), **When** the tree is scanned, **Then** nothing is recorded for it.
 
 ---
@@ -111,10 +112,10 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
   - a project source path;
   - a vendored or fetched third-party tree (`third_party/<name>`, `third-party/<name>`, `external/<name>`, `3rdparty/<name>`, `_deps/<name>-src`);
   - a toolchain or system path, which is never a file's source.
-- **FR-003**: A binary MUST be attributed to a versioned component only when its project paths name that component, and only that one, under the rule the clarification chooses. The version MUST come from the component, never from a path.
+- **FR-003**: A binary MUST be attributed to a versioned component only when its project paths name that component, and only that one, by a directory of that component's name in the path. The version MUST come from the component, never from a path. No project-specific manifest is read.
 - **FR-004**: An attributed binary MUST be listed in the component's evidence, with its digest, the way #1563 lists exported-targets files. The evidence kind MUST distinguish embedded-path attribution from package metadata.
 - **FR-005**: A binary that package metadata already attributes (#1531/#1563), or that an OS package owns, MUST NOT be attributed by this feature.
-- **FR-006**: Bundled third-party trees MUST be handled as the clarification chooses. No version may be invented.
+- **FR-006**: Each bundled third-party tree a binary's paths name MUST be reported as a component with no version, nested under that binary, with the path as evidence. Directory names on a measured exclusion list MUST NOT become components. No version may be invented.
 - **FR-007**: The document MUST record, at document scope, how many binaries were read, carried paths, were attributed, named several packages, named only toolchain paths, or named a project with no versioned component.
 - **FR-008**: A scan in which no binary carries a usable path MUST be byte-identical to today's.
 - **FR-009**: The feature MUST add zero Cargo dependencies, no subprocess and no network access, and MUST use only synthetic `waybill-fixture-*` names in committed fixtures.
@@ -129,7 +130,8 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
 
 ### Measurable Outcomes
 
-- **SC-001**: On the ROCm fixture, the binaries attributed through embedded paths reconcile with the committed census for the chosen rule, by count and bytes. Under rule (A) that is 291 files and 1.349 GB, or fewer if the one-package rule excludes MIOpen's library.
+- **SC-001**: On the ROCm fixture, the binaries attributed through embedded paths reconcile with the committed census, by count and bytes: 291 files and 1.349 GB, or fewer if the one-package rule excludes MIOpen's library.
+- **SC-006**: On the ROCm fixture, every bundled-library component is a project name. The exclusion list and the components it removed are committed with the measurement.
 - **SC-002**: No binary is attributed to a component whose project its paths do not name. This is checked on ROCm by listing every attribution with the project directory that justified it.
 - **SC-003**: Across the public corpus, every golden that changes is explained by a rule in this spec.
 - **SC-004**: Scan time on the full ROCm tree is at most 1.25× the main-branch median, over one warm-up and three interleaved runs. Reading strings from 3 GB of binaries is the cost to bound.
@@ -139,6 +141,6 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
 
 - Measurements run only in CI, through the public fixture repository. The census script and its input list are committed with the spec.
 - Path classification uses only the paths themselves and the components already in the document. No source tree is read.
-- `therock_manifest.json` is not read unless the first clarification chooses (B).
+- `therock_manifest.json` is not read (clarified). Submodules without a versioned component are #1541's.
 - The 161 symlink-only binary components on ROCm are a separate observation: binary components keyed on a symlink path whose target is also scanned. They are counted here and not changed.
 - Binaries built from a `*-tests` project (`hip-tests`) are evidence for test scope, but changing #1564's rules is out of scope. A follow-up issue records the measurement.
