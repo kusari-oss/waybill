@@ -1508,10 +1508,12 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     package_db::nix::attach_inputs_to_projects(&components, &mut relationships);
 
     // Spec 1537 (#1566, #1538), research R3: a package a pip requirements
-    // file declares gets an edge from the project that declares it. Before
-    // the scope rewrite below, for the same reason as the flake inputs: it
-    // emits `DependsOn` and that pass types it from the package's scope, so
-    // a `requirements-dev.txt` edge comes out optional (FR-010). Packages
+    // file declares gets an edge from the project that declares it. It
+    // emits plain `DependsOn`; the scope rewrite below types it from the
+    // package's scope, so a `requirements-dev.txt` edge comes out optional
+    // (FR-010). `scan_cmd` re-runs that rewrite after scope propagation and
+    // types any edge still plain, so this order is conventional, not
+    // load-bearing (mutation M10, measurements/mutations.md). Packages
     // declared at the scan root are anchored to the root at the end of this
     // function, once dedup and reconciliation have settled their PURLs.
     {

@@ -24,8 +24,9 @@ M = {
  "M5": [("waybill-cli/src/generate/graph_completeness/mod.rs",
          "        let anchors = crate::supplement::current_root_anchors();\n        let targets = crate::generate::root_edges::root_targets(\n            components,",
          "        let anchors: Vec<String> = Vec::new();\n        let targets = crate::generate::root_edges::root_targets(\n            components,")],
- # M6: the scan root is not excluded from the owner index.
- "M6": [(DA, "            if dir.as_os_str().is_empty() {\n                return; // the scan root is FR-002's, not an owner\n            }\n", "")],
+ # M6 (FR-002): the owner walk reaches the scan root, so a root main module
+ # owns a requirements file beside it.
+ "M6": [(DA, "            .take_while(|d| !d.as_os_str().is_empty())", "            .take_while(|_| true)")],
  # M7: precedence reversed: a submodule outranks a main module.
  "M7": [(DA, "const RANK_SUBMODULE: u8 = 2;", "const RANK_SUBMODULE: u8 = 0;"),
         (DA, "const RANK_PYPI_MAIN_MODULE: u8 = 0;", "const RANK_PYPI_MAIN_MODULE: u8 = 3;"),

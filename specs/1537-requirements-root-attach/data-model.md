@@ -16,13 +16,13 @@ Maps each directory to the project that owns the files in it (research R3).
 
 **Precedence within one directory (V1):** a `pkg:pypi` main module, then any other main module with the lowest PURL first, then a submodule.
 
-**The scan root is excluded.** A requirements file at the scan root is a declared root anchor (FR-002).
+**The walk stops below the scan root.** The scan root's own project is never returned as an owner, so a requirements file at the scan root is a declared root anchor (FR-002), even beside a main module.
 
 ## DeclaredAttachment (new, the pass's output)
 
 | Field | Type | Meaning |
 |---|---|---|
-| `edges` | `Vec<Relationship>` | `owner → component`, of type `DependsOn`. Typed later by `apply_lifecycle_scope_to_edges` (FR-010). |
+| `edges` | `Vec<Relationship>` | `owner → component`, of type `DependsOn`. Typed by `apply_lifecycle_scope_to_edges` (FR-010). That pass runs in `scan_fs` and again in `scan_cmd` after scope propagation, so the edge is typed wherever the pass sits (mutation M10). |
 | `root_anchors` | `BTreeSet<String>` | PURLs declared at the scan root, or with no owner below it (FR-002, FR-003). |
 
 **Rules:**

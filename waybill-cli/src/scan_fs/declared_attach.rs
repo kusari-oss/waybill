@@ -88,10 +88,9 @@ impl OwnerIndex {
     ) -> Self {
         let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
         let mut best: BTreeMap<PathBuf, (u8, String)> = BTreeMap::new();
+        // The scan root's own project may be offered here; it is never
+        // returned, because `owner_of` stops below the scan root (FR-002).
         let mut offer = |dir: PathBuf, rank: u8, purl: &str| {
-            if dir.as_os_str().is_empty() {
-                return; // the scan root is FR-002's, not an owner
-            }
             let cand = (rank, purl.to_string());
             match best.get(&dir) {
                 Some(cur) if *cur <= cand => {}
@@ -122,7 +121,9 @@ impl OwnerIndex {
     }
 
     /// The nearest owner of a file, walking up from its directory to, but
-    /// not including, the scan root.
+    /// not including, the scan root. Stopping there is what makes a file at
+    /// the scan root the document subject's (FR-002), even when a main
+    /// module sits beside it.
     fn owner_of(&self, file: &Path) -> Option<&str> {
         let dir = file.parent()?;
         dir.ancestors()
