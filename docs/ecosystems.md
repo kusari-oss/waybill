@@ -1395,6 +1395,13 @@ of `node_modules/` as tertiary fallback. `package-lock.json` v1 is
 **refused** — its format doesn't give enough info for reproducible
 dependency graphs.
 
+A `pnpm-lock.yaml` written as a multi-document YAML stream (pnpm 12,
+observed at 12.18.0) is read too (#1582). pnpm's own package-manager
+document, whose importers hold only `configDependencies` and
+`packageManagerDependencies`, is set aside, and the project's document is
+read. pnpm itself is not emitted. A lockfile that does not parse, or holds
+no project document, logs a warning rather than falling back silently.
+
 **PURL format:**
 - Unscoped: `pkg:npm/<name>@<version>`.
 - Scoped: `pkg:npm/<@scope>/<name>@<version>` (e.g. `pkg:npm/@angular/core@17.0.0`).
