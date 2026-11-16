@@ -91,4 +91,14 @@ The local go-opentelemetry regen also differs in Go transitives, which come from
 
 ## Recorded, not changed
 
-A requirements file's scope comes from its file name: `-dev`, `-test`, `-docs` and `-ci` are optional. It does not come from its directory. So `test/units/requirements.txt` (ansible) and `docs/requirements.txt` (pytorch, haskell-language-server) are attached as required dependencies of their project. The same was true of the root edges at `502231ff`, and of the components' own scope at `main`. Inference, not measured: classifying by directory would change many goldens, and it belongs in its own issue.
+`classify_requirements_scope` (`pip/requirements_txt.rs`) reads a file's scope from two places:
+- its **immediate** parent directory: `docs`, `doc`, `documentation`, `test`, `tests`, `ci` or `.ci`;
+- failing that, its file name: `-dev`, `-test`, `-docs` or `-ci`.
+
+So `docs/requirements.txt` (pytorch, haskell-language-server) is optional, and its owner edges are typed optional.
+
+A deeper test layout is not. ansible's `test/units/requirements.txt` has the parent `units`, so it is classified as `Main`, and its six packages are required dependencies of `ansible-core`. The components already had that scope at `main`. This feature only gave them an edge.
+
+Classifying by any ancestor would change other documents. It is a separate issue, filed with this PR.
+
+*Correction:* an earlier draft of this section said scope ignores the directory. It reads the immediate parent.
