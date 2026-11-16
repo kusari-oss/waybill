@@ -411,9 +411,12 @@ fn c7_one_package_declared_by_two_projects() {
     assert_verdict(&docs, "complete");
 }
 
-/// C-8: a development requirements file keeps its scope on the new edge.
+/// C-8: a `requirements-dev.txt` keeps the scope the reader already gives
+/// it on the new edge. The pip reader classifies `-dev`, `-test`, `-docs`
+/// and `-ci` files as optional (`classify_requirements_scope`), so the edge
+/// is optional, not development (FR-010: keep, do not reinterpret).
 #[test]
-fn c8_dev_requirements_keep_development_scope() {
+fn c8_dev_requirements_keep_their_optional_scope() {
     let fx = GitFixture::new();
     fx.repo("dep");
     fx.repo("app");
@@ -434,9 +437,11 @@ fn c8_dev_requirements_keep_development_scope() {
         .and_then(|p| p["SPDXID"].as_str())
         .unwrap();
     assert!(
-        rels.iter().any(|r| r["spdxElementId"] == d_id && r["relationshipType"] == "DEV_DEPENDENCY_OF"),
-        "SPDX 2.3 spells the dev edge as DEV_DEPENDENCY_OF"
+        rels.iter().any(|r| r["spdxElementId"] == d_id && r["relationshipType"] == "OPTIONAL_DEPENDENCY_OF"),
+        "SPDX 2.3 spells the edge as OPTIONAL_DEPENDENCY_OF"
     );
+    let d_cdx = cdx_components(&docs.cdx).into_iter().find(|c| c["purl"] == d).unwrap();
+    assert_eq!(d_cdx["scope"], "excluded", "CycloneDX keeps the optional scope as `excluded`");
     assert_verdict(&docs, "complete");
 }
 

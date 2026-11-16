@@ -218,61 +218,24 @@ pub fn compute_graph_completeness(
             .retain(|e| e != "generic");
     }
 
-    // Step 3 — multi-source BFS. First build the base adjacency, then
-    // mirror the emitter's primary-dep-fallback: if `target_ref` has
-    // no outbound edges in the relationships, synthesize edges from
-    // it to every "graph-top" (component NOT depended-on by anything
-    // else). This matches how the emitters build the wire-format
-    // dep-graph and keeps BFS reachability aligned with what the
-    // consumer sees.
+    // Step 3 — multi-source BFS over the graph the document emits. The
+    // root's adjacency is `generate::root_edges::root_targets`, the same
+    // function every emitter uses (spec 1537, research R6), not a copy of
+    // their fallback. The copy this replaces never saw root anchors
+    // (#1009, spec 1530), so a git submodule's anchor left the mirror
+    // firing here while the emitters' gate was closed, and the document
+    // said `complete` with its requirements stranded (#1566).
     let mut edges = bfs::build_edge_adjacency(relationships);
-    // Issue #892 / #894 — "has outbound edges" means has DECLARED ones. A
-    // milestone-868 resolve anchor (root -> `pkg:generic/<resolve-name>`) is
-    // synthetic ownership, not a dependency the project declared.
-    //
-    // Without this the anchor made `target_has_outbound` true, the mirror
-    // below declined to fire, and the classifier graded a sparser graph than
-    // the emitter shipped: on `pants-example-django` a `partial` verdict
-    // naming 12 unreachable components over a document with none. The
-    // emitter-side gate in `cyclonedx/dependencies.rs` already carries the
-    // same exemption; this is the classifier half of the same rule, and the
-    // two must agree or the annotation contradicts the document carrying it.
-    let resolve_component_refs: HashSet<&str> = components
-        .iter()
-        .filter(|c| {
-            c.extra_annotations
-                .get("waybill:component-kind")
-                .and_then(|v| v.as_str())
-                == Some("lockfile-resolve")
-        })
-        .map(|c| c.purl.as_str())
-        .collect();
-    let target_has_outbound = edges
-        .get(target_ref)
-        .map(|v| {
-            v.iter()
-                .any(|t| !resolve_component_refs.contains(t.as_str()))
-        })
-        .unwrap_or(false);
-    if !target_ref.is_empty() && !target_has_outbound && !components.is_empty() {
-        // Collect graph-tops: components not depended on by anything.
-        let depended_on: HashSet<&str> = relationships
-            .iter()
-            .map(|r| r.to.as_str())
-            .collect();
-        let graph_tops: Vec<String> = components
-            .iter()
-            .map(|c| c.purl.as_str().to_string())
-            .filter(|purl| !depended_on.contains(purl.as_str()) && purl != target_ref)
-            .collect();
-        if !graph_tops.is_empty() {
-            // Union, not replace: the resolve anchors deliberately did not
-            // count toward the gate above, so they must survive it.
-            let mut merged = edges.remove(target_ref).unwrap_or_default();
-            merged.extend(graph_tops);
-            merged.sort();
-            merged.dedup();
-            edges.insert(target_ref.to_string(), merged);
+    if !target_ref.is_empty() && !components.is_empty() {
+        let anchors = crate::supplement::current_root_anchors();
+        let targets = crate::generate::root_edges::root_targets(
+            components,
+            relationships,
+            target_ref,
+            &anchors,
+        );
+        if !targets.is_empty() {
+            edges.insert(target_ref.to_string(), targets.into_iter().collect());
         }
     }
 
@@ -1038,5 +1001,83 @@ mod tests {
             c,
             ReasonCode::MultiEcosystemPartialRoot { ecosystems } if ecosystems == &vec!["npm".to_string()]
         )));
+    }
+}
+
+/// Spec 1537 (#1566), T008: the classifier reads the root's adjacency from
+/// `root_edges::root_targets`, anchors included, so its verdict matches what
+/// the emitters attach.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1537_root_edges_tests {
+    use super::*;
+    use crate::generate::graph_completeness::test_support::{
+        mk_component, mk_rel, selection_with_operator_override,
+    };
+
+    const ROOT: &str = "pkg:generic/waybill-fixture-root@1";
+    const A: &str = "pkg:pypi/waybill-fixture-a@1.0.0";
+    const B: &str = "pkg:pypi/waybill-fixture-b@2.0.0";
+    const C: &str = "pkg:pypi/waybill-fixture-c@3.0.0";
+    const DEP: &str = "pkg:generic/waybill-fixture-dep@1";
+
+    fn grade(components: &[ResolvedComponent], rels: &[Relationship], anchors: &[&str]) -> GraphCompletenessResult {
+        let _guard = crate::supplement::install_reader_root_anchors(
+            anchors.iter().map(|a| a.to_string()).collect(),
+        );
+        compute_graph_completeness(components, rels, &selection_with_operator_override(), ROOT, &[])
+    }
+
+    /// #1566's shape: an anchor and no relationship edge. The gate stays
+    /// open, so every graph-top is attached and the verdict is `complete`.
+    #[test]
+    fn an_anchored_root_with_no_edges_is_complete() {
+        let comps = vec![mk_component(A), mk_component(B), mk_component(DEP)];
+        let r = grade(&comps, &[], &[DEP]);
+        assert_eq!(r.value, GraphCompletenessValue::Complete, "{:?}", r.reason_codes);
+        assert_eq!(r.orphan_count, 0);
+    }
+
+    /// A declared edge closes the gate; an undeclared package is stranded and
+    /// the verdict must not say `complete`.
+    #[test]
+    fn a_declared_edge_closes_the_gate_and_the_stranded_package_is_graded() {
+        let comps = vec![mk_component(A), mk_component(C), mk_component(DEP)];
+        let r = grade(&comps, &[mk_rel(ROOT, C)], &[DEP]);
+        assert_ne!(r.value, GraphCompletenessValue::Complete);
+        assert_eq!(r.orphan_count, 1);
+        assert!(!r.reachable_set.contains(A));
+        assert!(r.reachable_set.contains(DEP), "the anchor is reachable");
+    }
+
+    /// I-2 by construction (contract I-2, A1): what the classifier reaches
+    /// from the root is exactly what `root_targets` licenses, plus their
+    /// closure. The seed set is not re-derived here.
+    #[test]
+    fn the_reachable_set_is_root_targets_and_their_closure() {
+        let cases: Vec<(Vec<ResolvedComponent>, Vec<Relationship>, Vec<&str>)> = vec![
+            (vec![mk_component(A), mk_component(B), mk_component(DEP)], vec![], vec![DEP]),
+            (vec![mk_component(A), mk_component(C), mk_component(DEP)], vec![mk_rel(ROOT, C)], vec![DEP]),
+            (vec![mk_component(A), mk_component(B)], vec![mk_rel(A, B)], vec![]),
+        ];
+        for (comps, rels, anchors) in cases {
+            let owned: Vec<String> = anchors.iter().map(|a| a.to_string()).collect();
+            let mut want: HashSet<String> =
+                crate::generate::root_edges::root_targets(&comps, &rels, ROOT, &owned).into_iter().collect();
+            loop {
+                let more: Vec<String> = rels
+                    .iter()
+                    .filter(|r| want.contains(&r.from) && !want.contains(&r.to))
+                    .map(|r| r.to.clone())
+                    .collect();
+                if more.is_empty() {
+                    break;
+                }
+                want.extend(more);
+            }
+            want.retain(|p| comps.iter().any(|c| c.purl.as_str() == p));
+            let got = grade(&comps, &rels, &anchors).reachable_set;
+            assert_eq!(got, want);
+        }
     }
 }

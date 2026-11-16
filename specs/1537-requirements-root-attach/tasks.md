@@ -53,7 +53,7 @@
 **Goal**: one root-edge rule (research R2, R6). No attachment change yet.
 **Independent test**: invariants I-1 and I-2 hold on every fixture. C-2 now attaches in CycloneDX and SPDX 2.3 through the fallback, as SPDX 3 already does.
 
-- [ ] T004 [US2] Create `waybill-cli/src/generate/root_edges.rs` and declare it in `waybill-cli/src/generate/mod.rs`. Add:
+- [X] T004 [US2] Create `waybill-cli/src/generate/root_edges.rs` and declare it in `waybill-cli/src/generate/mod.rs`. Add:
 
   ```
   pub(crate) fn root_targets(components, relationships, root_ref, anchors) -> BTreeSet<String>
@@ -66,18 +66,23 @@
   - anchors are added after the gate and never change it.
 
   Unit-test each decision, plus V5 (anchors never close the gate), in the same file (`#[cfg_attr(test, allow(clippy::unwrap_used))]`).
-- [ ] T005 [US2] Switch `waybill-cli/src/generate/cyclonedx/dependencies.rs` to `root_targets`. Delete the local gate and the `current_root_anchors` loop at `:116`. Keep `resolve_bom_refs`. Update the module's existing tests to the R2 rule wherever they asserted the old copy's behaviour, and name each changed assertion in the commit message.
-- [ ] T006 [US2] Switch `waybill-cli/src/generate/spdx/document.rs` to `root_targets`. Delete the anchor loop at `:595` and the `synthetic_root_added` fallback block at `:729–`. Render every target through `relationships::synthesized_root_edge`, so scope-typed spellings are kept (#1000). Remove the `synthetic_root_added` condition per R2. Update `synth_root_fallback_*` tests the same way as T005.
-- [ ] T007 [US2] Switch `waybill-cli/src/generate/spdx/v3_document.rs` to `root_targets`. Delete the fallback block at `:746–` and the anchor block at `:862`. Keep the per-target lifecycle scope on `dependsOn` (#1000).
-- [ ] T008 [US2] In `waybill-cli/src/generate/graph_completeness/mod.rs` (`:221–272`), build `target_ref`'s adjacency from `root_targets`, passing `crate::supplement::current_root_anchors()`. Delete the mirror. The multi-root seed set is unchanged (clarification 3). Unit tests:
+- [X] T005 [US2] Switch `waybill-cli/src/generate/cyclonedx/dependencies.rs` to `root_targets`. Delete the local gate and the `current_root_anchors` loop at `:116`. Keep `resolve_bom_refs`. Update the module's existing tests to the R2 rule wherever they asserted the old copy's behaviour, and name each changed assertion in the commit message.
+- [X] T006 [US2] Switch `waybill-cli/src/generate/spdx/document.rs` to `root_targets`. Delete the anchor loop at `:595` and the `synthetic_root_added` fallback block at `:729–`. Render every target through `relationships::synthesized_root_edge`, so scope-typed spellings are kept (#1000). Remove the `synthetic_root_added` condition per R2. Update `synth_root_fallback_*` tests the same way as T005.
+- [X] T007 [US2] Switch `waybill-cli/src/generate/spdx/v3_document.rs` to `root_targets`. Delete the fallback block at `:746–` and the anchor block at `:862`. Keep the per-target lifecycle scope on `dependsOn` (#1000).
+- [X] T008 [US2] In `waybill-cli/src/generate/graph_completeness/mod.rs` (`:221–272`), build `target_ref`'s adjacency from `root_targets`, passing `crate::supplement::current_root_anchors()`. Delete the mirror. The multi-root seed set is unchanged (clarification 3). Unit tests:
   - a root with anchors and no relationship edges, where the fallback is open, is `complete`; the same with a dependency edge, where the fallback is closed, is `partial`;
   - **I-2 by construction (A1):** for a table of inputs, the adjacency the classifier walks from `target_ref` equals `root_targets` on the same inputs. This is the classifier half of I-2. The test never re-derives the seed set.
-- [ ] T009 [US2] Add three checks to `waybill-cli/tests/declared_requirements.rs` as helpers, and assert them in every C-case test:
+- [X] T009 [US2] Add three checks to `waybill-cli/tests/declared_requirements.rs` as helpers, and assert them in every C-case test:
   - **I-1:** the root's direct targets are equal across the three formats;
   - **I-2:** the verdict equals the contract's expected value for that case. The seed set is never recomputed (contract I-2);
   - **I-4:** in the fixtures, each case's exact expected root-target set (contract table) already rules out an undeclared root edge. The general property goes in `generate/root_edges.rs` as a unit test over a table of inputs: every output is a relationship target, an anchor, or, only when no dependency edge leaves the root, a graph-top without a container.
 
   Run the gate locally with `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`.
+  **Done (T004–T009).**
+  - **Gate run:** after the switch, 406 targets passed and two failed. One is `declared_requirements`: C-3, C-5, C-6 and C-7 await US1.
+  - **The other is `transitive_parity_pip_poetry`:** 64 → 89 SPDX 2.3 edges. Measured with `measurements/root_targets.py`, this is R9 case 5. At `main`, that fixture's root targets were 25 / 0 / 0 (CycloneDX / SPDX 2.3 / SPDX 3); on the branch they are 25 / 25 / 25. The baseline was updated, with the cause.
+  - **C-8 expectation corrected:** the reader classifies `requirements-dev.txt` as optional, not development, so the edge is `OPTIONAL_DEPENDENCY_OF` (FR-010).
+
 - [ ] T010 [US2] Commit and push. Regenerate the corpus goldens in CI (`public-corpus.yml`, `regen_goldens=true`, `--ref <branch> -f branch=<branch>`). Diff them normalised and `LC_ALL=C`-sorted against the committed goldens.
   - Explain every changed file by R9 cases 3–7.
   - **I-1 on the corpus (SC-002, G1):** commit `measurements/root_targets.py`, run with `python3 -I -B`. It extracts the root's direct targets from each regenerated target's three documents and asserts they are equal. Validate it first against the fixtures' Rust I-1 helper, using T002's emitted documents. Record the result for every target.

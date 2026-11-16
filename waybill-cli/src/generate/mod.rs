@@ -32,6 +32,7 @@ pub mod lifecycle_phases;
 pub mod openvex;
 pub mod orphan_reason;
 pub mod project_discovery;
+pub(crate) mod root_edges;
 pub mod root_selector;
 pub mod spdx;
 pub(crate) mod split;
