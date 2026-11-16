@@ -18,7 +18,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `waybill:component-kind: dataset`) identified by its element, with its
   download URL and declared digest. Other downloads (tool installers,
   undigested files, URLs built from undefined variables) are counted in
-  `waybill:declared-downloads` (C229) and emit nothing.
+  `waybill:declared-downloads` (C229) and emit nothing. Measured in CI on
+  ROCm's `rocm-libraries` at TheRock's pin: rocSPARSE's declarations give 24
+  datasets, one-to-one with the 24 matrices the installed SDK ships, each
+  with its SuiteSparse URL and MD5.
 
 - **Installed binaries are attributed to their package through the source
   paths embedded in them (#1532).** An unstripped or assertion-carrying
