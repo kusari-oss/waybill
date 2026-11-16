@@ -211,6 +211,8 @@ pub struct MetadataExtras<'a> {
     pub test_scope_coverage: Option<&'a str>,
     /// C228 (spec 1534) — bundled trees named by binaries' embedded paths.
     pub bundled_source_trees: Option<&'a str>,
+    /// C229 (spec 1535) — declared CMake downloads.
+    pub declared_downloads: Option<&'a str>,
     /// C208 (m1366, #1365) — the closure ecosystem identity pass's record.
     pub closure_ecosystem_identity: Option<&'a str>,
     /// C209 (m1367, #1371) — the CPE synthesis coverage record.
@@ -309,6 +311,7 @@ pub fn build_metadata(
         installed_library_coverage,
         test_scope_coverage,
         bundled_source_trees,
+        declared_downloads,
         closure_ecosystem_identity,
         cpe_coverage,
         closure_graph_admission,
@@ -550,6 +553,10 @@ pub fn build_metadata(
     // C228 (spec 1534): present only when a binary named a bundled tree.
     if let Some(record) = bundled_source_trees {
         properties.push(json!({ "name": crate::scan_fs::binary::embedded_paths::ANN_BUNDLED_SOURCE_TREES, "value": record }));
+    }
+    // C229 (spec 1535): present only when a `file(DOWNLOAD)` was read.
+    if let Some(record) = declared_downloads {
+        properties.push(json!({ "name": crate::scan_fs::package_db::cmake_download::ANN_DECLARED_DOWNLOADS, "value": record }));
     }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran,

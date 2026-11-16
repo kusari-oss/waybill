@@ -140,16 +140,16 @@ pub(crate) fn finalize(
     scan_root: &Path,
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
-) -> Vec<PackageDbEntry> {
+) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage) {
     if !marker.seen
         && !scan_root.join("CMakeLists.txt").is_file()
         && !scan_root.join("cmake").is_dir()
         && !scan_root.join("Modules").is_dir()
         && !scan_root.join("third_party").is_dir()
     {
-        return Vec::new();
+        return (Vec::new(), Default::default());
     }
-    read(scan_root, include_vendored, exclude_set)
+    read_with_downloads(scan_root, include_vendored, exclude_set)
 }
 
 pub fn read(
@@ -157,6 +157,15 @@ pub fn read(
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
+    read_with_downloads(scan_root, include_vendored, exclude_set).0
+}
+
+/// [`read`], plus the spec 1535 declared-download counts (C229).
+pub(crate) fn read_with_downloads(
+    scan_root: &Path,
+    include_vendored: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage) {
     // Milestone 156: opt-in recursive descent for third_party/. Default
     // depth-1 (matches milestone-102 behavior) unless the CLI flag
     // `--cmake-third-party-recursive` OR the env var
@@ -174,6 +183,9 @@ pub fn read(
     // declared version per name (Q1 clarification) before emitting.
     let mut find_package_hits: Vec<FindPackageHit> = Vec::new();
     let mut pkg_check_hits: Vec<PkgCheckHit> = Vec::new();
+    // Spec 1535: every `file(DOWNLOAD)` across the discovered files, so one
+    // dataset declared in two files becomes one component.
+    let mut downloads: Vec<super::cmake_download::DeclaredDownload> = Vec::new();
     for path in &cmake_files {
         let content = match std::fs::read_to_string(path) {
             Ok(s) => s,
@@ -202,10 +214,60 @@ pub fn read(
         }
         find_package_hits.extend(parse_find_package_calls(&content, &source_path));
         pkg_check_hits.extend(parse_pkg_check_modules_calls(&content, &source_path));
+        downloads.extend(super::cmake_download::parse_downloads(&content, &source_path));
     }
     entries.extend(emit_find_package_entries(find_package_hits));
     entries.extend(emit_pkg_check_module_entries(pkg_check_hits));
-    entries
+    let (datasets, coverage) = super::cmake_download::datasets(&downloads);
+    if coverage.read > 0 {
+        tracing::info!(
+            read = coverage.read,
+            datasets = coverage.datasets,
+            not_classified = coverage.not_classified,
+            unresolved = coverage.unresolved,
+            "cmake: declared downloads (spec 1535)"
+        );
+    }
+    entries.extend(datasets.iter().filter_map(dataset_entry));
+    (entries, coverage)
+}
+
+/// Spec 1535 (data-model "Dataset"): one component per declared dataset
+/// element. Identity is the element (`Group/Name` gives namespace and name);
+/// the first URL and the declared digest are qualifiers; no version.
+fn dataset_entry(d: &super::cmake_download::DatasetDecl) -> Option<PackageDbEntry> {
+    let (ns, name) = match d.element.rsplit_once('/') {
+        Some((ns, name)) => (Some(ns), name),
+        None => (None, d.element.as_str()),
+    };
+    let path = match ns {
+        Some(ns) => format!("{}/{}", encode_purl_segment(ns), encode_purl_segment(name)),
+        None => encode_purl_segment(name),
+    };
+    let mut qualifiers = Vec::new();
+    if let Some((alg, hex)) = &d.digest {
+        qualifiers.push(format!("checksum={}:{hex}", alg_name(*alg)));
+    }
+    qualifiers.push(format!("download_url={}", d.url));
+    let purl = Purl::new(&format!("pkg:generic/{path}?{}", qualifiers.join("&"))).ok()?;
+    let hash = d.digest.as_ref().and_then(|(alg, hex)| ContentHash::with_algorithm(*alg, hex).ok());
+    let mut files = d.files.iter();
+    let first = files.next()?.clone();
+    let mut e = build_cmake_entry(name, "", &first, purl, Some(&d.url), hash, false, "cmake-file-download");
+    e.extra_source_paths = files.cloned().collect();
+    e.sbom_tier = Some(if d.digest.is_some() { "source" } else { "design" }.to_string());
+    e.extra_annotations.insert("waybill:component-kind".to_string(), serde_json::json!("dataset"));
+    Some(e)
+}
+
+fn alg_name(alg: waybill_common::types::hash::HashAlgorithm) -> &'static str {
+    use waybill_common::types::hash::HashAlgorithm as H;
+    match alg {
+        H::Md5 => "md5",
+        H::Sha1 => "sha1",
+        H::Sha256 => "sha256",
+        H::Sha512 => "sha512",
+    }
 }
 
 /// Milestone 155 — parse `find_package(<Name> [<Version>])` call sites

@@ -165,7 +165,6 @@ pub enum SpdxPrimaryPackagePurpose {
     #[allow(dead_code)]
     Install,
     #[serde(rename = "OTHER")]
-    #[allow(dead_code)]
     Other,
 }
 
@@ -670,7 +669,11 @@ fn component_to_package(
     // main-module-tagged → APPLICATION derivation when the component
     // didn't come from the binary reader, preserving milestone 053+
     // / 064+ behavior byte-identically.
-    let primary_package_purpose = match c.binary_role {
+    // Spec 1535: SPDX 2.3 has no data purpose; a declared dataset is `OTHER`,
+    // and C160 `waybill:component-kind: dataset` carries the kind.
+    let primary_package_purpose = if crate::generate::cyclonedx::builder::is_dataset(c) {
+        Some(SpdxPrimaryPackagePurpose::Other)
+    } else { match c.binary_role {
         Some(waybill_common::resolution::BinaryRole::Application) => {
             Some(SpdxPrimaryPackagePurpose::Application)
         }
@@ -686,7 +689,7 @@ fn component_to_package(
             .and_then(|v| v.as_str())
             .filter(|s| *s == "main-module")
             .map(|_| SpdxPrimaryPackagePurpose::Application),
-    };
+    }};
 
     // Milestone 191 (#558 / FR-011): SPDX 2.3 versionInfo MUST be
     // "NOASSERTION" when the component has no concrete version
@@ -919,6 +922,7 @@ mod tests {
             installed_library_coverage: None,
             test_scope_coverage: None,
             bundled_source_trees: None,
+            declared_downloads: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,

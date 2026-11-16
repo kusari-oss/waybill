@@ -141,6 +141,8 @@ pub struct ScanResult {
     /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage, as its
     /// wire value. `None` when no `.gitmodules` file was seen.
     pub git_submodule_coverage: Option<String>,
+    /// Spec 1535 (C229): declared CMake downloads, as their wire value.
+    pub declared_downloads: Option<String>,
     /// Spec 1531 FR-008 (C225): the installed-library coverage record, as its
     /// wire value. `None` when no `.pc` or CMake version file was matched.
     pub installed_library_coverage: Option<String>,
@@ -424,6 +426,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         Option<package_db::golang::CacheWarmingResult> = None;
     let mut go_mod_why: Option<package_db::GoModWhyStatus> = None;
     let mut git_submodule_coverage: Option<String> = None;
+    let mut declared_downloads: Option<String> = None;
     let mut installed_library_coverage: Option<String> = None;
     let mut test_scope_inputs = test_scope::Inputs::default();
     let mut bundled_source_trees: Option<String> = None;
@@ -505,6 +508,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let mut scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name, exclude_set, no_binary_scan)?;
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
         git_submodule_coverage = scan_result.diagnostics.git_submodule_coverage.as_ref().map(|c| c.wire());
+        declared_downloads = scan_result.diagnostics.cmake_declared_downloads.clone();
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
         // Milestone 172: mirror gosum_fallback_count from
         // ScanDiagnostics into the local for the ScanResult return.
@@ -1599,6 +1603,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_cache_warming,
         go_mod_why,
         git_submodule_coverage,
+        declared_downloads,
         installed_library_coverage,
         test_scope_inputs,
         bundled_source_trees,

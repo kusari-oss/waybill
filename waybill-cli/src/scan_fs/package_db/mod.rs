@@ -16,6 +16,8 @@ pub mod bazel;
 pub mod brew;
 pub mod cargo;
 pub mod cmake;
+/// Spec 1535 (#1565): declared downloads and the datasets among them.
+pub(crate) mod cmake_download;
 pub mod cocoapods;
 pub mod composer;
 pub mod conan;
@@ -393,6 +395,9 @@ pub struct DbScanResult {
 /// cross-module signatures.
 #[derive(Default, Debug, Clone)]
 pub struct ScanDiagnostics {
+    /// Spec 1535 (C229): the CMake reader's declared-download counts, as
+    /// their wire value. `None` when no `file(DOWNLOAD)` was read.
+    pub cmake_declared_downloads: Option<String>,
     /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage.
     /// `None` when no `.gitmodules` file was seen.
     pub git_submodule_coverage: Option<git_submodule::SubmoduleCoverage>,
@@ -2239,6 +2244,7 @@ pub fn read_all(
     out.extend(std::mem::take(&mut shared_pilot.bazel));
     // Milestone 664 US2 T056: cmake splice from shared-walker pilot.
     out.extend(std::mem::take(&mut shared_pilot.cmake));
+    diagnostics.cmake_declared_downloads = shared_pilot.cmake_declared_downloads.take();
     // Milestone 664 US2 T053: vcpkg splice from shared-walker pilot.
     out.extend(std::mem::take(&mut shared_pilot.vcpkg));
     // Milestone 664 US2 T054: conan splice from shared-walker pilot.
@@ -2600,6 +2606,8 @@ struct SharedPilotOutput {
     installed_lib: installed_lib::Phase1,
     bazel: Vec<PackageDbEntry>,
     cmake: Vec<PackageDbEntry>,
+    /// Spec 1535 (C229): declared-download counts, wire value.
+    cmake_declared_downloads: Option<String>,
     /// Milestone 664 US2 T058: `go.mod` paths threaded to
     /// `golang::read`'s new `precomputed_go_mod_paths` parameter to
     /// skip the reader's internal `candidate_project_roots` walk.
@@ -3122,7 +3130,7 @@ fn run_shared_walker_pilot(
     // on legacy (targeted per-subdir glob, analogous to FR-005 npm
     // inner-tree escape hatch). Finalize gates the subdir-existence
     // checks on the marker flag + fs fallback.
-    let cmake_entries = registry
+    let (cmake_entries, cmake_downloads) = registry
         .registrations()
         .iter()
         .find(|r| r.reader_id == ReaderId::CMAKE)
@@ -3131,6 +3139,7 @@ fn run_shared_walker_pilot(
             cmake::finalize(marker, rootfs, include_vendored, exclude_set)
         })
         .unwrap_or_default();
+    let cmake_declared_downloads = cmake_downloads.wire();
 
     // Golang — collects `go.mod` paths for `legacy::read`'s
     // `precomputed_go_mod_paths` parameter (skips the internal
@@ -3202,6 +3211,7 @@ fn run_shared_walker_pilot(
         installed_lib: installed_lib_records,
         bazel: bazel_entries,
         cmake: cmake_entries,
+        cmake_declared_downloads,
         golang_go_mod_paths,
         yocto_bbappend_paths,
         yocto_layer_conf_paths,
