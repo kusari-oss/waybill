@@ -2287,10 +2287,15 @@ mod i3_tests {
     /// divergence allowlist now agree. Each count is the root's owning
     /// component(s) plus whatever only the root fallback reaches: django's
     /// 12 unversioned requirements and a file-tier `get-pants.sh`.
+    ///
+    /// Spec 1537: neither example has a project of its own, so the root
+    /// `requirements.txt` belongs to the subject, and the root also depends
+    /// directly on what that file pins and the resolve locks: django `mypy`
+    /// (14 -> 15), python `ansicolors` and `pytest` (2 -> 4).
     #[test]
     fn pants_targets_agree_across_formats() {
-        assert_eq!(counts("pants-example-django"), (14, 14, 14));
-        assert_eq!(counts("pants-example-python"), (2, 2, 2));
+        assert_eq!(counts("pants-example-django"), (15, 15, 15));
+        assert_eq!(counts("pants-example-python"), (4, 4, 4));
         assert_eq!(counts("pants-example-jvm"), (2, 2, 2));
         assert_eq!(counts("pants-clojure-polyglot"), (4, 4, 4));
     }

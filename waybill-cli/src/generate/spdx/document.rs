@@ -585,32 +585,6 @@ pub fn build_document(
     let mut relationships =
         super::relationships::build_relationships(artifacts, &root_ids, &purl_aliases);
 
-    // #1009: anchor supplement-contributed components whose only
-    // declared parent was the supplement's own subject. Mirrors the CDX
-    // side in `cyclonedx/dependencies.rs`. Unconditional — the issue-#236
-    // fallback below only fires when the root has no outgoing edges,
-    // which is why 43 of 44 arrived orphaned on mongo. Empty when no
-    // supplement is active, so byte-identity holds on the default path.
-    if let Some(root_id) = root_ids.first() {
-        for anchor_purl in crate::supplement::current_root_anchors() {
-            if artifacts
-                .components
-                .iter()
-                .any(|c| c.purl.as_str() == anchor_purl)
-            {
-                relationships.push(super::relationships::SpdxRelationship {
-                    source: root_id.clone(),
-                    target: SpdxId::for_purl(
-                        &waybill_common::types::purl::Purl::new(&anchor_purl)
-                            .expect("anchor PURL came from a parsed component"),
-                    ),
-                    kind: super::relationships::SpdxRelationshipType::DependsOn,
-                    comment: None,
-                });
-            }
-        }
-    }
-
     // Milestone 860 (#863) FR-008 — anchor the emitted root to every
     // retained main module, mirroring the CDX side so both formats
     // describe the same graph.
@@ -726,92 +700,60 @@ pub fn build_document(
             &m1273_unread,
         );
 
-    // Issue #236: when `synthesize_root` fires (multi-top-level
-    // scans with no main-module and no name match — the dominant
-    // case for image scans and OS-package scans), the synthetic
-    // root has no outgoing edges in `artifacts.relationships`. CDX
-    // covers this with the primary-dependency fallback in
-    // `cyclonedx/dependencies.rs:74-99` (synthesize edges from
-    // `metadata.component.bom-ref` to every graph-root component).
-    // We mirror that here so SPDX 2.3 emits a connected graph
-    // rooted at the same synthetic identity. Without this, the
-    // synthetic root is orphaned in `relationships[]` — only the
-    // `DESCRIBES` edge from `SPDXRef-DOCUMENT` reaches it and the
-    // 31 (in the postgres:16 case) top-level Packages have no
-    // incoming edges, producing N disconnected graph-tops where
-    // CDX has a single root.
-    //
-    // Post-#236 gating rule (added after the alpha.35 regen
-    // surfaced over-attachment under `--root-name`): only fire
-    // the fallback when synth_id has no outgoing edges in the
-    // already-built `relationships` vec. This mirrors CDX's
-    // `target_has_no_edges` gate at
-    // `cyclonedx/dependencies.rs:74-78` symmetrically. When
-    // `--root-name` is active, the milestone-#229 alias rewrite
-    // at lines 458-465 has already populated outgoing edges from
-    // synth_id for every relationship that was originally sourced
-    // at the dropped main-module's PURL. Firing the fallback
-    // on top of those would over-attach graph-root components
-    // (Go `// indirect` entries, orphan npm packages from
-    // secondary `node_modules/` trees, etc.) as direct deps of
-    // the override root — a divergence vs CDX which the alpha.35
-    // bug reports caught. The fallback still fires correctly for
-    // image scans, OS-package-only scans, and any other case
-    // where `artifacts.relationships` has no main-module-sourced
-    // edges to rewrite (synth_id stays with zero outgoing edges
-    // after `build_relationships`, so the gate is satisfied).
-    if synthetic_root_added {
-        if let Some(synth_id) = root_ids.first() {
-            let synth_has_outgoing = relationships
-                .iter()
-                .any(|r| r.source == *synth_id);
-            if !synth_has_outgoing {
-                // Mirror CDX's "graph roots" definition: components no
-                // other component or relationship points to as a `to`
-                // target. For a flat OS-package scan that's every
-                // component; for a transitive scan it's just the top-
-                // level deps.
-                let depended_on: std::collections::BTreeSet<&str> = artifacts
-                    .relationships
-                    .iter()
-                    .map(|r| r.to.as_str())
-                    .collect();
-                let mut graph_roots: Vec<&waybill_common::resolution::ResolvedComponent> =
-                    artifacts
-                        .components
-                        .iter()
-                        .filter(|c| {
-                            c.parent_purl.is_none()
-                                && !depended_on.contains(c.purl.as_str())
-                        })
-                        .collect();
-                // Deterministic emission order: lex by PURL.
-                graph_roots.sort_by(|a, b| a.purl.as_str().cmp(b.purl.as_str()));
-                for c in graph_roots {
-                    // #1000: carry the target's lifecycle scope. This
-                    // hardcoded `DependsOn`, so a dev/build/test-scoped
-                    // component reachable only via this fallback (bazel,
-                    // whose reader emits no `depends`) surfaced as a
-                    // runtime dependency in SPDX while CDX showed it
-                    // excluded. An SPDX consumer filtering to runtime
-                    // deps got a test-only library.
-                    let (source, target, kind) =
-                        super::relationships::synthesized_root_edge(
-                            artifacts.spdx2_relationship_compat,
-                            synth_id,
-                            &SpdxId::for_purl(&c.purl),
-                            c.lifecycle_scope,
-                        );
-                    relationships.push(super::relationships::SpdxRelationship {
-                        source,
-                        target,
-                        kind,
-                        comment: None,
-                    });
+    // Spec 1537 (#1566), research R2: the root's direct targets come from
+    // the one rule every format and the completeness classifier share
+    // (`generate::root_edges`), over the same pre-passed relationships the
+    // classifier just graded. It replaces this module's #236 fallback, which
+    // fired only for a synthetic root and counted every outgoing edge
+    // (including anchors) toward its gate, and its #1009 anchor loop, which
+    // ran before that gate. Each target the root does not already reach
+    // gets an edge, spelled by `synthesized_root_edge` so the target's
+    // lifecycle scope is kept (#1000).
+    if let Some(root_id) = root_ids.first() {
+        let anchors = crate::supplement::current_root_anchors();
+        let targets = crate::generate::root_edges::root_targets(
+            artifacts.components,
+            &m194_classifier_relationships,
+            &m158_target_ref,
+            &anchors,
+        );
+        let reached: std::collections::HashSet<SpdxId> = relationships
+            .iter()
+            .filter_map(|r| {
+                if r.source == *root_id
+                    && r.kind == super::relationships::SpdxRelationshipType::DependsOn
+                {
+                    Some(r.target.clone())
+                } else if r.target == *root_id && r.kind.is_reversed_dependency() {
+                    Some(r.source.clone())
+                } else {
+                    None
                 }
+            })
+            .collect();
+        for c in artifacts.components {
+            if !targets.contains(c.purl.as_str()) {
+                continue;
             }
+            let target_id = SpdxId::for_purl(&c.purl);
+            if target_id == *root_id || reached.contains(&target_id) {
+                continue;
+            }
+            let (source, target, kind) = super::relationships::synthesized_root_edge(
+                artifacts.spdx2_relationship_compat,
+                root_id,
+                &target_id,
+                c.lifecycle_scope,
+            );
+            relationships.push(super::relationships::SpdxRelationship {
+                source,
+                target,
+                kind,
+                comment: None,
+            });
         }
     }
+
 
     // Two creator entries: a `Tool:` identifying waybill (used
     // throughout the document as the `annotator` field on every

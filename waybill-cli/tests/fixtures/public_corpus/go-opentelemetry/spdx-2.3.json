@@ -53,7 +53,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 265 component(s) not reachable from root; go-transitive-coverage-degraded: 302 transitive edge(s) not populated\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 264 component(s) not reachable from root; go-transitive-coverage-degraded: 302 transitive edge(s) not populated\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -30916,12 +30916,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"foreign-build-system\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"pip-requirements-txt\"}"
         },
         {
@@ -32061,6 +32055,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-UJUUWI4VJRRJEI5V",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-VSV5M2KIO53IZW22"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UYLJ6OYBCAPGEINM",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-VSV5M2KIO53IZW22"
     },

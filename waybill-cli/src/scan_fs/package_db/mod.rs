@@ -405,6 +405,9 @@ pub struct ScanDiagnostics {
     /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage.
     /// `None` when no `.gitmodules` file was seen.
     pub git_submodule_coverage: Option<git_submodule::SubmoduleCoverage>,
+    /// Spec 1537 (research R3): each emitted submodule's directory and PURL,
+    /// for the declared-requirements pass. Empty without `.gitmodules`.
+    pub git_submodule_dirs: git_submodule::SubmoduleDirs,
     /// #1154: the `go mod why` pass's outcome (C195/C196). `None` when no
     /// Go main module was found.
     pub go_mod_why: Option<GoModWhyStatus>,
@@ -2253,6 +2256,7 @@ pub fn read_all(
     // Spec 1530 (#1515): git submodules, and their C222 coverage.
     out.extend(std::mem::take(&mut shared_pilot.git_submodule));
     diagnostics.git_submodule_coverage = shared_pilot.git_submodule_coverage.take();
+    diagnostics.git_submodule_dirs = std::mem::take(&mut shared_pilot.git_submodule_dirs);
 
     // Milestone 139: CocoaPods (iOS) ecosystem reader. One main-module
     // per project root (FR-012 + Q1 cascade) + lockfile-driven (FR-002)
@@ -2604,6 +2608,8 @@ struct SharedPilotOutput {
     git_submodule: Vec<PackageDbEntry>,
     /// Spec 1530 FR-011 (C222): `None` when no `.gitmodules` was seen.
     git_submodule_coverage: Option<git_submodule::SubmoduleCoverage>,
+    /// Spec 1537: submodule directories, for the declared-requirements pass.
+    git_submodule_dirs: git_submodule::SubmoduleDirs,
     /// Spec 1531 (#1531): parsed records, resolved after the binary scan.
     installed_lib: installed_lib::Phase1,
     bazel: Vec<PackageDbEntry>,
@@ -3095,7 +3101,7 @@ fn run_shared_walker_pilot(
 
     // Spec 1530 (#1515): git submodules. Runs `git` only when the walker
     // saw a `.gitmodules` file (research R4).
-    let (git_submodule_entries, git_submodule_coverage) = registry
+    let (git_submodule_entries, git_submodule_coverage, git_submodule_dirs) = registry
         .registrations()
         .iter()
         .find(|r| r.reader_id == ReaderId::GIT_SUBMODULE)
@@ -3210,6 +3216,7 @@ fn run_shared_walker_pilot(
         conan: conan_entries,
         git_submodule: git_submodule_entries,
         git_submodule_coverage,
+        git_submodule_dirs,
         installed_lib: installed_lib_records,
         bazel: bazel_entries,
         cmake: cmake_entries,

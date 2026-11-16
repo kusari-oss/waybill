@@ -39,7 +39,15 @@ const FIXTURE_SUBPATH: &str = "pip_poetry";
 // (`keyring → jaraco-classes`). Until then jaraco-classes looked orphaned
 // and was reached only through the root fallback (`poetry → jaraco-classes`,
 // which poetry does not declare), which this replaces in the CycloneDX graph.
-const EXPECTED_WAYBILL_EDGE_COUNT: usize = 64;
+//
+// 64 → 89: spec 1537 (#1566) gives SPDX the root fallback CycloneDX always
+// had. The root is the Poetry-legacy main module, whose `depends` is empty,
+// so it has no edges of its own. CycloneDX attached the 25 graph-top
+// packages to it; SPDX 2.3 and SPDX 3 applied the fallback only to a
+// synthetic root, so they attached none and disagreed with CycloneDX on the
+// subject's direct dependencies (measured at `main`: 25 / 0 / 0). All three
+// now share one rule (`generate::root_edges`, research R2): 25 / 25 / 25.
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 89;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // build → packaging.

@@ -168,7 +168,7 @@ impl SpdxRelationshipType {
 
     /// A dependency verb written dependency→dependent (the m228 reversal),
     /// i.e. a typed counterpart of `DEPENDS_ON`.
-    fn is_reversed_dependency(self) -> bool {
+    pub(super) fn is_reversed_dependency(self) -> bool {
         match self {
             Self::DevDependencyOf
             | Self::BuildDependencyOf
