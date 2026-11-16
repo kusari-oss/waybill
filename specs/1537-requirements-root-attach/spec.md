@@ -115,14 +115,14 @@ An engineer scans a C/C++ super-project with its submodules checked out. The sup
 
 ### Edge Cases
 
-- **Not a declaration.** A `constraints.txt`, or a file reached only through `-c`, constrains versions but declares nothing. Its components must not be attached as dependencies.
-- **Includes.** A `requirements.txt` that includes another with `-r` declares the included file's packages too.
+- **Not a declaration.** A `constraints.txt`, or a file reached only through `-c`, constrains versions but declares nothing. Its components must not be attached as dependencies. The pip reader reads every file matching `requirements*.txt`, so a file named like `requirements-constraints.txt` is read as a declaration today. T001 measures what the reader does with it, and the result decides whether this feature must exclude it.
+- **Includes (known limitation).** The pip reader does not follow `-r` (research R8). A file reached only through `-r`, such as `requirements/base.txt`, is not read, so its packages are not components and there is nothing to attach. An included file the reader also reads directly is attached by FR-003, like any other. Following includes is a reader-coverage follow-up, filed by T001.
 - **Scoped files.** A `requirements-dev.txt` or `requirements-test.txt` keeps its existing development or test scope on the edge. Attaching does not make it runtime.
 - **A project file next to the requirements file.** When a `pyproject.toml` or `setup.py` sits in the same directory, its main module already declares dependencies (milestone 670). A package declared by both appears once, with one edge from the owning project.
 - **The same package from two files.** One component, with an edge from each declaring project.
-- **Inside a vendored or excluded directory.** A requirements file under a directory waybill already treats as vendored or excluded keeps today's treatment.
+- **Inside a vendored or excluded directory.** Whether such a file is read is unchanged: the walker's skip set and `--exclude-path` decide that, as today. A file the reader does not read yields no component. A file it does read is attached by FR-003, like any other. T001 measures one vendored layout.
 - **A `cget` `requirements.txt`.** Not a pip file (#1522), so this feature does not touch it.
-- **Scans with no declarations at all**, such as a container image or OS packages (#236). The root-attachment behaviour these rely on is unchanged.
+- **Scans with no declarations at all**, such as a container image or OS packages (#236). Which scans get the fallback, and what switches it off, are unchanged. Only the format-parity corrections in FR-005 apply.
 - **A submodule that is also a pinned project dependency.** It keeps a single root edge (#1515), not two.
 
 ## Requirements *(mandatory)*
@@ -135,7 +135,10 @@ An engineer scans a C/C++ super-project with its submodules checked out. The sup
 
   A requirements file in a **nested directory with no project of its own** is declared by the **nearest enclosing project**. Walk up the directory tree to the first directory that contains a project; at the top, that is the root. For example, `build_tools/requirements.txt` in a super-project with no project at `build_tools/` belongs to the super-project. A file under a submodule's tree belongs to that submodule.
 - **FR-004**: **No root-to-everything star.** The root gains an edge only to a component that a declaration places there, or to one the existing no-declarations fallback covers (FR-005). Components with no declaration must not be attached to the root because something else made the graph non-empty. This is #870 Class B.
-- **FR-005**: The existing fallback for scans whose root declares nothing is unchanged for those scans. Examples are image scans, OS-package scans and placeholder roots (#236).
+- **FR-005**: The fallback for scans whose root has no dependency edge of its own is kept. Examples are image scans, OS-package scans and placeholder roots (#236). It is defined once, for all formats (FR-006). Making the copies agree corrects three format-specific behaviours, and these are the only changes allowed for such scans:
+  - SPDX applies the fallback to a promoted main-module root as CycloneDX does, not only to a synthetic root;
+  - only dependency edges other than lockfile-resolve anchors switch it off, in every format;
+  - a nested component (one with a container) is never attached to the root by the fallback, in every format.
 - **FR-006**: CycloneDX, SPDX 2.3 and SPDX 3 emitted from one scan agree on the set of components the root directly depends on. They also agree on every edge this feature creates.
 - **FR-007**: `waybill:graph-completeness` is computed against the graph the document emits, not against a separately maintained copy of the emitters' attachment rule.
   - The definition is unchanged: reachability from the existing multi-root seed set, which is the document root plus the per-ecosystem roots.
@@ -150,7 +153,7 @@ An engineer scans a C/C++ super-project with its submodules checked out. The sup
 
 - **Declaring project**: The component that a requirements file's packages are direct dependencies of. That is the document root, a main module of any ecosystem, or a git submodule, decided by the file's location (FR-002, FR-003).
 - **Declared edge**: An edge that exists because a manifest names its target. This is distinct from a fallback edge, which exists because nothing else reached the target.
-- **Orphan**: A component unreachable from the document root. It carries a reason (FR-008).
+- **Orphan**: A component unreachable from every seed of the completeness verdict, which is the document root plus the per-ecosystem roots (FR-007). When this feature's rule leaves it unattached, it carries a reason (FR-008).
 
 ## Success Criteria *(mandatory)*
 
@@ -159,8 +162,15 @@ An engineer scans a C/C++ super-project with its submodules checked out. The sup
 - **SC-001**: #1566's reproduction attaches **2 of 2** declared packages to the root in all three formats, with and without the submodule. Today: 0 of 2 in CycloneDX and SPDX 2.3 with it.
 - **SC-002**: For every synthetic fixture and every public-corpus target, the set of the root's direct dependencies is identical across the three formats.
 - **SC-003**: Recomputing reachability from the verdict's seed set over each emitted document agrees with its `waybill:graph-completeness` verdict in every fixture and corpus document. #1566's reproduction, with its declared packages unreachable as at `main` today, must not be graded `complete`. No document is `complete` with a component unreachable from every seed.
-- **SC-004**: Public-corpus goldens are regenerated in CI. Every changed file is explained by one of three things: a declared requirement now attached, an orphan reason now present, or a completeness verdict corrected. No component gains a root edge without a declaration naming it (FR-004).
-- **SC-005**: The SBOM quality corpus is run in CI. Every metric outside its authored range is explained by the same three causes, and is re-authored with the runs cited.
+- **SC-004**: Public-corpus goldens are regenerated in CI. Every changed file is explained by one of the causes research R9 lists:
+  1. a declared requirement attached;
+  2. a second declaring file recorded;
+  3. the fallback running for a root whose only edges were anchors;
+  4. a completeness verdict corrected;
+  5–7. one of the three FR-005 format-parity corrections.
+
+  The review records a count per cause. A component gains a root edge only through a declaration, an anchor, or the fallback of FR-005 (FR-004).
+- **SC-005**: The SBOM quality corpus is run in CI. Every metric outside its authored range is explained by the same R9 causes, and is re-authored with the runs cited.
 - **SC-006**: Measured in CI on the C/C++ super-project in the public fixture repository, with and without submodules checked out:
   - the super-project's own requirements-declared components unreachable without a reason go from **73** (without) and **62 of 66** (with) to **0**;
   - the root's direct dependencies are reported before and after, and each change is explained.

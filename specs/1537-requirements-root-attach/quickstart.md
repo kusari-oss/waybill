@@ -29,7 +29,7 @@ jq -r '.metadata.properties[] | select(.name == "waybill:graph-completeness") | 
 
 **At `main` `283e4c19`** the first command lists only the submodule, while the second still prints `complete` (research R1).
 
-The integration tests in `waybill-cli/tests/declared_requirements.rs` cover contract cases C-1 to C-9 and invariants I-1 to I-4:
+The integration tests in `waybill-cli/tests/declared_requirements.rs` cover contract cases C-1 to C-13 and invariants I-1 to I-4:
 
 ```sh
 cargo test -p waybill --test declared_requirements
