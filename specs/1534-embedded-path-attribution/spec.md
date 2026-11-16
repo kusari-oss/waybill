@@ -143,4 +143,4 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
 - Path classification uses only the paths themselves and the components already in the document. No source tree is read.
 - `therock_manifest.json` is not read (clarified). Submodules without a versioned component are #1541's.
 - The 161 symlink-only binary components on ROCm are a separate observation: binary components keyed on a symlink path whose target is also scanned. They are counted here and not changed.
-- Binaries built from a `*-tests` project (`hip-tests`) are evidence for test scope, but changing #1564's rules is out of scope. A follow-up issue records the measurement.
+- Binaries built from a `*-tests` project (`hip-tests`) are evidence for test scope, but changing #1564's rules is out of scope. #1574 records the measurement.
