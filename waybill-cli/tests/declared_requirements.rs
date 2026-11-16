@@ -339,7 +339,12 @@ fn c3_requirements_next_to_a_pyproject() {
     let docs = scan(&fx, &fx.path("app"), &[]);
     assert_eq!(docs.cdx["metadata"]["component"]["purl"], "pkg:pypi/waybill-fixture-app@1.0.0");
     assert_eq!(root_targets(&docs), set(&[A, B, "pkg:pypi/waybill-fixture-c@unresolved"]));
-    assert_verdict(&docs, "complete");
+    // `partial` for an existing reason: `c` is declared by the pyproject
+    // without a lockfile, so its version is unresolved. Not an orphan.
+    assert_verdict(&docs, "partial");
+    let reason = prop(&docs.cdx["metadata"], "waybill:graph-completeness-reason").unwrap_or("");
+    assert!(reason.starts_with("transitive-edges-unresolvable"), "{reason}");
+    assert!(!reason.contains("orphan"), "no component is stranded: {reason}");
 }
 
 const TOOLS_PKG: &str = "pkg:npm/waybill-fixture-tools@1.0.0";

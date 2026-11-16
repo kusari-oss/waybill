@@ -569,18 +569,33 @@ fn has_python_project_marker(dir: &Path) -> bool {
 /// Merge `additions` into `entries`, dropping any addition whose PURL
 /// already exists in `entries`. Preserves insertion order; additions
 /// that DO land are appended at the tail.
+/// Spec 1537 (research R5): a later entry for a PURL already present is
+/// not added, but its declaring file is kept on the existing entry. Without
+/// it, a package pinned in both `requirements.txt` and
+/// `tools/requirements.txt` kept only the first path, and the second
+/// declaring project could not be found. Same shape as the Go reader's
+/// duplicate handling (`golang/legacy.rs`).
 fn merge_without_override(
     entries: &mut Vec<PackageDbEntry>,
     additions: Vec<PackageDbEntry>,
 ) {
-    use std::collections::HashSet;
-    let existing: HashSet<String> = entries
+    use std::collections::HashMap;
+    let existing: HashMap<String, usize> = entries
         .iter()
-        .map(|e| e.purl.as_str().to_string())
+        .enumerate()
+        .map(|(i, e)| (e.purl.as_str().to_string(), i))
         .collect();
     for a in additions {
-        if !existing.contains(a.purl.as_str()) {
-            entries.push(a);
+        match existing.get(a.purl.as_str()) {
+            Some(&i) => {
+                let kept = &mut entries[i];
+                if kept.source_path != a.source_path
+                    && !kept.extra_source_paths.contains(&a.source_path)
+                {
+                    kept.extra_source_paths.push(a.source_path);
+                }
+            }
+            None => entries.push(a),
         }
     }
 }
@@ -1821,6 +1836,26 @@ mod tests {
         assert!(names.contains(&"fastapi"), "got {names:?}");
         assert!(names.contains(&"celery"), "got {names:?}");
         assert!(names.contains(&"flask"), "got {names:?}");
+    }
+
+    /// Spec 1537 (research R5): a package pinned in two requirements files
+    /// is one entry carrying both declaring paths.
+    #[test]
+    fn s1537_a_package_pinned_in_two_files_keeps_both_paths() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        std::fs::write(root.join("requirements.txt"), "waybill-fixture-a==1.0.0\n").unwrap();
+        std::fs::create_dir_all(root.join("tools")).unwrap();
+        std::fs::write(root.join("tools/requirements.txt"), "waybill-fixture-a==1.0.0\n").unwrap();
+        let out = read(root, false, &Default::default());
+        let a: Vec<&PackageDbEntry> = out.iter().filter(|e| e.name == "waybill-fixture-a").collect();
+        assert_eq!(a.len(), 1, "one entry for the package");
+        let mut paths: Vec<String> = std::iter::once(a[0].source_path.clone())
+            .chain(a[0].extra_source_paths.iter().cloned())
+            .map(|p| std::path::Path::new(&p).strip_prefix(root).map(|r| r.display().to_string()).unwrap_or(p))
+            .collect();
+        paths.sort();
+        assert_eq!(paths, vec!["requirements.txt".to_string(), "tools/requirements.txt".to_string()]);
     }
 
     #[test]

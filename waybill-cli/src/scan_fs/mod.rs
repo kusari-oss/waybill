@@ -23,6 +23,7 @@ pub mod podman_source;
 // yet invoke them. US1.B wires the walker into `scan_cmd::scan`
 // alongside the new `--file-inventory` CLI flag, multi-format
 // SBOM emission, and the new C-rows.
+pub(crate) mod declared_attach;
 pub(crate) mod file_tier;
 #[cfg(feature = "oci-registry")]
 pub mod oci_pull;
@@ -141,6 +142,10 @@ pub struct ScanResult {
     /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage, as its
     /// wire value. `None` when no `.gitmodules` file was seen.
     pub git_submodule_coverage: Option<String>,
+    /// Spec 1537 (research R4): PURLs declared by a requirements file at the
+    /// scan root, or with no owning project below it. `scan_cmd` installs
+    /// them as reader root anchors.
+    pub declared_root_anchors: Vec<String>,
     /// Spec 1535 (C229): declared CMake downloads, as their wire value.
     pub declared_downloads: Option<String>,
     /// Spec 1536 (C230): binaries a Python package owns, analysed and
@@ -429,6 +434,8 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         Option<package_db::golang::CacheWarmingResult> = None;
     let mut go_mod_why: Option<package_db::GoModWhyStatus> = None;
     let mut git_submodule_coverage: Option<String> = None;
+    // Spec 1537: submodule directories, for the declared-requirements pass.
+    let mut git_submodule_dirs = package_db::git_submodule::SubmoduleDirs::new();
     let mut declared_downloads: Option<String> = None;
     let mut python_owned_binaries: Option<String> = None;
     let mut installed_library_coverage: Option<String> = None;
@@ -512,6 +519,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let mut scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name, exclude_set, no_binary_scan)?;
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
         git_submodule_coverage = scan_result.diagnostics.git_submodule_coverage.as_ref().map(|c| c.wire());
+        git_submodule_dirs = std::mem::take(&mut scan_result.diagnostics.git_submodule_dirs);
         declared_downloads = scan_result.diagnostics.cmake_declared_downloads.clone();
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
         // Milestone 172: mirror gosum_fallback_count from
@@ -1499,6 +1507,19 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // `LifecycleScope::Build`.
     package_db::nix::attach_inputs_to_projects(&components, &mut relationships);
 
+    // Spec 1537 (#1566, #1538), research R3: a package a pip requirements
+    // file declares gets an edge from the project that declares it. Before
+    // the scope rewrite below, for the same reason as the flake inputs: it
+    // emits `DependsOn` and that pass types it from the package's scope, so
+    // a `requirements-dev.txt` edge comes out optional (FR-010). Packages
+    // declared at the scan root are anchored to the root at the end of this
+    // function, once dedup and reconciliation have settled their PURLs.
+    {
+        let index = declared_attach::OwnerIndex::build(&components, &git_submodule_dirs, root, scan_mode);
+        let declared = declared_attach::attach(&components, &relationships, &index, root);
+        relationships.extend(declared.edges);
+    }
+
     apply_lifecycle_scope_to_edges(&components, &mut relationships);
 
     let components = deduplicate(components);
@@ -1603,8 +1624,20 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             unresolved_declared_dep_count,
         );
     }
+    // Spec 1537 (research R4): requirements declared at the scan root, or
+    // with no owning project below it, are direct dependencies of whatever
+    // root each format chooses. Computed from the final components so a
+    // PURL the reconciler rewrote is not anchored under its old name.
+    let declared_root_anchors: Vec<String> = {
+        let index = declared_attach::OwnerIndex::build(&components, &git_submodule_dirs, root, scan_mode);
+        declared_attach::attach(&components, &relationships, &index, root)
+            .root_anchors
+            .into_iter()
+            .collect()
+    };
     Ok(ScanResult {
         unresolved_declared_dep_count,
+        declared_root_anchors,
         components,
         relationships,
         complete_ecosystems,

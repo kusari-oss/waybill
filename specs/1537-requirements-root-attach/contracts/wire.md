@@ -11,7 +11,7 @@ Every case is checked in CycloneDX 1.6, SPDX 2.3 and SPDX 3.0.1.
 |---|---|---|---|
 | C-1 | `requirements.txt` pinning `a`, `b` | `a`, `b` | `complete` |
 | C-2 | C-1 plus one submodule `dep` | `dep`, `a`, `b` | `complete` |
-| C-3 | `pyproject.toml` (`app`, declaring `c`) plus `requirements.txt` pinning `a`, `b`; the root is `app` | `c`, `a`, `b` | `complete` |
+| C-3 | `pyproject.toml` (`app`, declaring `c`) plus `requirements.txt` pinning `a`, `b`; the root is `app` | `c`, `a`, `b` | `partial`, reason `transitive-edges-unresolvable: pypi` (`c` is declared without a lockfile, so `c@unresolved`); never an orphan reason |
 | C-4 | `requirements.txt` (`a`) plus `tools/requirements.txt` (`t`); no project anywhere | `a`, `t` | `complete` |
 | C-5 | C-4 plus `tools/package.json` (an npm main module `tools-pkg`) plus a scan-root `pyproject.toml` (`app`, no dependencies); the root is `app` | `a`, `b`, `tools-pkg`. `tools-pkg` depends on `t`. File-tier entries for bare manifests are ignored | `complete` |
 | C-6 | Submodule at `third_party/x` holding its own `pyproject.toml` (`xpy`) and `requirements.txt` (`r`), plus a scan-root `pyproject.toml` (`app`); the root is `app` | `x`, `xpy`, `a`, `b`. `xpy` is a root edge, as a nested project, not reached through `x`. `xpy` depends on `r` | `complete` |

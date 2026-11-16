@@ -171,12 +171,17 @@ struct RepoDecls {
 /// Read every dispatched `.gitmodules`, join with gitlinks, and emit one
 /// entry per gitlink (FR-001 to FR-008, FR-011). Returns the entries and
 /// the C222 coverage, which is `None` when no `.gitmodules` was seen.
+/// Each emitted submodule's directory (canonical, absolute) mapped to its
+/// PURL. Spec 1537 (research R3): the declared-requirements pass uses it to
+/// find the project that owns a file under a submodule. Not a wire field.
+pub(crate) type SubmoduleDirs = BTreeMap<PathBuf, String>;
+
 pub(crate) fn finalize(
     marker: GitSubmoduleMarker,
     scan_root: &Path,
-) -> (Vec<PackageDbEntry>, Option<SubmoduleCoverage>) {
+) -> (Vec<PackageDbEntry>, Option<SubmoduleCoverage>, SubmoduleDirs) {
     if marker.gitmodules.is_empty() {
-        return (Vec::new(), None);
+        return (Vec::new(), None, SubmoduleDirs::new());
     }
     let scan_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
     let mut coverage = SubmoduleCoverage::default();
@@ -347,7 +352,7 @@ pub(crate) fn finalize(
     }
 
     tracing::info!(reader = "git-submodule", coverage = %coverage.wire(), "git submodules");
-    (emitted, Some(coverage))
+    (emitted, Some(coverage), purl_of_dir)
 }
 
 fn entry(id: &identity::Identity, commit: &str, source_path: &Path, build_reference: &'static str) -> PackageDbEntry {
@@ -407,8 +412,9 @@ mod tests {
     #[test]
     fn s1530_no_gitmodules_means_no_coverage_and_no_git() {
         let tmp = tempfile::tempdir().unwrap();
-        let (entries, coverage) = finalize(GitSubmoduleMarker::default(), tmp.path());
+        let (entries, coverage, dirs) = finalize(GitSubmoduleMarker::default(), tmp.path());
         assert!(entries.is_empty());
         assert!(coverage.is_none());
+        assert!(dirs.is_empty(), "spec 1537: no submodule, no owner directory");
     }
 }
