@@ -7,7 +7,7 @@
 
 ## Phase 1: Setup (measurement first)
 
-- [ ] T001 Commit the R1 repro arms, and the R12 arm, as a measurement record in `specs/1537-requirements-root-attach/measurements/repro.md`. The arms:
+- [X] T001 Commit the R1 repro arms, and the R12 arm, as a measurement record in `specs/1537-requirements-root-attach/measurements/repro.md`. The arms:
   - C-1: `requirements.txt` only;
   - C-2: with a submodule;
   - C-3: `pyproject.toml` + `requirements.txt`;

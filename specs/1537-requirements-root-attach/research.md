@@ -165,3 +165,15 @@ For each corpus target, a committed probe (`measurements/root_only.py`, run with
 - **The pass:** one walk up the ancestors per declaring file, over an index built once per scan. The index holds every main module and submodule. Cost is linear in the number of declaring files times directory depth.
 - **`root_edges`:** replaces four computations with one.
 - **No I/O, subprocess or network** (FR-011).
+
+## R14. A file named like a constraints file (measured, T001)
+
+**Measured:** the reader reads `requirements-constraints.txt` as a declaration, and its package is attached like any other (`measurements/repro.md`, arm c12).
+
+**Decision:** attach it like any other file the reader reads. Use no filename heuristic.
+- In pip, "constraint" is a property of how a file is referenced (`-c`), not of its name. The reader follows neither `-r` nor `-c` (#1583).
+- Guessing from a name would drop packages the project may install directly.
+
+The spec's "not a declaration" edge case applies to files reached through `-c`, and those are not read today. FR-008's population stays empty (R7).
+
+**Vendored directories (arm c11):** `vendor/x/requirements.txt` is not read, so there is nothing to attach (spec edge case: "whether such a file is read is unchanged").

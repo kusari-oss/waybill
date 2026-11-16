@@ -19,8 +19,8 @@ Every case is checked in CycloneDX 1.6, SPDX 2.3 and SPDX 3.0.1.
 | C-8 | `requirements-dev.txt` pinning `d`, plus a submodule | `dep` plus `d` with development scope: CycloneDX `scope: excluded`, SPDX 2.3 `DEV_DEPENDENCY_OF`, SPDX 3 `dependsOn` with development scope | `complete` |
 | C-9 | An image-style scan, with OS packages only and a placeholder root | identical to `main`, except where an FR-005 parity correction applies; each difference names its correction | unchanged |
 | C-10 | C-1 plus `--supplement-cdx` whose subject declares `s` | `s`, `a`, `b`. The supplement anchor no longer switches the fallback off in CycloneDX and SPDX 2.3 | `complete` |
-| C-11 | `requirements.txt` (`a`) plus `vendor/x/requirements.txt` (`v`) | `a`, plus `v` if and only if the reader reads it today (T001 records which) | `complete` |
-| C-12 | `requirements.txt` (`a`) plus `requirements-constraints.txt` (`k`) | set by T001's measurement and the spec's edge case. If `k` is read as a declaration, it is either attached like `a` or excluded with an orphan reason; the choice is recorded in research before T013 | per that choice |
+| C-11 | `requirements.txt` (`a`, `b`) plus `vendor/x/requirements.txt` (`v`) | `a`, `b`. `v` is not a component, because the vendored file is not read (T001, research R14) | `complete` |
+| C-12 | `requirements.txt` (`a`, `b`) plus `requirements-constraints.txt` (`k`) | `a`, `b`, `k`. A file named like a constraints file is read as a declaration and attached like any other (research R14) | `complete` |
 | C-13 | C-2 plus a root `CMakeLists.txt` whose `FetchContent_Declare` names the submodule's repository at its pinned commit, so the two readers merge into one component (spec 1530, FR-009) | `dep` exactly once, alongside `a` and `b`: one component, one root edge | `complete` |
 
 **C-6 is not fully determined yet.** Whether `x-py` hangs off the fallback or off the submodule depends on the fallback gate for that scan. T002 records the observed shape, and the contract is updated to it before implementation. Either way, `r` is attached to `x-py`, not to the root.
