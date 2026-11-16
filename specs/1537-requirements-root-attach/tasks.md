@@ -148,7 +148,7 @@
   - **Validation:** check it first against one target where both definitions must agree.
   - **I-2 on the corpus (SC-003, G1):** for each listed document, record which main-module component in the same document reaches each root-unreachable component. A component reached by neither the root nor any main module is an SC-003 failure. It blocks T025.
   - **Record and follow-up:** record the counts in `measurements/root-only.md`, and file the SC-008 follow-up issue with them.
-- [ ] T022 Mutations, applied by `measurements/mutate.py`, with each file restored by `cp` and checked with `git diff --quiet`. Results go in `measurements/mutations.md`. Each must fail at least one test:
+- [X] T022 Mutations, applied by `measurements/mutate.py`, with each file restored by `cp` and checked with `git diff --quiet`. Results go in `measurements/mutations.md`. Each must fail at least one test:
   - M1: anchors close the gate;
   - M2: the fallback only for synthetic roots;
   - M3: tool-use edges close the gate;
