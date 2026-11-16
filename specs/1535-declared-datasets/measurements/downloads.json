@@ -1,0 +1,404 @@
+[
+ {
+  "digest_lists": [],
+  "file": "cmake/FindROCMCmake.cmake",
+  "fr001_resolvable": false,
+  "in_loop": false,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "libhipcxx",
+  "url": "${rocm_cmake_url}",
+  "vars": [
+   "rocm_cmake_url"
+  ]
+ },
+ {
+  "digest_lists": [],
+  "file": "llvm/cmake/modules/TensorFlowCompile.cmake",
+  "fr001_resolvable": false,
+  "in_loop": false,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "llvm-project",
+  "url": "${model}",
+  "vars": [
+   "model"
+  ]
+ },
+ {
+  "digest_lists": [],
+  "file": "mlir/cmake/modules/AddMLIRPython.cmake",
+  "fr001_resolvable": false,
+  "in_loop": false,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "llvm-project",
+  "url": "https://raw.githubusercontent.com/wjakob/nanobind/${MLIR_NB_STUBGEN_VERSION}/src/stubgen.py",
+  "vars": [
+   "MLIR_NB_STUBGEN_VERSION"
+  ]
+ },
+ {
+  "digest_lists": [],
+  "file": "projects/miopen/cmake/embed.cmake",
+  "fr001_resolvable": false,
+  "in_loop": false,
+  "literal": false,
+  "resolved_by": [
+   null,
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "${TARGET_URI}/${FILE_NAME}.kdb",
+  "vars": [
+   "TARGET_URI",
+   "FILE_NAME"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/hipsparse/cmake/ClientMatrices.cmake",
+  "fr001_resolvable": false,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "$ENV{HIPSPARSE_TEST_MIRROR}/${mat}.tar.gz",
+  "vars": [
+   "mat"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/hipsparse/cmake/ClientMatrices.cmake",
+  "fr001_resolvable": true,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   "m<-TEST_MATRICES[19]"
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://sparse.tamu.edu/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/hipsparse/cmake/ClientMatrices.cmake",
+  "fr001_resolvable": true,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   "m<-TEST_MATRICES[19]"
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://www.cise.ufl.edu/research/sparse/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/hipsparse/cmake/hipsparse_clientmatrices.cmake",
+  "fr001_resolvable": false,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "$ENV{HIPSPARSE_TEST_MIRROR}/${mat}.tar.gz",
+  "vars": [
+   "mat"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/hipsparse/cmake/hipsparse_clientmatrices.cmake",
+  "fr001_resolvable": true,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   "m<-TEST_MATRICES[19]"
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://sparse.tamu.edu/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/hipsparse/cmake/hipsparse_clientmatrices.cmake",
+  "fr001_resolvable": true,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   "m<-TEST_MATRICES[19]"
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://www.cise.ufl.edu/research/sparse/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [
+   "BUILD_SHARED_LIBS"
+  ],
+  "file": "projects/hipcub/cmake/Dependencies.cmake",
+  "fr001_resolvable": false,
+  "in_loop": false,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://github.com/NVIDIA/cccl/archive/refs/tags/v${CCCL_MINIMUM_VERSION}.zip",
+  "vars": [
+   "CCCL_MINIMUM_VERSION"
+  ]
+ },
+ {
+  "digest_lists": [],
+  "file": "projects/hipcub/test/extra/CMakeLists.txt",
+  "fr001_resolvable": false,
+  "in_loop": false,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://github.com/NVIDIA/cccl/archive/refs/tags/v${CCCL_MINIMUM_VERSION}.zip",
+  "vars": [
+   "CCCL_MINIMUM_VERSION"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/rocsparse/cmake/ClientMatrices.cmake",
+  "fr001_resolvable": false,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "$ENV{ROCSPARSE_TEST_MIRROR}/${mat}.tar.gz",
+  "vars": [
+   "mat"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/rocsparse/cmake/ClientMatrices.cmake",
+  "fr001_resolvable": true,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   "m<-TEST_MATRICES[24]"
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://sparse.tamu.edu/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/rocsparse/cmake/ClientMatrices.cmake",
+  "fr001_resolvable": true,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   "m<-TEST_MATRICES[24]"
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://www.cise.ufl.edu/research/sparse/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/rocsparse/cmake/rocsparse_clientmatrices.cmake",
+  "fr001_resolvable": false,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "$ENV{ROCSPARSE_TEST_MIRROR}/${mat}.tar.gz",
+  "vars": [
+   "mat"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/rocsparse/cmake/rocsparse_clientmatrices.cmake",
+  "fr001_resolvable": true,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   "m<-TEST_MATRICES[24]"
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://sparse.tamu.edu/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [
+   "TEST_MD5HASH"
+  ],
+  "file": "projects/rocsparse/cmake/rocsparse_clientmatrices.cmake",
+  "fr001_resolvable": true,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   "m<-TEST_MATRICES[24]"
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://www.cise.ufl.edu/research/sparse/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [],
+  "file": "projects/rocsparse/cmake/suitesparse/MatrixDownloadAndConvert.cmake",
+  "fr001_resolvable": false,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://sparse.tamu.edu/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [],
+  "file": "projects/rocsparse/cmake/suitesparse/MatrixDownloadAndConvert.cmake",
+  "fr001_resolvable": false,
+  "in_loop": true,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "https://www.cise.ufl.edu/research/sparse/MM/${m}.tar.gz",
+  "vars": [
+   "m"
+  ]
+ },
+ {
+  "digest_lists": [],
+  "file": "projects/rocsolver/cmake/get-rocm-cmake.cmake",
+  "fr001_resolvable": false,
+  "in_loop": false,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-libraries",
+  "url": "${rocm_cmake_url}",
+  "vars": [
+   "rocm_cmake_url"
+  ]
+ },
+ {
+  "digest_lists": [],
+  "file": "shared/rocroller/GPUArchitectureGenerator/CMakeLists.txt",
+  "fr001_resolvable": true,
+  "in_loop": false,
+  "literal": true,
+  "resolved_by": [],
+  "submodule": "rocm-libraries",
+  "url": "https://gpuopen.com/download/machine-readable-isa/latest",
+  "vars": []
+ },
+ {
+  "digest_lists": [],
+  "file": "projects/rccl/cmake/Dependencies.cmake",
+  "fr001_resolvable": false,
+  "in_loop": false,
+  "literal": false,
+  "resolved_by": [
+   null
+  ],
+  "submodule": "rocm-systems",
+  "url": "https://github.com/ROCm/rocm-cmake/archive/${rocm_cmake_tag}.zip",
+  "vars": [
+   "rocm_cmake_tag"
+  ]
+ },
+ {
+  "digest_lists": [],
+  "file": "projects/rocprofiler-sdk/benchmark/cmake/timem.cmake",
+  "fr001_resolvable": true,
+  "in_loop": false,
+  "literal": true,
+  "resolved_by": [],
+  "submodule": "rocm-systems",
+  "url": "https://github.com/ROCm/timemory/releases/download/timemory-timem%2Fv0.0.4/timemory-timem-1.0.0-Linux.sh",
+  "vars": []
+ },
+ {
+  "digest_lists": [],
+  "file": "projects/rocprofiler-sdk/source/docs/CMakeLists.txt",
+  "fr001_resolvable": true,
+  "in_loop": false,
+  "literal": true,
+  "resolved_by": [],
+  "submodule": "rocm-systems",
+  "url": "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh",
+  "vars": []
+ },
+ {
+  "digest_lists": [],
+  "file": "projects/rocprofiler-sdk/tests/pytest-packages/CMakeLists.txt",
+  "fr001_resolvable": true,
+  "in_loop": false,
+  "literal": true,
+  "resolved_by": [],
+  "submodule": "rocm-systems",
+  "url": "https://github.com/jrmadsen/perfetto-trace-processor-shell/releases/download/v0.0.4/trace_processor_shell.linux_clang_release",
+  "vars": []
+ }
+]
