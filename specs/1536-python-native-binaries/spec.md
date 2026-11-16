@@ -47,25 +47,36 @@ The pip reader searches `site-packages` only under `usr/lib`, `usr/local/lib`, `
 
 **The ROCm SDK fixture** (`kusari-sandbox/waybill-fixture-therock-sdk`) contains no `.dist-info` directory: 0 of its listed paths. It cannot exercise this feature. It can only show that nothing changes there.
 
+## Clarifications
+
+### Session 2026-11-16
+
+- Q: What does a `RECORD`-claimed binary appear as, and where? → A: Each owned binary appears once, as its own component nested under the owning package. What it identifies nests under it: package → `libz.1.3.2.dylib` → `zlib@1.3.2`. The file tier's separate top-level `file` component for that path is not emitted, so nothing is listed twice, and `site-packages` gains the inventory it lacks today.
+- Q: Which real wheel(s) does CI measure? → A: Both of these:
+  - a pinned ROCm Python wheel published by TheRock, scanned in the fixture repo's CI;
+  - the auditwheel `manylinux` wheel and the delocate macOS wheel of one widely used numerical package from PyPI, pinned and scanned in CI.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A vendored native library is identified under its Python package (Priority: P1)
 
-A consumer scans an unpacked wheel or an installed `site-packages` tree. A shared library the package ships, and lists in its `RECORD`, goes through binary analysis. Anything identified is reported nested under the Python package that owns the file, with the library's path as its occurrence. The package stays the owner.
+A consumer scans an unpacked wheel or an installed `site-packages` tree. A shared library the package ships, and lists in its `RECORD`, goes through binary analysis. The library is reported once, as a component nested under the Python package that owns it, with its path as the occurrence. Anything identified in it nests under the library. The package stays the owner.
 
 **Why this priority**: This is the regression. Identification inside wheels was lost for unpacked wheels and never existed for `site-packages`, and vendored native code is exactly what a vulnerability consumer needs to see.
 
 **Independent Test**: The measured fixture, built from synthetic `waybill-fixture-*` names around a binary carrying an embedded zlib version string. Scan it in both layouts with a `.dist-info`, then check:
-- the zlib identification is reported, nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`;
+- the library is reported once, nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`;
+- the zlib identification is nested under the library;
 - the linkage the no-`.dist-info` scan reports is reported too.
 
 **Acceptance Scenarios**:
 
-1. **Given** an unpacked wheel whose `RECORD` lists a library with an embedded zlib version, **When** it is scanned, **Then** `pkg:generic/zlib@1.3.2` appears nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`, its occurrence is the library's path, and the root stays the Python package.
-2. **Given** the same package under `usr/lib/python3.12/site-packages/`, **When** it is scanned, **Then** the same nested component appears under the package.
+1. **Given** an unpacked wheel whose `RECORD` lists a library with an embedded zlib version, **When** it is scanned, **Then** the library appears as a component nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`, with its path as the occurrence. `pkg:generic/zlib@1.3.2` is nested under the library, and the root stays the Python package.
+2. **Given** the same package under `usr/lib/python3.12/site-packages/`, **When** it is scanned, **Then** the same nesting appears under the package.
 3. **Given** a library with dynamic dependencies outside the package, **When** it is scanned, **Then** those dependencies are reported as they are for an unclaimed binary, and the dependency edges start from the owning package.
 4. **Given** a vendored library that links another library vendored in the same package, **When** it is scanned, **Then** the linked library is not reported as an external dependency.
 5. **Given** a package whose `RECORD` lists only Python files, **When** it is scanned, **Then** the output is unchanged.
+6. **Given** an owned library in which analysis identifies nothing, **When** it is scanned, **Then** it still appears once, nested under the package. No top-level `file` component is emitted for its path.
 
 ---
 
@@ -107,7 +118,7 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 - **Claimed by both a `RECORD` and an OS package:** the OS claim wins, and the output is unchanged (US2).
 - **A `RECORD` entry for a missing file:** it is skipped, as today.
 - **A `RECORD` path outside the package directory.** pip installs scripts and data through `../../bin/<name>`-style entries. Some wheels ship their whole tool as a native executable this way, for example Rust and Go command-line tools. Such a file is owned by the package and analysed. Its embedded build metadata (cargo-auditable crates, Go build info) nests under the Python package.
-- **A binary that identifies the package itself.** A native library may carry the same project's name and version. It is still reported nested under the package, because it describes what the package contains. It is not merged into the package.
+- **A binary that identifies the package itself.** A native library may carry the same project's name and version. It is still reported nested under the binary, because it describes what the package contains. It is not merged into the package.
 - **Two `RECORD`s claim one file:** one owner is chosen deterministically, and the choice does not depend on scan order.
 - **A package without a `RECORD`** (egg-info, or a `.dist-info` missing the file): nothing claims its files today. Unchanged.
 - **CPython's own extension modules** (`lib-dynload`) are not `RECORD`-claimed. The CPython collapse is unchanged.
@@ -118,8 +129,8 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 ### Functional Requirements
 
 - **FR-001**: A file claimed by a Python package's `RECORD`, and by no OS package database, MUST go through binary analysis as an unclaimed file does. That covers dynamic linkage, ELF notes, embedded version strings, symbol fingerprints, embedded-path attribution, binary role, and build metadata (cargo-auditable, Go build info).
-- **FR-002**: Every component identified from such a file MUST nest under the Python package that owns it, the way cargo-auditable crates nest under their binary. Its occurrence MUST be the file's path.
-- **FR-003**: The owning Python package MUST remain the owner, and the document root MUST NOT change. What the binary's own file-level component becomes is [NEEDS CLARIFICATION: when a `RECORD`-claimed binary's own component is emitted, and where it sits — see Q1].
+- **FR-002**: Each such file that analysis recognises as a binary MUST appear exactly once, as its own component nested under the Python package that owns it, with the file's path as its occurrence. Every component identified from it MUST nest under that binary component (package → binary → identified), the way cargo-auditable crates nest under their binary.
+- **FR-003**: The owning Python package MUST remain the owner, and the document root MUST NOT change. An owned binary MUST NOT also appear anywhere else; in particular, the file tier MUST NOT emit a top-level `file` component for its path. An owned binary in which nothing is identified still appears, nested.
 - **FR-004**: Dependency edges from linkage MUST start at the owning package. A library resolved to another file the same package owns MUST NOT be reported as an external dependency.
 - **FR-005**: A file claimed by an OS package database (dpkg, rpm, apk, alpm, opkg) MUST keep today's behaviour, whether or not a `RECORD` also claims it.
 - **FR-006**: An unpacked wheel's root `.dist-info` and a `site-packages` `.dist-info` MUST take the same path. The layout does not change what is analysed or how it is reported.
@@ -131,18 +142,22 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 
 ### Key Entities
 
-- **Owned binary**: a file a Python package's `RECORD` claims, that no OS package database claims, and that binary analysis recognises as ELF, Mach-O or PE. Its attributes are the owning package, its path, and what analysis identified in it.
-- **Owning package**: the `pkg:pypi` component whose `RECORD` lists the file. It is the parent of everything identified in its owned binaries.
+- **Owned binary**: a file a Python package's `RECORD` claims, that no OS package database claims, and that binary analysis recognises as ELF, Mach-O or PE. It is reported as one component nested under the owning package, with its path as the occurrence, and it is the parent of what analysis identified in it.
+- **Owning package**: the `pkg:pypi` component whose `RECORD` lists the file. It is the parent of its owned binaries.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: On the synthetic wheel, in both layouts with a `.dist-info`, the zlib identification and the linkage that the no-`.dist-info` scan reports are all present. Each is nested under, or an edge from, `pkg:pypi/waybill-fixture-pkg@1.2.3`.
+- **SC-001**: On the synthetic wheel, in both layouts with a `.dist-info`, the zlib identification and the linkage that the no-`.dist-info` scan reports are all present. The library appears once, nested under `pkg:pypi/waybill-fixture-pkg@1.2.3`; the zlib identification is nested under the library, and the linkage edges start from the package. The two layouts give the same components and edges.
 - **SC-002**: On the public corpus, with goldens regenerated in CI, every changed file is explained by a `RECORD`-only claimed binary. No component of an OS package changes.
 - **SC-003**: On the ROCm SDK fixture in CI, which contains no `.dist-info`, the output is unchanged.
-- **SC-004**: On [NEEDS CLARIFICATION: which real wheel(s) CI measures — see Q2], measured in CI, the identifications and linkage that the same tree yields without its `.dist-info` are all present, nested under the package. No binary is reported twice.
-- **SC-005**: Each rule has a mutation that makes a test fail: the OS claim winning, nesting, the owner-rooted edges, the internal-link exclusion, the hash-suffix strip, the same path for both layouts, and the FR-009 counts.
+- **SC-004**: Measured in CI on real wheels, each pinned:
+  - a ROCm Python wheel published by TheRock, scanned in the fixture repo's CI, raising `--max-file-size` where its libraries need it (#1528);
+  - the auditwheel `manylinux` wheel and the delocate macOS wheel of one widely used numerical package from PyPI, chosen at plan time.
+
+  For each wheel, the identifications and linkage that the same tree yields without its `.dist-info` are all present, nested as FR-002 says. No binary is reported twice.
+- **SC-005**: Each rule has a mutation that makes a test fail: the OS claim winning, nesting, the owner-rooted edges, the internal-link exclusion, the hash-suffix strip, the same path for both layouts, the single listing of each owned binary, and the FR-009 counts.
 - **SC-006**: Every output passes the CycloneDX 1.6 schema and `spdx3-validate`.
 
 ## Assumptions

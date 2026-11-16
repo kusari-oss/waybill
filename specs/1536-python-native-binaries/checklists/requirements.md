@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,6 +31,6 @@
 
 ## Notes
 
-- Two markers remain: FR-003 (the binary's own component, Q1) and SC-004 (the real wheel measured in CI, Q2).
+- Both markers resolved 2026-11-16 and recorded under Clarifications: Q1 → each owned binary appears once, nested under its package, with identifications under it (FR-002, FR-003); Q2 → a TheRock ROCm wheel plus a PyPI auditwheel/delocate pair (SC-004).
 - The format terms (CycloneDX, SPDX, `RECORD`, PURL) are the domain's own vocabulary for this audience, as in specs 1533–1535.
 - The Background separates what was measured at `1ae157d5` from the figure quoted from #1567.
