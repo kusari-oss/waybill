@@ -37,7 +37,7 @@
   **Done.** At `main`, C-2, C-3, C-5, C-6, C-7, C-8, C-10 and C-13 fail; C-1, C-4, C-9, C-11 and C-12 pass. C-13 was mislisted as a control: it is C-2 plus a merge, so it fails at `main` too. C-5 to C-7 gained a scan-root project after the first run showed the root selector promoting a lone nested main module to subject (contract note). No gating: `git_submodule_reader.rs` uses the same fixture helper on every lane.
 
   Then update `contracts/wire.md` C-6 to the observed fallback shape, as the contract requires. Decide on file-scope `#![cfg(unix)]` by checking the Windows lane, and record the decision in the test file's header.
-- [ ] T003 [P] Add `.github/workflows/measure-source.yml` and `census/source_report.py` to `kusari-sandbox/waybill-fixture-therock-sdk` (research R10).
+- [X] T003 [P] Add `.github/workflows/measure-source.yml` and `census/source_report.py` to `kusari-sandbox/waybill-fixture-therock-sdk` (research R10).
   - **Inputs:** `base_ref`, `waybill_ref`, `therock_ref` (default `b1cae390cc745283dce25581415353f9bc906162`).
   - **Steps:**
     1. Free disk with plain `rm -rf` of the preinstalled toolchains, and record `df -h` before and after.
