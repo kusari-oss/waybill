@@ -85,8 +85,13 @@ pub fn build_packages(
             == Some(crate::scan_fs::file_tier::COMPONENT_TIER_FILE_VALUE);
 
         let mut pkg = serde_json::Map::new();
+        // Spec 1535 (#1565): a declared dataset is the Dataset profile's
+        // `dataset_DatasetPackage`, a `software_Package` subclass.
+        let is_dataset = crate::generate::cyclonedx::builder::is_dataset(c);
         let element_type = if is_file_tier {
             "software_File"
+        } else if is_dataset {
+            "dataset_DatasetPackage"
         } else {
             "software_Package"
         };
@@ -134,7 +139,12 @@ pub fn build_packages(
         // Spec 1533 FR-002 (research R8): test payload in an installed tree is
         // `test` first; the role it would otherwise carry is kept as an
         // additional purpose, so nothing milestone 104 emitted is lost.
-        if crate::scan_fs::test_scope::scoped_by_this_feature(c) {
+        if is_dataset {
+            // FR-006 (research R6): nothing in a download declaration says
+            // what kind of data it is.
+            pkg.insert("software_primaryPurpose".to_string(), json!("data"));
+            pkg.insert("dataset_datasetType".to_string(), json!(["noAssertion"]));
+        } else if crate::scan_fs::test_scope::scoped_by_this_feature(c) {
             pkg.insert("software_primaryPurpose".to_string(), json!("test"));
             if let Some(p) = primary_purpose {
                 pkg.insert("software_additionalPurpose".to_string(), json!([p]));

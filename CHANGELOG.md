@@ -9,6 +9,20 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **Datasets declared by CMake downloads are reported as data components
+  (#1565).** rocSPARSE and hipSPARSE fetch their test matrices from the
+  SuiteSparse collection through a `file(DOWNLOAD)` loop over a literal list
+  of names and a paired list of MD5s. The CMake reader now reads such loops:
+  each list element becomes a data component (CycloneDX `type: "data"`,
+  SPDX 3 `dataset_DatasetPackage`, SPDX 2.3 `OTHER` plus
+  `waybill:component-kind: dataset`) identified by its element, with its
+  download URL and declared digest. Other downloads (tool installers,
+  undigested files, URLs built from undefined variables) are counted in
+  `waybill:declared-downloads` (C229) and emit nothing. Measured in CI on
+  ROCm's `rocm-libraries` at TheRock's pin: rocSPARSE's declarations give 24
+  datasets, one-to-one with the 24 matrices the installed SDK ships, each
+  with its SuiteSparse URL and MD5.
+
 - **Installed binaries are attributed to their package through the source
   paths embedded in them (#1532).** An unstripped or assertion-carrying
   binary keeps absolute paths to the sources it was compiled from.

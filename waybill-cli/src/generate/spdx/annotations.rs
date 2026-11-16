@@ -710,6 +710,10 @@ pub fn annotate_document(
     if let Some(record) = artifacts.bundled_source_trees {
         push(&mut out, crate::scan_fs::binary::embedded_paths::ANN_BUNDLED_SOURCE_TREES, json!(record));
     }
+    // C229 (spec 1535).
+    if let Some(record) = artifacts.declared_downloads {
+        push(&mut out, crate::scan_fs::package_db::cmake_download::ANN_DECLARED_DOWNLOADS, json!(record));
+    }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran.
     if let Some(g) = artifacts.go_mod_why {

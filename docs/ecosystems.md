@@ -91,6 +91,31 @@ package version files (`*ConfigVersion.cmake`, `*-config-version.cmake`) in
   component nested under it, counted by `waybill:bundled-source-trees`
   (C228).
 
+## CMake declared datasets
+
+Spec 1535 (#1565). A CMake file that downloads a list of datasets the way
+rocSPARSE fetches its test matrices — a literal list of names, a literal list
+of digests, an index loop with `list(GET …)`, `file(DOWNLOAD)` and a
+`file(MD5|SHA…)` check — yields one data component per list element:
+
+- **Identity.** The element: `Group/Name` gives
+  `pkg:generic/<Group>/<Name>?checksum=<alg>:<hex>&download_url=<url>`. No
+  version is invented. Fallback URLs and repeat declarations join the same
+  component.
+- **Kind.** CycloneDX `type: "data"`; SPDX 3 `dataset_DatasetPackage`
+  (`software_primaryPurpose: "data"`, `dataset_datasetType: ["noAssertion"]`);
+  SPDX 2.3 `primaryPackagePurpose: OTHER` with `waybill:component-kind:
+  dataset` (C160).
+- **Everything else is counted, not emitted.** Literal downloads (tool
+  installers), loops without a paired digest list, and URLs using any
+  variable the file does not define as a literal list are counted in
+  `waybill:declared-downloads` (C229).
+- **Discovery.** The CMake reader reads the root `CMakeLists.txt`, `cmake/`,
+  `Modules/` and `third_party/` (#1516), so declarations deeper in a monorepo
+  are found by scanning that project's own root.
+- **Installed trees are unchanged.** A dataset needs a declaration; data files
+  in an installed SDK get no component from their directory or shape.
+
 ## SBOM tiers: source, design, binary
 
 Every component waybill emits carries a **tier** — a per-component classification

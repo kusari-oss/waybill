@@ -168,6 +168,8 @@ pub struct ScanArtifacts<'a> {
     pub test_scope_coverage: Option<&'a str>,
     /// Spec 1534 (C228): bundled trees named by binaries' embedded paths.
     pub bundled_source_trees: Option<&'a str>,
+    /// Spec 1535 (C229): declared CMake downloads.
+    pub declared_downloads: Option<&'a str>,
     /// Milestone 1366 (#1365; C208) — what the closure's ecosystem identity
     /// pass did: how many candidates it found, confirmed, declined and could
     /// not check, and why if any went unchecked. `None` when no closure was

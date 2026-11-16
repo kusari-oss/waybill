@@ -702,6 +702,7 @@ mod tests {
             installed_library_coverage: None,
             test_scope_coverage: None,
             bundled_source_trees: None,
+            declared_downloads: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,
