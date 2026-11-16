@@ -377,10 +377,31 @@ ecosystem = "pip"
 # to stop inventorying, so the range was describing pre-m934 behaviour
 # rather than a defect. Unlike cpp-mongo, no vendored upstream source is
 # involved: third_party/ here is empty by design (research R6).
+#
+# Re-measured 2026-11-16 on CI, one commit apart (#1576):
+#   5e4e36b8 (run 43910028270): pkgs=114 edges=8  depth=2 sbomqs=5.71
+#   96ad6804 (run 43911388922): pkgs=151 edges=45 depth=2 sbomqs=5.72
+# The last passing nightly, fbaf3a6d (run 43909031614), gives 116/8, and
+# the first failing one, 1e5c53d1 (run 43909077815), gives 151/45.
+#
+# Cause: #1515 (96ad6804) reports git submodules as components. The
+# fetch is still non-recursive, so third_party/ is still empty. The
+# submodules are read from .gitmodules and the commit's gitlinks, which a
+# depth-1 fetch carries. Verified locally at main 283e4c19 with this
+# harness's exact scan invocation:
+# - the pin has 37 gitlinks, and `waybill:git-submodule-coverage` reports
+#   {"pinned":37}, with nothing skipped;
+# - each gitlink commit is the version of exactly one
+#   pkg:github/<owner>/<repo>@<commit> component, one-to-one;
+# - the root depends on all 37, and none has edges of its own.
+# So +37 pkgs and +37 edges are exactly the submodules. Only the two
+# violated bounds move; the 116 -> 114 dip before #1515 stayed in range.
+# wall_ms rose from 1.7-1.9 s to 3.3-4.0 s (two CI runs each side), well
+# inside the guard.
 [targets.expect]
-pkgs      = { min = 100, max = 124 }
+pkgs      = { min = 135, max = 167 }
 files     = { min = 57, max = 71 }
-edges     = { min = 5, max = 11 }
+edges     = { min = 40, max = 50 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.41, max = 6.41 }
 wall_ms   = { min = 5, max = 50000 }
