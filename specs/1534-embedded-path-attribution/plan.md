@@ -13,7 +13,7 @@ Issue #1532.
 
 **Phase 2** (#1531/#1563's `installed_lib::resolve`) attaches each binary to the package(s) it names, the way #1563 attaches exported-targets files. C227 lists them per component, and C225 gains an `embedded-paths` count.
 
-**Bundled trees** become versionless components nested under the binary.
+**Bundled trees** become versionless components nested under the binary, on every binary scan, counted by a new document-scope C228.
 
 **Measured target (SC-001):** 258 binaries, 1.308 GB, 0 shared, on the ROCm SDK.
 
@@ -121,7 +121,9 @@ CHANGELOG.md
    - drop the already-attributed exclusion;
    - drop the shared marking;
    - drop the exclusion list.
-9. **Gate**, then corpus goldens in CI. The prediction is no change: no corpus target has versioned installed-library components beyond `image-postgres16`, whose binaries are dpkg-owned.
+9. **Gate**, then corpus goldens in CI.
+   - **Attribution:** no change predicted. No corpus target has versioned installed-library components beyond `image-postgres16`, whose binaries are dpkg-owned.
+   - **Bundled detection** runs on every binary scan, so any C/C++ binary in the corpus whose strings name a `third_party/`-style tree will gain components and C228. That is not predicted; each change must be explained by a tree the binary really names.
 10. **ROCm** `measure-full` in CI: SC-001, SC-002 (list every attribution with its justifying directory), SC-004 and SC-006.
 11. **Docs and CHANGELOG**, then the PR.
 

@@ -25,12 +25,12 @@
 - [ ] T004 Implement `embedded_paths.rs`:
   - `EmbeddedPathFinding { packages: BTreeSet<String>, header_only: bool, bundled: BTreeSet<String>, has_paths: bool, toolchain_only: bool }`;
   - `STOPLIST = ["amd"]` and `BUNDLED_EXCLUSIONS = ["sysdeps"]`, each with a comment citing research R2/R4;
-  - a byte-level scan with no regex dependency beyond the existing `regex` crate, if one is needed at all.
+  - a byte-level scanner (split on NUL, then walk path components), with no regex.
 
   Make T003 pass.
 - [ ] T005 Add `pub(crate) fn versioned_names(phase1: &Phase1, scan_root: &Path, claims: &OsClaims<'_>) -> BTreeSet<String>` to `waybill-cli/src/scan_fs/package_db/installed_lib/resolve.rs`. It returns the lowercased names of records with a recognised prefix, an `Ok` version and no OS owner, minus the stoplist. Unit-test that it equals the set of names phase 2 emits for a mixed fixture.
 - [ ] T006 Run the extraction in `waybill-cli/src/scan_fs/binary/scan.rs::scan_binary`:
-  - call `embedded_paths::extract` on the existing `string_region` when a names set is provided;
+  - call `embedded_paths::extract` on the existing `string_region`, always, with the (possibly empty) names set;
   - carry the finding on `BinaryScan`.
 
   Then, in `waybill-cli/src/scan_fs/binary/mod.rs`, thread an optional `(&BTreeSet<String>, &mut BTreeMap<String, EmbeddedPathFinding>)` through `read()`, keyed by the binary file component's `source_path`. Follow the #1524 `test_inputs` out-parameter. Update every caller of `read()`.
@@ -39,7 +39,7 @@
   - pass names and a findings map into `binary::read`;
   - pass the findings into `installed_lib::resolve::resolve`.
 
-  With no versioned names, pass `None`, so the binary scan does no extra work (FR-008).
+  Extraction always runs: bundled detection needs no names (analysis I1). With no versioned names, pass an empty set, so attribution matches nothing.
 
 **Checkpoint:** the gate is green and the output byte-identical, because nothing consumes the findings yet.
 
@@ -80,11 +80,12 @@
   - `waybill-fixture-fmt` is nested, with no version, `waybill:evidence-kind: embedded-source-path`, CycloneDX nesting, and SPDX 2.3/3 `CONTAINS`/`contains`;
   - `sysdeps` gives nothing;
   - two binaries naming the same tree give two components, one under each;
-  - C225 `embedded-paths.bundled` counts them.
+  - C228 `waybill:bundled-source-trees` counts them, including in a tree with no installed-library components (no C225).
 - [ ] T012 [US2] Implement bundled components:
   - in `waybill-cli/src/scan_fs/binary/entry.rs`, add a constructor in the symbol-fingerprint entry's shape (tier `analyzed`, confidence `heuristic`, version absent, `parent_purl` = the binary file component's PURL, `source_path` = the binary);
   - emit them from `binary::read` for each finding's `bundled`;
-  - register `embedded-source-path` in `BINARY_EVIDENCE_KINDS` in `waybill-cli/src/scan_fs/binary/mod.rs`, and add the value to the evidence-kind row in `docs/reference/sbom-format-mapping.md`.
+  - register `embedded-source-path` in `BINARY_EVIDENCE_KINDS` in `waybill-cli/src/scan_fs/binary/mod.rs`, and add the value to the evidence-kind row in `docs/reference/sbom-format-mapping.md`;
+  - emit C228 at document scope in all three formats (the C226 pattern), with its parity extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs` and its catalog row in `docs/reference/sbom-format-mapping.md`, in the same change.
 
   Make T011 pass.
 
@@ -103,12 +104,12 @@
   - **M7:** an empty bundled exclusion list;
   - **M8:** a version taken from the path, by setting the bundled component's version from the directory name.
 - [ ] T015 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record it in `measurements/gate-log.md`, with the positive signals counted.
-- [ ] T016 Regenerate the corpus goldens in CI (`public-corpus.yml`, `regen_goldens=true`). Byte-compare every file, and record the result in `measurements/golden-review.md` against plan step 9's prediction.
+- [ ] T016 Regenerate the corpus goldens in CI (`public-corpus.yml`, `regen_goldens=true`). Byte-compare every file, and record the result in `measurements/golden-review.md` against plan step 9's prediction. Explain every bundled component in a golden by the path its binary names.
 - [ ] T017 Run the ROCm measurement in CI. In the fixture repo's `measure-full.yml`, report:
   - C225 `embedded-paths`;
   - the attributed binaries per package, with bytes;
   - the bundled components;
-  - the SC-002 list (each attribution with the directory that justified it, from C227 against the census's examples);
+  - the SC-002 check: an independent script compares each attribution in C227 with `measurements/attribution.json`'s per-file `outermost` names, and lists any disagreement (analysis U1);
   - the timing.
 
   Run it against `main`. Record SC-001, SC-002, SC-004 and SC-006 in `measurements/therock-full.md`.

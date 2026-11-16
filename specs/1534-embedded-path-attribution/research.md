@@ -70,6 +70,8 @@ Notes:
 
 **Decision:** an exclusion list of `["sysdeps"]`, committed and measured. Each other name becomes a versionless component nested under the binary that names it.
 
+**Where it runs** (analysis I1): on every binary scan, since it needs no package names. Its counts go in C228. The corpus regeneration shows its reach outside installed trees.
+
 ## R5. Where the names come from, and when
 
 Matching needs the set of versioned component names before the binary scan, so the scan can keep only the outermost matching name per path, which is a few bytes per binary. #1531's phase-1 records are parsed before `binary::read` (the #1564 recognition already uses them).

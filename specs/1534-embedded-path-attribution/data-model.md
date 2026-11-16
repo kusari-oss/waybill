@@ -4,7 +4,7 @@ Everything is in process for one scan.
 
 ## VersionedNames (before the binary scan)
 
-The set of lowercased names of the #1531 records that will become versioned components. A record qualifies when it has:
+The set of lowercased names of the #1531 records that will become versioned components. It may be empty: extraction always runs, because bundled detection needs no names (analysis I1), and only attribution uses this set. A record qualifies when it has:
 - a recognised prefix;
 - a parsed version;
 - no OS owner.
@@ -54,10 +54,12 @@ There is one per (binary, name) pair. The same name in two binaries gives two co
 
 ## Coverage
 
-**C225, `embedded-paths` object.** Present when phase 2 ran and the binary scan reported any finding:
+**C225, `embedded-paths` object.** Present only when `read` > 0 (contracts/wire.md):
 
 ```json
-{"attributed":N,"bundled":N,"header-only":N,"no-versioned-match":N,"read":N,"shared":N,"toolchain-only":N,"with-paths":N}
+{"attributed":N,"header-only":N,"no-versioned-match":N,"read":N,"shared":N,"toolchain-only":N,"with-paths":N}
 ```
+
+**C228 `waybill:bundled-source-trees`.** Document scope, on every binary scan, present when any binary names a bundled tree: `{"binaries":N,"components":N,"excluded":N}`.
 
 **C227 `waybill:embedded-path-binaries`.** On an installed-library component: a sorted JSON array of `{"path": "<root-relative>"}` or `{"path": …, "shared-with": [...]}`.

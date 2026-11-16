@@ -54,6 +54,7 @@ The paths carry no versions. On this tree, a version can only come from a compon
 - Q: Which paths may attribute a binary to a package? → A: Compiled sources only: paths to compiled source files (`.c`, `.cc`, `.cpp`, `.cxx`, `.c++`, `.hip`, `.cu`) and DWARF compilation-unit names. A header path (`.h`, `.hh`, `.hpp`, `.hxx`, `.inl`, `.inc`, `.cuh`) names what was included, not what was built, and never attributes a binary.
 - Q: A binary whose compiled sources name two or more versioned packages? → A: It is listed in the evidence of each, marked as shared. Both projects' code is in the file, so no single owner is chosen.
 - Q: How is a generic package name kept from matching unrelated source trees? → A: Per path, only the outermost directory that names a versioned package counts. Package names known to collide are on a committed, measured stoplist, as bundled-tree names are. Measured (census run 43786608413): matching any directory gave HIP's `hip` 170 binaries through inner directories such as `rocthrust/testing/unittest/hip/`, and SuiteSparse's `amd@3.3.3` 2 binaries through Mesa and kernel directories named `amd`. With the outermost rule and `amd` on the stoplist, 258 binaries (1.308 GB) are attributed to one package each, and none is shared.
+- Q: Where does bundled-tree detection run? → A: On every binary scan. It needs no package names, so it is not tied to installed-library components. Its counts are reported in a document-scope record of their own, C228, which exists without C225 (analysis I1).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -95,7 +96,7 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
 
 1. **Given** a binary naming `third_party/<name>/`, `external/<name>/` or `_deps/<name>-src/`, **When** the tree is scanned, **Then** a component `<name>` with no version is nested under that binary, with the embedded path as its evidence.
 3. **Given** two binaries naming the same bundled tree, **When** the tree is scanned, **Then** each gets its own nested component. A bundled copy is not assumed to be the same build in both.
-2. **Given** a vendoring directory whose name is a known non-project (`packages`, `sysdeps`, `src`, `include`), **When** the tree is scanned, **Then** nothing is recorded for it.
+2. **Given** a vendoring directory whose name is on the measured exclusion list (today `sysdeps`, TheRock's own vendoring directory; research R4), **When** the tree is scanned, **Then** nothing is recorded for it.
 
 ---
 
@@ -105,7 +106,7 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
 - **A static library compiled into another project.** `libMIOpenCKGroupedConv` names MIOpen and Composable Kernel. It is listed in the evidence of each named versioned package and marked as shared (clarified). A package whose project directory name differs from its component name (`composablekernel` against `composable_kernel`) is not matched; the name rule is exact.
 - **Toolchain paths** (`/builddir/build/BUILD/gcc-…`, `/usr/include`, `/opt/python/…`) are never a file's source.
 - **A package name that is also a common directory name.** SuiteSparse's `amd` matched Mesa and Linux-kernel sources; HIP's `hip` matched a `hip/` directory inside other projects. The outermost-directory rule removes the second, and the measured stoplist the first.
-- **A binary known only by a symlink.** Evidence is read from the file the link resolves to inside the root; the 161 such components on ROCm are counted, not re-read.
+- **A binary known only by a symlink.** Its evidence is the file the link resolves to inside the root. The 161 such components on ROCm are a separate observation (Assumptions), not counted by this feature.
 - **Very large binaries** (350 MB): reading must stay within the scan-time budget (SC-004).
 - **A path that names a package's source but is a test of it** (rocThrust): attribution says which project built the file. Whether it is product is #1564's scope, which this feature does not change.
 
@@ -116,21 +117,21 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
 - **FR-001**: The scan MUST read absolute source paths from an installed binary's read-only data, and MAY read them from its debug information, without new Cargo dependencies.
 - **FR-002**: A path MUST be classified before use:
   - a project source path;
-  - a vendored or fetched third-party tree (`third_party/<name>`, `third-party/<name>`, `external/<name>`, `3rdparty/<name>`, `_deps/<name>-src`);
+  - a vendored or fetched third-party tree (`third_party/<name>`, `third-party/<name>`, `thirdparty/<name>`, `3rdparty/<name>`, `external/<name>`, `extern/<name>`, `vendor/<name>`, `_deps/<name>-src`), as measured in research R4;
   - a toolchain or system path, which is never a file's source.
 - **FR-003**: A binary MUST be attributed to each versioned component its compiled-source paths name. A path names a component through the outermost directory in it whose name equals that component's name and is not on the measured stoplist (clarified), and only to those. When it names more than one, each attribution MUST be marked as shared. Header paths MUST NOT count toward attribution. The version MUST come from the component, never from a path. No project-specific manifest is read.
-- **FR-004**: An attributed binary MUST be listed in the component's evidence, with its digest, the way #1563 lists exported-targets files. The evidence kind MUST distinguish embedded-path attribution from package metadata.
+- **FR-004**: An attributed binary MUST be listed in the component's evidence, with its digest, the way #1563 lists exported-targets files. C227 `waybill:embedded-path-binaries` on the component MUST record which evidence files came from embedded paths, and the other packages each shared file names (analysis T1).
 - **FR-005**: A binary that package metadata already attributes (#1531/#1563), or that an OS package owns, MUST NOT be attributed by this feature.
-- **FR-006**: Each bundled third-party tree a binary's paths name MUST be reported as a component with no version, nested under that binary, with the path as evidence. Directory names on a measured exclusion list MUST NOT become components. No version may be invented.
+- **FR-006**: On every binary scan, each bundled third-party tree a binary's paths name MUST be reported as a component with no version, nested under that binary, with the path as evidence. Directory names on the measured exclusion list MUST NOT become components. No version may be invented. C228 `waybill:bundled-source-trees` MUST record, at document scope, the binaries naming a bundled tree, the components emitted, and the names excluded.
 - **FR-007**: The document MUST record, at document scope, how many binaries were read, carried paths, were attributed to one package, were attributed as shared among several, named only toolchain paths, named only header paths of a package, or named nothing versioned.
-- **FR-008**: A scan in which no binary carries a usable path MUST be byte-identical to today's.
+- **FR-008**: A scan in which no binary carries a usable path MUST be byte-identical to today's. Because bundled detection runs on every binary scan, any corpus golden it changes MUST be explained by a bundled tree the binary really names (SC-003).
 - **FR-009**: The feature MUST add zero Cargo dependencies, no subprocess and no network access, and MUST use only synthetic `waybill-fixture-*` names in committed fixtures.
 
 ### Key Entities
 
 - **Embedded path**: an absolute path string found in a binary, with its classification (project, third-party tree, toolchain).
-- **Path attribution**: a binary → versioned component link, with its evidence kind.
-- **Embedded-path coverage**: the document-scope counts (FR-007).
+- **Path attribution**: a binary → versioned component link, recorded in C227.
+- **Embedded-path coverage**: the document-scope counts: C225's `embedded-paths` for attribution (FR-007), and C228 for bundled trees (FR-006).
 
 ## Success Criteria *(mandatory)*
 

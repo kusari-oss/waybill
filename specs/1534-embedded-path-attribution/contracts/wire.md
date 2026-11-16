@@ -37,7 +37,7 @@ The nesting follows the existing `parent_purl` handling for embedded identities.
 This extends the document-scope C225 record:
 
 ```json
-"embedded-paths": {"attributed":N,"bundled":N,"header-only":N,"no-versioned-match":N,"read":N,"shared":N,"toolchain-only":N,"with-paths":N}
+"embedded-paths": {"attributed":N,"header-only":N,"no-versioned-match":N,"read":N,"shared":N,"toolchain-only":N,"with-paths":N}
 ```
 
 | Key | Counts |
@@ -49,9 +49,32 @@ This extends the document-scope C225 record:
 | `header-only` | those with only header paths naming a package |
 | `toolchain-only` | those with only toolchain paths |
 | `no-versioned-match` | those whose compiled-source paths name no versioned package |
-| `bundled` | bundled components emitted |
 
 **Presence:**
 - The object is present only when `read` > 0.
 - Absent the object, C225 is byte-identical to today's.
 - A scan with no versioned installed-library components emits no C225, as today.
+
+## C228 `waybill:bundled-source-trees` (document scope)
+
+A JSON object encoded as a string with sorted keys:
+
+```json
+{"binaries":N,"components":N,"excluded":N}
+```
+
+| Key | Counts |
+|---|---|
+| `binaries` | binaries naming at least one bundled tree |
+| `components` | bundled components emitted |
+| `excluded` | bundled-tree names dropped by the exclusion list |
+
+It is emitted on every binary scan when any binary names a bundled tree, with or without installed-library components. Absent otherwise.
+
+| Format | Carrier |
+|---|---|
+| CycloneDX | `metadata.properties` |
+| SPDX 2.3 | document annotation |
+| SPDX 3 | document annotation |
+
+**Why not C225:** C225 exists only alongside installed-library components, and bundled detection does not depend on them (analysis I1).
