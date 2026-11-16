@@ -21,9 +21,11 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
     `_deps/<name>-src` (and similar) tree a binary names becomes a
     versionless component nested under it, on every binary scan, counted by
     `waybill:bundled-source-trees` (C228).
-  - **Measured on a ROCm 7.14 SDK, in CI:** 546 of 708 unattributed
-    binaries carry such paths; the census predicts 258 binaries (1.31 GB)
-    attributed to one package each.
+  - **Measured on a ROCm 7.14 SDK, in CI:** 617 binaries (3.0 GB),
+    including test-scoped ones, are attributed to their package. 257 of the
+    258 that the census predicted match exactly. 645 bundled components
+    appear in 547 binaries. Scan time is unchanged within noise, and the
+    public-corpus goldens are byte-identical.
 
 - **An installed tree's test payload is reported with the test scope
   (#1564).** An installed SDK can ship as much test and benchmark payload as

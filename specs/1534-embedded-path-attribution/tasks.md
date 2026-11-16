@@ -103,9 +103,9 @@
   - **M6:** no shared marking (first name only);
   - **M7:** an empty bundled exclusion list;
   - **M8:** a version taken from the path, by setting the bundled component's version from the directory name.
-- [ ] T015 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record it in `measurements/gate-log.md`, with the positive signals counted.
-- [ ] T016 Regenerate the corpus goldens in CI (`public-corpus.yml`, `regen_goldens=true`). Byte-compare every file, and record the result in `measurements/golden-review.md` against plan step 9's prediction. Explain every bundled component in a golden by the path its binary names.
-- [ ] T017 Run the ROCm measurement in CI. In the fixture repo's `measure-full.yml`, report:
+- [x] T015 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record it in `measurements/gate-log.md`, with the positive signals counted.
+- [x] T016 Regenerate the corpus goldens in CI (`public-corpus.yml`, `regen_goldens=true`). Byte-compare every file, and record the result in `measurements/golden-review.md` against plan step 9's prediction. Explain every bundled component in a golden by the path its binary names.
+- [x] T017 Run the ROCm measurement in CI. In the fixture repo's `measure-full.yml`, report:
   - C225 `embedded-paths`;
   - the attributed binaries per package, with bytes;
   - the bundled components;
