@@ -53,6 +53,7 @@ The paths carry no versions. On this tree, a version can only come from a compon
 - Q: Bundled third-party trees? → A: (A) A component with no version for each bundled library a binary's paths name under a vendoring convention, nested under that binary. Directory names that are not projects (`packages`, `sysdeps` and the like) are excluded by a measured list.
 - Q: Which paths may attribute a binary to a package? → A: Compiled sources only: paths to compiled source files (`.c`, `.cc`, `.cpp`, `.cxx`, `.c++`, `.hip`, `.cu`) and DWARF compilation-unit names. A header path (`.h`, `.hh`, `.hpp`, `.hxx`, `.inl`, `.inc`, `.cuh`) names what was included, not what was built, and never attributes a binary.
 - Q: A binary whose compiled sources name two or more versioned packages? → A: It is listed in the evidence of each, marked as shared. Both projects' code is in the file, so no single owner is chosen.
+- Q: How is a generic package name kept from matching unrelated source trees? → A: Per path, only the outermost directory that names a versioned package counts. Package names known to collide are on a committed, measured stoplist, as bundled-tree names are. Measured (census run 43786608413): matching any directory gave HIP's `hip` 170 binaries through inner directories such as `rocthrust/testing/unittest/hip/`, and SuiteSparse's `amd@3.3.3` 2 binaries through Mesa and kernel directories named `amd`. With the outermost rule and `amd` on the stoplist, 258 binaries (1.308 GB) are attributed to one package each, and none is shared.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -60,7 +61,7 @@ The paths carry no versions. On this tree, a version can only come from a compon
 
 A consumer scans an installed tree. A binary that no package metadata names carries embedded compiled-source paths whose project directories name a versioned component already in the document. The binary is listed in that component's evidence, the way #1563 lists the files a package's exported targets name. The evidence kind is recorded. The generic rule only: the build's own pin manifest is not read (clarified).
 
-**Why this priority**: It is the largest measured gain that invents nothing. On ROCm it covers up to 291 files, 1.349 GB (counted before the compiled-sources rule), including the 0.353 GB MIOpen library. The version comes from the component, never from a path.
+**Why this priority**: It is the largest measured gain that invents nothing. On ROCm it covers 258 binaries, 1.308 GB, under the clarified rules, including the 0.353 GB MIOpen library. The version comes from the component, never from a path.
 
 **Independent Test**: A synthetic prefix with:
 - versioned `waybill-fixture-p` and `waybill-fixture-q` (from their `.pc` files);
@@ -103,6 +104,7 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
 - **Remapped paths** (`-ffile-prefix-map`, `-fdebug-prefix-map`, or relative paths): no evidence, and nothing is attributed.
 - **A static library compiled into another project.** `libMIOpenCKGroupedConv` names MIOpen and Composable Kernel. It is listed in the evidence of each named versioned package and marked as shared (clarified). A package whose project directory name differs from its component name (`composablekernel` against `composable_kernel`) is not matched; the name rule is exact.
 - **Toolchain paths** (`/builddir/build/BUILD/gcc-…`, `/usr/include`, `/opt/python/…`) are never a file's source.
+- **A package name that is also a common directory name.** SuiteSparse's `amd` matched Mesa and Linux-kernel sources; HIP's `hip` matched a `hip/` directory inside other projects. The outermost-directory rule removes the second, and the measured stoplist the first.
 - **A binary known only by a symlink.** Evidence is read from the file the link resolves to inside the root; the 161 such components on ROCm are counted, not re-read.
 - **Very large binaries** (350 MB): reading must stay within the scan-time budget (SC-004).
 - **A path that names a package's source but is a test of it** (rocThrust): attribution says which project built the file. Whether it is product is #1564's scope, which this feature does not change.
@@ -116,7 +118,7 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
   - a project source path;
   - a vendored or fetched third-party tree (`third_party/<name>`, `third-party/<name>`, `external/<name>`, `3rdparty/<name>`, `_deps/<name>-src`);
   - a toolchain or system path, which is never a file's source.
-- **FR-003**: A binary MUST be attributed to each versioned component its compiled-source paths name, by a directory of that component's name in the path, and only to those. When it names more than one, each attribution MUST be marked as shared. Header paths MUST NOT count toward attribution. The version MUST come from the component, never from a path. No project-specific manifest is read.
+- **FR-003**: A binary MUST be attributed to each versioned component its compiled-source paths name. A path names a component through the outermost directory in it whose name equals that component's name and is not on the measured stoplist (clarified), and only to those. When it names more than one, each attribution MUST be marked as shared. Header paths MUST NOT count toward attribution. The version MUST come from the component, never from a path. No project-specific manifest is read.
 - **FR-004**: An attributed binary MUST be listed in the component's evidence, with its digest, the way #1563 lists exported-targets files. The evidence kind MUST distinguish embedded-path attribution from package metadata.
 - **FR-005**: A binary that package metadata already attributes (#1531/#1563), or that an OS package owns, MUST NOT be attributed by this feature.
 - **FR-006**: Each bundled third-party tree a binary's paths name MUST be reported as a component with no version, nested under that binary, with the path as evidence. Directory names on a measured exclusion list MUST NOT become components. No version may be invented.
@@ -134,7 +136,7 @@ A consumer scans an installed tree whose binaries compile in vendored libraries.
 
 ### Measurable Outcomes
 
-- **SC-001**: On the ROCm fixture, the binaries attributed through embedded paths reconcile with a census re-run under the compiled-sources rule, by count and bytes. The first census counted header paths too (291 files, 1.349 GB), so that is an upper bound.
+- **SC-001**: On the ROCm fixture, the binaries attributed through embedded paths reconcile, by count and bytes, with the committed census under the clarified rules (compiled sources only, outermost directory, stoplist `amd`): 258 binaries, 1.308 GB, 0 shared (`measurements/attribution.json`, run 43786608413).
 - **SC-006**: On the ROCm fixture, every bundled-library component is a project name. The exclusion list and the components it removed are committed with the measurement.
 - **SC-002**: No binary is attributed to a component whose project its paths do not name. This is checked on ROCm by listing every attribution with the project directory that justified it.
 - **SC-003**: Across the public corpus, every golden that changes is explained by a rule in this spec.
