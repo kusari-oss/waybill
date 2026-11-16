@@ -21,7 +21,7 @@
   If the R12 arm strands the vcpkg component, file a follow-up issue with the measurement ("declared C/C++ manifests reach the root only through the fallback"), labelled as a follow-up to #1566. Also file the R8 follow-up: `-r` includes are not followed. Record both issue numbers in `repro.md`.
 
   From the C-12 result, write research R14 before T013. Either a constraints-named file is excluded from attachment, with an orphan reason, or it is attached like any other file read today. Update contract C-12 and C-11 to the observed and chosen behaviour.
-- [ ] T002 Create `waybill-cli/tests/declared_requirements.rs` with the helper:
+- [X] T002 Create `waybill-cli/tests/declared_requirements.rs` with the helper:
 
   ```
   fn repo(files: &[(&str, &str)], submodules: &[(&str, &[(&str, &str)])]) -> TempDir
@@ -33,6 +33,8 @@
   - C-2, C-3, C-7, C-8 and C-10 must **fail**;
   - C-1, C-4, C-9 and C-13 must **pass**. These are the controls; a passing test may exercise nothing.
   - Record which way C-5, C-6, C-11 and C-12 go.
+
+  **Done.** At `main`, C-2, C-3, C-5, C-6, C-7, C-8, C-10 and C-13 fail; C-1, C-4, C-9, C-11 and C-12 pass. C-13 was mislisted as a control: it is C-2 plus a merge, so it fails at `main` too. C-5 to C-7 gained a scan-root project after the first run showed the root selector promoting a lone nested main module to subject (contract note). No gating: `git_submodule_reader.rs` uses the same fixture helper on every lane.
 
   Then update `contracts/wire.md` C-6 to the observed fallback shape, as the contract requires. Decide on file-scope `#![cfg(unix)]` by checking the Windows lane, and record the decision in the test file's header.
 - [ ] T003 [P] Add `.github/workflows/measure-source.yml` and `census/source_report.py` to `kusari-sandbox/waybill-fixture-therock-sdk` (research R10).

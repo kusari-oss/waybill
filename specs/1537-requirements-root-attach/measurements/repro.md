@@ -27,3 +27,11 @@
 
 - **#1583:** the pip reader does not follow `-r` includes (research R8).
 - **#1584:** a root `vcpkg.json` is orphaned (`foreign-build-system`) when the root is another ecosystem's main module (research R12).
+
+## T002 finding: a lone nested main module becomes the subject
+
+**At `main`:** with exactly one main module anywhere in the scan, the root selector promotes it to document subject, whatever its depth:
+- **C-5:** `tools/package.json` made `pkg:npm/waybill-fixture-tools@1.0.0` the root of a repository whose own code is at the top.
+- **C-6:** a git submodule's own `pyproject.toml` made `pkg:pypi/waybill-fixture-xpy@1.0.0` the root of the super-project scan, with the super-project's submodule anchored beneath it.
+
+This is root selection, not root edges, so it is out of scope for spec 1537. A follow-up is filed at close-out. The tests give the repository a scan-root project, so that they measure attachment.
