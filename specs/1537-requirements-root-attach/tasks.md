@@ -83,7 +83,7 @@
   - **The other is `transitive_parity_pip_poetry`:** 64 → 89 SPDX 2.3 edges. Measured with `measurements/root_targets.py`, this is R9 case 5. At `main`, that fixture's root targets were 25 / 0 / 0 (CycloneDX / SPDX 2.3 / SPDX 3); on the branch they are 25 / 25 / 25. The baseline was updated, with the cause.
   - **C-8 expectation corrected:** the reader classifies `requirements-dev.txt` as optional, not development, so the edge is `OPTIONAL_DEPENDENCY_OF` (FR-010).
 
-- [ ] T010 [US2] Commit and push. Regenerate the corpus goldens in CI (`public-corpus.yml`, `regen_goldens=true`, `--ref <branch> -f branch=<branch>`). Diff them normalised and `LC_ALL=C`-sorted against the committed goldens.
+- [X] T010 [US2] Commit and push. Regenerate the corpus goldens in CI (`public-corpus.yml`, `regen_goldens=true`, `--ref <branch> -f branch=<branch>`). Diff them normalised and `LC_ALL=C`-sorted against the committed goldens.
   - Explain every changed file by R9 cases 3–7.
   - **I-1 on the corpus (SC-002, G1):** commit `measurements/root_targets.py`, run with `python3 -I -B`. It extracts the root's direct targets from each regenerated target's three documents and asserts they are equal. Validate it first against the fixtures' Rust I-1 helper, using T002's emitted documents. Record the result for every target.
   - Record the per-case counts in `specs/1537-requirements-root-attach/measurements/golden-review.md` under "Step 1: root_edges".

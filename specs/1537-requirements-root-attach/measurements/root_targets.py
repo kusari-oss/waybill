@@ -17,7 +17,16 @@ import sys
 
 
 def strip(p):
-    return p.split("?")[0] if isinstance(p, str) else p
+    """PURL without qualifiers. A file-tier PURL keeps its identity as
+    `file:<sha256>`: every one is `pkg:generic/file-tier?content-sha256=...`,
+    so stripping would collapse them all into one."""
+    if not isinstance(p, str):
+        return p
+    if p.startswith("pkg:generic/file-tier"):
+        for q in p.partition("?")[2].split("&"):
+            if q.startswith("content-sha256="):
+                return "file:" + q.split("=", 1)[1]
+    return p.split("?")[0]
 
 
 def cdx(doc):
@@ -43,8 +52,9 @@ def spdx23(doc):
     root = roots[0]
     purl_of = {}
     for p in doc.get("packages", []):
-        refs = [e["referenceLocator"] for e in p.get("externalRefs", []) if e.get("referenceType") == "purl"]
-        purl_of[p["SPDXID"]] = refs[0] if refs else p["SPDXID"]
+        refs = [e["referenceLocator"] for e in (p.get("externalRefs") or []) if e.get("referenceType") == "purl"]
+        sha = [c["checksumValue"] for c in (p.get("checksums") or []) if c.get("algorithm") == "SHA256"]
+        purl_of[p["SPDXID"]] = refs[0] if refs else ("file:" + sha[0] if sha else p["SPDXID"])
     out = set()
     for r in rels:
         t = r["relationshipType"]
@@ -61,7 +71,16 @@ def spdx3(doc):
     if not docs or not docs[0].get("rootElement"):
         return set()
     root = docs[0]["rootElement"][0]
-    purl_of = {e["spdxId"]: e["software_packageUrl"] for e in g if e.get("spdxId") and e.get("software_packageUrl")}
+    purl_of = {}
+    for e in g:
+        if not e.get("spdxId"):
+            continue
+        if e.get("software_packageUrl"):
+            purl_of[e["spdxId"]] = e["software_packageUrl"]
+        else:
+            sha = [h["hashValue"] for h in (e.get("verifiedUsing") or []) if h.get("algorithm") == "sha256"]
+            if sha:
+                purl_of[e["spdxId"]] = "file:" + sha[0]
     out = set()
     for e in g:
         if e.get("type") in ("Relationship", "LifecycleScopedRelationship") and e.get("relationshipType") == "dependsOn" and e.get("from") == root:
