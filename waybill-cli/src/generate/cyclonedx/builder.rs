@@ -944,15 +944,20 @@ impl CycloneDxBuilder {
         let main_module_purl: Option<String> = if evaluated_nix_package_purl.is_some() {
             evaluated_nix_package_purl
         } else if !override_active && subject_is_a_main_module {
-            effective_components
-                .iter()
-                .find(|c| {
-                    c.extra_annotations
-                        .get("waybill:component-role")
-                        .and_then(|v| v.as_str())
-                        == Some("main-module")
-                })
-                .map(|c| c.purl.as_str().to_string())
+            // #1572 — the main module the selector made the subject, not the
+            // first one found. With two Python main modules in an installed
+            // SDK the selector falls back to a synthetic placeholder; rooting
+            // the graph at the first main module anyway gave the subject no
+            // `dependencies[]` entry, and the orphan fallback in
+            // `build_dependencies` made that package `dependsOn` every orphan
+            // in the tree (1,855 on a ROCm SDK) while SPDX anchored the same
+            // orphans to the subject.
+            match &m158_selection.subject {
+                crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => {
+                    effective_components.get(*idx).map(|c| c.purl.as_str().to_string())
+                }
+                _ => None,
+            }
         } else {
             None
         };

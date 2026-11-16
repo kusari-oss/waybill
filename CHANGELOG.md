@@ -124,6 +124,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **CycloneDX roots its dependency graph at the document subject (#1572).**
+  When the root selector chose a synthetic placeholder over two main
+  modules, the graph was still rooted at the first main module. That
+  package then declared `dependsOn` every orphan in the tree, 1,909 on a
+  ROCm SDK, and the subject had no `dependencies[]` entry. SPDX 2.3 and
+  SPDX 3 already anchored those components to the subject; CycloneDX now
+  agrees with them.
+
 - **A package artifact larger than `--max-file-size` is still identified
   (#1528).** The artifact walker dropped any file over the limit before its
   path was resolved, so a 300 MB wheel produced no component and left only
