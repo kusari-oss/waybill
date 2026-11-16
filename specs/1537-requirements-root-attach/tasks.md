@@ -126,7 +126,7 @@
 
 - [X] T017 [US3] Add an I-3 helper to `waybill-cli/tests/declared_requirements.rs`, and assert it in every C-case: no component whose C18 `waybill:source-files` includes a `requirements*.txt` path is unreachable from the seed set. Add a negative control that switches attachment off through a test-only path. It must make I-3 fail, which proves the check can fire.
   **Done.** No test-only switch in production code is needed. I-3 checks reachability from the root alone, which is stricter than the seed set, so it needs no classifier model. The negative control (`i3_detects_a_stranded_requirements_package`) removes the root's edge from a correct document and asserts that the check reports the package.
-- [ ] T018 [US3] Regenerate the corpus goldens in CI again (as T010). Explain every change against the T010 goldens by R9 cases 1, 2 and 4. Run `root_targets.py` (I-1) again and check I-3 on every regenerated CycloneDX document. The I-2 corpus check follows in T021. Record the results under "Step 2: declared attachment" in `measurements/golden-review.md`, and commit the goldens.
+- [X] T018 [US3] Regenerate the corpus goldens in CI again (as T010). Explain every change against the T010 goldens by R9 cases 1, 2 and 4. Run `root_targets.py` (I-1) again and check I-3 on every regenerated CycloneDX document. The I-2 corpus check follows in T021. Record the results under "Step 2: declared attachment" in `measurements/golden-review.md`, and commit the goldens.
 
 ## Phase 5: User Story 4 — a super-project with its submodules checked out (P2)
 
@@ -143,7 +143,7 @@
 ## Phase 6: Polish and cross-cutting
 
 - [X] T020 [P] Run the SBOM quality corpus in CI at the branch (`quality-corpus.yml`, `-f branch=<branch>`). Explain every metric outside its range by the same R9 causes. Re-author those ranges in `xtask/corpus/quality-corpus.toml`, with dated comments citing the runs, as #1581 did. Record the results in `measurements/quality.md`.
-- [ ] T021 [P] Commit `specs/1537-requirements-root-attach/measurements/root_only.py`, run with `python3 -I -B` (research R11).
+- [X] T021 [P] Commit `specs/1537-requirements-root-attach/measurements/root_only.py`, run with `python3 -I -B` (research R11).
   - **What it does:** for each regenerated CycloneDX document from T018's artifact, compute reachability from `metadata.component` alone and list the documents marked `complete` with an unreachable component.
   - **Validation:** check it first against one target where both definitions must agree.
   - **I-2 on the corpus (SC-003, G1):** for each listed document, record which main-module component in the same document reaches each root-unreachable component. A component reached by neither the root nor any main module is an SC-003 failure. It blocks T025.
@@ -163,7 +163,7 @@
   - M12: a cget file accepted;
   - M13 (FR-006): SPDX 2.3 bypasses `root_targets` and keeps its own gate;
   - M14 (FR-009): submodule anchors are not installed.
-- [ ] T023 [P] Update the docs:
+- [X] T023 [P] Update the docs:
   - `docs/ecosystems.md`, pip section: requirements files are attached to the declaring project, with the precedence rule;
   - `CHANGELOG.md` `[Unreleased]`:
     - Fixed: #1566 and #1538, with SC-006's numbers;

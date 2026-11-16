@@ -65,7 +65,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 6 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi; manifest-unread: 1 haskell manifest(s) found but not read\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 2 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi; manifest-unread: 1 haskell manifest(s) found but not read\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -26629,6 +26629,11 @@
       "spdxElementId": "SPDXRef-Package-ALLE5R4UZDTD336E"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-B5FSSMD3U2AKTZ3U",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ANCS6R2BZDW7IOIL"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-FKZRJOFVIPYZIIAZ",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-ANW6U4PJUVQZDTAD"
@@ -27422,6 +27427,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-BQ23RNQGDVKIBZ43"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-B5FSSMD3U2AKTZ3U",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-BVCXLA5LQ3EXDLJ2"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-NZQAQKOEMF3DDYS5",
@@ -29587,6 +29597,11 @@
       "relatedSpdxElement": "SPDXRef-Package-GKQZZF62TO4R2VBM",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-HXSMS2NPNEVKDDGK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-B5FSSMD3U2AKTZ3U",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-I2DYH3P7MD4G3IAE"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-QRYCASCWTQRNY2TY",
@@ -33242,6 +33257,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-QVFOFK4RTHTPXEWE"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-B5FSSMD3U2AKTZ3U",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-QW72TD6DOX54HI7L"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",

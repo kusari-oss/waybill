@@ -547,6 +547,20 @@
       "type": "Relationship"
     },
     {
+      "completeness": "complete",
+      "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-NG6B7GSBT6JOMDJN",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-AWSDT3NNTKMG6R36",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2H6CQOJKUCAKBXV2",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C6BIGX26BQTR6BDH",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SZPP2Q3S7JS3P5RM",
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-THZZ7BY5LVTRT5PE"
+      ],
+      "type": "Relationship"
+    },
+    {
       "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2H6CQOJKUCAKBXV2",
       "relationshipType": "dependsOn",
@@ -556,18 +570,6 @@
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SZPP2Q3S7JS3P5RM",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-THZZ7BY5LVTRT5PE",
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-V6WS5B3MCUO5V2R7"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "completeness": "complete",
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-NG6B7GSBT6JOMDJN",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-UX6LC766DVGBLOHQ",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2H6CQOJKUCAKBXV2",
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C6BIGX26BQTR6BDH"
       ],
       "type": "Relationship"
     },

@@ -25021,7 +25021,11 @@
         "pkg:hackage/unliftio@0.2.25.1",
         "pkg:hackage/unordered-containers@0.2.20.1",
         "pkg:hackage/vector@0.13.2.0",
-        "pkg:hackage/yaml@0.11.11.2"
+        "pkg:hackage/yaml@0.11.11.2",
+        "pkg:pypi/docutils",
+        "pkg:pypi/myst-parser",
+        "pkg:pypi/sphinx",
+        "pkg:pypi/sphinx-rtd-theme"
       ],
       "ref": "pkg:hackage/haskell-language-server@2.15.0.0"
     },
@@ -27439,7 +27443,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 6 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi; manifest-unread: 1 haskell manifest(s) found but not read"
+        "value": "orphaned-components-detected: 2 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi; manifest-unread: 1 haskell manifest(s) found but not read"
       },
       {
         "name": "waybill:workspaces-detected",

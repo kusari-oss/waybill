@@ -3366,6 +3366,7 @@
         "pkg:pypi/django-debug-toolbar",
         "pkg:pypi/django-stubs",
         "pkg:pypi/gunicorn",
+        "pkg:pypi/mypy@1.18.1",
         "pkg:pypi/protobuf",
         "pkg:pypi/pytest",
         "pkg:pypi/pytest-django",

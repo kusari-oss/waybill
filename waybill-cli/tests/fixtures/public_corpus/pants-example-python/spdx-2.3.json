@@ -1178,6 +1178,16 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-SZPP2Q3S7JS3P5RM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-THZZ7BY5LVTRT5PE",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-Q72FCOSCIJC2P37I",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-2H6CQOJKUCAKBXV2"
