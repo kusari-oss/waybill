@@ -102,7 +102,7 @@ CHANGELOG.md
    - identity by URL rather than element;
    - type `library` instead of `data`;
    - invent a version.
-6. **Gate.** Then corpus goldens in CI; byte-identity is predicted (R2: no CMake target).
+6. **Gate.** Then corpus goldens in CI. Byte-identity is predicted: there is no CMake target in the corpus, and no `file(DOWNLOAD)` in the repository's own CMake fixtures or the fixtures repository (research R2).
 7. **ROCm source** in CI: extend `census-downloads` to scan the `projects/rocsparse` and `projects/hipsparse` roots with the branch build (SC-001).
 8. **Docs, CHANGELOG, PR.**
 

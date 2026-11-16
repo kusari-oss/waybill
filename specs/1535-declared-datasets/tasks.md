@@ -24,7 +24,7 @@
   - `classify(&DeclaredDownload) -> Classification::{Dataset, NotClassified, Unresolved}` (research R2);
   - `datasets(downloads) -> (Vec<DatasetDecl>, DownloadCoverage)`. It de-duplicates by element (R3), keeps the first URL and digest, and on a digest disagreement drops the digest and counts it.
 
-  Reuse `cmake.rs`'s comment stripping and the `installed_lib::cmake_version` tokenizer if it fits; otherwise a local one. Make T003 pass.
+  Tokenize with `installed_lib::cmake_version::{commands, strip_comments}`, which handle quoting, bracket arguments (spec 1533) and comments. Make T003 pass.
 
 ## Phase 3: User Story 1, declared download lists become data components (P1, the MVP)
 
@@ -36,7 +36,8 @@
   - the fallback de-duplicated;
   - `$ENV` unresolved and counted;
   - two declaring files of one element giving one component with both as evidence;
-  - a literal tool download, `NotClassified`, counted and not emitted;
+  - a literal tool download, `NotClassified`, counted and not emitted (US1 scenario 1);
+  - lists of unequal length, counted in `digest-mismatches`;
   - the exact C229 object.
 - [ ] T006 [US1] In `waybill-cli/src/scan_fs/package_db/cmake.rs::read`, call `cmake_download::parse_downloads` on each discovered file. Emit one `PackageDbEntry` per `DatasetDecl` (data-model "Dataset"):
   - tier `source`;

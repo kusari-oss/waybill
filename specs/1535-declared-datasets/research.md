@@ -44,6 +44,12 @@
 - *Host allow-lists* (`sparse.tamu.edu`): a name guess, with one host as witness.
 - *Variable-name heuristics* (`TEST_MATRICES`): a name guess.
 
+**The repository's own CMake fixtures are unaffected** (analysis C1, checked 2026-11-16):
+- `waybill-cli/tests` and `src` hold no `file(DOWNLOAD`;
+- neither does any cached revision of the fixtures repository (`~/.cache/waybill/fixtures/{4de48e97,891f6342,fffc00b5}`).
+
+So no committed golden gains C229.
+
 **The public corpus cannot test false positives.** None of its 21 targets is a CMake project (all are Go, Haskell, image, Maven, Nix, npm, Pants, Python or Rust). It can only confirm byte-identity (SC-003).
 
 ## R3. Identity

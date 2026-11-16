@@ -32,7 +32,7 @@ An installed SDK can ship third-party datasets: benchmark inputs, test matrices 
 
 - **CycloneDX 1.6:** component `type: "data"`.
 - **SPDX 3.0.1:** `dataset_DatasetPackage`, a subclass of `software_Package`, with `software_primaryPurpose: "data"` and a required `dataset_datasetType`.
-- **SPDX 2.3:** no data kind (`primaryPackagePurpose` has no `DATA`). `OTHER` plus a waybill annotation is the bridge, which needs a catalog row with extractors.
+- **SPDX 2.3:** no data kind (`primaryPackagePurpose` has no `DATA`). `OTHER` plus a waybill annotation is the bridge. Research R4 found the existing C160 `waybill:component-kind` row can carry it with a new value.
 
 ## Clarifications
 
@@ -59,7 +59,7 @@ A consumer scans a source tree whose CMake files declare datasets to download. E
 
 **Acceptance Scenarios**:
 
-1. **Given** a `file(DOWNLOAD <url>)` whose URL is a literal and which FR-008 classifies as a dataset, **When** the tree is scanned, **Then** one data component is reported for it, identified by the URL.
+1. **Given** a `file(DOWNLOAD <url>)` whose URL is a literal, **When** the tree is scanned, **Then** it is resolved but not classified as a dataset (research R2: only a list loop with a paired digest list is), so it is counted and emits nothing. On TheRock's pins these are three tool installers and one undigested data file.
 2. **Given** a dataset download inside a loop over literal lists defined in the same file, where the URL uses only elements of those lists, **When** the tree is scanned, **Then** one data component is reported per list element, with the element substituted into the URL.
 3. **Given** a digest list taken element by element in the same loop and checked with `file(MD5|SHA256 …)`, **When** the tree is scanned, **Then** each component carries the digest at its own index.
 4. **Given** a URL using any variable not defined as a literal in the same file (`$ENV{…}`, a cache variable, a function argument), **When** the tree is scanned, **Then** that download yields no component, and it is counted as unresolved.
@@ -89,7 +89,7 @@ Every data component this feature emits carries each format's native kind:
 
 - **Two files declare the same dataset.** rocSPARSE's two CMake files and hipSPARSE's declare overlapping matrices. One component per distinct identity, with every declaring file as evidence.
 - **Mirror downloads** (`$ENV{…_TEST_MIRROR}/…`) are unresolved by FR-004 and do not duplicate the primary URL.
-- **The lists have different lengths.** The digest is not attached to any element, and the mismatch is counted.
+- **The lists have different lengths.** The digest is not attached to any element, and the case is counted in C229's `digest-mismatches`.
 - **A download that is not data** (a source archive, a tool) via `file(DOWNLOAD)`. What is declared is a download, not a purpose. The plan must decide how a dataset download is told from any other, by measurement on the corpus. A download not classified as a dataset is counted and emits nothing (clarified). This feature MUST NOT re-type an existing FetchContent or ExternalProject component.
 - **The test scope** (#1564). These matrices are test data. A dataset declared by a test client's CMake file is not test-scoped by this feature; #1564's rules apply to installed files.
 
@@ -100,10 +100,10 @@ Every data component this feature emits carries each format's native kind:
 - **FR-001**: The CMake reader MUST read `file(DOWNLOAD <url> …)` commands. A URL is resolved only from:
   - literals;
   - elements of literal lists defined in the same file, taken element by element in a loop over those lists or over an index range up to their length.
-- **FR-002**: Each resolved download that FR-008 classifies as a dataset MUST be reported as a data component. Its identity comes from the resolved URL. It has no version unless one is declared.
+- **FR-002**: Each resolved download that FR-008 classifies as a dataset MUST be reported as a data component. Its identity is the list element (for example `Williams/mac_econ_fwd500`). The first resolved URL and the paired digest are recorded on the component. It has no version unless one is declared. A fallback URL or a repeat declaration of the same element joins the same component.
 - **FR-003**: A digest list paired element by element with the download list, and checked by `file(MD5|SHA1|SHA256|SHA512 …)` in the same loop, MUST be recorded on the component as its declared hash, with the algorithm.
 - **FR-004**: A download whose URL uses anything outside FR-001's literals MUST yield no component, and MUST be counted.
-- **FR-005**: The native kinds of US2 MUST be emitted. SPDX 2.3 MUST carry the bridge through a new catalog row with extractors in all three formats.
+- **FR-005**: The native kinds of US2 MUST be emitted. SPDX 2.3 MUST carry `primaryPackagePurpose: OTHER` plus C160 `waybill:component-kind: dataset`. C160 is an existing closed enum documented as extensible without new rows (research R4), so no new catalog row is needed for the kind.
 - **FR-006**: The dataset type MUST be chosen from SPDX 3's `DatasetType` vocabulary by a documented rule. When the declaration does not support a specific value, it MUST be `noAssertion`.
 - **FR-007**: The document MUST record the downloads read, the datasets emitted, the resolved downloads not classified as datasets, the unresolved downloads, and the digest mismatches.
 - **FR-008**: A download MUST be classified as a dataset only by a rule the plan measures on the ROCm source and the public corpus. The rule MUST NOT classify any download the corpus shows to be source or tooling. A resolved download it does not classify emits nothing and is counted (clarified): a misclassification is a gap, never a wrong type.
@@ -113,14 +113,18 @@ Every data component this feature emits carries each format's native kind:
 ### Key Entities
 
 - **Declared download**: a `file(DOWNLOAD)` command with its URL template, its loop context and its paired digest list.
-- **Dataset component**: identity from the resolved URL, declared digest, no version, native data kind.
+- **Dataset component**: identity from the declared list element, with the first resolved URL and the declared digest recorded; no version; native data kind.
 - **Download coverage**: the document-scope counts (FR-007).
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: A scan of rocSPARSE's and hipSPARSE's CMake directories at `rocm-libraries@9811f2ea5235`, sparse-checked-out in CI, reports **24** distinct dataset components. Each carries its `sparse.tamu.edu` URL and the declared MD5. They match the 24 installed matrix names one-to-one.
+- **SC-001**: In CI, at `rocm-libraries@9811f2ea5235` (sparse-checked-out):
+  - a scan rooted at `projects/rocsparse` reports **24** dataset components, matching the 24 installed matrix stems one-to-one, each with its `sparse.tamu.edu` URL and declared MD5;
+  - a scan rooted at `projects/hipsparse` reports 19, all among those 24.
+
+  Separate roots are needed because of the reader's discovery limit (research R7, #1516).
 - **SC-002**: SPDX 3 output with datasets passes the conformance validator, and CycloneDX passes its schema.
 - **SC-003**: Across the public corpus, every golden that changes is explained. A component that becomes a dataset, or a new one, is justified by its declaration.
 - **SC-004**: Each rule (literal URL, list substitution, digest pairing, unresolved variable, fallback de-duplication, dataset classification) has a mutation that fails a test.

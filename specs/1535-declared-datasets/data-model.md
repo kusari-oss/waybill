@@ -31,7 +31,7 @@ The URL's only variable must be `<v>`. Elements are substituted in order.
 
 **Identity.** Two elements are the same dataset when their element text matches exactly. Fallback URLs and repeat declarations join the same component; the first URL and the first digest win.
 
-**Digest disagreement.** When two declarations of the same element give different digests, neither is recorded, and the case is counted in `digest-mismatches`.
+**Digest disagreement.** When two declarations of the same element give different digests, neither is recorded, and the case is counted in `digest-mismatches`. A digest list whose length differs from its element list is not paired at all, and counts once in `digest-mismatches` (analysis U2).
 
 ## Classification (FR-008, research R2)
 
@@ -49,6 +49,6 @@ A download in a `ListLoop` with a paired digest list is a **dataset**. Any other
 | `unresolved` | FR-004 |
 | `not-classified` | resolved calls that are not datasets |
 | `datasets` | distinct dataset components |
-| `digest-mismatches` | per element |
+| `digest-mismatches` | per element whose declarations disagree, plus once per unequal-length list pair |
 
 Present only when `read` > 0.
