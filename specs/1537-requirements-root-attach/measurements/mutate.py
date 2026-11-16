@@ -24,16 +24,18 @@ M = {
  "M5": [("waybill-cli/src/generate/graph_completeness/mod.rs",
          "        let anchors = crate::supplement::current_root_anchors();\n        let targets = crate::generate::root_edges::root_targets(\n            components,",
          "        let anchors: Vec<String> = Vec::new();\n        let targets = crate::generate::root_edges::root_targets(\n            components,")],
- # M6 (FR-002): the owner walk reaches the scan root, so a root main module
- # owns a requirements file beside it.
- "M6": [(DA, "            .take_while(|d| !d.as_os_str().is_empty())", "            .take_while(|_| true)")],
+ # M6 (FR-002): the owner walk stops below the scan root, so a scan-root
+ # file goes to the subject beside a scan-root main module (the original
+ # FR-002, which flattened the quality corpus's python-ansible).
+ "M6": [(DA, "        dir.ancestors()\n            .find_map(",
+             "        dir.ancestors()\n            .take_while(|d| !d.as_os_str().is_empty())\n            .find_map(")],
  # M7: precedence reversed: a submodule outranks a main module.
  "M7": [(DA, "const RANK_SUBMODULE: u8 = 2;", "const RANK_SUBMODULE: u8 = 0;"),
         (DA, "const RANK_PYPI_MAIN_MODULE: u8 = 0;", "const RANK_PYPI_MAIN_MODULE: u8 = 3;"),
         (DA, "const RANK_OTHER_MAIN_MODULE: u8 = 1;", "const RANK_OTHER_MAIN_MODULE: u8 = 4;")],
  # M8: the walk stops at the file's own directory.
- "M8": [(DA, "        dir.ancestors()\n            .take_while(|d| !d.as_os_str().is_empty())",
-             "        dir.ancestors()\n            .take(1)\n            .take_while(|d| !d.as_os_str().is_empty())")],
+ "M8": [(DA, "        dir.ancestors()\n            .find_map(",
+             "        dir.ancestors()\n            .take(1)\n            .find_map(")],
  # M9: the pip duplicate merge drops the second declaring file.
  "M9": [("waybill-cli/src/scan_fs/package_db/pip/mod.rs",
          "                    kept.extra_source_paths.push(a.source_path);",
@@ -57,6 +59,13 @@ M = {
           "    if let Some(root_id) = root_ids.first() {\n        let anchors = crate::supplement::current_root_anchors();\n        let targets = crate::generate::root_edges::root_targets(",
           "    if let Some(root_id) = root_ids.first().filter(|_| false) {\n        let anchors = crate::supplement::current_root_anchors();\n        let targets = crate::generate::root_edges::root_targets(")],
  # M14 (FR-009): submodule anchors are not installed.
+ # M15 (#1234): the pip reader ignores `# via`.
+ "M15": [("waybill-cli/src/scan_fs/package_db/pip/requirements_txt.rs",
+          "fn link_via_annotations(entries: &mut [PackageDbEntry], via: &BTreeMap<String, Vec<String>>) {\n    if via.is_empty() {",
+          "fn link_via_annotations(entries: &mut [PackageDbEntry], via: &BTreeMap<String, Vec<String>>) {\n    if via.is_empty() || entries.len() < usize::MAX {")],
+ # M16 (#1234): every pin of a file is direct, whatever its siblings say.
+ "M16": [(DA, "        .filter(|m| tops.contains(&m.as_str()) || !reached.contains(m.as_str()))",
+              "        .filter(|m| tops.contains(&m.as_str()) || !reached.contains(m.as_str()) || !m.is_empty())")],
  "M14": [("waybill-cli/src/cli/scan_cmd.rs",
           "        let mut anchors: Vec<String> =\n            submodules.iter().filter(|p| !nested.contains(*p)).map(|p| p.to_string()).collect();",
           "        let mut anchors: Vec<String> = { let _ = (&submodules, &nested); Vec::new() };")],

@@ -533,44 +533,51 @@ fn m1218_build_toolchain_can_be_made_to_fail() {
     assert_fails_with(&out, checks::orphan_explained::KIND_UNREACHABLE_AND_UNEXPLAINED);
 }
 
+/// `foreign-build-system` is anchored on maven-guice's two Bazel WORKSPACE
+/// rules. It was anchored on go-opentelemetry's `codespell` until spec 1537
+/// attached that package to the Go module whose `requirements.txt` declares
+/// it: no longer an orphan, so no marker to strip.
+///
+/// Count-based rather than `mutate`, because maven-guice's I7 cell is a
+/// declared failure (#1235's three duplicate-identity components). The
+/// control is the residual count: withholding the two markers takes it from
+/// 3 to 5.
 #[test]
 fn m1218_foreign_build_system_can_be_made_to_fail() {
-    let out = mutate("I7", "go-opentelemetry", |cdx| {
-        let n = strip_orphan_reason(cdx, "pkg:pypi/");
-        assert_eq!(n, 1, "codespell must carry the marker");
-    });
-    assert_fails_with(&out, checks::orphan_explained::KIND_UNREACHABLE_AND_UNEXPLAINED);
+    let inv = registry_entry("I7");
+    let mut sboms = goldens::load("maven-guice").expect("golden triple");
+    let before = match (inv.checker)(&sboms) {
+        CellOutcome::Fail(vs) => vs[0].count,
+        other => panic!("maven-guice I7 should fail with #1235's three, got {other:?}"),
+    };
+    assert_eq!(before, 3, "the residual must be issue #1235's three before the mutation");
+    let stripped = strip_orphan_reason(&mut sboms.cdx, "pkg:bazel/");
+    assert_eq!(stripped, 2, "both WORKSPACE rules must carry the marker");
+    match (inv.checker)(&sboms) {
+        CellOutcome::Fail(vs) => assert_eq!(vs[0].count, 5, "withholding the two must add exactly two"),
+        other => panic!("expected Fail, got {other:?}"),
+    }
 }
 
-/// `dead-lockfile-entry` needs a count-based mutation rather than
-/// `mutate`, because `python-flask`'s I7 cell legitimately still FAILS —
-/// thirteen `requirements.txt` components are issue #1234's and are
-/// deliberately unexplained. So the control is the residual count, not the
-/// verdict: withholding the ten markers must take it from 13 to 23.
+/// `dead-lockfile-entry`: python-flask's ten `uv.lock` resolution forks.
+///
+/// Until spec 1537 this was count-based, because the cell also held issue
+/// #1234's thirteen `examples/celery/requirements.txt` components, which had
+/// no edge and no reason. The pip reader now reads that compiled file's
+/// `# via` lines as edges, so the thirteen are reached and the cell passes:
+/// withholding the ten markers must fail it with exactly ten.
 #[test]
 fn m1218_dead_lockfile_entry_withheld_raises_the_residual_count() {
     let inv = registry_entry("I7");
     let mut sboms = goldens::load("python-flask").expect("golden triple");
-
-    let before = (inv.checker)(&sboms);
-    let before_count = match &before {
-        CellOutcome::Fail(vs) => vs[0].count,
-        other => panic!("python-flask I7 should fail with #1234's thirteen, got {other:?}"),
-    };
-    assert_eq!(
-        before_count, 13,
-        "the residual must be issue #1234's thirteen before the mutation",
+    assert!(
+        matches!((inv.checker)(&sboms), CellOutcome::Pass),
+        "python-flask I7 must pass before the mutation, else it proves nothing",
     );
-
     let stripped = strip_orphan_reason(&mut sboms.cdx, "pkg:pypi/");
     assert_eq!(stripped, 10, "the ten uv.lock resolution forks carry the marker");
-
-    let after = (inv.checker)(&sboms);
-    match &after {
-        CellOutcome::Fail(vs) => assert_eq!(
-            vs[0].count, 23,
-            "withholding the ten must restore the pre-feature count of 23",
-        ),
+    match (inv.checker)(&sboms) {
+        CellOutcome::Fail(vs) => assert_eq!(vs[0].count, 10, "withholding the ten must fail exactly ten"),
         other => panic!("expected Fail, got {other:?}"),
     }
 }

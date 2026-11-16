@@ -594,6 +594,13 @@ fn merge_without_override(
                 {
                     kept.extra_source_paths.push(a.source_path);
                 }
+                // A compiled requirements file's `# via` edges (#1234) live
+                // in `depends`; a pin repeated in a second file keeps them.
+                for d in a.depends {
+                    if !kept.depends.contains(&d) {
+                        kept.depends.push(d);
+                    }
+                }
             }
             None => entries.push(a),
         }
@@ -1856,6 +1863,23 @@ mod tests {
             .collect();
         paths.sort();
         assert_eq!(paths, vec!["requirements.txt".to_string(), "tools/requirements.txt".to_string()]);
+    }
+
+    #[test]
+    fn s1537_a_pin_repeated_in_a_second_compiled_file_keeps_its_via_edges() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        std::fs::write(root.join("requirements.txt"), "waybill-fixture-a==1.0.0\n").unwrap();
+        std::fs::create_dir_all(root.join("tools")).unwrap();
+        std::fs::write(
+            root.join("tools/requirements.txt"),
+            "waybill-fixture-a==1.0.0\nwaybill-fixture-b==2.0.0\n    # via waybill-fixture-a\n",
+        )
+        .unwrap();
+        let out = read(root, false, &Default::default());
+        let a: Vec<&PackageDbEntry> = out.iter().filter(|e| e.name == "waybill-fixture-a").collect();
+        assert_eq!(a.len(), 1);
+        assert_eq!(a[0].depends, vec!["pkg:pypi/waybill-fixture-b@2.0.0".to_string()]);
     }
 
     #[test]

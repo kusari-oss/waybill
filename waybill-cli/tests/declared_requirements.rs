@@ -659,3 +659,55 @@ fn c8b_nested_dev_requirements_keep_their_scope_on_the_owner_edge() {
     assert_declared_reachable(&docs);
     assert_verdict(&docs, "complete");
 }
+
+/// C-14: a scan-root project owns the scan-root requirements file, and the
+/// files below it that have no project of their own, also when the subject
+/// is a synthetic `--root-name` root. Both corpus harnesses scan this way.
+/// Giving the file to the subject instead put every package a second time
+/// directly under the named root, beside the project's own edges: the
+/// quality corpus's `python-ansible` went from depth 2 to a flat graph.
+#[test]
+fn c14_scan_root_requirements_belong_to_the_scan_root_project_under_a_named_root() {
+    let fx = GitFixture::new();
+    fx.repo("app");
+    fx.write("app/pyproject.toml", ROOT_PYPROJECT);
+    fx.write("app/requirements.txt", REQ_AB);
+    fx.write("app/docs/requirements.txt", "waybill-fixture-d==7.0.0\n");
+    commit_all(&fx, "app");
+    let docs = scan(&fx, &fx.path("app"), &["--root-name", "waybill-fixture-root", "--root-version", "1"]);
+    assert_eq!(
+        package_targets(&docs),
+        set(&[APP]),
+        "the named root reaches the packages through the project, never beside it",
+    );
+    assert_eq!(depends_of(&docs.cdx, APP), set(&[A, B, "pkg:pypi/waybill-fixture-d@7.0.0"]));
+    assert_declared_reachable(&docs);
+    assert_verdict(&docs, "complete");
+}
+
+/// pip-compile output: `a` is the project's, `b` and `c` come through it.
+const COMPILED: &str = "#\n#    pip-compile pyproject.toml\n#\n\
+waybill-fixture-a==1.0.0\n    # via waybill-fixture-app (pyproject.toml)\n\
+waybill-fixture-b==2.0.0\n    # via waybill-fixture-a\n\
+waybill-fixture-c==3.0.0\n    # via\n    #   waybill-fixture-a\n    #   waybill-fixture-b\n";
+
+/// C-15 (#1234): a compiled requirements file pins the whole closure and
+/// says which pin pulls in which. Its `# via` lines are the edges, and the
+/// project depends only on the pins the file says are its own. Attaching
+/// every pin to the project flattened `python-flask`'s celery example into
+/// 19 direct dependencies, 17 of them transitive.
+#[test]
+fn c15_a_compiled_requirements_file_keeps_its_depth() {
+    let fx = GitFixture::new();
+    fx.repo("app");
+    fx.write("app/pyproject.toml", ROOT_PYPROJECT);
+    fx.write("app/requirements.txt", COMPILED);
+    commit_all(&fx, "app");
+    let docs = scan(&fx, &fx.path("app"), &["--root-name", "waybill-fixture-root", "--root-version", "1"]);
+    let c = "pkg:pypi/waybill-fixture-c@3.0.0";
+    assert_eq!(depends_of(&docs.cdx, APP), set(&[A]), "only the pin the file gives the project");
+    assert_eq!(depends_of(&docs.cdx, A), set(&[B, c]));
+    assert_eq!(depends_of(&docs.cdx, B), set(&[c]));
+    assert_declared_reachable(&docs);
+    assert_verdict(&docs, "complete");
+}
