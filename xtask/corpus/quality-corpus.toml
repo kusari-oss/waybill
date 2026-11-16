@@ -269,10 +269,18 @@ ecosystem = "pip"
 # Re-measured against waybill 0.6.1 after rebasing onto main. edges 151->168 and
 # depth 2->4: the graph got RICHER, not poorer, so the old upper bound tripped on an
 # improvement rather than a regression. Bounds recentred on the new observation.
+# Re-measured 2026-11-16 for spec 1537 (#1566, #1538, #1234). Two
+# observations, identical: CI run 43957220662 @ e3dfd637, and the local
+# harness with the same flags (edges do not depend on sbomqs). Traced arm by
+# arm in specs/1537-requirements-root-attach/measurements/quality.md.
+#   edges 176 -> 202. All 26 are edges between pins of
+#   examples/celery/requirements.txt, read from its pip-compile `# via`
+#   lines one for one (#1234: those pins had no edges at all).
+#   Bound +/-10% (min +/-3) of the observed 202.
 [targets.expect]
 pkgs      = { min = 93, max = 115 }
 files     = { min = 0, max = 4 }
-edges     = { min = 151, max = 185 }
+edges     = { min = 182, max = 222 }
 max_depth = { min = 3, max = 8 }
 sbomqs    = { min = 7.02, max = 8.02 }
 wall_ms   = { min = 5, max = 2000 }
@@ -326,10 +334,21 @@ ecosystem = "pip"
 # (23 above the floor), re-centred only so the recorded observation stays
 # true -- this file's premise is that every target records what waybill
 # actually produced at that pin.
+# Re-measured 2026-11-16 for spec 1537 (#1566, #1538, #1234). Two
+# observations, identical: CI run 43957220662 @ e3dfd637, and the local
+# harness with the same flags (edges do not depend on sbomqs). Traced arm by
+# arm in specs/1537-requirements-root-attach/measurements/quality.md.
+#   edges 7 -> 13, depth 2, NOT flat. The six new edges are `ansible-core`
+#   -> the packages of test/units/requirements.txt, which had no edge
+#   before. (At 502231ff this target went flat, edges=18: a scan-root
+#   requirements file was given to the named root beside `ansible-core`.
+#   That was a defect in the feature and is fixed; it is why `flat = false`
+#   stays asserted here.)
+#   Bound +/-10% (min +/-3) of the observed 13.
 [targets.expect]
 pkgs      = { min = 8, max = 14 }
 files     = { min = 324, max = 396 }
-edges     = { min = 5, max = 11 }
+edges     = { min = 10, max = 16 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.37, max = 6.37 }
 wall_ms   = { min = 5, max = 30000 }
@@ -398,10 +417,18 @@ ecosystem = "pip"
 # violated bounds move; the 116 -> 114 dip before #1515 stayed in range.
 # wall_ms rose from 1.7-1.9 s to 3.3-4.0 s (two CI runs each side), well
 # inside the guard.
+# Re-measured 2026-11-16 for spec 1537 (#1566, #1538, #1234). Two
+# observations, identical: CI run 43957220662 @ e3dfd637, and the local
+# harness with the same flags (edges do not depend on sbomqs). Traced arm by
+# arm in specs/1537-requirements-root-attach/measurements/quality.md.
+#   edges 45 -> 97. 52 new edges, all from `torch` (the scan-root
+#   project), to packages in requirements*.txt, docs/ and three tool
+#   directories. None of the 52 had an incoming edge before.
+#   Bound +/-10% (min +/-3) of the observed 97.
 [targets.expect]
 pkgs      = { min = 135, max = 167 }
 files     = { min = 57, max = 71 }
-edges     = { min = 40, max = 50 }
+edges     = { min = 87, max = 107 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.41, max = 6.41 }
 wall_ms   = { min = 5, max = 50000 }
@@ -461,11 +488,20 @@ ecosystem = "pants+uv"
 #
 # `pkgs` has also drifted 271 -> 281 since 2026-09-04, still inside its
 # bound; recorded here so the block states what waybill now produces.
+# Re-measured 2026-11-16 for spec 1537 (#1566, #1538, #1234). Two
+# observations, identical: CI run 43957220662 @ e3dfd637, and the local
+# harness with the same flags (edges do not depend on sbomqs). Traced arm by
+# arm in specs/1537-requirements-root-attach/measurements/quality.md.
+#   edges 519 -> 651. The 132 new edges are `backend.ai` -> the 132 names
+#   its requirements.txt (124) and docs/requirements.txt (8) declare, one
+#   for one. 122 were already reachable through the Pants resolve; the
+#   project now also carries the direct edge its manifest states.
+#   Bound +/-10% (min +/-3) of the observed 651.
 [targets.expect]
 pkgs      = { min = 243, max = 299 }
 files     = { min = 53, max = 65 }
 # +/-10% of the observed 519, per HOW THE BOUNDS WERE SIZED above.
-edges     = { min = 467, max = 571 }
+edges     = { min = 586, max = 716 }
 max_depth = { min = 4, max = 9 }
 sbomqs    = { min = 6.77, max = 7.77 }
 wall_ms   = { min = 5, max = 30000 }
@@ -635,10 +671,19 @@ ecosystem = "bazel/polyglot"
 # 308 is therefore the post-m934 floor, re-authored so a FURTHER collapse
 # still fails. When #989 lands this bound rises and must be re-authored
 # again; do not read the eventual increase as a regression.
+# Re-measured 2026-11-16 for spec 1537 (#1566, #1538, #1234). Two
+# observations, identical: CI run 43957220662 @ e3dfd637, and the local
+# harness with the same flags (edges do not depend on sbomqs). Traced arm by
+# arm in specs/1537-requirements-root-attach/measurements/quality.md.
+#   edges 442 -> 475. All 33 new edges are from `mdb-python-deps`, the
+#   scan-root poetry project, to packages in nested requirements files with
+#   no project of their own (buildscripts/cost_model, two wiredtiger tools,
+#   a query benchmark). 25 of the 33 had no incoming edge at all before.
+#   Bound +/-10% (min +/-3) of the observed 475.
 [targets.expect]
 pkgs      = { min = 357, max = 437 }
 files     = { min = 277, max = 339 }
-edges     = { min = 381, max = 467 }
+edges     = { min = 427, max = 523 }
 max_depth = { min = 5, max = 10 }
 sbomqs    = { min = 5.89, max = 6.89 }
 wall_ms   = { min = 5, max = 200000 }

@@ -5,6 +5,7 @@
 //! versions at install time; entries get `sbom_tier = "design"` when
 //! the version is unpinned.
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use waybill_common::types::purl::Purl;
 
@@ -12,7 +13,7 @@ use waybill_common::types::hash::{ContentHash, HashAlgorithm};
 
 use super::super::name_validation::validate_pep508_name;
 use super::super::PackageDbEntry;
-use super::{build_pypi_purl_str, tokenise_requires_dist_name};
+use super::{build_pypi_purl_str, normalize_pypi_name_for_purl, tokenise_requires_dist_name};
 
 /// Milestone 670 T013 — FR-005a lifecycle-scope classification for a
 /// discovered `requirements*.txt` file. Filename + parent-directory
@@ -141,13 +142,129 @@ pub(super) fn read_requirements_files(rootfs: &Path) -> Option<Vec<PackageDbEntr
         for line in &parsed.rejected {
             tracing::debug!(path = %source_path, line = %line, "pip: skipping a line that is not a PEP 508 requirement");
         }
-        for entry in parsed.entries {
-            if let Some(pdb) = entry.into_package_db_entry(&source_path, scope) {
-                out.push(pdb);
+        let mut file_entries: Vec<PackageDbEntry> = parsed
+            .entries
+            .into_iter()
+            .filter_map(|entry| entry.into_package_db_entry(&source_path, scope))
+            .collect();
+        link_via_annotations(&mut file_entries, &parse_via(&text));
+        out.extend(file_entries);
+    }
+    if out.is_empty() { None } else { Some(out) }
+}
+
+/// Spec 1537 (#1234): a compiled requirements file (pip-compile, uv pip
+/// compile) pins the whole closure and records, under each pin, the pins
+/// that pull it in:
+///
+/// ```text
+/// amqp==5.1.1
+///     # via kombu
+/// click==8.1.3
+///     # via
+///     #   celery
+///     #   flask
+/// ```
+///
+/// Older pip-compile writes the same thing inline (`amqp==5.1.1  # via
+/// kombu`). Returns each pin's name (PEP 503) with the names it is via. A
+/// `via` that is not another pin — `-r requirements.in`, or the project
+/// itself, `app (pyproject.toml)` — is kept here and matches nothing later.
+pub(crate) fn parse_via(text: &str) -> BTreeMap<String, Vec<String>> {
+    fn via_rest(comment: &str) -> Option<&str> {
+        if comment == "via" {
+            Some("")
+        } else {
+            comment.strip_prefix("via ")
+        }
+    }
+    fn push(out: &mut BTreeMap<String, Vec<String>>, pin: &str, names: &str) {
+        for item in names.split(',') {
+            let item = item.split(" (").next().unwrap_or(item).trim();
+            let item = item.split('[').next().unwrap_or(item).trim();
+            if item.is_empty() || item.starts_with('-') {
+                continue;
+            }
+            let name = normalize_pypi_name_for_purl(item);
+            let parents = out.entry(pin.to_string()).or_default();
+            if !parents.contains(&name) {
+                parents.push(name);
             }
         }
     }
-    if out.is_empty() { None } else { Some(out) }
+    let mut out: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let joined = text.replace("\\\n", " ");
+    let mut current: Option<String> = None;
+    let mut in_block = false;
+    for raw in joined.lines() {
+        let line = raw.trim();
+        if line.is_empty() {
+            current = None;
+            in_block = false;
+            continue;
+        }
+        if let Some(raw_comment) = line.strip_prefix('#') {
+            let comment = raw_comment.trim();
+            let Some(pin) = current.as_deref() else { continue };
+            if let Some(rest) = via_rest(comment) {
+                in_block = true;
+                push(&mut out, pin, rest);
+            } else if in_block && raw_comment.starts_with("  ") && !comment.is_empty() {
+                // A block entry is indented under `# via`: `#   celery`.
+                push(&mut out, pin, comment);
+            } else {
+                in_block = false;
+            }
+            continue;
+        }
+        in_block = false;
+        let (req, comment) = match line.split_once(" #") {
+            Some((before, after)) => (before.trim(), Some(after.trim())),
+            None => (line, None),
+        };
+        current = match req.starts_with('-') {
+            true => None,
+            false => match parse_requirements_line(req) {
+                Line::Entry(e) => Some(normalize_pypi_name_for_purl(&e.name)),
+                Line::Skipped | Line::NotPep508 => None,
+            },
+        };
+        if let (Some(pin), Some(rest)) = (current.as_deref(), comment.and_then(via_rest)) {
+            push(&mut out, pin, rest);
+        }
+    }
+    out
+}
+
+/// Writes each `# via` as an edge between pins of the same file: a pin
+/// that is `via` another pin is that pin's dependency, named by its exact
+/// PURL so a scan holding several versions of one name cannot bind the
+/// edge to the wrong one. The declared-requirements pass then gives the
+/// file's project an edge only to the pins nothing in the file reaches.
+fn link_via_annotations(entries: &mut [PackageDbEntry], via: &BTreeMap<String, Vec<String>>) {
+    if via.is_empty() {
+        return;
+    }
+    let by_name: std::collections::HashMap<String, usize> = entries
+        .iter()
+        .enumerate()
+        .map(|(i, e)| (normalize_pypi_name_for_purl(&e.name), i))
+        .collect();
+    let mut adds: Vec<(usize, String)> = Vec::new();
+    for (i, e) in entries.iter().enumerate() {
+        for parent in via.get(&normalize_pypi_name_for_purl(&e.name)).into_iter().flatten() {
+            if let Some(&q) = by_name.get(parent) {
+                if q != i {
+                    adds.push((q, e.purl.as_str().to_string()));
+                }
+            }
+        }
+    }
+    for (q, purl) in adds {
+        if !entries[q].depends.contains(&purl) {
+            entries[q].depends.push(purl);
+        }
+    }
 }
 
 /// One line from a `requirements.txt`-style file, normalised.
@@ -1307,4 +1424,58 @@ urllib3>=2 \\
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert_eq!(names, ["requests", "urllib3"]);
     }
+
+    /// Spec 1537 (#1234): flask's `examples/celery/requirements.txt`
+    /// shape, pip-compile 7 block form.
+    const COMPILED: &str = "#\n#    pip-compile pyproject.toml\n#\namqp==5.1.1\n    # via kombu\ncelery[redis]==5.2.7\n    # via waybill-fixture-app (pyproject.toml)\nclick==8.1.3\n    # via\n    #   celery\n    #   click-repl\nclick-repl==0.2.0\n    # via celery\nkombu==5.2.4\n    # via celery\nvine==5.0.0\n    # via\n    #   amqp\n    #   celery\n";
+
+    #[test]
+    fn s1537_parse_via_reads_the_block_form() {
+        let via = parse_via(COMPILED);
+        assert_eq!(via["amqp"], vec!["kombu"]);
+        assert_eq!(via["celery"], vec!["waybill-fixture-app"]);
+        assert_eq!(via["click"], vec!["celery", "click-repl"]);
+        assert_eq!(via["vine"], vec!["amqp", "celery"]);
+    }
+
+    #[test]
+    fn s1537_parse_via_reads_the_inline_form_and_skips_includes() {
+        let via = parse_via("amqp==5.1.1  # via kombu, Celery\nkombu==5.2.4  # via -r requirements.in\n");
+        assert_eq!(via["amqp"], vec!["kombu", "celery"]);
+        assert!(!via.contains_key("kombu"), "`-r` names a file, not a pin");
+    }
+
+    #[test]
+    fn s1537_a_comment_that_is_not_via_ends_the_block() {
+        let via = parse_via("a==1\n    # via b\n    # this is a note\n    #   c\nb==2\nc==3\n");
+        assert_eq!(via["a"], vec!["b"], "`#   c` after an unrelated comment is not a via name");
+    }
+
+    #[test]
+    fn s1537_a_hand_written_file_has_no_via() {
+        assert!(parse_via("# runtime\nrequests==2.31.0  # pinned for CVE\nflask>=2\n").is_empty());
+    }
+
+    #[test]
+    fn s1537_via_becomes_exact_purl_edges_between_pins_of_one_file() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("requirements.txt"), COMPILED).unwrap();
+        let out = read_requirements_files(dir.path()).unwrap();
+        let deps = |name: &str| -> Vec<String> {
+            let mut d = out.iter().find(|e| e.name == name).unwrap().depends.clone();
+            d.sort();
+            d
+        };
+        assert_eq!(deps("celery"), vec![
+            "pkg:pypi/click-repl@0.2.0".to_string(),
+            "pkg:pypi/click@8.1.3".to_string(),
+            "pkg:pypi/kombu@5.2.4".to_string(),
+            "pkg:pypi/vine@5.0.0".to_string(),
+        ]);
+        assert_eq!(deps("kombu"), vec!["pkg:pypi/amqp@5.1.1".to_string()]);
+        assert_eq!(deps("amqp"), vec!["pkg:pypi/vine@5.0.0".to_string()]);
+        assert_eq!(deps("click-repl"), vec!["pkg:pypi/click@8.1.3".to_string()]);
+        assert!(deps("vine").is_empty() && deps("click").is_empty());
+    }
+
 }

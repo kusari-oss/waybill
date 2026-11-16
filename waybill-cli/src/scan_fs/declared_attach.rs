@@ -1,0 +1,504 @@
+//! Spec 1537 (#1566, #1538), research R3–R4: a package a pip requirements
+//! file declares is a direct dependency of the project that declares it.
+//!
+//! Until now such a package had no declared edge at all. The pip reader
+//! builds it with an empty `depends` and nothing names it, so it reached the
+//! root only through the "attach graph-tops to a root with no edges"
+//! fallback. Anything that gave the root an edge stranded it: a git
+//! submodule (#1566), or a `pyproject.toml` next to the file with a
+//! dependency of its own (research R1, arm c3).
+//!
+//! The declaring project of a file is found by its location:
+//!
+//! - **The nearest enclosing project**, walking up from the file's
+//!   directory and including the scan root itself (FR-002, FR-003). A
+//!   project is a main module of any ecosystem or a git submodule. In one
+//!   directory, a `pkg:pypi` main module wins, then any other main module
+//!   (lowest PURL), then a submodule. CMake, Conan and vcpkg emit no project
+//!   component, so their directories own nothing.
+//! - **No project anywhere up to the scan root:** the document's subject.
+//!   The root is chosen per format at emit time, so these become *declared
+//!   root anchors*, installed with the reader anchors (`cli/scan_cmd.rs`).
+//!
+//! A scan-root main module owns a scan-root file. Sending that file to the
+//! subject instead put every package a second time directly under a
+//! synthetic `--root-name` root, a star beside the main module's own edges:
+//! the quality corpus's `python-ansible` went from depth 2 to a flat graph.
+
+use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::path::{Component, Path, PathBuf};
+
+use waybill_common::resolution::{
+    EnrichmentProvenance, Relationship, RelationshipType, ResolvedComponent,
+};
+
+/// Owner rank within one directory (lower wins), research R3.
+const RANK_PYPI_MAIN_MODULE: u8 = 0;
+const RANK_OTHER_MAIN_MODULE: u8 = 1;
+const RANK_SUBMODULE: u8 = 2;
+
+/// `p` as a path relative to the scan root, without `.` or `..`. `None`
+/// when it is absolute outside the root or escapes it.
+fn relative(p: &str, scan_root: &Path, canonical_root: &Path) -> Option<PathBuf> {
+    // Main-module readers write `path+file://<absolute path>` (the
+    // workspace-member tagger reads the same form).
+    let path = Path::new(p.strip_prefix("path+file://").unwrap_or(p));
+    let rel = if path.is_absolute() {
+        path.strip_prefix(canonical_root)
+            .or_else(|_| path.strip_prefix(scan_root))
+            .ok()?
+            .to_path_buf()
+    } else {
+        path.to_path_buf()
+    };
+    let mut out = PathBuf::new();
+    for c in rel.components() {
+        match c {
+            Component::Normal(s) => out.push(s),
+            Component::CurDir => {}
+            _ => return None,
+        }
+    }
+    Some(out)
+}
+
+fn is_main_module(c: &ResolvedComponent) -> bool {
+    c.extra_annotations
+        .get("waybill:component-role")
+        .and_then(|v| v.as_str())
+        == Some("main-module")
+}
+
+/// The pip reader's own file test (`pip/mod.rs`: `requirements*.txt`).
+fn is_requirements_file(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.starts_with("requirements") && n.ends_with(".txt"))
+}
+
+/// Directory (relative to the scan root) → the project that owns it.
+#[derive(Debug, Default)]
+pub(crate) struct OwnerIndex {
+    by_dir: BTreeMap<PathBuf, String>,
+}
+
+impl OwnerIndex {
+    /// `submodule_dirs` maps each submodule's absolute, canonical directory
+    /// to its PURL (`git_submodule::SubmoduleDirs`).
+    pub(crate) fn build(
+        components: &[ResolvedComponent],
+        submodule_dirs: &BTreeMap<PathBuf, String>,
+        scan_root: &Path,
+        mode: crate::scan_fs::ScanMode,
+    ) -> Self {
+        let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+        let mut best: BTreeMap<PathBuf, (u8, String)> = BTreeMap::new();
+        let mut offer = |dir: PathBuf, rank: u8, purl: &str| {
+            let cand = (rank, purl.to_string());
+            match best.get(&dir) {
+                Some(cur) if *cur <= cand => {}
+                _ => {
+                    best.insert(dir, cand);
+                }
+            }
+        };
+        for c in components.iter().filter(|c| is_main_module(c)) {
+            // A main module's project directory is what the
+            // `waybill:workspace-member` annotation reports, from the same
+            // function: `path+file://<abs dir>` (pip, npm, cargo) or a
+            // manifest path's directory. `.` is the scan root.
+            let Some(first) = c.evidence.source_file_paths.first() else { continue };
+            let Some(ws) = crate::scan_fs::workspace_root::derive_workspace_root(first, &canonical_root, mode) else { continue };
+            let dir = if ws == "." { PathBuf::new() } else { PathBuf::from(ws) };
+            let rank = if c.purl.ecosystem() == "pypi" { RANK_PYPI_MAIN_MODULE } else { RANK_OTHER_MAIN_MODULE };
+            offer(dir, rank, c.purl.as_str());
+        }
+        for (dir, purl) in submodule_dirs {
+            let Some(s) = dir.to_str() else { continue };
+            let Some(rel) = relative(s, scan_root, &canonical_root) else { continue };
+            offer(rel, RANK_SUBMODULE, purl);
+        }
+        let by_dir: BTreeMap<PathBuf, String> = best.into_iter().map(|(d, (_, p))| (d, p)).collect();
+        tracing::debug!(owners = ?by_dir, "declared requirements: owner index");
+        Self { by_dir }
+    }
+
+    /// The nearest owner of a file, walking up from its directory to the
+    /// scan root inclusive (`""`).
+    fn owner_of(&self, file: &Path) -> Option<&str> {
+        let dir = file.parent()?;
+        dir.ancestors()
+            .find_map(|d| self.by_dir.get(d).map(String::as_str))
+    }
+}
+
+/// What the pass decided.
+#[derive(Debug, Default)]
+pub(crate) struct DeclaredAttachment {
+    /// `owner DependsOn package`, typed later by the lifecycle-scope pass.
+    pub edges: Vec<Relationship>,
+    /// Packages declared at the scan root, or with no owner below it.
+    pub root_anchors: BTreeSet<String>,
+}
+
+/// The packages a requirements file declares (pip, non-main-module), by
+/// file relative to the scan root.
+fn members_by_file(
+    components: &[ResolvedComponent],
+    scan_root: &Path,
+    canonical_root: &Path,
+) -> BTreeMap<PathBuf, BTreeSet<String>> {
+    let mut out: BTreeMap<PathBuf, BTreeSet<String>> = BTreeMap::new();
+    for c in components {
+        if c.purl.ecosystem() != "pypi" || is_main_module(c) {
+            continue;
+        }
+        for p in &c.evidence.source_file_paths {
+            let Some(rel) = relative(p, scan_root, canonical_root) else { continue };
+            if is_requirements_file(&rel) {
+                out.entry(rel).or_default().insert(c.purl.as_str().to_string());
+            }
+        }
+    }
+    out
+}
+
+/// The packages of one file that its project depends on directly.
+///
+/// A compiled file (pip-compile, uv) pins the whole closure and says which
+/// pin pulls in which (`# via kombu`); the pip reader turns that into edges
+/// between pins. A pin that another pin of the same file reaches is that
+/// pin's dependency, not the project's: giving the project an edge to every
+/// pin flattened `flask`'s celery example into 19 direct dependencies, 17 of
+/// them transitive. The direct set is every pin reachable from the pins no
+/// sibling points at, plus any pin left over in a sibling-only cycle, so the
+/// rule can never strand a pin. A hand-written file has no such edges, and
+/// every pin stays direct.
+fn direct_members(members: &BTreeSet<String>, relationships: &[Relationship]) -> BTreeSet<String> {
+    let mut inner: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    let mut has_parent: BTreeSet<&str> = BTreeSet::new();
+    for r in relationships {
+        if r.from != r.to && members.contains(&r.from) && members.contains(&r.to) {
+            inner.entry(r.from.as_str()).or_default().push(r.to.as_str());
+            has_parent.insert(r.to.as_str());
+        }
+    }
+    let tops: Vec<&str> =
+        members.iter().map(String::as_str).filter(|m| !has_parent.contains(m)).collect();
+    let mut reached: BTreeSet<&str> = BTreeSet::new();
+    let mut stack = tops.clone();
+    while let Some(n) = stack.pop() {
+        if reached.insert(n) {
+            stack.extend(inner.get(n).into_iter().flatten().copied());
+        }
+    }
+    members
+        .iter()
+        .filter(|m| tops.contains(&m.as_str()) || !reached.contains(m.as_str()))
+        .cloned()
+        .collect()
+}
+
+/// One candidate per declaring file (data-model V2–V4).
+pub(crate) fn attach(
+    components: &[ResolvedComponent],
+    relationships: &[Relationship],
+    index: &OwnerIndex,
+    scan_root: &Path,
+) -> DeclaredAttachment {
+    let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+    let mut seen: HashSet<(String, String)> = relationships
+        .iter()
+        .map(|r| (r.from.clone(), r.to.clone()))
+        .collect();
+    let direct: BTreeMap<PathBuf, BTreeSet<String>> = members_by_file(components, scan_root, &canonical_root)
+        .into_iter()
+        .map(|(file, members)| {
+            let d = direct_members(&members, relationships);
+            (file, d)
+        })
+        .collect();
+    let mut out = DeclaredAttachment::default();
+    for c in components {
+        for p in &c.evidence.source_file_paths {
+            let Some(rel) = relative(p, scan_root, &canonical_root) else { continue };
+            // Only a pip, non-main-module package is ever a member
+            // (`members_by_file`), and only a direct one is attached.
+            if !direct.get(&rel).is_some_and(|d| d.contains(c.purl.as_str())) {
+                continue;
+            }
+            match index.owner_of(&rel) {
+                Some(owner) if owner == c.purl.as_str() => {}
+                Some(owner) => {
+                    if seen.insert((owner.to_string(), c.purl.as_str().to_string())) {
+                        out.edges.push(Relationship {
+                            from: owner.to_string(),
+                            to: c.purl.as_str().to_string(),
+                            relationship_type: RelationshipType::DependsOn,
+                            provenance: EnrichmentProvenance {
+                                source: rel.to_string_lossy().into_owned(),
+                                data_type: "declared-requirement".to_string(),
+                            },
+                        });
+                    }
+                }
+                None => {
+                    out.root_anchors.insert(c.purl.as_str().to_string());
+                }
+            }
+        }
+    }
+    tracing::debug!(
+        edges = out.edges.len(),
+        root_anchors = out.root_anchors.len(),
+        "declared requirements: attached"
+    );
+    out
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::*;
+    use crate::generate::graph_completeness::test_support::mk_component;
+
+    fn declared(purl: &str, files: &[&str]) -> ResolvedComponent {
+        let mut c = mk_component(purl);
+        c.evidence.source_file_paths = files.iter().map(|f| f.to_string()).collect();
+        c
+    }
+
+    fn main_module(purl: &str, manifest: &str) -> ResolvedComponent {
+        let mut c = declared(purl, &[manifest]);
+        c.extra_annotations
+            .insert("waybill:component-role".to_string(), serde_json::json!("main-module"));
+        c
+    }
+
+    const A: &str = "pkg:pypi/waybill-fixture-a@1.0.0";
+    const ROOT: &str = "/nonexistent-waybill-fixture-root";
+
+    fn run(comps: &[ResolvedComponent], subs: &[(&str, &str)]) -> DeclaredAttachment {
+        let dirs: BTreeMap<PathBuf, String> =
+            subs.iter().map(|(d, p)| (Path::new(ROOT).join(d), p.to_string())).collect();
+        let index = OwnerIndex::build(comps, &dirs, Path::new(ROOT), crate::scan_fs::ScanMode::Path);
+        attach(comps, &[], &index, Path::new(ROOT))
+    }
+
+    fn edges(d: &DeclaredAttachment) -> Vec<(String, String)> {
+        d.edges.iter().map(|r| (r.from.clone(), r.to.clone())).collect()
+    }
+
+    #[test]
+    fn a_file_at_the_scan_root_goes_to_a_scan_root_main_module() {
+        let app = "pkg:pypi/waybill-fixture-app@1.0.0";
+        let comps = [main_module(app, "pyproject.toml"), declared(A, &["requirements.txt"])];
+        let d = run(&comps, &[]);
+        assert_eq!(edges(&d), vec![(app.to_string(), A.to_string())]);
+        assert!(d.root_anchors.is_empty(), "a scan-root project owns its file; the subject does not");
+    }
+
+    #[test]
+    fn a_file_at_the_scan_root_with_no_project_is_a_root_anchor() {
+        let d = run(&[declared(A, &["requirements.txt"])], &[]);
+        assert!(d.edges.is_empty());
+        assert_eq!(d.root_anchors, BTreeSet::from([A.to_string()]));
+    }
+
+    #[test]
+    fn a_nested_file_with_no_owner_of_its_own_walks_up_to_the_scan_root_project() {
+        let app = "pkg:pypi/waybill-fixture-app@1.0.0";
+        let comps = [main_module(app, "pyproject.toml"), declared(A, &["docs/requirements.txt"])];
+        let d = run(&comps, &[]);
+        assert_eq!(edges(&d), vec![(app.to_string(), A.to_string())]);
+        assert!(d.root_anchors.is_empty());
+    }
+
+    /// Main-module readers record the project directory as a
+    /// `path+file://<abs dir>` URI, not a manifest path (measured: npm and
+    /// pip at the scan stage). That directory is the owner, and it is nearer
+    /// than the scan root's own project.
+    #[test]
+    fn a_main_module_recorded_by_its_directory_owns_that_directory() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("tools")).unwrap();
+        let tools = "pkg:npm/waybill-fixture-tools@1.0.0";
+        let root = std::fs::canonicalize(tmp.path()).unwrap();
+        let app_src = format!("path+file://{}", root.display());
+        let tools_src = format!("path+file://{}", root.join("tools").display());
+        let comps = [
+            main_module("pkg:pypi/waybill-fixture-app@1.0.0", &app_src),
+            main_module(tools, &tools_src),
+            declared(A, &["tools/requirements.txt"]),
+        ];
+        let index = OwnerIndex::build(&comps, &BTreeMap::new(), tmp.path(), crate::scan_fs::ScanMode::Path);
+        let d = attach(&comps, &[], &index, tmp.path());
+        assert_eq!(edges(&d), vec![(tools.to_string(), A.to_string())]);
+        assert!(d.root_anchors.is_empty(), "the nearer project wins over the scan root's");
+    }
+
+    #[test]
+    fn a_nested_file_with_no_owner_is_a_root_anchor() {
+        let d = run(&[declared(A, &["tools/requirements.txt"])], &[]);
+        assert_eq!(d.root_anchors, BTreeSet::from([A.to_string()]));
+    }
+
+    #[test]
+    fn a_nested_file_goes_to_the_main_module_of_its_directory() {
+        let tools = "pkg:npm/waybill-fixture-tools@1.0.0";
+        let comps = [main_module(tools, "tools/package.json"), declared(A, &["tools/requirements.txt"])];
+        let d = run(&comps, &[]);
+        assert_eq!(edges(&d), vec![(tools.to_string(), A.to_string())]);
+        assert!(d.root_anchors.is_empty());
+    }
+
+    #[test]
+    fn the_walk_continues_to_the_nearest_enclosing_owner() {
+        let tools = "pkg:npm/waybill-fixture-tools@1.0.0";
+        let comps = [main_module(tools, "tools/package.json"), declared(A, &["tools/scripts/ci/requirements.txt"])];
+        assert_eq!(edges(&run(&comps, &[])), vec![(tools.to_string(), A.to_string())]);
+    }
+
+    #[test]
+    fn a_file_under_a_submodule_goes_to_the_submodule() {
+        let sub = "pkg:github/waybill-fixture/x@abc";
+        let d = run(&[declared(A, &["third_party/x/requirements.txt"])], &[("third_party/x", sub)]);
+        assert_eq!(edges(&d), vec![(sub.to_string(), A.to_string())]);
+    }
+
+    #[test]
+    fn a_submodules_own_python_project_outranks_the_submodule() {
+        let sub = "pkg:github/waybill-fixture/x@abc";
+        let xpy = "pkg:pypi/waybill-fixture-xpy@1.0.0";
+        let comps = [main_module(xpy, "third_party/x/pyproject.toml"), declared(A, &["third_party/x/requirements.txt"])];
+        assert_eq!(edges(&run(&comps, &[("third_party/x", sub)])), vec![(xpy.to_string(), A.to_string())]);
+    }
+
+    #[test]
+    fn a_pypi_main_module_outranks_another_ecosystems_in_the_same_directory() {
+        let npm = "pkg:npm/aaa-waybill-fixture@1.0.0";
+        let py = "pkg:pypi/zzz-waybill-fixture@1.0.0";
+        let comps = [main_module(npm, "tools/package.json"), main_module(py, "tools/pyproject.toml"), declared(A, &["tools/requirements.txt"])];
+        assert_eq!(edges(&run(&comps, &[])), vec![(py.to_string(), A.to_string())]);
+    }
+
+    #[test]
+    fn among_other_ecosystems_the_lowest_purl_wins() {
+        let cargo = "pkg:cargo/waybill-fixture-b@1.0.0";
+        let npm = "pkg:npm/waybill-fixture-a@1.0.0";
+        let comps = [main_module(npm, "tools/package.json"), main_module(cargo, "tools/Cargo.toml"), declared(A, &["tools/requirements.txt"])];
+        assert_eq!(edges(&run(&comps, &[])), vec![(cargo.to_string(), A.to_string())]);
+    }
+
+    #[test]
+    fn two_declaring_files_give_an_edge_and_an_anchor() {
+        let tools = "pkg:npm/waybill-fixture-tools@1.0.0";
+        let comps = [main_module(tools, "tools/package.json"), declared(A, &["requirements.txt", "tools/requirements.txt"])];
+        let d = run(&comps, &[]);
+        assert_eq!(edges(&d), vec![(tools.to_string(), A.to_string())]);
+        assert_eq!(d.root_anchors, BTreeSet::from([A.to_string()]));
+    }
+
+    #[test]
+    fn only_pypi_requirements_declarations_count() {
+        let cget = declared("pkg:generic/waybill-fixture-cget@1.0.0", &["requirements.txt"]);
+        let lock = declared(A, &["poetry.lock"]);
+        let d = run(&[cget, lock], &[]);
+        assert!(d.edges.is_empty() && d.root_anchors.is_empty());
+    }
+
+    #[test]
+    fn a_directory_with_no_project_component_owns_nothing() {
+        // CMake emits no main module (research R3): `native/` has only a
+        // CMakeLists.txt, so the walk continues to the root.
+        let d = run(&[declared(A, &["native/requirements.txt"])], &[]);
+        assert_eq!(d.root_anchors, BTreeSet::from([A.to_string()]));
+    }
+
+    #[test]
+    fn no_self_edge_and_no_duplicate_of_an_existing_edge() {
+        let xpy = "pkg:pypi/waybill-fixture-xpy@1.0.0";
+        let mut c = main_module(xpy, "x/pyproject.toml");
+        c.evidence.source_file_paths.push("x/requirements.txt".to_string());
+        let d = run(&[c], &[]);
+        assert!(d.edges.is_empty(), "a main module is never attached to itself");
+        let tools = "pkg:npm/waybill-fixture-tools@1.0.0";
+        let comps = [main_module(tools, "tools/package.json"), declared(A, &["tools/requirements.txt"])];
+        let index = OwnerIndex::build(&comps, &BTreeMap::new(), Path::new(ROOT), crate::scan_fs::ScanMode::Path);
+        let existing = vec![crate::generate::graph_completeness::test_support::mk_rel(tools, A)];
+        assert!(attach(&comps, &existing, &index, Path::new(ROOT)).edges.is_empty());
+    }
+
+    const B: &str = "pkg:pypi/waybill-fixture-b@2.0.0";
+    const C: &str = "pkg:pypi/waybill-fixture-c@3.0.0";
+    const APP: &str = "pkg:pypi/waybill-fixture-app@1.0.0";
+
+    fn run_with(comps: &[ResolvedComponent], rels: &[Relationship]) -> DeclaredAttachment {
+        let index = OwnerIndex::build(comps, &BTreeMap::new(), Path::new(ROOT), crate::scan_fs::ScanMode::Path);
+        attach(comps, rels, &index, Path::new(ROOT))
+    }
+
+    /// pip-compile's `# via`: the pip reader writes `A -> B` and `B -> C`.
+    /// The project gets A only; B and C are reached through it.
+    #[test]
+    fn a_compiled_file_gives_its_project_only_the_pins_no_sibling_reaches() {
+        use crate::generate::graph_completeness::test_support::mk_rel;
+        let comps = [
+            main_module(APP, "pyproject.toml"),
+            declared(A, &["requirements.txt"]),
+            declared(B, &["requirements.txt"]),
+            declared(C, &["requirements.txt"]),
+        ];
+        let d = run_with(&comps, &[mk_rel(A, B), mk_rel(B, C)]);
+        assert_eq!(edges(&d), vec![(APP.to_string(), A.to_string())]);
+    }
+
+    #[test]
+    fn a_pin_in_a_sibling_only_cycle_is_still_attached() {
+        use crate::generate::graph_completeness::test_support::mk_rel;
+        let comps = [
+            main_module(APP, "pyproject.toml"),
+            declared(A, &["requirements.txt"]),
+            declared(B, &["requirements.txt"]),
+        ];
+        let mut got = edges(&run_with(&comps, &[mk_rel(A, B), mk_rel(B, A)]));
+        got.sort();
+        assert_eq!(got, vec![(APP.to_string(), A.to_string()), (APP.to_string(), B.to_string())]);
+    }
+
+    /// Only an edge from a pin of the SAME file demotes a pin. An edge from
+    /// a package of another file, or from no file, leaves the declaration
+    /// direct.
+    #[test]
+    fn an_edge_from_outside_the_file_does_not_demote_a_pin() {
+        use crate::generate::graph_completeness::test_support::mk_rel;
+        let comps = [
+            main_module(APP, "pyproject.toml"),
+            declared(A, &["requirements.txt"]),
+            declared(B, &["docs/requirements.txt"]),
+        ];
+        let mut got = edges(&run_with(&comps, &[mk_rel(B, A)]));
+        got.sort();
+        assert_eq!(got, vec![(APP.to_string(), A.to_string()), (APP.to_string(), B.to_string())]);
+    }
+
+    /// A pin declared by two files is direct in the one whose siblings do
+    /// not reach it, and transitive in the other.
+    #[test]
+    fn directness_is_decided_per_file() {
+        use crate::generate::graph_completeness::test_support::mk_rel;
+        let tools = "pkg:npm/waybill-fixture-tools@1.0.0";
+        let comps = [
+            main_module(APP, "pyproject.toml"),
+            main_module(tools, "tools/package.json"),
+            declared(A, &["requirements.txt"]),
+            declared(B, &["requirements.txt", "tools/requirements.txt"]),
+        ];
+        let mut got = edges(&run_with(&comps, &[mk_rel(A, B)]));
+        got.sort();
+        assert_eq!(
+            got,
+            vec![(tools.to_string(), B.to_string()), (APP.to_string(), A.to_string())],
+        );
+    }
+}

@@ -336,18 +336,20 @@ explained even in principle — there was no code to assign. Feature 1218
 removed both guards and added `build-toolchain`, `foreign-build-system` and
 `unreferenced-lock-node` to C45 (#1214).
 
-**Two populations deliberately still fail I7**, and their declarations are
-the record of it rather than an oversight. Both are waybill's own defects,
-so a marker on them would assert a property of the scanned repository that
-is really a property of waybill, and would close the cell reporting it:
+**One population deliberately still fails I7**, and its declaration is the
+record of it rather than an oversight. It is waybill's own defect, so a
+marker on it would assert a property of the scanned repository that is
+really a property of waybill, and would close the cell reporting it:
 
-- `python-flask` (13) — `requirements.txt` components are emitted with no
-  out-edges, so a declaring module's transitive closure dangles. The edges
-  are in the lockfile; the emitter never wrote them. **#1234.**
 - `maven-guice` (3) — the maven dual-key insert emits both the declared and
   the workspace-resolved coordinate and wires only the resolved one, so an
   older coordinate sits unreferenced beside the version the build uses.
   **#1235.**
+
+A second, `python-flask`'s thirteen `examples/celery/requirements.txt`
+components (#1234), was closed by spec 1537: a requirements file's packages
+are attached to the project that declares it, and a compiled file's
+`# via` lines become the edges between its pins.
 
 So a fresh I7 failure is worth triaging in two directions before reaching
 for vocabulary: *is this a class nothing can describe yet*, or *is this an

@@ -165,6 +165,27 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A requirements file's packages are dependencies of the project that
+  declares it, whatever else the root has (#1566, #1538, #1234).** A package
+  a `requirements*.txt` declared reached the root only through a fallback
+  that fired when the root had no edges at all. A git submodule, or a
+  `pyproject.toml` with a dependency of its own, switched it off, and the
+  packages were stranded with no reason while the document said `complete`.
+  CycloneDX and SPDX 2.3 lost them where SPDX 3 kept them.
+  - **The rule.** The nearest enclosing project owns the file, walking up
+    to the scan root inclusive. A project is a main module of any ecosystem
+    or a git submodule. With no project anywhere, the document's subject
+    owns it. A package pinned in several files gets an edge from each.
+  - **Compiled files keep their depth.** pip-compile's `# via` lines become
+    edges between the pins, by exact PURL. The project depends only on the
+    pins no other pin of the file reaches. flask's `examples/celery`
+    example gains its 26 transitive edges (#1234).
+  - **Measured on TheRock, in CI:** 69 of 69 top-level requirements
+    packages are reachable from the root with submodules checked out, where
+    62 of 66 were stranded, and 69 of 69 without them, where all 69 were.
+    The three formats now agree on the root's direct targets: 170 without
+    submodules, where CycloneDX and SPDX 2.3 listed 11 and SPDX 3 171.
+
 - **Binary analysis of libraries vendored in Python packages (#1567).**
   A `.dist-info/RECORD` claim used to remove a file from binary analysis,
   as an OS package claim does, so an unpacked wheel with its `.dist-info`
@@ -278,6 +299,30 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   unchanged, since an installed system's `tests/` is not a fixture.
 
 ### Changed
+
+- **One rule decides the root's edges in every format (#1566).** CycloneDX,
+  SPDX 2.3, SPDX 3 and the `waybill:graph-completeness` classifier each kept
+  a copy of the "attach graph-tops to a root with no edges" fallback, and
+  they disagreed about what switched it off. They now share one function.
+  The fallback fires when the root's only edges are to lockfile-resolve
+  components. Root anchors (submodules, `--supplement-cdx`, declared
+  requirements) are added after that decision and never switch it off.
+  Corrections that move documents:
+  - SPDX 2.3 and SPDX 3 apply the fallback to a promoted main-module root
+    as CycloneDX did, not only to a synthetic one. The poetry parity
+    fixture's root targets go from 25 / 0 / 0 to 25 / 25 / 25.
+  - A scan whose root has submodule anchors and no other edge now gets the
+    fallback in CycloneDX and SPDX 2.3, as it always did in SPDX 3.
+  - Completeness reads the same edges, so the verdict can no longer
+    describe a graph the document does not carry.
+- **Edges added by requirements files move the corpus counts.** Each is a
+  package now attached to the project that declares it. Public corpus:
+  five targets' goldens change, and no other target's does. Quality corpus:
+  cpp-mongo 442 → 475, pants-backend-ai 519 → 651, python-ansible 7 → 13,
+  python-flask 176 → 202, python-pytorch 45 → 97. A requirements file that
+  every one of its packages shares with another file is no longer also
+  listed as an unattributed file-tier component: TheRock lists 3 file-tier
+  `requirements.txt` where it listed 17.
 
 - **Nested components nest at any depth (#1567).** CycloneDX folded a
   child only into a top-level parent; a component nested under a nested one

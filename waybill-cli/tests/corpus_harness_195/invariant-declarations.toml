@@ -375,24 +375,6 @@ shared this cell and deliberately left these.
 """
 issue = 1235
 
-[[declaration]]
-invariant = "I7"
-target = "python-flask"
-kind = "unreachable-and-unexplained"
-count_at_declaration = 13
-reason = """
-Thirteen `examples/celery/requirements.txt` components with no edge
-and no orphan-reason. The `requirements.txt` path emits components with
-ZERO out-edges, so the member main module is wired to `celery` and the
-whole transitive closure below it dangles — the edges are in the
-lockfile, the emitter never wrote them. A missing edge, not a missing
-explanation: a marker here would record a waybill defect as a property
-of the flask repository and close the cell reporting it. Feature 1218
-explained the ten `uv.lock` resolution forks that shared this cell and
-deliberately left these.
-"""
-issue = 1234
-
 # ---------------------------------------------------------------------
 # I8 — a component with no version and no annotation explaining why.
 #

@@ -26133,10 +26133,6 @@
           "value": "source"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "foreign-build-system"
-        },
-        {
           "name": "waybill:source-mechanism",
           "value": "pip-requirements-txt"
         },
@@ -26197,6 +26193,9 @@
     {
       "aggregate": "complete",
       "assemblies": [
+        "pkg:pypi/codespell@2.4.3"
+      ],
+      "dependencies": [
         "pkg:pypi/codespell@2.4.3"
       ]
     },
@@ -26871,8 +26870,7 @@
         "pkg:golang/honnef.co/go/tools@v0.8.1",
         "pkg:golang/mvdan.cc/gofumpt@v0.12.0",
         "pkg:golang/mvdan.cc/unparam@v0.0.0-20260823230713-2fa3d841b0c8",
-        "pkg:golang/stdlib@v1.26.0",
-        "pkg:pypi/codespell@2.4.3"
+        "pkg:golang/stdlib@v1.26.0"
       ]
     },
     {
@@ -28387,7 +28385,8 @@
         "pkg:golang/go.opentelemetry.io/otel/metric@v0.0.0-unknown",
         "pkg:golang/go.opentelemetry.io/otel/trace@v0.0.0-unknown",
         "pkg:golang/go.yaml.in/yaml/v3@v3.0.5",
-        "pkg:golang/stdlib@v1.26.0"
+        "pkg:golang/stdlib@v1.26.0",
+        "pkg:pypi/codespell@2.4.3"
       ],
       "ref": "pkg:golang/go.opentelemetry.io/otel@trace/v1.47.0-rc.1-139-g55899e389"
     },
@@ -28623,7 +28622,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 265 component(s) not reachable from root; go-transitive-coverage-degraded: 302 transitive edge(s) not populated"
+        "value": "orphaned-components-detected: 264 component(s) not reachable from root; go-transitive-coverage-degraded: 302 transitive edge(s) not populated"
       },
       {
         "name": "waybill:workspaces-detected",

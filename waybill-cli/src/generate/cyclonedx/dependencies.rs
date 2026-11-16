@@ -70,92 +70,26 @@ pub fn build_dependencies(
             .insert(rel.to.clone());
     }
 
-    // Primary-dependency fallback: if target_ref has no outgoing edges
-    // but we DO have components, synthesize edges from target_ref to
-    // every component that nothing else depends on (the roots of the
-    // component-side graph). For a flat scan with no relationships,
-    // this means target_ref → every component. For a transitive scan,
-    // it's just the top-level packages.
-    //
-    // Milestone 894 (#894): "has edges" means has DECLARED dependency edges.
-    // A milestone-868 resolve anchor (root -> `pkg:generic/<resolve-name>`)
-    // is synthetic ownership, not a dependency the project declared, so it
-    // must not count here.
-    //
-    // It did count, and the consequence was that one honest root edge
-    // switched off a fallback that had been supplying twenty-one. On
-    // `pants-example-django` reachability fell from 46 of 46 to 34 of 47:
-    // the resolve anchors its declared lockfile requirements, and the
-    // design-tier components sourced from requirements files — which the
-    // fallback had been covering — were stranded. Invisible on milestone
-    // 868's own measured target, whose root already had a real edge, so the
-    // fallback was never doing any work there.
-    let resolve_component_refs: BTreeSet<&str> = components
-        .iter()
-        .filter(|c| {
-            c.extra_annotations
-                .get("waybill:component-kind")
-                .and_then(|v| v.as_str())
-                == Some("lockfile-resolve")
-        })
-        .map(|c| c.purl.as_str())
-        .collect();
-    // #1009: anchor supplement-contributed components whose only
-    // declared parent was the supplement's own subject. Those edges could
-    // not be emitted at merge time — the subject is not a component and
-    // the root is chosen here, per format — so the targets ride the
-    // supplement channel and are attached to the root now.
-    //
-    // Unconditional, NOT gated on `target_has_no_edges`: the whole defect
-    // was that the fallback below never fires when the root already has
-    // edges, which is the normal case (mongo's root has 10, so 43 of 44
-    // supplement components arrived orphaned).
-    //
-    // Empty when no supplement is active, so the default path is
-    // byte-identical.
-    for anchor_purl in crate::supplement::current_root_anchors() {
-        if components.iter().any(|c| c.purl.as_str() == anchor_purl) {
-            dep_map
-                .entry(target_ref.to_string())
-                .or_default()
-                .insert(anchor_purl);
-        }
-    }
-
-    let target_has_no_edges = dep_map
-        .get(target_ref)
-        .map(|set| {
-            set.iter()
-                .all(|t| resolve_component_refs.contains(t.as_str()))
-        })
-        .unwrap_or(true);
-    if target_has_no_edges && !components.is_empty() {
-        let mut depended_on: BTreeSet<String> = BTreeSet::new();
-        for set in dep_map.values() {
-            depended_on.extend(set.iter().cloned());
-        }
-        // Milestone 084 — also exclude target_ref itself so the
-        // primary-dep fallback doesn't synthesize a self-loop. Pre-084
-        // target_ref was always the legacy `<name>@0.0.0` short-form
-        // which never matched any component's PURL, so this filter
-        // was implicit. Post-084 target_ref equals the main-module
-        // PURL (when promotion is in effect), and that PURL is also
-        // in `components` — without this filter the fallback emits
-        // `<root> dependsOn [<root>, ...]`.
-        let roots: BTreeSet<String> = components
-            .iter()
-            .map(|c| c.purl.as_str().to_string())
-            .filter(|r| !depended_on.contains(r) && r != target_ref)
-            .collect();
-        if !roots.is_empty() {
-            // Union rather than replace: the resolve anchors deliberately did
-            // not count toward the gate above, so they must survive it.
-            let existing = dep_map.remove(target_ref).unwrap_or_default();
-            dep_map.insert(
-                target_ref.to_string(),
-                roots.into_iter().chain(existing).collect(),
-            );
-        }
+    // Spec 1537 (#1566), research R2: the root's synthesized targets come
+    // from the one rule every format and the completeness classifier share
+    // (`generate::root_edges`). It replaces this module's own copy of the
+    // primary-dependency fallback (#236), its resolve-anchor exemption
+    // (#894) and its anchor loop (#1009, spec 1530). The anchors used to be
+    // inserted here BEFORE the gate was read, so a git submodule switched
+    // the fallback off in CycloneDX while SPDX 3, which added them after,
+    // kept it on.
+    let anchors = crate::supplement::current_root_anchors();
+    let synthesized = crate::generate::root_edges::synthesized_root_targets(
+        components,
+        relationships,
+        target_ref,
+        &anchors,
+    );
+    if !synthesized.is_empty() {
+        dep_map
+            .entry(target_ref.to_string())
+            .or_default()
+            .extend(synthesized);
     }
 
     // Convert to CycloneDX format.

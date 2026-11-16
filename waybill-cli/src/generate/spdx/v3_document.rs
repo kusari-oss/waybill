@@ -733,151 +733,64 @@ pub fn build_document(
         CREATION_INFO_ID,
     ));
 
-    // Issue #236: when `pick_root_iri` synthesized a root (multi-
-    // top-level scans with no main-module and no name match — the
-    // dominant case for image scans and OS-package scans), the
-    // synthetic root has no outgoing edges in `scan.relationships`.
-    // CDX covers this with the primary-dependency fallback in
-    // `cyclonedx/dependencies.rs:74-99`; we mirror it here for SPDX
-    // 3 so the emitted graph is rooted at the same synthetic
-    // identity. Without this fix the SpdxDocument's `rootElement`
-    // points at a Package no Relationship targets as a source —
-    // the SBOM is structurally valid but the dep graph has N
-    // disconnected graph-tops where CDX has a single root.
-    if synthetic_root_added {
-        if let Some(synth_iri) = root_iris.first() {
-            // Milestone 866 — mirror the gate SPDX 2.3 carries at
-            // `document.rs` ("only fire when synth_id has no outgoing
-            // edges") and CDX carries as `target_has_no_edges`. Without
-            // it this fallback over-attaches under `--root-name`, where
-            // the alias rewrite has already given the root its real
-            // outgoing edges: every component nothing else depends on
-            // gets asserted as a direct dependency of the root.
-            //
-            // The defect was latent until the Go edge fix. While the
-            // fabricated `main-module -> <every go.sum module>` edges
-            // existed, the stranded modules sat in `depended_on` and
-            // were filtered out here. Removing those edges promoted
-            // them to graph roots, and this fallback re-attached them
-            // to the root — reintroducing the same unbacked-edge
-            // falsehood one level up, in one format only, while the
-            // same document reported them as unreachable orphans.
-            //
-            // #1108 / #1022 — "has outgoing" means has DECLARED dependency
-            // edges, as in CDX since milestone 894. A root -> owning
-            // component edge (`waybill:component-kind = lockfile-resolve`) is
-            // synthetic ownership and must not switch the fallback off.
-            // Since m866 put that edge into the emit path, it did: once a
-            // repository had an owning component, SPDX 3 stopped attaching
-            // components nothing else reaches (the design-tier requirements
-            // of `pants-example-django`, the file-tier `get-pants.sh` of
-            // `pants-example-jvm`), while CDX and SPDX 2.3 kept them.
-            let resolve_iris: std::collections::BTreeSet<&str> = scan
-                .components
-                .iter()
-                .filter(|c| {
-                    c.extra_annotations
-                        .get("waybill:component-kind")
-                        .and_then(|v| v.as_str())
-                        == Some("lockfile-resolve")
-                })
-                .filter_map(|c| package_iri_by_purl.get(c.purl.as_str()).map(String::as_str))
-                .collect();
-            //
-            // #1438 — and only `dependsOn`. Milestone 1277 puts
-            // `root usesTool <member>` into `all_relationships` before this
-            // point; it is not a dependency edge, and counting it switched
-            // the fallback off for every override root over a closure with
-            // build tooling (shellcheck: 934 `usesTool`, 0 `dependsOn`, where
-            // CycloneDX and SPDX 2.3 had 169). SPDX 2.3 never tripped on it
-            // because its spelling, `<member> BUILD_TOOL_OF root`, is not
-            // sourced at the root.
-            let root_targets: std::collections::BTreeSet<String> = all_relationships
-                .iter()
-                .filter(|r| r["relationshipType"].as_str() == Some("dependsOn"))
-                .filter(|r| r["from"].as_str() == Some(synth_iri.as_str()))
-                .flat_map(|r| match &r["to"] {
-                    serde_json::Value::Array(a) => a
-                        .iter()
-                        .filter_map(|v| v.as_str().map(str::to_string))
-                        .collect::<Vec<_>>(),
-                    serde_json::Value::String(t) => vec![t.clone()],
-                    _ => Vec::new(),
-                })
-                .collect();
-            let synth_has_outgoing =
-                !root_targets.iter().all(|t| resolve_iris.contains(t.as_str()));
-            if !synth_has_outgoing {
-                let depended_on: std::collections::BTreeSet<&str> = scan
-                    .relationships
+    // Spec 1537 (#1566), research R2: the root's direct targets come from
+    // the one rule every format and the completeness classifier share
+    // (`generate::root_edges`), over the same augmented relationships the
+    // classifier graded. It replaces this module's #236 fallback (which
+    // fired only for a synthetic root, #866/#1108/#1438) and its #1009
+    // anchor block. Anchors used to be added AFTER the gate here and BEFORE
+    // it in CycloneDX and SPDX 2.3, which is why only SPDX 3 attached
+    // #1566's requirements. Each target the root does not already reach
+    // gets a `dependsOn`, carrying the target's lifecycle scope (#1000).
+    if let Some(root_iri) = root_iris.first() {
+        let anchors = crate::supplement::current_root_anchors();
+        let targets = crate::generate::root_edges::root_targets(
+            scan.components,
+            &m158_augmented_relationships,
+            &m158_target_ref,
+            &anchors,
+        );
+        let reached: std::collections::HashSet<String> = all_relationships
+            .iter()
+            .filter(|r| {
+                r["relationshipType"].as_str() == Some("dependsOn")
+                    && r["from"].as_str() == Some(root_iri.as_str())
+            })
+            .flat_map(|r| match &r["to"] {
+                serde_json::Value::Array(a) => a
                     .iter()
-                    .map(|r| r.to.as_str())
-                    .collect();
-                // #1000: keep the component alongside its IRI so the
-                // synthesized edge can carry the target's lifecycle
-                // scope. This used to collect IRIs alone and emit a
-                // bare `dependsOn`, so a dev/build/test-scoped
-                // component reachable only via this fallback surfaced
-                // as a runtime dependency.
-                let mut graph_roots: Vec<(&str, Option<waybill_common::resolution::LifecycleScope>)> =
-                    scan.components
-                        .iter()
-                        .filter(|c| {
-                            c.parent_purl.is_none() && !depended_on.contains(c.purl.as_str())
-                        })
-                        .filter_map(|c| {
-                            package_iri_by_purl
-                                .get(c.purl.as_str())
-                                .map(|iri| (iri.as_str(), c.lifecycle_scope))
-                        })
-                        .collect();
-                // Deterministic emission order: lex by IRI.
-                graph_roots.sort_by(|a, b| a.0.cmp(b.0));
-                for (to_iri, scope) in graph_roots {
-                    // Already reached through the owning-component edge.
-                    if root_targets.contains(to_iri) {
-                        continue;
-                    }
-                    let mut element = super::v3_relationships::build_relationship(
-                        synth_iri.as_str(),
-                        "dependsOn",
-                        to_iri,
-                        &doc_iri,
-                        CREATION_INFO_ID,
-                    );
-                    super::v3_relationships::apply_lifecycle_scope(&mut element, scope);
-                    all_relationships.push(element);
-                }
-            }
+                    .filter_map(|v| v.as_str().map(str::to_string))
+                    .collect::<Vec<_>>(),
+                serde_json::Value::String(t) => vec![t.clone()],
+                _ => Vec::new(),
+            })
+            .collect();
+        let mut missing: Vec<(&str, Option<waybill_common::resolution::LifecycleScope>)> = scan
+            .components
+            .iter()
+            .filter(|c| targets.contains(c.purl.as_str()))
+            .filter_map(|c| {
+                package_iri_by_purl
+                    .get(c.purl.as_str())
+                    .map(|iri| (iri.as_str(), c.lifecycle_scope))
+            })
+            .filter(|(iri, _)| *iri != root_iri.as_str() && !reached.contains(*iri))
+            .collect();
+        missing.sort_by(|a, b| a.0.cmp(b.0));
+        missing.dedup_by(|a, b| a.0 == b.0);
+        for (to_iri, scope) in missing {
+            let mut element = super::v3_relationships::build_relationship(
+                root_iri.as_str(),
+                "dependsOn",
+                to_iri,
+                &doc_iri,
+                CREATION_INFO_ID,
+            );
+            super::v3_relationships::apply_lifecycle_scope(&mut element, scope);
+            all_relationships.push(element);
         }
     }
 
-    // #1009: anchor supplement-contributed components whose only declared
-    // parent was the supplement's own subject. Mirrors the CDX and SPDX
-    // 2.3 twins. Unconditional — the issue-#236 fallback above only fires
-    // when the synthetic root has no outgoing edges, so on mongo 43 of 44
-    // supplement components arrived orphaned. Empty when no supplement is
-    // active, preserving byte-identity on the default path.
-    {
-        let anchors = crate::supplement::current_root_anchors();
-        if !anchors.is_empty() {
-            if let Some(root_iri) = root_iris.first() {
-                for anchor_purl in anchors {
-                    if let Some(to_iri) = package_iri_by_purl.get(anchor_purl.as_str()) {
-                        all_relationships.push(
-                            super::v3_relationships::build_relationship(
-                                root_iri.as_str(),
-                                "dependsOn",
-                                to_iri,
-                                &doc_iri,
-                                CREATION_INFO_ID,
-                            ),
-                        );
-                    }
-                }
-            }
-        }
-    }
 
     all_relationships.extend(license_relationships);
     if !synthetic_root_added {

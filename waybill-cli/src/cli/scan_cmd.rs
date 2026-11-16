@@ -3926,6 +3926,7 @@ pub async fn execute(
         go_cache_warming,
         go_mod_why,
         git_submodule_coverage,
+        declared_root_anchors,
         declared_downloads,
         python_owned_binaries,
         installed_library_coverage,
@@ -4485,8 +4486,14 @@ pub async fn execute(
             })
             .map(|r| r.to.as_str())
             .collect();
-        let anchors: Vec<String> =
+        let mut anchors: Vec<String> =
             submodules.iter().filter(|p| !nested.contains(*p)).map(|p| p.to_string()).collect();
+        // Spec 1537 (#1566), research R4: requirements declared at the scan
+        // root, or with no owning project below it, are direct dependencies
+        // of the root each format chooses, like a top-level submodule.
+        anchors.extend(declared_root_anchors.iter().cloned());
+        anchors.sort();
+        anchors.dedup();
         (!anchors.is_empty()).then(|| crate::supplement::install_reader_root_anchors(anchors))
     };
 

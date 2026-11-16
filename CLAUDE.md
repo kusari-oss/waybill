@@ -480,6 +480,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-16
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `serde`/`serde_json`, `globset` (walker patterns), `tracing`; `waybill_common::types::purl::{Purl, encode_purl_segment}`; `binary::is_path_claimed`. **Zero new Cargo dependencies.** No subprocess. (1531-pkgconfig-cmake-versions)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only. The reused pieces: (1532-cmake-exported-targets)
 - N/A. Everything is in-process for one scan. (1536-python-native-binaries)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `serde_json`, `tracing`, `waybill_common::resolution::{ResolvedComponent, Relationship, RelationshipType}` and `waybill_common::types::purl`. **Zero new Cargo dependencies** (FR-011). (1537-requirements-root-attach)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -712,9 +713,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1537-requirements-root-attach: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `serde_json`, `tracing`, `waybill_common::resolution::{ResolvedComponent, Relationship, RelationshipType}` and `waybill_common::types::purl`. **Zero new Cargo dependencies** (FR-011).
 - 1536-python-native-binaries: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only.
 - 1535-declared-datasets: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only.
-- 1534-embedded-path-attribution: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only.
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -1551,7 +1551,28 @@ yet — tracked as a follow-up.
 - Poetry / Pipfile: full tree.
 - Venv: flat (venv `Requires-Dist:` lines are captured but not
   transitively expanded; venv installs are "deployed" tier evidence).
-- requirements.txt: flat.
+- requirements.txt: each package a `requirements*.txt` declares is a direct
+  dependency of the project that declares it (spec 1537, #1566):
+  - **The nearest enclosing project owns the file,** walking up from its
+    directory to the scan root inclusive. A project is a main module of any
+    ecosystem or a git submodule. In one directory, a Python main module
+    wins, then any other main module (lowest PURL), then a submodule. CMake,
+    Conan and vcpkg emit no project component, so a CMake-only directory
+    owns nothing and the walk continues upward.
+  - **No project anywhere up to the scan root:** the package is a direct
+    dependency of the document's subject, whatever other edges the root has,
+    such as git submodules.
+  - **A compiled file keeps its depth (#1234).** pip-compile and `uv pip
+    compile` record under each pin the pins that pull it in (`# via kombu`).
+    Those become edges between the pins, by exact PURL. The project depends
+    only on the pins no other pin of the file reaches. A hand-written file
+    has no `# via`, so every pin is direct.
+  - **A package pinned in several files** gets an edge from each declaring
+    project, and `waybill:source-files` lists every file.
+  - **Scope is kept:** `-dev`, `-test`, `-docs` and `-ci` files stay
+    optional.
+  - **Not followed:** `-r` and `-c` includes (#1583), so a file reached only
+    through `-r` is not read.
 
 **Hashes:** `requirements.txt --hash=alg:hex` flags become
 `PackageDbEntry.hashes` → `components[].hashes[]`. Multiple hashes per
