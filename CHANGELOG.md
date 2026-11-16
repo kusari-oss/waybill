@@ -9,6 +9,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **Native binaries inside a Python package are inventoried and counted
+  (#1567).** A binary a package's `RECORD` lists, and no OS package claims,
+  is now reported in `site-packages` too, where it was not even a file
+  component: one component, nested under its `pkg:pypi` package, with what
+  it identifies nested under it. The new document-scope
+  `waybill:python-owned-binaries` (C230) says how many such binaries were
+  analysed and how many yielded an identification; linkage alone does not
+  count.
+
 - **Datasets declared by CMake downloads are reported as data components
   (#1565).** rocSPARSE and hipSPARSE fetch their test matrices from the
   SuiteSparse collection through a `file(DOWNLOAD)` loop over a literal list
@@ -156,6 +165,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Binary analysis of libraries vendored in Python packages (#1567).**
+  A `.dist-info/RECORD` claim used to remove a file from binary analysis,
+  as an OS package claim does, so an unpacked wheel with its `.dist-info`
+  lost every embedded-version identification and linkage edge (a regression
+  from #1529). A `RECORD` claim now names an owner instead. The binary is
+  analysed, and edges run package → binary → {its linked libraries, what it
+  identifies, the package's other binaries it links}. A binary dpkg, rpm,
+  apk, alpm, opkg or an `.ipk` also claims is unchanged. Under an auditwheel
+  `<pkg>.libs/` directory the content hash is dropped from the binary's name.
+
 - **CycloneDX roots its dependency graph at the document subject (#1572).**
   When the root selector chose a synthetic placeholder over two main
   modules, the graph was still rooted at the first main module. That
@@ -245,6 +264,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `waybill:binary-scan-skipped-test-inputs` (C223), absent at zero.
   `--include-test-binaries` turns the skip off. `--image` scans are
   unchanged, since an installed system's `tests/` is not a fixture.
+
+### Changed
+
+- **Nested components nest at any depth (#1567).** CycloneDX folded a
+  child only into a top-level parent; a component nested under a nested one
+  fell back to the top level. Nesting is now recursive, each nested
+  `bom-ref` carrying its ancestor chain, and `dependencies` refs name the
+  nested `bom-ref`, not the bare PURL, for every nested component,
+  cargo-auditable crates and shaded jars included. SPDX 2.3 emits `CONTAINS`
+  from a nested parent too. SPDX now writes one element per PURL: a
+  coordinate nested under two parents is one package both `CONTAINS`, where
+  it was two packages with one identifier.
 
 ## [0.16.0] - 2026-11-14
 

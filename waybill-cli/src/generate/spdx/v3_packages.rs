@@ -67,8 +67,14 @@ pub fn build_packages(
     let mut package_iri_by_purl: BTreeMap<String, String> = BTreeMap::new();
     let mut packages: Vec<Value> = Vec::with_capacity(components.len());
 
+    // Spec 1536 (V4): one element per PURL, as in SPDX 2.3: a library two
+    // packages vendor is one element each owner `contains`.
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     for c in components {
         let purl_str = c.purl.as_str();
+        if !seen.insert(purl_str) {
+            continue;
+        }
         let pkg_iri = format!("{doc_iri}/pkg-{}", hash_prefix(purl_str.as_bytes(), 16));
         package_iri_by_purl.insert(purl_str.to_string(), pkg_iri.clone());
 

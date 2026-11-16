@@ -431,18 +431,19 @@ pub fn build_relationships(
         });
     }
 
-    // 3. Containment edges from parent_purl. Top-level PURLs (set of
-    //    components with `parent_purl = None`) are the only valid
-    //    parent targets; orphan pointers are dropped.
+    // 3. Containment edges from parent_purl. A parent must be an emitted
+    //    component; orphan pointers are dropped.
     //
     //    Issue #229: aliased PURLs (dropped main-module → synthetic
     //    root) also count as valid containment parents, so children
     //    whose `parent_purl` references a filtered-out main module
     //    are re-parented to the new root instead of being dropped.
+    // Spec 1536 (#1567, research R5): any emitted component can contain
+    // another — package → binary → identification is three levels. Before,
+    // only a top-level parent counted, which was every nesting there was.
     let mut top_level: std::collections::HashSet<&str> = artifacts
         .components
         .iter()
-        .filter(|c| c.parent_purl.is_none())
         .map(|c| c.purl.as_str())
         .collect();
     for (purl, _) in purl_aliases {
@@ -703,6 +704,7 @@ mod tests {
             test_scope_coverage: None,
             bundled_source_trees: None,
             declared_downloads: None,
+            python_owned_binaries: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,

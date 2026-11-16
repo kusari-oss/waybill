@@ -28,6 +28,7 @@ pub mod pe;
 pub mod python_collapse;
 pub mod role;
 pub mod symbol_fingerprint;
+pub(crate) mod owned;
 pub mod version_strings;
 
 use std::path::Path;
@@ -240,15 +241,22 @@ pub(crate) fn is_path_claimed(
 /// `test_inputs` — #1524. `Some` skips binaries under test-input
 /// directories and records their root-relative paths there; see
 /// `discover::discover_binaries`.
+///
+/// `record_owners` — spec 1536 (#1567): files a Python package's `RECORD`
+/// lists. A binary only a `RECORD` claims is analysed like an unclaimed one,
+/// its identifications nest under it, and it is returned as an
+/// [`owned::OwnedBinary`] for [`owned::attach`] to place under its package.
+#[allow(clippy::too_many_arguments)]
 pub fn read(
     rootfs: &Path,
     claimed_paths: &std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
+    record_owners: &crate::scan_fs::package_db::pip::RecordOwners,
     exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
     no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
     test_inputs: Option<&mut Vec<std::path::PathBuf>>,
     mut embedded: Option<embedded_paths::EmbeddedPathsCtx<'_>>,
-) -> Vec<PackageDbEntry> {
+) -> (Vec<PackageDbEntry>, Vec<owned::OwnedBinary>) {
     // Issue #775 — `--no-binary-scan=all` skips the entire binary-scanning
     // tier. On a large source tree (mongo: 886 MB, 55k files), the
     // per-file magic-byte probe + `object::read::File::parse` cost adds
@@ -268,10 +276,11 @@ pub fn read(
             rootfs = %rootfs.display(),
             "binary-scan tier skipped via --no-binary-scan=all (issue #775)"
         );
-        return Vec::new();
+        return (Vec::new(), Vec::new());
     }
 
     let mut out = Vec::new();
+    let mut owned_out: Vec<owned::OwnedBinary> = Vec::new();
     let mut linkage_agg = linkage::LinkageAggregator::new();
     let mut python_collapser = python_collapse::PythonStdlibCollapser::default();
     let mut jdk_collapser = jdk_collapse::JdkCollapser::default();
@@ -500,6 +509,14 @@ pub fn read(
             #[cfg(unix)]
             claimed_inodes,
         );
+        // Spec 1536 (#1567, research R1/R3): claimed by a Python package's
+        // `RECORD` and by nothing else. Analysed as unclaimed, never
+        // collapsed into a CPython or JDK umbrella: it has an owner.
+        let owner: Option<std::path::PathBuf> = if path_claimed {
+            None
+        } else {
+            record_owners.owner_of(&path).map(Path::to_path_buf)
+        };
         let rpm_dir_heuristic = rootfs_kind == RootfsKind::Linux
             && has_rpmdb
             && is_os_managed_directory(rootfs, &path);
@@ -513,6 +530,7 @@ pub fn read(
         // `pkg:generic/cpython@<X.Y>` umbrella per unique version at
         // scan end.
         let collapsed_by_python = !path_claimed
+            && owner.is_none()
             && !rpm_dir_heuristic
             && !go_in_linux
             && python_collapser.try_collapse(&path, rootfs);
@@ -522,6 +540,7 @@ pub fn read(
         // version. Python gets first refusal (cheap, unlikely to match
         // JDK paths but belt-and-suspenders).
         let collapsed_by_jdk = !path_claimed
+            && owner.is_none()
             && !rpm_dir_heuristic
             && !go_in_linux
             && !collapsed_by_python
@@ -627,8 +646,21 @@ pub fn read(
         // those crates are real, even when the file-level component
         // is shadowed by an authoritative package-db entry). Build
         // it once outside the skip branch.
-        let file_level = make_file_level_component(&path, &bytes, &scan, go_in_linux);
+        let mut file_level = make_file_level_component(&path, &bytes, &scan, go_in_linux);
+        // Spec 1536 FR-008: an owned library auditwheel renamed is named
+        // without the hash. Only owned binaries: elsewhere the name is left
+        // as the file has it.
+        if owner.is_some() {
+            if let Some(name) = entry::auditwheel_unhashed_name(&path) {
+                entry::rename_file_level(&mut file_level, &name);
+            }
+        }
         let file_level_purl = file_level.purl.clone();
+        // Spec 1536: what an owned binary links and identifies, for
+        // `owned::attach`. Unused for every other binary.
+        let mut owned_links: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        let mut owned_internal: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        let mut owned_children: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
 
         if !skip_file_level {
             // File-level binary component. When `go_in_linux` is
@@ -648,6 +680,9 @@ pub fn read(
                     // US2: each bundled tree, nested under this binary.
                     for name in &finding.bundled {
                         if let Some(entry) = entry::bundled_tree_to_entry(name, &path, &parent_bom_ref) {
+                            if owner.is_some() {
+                                owned_children.insert(entry.purl.as_str().to_string());
+                            }
                             out.push(entry);
                         }
                     }
@@ -680,7 +715,18 @@ pub fn read(
                     if is_host_system_path(soname) {
                         continue;
                     }
-                    linkage_agg.add_with_claim_check(
+                    // Spec 1536 FR-004: a library the same package ships is
+                    // an edge to that binary, not an external dependency.
+                    // auditwheel and delocate reach it through an rpath the
+                    // probe below does not follow, so match on the file name.
+                    if let Some(owner) = owner.as_deref() {
+                        let base = soname.rsplit('/').next().unwrap_or(soname);
+                        if record_owners.owner_lists_file_named(owner, base) {
+                            owned_internal.insert(base.to_string());
+                            continue;
+                        }
+                    }
+                    let linked = linkage_agg.add_with_claim_check(
                         soname,
                         &path,
                         &parent_bom_ref,
@@ -689,6 +735,9 @@ pub fn read(
                         #[cfg(unix)]
                         claimed_inodes,
                     );
+                    if let (Some(_), Some(purl)) = (owner.as_ref(), linked) {
+                        owned_links.insert(purl);
+                    }
                 }
             }
         }
@@ -705,12 +754,16 @@ pub fn read(
         // this is the only identity source for them.
         if !skip_secondary_evidence {
             if let Some(note) = &scan.note_package {
-                if let Some(note_entry) = note_package_to_entry(
+                if let Some(mut note_entry) = note_package_to_entry(
                     note,
                     &path,
                     os_release_id.as_deref(),
                     os_release_version_id.as_deref(),
                 ) {
+                    if owner.is_some() {
+                        note_entry.parent_purl = Some(file_level_purl.as_str().to_string());
+                        owned_children.insert(note_entry.purl.as_str().to_string());
+                    }
                     out.push(note_entry);
                 }
             }
@@ -863,6 +916,12 @@ pub fn read(
             let mut new_entries: Vec<PackageDbEntry> =
                 by_library.into_values().collect();
             new_entries.sort_by(|a, b| a.purl.as_str().cmp(b.purl.as_str()));
+            if owner.is_some() {
+                for e in &mut new_entries {
+                    e.parent_purl = Some(file_level_purl.as_str().to_string());
+                    owned_children.insert(e.purl.as_str().to_string());
+                }
+            }
             out.extend(new_entries);
         }
 
@@ -891,14 +950,28 @@ pub fn read(
                 &file_level_purl,
                 &path,
             );
+            if owner.is_some() {
+                owned_children.extend(entries.iter().map(|e| e.purl.as_str().to_string()));
+            }
             out.extend(entries);
+        }
+
+        if let (Some(owner), false) = (owner, skip_file_level) {
+            owned_out.push(owned::OwnedBinary {
+                path: path.clone(),
+                owner,
+                file_purl: file_level_purl.as_str().to_string(),
+                links: owned_links,
+                internal_links: owned_internal,
+                children: owned_children,
+            });
         }
     }
 
     out.extend(linkage_agg.into_entries());
     out.extend(python_collapser.into_entries());
     out.extend(jdk_collapser.into_entries());
-    out
+    (out, owned_out)
 }
 
 
@@ -931,11 +1004,13 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
+            &Default::default(), // record owners (spec 1536)
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
             None, // embedded paths (spec 1534)
         )
+        .0
         .is_empty());
     }
 
@@ -949,11 +1024,13 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
+            &Default::default(), // record owners (spec 1536)
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
             None, // embedded paths (spec 1534)
         )
+        .0
         .is_empty());
     }
 
@@ -985,11 +1062,13 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
+            &Default::default(), // record owners (spec 1536)
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
             None, // embedded paths (spec 1534)
         )
+        .0
         .is_empty());
     }
 
@@ -1008,11 +1087,13 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
+            &Default::default(), // record owners (spec 1536)
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
             None, // embedded paths (spec 1534)
-        );
+        )
+        .0;
         assert_eq!(entries.len(), 1, "expected exactly the cpython umbrella");
         assert!(
             entries[0].purl.as_str().contains("cpython@3.11"),
@@ -1035,11 +1116,13 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
+            &Default::default(), // record owners (spec 1536)
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
             None, // embedded paths (spec 1534)
         )
+        .0
         .is_empty());
     }
 

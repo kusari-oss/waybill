@@ -143,6 +143,9 @@ pub struct ScanResult {
     pub git_submodule_coverage: Option<String>,
     /// Spec 1535 (C229): declared CMake downloads, as their wire value.
     pub declared_downloads: Option<String>,
+    /// Spec 1536 (C230): binaries a Python package owns, analysed and
+    /// identified, as the wire value. `None` when none was analysed.
+    pub python_owned_binaries: Option<String>,
     /// Spec 1531 FR-008 (C225): the installed-library coverage record, as its
     /// wire value. `None` when no `.pc` or CMake version file was matched.
     pub installed_library_coverage: Option<String>,
@@ -427,6 +430,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut go_mod_why: Option<package_db::GoModWhyStatus> = None;
     let mut git_submodule_coverage: Option<String> = None;
     let mut declared_downloads: Option<String> = None;
+    let mut python_owned_binaries: Option<String> = None;
     let mut installed_library_coverage: Option<String> = None;
     let mut test_scope_inputs = test_scope::Inputs::default();
     let mut bundled_source_trees: Option<String> = None;
@@ -545,6 +549,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let os_claimed_paths = scan_result.os_claimed_paths;
         #[cfg(unix)]
         let os_claimed_inodes = scan_result.os_claimed_inodes;
+        let record_owners = scan_result.record_owners;
         let installed_lib_records = scan_result.installed_lib_records;
         let binary_start = db_entries.len();
         // Milestone 004 US2 + post-ship claim-skip: generic-binary
@@ -595,16 +600,18 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         };
         let mut embedded_findings: std::collections::BTreeMap<String, binary::embedded_paths::EmbeddedPathFinding> =
             std::collections::BTreeMap::new();
-        db_entries.extend(binary::read(
+        let (binary_entries, owned_binaries) = binary::read(
             root,
             &claimed_paths,
             #[cfg(unix)]
             &claimed_inodes,
+            &record_owners,
             exclude_set,
             no_binary_scan,
             skip_test_inputs.then_some(&mut binary_test_inputs_skipped),
             Some(binary::embedded_paths::EmbeddedPathsCtx { names: &embedded_names, findings: &mut embedded_findings }),
-        ));
+        );
+        db_entries.extend(binary_entries);
         // Spec 1534 FR-006: C228, from the findings the binary scan reported.
         {
             let binaries = embedded_findings.values().filter(|f| !f.bundled.is_empty()).count();
@@ -643,6 +650,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             );
             installed_library_coverage = resolved.coverage.map(|c| c.wire());
             db_entries.splice(binary_start..binary_start, resolved.entries);
+            // Spec 1536 (#1567): each binary only a `RECORD` claims goes under
+            // its package, with its identifications and edges (C230).
+            python_owned_binaries =
+                binary::owned::attach(&mut db_entries, &owned_binaries).map(|c| c.wire());
             test_scope_inputs = test_scope::Inputs {
                 installed_tree,
                 declarations: resolved.tests,
@@ -1604,6 +1615,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_mod_why,
         git_submodule_coverage,
         declared_downloads,
+        python_owned_binaries,
         installed_library_coverage,
         test_scope_inputs,
         bundled_source_trees,

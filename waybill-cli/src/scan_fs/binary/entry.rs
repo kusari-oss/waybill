@@ -611,6 +611,40 @@ pub(crate) struct BinaryScan {
     pub binary_role: waybill_common::resolution::BinaryRole,
 }
 
+/// Spec 1536 (FR-008, research R6): the name auditwheel's renaming hid.
+///
+/// auditwheel copies a wheel's shared-library dependencies into a sibling
+/// `<pkg>.libs/` directory and appends a content hash to each name:
+/// `libscipy_openblas64_-4b78795a.so` in NumPy's `manylinux` wheel (measured,
+/// `measurements/wheels.md`). Only a file directly in a `*.libs` directory is
+/// considered, so a library elsewhere whose name merely ends in eight hex
+/// digits keeps it. `None` when the path is not that shape.
+pub(super) fn auditwheel_unhashed_name(path: &Path) -> Option<String> {
+    static HASHED: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let dir = path.parent()?.file_name()?.to_str()?;
+    if !dir.ends_with(".libs") || dir == ".libs" {
+        return None;
+    }
+    let name = path.file_name()?.to_str()?;
+    let re = HASHED.get_or_init(|| {
+        regex::Regex::new(r"^(?P<stem>.+)-[0-9a-f]{8}(?P<ext>\.so(?:\..+)?)$").expect("static pattern compiles")
+    });
+    let caps = re.captures(name)?;
+    Some(format!("{}{}", &caps["stem"], &caps["ext"]))
+}
+
+/// Rename a file-level component, keeping its `file-sha256` identity.
+pub(super) fn rename_file_level(entry: &mut PackageDbEntry, name: &str) {
+    let Some(sha) = entry.purl.as_str().split_once("?file-sha256=").map(|(_, s)| s.to_string()) else {
+        return;
+    };
+    let encoded = waybill_common::types::purl::encode_purl_segment(name);
+    if let Ok(purl) = Purl::new(&format!("pkg:generic/{encoded}?file-sha256={sha}")) {
+        entry.purl = purl;
+        entry.name = name.to_string();
+    }
+}
+
 pub(super) fn make_file_level_component(
     path: &Path,
     bytes: &[u8],
@@ -1058,6 +1092,26 @@ pub(super) fn note_package_to_entry(
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
+
+    /// Spec 1536 FR-008: the measured NumPy shape, and its edges.
+    #[test]
+    fn auditwheel_hash_is_stripped_only_in_a_libs_directory() {
+        let p = |s: &str| std::path::PathBuf::from(s);
+        assert_eq!(
+            auditwheel_unhashed_name(&p("/w/numpy.libs/libscipy_openblas64_-4b78795a.so")).as_deref(),
+            Some("libscipy_openblas64_.so")
+        );
+        assert_eq!(
+            auditwheel_unhashed_name(&p("/w/waybill_fixture_pkg.libs/libfoo-0123abcd.so.1")).as_deref(),
+            Some("libfoo.so.1")
+        );
+        assert_eq!(auditwheel_unhashed_name(&p("/w/waybill_fixture_pkg/libfoo-0123abcd.so.1")), None, "outside *.libs");
+        assert_eq!(auditwheel_unhashed_name(&p("/w/.libs/libfoo-0123abcd.so.1")), None, "a bare .libs is not auditwheel's");
+        assert_eq!(auditwheel_unhashed_name(&p("/w/x.libs/libfoo-0123abcz.so.1")), None, "not hex");
+        assert_eq!(auditwheel_unhashed_name(&p("/w/x.libs/libfoo-0123abc.so.1")), None, "seven digits");
+        assert_eq!(auditwheel_unhashed_name(&p("/w/x.libs/libfoo-0123abcd.dylib")), None, "not .so");
+        assert_eq!(auditwheel_unhashed_name(&p("/w/x.libs/libfoo.so.1")), None, "no suffix");
+    }
     use super::*;
     #[test]
     fn note_package_rpm_produces_canonical_purl() {

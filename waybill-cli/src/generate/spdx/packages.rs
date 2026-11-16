@@ -315,7 +315,15 @@ pub fn build_packages(
     for i in 0..artifacts.component_identifiers.len() {
         match_counts.insert(i, 0);
     }
+    // Spec 1536 (V4): one package per PURL. CycloneDX is a tree, so a
+    // library two packages vendor appears under each; SPDX is a graph, so
+    // it appears once and each owner `CONTAINS` it. Two packages with one
+    // `SPDXID` would be an invalid document.
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     for c in artifacts.components {
+        if !seen.insert(c.purl.as_str()) {
+            continue;
+        }
         let (pkg, decl_extracted, conc_extracted) = component_to_package(
             c,
             artifacts.include_hashes,
@@ -923,6 +931,7 @@ mod tests {
             test_scope_coverage: None,
             bundled_source_trees: None,
             declared_downloads: None,
+            python_owned_binaries: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,

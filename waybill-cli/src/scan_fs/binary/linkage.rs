@@ -77,7 +77,8 @@ impl LinkageAggregator {
     /// Register a linkage observation. `soname` is the raw DT_NEEDED
     /// string; `parent_path` is the absolute path to the binary that
     /// referenced it; `_parent_bom_ref` reserved for future cross-link.
-    pub fn add(&mut self, soname: &str, parent_path: &Path, _parent_bom_ref: &str) {
+    /// Returns the linkage component's PURL.
+    pub fn add(&mut self, soname: &str, parent_path: &Path, _parent_bom_ref: &str) -> String {
         let entry = self.by_soname.entry(soname.to_string()).or_insert_with(|| {
             // Sonames are a special case: they're bare `pkg:generic/`
             // identifiers where `/` INSIDE the name (e.g. macOS
@@ -105,6 +106,7 @@ impl LinkageAggregator {
         if !entry.parents.iter().any(|p| p == &parent_str) {
             entry.parents.push(parent_str);
         }
+        entry.purl.as_str().to_string()
     }
 
     /// Like [`Self::add`], but first probes standard library search
@@ -121,7 +123,7 @@ impl LinkageAggregator {
         rootfs: &Path,
         claimed: &std::collections::HashSet<PathBuf>,
         #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
-    ) {
+    ) -> Option<String> {
         if soname_resolves_to_claimed(
             soname,
             rootfs,
@@ -134,9 +136,9 @@ impl LinkageAggregator {
                 parent = %parent_path.display(),
                 "linkage evidence skipped: soname resolves to a claimed path"
             );
-            return;
+            return None;
         }
-        self.add(soname, parent_path, parent_bom_ref);
+        Some(self.add(soname, parent_path, parent_bom_ref))
     }
 
     /// Emit one `PackageDbEntry` per unique soname. Both axes are

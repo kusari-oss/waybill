@@ -726,6 +726,10 @@ fn push_document_fields(
     if let Some(record) = scan.declared_downloads {
         push(out, crate::scan_fs::package_db::cmake_download::ANN_DECLARED_DOWNLOADS, json!(record));
     }
+    // C230 (spec 1536).
+    if let Some(record) = scan.python_owned_binaries {
+        push(out, crate::scan_fs::binary::owned::ANN_PYTHON_OWNED_BINARIES, json!(record));
+    }
 
     // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran.
     if let Some(g) = scan.go_mod_why {
