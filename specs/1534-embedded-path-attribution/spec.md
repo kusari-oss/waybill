@@ -1,0 +1,153 @@
+# Feature Specification: Attribute installed binaries to their source through embedded build and source paths
+
+**Feature Branch**: `1534-embedded-path-attribution`
+**Created**: 2026-11-16
+**Status**: Draft
+**Input**: Issue #1532. Attribute installed binaries to their source using the build and source paths embedded in them. Measure first, in CI only. Prefer evidence that names a package over path heuristics. Never fabricate a version.
+
+## Background
+
+Unstripped and debug-info builds embed absolute source paths: assertion messages, `__FILE__`, and DWARF compilation units. Those paths name the project a file was compiled from, and often the vendored third-party trees compiled into it. Today an installed binary that no package metadata names becomes a file-level component with no identity.
+
+### Measured on a ROCm SDK install tree (CI only)
+
+**Fixture:** `kusari-sandbox/waybill-fixture-therock-sdk`, the pinned `therock-dist-linux-gfx1150-7.14.0a20260612.tar.gz` (16.55 GB).
+
+**The input.** After #1563, #1564 and #1572, 869 binary file components are neither attributed to a versioned component nor test-scoped. Of those:
+- 708 are regular files, 3.015 GB;
+- 161 are known only by a symlink path, such as LLVM's multi-call aliases (`llvm-strip`, `llvm-readelf`).
+
+**The census** (`census-binaries` run 43784750746, workflow `91e4096`) read those 708 files with binutils.
+
+| What the file carries | Files | Size |
+|---|---|---|
+| Absolute source paths in its strings | 545 | 2.977 GB |
+| DWARF compilation units with absolute paths | 42 | 0.260 GB |
+| Either | 546 | 2.983 GB |
+| A GNU build-id | 122 | 0.115 GB |
+| No path evidence | 162 | 0.032 GB |
+
+**Which source tree the paths name.** A file names the source tree that built it, and also the toolchain compiled into it. On this tree, 419 files carry the toolchain's own RPM build paths (`/builddir/build/BUILD/…`); the Red Hat GCC 8.5 and 13.3 stamps in `.comment` match that. Such a path says nothing about the file's own source.
+
+Classified against the TheRock checkout layout:
+- **A TheRock submodule:** 423 files, 2.283 GB (76% of the bytes).
+  - 422 name exactly one submodule project.
+  - One names two. `lib/libMIOpenCKGroupedConv_gfx1150.so` (0.353 GB) names `miopen` and `composablekernel`, because Composable Kernel is compiled into MIOpen.
+- **The project directory's name equals a versioned component already in the document** (#1531/#1563): 291 files, 1.349 GB. For example `rocthrust@4.4.0` (197 files, 0.466 GB), `miopen@3.5.2` (2, 0.359 GB), `rocblas@5.5.0` (12, 0.142 GB), `rocshmem@3.4.0`, `rocprofiler-sdk@1.3.1`.
+  - Many of these are test and benchmark executables. rocThrust is header-only, so every one of its 197 binaries is a test or a benchmark.
+  - So a path says which project built a file, not whether the file is product.
+- **No such component:** 132 files, 0.934 GB.
+  - `hip-tests` has 56 files, 0.488 GB: HIP's run-time-discovered `catch_tests`.
+  - `rocprofiler-systems` has 34 files, 0.287 GB. It has no versioned component (#1563).
+  - `rocgdb` has 7 files.
+  - `llvm-project` has 15 files. It is the submodule's name; its installed packages are named `llvm`, `clang` and so on.
+- **Bundled third-party trees** (`third_party/<name>`, `external/<name>`, `_deps/<name>-src`), with the number of files naming each: `timemory` 11, `fmt` 9, `googletest` 8 (+3 FetchContent), `abseil-cpp` 8, `pybind11` 8, `dyninst` 8, `ptl` 4, `grpc` 2, `fftw3` 2, `perfetto` 2, `gotcha`, `json`, `papi` 1 each. Some directory names are not projects (`packages`, `sysdeps`).
+
+The paths carry no versions. On this tree, a version can only come from a component that already has one, or from the build's own record of source pins (`share/therock/therock_manifest.json`, which is project-specific: #1541).
+
+## Clarifications
+
+### Session 2026-11-16
+
+- Q: How does a path become a component? → A: (A) Generic only. A binary is attributed to the versioned components already in the document that its compiled-source paths name (see the next answers). `therock_manifest.json` is not read; submodules without a versioned component are left to #1541.
+- Q: Bundled third-party trees? → A: (A) A component with no version for each bundled library a binary's paths name under a vendoring convention, nested under that binary. Directory names that are not projects (`packages`, `sysdeps` and the like) are excluded by a measured list.
+- Q: Which paths may attribute a binary to a package? → A: Compiled sources only: paths to compiled source files (`.c`, `.cc`, `.cpp`, `.cxx`, `.c++`, `.hip`, `.cu`) and DWARF compilation-unit names. A header path (`.h`, `.hh`, `.hpp`, `.hxx`, `.inl`, `.inc`, `.cuh`) names what was included, not what was built, and never attributes a binary.
+- Q: A binary whose compiled sources name two or more versioned packages? → A: It is listed in the evidence of each, marked as shared. Both projects' code is in the file, so no single owner is chosen.
+- Q: How is a generic package name kept from matching unrelated source trees? → A: Per path, only the outermost directory that names a versioned package counts. Package names known to collide are on a committed, measured stoplist, as bundled-tree names are. Measured (census run 43786608413): matching any directory gave HIP's `hip` 170 binaries through inner directories such as `rocthrust/testing/unittest/hip/`, and SuiteSparse's `amd@3.3.3` 2 binaries through Mesa and kernel directories named `amd`. With the outermost rule and `amd` on the stoplist, 258 binaries (1.308 GB) are attributed to one package each, and none is shared.
+- Q: Where does bundled-tree detection run? → A: On every binary scan. It needs no package names, so it is not tied to installed-library components. Its counts are reported in a document-scope record of their own, C228, which exists without C225 (analysis I1).
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - A binary built from a known package's source is attributed to it (Priority: P1)
+
+A consumer scans an installed tree. A binary that no package metadata names carries embedded compiled-source paths whose project directories name a versioned component already in the document. The binary is listed in that component's evidence, the way #1563 lists the files a package's exported targets name. The evidence kind is recorded. The generic rule only: the build's own pin manifest is not read (clarified).
+
+**Why this priority**: It is the largest measured gain that invents nothing. On ROCm it covers 258 binaries, 1.308 GB, under the clarified rules, including the 0.353 GB MIOpen library. The version comes from the component, never from a path.
+
+**Independent Test**: A synthetic prefix with:
+- versioned `waybill-fixture-p` and `waybill-fixture-q` (from their `.pc` files);
+- an unattributed shared library whose strings hold `/src/waybill-fixture-p/lib/x.cc`;
+- one whose compiled sources name two packages;
+- one that only `#include`s a package's header;
+- one whose paths name only the toolchain.
+
+The first is attributed to its package, the second to both packages as shared, and the last two to nothing.
+
+**Acceptance Scenarios**:
+
+1. **Given** a binary whose embedded project paths name exactly one versioned component, **When** the tree is scanned, **Then** the binary appears in that component's evidence, with its digest, and is recorded as attributed through embedded paths.
+2. **Given** a binary whose compiled-source paths name two or more such components, **When** the tree is scanned, **Then** it is listed in the evidence of each, marked as shared, and it is counted as shared.
+3. **Given** a binary whose only path naming a package is a header path (an `#include`d template's assertion), **When** the tree is scanned, **Then** it is not attributed to that package.
+4. **Given** a binary whose only paths are toolchain or system paths (`/usr/include`, `/builddir/build/BUILD`, `/opt/…`), **When** the tree is scanned, **Then** it is not attributed.
+5. **Given** a binary already attributed by package metadata (#1531/#1563), or owned by an OS package, **When** the tree is scanned, **Then** this feature does not attribute it again.
+6. **Given** a test-scoped binary (#1564), **When** the tree is scanned, **Then** it may be attributed to the project that built it, and its scope is unchanged.
+
+---
+
+### User Story 2 - Bundled third-party code is visible (Priority: P2)
+
+A consumer scans an installed tree whose binaries compile in vendored libraries. Each library a binary's paths name under a vendoring convention is reported per the clarification above. No version is invented.
+
+**Why this priority**: This is the issue's original motivation: bundled libraries nothing else finds. On ROCm it is 13 named trees across about 30 files. It is smaller in bytes than US1, and its precision depends on directory names.
+
+**Independent Test**: A synthetic binary whose strings name `/src/p/third_party/waybill-fixture-fmt/format.cc` and `/src/p/third_party/packages/x.cc`. The scenarios fix which of these is reported, and how.
+
+**Acceptance Scenarios**:
+
+1. **Given** a binary naming `third_party/<name>/`, `external/<name>/` or `_deps/<name>-src/`, **When** the tree is scanned, **Then** a component `<name>` with no version is nested under that binary, with the embedded path as its evidence.
+3. **Given** two binaries naming the same bundled tree, **When** the tree is scanned, **Then** each gets its own nested component. A bundled copy is not assumed to be the same build in both.
+2. **Given** a vendoring directory whose name is on the measured exclusion list (today `sysdeps`, TheRock's own vendoring directory; research R4), **When** the tree is scanned, **Then** nothing is recorded for it.
+
+---
+
+### Edge Cases
+
+- **Remapped paths** (`-ffile-prefix-map`, `-fdebug-prefix-map`, or relative paths): no evidence, and nothing is attributed.
+- **A static library compiled into another project.** `libMIOpenCKGroupedConv` names MIOpen and Composable Kernel. It is listed in the evidence of each named versioned package and marked as shared (clarified). A package whose project directory name differs from its component name (`composablekernel` against `composable_kernel`) is not matched; the name rule is exact.
+- **Toolchain paths** (`/builddir/build/BUILD/gcc-…`, `/usr/include`, `/opt/python/…`) are never a file's source.
+- **A package name that is also a common directory name.** SuiteSparse's `amd` matched Mesa and Linux-kernel sources; HIP's `hip` matched a `hip/` directory inside other projects. The outermost-directory rule removes the second, and the measured stoplist the first.
+- **A binary known only by a symlink.** Its evidence is the file the link resolves to inside the root. The 161 such components on ROCm are a separate observation (Assumptions), not counted by this feature.
+- **Very large binaries** (350 MB): reading must stay within the scan-time budget (SC-004).
+- **A path that names a package's source but is a test of it** (rocThrust): attribution says which project built the file. Whether it is product is #1564's scope, which this feature does not change.
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+- **FR-001**: The scan MUST read absolute source paths from an installed binary's read-only data, and MAY read them from its debug information, without new Cargo dependencies.
+- **FR-002**: A path MUST be classified before use:
+  - a project source path;
+  - a vendored or fetched third-party tree (`third_party/<name>`, `third-party/<name>`, `thirdparty/<name>`, `3rdparty/<name>`, `external/<name>`, `extern/<name>`, `vendor/<name>`, `_deps/<name>-src`), as measured in research R4;
+  - a toolchain or system path, which is never a file's source.
+- **FR-003**: A binary MUST be attributed to each versioned component its compiled-source paths name. A path names a component through the outermost directory in it whose name equals that component's name and is not on the measured stoplist (clarified), and only to those. When it names more than one, each attribution MUST be marked as shared. Header paths MUST NOT count toward attribution. The version MUST come from the component, never from a path. No project-specific manifest is read.
+- **FR-004**: An attributed binary MUST be listed in the component's evidence, with its digest, the way #1563 lists exported-targets files. C227 `waybill:embedded-path-binaries` on the component MUST record which evidence files came from embedded paths, and the other packages each shared file names (analysis T1).
+- **FR-005**: A binary that package metadata already attributes (#1531/#1563), or that an OS package owns, MUST NOT be attributed by this feature.
+- **FR-006**: On every binary scan, each bundled third-party tree a binary's paths name MUST be reported as a component with no version, nested under that binary, with the path as evidence. Directory names on the measured exclusion list MUST NOT become components. No version may be invented. C228 `waybill:bundled-source-trees` MUST record, at document scope, the binaries naming a bundled tree, the components emitted, and the names excluded.
+- **FR-007**: The document MUST record, at document scope, how many binaries were read, carried paths, were attributed to one package, were attributed as shared among several, named only toolchain paths, named only header paths of a package, or named nothing versioned.
+- **FR-008**: A scan in which no binary carries a usable path MUST be byte-identical to today's. Because bundled detection runs on every binary scan, any corpus golden it changes MUST be explained by a bundled tree the binary really names (SC-003).
+- **FR-009**: The feature MUST add zero Cargo dependencies, no subprocess and no network access, and MUST use only synthetic `waybill-fixture-*` names in committed fixtures.
+
+### Key Entities
+
+- **Embedded path**: an absolute path string found in a binary, with its classification (project, third-party tree, toolchain).
+- **Path attribution**: a binary → versioned component link, recorded in C227.
+- **Embedded-path coverage**: the document-scope counts: C225's `embedded-paths` for attribution (FR-007), and C228 for bundled trees (FR-006).
+
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+
+- **SC-001**: On the ROCm fixture, the binaries attributed through embedded paths reconcile, by count and bytes, with the committed census under the clarified rules (compiled sources only, outermost directory, stoplist `amd`): 258 binaries, 1.308 GB, 0 shared (`measurements/attribution.json`, run 43786608413).
+- **SC-006**: On the ROCm fixture, every bundled-library component is a project name. The exclusion list and the components it removed are committed with the measurement.
+- **SC-002**: No binary is attributed to a component whose project its paths do not name. This is checked on ROCm by listing every attribution with the project directory that justified it.
+- **SC-003**: Across the public corpus, every golden that changes is explained by a rule in this spec.
+- **SC-004**: Scan time on the full ROCm tree is at most 1.25× the main-branch median, over one warm-up and three interleaved runs. Reading strings from 3 GB of binaries is the cost to bound.
+- **SC-005**: Each rule (compiled sources only, exact directory name, toolchain exclusion, shared marking, already-attributed exclusion, OS ownership) has a mutation that fails a test.
+
+## Assumptions
+
+- Measurements run only in CI, through the public fixture repository. The census script and its input list are committed with the spec.
+- Path classification uses only the paths themselves and the components already in the document. No source tree is read.
+- `therock_manifest.json` is not read (clarified). Submodules without a versioned component are #1541's.
+- The 161 symlink-only binary components on ROCm are a separate observation: binary components keyed on a symlink path whose target is also scanned. They are counted here and not changed.
+- Binaries built from a `*-tests` project (`hip-tests`) are evidence for test scope, but changing #1564's rules is out of scope. #1574 records the measurement.

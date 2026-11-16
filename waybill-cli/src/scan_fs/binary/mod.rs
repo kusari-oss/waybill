@@ -36,6 +36,8 @@ use std::path::Path;
 use super::package_db::PackageDbEntry;
 
 mod discover;
+/// Spec 1534 (#1532): absolute source paths embedded in a binary.
+pub(crate) mod embedded_paths;
 /// Spec 1533 FR-012: the directory names #1524 skips in a directory scan.
 pub(crate) use discover::TEST_INPUT_DIRS;
 /// Milestone 1378 (#1396) — the two embedded-build-information readers, for a
@@ -65,6 +67,8 @@ pub(crate) const BINARY_EVIDENCE_KINDS: &[&str] = &[
     "cargo-auditable",
     "dynamic-linkage",
     "elf-note-package",
+    // Spec 1534 (#1532): a bundled tree named by embedded source paths.
+    "embedded-source-path",
     "embedded-version-string",
     "jdk-runtime-collapsed",
     "python-stdlib-collapsed",
@@ -243,6 +247,7 @@ pub fn read(
     exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
     no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
     test_inputs: Option<&mut Vec<std::path::PathBuf>>,
+    mut embedded: Option<embedded_paths::EmbeddedPathsCtx<'_>>,
 ) -> Vec<PackageDbEntry> {
     // Issue #775 — `--no-binary-scan=all` skips the entire binary-scanning
     // tier. On a large source tree (mongo: 886 MB, 55k files), the
@@ -634,6 +639,24 @@ pub fn read(
             let parent_bom_ref = file_level.purl.as_str().to_string();
             out.push(file_level);
 
+            // Spec 1534 (#1532): the source paths embedded in this binary.
+            // Only where secondary evidence runs: claimed, collapsed and Go
+            // binaries are never attributed through their strings.
+            if !skip_secondary_evidence {
+                if let Some(ctx) = embedded.as_mut() {
+                    let finding = embedded_paths::extract(&scan.string_region, ctx.names);
+                    // US2: each bundled tree, nested under this binary.
+                    for name in &finding.bundled {
+                        if let Some(entry) = entry::bundled_tree_to_entry(name, &path, &parent_bom_ref) {
+                            out.push(entry);
+                        }
+                    }
+                    if finding.has_paths || !finding.bundled_excluded.is_empty() {
+                        ctx.findings.insert(path.to_string_lossy().into_owned(), finding);
+                    }
+                }
+            }
+
             // Linkage-evidence components — accumulated into the global
             // dedup aggregator; emitted after the walk completes.
             // Host-system-path install-names filtered out to prevent
@@ -911,6 +934,7 @@ mod tests {
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
+            None, // embedded paths (spec 1534)
         )
         .is_empty());
     }
@@ -928,6 +952,7 @@ mod tests {
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
+            None, // embedded paths (spec 1534)
         )
         .is_empty());
     }
@@ -963,6 +988,7 @@ mod tests {
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
+            None, // embedded paths (spec 1534)
         )
         .is_empty());
     }
@@ -985,6 +1011,7 @@ mod tests {
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
+            None, // embedded paths (spec 1534)
         );
         assert_eq!(entries.len(), 1, "expected exactly the cpython umbrella");
         assert!(
@@ -1011,6 +1038,7 @@ mod tests {
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
             None, // no_binary_scan_mode
             None, // test_inputs
+            None, // embedded paths (spec 1534)
         )
         .is_empty());
     }

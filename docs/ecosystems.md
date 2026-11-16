@@ -79,6 +79,17 @@ package version files (`*ConfigVersion.cmake`, `*-config-version.cmake`) in
   their locations by outcome, and what was scoped. Name patterns are not
   used, and tests discovered at run time through `include()`d scripts are
   counted as unresolved.
+- **Embedded source paths** (spec 1534, #1532). A binary no package
+  metadata names, whose read-only strings hold absolute paths to compiled
+  sources (`.c`, `.cc`, `.cpp`, `.hip`, `.cu`, …), is listed in the evidence
+  of the versioned package whose name is the outermost directory of those
+  paths. Headers, toolchain paths (`/usr/`, `/builddir/`, `/opt/`) and names
+  on a measured stoplist never attribute, and the version is always the
+  component's. `waybill:embedded-path-binaries` (C227) lists those files on
+  the package. Separately, on every binary scan, each bundled tree a binary
+  names (`third_party/<name>`, `_deps/<name>-src`, …) becomes a versionless
+  component nested under it, counted by `waybill:bundled-source-trees`
+  (C228).
 
 ## SBOM tiers: source, design, binary
 

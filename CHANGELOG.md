@@ -9,6 +9,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **Installed binaries are attributed to their package through the source
+  paths embedded in them (#1532).** An unstripped or assertion-carrying
+  binary keeps absolute paths to the sources it was compiled from.
+  - **What changes.** A binary no package metadata names is listed in
+    the evidence of the versioned package whose name is the outermost
+    directory of its compiled-source paths. `waybill:embedded-path-binaries`
+    (C227) marks those files. Headers, toolchain paths and names on a
+    measured stoplist never attribute; nothing is versioned from a path.
+  - **Bundled code is visible.** Each `third_party/<name>`,
+    `_deps/<name>-src` (and similar) tree a binary names becomes a
+    versionless component nested under it, on every binary scan, counted by
+    `waybill:bundled-source-trees` (C228).
+  - **Measured on a ROCm 7.14 SDK, in CI:** 617 binaries (3.0 GB),
+    including test-scoped ones, are attributed to their package. 257 of the
+    258 that the census predicted match exactly. 645 bundled components
+    appear in 547 binaries. Scan time is unchanged within noise, and the
+    public-corpus goldens are byte-identical.
+
 - **An installed tree's test payload is reported with the test scope
   (#1564).** An installed SDK can ship as much test and benchmark payload as
   product, and it was reported exactly like the libraries it tests.

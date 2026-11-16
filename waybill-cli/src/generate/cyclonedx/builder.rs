@@ -206,6 +206,8 @@ pub struct CycloneDxBuilder {
     installed_library_coverage: Option<String>,
     /// C226 (spec 1533) — the test-scope coverage record.
     test_scope_coverage: Option<String>,
+    /// C228 (spec 1534).
+    bundled_source_trees: Option<String>,
     /// C208 (m1366) — the closure ecosystem identity record, pre-rendered.
     closure_ecosystem_identity: Option<String>,
     /// C209 (m1367) — the CPE synthesis coverage record, pre-rendered.
@@ -304,6 +306,7 @@ impl CycloneDxBuilder {
             binary_test_inputs_skipped: 0,
             installed_library_coverage: None,
             test_scope_coverage: None,
+            bundled_source_trees: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,
@@ -445,6 +448,11 @@ impl CycloneDxBuilder {
     /// C226 (spec 1533).
     pub fn with_test_scope_coverage(mut self, value: Option<String>) -> Self {
         self.test_scope_coverage = value;
+        self
+    }
+    /// C228 (spec 1534).
+    pub fn with_bundled_source_trees(mut self, value: Option<String>) -> Self {
+        self.bundled_source_trees = value;
         self
     }
 
@@ -1120,6 +1128,7 @@ impl CycloneDxBuilder {
                 binary_test_inputs_skipped: self.binary_test_inputs_skipped,
                 installed_library_coverage: self.installed_library_coverage.as_deref(),
                 test_scope_coverage: self.test_scope_coverage.as_deref(),
+                bundled_source_trees: self.bundled_source_trees.as_deref(),
                 closure_ecosystem_identity: self.closure_ecosystem_identity.as_deref(),
                 cpe_coverage: self.cpe_coverage.as_deref(),
                 closure_graph_admission: self.closure_graph_admission.as_deref(),

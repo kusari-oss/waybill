@@ -148,6 +148,9 @@ pub struct ScanResult {
     /// this is an installed tree, the OS claims). Applied in `scan_cmd` after
     /// file-tier emission.
     pub(crate) test_scope_inputs: test_scope::Inputs,
+    /// Spec 1534 (C228): the bundled-tree count, as its wire value. `None`
+    /// when no binary named a bundled tree.
+    pub bundled_source_trees: Option<String>,
     /// Milestone 161 (T012): workspace-mode detection outcome from
     /// `go.work` at scanned root. Distinct from
     /// `go_transitive_coverage` and `go_graph_completeness` per
@@ -423,6 +426,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut git_submodule_coverage: Option<String> = None;
     let mut installed_library_coverage: Option<String> = None;
     let mut test_scope_inputs = test_scope::Inputs::default();
+    let mut bundled_source_trees: Option<String> = None;
     // Milestone 161 (T012): doc-scope go-workspace-mode signal.
     // Distinct from `go_transitive_coverage` per research.md R1.
     // Carried through ScanResult into the format emitters for the
@@ -574,6 +578,19 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             }
         };
         let skip_test_inputs = installed_tree == test_scope::InstalledTree::NotRecognised && !include_test_binaries;
+        // Spec 1534 (#1532, research R5): the versioned package names the
+        // binary scan matches embedded source paths against. Extraction runs
+        // even when this is empty: bundled-tree detection needs no names.
+        let embedded_names = {
+            let claims = package_db::installed_lib::resolve::OsClaims {
+                paths: &os_claimed_paths,
+                #[cfg(unix)]
+                inodes: &os_claimed_inodes,
+            };
+            package_db::installed_lib::resolve::versioned_names(&installed_lib_records, root, &claims)
+        };
+        let mut embedded_findings: std::collections::BTreeMap<String, binary::embedded_paths::EmbeddedPathFinding> =
+            std::collections::BTreeMap::new();
         db_entries.extend(binary::read(
             root,
             &claimed_paths,
@@ -582,7 +599,19 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             exclude_set,
             no_binary_scan,
             skip_test_inputs.then_some(&mut binary_test_inputs_skipped),
+            Some(binary::embedded_paths::EmbeddedPathsCtx { names: &embedded_names, findings: &mut embedded_findings }),
         ));
+        // Spec 1534 FR-006: C228, from the findings the binary scan reported.
+        {
+            let binaries = embedded_findings.values().filter(|f| !f.bundled.is_empty()).count();
+            let components: usize = embedded_findings.values().map(|f| f.bundled.len()).sum();
+            let excluded: usize = embedded_findings.values().map(|f| f.bundled_excluded.len()).sum();
+            if binaries > 0 || excluded > 0 {
+                bundled_source_trees = Some(
+                    serde_json::json!({ "binaries": binaries, "components": components, "excluded": excluded }).to_string(),
+                );
+            }
+        }
         if !binary_test_inputs_skipped.is_empty() {
             tracing::info!(
                 skipped = binary_test_inputs_skipped.len(),
@@ -606,6 +635,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 root,
                 &claims,
                 &db_entries[binary_start..],
+                &embedded_findings,
             );
             installed_library_coverage = resolved.coverage.map(|c| c.wire());
             db_entries.splice(binary_start..binary_start, resolved.entries);
@@ -1571,6 +1601,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         git_submodule_coverage,
         installed_library_coverage,
         test_scope_inputs,
+        bundled_source_trees,
         go_workspace_mode,
         go_toolchains_detected,
         cross_ecosystem_edges_report,
