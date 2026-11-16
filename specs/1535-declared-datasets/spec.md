@@ -39,6 +39,7 @@ An installed SDK can ship third-party datasets: benchmark inputs, test matrices 
 ### Session 2026-11-16
 
 - Q: Are datasets emitted from an installed tree without a declaration? → A: (A) No. Datasets come only from a declaration, read by a source-tree scan. An installed tree's data files are unchanged: no component is created from a directory name or file shape. Linking installed files to a declaration is out of scope.
+- Q: What happens to a resolved download the dataset rule does not classify as data? → A: It is counted in the document's download coverage and emits nothing. Only datasets become components; a general `file(DOWNLOAD)` reader is #1518's scope.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -89,7 +90,7 @@ Every data component this feature emits carries each format's native kind:
 - **Two files declare the same dataset.** rocSPARSE's two CMake files and hipSPARSE's declare overlapping matrices. One component per distinct identity, with every declaring file as evidence.
 - **Mirror downloads** (`$ENV{…_TEST_MIRROR}/…`) are unresolved by FR-004 and do not duplicate the primary URL.
 - **The lists have different lengths.** The digest is not attached to any element, and the mismatch is counted.
-- **A download that is not data** (a source archive, a tool) via `file(DOWNLOAD)`. What is declared is a download, not a purpose. The plan must decide how a dataset download is told from any other, by measurement on the corpus. This feature MUST NOT re-type an existing FetchContent or ExternalProject component.
+- **A download that is not data** (a source archive, a tool) via `file(DOWNLOAD)`. What is declared is a download, not a purpose. The plan must decide how a dataset download is told from any other, by measurement on the corpus. A download not classified as a dataset is counted and emits nothing (clarified). This feature MUST NOT re-type an existing FetchContent or ExternalProject component.
 - **The test scope** (#1564). These matrices are test data. A dataset declared by a test client's CMake file is not test-scoped by this feature; #1564's rules apply to installed files.
 
 ## Requirements *(mandatory)*
@@ -104,8 +105,8 @@ Every data component this feature emits carries each format's native kind:
 - **FR-004**: A download whose URL uses anything outside FR-001's literals MUST yield no component, and MUST be counted.
 - **FR-005**: The native kinds of US2 MUST be emitted. SPDX 2.3 MUST carry the bridge through a new catalog row with extractors in all three formats.
 - **FR-006**: The dataset type MUST be chosen from SPDX 3's `DatasetType` vocabulary by a documented rule. When the declaration does not support a specific value, it MUST be `noAssertion`.
-- **FR-007**: The document MUST record the downloads read, the datasets emitted, the unresolved downloads, and the digest mismatches.
-- **FR-008**: A download MUST be classified as a dataset only by a rule the plan measures on the ROCm source and the public corpus. The rule MUST NOT classify any download the corpus shows to be source or tooling.
+- **FR-007**: The document MUST record the downloads read, the datasets emitted, the resolved downloads not classified as datasets, the unresolved downloads, and the digest mismatches.
+- **FR-008**: A download MUST be classified as a dataset only by a rule the plan measures on the ROCm source and the public corpus. The rule MUST NOT classify any download the corpus shows to be source or tooling. A resolved download it does not classify emits nothing and is counted (clarified): a misclassification is a gap, never a wrong type.
 - **FR-009**: A data component MUST come only from a declaration. An installed tree's data files without one (for example the ROCm install's `clients/matrices/`) MUST be unchanged: no component from a directory name or file shape (clarified).
 - **FR-010**: Zero new Cargo dependencies, no network access at scan time, synthetic `waybill-fixture-*` names in committed fixtures, and ROCm measured in CI only.
 
