@@ -342,13 +342,17 @@ pub struct DbScanResult {
     pub claimed_inodes: std::collections::HashSet<(u64, u64)>,
     /// #1531 (spec 1531, research R3): the claims made by an OS package
     /// database — dpkg, apk, alpm, opkg and rpm — and by nothing else.
-    /// `claimed_paths` also holds pip `RECORD` and `.ipk` archive claims,
-    /// so it cannot answer "does an OS package own this file?". Every
-    /// entry here is also in `claimed_paths`.
+    /// `claimed_paths` also holds `.ipk` archive claims, so it cannot
+    /// answer "does an OS package own this file?". Every entry here is also
+    /// in `claimed_paths`.
     pub os_claimed_paths: std::collections::HashSet<std::path::PathBuf>,
     /// The (device, inode) pairs of `os_claimed_paths`.
     #[cfg(unix)]
     pub os_claimed_inodes: std::collections::HashSet<(u64, u64)>,
+    /// Spec 1536 (#1567): pip `RECORD` claims, held apart from
+    /// `claimed_paths`. They name the owning `.dist-info` and do not stop
+    /// binary analysis; see `scan_fs::binary::owned`.
+    pub record_owners: pip::RecordOwners,
     /// Feature 005 — non-fatal diagnostics collected during `read_all`.
     /// Surfaced into the SBOM's `metadata.properties` so consumers can
     /// detect degraded output without needing the scanner's log stream.
@@ -1951,13 +1955,9 @@ pub fn read_all(
     // pattern). No-op when the pin is absent.
     out.extend(pants_go::read(rootfs, exclude_set));
 
-    // Collect pip-claimed paths from dist-info RECORD files.
-    pip::collect_claimed_paths(
-        rootfs,
-        &mut claimed,
-        #[cfg(unix)]
-        &mut claimed_inodes,
-    );
+    // Spec 1536 (#1567): `RECORD` claims name an owner rather than joining
+    // `claimed`, so the binary scan still analyses what a wheel vendors.
+    let record_owners = pip::collect_record_owners(rootfs);
 
     // Node.js: the reader dispatches lockfile > node_modules > root
     // package.json internally.
@@ -2113,6 +2113,7 @@ pub fn read_all(
         &claimed,
         #[cfg(unix)]
         &claimed_inodes,
+        &record_owners,
     );
     // Milestone 050: capture binary count BEFORE moving entries
     // into `out`, for the source-tree-no-binary scope hint emitted
@@ -2483,6 +2484,7 @@ pub fn read_all(
         os_claimed_paths: os_claimed,
         #[cfg(unix)]
         os_claimed_inodes,
+        record_owners,
         diagnostics,
         scan_target_coord,
         // Milestone 664 US2 T047: BUILD files collected by the pilot for
@@ -3444,7 +3446,14 @@ mod tests {
         let pip_path = site.join(in_wheel);
         assert!(result.claimed_paths.contains(&dpkg_path), "dpkg claim in the shared set");
         assert!(result.os_claimed_paths.contains(&dpkg_path), "dpkg claim in the OS set");
-        assert!(result.claimed_paths.contains(&pip_path), "control: pip claim in the shared set");
+        // Spec 1536 (#1567): a `RECORD` claim names an owner and joins
+        // neither claim set; the binary scan analyses the file.
+        assert_eq!(
+            result.record_owners.owner_of(&pip_path),
+            Some(dist_info.as_path()),
+            "control: the pip claim is recorded, with its owner"
+        );
+        assert!(!result.claimed_paths.contains(&pip_path), "pip claim kept out of the shared set");
         assert!(!result.os_claimed_paths.contains(&pip_path), "pip claim kept out of the OS set");
         assert!(
             result.os_claimed_paths.is_subset(&result.claimed_paths),

@@ -69,7 +69,7 @@ use std::sync::{Arc, Mutex};
 //
 // pip/ split layout (per specs/018-module-splits/contracts/module-boundaries.md):
 //   - dist_info.rs       — Tier 1: venv PEP 376 walker + METADATA parser +
-//                          extract_license + collect_claimed_paths
+//                          extract_license + collect_record_owners
 //   - poetry.rs          — Tier 2: poetry.lock v1/v2 parser
 //   - pipfile.rs         — Tier 3: Pipfile.lock parser
 //   - requirements_txt.rs — Tier 3: requirements*.txt parser
@@ -88,7 +88,7 @@ mod poetry;
 mod requirements_txt;
 pub(crate) mod uv_lock;
 
-pub use dist_info::collect_claimed_paths;
+pub use dist_info::{collect_record_owners, RecordOwners};
 
 /// Normalise a pypi package name into the form the packageurl-python
 /// reference implementation emits in canonical PURLs: lowercase, with

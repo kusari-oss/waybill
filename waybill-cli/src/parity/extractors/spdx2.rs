@@ -757,6 +757,7 @@ spdx23_anno!(c226_spdx23, "waybill:test-scope-coverage", document);
 spdx23_anno!(c227_spdx23, "waybill:embedded-path-binaries", component);
 spdx23_anno!(c228_spdx23, "waybill:bundled-source-trees", document);
 spdx23_anno!(c229_spdx23, "waybill:declared-downloads", document);
+spdx23_anno!(c230_spdx23, "waybill:python-owned-binaries", document);
 spdx23_anno!(c42_spdx23, "waybill:lifecycle-scope", component);
 spdx23_anno!(c194_spdx23_raw, "waybill:derivation", document);
 spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);

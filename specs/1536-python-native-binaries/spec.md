@@ -165,7 +165,7 @@ Both are listed in `RECORD`, so both are owned by the package and analysed.
 ## Assumptions
 
 - The binary scan's existing analysis is reused unchanged. This feature changes which files reach it and where its results attach, not what it finds.
-- The nesting construct is the one cargo-auditable already uses, CycloneDX nested components and SPDX `CONTAINS`, so no new format carrier is needed; FR-009 needs a document-scope row. The emitters carry only one level of nesting today, so they gain depth (research R5). That also changes how *existing* nested components are emitted: CycloneDX `dependencies` refs become their `bom-ref`s, and nested SPDX identifiers include the parent chain. No corpus golden holds a nested component (measured), and the CHANGELOG states the change.
+- The nesting construct is the one cargo-auditable already uses, CycloneDX nested components and SPDX `CONTAINS`, so no new format carrier is needed; FR-009 needs a document-scope row. The emitters carry only one level of nesting today, so they gain depth (research R5). That also changes how *existing* nested components are emitted: CycloneDX `dependencies` refs become their `bom-ref`s, and SPDX emits one element per PURL, so a coordinate nested under two parents no longer produces a duplicate identifier. No corpus golden holds a nested component (measured), and the CHANGELOG states the change.
 - `site-packages` locations stay as the pip reader finds them today.
 - #1528 (wheels over `--max-file-size`) and #1530 (archives inside packages) are separate.
 - Measurements on TheRock's artifacts run in CI only. Nothing from TheRock is cloned or downloaded locally.

@@ -661,6 +661,10 @@ pub(crate) fn finalize(
     rootfs: &Path,
     claimed_paths: &std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
+    // Spec 1536 (research R1): a `RECORD`-owned binary keeps today's
+    // diagnostic suppression. The binary scan reports it, nested under its
+    // package, so a diagnostic would be a second component for one file.
+    record_owners: &super::pip::RecordOwners,
 ) -> (
     Vec<PackageDbEntry>,
     std::collections::HashSet<String>,
@@ -698,7 +702,8 @@ pub(crate) fn finalize(
                     claimed_paths,
                     #[cfg(unix)]
                     claimed_inodes,
-                ) {
+                ) || record_owners.owner_of(path).is_some()
+                {
                     tracing::debug!(
                         binary = %path.display(),
                         status = status_str,
@@ -775,6 +780,7 @@ pub fn read(
         claimed_paths,
         #[cfg(unix)]
         claimed_inodes,
+        &super::pip::RecordOwners::default(),
     )
 }
 

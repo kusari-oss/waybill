@@ -6,7 +6,7 @@
 
 ## Phase 1: Setup (measurement first)
 
-- [ ] T001 Add `measure-wheels.yml` to `kusari-sandbox/waybill-fixture-therock-sdk`, with inputs `waybill_ref` and `base_ref` (research R8).
+- [X] T001 Add `measure-wheels.yml` to `kusari-sandbox/waybill-fixture-therock-sdk`, with inputs `waybill_ref` and `base_ref` (research R8).
   - **Wheels**, each pinned by version and SHA-256:
     - `rocm-sdk-libraries` from `https://stable.repo.amd.com/rocm/whl-next/`;
     - one NumPy `manylinux_x86_64` wheel and one NumPy `macosx_arm64` wheel from PyPI.
@@ -18,15 +18,17 @@
   - **Baseline:** scan each wheel at `base_ref` with its `.dist-info`, and without it.
 
   Commit the script, the run ID and the census to `specs/1536-python-native-binaries/measurements/wheels.md`. Then confirm or correct research R6's suffix pattern and R8's NumPy layout claim before T015. Nothing is downloaded locally.
-- [ ] T002 [P] Extend `waybill-cli/tests/common/installed_lib.rs` with `elf_shared_lib_with_needed(rodata, needed: &[&str]) -> Vec<u8>`: a `.dynamic` and `.dynstr` that carry `DT_NEEDED` entries. Add a positive-control test in a new `waybill-cli/tests/python_owned_binaries.rs`. It scans an unclaimed tree holding the library (no `.dist-info`) and asserts:
+- [X] T002 [P] Extend `waybill-cli/tests/common/installed_lib.rs` with `elf_shared_lib_with_needed(rodata, needed: &[&str]) -> Vec<u8>`: a `.dynamic` and `.dynstr` that carry `DT_NEEDED` entries. Add a positive-control test in a new `waybill-cli/tests/python_owned_binaries.rs`. It scans an unclaimed tree holding the library (no `.dist-info`) and asserts:
   - the embedded zlib version identifies `pkg:generic/zlib@<v>`;
   - a linkage component exists for a `needed` entry.
 
   This is the control that the fixture can make each signal fire (memory: a zero result can mean broken).
 
+  **Done as a Mach-O, not an ELF:** `macho_dylib(loads, cstring)`. The `object` crate reports an ELF import's library only through symbol versioning (`.gnu.version_r`), not `DT_NEEDED`, so a minimal ELF cannot carry linkage. A Mach-O names its libraries in `LC_LOAD_DYLIB`. Tests that need a Linux rootfs, which drops Mach-O, use `elf_shared_lib` for the version string alone.
+
 ## Phase 2: Foundational (blocks every story)
 
-- [ ] T003 Write unit tests in `waybill-cli/src/scan_fs/package_db/pip/dist_info.rs` for a new `RecordOwners` (data-model). Cover:
+- [X] T003 Write unit tests in `waybill-cli/src/scan_fs/package_db/pip/dist_info.rs` for a new `RecordOwners` (data-model). Cover:
   - one `RECORD`, giving path → `.dist-info`;
   - two `RECORD`s listing one path, where the sorted-first `.dist-info` wins (V1, FR-010);
   - `../../bin/<tool>` entries;
@@ -34,12 +36,12 @@
   - `files_by_owner`;
   - a `RECORD` line with an empty path is skipped;
   - a `RECORD` entry naming a missing file is skipped (spec edge case).
-- [ ] T004 Implement `RecordOwners` in `waybill-cli/src/scan_fs/package_db/pip/dist_info.rs`. Replace `collect_claimed_paths`'s insert into the shared set with a fill of `RecordOwners`, using `candidate_site_packages_roots` and sorted `.dist-info` iteration.
+- [X] T004 Implement `RecordOwners` in `waybill-cli/src/scan_fs/package_db/pip/dist_info.rs`. Replace `collect_claimed_paths`'s insert into the shared set with a fill of `RecordOwners`, using `candidate_site_packages_roots` and sorted `.dist-info` iteration.
   - Add `record_owners: RecordOwners` to `DbScanResult` in `waybill-cli/src/scan_fs/package_db/mod.rs`, and remove the pip call's writes into `claimed`.
   - Update the test at `package_db/mod.rs:3398`: the pip claim is in `record_owners`, and in neither `claimed_paths` nor `os_claimed_paths`. Keep the subset assertion.
 
   Make T003 pass (research R1).
-- [ ] T005 In `waybill-cli/src/scan_fs/binary/mod.rs`, add a `&RecordOwners` parameter to `binary::read` and return `(Vec<PackageDbEntry>, Vec<OwnedBinary>)`.
+- [X] T005 In `waybill-cli/src/scan_fs/binary/mod.rs`, add a `&RecordOwners` parameter to `binary::read` and return `(Vec<PackageDbEntry>, Vec<OwnedBinary>)`.
   - **Owned:** a binary is owned when the shared set does not claim it and `RecordOwners` resolves it. For such a binary, set `path_claimed = false` and skip both collapsers. `rpm_dir_heuristic` and `go_in_linux` stay as they are (R3).
   - **Record:** collect, per owned binary, its file-level PURL, the linkage PURLs of its imports, its internal-link file names (soname base name ∈ the owner's `files_by_owner`), and whether a content-derived identification fired.
   - **Internal links:** sonames that are internal links are not passed to `LinkageAggregator`.
@@ -47,12 +49,12 @@
   Pass `&RecordOwners` to `go_binary`'s finalize (`waybill-cli/src/scan_fs/package_db/go_binary.rs:662`, `:739`). There an owned path counts as claimed for diagnostic suppression only (research R1).
 
   Define `OwnedBinary` in a new `waybill-cli/src/scan_fs/binary/owned.rs`. Update the call site in `waybill-cli/src/scan_fs/mod.rs:598` and every other caller (find them with `grep -rn "binary::read(" waybill-cli/`; count the whole output, no `head`).
-- [ ] T006 [P] Write emitter unit tests:
+- [X] T006 [P] Write emitter unit tests:
   - **`waybill-cli/src/generate/cyclonedx/builder.rs`:** a three-level `parent_purl` chain folds into nested `components[]`, and the nested `bom-ref`s are `<purl>#<parent bom-ref>`. The same PURL under two parents gives two distinct `bom-ref`s (V4).
   - **`waybill-cli/src/generate/cyclonedx/dependencies.rs`:** every `ref` and `dependsOn` value is a `bom-ref`. A target with two copies resolves to the copy under the source (V5).
   - **`waybill-cli/src/generate/spdx/relationships.rs`:** `CONTAINS` is emitted from a nested parent.
   - **`waybill-cli/src/generate/spdx/ids.rs`:** a nested component's identifier differs from a top-level component with the same PURL, and differs between two parents.
-- [ ] T007 Implement R5 to make T006 pass:
+- [X] T007 Implement R5 to make T006 pass:
   - **`builder.rs`:** fold recursively, deepest first, with ancestor-chain `bom-ref`s.
   - **`dependencies.rs`:** map PURLs to `bom-ref`s.
   - **`spdx/relationships.rs`:** `CONTAINS` from any emitted parent.
@@ -67,7 +69,7 @@
 **Goal:** package → binary → identifications, with the edge chain, in both layouts.
 **Independent test:** spec US1. The T002 library is listed in a `RECORD`, under an unpacked-wheel root and under `usr/lib/python3.12/site-packages/`.
 
-- [ ] T008 [US1] Write the integration tests first in `waybill-cli/tests/python_owned_binaries.rs`, for both layouts. Cover US1 scenarios 1–6:
+- [X] T008 [US1] Write the integration tests first in `waybill-cli/tests/python_owned_binaries.rs`, for both layouts. Cover US1 scenarios 1–6:
   - **Nesting:** `pkg:pypi/waybill-fixture-pkg@1.2.3` → library → `pkg:generic/zlib@<v>`, and the root is unchanged.
   - **The same tree in `site-packages`.**
   - **Edges:** library → linkage component and library → zlib; package → library.
@@ -81,7 +83,7 @@
   - C230 `{"analysed":N,"identified":M}`, agreeing across the three formats, with a linkage-only library counted in `analysed` and not in `identified` (clarification 4);
   - FR-006: the two layouts' nested trees and edges compared, root normalised;
   - the CycloneDX output passing `tests/common/cdx_schema.rs`, and the SPDX 3 output passing `spdx3-validate` under `WAYBILL_REQUIRE_SPDX3_VALIDATOR`.
-- [ ] T009 [US1] Implement the attach pass in `waybill-cli/src/scan_fs/binary/owned.rs` (data-model "The attach pass", research R4):
+- [X] T009 [US1] Implement the attach pass in `waybill-cli/src/scan_fs/binary/owned.rs` (data-model "The attach pass", research R4):
   - resolve the owner PURL from the pip entry whose `source_path` is `<dist-info>/METADATA`;
   - set `parent_purl` and `depends` per the data-model table, covering `go_binary` entries whose `source_path` is an owned path;
   - return `OwnedBinaryCoverage`;
@@ -93,13 +95,15 @@
   - a `go_binary` module whose `source_path` is an owned path nests under the binary (spec edge case, Go build info);
   - a symbol-fingerprint entry nests the same way;
   - an entry from another path is untouched.
-- [ ] T010 [US1] Plumb C230 `waybill:python-owned-binaries` (the C228/C229 pattern):
+
+  **As built:** version-string, symbol-fingerprint, v2-matcher and ELF-note entries are nested by `binary::read` itself, when it emits them for an owned binary. Bundled trees and cargo-auditable crates already were. The attach pass nests only what another reader emits, which is `go_binary` modules. So fingerprint nesting is covered where it happens, by the same code path that T008's version-string case exercises, not by a unit test of the pass.
+- [X] T010 [US1] Plumb C230 `waybill:python-owned-binaries` (the C228/C229 pattern):
   - `scan_fs::ScanResult` → `cli/scan_cmd.rs` → `generate::ScanArtifacts` → `generate/cyclonedx/{metadata,builder,mod}.rs` and `generate/spdx/{annotations,v3_annotations}.rs`, plus every test constructor of `ScanArtifacts`;
   - its parity extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`;
   - its row in `docs/reference/sbom-format-mapping.md`, in the same change (memory: the gate is in the lib target).
 
   Make T008 pass.
-- [ ] T011 [US1] Add edge-case tests to `waybill-cli/tests/python_owned_binaries.rs`:
+- [X] T011 [US1] Add edge-case tests to `waybill-cli/tests/python_owned_binaries.rs`:
   - **One library, two packages:** two packages each vendor a byte-identical library. There are two nested copies with distinct identifiers in all three formats, and the documents still pass the schema and `spdx3-validate` (V4).
   - **`../../bin/<tool>`:** a `RECORD` entry holding the cargo-auditable fixture from `closure_binary_contents.rs`. It is owned and nested, with its crates under it.
   - **One file in two `RECORD`s:** the owner is the sorted-first `.dist-info` (FR-010).
@@ -140,7 +144,7 @@
 
 - [ ] T016 [P] Docs:
   - in `docs/ecosystems.md`, a Python section entry on owned native binaries: nesting, edges, C230, the OS-claim rule, and the bare `lib/python3.X/site-packages` limit;
-  - in `CHANGELOG.md`, `[Unreleased]` entries: a Fixed entry for the #1529 regression; an Added entry for the `site-packages` inventory and C230; and a Changed entry for nesting depth. That entry says that all nested components, cargo-auditable and shade jars included, now have CycloneDX `dependencies` refs that match their `bom-ref`, and SPDX identifiers that include the parent chain.
+  - in `CHANGELOG.md`, `[Unreleased]` entries: a Fixed entry for the #1529 regression; an Added entry for the `site-packages` inventory and C230; and a Changed entry for nesting depth. That entry says that all nested components, cargo-auditable and shade jars included, now have CycloneDX `dependencies` refs that match their `bom-ref`, and that SPDX emits one element per PURL.
 - [ ] T017 Mutations, each reverted with `cp` and each required to fail a named test. Record them in `specs/1536-python-native-binaries/measurements/mutations.md`:
   - **M1:** the OS claim no longer wins;
   - **M2:** no `parent_purl` on the binary;

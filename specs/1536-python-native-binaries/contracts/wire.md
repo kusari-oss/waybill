@@ -29,14 +29,14 @@ The fixture: `waybill-fixture-pkg` 1.2.3, whose `RECORD` lists `waybill_fixture_
 ```
 
 **Contract:**
-- **C-1:** an owned binary appears exactly once, nested under its owner, and never at the top level.
+- **C-1:** an owned binary appears exactly once, nested under its owner. When the owner is the document root (an unpacked wheel), that means at the top of `components[]`, which holds the root's contents (research R5).
 - **C-2:** no `file`-tier component exists for the binary's path.
 - **C-3:** every `dependencies` ref and `dependsOn` value is a `bom-ref` in the document.
 - **C-4:** the linkage component stays top-level. It is a library outside the package.
 
 ## SPDX 2.3
 
-- Packages: the owner, the binary, `zlib@1.3.2` and `libSystem.B.dylib`. The nested ones get distinct `SPDXID`s (data-model V4).
+- Packages: the owner, the binary, `zlib@1.3.2` and `libSystem.B.dylib`. One package per PURL: a library two packages vendor is one package that both `CONTAINS` (data-model V4).
 - Relationships:
   - `owner CONTAINS binary`;
   - `binary CONTAINS zlib`;

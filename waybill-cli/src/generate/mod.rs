@@ -170,6 +170,8 @@ pub struct ScanArtifacts<'a> {
     pub bundled_source_trees: Option<&'a str>,
     /// Spec 1535 (C229): declared CMake downloads.
     pub declared_downloads: Option<&'a str>,
+    /// Spec 1536 (C230): binaries a Python package owns.
+    pub python_owned_binaries: Option<&'a str>,
     /// Milestone 1366 (#1365; C208) — what the closure's ecosystem identity
     /// pass did: how many candidates it found, confirmed, declined and could
     /// not check, and why if any went unchecked. `None` when no closure was

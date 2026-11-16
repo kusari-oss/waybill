@@ -1,0 +1,165 @@
+name: measure-wheels
+
+# waybill spec 1536 (#1567): native binaries inside a Python package.
+# Census of three real wheels, then scans with and without each wheel's
+# .dist-info at one or two waybill refs. Wheels are downloaded here, in CI,
+# and nowhere else.
+#
+# - NumPy, auditwheel manylinux (numpy.libs/) and delocate macOS (numpy/.dylibs/),
+#   pinned by SHA-256 from PyPI's JSON API (2026-11-16).
+# - rocm-sdk-libraries 10.1.0 from the ROCm stable wheel index, which publishes
+#   no hashes; the first run records the SHA-256, and later runs pass it as
+#   `rocm_sha256`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: "waybill ref for the baseline scan"
+        type: string
+        default: "main"
+      waybill_ref:
+        description: "waybill ref under test (empty: census and baseline only)"
+        type: string
+        default: ""
+      rocm_version:
+        description: "rocm-sdk-libraries version on the stable index (its wheels are tagged linux_x86_64)"
+        type: string
+        default: "10.1.0"
+      rocm_sha256:
+        description: "expected SHA-256 of the rocm-sdk-libraries wheel (empty: record only)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+env:
+  ROCM_INDEX: https://stable.repo.amd.com/rocm/whl-next/
+
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          path: fixture
+      - name: Fetch wheels
+        env:
+          ROCM_VERSION: ${{ inputs.rocm_version }}
+          ROCM_SHA256: ${{ inputs.rocm_sha256 }}
+        run: |
+          set -euo pipefail
+          df -h "$RUNNER_TEMP" | tee -a "$GITHUB_STEP_SUMMARY"
+          mkdir -p wheels out
+          fetch() { # name url sha256
+            curl -fsSL --retry 3 -o "wheels/$1" "$2"
+            echo "$3  wheels/$1" | sha256sum -c -
+          }
+          fetch numpy-2.5.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl \
+            https://files.pythonhosted.org/packages/99/61/522b973ba38987b22a4a71beaed2ea6ac9fd4f687baaa2bc9a45100625e0/numpy-2.5.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl \
+            704d819265e5d1064d932968e9ee85fff2103ccc78c05b878c06943ba27b8507
+          fetch numpy-2.5.5-cp312-cp312-macosx_11_0_arm64.whl \
+            https://files.pythonhosted.org/packages/5c/f4/06db317e93dd6d618786004c1761214b113832bb77294c8513776956702a/numpy-2.5.5-cp312-cp312-macosx_11_0_arm64.whl \
+            b96e9ee49ccbdb5676359f852a4497f7a9c5df6c377d8877f5330d6fd3ff42e4
+          [[ -z "$ROCM_VERSION" || "$ROCM_VERSION" =~ ^[A-Za-z0-9.+-]+$ ]] || { echo "bad rocm_version"; exit 1; }
+          spec="rocm-sdk-libraries${ROCM_VERSION:+==$ROCM_VERSION}"
+          python3 -m pip download --no-deps --only-binary :all: --dest wheels/rocm \
+            --index-url "$ROCM_INDEX" --platform linux_x86_64 --python-version 3.12 "$spec"
+          w=$(ls wheels/rocm/*.whl)
+          mv "$w" wheels/
+          sum=$(sha256sum "wheels/$(basename "$w")" | cut -d' ' -f1)
+          if [[ -n "$ROCM_SHA256" ]]; then [[ "$sum" == "$ROCM_SHA256" ]] || { echo "rocm sha mismatch: $sum"; exit 1; }; fi
+          { echo "## Wheels"; echo; echo '| wheel | sha256 | bytes |'; echo '|---|---|---|'
+            for f in wheels/*.whl; do echo "| \`$(basename "$f")\` | \`$(sha256sum "$f" | cut -d' ' -f1)\` | $(stat -c %s "$f") |"; done; } \
+            | tee -a "$GITHUB_STEP_SUMMARY" out/wheels.md
+      - name: Unpack and census
+        run: |
+          set -euo pipefail
+          for f in wheels/*.whl; do
+            n=$(basename "$f" .whl)
+            mkdir -p "trees/$n/with" && python3 -I -B -m zipfile -e "$f" "trees/$n/with"
+            cp -a "trees/$n/with" "trees/$n/without" && rm -rf "trees/$n/without"/*.dist-info
+            rm -f "$f"
+          done
+          python3 -I -B - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY" out/census.md
+          import os, re, json
+          MAGIC = (b"\x7fELF", b"\xcf\xfa\xed\xfe", b"\xce\xfa\xed\xfe", b"\xca\xfe\xba\xbe", b"MZ")
+          hashed = re.compile(r"^(.+)-[0-9a-f]{8}(\.so(\..+)?)$")
+          census = {}
+          print("## Census\n")
+          for n in sorted(os.listdir("trees")):
+              root = f"trees/{n}/with"
+              natives, sizes = [], []
+              for d, _, fs in os.walk(root):
+                  for f in fs:
+                      p = os.path.join(d, f)
+                      with open(p, "rb") as h:
+                          if h.read(4).startswith(MAGIC):
+                              natives.append(os.path.relpath(p, root)); sizes.append(os.path.getsize(p))
+              libs = [p for p in natives if re.search(r"(^|/)[^/]+\.libs/", p)]
+              dylibs = [p for p in natives if "/.dylibs/" in p]
+              hashed_libs = [p for p in libs if hashed.match(os.path.basename(p))]
+              hashed_elsewhere = [p for p in natives if p not in libs and hashed.match(os.path.basename(p))]
+              record = [l.split(",")[0] for di in os.listdir(root) if di.endswith(".dist-info")
+                        for l in open(f"{root}/{di}/RECORD") if l.strip()]
+              outside = [r for r in record if r.startswith("../")]
+              natives_in_record = [p for p in natives if p in set(record)]
+              c = dict(native=len(natives), in_record=len(natives_in_record), libs_dir=len(libs),
+                       dylibs_dir=len(dylibs), hashed_in_libs=len(hashed_libs),
+                       hashed_elsewhere=len(hashed_elsewhere), record_outside=len(outside),
+                       over_256MiB=sum(s > 256 << 20 for s in sizes), over_500MiB=sum(s > 500 << 20 for s in sizes),
+                       largest=max(sizes, default=0))
+              census[n] = c
+              print(f"### {n}\n\n```\n{json.dumps(c, indent=1)}\n```\n")
+              for p in (hashed_libs[:3] + dylibs[:3] + hashed_elsewhere[:3]):
+                  print(f"- `{p}`")
+              print()
+          json.dump(census, open("out/census.json", "w"), indent=1, sort_keys=True)
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: kusari-oss/waybill
+          ref: ${{ inputs.base_ref }}
+          path: wb-base
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: inputs.waybill_ref != ''
+        with:
+          persist-credentials: false
+          repository: kusari-oss/waybill
+          ref: ${{ inputs.waybill_ref }}
+          path: wb-new
+      - name: Build and scan
+        env:
+          HAS_NEW: ${{ inputs.waybill_ref != '' }}
+        run: |
+          set -euo pipefail
+          refs="base"; [[ "$HAS_NEW" == "true" ]] && refs="base new"
+          for r in $refs; do (cd "wb-$r" && cargo build --release -p waybill) ; echo "$r $(git -C "wb-$r" rev-parse HEAD)" | tee -a out/refs.txt; done
+          for n in $(ls trees); do
+            for r in $refs; do
+              for v in with without; do
+                [[ "$r" == "base" && "$v" == "without" && "$HAS_NEW" == "true" ]] && continue
+                o="out/$n.$r.$v"
+                s=$(date +%s.%N)
+                HOME="$RUNNER_TEMP/home" "wb-$r/target/release/waybill" --offline sbom scan \
+                  --path "trees/$n/$v" --no-deep-hash \
+                  --format cyclonedx-json,spdx-2.3-json,spdx-3-json \
+                  --output "cyclonedx-json=$o.cdx.json" --output "spdx-2.3-json=$o.spdx23.json" \
+                  --output "spdx-3-json=$o.spdx3.json"
+                echo "$o $(echo "$(date +%s.%N) - $s" | bc)" >> out/times.txt
+              done
+            done
+          done
+      - name: Report
+        run: |
+          set -euo pipefail
+          python3 -I -B fixture/census/wheels_report.py out | tee -a "$GITHUB_STEP_SUMMARY" out/report.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: measure-wheels
+          path: out/

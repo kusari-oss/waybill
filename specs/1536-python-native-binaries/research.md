@@ -98,7 +98,12 @@ A new pass, `attach_owned` in a new module `scan_fs/binary/owned.rs`, runs in `s
 - **CycloneDX:** fold recursively, deepest first. A nested `bom-ref` is `<purl>#<parent bom-ref>`, so the whole ancestor chain is in the ref and stays unique even when one library sits under two packages. Every `dependencies[].ref` and `dependsOn` target is rewritten through a PURL → `bom-ref` map. A target PURL with several copies resolves to the copy whose parent is the edge's source, else to the top-level copy. A source PURL with several copies emits its edges once per copy.
 - **SPDX 2.3:** emit `CONTAINS` from any emitted parent, not only a top-level one.
 - **SPDX 3:** unchanged.
-- **The same PURL nested under two parents** (one library vendored by two packages): the SPDX identifier of a nested component derives from its PURL plus its parent chain, so the two copies get distinct identifiers. A test with two packages vendoring a byte-identical library pins this (data-model V4), validated by `spdx3-validate` and the SPDX 2.3 schema.
+- **The same PURL nested under two parents** (one library vendored by two packages): ~~the SPDX identifier of a nested component derives from its PURL plus its parent chain~~. **Revised at implement time:** SPDX emits one element per PURL, and each owner `CONTAINS` it.
+  - **Why:** the planned test (T011) showed today's emitters write two SPDX packages with one `SPDXID`, which is an invalid document: 7 packages, 6 unique identifiers.
+  - **Why not per-copy identifiers:** SPDX is a graph. One element contained by two packages states the fact exactly, since it is the same file content in both. Per-copy identifiers would mean re-keying every PURL → identifier lookup in both SPDX writers (`document.rs` alone derives one in 11 places).
+  - **CycloneDX is a tree**, so it keeps one copy under each owner.
+  - **Side effect:** this also fixes the duplicate identifiers today's shade-jar output would produce for one coordinate vendored by two jars.
+- **The owner is the document's root** (an unpacked wheel, where the package *is* the subject): the root is `metadata.component`, not an entry in `components[]`. So the owned binary sits at the top of `components[]`, which is the root's contents, and its identifications nest under it. The edge root → binary is emitted as for any other owner. FR-006's comparison therefore normalises the root (T008).
 
 **Rationale:** with no nested components in any golden, changing how they are emitted is invisible outside this feature. That is measured, not assumed. The other order (key edges by PURL and accept dangling refs) is the existing tolerance for declared-not-shipped dependencies, and it would leave the package → binary → library chain unresolvable in CycloneDX.
 

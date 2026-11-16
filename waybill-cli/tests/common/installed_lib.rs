@@ -249,3 +249,103 @@ pub fn elf_shared_lib(rodata: &[u8]) -> Vec<u8> {
     sh(shstr_off, 3, 0, strtab_off, shstrtab.len() as u64);
     f
 }
+
+/// A 64-bit little-endian Mach-O dylib (`MH_DYLIB`) that loads each of
+/// `loads` and whose `__TEXT,__cstring` section holds `cstring`.
+///
+/// Each `LC_LOAD_DYLIB` gets one undefined symbol bound to its library
+/// ordinal, because the `object` crate reports a Mach-O import through a
+/// symbol, not through the load command alone (the shape of the `macho`
+/// builder in `binary_test_inputs.rs`). `cstring` is where the binary scan
+/// reads embedded version strings on Mach-O. Spec 1536 uses this rather than
+/// an ELF: an ELF import names its library only through symbol versioning.
+pub fn macho_dylib(loads: &[&str], cstring: &[u8]) -> Vec<u8> {
+    let le = |v: u32| v.to_le_bytes();
+    let mut cmds: Vec<u8> = Vec::new();
+    let mut ncmds = 0u32;
+
+    // Data laid out after the header and commands, at fixed offsets.
+    const CSTRING_OFF: u32 = 2048;
+    const SYM_OFF: u32 = 3072;
+
+    // LC_SEGMENT_64 __TEXT with one section, __cstring.
+    let mut seg = Vec::new();
+    seg.extend_from_slice(&le(0x19));
+    seg.extend_from_slice(&le(72 + 80));
+    let name16 = |s: &str, v: &mut Vec<u8>| {
+        let mut n = [0u8; 16];
+        n[..s.len()].copy_from_slice(s.as_bytes());
+        v.extend_from_slice(&n);
+    };
+    name16("__TEXT", &mut seg);
+    let total = 4096u64;
+    for v in [0u64, total, 0, total] {
+        seg.extend_from_slice(&v.to_le_bytes()); // vmaddr, vmsize, fileoff, filesize
+    }
+    for v in [5u32, 5, 1, 0] {
+        seg.extend_from_slice(&le(v)); // maxprot, initprot, nsects, flags
+    }
+    name16("__cstring", &mut seg);
+    name16("__TEXT", &mut seg);
+    seg.extend_from_slice(&u64::from(CSTRING_OFF).to_le_bytes()); // addr
+    seg.extend_from_slice(&(cstring.len() as u64).to_le_bytes()); // size
+    for v in [CSTRING_OFF, 0, 0, 0, 0x2, 0, 0, 0] {
+        seg.extend_from_slice(&le(v)); // offset, align, reloff, nreloc, S_CSTRING_LITERALS, reserved1-3
+    }
+    cmds.extend_from_slice(&seg);
+    ncmds += 1;
+
+    for dylib in loads {
+        let mut name = dylib.as_bytes().to_vec();
+        name.push(0);
+        let size = (24 + name.len() as u32 + 7) & !7;
+        for v in [0x0c, size, 24, 2, 0x1_0000, 0x1_0000] {
+            cmds.extend_from_slice(&le(v));
+        }
+        let start = cmds.len();
+        cmds.extend_from_slice(&name);
+        cmds.resize(start + size as usize - 24, 0);
+        ncmds += 1;
+    }
+
+    // One undefined symbol per load, bound to its ordinal.
+    let mut strtab = vec![0u8];
+    let mut nlist = Vec::new();
+    for (i, _) in loads.iter().enumerate() {
+        let strx = strtab.len() as u32;
+        strtab.extend_from_slice(format!("_waybill_fixture_sym{i}\0").as_bytes());
+        nlist.extend_from_slice(&le(strx));
+        nlist.push(0x01); // N_UNDF | N_EXT
+        nlist.push(0);
+        nlist.extend_from_slice(&(((i as u16) + 1) << 8).to_le_bytes());
+        nlist.extend_from_slice(&0u64.to_le_bytes());
+    }
+    let stroff = SYM_OFF + nlist.len() as u32;
+    for v in [0x2, 24, SYM_OFF, loads.len() as u32, stroff, strtab.len() as u32] {
+        cmds.extend_from_slice(&le(v));
+    }
+    ncmds += 1;
+    let mut dysymtab = [0u32; 20];
+    dysymtab[0] = 0x0b;
+    dysymtab[1] = 80;
+    dysymtab[7] = loads.len() as u32; // nundefsym
+    for v in dysymtab {
+        cmds.extend_from_slice(&le(v));
+    }
+    ncmds += 1;
+
+    let mut b = Vec::new();
+    // mach_header_64: MH_MAGIC_64, x86_64, MH_DYLIB, MH_NOUNDEFS | MH_DYLDLINK | MH_TWOLEVEL.
+    for v in [0xfeed_facf, 0x0100_0007, 3, 6, ncmds, cmds.len() as u32, 0x85, 0] {
+        b.extend_from_slice(&le(v));
+    }
+    b.extend_from_slice(&cmds);
+    assert!(b.len() <= CSTRING_OFF as usize && cstring.len() <= (SYM_OFF - CSTRING_OFF) as usize);
+    b.resize(CSTRING_OFF as usize, 0);
+    b.extend_from_slice(cstring);
+    b.resize(SYM_OFF as usize, 0);
+    b.extend_from_slice(&nlist);
+    b.extend_from_slice(&strtab);
+    b.resize(total as usize, 0);
+    b
+}

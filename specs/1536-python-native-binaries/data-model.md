@@ -56,7 +56,7 @@ There is one per binary that the shared claim set does not claim, `RecordOwners`
 **Containment tree:** owner → binary → identified. The CycloneDX nested `bom-ref` is `<purl>#<parent bom-ref>`, recursively.
 
 **Rules:**
-- **V4:** the same PURL nested under two parents gets two distinct CycloneDX `bom-ref`s, SPDX 2.3 `SPDXID`s and SPDX 3 IRIs. The SPDX identifier of a nested component derives from its PURL plus its parent chain.
+- **V4:** the same PURL nested under two parents gets two distinct CycloneDX `bom-ref`s, one per copy, with its children under each. SPDX emits one element per PURL, contained by each owner (research R5, revised at implement time).
 - **V5:** every CycloneDX `dependencies[].ref` and `dependsOn` value is a `bom-ref` present in the document. An edge to a PURL with several copies resolves to the copy under the edge's source, else to the top-level copy.
 
 ## C230 `waybill:python-owned-binaries`

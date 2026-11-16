@@ -48,6 +48,8 @@ pub fn build_dependencies(
     cross_ecosystem_edges_report: Option<
         &crate::generate::cross_ecosystem_edges::CrossEcosystemEdgesReport,
     >,
+    // Spec 1536 (V5): each PURL's emitted copies. `None` keeps PURLs as refs.
+    bom_refs: Option<&super::builder::BomRefIndex>,
 ) -> serde_json::Value {
     // Build a map of ref -> set of dependency refs.
     let mut dep_map: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
@@ -163,6 +165,10 @@ pub fn build_dependencies(
     // (`waybill:cross-ecosystem-inference-ambiguous`) as
     // `dependencies[i].properties[]` objects. Per-edge disambiguation
     // via the `target_purl` field inside the property value payload.
+    let dep_map = match bom_refs {
+        Some(index) => resolve_bom_refs(dep_map, index),
+        None => dep_map,
+    };
     let entries: Vec<serde_json::Value> = dep_map
         .into_iter()
         .map(|(ref_str, depends_on)| {
@@ -208,6 +214,45 @@ pub fn build_dependencies(
         .collect();
 
     json!(entries)
+}
+
+/// Spec 1536 (V5): rewrite PURL-keyed edges onto `bom-ref`s.
+///
+/// A nested component's `bom-ref` is not its PURL, so an edge naming the
+/// PURL would point at nothing. An edge from a PURL with several copies is
+/// emitted from each copy. Its target resolves to the copy nested under that
+/// source, else the top-level copy, else the first copy. A PURL with no
+/// emitted copy (a declared-not-shipped target, the document root) keeps its
+/// PURL. A document without nesting is unchanged: each PURL's only copy is
+/// its own `bom-ref`.
+fn resolve_bom_refs(
+    dep_map: BTreeMap<String, BTreeSet<String>>,
+    index: &super::builder::BomRefIndex,
+) -> BTreeMap<String, BTreeSet<String>> {
+    let mut out: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for (from, targets) in dep_map {
+        let sources: Vec<String> = match index.get(&from) {
+            Some(copies) => copies.iter().map(|(r, _)| r.clone()).collect(),
+            None => vec![from],
+        };
+        for source in sources {
+            let set = out.entry(source.clone()).or_default();
+            for to in &targets {
+                let resolved = index
+                    .get(to)
+                    .and_then(|copies| {
+                        copies
+                            .iter()
+                            .find(|(_, parent)| parent.as_deref() == Some(source.as_str()))
+                            .or_else(|| copies.iter().find(|(_, parent)| parent.is_none()))
+                            .or_else(|| copies.first())
+                    })
+                    .map_or_else(|| to.clone(), |(r, _)| r.clone());
+                set.insert(resolved);
+            }
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -272,7 +317,7 @@ mod tests {
             make_component("tokio", "1.38.0"),
         ];
 
-        let result = build_dependencies(&components, &[], "myapp@0.1.0", None);
+        let result = build_dependencies(&components, &[], "myapp@0.1.0", None, None);
         let deps = result.as_array().expect("array");
 
         // Should have 3 entries: myapp target + 2 components.
@@ -332,7 +377,7 @@ mod tests {
             },
         ];
 
-        let result = build_dependencies(&components, &relationships, "myapp@0.1.0", None);
+        let result = build_dependencies(&components, &relationships, "myapp@0.1.0", None, None);
         let deps = result.as_array().unwrap();
         let target = deps.iter().find(|d| d["ref"] == "myapp@0.1.0").unwrap();
         let target_deps: Vec<&str> = target["dependsOn"]
@@ -358,7 +403,7 @@ mod tests {
                 data_type: "test".to_string(),
             },
         }];
-        let result = build_dependencies(&components, &relationships, "myapp@0.1.0", None);
+        let result = build_dependencies(&components, &relationships, "myapp@0.1.0", None, None);
         let deps = result.as_array().unwrap();
         let target = deps.iter().find(|d| d["ref"] == "myapp@0.1.0").unwrap();
         let target_deps: Vec<&str> = target["dependsOn"]
@@ -399,7 +444,7 @@ mod tests {
             },
         ];
 
-        let result = build_dependencies(&components, &relationships, "target@0.1.0", None);
+        let result = build_dependencies(&components, &relationships, "target@0.1.0", None, None);
         let deps = result.as_array().expect("array");
 
         // Find the myapp entry.
@@ -421,7 +466,7 @@ mod tests {
             make_component("alpha", "1.0.0"),
         ];
 
-        let result = build_dependencies(&components, &[], "target@0.1.0", None);
+        let result = build_dependencies(&components, &[], "target@0.1.0", None, None);
         let deps = result.as_array().expect("array");
 
         // BTreeMap ensures alphabetical ordering by ref.

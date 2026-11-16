@@ -210,6 +210,8 @@ pub struct CycloneDxBuilder {
     bundled_source_trees: Option<String>,
     /// C229 (spec 1535).
     declared_downloads: Option<String>,
+    /// C230 (spec 1536).
+    python_owned_binaries: Option<String>,
     /// C208 (m1366) — the closure ecosystem identity record, pre-rendered.
     closure_ecosystem_identity: Option<String>,
     /// C209 (m1367) — the CPE synthesis coverage record, pre-rendered.
@@ -310,6 +312,7 @@ impl CycloneDxBuilder {
             test_scope_coverage: None,
             bundled_source_trees: None,
             declared_downloads: None,
+            python_owned_binaries: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,
             closure_graph_admission: None,
@@ -461,6 +464,11 @@ impl CycloneDxBuilder {
     /// C229 (spec 1535).
     pub fn with_declared_downloads(mut self, value: Option<String>) -> Self {
         self.declared_downloads = value;
+        self
+    }
+    /// C230 (spec 1536).
+    pub fn with_python_owned_binaries(mut self, value: Option<String>) -> Self {
+        self.python_owned_binaries = value;
         self
     }
 
@@ -1138,6 +1146,7 @@ impl CycloneDxBuilder {
                 test_scope_coverage: self.test_scope_coverage.as_deref(),
                 bundled_source_trees: self.bundled_source_trees.as_deref(),
                 declared_downloads: self.declared_downloads.as_deref(),
+                python_owned_binaries: self.python_owned_binaries.as_deref(),
                 closure_ecosystem_identity: self.closure_ecosystem_identity.as_deref(),
                 cpe_coverage: self.cpe_coverage.as_deref(),
                 closure_graph_admission: self.closure_graph_admission.as_deref(),
@@ -1161,7 +1170,7 @@ impl CycloneDxBuilder {
         for i in 0..self.component_identifiers.len() {
             match_counts.insert(i, 0);
         }
-        let cdx_components = self.build_components(effective_components, &mut match_counts)?;
+        let (cdx_components, bom_refs) = self.build_components(effective_components, &mut match_counts)?;
         for (idx, count) in &match_counts {
             if *count == 0 {
                 let flag = &self.component_identifiers[*idx];
@@ -1273,7 +1282,7 @@ impl CycloneDxBuilder {
         let effective_relationships: &[Relationship] = effective_relationships_owned
             .as_deref()
             .unwrap_or(effective_relationships_base);
-        let deps = build_dependencies(effective_components, effective_relationships, &target_ref, self.cross_ecosystem_edges_report.as_ref());
+        let deps = build_dependencies(effective_components, effective_relationships, &target_ref, self.cross_ecosystem_edges_report.as_ref(), Some(&bom_refs));
         // m1068 (#1039): the scan's VEX, against this document's `bom-ref`s.
         let mut vex_refs = super::vex::BomRefIndex::new(
             metadata
@@ -1391,7 +1400,7 @@ impl CycloneDxBuilder {
         &self,
         components: &[ResolvedComponent],
         match_counts: &mut std::collections::BTreeMap<usize, usize>,
-    ) -> anyhow::Result<serde_json::Value> {
+    ) -> anyhow::Result<(serde_json::Value, BomRefIndex)> {
         // Milestones 053 (Go) + 064 (cargo) FR-001a: a main-module is
         // emitted via CDX `metadata.component` per Constitution
         // Principle V (native BOM-subject construct). Skip it here so
@@ -1455,11 +1464,12 @@ impl CycloneDxBuilder {
                 && evaluated.as_deref().is_none_or(|p| p == c.purl.as_str())
         };
 
-        // First pass: identify top-level PURLs so we can route children
-        // that reference valid parents. Orphans fall back to top-level.
-        let top_level_purls: std::collections::HashSet<String> = components
+        // First pass: the PURLs a child can nest under — every emitted
+        // component, not only top-level ones (spec 1536: package → binary →
+        // identification is three levels). Orphans fall back to top-level.
+        let present_purls: std::collections::HashSet<String> = components
             .iter()
-            .filter(|c| c.parent_purl.is_none() && !is_promoted_main_module(c))
+            .filter(|c| !is_promoted_main_module(c))
             .map(|c| c.purl.as_str().to_string())
             .collect();
 
@@ -1476,6 +1486,10 @@ impl CycloneDxBuilder {
             String,
             Vec<usize>,
         > = std::collections::BTreeMap::new();
+        // Per entry: its PURL and whether it nests. The final `bom-ref`,
+        // which carries the ancestor chain, is set when the tree is built.
+        let mut entry_purls: Vec<String> = Vec::new();
+        let mut entry_nests: Vec<bool> = Vec::new();
 
         for component in components {
             // Milestone 053: skip the Go main-module — it lives in
@@ -1483,18 +1497,15 @@ impl CycloneDxBuilder {
             if is_promoted_main_module(component) {
                 continue;
             }
-            // Decide this entry's bom-ref: plain PURL when top-level,
-            // `<child>#<parent>` composite when the parent exists in
-            // the top-level set. Orphans (declared parent not in the
-            // top-level set) get demoted to top-level with plain ref.
+            // This entry's parent, when the parent is emitted. Orphans
+            // (declared parent absent) are demoted to top-level. The plain
+            // PURL is a placeholder `bom-ref`: a nested entry's is rewritten
+            // to `<purl>#<parent bom-ref>` when the tree is assembled.
             let effective_parent: Option<&String> = component
                 .parent_purl
                 .as_ref()
-                .filter(|p| top_level_purls.contains(p.as_str()));
-            let bom_ref = match effective_parent {
-                Some(parent) => format!("{}#{}", component.purl.as_str(), parent),
-                None => component.purl.as_str().to_string(),
-            };
+                .filter(|p| present_purls.contains(p.as_str()) && p.as_str() != component.purl.as_str());
+            let bom_ref = component.purl.as_str().to_string();
             // Milestone 133 US1.B: file-tier components carry a
             // `waybill:component-tier = "file"` annotation. When
             // present, override `type` to the CDX-native `"file"`
@@ -2183,6 +2194,8 @@ impl CycloneDxBuilder {
             // to top-level (effective_parent is None).
             let pushed_index = cdx_components.len();
             cdx_components.push(entry);
+            entry_purls.push(component.purl.as_str().to_string());
+            entry_nests.push(effective_parent.is_some());
             if let Some(parent) = effective_parent {
                 children_indices_by_parent
                     .entry(parent.clone())
@@ -2191,43 +2204,81 @@ impl CycloneDxBuilder {
             }
         }
 
-        // Fold children into their parents. Walk in reverse-index
-        // order so later removals don't shift earlier indices.
-        let mut child_indices_to_remove: std::collections::BTreeSet<usize> =
-            std::collections::BTreeSet::new();
-        // Map parent PURL -> index in cdx_components. Built once.
-        let mut parent_index_by_purl: std::collections::HashMap<String, usize> =
-            std::collections::HashMap::new();
-        for (i, entry) in cdx_components.iter().enumerate() {
-            if let Some(purl) = entry.get("purl").and_then(|v| v.as_str()) {
-                // Top-level entries (those whose bom-ref equals the
-                // plain PURL) are the only valid parents.
-                let bom_ref = entry.get("bom-ref").and_then(|v| v.as_str()).unwrap_or("");
-                if bom_ref == purl {
-                    parent_index_by_purl.insert(purl.to_string(), i);
-                }
+        // Fold children into their parents, recursively. A child goes under
+        // every emitted copy of its parent's PURL: one binary vendored by
+        // two packages holds the same identifications in each (spec 1536
+        // V4). Each nested `bom-ref` is `<purl>#<parent bom-ref>`, so the
+        // ancestor chain keeps it unique. Roots keep the plain PURL; that is
+        // the pre-1536 shape for every one-level nesting.
+        let mut placed = vec![false; cdx_components.len()];
+        let mut bom_refs = BomRefIndex::default();
+        let mut tops: Vec<(usize, serde_json::Value)> = Vec::new();
+        let mut path: Vec<usize> = Vec::new();
+        let ctx = FoldCtx {
+            entries: &cdx_components,
+            purls: &entry_purls,
+            children: &children_indices_by_parent,
+        };
+        for (i, nests) in entry_nests.iter().enumerate() {
+            if !nests {
+                tops.push((i, ctx.assemble(i, None, &mut path, &mut placed, &mut bom_refs)));
             }
         }
-        for (parent_purl, child_idxs) in &children_indices_by_parent {
-            let Some(&parent_idx) = parent_index_by_purl.get(parent_purl) else {
-                continue;
-            };
-            let mut child_entries: Vec<serde_json::Value> =
-                Vec::with_capacity(child_idxs.len());
-            for &ci in child_idxs {
-                child_entries.push(cdx_components[ci].clone());
-                child_indices_to_remove.insert(ci);
-            }
-            if !child_entries.is_empty() {
-                cdx_components[parent_idx]["components"] = json!(child_entries);
+        // Entries no root reaches (a parent cycle) are emitted top-level
+        // rather than lost.
+        for i in 0..cdx_components.len() {
+            if !placed[i] {
+                tops.push((i, ctx.assemble(i, None, &mut path, &mut placed, &mut bom_refs)));
             }
         }
-        // Remove folded children from top-level (reverse order).
-        for &idx in child_indices_to_remove.iter().rev() {
-            cdx_components.remove(idx);
-        }
+        tops.sort_by_key(|(i, _)| *i);
+        let cdx_components: Vec<serde_json::Value> = tops.into_iter().map(|(_, v)| v).collect();
 
-        Ok(json!(cdx_components))
+        Ok((json!(cdx_components), bom_refs))
+    }
+}
+
+/// Spec 1536: each PURL's emitted copies, as `(bom-ref, parent bom-ref)`.
+/// `dependencies` resolves edges, which are keyed by PURL, through it.
+pub(crate) type BomRefIndex = std::collections::BTreeMap<String, Vec<(String, Option<String>)>>;
+
+struct FoldCtx<'a> {
+    entries: &'a [serde_json::Value],
+    purls: &'a [String],
+    children: &'a std::collections::BTreeMap<String, Vec<usize>>,
+}
+
+impl FoldCtx<'_> {
+    fn assemble(
+        &self,
+        i: usize,
+        parent_ref: Option<&str>,
+        path: &mut Vec<usize>,
+        placed: &mut [bool],
+        refs: &mut BomRefIndex,
+    ) -> serde_json::Value {
+        let mut e = self.entries[i].clone();
+        let bom_ref = match parent_ref {
+            Some(p) => format!("{}#{}", self.purls[i], p),
+            None => self.purls[i].clone(),
+        };
+        e["bom-ref"] = json!(bom_ref);
+        placed[i] = true;
+        refs.entry(self.purls[i].clone())
+            .or_default()
+            .push((bom_ref.clone(), parent_ref.map(str::to_string)));
+        path.push(i);
+        let mut nested: Vec<serde_json::Value> = Vec::new();
+        for &k in self.children.get(&self.purls[i]).into_iter().flatten() {
+            if !path.contains(&k) {
+                nested.push(self.assemble(k, Some(&bom_ref), path, placed, refs));
+            }
+        }
+        path.pop();
+        if !nested.is_empty() {
+            e["components"] = json!(nested);
+        }
+        e
     }
 }
 
@@ -2550,6 +2601,126 @@ mod tests {
         }
         // Parent's bom-ref stays as the plain PURL (no composite).
         assert_eq!(top[0]["bom-ref"], parent_purl_str);
+    }
+
+    /// Spec 1536 (#1567): every `bom-ref` in a CycloneDX document, nested
+    /// ones included.
+    fn all_bom_refs(v: &serde_json::Value, out: &mut Vec<String>) {
+        for c in v["components"].as_array().into_iter().flatten() {
+            out.push(c["bom-ref"].as_str().unwrap().to_string());
+            all_bom_refs(c, out);
+        }
+    }
+
+    fn depends_on(edge_from: &str, to: &str) -> Relationship {
+        Relationship {
+            from: edge_from.to_string(),
+            to: to.to_string(),
+            relationship_type: waybill_common::resolution::RelationshipType::DependsOn,
+            provenance: waybill_common::resolution::EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "test".to_string(),
+            },
+        }
+    }
+
+    /// Spec 1536 (research R5): package → binary → identification nests
+    /// three levels deep, each `bom-ref` carrying its ancestor chain.
+    #[test]
+    fn three_level_chain_nests_recursively_with_ancestor_chain_bom_refs() {
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
+        let pkg = make_component("waybill-fixture-pkg", "1.2.3");
+        let mut bin = make_component("waybill-fixture-lib", "0.0.0");
+        bin.parent_purl = Some(pkg.purl.as_str().to_string());
+        let mut lib = make_component("waybill-fixture-z", "1.3.1");
+        lib.parent_purl = Some(bin.purl.as_str().to_string());
+        let (p, b, l) = (pkg.purl.as_str().to_string(), bin.purl.as_str().to_string(), lib.purl.as_str().to_string());
+        let bom = builder
+            .build(&[pkg, bin, lib], &[], &clean_integrity(), "myapp", &[], None)
+            .expect("build bom");
+        let top = bom["components"].as_array().expect("top-level array");
+        assert_eq!(top.len(), 1, "only the package is top-level: {top:?}");
+        let b_entry = &top[0]["components"][0];
+        assert_eq!(b_entry["bom-ref"], format!("{b}#{p}"));
+        assert_eq!(b_entry["components"][0]["bom-ref"], format!("{l}#{b}#{p}"));
+    }
+
+    /// V4: one binary owned by two packages appears under each, and what it
+    /// identifies appears under each copy, every `bom-ref` distinct.
+    #[test]
+    fn grandchild_of_a_binary_under_two_packages_appears_under_each_copy() {
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
+        let pkg_a = make_component("waybill-fixture-a", "1.0.0");
+        let pkg_b = make_component("waybill-fixture-b", "1.0.0");
+        let mut bin_a = make_component("waybill-fixture-lib", "0.0.0");
+        bin_a.parent_purl = Some(pkg_a.purl.as_str().to_string());
+        let mut bin_b = bin_a.clone();
+        bin_b.parent_purl = Some(pkg_b.purl.as_str().to_string());
+        let mut lib = make_component("waybill-fixture-z", "1.3.1");
+        lib.parent_purl = Some(bin_a.purl.as_str().to_string());
+        let bom = builder
+            .build(&[pkg_a, pkg_b, bin_a, bin_b, lib], &[], &clean_integrity(), "myapp", &[], None)
+            .expect("build bom");
+        let top = bom["components"].as_array().expect("top-level array");
+        assert_eq!(top.len(), 2);
+        for pkg in top {
+            let bin = &pkg["components"][0];
+            assert_eq!(bin["components"][0]["name"], "waybill-fixture-z", "under {}", pkg["name"]);
+        }
+        let mut refs = Vec::new();
+        all_bom_refs(&bom, &mut refs);
+        let n = refs.len();
+        refs.sort();
+        refs.dedup();
+        assert_eq!((n, refs.len()), (6, 6), "six entries, all bom-refs distinct: {refs:?}");
+    }
+
+    /// V5: every `dependencies` ref and `dependsOn` value is a `bom-ref`
+    /// in the document; an edge from a PURL with two copies is emitted
+    /// from each, to the copy of its target under it.
+    #[test]
+    fn dependency_refs_resolve_to_nested_bom_refs() {
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
+        let pkg_a = make_component("waybill-fixture-a", "1.0.0");
+        let pkg_b = make_component("waybill-fixture-b", "1.0.0");
+        let mut bin_a = make_component("waybill-fixture-lib", "0.0.0");
+        bin_a.parent_purl = Some(pkg_a.purl.as_str().to_string());
+        let mut bin_b = bin_a.clone();
+        bin_b.parent_purl = Some(pkg_b.purl.as_str().to_string());
+        let mut lib = make_component("waybill-fixture-z", "1.3.1");
+        lib.parent_purl = Some(bin_a.purl.as_str().to_string());
+        let (pa, pb, b, l) = (
+            pkg_a.purl.as_str().to_string(),
+            pkg_b.purl.as_str().to_string(),
+            bin_a.purl.as_str().to_string(),
+            lib.purl.as_str().to_string(),
+        );
+        let rels = vec![depends_on(&pa, &b), depends_on(&pb, &b), depends_on(&b, &l)];
+        let bom = builder
+            .build(&[pkg_a, pkg_b, bin_a, bin_b, lib], &rels, &clean_integrity(), "myapp", &[], None)
+            .expect("build bom");
+        let mut refs = Vec::new();
+        all_bom_refs(&bom, &mut refs);
+        let root = bom["metadata"]["component"]["bom-ref"].as_str().unwrap().to_string();
+        let deps = bom["dependencies"].as_array().unwrap();
+        for d in deps {
+            let r = d["ref"].as_str().unwrap();
+            assert!(r == root || refs.iter().any(|x| x == r), "ref {r} is not a bom-ref");
+            for t in d["dependsOn"].as_array().unwrap() {
+                let t = t.as_str().unwrap();
+                assert!(refs.iter().any(|x| x == t), "dependsOn {t} is not a bom-ref");
+            }
+        }
+        let of = |r: &str| -> Vec<String> {
+            deps.iter()
+                .find(|d| d["ref"] == r)
+                .map(|d| d["dependsOn"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect())
+                .unwrap_or_default()
+        };
+        assert_eq!(of(&pa), vec![format!("{b}#{pa}")]);
+        assert_eq!(of(&pb), vec![format!("{b}#{pb}")]);
+        assert_eq!(of(&format!("{b}#{pa}")), vec![format!("{l}#{b}#{pa}")]);
+        assert_eq!(of(&format!("{b}#{pb}")), vec![format!("{l}#{b}#{pb}")]);
     }
 
     /// Orphan children (parent_purl pointing at a PURL absent from the

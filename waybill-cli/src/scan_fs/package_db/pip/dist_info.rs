@@ -6,9 +6,8 @@
 //! module boundary, and emitted by [`super::read`] before the
 //! lockfile and requirements-file tiers run.
 //!
-//! Also exports [`collect_claimed_paths`], the post-pip-install
-//! claim tracker that prevents binary-walker double-counting of
-//! cpython extension files. Callers reach it via the re-export in
+//! Also exports [`collect_record_owners`]: which `.dist-info` owns each
+//! file a `RECORD` lists (spec 1536). Callers reach it via the re-export in
 //! `pip/mod.rs`.
 
 use std::collections::BTreeSet;
@@ -25,67 +24,141 @@ use super::{build_pypi_purl_str, normalize_pypi_name_for_purl, tokenise_requires
 // Tier 1: venv dist-info walker
 // -----------------------------------------------------------------------
 
-/// Iterate every dist-info `RECORD` file under every candidate
-/// site-packages directory and insert each listed file (rootfs-joined
-/// absolute path) into `claimed`. Milestone 004 post-ship fix for the
-/// binary-walker double-counting of pip-installed cpython extensions.
+/// Spec 1536 (#1567): the files each `.dist-info/RECORD` lists, mapped to
+/// the `.dist-info` that lists them.
 ///
-/// RECORD format (PEP 376 / PEP 627): CSV where column 0 is the file
-/// path relative to site-packages (forward slashes). We ignore the
-/// remaining columns (hash + size — not needed for claim tracking).
+/// These used to go into the claim set the OS package databases share, and
+/// a claimed file skipped binary analysis entirely. A Python package is not
+/// the binary it ships: a wheel vendors third-party native code, which the
+/// binary scan must still see. So a `RECORD` claim is kept apart. It names an
+/// owner, and the binary scan analyses the file and nests the result under
+/// that owner (`scan_fs::binary::owned`).
 ///
-/// No-op when no site-packages exists. Malformed CSV lines are
-/// tolerated (partial claims, not scan failure).
-pub fn collect_claimed_paths(
-    rootfs: &Path,
-    claimed: &mut std::collections::HashSet<std::path::PathBuf>,
-    #[cfg(unix)] claimed_inodes: &mut std::collections::HashSet<(u64, u64)>,
-) {
-    // Perf: cache canonicalized parents across every RECORD file
-    // (see dpkg::collect_claimed_paths for rationale).
-    let mut parent_cache: std::collections::HashMap<
-        std::path::PathBuf,
-        Option<std::path::PathBuf>,
-    > = std::collections::HashMap::new();
-    for site_packages in candidate_site_packages_roots(rootfs) {
-        if !site_packages.is_dir() {
-            continue;
+/// Lookup mirrors `binary::is_path_claimed`: the walker's path, then its
+/// canonical form, then (Unix) its device and inode.
+#[derive(Debug, Default, Clone)]
+pub struct RecordOwners {
+    by_path: std::collections::BTreeMap<PathBuf, PathBuf>,
+    #[cfg(unix)]
+    by_inode: std::collections::BTreeMap<(u64, u64), PathBuf>,
+    files_by_owner: std::collections::BTreeMap<PathBuf, BTreeSet<String>>,
+}
+
+impl RecordOwners {
+    #[cfg(test)]
+    pub fn is_empty(&self) -> bool {
+        self.by_path.is_empty()
+    }
+
+    /// The `.dist-info` whose `RECORD` lists `walker_path`.
+    pub fn owner_of(&self, walker_path: &Path) -> Option<&Path> {
+        if let Some(o) = self.by_path.get(walker_path) {
+            return Some(o);
         }
+        if let Ok(canonical) = std::fs::canonicalize(walker_path) {
+            if let Some(o) = self.by_path.get(&canonical) {
+                return Some(o);
+            }
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::MetadataExt;
+            if let Ok(meta) = std::fs::metadata(walker_path) {
+                if let Some(o) = self.by_inode.get(&(meta.dev(), meta.ino())) {
+                    return Some(o);
+                }
+            }
+        }
+        None
+    }
+
+    /// Whether `owner`'s `RECORD` lists a file whose name is `file_name`.
+    /// Internal links are matched this way: auditwheel and delocate point a
+    /// vendored library at its sibling through an rpath, which the linkage
+    /// probe does not follow, and the sibling is always in the same `RECORD`.
+    pub fn owner_lists_file_named(&self, owner: &Path, file_name: &str) -> bool {
+        self.files_by_owner.get(owner).is_some_and(|names| names.contains(file_name))
+    }
+
+    /// First insert wins. Callers insert `.dist-info` directories in sorted
+    /// order, so two `RECORD`s listing one file resolve to the one that sorts
+    /// first, whatever the scan order (FR-010).
+    fn insert(
+        &mut self,
+        owner: &Path,
+        abs_path: PathBuf,
+        parent_cache: &mut std::collections::HashMap<PathBuf, Option<PathBuf>>,
+    ) {
+        if let (Some(parent), Some(basename)) = (abs_path.parent(), abs_path.file_name()) {
+            let canonical_parent = parent_cache
+                .entry(parent.to_path_buf())
+                .or_insert_with(|| std::fs::canonicalize(parent).ok())
+                .clone();
+            if let Some(canonical_parent) = canonical_parent {
+                let canonical = canonical_parent.join(basename);
+                if canonical != abs_path {
+                    self.by_path.entry(canonical).or_insert_with(|| owner.to_path_buf());
+                }
+            }
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::MetadataExt;
+            if let Ok(meta) = std::fs::metadata(&abs_path) {
+                self.by_inode.entry((meta.dev(), meta.ino())).or_insert_with(|| owner.to_path_buf());
+            }
+        }
+        if let Some(name) = abs_path.file_name().and_then(|n| n.to_str()) {
+            self.files_by_owner.entry(owner.to_path_buf()).or_default().insert(name.to_string());
+        }
+        self.by_path.entry(abs_path).or_insert_with(|| owner.to_path_buf());
+    }
+}
+
+/// Read every `RECORD` under every candidate `site-packages` directory into
+/// a [`RecordOwners`].
+///
+/// RECORD format (PEP 376 / PEP 627): CSV whose first column is a path
+/// relative to `site-packages`, with forward slashes. Entries may escape it
+/// with `../` (scripts installed to `bin/`); that form is kept. An entry
+/// naming a file that is not there is skipped. Malformed lines are tolerated.
+pub fn collect_record_owners(rootfs: &Path) -> RecordOwners {
+    let mut owners = RecordOwners::default();
+    let mut parent_cache: std::collections::HashMap<PathBuf, Option<PathBuf>> =
+        std::collections::HashMap::new();
+    let mut dist_infos: Vec<(PathBuf, PathBuf)> = Vec::new();
+    for site_packages in candidate_site_packages_roots(rootfs) {
         let Ok(read_dir) = std::fs::read_dir(&site_packages) else {
             continue;
         };
         for entry in read_dir.flatten() {
             let p = entry.path();
-            if p.extension().and_then(|s| s.to_str()) != Some("dist-info") {
-                continue;
-            }
-            let record = p.join("RECORD");
-            let Ok(content) = std::fs::read_to_string(&record) else {
-                continue;
-            };
-            for line in content.lines() {
-                // First field = path relative to site-packages.
-                let Some(rel) = line.split(',').next() else {
-                    continue;
-                };
-                let rel = rel.trim();
-                if rel.is_empty() {
-                    continue;
-                }
-                // Resolve path: site-packages + rel. Some RECORD
-                // entries use `../` to escape for shared data
-                // (`../../../bin/jq` etc.) — preserve that form.
-                let abs = site_packages.join(rel);
-                super::super::insert_claim_with_canonical_cached(
-                    claimed,
-                    #[cfg(unix)]
-                    claimed_inodes,
-                    abs,
-                    &mut parent_cache,
-                );
+            if p.extension().and_then(|s| s.to_str()) == Some("dist-info") {
+                dist_infos.push((p, site_packages.clone()));
             }
         }
     }
+    dist_infos.sort();
+    dist_infos.dedup();
+    for (dist_info, site_packages) in dist_infos {
+        let Ok(content) = std::fs::read_to_string(dist_info.join("RECORD")) else {
+            continue;
+        };
+        for line in content.lines() {
+            let Some(rel) = line.split(',').next().map(str::trim) else {
+                continue;
+            };
+            if rel.is_empty() {
+                continue;
+            }
+            let abs = site_packages.join(rel);
+            if !abs.is_file() {
+                continue;
+            }
+            owners.insert(&dist_info, abs, &mut parent_cache);
+        }
+    }
+    owners
 }
 
 /// Walk candidate `site-packages/` locations under `rootfs` and parse
@@ -447,6 +520,97 @@ mod tests {
 
     use super::super::read;
     use super::*;
+
+    /// Spec 1536 (#1567): a site-packages tree with `.dist-info`s, each
+    /// `(dir name, RECORD body)`, plus files to create (relative to
+    /// site-packages, `../` allowed).
+    fn record_tree(dist_infos: &[(&str, &str)], files: &[&str]) -> (tempfile::TempDir, PathBuf) {
+        let dir = tempfile::tempdir().unwrap();
+        let sp = dir.path().join(".venv/lib/python3.12/site-packages");
+        fs::create_dir_all(&sp).unwrap();
+        for (name, record) in dist_infos {
+            fs::create_dir_all(sp.join(name)).unwrap();
+            fs::write(sp.join(name).join("RECORD"), record).unwrap();
+        }
+        for f in files {
+            let p = sp.join(f);
+            fs::create_dir_all(p.parent().unwrap()).unwrap();
+            fs::write(&p, f.as_bytes()).unwrap();
+        }
+        (dir, sp)
+    }
+
+    #[test]
+    fn record_owners_map_each_listed_file_to_its_dist_info() {
+        let (dir, sp) = record_tree(
+            &[("waybill_fixture_a-1.0.dist-info", "waybill_fixture_a/.dylibs/libz.dylib,sha256=x,1\n")],
+            &["waybill_fixture_a/.dylibs/libz.dylib", "waybill_fixture_a/unlisted.so"],
+        );
+        let owners = collect_record_owners(dir.path());
+        let owner = sp.join("waybill_fixture_a-1.0.dist-info");
+        assert_eq!(owners.owner_of(&sp.join("waybill_fixture_a/.dylibs/libz.dylib")), Some(owner.as_path()));
+        assert_eq!(owners.owner_of(&sp.join("waybill_fixture_a/unlisted.so")), None);
+        assert!(owners.owner_lists_file_named(&owner, "libz.dylib"));
+        assert!(!owners.owner_lists_file_named(&owner, "unlisted.so"));
+    }
+
+    /// FR-010: two `RECORD`s listing one file resolve to the `.dist-info`
+    /// that sorts first, whichever is read first.
+    #[test]
+    fn record_owners_first_sorted_dist_info_wins() {
+        let rec = "shared/libshared.so,,\n";
+        let (dir, sp) = record_tree(
+            &[("waybill_fixture_b-1.0.dist-info", rec), ("waybill_fixture_a-1.0.dist-info", rec)],
+            &["shared/libshared.so"],
+        );
+        let owners = collect_record_owners(dir.path());
+        assert_eq!(
+            owners.owner_of(&sp.join("shared/libshared.so")),
+            Some(sp.join("waybill_fixture_a-1.0.dist-info").as_path())
+        );
+    }
+
+    /// pip installs scripts through `../`-relative entries; they are owned.
+    #[test]
+    fn record_owners_keep_entries_outside_the_package() {
+        let (dir, sp) = record_tree(
+            &[("waybill_fixture_a-1.0.dist-info", "../../../bin/waybill-fixture-tool,,\n")],
+            &["../../../bin/waybill-fixture-tool"],
+        );
+        let owners = collect_record_owners(dir.path());
+        assert_eq!(
+            owners.owner_of(&dir.path().join(".venv/bin/waybill-fixture-tool")),
+            Some(sp.join("waybill_fixture_a-1.0.dist-info").as_path()),
+            "the walker reaches the script by its own path, not the ../ form"
+        );
+    }
+
+    #[test]
+    fn record_owners_skip_empty_and_missing_entries() {
+        let (dir, _sp) = record_tree(
+            &[("waybill_fixture_a-1.0.dist-info", ",,\n  ,x,y\nwaybill_fixture_a/gone.so,,\n")],
+            &[],
+        );
+        let owners = collect_record_owners(dir.path());
+        assert!(owners.is_empty(), "an empty path and a missing file are both skipped");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn record_owners_match_by_canonical_path_and_by_inode() {
+        let (dir, sp) = record_tree(
+            &[("waybill_fixture_a-1.0.dist-info", "waybill_fixture_a/libz.so,,\n")],
+            &["waybill_fixture_a/libz.so"],
+        );
+        let owner = sp.join("waybill_fixture_a-1.0.dist-info");
+        // A symlinked parent: the walker's path differs from the RECORD's.
+        std::os::unix::fs::symlink(&sp, dir.path().join("sp-link")).unwrap();
+        // A hard link elsewhere: only the inode matches.
+        fs::hard_link(sp.join("waybill_fixture_a/libz.so"), dir.path().join("libz-hard.so")).unwrap();
+        let owners = collect_record_owners(dir.path());
+        assert_eq!(owners.owner_of(&dir.path().join("sp-link/waybill_fixture_a/libz.so")), Some(owner.as_path()));
+        assert_eq!(owners.owner_of(&dir.path().join("libz-hard.so")), Some(owner.as_path()));
+    }
     fn make_venv_rootfs(
         packages: &[(&str, &str, &str)],
     ) -> tempfile::TempDir {

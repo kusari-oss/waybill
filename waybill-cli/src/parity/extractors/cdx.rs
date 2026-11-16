@@ -1061,6 +1061,8 @@ cdx_anno!(c227_cdx, "waybill:embedded-path-binaries", component);
 cdx_anno!(c228_cdx, "waybill:bundled-source-trees", document);
 // Spec 1535 (#1565): C229 — declared CMake downloads, document scope.
 cdx_anno!(c229_cdx, "waybill:declared-downloads", document);
+// Spec 1536 (#1567): C230 — binaries a Python package owns, document scope.
+cdx_anno!(c230_cdx, "waybill:python-owned-binaries", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);
