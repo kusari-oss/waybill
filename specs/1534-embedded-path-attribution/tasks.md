@@ -113,7 +113,7 @@
   - the timing.
 
   Run it against `main`. Record SC-001, SC-002, SC-004 and SC-006 in `measurements/therock-full.md`.
-- [ ] T018 Open the PR. The body carries the measurements, the mutations, the gate result and the attribution line. `Closes #1532`.
+- [x] T018 Open the PR. The body carries the measurements, the mutations, the gate result and the attribution line. `Closes #1532`.
 
 ## Dependencies
 
