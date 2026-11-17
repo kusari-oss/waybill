@@ -47,6 +47,8 @@ pub fn build_document(
     // BEFORE per-package emission (clean replacement per Q2 / FR-008).
     // The downstream pick_root_iri then synthesizes a root from the
     // override values verbatim.
+    // Spec 1541: `for_document` applies the main-module drop itself.
+    let unfiltered_components = scan.components;
     let override_active = scan.root_override.is_active();
     // Issue #229: capture the dropped main-module PURLs so the
     // post-`pick_root_iri` alias step (below) can map them to the
@@ -664,9 +666,6 @@ pub fn build_document(
         .into_iter()
         .chain(m158_workspace_peer_edges.iter().cloned())
         .collect();
-    // The classifier sees exactly the graph that gets emitted.
-    let m194_classifier_relationships: Vec<waybill_common::resolution::Relationship> =
-        m158_augmented_relationships.clone();
 
     // Milestone 158 US2 — the multi-root BFS reachability pass on the
     // AUGMENTED SPDX 3 graph, feeding the two document-scope annotations.
@@ -679,14 +678,18 @@ pub fn build_document(
         .as_ref()
         .map(|s| vec![("haskell", s.hpack_unread)])
         .unwrap_or_default();
-    let m158_graph_completeness =
-        crate::generate::graph_completeness::compute_graph_completeness(
-            scan.components,
-            &m194_classifier_relationships,
-            &m158_selection,
-            &m158_target_ref,
-            &m1273_unread,
-        );
+    let m158_graph_completeness = crate::generate::graph_completeness::for_document(
+        unfiltered_components,
+        scan.relationships,
+        &crate::generate::graph_completeness::DocumentSubject {
+            root_override: &scan.root_override,
+            scan_target_coord: scan.scan_target_coord,
+            target_name: scan.target_name,
+            target_kind: scan.scan_target_kind,
+        },
+        &m1273_unread,
+    )
+    .completeness;
     let m1069_claims = crate::generate::cyclonedx::compositions::dependency_claims(
         scan.components,
         scan.complete_ecosystems,

@@ -23,16 +23,22 @@
 
 ## Phase 2: Foundational (blocks every story)
 
-- [ ] T003 Write unit tests in `waybill-cli/src/generate/graph_completeness/mod.rs`, which must fail before T004:
+- [X] T003 Write unit tests in `waybill-cli/src/generate/graph_completeness/mod.rs`, which must fail before T004:
   - for a fixture with an operator root override, a main module the override replaces, a resolve anchor and a workspace peer, `for_document`'s `reachable_set` equals what the CycloneDX builder's current preparation produces;
   - a child with `parent_purl` set to a reachable component is reachable;
   - a child of an unreachable container is not.
-- [ ] T004 Implement `graph_completeness::for_document(components, relationships, &DocumentSubject, unread)` in `waybill-cli/src/generate/graph_completeness/mod.rs` (data-model):
+- [X] T004 Implement `graph_completeness::for_document(components, relationships, &DocumentSubject, unread)` in `waybill-cli/src/generate/graph_completeness/mod.rs` (data-model):
   - move the preparation out of `waybill-cli/src/generate/cyclonedx/builder.rs`: root selection, `effective_components`, `anchor_retained_mainmod_edges`, `anchor_resolve_components` and workspace-peer edges;
   - add containment edges from `parent_purl` to each child.
 
   Make the CycloneDX builder, `waybill-cli/src/generate/spdx/document.rs` and `waybill-cli/src/generate/spdx/v3_document.rs` call it. Diff each emitter's former preparation against the extracted one first; a step one emitter had and another lacked is a finding, recorded here before it is unified.
-- [ ] T005 Make `classify_orphans_pre_emit` in `waybill-cli/src/generate/orphan_reason.rs` call `for_document`. In `waybill-cli/src/cli/scan_cmd.rs`, pass it the scan's real root override and target version (the values `ScanArtifacts` is built from), instead of `RootComponentOverride::default()` and `"0.0.0"`.
+- [X] T005 Make `classify_orphans_pre_emit` in `waybill-cli/src/generate/orphan_reason.rs` call `for_document`. In `waybill-cli/src/cli/scan_cmd.rs`, pass it the scan's real root override and target version (the values `ScanArtifacts` is built from), instead of `RootComponentOverride::default()` and `"0.0.0"`.
+
+**Done.**
+- T003's containment tests (`s1541_containment_tests`, 4) were run before the fix: the two reachability cases failed and the two direction cases passed, then all 4 passed. The first bullet (for_document equals the CDX builder's preparation) holds by construction: the CDX builder's preparation *is* `for_document` now, moved verbatim.
+- **Finding from T004's diff:** the SPDX 2.3 and SPDX 3 emitters spelled the graph root differently from CycloneDX (`pkg:generic/<name>@<version>` for a synthetic subject, `<target_name>` for an operator override, against CycloneDX's `<name>@<version>`). They now take completeness from `for_document`, and keep their own spelling only for the edges they emit. The spelling changes the reachable set only if it collides with a component PURL.
+- **The classifier** used no main-module drop, no anchoring and `RootComponentOverride::default()`. `scan_cmd` now builds the override once, for the classifier and `ScanArtifacts`.
+- Checkpoint suites green with no golden change: `cdx_regression`, `spdx_regression`, `spdx3_regression` 11 each, `graph_completeness_operator_root` 4, `orphan_reason_expand` 4, `file_tier_orphan_emit` 5, `cmake_fetch_wrappers` 48, `cmake_nested_fetches` 22, `declared_requirements` 18; unit suites around the change 112.
 
 **Checkpoint:** T003 passes. `cdx_regression`, `spdx_regression`, `spdx3_regression`, `cmake_fetch_wrappers`, `cmake_nested_fetches` and `declared_requirements` pass. A changed golden is traced before it is regenerated.
 

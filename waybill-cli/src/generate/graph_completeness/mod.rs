@@ -26,6 +26,7 @@ use waybill_common::resolution::{
 use crate::generate::root_selector::{ResolvedRootSubject, RootSelectionResult};
 
 pub mod bfs;
+pub mod document;
 pub mod reason_codes;
 #[cfg(test)]
 // `pub(crate)` since #1209: `resolve::scope_propagation`'s tests build
@@ -34,6 +35,7 @@ pub mod reason_codes;
 // nothing reaches the shipped binary.
 pub(crate) mod test_support;
 
+pub use document::{for_document, DocumentSubject};
 pub use reason_codes::{join_reason_codes, ReasonCode};
 
 /// The three-valued completeness domain per FR-006. Serialized as
@@ -236,6 +238,19 @@ pub fn compute_graph_completeness(
         );
         if !targets.is_empty() {
             edges.insert(target_ref.to_string(), targets.into_iter().collect());
+        }
+    }
+
+    // Spec 1541 (#1593), FR-003: a nested component is reached through its
+    // container. CycloneDX nests it and SPDX says CONTAINS; neither is a
+    // dependency edge, so without this every bundled library under a
+    // reachable binary counted as an orphan (644 on a ROCm SDK).
+    for c in components {
+        if let Some(parent) = &c.parent_purl {
+            edges
+                .entry(parent.clone())
+                .or_default()
+                .push(c.purl.as_str().to_string());
         }
     }
 
@@ -1079,5 +1094,67 @@ mod s1537_root_edges_tests {
             let got = grade(&comps, &rels, &anchors).reachable_set;
             assert_eq!(got, want);
         }
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1541_containment_tests {
+    use super::*;
+    use crate::generate::graph_completeness::test_support::{
+        mk_component, mk_rel, selection_with_operator_override,
+    };
+
+    const ROOT: &str = "pkg:generic/waybill-fixture-root@1";
+    const BIN: &str = "pkg:generic/waybill-fixture-bin@1";
+    const LIB: &str = "pkg:generic/waybill-fixture-bundled@2";
+    const LOOSE: &str = "pkg:generic/waybill-fixture-loose@3";
+    const INNER: &str = "pkg:generic/waybill-fixture-inner@4";
+
+    fn nested(purl: &str, parent: &str) -> ResolvedComponent {
+        let mut c = mk_component(purl);
+        c.parent_purl = Some(parent.to_string());
+        c
+    }
+
+    fn grade(components: &[ResolvedComponent], rels: &[Relationship]) -> GraphCompletenessResult {
+        compute_graph_completeness(components, rels, &selection_with_operator_override(), ROOT, &[])
+    }
+
+    /// FR-003: a component nested in a reachable container is reachable.
+    #[test]
+    fn a_child_of_a_reachable_container_is_reachable() {
+        let comps = vec![mk_component(BIN), nested(LIB, BIN)];
+        let r = grade(&comps, &[mk_rel(ROOT, BIN)]);
+        assert!(r.reachable_set.contains(LIB), "{:?}", r.reachable_set);
+        assert_eq!(r.orphan_count, 0, "{:?}", r.reason_codes);
+    }
+
+    /// Containment chains: a component nested two deep is reached through both.
+    #[test]
+    fn containment_is_transitive() {
+        let comps = vec![mk_component(BIN), nested(LIB, BIN), nested(INNER, LIB)];
+        let r = grade(&comps, &[mk_rel(ROOT, BIN)]);
+        assert!(r.reachable_set.contains(INNER));
+    }
+
+    /// A child of an unreachable container stays unreachable.
+    #[test]
+    fn a_child_of_an_unreachable_container_is_not_reachable() {
+        let comps = vec![mk_component(BIN), mk_component(LOOSE), nested(LIB, LOOSE)];
+        let r = grade(&comps, &[mk_rel(ROOT, BIN)]);
+        assert!(!r.reachable_set.contains(LOOSE));
+        assert!(!r.reachable_set.contains(LIB));
+        assert_eq!(r.orphan_count, 2);
+    }
+
+    /// Containment runs container to child only: a reachable child does not
+    /// make its container reachable.
+    #[test]
+    fn a_reachable_child_does_not_reach_its_container() {
+        let comps = vec![mk_component(LOOSE), nested(LIB, LOOSE)];
+        let r = grade(&comps, &[mk_rel(ROOT, LIB)]);
+        assert!(r.reachable_set.contains(LIB));
+        assert!(!r.reachable_set.contains(LOOSE));
     }
 }

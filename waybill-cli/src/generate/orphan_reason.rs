@@ -36,10 +36,6 @@ use std::collections::{HashMap, HashSet};
 
 use waybill_common::resolution::{Relationship, ResolvedComponent};
 
-use crate::generate::graph_completeness::{
-    build_workspace_peer_edges, compute_graph_completeness,
-};
-use crate::generate::root_selector::{select_root, ResolvedRootSubject};
 use crate::generate::RootComponentOverride;
 use crate::scan_fs::package_db::maven::ScanTargetCoord;
 
@@ -723,54 +719,21 @@ pub fn classify_orphans_pre_emit(
     target_name: &str,
     target_kind: crate::generate::root_selector::ScanTargetKind,
 ) -> OrphanReasonCounts {
-    // Mirror the CDX builder's target-version placeholder (`"0.0.0"`).
-    // The graph-completeness pass uses `target_ref` as a fallback seed
-    // when no main-module component is present; when a main-module IS
-    // present, its PURL is the primary seed and this placeholder is
-    // ignored. Format-specific target-ref shapes (SPDX IRIs vs CDX
-    // PURLs) don't influence orphan classification because reachability
-    // is over PURL keys.
-    let target_version = "0.0.0";
-
-    let selection = select_root(
+    // Spec 1541 (#1593): the reachable set every emitter computes, from the
+    // same preparation and the scan's own root override. The unread-manifest
+    // list only changes reason codes, never the reachable set.
+    let gc = crate::generate::graph_completeness::for_document(
         components,
-        root_override,
-        scan_target_coord,
-        target_name,
-        target_version,
-        target_kind,
-    );
-
-    // Mirror the CDX builder's target_ref derivation (`builder.rs:430`):
-    // main-module PURL wins; else `<name>@<version>` fallback.
-    let target_ref: String = match &selection.subject {
-        ResolvedRootSubject::MainModule(idx) => components
-            .get(*idx)
-            .map(|c| c.purl.as_str().to_string())
-            .unwrap_or_else(|| format!("{target_name}@{target_version}")),
-        _ => format!("{target_name}@{target_version}"),
-    };
-
-    let peer_edges = build_workspace_peer_edges(&selection, components);
-    let augmented: Vec<Relationship> = relationships
-        .iter()
-        .cloned()
-        .chain(peer_edges)
-        .collect();
-
-    // Milestone 1273 FR-005 — `&[]` deliberately. This call exists for its
-    // `reachable_set`, which orphan classification needs; its reason codes are
-    // discarded and never reach a document. The published completeness verdict
-    // is computed by the three emitters, which do pass the unread-manifest
-    // facts. Passing them here too would change nothing and would imply this
-    // result is the one consumers see.
-    let gc = compute_graph_completeness(
-        components,
-        &augmented,
-        &selection,
-        &target_ref,
+        relationships,
+        &crate::generate::graph_completeness::DocumentSubject {
+            root_override,
+            scan_target_coord,
+            target_name,
+            target_kind,
+        },
         &[],
-    );
+    )
+    .completeness;
 
     let counts = classify_orphans(components, &gc.reachable_set);
 
