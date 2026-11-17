@@ -47,14 +47,19 @@
 **Goal:** the classifier, the document and I7 see one unreachable set, including for nested components, in three formats.
 **Independent test:** O-1, O-2, O-8, O-9, with I-A and I-B on every case.
 
-- [ ] T006 [US2] Create `waybill-cli/tests/orphan_explanations.rs`, using the `tests/common/cmake_fetch.rs` helpers where they fit:
+- [X] T006 [US2] Create `waybill-cli/tests/orphan_explanations.rs`, using the `tests/common/cmake_fetch.rs` helpers where they fit:
   - **Cases:** O-1, O-2, O-8 and O-9 (`contracts/wire.md`).
   - **I-A:** assert it with the corpus harness's own `cdx_reachable` and `orphan_explained::is_explained`, reached through the harness path module, never a re-derived walk: no reachable component carries C45; every unreachable one carries an I7 marker; the completeness count equals the I7 population.
   - **I-B:** the formats agree.
 
   Run against `main`'s code (before T004/T005) and record which fail.
-- [ ] T007 [US2] Extend the I7 check in `waybill-cli/tests/corpus_harness_195/invariants/checks/orphan_explained.rs`: walk nested `components[]`, and treat a component as reachable when its container is. Add unit tests beside the existing ones: a nested child of a reachable container is not an offender; a nested child of an unreachable container is, unless explained.
-- [ ] T008 [US2] Fix whatever T006 shows still failing after T004–T007. Record each fix and its cause in this task's text.
+- [X] T007 [US2] Extend the I7 check in `waybill-cli/tests/corpus_harness_195/invariants/checks/orphan_explained.rs`: walk nested `components[]`, and treat a component as reachable when its container is. Add unit tests beside the existing ones: a nested child of a reachable container is not an offender; a nested child of an unreachable container is, unless explained.
+- [X] T008 [US2] Fix whatever T006 shows still failing after T004–T007. Record each fix and its cause in this task's text.
+  - **TheRock's cause, traced** (source-trace "the classifier"): the scan's log shows the classifier assigned **0** codes of every kind while the document reported 846 unreachable. Without the operator root, the classifier rooted the graph at a placeholder with no outgoing edges, which opens the root fallback (spec 1537) and attaches every graph-top, so nearly everything counted reachable. With `--root-name`, the dropped main modules' edges are anchored to the root and the fallback stays closed. O-1 reproduces this shape: two npm projects and an unreferenced lock entry, scanned with `--root-name`.
+  - **O-1 can fail:** with the classifier given `RootComponentOverride::default()` again, O-1 fails ("the stray carries C45") and O-2 passes. With the fix, O-1, O-2 and O-8 pass.
+  - **O-9** first failed its own control: an *unowned* binary's identified zlib is emitted top-level, not nested. Nesting needs an owner, so O-9 now uses an installed package, unreachable behind an npm project whose edges close the fallback. Its controls hold. It fails only on "zlib carries C45", which is US1's binary code (T010).
+  - **T007:** I7 now walks nested components, and treats containment as reachability (`reachable_with_containment`). With the check reverted to top-level only, 2 of the 3 new harness tests fail. The committed goldens move no cell (`public_corpus`: 140 passed).
+  - `orphan_explanations.rs` includes the corpus harness by `#[path]`, so I-A uses its predicates and not a copy. The harness's own unit tests run in this binary too (135 in all).
 
 ## Phase 4: User Story 1 — every unreachable component on TheRock says why (P1) 🎯 MVP with US2
 
