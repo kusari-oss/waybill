@@ -60,6 +60,9 @@ M = {
             && !include_test_binaries;""",
              "        let skip_test_inputs = installed_tree == test_scope::InstalledTree::NotRecognised && !include_test_binaries;")],
  "M19": [(D, "                if is_under_test_input_dir(&rel) && !installed {", "                if is_under_test_input_dir(&rel) {")],
+ # M20 (FR-002): reachability keyed by PURL again, so a top-level copy of a
+ # nested PURL counts as reached (ROCm SDK `gotcha`).
+ "M20": [(G, '        Some(parent) => format!("{}#{parent}", c.purl.as_str()),', '        Some(_parent) => c.purl.as_str().to_string(),')],
 }
 
 repo, arg = sys.argv[1], sys.argv[2]

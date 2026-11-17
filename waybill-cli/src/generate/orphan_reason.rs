@@ -405,14 +405,17 @@ pub fn classify_orphans(
     // index spans every ecosystem — which mechanism B needs, and which is
     // also why the `dead-lockfile-entry` arm below cannot rely on "has a
     // reachable sibling" alone. See the comment on that arm.
-    let mut by_name: HashMap<(String, String), Vec<String>> = HashMap::new();
+    let mut by_name: HashMap<(String, String), Vec<(String, String)>> = HashMap::new();
     for c in components.iter() {
         let ecosystem = c.purl.ecosystem();
         let key = (
             ecosystem.to_string(),
             versionless_identity(c.purl.as_str()).to_string(),
         );
-        by_name.entry(key).or_default().push(c.purl.as_str().to_string());
+        by_name
+            .entry(key)
+            .or_default()
+            .push((c.purl.as_str().to_string(), crate::generate::graph_completeness::node_key(c)));
     }
 
     // Feature 1218 — the ecosystems that have at least one component
@@ -423,7 +426,7 @@ pub fn classify_orphans(
     // Computed once here rather than per-component, so the arm stays O(1).
     let ecosystems_with_reachable: HashSet<String> = components
         .iter()
-        .filter(|c| reachable_set.contains(c.purl.as_str()))
+        .filter(|c| reachable_set.contains(&crate::generate::graph_completeness::node_key(c)))
         .map(|c| c.purl.ecosystem().to_string())
         .collect();
 
@@ -437,7 +440,7 @@ pub fn classify_orphans(
         let purl_str = c.purl.as_str().to_string();
 
         // 2a. Non-orphan (reachable via BFS) → skip.
-        if reachable_set.contains(&purl_str) {
+        if reachable_set.contains(&crate::generate::graph_completeness::node_key(c)) {
             continue;
         }
 
@@ -570,7 +573,7 @@ pub fn classify_orphans(
             .map(|siblings| {
                 siblings
                     .iter()
-                    .any(|s| s != &purl_str && reachable_set.contains(s))
+                    .any(|(p, k)| p != &purl_str && reachable_set.contains(k))
             })
             .unwrap_or(false);
 

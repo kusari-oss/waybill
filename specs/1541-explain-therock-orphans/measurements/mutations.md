@@ -2,7 +2,7 @@
 
 `measurements/mutate.py` applies one named mutation; `mutate-run.sh` applies each, runs the unit tests (`s1541`, `uv_lock`, `graph_completeness`, `orphan_reason`, `discover`) and the `orphan_explanations` and `public_corpus` targets, records the failing tests, and restores every touched file with `cp`. Every file was clean against the commit afterwards.
 
-**19 of 19 caught.** No mutation caused a compile error: the `error:` lines in the logs are cargo's per-target failure summaries (0 `error[` lines across all logs).
+**19 of 19 caught** in the first run. M20 was added after the SDK trace found `gotcha`, and was run by hand: it fails `a_top_level_copy_of_a_nested_purl_is_not_reached_through_containment`. 20 of 20 caught. No mutation caused a compile error: the `error:` lines in the logs are cargo's per-target failure summaries (0 `error[` lines across all logs).
 
 | # | mutation | failing tests | caught by |
 |---|---|---|---|
@@ -25,3 +25,4 @@
 | M17 | C151 not emitted on the versionless project | 1 | `s1541_a_versionless_editable_project_is_emitted` |
 | M18 | #1524 skip back to the whole-tree rule (FR-011) | 1 | `o14_a_vendored_sdk_does_not_unskip_the_trees_test_inputs` |
 | M19 | installed prefix ignored in the per-binary skip | 2 | `o14_a_vendored_sdk_does_not_unskip_the_trees_test_inputs`, `s1541_only_test_inputs_under_an_installed_prefix_are_kept` |
+| M20 | reachability keyed by PURL again (top-level copy of a nested PURL counts as reached) | 1 | `a_top_level_copy_of_a_nested_purl_is_not_reached_through_containment` |

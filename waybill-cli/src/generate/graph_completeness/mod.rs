@@ -152,6 +152,61 @@ impl GraphCompletenessResult {
 /// rather than an omission.
 pub type UnreadManifests<'a> = &'a [(&'a str, usize)];
 
+/// Spec 1541 (#1593): the key a component is reached by. A top-level
+/// component is its PURL. A nested one is `<purl>#<container purl>`, the
+/// shape of its CycloneDX `bom-ref`, because one PURL can be nested in
+/// several binaries and reported at the top level as well (`gotcha` on a
+/// ROCm SDK: two nested copies and one top-level copy nothing depends on).
+/// Keyed by PURL alone, reaching a nested copy made the top-level one count
+/// as reachable while the document's own graph could not reach it.
+pub fn node_key(c: &ResolvedComponent) -> String {
+    match &c.parent_purl {
+        Some(parent) => format!("{}#{parent}", c.purl.as_str()),
+        None => c.purl.as_str().to_string(),
+    }
+}
+
+/// Spec 1541 (#1593), FR-003: a nested component is reached through its
+/// container. CycloneDX nests it and SPDX says CONTAINS; neither is a
+/// dependency edge, so without this every bundled library under a reachable
+/// binary counted as an orphan (644 on a ROCm SDK).
+///
+/// - Each container (every component carrying the parent PURL) reaches the
+///   child's [`node_key`].
+/// - A nested child's own dependency edges, keyed by its PURL, leave its
+///   node key too.
+/// - A PURL that exists only nested resolves a dependency edge to its nested
+///   copies, as before this module keyed by node.
+fn add_containment_edges(
+    components: &[ResolvedComponent],
+    edges: &mut std::collections::HashMap<String, Vec<String>>,
+) {
+    use std::collections::HashMap;
+    let mut keys_by_purl: HashMap<&str, Vec<String>> = HashMap::new();
+    for c in components {
+        keys_by_purl.entry(c.purl.as_str()).or_default().push(node_key(c));
+    }
+    let top_level: HashSet<&str> = components
+        .iter()
+        .filter(|c| c.parent_purl.is_none())
+        .map(|c| c.purl.as_str())
+        .collect();
+    for c in components {
+        let Some(parent) = &c.parent_purl else { continue };
+        let child = node_key(c);
+        let containers = keys_by_purl.get(parent.as_str()).cloned().unwrap_or_else(|| vec![parent.clone()]);
+        for container in containers {
+            edges.entry(container).or_default().push(child.clone());
+        }
+        if let Some(own) = edges.get(c.purl.as_str()).cloned() {
+            edges.entry(child.clone()).or_default().extend(own);
+        }
+        if !top_level.contains(c.purl.as_str()) {
+            edges.entry(c.purl.as_str().to_string()).or_default().push(child);
+        }
+    }
+}
+
 pub fn compute_graph_completeness(
     components: &[ResolvedComponent],
     relationships: &[Relationship],
@@ -241,18 +296,7 @@ pub fn compute_graph_completeness(
         }
     }
 
-    // Spec 1541 (#1593), FR-003: a nested component is reached through its
-    // container. CycloneDX nests it and SPDX says CONTAINS; neither is a
-    // dependency edge, so without this every bundled library under a
-    // reachable binary counted as an orphan (644 on a ROCm SDK).
-    for c in components {
-        if let Some(parent) = &c.parent_purl {
-            edges
-                .entry(parent.clone())
-                .or_default()
-                .push(c.purl.as_str().to_string());
-        }
-    }
+    add_containment_edges(components, &mut edges);
 
     let visited = bfs::multi_source_bfs(&root_set.roots, &edges);
 
@@ -260,10 +304,7 @@ pub fn compute_graph_completeness(
     // A component "counts" toward reachability only if it appears in
     // the emitted `components[]` (not the edge closure). Compute the
     // component-key set once for the intersection.
-    let component_keys: HashSet<String> = components
-        .iter()
-        .map(|c| c.purl.as_str().to_string())
-        .collect();
+    let component_keys: HashSet<String> = components.iter().map(node_key).collect();
     // Milestone 167 (T002): materialize the reachable-set (intersected
     // with emitted component PURL keys) so the orphan-reason classifier
     // can key on it without recomputing BFS. `reachable_component_count`
@@ -294,7 +335,7 @@ pub fn compute_graph_completeness(
         // component in ecos_without_root.
         let mut q3_ecosystems: Vec<String> = components
             .iter()
-            .filter(|c| !visited.contains(c.purl.as_str()))
+            .filter(|c| !visited.contains(&node_key(c)))
             .map(|c| c.purl.ecosystem().to_string())
             .filter(|eco| ecos_without_root.contains(eco))
             .collect::<HashSet<_>>()
@@ -311,7 +352,7 @@ pub fn compute_graph_completeness(
         // reachable. Q2 `orphaned-components-detected`.
         let residual_orphan_count = components
             .iter()
-            .filter(|c| !visited.contains(c.purl.as_str()))
+            .filter(|c| !visited.contains(&node_key(c)))
             .filter(|c| !ecos_without_root.contains(c.purl.ecosystem()))
             .count();
         if residual_orphan_count > 0 {
@@ -1126,7 +1167,7 @@ mod s1541_containment_tests {
     fn a_child_of_a_reachable_container_is_reachable() {
         let comps = vec![mk_component(BIN), nested(LIB, BIN)];
         let r = grade(&comps, &[mk_rel(ROOT, BIN)]);
-        assert!(r.reachable_set.contains(LIB), "{:?}", r.reachable_set);
+        assert!(r.reachable_set.contains(&node_key(&nested(LIB, BIN))), "{:?}", r.reachable_set);
         assert_eq!(r.orphan_count, 0, "{:?}", r.reason_codes);
     }
 
@@ -1135,7 +1176,7 @@ mod s1541_containment_tests {
     fn containment_is_transitive() {
         let comps = vec![mk_component(BIN), nested(LIB, BIN), nested(INNER, LIB)];
         let r = grade(&comps, &[mk_rel(ROOT, BIN)]);
-        assert!(r.reachable_set.contains(INNER));
+        assert!(r.reachable_set.contains(&node_key(&nested(INNER, LIB))));
     }
 
     /// A child of an unreachable container stays unreachable.
@@ -1144,7 +1185,7 @@ mod s1541_containment_tests {
         let comps = vec![mk_component(BIN), mk_component(LOOSE), nested(LIB, LOOSE)];
         let r = grade(&comps, &[mk_rel(ROOT, BIN)]);
         assert!(!r.reachable_set.contains(LOOSE));
-        assert!(!r.reachable_set.contains(LIB));
+        assert!(!r.reachable_set.contains(&node_key(&nested(LIB, LOOSE))));
         assert_eq!(r.orphan_count, 2);
     }
 
@@ -1154,7 +1195,28 @@ mod s1541_containment_tests {
     fn a_reachable_child_does_not_reach_its_container() {
         let comps = vec![mk_component(LOOSE), nested(LIB, LOOSE)];
         let r = grade(&comps, &[mk_rel(ROOT, LIB)]);
-        assert!(r.reachable_set.contains(LIB));
+        assert!(r.reachable_set.contains(&node_key(&nested(LIB, LOOSE))), "a nested-only PURL resolves a dependency edge");
         assert!(!r.reachable_set.contains(LOOSE));
+    }
+
+    /// ROCm SDK's `gotcha`: one PURL nested in a reachable binary and also
+    /// reported at the top level, where nothing depends on it. The nested copy
+    /// is reachable; the top-level copy is not.
+    #[test]
+    fn a_top_level_copy_of_a_nested_purl_is_not_reached_through_containment() {
+        let comps = vec![mk_component(BIN), nested(LIB, BIN), mk_component(LIB)];
+        let r = grade(&comps, &[mk_rel(ROOT, BIN)]);
+        assert!(r.reachable_set.contains(&node_key(&nested(LIB, BIN))));
+        assert!(!r.reachable_set.contains(LIB), "{:?}", r.reachable_set);
+        assert_eq!(r.orphan_count, 1);
+    }
+
+    /// A nested component's own dependencies are reached through it.
+    #[test]
+    fn a_nested_components_dependencies_are_reached() {
+        let comps = vec![mk_component(BIN), nested(LIB, BIN), mk_component(LOOSE)];
+        let r = grade(&comps, &[mk_rel(ROOT, BIN), mk_rel(LIB, LOOSE)]);
+        assert!(r.reachable_set.contains(LOOSE), "{:?}", r.reachable_set);
+        assert_eq!(r.orphan_count, 0);
     }
 }

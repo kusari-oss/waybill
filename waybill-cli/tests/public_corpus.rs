@@ -650,16 +650,19 @@ mod issue_1286_log_contract {
 }
 
 /// Spec 1541 FR-001 probe: the I7 population of a document a CI run
-/// produced, measured with the corpus harness's own I7 check and predicate,
+/// produced, measured with the corpus harness's own I7 functions (nested
+/// components included, containment as reachability, since T007),
 /// so nothing here re-derives reachability. Ignored; run with
 /// `WAYBILL_I7_PROBE_DOC=<cdx.json> cargo test --test public_corpus
 /// probe_i7_on_document -- --ignored --nocapture`.
 #[test]
 #[ignore]
 fn probe_i7_on_document() {
-    use corpus_harness_195::invariants::checks::orphan_explained::is_explained;
+    use corpus_harness_195::invariants::checks::orphan_explained::{
+        cdx_components_with_containers, is_explained, reachable_with_containment,
+    };
     use corpus_harness_195::invariants::checks::{
-        cdx_component_ref, cdx_components, cdx_doc_prop, cdx_prop, cdx_reachable, cdx_subject_ref,
+        cdx_component_ref, cdx_components, cdx_doc_prop, cdx_prop, cdx_subject_ref,
     };
     use std::collections::BTreeMap;
     let Ok(path) = std::env::var("WAYBILL_I7_PROBE_DOC") else { return };
@@ -672,11 +675,11 @@ fn probe_i7_on_document() {
         stack.extend(c["components"].as_array().into_iter().flatten());
     }
     let root = cdx_subject_ref(&cdx).unwrap_or_default().to_string();
-    let reachable = cdx_reachable(&cdx);
+    let reachable = reachable_with_containment(&cdx);
     let mut unreachable = 0usize;
     let mut by_kind: BTreeMap<String, usize> = BTreeMap::new();
     let mut explained_by: BTreeMap<String, usize> = BTreeMap::new();
-    for c in top {
+    for (c, _) in cdx_components_with_containers(&cdx) {
         let Some(r) = cdx_component_ref(c) else { continue };
         if r == root || reachable.contains(r) {
             continue;
@@ -704,16 +707,14 @@ fn probe_i7_on_document() {
             cdx_prop(c, "waybill:sbom-tier").unwrap_or("-"),
             cdx_prop(c, "waybill:source-mechanism").unwrap_or("-"),
         );
-        if cdx_prop(c, "waybill:sbom-tier") != Some("analyzed") {
-            println!("UNEXPLAINED {} files={}", c["purl"].as_str().unwrap_or("-"), files);
-        }
+        println!("UNEXPLAINED {} files={}", c["purl"].as_str().unwrap_or("-"), files);
         *by_kind.entry(key).or_default() += 1;
     }
     println!("document: {path}");
     println!("graph-completeness: {:?}", cdx_doc_prop(&cdx, "waybill:graph-completeness"));
     println!("graph-completeness-reason: {:?}", cdx_doc_prop(&cdx, "waybill:graph-completeness-reason"));
     println!("top-level components: {}, nested: {nested}", top.len());
-    println!("I7 unreachable (top-level, single root over dependencies[]): {unreachable}");
+    println!("I7 unreachable (all components, dependency edges and containment): {unreachable}");
     println!("I7 explained: {}", explained_by.values().sum::<usize>());
     for (k, n) in &explained_by {
         println!("  {n:5}  {k}");
