@@ -26,8 +26,8 @@ Each case is a synthetic `waybill-fixture-*` tree, scanned with `--offline` and 
 | D-15 | DP; a project function `add_dep(name)` that calls `download_project(PROJ ${name} ${ARGN})`; called with a GitHub repository | DP(`["add_dep","download_project"]`): a spec 1539 wrapper of it |
 | D-16 | DP; two calls of one repository and tag in sibling directories | one component (one per PURL), with both files in C18 |
 | D-17 | DP; a call with a URL given twice | the first URL's component (probe D6) |
-| D-19 | DP defined in `cmake/DownloadProject.cmake`, never called, and no other fetch in the tree | no fetch component; C231 absent (spec 1538 I-4): a recognised definition is not a declaration |
 | D-18 | spec 1539 wrapper whose `cmake_parse_arguments` keyword lists are variables (`set(one URL NAME)`, `"${one}"`) | binds with the resolved keywords: `URL` is consumed and re-passed as spec 1539 binds it |
+| D-19 | DP defined in `cmake/DownloadProject.cmake`, never called, and no other fetch in the tree | no fetch component; C231 absent (spec 1538 I-4): a recognised definition is not a declaration |
 
 Spec 1538's C-1 to C-15 and spec 1539's W-1 to W-26 still hold, unchanged.
 
