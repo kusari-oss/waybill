@@ -458,4 +458,21 @@ mod tests {
         assert_eq!(v["read"], 4);
         assert_eq!(v["merged"]["first-declaration-wins"], 1);
     }
+
+    #[test]
+    fn commented_out_declarations_are_not_read() {
+        let dir = tempfile::tempdir().unwrap();
+        let f = dir.path().join("CMakeLists.txt");
+        std::fs::write(
+            &f,
+            "# FetchContent_Declare(waybill-fixture-a URL https://example.invalid/a-1.0.tar.gz)\n\
+             #[[ FetchContent_Declare(waybill-fixture-b URL https://example.invalid/b-1.0.tar.gz) ]]\n\
+             FetchContent_Declare(waybill-fixture-c URL https://example.invalid/c-1.0.tar.gz)\n",
+        )
+        .unwrap();
+        let (entries, cov) = read_fetches(dir.path(), &[f]);
+        assert_eq!(cov.read, 1, "only the live declaration is read");
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "waybill-fixture-c");
+    }
 }

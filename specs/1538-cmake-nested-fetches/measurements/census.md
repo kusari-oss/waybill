@@ -64,6 +64,8 @@ By top directory: `rocm-libraries/projects` 111, `rocm-systems/projects` 33, `ro
 
 ## Nested find_package (SC-008)
 
+Filed as #1591.
+
 These calls are outside today's file set, so this feature does not read them. The counts go to the follow-up issue.
 
 | | count |

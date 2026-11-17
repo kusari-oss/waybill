@@ -150,7 +150,7 @@
   - **SC-004:** no two fetch-derived components share a PURL. List every versionless identity on more than one component, and confirm each comes only from sibling declarations.
   - **SC-006:** the branch's median of 3 is at most 1.5× `main`'s, in the same job.
   - **Ownership:** the components' owners, by submodule.
-- [ ] T024 [US4] File the SC-008 follow-up issue: nested `find_package` 2,030, `pkg_check_modules` 42, `pkg_search_module` 3 (`measurements/census.md`). Ask whether to read them and how fallbacks would apply. Link it from `measurements/census.md`.
+- [X] T024 [US4] File the SC-008 follow-up issue: nested `find_package` 2,030, `pkg_check_modules` 42, `pkg_search_module` 3 (`measurements/census.md`). Ask whether to read them and how fallbacks would apply. Link it from `measurements/census.md`.
 
 ## Phase 7: Polish and cross-cutting
 
