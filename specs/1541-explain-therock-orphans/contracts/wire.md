@@ -1,7 +1,7 @@
 # Contract: reachability and orphan markers
 
 Synthetic `waybill-fixture-*` trees, scanned in the three formats. "Reachable" means by the one `for_document` answer. Every case also checks:
-Every case also checks:
+
 - **I-A:** no reachable component carries C45; every unreachable component carries an I7 marker or is a declared defect; and the count in the document's completeness reason equals the I7 population, counting nested components with containment;
 - **I-B:** the three formats agree.
 
