@@ -164,6 +164,7 @@
   - **Accounting:** C231 `unresolved` not counted, which must break V1.
 
   Each mutation must fail a test. Record the results in `measurements/mutations.md`.
+- [X] T025b A parameterised name is unresolved only when the identity depends on it (C-13b). Found by T026's quality corpus: pytorch's `ExternalProject_Add(${dlfcn-win32_external} GIT_REPOSITORY https://github.com/dlfcn-win32/dlfcn-win32.git …)` and the xz one, emitted by v0.17.0, were dropped. Mutations M22 and M23.
 - [ ] T026 Corpora in CI.
   - **Public corpus:** compare mode at the branch. It is expected **byte-identical** (R12), and any change stops the work until it is explained.
   - **Quality corpus** at the branch. Trace any `cpp-mongo` movement edge by edge against `main`, and re-author `xtask/corpus/quality-corpus.toml` with dated causes.

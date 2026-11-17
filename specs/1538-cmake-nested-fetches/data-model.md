@@ -32,7 +32,7 @@ An unbalanced `end*` is ignored, and a file that ends with open blocks is not an
 | Field | Type | Meaning |
 |---|---|---|
 | `kind` | `FetchContent \| ExternalProject` | |
-| `name` | `String` | First argument. Unresolvable if it contains `${…}` with no same-file literal `set()`. |
+| `name` | `String` | First argument, expanded with same-file literal `set()`s. A name still containing `${…}` is unresolvable only when the identity depends on it: a GitHub `GIT_REPOSITORY` names the package by itself, and the component takes that name (C-13b). An unexpanded name never matches under R5. |
 | `file` | `PathBuf` | Relative to the scan root. |
 | `conditions` | `Vec<String>` | Enclosing `if` conditions outermost first, plus `function: <name>`. Becomes C232. |
 | `shape` | `Option<FallbackShape>` | The first applicable shape (R2 order). `None` means unconditional. |

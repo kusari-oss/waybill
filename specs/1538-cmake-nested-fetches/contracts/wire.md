@@ -25,6 +25,7 @@ Each case is a synthetic `waybill-fixture-*` tree, scanned with `--offline` and 
 | C-12d | root fetches R at v1, `mid/` fetches R at v2, `mid/leaf/` fetches R guarded at v3 (different names) | v3 merges into `mid/`'s v2 (nearest enclosing supplier). C233 on v2 only. |
 | C-12e | the root file fetches R at v1 and at v2; `sub/` fetches R guarded at v3 | v3 stays its own component: a tie at the nearest depth merges nothing |
 | C-13 | inside `function(wf_fetch)`: a literal-URL declaration, and one named `${name}` | literal: Optional(`cmake-function-body`), C232 = `["function: wf_fetch"]`. Parameterised: not emitted, C231 `unresolved.identity` = 1. |
+| C-13b | inside a function, `ExternalProject_Add(${dep} GIT_REPOSITORY https://github.com/<o>/<r>.git GIT_TAG v1.2)` | emitted as `pkg:github/<o>/<r>@v1.2`, named `<r>`, Optional(`cmake-function-body`); `unresolved.identity` = 0. Found by the quality corpus: v0.17.0 emitted two such pytorch components, and the first implementation dropped them. |
 | C-14 | a fetch inside submodule `third_party/x`'s tree, and one in a plain directory | first: an edge from the submodule. Second: a root edge. I-1 holds. |
 | C-15 | C-1's tree plus `vendor-x/CMakeLists.txt` with a fetch, scanned with `--exclude-path vendor-x`; and a fetch under a directory the walker always skips (`node_modules/`) | neither is read or counted. FR-001's skip and exclusion rules apply to the widened walk. |
 

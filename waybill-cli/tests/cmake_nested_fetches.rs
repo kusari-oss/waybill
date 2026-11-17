@@ -529,3 +529,23 @@ fn c12e_a_tie_between_suppliers_merges_nothing() {
     assert_optional(the(&docs, "pkg:generic/waybill-fixture-rr-c@v3"), "cmake-not-target");
     assert_eq!(n(&coverage(&docs).unwrap(), &["merged", "existing-component"]), 0);
 }
+
+/// C-13b: a parameterised name does not make a fetch unresolved when the
+/// identity does not depend on it. A GitHub `GIT_REPOSITORY` names the
+/// package, and the component takes that name, not the variable.
+#[test]
+fn c13b_a_parameterised_name_with_a_github_repository_is_emitted() {
+    let fx = tree(&[(
+        "CMakeLists.txt",
+        &format!(
+            "{ROOT}function(wf_deps dep_target)\nExternalProject_Add(${{dep_target}} GIT_REPOSITORY https://github.com/waybill-fixture/waybill-fixture-gh.git GIT_TAG v1.2)\nendfunction()\n"
+        ),
+    )]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    let c = the(&docs, "pkg:github/waybill-fixture/waybill-fixture-gh@v1.2");
+    assert_eq!(c["name"], "waybill-fixture-gh", "{c}");
+    assert_optional(c, "cmake-function-body");
+    let cov = coverage(&docs).unwrap();
+    assert_eq!(n(&cov, &["emitted"]), 1, "{cov}");
+    assert_eq!(n(&cov, &["unresolved", "identity"]), 0, "{cov}");
+}

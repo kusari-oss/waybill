@@ -163,10 +163,22 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
             cov.read += 1;
             let raw_name = args.first().cloned().unwrap_or_default();
             let decl_name = super::expand_known_vars(&raw_name, &vars);
-            let entry = if decl_name.is_empty() || decl_name.contains("${") || decl_name.contains("$<") {
+            // A name the reader cannot expand is unresolved only when the
+            // identity depends on it: a GitHub `GIT_REPOSITORY` names the
+            // package by itself, and the component takes that name.
+            let unexpanded = |s: &str| s.contains("${") || s.contains("$<") || s.contains("%24");
+            let name_unexpanded = unexpanded(&decl_name);
+            let entry = if decl_name.is_empty() {
                 None
             } else {
                 super::fetch_entry(&decl_name, &args[1..].join(" "), &source_path, rule, &vars)
+                    .filter(|e| !unexpanded(e.purl.as_str()))
+                    .map(|mut e| {
+                        if name_unexpanded {
+                            e.name = e.purl.name().to_string();
+                        }
+                        e
+                    })
             };
             let Some(mut entry) = entry else {
                 cov.unresolved_identity += 1;
@@ -184,7 +196,9 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
                 None
             };
             mark(&mut entry, shape, test, &conditions);
-            decls.push(Declaration { kind, name: decl_name.to_ascii_lowercase(), rel: rel.clone(), entry: Some(entry) });
+            // An unexpanded name is no name: it never matches under R5.
+            let name = if name_unexpanded { String::new() } else { decl_name.to_ascii_lowercase() };
+            decls.push(Declaration { kind, name, rel: rel.clone(), entry: Some(entry) });
         }
     }
 
@@ -241,7 +255,7 @@ fn superseded(entry: &mut PackageDbEntry, file: &Path, version: &str) {
 fn first_declaration_wins(decls: &mut [Declaration], cov: &mut FetchCoverage) {
     let mut moves: Vec<(usize, usize)> = Vec::new();
     for (i, d) in decls.iter().enumerate() {
-        if d.kind != FetchKind::FetchContent {
+        if d.kind != FetchKind::FetchContent || d.name.is_empty() {
             continue;
         }
         let dir = d.rel.parent().unwrap_or(Path::new(""));

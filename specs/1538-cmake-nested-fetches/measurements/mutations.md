@@ -45,4 +45,7 @@ Re-applied after the tests were added, each fails exactly its new test.
 | M20 | an R9 tie picks the first holder | C-12e |
 | M21 | R9 picks the shallowest supplier, not the nearest | C-12d |
 
-**All 21 are caught.** M19 to M21 were added with T022b and applied by hand, each reverted with `cp` and the file compared with `cmp` afterwards.
+| M22 | any `${…}` name is unresolved, whatever the identity | C-13b |
+| M23 | the component keeps the unexpanded variable as its name | C-13b |
+
+**All 23 are caught.** M19 to M23 were added with T022b and T025b and applied by hand, each reverted with `cp` and the file compared with `cmp` afterwards.
