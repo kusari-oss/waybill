@@ -69,6 +69,13 @@ None of these 8 appears in TheRock's SBOM, and none is counted in C231.
 
 The example's `GIT_TAG develop` is a branch name, not a release. A direct `ExternalProject_Add` with the same tag is emitted today with `develop` as its version. Whether that needs marking is in scope only if the census shows it matters on TheRock (FR-009).
 
+## Clarifications
+
+### Session 2026-11-17
+
+- Q: How is `download_project()` recognised? → A: By name, as an `ExternalProject_Add` alias, only when its definition in the scan has DownloadProject's shape. The configured template is not read.
+- Q: How is a URL fetch named when its archive does not parse as `<name>-<version>`? → A: `<PROJ>`, the name the caller gave.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A dependency fetched with `download_project()` is a component (Priority: P1)
@@ -122,8 +129,9 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 ### Edge Cases
 
 - **A template with no definition in the scan.** If DownloadProject's `.cmake` file is excluded or absent, the calls are not recognised, and are counted nowhere. This matches spec 1539's "defined outside the scan".
-- **A modified DownloadProject.** A project's copy may differ from the upstream module, with other keywords or another template. Whatever FR-001 decides must not bind a call through a definition it does not recognise as the module.
-- **Both template branches.** The template's `if(${DL_ARGS_BUILD_PROJECT})` and its `else()` hold the same fetch name and forwarded arguments. Either is the identity; the condition does not make the fetch conditional.
+- **A modified DownloadProject.** A project's copy may differ from the upstream module. A copy that keeps the shape in FR-001 is read with the upstream keyword list (FR-002); one that does not is not recognised. The census (SC-001) reports any copy that differs.
+- **A different function named `download_project`.** Without DownloadProject's shape, it is not recognised: its calls are read only if it is a spec 1539 wrapper by its own body.
+- **`BUILD_PROJECT`.** The template's `if(${DL_ARGS_BUILD_PROJECT})` and its `else()` hold the same fetch name and forwarded arguments; the keyword changes what is built after the fetch, not what is fetched, and does not make the fetch conditional.
 - **A call under a condition, or in a test directory.** The call site's spec 1538 shapes and scope apply (FR-005), as for any wrapper call.
 - **The same dependency declared twice.** rocprim's vendored copies may declare the same repository and tag through `download_project()` in several places. Spec 1538's one-component-per-PURL and enclosing-supplier rules decide, unchanged (FR-005).
 - **A variable in the call.** `${ROCRAND_ROOT}` and the like are expanded from a same-file literal `set()`, as in spec 1539. Otherwise they stay as written, and decide nothing unless the identity depends on them.
@@ -133,12 +141,16 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 
 ### Functional Requirements
 
-- **FR-001: What is recognised.** A call to `download_project()` MUST be read as the fetch DownloadProject generates for it, by **[NEEDS CLARIFICATION: (a) generalising spec 1539: a function whose body `configure_file()`s a template found in the scan, without `@ONLY`, is a wrapper whose body is that template's single fetch call, bound with the function's scope; (b) recognising `download_project` by name as an `ExternalProject_Add` alias when its definition in the scan has DownloadProject's shape; or (c) both]**.
+- **FR-001: What is recognised.** A call to `download_project` (case-insensitive) MUST be read as an `ExternalProject_Add` alias, when at least one definition of that name in the scan has DownloadProject's shape:
+  - its body calls `cmake_parse_arguments` with prefix `DL_ARGS`, and `PROJ` among the keywords it parses;
+  - and it calls `configure_file()` on a template whose file name is `DownloadProject.CMakeLists.cmake.in`.
+
+  The template itself is not read. A definition of that name without this shape is not DownloadProject. If every definition lacks the shape, the call is not recognised; if definitions disagree, spec 1539's FR-002 rule applies, and the call is unresolved and counted as ambiguous. Other configure-time generators are out of scope.
 - **FR-002: Binding.** The call MUST bind as CMake binds it:
   - DownloadProject's options and one-value keywords (`QUIET`; `PROJ`, `PREFIX`, `DOWNLOAD_DIR`, `SOURCE_DIR`, `BINARY_DIR`, `BUILD_PROJECT`) are consumed by `cmake_parse_arguments`, with spec 1539's measured rules (the last value of a one-value keyword wins);
   - every other argument is forwarded, in order, to the generated `ExternalProject_Add`.
 - **FR-003: Same fields as the generated call.** The component MUST be the one a direct `ExternalProject_Add` with the generated arguments would give: version, hash, mechanism (`cmake-externalproject`) and identity rules, including the GitHub rule and spec 1539's FR-005 archive naming for a URL fetch.
-- **FR-004: Naming.** When the identity does not name the package (a URL that does not parse as `<name>-<version>`), the component MUST be named **[NEEDS CLARIFICATION: (a) `<PROJ>-download`, the generated `ExternalProject_Add`'s name, as spec 1539 would bind it; or (b) `<PROJ>`, the name the caller gave]**. A GitHub `GIT_REPOSITORY` names the package by itself, as today.
+- **FR-004: Naming.** The generated declaration's name is `<PROJ>`, the name the caller gave, not DownloadProject's internal `<PROJ>-download` target. A URL fetch whose archive parses as `<name>-<version>` is named from the archive (spec 1539 FR-005); otherwise it is named `<PROJ>`. A GitHub `GIT_REPOSITORY` names the package by itself, as today. A call with no `PROJ` is not bound (FR-007).
 - **FR-005: Spec 1538 and 1539 apply unchanged at the call site:**
   - conditions from the call site's enclosing blocks;
   - test scope from the call site's directory;
@@ -148,8 +160,8 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
   - ownership by the call site's file;
   - C231 accounting, including `wrappers`;
   - the template's internal `if(${DL_ARGS_BUILD_PROJECT})` does not make the fetch conditional.
-- **FR-006: Evidence.** Each component produced by a `download_project` call MUST carry C234 with a chain naming `download_project`, plus any spec 1539 wrapper around it, outermost first. No new catalog row is added unless FR-001's answer requires one.
-- **FR-007: No identity, no component.** A call with no `URL` and no `GIT_REPOSITORY`, or whose identity depends on an unexpanded variable, MUST NOT emit a component, and is counted under C231 `unresolved.identity`.
+- **FR-006: Evidence.** Each component produced by a `download_project` call MUST carry C234 with a chain ending in `download_project` as defined, after any spec 1539 wrapper around it, outermost first. No new catalog row is added.
+- **FR-007: No identity, no component.** A call with no `PROJ`, no `URL` and no `GIT_REPOSITORY`, or whose identity depends on an unexpanded variable, MUST NOT emit a component, and is counted under C231 `unresolved.identity`.
 - **FR-008: Direct calls and existing wrappers unchanged.** Every direct `FetchContent_Declare` / `ExternalProject_Add`, and every spec 1539 wrapper call, MUST produce byte-identical output to `main`.
 - **FR-009: Branch-name tags.** A `GIT_TAG` that is a branch name is emitted as a direct call's would be today. Marking it is added only if the census (SC-001) shows `download_project` calls on TheRock with a branch-name tag that would otherwise be presented as a release. If it does, the marking reuses an existing row where one fits (Principle V audit), or is filed as a follow-up.
 - **FR-010: Formats agree.** CycloneDX, SPDX 2.3 and SPDX 3 MUST carry the same components, edges and rows, and agree on the root's direct targets (spec 1537 I-1).
@@ -157,8 +169,7 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 
 ### Key Entities
 
-- **DownloadProject definition**: the `download_project` function in a walked `.cmake` file, with its `cmake_parse_arguments` keywords and its `configure_file()` template path.
-- **Template**: the configured `.cmake.in` file holding the generated `ExternalProject_Add`, if FR-001 reads it.
+- **DownloadProject definition**: a `download_project` function in a walked `.cmake` file with DownloadProject's shape (FR-001): `cmake_parse_arguments(DL_ARGS …)` parsing `PROJ`, and a `configure_file()` of `DownloadProject.CMakeLists.cmake.in`.
 - **`download_project` call**: a call site with its file, enclosing blocks and literal arguments, bound to the definition.
 - **Generated declaration**: the `ExternalProject_Add` the call produces, with its arguments resolved. It is treated exactly as a direct declaration.
 
@@ -177,10 +188,9 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 
 ## Assumptions
 
-- **Scope is the CMake fetch reader only.** DownloadProject is the one configure-time generator measured on TheRock. Other generators, such as hand-written `file(WRITE)` projects, are out of scope unless FR-001 (a) covers them as a side effect.
+- **Scope is the CMake fetch reader only.** DownloadProject is the one configure-time generator measured on TheRock, and it is recognised by name and shape (clarification). Generalising to any `configure_file()`d template, and other generators such as hand-written `file(WRITE)` projects, are out of scope.
 - **Static only.** No CMake is run on the scanned tree. The CMake behaviours the design depends on are probed with a real CMake on synthetic projects in plan, and the probe is committed:
-  - `configure_file()` substitution of `${…}` and `@…@` without `@ONLY`;
-  - how a substituted list in an unquoted argument splits;
-  - the generated project's fetch.
+  - that a `download_project` call fetches what an `ExternalProject_Add` with its non-DownloadProject arguments would, in order, with DownloadProject's keywords consumed;
+  - that `BUILD_PROJECT` does not change what is fetched.
 - **The upstream module's shape** (keywords, template name, template contents) is as read at rocm-libraries `98e132f8`. A copy that differs is handled by FR-001's answer, and the census reports any.
 - **All measurement of TheRock is in CI,** through `kusari-sandbox/waybill-fixture-therock-sdk`. TheRock is never cloned or scanned locally. Single public files may be read through the GitHub API.
