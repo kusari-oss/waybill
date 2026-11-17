@@ -101,4 +101,17 @@ All 40 calls are emitted, as 39 components, each with its declared hash: SHA-256
 | `main` | 7.012 s | 6.950 s | 6.975 s | 6.975 s |
 | branch | 6.980 s | 7.002 s | 6.987 s | 6.987 s |
 
-The full-tree SC-005 measurement is in the next section (T019).
+## SC-005: full tree with submodules (T019)
+
+`measure-source` 44105373483 in the fixture repository scanned the full 17 GB tree with all submodules at `main` (`b8ba7e4d`) and at the branch (`bbbe0b34`). Each side had one untimed warm-up, then three alternating timed rounds.
+
+| | warm-up | run 1 | run 2 | run 3 | median |
+|---|---|---|---|---|---|
+| `main` | 155.8 s | 117.3 s | 114.5 s | 116.2 s | 116.2 s |
+| branch | 120.5 s | 122.2 s | 116.2 s | 117.3 s | 117.3 s |
+
+**Ratio of medians: 1.010.** That is within SC-005's 1.5×, and within the spread of each side's own rounds (114.5 to 122.2 s).
+
+The same documents:
+- **Components:** 4,312 → 4,346, and unique PURLs 2,636 → 2,670. Both rise by 34, the new wrapped PURLs. 39 components carry C234.
+- **C231** is identical to the sparse census above, at both refs. The full tree adds no CMake file that the sparse checkout lacked.

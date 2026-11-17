@@ -159,19 +159,20 @@
 **Goal:** SC-002 to SC-005 on the tree that motivated the feature.
 **Independent test:** `census-fetches` and `measure-source` at the branch.
 
-- [ ] T018 [US4] Push the branch, and dispatch `census-fetches` in the fixture repository with `--ref main -f waybill_ref=1539-cmake-fetch-wrappers -f base_ref=main`. Record in `specs/1539-cmake-fetch-wrappers/measurements/therock.md`:
+- [X] T018 [US4] Push the branch, and dispatch `census-fetches` in the fixture repository with `--ref main -f waybill_ref=1539-cmake-fetch-wrappers -f base_ref=main`. Record in `specs/1539-cmake-fetch-wrappers/measurements/therock.md`:
   - **C231 at both refs,** against `census.md`'s prediction: `read` 241, `unresolved.identity` 54, `wrappers` `{"ambiguous-calls":0,"calls":53,"definitions":7}`. Explain every difference; the prediction is inference, and a mismatch is a finding, not a failure to hide.
   - **SC-002:** every `therock_subproject_fetch` call with a URL is emitted, with its version and SHA-256. List the 39 components: PURL, version, hash prefix, call site, scope. 36 should be named from the archive, and 3 at their bound name and `unknown`.
   - **SC-003:** LLVM's 13 calls emit nothing, and no component on the tree is named after a wrapper parameter or a target variable. Grep the PURLs for `${`, `therock-` and `-sources`; the last two should match only the 3 FR-005 fallbacks.
   - **SC-004:** V1 and V2 hold, and `wrappers.calls` = 53 matches the census.
   - **SC-008 and I-1:** C234 on all 39 and on no other component in all three formats, and the root's direct targets agree in the three formats.
   - **Scan times** of the sparse tree, interleaved, from `times.txt`.
-- [ ] T019 [US4] Dispatch `measure-source` with the branch against `main` (interleaved: a warm-up, then three alternating rounds). Record the medians and their ratio in `measurements/therock.md` (SC-005, ≤ 1.5×). One run is one measurement of 3 rounds per side. If the ratio is over 1.1, run it twice more before drawing a conclusion.
-- [ ] T020 [US4] **Ask the user** whether to file the FR-010 follow-up: 8 `download_project` calls with an identity no wrapper rule can bind (research R11; `measurements/census.md`), proposing `download_project` as an `ExternalProject_Add` alias with `PROJ` as the name. If yes, file it in `kusari-oss/waybill`, linked to #1518 and #1539, with the attribution line, and record its number here.
+- [X] T019 [US4] Dispatch `measure-source` with the branch against `main` (interleaved: a warm-up, then three alternating rounds). Record the medians and their ratio in `measurements/therock.md` (SC-005, ≤ 1.5×). One run is one measurement of 3 rounds per side. If the ratio is over 1.1, run it twice more before drawing a conclusion.
+- [X] T020 [US4] **Ask the user** whether to file the FR-010 follow-up: 8 `download_project` calls with an identity no wrapper rule can bind (research R11; `measurements/census.md`), proposing `download_project` as an `ExternalProject_Add` alias with `PROJ` as the name. If yes, file it in `kusari-oss/waybill`, linked to #1518 and #1539, with the attribution line, and record its number here.
+  - **Done:** the user said to file it. #1594 is filed and added to tracker #1542. The pytorch aotriton finding from T022 is filed separately as #1595: a GitHub fetch with an unresolved tag is named after its CMake target.
 
 ## Phase 7: Polish and cross-cutting
 
-- [ ] T021 Mutations: `specs/1539-cmake-fetch-wrappers/measurements/mutate.py` plus `mutate-run.sh`, in spec 1538's pattern (`specs/1538-cmake-nested-fetches/measurements/`), restoring with `cp` and checking `git diff --quiet` after a commit. Record the results in `measurements/mutations.md`. At least these mutations, each of which must be caught by a named test:
+- [X] T021 Mutations: `specs/1539-cmake-fetch-wrappers/measurements/mutate.py` plus `mutate-run.sh`, in spec 1538's pattern (`specs/1538-cmake-nested-fetches/measurements/`), restoring with `cp` and checking `git diff --quiet` after a commit. Record the results in `measurements/mutations.md`. At least these mutations, each of which must be caught by a named test:
   - each `ForwardingShape` no longer detected (×5);
   - R2's own-identity check removed;
   - multi-value consumption stops at any keyword (W1 lost);
@@ -192,10 +193,10 @@
   - **Public corpus:** dispatch `public-corpus.yml` in compare mode at the branch. Expected: identical, or every changed target traced to a CMake wrapper definition or call in its tree (SC-006). A C231-only change from a template moving out of `read` is expected where a target defines a parameterised wrapper (research R13). Regenerate goldens only after tracing, with `-f regen_goldens=true`.
   - **Quality corpus:** compare against `main`, PURL by PURL. pytorch's C-13b components (dlfcn-win32, xz) must be unchanged (R2).
   - **Record** in `measurements/corpus.md`, labelling any attribution not traced as inference.
-- [ ] T023 [P] Docs:
+- [X] T023 [P] Docs:
   - **`docs/ecosystems.md`' CMake section:** what a wrapper is (the five shapes, R2), how a call binds (the measured rules, with W1 and W2 called out), multiply-defined wrappers, FR-005 naming and its fallback, C234, C231's `wrappers`, and the `download_project` boundary.
   - **`CHANGELOG.md` `[Unreleased]`:** Added C234 and C231 `wrappers`; Fixed #1518, with TheRock's numbers from T018.
-- [ ] T024 Run the gate **alone** and record it in `specs/1539-cmake-fetch-wrappers/measurements/gate-log.md`:
+- [X] T024 Run the gate **alone** and record it in `specs/1539-cmake-fetch-wrappers/measurements/gate-log.md`:
   - the ok-line count, 0 failed, and the expected line found;
   - `cmake_fetch_wrappers` N of N;
   - `cmake_nested_fetches` N of N;
