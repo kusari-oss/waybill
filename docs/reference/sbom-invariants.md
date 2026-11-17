@@ -89,7 +89,7 @@ For the per-annotation wire shapes these invariants read, see
 | I4 | CycloneDX and SPDX 2.3 agree on the subject's direct dependency set | both documents emitted, each with a resolvable subject | `root-direct-only-in-cdx`, `root-direct-only-in-spdx` | Active |
 | I5 | A `complete` graph-completeness verdict implies nothing was excluded from the judgement | document-scope completeness verdict is `complete` | `complete-with-unreachable` | Active |
 | I6 | A package does not appear under several different unknown-version spellings | at least one component carries an unknown-version sentinel | `mixed-unknown-version-spelling` | Active |
-| I7 | A component not reachable from the subject by any dependency edge carries a marker explaining why | subject resolvable and at least one non-subject component | `unreachable-and-unexplained` | Active |
+| I7 | A component not reachable from the subject by any dependency edge or containment carries a marker explaining why | subject resolvable and at least one non-subject component | `unreachable-and-unexplained` | Active |
 | I8 | A component with no version carries an annotation explaining why it has none | at least one component has an absent or empty version | `versionless-and-unexplained` | Active |
 | I9 | A component the compiler supplies carries no non-runtime scope | at least one component is marked compiler-supplied | `compiler-supplied-non-runtime` | Active |
 | I10 | A closure member's non-runtime marker agrees with the evidence that decided it, or the member says it was exempted | at least one component carries a closure role | `closure-tooling-without-non-runtime-marker`, `closure-statically-linked-but-marked`, `closure-runtime-member-but-marked` | Active |
@@ -335,6 +335,23 @@ unreachable maven, pypi, bazel, github or generic component could not be
 explained even in principle — there was no code to assign. Feature 1218
 removed both guards and added `build-toolchain`, `foreign-build-system` and
 `unreferenced-lock-node` to C45 (#1214).
+
+**Containment counts as reachability, and nested components are checked,
+since spec 1541** (#1593). A component nested in another (CycloneDX
+`components[].components[]`, SPDX `CONTAINS`) is reached through its
+container, and the check walks nested components as well as top-level
+ones. Before, it read only the top level: on a ROCm SDK, 644 libraries
+nested in binaries were counted unreachable by the completeness pass and
+were invisible to this check, so the two disagreed by exactly that many.
+
+**The classifier sees the document's graph since spec 1541.** It used to
+root the graph at a placeholder without the operator's `--root-*` override.
+With no edge from that root, the root fallback attached every graph-top, so
+it counted nearly everything reachable and coded nothing (0 codes against
+846 unreachable components on ROCm TheRock's source tree). It now prepares
+its graph through `graph_completeness::for_document`, as the three emitters
+do. Spec 1541 also adds `test-data-binary` and `unowned-binary` for
+components from binary analysis.
 
 **One population deliberately still fails I7**, and its declaration is the
 record of it rather than an oversight. It is waybill's own defect, so a
