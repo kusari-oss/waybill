@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -32,7 +32,5 @@
 ## Notes
 
 - **CMake command names in the spec.** `ExternalProject_Add`, `cmake_parse_arguments`, `${ARGN}` and similar names are the domain being read, not implementation choices, as in spec 1538. No language, crate or code structure is named.
-- **Open markers.** Two [NEEDS CLARIFICATION] markers remain:
-  - FR-002: which definition binds when a wrapper is defined twice;
-  - FR-005: how a wrapper-fetched component is named.
+- **Markers resolved** by `/speckit-clarify` on 2026-11-17: FR-005 (archive-filename naming, wrapper calls only) and FR-002 (bind against every definition; unresolved when they differ).
 - **Deferred by design.** The forwarding-shape list (FR-001) is fixed by the SC-001 census, not by the spec. CMake's rule for a repeated keyword is probed in plan.
