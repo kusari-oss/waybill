@@ -897,10 +897,10 @@ impl CycloneDxBuilder {
             &m1273_unread,
         );
         let effective_components: &[ResolvedComponent] = document_graph.effective(components);
-        let retained_main_module_purls: &[String] = &document_graph.retained_main_module_purls;
-        let target_ref: &String = &document_graph.target_ref;
+        let retained_main_module_purls: Vec<String> = document_graph.retained_main_module_purls.clone();
+        let target_ref: String = document_graph.target_ref.clone();
         let m158_workspace_peer_edges: &[Relationship] = &document_graph.workspace_peer_edges;
-        let graph_completeness = &document_graph.completeness;
+        let graph_completeness = document_graph.completeness.clone();
 
         // FR-013 tracing log line (research §R8). Grep-friendly for
         // CI-log analysis, follows the milestone-157 FR-007 precedent.
@@ -1138,7 +1138,7 @@ impl CycloneDxBuilder {
                 .to_string(),
         );
         vex_refs.add_components(cdx_components.as_array().map(Vec::as_slice).unwrap_or(&[]));
-        for purl in retained_main_module_purls {
+        for purl in &retained_main_module_purls {
             vex_refs.alias_root(purl);
         }
         let (vulnerabilities, vex_carried_omitted) =
