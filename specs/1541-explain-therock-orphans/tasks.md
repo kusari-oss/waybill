@@ -14,12 +14,12 @@
 ## Phase 1: Setup
 
 - [X] T001 Trace TheRock's source tree (FR-001, SC-001): `probe_i7_on_document` in `waybill-cli/tests/public_corpus.rs` on `measure-source` 44149685219's `branch.sub.cdx.json`. Recorded in `specs/1541-explain-therock-orphans/measurements/source-trace.md`.
-- [ ] T002 Trace TheRock's SDK at `main`. Download `measure-full` run 44173368036's documents, run `probe_i7_on_document` on them, and record in `specs/1541-explain-therock-orphans/measurements/sdk-trace.md`:
-  - the completeness reason;
-  - the I7 population, counting nested components separately (the probe reports how many there are);
-  - the unexplained components, by population.
+- [X] T002 Trace TheRock's SDK at `main`: `probe_i7_on_document` on `measure-full` run 44173368036's `branch.cdx.json`. Recorded in `specs/1541-explain-therock-orphans/measurements/sdk-trace.md`:
+  - 645 unreachable by the completeness reason;
+  - 644 nested components, which the I7 check never sees;
+  - 1 top-level unexplained unowned binary.
 
-  Confirm that the nested population is the one R2 addresses. If `measure-full` emits CycloneDX only, extend its scan step in the fixture repository's `.github/workflows/measure-full.yml` to emit SPDX 2.3 and SPDX 3 as well, for FR-009, and re-dispatch.
+  `measure-full` emits CycloneDX only, so its scan step gains SPDX 2.3 and SPDX 3 in T013, for FR-009.
 
 ## Phase 2: Foundational (blocks every story)
 
@@ -43,7 +43,7 @@
 
 - [ ] T006 [US2] Create `waybill-cli/tests/orphan_explanations.rs`, using the `tests/common/cmake_fetch.rs` helpers where they fit:
   - **Cases:** O-1, O-2, O-8 and O-9 (`contracts/wire.md`).
-  - **I-A:** the completeness reason's count equals the number of unreachable components the probe's logic counts.
+  - **I-A:** assert it with the corpus harness's own `cdx_reachable` and `orphan_explained::is_explained`, reached through the harness path module, never a re-derived walk: no reachable component carries C45; every unreachable one carries an I7 marker; the completeness count equals the I7 population.
   - **I-B:** the formats agree.
 
   Run against `main`'s code (before T004/T005) and record which fail.
@@ -53,9 +53,9 @@
 ## Phase 4: User Story 1 — every unreachable component on TheRock says why (P1) 🎯 MVP with US2
 
 **Goal:** the binary codes, the uv reader's root and edges, and the remaining populations.
-**Independent test:** O-3 to O-7 and O-10 to O-12; then TheRock (T015).
+**Independent test:** O-3 to O-7 and O-10 to O-13; then TheRock (T013).
 
-- [ ] T009 [US1] Add cases O-3, O-4, O-5, O-6, O-7, O-10, O-11 and O-12 to `waybill-cli/tests/orphan_explanations.rs`, and confirm they fail before T010 and T011.
+- [ ] T009 [US1] Add cases O-3, O-4, O-5 (including an unowned binary in a non-source scan), O-6, O-7, O-10, O-11, O-12 and O-13 to `waybill-cli/tests/orphan_explanations.rs`, and confirm they fail before T010 and T011.
 - [ ] T010 [US1] Register `test-data-binary` and `unowned-binary` in C45's row in `docs/reference/sbom-format-mapping.md`. Give each its population and its exclusions, and place them below every existing code. Then implement them in `waybill-cli/src/generate/orphan_reason.rs`:
   - two `OrphanReasonCode` variants;
   - the closed test-data directory list (research R3), matched case-sensitively per path segment;
@@ -75,7 +75,7 @@
 **Goal:** SC-002 to SC-007.
 **Independent test:** CI runs at the branch against `main`.
 
-- [ ] T013 [US3] Push the branch. Dispatch `measure-source` (`--ref main -f waybill_ref=1541-explain-therock-orphans -f base_ref=main`) and `measure-full` (the same inputs) in the fixture repository. Probe both documents at each ref with `probe_i7_on_document`, and record in `specs/1541-explain-therock-orphans/measurements/therock.md`:
+- [ ] T013 [US3] Push the branch. Extend `measure-full`'s scan step in the fixture repository's `.github/workflows/measure-full.yml` to emit SPDX 2.3 and SPDX 3 as well (FR-009). Dispatch `measure-source` (`--ref main -f waybill_ref=1541-explain-therock-orphans -f base_ref=main`) and `measure-full` (the same inputs) in the fixture repository. Probe both documents at each ref with `probe_i7_on_document`, and record in `specs/1541-explain-therock-orphans/measurements/therock.md`:
   - unexplained counts before and after (SC-002, SC-003);
   - the codes by count;
   - the completeness reason at both refs;
@@ -108,12 +108,12 @@
   - **`docs/reference/sbom-invariants.md`, I7:** containment counts as reachability; the two new codes.
   - **`docs/reference/sbom-format-mapping.md`:** C45's row.
   - **`CHANGELOG.md`:** Fixed #1593, with TheRock's before and after.
-- [ ] T018 Run the gate alone and record it in `specs/1541-explain-therock-orphans/measurements/gate-log.md`.
+- [ ] T018 Run the gate alone and record it in `specs/1541-explain-therock-orphans/measurements/gate-log.md`: the ok-line count, 0 failed, the expected line, `orphan_explanations` N/N, and `git diff --quiet main -- Cargo.toml Cargo.lock '*/Cargo.toml'` (FR-010).
 - [ ] T019 Open the PR: `fix: every unreachable component on TheRock explains itself (#1593)`. The body carries the trace, the before and after, the corpora, the mutations and the reader change (`Refs #1214`), ending with the attribution line. After it lands, tick #1593 on #1542.
 
 ## Dependencies
 
-- **T002** is independent of everything; it is a measurement.
+- **Setup** is done.
 - **Foundational:** T003 → T004 → T005, which blocks everything after.
 - **US2:** T006 (tests first, which may start before T004) → T007 → T008.
 - **US1:** T009 → T010 and T011 (separate files, so they can run in parallel) → T012, which needs T013's run.

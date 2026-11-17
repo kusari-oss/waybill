@@ -139,17 +139,19 @@ The maintainer sees, from CI, the before and after on TheRock source and SDK, th
   - No dependency edge is added, and no reason is given: nesting already states how the component is in the document.
   - The three formats MUST give the same answer.
   - A component nested in an unreachable container stays unreachable, and is explained as any orphan is.
-- **FR-004: Binary-analysis components in a source tree.** An unreachable component found by binary analysis in a source scan, owned by no package, MUST carry one of two new C45 reasons:
+- **FR-004: Binary-analysis components.** An unreachable component found by binary analysis, owned by no package, in any scan, MUST carry one of two new C45 reasons:
   - **one for binaries under a test-data directory:** any path segment in a closed list that the plan fixes from TheRock's measured paths. It starts from spec 1538's test-scope directories, `test`, `tests` and `unittests`, plus `testdata` and the like where measured;
   - **one for every other such binary.**
 
   Both codes are registered in the C45 row and its contract before emission, below every existing code in priority, so no component carrying an existing code changes. Their exact strings are fixed in the plan.
+
+  On TheRock's built SDK at `main`, 1 such binary is the SDK's only top-level unexplained component (`measurements/sdk-trace.md`).
 - **FR-005: Lockfile packages with no owner.** For packages from a lock file (such as `uv.lock`) in a subproject, unreachable from the root:
   - if the lock file's own project is in the document, the packages MUST be attached to it, as spec 1537 attaches a requirements file's packages to its declaring project;
   - otherwise they carry the existing code that fits (`unreferenced-lock-node`, `foreign-build-system` or `dead-lockfile-entry`, by their current definitions);
   - otherwise a new code is registered first.
-- **FR-006: Existing markers unchanged.** Every component that carries a C45 code on `main` MUST carry the same code. New codes sit below every existing code, as feature 1218's did (its FR-004).
-- **FR-007: Remaining small populations.** TheRock's cargo, npm, conan, vcpkg and deb orphans (17 in the source scan) MUST each be traced and either attached or explained. A population that is a waybill defect is declared in `invariant-declarations.toml` with its own issue, as #1235 is, not given a reason.
+- **FR-006: Existing markers unchanged.** Every component that carries a C45 code on `main` MUST, at the branch, either carry the same code, or be reachable through an edge this feature adds (research R1 or R4), traced in `measurements/corpus.md` or `therock.md`. It never carries a different code. New codes sit below every existing code, as feature 1218's did (its FR-004).
+- **FR-007: Remaining small populations.** TheRock's cargo (8), npm (4), conan (2) and vcpkg (2) orphans, and the two `pkg:generic` components `tensile` (a `pyproject.toml` workspace root) and `wkmi@1.0.0` (a CMake package-version file), MUST each be traced and either attached or explained. A population that is a waybill defect is declared in `invariant-declarations.toml` with its own issue, as #1235 is, not given a reason. The deb glibc, identified inside kpack's test-asset binaries, falls under FR-004's test-data rule.
 - **FR-008: #1214.** #1214's own corpus populations are not re-opened. If this feature's rules newly explain any of them, the corpus run shows it, and #1214 is closed only when every population it lists is explained or declared.
 - **FR-009: Formats agree.** CycloneDX, SPDX 2.3 and SPDX 3 MUST agree on which components are unreachable and on their markers. The root's direct targets keep agreeing (spec 1537 I-1).
 - **FR-010: No new dependencies.** Zero new Cargo dependencies. Test fixtures use synthetic `waybill-fixture-*` names.
@@ -165,11 +167,15 @@ The maintainer sees, from CI, the before and after on TheRock source and SDK, th
 
 ### Measurable Outcomes
 
-- **SC-001 (trace first):** Before FR-002 to FR-005 are fixed in the plan, a measured run accounts for every unreachable component on TheRock (source and SDK) by population and cause, and the totals equal the document's own count.
+- **SC-001 (trace first):** Before FR-002 to FR-005 are fixed in the plan, a measured run accounts for every unreachable component on TheRock (source and SDK) by population and cause, and the totals equal the document's own count. The SDK trace (`measure-full` 44173368036 at `main`) found 645 unreachable: 644 nested components, which FR-003 settles, and 1 unowned binary, which FR-004 settles. No other population (`measurements/sdk-trace.md`).
 - **SC-002 (TheRock source):** At the branch, 0 unreachable components without an I7 marker. Any exception is a declared waybill defect with an issue number.
 - **SC-003 (TheRock SDK):** The same, for the built SDK.
-- **SC-004 (one answer):** In every contract fixture and both TheRock scans, the document's unreachable count, the classifier's unreachable set and the I7 population are equal, and the three formats agree.
-- **SC-005 (no regressions in explanation):** Every component carrying a C45 code on `main`, on TheRock and across the public corpus, carries the same code at the branch.
+- **SC-004 (one answer):** In every contract fixture and in both TheRock scans:
+  - no reachable component carries C45;
+  - every unreachable component carries an I7 marker, or is a declared defect;
+  - the count in the document's completeness reason equals the I7 population, counting nested components with containment (FR-003);
+  - the three formats agree.
+- **SC-005 (no regressions in explanation):** Every component carrying a C45 code on `main`, on TheRock and across the public corpus, carries the same code at the branch, or is reachable through an edge this feature adds, each such case traced.
 - **SC-006 (corpora):** The public corpus invariant gate stays green, and every golden change is traced to a rule here. Every quality-corpus movement is traced against a `main` control.
 - **SC-007 (cost):** The median full-tree TheRock source scan is at most 1.5× `main`'s, by the interleaved `measure-source` workflow.
 - **SC-008 (tests have teeth):** Each rule (shared reachability, containment, each of the two new codes and the test-data path rule, lockfile attachment) has a contract test, and a mutation that removes or weakens it is caught.
