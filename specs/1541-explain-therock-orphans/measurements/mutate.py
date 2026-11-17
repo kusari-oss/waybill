@@ -55,6 +55,13 @@ M = {
  # nested PURL counts as reached (ROCm SDK `gotcha`).
  "M20": [(G, '        Some(parent) => format!("{}#{parent}", c.purl.as_str()),', '        Some(_parent) => c.purl.as_str().to_string(),')],
  # M21 (FR-005): a name listed once resolves across the scan again.
+ # M23 (FR-007): conan recipes not a build manifest.
+ "M23": [(O, '    "conanfile.py",\n', '')],
+ # M24 (FR-004): only the analyzed tier counts as binary-derived.
+ "M24": [(O, "                    || crate::scan_fs::binary::is_binary_derived(c.evidence_kind.as_deref())\n", "")],
+ # M25 (FR-005): the workspace root lists bare member names again.
+ "M25": [(U, "                        .and_then(|v| purl_of.get(&(key, v)).cloned())\n                        .unwrap_or_else(|| m.clone())",
+             "                        .and_then(|_v| None::<String>)\n                        .unwrap_or_else(|| m.clone())")],
  "M21": [(U, "            .or_else(|| only_version.get(&key).cloned().flatten());", "            .or(None::<String>);")],
  # M22 (FR-005): an extra requested by the project's own extra stays inactive.
  "M22": [(U, "                if !own_project && !extra_is_optionally_active(name, extra_name) {",

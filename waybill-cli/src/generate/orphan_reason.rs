@@ -120,6 +120,9 @@ const MANIFEST_NAMES: &[&str] = &[
     "pyproject.toml",
     "CMakeLists.txt",
     "conanfile.txt",
+    // Spec 1541: the recipe form. ROCm TheRock's rocPRIM and hipCUB declare
+    // gtest and benchmark here, and nothing in conan is reachable.
+    "conanfile.py",
     "vcpkg.json",
 ];
 
@@ -726,9 +729,15 @@ pub fn classify_orphans(
                     // component; the enum variant's doc says so, and says
                     // what to check if a surprising one appears.
                     OrphanReasonCode::ReachableOnlyThroughUnemittedPackage
-                } else if c.sbom_tier.as_deref() == Some("analyzed") {
-                    // Spec 1541 (#1593), FR-004 — produced by binary analysis.
-                    // Last, so every earlier code wins by position (FR-006).
+                } else if c.sbom_tier.as_deref() == Some("analyzed")
+                    || crate::scan_fs::binary::is_binary_derived(c.evidence_kind.as_deref())
+                {
+                    // Spec 1541 (#1593), FR-004 — produced by reading a
+                    // binary. The tier alone misses a distro package named by
+                    // an ELF `.note.package`, which is `source` tier (#759):
+                    // a `glibc` from executables under TheRock's kpack
+                    // `test_assets`. Last, so every earlier code wins by
+                    // position (FR-006).
                     if all_under_test_data_dirs(&c.evidence.source_file_paths) {
                         OrphanReasonCode::TestDataBinary
                     } else {
@@ -1683,5 +1692,23 @@ mod tests {
         let mut c = analyzed("pkg:generic/waybill-fixture-z@1", &["tests/a.so"]);
         c.sbom_tier = Some("source".to_string());
         assert_eq!(code_for(c), None);
+    }
+
+    /// A distro package named by an ELF `.note.package` is `source` tier and
+    /// still binary-derived.
+    #[test]
+    fn s1541_an_elf_note_package_takes_a_binary_code() {
+        let mut c = analyzed("pkg:deb/debian/glibc@2.41?arch=amd64", &["kpack/test_assets/a.exe"]);
+        c.sbom_tier = Some("source".to_string());
+        c.evidence_kind = Some("elf-note-package".to_string());
+        assert_eq!(code_for(c).as_deref(), Some("test-data-binary"));
+    }
+
+    /// A conan recipe is a build manifest: an unreachable conan component
+    /// from one, with nothing conan reachable, is a foreign build system.
+    #[test]
+    fn s1541_a_conan_recipe_is_a_build_manifest() {
+        let c = unreachable_from("pkg:conan/gtest@1.11.0", "rocprim/conanfile.py");
+        assert_eq!(code_for(c).as_deref(), Some("foreign-build-system"));
     }
 }

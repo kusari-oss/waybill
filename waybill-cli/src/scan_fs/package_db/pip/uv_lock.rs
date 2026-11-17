@@ -572,7 +572,7 @@ pub(crate) fn parse_uv_lock_with_flags(
     // to another lock's 4.5.1 and stranded this lock's 4.6.0 and everything
     // under it.
     let mut only_version: HashMap<String, Option<String>> = HashMap::new();
-    for ((name, version), _) in &purl_of {
+    for (name, version) in purl_of.keys() {
         only_version
             .entry(name.clone())
             .and_modify(|v| *v = None)
@@ -867,10 +867,33 @@ pub(crate) fn parse_uv_lock_with_flags(
         let root_pyproject = rootfs.join("pyproject.toml");
         let root_name = workspace_root_name(ws.root_name.as_deref());
         if let Some(mut root_entry) = synthesize_workspace_root(&root_name, &root_pyproject) {
-            // Populate workspace-root's `depends` with each emitted
-            // member's name. The downstream emitter resolves these to
-            // dependsOn edges against the actual member PURLs.
-            root_entry.depends = ws.member_names.iter().cloned().collect();
+            // Each member, by its exact PURL in this lock. Spec 1541
+            // (#1593): the root is `pkg:generic`, and a bare name resolves
+            // in the depender's ecosystem, so a pypi member never resolved
+            // and the root had no edge (`rocisa` under TheRock's
+            // tensilelite). The root project is a member too when the lock
+            // lists it, as uv's `[manifest]` records.
+            let mut members: Vec<String> = ws.member_names.iter().cloned().collect();
+            if let Some(own) = ws.root_name.as_deref() {
+                if !members.iter().any(|m| m == own)
+                    && only_version.contains_key(&normalize_pypi_name_for_purl(own))
+                {
+                    members.push(own.to_string());
+                }
+            }
+            members.sort();
+            root_entry.depends = members
+                .iter()
+                .map(|m| {
+                    let key = normalize_pypi_name_for_purl(m);
+                    only_version
+                        .get(&key)
+                        .cloned()
+                        .flatten()
+                        .and_then(|v| purl_of.get(&(key, v)).cloned())
+                        .unwrap_or_else(|| m.clone())
+                })
+                .collect();
             out.push(root_entry);
         }
     }
@@ -1288,10 +1311,15 @@ source = { registry = "https://pypi.org/simple" }
                 .and_then(|v| v.as_str()),
             Some("workspace-root"),
         );
-        // Workspace-root depends on each member by name.
+        // Workspace-root depends on each member, by its PURL in this lock
+        // (spec 1541). The root manifest's own name is not in this lock, so
+        // it is not a member.
         let mut depends_sorted = ws_root.depends.clone();
         depends_sorted.sort();
-        assert_eq!(depends_sorted, vec!["shared".to_string(), "web".to_string()]);
+        assert_eq!(
+            depends_sorted,
+            vec!["pkg:pypi/shared@0.1.0".to_string(), "pkg:pypi/web@0.1.0".to_string()]
+        );
 
         // Intra-workspace edge: web depends on shared.
         assert_eq!(web.depends, vec!["pkg:pypi/shared@0.1.0".to_string()]);
@@ -1898,5 +1926,51 @@ source = { registry = "https://pypi.org/simple" }
         assert_eq!(dsl.depends, vec!["pkg:pypi/dsl-libs-cu13@4.7.0".to_string()]);
         let libs = entries.iter().find(|e| e.name == "dsl-libs-cu13").unwrap();
         assert_eq!(libs.lifecycle_scope, Some(waybill_common::resolution::LifecycleScope::Optional));
+    }
+
+    /// TheRock's tensilelite: the root pyproject is itself a member (uv's
+    /// `[manifest]` lists it) and declares one more workspace member. The
+    /// synthesized `pkg:generic` root reaches both by PURL; a bare pypi name
+    /// resolved in the `generic` ecosystem and never matched.
+    #[test]
+    fn s1541_a_workspace_root_reaches_its_members_and_its_own_project() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("pyproject.toml"),
+            "[project]\nname = \"tensile\"\nversion = \"5.0.0\"\n\n[tool.uv.workspace]\nmembers = [\"rocisa\"]\n",
+        )
+        .unwrap();
+        std::fs::create_dir_all(tmp.path().join("rocisa")).unwrap();
+        std::fs::write(
+            tmp.path().join("rocisa/pyproject.toml"),
+            "[project]\nname = \"rocisa\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        let src = r#"
+version = 1
+
+[manifest]
+members = ["rocisa", "tensile"]
+
+[[package]]
+name = "rocisa"
+version = "0.1.0"
+source = { editable = "rocisa" }
+
+[[package]]
+name = "tensile"
+version = "5.0.0"
+source = { editable = "." }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let entries = parse_uv_lock(&parsed, "/tmp/uv.lock", tmp.path());
+        let root = entries
+            .iter()
+            .find(|e| e.purl.as_str().starts_with("pkg:generic/"))
+            .expect("workspace root");
+        assert_eq!(
+            root.depends,
+            vec!["pkg:pypi/rocisa@0.1.0".to_string(), "pkg:pypi/tensile@5.0.0".to_string()]
+        );
     }
 }
