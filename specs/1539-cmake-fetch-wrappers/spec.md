@@ -1,0 +1,207 @@
+# Feature Specification: CMake fetches made through user-defined wrappers
+
+**Feature Branch**: `1539-cmake-fetch-wrappers`
+**Created**: 2026-11-17
+**Status**: Draft
+**Input**: User description: "#1518 — fetches made through a user-defined wrapper around ExternalProject_Add / FetchContent_Declare are invisible. Super-builds wrap the built-ins to add logging, mirrors or common options, and the CMake reader only matches the built-in names. On ROCm's TheRock (pin b1cae390) this hides every third-party source tarball: they are all fetched through `therock_subproject_fetch` (cmake/therock_subproject.cmake:147), about 40 calls over 39 distinct tarballs per #1539 … Decide: which forwarding shapes count as a wrapper … how a call site's literal arguments bind to the wrapper's parameters … what a wrapper-fetched component is named … that a mirror URL gives no upstream identity … that spec 1538's conditional shapes, first-declaration-wins, enclosing-supplier merge and ownership apply unchanged to wrapper calls; and an annotation recording the wrapper name as evidence, registered as a catalog row. Whether operator-declared wrapper names (a flag) are needed … Measure … in CI only, via the fixture repo … Synthetic waybill-fixture-* fixtures; zero new Cargo dependencies." (full text in the conversation that created this branch)
+
+The spec number (1539) is the next in sequence. It is unrelated to issue #1539, the TheRock cataloger, which this feature is a prerequisite of.
+
+## Background
+
+### What the reader sees today
+
+Since spec 1538, the CMake reader reads `FetchContent_Declare` and `ExternalProject_Add` from every CMake file the scan walks. It matches those two command names only.
+
+A project that wraps them in its own `function()` or `macro()` (to add logging, a mirror, or common options) fetches every dependency through a command the reader does not know. Today:
+- **the call sites** of the wrapper are not read at all;
+- **the one built-in call inside the wrapper's body** is read once, as a declaration whose name is a parameter such as `${target_name}`. It is counted under `unresolved.identity` (C231), and no component is emitted.
+
+### The case that motivates it
+
+ROCm's TheRock (pin `b1cae390`) fetches its third-party source tarballs through `therock_subproject_fetch` (`cmake/therock_subproject.cmake:147`). #1539 counted about 40 calls over 39 distinct tarballs. One call site (`third-party/sysdeps/common/zstd/CMakeLists.txt`):
+
+```cmake
+therock_subproject_fetch(therock-zstd-sources
+  SOURCE_DIR "${_source_dir}"
+  # Originally mirrored from: "https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz"
+  URL "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/zstd-1.5.7.tar.gz"
+  URL_HASH "SHA256=eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3"
+  TOUCH "${_download_stamp}"
+)
+```
+
+The wrapper does **not** forward `${ARGN}`, the shape #1518 proposed detecting:
+
+```cmake
+function(therock_subproject_fetch target_name)
+  cmake_parse_arguments(PARSE_ARGV 1 ARG "CMAKE_PROJECT" "SOURCE_DIR;PREFIX;EXCLUDE_FROM_ALL" "TOUCH")
+  ...
+  ExternalProject_Add("${target_name}" ... SOURCE_DIR "${ARG_SOURCE_DIR}" ... ${_extra} ${ARG_UNPARSED_ARGUMENTS})
+endfunction()
+```
+
+`URL` and `URL_HASH` are not among the parsed keywords, so they reach `ExternalProject_Add` through `${ARG_UNPARSED_ARGUMENTS}`. The name is the first parameter.
+
+These tarballs are code compiled into ROCm, so none of TheRock's third-party sources appear in its SBOM today.
+
+### Other wrappers in the same tree
+
+Spec 1538's census (`specs/1538-cmake-nested-fetches/measurements/census.md`) found 17 fetch calls inside function or macro bodies, 8 of them with a `${…}` name. Among them:
+- LLVM's `llvm_ExternalProject_Add` and `add_custom_libcxx`;
+- test-build wrappers in rocdecode and rocjpeg (`rocdecode_add_test_ext`, `rocjpeg_add_test_ext`).
+
+Several of these build in-tree sources and pass no URL or repository. They must stay unresolved, not become components.
+
+### Out of core
+
+A mirror URL names the mirror, not the upstream. TheRock records the upstream in a `# Originally mirrored from:` comment. Recovering it is project-specific and belongs in the TheRock cataloger (#1539), not in the CMake reader. The archive's name, version and declared hash are still available from the mirror URL.
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - A dependency fetched through a forwarding wrapper is a component (Priority: P1)
+
+An engineer scans a C++ super-build that fetches its third-party sources through its own wrapper function. Each call to the wrapper that names a source (a URL or a repository) appears as a component with its version and declared hash, exactly as a direct `ExternalProject_Add` or `FetchContent_Declare` with the same arguments would.
+
+**Why this priority**: This is the defect (#1518). On TheRock it hides every third-party source tarball.
+
+**Independent Test**: Scan #1518's repro. It has a wrapper forwarding `${ARGN}`, one call to it, and one direct `ExternalProject_Add`. Check that both are emitted, the wrapped one with the same fields a direct call with its arguments would give.
+
+**Acceptance Scenarios**:
+
+1. **Given** a wrapper that forwards `${ARGN}` to `ExternalProject_Add`, called once with a literal `URL` and `URL_HASH`, **When** scanned, **Then** one component is emitted with that URL's version and that hash.
+2. **Given** a wrapper that parses its arguments with `cmake_parse_arguments` and forwards `${<prefix>_UNPARSED_ARGUMENTS}` (TheRock's shape), **When** a call passes `URL` and `URL_HASH` as unparsed arguments, **Then** the same component is emitted.
+3. **Given** a wrapper that re-passes a parsed keyword by name (`URL ${ARG_URL}`), **When** called with `URL <literal>`, **Then** the same component is emitted.
+4. **Given** a wrapper called five times with five different URLs, **When** scanned, **Then** five components are emitted, one per call.
+5. **Given** the same tree, **When** scanned, **Then** the wrapper's own body is not also counted as an unresolved declaration (FR-008).
+
+---
+
+### User Story 2 - A wrapper around an in-tree build adds nothing false (Priority: P1)
+
+The same engineer's tree also wraps `ExternalProject_Add` to build in-tree subprojects (LLVM's runtimes, test programs) with no URL and no repository. Those calls do not become components, and the SBOM says how many such calls were seen and why nothing was emitted.
+
+**Why this priority**: Without it, User Story 1 fabricates components for things that are not third-party sources. Both stories must land together.
+
+**Independent Test**: A fixture with a wrapper whose calls pass only `SOURCE_DIR`. No component is emitted, and C231 counts the calls as unresolved.
+
+**Acceptance Scenarios**:
+
+1. **Given** a wrapper call that binds no `URL` and no `GIT_REPOSITORY`, **When** scanned, **Then** no component is emitted and the call is counted under `unresolved.identity`.
+2. **Given** a wrapper called inside `foreach()` with the name or URL taken from the loop variable, **When** scanned, **Then** no component is emitted and the call is counted as unresolved, never guessed.
+
+---
+
+### User Story 3 - The SBOM says how a wrapped fetch was found (Priority: P2)
+
+A reviewer looking at a component that came from a wrapper call can see which wrapper produced it. That makes the evidence auditable: the call site is in C18, and the wrapper chain is in a new row.
+
+**Why this priority**: An inferred binding through someone else's function is weaker evidence than a direct call. Saying so lets a consumer weigh it.
+
+**Independent Test**: In User Story 1's fixtures, each wrapped component carries the wrapper's name. Direct calls do not carry the row.
+
+**Acceptance Scenarios**:
+
+1. **Given** a component from a call to `wf_fetch`, **When** scanned, **Then** its wrapper row names `wf_fetch`, and C18 names the call site's file, not the wrapper's file.
+2. **Given** a wrapper that calls another wrapper, **When** scanned, **Then** the row lists both, outermost first.
+
+---
+
+### User Story 4 - TheRock's third-party sources are measured in CI (Priority: P2)
+
+The maintainer sees, from CI runs in the fixture repository, what this changes on TheRock:
+- how many wrapper definitions and call sites there are, and of which shapes;
+- which calls became components, with versions and hashes;
+- which calls stayed unresolved, and why;
+- the scan time against `main`.
+
+**Why this priority**: The forwarding shapes to support are chosen from this measurement (FR-001), not assumed.
+
+**Independent Test**: The fixture repository's census and `measure-source` workflows, run at this branch and `main`.
+
+**Acceptance Scenarios**:
+
+1. **Given** the census, **When** run at TheRock's pin, **Then** every function or macro whose body calls a fetch built-in is listed with its forwarding shape and its call-site count, before the shape list is fixed.
+2. **Given** the branch scan, **When** compared with the census, **Then** every wrapper call site is accounted for as emitted, merged or unresolved.
+
+### Edge Cases
+
+- **Defined twice.** A wrapper defined in two files: CMake uses the definition in effect at the call. The reader picks the definition statically, by the rule in FR-002, and that choice is visible in the evidence row.
+- **Defined but never called.** Nothing is emitted, and the body is not counted as a declaration (FR-008).
+- **Called but defined outside the scan,** for example in an installed CMake package. The call is not recognised. That is the same as today, and it is counted nowhere.
+- **Recursion.** A wrapper that calls itself, directly or through another wrapper, is followed to a bounded depth and never loops (FR-004).
+- **Both keyword sources.** A wrapper body with its own literal `URL` that also forwards the caller's arguments: the effective value follows CMake's rule for a repeated keyword. That rule is probed in plan, as spec 1538 probed its semantics.
+- **Variable arguments.** A call-site argument that is `${VAR}` with a same-file literal `set()` is expanded as direct calls are today. Otherwise the call is unresolved.
+- **Positional parameters.** A wrapper whose name parameter is not first, or that reads `${ARGV0}`/`${ARGV1}`: bound by position like any other parameter.
+- **Shapes and merges.** A wrapper call under `if(NOT X_FOUND)`, or in a `tests/` directory, gets spec 1538's shapes from the **call site**. Conditions inside the wrapper body add to them (FR-006).
+- **First declaration wins.** Wrapping `FetchContent_Declare` with the same bound name in an ancestor directory triggers first-declaration-wins exactly as two direct calls would.
+- **A body that does more than fetch.** A wrapper body may call the built-in once alongside other commands. Only the fetch call matters.
+- **A body that is not a wrapper.** A wrapper body that calls the built-in with entirely literal arguments, and forwards nothing, is not a wrapper. It is read as a direct fetch inside a function body (spec 1538's `cmake-function-body`), unchanged.
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+- **FR-001: What counts as a wrapper.** A `function()` or `macro()` defined in any CMake file the reader reads MUST be treated as a fetch wrapper when its body calls `FetchContent_Declare`, `ExternalProject_Add`, or another wrapper (FR-004), and forwards the caller's arguments by a recognised shape. The recognised shapes are fixed from the census (SC-001). They MUST include those the census finds carrying an identity on TheRock. The candidates are:
+  - `${ARGN}`, `${ARGV}`;
+  - `${<P>_UNPARSED_ARGUMENTS}` after `cmake_parse_arguments(<P> …)` or `cmake_parse_arguments(PARSE_ARGV <n> <P> …)`;
+  - a parsed keyword re-passed by name, such as `URL ${<P>_URL}`;
+  - a named parameter used as the fetch's name, such as `${target_name}`.
+- **FR-002: Binding a call.** For each call to a wrapper, the reader MUST bind the call-site arguments to the wrapper's parameters as CMake would:
+  - positional parameters first;
+  - then `cmake_parse_arguments` options, one-value and multi-value keywords;
+  - then the remainder.
+
+  It then evaluates the fetch call in the body with those bindings. A default the body sets with a literal value, for a parameter the call did not pass, is applied. A wrapper defined more than once is bound to the definition that **[NEEDS CLARIFICATION: the last definition in walk order, the definition in the nearest ancestor-or-self directory of the call site, or refuse (unresolved) when definitions differ]**.
+- **FR-003: Same fields as a direct call.** A bound wrapper call MUST produce the component, with the same version, hash, mechanism and identity rules, that a direct call with the bound arguments would. This includes the existing `GIT_REPOSITORY` handling and the parameterised-name rule (spec 1538 C-13b).
+- **FR-004: Wrappers calling wrappers.** A wrapper whose body calls another wrapper MUST be followed transitively. A recursive chain stops at a bound depth, never loops, and is counted unresolved.
+- **FR-005: Naming.** When the bound name is a build target rather than the package (`therock-zstd-sources` for the archive `zstd-1.5.7.tar.gz`), the component MUST be named **[NEEDS CLARIFICATION: (a) from the declared name, as direct calls are today; (b) from the archive filename whenever it parses as `<name>-<version>`, for wrapper calls only; or (c) from the archive filename for every URL fetch, direct calls included, which changes existing components]**.
+- **FR-006: Spec 1538 applies unchanged at the call site.** Wrapper calls MUST get spec 1538's behaviour as direct calls do:
+  - the conditional shapes (C122) and C232, taken from the call site's enclosing blocks, with any conditions inside the wrapper body appended;
+  - test scope from the call site's directory;
+  - first-declaration-wins by bound name;
+  - the enclosing-supplier merge (R9);
+  - one component per PURL;
+  - ownership by the call site's file.
+- **FR-007: No identity, no component.** A bound call with no `URL` and no `GIT_REPOSITORY`, or one whose identity depends on an unexpanded variable, MUST NOT emit a component. It is counted under C231 `unresolved.identity`.
+- **FR-008: Accounting.** C231 MUST stay exact (V1: `read == emitted + merged.* + unresolved.identity`).
+  - Each wrapper call is one declaration read.
+  - The fetch call inside a recognised wrapper's body is a template, not a declaration. It is counted under a new C231 key for wrapper definitions, outside V1, so it does not inflate `read` or `unresolved.identity`.
+  - The key is registered with C231's documentation.
+- **FR-009: Evidence row.** Each component produced by a wrapper call MUST carry a new per-component row, `waybill:cmake-fetch-wrapper`: a sorted JSON array of the wrapper chains that produced it, each chain outermost first. It is registered in the catalog with parity extractors for CycloneDX, SPDX 2.3 and SPDX 3. A component that also has a direct declaration keeps the row for its wrapped declarations.
+- **FR-010: No operator flag unless measured.** No option for naming extra wrapper commands is added unless the census (SC-001) finds call sites with an identity that the static shapes cannot bind. If it does, the decision and the count are recorded, and a flag becomes its own follow-up.
+- **FR-011: Direct calls unchanged.** Every direct `FetchContent_Declare` / `ExternalProject_Add` MUST produce byte-identical output to `main`, except where FR-005's answer changes naming for direct calls.
+- **FR-012: Formats agree.** CycloneDX, SPDX 2.3 and SPDX 3 MUST carry the same wrapped components, edges and rows, and the three formats MUST agree on the root's direct targets (spec 1537 I-1).
+- **FR-013: No new dependencies.** Zero new Cargo dependencies. Test fixtures use synthetic `waybill-fixture-*` names.
+
+### Key Entities
+
+- **Wrapper definition**: a function or macro name, its parameters, its argument-parsing calls, and the fetch call (or wrapper call) in its body with its forwarding shape. Defined in one or more files.
+- **Wrapper call**: a call site, with its file, its enclosing blocks, and its literal arguments, bound to one definition.
+- **Bound declaration**: the fetch the call would make, with arguments resolved. It is treated exactly as a direct declaration.
+- **Wrapper chain**: the sequence of wrapper names from the call site to the built-in. It is the evidence row's value.
+
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+
+- **SC-001 (census first):** Before the shape list in FR-001 is fixed, a CI census of TheRock at its pin lists every function or macro whose body calls a fetch built-in or another such function. For each, it records the forwarding shape, the number of call sites, and how many of those pass a URL or repository.
+- **SC-002 (TheRock's third-party sources):**
+  - Every `therock_subproject_fetch` call site with a literal `URL` is emitted as a component with the URL's version and the declared SHA-256.
+  - The count equals the census's count of such call sites. #1539 counted about 40 calls over 39 distinct tarballs; the census re-measures this.
+- **SC-003 (no fabrication):** Every wrapper call the census marks as having no URL or repository emits nothing and is counted unresolved. That covers LLVM's in-tree runtimes and the test-build wrappers. 0 components on TheRock are named after a wrapper parameter or a target variable.
+- **SC-004 (accounting):** On TheRock, C231 V1 and V2 hold, and every census call site is accounted for as emitted, merged or unresolved. Wrapper definitions are counted separately and match the census count.
+- **SC-005 (cost):** The median full-tree scan time of TheRock with submodules is at most 1.5× `main`'s. It is measured by the interleaved `measure-source` workflow: a warm-up, then three alternating rounds.
+- **SC-006 (corpora):**
+  - The public corpus goldens are byte-identical, or every change is traced to a wrapper call in that target.
+  - Every quality-corpus movement is traced PURL by PURL against `main`.
+- **SC-007 (tests have teeth):** Each recognised forwarding shape, the binding rules, recursion and the accounting have a contract test. A mutation that removes or weakens each one is caught by a test.
+- **SC-008 (evidence):** 100% of wrapped components carry `waybill:cmake-fetch-wrapper`, and 0 direct-only components do, in all three formats.
+
+## Assumptions
+
+- **Scope is the CMake fetch reader only.** `find_package` (#1591), Meson wraps (#1523) and TheRock's subproject topology (#1539) are out of scope.
+- **Static only.** Nothing is evaluated by running CMake. A binding the static rules cannot make is unresolved, never guessed. As in spec 1538, CMake semantics that a rule depends on are probed with a real CMake in plan, and the probe is committed.
+- **Definitions come from the same file set** spec 1538 reads fetches from: every CMake file the walker hands the reader. A wrapper defined in an `include()`d file outside the walked tree is not seen.
+- **Mirror URLs stay as they are.** The upstream origin of a mirrored tarball is out of core (#1539). The component's download URL is the mirror's, and its identity is whatever the archive gives.
+- **All measurement of TheRock is in CI,** through `kusari-sandbox/waybill-fixture-therock-sdk`. TheRock is never cloned or scanned locally.
