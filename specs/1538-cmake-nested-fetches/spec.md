@@ -12,6 +12,9 @@ The spec number (1538) is the next in sequence. It is unrelated to issue #1538, 
 ### Session 2026-11-17
 
 - Q: Which declaration kinds does widened discovery apply to? → A: Fetches only (`FetchContent_Declare`, `ExternalProject_Add`). Nested `find_package` and `pkg_check_modules` calls are counted on TheRock in CI, and a follow-up is filed with the numbers (FR-002, SC-008).
+- Q: How is `FetchContent_Declare`'s first-declaration-wins rule treated? → A: As a fifth fallback shape. An inner `FetchContent_Declare` of a name an enclosing project also declares is merged into that component (C56), with the reason `first-declaration-wins`, guarded or not. Same-name declarations in sibling subprojects with no enclosing declaration stay separate components (FR-003, FR-005).
+- Q: Does any enclosing `if()` mark a fetch conditional, or only the recognised fallback shapes? → A: Any enclosing `if()`, in every file including the root. Recognised shapes get their own reason. Any other condition gets the reason `conditional`, and the condition's text is recorded (FR-004, FR-010).
+- Q: Does a fetch under `if(BUILD_TESTING)` get test scope? → A: Yes, as well as the conditional mark, including when `BUILD_TESTING` is `AND`-combined. Project-specific test options (`<PROJ>_BUILD_TESTS` and similar) are not matched by name, and stay `conditional` only (FR-008).
 
 ## Background
 
@@ -106,8 +109,10 @@ When the super-project itself supplies a package, through its own fetch, a submo
 **Acceptance Scenarios**:
 
 1. **Given** the root fetches package P and a subproject's guarded fallback also declares P, **When** scanned, **Then** P is one component, and the fallback appears in its additional-detection record.
-2. **Given** a fallback for P at a different version than the super-project's, **When** scanned, **Then** P is still one component at the super-project's version. The fallback's version is preserved in the detection record, not as a second component.
-3. **Given** a fallback for a package nothing else in the scan supplies, **When** scanned, **Then** it is emitted as its own component, marked conditional (User Story 2).
+2. **Given** the root `FetchContent_Declare`s P and a subproject declares P again with **no** guard, **When** scanned, **Then** P is one component, and the inner declaration is an additional detection with the reason `first-declaration-wins`.
+3. **Given** two sibling subprojects that each declare P, with no enclosing declaration of P, **When** scanned, **Then** both stay components. A static scan cannot know their order.
+4. **Given** a fallback for P at a different version than the super-project's, **When** scanned, **Then** P is still one component at the super-project's version. The fallback's version is preserved in the detection record, not as a second component.
+5. **Given** a fallback for a package nothing else in the scan supplies, **When** scanned, **Then** it is emitted as its own component, marked conditional (User Story 2).
 
 ---
 
@@ -126,8 +131,10 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
 ### Edge Cases
 
 - **A file reached by more than one route** (an `include()` and the walk) is read once. Its declarations are not duplicated.
-- **A fetch in a test-only subtree** (`test/`, `tests/`, `unittests/`) is attributed as a test dependency, not a runtime one.
-- **A guard whose condition cannot be read statically** (a variable set elsewhere, a generator expression) still marks the fetch conditional, with a reason saying the guard was not evaluated. It is never treated as unconditional.
+- **A fetch in a test-only subtree** (`test/`, `tests/`, `unittests/`), or under `if(BUILD_TESTING)`, is attributed as a test dependency, not a runtime one.
+- **A condition that combines `BUILD_TESTING` with `OR`** (`if(BUILD_TESTING OR FOO)`) does not imply a test-only fetch. It is `conditional` only.
+- **A condition that cannot be read statically** (a variable set elsewhere, a generator expression) still marks the fetch conditional, with the reason `conditional` and the condition's text. It is never treated as unconditional.
+- **A configuration switch rather than a fallback** (`if(WIN32)`, `if(ENABLE_FOO)`) also marks the fetch conditional (FR-004). That holds in the root file too, which changes today's root output by adding the marker.
 - **A fetch inside a submodule's tree** belongs to that submodule (spec 1537's ownership rule). A fetch with no enclosing project belongs to the document root.
 - **A CMake file that does not parse** is skipped with a warning naming its path. It never aborts the scan.
 - **Very large trees.** The measured super-build has 6,161 CMake files. Reading all of them must not make the scan impractical (SC-006).
@@ -146,23 +153,31 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
   - `FIND_PACKAGE_ARGS` on the declaration;
   - an enclosing `if(NOT TARGET …)` guard;
   - `FETCHCONTENT_TRY_FIND_PACKAGE_MODE` set by an enclosing project;
-  - a dependency provider installed by an enclosing project.
+  - a dependency provider installed by an enclosing project;
+  - **first declaration wins:** a `FetchContent_Declare` of a name an enclosing project also declares. CMake ignores every declaration of a name after the first, guarded or not, and a project's own declarations normally precede its `add_subdirectory()` calls. "Earlier" is approximated statically as "declared by an enclosing project", and the reason value says so. This shape does not apply to `ExternalProject_Add`, where a duplicate target name is an error, and it does not apply between sibling subprojects, whose order a static scan cannot know.
 
   The marker MUST use an existing waybill row or a format-native field where one fits, and add a new row only if none does (Constitution Principle V). The same marker MUST appear in all three formats.
-- **FR-004**: A guard the reader cannot evaluate MUST mark the fetch conditional, with a reason saying so. An unrecognised guard MUST NOT be read as "unconditional".
-- **FR-005**: When the scan already holds a component for the package a fallback declares, the declaration MUST be recorded on that component as an additional detection (C56), not emitted as a second component. "The scan holds" includes a super-project fetch, a git submodule, or another reader's component. Matching MUST use the package's identity (URL or repository), not its name alone, so that two packages that share a name are not merged.
+- **FR-004**: A fetch inside **any** enclosing `if()` MUST be marked conditional, in every CMake file, the root included.
+  - A recognised shape (FR-003) gives its own reason.
+  - Any other condition, such as `if(WIN32)`, `if(ENABLE_FOO)` or a condition the reader cannot evaluate, gives the reason `conditional`, with the condition's text recorded.
+  - An unrecognised condition MUST NOT be read as "unconditional".
+- **FR-005**: When the scan already holds a component for the package a fallback declares (including a `first-declaration-wins` declaration, whose package is the enclosing project's same-name fetch), the declaration MUST be recorded on that component as an additional detection (C56), not emitted as a second component. "The scan holds" includes a super-project fetch, a git submodule, or another reader's component. Matching MUST use the package's identity (URL or repository), not its name alone, so that two packages that share a name are not merged.
 - **FR-006**: A fallback for a package nothing else supplies MUST be emitted as its own component, marked per FR-003.
 - **FR-007**: Each nested fetch MUST be a dependency of the project that declares it, by spec 1537's ownership rule. That is the nearest enclosing project component (main module or git submodule), and otherwise the document root. All three formats MUST agree on the root's direct targets (invariant I-1).
-- **FR-008**: A fetch declared under a test-only directory (`test`, `tests` or `unittests`, the names #1524 uses) MUST carry the test lifecycle scope.
+- **FR-008**: A fetch MUST carry the test lifecycle scope in either of two cases:
+  - it is declared under a test-only directory (`test`, `tests` or `unittests`, the names #1524 uses);
+  - it is inside `if(BUILD_TESTING)`, alone or `AND`-combined with other conditions. `BUILD_TESTING` is CTest's standard switch.
+
+  It also keeps the conditional mark (FR-004). Project-specific test options (`<PROJ>_BUILD_TESTS`, `ENABLE_TESTS` and similar) are NOT matched by name; such a fetch is `conditional` only. That follows the test-scope rules of #1564 and #1524, which do not guess from names.
 - **FR-009**: Fetch declarations that are counted but not emitted MUST be counted in the document, by reason, so that "accounted for" in SC-002 is checkable from the document alone. Examples are unparseable files, fetches of a subproject that is not on disk, and declarations merged by FR-005.
-- **FR-010**: Output for a tree whose fetches are all in the root, `cmake/` and `Modules/` MUST be unchanged, except where this feature's rows are added.
+- **FR-010**: Output for a tree whose fetches are all in the root, `cmake/` and `Modules/` MUST be unchanged, except for two additions: the conditional marker on fetches inside an `if()` (FR-004), and this feature's document-scope rows.
 - **FR-011**: No new Cargo dependency.
 - **FR-012**: `--cmake-third-party-recursive` MUST still be accepted. Its behaviour becomes a subset of the default. Removing the flag is a separate decision.
 
 ### Key Entities
 
 - **Fetch declaration**: one `FetchContent_Declare` or `ExternalProject_Add` call. It has a declaring file, an identity (URL or repository), a pinned revision or version, and a declared hash.
-- **Fallback shape**: the reason a declaration is conditional. One of the four recognised shapes, or "a guard was not evaluated".
+- **Fallback shape**: the reason a declaration is conditional. One of the five recognised shapes (four guards, plus first declaration wins), or `conditional` for any other enclosing `if()`, recorded with the condition's text.
 - **Declaring project**: the component a fetch is a dependency of (FR-007).
 - **Additional detection**: a fallback declaration recorded on an existing component instead of emitted as a second one (FR-005).
 
@@ -182,7 +197,7 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
 ## Assumptions
 
 - Source scanning cannot know which fallbacks a build takes. This feature marks the possibility only, and resolving it is #1544's build-tree work.
-- The four fallback shapes cover the super-build patterns that matter. Any others found while measuring TheRock are recorded, and added only if they are standard CMake. Project-specific wrapper functions are #1518 and #1545, not this feature.
+- The five fallback shapes cover the super-build patterns that matter. Any others found while measuring TheRock are recorded, and added only if they are standard CMake. Project-specific wrapper functions are #1518 and #1545, not this feature.
 - A fetch's identity for FR-005 is its URL or repository, normalised as the existing reader already does (lowercased `pkg:github` owner and repository, #1515).
 - TheRock is measured in CI only, through the fixture repository (`kusari-sandbox/waybill-fixture-therock-sdk`), and is never cloned locally.
 - Fixtures use synthetic `waybill-fixture-*` names.
