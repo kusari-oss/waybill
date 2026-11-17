@@ -66,19 +66,27 @@
 **Goal:** the binary codes, the uv reader's root and edges, and the remaining populations.
 **Independent test:** O-3 to O-7 and O-10 to O-13; then TheRock (T013).
 
-- [ ] T009 [US1] Add cases O-3, O-4, O-5 (including an unowned binary in a non-source scan), O-6, O-7, O-10, O-11, O-12 and O-13 to `waybill-cli/tests/orphan_explanations.rs`, and confirm they fail before T010 and T011.
-- [ ] T010 [US1] Register `test-data-binary` and `unowned-binary` in C45's row in `docs/reference/sbom-format-mapping.md`. Give each its population and its exclusions, and place them below every existing code. Then implement them in `waybill-cli/src/generate/orphan_reason.rs`:
+- [X] T009 [US1] Add cases O-3, O-4, O-5 (including an unowned binary in a non-source scan), O-6, O-7, O-10, O-11, O-12 and O-13 to `waybill-cli/tests/orphan_explanations.rs`, and confirm they fail before T010 and T011.
+- [X] T010 [US1] Register `test-data-binary` and `unowned-binary` in C45's row in `docs/reference/sbom-format-mapping.md`. Give each its population and its exclusions, and place them below every existing code. Then implement them in `waybill-cli/src/generate/orphan_reason.rs`:
   - two `OrphanReasonCode` variants;
   - the closed test-data directory list (research R3), matched case-sensitively per path segment;
   - the "derived from binaries" predicate (data-model), fixed from TheRock's population;
   - placement after every existing arm, so FR-006 holds by position;
   - counters in `OrphanReasonCounts`, and in the info log.
-- [ ] T011 [US1] In `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs` (research R4):
+- [X] T011 [US1] In `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs` (research R4):
   - emit an editable root with no `version` as a versionless component, with `waybill:unresolved-reason` = `dynamic version in pyproject.toml; not resolved from the lock`;
   - wire its `dependencies` (runtime), `optional-dependencies` (optional, keeping `waybill:optional-derivation`) and `dev-dependencies` (development) edges, from every root, including one with a version;
   - add an edge to every listed version of a dependency named more than once under markers.
 
   Run spec 674's uv tests and the pip suites. Record every changed expectation, and why.
+  - **Done, with one correction to R4.** The editable project's own entry with no version is emitted versionless, with C151. A dependency pinned to one of several versions targets that version's exact PURL, which the resolver already accepts (`resolve_exact_purl_dep`, spec 1530). The project's own unrequested extras get optional edges.
+  - **Correction:** R4 said to wire every package's optional-dependencies. An existing test (#1163) pins that a *dependency's* unrequested extras get no edge, because they chain unrelated packages (`attrs[docs]` → `myst-parser`). The new edges therefore come only from the project's own entry (editable or virtual), as the pyproject reader already does. #1163's test is unchanged and passes.
+  - **T009 findings:**
+    - A directory scan skips binaries under `test`, `tests`, `unittests` and `Inputs` (#1524), so O-3 and O-4 pass `--include-test-binaries` there.
+    - The other spellings (`test_assets`, `testsuite`, `fixtures`, …) are analyzed without it.
+    - O-9's container is an installed package that no rule here explains, and O-9 exempts it by name.
+    - O-12 (cargo) and O-13 (claimed binary) passed before any change.
+  - Every suite touching uv, binaries or orphan reasons (24) passes, plus the three regression goldens; no golden changed.
 - [ ] T012 [US1] Re-probe the source-tree document at the branch (after T013's CI run). For each population in `source-trace.md` still unexplained (expected: none of the cargo, npm, conan or vcpkg ones after T005), trace it, and record the cause in `measurements/source-trace.md` under "At the branch". Covers `pkg:generic/tensile` and `pkg:generic/wkmi@1.0.0` (FR-007). A waybill defect is declared in `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` with a new issue, not given a code.
 
 ## Phase 5: User Story 3 — measured on TheRock, the corpora traced (P2)

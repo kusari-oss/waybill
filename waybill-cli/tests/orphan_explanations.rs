@@ -51,18 +51,25 @@ fn doc_raw(docs: &Docs, field: &str) -> Option<String> {
     cdx
 }
 
-/// The orphan count the completeness reason states, 0 when it states none.
-fn stated_orphans(docs: &Docs) -> usize {
-    let Some(reason) = doc_raw(docs, "waybill:graph-completeness-reason") else { return 0 };
-    assert!(
-        !reason.contains("multi-ecosystem-partial-root"),
-        "fixture design: the reason splits its count: {reason}"
-    );
-    reason
-        .split(';')
-        .find_map(|code| code.trim().strip_prefix("orphaned-components-detected: "))
+/// The orphan count the completeness reason states (0 when it states none),
+/// and the ecosystems it reports under `multi-ecosystem-partial-root`, whose
+/// unreachable components that count leaves out.
+fn stated_orphans(docs: &Docs) -> (usize, Vec<String>) {
+    let Some(reason) = doc_raw(docs, "waybill:graph-completeness-reason") else {
+        return (0, Vec::new());
+    };
+    let codes: Vec<&str> = reason.split(';').map(str::trim).collect();
+    let count = codes
+        .iter()
+        .find_map(|c| c.strip_prefix("orphaned-components-detected: "))
         .map(|rest| rest.split_whitespace().next().unwrap().parse().unwrap())
-        .unwrap_or(0)
+        .unwrap_or(0);
+    let partial = codes
+        .iter()
+        .find_map(|c| c.strip_prefix("multi-ecosystem-partial-root: "))
+        .map(|rest| rest.split(',').map(|e| e.trim().to_string()).collect())
+        .unwrap_or_default();
+    (count, partial)
 }
 
 /// The I7 population: components, nested ones included, other than the
@@ -83,6 +90,12 @@ fn unreachable(cdx: &Value) -> Vec<&Value> {
 
 /// I-A and I-B (contract): one unreachable set, in every format.
 fn assert_one_answer(docs: &Docs) {
+    assert_one_answer_except(docs, &[]);
+}
+
+/// [`assert_one_answer`], with `unexplained` named as unreachable components
+/// no rule of this feature covers. Each caller says why.
+fn assert_one_answer_except(docs: &Docs, unexplained: &[&str]) {
     let cdx = &docs.cdx;
     let reachable = reachable_with_containment(cdx);
     for (c, _) in cdx_components_with_containers(cdx) {
@@ -92,11 +105,23 @@ fn assert_one_answer(docs: &Docs) {
     }
     let orphans = unreachable(cdx);
     for c in &orphans {
+        if unexplained.iter().any(|u| c["purl"] == *u) {
+            assert!(!is_explained(c), "{} is explained now; drop the exemption", c["purl"]);
+            continue;
+        }
         assert!(is_explained(c), "I-A: unreachable {} carries no marker", c["bom-ref"]);
     }
+    let (stated, partial) = stated_orphans(docs);
+    let counted = orphans
+        .iter()
+        .filter(|c| {
+            let eco = c["purl"].as_str().and_then(|p| p.strip_prefix("pkg:")).and_then(|p| p.split('/').next());
+            !eco.is_some_and(|e| partial.iter().any(|x| x == e))
+        })
+        .count();
     assert_eq!(
-        stated_orphans(docs),
-        orphans.len(),
+        stated,
+        counted,
         "I-A: completeness count vs the I7 population {:?}",
         orphans.iter().map(|c| &c["bom-ref"]).collect::<Vec<_>>()
     );
@@ -163,6 +188,8 @@ const STRAY: &str = "pkg:npm/waybill-fixture-stray@1.0.0";
 fn scan(root: &Path, extra: &[&str]) -> Docs {
     scan_with("--path", root, extra)
 }
+
+const INCLUDE_TESTS: &[&str] = &["--include-test-binaries"];
 
 const ROOT_FLAGS: &[&str] = &["--root-name", "waybill-fixture-root", "--root-version", "1.0.0"];
 
@@ -269,5 +296,238 @@ fn o9_a_library_nested_in_an_unreachable_binary_is_explained() {
     assert!(!reachable.contains(container), "control: the binary is unreachable");
     assert!(!reachable.contains(cdx_component_ref(zlib).unwrap()));
     assert!(cdx_prop(zlib, C45).is_some(), "zlib carries C45");
+    // The installed package holding the binary is unreachable too, because
+    // the fixture puts it behind an unrelated npm app. No rule of this
+    // feature covers an installed package, and TheRock has none.
+    assert_one_answer_except(&docs, &["pkg:pypi/waybill-fixture-pkg@1.2.3"]);
+}
+
+// ---------------------------------------------------------------------
+// User Story 1: binaries found by binary analysis (FR-004)
+// ---------------------------------------------------------------------
+
+/// An npm project with an edge at the scan root: its main module roots the
+/// graph and closes the root fallback, so a loose binary is not attached to
+/// the root and is unreachable.
+fn app(root: &Path) {
+    npm_project(root, ".", "waybill-fixture-app", &["waybill-fixture-dep-a"], &[]);
+}
+
+/// Every component binary analysis produced, by PURL, with its C45.
+fn analyzed(docs: &Docs) -> Vec<(String, Option<String>)> {
+    let mut v: Vec<(String, Option<String>)> = cdx_components_with_containers(&docs.cdx)
+        .into_iter()
+        .map(|(c, _)| c)
+        .filter(|c| cdx_prop(c, "waybill:sbom-tier") == Some("analyzed"))
+        .map(|c| (c["purl"].as_str().unwrap_or_default().to_string(), cdx_prop(c, C45).map(str::to_string)))
+        .collect();
+    v.sort();
+    v
+}
+
+/// Scan a tree holding the zlib-carrying library at each of `paths`, behind
+/// an npm app, and return the documents. Asserts the binary population is
+/// unreachable, so a code test cannot pass on a reachable component.
+///
+/// A directory scan skips binaries under `test`, `tests`, `unittests` and
+/// `Inputs` (#1524); a case placing one there passes
+/// `--include-test-binaries`, as TheRock's scan in effect did.
+fn loose_binaries(paths: &[&str], extra: &[&str]) -> Docs {
+    let dir = tempfile::tempdir().unwrap();
+    app(dir.path());
+    for p in paths {
+        plant(dir.path(), p, &zlib_dylib());
+    }
+    let docs = scan(dir.path(), extra);
+    let found = analyzed(&docs);
+    assert!(!found.is_empty(), "control: binary analysis produced components");
+    let reachable = reachable_with_containment(&docs.cdx);
+    for (c, _) in cdx_components_with_containers(&docs.cdx) {
+        if cdx_prop(c, "waybill:sbom-tier") == Some("analyzed") {
+            assert!(
+                !reachable.contains(cdx_component_ref(c).unwrap()),
+                "control: {} is unreachable",
+                c["purl"]
+            );
+        }
+    }
+    docs
+}
+
+fn assert_all_coded(docs: &Docs, code: &str) {
+    for (purl, got) in analyzed(docs) {
+        assert_eq!(got.as_deref(), Some(code), "{purl}");
+    }
+    assert_one_answer(docs);
+}
+
+/// O-3: under a test-data directory.
+#[test]
+fn o3_a_binary_under_tests_is_test_data() {
+    let docs = loose_binaries(&["tests/data/libwaybill-fixture-z.dylib"], INCLUDE_TESTS);
+    assert_all_coded(&docs, "test-data-binary");
+}
+
+/// O-4: the other spellings TheRock uses. `Inputs` is one of #1524's; the
+/// rest are analyzed in a directory scan without any flag.
+#[test]
+fn o4_the_other_test_data_spellings_are_test_data() {
+    let docs = loose_binaries(&["lldb/Inputs/libwaybill-fixture-z.dylib"], INCLUDE_TESTS);
+    assert_all_coded(&docs, "test-data-binary");
+    for d in ["test_assets", "testsuite", "fixtures", "testdata", "test-data", "test_data", "test-suite", "test-assets"] {
+        let docs = loose_binaries(&[&format!("kpack/{d}/libwaybill-fixture-z.dylib")], &[]);
+        assert_all_coded(&docs, "test-data-binary");
+    }
+}
+
+/// O-5: anywhere else, in a source tree or an install tree.
+#[test]
+fn o5_a_binary_elsewhere_is_unowned() {
+    for p in ["prebuilt/libwaybill-fixture-z.dylib", "usr/lib/libwaybill-fixture-z.dylib"] {
+        let docs = loose_binaries(&[p], &[]);
+        assert_all_coded(&docs, "unowned-binary");
+    }
+}
+
+/// O-6: every source file must be under a test-data directory. The same
+/// library twice, once under `tests/` and once outside, is one set of
+/// components with both paths.
+#[test]
+fn o6_a_binary_partly_outside_test_data_is_unowned() {
+    let docs = loose_binaries(
+        &["tests/libwaybill-fixture-z.dylib", "prebuilt/libwaybill-fixture-z.dylib"],
+        INCLUDE_TESTS,
+    );
+    let zlib = cdx_components_with_containers(&docs.cdx)
+        .into_iter()
+        .map(|(c, _)| c)
+        .find(|c| c["purl"] == "pkg:generic/zlib@1.3.1")
+        .unwrap();
+    assert_eq!(
+        common::installed_lib::source_files(zlib).len(),
+        2,
+        "control: one component, both paths"
+    );
+    assert_all_coded(&docs, "unowned-binary");
+}
+
+/// O-13: a binary a package claims is the package's contents. It gets no
+/// binary code, because it is not unowned.
+#[test]
+fn o13_a_claimed_binary_gets_no_binary_code() {
+    let dir = tempfile::tempdir().unwrap();
+    installed_package_with_zlib(dir.path());
+    let docs = scan(dir.path(), &[]);
+    for (purl, got) in analyzed(&docs) {
+        assert!(
+            !matches!(got.as_deref(), Some("unowned-binary") | Some("test-data-binary")),
+            "{purl}: {got:?}"
+        );
+    }
+    assert_one_answer(&docs);
+}
+
+// ---------------------------------------------------------------------
+// User Story 1: lock files (FR-005)
+// ---------------------------------------------------------------------
+
+const UV_REGISTRY: &str = r#"source = { registry = "https://pypi.org/simple" }"#;
+
+fn uv_package(name: &str, version: &str) -> String {
+    format!("[[package]]\nname = \"{name}\"\nversion = \"{version}\"\n{UV_REGISTRY}\n\n")
+}
+
+/// O-10: the project's own entry is editable with a dynamic version, so the
+/// lock gives it none. It is emitted versionless and explains why, and its
+/// three groups are wired.
+#[test]
+fn o10_a_versionless_editable_root_is_emitted_and_wired() {
+    let dir = tempfile::tempdir().unwrap();
+    write(
+        dir.path(),
+        "proj/pyproject.toml",
+        "[project]\nname = \"waybill-fixture-proj\"\ndynamic = [\"version\"]\n",
+    );
+    let lock = format!(
+        "version = 1\nrequires-python = \">=3.10\"\n\n\
+[[package]]\nname = \"waybill-fixture-proj\"\nsource = {{ editable = \".\" }}\n\
+dependencies = [{{ name = \"waybill-fixture-run\" }}]\n\n\
+[package.optional-dependencies]\ncu12 = [{{ name = \"waybill-fixture-opt\" }}]\n\n\
+[package.dev-dependencies]\ndev = [{{ name = \"waybill-fixture-dev\" }}]\n\n{}{}{}",
+        uv_package("waybill-fixture-run", "1.0.0"),
+        uv_package("waybill-fixture-opt", "1.0.0"),
+        uv_package("waybill-fixture-dev", "1.0.0"),
+    );
+    write(dir.path(), "proj/uv.lock", &lock);
+    let docs = scan(dir.path(), &[]);
+    let root: Vec<&Value> = cdx_components_with_containers(&docs.cdx)
+        .into_iter()
+        .map(|(c, _)| c)
+        .chain(std::iter::once(&docs.cdx["metadata"]["component"]))
+        .filter(|c| c["purl"] == "pkg:pypi/waybill-fixture-proj")
+        .collect();
+    assert_eq!(root.len(), 1, "the versionless root, once");
+    for p in ["pkg:pypi/waybill-fixture-run@1.0.0", "pkg:pypi/waybill-fixture-opt@1.0.0", "pkg:pypi/waybill-fixture-dev@1.0.0"] {
+        assert!(!unreachable(&docs.cdx).iter().any(|c| c["purl"] == p), "{p} is reachable");
+    }
+    assert_one_answer(&docs);
+}
+
+/// O-11: a dependency listed at three versions under markers gets an edge to
+/// each.
+#[test]
+fn o11_every_forked_version_is_wired() {
+    let dir = tempfile::tempdir().unwrap();
+    write(
+        dir.path(),
+        "pyproject.toml",
+        "[project]\nname = \"waybill-fixture-proj\"\nversion = \"1.0.0\"\n",
+    );
+    let deps: String = ["1.0.0", "2.0.0", "3.0.0"]
+        .iter()
+        .map(|v| format!("{{ name = \"waybill-fixture-fork\", version = \"{v}\", {UV_REGISTRY}, marker = \"python_full_version == '3.1{}'\" }}", &v[..1]))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let lock = format!(
+        "version = 1\nrequires-python = \">=3.10\"\n\n\
+[[package]]\nname = \"waybill-fixture-proj\"\nversion = \"1.0.0\"\nsource = {{ editable = \".\" }}\n\
+dependencies = [{deps}]\n\n{}{}{}",
+        uv_package("waybill-fixture-fork", "1.0.0"),
+        uv_package("waybill-fixture-fork", "2.0.0"),
+        uv_package("waybill-fixture-fork", "3.0.0"),
+    );
+    write(dir.path(), "uv.lock", &lock);
+    let docs = scan(dir.path(), &[]);
+    for v in ["1.0.0", "2.0.0", "3.0.0"] {
+        let p = format!("pkg:pypi/waybill-fixture-fork@{v}");
+        assert!(!unreachable(&docs.cdx).iter().any(|c| c["purl"] == p.as_str()), "{p} is reachable");
+    }
+    assert_one_answer(&docs);
+}
+
+/// O-12: an older version in a `Cargo.lock` that nothing references, beside
+/// a reachable newer one, is a dead lock entry (existing code, unchanged).
+#[test]
+fn o12_an_unreferenced_older_cargo_version_is_a_dead_lock_entry() {
+    let dir = tempfile::tempdir().unwrap();
+    write(
+        dir.path(),
+        "Cargo.toml",
+        "[package]\nname = \"waybill-fixture-app\"\nversion = \"0.1.0\"\n\n[dependencies]\nwaybill-fixture-x = \"2\"\n",
+    );
+    write(dir.path(), "src/main.rs", "fn main() {}\n");
+    let reg = "source = \"registry+https://github.com/rust-lang/crates.io-index\"";
+    write(
+        dir.path(),
+        "Cargo.lock",
+        &format!(
+            "version = 3\n\n[[package]]\nname = \"waybill-fixture-app\"\nversion = \"0.1.0\"\ndependencies = [\"waybill-fixture-x 2.0.0\"]\n\n\
+[[package]]\nname = \"waybill-fixture-x\"\nversion = \"1.0.0\"\n{reg}\n\n\
+[[package]]\nname = \"waybill-fixture-x\"\nversion = \"2.0.0\"\n{reg}\n"
+        ),
+    );
+    let docs = scan(dir.path(), &[]);
+    assert_eq!(marker(&docs, "pkg:cargo/waybill-fixture-x@1.0.0"), Some("dead-lockfile-entry"));
+    assert_eq!(marker(&docs, "pkg:cargo/waybill-fixture-x@2.0.0"), None);
     assert_one_answer(&docs);
 }
