@@ -2,23 +2,35 @@
 
 Every document is a CI artifact from `kusari-sandbox/waybill-fixture-therock-sdk`, read locally with `probe_i7_on_document`. The probe uses the corpus harness's own I7 functions: nested components are included, and containment counts as reachability. With sibling SPDX documents present, it also compares C45, C104 and C105 across the formats through the parity extractors. TheRock was never scanned locally.
 
-## Built SDK (`measure-full` 44189121691; branch `2dd9c4f4`, base `main` `b503bd6a`)
+## Built SDK (`measure-full`, base `main` `b503bd6a`)
+
+**Final run: 44193745935, branch `2aecdf6e`.** Medians of three interleaved runs: base 46.0 s, branch 45.3 s, **0.983×**.
 
 | | `main` | branch |
 |---|---|---|
-| completeness reason | 645 not reachable | **1** not reachable |
+| completeness reason (last scan) | 645 not reachable | none (0) |
 | components (top-level / nested) | 2,105 / 644 | 2,105 / 644 |
 | I7 population | 1 | 1 |
-| I7 unexplained | **1** (`pkg:generic/gotcha`) | **0** (`gotcha` carries `unowned-binary`) |
-| completeness count = I7 population | no (645 ≠ 1) | **yes** (1 = 1) |
-| median scan, interleaved (3 runs) | 39.3 s | 34.8 s (**0.884×**) |
+| I7 unexplained (last scan) | 1 (`pkg:generic/gotcha`) | 1 (`pkg:generic/gotcha`) |
+| C45, C104, C105 across formats | agree | agree |
 
-**Formats (FR-009):**
-- C104 and C105 agree in all three formats.
-- C45 agrees in CycloneDX and SPDX 3. **SPDX 2.3 does not.** It keys packages by PURL, and folds `gotcha`'s three components into one package reached by `CONTAINS`, which has nothing to carry the marker.
-- The top-level copy exists because two binaries merged by name and hash lose one binary's nested identification. That is a binary-reader defect present on `main`, filed as **#1600**.
+**The one SDK component is order-dependent (#1600).** Each side is scanned four times per run (warm-up first), and every scan logs its completeness orphan count:
 
-*The `2dd9c4f4` build predates `adf230fc`, which changes only the uv reader. The SDK has no `uv.lock`.*
+| run | branch commit | branch scans | `main` scans |
+|---|---|---|---|
+| 44189121691 | `2dd9c4f4` | 0, 0, 1, 0 | 645 ×4 |
+| 44193745935 | `2aecdf6e` | 1, 1, 1, 0 | 645 ×4 |
+
+**What the flip is.** Two `libgotcha.so` files share a name and content hash, and merge into one file component. Which file's identification keeps a container varies with the parallel walker's order (inference, recorded on #1600).
+- **When the count is 1,** the top-level `gotcha` is unreachable in every view and carries `unowned-binary`. Completeness = I7 = 1, and the formats agree on C45 (run 44189121691's last scan).
+- **When the count is 0,** completeness and the classifier count it reached through a container, while CycloneDX renders it top-level and unreached. That is the only I-A failure on the SDK, about half the scans.
+
+**Decision (maintainer, at implementation):** ship spec 1541 with this recorded; #1600 follows as its own change.
+
+**Everything else on the SDK holds in every scan:**
+- the 644 nested components are reachable through containment;
+- the completeness reason no longer counts them (645 → 0 or 1);
+- no other component is unexplained.
 
 ## Source tree (`measure-source`)
 

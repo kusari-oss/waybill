@@ -49,3 +49,14 @@ Both runs succeeded, with no violations at either ref. Every metric except wall 
 - **Harness expectations followed:**
   - `python_flask_expectations` now pins `complete`, so an orphan returning is caught.
   - Two feature-1218 controls lost their populations: python-flask's ten forks, and haskell-security-advisories' three flake inputs. One now asserts that the forks are **reached**. The other moved to `maven-guice`'s three #1235 components, still a declared non-Go/npm population.
+
+## Quality corpus, final (`2aecdf6e`, run 44193736601, against `main` control 44184449481)
+
+No violations. Two targets moved, both from FR-005:
+
+| target | `main` | branch |
+|---|---|---|
+| `python-flask` | 202 edges, `partial`, sbomqs 7.2171 | 222 edges, **`complete`**, sbomqs **7.5098** |
+| `rust-zizmor` | 473 pkgs, 1184 edges, 300 nodes with out-edges, `partial`, 7.6975 | 473 pkgs, 1188 edges, 301, **`complete`**, 7.6975 |
+
+zizmor's package count no longer rises (the first run had 474). The lock's `zizmor` entry now takes the pyproject reader's `0.0.0-unknown` and merges with that component. Its four dev-group edges remain.
