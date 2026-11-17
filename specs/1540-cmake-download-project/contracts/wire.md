@@ -9,7 +9,7 @@ Each case is a synthetic `waybill-fixture-*` tree, scanned with `--offline` and 
 
 | # | Tree | Expected |
 |---|---|---|
-| D-1 | DP; `download_project(PROJ waybill-fixture-r GIT_REPOSITORY https://github.com/waybill-org/waybill-fixture-r.git GIT_TAG v1.2 BUILD_PROJECT TRUE)` | `pkg:github/waybill-org/waybill-fixture-r@v1.2`, mechanism `cmake-externalproject`, required, DP(`["download_project"]`) (US1-1) |
+| D-1 | DP; `download_project(PROJ waybill-fixture-r GIT_REPOSITORY https://github.com/waybill-org/waybill-fixture-r.git GIT_TAG v1.2 BUILD_PROJECT TRUE INSTALL_DIR ${ROOT})`, with `set(ROOT "${CMAKE_BINARY_DIR}/r")` in the same file, as TheRock's calls pass `INSTALL_DIR ${ROCRAND_ROOT}` | `pkg:github/waybill-org/waybill-fixture-r@v1.2`, mechanism `cmake-externalproject`, required, DP(`["download_project"]`) (US1-1) |
 | D-2 | DP; `download_project(PROJ waybill-fixture-u URL https://example.invalid/waybill-fixture-u-2.0.tar.gz URL_HASH SHA256=<64 hex>)` | `pkg:generic/waybill-fixture-u@2.0` with the hash (US1-2) |
 | D-3 | DP; a URL whose archive does not parse (`…/download?id=7`), `PROJ waybill-fixture-np` | `pkg:generic/waybill-fixture-np@unknown`: named `<PROJ>`, not `<PROJ>-download` (FR-004) |
 | D-4 | DP; a call passing `PREFIX`, `SOURCE_DIR`, `DOWNLOAD_DIR`, `BINARY_DIR`, `QUIET` and `BUILD_PROJECT FALSE` alongside a URL | the same component as without them: DownloadProject's keywords are consumed, not forwarded (US1-3, probes D2, D4) |
@@ -26,6 +26,7 @@ Each case is a synthetic `waybill-fixture-*` tree, scanned with `--offline` and 
 | D-15 | DP; a project function `add_dep(name)` that calls `download_project(PROJ ${name} ${ARGN})`; called with a GitHub repository | DP(`["add_dep","download_project"]`): a spec 1539 wrapper of it |
 | D-16 | DP; two calls of one repository and tag in sibling directories | one component (one per PURL), with both files in C18 |
 | D-17 | DP; a call with a URL given twice | the first URL's component (probe D6) |
+| D-19 | DP defined in `cmake/DownloadProject.cmake`, never called, and no other fetch in the tree | no fetch component; C231 absent (spec 1538 I-4): a recognised definition is not a declaration |
 | D-18 | spec 1539 wrapper whose `cmake_parse_arguments` keyword lists are variables (`set(one URL NAME)`, `"${one}"`) | binds with the resolved keywords: `URL` is consumed and re-passed as spec 1539 binds it |
 
 Spec 1538's C-1 to C-15 and spec 1539's W-1 to W-26 still hold, unchanged.

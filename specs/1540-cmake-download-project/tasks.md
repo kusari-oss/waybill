@@ -26,10 +26,11 @@
   - **A list set under `if()` is unresolved:** the call returns `Err(Unbound::UnknownKeywords)`.
   - **A list appended with `list(APPEND …)` is unresolved.**
   - **The `PARSE_ARGV` form** resolves its lists the same way.
+  - **Integration, D-18:** add D-18 to `waybill-cli/tests/cmake_fetch_wrappers.rs`: a spec 1539 wrapper with `set(one URL NAME)` and `cmake_parse_arguments(W "" "${one}" "" ${ARGN})`. It must fail before T005: without expansion, nothing is parsed and no component is emitted.
 - [ ] T005 Implement keyword-list expansion in `Scope::evaluate` in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs` (data-model "Keyword lists", research R2).
   - **Expansion:** expand each of `cmake_parse_arguments`' three keyword-list arguments in the scope as **one string**, joining a known list with `;`. Then split on `;`. Do not splice them as separate arguments.
   - **Unresolved lists:** a list still containing `${` returns `Err(Unbound::UnknownKeywords)`. Add the variant.
-  - **Accounting:** in `waybill-cli/src/scan_fs/package_db/cmake/fetches.rs`, `UnknownKeywords` counts in `unresolved_identity`, as the other variants do. Check that the `match` on `Unbound` is exhaustive.
+  - **Accounting:** confirm that `waybill-cli/src/scan_fs/package_db/cmake/fetches.rs` counts the new variant in `unresolved_identity`. It handles `Unbound` with `if e == Unbound::Ambiguous`, so no edit is expected.
   - **The other argument positions** (the prefix, `PARSE_ARGV <n>`, the trailing input) are unchanged.
 
 **Checkpoint:** T004 passes. Spec 1539's suites (`cmake_fetch_wrappers` W-1 to W-26, the 18 unit tests) and spec 1538's `cmake_nested_fetches` pass unchanged.
@@ -37,13 +38,13 @@
 ## Phase 3: User Story 1 — a dependency fetched with `download_project()` is a component (P1) 🎯 MVP
 
 **Goal:** every `download_project()` call through a DownloadProject-shaped definition binds as the `ExternalProject_Add` it generates, named `<PROJ>`, with the copy's own keywords.
-**Independent test:** contract cases D-1 to D-14, D-16, D-17 and D-18, plus I-1, I-2 and I-7.
+**Independent test:** contract cases D-1 to D-14, D-16, D-17 and D-19, plus I-1, I-2 and I-7. D-18 is T004's.
 
 - [ ] T006 [US1] Add a helper and contract cases to `waybill-cli/tests/cmake_fetch_wrappers.rs`.
   - **Helper:** `dp_module(extra_keyword: &str, guard: Option<&str>) -> String` writes a DownloadProject-shaped `cmake/DownloadProject.cmake`, as in `contracts/wire.md`'s description of "DP": keyword lists in variables, `cmake_parse_arguments(DL_ARGS …)`, defaults, `configure_file()` of `DownloadProject.CMakeLists.cmake.in`, and two `execute_process()` calls. `extra_keyword` adds to `oneValueArgs` (D-8), and `guard` puts `set(oneValueArgs …)` under an `if()` (D-9).
-  - **Cases:** D-1 to D-14, D-16, D-17 and D-18, as written in `contracts/wire.md`, in all three formats, checking PURL, version, mechanism, scope, C122, C232, C18 and C231 `wrappers`.
+  - **Cases:** D-1 to D-14, D-16, D-17 and D-19, as written in `contracts/wire.md`, in all three formats, checking PURL, version, mechanism, scope, C122, C232, C18 and C231 `wrappers`.
   - **Not yet:** C234 assertions are US2's (T010). Leave a `// C234: T010` marker at each.
-  - **Prove they bite:** run against the reader after T005, before T007. Record which fail (expected: all but D-10 and D-12, which are controls), and that D-18 passes (T005 fixed it).
+  - **Prove they bite:** run against the reader after T005, before T007. Record which fail (expected: all but D-10, D-12 and D-19, which are controls).
 - [ ] T007 [US1] Recognise DownloadProject in `Definitions::collect`, in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs` (data-model "DownloadProject definition", research R1).
   - **The shape check:** for a definition whose lowercased name is `download_project`, before the wrapper fixed point:
     - find a `cmake_parse_arguments` with prefix `DL_ARGS` whose one-value list, resolved with T005's expansion over the body's unconditional literal `set()`s, contains `PROJ`;

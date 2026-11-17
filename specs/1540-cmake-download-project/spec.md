@@ -166,8 +166,8 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
   - the template's internal `if(${DL_ARGS_BUILD_PROJECT})` does not make the fetch conditional.
 - **FR-006: Evidence.** Each component produced by a `download_project` call MUST carry C234 with a chain ending in `download_project` as defined, after any spec 1539 wrapper around it, outermost first. No new catalog row is added.
 - **FR-007: No identity, no component.** A call with no `PROJ`, no `URL` and no `GIT_REPOSITORY`, or whose identity depends on an unexpanded variable, MUST NOT emit a component, and is counted under C231 `unresolved.identity`.
-- **FR-008: Direct calls and existing wrappers unchanged.** Every direct `FetchContent_Declare` / `ExternalProject_Add`, and every spec 1539 wrapper call, MUST produce byte-identical output to `main`.
-- **FR-009: Branch-name tags.** A `GIT_TAG` that is a branch name is emitted as a direct call's would be today. Marking it is added only if the census (SC-001) shows `download_project` calls on TheRock with a branch-name tag that would otherwise be presented as a release. If it does, the marking reuses an existing row where one fits (Principle V audit), or is filed as a follow-up.
+- **FR-008: Direct calls and existing wrappers unchanged.** Every direct `FetchContent_Declare` / `ExternalProject_Add`, and every spec 1539 wrapper whose `cmake_parse_arguments` keyword lists are literal, MUST produce byte-identical output to `main`. A spec 1539 wrapper whose keyword lists are held in variables changes as FR-002 requires: it binds with its resolved keywords, or is unresolved when they cannot be resolved. Before this feature it parsed nothing (research R2). Spec 1539's census found literal lists in every wrapper on TheRock.
+- **FR-009: Branch-name tags.** A `GIT_TAG` that is a branch name is emitted as a direct call's would be today. The census (SC-001) found 5 of TheRock's 8 calls naming a branch-like tag, and `main` already emits branch names as versions for direct fetches. No existing row fits outside Nix (C166, C167), so marking is not added here and is filed for all CMake git fetches as #1598 (research R6).
 - **FR-010: Formats agree.** CycloneDX, SPDX 2.3 and SPDX 3 MUST carry the same components, edges and rows, and agree on the root's direct targets (spec 1537 I-1).
 - **FR-011: No new dependencies.** Zero new Cargo dependencies. Test fixtures use synthetic `waybill-fixture-*` names, and a synthetic DownloadProject-shaped module, not a copy of the upstream file.
 
@@ -181,12 +181,12 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 
 ### Measurable Outcomes
 
-- **SC-001 (census first):** Before FR-001 to FR-004 are fixed in the plan, a CI census of TheRock at its pin lists every `download_project` definition and call, with its file, `PROJ`, identity and tag, whether the template is present beside each definition, and whether any copy differs from the upstream module's shape.
+- **SC-001 (census first):** Before FR-001 to FR-004 are fixed in the plan, a CI census of TheRock at its pin lists every `download_project` definition and call, with its file, `PROJ`, identity and tag, and whether any copy differs from the upstream module's shape. Template presence was dropped: the census checkout is sparse (`*.cmake`, `CMakeLists.txt`, `.gitmodules`), so `.cmake.in` files cannot be seen there, and FR-001 does not read the template (`measurements/census.md`).
 - **SC-002 (TheRock):** Every `download_project` call on TheRock with a `URL` or `GIT_REPOSITORY` is emitted, or merged into the component it duplicates. The count equals the census's.
 - **SC-003 (no fabrication):** 0 components on TheRock are named after a DownloadProject keyword, a template variable, or a `${…}` expression.
 - **SC-004 (accounting):** On TheRock, C231 V1 and V2 hold, and every census call is accounted for as emitted, merged or unresolved.
 - **SC-005 (cost):** The median full-tree TheRock scan with submodules is at most 1.5× `main`'s, by the interleaved `measure-source` workflow.
-- **SC-006 (corpora):** The public corpus goldens are byte-identical, or every change is traced to a `download_project` call in that target. Every quality-corpus movement is traced PURL by PURL against a `main` control.
+- **SC-006 (corpora):** The public corpus goldens are byte-identical, or every change is traced to a `download_project` call, or to a wrapper whose keyword lists are variables (FR-002, FR-008), in that target. Every quality-corpus movement is traced PURL by PURL against a `main` control.
 - **SC-007 (tests have teeth):** The recognition rule, the keyword split (including a copy with an added keyword, and lists that cannot be resolved), the naming rule and the accounting each have a contract test, and a mutation that removes or weakens each is caught.
 - **SC-008 (evidence):** 100% of `download_project` components carry C234 naming `download_project`, in all three formats.
 
