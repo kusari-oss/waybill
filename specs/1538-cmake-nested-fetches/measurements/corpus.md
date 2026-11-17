@@ -11,7 +11,7 @@
 **The cancelled run.** `corpus_nix_closure_slacklinker` ran 39+ minutes before the job timed out. It is a Nix closure target that this branch does not touch.
 - Its usual time is 10–12 minutes (run 43977779899).
 - A control at `main` (44019256105), dispatched beside the next branch run, passed in 16 minutes.
-- The branch's next two runs took 18 and about 20 minutes.
+- The branch's next two runs took 18 and 23 minutes.
 
 The slow run did not recur at the branch or at `main`.
 
