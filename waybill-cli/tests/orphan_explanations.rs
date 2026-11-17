@@ -460,13 +460,17 @@ dependencies = [{{ name = \"waybill-fixture-run\" }}]\n\n\
     );
     write(dir.path(), "proj/uv.lock", &lock);
     let docs = scan(dir.path(), &[]);
-    let root: Vec<&Value> = cdx_components_with_containers(&docs.cdx)
+    // One identity for the project: the pyproject reader's placeholder for a
+    // dynamic version, which the lock's entry now shares.
+    let root: Vec<String> = cdx_components_with_containers(&docs.cdx)
         .into_iter()
         .map(|(c, _)| c)
         .chain(std::iter::once(&docs.cdx["metadata"]["component"]))
-        .filter(|c| c["purl"] == "pkg:pypi/waybill-fixture-proj")
+        .filter_map(|c| c["purl"].as_str())
+        .filter(|p| p.starts_with("pkg:pypi/waybill-fixture-proj"))
+        .map(str::to_string)
         .collect();
-    assert_eq!(root.len(), 1, "the versionless root, once");
+    assert_eq!(root, vec!["pkg:pypi/waybill-fixture-proj@0.0.0-unknown".to_string()], "one identity for the project");
     for p in ["pkg:pypi/waybill-fixture-run@1.0.0", "pkg:pypi/waybill-fixture-opt@1.0.0", "pkg:pypi/waybill-fixture-dev@1.0.0"] {
         assert!(!unreachable(&docs.cdx).iter().any(|c| c["purl"] == p), "{p} is reachable");
     }
@@ -571,4 +575,40 @@ fn o14_a_vendored_sdk_does_not_unskip_the_trees_test_inputs() {
         "the installed package's own test is kept: {files:?}"
     );
     assert_eq!(doc_raw(&docs, "waybill:binary-scan-skipped-test-inputs").as_deref(), Some("1"));
+}
+
+/// O-15: TheRock's tensilelite shape. Two locks pin different versions of
+/// one name. Each project's edge stays inside its own lock; a bare name
+/// resolved across the scan, linking one project to the other lock's
+/// version and stranding its own.
+#[test]
+fn o15_a_uv_edge_stays_inside_its_lock() {
+    let dir = tempfile::tempdir().unwrap();
+    for (proj, v) in [("a", "1.0.0"), ("b", "2.0.0")] {
+        write(
+            dir.path(),
+            &format!("{proj}/pyproject.toml"),
+            &format!("[project]\nname = \"waybill-fixture-{proj}\"\nversion = \"1.0.0\"\n"),
+        );
+        write(
+            dir.path(),
+            &format!("{proj}/uv.lock"),
+            &format!(
+                "version = 1\nrequires-python = \">=3.10\"\n\n\
+[[package]]\nname = \"waybill-fixture-{proj}\"\nversion = \"1.0.0\"\nsource = {{ editable = \".\" }}\n\n\
+[package.dev-dependencies]\ndev = [{{ name = \"waybill-fixture-tool\" }}]\n\n{}",
+                uv_package("waybill-fixture-tool", v)
+            ),
+        );
+    }
+    let docs = scan(dir.path(), &[]);
+    for v in ["1.0.0", "2.0.0"] {
+        let p = format!("pkg:pypi/waybill-fixture-tool@{v}");
+        assert!(!unreachable(&docs.cdx).iter().any(|c| c["purl"] == p.as_str()), "{p} is reachable");
+    }
+    assert_eq!(
+        common::installed_lib::depends_on(&docs.cdx, "pkg:pypi/waybill-fixture-a@1.0.0"),
+        vec!["pkg:pypi/waybill-fixture-tool@1.0.0".to_string()]
+    );
+    assert_one_answer(&docs);
 }

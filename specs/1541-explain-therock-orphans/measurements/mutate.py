@@ -41,8 +41,9 @@ M = {
  "M13": [(U, "                                if added.insert(to.clone()) {\n                                    depends.push(to);\n                                }",
              "                                let _ = added.insert(to);")],
  "M14": [(U, "        Some(pinned.cloned().unwrap_or_else(|| name.to_string()))", "        let _ = pinned;\n        Some(name.to_string())")],
- "M15": [(U, "                if !own_project && !extra_is_active(name, extra_name) {", "                if !extra_is_active(name, extra_name) {")],
- "M16": [(U, "                if !own_project && !extra_is_active(name, extra_name) {", "                if false && !own_project && !extra_is_active(name, extra_name) {")],
+ "M15": [(U, "        own.then(|| (normalize_pypi_name_for_purl(name), extras))",
+             "        own.then(|| (normalize_pypi_name_for_purl(name), BTreeSet::new()))")],
+ "M16": [(U, "                if !own_project && !extra_is_optionally_active(name, extra_name) {", "                if false {")],
  "M17": [(U, '                "waybill:unresolved-reason".to_string(),', '                "waybill:unresolved-reason-x".to_string(),')],
  # M18, M19 (FR-011): the whole-tree rule back; the installed prefix ignored.
  "M18": [(S, """        let skip_test_inputs = installed_tree != test_scope::InstalledTree::Image
@@ -53,6 +54,11 @@ M = {
  # M20 (FR-002): reachability keyed by PURL again, so a top-level copy of a
  # nested PURL counts as reached (ROCm SDK `gotcha`).
  "M20": [(G, '        Some(parent) => format!("{}#{parent}", c.purl.as_str()),', '        Some(_parent) => c.purl.as_str().to_string(),')],
+ # M21 (FR-005): a name listed once resolves across the scan again.
+ "M21": [(U, "            .or_else(|| only_version.get(&key).cloned().flatten());", "            .or(None::<String>);")],
+ # M22 (FR-005): an extra requested by the project's own extra stays inactive.
+ "M22": [(U, "                if !own_project && !extra_is_optionally_active(name, extra_name) {",
+             "                if !own_project && !extra_is_active(name, extra_name) {")],
 }
 
 repo, arg = sys.argv[1], sys.argv[2]
