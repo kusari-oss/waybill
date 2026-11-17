@@ -16,7 +16,7 @@
 
 - [X] T001 Census TheRock's fetch declarations in CI, never locally: `census/fetches.py` and `.github/workflows/census-fetches.yml` in `kusari-sandbox/waybill-fixture-therock-sdk` (`c9001e9`, run 44005855500). Record the counts in `specs/1538-cmake-nested-fetches/measurements/census.md` (SC-007, SC-008).
 - [X] T002 Probe CMake's handling of each fallback shape with the installed CMake 4.4.5: `specs/1538-cmake-nested-fetches/measurements/cmake-semantics/probe.sh`, with `results.txt` and `cmake-version.txt` (research R3).
-- [ ] T003 Extend `.github/workflows/census-fetches.yml` in the fixture repository with a `base_ref` input:
+- [X] T003 Extend `.github/workflows/census-fetches.yml` in the fixture repository with a `base_ref` input:
   - build `base` and `branch` side by side, and scan the sparse tree with each, 3 times;
   - write both CycloneDX documents and `times.txt` to the artifact.
 
