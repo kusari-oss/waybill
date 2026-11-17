@@ -247,6 +247,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `self.requires()` nested under a conditional or loop is optional, with
   `waybill:optional-derivation: conan-conditional-requires` (C122).
 
+- **A pnpm 12 lockfile is read (#1582).** pnpm 12 writes `pnpm-lock.yaml`
+  as a multi-document YAML stream, with pnpm's own package-manager document
+  first. The parser accepted one document only, and the error was
+  swallowed, so the whole lockfile was ignored without a warning and every
+  npm dependency came out versionless from `package.json`. Every document
+  is now parsed, the package-manager document is set aside by its importer
+  shape (both documents have `packages`), and pnpm itself is not emitted. A
+  lockfile that does not parse now logs a warning. Measured on a pnpm
+  12.18.0 lockfile from a public monorepo, scanned with its root
+  `package.json`: 317 npm components with no version before, 2,873 with a
+  version after.
+
 - **A cget `requirements.txt` no longer fabricates PyPI packages (#1522).**
   cget, a C/C++ package manager, also uses `requirements.txt`, with lines
   such as `owner/repo@ref` and `name@version`. The pip reader parsed them as

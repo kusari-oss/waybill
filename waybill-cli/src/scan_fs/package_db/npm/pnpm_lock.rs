@@ -347,10 +347,89 @@ fn v9_importer_scopes(
 pub(super) fn read_pnpm_lock(rootfs: &Path, include_dev: bool) -> Option<Vec<PackageDbEntry>> {
     let path = rootfs.join("pnpm-lock.yaml");
     let text = std::fs::read_to_string(&path).ok()?;
-    let parsed: serde_yaml::Value = serde_yaml::from_str(&text).ok()?;
     let source_path = path.to_string_lossy().into_owned();
+    let parsed = project_lockfile_document(&text, &source_path)?;
     let out = parse_pnpm_lock(&parsed, &source_path, include_dev);
     if out.is_empty() { None } else { Some(out) }
+}
+
+/// The importer keys of pnpm's package-manager document, which records
+/// pnpm itself rather than the project (#1582).
+const PACKAGE_MANAGER_IMPORTER_KEYS: &[&str] = &["configDependencies", "packageManagerDependencies"];
+
+/// #1582: the project's lockfile document from a `pnpm-lock.yaml` stream.
+///
+/// pnpm 12 (observed at 12.18.0) writes the file as a multi-document YAML
+/// stream. The first document records pnpm itself: an importer holding
+/// only `configDependencies` and `packageManagerDependencies`, and its own
+/// `packages` and `snapshots` (`@pnpm/exe.*`). The project's lockfile comes
+/// after the second `---`. `serde_yaml::from_str` rejects a stream with more
+/// than one document, and the error was swallowed, so every npm dependency
+/// fell back to a versionless `package.json` component with nothing logged.
+///
+/// Every document is parsed, and the package-manager document is set aside
+/// by its importer shape. It cannot be told apart by `packages`, which both
+/// documents have. A file that does not parse, or holds no project document,
+/// is reported, because an existing lockfile that yields nothing reads
+/// exactly like a project with no lockfile.
+fn project_lockfile_document(text: &str, source_path: &str) -> Option<serde_yaml::Value> {
+    use serde::Deserialize;
+    let mut project: Vec<serde_yaml::Value> = Vec::new();
+    let mut package_manager = 0usize;
+    for document in serde_yaml::Deserializer::from_str(text) {
+        let value = match serde_yaml::Value::deserialize(document) {
+            Ok(v) => v,
+            Err(error) => {
+                tracing::warn!(
+                    path = %source_path,
+                    %error,
+                    "pnpm: pnpm-lock.yaml could not be parsed; no version is read from it",
+                );
+                return None;
+            }
+        };
+        if value.is_null() {
+            continue;
+        }
+        if is_package_manager_document(&value) {
+            package_manager += 1;
+        } else {
+            project.push(value);
+        }
+    }
+    if project.len() > 1 {
+        tracing::warn!(
+            path = %source_path,
+            documents = project.len(),
+            "pnpm: pnpm-lock.yaml holds several project documents; reading the first",
+        );
+    }
+    let first = project.into_iter().next();
+    if first.is_none() {
+        tracing::warn!(
+            path = %source_path,
+            package_manager_documents = package_manager,
+            "pnpm: pnpm-lock.yaml holds no project lockfile document; no version is read from it",
+        );
+    }
+    first
+}
+
+/// True for pnpm's package-manager document: it has importers, and every
+/// importer holds nothing but `configDependencies` and
+/// `packageManagerDependencies`. A project importer with no dependencies
+/// at all (`.: {}`) is not one.
+fn is_package_manager_document(doc: &serde_yaml::Value) -> bool {
+    let Some(importers) = doc.get("importers").and_then(serde_yaml::Value::as_mapping) else {
+        return false;
+    };
+    !importers.is_empty()
+        && importers.values().all(|importer| {
+            importer.as_mapping().is_some_and(|m| {
+                !m.is_empty()
+                    && m.keys().all(|k| k.as_str().is_some_and(|k| PACKAGE_MANAGER_IMPORTER_KEYS.contains(&k)))
+            })
+        })
 }
 
 /// Parse a deserialised `pnpm-lock.yaml` document. Handles v6/v7/v9
@@ -2057,4 +2136,70 @@ snapshots:
              from attempting the locations it knows"
         );
     }
+
+    // #1582: pnpm 12 writes `pnpm-lock.yaml` as a multi-document stream,
+    // pnpm's own package-manager document first. Shape taken from a real
+    // pnpm 12.18.0 lockfile; names are synthetic.
+    const PROJECT_DOC: &str = "lockfileVersion: '9.0'\n\nsettings:\n  autoInstallPeers: true\n\nimporters:\n\n  .:\n    dependencies:\n      waybill-fixture-lib:\n        specifier: ^1.0.0\n        version: 1.2.3\n\npackages:\n\n  waybill-fixture-lib@1.2.3:\n    resolution: {integrity: sha512-AAAA}\n\nsnapshots:\n\n  waybill-fixture-lib@1.2.3: {}\n";
+    const PACKAGE_MANAGER_DOC: &str = "lockfileVersion: '9.0'\n\nimporters:\n\n  .:\n    configDependencies: {}\n    packageManagerDependencies:\n      pnpm:\n        specifier: 12.18.0\n        version: 12.18.0\n\npackages:\n\n  pnpm@12.18.0:\n    resolution: {integrity: sha512-BBBB}\n\nsnapshots:\n\n  pnpm@12.18.0: {}\n";
+
+    fn read(text: &str) -> Option<Vec<String>> {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("pnpm-lock.yaml"), text).unwrap();
+        read_pnpm_lock(dir.path(), true).map(|v| {
+            let mut p: Vec<String> = v.iter().map(|e| e.purl.as_str().to_string()).collect();
+            p.sort();
+            p
+        })
+    }
+
+    #[test]
+    fn s1582_a_multi_document_lockfile_reads_the_project_document() {
+        let got = read(&format!("---\n{PACKAGE_MANAGER_DOC}---\n{PROJECT_DOC}"));
+        assert_eq!(got, Some(vec!["pkg:npm/waybill-fixture-lib@1.2.3".to_string()]));
+    }
+
+    #[test]
+    fn s1582_the_package_manager_document_is_not_the_project_in_either_order() {
+        let got = read(&format!("{PROJECT_DOC}---\n{PACKAGE_MANAGER_DOC}"));
+        assert_eq!(got, Some(vec!["pkg:npm/waybill-fixture-lib@1.2.3".to_string()]));
+    }
+
+    /// Control: a single document, with or without a leading `---`, reads
+    /// exactly as before.
+    #[test]
+    fn s1582_a_single_document_is_unchanged() {
+        let want = Some(vec!["pkg:npm/waybill-fixture-lib@1.2.3".to_string()]);
+        assert_eq!(read(PROJECT_DOC), want);
+        assert_eq!(read(&format!("---\n{PROJECT_DOC}")), want);
+    }
+
+    #[test]
+    fn s1582_a_lockfile_with_only_the_package_manager_document_yields_nothing() {
+        assert_eq!(read(&format!("---\n{PACKAGE_MANAGER_DOC}")), None);
+    }
+
+    #[test]
+    fn s1582_an_unparseable_lockfile_yields_nothing() {
+        assert_eq!(read("lockfileVersion: '9.0'\nimporters: [unclosed\n"), None);
+    }
+
+    #[test]
+    fn s1582_package_manager_document_shape() {
+        let doc = |y: &str| -> serde_yaml::Value { serde_yaml::from_str(y).unwrap() };
+        assert!(is_package_manager_document(&doc(PACKAGE_MANAGER_DOC)));
+        assert!(!is_package_manager_document(&doc(PROJECT_DOC)));
+        assert!(
+            !is_package_manager_document(&doc("importers:\n  .: {}\n")),
+            "a project importer with no dependencies is still the project"
+        );
+        assert!(
+            !is_package_manager_document(&doc(
+                "importers:\n  .:\n    packageManagerDependencies: {}\n    dependencies: {}\n"
+            )),
+            "an importer with any other key is the project's"
+        );
+        assert!(!is_package_manager_document(&doc("lockfileVersion: '6.0'\ndependencies: {}\n")));
+    }
+
 }
