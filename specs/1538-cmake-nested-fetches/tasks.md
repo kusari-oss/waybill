@@ -147,7 +147,7 @@
 **Goal:** SC-002 to SC-004 and SC-006 on the tree that motivated the feature.
 **Independent test:** `census-fetches` at the branch.
 
-- [ ] T023 [US4] Push the branch and dispatch `census-fetches` with `waybill_ref = 1538-cmake-nested-fetches` and `base_ref = main` (T003). Record in `specs/1538-cmake-nested-fetches/measurements/therock.md`:
+- [X] T023 [US4] Push the branch and dispatch `census-fetches` with `waybill_ref = 1538-cmake-nested-fetches` and `base_ref = main` (T003). Record in `specs/1538-cmake-nested-fetches/measurements/therock.md`:
   - **SC-002:** compare file by file. Every declaration in the census's `fetches.json` is either read, which its file appears in C18 or the C231 accounting shows, or in a directory the walk skips, listed by path. V1 holds. Zero are silently dropped.
   - **SC-003:** counts by C122 value against the census's shape counts: 148 under an `if`, 5 `FIND_PACKAGE_ARGS`, 32 `NOT TARGET`, and `NOT <X>_FOUND`.
   - **SC-004:** no two fetch-derived components share a PURL. List every versionless identity on more than one component, and confirm each comes only from sibling declarations.
@@ -166,14 +166,14 @@
 
   Each mutation must fail a test. Record the results in `measurements/mutations.md`.
 - [X] T025b A parameterised name is unresolved only when the identity depends on it (C-13b). Found by T026's quality corpus: pytorch's `ExternalProject_Add(${dlfcn-win32_external} GIT_REPOSITORY https://github.com/dlfcn-win32/dlfcn-win32.git …)` and the xz one, emitted by v0.17.0, were dropped. Mutations M22 and M23.
-- [ ] T026 Corpora in CI.
+- [X] T026 Corpora in CI.
   - **Public corpus:** compare mode at the branch. It is expected **byte-identical** (R12), and any change stops the work until it is explained.
   - **Quality corpus** at the branch. Trace any `cpp-mongo` movement edge by edge against `main`, and re-author `xtask/corpus/quality-corpus.toml` with dated causes.
   - Record both in `measurements/corpus.md`.
-- [ ] T027 Update `docs/ecosystems.md`' CMake section: the discovery rule, the shapes and their C122 values, test scope, merging, C231 to C233, and the `find_package` boundary (FR-002).
+- [X] T027 Update `docs/ecosystems.md`' CMake section: the discovery rule, the shapes and their C122 values, test scope, merging, C231 to C233, and the `find_package` boundary (FR-002).
   - In `waybill-cli/src/cli/scan_cmd.rs`, `--cmake-third-party-recursive`'s help text says it now affects `find_package` only (FR-012).
   - Add CHANGELOG `[Unreleased]` entries: Added (C231 to C233); Fixed (#1516, #1519, with T023's TheRock numbers).
-- [ ] T028 Run the gate and record it in `measurements/gate-log.md`: the ok-line count, 0 failed, the expected line found, and `cmake_nested_fetches` N of N. Also check `git diff --quiet main -- Cargo.lock Cargo.toml '*/Cargo.toml'`.
+- [X] T028 Run the gate and record it in `measurements/gate-log.md`: the ok-line count, 0 failed, the expected line found, and `cmake_nested_fetches` N of N. Also check `git diff --quiet main -- Cargo.lock Cargo.toml '*/Cargo.toml'`.
 - [ ] T029 Open the PR. The body carries:
   - the census baseline and T023's TheRock numbers;
   - the CMake probe table;
