@@ -1,0 +1,11 @@
+W1 a multi-value keyword before URL: exit=1 PROBE unparsed=[] touch=[t1;t2;URL;http://127.0.0.1:18539/a-1.0.tar.gz;URL_HASH;SHA256=00;EXTRA] source_dir=[] 
+W1b TheRock's order (SOURCE_DIR, URL, TOUCH last): exit=0 PROBE unparsed=[URL;http://127.0.0.1:18539/a-1.0.tar.gz] touch=[t1] source_dir=[<W>/w1b/_b/wz-src] PROBE _EP_URL=[http://127.0.0.1:18539/a-1.0.tar.gz]  downloaded=a (SOURCE_DIR is parsed and not re-passed, so the default source dir is used)
+W2 ExternalProject_Add URL twice (body a, caller b): exit=0 PROBE _EP_URL=[http://127.0.0.1:18539/a-1.0.tar.gz;http://127.0.0.1:18539/b-1.0.tar.gz]  downloaded=a
+W2b ExternalProject_Add URL a b: exit=0 PROBE _EP_URL=[http://127.0.0.1:18539/a-1.0.tar.gz;http://127.0.0.1:18539/b-1.0.tar.gz]  downloaded=a
+W3 FetchContent_Declare URL twice (body a, caller b): exit=0 PROBE populated=True  downloaded=a
+W4 cmake_parse_arguments one-value keyword twice: exit=0 PROBE W_URL=[second] unparsed=[] 
+W5 defined twice, called after each: exit=0 PROBE body=x PROBE body=y 
+W5b redefined in a subdirectory, then called in the parent: exit=0 PROBE body=y PROBE body=y 
+W6 quoted unparsed forwarding: exit=0 PROBE _EP_URL=[http://127.0.0.1:18539/a-1.0.tar.gz] 
+W7 macro and function argument variables: exit=0 PROBE macro name=n1 argv1=URL argn=[URL;u1] PROBE function name=n1 argv1=URL argn=[URL;u1] 
+W8 body default: exit=0   e8a=a e8b=b

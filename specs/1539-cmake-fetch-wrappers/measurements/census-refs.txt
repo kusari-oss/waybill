@@ -1,0 +1,13 @@
+therock b1cae390cc745283dce25581415353f9bc906162
+base/half 207ee58595a64b5c4a70df221f1e6e704b807811 1 cmake files
+compiler/hipify d364ef407b2c3e20c6ceb3575bd852f0c7cebb8c 1 cmake files
+compiler/amd-llvm 4b5cc0619e61b882af37dc5b73504e10e2515b5d 2959 cmake files
+base/rocm-cmake 10155d7272ea1bf79f6b5a9dbc339657af1aa372 81 cmake files
+rocm-libraries 98e132f8d03e9e09441b32db692bdfc8c714563a 1530 cmake files
+rocm-systems c1ab6df5e4180e4f69d60ae1ae046fa390e22a87 1420 cmake files
+compiler/spirv-llvm-translator ff3483afbc6ff3e200c4d51e51c501186d6b1d18 4 cmake files
+third-party/sysdeps/common/mesa-fork 4b0d67e19365c50d1a60e8ada444323c4c82c458 0 cmake files
+math-libs/libhipcxx 88f23f01fd7000c1ad25492311693e8e7ccabe31 31 cmake files
+debug-tools/rocgdb/source b79d66da2acad573ed4536d0ad1f042c48a98c69 1 cmake files
+rocm-docs 9bcf25db1e77f58b435fe162baaa99566bac0189 3 cmake files
+waybill b8ba7e4d8ef61121c09406bdb07cf3d62e64038a

@@ -39,6 +39,7 @@
 #![allow(dead_code)]
 
 pub mod cdx_schema;
+pub mod cmake_fetch;
 pub mod endpoints;
 pub mod git_fixture;
 pub mod installed_lib;

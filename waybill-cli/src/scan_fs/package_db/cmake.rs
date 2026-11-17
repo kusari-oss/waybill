@@ -54,6 +54,7 @@ use super::PackageDbEntry;
 pub(crate) mod blocks;
 pub(crate) mod fallback;
 pub(crate) mod fetches;
+pub(crate) mod wrappers;
 pub(crate) use fetches::{read_fetches, FetchCoverage};
 
 // Milestone 664 US2 T056: shared-walker marker-detect registration.
@@ -1174,6 +1175,21 @@ fn parse_version_from_url(url: &str) -> Option<String> {
     re.captures(url)?.get(1).map(|m| m.as_str().to_string())
 }
 
+/// Spec 1539 FR-005 (research R6): the package name an archive's filename
+/// gives, when the filename is `<name>[-_]v?<version>` plus an archive
+/// extension, for exactly the `version` the URL gave. `None` otherwise, so
+/// a filename that carries a commit or no dotted version keeps the
+/// declared name.
+fn archive_name(url: &str, version: &str) -> Option<String> {
+    const EXTENSIONS: [&str; 10] = [".tar.gz", ".tgz", ".tar.bz2", ".tbz2", ".tar.xz", ".txz", ".tar.zst", ".zip", ".tar", ".7z"];
+    let path = url.split(['?', '#']).next()?;
+    let file = path.trim_end_matches('/').rsplit('/').next()?;
+    let lower = file.to_ascii_lowercase();
+    let stem = EXTENSIONS.iter().find(|e| lower.ends_with(*e)).map_or(file, |e| &file[..file.len() - e.len()]);
+    let re = Regex::new(&format!(r"^(.+?)[-_]v?{}$", regex::escape(version))).ok()?;
+    re.captures(stem)?.get(1).map(|m| m.as_str().to_string()).filter(|n| !n.is_empty())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn build_cmake_entry(
     name: &str,
@@ -1246,6 +1262,29 @@ fn build_cmake_entry(
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// Spec 1539 FR-005, over every filename shape TheRock's census found
+    /// (`specs/1539-cmake-fetch-wrappers/measurements/census.md`).
+    #[test]
+    fn archive_names_follow_the_parsed_version() {
+        let name = |url: &str| archive_name(url, &parse_version_from_url(url).unwrap_or_else(|| "unknown".to_string()));
+        let m = "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/";
+        assert_eq!(name(&format!("{m}zstd-1.5.7.tar.gz")).as_deref(), Some("zstd"));
+        assert_eq!(name(&format!("{m}grpc-v1.78.1.tar.gz")).as_deref(), Some("grpc"));
+        assert_eq!(name(&format!("{m}libdrm-libdrm-2.4.134.tar.bz2")).as_deref(), Some("libdrm-libdrm"));
+        assert_eq!(name(&format!("{m}fmt-11.1.3.zip")).as_deref(), Some("fmt"));
+        assert_eq!(name(&format!("{m}Catch2-3.8.1.tar.gz")).as_deref(), Some("Catch2"), "case kept");
+        assert_eq!(name(&format!("{m}expat-2.7.5.tar.xz")).as_deref(), Some("expat"));
+        assert_eq!(name(&format!("{m}elfio-3.12.tar.gz")).as_deref(), Some("elfio"));
+        assert_eq!(name(&format!("{m}OpenBLAS-18638c7.tar.gz")), None, "a commit, no version");
+        assert_eq!(name(&format!("{m}libbacktrace-{}.zip", "b9e40069c0b47a722286b94eb5231f7f05c08713")), None);
+        assert_eq!(name(&format!("{m}sqlite-amalgamation-3510300.zip")), None, "MMNNPP00 is not a dotted version");
+        assert_eq!(name("https://example.invalid/a/v2.1.tar.gz"), None, "no name before the version");
+        assert_eq!(name("https://example.invalid/waybill-fixture-q-1.0.tar.gz?raw=1").as_deref(), Some("waybill-fixture-q"));
+        // The version must be the one the URL gave: a version taken from an
+        // earlier path segment does not rename a filename that disagrees.
+        assert_eq!(archive_name("https://github.com/o/r/releases/download/v1.5.7/zstd-1.5.6.tar.gz", "1.5.7"), None);
+    }
 
     #[test]
     fn empty_when_no_files() {
