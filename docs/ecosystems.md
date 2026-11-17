@@ -166,6 +166,8 @@ widen them).
     supplier is the one declared in the nearest ancestor-or-self directory (a
     submodule counts from its `.gitmodules`). A sibling project's component
     never supplies, and a tie between two at the nearest depth merges nothing.
+    A required component with exactly the fetch's PURL takes it wherever it
+    is declared, and stays required.
   - Declarations of one PURL are one component: optional only if every
     declaration is conditional.
 - **Ownership.** A fetch is a dependency of the nearest enclosing project — a

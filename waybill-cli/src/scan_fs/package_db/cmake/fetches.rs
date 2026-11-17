@@ -427,6 +427,12 @@ pub(crate) fn merge_into_existing(entries: &mut Vec<PackageDbEntry>, cov: &mut F
             at.extend(files_of(e).iter().map(|f| (i, dir_of(f))));
         }
     }
+    let mut required_by_purl: BTreeMap<String, usize> = BTreeMap::new();
+    for (i, e) in entries.iter().enumerate() {
+        if !conditional(e) {
+            required_by_purl.entry(e.purl.as_str().to_string()).or_insert(i);
+        }
+    }
     // The supplier for one file: the holder declared in the nearest
     // ancestor-or-self directory. A tie between two components there is
     // no supplier.
@@ -441,16 +447,20 @@ pub(crate) fn merge_into_existing(entries: &mut Vec<PackageDbEntry>, cov: &mut F
         if !conditional(&entries[i]) {
             continue;
         }
-        let Some(at) = repository_identity(&entries[i]).and_then(|id| holders.get(&id)) else { continue };
-        // The same version is the same component: PURL dedup merges it.
-        if at.iter().any(|(h, _)| entries[*h].purl == entries[i].purl) {
-            continue;
-        }
-        let mut targets = files_of(&entries[i]).into_iter().map(|f| supplier(at, &dir_of(&f), entries));
-        let Some(Some(h)) = targets.next() else { continue };
-        if !targets.all(|t| t.is_some_and(|o| entries[o].purl == entries[h].purl)) {
-            continue;
-        }
+        // A required component with exactly this PURL is this package
+        // wherever it is declared; recording the fallback on it keeps the
+        // survivor's own rows, which PURL dedup would not.
+        let h = if let Some(&h) = required_by_purl.get(entries[i].purl.as_str()) {
+            h
+        } else {
+            let Some(at) = repository_identity(&entries[i]).and_then(|id| holders.get(&id)) else { continue };
+            let mut targets = files_of(&entries[i]).into_iter().map(|f| supplier(at, &dir_of(&f), entries));
+            let Some(Some(h)) = targets.next() else { continue };
+            if !targets.all(|t| t.is_some_and(|o| entries[o].purl == entries[h].purl)) {
+                continue;
+            }
+            h
+        };
         let lost = entries[i].clone();
         let files: Vec<String> = std::iter::once(lost.source_path.clone()).chain(lost.extra_source_paths.iter().cloned()).collect();
         for f in &files {

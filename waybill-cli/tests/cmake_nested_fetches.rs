@@ -549,3 +549,39 @@ fn c13b_a_parameterised_name_with_a_github_repository_is_emitted() {
     assert_eq!(n(&cov, &["emitted"]), 1, "{cov}");
     assert_eq!(n(&cov, &["unresolved", "identity"]), 0, "{cov}");
 }
+
+/// C-12f (R9): a guarded fetch with exactly the PURL of a required component
+/// another reader emitted is recorded on that component, wherever it is.
+/// The survivor stays required and carries no conditional rows; the
+/// fallback is in C233. Found on TheRock: rocprim's googletest fallback
+/// pins the commit of `rocm-libraries`' googletest submodule.
+#[test]
+fn c12f_a_fallback_at_a_required_components_exact_purl_merges_into_it() {
+    let sha = "a".repeat(40);
+    let fx = GitFixture::new();
+    fx.repo("app");
+    fx.write(
+        "app/.gitmodules",
+        "[submodule \"g\"]\n\tpath = elsewhere/waybill-fixture-g\n\turl = https://github.com/waybill-org/waybill-fixture-g.git\n",
+    );
+    fx.write("app/CMakeLists.txt", ROOT);
+    fx.write(
+        "app/a/b/CMakeLists.txt",
+        &guarded(&format!(
+            "FetchContent_Declare(waybill-fixture-g GIT_REPOSITORY https://github.com/waybill-org/waybill-fixture-g.git GIT_TAG {sha})\n"
+        )),
+    );
+    let app = fx.path("app");
+    fx.git(&app, &["add", ".gitmodules"]);
+    fx.add_gitlink("app", "elsewhere/waybill-fixture-g", &sha);
+    let docs = scan(&fx, &app, &[]);
+    let purl = format!("pkg:github/waybill-org/waybill-fixture-g@{sha}");
+    let all: Vec<&Value> = cdx_components(&docs.cdx).into_iter().filter(|c| c["purl"] == purl.as_str()).collect();
+    assert_eq!(all.len(), 1, "one component");
+    let c = all[0];
+    assert!(required(c), "the submodule keeps it required, with no conditional rows: {c}");
+    assert_eq!(prop(c, "waybill:source-mechanism"), Some("git-submodule"), "{c}");
+    let sup: Value = serde_json::from_str(prop(c, "waybill:superseded-declarations").unwrap()).unwrap();
+    assert_eq!(sup, serde_json::json!([{"file": "a/b/CMakeLists.txt", "version": sha}]));
+    assert_eq!(n(&coverage(&docs).unwrap(), &["merged", "existing-component"]), 1);
+}

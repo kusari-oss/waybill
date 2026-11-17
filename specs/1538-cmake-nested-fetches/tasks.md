@@ -138,6 +138,7 @@
   - **Unconditional fetches never merge across versions.**
 
 - [X] T022b [US3] Restrict R9 to an enclosing supplier (clarification from T023's TheRock run): identical PURL → PURL dedup; else nearest ancestor-or-self holder; a tie or a sibling → no merge. Contract cases C-12c, C-12d, C-12e; mutations M19 to M21.
+- [X] T022c [US3] A guarded fetch at the exact PURL of a non-conditional component merges into it explicitly (C-12f). TheRock's second census run (44020737966) showed rocprim's googletest fallback deduplicated by PURL with `rocm-libraries`' submodule: the survivor was required but kept `cmake-not-target` and the fetch's conditions (I-3), and lost its `git-submodule` mechanism. Mutation M24.
 
 **Checkpoint:** C-1 to C-15 all pass.
 

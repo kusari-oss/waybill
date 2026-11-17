@@ -45,7 +45,8 @@ Re-applied after the tests were added, each fails exactly its new test.
 | M20 | an R9 tie picks the first holder | C-12e |
 | M21 | R9 picks the shallowest supplier, not the nearest | C-12d |
 
+| M24 | an exact-PURL fallback is left to PURL dedup (the first T022b behaviour) | C-12f, through I-3: the survivor was required but kept C122 and C232 |
 | M22 | any `${…}` name is unresolved, whatever the identity | C-13b |
 | M23 | the component keeps the unexpanded variable as its name | C-13b |
 
-**All 23 are caught.** M19 to M23 were added with T022b and T025b and applied by hand, each reverted with `cp` and the file compared with `cmp` afterwards.
+**All 24 are caught.** M19 to M24 were added with T022b, T022c and T025b and applied by hand, each reverted with `cp` and the file compared with `cmp` afterwards.
