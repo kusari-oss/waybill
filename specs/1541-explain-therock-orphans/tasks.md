@@ -90,21 +90,26 @@
 - [X] T011b [US1] FR-011 (clarification Q3): decide #1524's test-input skip per binary in `waybill-cli/src/scan_fs/binary/discover.rs` (`TestInputs { skipped, installed_prefixes }`), `installed_lib/resolve.rs` (`installed_prefixes`) and `scan_fs/mod.rs`. Contract O-14; unit test `s1541_only_test_inputs_under_an_installed_prefix_are_kept`.
   - O-14 fails with the old whole-tree rule ("the LLVM test input is skipped"), and passes with the fix.
   - Green after the change: binary, installed-lib and test-scope unit tests (553), and every integration suite touching test binaries, installed libraries or test scope (17 files).
-- [ ] T012 [US1] Re-probe the source-tree document at the branch (after T013's CI run). For each population in `source-trace.md` still unexplained (expected: none of the cargo, npm, conan or vcpkg ones after T005), trace it, and record the cause in `measurements/source-trace.md` under "At the branch". Covers `pkg:generic/tensile` and `pkg:generic/wkmi@1.0.0` (FR-007). A waybill defect is declared in `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` with a new issue, not given a code.
+- [X] T012 [US1] Re-probe the source-tree document at the branch (after T013's CI run). For each population in `source-trace.md` still unexplained (expected: none of the cargo, npm, conan or vcpkg ones after T005), trace it, and record the cause in `measurements/source-trace.md` under "At the branch". Covers `pkg:generic/tensile` and `pkg:generic/wkmi@1.0.0` (FR-007). A waybill defect is declared in `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` with a new issue, not given a code.
+  - **Done** (`measurements/therock.md`). The first branch run left 14. These were traced to:
+    - lock-local names, optional activation and the shared identity (uv, `adf230fc`);
+    - `conanfile.py`, the binary-derived predicate, and workspace-root member edges (`2aecdf6e`).
+  - Two remain, each a filed defect: #1601 (`tensile`) and #1602 (`wkmi`).
+  - The SDK trace found #1600: an order-dependent detached identification.
 
 ## Phase 5: User Story 3 — measured on TheRock, the corpora traced (P2)
 
 **Goal:** SC-002 to SC-007.
 **Independent test:** CI runs at the branch against `main`.
 
-- [ ] T013 [US3] Push the branch. Extend `measure-full`'s scan step in the fixture repository's `.github/workflows/measure-full.yml` to emit SPDX 2.3 and SPDX 3 as well (FR-009). Dispatch `measure-source` (`--ref main -f waybill_ref=1541-explain-therock-orphans -f base_ref=main`) and `measure-full` (the same inputs) in the fixture repository. Probe both documents at each ref with `probe_i7_on_document`, and record in `specs/1541-explain-therock-orphans/measurements/therock.md`:
+- [X] T013 [US3] Push the branch. Extend `measure-full`'s scan step in the fixture repository's `.github/workflows/measure-full.yml` to emit SPDX 2.3 and SPDX 3 as well (FR-009). Dispatch `measure-source` (`--ref main -f waybill_ref=1541-explain-therock-orphans -f base_ref=main`) and `measure-full` (the same inputs) in the fixture repository. Probe both documents at each ref with `probe_i7_on_document`, and record in `specs/1541-explain-therock-orphans/measurements/therock.md`:
   - unexplained counts before and after (SC-002, SC-003);
   - the codes by count;
   - the completeness reason at both refs;
   - equality of the classifier, document and I7 counts (SC-004);
   - every component carrying a C45 code at `main` keeping it (SC-005).
-- [ ] T014 [US3] Record `measure-source`'s interleaved medians and their ratio in `measurements/therock.md` (SC-007, ≤ 1.5×).
-- [ ] T015 [US3] Corpora:
+- [X] T014 [US3] Record `measure-source`'s interleaved medians and their ratio in `measurements/therock.md` (SC-007, ≤ 1.5×).
+- [X] T015 [US3] Corpora:
   - dispatch `public-corpus.yml` at the branch and at `main` together, and the same for `quality-corpus.yml`;
   - trace every golden change to a rule (R1 to R4), and only then regenerate with `-f regen_goldens=true`;
   - confirm the invariant gate (`invariant-must-pass.toml`) is green, and any I7 cell that moves is explained;
@@ -127,11 +132,11 @@
   - dev edges dropped;
   - only one forked version wired.
   - **19 of 19 caught** (`measurements/mutations.md`). Beyond the list above: dev-group edges, C151 on the versionless project, the #1163 guard, FR-011's whole-tree rule and the installed prefix.
-- [ ] T017 [P] Docs:
+- [X] T017 [P] Docs:
   - **`docs/reference/sbom-invariants.md`, I7:** containment counts as reachability; the two new codes.
   - **`docs/reference/sbom-format-mapping.md`:** C45's row.
   - **`CHANGELOG.md`:** Fixed #1593, with TheRock's before and after.
-- [ ] T018 Run the gate alone and record it in `specs/1541-explain-therock-orphans/measurements/gate-log.md`: the ok-line count, 0 failed, the expected line, `orphan_explanations` N/N, and `git diff --quiet main -- Cargo.toml Cargo.lock '*/Cargo.toml'` (FR-010).
+- [X] T018 Run the gate alone and record it in `specs/1541-explain-therock-orphans/measurements/gate-log.md`: the ok-line count, 0 failed, the expected line, `orphan_explanations` N/N, and `git diff --quiet main -- Cargo.toml Cargo.lock '*/Cargo.toml'` (FR-010).
 - [ ] T019 Open the PR: `fix: every unreachable component on TheRock explains itself (#1593)`. The body carries the trace, the before and after, the corpora, the mutations and the reader change (`Refs #1214`), ending with the attribution line. After it lands, tick #1593 on #1542.
 
 ## Dependencies

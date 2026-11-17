@@ -8,4 +8,11 @@
 
 The first attempt was terminated by an external SIGTERM (exit 143) three minutes in, during clippy, before any check failed. It was rerun unchanged.
 
-Rerun after the final commit, before the PR (below).
+## Final
+
+Run alone at `e961902b`, which holds the final code (`2aecdf6e`), the regenerated goldens and the harness updates (`2be4f95a`):
+- `GATE_EXIT=0` and `GATE_RESULT=pass`; the expected line is present;
+- 411 `test result: ok` lines; **8,665 passed, 0 failed**; 0 failure blocks.
+
+Cargo files are unchanged against `main` (FR-010):
+`git diff --quiet main -- Cargo.toml Cargo.lock '*/Cargo.toml'` exits 0.

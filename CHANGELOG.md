@@ -40,10 +40,11 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 ### Fixed
 
 - **Every unreachable component on ROCm TheRock explains itself (#1593,
-  spec 1541).** On TheRock's source tree, 846 components were unreachable
-  and 841 carried no marker. On the built SDK, 645 were unreachable; 644 of
-  them were nested components that invariant I7 never saw. Four causes,
-  each traced:
+  spec 1541).** On TheRock's source tree, unexplained components fell from
+  841 to 2, both filed defects (#1601, #1602). On the built SDK, 645
+  unreachable components fell to 0 or 1: 644 were nested components I7
+  never saw, and the one that varies between scans is #1600. Scan time is
+  1.018× on the source tree and 0.983× on the SDK. Causes, each traced:
   - **The orphan classifier saw a different graph.** It ignored the
     operator's root override, so it coded nothing on TheRock. The
     classifier and the three emitters now share one preparation of the
@@ -54,11 +55,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
     CMake package-version file marked the source tree as installed, so 550
     LLVM test inputs were analyzed. The skip is now decided per binary: a
     test input is kept only under an installed library's own prefix.
-  - **The uv reader skipped a project with a dynamic version.** That
-    stranded its dependencies. The project is now emitted versionless with
-    `waybill:unresolved-reason`. A dependency the lock pins to one of
-    several versions is wired to that version, and the project's own
-    unrequested extras are optional edges.
+  - **The uv reader stranded packages.** It skipped a project with a
+    dynamic version, resolved bare names across the whole scan instead of
+    within the lock, wired only one version of a forked dependency, and
+    gave no edge to an extra requested through the project's own extras.
+    Each is fixed: the project takes the pyproject reader's
+    `0.0.0-unknown` and merges with it; a name the lock lists once
+    resolves to that entry; every pinned fork is wired; and such extras
+    are optional edges. python-flask is now `complete`.
+  - **Reachability is keyed by component, not PURL.** A nested copy of a
+    PURL no longer makes a top-level copy count as reached.
+  - `conanfile.py` is a build manifest, and a package named by an ELF
+    `.note.package` is binary-derived.
 
   New C45 values: `test-data-binary` and `unowned-binary`, for components
   from binary analysis that nothing reaches.
