@@ -172,7 +172,7 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
   - **First declaration wins.** A `FetchContent_Declare` whose name an ancestor directory also declares is matched **by name**, compared case-insensitively. That is CMake's own rule (research R3, P1). It applies to ancestors only, never to siblings, and never to `ExternalProject_Add`.
   - **An existing component.** A **conditional** fetch is matched against a component the scan already holds by its **identity**: the repository or URL, without the version. The existing component may be a git submodule, another reader's component, or an unconditional fetch. A name alone never merges two packages here.
 
-  Either way, the declaration's file and version are recorded on the surviving component (C18 and C233, and C56 when the mechanism differs).
+  Either way, the declaration's file and version are recorded on the surviving component, in C18 and C233. *Corrected at implementation (research R15):* not C56, which the cross-reader dedup emits only for identical PURLs.
 - **FR-006**: A fallback for a package nothing else supplies MUST be emitted as its own component, marked per FR-003.
 - **FR-007**: Each nested fetch MUST be a dependency of the project that declares it, by spec 1537's ownership rule. That is the nearest enclosing project component (main module or git submodule), and otherwise the document root. All three formats MUST agree on the root's direct targets (invariant I-1).
 - **FR-008**: A fetch MUST carry the test lifecycle scope in either of two cases:

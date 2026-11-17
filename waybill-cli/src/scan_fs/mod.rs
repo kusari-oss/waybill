@@ -24,6 +24,7 @@ pub mod podman_source;
 // alongside the new `--file-inventory` CLI flag, multi-format
 // SBOM emission, and the new C-rows.
 pub(crate) mod declared_attach;
+pub(crate) mod cmake_fetch_attach;
 pub(crate) mod file_tier;
 #[cfg(feature = "oci-registry")]
 pub mod oci_pull;
@@ -148,6 +149,8 @@ pub struct ScanResult {
     pub declared_root_anchors: Vec<String>,
     /// Spec 1535 (C229): declared CMake downloads, as their wire value.
     pub declared_downloads: Option<String>,
+    /// Spec 1538 (C231): CMake fetch-declaration counts, as their wire value.
+    pub cmake_fetch_coverage: Option<String>,
     /// Spec 1536 (C230): binaries a Python package owns, analysed and
     /// identified, as the wire value. `None` when none was analysed.
     pub python_owned_binaries: Option<String>,
@@ -437,6 +440,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // Spec 1537: submodule directories, for the declared-requirements pass.
     let mut git_submodule_dirs = package_db::git_submodule::SubmoduleDirs::new();
     let mut declared_downloads: Option<String> = None;
+    let mut cmake_fetch_coverage: Option<String> = None;
     let mut python_owned_binaries: Option<String> = None;
     let mut installed_library_coverage: Option<String> = None;
     let mut test_scope_inputs = test_scope::Inputs::default();
@@ -521,6 +525,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         git_submodule_coverage = scan_result.diagnostics.git_submodule_coverage.as_ref().map(|c| c.wire());
         git_submodule_dirs = std::mem::take(&mut scan_result.diagnostics.git_submodule_dirs);
         declared_downloads = scan_result.diagnostics.cmake_declared_downloads.clone();
+        cmake_fetch_coverage = scan_result.diagnostics.cmake_fetch_coverage.clone();
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
         // Milestone 172: mirror gosum_fallback_count from
         // ScanDiagnostics into the local for the ScanResult return.
@@ -1520,6 +1525,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let index = declared_attach::OwnerIndex::build(&components, &git_submodule_dirs, root, scan_mode);
         let declared = declared_attach::attach(&components, &relationships, &index, root);
         relationships.extend(declared.edges);
+        // Spec 1538 (research R6): a CMake fetch is a dependency of the
+        // project whose tree declares it, by the same owner rule.
+        let fetches = cmake_fetch_attach::attach(&components, &relationships, &index, root);
+        relationships.extend(fetches.edges);
     }
 
     apply_lifecycle_scope_to_edges(&components, &mut relationships);
@@ -1632,10 +1641,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // PURL the reconciler rewrote is not anchored under its old name.
     let declared_root_anchors: Vec<String> = {
         let index = declared_attach::OwnerIndex::build(&components, &git_submodule_dirs, root, scan_mode);
-        declared_attach::attach(&components, &relationships, &index, root)
-            .root_anchors
-            .into_iter()
-            .collect()
+        let mut anchors = declared_attach::attach(&components, &relationships, &index, root).root_anchors;
+        anchors.extend(cmake_fetch_attach::attach(&components, &relationships, &index, root).root_anchors);
+        anchors.into_iter().collect()
     };
     Ok(ScanResult {
         unresolved_declared_dep_count,
@@ -1650,6 +1658,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_mod_why,
         git_submodule_coverage,
         declared_downloads,
+        cmake_fetch_coverage,
         python_owned_binaries,
         installed_library_coverage,
         test_scope_inputs,

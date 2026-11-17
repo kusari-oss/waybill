@@ -758,6 +758,10 @@ spdx23_anno!(c227_spdx23, "waybill:embedded-path-binaries", component);
 spdx23_anno!(c228_spdx23, "waybill:bundled-source-trees", document);
 spdx23_anno!(c229_spdx23, "waybill:declared-downloads", document);
 spdx23_anno!(c230_spdx23, "waybill:python-owned-binaries", document);
+// Spec 1538 (#1516, #1519).
+spdx23_anno!(c231_spdx23, "waybill:cmake-fetch-coverage", document);
+spdx23_anno!(c232_spdx23, "waybill:cmake-fetch-conditions", component);
+spdx23_anno!(c233_spdx23, "waybill:superseded-declarations", component);
 spdx23_anno!(c42_spdx23, "waybill:lifecycle-scope", component);
 spdx23_anno!(c194_spdx23_raw, "waybill:derivation", document);
 spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);

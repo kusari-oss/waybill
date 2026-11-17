@@ -402,6 +402,9 @@ pub struct ScanDiagnostics {
     /// Spec 1535 (C229): the CMake reader's declared-download counts, as
     /// their wire value. `None` when no `file(DOWNLOAD)` was read.
     pub cmake_declared_downloads: Option<String>,
+    /// Spec 1538 (C231): the CMake reader's fetch-declaration counts, as
+    /// their wire value. `None` when no fetch declaration was read.
+    pub cmake_fetch_coverage: Option<String>,
     /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage.
     /// `None` when no `.gitmodules` file was seen.
     pub git_submodule_coverage: Option<git_submodule::SubmoduleCoverage>,
@@ -2257,6 +2260,7 @@ pub fn read_all(
     out.extend(std::mem::take(&mut shared_pilot.git_submodule));
     diagnostics.git_submodule_coverage = shared_pilot.git_submodule_coverage.take();
     diagnostics.git_submodule_dirs = std::mem::take(&mut shared_pilot.git_submodule_dirs);
+    let mut cmake_fetches = std::mem::take(&mut shared_pilot.cmake_fetches);
 
     // Milestone 139: CocoaPods (iOS) ecosystem reader. One main-module
     // per project root (FR-012 + Q1 cascade) + lockfile-driven (FR-002)
@@ -2478,8 +2482,13 @@ pub fn read_all(
     // preserved unchanged. Log a per-scan drop count at INFO so
     // consumers can grep for "unexpected zero drops" as a sanity
     // check on multi-source scans.
-    let out = dedup_installed_db_over_archive_file(out);
+    let mut out = dedup_installed_db_over_archive_file(out);
 
+    // Spec 1538 (#1519, research R9): a conditional CMake fetch of a
+    // repository another component already stands for is recorded on that
+    // component. Every reader's entries are in `out` by now.
+    cmake::fetches::merge_into_existing(&mut out, &mut cmake_fetches, rootfs);
+    diagnostics.cmake_fetch_coverage = cmake_fetches.wire();
     Ok(DbScanResult {
         entries: out,
         claimed_paths: claimed,
@@ -2616,6 +2625,9 @@ struct SharedPilotOutput {
     cmake: Vec<PackageDbEntry>,
     /// Spec 1535 (C229): declared-download counts, wire value.
     cmake_declared_downloads: Option<String>,
+    /// Spec 1538 (C231): fetch-declaration counts, completed by the
+    /// cross-reader merge once every reader's entries are in.
+    cmake_fetches: cmake::FetchCoverage,
     /// Milestone 664 US2 T058: `go.mod` paths threaded to
     /// `golang::read`'s new `precomputed_go_mod_paths` parameter to
     /// skip the reader's internal `candidate_project_roots` walk.
@@ -3138,7 +3150,7 @@ fn run_shared_walker_pilot(
     // on legacy (targeted per-subdir glob, analogous to FR-005 npm
     // inner-tree escape hatch). Finalize gates the subdir-existence
     // checks on the marker flag + fs fallback.
-    let (cmake_entries, cmake_downloads) = registry
+    let (cmake_entries, cmake_downloads, cmake_fetches) = registry
         .registrations()
         .iter()
         .find(|r| r.reader_id == ReaderId::CMAKE)
@@ -3221,6 +3233,7 @@ fn run_shared_walker_pilot(
         bazel: bazel_entries,
         cmake: cmake_entries,
         cmake_declared_downloads,
+        cmake_fetches,
         golang_go_mod_paths,
         yocto_bbappend_paths,
         yocto_layer_conf_paths,

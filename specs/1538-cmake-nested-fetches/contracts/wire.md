@@ -28,5 +28,5 @@ Each case is a synthetic `waybill-fixture-*` tree, scanned with `--offline` and 
 
 - **I-1:** the root's direct targets agree in all three formats. This is spec 1537's invariant, unchanged.
 - **I-2:** C231's V1 holds: `read = emitted + merged.* + unresolved.identity`.
-- **I-3:** no fetch-derived component is conditional without C122 and C232. No unconditional one carries C232.
+- **I-3:** every conditional fetch carries C122. One whose shape comes from an enclosing block (`cmake-not-target`, `cmake-find-package-fallback`, `cmake-conditional`, `cmake-function-body`) also carries C232. `FIND_PACKAGE_ARGS`, `ALWAYS` and a provider have no condition text. No unconditional fetch carries C232. *Corrected at implementation:* this first required C232 on every conditional fetch, which those three shapes cannot meet.
 - **I-4:** a scan with no CMake fetch declarations emits no C231, C232 or C233 (FR-010).

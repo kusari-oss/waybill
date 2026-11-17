@@ -159,3 +159,19 @@ Resolving a wrapper's *call sites* (TheRock's `therock_subproject_fetch`, `rocm_
 **Decision.** C57 `waybill:build-reference` reads `add_subdirectory()` / `SOURCE_DIR` references to decide whether a git submodule is `declared-and-used`. It stays on today's file set (`discover_cmake_files`).
 
 This feature widens fetch declarations only (FR-002). C57's catalog note, that #1516's limit applies, therefore remains true after this feature and is not edited. Whether to widen it is part of the SC-008 follow-up, which decides what else the nested files should contribute.
+
+## R15. What changed at implementation
+
+- **No second tokeniser (T004).** `installed_lib::cmake_version::{strip_comments, commands}` already tokenises CMake, for spec 1533's CTest reader and spec 1535's downloads parser. The reader reuses it. The only addition is `commands_checked`, which reports a command still open at end of file (C231 `unparseable-files`).
+
+  Comment stripping removes the newlines inside bracket comments, so declarations carry no line number. Nothing on the wire needed one: C233 is file and version.
+- **Discovery through the shared walker (R1).** `on_cmake_file` now collects every CMake file the shared walker visits, and fetches are read from those. So the walker's skip set and `--exclude-path` apply exactly as for every reader. The reader's own `safe_walk` is subdirectory-targeted and has no skip set, so pointing it at the scan root would have walked `.git` and `node_modules`.
+
+  `cmake::read()` (the binary tier, which has no walker) keeps today's file set.
+- **C56 is not emitted on an R9 merge.** C56 is produced by the cross-reader dedup for **identical** PURLs. An R9 fallback has another PURL, a different version, so the merge is explicit: the file goes into C18, and the file and version into C233. FR-005's "and C56 when the mechanism differs" is dropped.
+- **R9's identity is the repository.** It is `github.com/<owner>/<repo>`, or the normalised git URL of a `GIT_REPOSITORY` fetch or a submodule's `vcs_url`. A URL-tarball fetch has no identity that survives removing its version reliably, so it never merges across readers.
+- **`unresolved.identity` includes a declaration with neither `URL` nor `GIT_REPOSITORY` + `GIT_TAG`** (for example `SOURCE_DIR` only). Leaving it out would break V1. A declaration whose URL or tag uses an unresolved variable is still emitted, versionless, with C151 (#1517), and counts as `emitted`.
+- **C231 gains `components`.** V2 compares `conditional + test` with it, because `emitted` counts declarations, not components.
+- **I-3 corrected.** C232 is required only for shapes that come from an enclosing block. `FIND_PACKAGE_ARGS`, `ALWAYS` and a provider have no condition text, and C122 names them.
+- **A declaration counts as one,** carried explicitly. Inferring the count from a component's paths double-counted a first-declaration-wins loser, whose file is added to the winner's C18 (caught by C-10's V1 check).
+

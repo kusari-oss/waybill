@@ -10,7 +10,6 @@ One CMake command invocation.
 |---|---|---|
 | `name` | `String` | Command name, lowercased. CMake command names are case-insensitive. |
 | `args` | `String` | Raw argument text between the outer parentheses. |
-| `line` | `u32` | 1-based line where the command starts. |
 
 **Tokenising rules:**
 - A `#` line comment and a `#[[ … ]]` / `#[=[ … ]=]` bracket comment are skipped.
@@ -35,7 +34,6 @@ An unbalanced `end*` is ignored, and a file that ends with open blocks is not an
 | `kind` | `FetchContent \| ExternalProject` | |
 | `name` | `String` | First argument. Unresolvable if it contains `${…}` with no same-file literal `set()`. |
 | `file` | `PathBuf` | Relative to the scan root. |
-| `line` | `u32` | |
 | `conditions` | `Vec<String>` | Enclosing `if` conditions outermost first, plus `function: <name>`. Becomes C232. |
 | `shape` | `Option<FallbackShape>` | The first applicable shape (R2 order). `None` means unconditional. |
 | `test` | `Option<TestDerivation>` | `SourceTestDirectory` or `CmakeBuildTesting` (R7). |
@@ -83,7 +81,7 @@ Scope typing comes from `apply_lifecycle_scope_to_edges`.
 **C231 `waybill:cmake-fetch-coverage`** is document-scope, present iff `read > 0`.
 
 ```json
-{"conditional":N,"emitted":N,"merged":{"existing-component":N,"first-declaration-wins":N},
+{"components":N,"conditional":N,"emitted":N,"merged":{"existing-component":N,"first-declaration-wins":N},
  "read":N,"test":N,"unparseable-files":N,"unresolved":{"identity":N}}
 ```
 
@@ -91,7 +89,7 @@ Scope typing comes from `apply_lifecycle_scope_to_edges`.
 
 **Invariants:**
 - **V1:** `read == emitted + merged.existing-component + merged.first-declaration-wins + unresolved.identity`.
-- **V2:** `conditional <= emitted` and `test <= emitted`. Both are counts of emitted components.
+- **V2:** `conditional + test <= components`. `emitted` counts declarations; `components`, `conditional` and `test` count emitted components.
 
 **C232 `waybill:cmake-fetch-conditions`** is per-component: a JSON array of strings, sorted, present iff the component is conditional or test-scoped through a condition.
 

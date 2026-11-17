@@ -726,6 +726,10 @@ fn push_document_fields(
     if let Some(record) = scan.declared_downloads {
         push(out, crate::scan_fs::package_db::cmake_download::ANN_DECLARED_DOWNLOADS, json!(record));
     }
+    // C231 (spec 1538).
+    if let Some(record) = scan.cmake_fetch_coverage {
+        push(out, crate::scan_fs::package_db::cmake::fetches::ANN_CMAKE_FETCH_COVERAGE, json!(record));
+    }
     // C230 (spec 1536).
     if let Some(record) = scan.python_owned_binaries {
         push(out, crate::scan_fs::binary::owned::ANN_PYTHON_OWNED_BINARIES, json!(record));

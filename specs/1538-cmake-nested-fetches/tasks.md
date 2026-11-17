@@ -24,7 +24,7 @@
 
 ## Phase 2: Foundational (blocks every story)
 
-- [ ] T004 [P] Create a CMake command tokeniser, `waybill-cli/src/scan_fs/package_db/cmake/commands.rs`, declared from `cmake.rs`.
+- [X] T004 [P] *Done as reuse (research R15):* the existing `installed_lib::cmake_version` tokeniser, plus `commands_checked`, which reports a command still open at end of file; no new file. Original text: create a CMake command tokeniser, `waybill-cli/src/scan_fs/package_db/cmake/commands.rs`, declared from `cmake.rs`.
   - **Output:** `commands(text) -> impl Iterator<Item = Command { name (lowercased), args, line }>`.
   - **Behaviour to port from `census/fetches.py`'s `commands()`:** skip `#` line comments and `#[=*[ … ]=*]` bracket comments; inside arguments, respect quoted strings with `\` escapes, bracket arguments and nested parentheses; report 1-based start lines.
   - **Unterminated input:** a command or bracket argument still open at the end of a file is reported as unterminated, for C231 `unparseable-files`.
@@ -34,13 +34,13 @@
     - a bracket argument containing `)` does not close the call;
     - line numbers after a multi-line call are right;
     - mixed-case command names are lowercased.
-- [ ] T005 [P] Create the block stack, `waybill-cli/src/scan_fs/package_db/cmake/blocks.rs`.
+- [X] T005 [P] Create the block stack, `waybill-cli/src/scan_fs/package_db/cmake/blocks.rs`.
   - **Blocks:** `enum Block { If { condition }, Function { name }, Loop }`.
   - **Transitions:** `if` pushes; `elseif` replaces the top condition; `else` prefixes it with `else: `; `endif` pops; `function`/`macro` push `Function`; `foreach`/`while` push `Loop`.
   - **Robustness:** an unbalanced `end*` is ignored, and an unclosed block at the end of a file is counted, not fatal.
   - **Output:** `conditions()` returns the enclosing conditions outermost first, with `function: <name>` for function bodies.
   - **Unit tests:** nesting, `elseif`/`else` text, a function inside an `if`, and unbalanced input.
-- [ ] T006 [P] Create `FallbackShape`, `waybill-cli/src/scan_fs/package_db/cmake/fallback.rs`.
+- [X] T006 [P] Create `FallbackShape`, `waybill-cli/src/scan_fs/package_db/cmake/fallback.rs`.
   - **The enum:** a closed enum with `as_str()` giving the C122 values (`cmake-find-package-args`, `cmake-not-target`, `cmake-find-package-fallback`, `cmake-try-find-package-always`, `cmake-dependency-provider`, `cmake-function-body`, `cmake-conditional`). Its order is the precedence (data-model).
   - **The classifier:** `classify(kind, args, conditions, mode_in_force, provider_fetchcontent) -> Option<FallbackShape>`.
     - `FIND_PACKAGE_ARGS` is cancelled when the mode in force is `NEVER` (R3 P4).
@@ -49,8 +49,8 @@
   - **Mode scope:** a helper resolves the `FETCHCONTENT_TRY_FIND_PACKAGE_MODE` in force for a directory, as the last `set()` in the nearest directory, else an ancestor.
   - **Provider:** a helper decides whether a `cmake_language(SET_DEPENDENCY_PROVIDER … SUPPORTED_METHODS …)` lists `FETCHCONTENT_MAKEAVAILABLE_SERIAL`.
   - **Unit tests:** one per shape and per cancellation, plus ExternalProject never matching the FetchContent-only shapes.
-- [ ] T007 Make spec 1537's `OwnerIndex` reusable for any relative path, in `waybill-cli/src/scan_fs/declared_attach.rs`: `pub(crate)` on the type, `build` and `owner_of`, with no behaviour change. The existing `declared_attach` unit tests and `tests/declared_requirements.rs` must stay green.
-- [ ] T008 Thread a document-scope `cmake_fetch_coverage: Option<String>` (C231), mirroring C229 `declared_downloads` site for site.
+- [X] T007 Make spec 1537's `OwnerIndex` reusable for any relative path, in `waybill-cli/src/scan_fs/declared_attach.rs`: `pub(crate)` on the type, `build` and `owner_of`, with no behaviour change. The existing `declared_attach` unit tests and `tests/declared_requirements.rs` must stay green.
+- [X] T008 Thread a document-scope `cmake_fetch_coverage: Option<String>` (C231), mirroring C229 `declared_downloads` site for site.
   - **Where it comes from:** the field on `ScanResult` (`waybill-cli/src/scan_fs/mod.rs`) and its destructuring in `waybill-cli/src/cli/scan_cmd.rs`.
   - **The emit path:**
     - `generate::ScanArtifacts` in `waybill-cli/src/generate/mod.rs`;
@@ -58,7 +58,7 @@
     - SPDX 2.3 in `generate/spdx/annotations.rs`;
     - SPDX 3 in `generate/spdx/v3_annotations.rs`.
   - **Every struct literal** that sets `declared_downloads: None` also sets `cmake_fetch_coverage: None`: `openvex/mod.rs`, `spdx/{packages,relationships,document,mod}.rs`, and any others a compile error names.
-- [ ] T009 Add rows C231 `waybill:cmake-fetch-coverage`, C232 `waybill:cmake-fetch-conditions` and C233 `waybill:superseded-declarations` to `docs/reference/sbom-format-mapping.md`, each with a Principle V audit (research R4, R5, R8).
+- [X] T009 Add rows C231 `waybill:cmake-fetch-coverage`, C232 `waybill:cmake-fetch-conditions` and C233 `waybill:superseded-declarations` to `docs/reference/sbom-format-mapping.md`, each with a Principle V audit (research R4, R5, R8).
   - **Same file:** add the new C122 values and the C62 values `source-test-directory` and `cmake-build-testing`.
   - **Extractors, in the same commit:** the catalog gate is in the lib target. Add `c231_*`, `c232_*` and `c233_*` to `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`, registered in `parity/extractors/mod.rs` as `SymmetricEqual`, `order_sensitive: false`.
 
@@ -69,30 +69,32 @@
 **Goal:** every fetch declaration in any CMake file is read and emitted, owned by its nearest enclosing project, and counted.
 **Independent test:** contract cases C-1, C-2 and C-14, plus invariants I-2 and I-4.
 
-- [ ] T010 [US1] Create `waybill-cli/tests/cmake_nested_fetches.rs`.
+- [X] T010 [US1] Create `waybill-cli/tests/cmake_nested_fetches.rs`.
   - **Helpers:** `scan(fixture, extra_args) -> Docs` in all three formats, mirroring `tests/declared_requirements.rs`; per-format component and root-target extractors; `coverage(docs)`, which reads C231 and asserts I-2's V1 identity.
   - **Cases C-1, C-2, C-14 and C-15** (`contracts/wire.md`). C-15 checks that the skip set and `--exclude-path` still apply to the widened walk.
   - **I-4:** a CMake tree with no fetch carries no C231, C232 or C233.
   - **Prove they bite:** run against `main`'s reader. C-1, C-2 and C-14 must fail; C-15 is a control and passes. Record which, in this task's text.
-- [ ] T011 [US1] Split discovery in `waybill-cli/src/scan_fs/package_db/cmake.rs`.
+  - **Done:** before the implementation, all 15 contract cases failed and I-4 passed. C-15 failed only on the missing C231, not on what was read.
+- [X] T011 [US1] Split discovery in `waybill-cli/src/scan_fs/package_db/cmake.rs`.
   - **Fetch declarations** are read from every `CMakeLists.txt` and `*.cmake` the scan reaches. Use the existing `safe_walk` with the exclusion set and the walker's skip set, as `collect_cmake_files_recursive` does.
   - **`find_package` / `pkg_check_modules` / `pkg_search_module`** stay on `discover_cmake_files`' set (FR-002). `discover_cmake_files`' callers for submodule references (C57, line ~600) keep their set.
   - **One pass per file:** use `cmake::commands` and `cmake::blocks` instead of whole-file regexes for the fetch calls. The existing `FetchContent`/`ExternalProject` argument parsing, PURL building and same-file `set()` resolution (#1517) are reused unchanged on each command's arguments.
   - **Each `PackageDbEntry`** carries its declaring file, line and conditions.
-- [ ] T012 [US1] Create `waybill-cli/src/scan_fs/cmake_fetch_attach.rs`, wired after `declared_attach` in `waybill-cli/src/scan_fs/mod.rs`.
+- [X] T012 [US1] Create `waybill-cli/src/scan_fs/cmake_fetch_attach.rs`, wired after `declared_attach` in `waybill-cli/src/scan_fs/mod.rs`.
   - **Ownership:** for each fetch component, `OwnerIndex::owner_of(file)` gives `owner DependsOn fetch` (provenance `data_type: "cmake-fetch-declaration"`).
   - **No owner:** the fetch becomes a declared root anchor (spec 1537 channel).
   - **No duplicates:** no self-edge, and no edge that already exists.
-- [ ] T013 [US1] Compute C231 in `cmake_fetch_attach.rs`.
+- [X] T013 [US1] Compute C231 in `cmake_fetch_attach.rs`.
   - **The counts:** `read`, `emitted`, `unresolved.identity` (a `${…}` name or URL with no same-file literal `set()`), `unparseable-files`, and zero-filled `merged.*`, `conditional` and `test` until US2 and US3. `unparseable-files` counts I/O or non-UTF-8 errors, and files that end inside an open command or bracket argument; the tokeniser reports the latter (T004).
   - **Sorted keys**, encoded as a string.
   - **Absent when `read == 0`** (I-4).
   - Thread it into `ScanResult.cmake_fetch_coverage` (T008).
   - **Unit test:** V1 holds on a mixed fixture.
-- [ ] T014 [US1] **The control for FR-010** is the existing CMake regression goldens: `cdx_regression_cmake`, plus the SPDX 2.3 and SPDX 3 `cmake` cases, in `tests/{cdx,spdx,spdx3}_regression.rs`.
+- [X] T014 [US1] **The control for FR-010** is the existing CMake regression goldens: `cdx_regression_cmake`, plus the SPDX 2.3 and SPDX 3 `cmake` cases, in `tests/{cdx,spdx,spdx3}_regression.rs`.
   - They MUST stay byte-identical, except for C231, and except for the conditional marker on any of their fetches inside an `if()` (FR-010).
   - Diff any change field by field, and explain it in this task's text before regenerating.
   - The existing `cmake` unit tests run unchanged.
+  - **Done:** CycloneDX, SPDX 2.3 and SPDX 3 each gained only the C231 document entry. In CycloneDX it is `read` 3 = `emitted` 3, with no conditionals. Components, scopes and every other field are identical. The goldens are regenerated, and 85 `cmake` unit tests plus 18 CMake-related integration files pass.
 
 **Checkpoint:** C-1, C-2, C-14, I-2 and I-4 pass. With no US2, nested fallbacks are emitted as *required*. That over-reports, which is why US1 and US2 land together.
 
@@ -101,21 +103,21 @@
 **Goal:** a conditional fetch is Optional, with C122 naming the shape and C232 the condition text. Test-scoped fetches are Test.
 **Independent test:** contract cases C-3, C-3b, C-4 to C-9 and C-13, plus invariant I-3.
 
-- [ ] T015 [US2] Add contract cases C-3, C-3b, C-4, C-5, C-6, C-7, C-8, C-9 and C-13 to `waybill-cli/tests/cmake_nested_fetches.rs`, plus an `assert_i3(docs)` helper: every conditional fetch component has C122 and C232, and no unconditional one has C232. Confirm each case fails after US1 alone.
-- [ ] T016 [US2] Classify each declaration in `cmake.rs`.
+- [X] T015 [US2] Add contract cases C-3, C-3b, C-4, C-5, C-6, C-7, C-8, C-9 and C-13 to `waybill-cli/tests/cmake_nested_fetches.rs`, plus an `assert_i3(docs)` helper: every conditional fetch component has C122 and C232, and no unconditional one has C232. Confirm each case fails after US1 alone.
+- [X] T016 [US2] Classify each declaration in `cmake.rs`.
   - **The inputs to `fallback::classify`:** the block-stack conditions, the declaration's arguments, the mode in force for its directory (a pre-pass over all files collects `set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE …)`), and whether any file defines a FetchContent-capable provider.
   - **On `Some(shape)`:** `lifecycle_scope = Optional`, `waybill:optional-derivation = shape.as_str()` (the `conan.rs:271` pattern), and `waybill:cmake-fetch-conditions` = the JSON array of conditions.
   - **`function:` entries:** a declaration in a function body gets `FunctionBody` and is emitted only if its identity is literal (R13).
-- [ ] T017 [US2] Test scope in `cmake.rs` (R7).
+- [X] T017 [US2] Test scope in `cmake.rs` (R7).
   - **Which fetches:** a declaring file under a `test`, `tests` or `unittests` directory below the scan root, or an enclosing condition containing `BUILD_TESTING` that is not inside `OR`.
   - **What it gets:** `LifecycleScope::Test`, with `waybill:lifecycle-scope-derivation` = `source-test-directory` or `cmake-build-testing`. C232 is kept when a condition applies.
   - **Test outranks Optional.**
-- [ ] T018 [US2] Combine same-PURL declarations in `cmake_fetch_attach.rs`, before the cross-reader dedup.
+- [X] T018 [US2] Combine same-PURL declarations in `cmake_fetch_attach.rs`, before the cross-reader dedup.
   - **Scope:** a component is Optional only if **every** declaration is conditional; otherwise its scope is the strongest (feature 1269's rule).
   - **C232:** the sorted union of conditions, dropped if the result is unconditional.
   - **C18:** the union of files.
   - **Unit test:** a conditional and an unconditional declaration of one PURL give a required component with no C232.
-- [ ] T019 [US2] C231's `conditional` and `test` counts (V2). Extend the T013 unit test.
+- [X] T019 [US2] C231's `conditional` and `test` counts (V2). Extend the T013 unit test.
 
 **Checkpoint:** C-1 to C-9, C-13 and C-14 pass, with I-1 to I-4. This is the MVP: US1 + US2.
 
@@ -124,13 +126,13 @@
 **Goal:** first-declaration-wins and existing-component merges, recorded in C233.
 **Independent test:** contract cases C-10, C-11 and C-12.
 
-- [ ] T020 [US3] Add contract cases C-10, C-11 and C-12 to `waybill-cli/tests/cmake_nested_fetches.rs`, and confirm C-10 and C-12 fail after US2.
-- [ ] T021 [US3] First declaration wins (R5), in `cmake_fetch_attach.rs`.
+- [X] T020 [US3] Add contract cases C-10, C-11 and C-12 to `waybill-cli/tests/cmake_nested_fetches.rs`, and confirm C-10 and C-12 fail after US2.
+- [X] T021 [US3] First declaration wins (R5), in `cmake_fetch_attach.rs`.
   - **Which declarations:** for FetchContent only, a declaration whose lowercased name is declared by a file in an ancestor directory.
   - **What happens:** it is not emitted. The ancestor's component gains its file in C18 and `{file, version}` in C233, and C231 counts `merged.first-declaration-wins`.
   - **Siblings never merge** (C-11).
   - **Unit test:** ExternalProject never merges (R3 P6).
-- [ ] T022 [US3] Existing-component merge (R9), in `cmake_fetch_attach.rs`.
+- [X] T022 [US3] Existing-component merge (R9), in `cmake_fetch_attach.rs`.
   - **Which fetches:** conditional ones only, when their versionless identity (`pkg:github/<owner>/<repo>`, or the URL with its version path segment removed) equals a component another reader emitted.
   - **What happens:** the fetch merges into that component. C56 gains the CMake mechanism when it differs, C233 gains `{file, version}`, and C231 counts `merged.existing-component`.
   - **Unconditional fetches never merge across versions.**

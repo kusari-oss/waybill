@@ -50,6 +50,12 @@ use regex::Regex;
 
 use super::PackageDbEntry;
 
+// Spec 1538 (#1516, #1519): the blocks around a fetch, and why it might not be taken.
+pub(crate) mod blocks;
+pub(crate) mod fallback;
+pub(crate) mod fetches;
+pub(crate) use fetches::{read_fetches, FetchCoverage};
+
 // Milestone 664 US2 T056: shared-walker marker-detect registration.
 use crate::scan_fs::walk_registry::{
     globset_from_patterns_case_insensitive, ReaderId, ReaderRegistration, SharedWalkerContext,
@@ -84,6 +90,10 @@ struct PkgCheckHit {
 #[derive(Default, Debug)]
 pub(crate) struct CMakeMarkerState {
     pub(crate) seen: bool,
+    /// Spec 1538 (#1516): every CMake file the shared walker handed the
+    /// reader. Fetch declarations are read from these, so the walker's skip
+    /// set and `--exclude-path` apply exactly as they do to every reader.
+    pub(crate) files: Vec<PathBuf>,
 }
 
 fn on_cmake_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
@@ -100,6 +110,7 @@ fn on_cmake_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
         Err(poisoned) => poisoned.into_inner(),
     };
     guard.seen = true;
+    guard.files.push(path.to_path_buf());
 }
 
 pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
@@ -140,16 +151,16 @@ pub(crate) fn finalize(
     scan_root: &Path,
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
-) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage) {
+) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage, FetchCoverage) {
     if !marker.seen
         && !scan_root.join("CMakeLists.txt").is_file()
         && !scan_root.join("cmake").is_dir()
         && !scan_root.join("Modules").is_dir()
         && !scan_root.join("third_party").is_dir()
     {
-        return (Vec::new(), Default::default());
+        return (Vec::new(), Default::default(), Default::default());
     }
-    read_with_downloads(scan_root, include_vendored, exclude_set)
+    read_with_downloads(scan_root, include_vendored, exclude_set, Some(marker.files))
 }
 
 pub fn read(
@@ -157,15 +168,23 @@ pub fn read(
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
-    read_with_downloads(scan_root, include_vendored, exclude_set).0
+    read_with_downloads(scan_root, include_vendored, exclude_set, None).0
 }
 
-/// [`read`], plus the spec 1535 declared-download counts (C229).
+/// [`read`], plus the spec 1535 declared-download counts (C229) and the
+/// spec 1538 fetch counts (C231).
+///
+/// `walked` is the shared walker's CMake files (spec 1538, #1516): fetch
+/// declarations are read from all of them. `find_package`,
+/// `pkg_check_modules`, `file(DOWNLOAD)` and vendored directories stay on
+/// [`discover_cmake_files`]' set (spec FR-002). Without a walker (the binary
+/// tier's call), fetches are read from that set too, as before.
 pub(crate) fn read_with_downloads(
     scan_root: &Path,
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
-) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage) {
+    walked: Option<Vec<PathBuf>>,
+) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage, FetchCoverage) {
     // Milestone 156: opt-in recursive descent for third_party/. Default
     // depth-1 (matches milestone-102 behavior) unless the CLI flag
     // `--cmake-third-party-recursive` OR the env var
@@ -199,16 +218,6 @@ pub(crate) fn read_with_downloads(
             }
         };
         let source_path = path.to_string_lossy().to_string();
-        entries.extend(parse_fetch_block(
-            &content,
-            &source_path,
-            "FetchContent_Declare",
-        ));
-        entries.extend(parse_fetch_block(
-            &content,
-            &source_path,
-            "ExternalProject_Add",
-        ));
         if include_vendored {
             entries.extend(parse_vendored(&content, &source_path, scan_root));
         }
@@ -229,7 +238,12 @@ pub(crate) fn read_with_downloads(
         );
     }
     entries.extend(datasets.iter().filter_map(dataset_entry));
-    (entries, coverage)
+    let mut fetch_files = walked.unwrap_or(cmake_files);
+    fetch_files.sort();
+    fetch_files.dedup();
+    let (fetch_entries, fetches) = read_fetches(scan_root, &fetch_files);
+    entries.extend(fetch_entries);
+    (entries, coverage, fetches)
 }
 
 /// Spec 1535 (data-model "Dataset"): one component per declared dataset
@@ -937,28 +951,22 @@ fn expand_known_vars(text: &str, vars: &std::collections::HashMap<String, Option
     out
 }
 
-fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<PackageDbEntry> {
-    // Outer envelope: rule_name + first whitespace-separated token
-    // (the dep name) + everything until the matching `)`. Non-greedy
-    // dotall.
-    let outer_pattern = format!(
-        r"(?ms){}\s*\(\s*(\S+)(.*?)\)",
-        regex::escape(rule_name)
-    );
-    let outer = match Regex::new(&outer_pattern) {
-        Ok(r) => r,
-        Err(_) => return Vec::new(),
-    };
-    let github_re = Regex::new(r"^https?://github\.com/([^/]+)/([^/\.\s]+)").ok();
-    let vars = collect_set_vars(content);
-    let mut out = Vec::new();
-    for c in outer.captures_iter(content) {
-        let name = c.get(1).map(|m| m.as_str()).unwrap_or("").trim();
-        let body = expand_known_vars(c.get(2).map(|m| m.as_str()).unwrap_or(""), &vars);
-        let body = body.as_str();
-        if name.is_empty() {
-            continue;
-        }
+/// One fetch declaration's component, from its name and the rest of its
+/// arguments (spec 1538: the arguments come from the command tokeniser, so a
+/// nested `(` no longer ends the body early). `None` when it names neither a
+/// `URL` nor a `GIT_REPOSITORY` + `GIT_TAG`.
+fn fetch_entry(
+    name: &str,
+    body: &str,
+    source_path: &str,
+    rule_name: &str,
+    vars: &std::collections::HashMap<String, Option<String>>,
+) -> Option<PackageDbEntry> {
+    static GITHUB: OnceLock<Option<Regex>> = OnceLock::new();
+    let github_re = GITHUB.get_or_init(|| Regex::new(r"^https?://github\.com/([^/]+)/([^/\.\s]+)").ok()).as_ref();
+    let body = expand_known_vars(body, vars);
+    let body = body.as_str();
+    {
 
         let git_repo = extract_keyword(body, "GIT_REPOSITORY");
         let git_tag = extract_keyword(body, "GIT_TAG");
@@ -972,7 +980,7 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
             .any(|v| v.as_deref().is_some_and(|v| v.contains("${")));
         if unresolved && (url.is_some() || (git_repo.is_some() && git_tag.is_some())) {
             let Ok(purl) = Purl::new(&format!("pkg:generic/{}", encode_purl_segment(name))) else {
-                continue;
+                return None;
             };
             let source_mechanism = if rule_name == "ExternalProject_Add" {
                 "cmake-externalproject"
@@ -988,8 +996,7 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
                 "waybill:unresolved-reason".to_string(),
                 serde_json::Value::String(CMAKE_UNRESOLVED_VARIABLE_REASON.to_string()),
             );
-            out.push(entry);
-            continue;
+            return Some(entry);
         }
 
         let (purl_str, download_url, version) = if let (Some(g), Some(t)) =
@@ -1024,8 +1031,9 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
                 ),
             };
             (purl, Some(g.to_string()), t.to_string())
-        } else if let Some(u) = url.as_deref() {
+        } else {
             // URL form — parse version from filename.
+            let u = url.as_deref()?;
             let version = parse_version_from_url(u).unwrap_or_else(|| "unknown".to_string());
             (
                 format!(
@@ -1036,11 +1044,10 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
                 Some(u.to_string()),
                 version,
             )
-        } else {
-            continue;
         };
 
-        if let Ok(purl) = Purl::new(&purl_str) {
+        let purl = Purl::new(&purl_str).ok()?;
+        {
             // Distinguish source-mechanism by rule name + presence
             // of GIT_REPOSITORY (FetchContent_Declare with git form)
             // vs URL form. ExternalProject_Add only supports URL
@@ -1052,7 +1059,7 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
             } else {
                 "cmake-fetchcontent-url"
             };
-            out.push(build_cmake_entry(
+            Some(build_cmake_entry(
                 name,
                 &version,
                 source_path,
@@ -1061,10 +1068,9 @@ fn parse_fetch_block(content: &str, source_path: &str, rule_name: &str) -> Vec<P
                 url_hash,
                 false,
                 source_mechanism,
-            ));
+            ))
         }
     }
-    out
 }
 
 /// Extract a CMake keyword-value pair. CMake syntax: `KEYWORD value`
