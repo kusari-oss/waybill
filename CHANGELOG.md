@@ -27,7 +27,41 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
     recognised shape. `waybill:lifecycle-scope-derivation` (C62) gains
     `source-test-directory` and `cmake-build-testing`.
 
+- **Which wrapper a CMake fetch came through (C234), and what the reader
+  made of wrappers (C231 `wrappers`).**
+  - `waybill:cmake-fetch-wrapper` (C234) lists, on each component a call to
+    a user-defined wrapper stands for, the chain of wrapper names, outermost
+    first.
+  - `waybill:cmake-fetch-coverage` (C231) gains `wrappers`: the wrapper
+    definitions read, the calls bound, and the calls left unresolved because
+    a wrapper's definitions disagree. It is present only when the tree
+    defines a wrapper.
+
 ### Fixed
+
+- **CMake fetches made through a project's own wrapper function are
+  reported (#1518).** Super-builds wrap `ExternalProject_Add` and
+  `FetchContent_Declare` in their own functions, and the reader matched only
+  the built-in names.
+  - **What is recognised.** A function or macro whose body makes one fetch
+    call and passes the caller's arguments to it: `${ARGN}`, `${ARGV}`, a
+    parameter, or a variable from `cmake_parse_arguments`, including
+    `${<P>_UNPARSED_ARGUMENTS}`. Wrappers of wrappers are followed.
+  - **How a call binds.** As CMake 4.4.5 was measured to bind it: a
+    one-value keyword keeps its last value; a multi-value keyword swallows a
+    `URL` placed after it, so nothing is fetched; a default the body sets
+    applies only when the call did not; and a repeated `URL` is a mirror list
+    whose first entry is fetched.
+  - **Naming.** A wrapped URL fetch is named from its archive filename when
+    that is `<name>-<version>`. Direct calls are unchanged.
+  - **Safety.** A wrapper defined more than once binds only when every
+    definition gives the same package. A wrapper that builds in-tree sources,
+    with no URL or repository, is counted, not emitted.
+  - **On ROCm's TheRock,** all 40 `therock_subproject_fetch` calls (39 distinct
+    source tarballs, each with its declared SHA-256 or SHA-512) are now
+    components, where none were before. 36 are named from the archive, for
+    example `pkg:generic/zstd@1.5.7`. LLVM's in-tree wrapper calls and two
+    test-build wrappers' calls, 27 in all, are counted as unresolved.
 
 - **CMake fetches in nested projects are reported, and a subproject's
   standalone-build fallback is marked as one (#1516, #1519).**
