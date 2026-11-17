@@ -58,6 +58,13 @@ Measured in the fixture repository `kusari-sandbox/waybill-fixture-therock-sdk`,
 
 This feature traces that before designing (FR-001).
 
+## Clarifications
+
+### Session 2026-11-17
+
+- Q: How are components nested inside another component treated? → A: Containment counts as reachability in graph-completeness, the classifier and I7: a component nested in a reachable component is reachable. The same rule applies in all three formats.
+- Q: One reason code or two for binary-analysis components in a source tree? → A: Two: one for binaries under a test-data directory, one for the rest.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Every unreachable component on TheRock says why (Priority: P1)
@@ -71,7 +78,7 @@ A consumer of TheRock's SBOM, source or SDK, walks the dependency graph from the
 **Acceptance Scenarios**:
 
 1. **Given** TheRock's source tree, **When** scanned at the branch, **Then** every unreachable component carries an I7 marker.
-2. **Given** TheRock's built SDK, **When** scanned at the branch, **Then** every unreachable component carries an I7 marker, or is reachable by the rule FR-003 settles.
+2. **Given** TheRock's built SDK, **When** scanned at the branch, **Then** components nested in a reachable component are reachable (FR-003), and every remaining unreachable component carries an I7 marker.
 3. **Given** any population on TheRock where tracing shows a reader should have written an edge, **When** scanned at the branch, **Then** the edge is written and the components are reachable, not explained.
 
 ---
@@ -92,7 +99,7 @@ and that the three formats agree on it.
 **Acceptance Scenarios**:
 
 1. **Given** a scan with an operator root (`--root-name`), **When** emitted, **Then** the classifier's unreachable set equals the document's.
-2. **Given** a nested component, **When** emitted in the three formats, **Then** all three treat it the same way: reachable in all, or unreachable and explained in all.
+2. **Given** a component nested in a reachable component, **When** emitted in the three formats, **Then** all three count it reachable, and none gives it an orphan marker.
 
 ---
 
@@ -111,7 +118,7 @@ The maintainer sees, from CI, the before and after on TheRock source and SDK, th
 ### Edge Cases
 
 - **A component both nested and depended on.** It is reachable through the dependency edge, whatever FR-003 decides for containment.
-- **A nested component whose container is itself unreachable.** Containment does not make it reachable from the root. It carries the container's explanation, or one of its own.
+- **A nested component whose container is itself unreachable.** Containment does not make it reachable from the root. It is explained as any orphan is, by its own population's reason.
 - **A binary in a source tree that a package also claims.** It is a part of that package, not an orphan, and is treated as the package's contents.
 - **The operator overrides the root, or leaves it unset.** Both give the same reachability answer in the classifier and the document.
 - **`maven-guice`'s #1235 population** stays a declared I7 failure, a waybill defect. Explaining it would close the cell reporting it.
@@ -128,8 +135,15 @@ The maintainer sees, from CI, the before and after on TheRock source and SDK, th
 
   The findings decide FR-002 to FR-005, and are recorded with the counts they explain.
 - **FR-002: One reachability answer.** The orphan classifier, the document's `waybill:graph-completeness` and the I7 check MUST compute unreachability from the same subject and the same edges, so the three populations are identical in every scan. That includes scans with an operator root.
-- **FR-003: Containment.** A component nested inside another (CycloneDX `components[].components[]`, SPDX `CONTAINS`) MUST be handled by **[NEEDS CLARIFICATION: (a) counting containment as reachability, in graph-completeness, the classifier and I7, so a component contained by a reachable component is reachable; (b) leaving it unreachable and explaining it with a reason code for contained components; or (c) adding a dependency edge from the container]**, identically in CycloneDX, SPDX 2.3 and SPDX 3.
-- **FR-004: Binary-analysis components in a source tree.** An unreachable component found by binary analysis in a source scan, owned by no package, MUST carry a C45 reason. That reason is **[NEEDS CLARIFICATION: (a) one code for every such binary, e.g. "found in the tree by binary analysis, not built from it as far as the scan can tell"; or (b) two codes, splitting binaries under a test-data path (`test`, `tests`, `testdata`, `unittests`, and the like) from the rest]**. The new code or codes are registered in the C45 row and its contract before emission, below every existing code in priority, so no component carrying an existing code changes.
+- **FR-003: Containment.** Containment MUST count as reachability, in graph-completeness, the orphan classifier and the I7 check alike. A component nested inside another (CycloneDX `components[].components[]`; SPDX 2.3 and SPDX 3 `CONTAINS`) is reachable when its container is.
+  - No dependency edge is added, and no reason is given: nesting already states how the component is in the document.
+  - The three formats MUST give the same answer.
+  - A component nested in an unreachable container stays unreachable, and is explained as any orphan is.
+- **FR-004: Binary-analysis components in a source tree.** An unreachable component found by binary analysis in a source scan, owned by no package, MUST carry one of two new C45 reasons:
+  - **one for binaries under a test-data directory:** any path segment in a closed list that the plan fixes from TheRock's measured paths. It starts from spec 1538's test-scope directories, `test`, `tests` and `unittests`, plus `testdata` and the like where measured;
+  - **one for every other such binary.**
+
+  Both codes are registered in the C45 row and its contract before emission, below every existing code in priority, so no component carrying an existing code changes. Their exact strings are fixed in the plan.
 - **FR-005: Lockfile packages with no owner.** For packages from a lock file (such as `uv.lock`) in a subproject, unreachable from the root:
   - if the lock file's own project is in the document, the packages MUST be attached to it, as spec 1537 attaches a requirements file's packages to its declaring project;
   - otherwise they carry the existing code that fits (`unreferenced-lock-node`, `foreign-build-system` or `dead-lockfile-entry`, by their current definitions);
@@ -143,7 +157,7 @@ The maintainer sees, from CI, the before and after on TheRock source and SDK, th
 ### Key Entities
 
 - **Subject**: the component reachability is computed from. The document's root, as the emitted document states it.
-- **Unreachable set**: components with a PURL that no dependency edge, nor containment if FR-003 says so, connects to the subject.
+- **Unreachable set**: components with a PURL that no chain of dependency edges and containment connects to the subject (FR-003).
 - **I7 marker**: C45, C151, an `unreferenced` closure role, or the file tier.
 - **Population**: a group of unreachable components with one cause, as traced (FR-001).
 
@@ -158,7 +172,7 @@ The maintainer sees, from CI, the before and after on TheRock source and SDK, th
 - **SC-005 (no regressions in explanation):** Every component carrying a C45 code on `main`, on TheRock and across the public corpus, carries the same code at the branch.
 - **SC-006 (corpora):** The public corpus invariant gate stays green, and every golden change is traced to a rule here. Every quality-corpus movement is traced against a `main` control.
 - **SC-007 (cost):** The median full-tree TheRock source scan is at most 1.5× `main`'s, by the interleaved `measure-source` workflow.
-- **SC-008 (tests have teeth):** Each rule (shared reachability, containment, each new code, lockfile attachment) has a contract test, and a mutation that removes or weakens it is caught.
+- **SC-008 (tests have teeth):** Each rule (shared reachability, containment, each of the two new codes and the test-data path rule, lockfile attachment) has a contract test, and a mutation that removes or weakens it is caught.
 
 ## Assumptions
 

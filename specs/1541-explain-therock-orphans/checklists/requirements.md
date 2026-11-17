@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -32,7 +32,5 @@
 ## Notes
 
 - **Domain names in the spec.** C45, I7, CycloneDX nesting and SPDX `CONTAINS` are the domain, as in earlier specs. No code structure is named, apart from the classifier, which the issue names as the suspected cause, and which FR-001 traces rather than assumes.
-- **Open markers.** Two [NEEDS CLARIFICATION] markers remain:
-  - FR-003: how contained components are treated;
-  - FR-004: one reason code or two for binary-analysis components in a source tree.
+- **Markers resolved** on 2026-11-17: FR-003, containment counts as reachability; FR-004, two codes (test-data directories and the rest).
 - **Deferred by design to FR-001's trace:** whether the classifier's reachable set differs from the document's, and which populations lack an edge rather than a reason.
