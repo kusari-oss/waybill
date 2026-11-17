@@ -474,3 +474,58 @@ fn c12b_an_unconditional_fetch_of_a_submodule_stays_separate() {
     assert_eq!(n(&coverage(&docs).unwrap(), &["merged", "existing-component"]), 0);
 }
 
+
+fn git_fetch(name: &str, tag: &str) -> String {
+    format!("FetchContent_Declare({name} GIT_REPOSITORY /waybill-fixture/rr.git GIT_TAG {tag})\n")
+}
+
+fn guarded(body: &str) -> String {
+    format!("if(NOT TARGET rr)\n{body}endif()\n")
+}
+
+/// C-12c (R9): a sibling's component is never a supplier. A guarded fetch of
+/// a repository only a sibling project declares stays its own component.
+#[test]
+fn c12c_a_sibling_never_supplies_a_fallback() {
+    let fx = tree(&[
+        ("CMakeLists.txt", ROOT),
+        ("a/CMakeLists.txt", &git_fetch("waybill-fixture-rr-a", "v1")),
+        ("b/CMakeLists.txt", &guarded(&git_fetch("waybill-fixture-rr-b", "v2"))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    the(&docs, "pkg:generic/waybill-fixture-rr-a@v1");
+    assert_optional(the(&docs, "pkg:generic/waybill-fixture-rr-b@v2"), "cmake-not-target");
+    assert_eq!(n(&coverage(&docs).unwrap(), &["merged", "existing-component"]), 0);
+}
+
+/// C-12d (R9): the nearest enclosing supplier wins.
+#[test]
+fn c12d_the_nearest_enclosing_supplier_wins() {
+    let fx = tree(&[
+        ("CMakeLists.txt", &format!("{ROOT}{}", git_fetch("waybill-fixture-rr-a", "v1"))),
+        ("mid/CMakeLists.txt", &git_fetch("waybill-fixture-rr-b", "v2")),
+        ("mid/leaf/CMakeLists.txt", &guarded(&git_fetch("waybill-fixture-rr-c", "v3"))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert!(!fetch_purls(&docs).iter().any(|p| p.contains("rr-c")), "{:?}", fetch_purls(&docs));
+    let mid = the(&docs, "pkg:generic/waybill-fixture-rr-b@v2");
+    let sup: Value = serde_json::from_str(prop(mid, "waybill:superseded-declarations").unwrap()).unwrap();
+    assert_eq!(sup, serde_json::json!([{"file": "mid/leaf/CMakeLists.txt", "version": "v3"}]));
+    assert!(prop(the(&docs, "pkg:generic/waybill-fixture-rr-a@v1"), "waybill:superseded-declarations").is_none());
+    assert_eq!(n(&coverage(&docs).unwrap(), &["merged", "existing-component"]), 1);
+}
+
+/// C-12e (R9): two suppliers at the same depth is no supplier.
+#[test]
+fn c12e_a_tie_between_suppliers_merges_nothing() {
+    let fx = tree(&[
+        (
+            "CMakeLists.txt",
+            &format!("{ROOT}{}{}", git_fetch("waybill-fixture-rr-a", "v1"), git_fetch("waybill-fixture-rr-b", "v2")),
+        ),
+        ("sub/CMakeLists.txt", &guarded(&git_fetch("waybill-fixture-rr-c", "v3"))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert_optional(the(&docs, "pkg:generic/waybill-fixture-rr-c@v3"), "cmake-not-target");
+    assert_eq!(n(&coverage(&docs).unwrap(), &["merged", "existing-component"]), 0);
+}

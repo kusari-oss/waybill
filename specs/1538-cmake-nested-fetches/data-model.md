@@ -62,7 +62,7 @@ A closed enum. `as_str()` gives the C122 value.
 - The winner's C18 gains the loser's file, and its C233 gains `{file, version}`.
 - C231 counts it under `merged.first-declaration-wins`.
 
-**Existing component (R9).** This applies to conditional fetches only. When the fetch's identity, without version (`pkg:github/<owner>/<repo>`, or the URL with its version segment dropped), equals a component another reader emitted:
+**Existing component (R9).** This applies to conditional fetches only. When the fetch's identity, without version (`pkg:github/<owner>/<repo>`, or the URL with its version segment dropped), equals a component an enclosing project supplies (the holder declared in the **nearest ancestor-or-self directory** of the fetch's file. A submodule is declared by its `.gitmodules`. A holder with the identical PURL is the same component, and PURL dedup merges it. A tie between two components at that depth, or no holder in an ancestor directory, merges nothing. A sibling project's component is never a supplier.):
 - the fetch is merged there: C56 gets the CMake mechanism if it differs, and C233 gets `{file, version}`;
 - C231 counts it under `merged.existing-component`.
 

@@ -378,9 +378,11 @@ fn normalise_repository(url: &str) -> String {
     if u.to_ascii_lowercase().starts_with("github.com/") { u.to_ascii_lowercase() } else { u.to_string() }
 }
 
-/// R9: a **conditional** fetch of a repository another component already
-/// stands for (a git submodule, another reader's component, an
-/// unconditional fetch) is recorded on that component, not emitted.
+/// R9: a **conditional** fetch of a repository that an enclosing project
+/// already supplies (a git submodule, another reader's component, an
+/// unconditional fetch) is recorded on that component, not emitted. The
+/// supplier is the one declared in the nearest ancestor-or-self directory;
+/// a sibling's component is never a supplier.
 pub(crate) fn merge_into_existing(entries: &mut Vec<PackageDbEntry>, cov: &mut FetchCoverage, scan_root: &Path) {
     let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
     let is_fetch = |e: &PackageDbEntry| {
@@ -394,21 +396,47 @@ pub(crate) fn merge_into_existing(entries: &mut Vec<PackageDbEntry>, cov: &mut F
             && e.lifecycle_scope == Some(LifecycleScope::Optional)
             && e.extra_annotations.get(ANN_OPTIONAL_DERIVATION).and_then(|v| v.as_str()).is_some_and(|d| d.starts_with("cmake-"))
     };
-    let mut holders: BTreeMap<String, usize> = BTreeMap::new();
+    let files_of = |e: &PackageDbEntry| -> Vec<String> {
+        std::iter::once(e.source_path.clone()).chain(e.extra_source_paths.iter().cloned()).collect()
+    };
+    let dir_of = |f: &str| -> PathBuf {
+        relative(Path::new(f), scan_root, &canonical_root).parent().map(Path::to_path_buf).unwrap_or_default()
+    };
+    // Every place a non-conditional component is declared, by identity.
+    let mut holders: BTreeMap<String, Vec<(usize, PathBuf)>> = BTreeMap::new();
     for (i, e) in entries.iter().enumerate() {
         if conditional(e) {
             continue;
         }
         if let Some(id) = repository_identity(e) {
-            holders.entry(id).or_insert(i);
+            let at = holders.entry(id).or_default();
+            at.extend(files_of(e).iter().map(|f| (i, dir_of(f))));
         }
     }
+    // The supplier for one file: the holder declared in the nearest
+    // ancestor-or-self directory. A tie between two components there is
+    // no supplier.
+    let supplier = |at: &[(usize, PathBuf)], dir: &Path, entries: &[PackageDbEntry]| -> Option<usize> {
+        let depth = at.iter().filter(|(_, d)| dir.starts_with(d)).map(|(_, d)| d.components().count()).max()?;
+        let mut nearest = at.iter().filter(|(_, d)| dir.starts_with(d) && d.components().count() == depth).map(|(h, _)| *h);
+        let h = nearest.next()?;
+        nearest.all(|o| entries[o].purl == entries[h].purl).then_some(h)
+    };
     let mut remove: Vec<usize> = Vec::new();
     for i in 0..entries.len() {
         if !conditional(&entries[i]) {
             continue;
         }
-        let Some(&h) = repository_identity(&entries[i]).as_ref().and_then(|id| holders.get(id)) else { continue };
+        let Some(at) = repository_identity(&entries[i]).and_then(|id| holders.get(&id)) else { continue };
+        // The same version is the same component: PURL dedup merges it.
+        if at.iter().any(|(h, _)| entries[*h].purl == entries[i].purl) {
+            continue;
+        }
+        let mut targets = files_of(&entries[i]).into_iter().map(|f| supplier(at, &dir_of(&f), entries));
+        let Some(Some(h)) = targets.next() else { continue };
+        if !targets.all(|t| t.is_some_and(|o| entries[o].purl == entries[h].purl)) {
+            continue;
+        }
         let lost = entries[i].clone();
         let files: Vec<String> = std::iter::once(lost.source_path.clone()).chain(lost.extra_source_paths.iter().cloned()).collect();
         for f in &files {

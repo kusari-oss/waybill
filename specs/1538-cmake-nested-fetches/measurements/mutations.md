@@ -41,4 +41,8 @@ Re-applied after the tests were added, each fails exactly its new test.
 | M17 | owner edges not added (R6) | C-14 |
 | M18 | `unresolved.identity` not counted, which breaks V1 | C-13 |
 
-**All 18 are caught.**
+| M19 | R9 supplier no longer has to be an ancestor | C-12c |
+| M20 | an R9 tie picks the first holder | C-12e |
+| M21 | R9 picks the shallowest supplier, not the nearest | C-12d |
+
+**All 21 are caught.** M19 to M21 were added with T022b and applied by hand, each reverted with `cp` and the file compared with `cmp` afterwards.

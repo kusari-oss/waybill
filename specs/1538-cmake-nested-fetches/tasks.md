@@ -137,6 +137,8 @@
   - **What happens:** the fetch merges into that component. C56 gains the CMake mechanism when it differs, C233 gains `{file, version}`, and C231 counts `merged.existing-component`.
   - **Unconditional fetches never merge across versions.**
 
+- [X] T022b [US3] Restrict R9 to an enclosing supplier (clarification from T023's TheRock run): identical PURL → PURL dedup; else nearest ancestor-or-self holder; a tie or a sibling → no merge. Contract cases C-12c, C-12d, C-12e; mutations M19 to M21.
+
 **Checkpoint:** C-1 to C-15 all pass.
 
 ## Phase 6: User Story 4 — TheRock measured in CI (P2)

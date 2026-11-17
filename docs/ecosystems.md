@@ -160,9 +160,12 @@ widen them).
     file and version) instead of emitted. Sibling projects are never merged:
     their order is not knowable from source. `ExternalProject_Add` is never
     merged this way (a duplicate target is a configure error).
-  - A conditional fetch of a repository another component already stands for
-    — a git submodule, or another reader's component — is recorded on that
-    component the same way.
+  - A conditional fetch of a repository an enclosing project already
+    supplies — a git submodule, another reader's component, or an
+    unconditional fetch — is recorded on that component the same way. The
+    supplier is the one declared in the nearest ancestor-or-self directory (a
+    submodule counts from its `.gitmodules`). A sibling project's component
+    never supplies, and a tie between two at the nearest depth merges nothing.
   - Declarations of one PURL are one component: optional only if every
     declaration is conditional.
 - **Ownership.** A fetch is a dependency of the nearest enclosing project — a

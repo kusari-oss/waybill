@@ -124,7 +124,11 @@ The row is present only when at least one fetch declaration was read, so scans w
 
 ## R9. A fallback the scan already holds (FR-005)
 
-**Decision.** A **conditional** fetch whose identity matches a component another reader emitted is merged into that component. Identity is the repository or URL, without the version: for `pkg:github` this is owner/repo, already lowercased (#1515). The other reader is typically a git submodule, or a FetchContent elsewhere that was emitted unconditionally.
+**Decision.** A **conditional** fetch whose identity matches a component an **enclosing project** supplies is merged into that component. The supplier is the holder declared in the **nearest ancestor-or-self directory** of the fetch's file. A submodule is declared by its `.gitmodules`. A holder with the identical PURL is the same component, and PURL dedup merges it. A tie between two components at that depth, or no holder in an ancestor directory, merges nothing. A sibling project's component is never a supplier.
+
+*Corrected at implementation.* The first version merged into the first holder found, anywhere in the tree. On TheRock (run 44011629471) that merged 20 of 46 fallbacks sibling-to-sibling: 16 googletest declarations at five versions went to `googletest@f8d7d77`, an unconditional fetch in another subproject, although `rocm-libraries` holds googletest `e2239ee…` as a submodule at the exact commit rocprim pins. spdlog and yaml-cpp in `rocm-libraries` merged into `rocm-systems` submodules. The other 26 merged into TheRock's top-level `rocm-cmake` submodule, the case this rule exists for.
+
+The original text read: a conditional fetch whose identity matches a component another reader emitted is merged into that component. Identity is the repository or URL, without the version: for `pkg:github` this is owner/repo, already lowercased (#1515). The other reader is typically a git submodule, or a FetchContent elsewhere that was emitted unconditionally.
 - C56 gets `cmake-fetchcontent-*` when the mechanism differs.
 - C233 records the fallback's file and version.
 - The C231 count is `merged.existing-component`.
