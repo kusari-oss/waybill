@@ -28,7 +28,7 @@ pub const KINDS: &[&str] = &[KIND_UNREACHABLE_AND_UNEXPLAINED];
 /// grouping rather than a dependency, and that is accounted for whether
 /// or not anything happens to depend on it. The tests below are the only
 /// thing exercising this arm, by construction and deliberately.
-fn is_explained(component: &serde_json::Value) -> bool {
+pub fn is_explained(component: &serde_json::Value) -> bool {
     cdx_prop(component, "waybill:orphan-reason").is_some()
         || cdx_prop(component, "waybill:version-absence") == Some("by-construction")
         || cdx_prop(component, "waybill:component-tier") == Some("file")
