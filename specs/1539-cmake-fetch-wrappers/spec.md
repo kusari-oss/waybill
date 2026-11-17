@@ -51,7 +51,7 @@ Spec 1538's census (`specs/1538-cmake-nested-fetches/measurements/census.md`) fo
 - LLVM's `llvm_ExternalProject_Add` and `add_custom_libcxx`;
 - LLVM's `builtin_*` and `runtime_*` functions, which call `llvm_ExternalProject_Add`.
 
-The census (`measurements/census.md`) finds 7 wrappers, all of them TheRock's or LLVM's. rocdecode's and rocjpeg's test-build functions (`rocdecode_add_test_ext`, `rocjpeg_add_test_ext`) call a fetch but forward nothing, so they stay spec 1538 function-body fetches.
+The census (`measurements/census.md`) found 7 wrappers, all TheRock's or LLVM's. At the branch the reader recognises 9 (`measurements/therock.md`). rocdecode's and rocjpeg's test-build functions (`rocdecode_add_test_ext`, `rocjpeg_add_test_ext`) pass their parameters in non-name positions (`test_${TEST_EXE}`, `${TEST_SOURCE_DIR}`), which the census script did not count as forwarding. Their 14 calls build in-tree tests.
 
 Several of these build in-tree sources and pass no URL or repository. They must stay unresolved, not become components.
 
@@ -205,8 +205,8 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 - **SC-002 (TheRock's third-party sources):**
   - Every `therock_subproject_fetch` call site whose `URL` is literal after same-file `set()` expansion is emitted as a component with the URL's version and the declared SHA-256, named from the archive filename where it parses (FR-005).
   - The census (`measurements/census.md`) counts 40 such calls, 36 with literal URLs and 4 whose URLs expand from same-file `set()`s. They cover 39 distinct URLs, because `third-party/fftw3` calls twice with one URL. So 40 declarations are emitted, as 39 components.
-- **SC-003 (no fabrication):** Every wrapper call the census marks as having no URL or repository emits nothing and is counted unresolved. That covers LLVM's 13 in-tree calls. 0 components on TheRock have a name containing `${`. A component named from its bound name under FR-005's fallback (`therock-OpenBLAS-sources`) is a literal name the source declares, and is allowed.
-- **SC-004 (accounting):** On TheRock, C231 V1 and V2 hold, and every census call site is accounted for as emitted, merged or unresolved. Wrapper definitions are counted separately: C231 `wrappers.definitions` equals the census's `wrappers`, 7.
+- **SC-003 (no fabrication):** Every wrapper call the census marks as having no URL or repository emits nothing and is counted unresolved. That covers LLVM's 13 in-tree calls and rocdecode's and rocjpeg's 14 test-build calls (`measurements/therock.md`). 0 components on TheRock have a name containing `${`. A component named from its bound name under FR-005's fallback (`therock-OpenBLAS-sources`) is a literal name the source declares, and is allowed.
+- **SC-004 (accounting):** On TheRock, C231 V1 and V2 hold, and every census call site is accounted for as emitted, merged or unresolved. Wrapper definitions are counted separately: C231 `wrappers.definitions` matches the wrappers in the census, explained definition by definition: 9 at the branch, where the census script counted 7 because it under-detected two (`measurements/therock.md`).
 - **SC-005 (cost):** The median full-tree scan time of TheRock with submodules is at most 1.5× `main`'s. It is measured by the interleaved `measure-source` workflow: a warm-up, then three alternating rounds.
 - **SC-006 (corpora):**
   - The public corpus goldens are byte-identical, or every change is traced to a wrapper call in that target.

@@ -31,7 +31,7 @@ enum ForwardingShape {   // closed; the census (SC-001) fixed this list
     Argv,                // ${ARGV}
     Unparsed,            // ${<P>_UNPARSED_ARGUMENTS}
     ParsedVariable,      // any ${<P>_<KW>}: URL ${<P>_URL}, URL ${<P>_SOURCE_URL}
-    NameParameter,       // the call's first argument is a parameter or ${ARGV<n>}
+    Parameter,           // a named parameter or ${ARGV<n>}, in any position
 }
 ```
 
@@ -111,3 +111,9 @@ V1 is unchanged: `read = emitted + merged.first-declaration-wins + merged.existi
 A per-component sorted JSON array of chains. Each chain is a JSON array of wrapper names as defined, outermost first: `[["therock_subproject_fetch"]]`, `[["wf_outer","wf_argn"]]`. A component that stands for several wrapped declarations (R4 of spec 1538: one component per PURL) carries the union. A component that only direct declarations stand for carries no row.
 
 A declaration merged into another component (first-declaration-wins, R9) is recorded in C233 as today, and its chain is not carried: C234 describes what the component's own declarations were.
+
+## What changed at implementation
+
+- **`NameParameter` became `Parameter`.** A named parameter or `${ARGV<n>}` counts in any position, not only as the fetch's name. A wrapper taking its URL positionally (`URL ${url}`) forwards by the same mechanism (contract W-21).
+- **One evaluator instead of precomputed fields.** `WrapperDef` keeps its body commands, and binding evaluates them in order up to the call (`Scope` in `wrappers.rs`): `cmake_parse_arguments`, guarded and unguarded `set()`, `unset()`. Any other command that names a variable makes it unknown, so `list(APPEND X …)` never leaves a stale value. This replaces the separate `parses`, `defaults` and `locals` fields, with the same rules.
+- **An unset variable the body owns** (a parameter, `ARGV<n>`, a `<P>_*` from `cmake_parse_arguments`) expands to nothing, as in CMake. Any other unset variable is the caller's or global, and stays written as `${…}`.

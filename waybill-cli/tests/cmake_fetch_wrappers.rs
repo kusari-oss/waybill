@@ -573,6 +573,20 @@ fn w25_a_call_site_variable_with_a_literal_set_is_expanded() {
     the(&docs, "pkg:generic/waybill-fixture-xz@5.8.1");
 }
 
+/// W-26: a call-site variable expands before the call, as in CMake. A
+/// keyword held in a variable is a keyword: here the multi-value `TOUCH`
+/// swallows the `URL` (probe W1), and nothing is fetched.
+#[test]
+fn w26_a_keyword_in_a_call_site_variable_is_a_keyword() {
+    let fx = tree(&[
+        ("cmake/wrap.cmake", PARSE),
+        ("CMakeLists.txt", &root(&format!("set(_kw TOUCH)\nwf_parse(waybill-fixture-kw ${{_kw}} t URL {})\n", url("waybill-fixture-kw", "1.0")))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert!(fetches(&docs).is_empty(), "{:?}", fetch_purls(&docs));
+    assert_eq!(n(&cov(&docs), &["unresolved", "identity"]), 1);
+}
+
 /// I-7: a tree with no wrapper definitions keeps spec 1538's C231, with no
 /// `wrappers` key.
 #[test]

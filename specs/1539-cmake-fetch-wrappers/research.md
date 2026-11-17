@@ -11,7 +11,7 @@ The evidence:
 
 | shape | example | on TheRock |
 |---|---|---|
-| `NameParameter` | `ExternalProject_Add("${target_name}" …)`, or `${ARGV0}` | `therock_subproject_fetch`, `llvm_ExternalProject_Add`, `add_custom_libcxx` |
+| `Parameter` | `ExternalProject_Add("${target_name}" …)`, `${ARGV0}`, or a parameter in any position (`URL ${url}`) | `therock_subproject_fetch`, `llvm_ExternalProject_Add`, `add_custom_libcxx` |
 | `Unparsed` | `${ARG_UNPARSED_ARGUMENTS}` after `cmake_parse_arguments(ARG …)` or `(PARSE_ARGV <n> ARG …)` | `therock_subproject_fetch`, the only identity carrier: 40 calls |
 | `ParsedVariable` | any `${<P>_<KW>}`: `URL ${ARG_URL}`, `SOURCE_DIR ${ARG_SOURCE_DIR}`, and after a different keyword, `DEPENDS ${ARG_DEPENDS}` | all of LLVM's, and `therock_subproject_fetch`'s `SOURCE_DIR` / `PREFIX` |
 | `Argn` | `${ARGN}` | none directly. #1518's repro. |
@@ -158,3 +158,10 @@ So it is a `waybill:*` row, with parity extractors in the three formats, the C23
 - **Pre-pass:** the wrapper fixed point stops when an iteration adds no name. That is bounded by the number of definitions.
 - **Binding:** follows the chain with the names already on it. A repeat is `Recursion`. Depth is capped at 8, the same bound `expand_known_vars` uses. Both are unresolved, never a loop.
 - **On TheRock:** the deepest chain is 2 (`runtime_register_target` → `llvm_ExternalProject_Add`).
+
+## R15. What changed at implementation
+
+- **`NameParameter` became `Parameter`** (data-model.md): any position, so a positional URL forwards too (W-21).
+- **C-13 is unchanged.** R9 predicted that spec 1538's C-13 template would move from `unresolved.identity` to `wrappers.definitions`. C-13's body makes two fetch calls, so by R1 it is not a wrapper.
+- **A cycle reaches a built-in only through a second definition** (W-9). Two functions calling each other never reach one, so neither is a wrapper and the call is not read. The guard against recursion still matters, for a name defined twice, where one definition fetches and the other leads back to the caller. The disagreement makes the call ambiguous.
+- **Call-site variables are expanded before binding,** as the plan said, and the reader expands the bound arguments again with the same file's `set()`s, as for direct calls. The first expansion matters only where a variable decides how the binder parses (for example, a keyword held in a variable). See mutation M30 in `measurements/mutations.md`.

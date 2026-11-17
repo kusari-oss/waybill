@@ -182,6 +182,65 @@ widen them).
 `--cmake-third-party-recursive` still widens `find_package` reading under
 `third_party/`; fetches no longer need it.
 
+### Fetches made through wrappers
+
+Spec 1539 (#1518). Super-builds wrap the built-ins in their own functions to
+add a mirror, logging or common options. A **wrapper** is a `function()` or
+`macro()`, in any file the walker reaches, whose body makes exactly one call to
+`FetchContent_Declare`, `ExternalProject_Add` or another wrapper, and passes the
+caller's arguments to it by one of:
+
+- `${ARGN}` or `${ARGV}`;
+- a named parameter or `${ARGV<n>}`, in any position;
+- `${<P>_UNPARSED_ARGUMENTS}`, or any other `${<P>_<KW>}`, after
+  `cmake_parse_arguments(<P> …)` or `cmake_parse_arguments(PARSE_ARGV <n> <P> …)`.
+
+A body whose built-in call already names a package on its own (a literal URL
+and name, or a literal GitHub `GIT_REPOSITORY`) is not a wrapper: it is a
+function-body fetch, as above.
+
+Each call to a wrapper is bound as CMake binds it, measured with CMake 4.4.5
+(`specs/1539-cmake-fetch-wrappers/measurements/cmake-semantics/`):
+
+- named parameters take the first arguments, and `ARGN` is the rest;
+- `cmake_parse_arguments`: an option is `TRUE` when present; a one-value
+  keyword keeps its **last** value; a multi-value keyword takes every word up to
+  the next keyword of the same call. A `URL` the wrapper does not parse, placed
+  after a multi-value keyword, is swallowed by it, and CMake fetches nothing, so
+  neither does the reader;
+- a default the body sets under `if(NOT DEFINED <var>)` or `if(NOT <var>)` applies
+  only when the call did not set it; a value set under any other condition is
+  unknown;
+- the bound arguments are read as a direct call's are. A repeated `URL` is a
+  mirror list, and CMake fetches the **first**, which can be the body's own.
+
+The bound call is then a declaration like any other: its conditions are the call
+site's followed by those inside the wrapper body, and its test scope, ownership,
+first-declaration-wins and merges all come from the **call site**.
+
+- **Naming.** A wrapped URL fetch is named from its archive filename when that
+  is `<name>-<version>` for the version the URL gives: TheRock's
+  `therock_subproject_fetch(therock-zstd-sources URL …/zstd-1.5.7.tar.gz)` is
+  `pkg:generic/zstd@1.5.7`. Otherwise, as for a commit-named archive, it keeps
+  the name the call gives. Direct calls are never renamed. A mirror URL is kept
+  as the download URL; recovering the upstream is out of the reader (#1539).
+- **A wrapper defined more than once** is bound against every definition, because
+  which one CMake runs depends on evaluation order. The call is emitted only
+  when every definition gives the same PURL and hash; otherwise it is
+  unresolved.
+- **Evidence.** `waybill:cmake-fetch-wrapper` (C234) lists the wrapper chain,
+  outermost first, on every component a wrapper call stands for.
+- **Accounting.** The built-in call inside a wrapper's body is a template, not a
+  declaration. C231 gains `wrappers` (`definitions`, `calls`, `ambiguous-calls`),
+  outside `read`'s identity, when the tree defines a wrapper. Each call is one
+  declaration in `read`; a call that names no `URL` or `GIT_REPOSITORY` (an
+  in-tree build), recurses, or binds to disagreeing definitions is
+  `unresolved.identity`.
+- **Not covered.** A call whose definition is outside the scan, and functions
+  that generate their fetch at configure time, such as DownloadProject's
+  `download_project()`, which writes `ExternalProject_Add` into a generated
+  project through `configure_file()`.
+
 ## SBOM tiers: source, design, binary
 
 Every component waybill emits carries a **tier** — a per-component classification

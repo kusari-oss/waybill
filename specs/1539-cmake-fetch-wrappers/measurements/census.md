@@ -78,3 +78,10 @@ Of the four variable URLs:
 - `unresolved.identity` = 44 − 3 + 13 = **54**.
 - 40 more declarations are emitted, as **39** new components: 36 named from the archive, and 3 (OpenBLAS, libbacktrace, sqlite) at their bound name and `unknown`.
 - `wrappers` = `{"ambiguous-calls":0,"calls":53,"definitions":7}`.
+
+## Measured at the branch
+
+See `therock.md` (run 44105368718). The prediction above was off in three counts, each traced:
+- **`definitions` 9, not 7; `calls` 67, not 53.** This census script counts a parameter as forwarding only when it is the fetch's exact first argument. `rocdecode_add_test_ext` and `rocjpeg_add_test_ext` name their project `test_${TEST_EXE}` and pass `${TEST_SOURCE_DIR}`, so the reader's `Parameter` shape (any position) recognises them, and this script listed them as forwarding nothing. Their 14 calls build in-tree tests, with no URL, and are unresolved.
+- **`read` 253 and `unresolved.identity` 66** follow from that, exactly.
+- **39 wrapped components, of which 34 are new PURLs.** Five tarballs (`Catch2`, `FunctionalPlus`, `frugally-deep`, `googletest@1.17.0`, `json@3.12.0`) were already components, declared directly elsewhere in the tree at the same version, with the same hash.
