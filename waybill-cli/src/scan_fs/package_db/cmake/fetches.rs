@@ -475,4 +475,42 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "waybill-fixture-c");
     }
+
+    fn files(dir: &Path, list: &[(&str, &str)]) -> Vec<PathBuf> {
+        list.iter()
+            .map(|(rel, text)| {
+                let f = dir.join(rel);
+                std::fs::create_dir_all(f.parent().unwrap()).unwrap();
+                std::fs::write(&f, text).unwrap();
+                f
+            })
+            .collect()
+    }
+
+    /// T018 / R4: one PURL declared conditionally in one file and
+    /// unconditionally in another is required, and carries no C232.
+    #[test]
+    fn a_required_declaration_keeps_its_purl_required() {
+        let dir = tempfile::tempdir().unwrap();
+        let decl = "FetchContent_Declare(waybill-fixture-p URL https://example.invalid/waybill-fixture-p-1.0.tar.gz)\n";
+        let fs = files(dir.path(), &[("a/CMakeLists.txt", &format!("if(WIN32)\n{decl}endif()\n")), ("b/CMakeLists.txt", decl)]);
+        let (entries, cov) = read_fetches(dir.path(), &fs);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].lifecycle_scope, None, "required: some build takes it");
+        assert!(!entries[0].extra_annotations.contains_key(ANN_CMAKE_FETCH_CONDITIONS));
+        assert_eq!((cov.emitted, cov.components, cov.conditional), (2, 1, 0));
+    }
+
+    /// T021 / R3 P6: a duplicate ExternalProject_Add is a configure error,
+    /// not a superseded declaration, so it never merges.
+    #[test]
+    fn external_project_never_merges_under_first_declaration_wins() {
+        let dir = tempfile::tempdir().unwrap();
+        let ep = |v: &str| format!("ExternalProject_Add(waybill-fixture-ep URL https://example.invalid/waybill-fixture-ep-{v}.tar.gz)\n");
+        let fs = files(dir.path(), &[("CMakeLists.txt", &ep("1.0")), ("sub/CMakeLists.txt", &ep("2.0"))]);
+        let (entries, cov) = read_fetches(dir.path(), &fs);
+        assert_eq!(entries.len(), 2, "both stay components");
+        assert_eq!(cov.merged_first_declaration_wins, 0);
+    }
+
 }

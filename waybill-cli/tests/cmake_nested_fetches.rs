@@ -454,3 +454,23 @@ fn i4_a_tree_without_fetches_has_no_rows() {
     let text = docs.cdx.to_string();
     assert!(!text.contains("waybill:cmake-fetch-conditions") && !text.contains("waybill:superseded-declarations"));
 }
+
+/// C-12b (R9): an **unconditional** fetch of the submodule's repository at
+/// another tag is a separate claim, never merged.
+#[test]
+fn c12b_an_unconditional_fetch_of_a_submodule_stays_separate() {
+    let fx = GitFixture::new();
+    fx.repo("pdep");
+    fx.repo("app");
+    fx.add_submodule("app", "pdep", "third_party/pdep");
+    let dep = fx.path("pdep");
+    fx.write("app/CMakeLists.txt", ROOT);
+    fx.write(
+        "app/sub/CMakeLists.txt",
+        &format!("FetchContent_Declare(waybill-fixture-pdep GIT_REPOSITORY {} GIT_TAG v9.0)\n", dep.display()),
+    );
+    let docs = scan(&fx, &fx.path("app"), &[]);
+    the(&docs, "pkg:generic/waybill-fixture-pdep@v9.0");
+    assert_eq!(n(&coverage(&docs).unwrap(), &["merged", "existing-component"]), 0);
+}
+

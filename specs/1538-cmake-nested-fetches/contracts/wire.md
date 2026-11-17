@@ -20,6 +20,7 @@ Each case is a synthetic `waybill-fixture-*` tree, scanned with `--offline` and 
 | C-10 | root declares P at 1.0; `sub/` redeclares P at 2.0, unguarded | one component, P at 1.0. C18 lists both files. C233 = `[{"file":"sub/CMakeLists.txt","version":"2.0"}]`. C231 `merged.first-declaration-wins` = 1. |
 | C-11 | siblings `a/` and `b/` each declare P at different versions, no ancestor declaration | two components (clarification 1) |
 | C-12 | a git submodule `third_party/p` of repository R; inside another project, a guarded fetch of R at a different tag | one component, the submodule's. The fetch is in C233, and C231 `merged.existing-component` = 1. |
+| C-12b | C-12 with the fetch **unguarded** | a separate component at its own tag; nothing merged (R9 applies to conditional fetches only) |
 | C-13 | inside `function(wf_fetch)`: a literal-URL declaration, and one named `${name}` | literal: Optional(`cmake-function-body`), C232 = `["function: wf_fetch"]`. Parameterised: not emitted, C231 `unresolved.identity` = 1. |
 | C-14 | a fetch inside submodule `third_party/x`'s tree, and one in a plain directory | first: an edge from the submodule. Second: a root edge. I-1 holds. |
 | C-15 | C-1's tree plus `vendor-x/CMakeLists.txt` with a fetch, scanned with `--exclude-path vendor-x`; and a fetch under a directory the walker always skips (`node_modules/`) | neither is read or counted. FR-001's skip and exclusion rules apply to the widened walk. |

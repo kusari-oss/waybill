@@ -110,11 +110,72 @@ of digests, an index loop with `list(GET …)`, `file(DOWNLOAD)` and a
   installers), loops without a paired digest list, and URLs using any
   variable the file does not define as a literal list are counted in
   `waybill:declared-downloads` (C229).
-- **Discovery.** The CMake reader reads the root `CMakeLists.txt`, `cmake/`,
-  `Modules/` and `third_party/` (#1516), so declarations deeper in a monorepo
-  are found by scanning that project's own root.
+- **Discovery.** `file(DOWNLOAD)` is read from the root `CMakeLists.txt`,
+  `cmake/`, `Modules/` and `third_party/`, so declarations deeper in a
+  monorepo are found by scanning that project's own root. Fetch declarations
+  are read from every CMake file (see "CMake fetch declarations", spec 1538).
 - **Installed trees are unchanged.** A dataset needs a declaration; data files
   in an installed SDK get no component from their directory or shape.
+
+## CMake fetch declarations
+
+Spec 1538 (#1516, #1519). Every `FetchContent_Declare` and `ExternalProject_Add`
+in every CMake file the scan's walker reaches is read: nested projects,
+`third-party/`, monorepo siblings, whether or not anything `add_subdirectory()`s
+them. The walker's skip set and `--exclude-path` apply. `find_package`,
+`pkg_check_modules` and `file(DOWNLOAD)` are still read only from the root
+`CMakeLists.txt`, `cmake/`, `Modules/` and `third_party/` (#1591 asks whether to
+widen them).
+
+- **Identity** is unchanged: `pkg:github/<owner>/<repo>@<tag>` for GitHub,
+  otherwise `pkg:generic/<name>@<version>`, with the URL and declared hash.
+- **Conditional fetches are optional, with the reason.** A declaration that a
+  build might not take is `LifecycleScope::Optional` — CycloneDX
+  `scope: "excluded"`, SPDX 2.3 `OPTIONAL_DEPENDENCY_OF` — and
+  `waybill:optional-derivation` (C122) names why, first match wins:
+
+  | C122 value | when |
+  |---|---|
+  | `cmake-find-package-args` | `FIND_PACKAGE_ARGS` on the declaration, unless `FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER` is in force |
+  | `cmake-not-target` | an enclosing `if(NOT TARGET …)` |
+  | `cmake-find-package-fallback` | an enclosing `if(NOT <X>_FOUND)` |
+  | `cmake-try-find-package-always` | `FETCHCONTENT_TRY_FIND_PACKAGE_MODE ALWAYS` in the declaring directory or an ancestor (FetchContent only) |
+  | `cmake-dependency-provider` | the tree defines a provider supporting `FETCHCONTENT_MAKEAVAILABLE_SERIAL` (FetchContent only) |
+  | `cmake-function-body` | inside a `function()` or `macro()` body |
+  | `cmake-conditional` | any other enclosing `if()` |
+
+  The enclosing conditions are in `waybill:cmake-fetch-conditions` (C232).
+  These rules follow CMake's measured behaviour
+  (`specs/1538-cmake-nested-fetches/measurements/cmake-semantics/`). Which
+  fallbacks a build actually took is build-tree evidence (#1544); a source
+  scan marks the possibility.
+- **Test scope.** A declaration under a `test`, `tests` or `unittests`
+  directory, or inside `if(BUILD_TESTING)` (not `OR`-combined), is test-scoped
+  (C62 `source-test-directory` / `cmake-build-testing`). Project-specific test
+  options are not matched by name; they are `cmake-conditional`.
+- **One component per package.**
+  - A `FetchContent_Declare` whose name an ancestor directory also declares
+    never runs — CMake keeps the first declaration — so it is recorded on the
+    ancestor's component (`waybill:superseded-declarations`, C233, with its
+    file and version) instead of emitted. Sibling projects are never merged:
+    their order is not knowable from source. `ExternalProject_Add` is never
+    merged this way (a duplicate target is a configure error).
+  - A conditional fetch of a repository another component already stands for
+    — a git submodule, or another reader's component — is recorded on that
+    component the same way.
+  - Declarations of one PURL are one component: optional only if every
+    declaration is conditional.
+- **Ownership.** A fetch is a dependency of the nearest enclosing project — a
+  main module or a git submodule (spec 1537's rule) — or of the document root
+  when there is none.
+- **Accounting.** `waybill:cmake-fetch-coverage` (C231) counts every
+  declaration read: `read` = `emitted` + `merged.first-declaration-wins` +
+  `merged.existing-component` + `unresolved.identity`. A name built from a
+  variable the file does not set literally, or a declaration with neither
+  `URL` nor `GIT_REPOSITORY` + `GIT_TAG`, is `unresolved.identity`.
+
+`--cmake-third-party-recursive` still widens `find_package` reading under
+`third_party/`; fetches no longer need it.
 
 ## SBOM tiers: source, design, binary
 

@@ -154,7 +154,7 @@
 
 ## Phase 7: Polish and cross-cutting
 
-- [ ] T025 Mutations: `specs/1538-cmake-nested-fetches/measurements/mutate.py` plus `mutate-run.sh`, in spec 1537's pattern, restoring with `cp` and checking `git diff --quiet` after a commit.
+- [X] T025 Mutations: `specs/1538-cmake-nested-fetches/measurements/mutate.py` plus `mutate-run.sh`, in spec 1537's pattern, restoring with `cp` and checking `git diff --quiet` after a commit.
   - **Discovery and reading:** discovery back to today's set; the tokeniser not skipping bracket comments; `else` not recorded.
   - **Each shape, removed in turn:** `NOT TARGET`, `NOT <X>_FOUND`, `FIND_PACKAGE_ARGS`, the `NEVER` cancellation, `ALWAYS`, the provider's method check, function body.
   - **Scope:** Test not outranking Optional; the all-declarations-conditional rule inverted.

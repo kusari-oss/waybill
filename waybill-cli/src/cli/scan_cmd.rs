@@ -1310,6 +1310,11 @@ pub struct ScanArgs {
     /// Also accepts `WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE=1` env var,
     /// read directly by the milestone-156 cmake reader (mirrors the
     /// `WAYBILL_INCLUDE_VENDORED` env-var propagation pattern).
+    ///
+    /// Spec 1538: it now affects `find_package`, `pkg_check_modules` and
+    /// `file(DOWNLOAD)` only. `FetchContent_Declare` and
+    /// `ExternalProject_Add` are read from every CMake file the scan
+    /// reaches, with or without it.
     #[arg(long)]
     pub cmake_third_party_recursive: bool,
 
