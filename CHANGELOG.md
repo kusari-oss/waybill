@@ -7,6 +7,45 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-16
+
+A minor release. It adds surface: `--include-test-binaries`, and document rows
+C222 to C230.
+
+Most of this release is C/C++ and installed-tree work (ROCm's TheRock was the
+driving target), and much of it changes what a document says on the wire, even
+where an entry is filed as a fix. What a consumer will notice:
+
+- **New components appear:**
+  - git submodules (C222);
+  - datasets that a CMake `file(DOWNLOAD)` loop declares (C229);
+  - the native binaries inside a Python package, nested under it (C230);
+  - bundled `third_party` and `_deps` source trees, nested under the binaries
+    that name them (C228).
+- **Installed C/C++ libraries carry exact versions,** taken from pkg-config
+  and from CMake package-version files (C224, C225). Installed files and
+  binaries are attributed to their package through CMake exported targets and
+  embedded source paths (C227).
+- **Test payload is scoped `test`.** In an installed tree, files a test
+  declaration names, and files under `test`, `tests` and similar directories,
+  carry the test scope (C226). A `--path` scan skips toolchain test inputs
+  (C223). `--include-test-binaries` turns that skip off.
+- **The dependency graph's root changed:**
+  - **One rule for every format.** CycloneDX, SPDX 2.3, SPDX 3 and
+    `waybill:graph-completeness` now use one rule for the root's edges, so
+    documents that used to disagree now agree.
+  - **Requirements files attach to their project.** A pip
+    `requirements*.txt`'s packages are dependencies of the project that
+    declares it. They are no longer stranded by a submodule or a
+    `pyproject.toml`.
+  - **A compiled requirements file keeps its depth,** through its `# via`
+    edges.
+  - **CycloneDX roots its graph at the document subject.**
+- **Nesting.** Nested components nest at any depth, and SPDX writes one
+  element per PURL.
+- **pnpm 12 lockfiles are read.** They used to be ignored without a warning,
+  which left every npm dependency without a version.
+
 ### Added
 
 - **Native binaries inside a Python package are inventoried and counted
@@ -8260,7 +8299,10 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.17.0
+[0.16.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.16.0
+[0.15.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.15.0
 [0.14.1]: https://github.com/kusari-oss/waybill/releases/tag/v0.14.1
 [0.14.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.14.0
 [GHSA-7mmp-9c2p-27mx]: https://github.com/kusari-oss/waybill/security/advisories/GHSA-7mmp-9c2p-27mx
