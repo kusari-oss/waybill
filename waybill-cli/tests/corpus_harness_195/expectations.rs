@@ -930,14 +930,20 @@ pub fn python_flask_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFa
     // Tripwire preserved: regressions that break the pip reader would
     // drop all pkg:pypi/* transitives; regressions that ELIMINATE
     // classifier signal would flip to `unknown`.
+    //
+    // Spec 1541 (#1593): `complete`. Spec 1537 attached the requirements
+    // files' packages to their project, and spec 1541 wired the uv.lock's
+    // forked versions, so the last orphans (`click`, `sphinx` and
+    // `alabaster` forks) are reached. Drift back to `partial` means an
+    // orphan returned.
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
-    if gc != "partial" {
+    if gc != "complete" {
         return Err(AssertionFailure {
             check_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
-            expected: "partial (m196-empirical: BFS-orphans from operator-override root, requirements/*.txt transitive fan-out)".to_string(),
-            suggested_action: "investigate pip reader (m068 / m183) or m158 classifier — flask drift from `partial` suggests a regression",
+            expected: "complete (spec 1541: requirements-file packages attached, uv.lock forks wired)".to_string(),
+            suggested_action: "investigate the pip/uv readers (specs 1537, 1541) — an orphan returned to python-flask",
         });
     }
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:pypi/")) {

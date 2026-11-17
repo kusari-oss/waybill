@@ -1,5 +1,5 @@
 //! I7 — a component not reachable from the subject by any dependency
-//! edge carries a marker explaining why.
+//! edge or containment carries a marker explaining why.
 //!
 //! A component nothing explains leaves a consumer unable to tell whether
 //! it is a real part of the artifact or a reader artefact.
@@ -9,7 +9,11 @@
 //! preconditions are disjoint by construction (FR-019).
 
 use super::super::{CellOutcome, Violation};
-use super::{cdx_component_ref, cdx_components, cdx_prop, cdx_reachable, cdx_subject_ref};
+use std::collections::{HashSet, VecDeque};
+
+use super::{cdx_adjacency, cdx_component_ref, cdx_components, cdx_prop, cdx_subject_ref};
+#[cfg(test)]
+use super::cdx_reachable;
 
 pub const KIND_UNREACHABLE_AND_UNEXPLAINED: &str = "unreachable-and-unexplained";
 pub const KINDS: &[&str] = &[KIND_UNREACHABLE_AND_UNEXPLAINED];
@@ -28,7 +32,7 @@ pub const KINDS: &[&str] = &[KIND_UNREACHABLE_AND_UNEXPLAINED];
 /// grouping rather than a dependency, and that is accounted for whether
 /// or not anything happens to depend on it. The tests below are the only
 /// thing exercising this arm, by construction and deliberately.
-fn is_explained(component: &serde_json::Value) -> bool {
+pub fn is_explained(component: &serde_json::Value) -> bool {
     cdx_prop(component, "waybill:orphan-reason").is_some()
         || cdx_prop(component, "waybill:version-absence") == Some("by-construction")
         || cdx_prop(component, "waybill:component-tier") == Some("file")
@@ -67,9 +71,58 @@ fn is_explained(component: &serde_json::Value) -> bool {
         || cdx_prop(component, "waybill:boot-library-compiler").is_some()
 }
 
+/// Every component, nested ones included, each with its container's ref.
+///
+/// Spec 1541 (#1593): a component nested in another is part of the
+/// document, and before this the check read only the top level, so the 644
+/// libraries nested in binaries on a ROCm SDK were outside its population.
+pub fn cdx_components_with_containers(
+    cdx: &serde_json::Value,
+) -> Vec<(&serde_json::Value, Option<&str>)> {
+    fn walk<'a>(
+        container: &'a serde_json::Value,
+        container_ref: Option<&'a str>,
+        out: &mut Vec<(&'a serde_json::Value, Option<&'a str>)>,
+    ) {
+        for c in container.get("components").and_then(|c| c.as_array()).into_iter().flatten() {
+            out.push((c, container_ref));
+            walk(c, cdx_component_ref(c), out);
+        }
+    }
+    let mut out = Vec::new();
+    walk(cdx, None, &mut out);
+    out
+}
+
+/// Refs reachable from the subject by a dependency edge or by containment
+/// (spec 1541 FR-003): a nested component is reached through its container,
+/// and what it depends on is reached through it.
+pub fn reachable_with_containment(cdx: &serde_json::Value) -> HashSet<&str> {
+    let mut seen: HashSet<&str> = HashSet::new();
+    let Some(root) = cdx_subject_ref(cdx) else { return seen };
+    let mut adj = cdx_adjacency(cdx);
+    for (c, container) in cdx_components_with_containers(cdx) {
+        if let (Some(container), Some(r)) = (container, cdx_component_ref(c)) {
+            adj.entry(container).or_default().push(r);
+        }
+    }
+    let mut q: VecDeque<&str> = VecDeque::new();
+    q.push_back(root);
+    seen.insert(root);
+    while let Some(cur) = q.pop_front() {
+        for next in adj.get(cur).into_iter().flatten() {
+            if seen.insert(next) {
+                q.push_back(next);
+            }
+        }
+    }
+    seen
+}
+
 pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
     let cdx = &sboms.cdx;
-    let components = cdx_components(cdx);
+    let components: Vec<&serde_json::Value> =
+        cdx_components_with_containers(cdx).into_iter().map(|(c, _)| c).collect();
 
     let Some(root) = cdx_subject_ref(cdx) else {
         return CellOutcome::NotApplicable { reason: "no resolvable subject".to_string() };
@@ -84,14 +137,14 @@ pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
         };
     }
 
-    let reachable = cdx_reachable(cdx);
+    let reachable = reachable_with_containment(cdx);
     let mut offenders: Vec<String> = components
         .iter()
         .filter(|c| {
             let Some(r) = cdx_component_ref(c) else { return false };
             r != root && !reachable.contains(r) && !is_explained(c)
         })
-        .filter_map(cdx_component_ref)
+        .filter_map(|c| cdx_component_ref(c))
         .map(|r| r.to_string())
         .collect();
     if offenders.is_empty() {
@@ -270,5 +323,88 @@ mod tests {
             count,
             example: offenders.into_iter().next(),
         }])
+    }
+
+    // -----------------------------------------------------------------
+    // Spec 1541 (#1593), FR-003 — nested components
+    // -----------------------------------------------------------------
+
+    fn sboms(cdx: serde_json::Value) -> super::super::EmittedSboms {
+        use std::path::PathBuf;
+        super::super::EmittedSboms {
+            cdx,
+            spdx_2_3: serde_json::json!({}),
+            spdx_3: serde_json::json!({}),
+            paths: crate::corpus_harness_195::harness::EmittedPaths {
+                cdx: PathBuf::new(),
+                spdx_2_3: PathBuf::new(),
+                spdx_3: PathBuf::new(),
+            },
+        }
+    }
+
+    /// A subject depending on `bin`, which nests `lib`. `loose` is
+    /// top-level, unreachable and explained, and nests `stray`.
+    fn nested_doc(stray_props: serde_json::Value) -> serde_json::Value {
+        serde_json::json!({
+            "metadata": { "component": { "bom-ref": "root@1" } },
+            "components": [
+                { "bom-ref": "pkg:generic/bin@1", "purl": "pkg:generic/bin@1",
+                  "components": [
+                      { "bom-ref": "pkg:generic/lib@2", "purl": "pkg:generic/lib@2" }
+                  ] },
+                { "bom-ref": "pkg:generic/loose@3", "purl": "pkg:generic/loose@3",
+                  "properties": [ { "name": "waybill:orphan-reason", "value": "unowned-binary" } ],
+                  "components": [
+                      { "bom-ref": "pkg:generic/stray@4", "purl": "pkg:generic/stray@4",
+                        "properties": stray_props }
+                  ] }
+            ],
+            "dependencies": [
+                { "ref": "root@1", "dependsOn": ["pkg:generic/bin@1"] }
+            ]
+        })
+    }
+
+    /// A component nested in a reachable container is reachable.
+    #[test]
+    fn s1541_a_nested_child_of_a_reachable_container_is_not_an_offender() {
+        let doc = nested_doc(serde_json::json!([
+            { "name": "waybill:orphan-reason", "value": "unowned-binary" }
+        ]));
+        assert!(reachable_with_containment(&doc).contains("pkg:generic/lib@2"));
+        assert_eq!(check(&sboms(doc)), CellOutcome::Pass);
+    }
+
+    /// A component nested in an unreachable container is in the population,
+    /// and an unexplained one is an offender.
+    #[test]
+    fn s1541_a_nested_child_of_an_unreachable_container_is_checked() {
+        let doc = nested_doc(serde_json::json!([]));
+        assert!(!reachable_with_containment(&doc).contains("pkg:generic/stray@4"));
+        match check(&sboms(doc)) {
+            CellOutcome::Fail(v) => {
+                assert_eq!(v[0].count, 1);
+                assert_eq!(v[0].example.as_deref(), Some("pkg:generic/stray@4"));
+            }
+            other => panic!("expected the nested stray to fail: {other:?}"),
+        }
+    }
+
+    /// Dependencies of a component reached only through containment are
+    /// reachable too.
+    #[test]
+    fn s1541_a_nested_childs_dependencies_are_reachable() {
+        let mut doc = nested_doc(serde_json::json!([
+            { "name": "waybill:orphan-reason", "value": "unowned-binary" }
+        ]));
+        doc["components"].as_array_mut().unwrap().push(serde_json::json!(
+            { "bom-ref": "pkg:generic/dep@5", "purl": "pkg:generic/dep@5" }
+        ));
+        doc["dependencies"].as_array_mut().unwrap().push(serde_json::json!(
+            { "ref": "pkg:generic/lib@2", "dependsOn": ["pkg:generic/dep@5"] }
+        ));
+        assert!(reachable_with_containment(&doc).contains("pkg:generic/dep@5"));
+        assert_eq!(check(&sboms(doc)), CellOutcome::Pass);
     }
 }

@@ -36,10 +36,6 @@ use std::collections::{HashMap, HashSet};
 
 use waybill_common::resolution::{Relationship, ResolvedComponent};
 
-use crate::generate::graph_completeness::{
-    build_workspace_peer_edges, compute_graph_completeness,
-};
-use crate::generate::root_selector::{select_root, ResolvedRootSubject};
 use crate::generate::RootComponentOverride;
 use crate::scan_fs::package_db::maven::ScanTargetCoord;
 
@@ -124,6 +120,9 @@ const MANIFEST_NAMES: &[&str] = &[
     "pyproject.toml",
     "CMakeLists.txt",
     "conanfile.txt",
+    // Spec 1541: the recipe form. ROCm TheRock's rocPRIM and hipCUB declare
+    // gtest and benchmark here, and nothing in conan is reachable.
+    "conanfile.py",
     "vcpkg.json",
 ];
 
@@ -247,6 +246,17 @@ pub enum OrphanReasonCode {
     /// that arm to prevent — invisibly, because an explained component is
     /// not an I7 offender and every count would still pass.
     ClosureMemberNotAnEdgeEndpoint,
+    /// Spec 1541 (#1593) — produced by binary analysis, and every source
+    /// file sits under a test-data directory ([`TEST_DATA_DIRS`]). On ROCm
+    /// TheRock's source tree: 22 under `testsuite`, `fixtures`,
+    /// `test_assets` and the like, and 550 more under #1524's directories
+    /// when that skip is off.
+    TestDataBinary,
+    /// Spec 1541 (#1593) — produced by binary analysis, not every source
+    /// file under a test-data directory, and no package claims it: a
+    /// prebuilt binary committed to the tree (212 GPU code objects on
+    /// TheRock), or one in an install tree nothing owns.
+    UnownedBinary,
 }
 
 impl OrphanReasonCode {
@@ -266,6 +276,8 @@ impl OrphanReasonCode {
                 "reachable-only-through-unemitted-package"
             }
             Self::ClosureMemberNotAnEdgeEndpoint => "closure-member-not-an-edge-endpoint",
+            Self::TestDataBinary => "test-data-binary",
+            Self::UnownedBinary => "unowned-binary",
         }
     }
 }
@@ -285,6 +297,8 @@ pub struct OrphanReasonCounts {
     pub unreferenced_lock_node: usize,
     pub reachable_only_through_unemitted_package: usize,
     pub closure_member_not_an_edge_endpoint: usize,
+    pub test_data_binary: usize,
+    pub unowned_binary: usize,
 }
 
 impl OrphanReasonCounts {
@@ -313,8 +327,44 @@ impl OrphanReasonCounts {
             OrphanReasonCode::ClosureMemberNotAnEdgeEndpoint => {
                 self.closure_member_not_an_edge_endpoint += 1
             }
+            OrphanReasonCode::TestDataBinary => self.test_data_binary += 1,
+            OrphanReasonCode::UnownedBinary => self.unowned_binary += 1,
         }
     }
+}
+
+/// Spec 1541 (#1593), research R3: directories that hold test data, matched
+/// case-sensitively against each path segment. Measured on ROCm TheRock:
+/// `test`, `Inputs`, `unittests`, `tests`, `testsuite`, `fixtures` and
+/// `test_assets`; the rest are their common spellings. A superset of #1524's
+/// `TEST_INPUT_DIRS`, which decides what a directory scan skips.
+pub(crate) const TEST_DATA_DIRS: [&str; 12] = [
+    "test",
+    "tests",
+    "testdata",
+    "test-data",
+    "test_data",
+    "testsuite",
+    "test-suite",
+    "unittests",
+    "Inputs",
+    "fixtures",
+    "test_assets",
+    "test-assets",
+];
+
+/// Whether every one of `paths` lies under a [`TEST_DATA_DIRS`] directory.
+/// Only directory segments count, not the file name, and an empty list is
+/// not "all under test data".
+fn all_under_test_data_dirs(paths: &[String]) -> bool {
+    let under = |p: &str| {
+        let segments: Vec<&str> = p.split(['/', '\\']).filter(|s| !s.is_empty()).collect();
+        segments
+            .split_last()
+            .is_some_and(|(_, dirs)| dirs.iter().any(|d| TEST_DATA_DIRS.contains(d)))
+    };
+    let real: Vec<&str> = paths.iter().map(|p| p.trim()).filter(|p| !p.is_empty()).collect();
+    !real.is_empty() && real.iter().all(|p| under(p))
 }
 
 /// Emit-time classifier — stamps `waybill:orphan-reason` on BFS-
@@ -358,14 +408,17 @@ pub fn classify_orphans(
     // index spans every ecosystem — which mechanism B needs, and which is
     // also why the `dead-lockfile-entry` arm below cannot rely on "has a
     // reachable sibling" alone. See the comment on that arm.
-    let mut by_name: HashMap<(String, String), Vec<String>> = HashMap::new();
+    let mut by_name: HashMap<(String, String), Vec<(String, String)>> = HashMap::new();
     for c in components.iter() {
         let ecosystem = c.purl.ecosystem();
         let key = (
             ecosystem.to_string(),
             versionless_identity(c.purl.as_str()).to_string(),
         );
-        by_name.entry(key).or_default().push(c.purl.as_str().to_string());
+        by_name
+            .entry(key)
+            .or_default()
+            .push((c.purl.as_str().to_string(), crate::generate::graph_completeness::node_key(c)));
     }
 
     // Feature 1218 — the ecosystems that have at least one component
@@ -376,7 +429,7 @@ pub fn classify_orphans(
     // Computed once here rather than per-component, so the arm stays O(1).
     let ecosystems_with_reachable: HashSet<String> = components
         .iter()
-        .filter(|c| reachable_set.contains(c.purl.as_str()))
+        .filter(|c| reachable_set.contains(&crate::generate::graph_completeness::node_key(c)))
         .map(|c| c.purl.ecosystem().to_string())
         .collect();
 
@@ -390,7 +443,7 @@ pub fn classify_orphans(
         let purl_str = c.purl.as_str().to_string();
 
         // 2a. Non-orphan (reachable via BFS) → skip.
-        if reachable_set.contains(&purl_str) {
+        if reachable_set.contains(&crate::generate::graph_completeness::node_key(c)) {
             continue;
         }
 
@@ -523,7 +576,7 @@ pub fn classify_orphans(
             .map(|siblings| {
                 siblings
                     .iter()
-                    .any(|s| s != &purl_str && reachable_set.contains(s))
+                    .any(|(p, k)| p != &purl_str && reachable_set.contains(k))
             })
             .unwrap_or(false);
 
@@ -676,6 +729,20 @@ pub fn classify_orphans(
                     // component; the enum variant's doc says so, and says
                     // what to check if a surprising one appears.
                     OrphanReasonCode::ReachableOnlyThroughUnemittedPackage
+                } else if c.sbom_tier.as_deref() == Some("analyzed")
+                    || crate::scan_fs::binary::is_binary_derived(c.evidence_kind.as_deref())
+                {
+                    // Spec 1541 (#1593), FR-004 — produced by reading a
+                    // binary. The tier alone misses a distro package named by
+                    // an ELF `.note.package`, which is `source` tier (#759):
+                    // a `glibc` from executables under TheRock's kpack
+                    // `test_assets`. Last, so every earlier code wins by
+                    // position (FR-006).
+                    if all_under_test_data_dirs(&c.evidence.source_file_paths) {
+                        OrphanReasonCode::TestDataBinary
+                    } else {
+                        OrphanReasonCode::UnownedBinary
+                    }
                 } else {
                     // Matching no mechanism, the component stays
                     // unexplained and keeps failing invariant I7 — FR-011,
@@ -723,54 +790,21 @@ pub fn classify_orphans_pre_emit(
     target_name: &str,
     target_kind: crate::generate::root_selector::ScanTargetKind,
 ) -> OrphanReasonCounts {
-    // Mirror the CDX builder's target-version placeholder (`"0.0.0"`).
-    // The graph-completeness pass uses `target_ref` as a fallback seed
-    // when no main-module component is present; when a main-module IS
-    // present, its PURL is the primary seed and this placeholder is
-    // ignored. Format-specific target-ref shapes (SPDX IRIs vs CDX
-    // PURLs) don't influence orphan classification because reachability
-    // is over PURL keys.
-    let target_version = "0.0.0";
-
-    let selection = select_root(
+    // Spec 1541 (#1593): the reachable set every emitter computes, from the
+    // same preparation and the scan's own root override. The unread-manifest
+    // list only changes reason codes, never the reachable set.
+    let gc = crate::generate::graph_completeness::for_document(
         components,
-        root_override,
-        scan_target_coord,
-        target_name,
-        target_version,
-        target_kind,
-    );
-
-    // Mirror the CDX builder's target_ref derivation (`builder.rs:430`):
-    // main-module PURL wins; else `<name>@<version>` fallback.
-    let target_ref: String = match &selection.subject {
-        ResolvedRootSubject::MainModule(idx) => components
-            .get(*idx)
-            .map(|c| c.purl.as_str().to_string())
-            .unwrap_or_else(|| format!("{target_name}@{target_version}")),
-        _ => format!("{target_name}@{target_version}"),
-    };
-
-    let peer_edges = build_workspace_peer_edges(&selection, components);
-    let augmented: Vec<Relationship> = relationships
-        .iter()
-        .cloned()
-        .chain(peer_edges)
-        .collect();
-
-    // Milestone 1273 FR-005 — `&[]` deliberately. This call exists for its
-    // `reachable_set`, which orphan classification needs; its reason codes are
-    // discarded and never reach a document. The published completeness verdict
-    // is computed by the three emitters, which do pass the unread-manifest
-    // facts. Passing them here too would change nothing and would imply this
-    // result is the one consumers see.
-    let gc = compute_graph_completeness(
-        components,
-        &augmented,
-        &selection,
-        &target_ref,
+        relationships,
+        &crate::generate::graph_completeness::DocumentSubject {
+            root_override,
+            scan_target_coord,
+            target_name,
+            target_kind,
+        },
         &[],
-    );
+    )
+    .completeness;
 
     let counts = classify_orphans(components, &gc.reachable_set);
 
@@ -786,6 +820,8 @@ pub fn classify_orphans_pre_emit(
         orphan_reason_build_toolchain = counts.build_toolchain,
         orphan_reason_foreign_build_system = counts.foreign_build_system,
         orphan_reason_unreferenced_lock_node = counts.unreferenced_lock_node,
+        orphan_reason_test_data_binary = counts.test_data_binary,
+        orphan_reason_unowned_binary = counts.unowned_binary,
         "orphan-reason classification complete"
     );
 
@@ -1598,5 +1634,81 @@ mod tests {
                  mechanism stays unexplained",
             );
         }
+    }
+
+    // ── Spec 1541 (#1593), FR-004 ──────────────────────────────────────
+
+    fn analyzed(purl: &str, files: &[&str]) -> ResolvedComponent {
+        let mut c = mk(purl);
+        c.sbom_tier = Some("analyzed".to_string());
+        c.evidence.source_file_paths = files.iter().map(|f| f.to_string()).collect();
+        c
+    }
+
+    fn code_for(c: ResolvedComponent) -> Option<String> {
+        let mut comps = vec![c];
+        classify_orphans(&mut comps, &HashSet::new());
+        reason_of(&comps[0]).map(str::to_string)
+    }
+
+    #[test]
+    fn s1541_each_test_data_directory_is_recognised() {
+        for d in TEST_DATA_DIRS {
+            let c = analyzed("pkg:generic/waybill-fixture-z@1", &[&format!("a/{d}/b/lib.so")]);
+            assert_eq!(code_for(c).as_deref(), Some("test-data-binary"), "{d}");
+        }
+    }
+
+    #[test]
+    fn s1541_the_test_data_match_is_exact_per_segment() {
+        for f in ["latest/lib.so", "tests.d/lib.so", "Test/lib.so", "inputs/lib.so", "a/test"] {
+            let c = analyzed("pkg:generic/waybill-fixture-z@1", &[f]);
+            assert_eq!(code_for(c).as_deref(), Some("unowned-binary"), "{f}");
+        }
+        let c = analyzed("pkg:generic/waybill-fixture-z@1", &["a\\tests\\lib.dll"]);
+        assert_eq!(code_for(c).as_deref(), Some("test-data-binary"), "a Windows separator");
+    }
+
+    #[test]
+    fn s1541_every_file_must_be_under_test_data() {
+        let c = analyzed("pkg:generic/waybill-fixture-z@1", &["tests/a.so", "prebuilt/a.so"]);
+        assert_eq!(code_for(c).as_deref(), Some("unowned-binary"));
+        let c = analyzed("pkg:generic/waybill-fixture-z@1", &[]);
+        assert_eq!(code_for(c).as_deref(), Some("unowned-binary"), "no files is not all-under");
+    }
+
+    /// O-7: an earlier code wins by position.
+    #[test]
+    fn s1541_an_existing_code_wins_over_the_binary_codes() {
+        let c = analyzed("pkg:npm/waybill-fixture-z@1.0.0", &["tests/a.so"]);
+        assert_eq!(code_for(c).as_deref(), Some("hoisted-unused"));
+        let c = analyzed("pkg:golang/example.invalid/waybill-fixture-z@v1.0.0", &["tests/a"]);
+        assert_eq!(code_for(c).as_deref(), Some("unresolved-indirect-require"));
+    }
+
+    /// A component not from binary analysis takes neither code.
+    #[test]
+    fn s1541_only_analyzed_components_take_a_binary_code() {
+        let mut c = analyzed("pkg:generic/waybill-fixture-z@1", &["tests/a.so"]);
+        c.sbom_tier = Some("source".to_string());
+        assert_eq!(code_for(c), None);
+    }
+
+    /// A distro package named by an ELF `.note.package` is `source` tier and
+    /// still binary-derived.
+    #[test]
+    fn s1541_an_elf_note_package_takes_a_binary_code() {
+        let mut c = analyzed("pkg:deb/debian/glibc@2.41?arch=amd64", &["kpack/test_assets/a.exe"]);
+        c.sbom_tier = Some("source".to_string());
+        c.evidence_kind = Some("elf-note-package".to_string());
+        assert_eq!(code_for(c).as_deref(), Some("test-data-binary"));
+    }
+
+    /// A conan recipe is a build manifest: an unreachable conan component
+    /// from one, with nothing conan reachable, is a foreign build system.
+    #[test]
+    fn s1541_a_conan_recipe_is_a_build_manifest() {
+        let c = unreachable_from("pkg:conan/gtest@1.11.0", "rocprim/conanfile.py");
+        assert_eq!(code_for(c).as_deref(), Some("foreign-build-system"));
     }
 }

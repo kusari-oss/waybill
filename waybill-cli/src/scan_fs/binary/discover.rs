@@ -30,16 +30,31 @@ const MAX_WALK_DEPTH: usize = 16;
 /// here just means the file falls through to the full probe + the
 /// downstream layered claim check).
 ///
+/// #1524: what a directory scan does with test-input binaries.
+pub struct TestInputs<'a> {
+    /// Root-relative paths of the binaries not returned.
+    pub skipped: &'a mut Vec<PathBuf>,
+    /// Spec 1541 (#1593): absolute install prefixes of the installed
+    /// libraries the tree holds. A test-input binary under one is an
+    /// installed package's test, and is returned. One vendored prefix in a
+    /// source tree no longer makes the whole tree "installed": on ROCm
+    /// TheRock, a single committed `lib/cmake/<pkg>/` file did, and 550
+    /// LLVM test inputs were reported.
+    pub installed_prefixes: &'a [PathBuf],
+}
+
 /// `test_inputs` — #1524. `Some` in a directory scan: a binary whose
-/// root-relative parent path contains a [`TEST_INPUT_DIRS`] component is
-/// not returned, and its root-relative path is pushed here instead. `None`
-/// (image and rootfs scans, nix outputs) returns every binary, because an
-/// installed system's `/usr/lib/<pkg>/tests/` is not a fixture.
+/// root-relative parent path contains a [`TEST_INPUT_DIRS`] component, and
+/// that is under none of [`TestInputs::installed_prefixes`], is not
+/// returned; its root-relative path is pushed to
+/// [`TestInputs::skipped`] instead. `None` (image and rootfs scans, nix
+/// outputs) returns every binary, because an installed system's
+/// `/usr/lib/<pkg>/tests/` is not a fixture.
 pub(super) fn discover_binaries(
     root: &Path,
     claimed_paths: &HashSet<PathBuf>,
     exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
-    mut test_inputs: Option<&mut Vec<PathBuf>>,
+    mut test_inputs: Option<TestInputs<'_>>,
 ) -> Vec<PathBuf> {
     let mut out = Vec::new();
     if root.is_file() {
@@ -86,9 +101,13 @@ pub(super) fn discover_binaries(
             if claimed_paths.contains(&reported) {
                 return;
             }
-            if let (Some(skipped), Some(rel)) = (test_inputs.as_deref_mut(), rel) {
-                if is_under_test_input_dir(&rel) {
-                    skipped.push(rel);
+            if let (Some(t), Some(rel)) = (test_inputs.as_mut(), rel) {
+                let installed = t
+                    .installed_prefixes
+                    .iter()
+                    .any(|p| reported.starts_with(p) || path.starts_with(p));
+                if is_under_test_input_dir(&rel) && !installed {
+                    t.skipped.push(rel);
                     return;
                 }
             }
@@ -243,12 +262,16 @@ mod test_input_tests {
     }
 
     fn discover(root: &Path, skip: bool) -> (Vec<PathBuf>, Vec<PathBuf>) {
+        discover_keeping(root, skip, &[])
+    }
+
+    fn discover_keeping(root: &Path, skip: bool, installed_prefixes: &[PathBuf]) -> (Vec<PathBuf>, Vec<PathBuf>) {
         let mut skipped = Vec::new();
         let mut found = discover_binaries(
             root,
             &HashSet::new(),
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
-            skip.then_some(&mut skipped),
+            skip.then_some(TestInputs { skipped: &mut skipped, installed_prefixes }),
         );
         found.sort();
         skipped.sort();
@@ -320,5 +343,23 @@ mod test_input_tests {
         let (found, skipped) = discover(&root, true);
         assert_eq!(found, vec![root.join("sub/other"), root.join("tool")]);
         assert!(skipped.is_empty());
+    }
+
+    /// Spec 1541 (#1593): a test-input binary under an installed library's
+    /// prefix is that package's test and is reported; one elsewhere in the
+    /// same tree is still skipped.
+    #[test]
+    fn s1541_only_test_inputs_under_an_installed_prefix_are_kept() {
+        let dir = tempfile::tempdir().unwrap();
+        plant(
+            dir.path(),
+            &["vendor/sdk/lib/pkg/tests/a", "llvm/test/Object/Inputs/b", "prebuilt/c"],
+        );
+        let prefix = dir.path().join("vendor/sdk");
+        let (found, skipped) = discover_keeping(dir.path(), true, std::slice::from_ref(&prefix));
+        let rel: Vec<PathBuf> =
+            found.iter().map(|p| p.strip_prefix(dir.path()).unwrap().to_path_buf()).collect();
+        assert_eq!(rel, vec![PathBuf::from("prebuilt/c"), PathBuf::from("vendor/sdk/lib/pkg/tests/a")]);
+        assert_eq!(skipped, vec![PathBuf::from("llvm/test/Object/Inputs/b")]);
     }
 }

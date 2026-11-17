@@ -407,6 +407,8 @@ pub fn build_document(
     // BEFORE per-package emission. The downstream root-selection
     // logic then falls through to the synthesize_root path with
     // the operator-supplied identity (clean replacement).
+    // Spec 1541: `for_document` applies the main-module drop itself.
+    let unfiltered_components = artifacts.components;
     let override_active = artifacts.root_override.is_active();
     // Issue #229: capture the dropped main-module PURLs so the
     // relationship builder can alias them to the synthesized root's
@@ -691,14 +693,18 @@ pub fn build_document(
         .as_ref()
         .map(|s| vec![("haskell", s.hpack_unread)])
         .unwrap_or_default();
-    let m158_graph_completeness =
-        crate::generate::graph_completeness::compute_graph_completeness(
-            artifacts.components,
-            &m194_classifier_relationships,
-            &selection,
-            &m158_target_ref,
-            &m1273_unread,
-        );
+    let m158_graph_completeness = crate::generate::graph_completeness::for_document(
+        unfiltered_components,
+        artifacts.relationships,
+        &crate::generate::graph_completeness::DocumentSubject {
+            root_override: &artifacts.root_override,
+            scan_target_coord: artifacts.scan_target_coord,
+            target_name: artifacts.target_name,
+            target_kind: artifacts.scan_target_kind,
+        },
+        &m1273_unread,
+    )
+    .completeness;
 
     // Spec 1537 (#1566), research R2: the root's direct targets come from
     // the one rule every format and the completeness classifier share

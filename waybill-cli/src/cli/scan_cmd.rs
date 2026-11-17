@@ -5883,19 +5883,43 @@ pub async fn execute(
     // the format emitters unchanged via the existing per-format
     // `extra_annotations` serialization (parity-catalog C45).
     //
-    // Runs with a `RootComponentOverride::default()` placeholder for
-    // classification purposes only: BFS-reachability of components
-    // is over PURL keys, and override-active vs override-inactive
-    // classification produces identical orphan sets because the
-    // override only affects which main-module entries are dropped
-    // from the emitted `components[]` (a per-format concern). The
-    // actual `ScanArtifacts::root_override` below is built from the
-    // operator's `--root-*` flags and is unaffected by this call.
+    // Spec 1541 (#1593): the operator's root override, built once for the
+    // classifier and the emitters, so the classifier's reachable set is the
+    // document's.
+    let root_override: crate::generate::RootComponentOverride = {
+        let (full_purl, full_name, full_version) = match args.root_purl.as_deref() {
+            Some(raw) => {
+                let parsed = waybill_common::types::purl::Purl::new(raw).expect(
+                    "--root-purl already validated at clap parse time via validate_root_purl",
+                );
+                let name = match parsed.namespace() {
+                    Some(ns) => format!("{ns}/{}", parsed.name()),
+                    None => parsed.name().to_string(),
+                };
+                let version = parsed.version().unwrap_or("").to_string();
+                (Some(parsed.as_str().to_string()), Some(name), Some(version))
+            }
+            None => (None, None, None),
+        };
+        crate::generate::RootComponentOverride {
+            name: args.root_name.clone(),
+            version: args.root_version.clone(),
+            purl_type: args.root_purl_type.clone(),
+            omit_purl: args.no_root_purl,
+            full_purl,
+            full_purl_name: full_name,
+            full_purl_version: full_version,
+            // Spec 1491: the subject's operator CPEs, for a subject that
+            // is not a scanned component. A main-module subject got them
+            // on its component in `apply_root_cpes`, and this stays empty.
+            cpes: synthetic_subject_cpes.clone(),
+        }
+    };
     let _m167_orphan_reason_counts =
         crate::generate::orphan_reason::classify_orphans_pre_emit(
             &mut components,
             &relationships,
-            &crate::generate::RootComponentOverride::default(),
+            &root_override,
             scan_target_coord.as_ref(),
             &target_name,
             scan_target_kind,
@@ -6190,35 +6214,7 @@ pub async fn execute(
         // shortcut `--root-purl` (#359). The discrete flags +
         // `--root-purl` are clap-`conflicts_with` mutually exclusive so
         // only one branch is populated at any time.
-        root_override: {
-            let (full_purl, full_name, full_version) = match args.root_purl.as_deref() {
-                Some(raw) => {
-                    let parsed = waybill_common::types::purl::Purl::new(raw).expect(
-                        "--root-purl already validated at clap parse time via validate_root_purl",
-                    );
-                    let name = match parsed.namespace() {
-                        Some(ns) => format!("{ns}/{}", parsed.name()),
-                        None => parsed.name().to_string(),
-                    };
-                    let version = parsed.version().unwrap_or("").to_string();
-                    (Some(parsed.as_str().to_string()), Some(name), Some(version))
-                }
-                None => (None, None, None),
-            };
-            crate::generate::RootComponentOverride {
-                name: args.root_name.clone(),
-                version: args.root_version.clone(),
-                purl_type: args.root_purl_type.clone(),
-                omit_purl: args.no_root_purl,
-                full_purl,
-                full_purl_name: full_name,
-                full_purl_version: full_version,
-                // Spec 1491: the subject's operator CPEs, for a subject that
-                // is not a scanned component. A main-module subject got them
-                // on its component in `apply_root_cpes`, and this stays empty.
-                cpes: synthetic_subject_cpes.clone(),
-            }
-        },
+        root_override: root_override.clone(),
         // Milestone 149 (issue #151): opt-in flag to preserve the
         // manifest-derived main-module as a library entry when the
         // root-override flags above fire. Default OFF preserves

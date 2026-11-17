@@ -37,6 +37,7 @@ use std::path::Path;
 use super::package_db::PackageDbEntry;
 
 mod discover;
+pub use discover::TestInputs;
 /// Spec 1534 (#1532): absolute source paths embedded in a binary.
 pub(crate) mod embedded_paths;
 /// Spec 1533 FR-012: the directory names #1524 skips in a directory scan.
@@ -254,7 +255,7 @@ pub fn read(
     record_owners: &crate::scan_fs::package_db::pip::RecordOwners,
     exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
     no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
-    test_inputs: Option<&mut Vec<std::path::PathBuf>>,
+    test_inputs: Option<discover::TestInputs<'_>>,
     mut embedded: Option<embedded_paths::EmbeddedPathsCtx<'_>>,
 ) -> (Vec<PackageDbEntry>, Vec<owned::OwnedBinary>) {
     // Issue #775 — `--no-binary-scan=all` skips the entire binary-scanning

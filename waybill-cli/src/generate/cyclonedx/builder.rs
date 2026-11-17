@@ -874,179 +874,6 @@ impl CycloneDxBuilder {
             );
         }
 
-        // Milestone 077 — when override is active, filter manifest-
-        // derived main-module components OUT of the components slice
-        // BEFORE downstream emission (build_components, compositions,
-        // dependencies). This is the clean-replacement implementation
-        // per FR-008 / VR-077-003.
-        // Milestone 084 — capture the dropped main-module PURLs alongside
-        // the existing component-filter so we can also filter relationships
-        // keyed off them (otherwise the override path leaves an orphan
-        // dependencies[].ref entry pointing at the now-dropped main-module
-        // PURL — same shape bug as the pre-fix main-module path, just with
-        // the orphan and the legitimate root swapped).
-        // Milestone 149 (issue #151) — drop logic consolidated into
-        // `apply_main_module_drop_or_demote` in `root_selector.rs` so
-        // the same filter runs identically across all three emitters
-        // (CDX here, SPDX 2.3 + SPDX 3 parallel sites). When the new
-        // `preserve_manifest_main_module` flag is set, the helper
-        // takes the demote-as-library branch instead of dropping; the
-        // demoted entry's PURL still lands in `retained_main_module_purls`
-        // (renamed `redirected_main_module_purls` in the helper return
-        // type) so the downstream relationship re-anchoring at lines
-        // 442-447 continues to fire per US1 clarification Option A
-        // (recorded 2026-06-29).
-        let drop_result = crate::generate::root_selector::apply_main_module_drop_or_demote(
-            components,
-            &self.root_override
-        );
-        let filtered_components_owned: Option<Vec<ResolvedComponent>> = if override_active {
-            Some(drop_result.effective_components)
-        } else {
-            None
-        };
-        let retained_main_module_purls: Vec<String> = drop_result.retained_main_module_purls;
-        let effective_components: &[ResolvedComponent] =
-            filtered_components_owned.as_deref().unwrap_or(components);
-
-        // Milestone 084 — when milestone-053's main-module promotion is in
-        // effect, target_ref MUST equal metadata.component.bom-ref (the
-        // main-module PURL). Pre-084 this was always `name@version`, which
-        // produced an orphan ref in dependencies[] and compositions[]
-        // because metadata.rs:391-409 already returns the PURL for the
-        // main-module case while builder.rs kept emitting the legacy
-        // short-form. Detection uses the same `waybill:component-role:
-        // main-module` annotation as the override-filter at lines 272-293.
-        //
-        // #1186 — and not when the subject is an explicitly named image.
-        // The ladder's branch 2 (#1170) hands `metadata.component` to the
-        // image, in the same `<name>@<version>` shape the `None` arm below
-        // produces. Promoting an in-image main module here would root the
-        // graph at a component the subject does not point to: the subject
-        // would get no `dependencies[]` entry at all, and
-        // `build_dependencies`' orphan-anchor fallback — "primary depends
-        // on every component nothing else depends on" — would fire on an
-        // ordinary npm package, making it declare `dependsOn` every apk
-        // package in the image.
-        //
-        // This is the same guard #1170 already applied to component
-        // emission at the `subject_is_a_main_module` binding below; that
-        // site was patched and this one was not, so the subject moved and
-        // the graph root stayed behind.
-        // Milestone 158 (US1 + US2) — pre-compute selection so we can:
-        //   (a) augment the effective relationships with root → loser
-        //       edges (workspace-peer linkage per FR-002).
-        //   (b) run the multi-root BFS reachability pass over the
-        //       AUGMENTED graph and thread the result into
-        //       `build_metadata` for the two document-scope
-        //       annotations (FR-003 + FR-004).
-        //
-        // We duplicate the `select_root` call that `build_metadata`
-        // will also make internally (needed for milestone 127's
-        // `waybill:root-selection-heuristic`). Both callers see the
-        // same result — the ladder is deterministic — so no drift.
-        let m158_selection = crate::generate::root_selector::select_root(
-            effective_components,
-            &self.root_override,
-            scan_target_coord,
-            target_name,
-            "0.0.0",
-            self.config.scan_target_kind,
-        );
-
-        let subject_is_a_main_module = self.config.scan_target_kind
-            != crate::generate::root_selector::ScanTargetKind::ExplicitImage;
-        // Milestone 1377 (#1398) — the evaluated Nix package is a component
-        // the selector chose by tag, not the first main-module, and under
-        // that rung the two differ (openssh has no main-module at all, so
-        // the graph was rooted at `filesystem-scan@0.0.0`, a ref nothing
-        // defined). Read from the selection itself, and only for that rung:
-        // every other scan keeps the first-main-module rule byte for byte.
-        let evaluated_nix_package_purl: Option<String> = match (
-            m158_selection.heuristic,
-            &m158_selection.subject,
-        ) {
-            (
-                Some(crate::generate::root_selector::RootSelectionHeuristic::NixEvaluatedPackage),
-                crate::generate::root_selector::ResolvedRootSubject::MainModule(idx),
-            ) => effective_components.get(*idx).map(|c| c.purl.as_str().to_string()),
-            _ => None,
-        };
-        let main_module_purl: Option<String> = if evaluated_nix_package_purl.is_some() {
-            evaluated_nix_package_purl
-        } else if !override_active && subject_is_a_main_module {
-            // #1572 — the main module the selector made the subject, not the
-            // first one found. With two Python main modules in an installed
-            // SDK the selector falls back to a synthetic placeholder; rooting
-            // the graph at the first main module anyway gave the subject no
-            // `dependencies[]` entry, and the orphan fallback in
-            // `build_dependencies` made that package `dependsOn` every orphan
-            // in the tree (1,855 on a ROCm SDK) while SPDX anchored the same
-            // orphans to the subject.
-            match &m158_selection.subject {
-                crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => {
-                    effective_components.get(*idx).map(|c| c.purl.as_str().to_string())
-                }
-                _ => None,
-            }
-        } else {
-            None
-        };
-        let target_ref: String = match main_module_purl.as_deref() {
-            Some(purl) => purl.to_string(),
-            None => format!("{}@{}", effective_target_name, effective_target_version),
-        };
-
-        // FR-002 workspace-peer linkage: for each loser Purl, emit a
-        // synthetic `root → loser` DependsOn edge. `build_dependencies`
-        // and `build_relationships` (SPDX side) naturally emit these
-        // via the existing infrastructure once they're in the list.
-        let m158_workspace_peer_edges: Vec<Relationship> =
-            crate::generate::graph_completeness::build_workspace_peer_edges(
-                &m158_selection,
-                effective_components,
-            );
-
-        // Milestone 192 — pre-rewrite dropped-main-module relationships
-        // BEFORE the classifier runs. When operator-override drops a
-        // native main-module (e.g., `--root-name X` on a Go source scan
-        // that had `pkg:golang/github.com/example/foo` as its detected
-        // mainmod), the mainmod's outgoing DependsOn edges are still in
-        // `relationships` with `.from = <dropped-purl>`. The m086 rewrite
-        // block below re-anchors those edges onto `target_ref`; without
-        // running that rewrite here, `compute_graph_completeness` sees
-        // stale edges pointing FROM components that no longer exist in
-        // `effective_components`, and BFS from the operator's synthetic
-        // target_ref can't reach the transitive Go/npm/etc. deps that
-        // used to hang off the dropped mainmod. Pre-m192 this manifested
-        // as `partial: multi-ecosystem-partial-root: <eco>`; post-m192
-        // (post-bfs.rs fix) it manifested as `partial: orphaned-
-        // components-detected: N` because the m192 synthesis empties
-        // ecosystems_without_root but doesn't rebuild the transitive
-        // reachability from target_ref.
-        //
-        // Fix: apply the m086 rewrite eagerly so the classifier operates
-        // on the same edge topology that build_dependencies (line 626)
-        // will emit. Reuse `retained_main_module_purls` computed above.
-        // Extracted to `graph_completeness::anchor_retained_mainmod_edges`
-        // in m194 US4 so SPDX 2.3 + SPDX 3 emitters share the same
-        // pre-rewrite and reach classifier `complete` on operator-
-        // override scans (SC-005).
-        let m192_prerewritten_relationships: Vec<Relationship> = crate::generate::graph_completeness::anchor_resolve_components(
-            &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
-                relationships,
-                &retained_main_module_purls,
-                &target_ref,
-            ),
-            effective_components,
-            &target_ref,
-        );
-        let metadata_relationships_augmented: Vec<Relationship> = m192_prerewritten_relationships
-            .iter()
-            .cloned()
-            .chain(m158_workspace_peer_edges.iter().cloned())
-            .collect();
-
         // Milestone 1273 FR-005 — manifests a reader found and could not
         // read. Carried from the reader because the completeness pass cannot
         // infer why a component set is thin.
@@ -1055,15 +882,25 @@ impl CycloneDxBuilder {
             .as_ref()
             .map(|s| vec![("haskell", s.hpack_unread)])
             .unwrap_or_default();
-        // FR-008 multi-root BFS on the AUGMENTED + REWRITTEN graph.
-        let graph_completeness =
-            crate::generate::graph_completeness::compute_graph_completeness(
-                effective_components,
-                &metadata_relationships_augmented,
-                &m158_selection,
-                &target_ref,
-                &m1273_unread,
-            );
+        // Spec 1541 (#1593): the main-module drop, root selection, graph root
+        // and anchoring rewrites, prepared once for every format and for the
+        // orphan classifier.
+        let document_graph = crate::generate::graph_completeness::for_document(
+            components,
+            relationships,
+            &crate::generate::graph_completeness::DocumentSubject {
+                root_override: &self.root_override,
+                scan_target_coord,
+                target_name,
+                target_kind: self.config.scan_target_kind,
+            },
+            &m1273_unread,
+        );
+        let effective_components: &[ResolvedComponent] = document_graph.effective(components);
+        let retained_main_module_purls: Vec<String> = document_graph.retained_main_module_purls.clone();
+        let target_ref: String = document_graph.target_ref.clone();
+        let m158_workspace_peer_edges: &[Relationship] = &document_graph.workspace_peer_edges;
+        let graph_completeness = document_graph.completeness.clone();
 
         // FR-013 tracing log line (research §R8). Grep-friendly for
         // CI-log analysis, follows the milestone-157 FR-007 precedent.

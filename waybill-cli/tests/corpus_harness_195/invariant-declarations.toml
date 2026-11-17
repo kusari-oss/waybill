@@ -341,24 +341,6 @@ issue = 1207
 
 [[declaration]]
 invariant = "I7"
-target = "haskell-security-advisories"
-kind = "unreachable-and-unexplained"
-count_at_declaration = 3
-reason = """
-Three `pkg:github/*` flake inputs with no edge and no orphan-reason.
-Feature 1218 added an `unreferenced-lock-node` code for exactly this
-population and it cannot reach them: `nix::attach_inputs_to_projects`
-adds main-module-to-root-input RELATIONSHIPS, so the emit-time
-classifier's BFS sees these as reachable and skips them, while the
-emitted `dependencies[]` carries no such edge and invariant I7 — which
-reads the document — sees them as unreachable. The classifier and the
-document disagree about reachability, which is a waybill defect rather
-than a missing word, so the cell keeps reporting it.
-"""
-issue = 1237
-
-[[declaration]]
-invariant = "I7"
 target = "maven-guice"
 kind = "unreachable-and-unexplained"
 count_at_declaration = 3

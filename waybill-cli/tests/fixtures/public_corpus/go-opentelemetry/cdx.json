@@ -1472,10 +1472,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -1547,10 +1543,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -3806,10 +3798,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -4674,10 +4662,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -8321,10 +8305,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -8967,10 +8947,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -10075,10 +10051,6 @@
         {
           "name": "waybill:lifecycle-scope-derivation",
           "value": "transitive"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -14957,10 +14929,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -15033,10 +15001,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -15113,10 +15077,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -15188,10 +15148,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -15656,10 +15612,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -15735,10 +15687,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -15818,10 +15766,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -15894,10 +15838,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -19550,10 +19490,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -20515,10 +20451,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -20742,10 +20674,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -20813,10 +20741,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -20882,10 +20806,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -21168,10 +21088,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -21234,10 +21150,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"bridge/opencensus/test\"]"
         }
@@ -21293,10 +21205,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -21356,10 +21264,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"bridge/opentracing\"]"
         }
@@ -21415,10 +21319,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -21478,10 +21378,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"exporters/otlp/otlplog/otlploghttp\"]"
         }
@@ -21537,10 +21433,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -21600,10 +21492,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"exporters/otlp/otlpmetric/otlpmetrichttp\"]"
         }
@@ -21659,10 +21547,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -21722,10 +21606,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"exporters/otlp/otlptrace/otlptracehttp\"]"
         }
@@ -21781,10 +21661,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -21844,10 +21720,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"exporters/prometheus\"]"
         }
@@ -21903,10 +21775,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -21966,10 +21834,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"exporters/stdout/stdoutmetric\"]"
         }
@@ -22025,10 +21889,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -22088,10 +21948,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"exporters/zipkin\"]"
         }
@@ -22147,10 +22003,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:produces-binaries",
@@ -22212,10 +22064,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -22336,10 +22184,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"metric/x\"]"
         }
@@ -22455,10 +22299,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"schema\"]"
         }
@@ -22518,10 +22358,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -22590,10 +22426,6 @@
           "value": "transitive"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"sdk/log\"]"
         }
@@ -22660,10 +22492,6 @@
           "value": "transitive"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"sdk/metric\"]"
         }
@@ -22720,10 +22548,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -22791,10 +22615,6 @@
           "value": "transitive"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"sdk\"]"
         }
@@ -22851,10 +22671,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:workspace-member",
@@ -23060,10 +22876,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -23388,10 +23200,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -24004,10 +23812,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -24402,10 +24206,6 @@
         {
           "name": "waybill:lifecycle-scope-derivation",
           "value": "transitive"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -24859,10 +24659,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -24928,10 +24724,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -25211,10 +25003,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -25304,10 +25092,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -25415,10 +25199,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -25703,10 +25483,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",

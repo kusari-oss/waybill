@@ -648,3 +648,95 @@ mod issue_1286_log_contract {
         );
     }
 }
+
+/// Spec 1541 FR-001 probe: the I7 population of a document a CI run
+/// produced, measured with the corpus harness's own I7 functions (nested
+/// components included, containment as reachability, since T007),
+/// so nothing here re-derives reachability. Ignored; run with
+/// `WAYBILL_I7_PROBE_DOC=<cdx.json> cargo test --test public_corpus
+/// probe_i7_on_document -- --ignored --nocapture`.
+#[test]
+#[ignore]
+fn probe_i7_on_document() {
+    use corpus_harness_195::invariants::checks::orphan_explained::{
+        cdx_components_with_containers, is_explained, reachable_with_containment,
+    };
+    use corpus_harness_195::invariants::checks::{
+        cdx_component_ref, cdx_components, cdx_doc_prop, cdx_prop, cdx_subject_ref,
+    };
+    use std::collections::BTreeMap;
+    let Ok(path) = std::env::var("WAYBILL_I7_PROBE_DOC") else { return };
+    let cdx: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    let top = cdx_components(&cdx);
+    let mut nested = 0usize;
+    let mut stack: Vec<&serde_json::Value> = top.iter().flat_map(|c| c["components"].as_array().into_iter().flatten()).collect();
+    while let Some(c) = stack.pop() {
+        nested += 1;
+        stack.extend(c["components"].as_array().into_iter().flatten());
+    }
+    let root = cdx_subject_ref(&cdx).unwrap_or_default().to_string();
+    let reachable = reachable_with_containment(&cdx);
+    let mut unreachable = 0usize;
+    let mut by_kind: BTreeMap<String, usize> = BTreeMap::new();
+    let mut explained_by: BTreeMap<String, usize> = BTreeMap::new();
+    for (c, _) in cdx_components_with_containers(&cdx) {
+        let Some(r) = cdx_component_ref(c) else { continue };
+        if r == root || reachable.contains(r) {
+            continue;
+        }
+        unreachable += 1;
+        if is_explained(c) {
+            let how = if cdx_prop(c, "waybill:component-tier") == Some("file") {
+                "file-tier".to_string()
+            } else if let Some(r) = cdx_prop(c, "waybill:orphan-reason") {
+                format!("orphan-reason={r}")
+            } else if cdx_prop(c, "waybill:unresolved-reason").is_some() {
+                "unresolved-reason".to_string()
+            } else {
+                "other-marker".to_string()
+            };
+            *explained_by.entry(how).or_default() += 1;
+            continue;
+        }
+        let purl_type = c["purl"].as_str().and_then(|p| p.strip_prefix("pkg:")).and_then(|p| p.split('/').next()).unwrap_or("none");
+        let files = cdx_prop(c, "waybill:source-files").unwrap_or("");
+        let test_path = ["/test/", "/tests/", "/testdata/", "/unittests/", "/test-data/", "/inputs/"].iter().any(|t| files.contains(t));
+        let key = format!(
+            "{purl_type} type={} tier={} mech={} test_path={test_path}",
+            c["type"].as_str().unwrap_or("?"),
+            cdx_prop(c, "waybill:sbom-tier").unwrap_or("-"),
+            cdx_prop(c, "waybill:source-mechanism").unwrap_or("-"),
+        );
+        println!("UNEXPLAINED {} files={}", c["purl"].as_str().unwrap_or("-"), files);
+        *by_kind.entry(key).or_default() += 1;
+    }
+    println!("document: {path}");
+    println!("graph-completeness: {:?}", cdx_doc_prop(&cdx, "waybill:graph-completeness"));
+    println!("graph-completeness-reason: {:?}", cdx_doc_prop(&cdx, "waybill:graph-completeness-reason"));
+    println!("top-level components: {}, nested: {nested}", top.len());
+    println!("I7 unreachable (all components, dependency edges and containment): {unreachable}");
+    println!("I7 explained: {}", explained_by.values().sum::<usize>());
+    for (k, n) in &explained_by {
+        println!("  {n:5}  {k}");
+    }
+    println!("I7 unexplained: {}", by_kind.values().sum::<usize>());
+    for (k, n) in &by_kind {
+        println!("  {n:5}  {k}");
+    }
+    // FR-009: the same rows in the sibling SPDX documents, through the
+    // parity extractors the format-parity gate uses.
+    let sibling = |ext: &str| path.strip_suffix(".cdx.json").map(|stem| format!("{stem}{ext}"));
+    let read = |p: Option<String>| -> Option<serde_json::Value> {
+        serde_json::from_slice(&std::fs::read(p?).ok()?).ok()
+    };
+    if let (Some(s2), Some(s3)) = (read(sibling(".spdx23.json")), read(sibling(".spdx3.json"))) {
+        for row in ["C45", "C104", "C105"] {
+            let e = waybill::parity::extractors::EXTRACTORS.iter().find(|e| e.row_id == row).unwrap();
+            let (a, b, c) = ((e.cdx)(&cdx), (e.spdx23)(&s2), (e.spdx3)(&s3));
+            println!("FORMATS {row}: values={} spdx23_agrees={} spdx3_agrees={}", a.len(), a == b, a == c);
+            if a != b || a != c {
+                println!("  cdx={a:?}\n  spdx23={b:?}\n  spdx3={c:?}");
+            }
+        }
+    }
+}

@@ -599,7 +599,24 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 test_scope::InstalledTree::NotRecognised
             }
         };
-        let skip_test_inputs = installed_tree == test_scope::InstalledTree::NotRecognised && !include_test_binaries;
+        // Spec 1541 (#1593): #1524's skip is decided per binary. An image or
+        // a tree an OS package database claims files in is an installed
+        // system, and keeps every binary. Otherwise a test-input binary is
+        // kept only under an installed library's own prefix: one vendored
+        // `lib/cmake/<pkg>/` in a source tree used to mark the whole tree
+        // installed (`installed_tree` above, which `test_scope` still uses)
+        // and report every test input in it.
+        let skip_test_inputs = installed_tree != test_scope::InstalledTree::Image
+            && os_claimed_paths.is_empty()
+            && !include_test_binaries;
+        let installed_prefixes: Vec<std::path::PathBuf> = {
+            let claims = package_db::installed_lib::resolve::OsClaims {
+                paths: &os_claimed_paths,
+                #[cfg(unix)]
+                inodes: &os_claimed_inodes,
+            };
+            package_db::installed_lib::resolve::installed_prefixes(&installed_lib_records, root, &claims)
+        };
         // Spec 1534 (#1532, research R5): the versioned package names the
         // binary scan matches embedded source paths against. Extraction runs
         // even when this is empty: bundled-tree detection needs no names.
@@ -621,7 +638,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             &record_owners,
             exclude_set,
             no_binary_scan,
-            skip_test_inputs.then_some(&mut binary_test_inputs_skipped),
+            skip_test_inputs.then_some(binary::TestInputs {
+                skipped: &mut binary_test_inputs_skipped,
+                installed_prefixes: &installed_prefixes,
+            }),
             Some(binary::embedded_paths::EmbeddedPathsCtx { names: &embedded_names, findings: &mut embedded_findings }),
         );
         db_entries.extend(binary_entries);

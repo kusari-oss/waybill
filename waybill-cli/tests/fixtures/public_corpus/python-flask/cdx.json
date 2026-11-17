@@ -51,12 +51,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -68,6 +72,7 @@
         }
       ],
       "purl": "pkg:pypi/alabaster@0.7.16",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -666,10 +671,6 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -1986,10 +1987,6 @@
           "value": "source"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
-        },
-        {
           "name": "waybill:python-lockfile-format",
           "value": "uv"
         },
@@ -2059,10 +2056,6 @@
           "value": "source"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
-        },
-        {
           "name": "waybill:python-lockfile-format",
           "value": "uv"
         },
@@ -2128,16 +2121,8 @@
           "value": "[\"uv.lock\"]"
         },
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "optional"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "source"
-        },
-        {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -2149,7 +2134,6 @@
         }
       ],
       "purl": "pkg:pypi/colorama@0.4.6",
-      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -3996,10 +3980,6 @@
           "value": "source"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
-        },
-        {
           "name": "waybill:python-lockfile-format",
           "value": "uv"
         },
@@ -4124,10 +4104,6 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -4594,10 +4570,6 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -7243,10 +7215,6 @@
           "value": "pep-735-dependency-groups:docs"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
-        },
-        {
           "name": "waybill:python-lockfile-format",
           "value": "uv"
         },
@@ -7323,10 +7291,6 @@
         {
           "name": "waybill:optional-derivation",
           "value": "pep-735-dependency-groups:docs"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -10080,10 +10044,6 @@
           "value": "source"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "dead-lockfile-entry"
-        },
-        {
           "name": "waybill:python-lockfile-format",
           "value": "uv"
         },
@@ -10281,10 +10241,7 @@
         "pkg:pypi/werkzeug@2.3.3",
         "pkg:pypi/werkzeug@3.1.3",
         "pkg:pypi/zipp@3.23.0"
-      ]
-    },
-    {
-      "aggregate": "unknown",
+      ],
       "dependencies": [
         "pkg:pypi/alabaster@0.7.16",
         "pkg:pypi/alabaster@1.0.0",
@@ -10584,14 +10541,20 @@
       "dependsOn": [
         "pkg:pypi/asgiref@3.9.1",
         "pkg:pypi/blinker@1.6.2",
+        "pkg:pypi/blinker@1.9.0",
         "pkg:pypi/click@8.1.3",
+        "pkg:pypi/click@8.1.8",
+        "pkg:pypi/click@8.2.1",
         "pkg:pypi/cryptography@45.0.6",
         "pkg:pypi/gha-update@0.2.0",
         "pkg:pypi/greenlet@3.2.4",
         "pkg:pypi/importlib-metadata@8.7.0",
         "pkg:pypi/itsdangerous@2.1.2",
+        "pkg:pypi/itsdangerous@2.2.0",
         "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/jinja2@3.1.6",
         "pkg:pypi/markupsafe@2.1.2",
+        "pkg:pypi/markupsafe@3.0.2",
         "pkg:pypi/mypy@1.17.1",
         "pkg:pypi/pallets-sphinx-themes@2.3.0",
         "pkg:pypi/pre-commit-uv@4.1.4",
@@ -10602,13 +10565,16 @@
         "pkg:pypi/ruff@0.12.9",
         "pkg:pypi/sphinx-autobuild@2024.10.3",
         "pkg:pypi/sphinx-tabs@3.4.7",
+        "pkg:pypi/sphinx@7.4.7",
+        "pkg:pypi/sphinx@8.1.3",
         "pkg:pypi/sphinx@8.2.3",
         "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1",
         "pkg:pypi/tox-uv@1.28.0",
         "pkg:pypi/tox@4.28.4",
         "pkg:pypi/types-contextvars@2.4.7.3",
         "pkg:pypi/types-dataclasses@0.6.6",
-        "pkg:pypi/werkzeug@2.3.3"
+        "pkg:pypi/werkzeug@2.3.3",
+        "pkg:pypi/werkzeug@3.1.3"
       ],
       "ref": "pkg:pypi/flask@3.1.2"
     },
@@ -10621,7 +10587,7 @@
     },
     {
       "dependsOn": [
-        "pkg:pypi/click@8.1.3",
+        "pkg:pypi/click@8.2.1",
         "pkg:pypi/httpx@0.28.1"
       ],
       "ref": "pkg:pypi/gha-update@0.2.0"
@@ -10688,7 +10654,7 @@
     },
     {
       "dependsOn": [
-        "pkg:pypi/markupsafe@2.1.2"
+        "pkg:pypi/markupsafe@3.0.2"
       ],
       "ref": "pkg:pypi/jinja2@3.1.6"
     },
@@ -10739,6 +10705,8 @@
       "dependsOn": [
         "pkg:pypi/packaging@25.0",
         "pkg:pypi/sphinx-notfound-page@1.1.0",
+        "pkg:pypi/sphinx@7.4.7",
+        "pkg:pypi/sphinx@8.1.3",
         "pkg:pypi/sphinx@8.2.3"
       ],
       "ref": "pkg:pypi/pallets-sphinx-themes@2.3.0"
@@ -10862,6 +10830,8 @@
     {
       "dependsOn": [
         "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/sphinx@7.4.7",
+        "pkg:pypi/sphinx@8.1.3",
         "pkg:pypi/sphinx@8.2.3",
         "pkg:pypi/starlette@0.47.2",
         "pkg:pypi/uvicorn@0.35.0",
@@ -10872,6 +10842,8 @@
     },
     {
       "dependsOn": [
+        "pkg:pypi/sphinx@7.4.7",
+        "pkg:pypi/sphinx@8.1.3",
         "pkg:pypi/sphinx@8.2.3"
       ],
       "ref": "pkg:pypi/sphinx-notfound-page@1.1.0"
@@ -10880,19 +10852,21 @@
       "dependsOn": [
         "pkg:pypi/docutils@0.21.2",
         "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/sphinx@7.4.7",
+        "pkg:pypi/sphinx@8.1.3",
         "pkg:pypi/sphinx@8.2.3"
       ],
       "ref": "pkg:pypi/sphinx-tabs@3.4.7"
     },
     {
       "dependsOn": [
-        "pkg:pypi/alabaster@1.0.0",
+        "pkg:pypi/alabaster@0.7.16",
         "pkg:pypi/babel@2.17.0",
         "pkg:pypi/colorama@0.4.6",
         "pkg:pypi/docutils@0.21.2",
         "pkg:pypi/imagesize@1.4.1",
         "pkg:pypi/importlib-metadata@8.7.0",
-        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/jinja2@3.1.6",
         "pkg:pypi/packaging@25.0",
         "pkg:pypi/pygments@2.19.2",
         "pkg:pypi/requests@2.32.5",
@@ -10914,7 +10888,7 @@
         "pkg:pypi/colorama@0.4.6",
         "pkg:pypi/docutils@0.21.2",
         "pkg:pypi/imagesize@1.4.1",
-        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/jinja2@3.1.6",
         "pkg:pypi/packaging@25.0",
         "pkg:pypi/pygments@2.19.2",
         "pkg:pypi/requests@2.32.5",
@@ -10936,7 +10910,7 @@
         "pkg:pypi/colorama@0.4.6",
         "pkg:pypi/docutils@0.21.2",
         "pkg:pypi/imagesize@1.4.1",
-        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/jinja2@3.1.6",
         "pkg:pypi/packaging@25.0",
         "pkg:pypi/pygments@2.19.2",
         "pkg:pypi/requests@2.32.5",
@@ -10969,6 +10943,8 @@
     },
     {
       "dependsOn": [
+        "pkg:pypi/sphinx@7.4.7",
+        "pkg:pypi/sphinx@8.1.3",
         "pkg:pypi/sphinx@8.2.3"
       ],
       "ref": "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1"
@@ -11040,7 +11016,8 @@
     },
     {
       "dependsOn": [
-        "pkg:pypi/click@8.1.3",
+        "pkg:pypi/click@8.1.8",
+        "pkg:pypi/click@8.2.1",
         "pkg:pypi/h11@0.16.0",
         "pkg:pypi/typing-extensions@4.14.1"
       ],
@@ -11081,7 +11058,7 @@
     },
     {
       "dependsOn": [
-        "pkg:pypi/markupsafe@2.1.2"
+        "pkg:pypi/markupsafe@3.0.2"
       ],
       "ref": "pkg:pypi/werkzeug@3.1.3"
     },
@@ -11170,11 +11147,7 @@
       },
       {
         "name": "waybill:graph-completeness",
-        "value": "partial"
-      },
-      {
-        "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 10 component(s) not reachable from root"
+        "value": "complete"
       },
       {
         "name": "waybill:workspaces-detected",

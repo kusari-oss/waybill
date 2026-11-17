@@ -97,13 +97,14 @@ pub(crate) fn dependency_claims(
         ..Default::default()
     };
     for eco in complete_ecosystems {
-        let refs: Vec<String> = components
-            .iter()
-            .filter(|c| c.purl.ecosystem() == eco.as_str())
-            .map(|c| c.purl.as_str().to_string())
-            .collect();
+        let in_eco: Vec<&ResolvedComponent> =
+            components.iter().filter(|c| c.purl.ecosystem() == eco.as_str()).collect();
+        let refs: Vec<String> = in_eco.iter().map(|c| c.purl.as_str().to_string()).collect();
+        // Spec 1541: reachability is keyed by component, not PURL.
         let all_reachable = match reachable_set {
-            Some(set) => refs.iter().all(|r| set.contains(r.as_str())),
+            Some(set) => in_eco
+                .iter()
+                .all(|c| set.contains(&crate::generate::graph_completeness::node_key(c))),
             None => true,
         };
         let resolved = all_reachable && !degraded_ecosystems.contains(eco.as_str());

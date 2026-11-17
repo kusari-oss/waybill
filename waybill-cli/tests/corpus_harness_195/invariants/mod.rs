@@ -165,7 +165,7 @@ pub static REGISTRY: &[Invariant] = &[
     Invariant {
         id: "I7",
         statement: "A component not reachable from the subject by any dependency edge \
-                    carries a marker explaining why",
+                    or containment carries a marker explaining why",
         precondition: "subject resolvable and at least one non-subject component",
         kinds: checks::orphan_explained::KINDS,
         checker: checks::orphan_explained::check,

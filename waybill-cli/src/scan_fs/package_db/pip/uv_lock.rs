@@ -306,6 +306,23 @@ pub(crate) fn parse_uv_lock_bytes(
     Some(entries)
 }
 
+/// The version the pyproject reader gives a project whose version is
+/// dynamic (milestone 068, spec Q1).
+const DYNAMIC_VERSION_PLACEHOLDER: &str = "0.0.0-unknown";
+
+/// A lock entry's PURL: `pkg:generic` for a git, path or URL source,
+/// `pkg:pypi` otherwise (milestone 674).
+fn entry_purl_str(name: &str, version: &str, source_tbl: Option<&toml::value::Table>) -> String {
+    match UvSourceShape::from_table(source_tbl) {
+        UvSourceShape::Git { .. } | UvSourceShape::Path { .. } | UvSourceShape::Url { .. } => format!(
+            "pkg:generic/{}@{}",
+            encode_purl_segment(name),
+            encode_purl_segment(version),
+        ),
+        _ => build_pypi_purl_str(name, version),
+    }
+}
+
 /// Parse an already-deserialised `uv.lock` TOML document. Public-in-
 /// module so unit tests can drive parsing without disk I/O.
 ///
@@ -335,6 +352,34 @@ fn uv_edge(dep: &toml::Value, gated_by: &BTreeSet<String>) -> Option<ExtraEdge> 
 /// extras are active only if something in the lock asks for them: `uv
 /// sync` installs none by default.
 fn uv_active_extras(packages: &[toml::Value], include_dev: bool) -> HashMap<String, BTreeSet<String>> {
+    extras::active_extras([], &uv_extras_graph(packages, include_dev))
+}
+
+/// Spec 1541 (#1593): the extras active when the project's own extras are
+/// installed. An extra active here but not in [`uv_active_extras`] is
+/// reached only through one of the project's optional extras, so its
+/// children are optional dependencies: on ROCm TheRock, `nccl4py[cu13]`
+/// requests `nvidia-cutlass-dsl[cu13]`, whose child was otherwise stranded.
+fn uv_optionally_active_extras(packages: &[toml::Value], include_dev: bool) -> HashMap<String, BTreeSet<String>> {
+    let seeds = packages.iter().filter_map(|p| p.as_table()).filter_map(|t| {
+        let own = matches!(
+            UvSourceShape::from_table(t.get("source").and_then(|v| v.as_table())),
+            UvSourceShape::Editable | UvSourceShape::Virtual
+        );
+        let name = t.get("name")?.as_str()?;
+        let extras: BTreeSet<String> = t
+            .get("optional-dependencies")
+            .and_then(|v| v.as_table())
+            .into_iter()
+            .flat_map(|o| o.keys())
+            .map(|e| extras::normalize_extra(e))
+            .collect();
+        own.then(|| (normalize_pypi_name_for_purl(name), extras))
+    });
+    extras::active_extras(seeds, &uv_extras_graph(packages, include_dev))
+}
+
+fn uv_extras_graph(packages: &[toml::Value], include_dev: bool) -> HashMap<String, Vec<ExtraEdge>> {
     let none = BTreeSet::new();
     let mut graph: HashMap<String, Vec<ExtraEdge>> = HashMap::new();
     for tbl in packages.iter().filter_map(|p| p.as_table()) {
@@ -354,7 +399,7 @@ fn uv_active_extras(packages: &[toml::Value], include_dev: bool) -> HashMap<Stri
             edges.extend(arr.as_array().into_iter().flatten().filter_map(|d| uv_edge(d, &gate)));
         }
     }
-    extras::active_extras([], &graph)
+    graph
 }
 
 pub(crate) fn parse_uv_lock(
@@ -388,6 +433,12 @@ pub(crate) fn parse_uv_lock_with_flags(
     let active = uv_active_extras(packages, include_dev);
     let extra_is_active = |pkg_name: &str, extra: &str| {
         active
+            .get(&normalize_pypi_name_for_purl(pkg_name))
+            .is_some_and(|a| a.contains(&extras::normalize_extra(extra)))
+    };
+    let optionally_active = uv_optionally_active_extras(packages, include_dev);
+    let extra_is_optionally_active = |pkg_name: &str, extra: &str| {
+        optionally_active
             .get(&normalize_pypi_name_for_purl(pkg_name))
             .is_some_and(|a| a.contains(&extras::normalize_extra(extra)))
     };
@@ -491,12 +542,63 @@ pub(crate) fn parse_uv_lock_with_flags(
         }
     }
 
+    // Spec 1541 (#1593), research R4: each entry's PURL by (name, version),
+    // so a dependency the lock pins to one of several versions (a fork
+    // under markers) is wired to that version exactly. A bare name resolves
+    // to whichever version the name lookup holds, which left the other
+    // versions of a fork unreachable.
+    let purl_of: HashMap<(String, String), String> = packages
+        .iter()
+        .filter_map(|p| p.as_table())
+        .filter_map(|t| {
+            let name = t.get("name")?.as_str()?.trim();
+            let version = t.get("version")?.as_str()?.trim();
+            (!name.is_empty() && !version.is_empty()).then(|| {
+                (
+                    (normalize_pypi_name_for_purl(name), version.to_string()),
+                    entry_purl_str(name, version, t.get("source").and_then(|v| v.as_table())),
+                )
+            })
+        })
+        .collect();
+    let present: HashSet<String> = packages
+        .iter()
+        .filter_map(|p| p.as_table()?.get("name")?.as_str())
+        .map(normalize_pypi_name_for_purl)
+        .collect();
+    // A name the lock lists exactly once resolves to that entry too, so an
+    // edge never leaves its lock. A bare name resolves across the whole scan:
+    // on TheRock, tensilelite's dev group named `pre-commit`, which resolved
+    // to another lock's 4.5.1 and stranded this lock's 4.6.0 and everything
+    // under it.
+    let mut only_version: HashMap<String, Option<String>> = HashMap::new();
+    for (name, version) in purl_of.keys() {
+        only_version
+            .entry(name.clone())
+            .and_modify(|v| *v = None)
+            .or_insert_with(|| Some(version.clone()));
+    }
+    let target = |dep: &toml::Value| -> Option<String> {
+        let t = dep.as_table()?;
+        let name = t.get("name")?.as_str()?;
+        let key = normalize_pypi_name_for_purl(name);
+        let version = t
+            .get("version")
+            .and_then(|v| v.as_str())
+            .map(|v| v.trim().to_string())
+            .or_else(|| only_version.get(&key).cloned().flatten());
+        let pinned = version.and_then(|v| purl_of.get(&(key, v)));
+        Some(pinned.cloned().unwrap_or_else(|| name.to_string()))
+    };
+
     for pkg in packages {
         let Some(tbl) = pkg.as_table() else {
             continue;
         };
         let name = tbl.get("name").and_then(|v| v.as_str()).unwrap_or("").trim();
         let version = tbl.get("version").and_then(|v| v.as_str()).unwrap_or("").trim();
+        let source_tbl = tbl.get("source").and_then(|v| v.as_table());
+        let source_shape = UvSourceShape::from_table(source_tbl);
         if name.is_empty() {
             // Per spec edge case "source-only entry": uv.lock entries
             // without a top-level `name` are unresolvable. Warn and skip.
@@ -506,7 +608,14 @@ pub(crate) fn parse_uv_lock_with_flags(
             );
             continue;
         }
-        if version.is_empty() {
+        // Spec 1541 (#1593), research R4: the project's own entry, editable
+        // or virtual, carries no version when its `pyproject.toml` declares
+        // a dynamic one. It is emitted with the pyproject reader's
+        // placeholder version and says why; skipping it stranded everything
+        // only it depends on (nccl4py on ROCm TheRock).
+        let project_without_version = version.is_empty()
+            && matches!(source_shape, UvSourceShape::Editable | UvSourceShape::Virtual);
+        if version.is_empty() && !project_without_version {
             // Source-only entry (e.g. git source without resolved version
             // at lockfile-write time). Warn and skip per spec US1
             // scenario 4 + FR-010.
@@ -524,23 +633,34 @@ pub(crate) fn parse_uv_lock_with_flags(
         let mut depends: Vec<String> = tbl
             .get("dependencies")
             .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|dep| dep.as_table()?.get("name")?.as_str().map(|s| s.to_string()))
-                    .collect()
-            })
+            .map(|arr| arr.iter().filter_map(&target).collect())
             .unwrap_or_default();
 
         // #1163 — children of an active extra are dependencies.
+        //
+        // Spec 1541 (#1593): so are the project's own unrequested extras,
+        // as optional dependencies (their scope is set below), as the
+        // pyproject reader already treats them. Without the edge an extra
+        // nothing requested, such as a CUDA variant, was unreachable from
+        // the project declaring it. Only the project's own entry (editable
+        // or virtual): a dependency's unrequested extras stay edgeless,
+        // because #1163 found they chain unrelated packages together.
+        let own_project = matches!(source_shape, UvSourceShape::Editable | UvSourceShape::Virtual);
         if let Some(opt_table) = tbl.get("optional-dependencies").and_then(|v| v.as_table()) {
             for (extra_name, arr) in opt_table {
-                if !extra_is_active(name, extra_name) {
+                if !own_project && !extra_is_optionally_active(name, extra_name) {
                     continue;
                 }
                 for child in arr.as_array().into_iter().flatten() {
-                    if let Some(child_name) = child.as_table().and_then(|t| t.get("name")).and_then(|v| v.as_str()) {
-                        if !depends.iter().any(|d| d == child_name) {
-                            depends.push(child_name.to_string());
+                    let Some(child_name) = child.as_table().and_then(|t| t.get("name")).and_then(|v| v.as_str()) else {
+                        continue;
+                    };
+                    if !present.contains(&normalize_pypi_name_for_purl(child_name)) {
+                        continue;
+                    }
+                    if let Some(to) = target(child) {
+                        if !depends.iter().any(|d| d == &to) {
+                            depends.push(to);
                         }
                     }
                 }
@@ -560,16 +680,12 @@ pub(crate) fn parse_uv_lock_with_flags(
                 for (_group_name, arr) in dev_table {
                     if let Some(deps_arr) = arr.as_array() {
                         for dep in deps_arr {
-                            if let Some(child_name) = dep
-                                .as_table()
-                                .and_then(|t| t.get("name"))
-                                .and_then(|v| v.as_str())
-                            {
-                                if primary_set.contains(child_name) {
+                            if let Some(to) = target(dep) {
+                                if primary_set.contains(&to) {
                                     continue;
                                 }
-                                if added.insert(child_name.to_string()) {
-                                    depends.push(child_name.to_string());
+                                if added.insert(to.clone()) {
+                                    depends.push(to);
                                 }
                             }
                         }
@@ -585,19 +701,10 @@ pub(crate) fn parse_uv_lock_with_flags(
         // Virtual / Unknown all emit as `pkg:pypi/*` (preserves
         // m106 workspace-mode backward-compat); Git / Path / Url
         // emit as `pkg:generic/*` per m674 FR-005 through FR-007.
-        let source_tbl = tbl.get("source").and_then(|v| v.as_table());
-        let source_shape = UvSourceShape::from_table(source_tbl);
-
-        let purl_str = match &source_shape {
-            UvSourceShape::Git { .. }
-            | UvSourceShape::Path { .. }
-            | UvSourceShape::Url { .. } => format!(
-                "pkg:generic/{}@{}",
-                encode_purl_segment(name),
-                encode_purl_segment(version),
-            ),
-            _ => build_pypi_purl_str(name, version),
-        };
+        // The pyproject reader's identity for a dynamic version (milestone
+        // 068), so the two entries for one project merge.
+        let version = if project_without_version { DYNAMIC_VERSION_PLACEHOLDER } else { version };
+        let purl_str = entry_purl_str(name, version, source_tbl);
         let Ok(purl) = Purl::new(&purl_str) else {
             tracing::warn!(
                 package = %name,
@@ -687,6 +794,15 @@ pub(crate) fn parse_uv_lock_with_flags(
             | UvSourceShape::Unknown => None,
         };
 
+        if project_without_version {
+            extra.insert(
+                "waybill:unresolved-reason".to_string(),
+                serde_json::Value::String(
+                    "dynamic version in pyproject.toml; not resolved from the lock".to_string(),
+                ),
+            );
+        }
+
         // Component-role annotation for workspace members (per
         // Clarification Q1 of milestone 106).
         if let Some(ws) = &workspace_info {
@@ -751,10 +867,33 @@ pub(crate) fn parse_uv_lock_with_flags(
         let root_pyproject = rootfs.join("pyproject.toml");
         let root_name = workspace_root_name(ws.root_name.as_deref());
         if let Some(mut root_entry) = synthesize_workspace_root(&root_name, &root_pyproject) {
-            // Populate workspace-root's `depends` with each emitted
-            // member's name. The downstream emitter resolves these to
-            // dependsOn edges against the actual member PURLs.
-            root_entry.depends = ws.member_names.iter().cloned().collect();
+            // Each member, by its exact PURL in this lock. Spec 1541
+            // (#1593): the root is `pkg:generic`, and a bare name resolves
+            // in the depender's ecosystem, so a pypi member never resolved
+            // and the root had no edge (`rocisa` under TheRock's
+            // tensilelite). The root project is a member too when the lock
+            // lists it, as uv's `[manifest]` records.
+            let mut members: Vec<String> = ws.member_names.iter().cloned().collect();
+            if let Some(own) = ws.root_name.as_deref() {
+                if !members.iter().any(|m| m == own)
+                    && only_version.contains_key(&normalize_pypi_name_for_purl(own))
+                {
+                    members.push(own.to_string());
+                }
+            }
+            members.sort();
+            root_entry.depends = members
+                .iter()
+                .map(|m| {
+                    let key = normalize_pypi_name_for_purl(m);
+                    only_version
+                        .get(&key)
+                        .cloned()
+                        .flatten()
+                        .and_then(|v| purl_of.get(&(key, v)).cloned())
+                        .unwrap_or_else(|| m.clone())
+                })
+                .collect();
             out.push(root_entry);
         }
     }
@@ -1054,7 +1193,7 @@ source = { registry = "https://pypi.org/simple" }
         let entries = parse_uv_lock(&parsed, "/tmp/uv.lock", tmp.path());
         assert_eq!(entries.len(), 3);
         let httpx = entries.iter().find(|e| e.name == "httpx").unwrap();
-        assert_eq!(httpx.depends, vec!["anyio".to_string(), "certifi".to_string()]);
+        assert_eq!(httpx.depends, vec!["pkg:pypi/anyio@4.4.0".to_string(), "pkg:pypi/certifi@2024.8.30".to_string()]);
     }
 
     #[test]
@@ -1172,13 +1311,18 @@ source = { registry = "https://pypi.org/simple" }
                 .and_then(|v| v.as_str()),
             Some("workspace-root"),
         );
-        // Workspace-root depends on each member by name.
+        // Workspace-root depends on each member, by its PURL in this lock
+        // (spec 1541). The root manifest's own name is not in this lock, so
+        // it is not a member.
         let mut depends_sorted = ws_root.depends.clone();
         depends_sorted.sort();
-        assert_eq!(depends_sorted, vec!["shared".to_string(), "web".to_string()]);
+        assert_eq!(
+            depends_sorted,
+            vec!["pkg:pypi/shared@0.1.0".to_string(), "pkg:pypi/web@0.1.0".to_string()]
+        );
 
         // Intra-workspace edge: web depends on shared.
-        assert_eq!(web.depends, vec!["shared".to_string()]);
+        assert_eq!(web.depends, vec!["pkg:pypi/shared@0.1.0".to_string()]);
     }
 
     #[test]
@@ -1224,12 +1368,12 @@ source = { editable = "bar" }
         let foo = entries.iter().find(|e| e.name == "foo").unwrap();
         let bar = entries.iter().find(|e| e.name == "bar").unwrap();
         assert!(
-            !foo.depends.contains(&"bar".to_string()),
+            !foo.depends.iter().any(|d| d == "bar" || d.starts_with("pkg:pypi/bar@")),
             "foo MUST NOT depend on bar (no declared edge); got: {:?}",
             foo.depends,
         );
         assert!(
-            !bar.depends.contains(&"foo".to_string()),
+            !bar.depends.iter().any(|d| d == "foo" || d.starts_with("pkg:pypi/foo@")),
             "bar MUST NOT depend on foo (no declared edge); got: {:?}",
             bar.depends,
         );
@@ -1366,12 +1510,12 @@ source = { registry = "https://pypi.org/simple" }
             .find(|e| e.name == "demo-app")
             .expect("demo-app emitted");
         assert!(
-            demo.depends.contains(&"certifi".to_string()),
+            demo.depends.contains(&"pkg:pypi/certifi@2025.1.31".to_string()),
             "runtime edge missing: {:?}",
             demo.depends,
         );
         assert!(
-            demo.depends.contains(&"datamodel-code-generator".to_string()),
+            demo.depends.contains(&"pkg:pypi/datamodel-code-generator@0.31.2".to_string()),
             "issue #783: dev-group edge missing on demo-app: {:?}",
             demo.depends,
         );
@@ -1429,7 +1573,7 @@ source = { registry = "https://pypi.org/simple" }
         );
         let demo = entries.iter().find(|e| e.name == "demo-app").unwrap();
         assert!(
-            !demo.depends.contains(&"datamodel-code-generator".to_string()),
+            !demo.depends.iter().any(|d| d == "datamodel-code-generator" || d.starts_with("pkg:pypi/datamodel-code-generator@")),
             "include_dev=false must not add dev-group edges, got: {:?}",
             demo.depends,
         );
@@ -1477,7 +1621,7 @@ source = { registry = "https://pypi.org/simple" }
             parse_uv_lock(&parsed, "/tmp/uv.lock", Path::new("/tmp/nonexistent"));
         let demo = entries.iter().find(|e| e.name == "demo-app").unwrap();
         assert_eq!(
-            demo.depends.iter().filter(|d| *d == "pytest").count(),
+            demo.depends.iter().filter(|d| *d == "pkg:pypi/pytest@7.4.0").count(),
             1,
             "duplicate pytest edge on demo-app: {:?}",
             demo.depends,
@@ -1626,9 +1770,207 @@ source = { registry = "https://pypi.org/simple" }
         let parsed: toml::Value = toml::from_str(src).unwrap();
         let entries = parse_uv_lock(&parsed, "/tmp/uv.lock", tmp.path());
         let get = |n: &str| entries.iter().find(|e| e.name == n).unwrap();
-        assert_eq!(get("requests").depends, vec!["certifi".to_string(), "pysocks".to_string()]);
+        assert_eq!(get("requests").depends, vec!["pkg:pypi/certifi@2024.2.2".to_string(), "pkg:pypi/pysocks@1.7.1".to_string()]);
         let optional = |n: &str| get(n).extra_annotations.contains_key("waybill:optional-derivation");
         assert!(!optional("pysocks"), "an active extra's child is installed, not optional");
         assert!(optional("chardet"), "an unrequested extra's child stays optional");
+    }
+
+    // ── Spec 1541 (#1593), research R4 ─────────────────────────────────
+
+    fn s1541_parse(src: &str) -> Vec<PackageDbEntry> {
+        let tmp = tempfile::tempdir().unwrap();
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        parse_uv_lock(&parsed, "/tmp/uv.lock", tmp.path())
+    }
+
+    /// The project's entry with a dynamic version is emitted versionless,
+    /// says why, and keeps its edges.
+    #[test]
+    fn s1541_a_versionless_editable_project_is_emitted() {
+        let entries = s1541_parse(
+            r#"
+version = 1
+
+[[package]]
+name = "proj"
+source = { editable = "." }
+dependencies = [{ name = "dep" }]
+
+[[package]]
+name = "dep"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "gitonly"
+source = { git = "https://example.invalid/x.git#abc" }
+"#,
+        );
+        let proj = entries.iter().find(|e| e.name == "proj").expect("emitted");
+        assert_eq!(proj.purl.as_str(), "pkg:pypi/proj@0.0.0-unknown");
+        assert_eq!(proj.depends, vec!["pkg:pypi/dep@1.0.0".to_string()]);
+        assert!(proj.extra_annotations.contains_key("waybill:unresolved-reason"));
+        assert!(
+            !entries.iter().any(|e| e.name == "gitonly"),
+            "a versionless entry that is not the project is still skipped"
+        );
+    }
+
+    /// A dependency pinned to one of several versions targets that version's
+    /// PURL; a bare name stays a name.
+    #[test]
+    fn s1541_a_forked_dependency_targets_each_version() {
+        let entries = s1541_parse(
+            r#"
+version = 1
+
+[[package]]
+name = "proj"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "numpy", version = "1.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "six" },
+]
+
+[[package]]
+name = "numpy"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "numpy"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "six"
+version = "1.16.0"
+source = { registry = "https://pypi.org/simple" }
+"#,
+        );
+        let proj = entries.iter().find(|e| e.name == "proj").unwrap();
+        assert_eq!(
+            proj.depends,
+            vec![
+                "pkg:pypi/numpy@1.0.0".to_string(),
+                "pkg:pypi/numpy@2.0.0".to_string(),
+                "pkg:pypi/six@1.16.0".to_string()
+            ],
+            "a name the lock lists once resolves inside the lock"
+        );
+    }
+
+    /// The project's own unrequested extra gets an optional edge; the child
+    /// stays optional.
+    #[test]
+    fn s1541_the_projects_unrequested_extra_is_an_optional_edge() {
+        let entries = s1541_parse(
+            r#"
+version = 1
+
+[[package]]
+name = "proj"
+version = "0.1.0"
+source = { editable = "." }
+
+[package.optional-dependencies]
+cu12 = [{ name = "cuda-bindings" }, { name = "not-in-lock" }]
+
+[[package]]
+name = "cuda-bindings"
+version = "12.0.0"
+source = { registry = "https://pypi.org/simple" }
+"#,
+        );
+        let proj = entries.iter().find(|e| e.name == "proj").unwrap();
+        assert_eq!(proj.depends, vec!["pkg:pypi/cuda-bindings@12.0.0".to_string()], "only children in the lock");
+        let child = entries.iter().find(|e| e.name == "cuda-bindings").unwrap();
+        assert_eq!(child.lifecycle_scope, Some(waybill_common::resolution::LifecycleScope::Optional));
+    }
+
+    /// TheRock's `nccl4py[cu13]` shape: the project's own extra requests a
+    /// dependency's extra. That extra's child gets an edge, scoped optional,
+    /// because only an optional extra reaches it.
+    #[test]
+    fn s1541_an_extra_requested_by_the_projects_extra_is_optional() {
+        let entries = s1541_parse(
+            r#"
+version = 1
+
+[[package]]
+name = "proj"
+version = "0.1.0"
+source = { editable = "." }
+
+[package.optional-dependencies]
+cu13 = [{ name = "dsl", extra = ["cu13"] }]
+
+[[package]]
+name = "dsl"
+version = "4.7.0"
+source = { registry = "https://pypi.org/simple" }
+
+[package.optional-dependencies]
+cu13 = [{ name = "dsl-libs-cu13" }]
+
+[[package]]
+name = "dsl-libs-cu13"
+version = "4.7.0"
+source = { registry = "https://pypi.org/simple" }
+"#,
+        );
+        let dsl = entries.iter().find(|e| e.name == "dsl").unwrap();
+        assert_eq!(dsl.depends, vec!["pkg:pypi/dsl-libs-cu13@4.7.0".to_string()]);
+        let libs = entries.iter().find(|e| e.name == "dsl-libs-cu13").unwrap();
+        assert_eq!(libs.lifecycle_scope, Some(waybill_common::resolution::LifecycleScope::Optional));
+    }
+
+    /// TheRock's tensilelite: the root pyproject is itself a member (uv's
+    /// `[manifest]` lists it) and declares one more workspace member. The
+    /// synthesized `pkg:generic` root reaches both by PURL; a bare pypi name
+    /// resolved in the `generic` ecosystem and never matched.
+    #[test]
+    fn s1541_a_workspace_root_reaches_its_members_and_its_own_project() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("pyproject.toml"),
+            "[project]\nname = \"tensile\"\nversion = \"5.0.0\"\n\n[tool.uv.workspace]\nmembers = [\"rocisa\"]\n",
+        )
+        .unwrap();
+        std::fs::create_dir_all(tmp.path().join("rocisa")).unwrap();
+        std::fs::write(
+            tmp.path().join("rocisa/pyproject.toml"),
+            "[project]\nname = \"rocisa\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        let src = r#"
+version = 1
+
+[manifest]
+members = ["rocisa", "tensile"]
+
+[[package]]
+name = "rocisa"
+version = "0.1.0"
+source = { editable = "rocisa" }
+
+[[package]]
+name = "tensile"
+version = "5.0.0"
+source = { editable = "." }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let entries = parse_uv_lock(&parsed, "/tmp/uv.lock", tmp.path());
+        let root = entries
+            .iter()
+            .find(|e| e.purl.as_str().starts_with("pkg:generic/"))
+            .expect("workspace root");
+        assert_eq!(
+            root.depends,
+            vec!["pkg:pypi/rocisa@0.1.0".to_string(), "pkg:pypi/tensile@5.0.0".to_string()]
+        );
     }
 }
