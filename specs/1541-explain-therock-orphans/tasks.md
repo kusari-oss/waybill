@@ -114,7 +114,7 @@
 
 ## Phase 6: Polish
 
-- [ ] T016 Mutations: `specs/1541-explain-therock-orphans/measurements/mutate.py` and `mutate-run.sh`, recorded in `measurements/mutations.md`. At least these, each caught by a named test:
+- [X] T016 Mutations: `specs/1541-explain-therock-orphans/measurements/mutate.py` and `mutate-run.sh`, recorded in `measurements/mutations.md`. At least these, each caught by a named test:
   - the classifier using its own preparation again;
   - containment edges removed;
   - containment edges reversed;
@@ -126,6 +126,7 @@
   - the uv editable root skipped;
   - dev edges dropped;
   - only one forked version wired.
+  - **19 of 19 caught** (`measurements/mutations.md`). Beyond the list above: dev-group edges, C151 on the versionless project, the #1163 guard, FR-011's whole-tree rule and the installed prefix.
 - [ ] T017 [P] Docs:
   - **`docs/reference/sbom-invariants.md`, I7:** containment counts as reachability; the two new codes.
   - **`docs/reference/sbom-format-mapping.md`:** C45's row.
