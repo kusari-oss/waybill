@@ -1,0 +1,232 @@
+{
+  "cmake_files": 6172,
+  "cmake_files_in_current_set": 31,
+  "cmake_files_reachable_literal": 51,
+  "add_subdirectory_unresolved_variable": 229,
+  "fetch_calls": {
+    "externalproject_add": 39,
+    "fetchcontent_declare": 152
+  },
+  "fetch_in_current_set": 1,
+  "fetch_reachable_literal": 0,
+  "fetch_in_function_or_macro": 17,
+  "fetch_in_loop": 0,
+  "fetch_under_any_if": 148,
+  "fetch_unconditional": 43,
+  "shape_find_package_args": 5,
+  "shape_not_target": 32,
+  "shape_build_testing": 0,
+  "fetch_in_test_dir": 28,
+  "fetchcontent_names_in_several_files": 14,
+  "fetchcontent_shadowed_by_enclosing_same_name": 0,
+  "try_find_package_mode_sets": [],
+  "dependency_providers": [
+    {
+      "file": "cmake/therock_subproject_dep_provider.cmake",
+      "line": 82,
+      "args": "SET_DEPENDENCY_PROVIDER therock_dependency_provider SUPPORTED_METHODS FIND_PACKAGE"
+    }
+  ],
+  "find_calls_outside_current_set": {
+    "find_package": 2030,
+    "pkg_check_modules": 42,
+    "pkg_search_module": 3
+  },
+  "find_calls_in_current_set": {
+    "find_package": 9
+  },
+  "functions_wrapping_fetches": {
+    "rocm_libs_declare_shared_deps": 4,
+    "therock_subproject_fetch": 1,
+    "add_custom_libcxx": 1,
+    "llvm_ExternalProject_Add": 1,
+    "fetch_gtest_dependency": 1,
+    "_fetch_gtest": 1,
+    "_fetch_flatbuffers": 1,
+    "_fetch_spdlog": 1,
+    "_fetch_nlohmann_json": 1,
+    "_fetch_composable_kernel": 1,
+    "add_rocshmem_targets": 1,
+    "rccl_standalone_setup": 1,
+    "rocdecode_add_test_ext": 1,
+    "rocjpeg_add_test_ext": 1
+  },
+  "top_conditions": {
+    "NOT ROCmCMakeBuildTools_FOUND": 32,
+    "NOT TARGET GTest::GTest AND NOT TARGET GTest::gtest": 20,
+    "NOT GTest_FOUND": 14,
+    "USER_BUILD_TEST OR BUILD_HIPSTDPAR_TEST": 8,
+    "ROCROLLER_ENABLE_FETCH": 8,
+    "BUILD_TEST": 7,
+    "NOT ROCM_FOUND": 6,
+    "USER_BUILD_TEST": 6,
+    "EXISTS /usr/src/googletest AND NOT EXTERNAL_DEPS_FORCE_DOWNLOAD": 6,
+    "else: EXISTS /usr/src/googletest AND NOT EXTERNAL_DEPS_FORCE_DOWNLOAD": 6,
+    "else: HIP_COMPILER STREQUAL \"nvcc\"": 6,
+    "${ROCPRIM_FETCH_METHOD} STREQUAL \"DOWNLOAD\" OR ${ROCPRIM_FETCH_METHOD} STREQUAL \"MONOREPO\"": 6,
+    "NOT Catch2_FOUND": 5,
+    "else: NOT PROFILER_HUB_FETCH_DEPENDENCIES": 5,
+    "else: TARGET rocprim": 4,
+    "BUILD_TEST OR BUILD_HIPSTDPAR_TEST": 4,
+    "else: SQLITE_USE_SYSTEM_PACKAGE": 4,
+    "NOT TARGET roc::rocprim": 3,
+    "${LINK_HIP_DEVICE_LIBS} AND NOT GRAFT_THRUST_ONTO_BINARIES": 3,
+    "NOT TARGET TBB::tbb AND NOT TARGET tbb AND BUILD_HIPSTDPAR_TEST_WITH_TBB": 3,
+    "${ROCRAND_FETCH_METHOD} STREQUAL \"MONOREPO\" OR ${ROCRAND_FETCH_METHOD} STREQUAL \"DOWNLOAD\"": 3,
+    "USER_BUILD_BENCHMARK": 3,
+    "build_runtimes": 2,
+    "\"openmp\" IN_LIST LLVM_ENABLE_RUNTIMES OR \"offload\" IN_LIST LLVM_ENABLE_RUNTIMES": 2,
+    "DEFINED LIBOMPTARGET_EXTERNAL_PROJECT_ROCM_DEVICE_LIBS_PATH": 2
+  },
+  "names_in_several_files": {
+    "catch2": [
+      "rocm-libraries/projects/hipdnn/tests/cudnn_samples/CMakeLists.txt",
+      "rocm-libraries/shared/origami/tests/CMakeLists.txt",
+      "rocm-libraries/shared/rocroller/test/catch/CMakeLists.txt",
+      "rocm-libraries/shared/rocroller/test/rocprofiler/CMakeLists.txt",
+      "rocm-systems/projects/hip-tests/catch/CMakeLists.txt",
+      "rocm-systems/projects/hrr/tests/CMakeLists.txt"
+    ],
+    "flatbuffers": [
+      "rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake",
+      "rocm-systems/emulation/rocjitsu/CMakeLists.txt"
+    ],
+    "fmt": [
+      "rocm-libraries/shared/rocroller/CMakeLists.txt",
+      "rocm-systems/profilers/profiler-hub/cmake/fmt.cmake",
+      "rocm-systems/projects/rocprofiler-systems/cmake/FmtLib.cmake",
+      "rocm-systems/projects/rocprofiler/src/tools/rocprofv2/CMakeLists.txt"
+    ],
+    "googletest": [
+      "rocm-libraries/dnn-providers/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl2/hipcub/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl2/rocprim/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl2/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/hipcub/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/rocprim/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipcub/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipdnn/samples/example_engine_plugin/tests/CMakeLists.txt",
+      "rocm-libraries/projects/hipsparse/cmake/hipsparse_gtest.cmake",
+      "rocm-libraries/projects/hipsparselt/cmake/fetch_google_test.cmake",
+      "rocm-libraries/projects/hiptensor/test/CMakeLists.txt",
+      "rocm-libraries/projects/rocalution/clients/tests/CMakeLists.txt",
+      "rocm-libraries/projects/rocprim/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocrand/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocrand/test/cpp_wrapper/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocsparse/cmake/rocsparse_gtest.cmake",
+      "rocm-libraries/projects/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocwmma/test/CMakeLists.txt",
+      "rocm-libraries/shared/hostnumerics/cmake/HostNumericsTestDependencies.cmake",
+      "rocm-libraries/shared/mxdatagenerator/CMakeLists.txt",
+      "rocm-libraries/shared/rocroller/test/CMakeLists.txt",
+      "rocm-systems/emulation/rocjitsu/CMakeLists.txt",
+      "rocm-systems/profilers/profiler-hub/cmake/gtest.cmake",
+      "rocm-systems/projects/amdsmi/tests/amd_smi_test/CMakeLists.txt",
+      "rocm-systems/projects/aqlprofile/CMakeLists.txt",
+      "rocm-systems/projects/hipfile/cmake/HipFileUseGTest.cmake",
+      "rocm-systems/projects/rccl-tests/test/CMakeLists.txt",
+      "rocm-systems/projects/rccl/test/host/CMakeLists.txt",
+      "rocm-systems/projects/rdc/tests/rdc_tests/CMakeLists.txt",
+      "rocm-systems/projects/rdc/tests/unit/CMakeLists.txt",
+      "rocm-systems/projects/rocm-smi-lib/tests/rocm_smi_test/CMakeLists.txt",
+      "rocm-systems/projects/rocprof-trace-decoder/test/unit/CMakeLists.txt",
+      "rocm-systems/projects/rocprofiler-systems/cmake/GTest.cmake",
+      "rocm-systems/projects/rocr-runtime/rocrtst/suites/aie/CMakeLists.txt",
+      "rocm-systems/projects/rocshmem/tests/unit_tests/CMakeLists.txt",
+      "rocm-systems/shared/cuid/tests/CMakeLists.txt"
+    ],
+    "gtest": [
+      "rocm-libraries/cmake/modules/shared_third_party.cmake",
+      "rocm-libraries/projects/composablekernel/cmake/gtest.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/cmake/modules/shared_third_party.cmake",
+      "rocm-libraries/projects/miopen/cmake/ThirdParty.cmake",
+      "rocm-libraries/projects/rpp/utilities/test/cmake/gtest.cmake"
+    ],
+    "nanobind": [
+      "rocm-libraries/projects/hipblaslt/tensilelite/rocisa/CMakeLists.txt",
+      "rocm-libraries/projects/hipdnn/python/frontend_bindings/CMakeLists.txt",
+      "rocm-libraries/shared/origami/python/CMakeLists.txt",
+      "rocm-libraries/shared/stinkytofu/python_module/CMakeLists.txt"
+    ],
+    "nlohmann_json": [
+      "rocm-libraries/cmake/modules/shared_third_party.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/cmake/modules/shared_third_party.cmake",
+      "rocm-libraries/projects/miopen/cmake/ThirdParty.cmake",
+      "rocm-systems/profilers/profiler-hub/cmake/nlohmann_json.cmake",
+      "rocm-systems/projects/rocprofiler-systems/cmake/NlohmannJson.cmake"
+    ],
+    "prim": [
+      "rocm-libraries/projects/hipccl/hipccl2/hipcub/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl2/hipcub/test/extra/CMakeLists.txt",
+      "rocm-libraries/projects/hipccl/hipccl2/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/hipcub/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/hipcub/test/extra/CMakeLists.txt",
+      "rocm-libraries/projects/hipccl/hipccl3/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipcub/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipcub/test/extra/CMakeLists.txt",
+      "rocm-libraries/projects/rocthrust/cmake/Dependencies.cmake"
+    ],
+    "rocm-cmake": [
+      "math-libs/libhipcxx/cmake/FindROCMCmake.cmake",
+      "rocm-docs/cmake/Modules/Dependencies.cmake",
+      "rocm-libraries/cmake/modules/fetch_rocm_cmake.cmake",
+      "rocm-libraries/projects/hipblas-common/cmake/dependencies.cmake",
+      "rocm-libraries/projects/hipblas/cmake/get-rocm-cmake.cmake",
+      "rocm-libraries/projects/hipblaslt/cmake/fetch_rocm_cmake.cmake",
+      "rocm-libraries/projects/hipccl/hipccl2/cmake/modules/fetch_rocm_cmake.cmake",
+      "rocm-libraries/projects/hipccl/hipccl2/hipcub/cmake/ROCmCMakeBuildToolsDependency.cmake",
+      "rocm-libraries/projects/hipccl/hipccl2/rocprim/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl2/rocthrust/cmake/FindROCMCmake.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/cmake/modules/fetch_rocm_cmake.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/hipcub/cmake/ROCmCMakeBuildToolsDependency.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/rocprim/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/rocthrust/cmake/FindROCMCmake.cmake",
+      "rocm-libraries/projects/hipcub/cmake/ROCmCMakeBuildToolsDependency.cmake",
+      "rocm-libraries/projects/hiprand/cmake/ROCmCMakeBuildToolsDependency.cmake",
+      "rocm-libraries/projects/hipsolver/cmake/get-rocm-cmake.cmake",
+      "rocm-libraries/projects/hipsparse/cmake/find_rocm_cmake.cmake",
+      "rocm-libraries/projects/hipsparselt/cmake/fetch_rocm_cmake.cmake",
+      "rocm-libraries/projects/rocalution/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocblas/cmake/get-rocm-cmake.cmake",
+      "rocm-libraries/projects/rocblas/next-cmake/cmake/FetchROCmCMake.cmake",
+      "rocm-libraries/projects/rocprim/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocrand/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocsolver/cmake/get-rocm-cmake.cmake",
+      "rocm-libraries/projects/rocsparse/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocthrust/cmake/FindROCMCmake.cmake",
+      "rocm-libraries/shared/origami/cmake/dependencies.cmake",
+      "rocm-libraries/shared/rocroller/cmake/fetch_rocm_cmake.cmake",
+      "rocm-systems/projects/hipfile/cmake/HipFileUseROCmCMake.cmake",
+      "rocm-systems/projects/rccl-tests/cmake/Dependencies.cmake"
+    ],
+    "rocm_cmake_local": [
+      "rocm-libraries/projects/hipfft/cmake/dependencies.cmake",
+      "rocm-libraries/projects/rocfft/CMakeLists.txt"
+    ],
+    "rocrand": [
+      "rocm-libraries/projects/hipccl/hipccl2/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hiprand/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocthrust/cmake/Dependencies.cmake"
+    ],
+    "spdlog": [
+      "rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake",
+      "rocm-libraries/shared/rocroller/CMakeLists.txt",
+      "rocm-systems/profilers/profiler-hub/cmake/spdlog.cmake",
+      "rocm-systems/projects/rocprofiler-systems/cmake/Spdlog.cmake"
+    ],
+    "sqlite_local": [
+      "rocm-libraries/projects/hipccl/hipccl2/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocfft/cmake/sqlite.cmake",
+      "rocm-libraries/projects/rocthrust/cmake/Dependencies.cmake"
+    ],
+    "tbb": [
+      "rocm-libraries/projects/hipccl/hipccl2/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/hipccl/hipccl3/rocthrust/cmake/Dependencies.cmake",
+      "rocm-libraries/projects/rocthrust/cmake/Dependencies.cmake"
+    ]
+  }
+}

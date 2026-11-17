@@ -152,9 +152,15 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
 - **FR-003**: A fetch whose declaration matches a recognised fallback shape MUST be marked as declared-but-not-necessarily-built, with a reason naming the shape. The shapes are:
   - `FIND_PACKAGE_ARGS` on the declaration;
   - an enclosing `if(NOT TARGET …)` guard;
-  - `FETCHCONTENT_TRY_FIND_PACKAGE_MODE` set by an enclosing project;
-  - a dependency provider installed by an enclosing project;
+  - `FETCHCONTENT_TRY_FIND_PACKAGE_MODE` set to `ALWAYS` by the declaring directory or an enclosing one;
+  - a dependency provider whose `SUPPORTED_METHODS` include `FETCHCONTENT_MAKEAVAILABLE_SERIAL` (FetchContent only);
+  - an enclosing `NOT <X>_FOUND` condition, the "find_package, else fetch" idiom;
   - **first declaration wins:** a `FetchContent_Declare` of a name an enclosing project also declares. CMake ignores every declaration of a name after the first, guarded or not, and a project's own declarations normally precede its `add_subdirectory()` calls. "Earlier" is approximated statically as "declared by an enclosing project", and the reason value says so. This shape does not apply to `ExternalProject_Add`, where a duplicate target name is an error, and it does not apply between sibling subprojects, whose order a static scan cannot know.
+
+  *Corrected at planning (research R3), from CMake behaviour measured with CMake 4.4.5:*
+  - `NOT <X>_FOUND` is TheRock's commonest fallback (census), so it is a recognised shape.
+  - `FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER` in force cancels `FIND_PACKAGE_ARGS`.
+  - A provider never sees `ExternalProject_Add`, and affects FetchContent only when it supports `FETCHCONTENT_MAKEAVAILABLE_SERIAL`.
 
   The marker MUST use an existing waybill row or a format-native field where one fits, and add a new row only if none does (Constitution Principle V). The same marker MUST appear in all three formats.
 - **FR-004**: A fetch inside **any** enclosing `if()` MUST be marked conditional, in every CMake file, the root included.
@@ -168,7 +174,7 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
   - it is declared under a test-only directory (`test`, `tests` or `unittests`, the names #1524 uses);
   - it is inside `if(BUILD_TESTING)`, alone or `AND`-combined with other conditions. `BUILD_TESTING` is CTest's standard switch.
 
-  It also keeps the conditional mark (FR-004). Project-specific test options (`<PROJ>_BUILD_TESTS`, `ENABLE_TESTS` and similar) are NOT matched by name; such a fetch is `conditional` only. That follows the test-scope rules of #1564 and #1524, which do not guess from names.
+  It also keeps the conditional mark (FR-004). The component's scope is single-valued, so its scope is test, and the condition stays recorded with it (research R7). Project-specific test options (`<PROJ>_BUILD_TESTS`, `ENABLE_TESTS` and similar) are NOT matched by name; such a fetch is `conditional` only. That follows the test-scope rules of #1564 and #1524, which do not guess from names.
 - **FR-009**: Fetch declarations that are counted but not emitted MUST be counted in the document, by reason, so that "accounted for" in SC-002 is checkable from the document alone. Examples are unparseable files, fetches of a subproject that is not on disk, and declarations merged by FR-005.
 - **FR-010**: Output for a tree whose fetches are all in the root, `cmake/` and `Modules/` MUST be unchanged, except for two additions: the conditional marker on fetches inside an `if()` (FR-004), and this feature's document-scope rows.
 - **FR-011**: No new Cargo dependency.
