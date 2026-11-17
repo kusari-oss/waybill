@@ -587,6 +587,289 @@ fn w26_a_keyword_in_a_call_site_variable_is_a_keyword() {
     assert_eq!(n(&cov(&docs), &["unresolved", "identity"]), 1);
 }
 
+/// D-18 (spec 1540 FR-002): a spec 1539 wrapper whose
+/// `cmake_parse_arguments` keyword lists are held in variables binds with
+/// the resolved keywords. Read literally, nothing was parsed.
+#[test]
+fn d18_a_wrapper_with_keyword_lists_in_variables_binds() {
+    let fx = tree(&[
+        (
+            "cmake/wrap.cmake",
+            "function(wf_vars)\nset(one NAME URL)\ncmake_parse_arguments(W \"\" \"${one}\" \"\" ${ARGN})\nFetchContent_Declare(${W_NAME} URL ${W_URL})\nendfunction()\n",
+        ),
+        ("CMakeLists.txt", &root(&format!("wf_vars(NAME waybill-fixture-kv URL {})\n", url("waybill-fixture-kv", "1.0")))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    let c = the(&docs, "pkg:generic/waybill-fixture-kv@1.0");
+    assert_eq!(wrapper_chains(c), chain(&["wf_vars"]));
+}
+
+// ---------------------------------------------------------------------
+// Spec 1540 (#1594): DownloadProject's download_project(), recognised by
+// name and shape (`specs/1540-cmake-download-project/contracts/wire.md`,
+// D-1 to D-19). The module below is written for these tests; it has
+// DownloadProject's shape and is not a copy of the upstream file.
+// ---------------------------------------------------------------------
+
+/// A DownloadProject-shaped module. `extra` adds a one-value keyword;
+/// `guard` puts `set(oneValueArgs …)` under `if(<guard>)`.
+fn dp_module(extra: &str, guard: Option<&str>) -> String {
+    let one = format!("set(oneValueArgs PROJ PREFIX DOWNLOAD_DIR SOURCE_DIR BINARY_DIR BUILD_PROJECT{extra})\n");
+    let one = match guard {
+        Some(g) => format!("if({g})\n{one}endif()\n"),
+        None => one,
+    };
+    format!(
+        "set(_DownloadProjectDir \"${{CMAKE_CURRENT_LIST_DIR}}\")\n\
+         function(download_project)\n\
+         set(options QUIET)\n{one}set(multiValueArgs \"\")\n\
+         cmake_parse_arguments(DL_ARGS \"${{options}}\" \"${{oneValueArgs}}\" \"${{multiValueArgs}}\" ${{ARGN}})\n\
+         if(NOT DL_ARGS_PREFIX)\nset(DL_ARGS_PREFIX \"${{CMAKE_BINARY_DIR}}\")\nendif()\n\
+         if(NOT DL_ARGS_DOWNLOAD_DIR)\nset(DL_ARGS_DOWNLOAD_DIR \"${{DL_ARGS_PREFIX}}/${{DL_ARGS_PROJ}}-download\")\nendif()\n\
+         configure_file(\"${{_DownloadProjectDir}}/DownloadProject.CMakeLists.cmake.in\" \"${{DL_ARGS_DOWNLOAD_DIR}}/CMakeLists.txt\")\n\
+         execute_process(COMMAND ${{CMAKE_COMMAND}} . WORKING_DIRECTORY \"${{DL_ARGS_DOWNLOAD_DIR}}\")\n\
+         execute_process(COMMAND ${{CMAKE_COMMAND}} --build . WORKING_DIRECTORY \"${{DL_ARGS_DOWNLOAD_DIR}}\")\n\
+         endfunction()\n"
+    )
+}
+
+fn dp_root(extra: &str) -> String {
+    format!("{ROOT}include(cmake/DownloadProject.cmake)\n{extra}")
+}
+
+fn dp_tree(calls: &str) -> GitFixture {
+    tree(&[("cmake/DownloadProject.cmake", &dp_module("", None)), ("CMakeLists.txt", &dp_root(calls))])
+}
+
+fn dp_chain() -> Option<Vec<Vec<String>>> {
+    chain(&["download_project"])
+}
+
+/// D-1: a GitHub repository, with TheRock's INSTALL_DIR from a same-file set().
+#[test]
+fn d1_a_github_download_project_call_is_a_component() {
+    let fx = dp_tree(
+        "set(ROOT \"${CMAKE_BINARY_DIR}/r\")\ndownload_project(PROJ waybill-fixture-r GIT_REPOSITORY https://github.com/waybill-org/waybill-fixture-r.git GIT_TAG v1.2 BUILD_PROJECT TRUE INSTALL_DIR ${ROOT})\n",
+    );
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    let c = the(&docs, "pkg:github/waybill-org/waybill-fixture-r@v1.2");
+    assert_eq!(prop(c, "waybill:source-mechanism"), Some("cmake-externalproject"));
+    assert!(required(c), "{c}");
+    assert_eq!(source_files(c), vec!["CMakeLists.txt".to_string()]);
+    assert_eq!(wrapper_chains(c), dp_chain());
+    assert_eq!(wrappers(&docs), (1, 1, 0));
+}
+
+/// D-2: a URL and a hash.
+#[test]
+fn d2_a_url_download_project_call_is_a_component() {
+    let fx = dp_tree(&format!("download_project(PROJ waybill-fixture-u URL {} URL_HASH SHA256={})\n", url("waybill-fixture-u", "2.0"), h()));
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    let c = the(&docs, "pkg:generic/waybill-fixture-u@2.0");
+    assert_eq!(sha256(c), Some(h().as_str()));
+    assert_eq!(wrapper_chains(c), dp_chain());
+}
+
+/// D-3 (FR-004): named `<PROJ>`, not `<PROJ>-download`.
+#[test]
+fn d3_a_url_that_does_not_parse_is_named_proj() {
+    let fx = dp_tree("download_project(PROJ waybill-fixture-np URL https://example.invalid/download?id=7)\n");
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert_eq!(wrapper_chains(the(&docs, "pkg:generic/waybill-fixture-np@unknown")), dp_chain());
+    assert!(!fetch_purls(&docs).iter().any(|p| p.contains("-download")), "{:?}", fetch_purls(&docs));
+}
+
+/// D-4 (probes D2, D4): DownloadProject's keywords are consumed. Placed
+/// before `URL`, `SOURCE_DIR` takes `URL` as its value; forwarded, the
+/// fetch would read `URL URL …` and name another version.
+#[test]
+fn d4_downloadprojects_keywords_are_consumed() {
+    let fx = dp_tree(&format!(
+        "download_project(PROJ waybill-fixture-k QUIET PREFIX p DOWNLOAD_DIR d BINARY_DIR b BUILD_PROJECT FALSE SOURCE_DIR URL URL {})\n",
+        url("waybill-fixture-k", "1.0")
+    ));
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    let c = the(&docs, "pkg:generic/waybill-fixture-k@1.0");
+    assert_eq!(prop(c, "waybill:download-url"), Some(url("waybill-fixture-k", "1.0").as_str()));
+    assert_eq!(wrapper_chains(c), dp_chain());
+}
+
+/// D-5 (probe D3): the last PROJ names it.
+#[test]
+fn d5_the_last_proj_wins() {
+    let fx = dp_tree("download_project(PROJ waybill-fixture-first URL https://example.invalid/download?id=5 PROJ waybill-fixture-second)\n");
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert_eq!(wrapper_chains(the(&docs, "pkg:generic/waybill-fixture-second@unknown")), dp_chain());
+}
+
+/// D-6 and D-7 (FR-007): no identity, or no PROJ, is unresolved.
+#[test]
+fn d6_d7_no_identity_or_no_proj_is_unresolved() {
+    let fx = dp_tree("download_project(PROJ waybill-fixture-none SOURCE_DIR x)\ndownload_project(URL https://example.invalid/download?id=6)\n");
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert!(fetches(&docs).is_empty(), "{:?}", fetch_purls(&docs));
+    let c = cov(&docs);
+    assert_eq!((n(&c, &["read"]), n(&c, &["unresolved", "identity"])), (2, 2), "{c}");
+    assert_eq!(wrappers(&docs), (1, 2, 0));
+}
+
+/// D-8 (probe D5): keywords come from each copy. A copy listing EXTRA_KW
+/// consumes it; one that does not forwards it, and the fetch reads
+/// `URL URL …` instead.
+#[test]
+fn d8_keywords_come_from_each_copy() {
+    let call = format!("download_project(PROJ waybill-fixture-x EXTRA_KW URL URL {})\n", url("waybill-fixture-x", "1.0"));
+    let fx = tree(&[("cmake/DownloadProject.cmake", &dp_module(" EXTRA_KW", None)), ("CMakeLists.txt", &dp_root(&call))]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert_eq!(wrapper_chains(the(&docs, "pkg:generic/waybill-fixture-x@1.0")), dp_chain());
+    let plain = dp_tree(&call);
+    let docs = scan(&plain, &plain.path("t"), &[]);
+    assert!(!fetch_purls(&docs).contains("pkg:generic/waybill-fixture-x@1.0"), "{:?}", fetch_purls(&docs));
+}
+
+/// D-9: a keyword list set under if() is unresolved, not guessed.
+#[test]
+fn d9_an_unresolved_keyword_list_is_not_guessed() {
+    let fx = tree(&[
+        ("cmake/DownloadProject.cmake", &dp_module("", Some("X"))),
+        ("CMakeLists.txt", &dp_root(&format!("download_project(PROJ waybill-fixture-g URL {})\n", url("waybill-fixture-g", "1.0")))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert!(fetches(&docs).is_empty(), "{:?}", fetch_purls(&docs));
+    assert_eq!(n(&cov(&docs), &["unresolved", "identity"]), 1);
+}
+
+/// D-10: a function named download_project without DownloadProject's shape
+/// is not recognised.
+#[test]
+fn d10_a_same_named_function_without_the_shape_is_not_read() {
+    let fx = tree(&[
+        ("cmake/DownloadProject.cmake", "function(download_project)\nmessage(STATUS \"not DownloadProject\")\nendfunction()\n"),
+        ("CMakeLists.txt", &dp_root(&format!("download_project(PROJ waybill-fixture-o URL {})\n", url("waybill-fixture-o", "1.0")))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert!(fetches(&docs).is_empty());
+    assert!(coverage(&docs).is_none());
+}
+
+/// D-11: one shaped definition and one without the shape disagree.
+#[test]
+fn d11_a_shaped_and_an_unshaped_definition_are_ambiguous() {
+    let fx = tree(&[
+        ("a/DownloadProject.cmake", &dp_module("", None)),
+        ("b/other.cmake", "function(download_project)\nmessage(STATUS no)\nendfunction()\n"),
+        ("CMakeLists.txt", &format!("{ROOT}download_project(PROJ waybill-fixture-a URL {})\n", url("waybill-fixture-a", "1.0"))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert!(fetches(&docs).is_empty(), "{:?}", fetch_purls(&docs));
+    assert_eq!(wrappers(&docs), (1, 1, 1));
+}
+
+/// D-12: the module excluded from the scan is not seen.
+#[test]
+fn d12_an_excluded_module_is_not_seen() {
+    let fx = tree(&[
+        ("vendor-dp/DownloadProject.cmake", &dp_module("", None)),
+        ("CMakeLists.txt", &format!("{ROOT}download_project(PROJ waybill-fixture-e URL {})\n", url("waybill-fixture-e", "1.0"))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &["--exclude-path", "vendor-dp"]);
+    assert!(fetches(&docs).is_empty());
+    assert!(coverage(&docs).is_none());
+}
+
+/// D-13: the call site's condition; the template's `if` is not modelled.
+#[test]
+fn d13_the_call_sites_condition_alone() {
+    let fx = dp_tree(&format!(
+        "if(NOT WaybillFixtureR_FOUND)\ndownload_project(PROJ waybill-fixture-c URL {})\nendif()\n",
+        url("waybill-fixture-c", "1.0")
+    ));
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    let c = the(&docs, "pkg:generic/waybill-fixture-c@1.0");
+    assert_optional(c, "cmake-find-package-fallback");
+    assert_eq!(conditions(c), Some(vec!["NOT WaybillFixtureR_FOUND".to_string()]));
+    assert_eq!(wrapper_chains(c), dp_chain());
+}
+
+/// D-14: test scope from the call site's directory.
+#[test]
+fn d14_a_call_in_a_test_directory() {
+    let fx = tree(&[
+        ("cmake/DownloadProject.cmake", &dp_module("", None)),
+        ("CMakeLists.txt", &dp_root("")),
+        ("tests/CMakeLists.txt", &format!("download_project(PROJ waybill-fixture-t URL {})\n", url("waybill-fixture-t", "1.0"))),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    let c = the(&docs, "pkg:generic/waybill-fixture-t@1.0");
+    assert_eq!(prop(c, "waybill:lifecycle-scope"), Some("test"), "{c}");
+    assert_eq!(wrapper_chains(c), dp_chain());
+}
+
+/// D-16: one repository and tag in two sibling directories is one component.
+#[test]
+fn d16_two_calls_of_one_identity_are_one_component() {
+    let call = "download_project(PROJ waybill-fixture-s GIT_REPOSITORY https://github.com/waybill-org/waybill-fixture-s.git GIT_TAG v2)\n";
+    let fx = tree(&[
+        ("cmake/DownloadProject.cmake", &dp_module("", None)),
+        ("CMakeLists.txt", &dp_root("")),
+        ("a/CMakeLists.txt", call),
+        ("b/CMakeLists.txt", call),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    let c = the(&docs, "pkg:github/waybill-org/waybill-fixture-s@v2");
+    assert_eq!(source_files(c), vec!["a/CMakeLists.txt".to_string(), "b/CMakeLists.txt".to_string()]);
+    assert_eq!(wrapper_chains(c), dp_chain(), "one chain for both calls");
+}
+
+/// D-17 (probe D6): a URL given twice fetches the first.
+#[test]
+fn d17_the_first_url_is_fetched() {
+    let fx = dp_tree(&format!(
+        "download_project(PROJ waybill-fixture-m URL {} URL {})\n",
+        url("waybill-fixture-m1", "1.0"),
+        url("waybill-fixture-m2", "2.0")
+    ));
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert_eq!(wrapper_chains(the(&docs, "pkg:generic/waybill-fixture-m1@1.0")), dp_chain());
+    assert!(!fetch_purls(&docs).iter().any(|p| p.contains("m2")));
+}
+
+/// D-15: a project function forwarding to download_project is a spec 1539
+/// wrapper of it; the chain is outermost first.
+#[test]
+fn d15_a_wrapper_around_download_project() {
+    let fx = dp_tree(
+        "function(add_dep name)\ndownload_project(PROJ ${name} ${ARGN})\nendfunction()\n\
+         add_dep(waybill-fixture-w GIT_REPOSITORY https://github.com/waybill-org/waybill-fixture-w.git GIT_TAG v3)\n",
+    );
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    let c = the(&docs, "pkg:github/waybill-org/waybill-fixture-w@v3");
+    assert_eq!(wrapper_chains(c), chain(&["add_dep", "download_project"]));
+    assert_eq!(wrappers(&docs), (2, 1, 0));
+}
+
+/// I-8: a direct fetch beside download_project calls carries no C234.
+#[test]
+fn i8_a_direct_fetch_beside_download_project_carries_no_chain() {
+    let fx = dp_tree(&format!(
+        "download_project(PROJ waybill-fixture-dpx URL {})\nExternalProject_Add(waybill-fixture-direct URL {})\n",
+        url("waybill-fixture-dpx", "1.0"),
+        url("waybill-fixture-direct", "1.0")
+    ));
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert_eq!(wrapper_chains(the(&docs, "pkg:generic/waybill-fixture-dpx@1.0")), dp_chain());
+    assert_eq!(wrapper_chains(the(&docs, "pkg:generic/waybill-fixture-direct@1.0")), None);
+}
+
+/// D-19: DownloadProject defined, never called.
+#[test]
+fn d19_a_definition_never_called_emits_and_counts_nothing() {
+    let fx = dp_tree("");
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    assert!(fetches(&docs).is_empty());
+    assert!(coverage(&docs).is_none());
+}
+
 /// I-7: a tree with no wrapper definitions keeps spec 1538's C231, with no
 /// `wrappers` key.
 #[test]

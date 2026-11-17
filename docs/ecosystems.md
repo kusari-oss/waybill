@@ -236,10 +236,31 @@ first-declaration-wins and merges all come from the **call site**.
   declaration in `read`; a call that names no `URL` or `GIT_REPOSITORY` (an
   in-tree build), recurses, or binds to disagreeing definitions is
   `unresolved.identity`.
-- **Not covered.** A call whose definition is outside the scan, and functions
-  that generate their fetch at configure time, such as DownloadProject's
-  `download_project()`, which writes `ExternalProject_Add` into a generated
-  project through `configure_file()`.
+- **Keyword lists held in variables.** `set(oneValueArgs …)` then
+  `cmake_parse_arguments(P "" "${oneValueArgs}" …)` is expanded before parsing,
+  as CMake does. A list the reader cannot resolve (set conditionally, or
+  changed by another command) leaves the call unresolved.
+- **DownloadProject.** Spec 1540 (#1594). `download_project()` generates its
+  fetch at configure time, through a `configure_file()`d template, so its body
+  has no fetch call. A `download_project` definition with the module's shape
+  (`cmake_parse_arguments(DL_ARGS …)` parsing `PROJ`, and a `configure_file()`
+  of `DownloadProject.CMakeLists.cmake.in`) is read as the template's
+  `ExternalProject_Add`:
+  - every argument the copy's own keyword lists do not consume is forwarded to
+    the fetch. Vendored copies differ (some add `STATUS_MSG`, older ones lack
+    `BUILD_PROJECT`), and a keyword a copy does not parse is forwarded, as
+    CMake forwards it;
+  - the component is named after `PROJ`;
+  - C234's chain ends in `download_project`.
+
+  A function named `download_project` without that shape is not
+  DownloadProject. The template is not read.
+- **Not covered.** A call whose definition is outside the scan, and other
+  configure-time generators (a hand-written `file(WRITE)` project, for
+  example).
+- **Branch names as versions.** A `GIT_TAG` that names a branch (`develop`) is
+  the component's version, as for a direct call; nothing yet marks it as a
+  moving reference (#1598).
 
 ## SBOM tiers: source, design, binary
 
