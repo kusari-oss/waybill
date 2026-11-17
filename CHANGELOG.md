@@ -39,6 +39,25 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **DownloadProject's `download_project()` calls are reported (#1594).** The
+  module, vendored by many projects, fetches through a template it configures
+  at configure time, so the CMake reader saw no fetch.
+  - **Recognition.** A `download_project` definition with the module's shape
+    (`cmake_parse_arguments(DL_ARGS …)` parsing `PROJ`, and a
+    `configure_file()` of `DownloadProject.CMakeLists.cmake.in`) is read as the
+    template's `ExternalProject_Add`, named after `PROJ`. C234 records
+    `download_project`.
+  - **Keywords.** Each vendored copy consumes the keywords it parses itself;
+    copies differ.
+  - **Keyword lists in variables.** `cmake_parse_arguments` keyword lists
+    held in variables are now expanded before parsing, for every wrapper, as
+    CMake does.
+  - **On ROCm's TheRock,** all 8 calls (in rocprim, rocthrust, hiprand and
+    rccl) are now read:
+    - two new components, `rocRAND@develop` and `rocPRIM@master`;
+    - two calls merged into the submodules they duplicate;
+    - one added to an existing googletest component.
+
 - **CMake fetches made through a project's own wrapper function are
   reported (#1518).** Super-builds wrap `ExternalProject_Add` and
   `FetchContent_Declare` in their own functions, and the reader matched only

@@ -92,7 +92,7 @@
 **Goal:** SC-002 to SC-005 on TheRock.
 **Independent test:** `census-fetches` and `measure-source` at the branch, against `main`.
 
-- [ ] T012 [US3] Push the branch, and dispatch `census-fetches` in the fixture repository with `--ref main -f waybill_ref=1540-cmake-download-project -f base_ref=main`. Record in `specs/1540-cmake-download-project/measurements/therock.md`:
+- [X] T012 [US3] Push the branch, and dispatch `census-fetches` in the fixture repository with `--ref main -f waybill_ref=1540-cmake-download-project -f base_ref=main`. Record in `specs/1540-cmake-download-project/measurements/therock.md`:
   - **C231 at both refs,** against `census.md`'s prediction: `read` +8, `wrappers.calls` +8, `wrappers.definitions` +9, no new unresolved. Explain every difference.
   - **SC-002:** each of the 8 calls, and what it became: a component (PURL, version, mechanism, scope, C234), or a merge (into which component, from C233).
   - **SC-003:** no PURL containing `${`, `DL_ARGS` or `-download`.
@@ -117,7 +117,7 @@
 - [ ] T015 Corpora in CI. Record in `measurements/corpus.md`:
   - **Public corpus:** dispatch `public-corpus.yml` at the branch, and a `main` control at the same time. Expected: identical, or each change traced to a `download_project` call or a wrapper whose keyword lists are variables (T005).
   - **Quality corpus:** dispatch at the branch with a `main` control, and trace every movement PURL by PURL.
-- [ ] T016 [P] Docs:
+- [X] T016 [P] Docs:
   - **`docs/ecosystems.md`, "Fetches made through wrappers":** DownloadProject recognised by name and shape; keywords from each copy; the `<PROJ>` name; the branch-tag gap (#1598).
   - **`CHANGELOG.md` `[Unreleased]`:** Fixed #1594, with TheRock's numbers from T012.
 - [ ] T017 Run the gate alone and record it in `specs/1540-cmake-download-project/measurements/gate-log.md`:
