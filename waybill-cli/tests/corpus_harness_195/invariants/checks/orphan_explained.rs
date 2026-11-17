@@ -1,5 +1,5 @@
 //! I7 — a component not reachable from the subject by any dependency
-//! edge carries a marker explaining why.
+//! edge or containment carries a marker explaining why.
 //!
 //! A component nothing explains leaves a consumer unable to tell whether
 //! it is a real part of the artifact or a reader artefact.
