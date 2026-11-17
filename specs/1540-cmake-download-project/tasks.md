@@ -124,7 +124,7 @@
   - the ok-line count, 0 failed, and the expected line found;
   - `cmake_fetch_wrappers` N/N and `cmake_nested_fetches` N/N;
   - no Cargo changes.
-- [ ] T018 Open the PR against `main`.
+- [X] T018 Open the PR against `main`.
   - **Title:** `feat(cmake): download_project() fetches (DownloadProject) (#1594)`.
   - **Body:** census, probe, TheRock before and after, corpora, mutations, the T005 change to spec 1539's binder, and `Refs #1598`. End with the attribution line; no session links.
   - **After it lands:** tick #1594 on tracker #1542.
