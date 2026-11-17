@@ -723,4 +723,20 @@ fn probe_i7_on_document() {
     for (k, n) in &by_kind {
         println!("  {n:5}  {k}");
     }
+    // FR-009: the same rows in the sibling SPDX documents, through the
+    // parity extractors the format-parity gate uses.
+    let sibling = |ext: &str| path.strip_suffix(".cdx.json").map(|stem| format!("{stem}{ext}"));
+    let read = |p: Option<String>| -> Option<serde_json::Value> {
+        serde_json::from_slice(&std::fs::read(p?).ok()?).ok()
+    };
+    if let (Some(s2), Some(s3)) = (read(sibling(".spdx23.json")), read(sibling(".spdx3.json"))) {
+        for row in ["C45", "C104", "C105"] {
+            let e = waybill::parity::extractors::EXTRACTORS.iter().find(|e| e.row_id == row).unwrap();
+            let (a, b, c) = ((e.cdx)(&cdx), (e.spdx23)(&s2), (e.spdx3)(&s3));
+            println!("FORMATS {row}: values={} spdx23_agrees={} spdx3_agrees={}", a.len(), a == b, a == c);
+            if a != b || a != c {
+                println!("  cdx={a:?}\n  spdx23={b:?}\n  spdx3={c:?}");
+            }
+        }
+    }
 }
