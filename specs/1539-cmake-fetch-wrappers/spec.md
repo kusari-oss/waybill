@@ -179,7 +179,7 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 - **FR-007: No identity, no component.** A bound call with no `URL` and no `GIT_REPOSITORY`, or one whose identity depends on an unexpanded variable, MUST NOT emit a component. It is counted under C231 `unresolved.identity`.
 - **FR-008: Accounting.** C231 MUST stay exact (V1: `read == emitted + merged.* + unresolved.identity`).
   - Each wrapper call is one declaration read.
-  - The fetch call inside a recognised wrapper's body is a template, not a declaration. It is counted under a new C231 key for wrapper definitions, outside V1, so it does not inflate `read` or `unresolved.identity`.
+  - The fetch call inside a recognised wrapper's body is a template, not a declaration. A body is recognised only when its fetch call has no identity of its own, read as spec 1538 reads it (plan R2). A body call with a literal identity, such as spec 1538's C-13b, stays a direct fetch in a function body. It is counted under a new C231 key for wrapper definitions, outside V1, so it does not inflate `read` or `unresolved.identity`.
   - Wrapper calls left unresolved because their definitions disagree (FR-002) are counted under a second new key, also outside V1, as well as under `unresolved.identity`.
   - Both keys are registered with C231's documentation.
 - **FR-009: Evidence row.** Each component produced by a wrapper call MUST carry a new per-component row, `waybill:cmake-fetch-wrapper`: a sorted JSON array of the wrapper chains that produced it, each chain outermost first. It is registered in the catalog with parity extractors for CycloneDX, SPDX 2.3 and SPDX 3. A component that also has a direct declaration keeps the row for its wrapped declarations.

@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-16
+Auto-generated from all feature plans. Last updated: 2026-11-17
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -482,6 +482,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-16
 - N/A. Everything is in-process for one scan. (1536-python-native-binaries)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `serde_json`, `tracing`, `waybill_common::resolution::{ResolvedComponent, Relationship, RelationshipType}` and `waybill_common::types::purl`. **Zero new Cargo dependencies** (FR-011). (1537-requirements-root-attach)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `regex`, `serde_json`, `tracing`, `waybill_common::resolution::{LifecycleScope, Relationship, ResolvedComponent}`, `waybill_common::types::purl`. **Zero new Cargo dependencies** (FR-011). (1538-cmake-nested-fetches)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `regex`, `serde_json`, `tracing`, the existing tokeniser `installed_lib::cmake_version::{commands_checked, strip_comments}`, and spec 1538's `cmake/{blocks,fallback,fetches}.rs`. **Zero new Cargo dependencies** (FR-013). (1539-cmake-fetch-wrappers)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -714,9 +715,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1539-cmake-fetch-wrappers: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `regex`, `serde_json`, `tracing`, the existing tokeniser `installed_lib::cmake_version::{commands_checked, strip_comments}`, and spec 1538's `cmake/{blocks,fallback,fetches}.rs`. **Zero new Cargo dependencies** (FR-013).
 - 1538-cmake-nested-fetches: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `regex`, `serde_json`, `tracing`, `waybill_common::resolution::{LifecycleScope, Relationship, ResolvedComponent}`, `waybill_common::types::purl`. **Zero new Cargo dependencies** (FR-011).
 - 1537-requirements-root-attach: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `serde_json`, `tracing`, `waybill_common::resolution::{ResolvedComponent, Relationship, RelationshipType}` and `waybill_common::types::purl`. **Zero new Cargo dependencies** (FR-011).
-- 1536-python-native-binaries: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only.
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -1,0 +1,1870 @@
+{
+ "summary": {
+  "cmake_files": 6172,
+  "functions_calling_a_fetch": 18,
+  "functions_calling_a_fetch_without_forwarding": [
+   "_fetch_composable_kernel",
+   "_fetch_flatbuffers",
+   "_fetch_gtest",
+   "_fetch_nlohmann_json",
+   "_fetch_spdlog",
+   "add_rocshmem_targets",
+   "fetch_gtest_dependency",
+   "rccl_standalone_setup",
+   "rocdecode_add_test_ext",
+   "rocjpeg_add_test_ext",
+   "rocm_libs_declare_shared_deps",
+   "rocm_libs_declare_shared_deps"
+  ],
+  "wrappers": 7,
+  "wrapper_definitions": 19,
+  "wrappers_defined_more_than_once": {
+   "rocm_libs_declare_shared_deps": 2
+  },
+  "wrappers_defined_more_than_once_with_differing_bodies": [],
+  "shapes_by_wrapper": {
+   "_fetch_composable_kernel@rocm-libraries/projects/miopen/cmake/Dependencies.cmake:103": [],
+   "_fetch_flatbuffers@rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake:246": [
+    "literal-identity"
+   ],
+   "_fetch_gtest@rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake:216": [],
+   "_fetch_nlohmann_json@rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake:308": [],
+   "_fetch_spdlog@rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake:285": [
+    "literal-identity"
+   ],
+   "add_custom_libcxx@compiler/amd-llvm/compiler-rt/cmake/Modules/AddCompilerRT.cmake:650": [
+    "name-param",
+    "parsed-variable"
+   ],
+   "add_rocshmem_targets@rocm-systems/projects/rccl/cmake/ROCSHMEM.cmake:30": [],
+   "builtin_default_target@compiler/amd-llvm/llvm/runtimes/CMakeLists.txt:133": [
+    "named-keyword"
+   ],
+   "builtin_register_target@compiler/amd-llvm/llvm/runtimes/CMakeLists.txt:160": [
+    "named-keyword",
+    "parsed-variable"
+   ],
+   "fetch_gtest_dependency@rocm-libraries/dnn-providers/cmake/Dependencies.cmake:16": [
+    "literal-identity"
+   ],
+   "llvm_ExternalProject_Add@compiler/amd-llvm/llvm/cmake/modules/LLVMExternalProjectUtils.cmake:73": [
+    "name-param",
+    "named-keyword"
+   ],
+   "rccl_standalone_setup@rocm-systems/projects/rccl/test/host/CMakeLists.txt:1138": [
+    "literal-identity"
+   ],
+   "rocdecode_add_test_ext@rocm-systems/projects/rocdecode/CMakeLists.txt:464": [],
+   "rocjpeg_add_test_ext@rocm-systems/projects/rocjpeg/CMakeLists.txt:408": [],
+   "rocm_libs_declare_shared_deps@rocm-libraries/cmake/modules/shared_third_party.cmake:138": [
+    "literal-identity"
+   ],
+   "rocm_libs_declare_shared_deps@rocm-libraries/projects/hipccl/hipccl3/cmake/modules/shared_third_party.cmake:158": [
+    "literal-identity"
+   ],
+   "runtime_default_target@compiler/amd-llvm/llvm/runtimes/CMakeLists.txt:280": [
+    "named-keyword",
+    "parsed-variable"
+   ],
+   "runtime_register_target@compiler/amd-llvm/llvm/runtimes/CMakeLists.txt:375": [
+    "named-keyword",
+    "parsed-variable"
+   ],
+   "therock_subproject_fetch@cmake/therock_subproject.cmake:147": [
+    "name-param",
+    "named-keyword",
+    "unparsed"
+   ]
+  },
+  "call_sites": 57,
+  "call_sites_inside_a_wrapper_body": 4,
+  "call_sites_by_wrapper": {
+   "therock_subproject_fetch": 40,
+   "llvm_externalproject_add": 8,
+   "add_custom_libcxx": 3,
+   "runtime_default_target": 2,
+   "runtime_register_target": 2,
+   "builtin_default_target": 1,
+   "builtin_register_target": 1
+  },
+  "top_level_sites_with_literal_identity": 36,
+  "top_level_sites_without_identity": 13,
+  "top_level_sites_with_variable_identity": 4,
+  "top_level_sites_name_not_literal": 7,
+  "top_level_sites_in_loop": 6,
+  "top_level_sites_conditional": 38,
+  "top_level_url_sites_with_url_hash": 40,
+  "distinct_literal_urls": 35,
+  "fr005_named_from_archive": 34,
+  "fr005_fallback_to_bound_name": 2,
+  "other_commands_passing_url_or_repository": {
+   "download_project": 8,
+   "set_package_properties": 3
+  },
+  "other_command_examples": {
+   "download_project": "rocm-libraries/projects/hipccl/hipccl2/rocprim/cmake/Dependencies.cmake:211",
+   "set_package_properties": "compiler/amd-llvm/third-party/benchmark/cmake/Modules/FindLLVMAr.cmake:13"
+  }
+ },
+ "wrappers": [
+  {
+   "name": "_fetch_composable_kernel",
+   "kind": "function",
+   "file": "rocm-libraries/projects/miopen/cmake/Dependencies.cmake",
+   "line": 103,
+   "params": [
+    "VERSION",
+    "HASH"
+   ],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 108,
+     "calls": "fetchcontent_declare",
+     "shapes": [],
+     "other_variables": [
+      "_ck_src"
+     ],
+     "args": "composable_kernel SOURCE_DIR ${_ck_src}"
+    }
+   ],
+   "shapes": [],
+   "body_hash": "f40304b4b0d1",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "_fetch_flatbuffers",
+   "kind": "function",
+   "file": "rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake",
+   "line": 246,
+   "params": [
+    "VERSION",
+    "HASH"
+   ],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 263,
+     "calls": "fetchcontent_declare",
+     "shapes": [
+      "literal-identity"
+     ],
+     "other_variables": [
+      "GIT_TAG"
+     ],
+     "args": "flatbuffers GIT_REPOSITORY https://github.com/google/flatbuffers.git GIT_TAG ${GIT_TAG} GIT_SHALLOW TRUE DOWNLOAD_EXTRACT_TIMESTAMP TRUE"
+    }
+   ],
+   "shapes": [
+    "literal-identity"
+   ],
+   "body_hash": "0df85d58a498",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "_fetch_gtest",
+   "kind": "function",
+   "file": "rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake",
+   "line": 216,
+   "params": [
+    "VERSION",
+    "HASH"
+   ],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 225,
+     "calls": "fetchcontent_declare",
+     "shapes": [],
+     "other_variables": [
+      "GIT_TAG",
+      "HASH_ARG"
+     ],
+     "args": "googletest URL https://github.com/google/googletest/archive/refs/tags/${GIT_TAG}.zip ${HASH_ARG} DOWNLOAD_EXTRACT_TIMESTAMP TRUE"
+    }
+   ],
+   "shapes": [],
+   "body_hash": "99e304526f55",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "_fetch_nlohmann_json",
+   "kind": "function",
+   "file": "rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake",
+   "line": 308,
+   "params": [
+    "VERSION",
+    "HASH"
+   ],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 315,
+     "calls": "fetchcontent_declare",
+     "shapes": [],
+     "other_variables": [
+      "HASH_ARG"
+     ],
+     "args": "json URL https://github.com/nlohmann/json/releases/download/v${VERSION}/json.tar.xz ${HASH_ARG} DOWNLOAD_EXTRACT_TIMESTAMP TRUE"
+    }
+   ],
+   "shapes": [],
+   "body_hash": "78380734095a",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "_fetch_spdlog",
+   "kind": "function",
+   "file": "rocm-libraries/projects/hipdnn/cmake/Dependencies.cmake",
+   "line": 285,
+   "params": [
+    "VERSION",
+    "HASH"
+   ],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 288,
+     "calls": "fetchcontent_declare",
+     "shapes": [
+      "literal-identity"
+     ],
+     "other_variables": [
+      "GIT_TAG"
+     ],
+     "args": "spdlog GIT_REPOSITORY https://github.com/gabime/spdlog.git GIT_TAG ${GIT_TAG} GIT_SHALLOW TRUE DOWNLOAD_EXTRACT_TIMESTAMP TRUE"
+    }
+   ],
+   "shapes": [
+    "literal-identity"
+   ],
+   "body_hash": "581636e5f004",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "add_custom_libcxx",
+   "kind": "macro",
+   "file": "compiler/amd-llvm/compiler-rt/cmake/Modules/AddCompilerRT.cmake",
+   "line": 650,
+   "params": [
+    "name",
+    "prefix"
+   ],
+   "parse_arguments": [
+    {
+     "prefix": "LIBCXX",
+     "parse_argv": null,
+     "options": [
+      "USE_TOOLCHAIN"
+     ],
+     "one": [],
+     "multi": [
+      "DEPS",
+      "CFLAGS",
+      "CMAKE_ARGS"
+     ],
+     "forwarded": "${ARGN}"
+    }
+   ],
+   "defaults_set": [
+    "LIBCXX_CXX_FLAGS \"${LIBCXX_CXX_FLAGS} ${CXX_FLAGS}\"",
+    "LIBCXX_C_FLAGS \"${LIBCXX_C_FLAGS} ${C_FLAGS}\""
+   ],
+   "inner_calls": [
+    {
+     "line": 742,
+     "calls": "externalproject_add",
+     "shapes": [
+      "name-param",
+      "parsed-variable"
+     ],
+     "other_variables": [
+      "CMAKE_PASSTHROUGH_VARIABLES",
+      "LLVM_MAIN_SRC_DIR",
+      "compiler_args",
+      "verbose"
+     ],
+     "args": "${name} DEPENDS ${name}-clobber ${LIBCXX_DEPS} PREFIX ${prefix} SOURCE_DIR ${LLVM_MAIN_SRC_DIR}/../runtimes BINARY_DIR ${prefix}/build CMAKE_ARGS -DCMAKE_INSTALL_MESSAGE=NEVER ${CMAKE_PASSTHROUGH_VARIABLES} ${compiler_args} ${verbose} -DCMAKE_C_FLAGS=${LIBCXX_C_FLAGS} -DCMAKE_CXX_FLAGS=${LIBCXX_CXX_FLAGS} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_TRY_COMPILE_TARGET_TY"
+    }
+   ],
+   "shapes": [
+    "name-param",
+    "parsed-variable"
+   ],
+   "body_hash": "c920dc880285",
+   "nested_in": null,
+   "forwards": true
+  },
+  {
+   "name": "add_rocshmem_targets",
+   "kind": "function",
+   "file": "rocm-systems/projects/rccl/cmake/ROCSHMEM.cmake",
+   "line": 30,
+   "params": [],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 149,
+     "calls": "externalproject_add",
+     "shapes": [],
+     "other_variables": [
+      "CMAKE_BUILD_TYPE",
+      "CMAKE_COMMAND",
+      "ROCSHMEM_INSTALL_DIR",
+      "ROCSHMEM_SOURCE_DIR",
+      "_rocshmem_asan_opt",
+      "_rocshmem_cmake_opts",
+      "_rocshmem_gpu_targets",
+      "_rocshmem_sdma_opt"
+     ],
+     "args": "rocshmem_ext SOURCE_DIR ${ROCSHMEM_SOURCE_DIR} INSTALL_DIR ${ROCSHMEM_INSTALL_DIR} BUILD_BYPRODUCTS ${ROCSHMEM_INSTALL_DIR}/lib/librocshmem.a ${ROCSHMEM_INSTALL_DIR}/include/rocshmem/rocshmem_config.h UPDATE_DISCONNECTED TRUE LOG_DOWNLOAD FALSE LOG_CONFIGURE FALSE LOG_BUILD FALSE LOG_INSTALL FALSE BUILD_IN_SOURCE TRUE DOWNLOAD_COMMAND TEST_COMMAND CONFIGURE_COMMAND BUILD_COMMAND ${CMAKE_COMMAND} -"
+    }
+   ],
+   "shapes": [],
+   "body_hash": "c494bac8ff7c",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "builtin_default_target",
+   "kind": "function",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 133,
+   "params": [
+    "compiler_rt_path"
+   ],
+   "parse_arguments": [
+    {
+     "prefix": "ARG",
+     "parse_argv": null,
+     "options": [],
+     "one": [],
+     "multi": [
+      "DEPENDS"
+     ],
+     "forwarded": "${ARGN}"
+    }
+   ],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 138,
+     "calls": "llvm_externalproject_add",
+     "shapes": [
+      "named-keyword"
+     ],
+     "other_variables": [
+      "BUILTINS_CMAKE_ARGS",
+      "CMAKE_BINARY_DIR",
+      "COMMON_CMAKE_ARGS",
+      "EXTRA_ARGS",
+      "LLVM_ENABLE_PER_TARGET_RUNTIME_DIR",
+      "LLVM_LIBRARY_DIR",
+      "LLVM_TARGET_TRIPLE",
+      "LLVM_TOOLS_BINARY_DIR"
+     ],
+     "args": "builtins ${compiler_rt_path}/lib/builtins DEPENDS ${ARG_DEPENDS} CMAKE_ARGS -DLLVM_LIBRARY_OUTPUT_INTDIR=${LLVM_LIBRARY_DIR} -DLLVM_RUNTIME_OUTPUT_INTDIR=${LLVM_TOOLS_BINARY_DIR} -DLLVM_DEFAULT_TARGET_TRIPLE=${LLVM_TARGET_TRIPLE} -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=${LLVM_ENABLE_PER_TARGET_RUNTIME_DIR} -DLLVM_CMAKE_DIR=${CMAKE_BINARY_DIR} -DCMAKE_C_COMPILER_WORKS=ON -DCMAKE_CXX_COMPILER_WORKS=ON "
+    }
+   ],
+   "shapes": [
+    "named-keyword"
+   ],
+   "body_hash": "508a0a341c21",
+   "nested_in": null,
+   "forwards": true
+  },
+  {
+   "name": "builtin_register_target",
+   "kind": "function",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 160,
+   "params": [
+    "compiler_rt_path",
+    "name"
+   ],
+   "parse_arguments": [
+    {
+     "prefix": "ARG",
+     "parse_argv": null,
+     "options": [],
+     "one": [],
+     "multi": [
+      "DEPENDS",
+      "CMAKE_ARGS",
+      "EXTRA_ARGS"
+     ],
+     "forwarded": "${ARGN}"
+    }
+   ],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 166,
+     "calls": "llvm_externalproject_add",
+     "shapes": [
+      "named-keyword",
+      "parsed-variable"
+     ],
+     "other_variables": [
+      "CMAKE_BINARY_DIR",
+      "COMMON_CMAKE_ARGS",
+      "EXTRA_ARGS",
+      "LLVM_LIBRARY_DIR",
+      "LLVM_TOOLS_BINARY_DIR"
+     ],
+     "args": "builtins-${name} ${compiler_rt_path}/lib/builtins DEPENDS ${ARG_DEPENDS} CMAKE_ARGS -DLLVM_LIBRARY_OUTPUT_INTDIR=${LLVM_LIBRARY_DIR} -DLLVM_RUNTIME_OUTPUT_INTDIR=${LLVM_TOOLS_BINARY_DIR} -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=ON -DLLVM_CMAKE_DIR=${CMAKE_BINARY_DIR} -DCMAKE_C_COMPILER_WORKS=ON -DCMAKE_CXX_COMPILER_WORKS=ON -DCMAKE_ASM_COMPILER_WORKS=ON -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON ${COMMON_CM"
+    }
+   ],
+   "shapes": [
+    "named-keyword",
+    "parsed-variable"
+   ],
+   "body_hash": "45a36502a564",
+   "nested_in": null,
+   "forwards": true
+  },
+  {
+   "name": "fetch_gtest_dependency",
+   "kind": "function",
+   "file": "rocm-libraries/dnn-providers/cmake/Dependencies.cmake",
+   "line": 16,
+   "params": [],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 54,
+     "calls": "fetchcontent_declare",
+     "shapes": [
+      "literal-identity"
+     ],
+     "other_variables": [],
+     "args": "googletest URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip DOWNLOAD_EXTRACT_TIMESTAMP TRUE"
+    }
+   ],
+   "shapes": [
+    "literal-identity"
+   ],
+   "body_hash": "58b67a10015f",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "llvm_ExternalProject_Add",
+   "kind": "function",
+   "file": "compiler/amd-llvm/llvm/cmake/modules/LLVMExternalProjectUtils.cmake",
+   "line": 73,
+   "params": [
+    "name",
+    "source_dir"
+   ],
+   "parse_arguments": [
+    {
+     "prefix": "ARG",
+     "parse_argv": null,
+     "options": [
+      "ENABLE_FORTRAN",
+      "USE_TOOLCHAIN",
+      "EXCLUDE_FROM_ALL",
+      "NO_INSTALL",
+      "ALWAYS_CLEAN"
+     ],
+     "one": [
+      "SOURCE_DIR",
+      "FOLDER"
+     ],
+     "multi": [
+      "CMAKE_ARGS",
+      "TOOLCHAIN_TOOLS",
+      "RUNTIME_LIBRARIES",
+      "DEPENDS",
+      "EXTRA_TARGETS",
+      "PASSTHROUGH_PREFIXES",
+      "STRIP_TOOL",
+      "TARGET_TRIPLE"
+     ],
+     "forwarded": "${ARGN}"
+    }
+   ],
+   "defaults_set": [
+    "ARG_RUNTIME_LIBRARIES compiler-rt libcxx",
+    "ARG_TOOLCHAIN_TOOLS clang clang-scan-deps"
+   ],
+   "inner_calls": [
+    {
+     "line": 403,
+     "calls": "externalproject_add",
+     "shapes": [
+      "name-param",
+      "named-keyword"
+     ],
+     "other_variables": [
+      "BINARY_DIR",
+      "CMAKE_BINARY_DIR",
+      "CMAKE_BUILD_TYPE",
+      "CMAKE_CACHE_DEFAULT_ARGS",
+      "CMAKE_INSTALL_PREFIX",
+      "CMAKE_MAKE_PROGRAM",
+      "LLVM_ENABLE_WERROR",
+      "LLVM_HAVE_LINK_VERSION_SCRIPT",
+      "LLVM_HOST_TRIPLE",
+      "LLVM_LIT_ARGS",
+      "LLVM_SOURCE_PREFIX",
+      "LLVM_USE_RELATIVE_PATHS_IN_DEBUG_INFO",
+      "LLVM_USE_RELATIVE_PATHS_IN_FILES",
+      "PACKAGE_VERSION",
+      "PASSTHROUGH_VARIABLES",
+      "PROJECT_BINARY_DIR",
+      "STAMP_DIR",
+      "build_command_arg",
+      "cmake_args",
+      "compiler_args",
+      "exclude",
+      "llvm_config_path",
+      "maybe_configure_environment_modification",
+      "nameCanon",
+      "sysroot_arg",
+      "verbose"
+     ],
+     "args": "${name} DEPENDS ${ARG_DEPENDS} llvm-config ${name}-clobber PREFIX ${CMAKE_BINARY_DIR}/projects/${name} SOURCE_DIR ${source_dir} STAMP_DIR ${STAMP_DIR} BINARY_DIR ${BINARY_DIR} ${exclude} CMAKE_ARGS ${${nameCanon}_CMAKE_ARGS} --no-warn-unused-cli ${compiler_args} ${verbose} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} ${sysroot_arg} -DLLVM_BINARY_DIR=${PROJECT_BINARY_DIR} -DLLVM_CONFIG_PATH=${llv"
+    }
+   ],
+   "shapes": [
+    "name-param",
+    "named-keyword"
+   ],
+   "body_hash": "7687c2e1199e",
+   "nested_in": null,
+   "forwards": true
+  },
+  {
+   "name": "rccl_standalone_setup",
+   "kind": "function",
+   "file": "rocm-systems/projects/rccl/test/host/CMakeLists.txt",
+   "line": 1138,
+   "params": [],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 1156,
+     "calls": "fetchcontent_declare",
+     "shapes": [
+      "literal-identity"
+     ],
+     "other_variables": [],
+     "args": "googletest GIT_REPOSITORY https://github.com/google/googletest.git GIT_TAG v1.14.0 GIT_SHALLOW TRUE"
+    }
+   ],
+   "shapes": [
+    "literal-identity"
+   ],
+   "body_hash": "0a0a2a788175",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "rocdecode_add_test_ext",
+   "kind": "macro",
+   "file": "rocm-systems/projects/rocdecode/CMakeLists.txt",
+   "line": 464,
+   "params": [
+    "TEST_EXE",
+    "TEST_SOURCE_DIR"
+   ],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 465,
+     "calls": "externalproject_add",
+     "shapes": [],
+     "other_variables": [
+      "CMAKE_BUILD_TYPE",
+      "CMAKE_CXX_COMPILER",
+      "PROJECT_NAME",
+      "ROCDECODE_TEST_INSTALL_RPATH",
+      "ROCDECODE_TEST_PREFIX_PATH_ALT",
+      "ROCDECODE_TEST_TOOLCHAIN_ARG",
+      "ROCM_PATH"
+     ],
+     "args": "test_${TEST_EXE} SOURCE_DIR ${TEST_SOURCE_DIR} LIST_SEPARATOR | CMAKE_ARGS -DROCM_PATH=${ROCM_PATH} ${ROCDECODE_TEST_TOOLCHAIN_ARG} -DCMAKE_PREFIX_PATH=${ROCDECODE_TEST_PREFIX_PATH_ALT} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON -DCMAKE_INSTALL_RPATH=${ROCDECODE_TEST_INSTALL_RPATH} BUILD_ALWAYS ON INSTALL_COMMAND DEPENDS st"
+    }
+   ],
+   "shapes": [],
+   "body_hash": "47c2285b693c",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "rocjpeg_add_test_ext",
+   "kind": "macro",
+   "file": "rocm-systems/projects/rocjpeg/CMakeLists.txt",
+   "line": 408,
+   "params": [
+    "TEST_EXE",
+    "TEST_SOURCE_DIR"
+   ],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 409,
+     "calls": "externalproject_add",
+     "shapes": [],
+     "other_variables": [
+      "CMAKE_BUILD_TYPE",
+      "CMAKE_CXX_COMPILER",
+      "PROJECT_NAME",
+      "ROCJPEG_TEST_INSTALL_RPATH",
+      "ROCJPEG_TEST_PREFIX_PATH_ALT",
+      "ROCJPEG_TEST_TOOLCHAIN_ARG",
+      "ROCM_PATH"
+     ],
+     "args": "test_${TEST_EXE} SOURCE_DIR ${TEST_SOURCE_DIR} LIST_SEPARATOR | CMAKE_ARGS -DROCM_PATH=${ROCM_PATH} ${ROCJPEG_TEST_TOOLCHAIN_ARG} -DCMAKE_PREFIX_PATH=${ROCJPEG_TEST_PREFIX_PATH_ALT} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON -DCMAKE_INSTALL_RPATH=${ROCJPEG_TEST_INSTALL_RPATH} BUILD_ALWAYS ON INSTALL_COMMAND DEPENDS stage_${"
+    }
+   ],
+   "shapes": [],
+   "body_hash": "89145d0a18bc",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "rocm_libs_declare_shared_deps",
+   "kind": "function",
+   "file": "rocm-libraries/cmake/modules/shared_third_party.cmake",
+   "line": 138,
+   "params": [],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 159,
+     "calls": "fetchcontent_declare",
+     "shapes": [
+      "literal-identity"
+     ],
+     "other_variables": [],
+     "args": "nlohmann_json URL https://github.com/nlohmann/json/archive/refs/tags/v3.12.0.tar.gz URL_HASH SHA256=4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187 SYSTEM OVERRIDE_FIND_PACKAGE"
+    },
+    {
+     "line": 192,
+     "calls": "fetchcontent_declare",
+     "shapes": [
+      "literal-identity"
+     ],
+     "other_variables": [],
+     "args": "GTest URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.tar.gz URL_HASH SHA256=65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c SYSTEM OVERRIDE_FIND_PACKAGE"
+    }
+   ],
+   "shapes": [
+    "literal-identity"
+   ],
+   "body_hash": "90aff7f05382",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "rocm_libs_declare_shared_deps",
+   "kind": "function",
+   "file": "rocm-libraries/projects/hipccl/hipccl3/cmake/modules/shared_third_party.cmake",
+   "line": 158,
+   "params": [],
+   "parse_arguments": [],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 179,
+     "calls": "fetchcontent_declare",
+     "shapes": [
+      "literal-identity"
+     ],
+     "other_variables": [],
+     "args": "nlohmann_json URL https://github.com/nlohmann/json/archive/refs/tags/v3.12.0.tar.gz URL_HASH SHA256=4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187 SYSTEM OVERRIDE_FIND_PACKAGE"
+    },
+    {
+     "line": 212,
+     "calls": "fetchcontent_declare",
+     "shapes": [
+      "literal-identity"
+     ],
+     "other_variables": [],
+     "args": "GTest URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.tar.gz URL_HASH SHA256=65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c SYSTEM OVERRIDE_FIND_PACKAGE"
+    }
+   ],
+   "shapes": [
+    "literal-identity"
+   ],
+   "body_hash": "90aff7f05382",
+   "nested_in": null,
+   "forwards": false
+  },
+  {
+   "name": "runtime_default_target",
+   "kind": "function",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 280,
+   "params": [],
+   "parse_arguments": [
+    {
+     "prefix": "ARG",
+     "parse_argv": null,
+     "options": [],
+     "one": [],
+     "multi": [
+      "DEPENDS",
+      "CMAKE_ARGS",
+      "PREFIXES",
+      "EXTRA_ARGS"
+     ],
+     "forwarded": "${ARGN}"
+    }
+   ],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 337,
+     "calls": "llvm_externalproject_add",
+     "shapes": [
+      "named-keyword",
+      "parsed-variable"
+     ],
+     "other_variables": [
+      "CMAKE_CURRENT_SOURCE_DIR",
+      "COMMON_CMAKE_ARGS",
+      "EXTRA_ARGS",
+      "LLVM_BUILD_TOOLS",
+      "LLVM_ENABLE_DOXYGEN",
+      "LLVM_ENABLE_PER_TARGET_RUNTIME_DIR",
+      "LLVM_ENABLE_PROJECTS_USED",
+      "LLVM_INCLUDE_TESTS",
+      "LLVM_TARGET_TRIPLE",
+      "RUNTIMES_CMAKE_ARGS",
+      "SUB_CHECK_TARGETS",
+      "SUB_COMPONENTS",
+      "SUB_INSTALL_TARGETS",
+      "extra_targets",
+      "test_targets"
+     ],
+     "args": "runtimes ${CMAKE_CURRENT_SOURCE_DIR}/../../runtimes DEPENDS ${ARG_DEPENDS} CMAKE_ARGS -DCOMPILER_RT_BUILD_BUILTINS=Off -DLLVM_INCLUDE_TESTS=${LLVM_INCLUDE_TESTS} -DLLVM_DEFAULT_TARGET_TRIPLE=${LLVM_TARGET_TRIPLE} -DLLVM_ENABLE_PROJECTS_USED=${LLVM_ENABLE_PROJECTS_USED} -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=${LLVM_ENABLE_PER_TARGET_RUNTIME_DIR} -DLLVM_BUILD_TOOLS=${LLVM_BUILD_TOOLS} -DLLVM_ENABLE_DO"
+    }
+   ],
+   "shapes": [
+    "named-keyword",
+    "parsed-variable"
+   ],
+   "body_hash": "1f3025d70247",
+   "nested_in": null,
+   "forwards": true
+  },
+  {
+   "name": "runtime_register_target",
+   "kind": "function",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 375,
+   "params": [
+    "name"
+   ],
+   "parse_arguments": [
+    {
+     "prefix": "ARG",
+     "parse_argv": null,
+     "options": [],
+     "one": [
+      "BASE_NAME"
+     ],
+     "multi": [
+      "DEPENDS",
+      "CMAKE_ARGS",
+      "EXTRA_ARGS"
+     ],
+     "forwarded": "${ARGN}"
+    }
+   ],
+   "defaults_set": [],
+   "inner_calls": [
+    {
+     "line": 463,
+     "calls": "llvm_externalproject_add",
+     "shapes": [
+      "named-keyword",
+      "parsed-variable"
+     ],
+     "other_variables": [
+      "CMAKE_CURRENT_SOURCE_DIR",
+      "COMMON_CMAKE_ARGS",
+      "EXTRA_ARGS",
+      "LLVM_ENABLE_PER_TARGET_RUNTIME_DIR",
+      "LLVM_ENABLE_PROJECTS_USED",
+      "LLVM_INCLUDE_TESTS"
+     ],
+     "args": "runtimes-${name} ${CMAKE_CURRENT_SOURCE_DIR}/../../runtimes DEPENDS ${ARG_DEPENDS} CMAKE_ARGS -DCOMPILER_RT_BUILD_BUILTINS=OFF -DLLVM_INCLUDE_TESTS=${LLVM_INCLUDE_TESTS} -DLLVM_ENABLE_PROJECTS_USED=${LLVM_ENABLE_PROJECTS_USED} -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=${LLVM_ENABLE_PER_TARGET_RUNTIME_DIR} -DCMAKE_C_COMPILER_WORKS=ON -DCMAKE_CXX_COMPILER_WORKS=ON -DCMAKE_Fortran_COMPILER_WORKS=ON -DCMAK"
+    }
+   ],
+   "shapes": [
+    "named-keyword",
+    "parsed-variable"
+   ],
+   "body_hash": "c6d07dd34f95",
+   "nested_in": null,
+   "forwards": true
+  },
+  {
+   "name": "therock_subproject_fetch",
+   "kind": "function",
+   "file": "cmake/therock_subproject.cmake",
+   "line": 147,
+   "params": [
+    "target_name"
+   ],
+   "parse_arguments": [
+    {
+     "prefix": "ARG",
+     "parse_argv": "1",
+     "options": [
+      "CMAKE_PROJECT"
+     ],
+     "one": [
+      "SOURCE_DIR",
+      "PREFIX",
+      "EXCLUDE_FROM_ALL"
+     ],
+     "multi": [
+      "TOUCH"
+     ],
+     "forwarded": null
+    }
+   ],
+   "defaults_set": [
+    "ARG_EXCLUDE_FROM_ALL TRUE",
+    "ARG_PREFIX \"${CMAKE_CURRENT_BINARY_DIR}/${target_name}_fetch\"",
+    "ARG_SOURCE_DIR \"${CMAKE_CURRENT_BINARY_DIR}/source\""
+   ],
+   "inner_calls": [
+    {
+     "line": 181,
+     "calls": "externalproject_add",
+     "shapes": [
+      "name-param",
+      "named-keyword",
+      "unparsed"
+     ],
+     "other_variables": [
+      "_extra"
+     ],
+     "args": "${target_name} EXCLUDE_FROM_ALL ${ARG_EXCLUDE_FROM_ALL} PREFIX ${ARG_PREFIX} DOWNLOAD_NO_PROGRESS ON LOG_DOWNLOAD ON LOG_MERGED_STDOUTERR ON LOG_OUTPUT_ON_FAILURE ON SOURCE_DIR ${ARG_SOURCE_DIR} CONFIGURE_COMMAND INSTALL_COMMAND TEST_COMMAND ${_extra} ${ARG_UNPARSED_ARGUMENTS}"
+    }
+   ],
+   "shapes": [
+    "name-param",
+    "named-keyword",
+    "unparsed"
+   ],
+   "body_hash": "7af3d40ebf9e",
+   "nested_in": null,
+   "forwards": true
+  }
+ ],
+ "call_sites": [
+  {
+   "wrapper": "llvm_externalproject_add",
+   "file": "compiler/amd-llvm/clang/utils/perf-training/CMakeLists.txt",
+   "line": 58,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "generate-profraw-external",
+   "name_literal": true,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "add_custom_libcxx",
+   "file": "compiler/amd-llvm/compiler-rt/lib/fuzzer/CMakeLists.txt",
+   "line": 161,
+   "in_function": null,
+   "in_loop": true,
+   "conditional": true,
+   "name": "libcxx_fuzzer_${arch}",
+   "name_literal": false,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "add_custom_libcxx",
+   "file": "compiler/amd-llvm/compiler-rt/lib/msan/tests/CMakeLists.txt",
+   "line": 139,
+   "in_function": null,
+   "in_loop": true,
+   "conditional": true,
+   "name": "libcxx_msan_${arch}",
+   "name_literal": false,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "add_custom_libcxx",
+   "file": "compiler/amd-llvm/compiler-rt/lib/tsan/CMakeLists.txt",
+   "line": 30,
+   "in_function": null,
+   "in_loop": true,
+   "conditional": true,
+   "name": "libcxx_tsan_${arch}",
+   "name_literal": false,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "llvm_externalproject_add",
+   "file": "compiler/amd-llvm/flang/test/CMakeLists.txt",
+   "line": 253,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "generate-clang-profraw-external",
+   "name_literal": true,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "llvm_externalproject_add",
+   "file": "compiler/amd-llvm/flang/test/CMakeLists.txt",
+   "line": 270,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "generate-flang-profraw-external",
+   "name_literal": true,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "llvm_externalproject_add",
+   "file": "compiler/amd-llvm/llvm/CMakeLists.txt",
+   "line": 1468,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "test-suite",
+   "name_literal": true,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "llvm_externalproject_add",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 138,
+   "in_function": "builtin_default_target",
+   "in_loop": false,
+   "conditional": false,
+   "name": "builtins",
+   "name_literal": true,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "llvm_externalproject_add",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 166,
+   "in_function": "builtin_register_target",
+   "in_loop": false,
+   "conditional": false,
+   "name": "builtins-${name}",
+   "name_literal": false,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "builtin_default_target",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 202,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "${compiler_rt_path}",
+   "name_literal": false,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "builtin_register_target",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 225,
+   "in_function": null,
+   "in_loop": true,
+   "conditional": true,
+   "name": "${compiler_rt_path}",
+   "name_literal": false,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "llvm_externalproject_add",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 337,
+   "in_function": "runtime_default_target",
+   "in_loop": false,
+   "conditional": false,
+   "name": "runtimes",
+   "name_literal": true,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "llvm_externalproject_add",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 463,
+   "in_function": "runtime_register_target",
+   "in_loop": false,
+   "conditional": false,
+   "name": "runtimes-${name}",
+   "name_literal": false,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "runtime_default_target",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 725,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "DEPENDS",
+   "name_literal": true,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "runtime_default_target",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 733,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "DEPENDS",
+   "name_literal": true,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "runtime_register_target",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 792,
+   "in_function": null,
+   "in_loop": true,
+   "conditional": true,
+   "name": "${name}",
+   "name_literal": false,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "runtime_register_target",
+   "file": "compiler/amd-llvm/llvm/runtimes/CMakeLists.txt",
+   "line": 800,
+   "in_function": null,
+   "in_loop": true,
+   "conditional": true,
+   "name": "${name}+${multilib}",
+   "name_literal": false,
+   "keywords": {},
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/Catch2/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-catch2-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/Catch2-3.8.1.tar.gz",
+    "URL_HASH": "SHA256=18b3f70ac80fccc340d8c6ff0f339b2ae64944782f8d2fca2bd705cf47cadb79"
+   },
+   "identity_literal": true,
+   "url_version": "3.8.1",
+   "archive": "Catch2-3.8.1.tar.gz",
+   "fr005_name": "Catch2"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/FunctionalPlus/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-FunctionalPlus-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/FunctionalPlus-0.2.25.tar.gz",
+    "URL_HASH": "SHA256=9b5e24bbc92f43b977dc83efbc173bcf07dbe07f8718fc2670093655b56fcee3"
+   },
+   "identity_literal": true,
+   "url_version": "0.2.25",
+   "archive": "FunctionalPlus-0.2.25.tar.gz",
+   "fr005_name": "FunctionalPlus"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/SuiteSparse/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-SuiteSparse-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/SuiteSparse-7.8.3.tar.gz",
+    "URL_HASH": "SHA256=ce39b28d4038a09c14f21e02c664401be73c0cb96a9198418d6a98a7db73a259"
+   },
+   "identity_literal": true,
+   "url_version": "7.8.3",
+   "archive": "SuiteSparse-7.8.3.tar.gz",
+   "fr005_name": "SuiteSparse"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/eigen/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-eigen-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/eigen-3.4.0.tar.bz2",
+    "URL_HASH": "SHA256=b4c198460eba6f28d34894e3a5710998818515104d6e74e5cc331ce31e46e626"
+   },
+   "identity_literal": true,
+   "url_version": "3.4.0",
+   "archive": "eigen-3.4.0.tar.bz2",
+   "fr005_name": "eigen"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/elfio/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-elfio-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/elfio-3.12.tar.gz",
+    "URL_HASH": "SHA512=13ec6be1f8ee3d7dc96d4ff141d3c199dacd818470c0d902403215571ce3d998afe9e71a8c64e0e69cfb86a4794752d93e2e406025f4812e499e51b67201e23c"
+   },
+   "identity_literal": true,
+   "url_version": "3.12",
+   "archive": "elfio-3.12.tar.gz",
+   "fr005_name": "elfio"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/fftw3/CMakeLists.txt",
+   "line": 34,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-fftw3-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/fftw-3.3.10.tar.gz",
+    "URL_HASH": "SHA256=56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467"
+   },
+   "identity_literal": true,
+   "url_version": "3.3.10",
+   "archive": "fftw-3.3.10.tar.gz",
+   "fr005_name": "fftw"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/fftw3/CMakeLists.txt",
+   "line": 58,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-fftw3-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/fftw-3.3.10.tar.gz",
+    "URL_HASH": "SHA256=56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467"
+   },
+   "identity_literal": true,
+   "url_version": "3.3.10",
+   "archive": "fftw-3.3.10.tar.gz",
+   "fr005_name": "fftw"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/flatbuffers/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-flatbuffers-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/flatbuffers-25.9.23.tar.gz",
+    "URL_HASH": "SHA256=9102253214dea6ae10c2ac966ea1ed2155d22202390b532d1dea64935c518ada"
+   },
+   "identity_literal": true,
+   "url_version": "25.9.23",
+   "archive": "flatbuffers-25.9.23.tar.gz",
+   "fr005_name": "flatbuffers"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/fmt/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-fmt-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/fmt-11.1.3.zip",
+    "URL_HASH": "SHA256=7df2fd3426b18d552840c071c977dc891efe274051d2e7c47e2c83c3918ba6df"
+   },
+   "identity_literal": true,
+   "url_version": "11.1.3",
+   "archive": "fmt-11.1.3.zip",
+   "fr005_name": "fmt"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/frugally-deep/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-frugally-deep-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/frugally-deep-0.15.31.tar.gz",
+    "URL_HASH": "SHA256=49bf5e30ad2d33e464433afbc8b6fe8536fc959474004a1ce2ac03d7c54bc8ba"
+   },
+   "identity_literal": true,
+   "url_version": "0.15.31",
+   "archive": "frugally-deep-0.15.31.tar.gz",
+   "fr005_name": "frugally-deep"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/googletest/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-googletest-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/googletest-1.17.0.tar.gz",
+    "URL_HASH": "SHA256=65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c"
+   },
+   "identity_literal": true,
+   "url_version": "1.17.0",
+   "archive": "googletest-1.17.0.tar.gz",
+   "fr005_name": "googletest"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/grpc/CMakeLists.txt",
+   "line": 14,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-grpc-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/grpc-v1.78.1.tar.gz",
+    "URL_HASH": "SHA256=96e1d4c82735a6867b9045d782d3f4f7477224496fec5386ca3adae1f2059796"
+   },
+   "identity_literal": true,
+   "url_version": "1.78.1",
+   "archive": "grpc-v1.78.1.tar.gz",
+   "fr005_name": "grpc"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/host-blas/CMakeLists.txt",
+   "line": 25,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-OpenBLAS-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/OpenBLAS-18638c7.tar.gz",
+    "URL_HASH": "SHA256=5d81882fdf45a92a190bda2be2922d3372fef19af8f4442f720c0ebc4d10eba8"
+   },
+   "identity_literal": true,
+   "url_version": null,
+   "archive": "OpenBLAS-18638c7.tar.gz",
+   "fr005_name": null
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/libdivide/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-libdivide-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/libdivide-5.2.0.tar.gz",
+    "URL_HASH": "SHA256=73ae910c4cdbda823b7df2c1e0e1e7427464ebc43fc770b1a30bb598cb703f49"
+   },
+   "identity_literal": true,
+   "url_version": "5.2.0",
+   "archive": "libdivide-5.2.0.tar.gz",
+   "fr005_name": "libdivide"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/msgpack-cxx/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-msgpack-cxx-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/msgpack-cxx-7.0.0.tar.gz",
+    "URL_HASH": "SHA256=7504b7af7e7b9002ce529d4f941e1b7fb1fb435768780ce7da4abaac79bb156f"
+   },
+   "identity_literal": true,
+   "url_version": "7.0.0",
+   "archive": "msgpack-cxx-7.0.0.tar.gz",
+   "fr005_name": "msgpack-cxx"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/nlohmann-json/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-nlohmann-json-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/json-3.12.0.tar.gz",
+    "URL_HASH": "SHA256=42F6E95CAD6EC532FD372391373363B62A14AF6D771056DBFC86160E6DFFF7AA"
+   },
+   "identity_literal": true,
+   "url_version": "3.12.0",
+   "archive": "json-3.12.0.tar.gz",
+   "fr005_name": "json"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/openmpi/CMakeLists.txt",
+   "line": 7,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-openmpi-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/openmpi-${OPENMPI_VERSION}.tar.bz2",
+    "URL_HASH": "SHA256=dfb72762531170847af3e4a0f21d77d7b23cf36f67ce7ce9033659273677d80b"
+   },
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/simde/CMakeLists.txt",
+   "line": 23,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-simde-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/simde-${SIMDE_VERSION}.tar.gz",
+    "URL_HASH": "SHA256=ed2a3268658f2f2a9b5367628a85ccd4cf9516460ed8604eed369653d49b25fb"
+   },
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/spdlog/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-spdlog-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/spdlog-1.15.3.tar.gz",
+    "URL_HASH": "SHA256=15a04e69c222eb6c01094b5c7ff8a249b36bb22788d72519646fb85feb267e67"
+   },
+   "identity_literal": true,
+   "url_version": "1.15.3",
+   "archive": "spdlog-1.15.3.tar.gz",
+   "fr005_name": "spdlog"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/bzip2/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-bzip2-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/bzip2-1.0.8.tar.gz",
+    "URL_HASH": "SHA512=083f5e675d73f3233c7930ebe20425a533feedeaaa9d8cc86831312a6581cefbe6ed0d08d2fa89be81082f2a5abdabca8b3c080bf97218a1bd59dc118a30b9f3"
+   },
+   "identity_literal": true,
+   "url_version": "1.0.8",
+   "archive": "bzip2-1.0.8.tar.gz",
+   "fr005_name": "bzip2"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/expat/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-expat-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/expat-2.7.5.tar.xz",
+    "URL_HASH": "SHA256=1032dfef4ff17f70464827daa28369b20f6584d108bc36f17ab1676e1edd2f91"
+   },
+   "identity_literal": true,
+   "url_version": "2.7.5",
+   "archive": "expat-2.7.5.tar.xz",
+   "fr005_name": "expat"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/gmp/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-gmp-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/gmp-6.3.0.tar.xz",
+    "URL_HASH": "SHA512=e85a0dab5195889948a3462189f0e0598d331d3457612e2d3350799dba2e244316d256f8161df5219538eb003e4b5343f989aaa00f96321559063ed8c8f29fd2"
+   },
+   "identity_literal": true,
+   "url_version": "6.3.0",
+   "archive": "gmp-6.3.0.tar.xz",
+   "fr005_name": "gmp"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/hwloc/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-hwloc-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/hwloc-1.11.13.tar.bz2",
+    "URL_HASH": "SHA256=a4494b7765f517c0990d1c7f09d98cb87755bb6b841e4e2cbfebca1b14bac9c8"
+   },
+   "identity_literal": true,
+   "url_version": "1.11.13",
+   "archive": "hwloc-1.11.13.tar.bz2",
+   "fr005_name": "hwloc"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/libbacktrace/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-libbacktrace-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/libbacktrace-b9e40069c0b47a722286b94eb5231f7f05c08713.zip",
+    "URL_HASH": "SHA512=8acc3324d367413f41a7a65d86b96ad536907ef8c54905041670f5b9adac229a45d454a954385f230c4236d0d69d486551194b1298694af9df2229a05e998997"
+   },
+   "identity_literal": true,
+   "url_version": null,
+   "archive": "libbacktrace-b9e40069c0b47a722286b94eb5231f7f05c08713.zip",
+   "fr005_name": null
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/liblzma/CMakeLists.txt",
+   "line": 11,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-liblzma-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "${_xz_url}",
+    "URL_HASH": "SHA256=5965c692c4c8800cd4b33ce6d0f6ac9ac9d6ab227b17c512b6561bce4f08d47e"
+   },
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/mpfr/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-mpfr-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/mpfr-4.2.2.tar.xz",
+    "URL_HASH": "SHA512=eb9e7f51b5385fb349cc4fba3a45ffdf0dd53be6dfc74932dc01258158a10514667960c530c47dd9dfc5aa18be2bd94859d80499844c5713710581e6ac6259a9"
+   },
+   "identity_literal": true,
+   "url_version": "4.2.2",
+   "archive": "mpfr-4.2.2.tar.xz",
+   "fr005_name": "mpfr"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/ncurses/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-ncurses-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/ncurses-6.6.tar.gz",
+    "URL_HASH": "SHA512=02647baae53abc844fbadee5b0a2187ad073125c4e8950df6d1c4feb781cb74ba64fb838cedfee2c246c39932187f6775b1df124f18b99a4233f0d98c72191de"
+   },
+   "identity_literal": true,
+   "url_version": "6.6",
+   "archive": "ncurses-6.6.tar.gz",
+   "fr005_name": "ncurses"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/sqlite3/CMakeLists.txt",
+   "line": 14,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-sqlite3-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/sqlite-amalgamation-${SQLITE3_AMALGAMATION_VERSION}.zip",
+    "URL_HASH": "SHA256=acb1e6f5d832484bf6d32b681e858c38add8b2acdfd42ac5df24b8afb46552b4"
+   },
+   "identity_literal": false,
+   "url_version": null,
+   "archive": null,
+   "fr005_name": null
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/zlib/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-zlib-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/zlib-1.3.2.tar.gz",
+    "URL_HASH": "SHA256=bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16"
+   },
+   "identity_literal": true,
+   "url_version": "1.3.2",
+   "archive": "zlib-1.3.2.tar.gz",
+   "fr005_name": "zlib"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/common/zstd/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-zstd-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/zstd-1.5.7.tar.gz",
+    "URL_HASH": "SHA256=eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3"
+   },
+   "identity_literal": true,
+   "url_version": "1.5.7",
+   "archive": "zstd-1.5.7.tar.gz",
+   "fr005_name": "zstd"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/linux/elfutils/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-elfutils-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/elfutils-0.195.tar.bz2",
+    "URL_HASH": "SHA512=e1e1fdf4f7f72bf520deb0103bb8fd208dc247bab14af100c6fb56d38c0ef6c6d54ff5bd15b84e4f70e2b2ea481e5999fea2842360f8932a861122df79b5fc8f"
+   },
+   "identity_literal": true,
+   "url_version": "0.195",
+   "archive": "elfutils-0.195.tar.bz2",
+   "fr005_name": "elfutils"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/linux/libcap/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-libcap-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/libcap-2.69.tar.gz",
+    "URL_HASH": "SHA256=9cc2fa3ee744d881629cdac1a1b54c302e7684fda3e3622056218c7681642ffb"
+   },
+   "identity_literal": true,
+   "url_version": "2.69",
+   "archive": "libcap-2.69.tar.gz",
+   "fr005_name": "libcap"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/linux/libdrm/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-libdrm-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/libdrm-libdrm-2.4.134.tar.bz2",
+    "URL_HASH": "SHA256=D77E5AF336B6491F9E2427378244912EF5295C3C034AF76846C0FCFFE2EB869C"
+   },
+   "identity_literal": true,
+   "url_version": "2.4.134",
+   "archive": "libdrm-libdrm-2.4.134.tar.bz2",
+   "fr005_name": "libdrm-libdrm"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/linux/libiberty/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-libiberty-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/binutils-2.46.0.tar.gz",
+    "URL_HASH": "SHA512=30d24f7461d459dcbd04e506bb74e487a92748ed411878aacf7388a79ac5b73f968569f43385c9f12c669a5c0b0295d3083a8a4f3ab1be1bb826b3a15ec1f029"
+   },
+   "identity_literal": true,
+   "url_version": "2.46.0",
+   "archive": "binutils-2.46.0.tar.gz",
+   "fr005_name": "binutils"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/linux/libmnl/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-libmnl-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/libmnl-1.0.5.tar.bz2",
+    "URL_HASH": "SHA256=274b9b919ef3152bfb3da3a13c950dd60d6e2bcd54230ffeca298d03b40d0525"
+   },
+   "identity_literal": true,
+   "url_version": "1.0.5",
+   "archive": "libmnl-1.0.5.tar.bz2",
+   "fr005_name": "libmnl"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/linux/libnl/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-libnl-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/libnl-3.12.0.tar.gz",
+    "URL_HASH": "SHA256=fc51ca7196f1a3f5fdf6ffd3864b50f4f9c02333be28be4eeca057e103c0dd18"
+   },
+   "identity_literal": true,
+   "url_version": "3.12.0",
+   "archive": "libnl-3.12.0.tar.gz",
+   "fr005_name": "libnl"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/linux/libpciaccess/CMakeLists.txt",
+   "line": 8,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-libpciaccess-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/libpciaccess-0.18.1.tar.xz",
+    "URL_HASH": "SHA256=4af43444b38adb5545d0ed1c2ce46d9608cc47b31c2387fc5181656765a6fa76"
+   },
+   "identity_literal": true,
+   "url_version": "0.18.1",
+   "archive": "libpciaccess-0.18.1.tar.xz",
+   "fr005_name": "libpciaccess"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/linux/numactl/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-numactl-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/numactl-2.0.19.tar.gz",
+    "URL_HASH": "SHA256=f2672a0381cb59196e9c246bf8bcc43d5568bc457700a697f1a1df762b9af884"
+   },
+   "identity_literal": true,
+   "url_version": "2.0.19",
+   "archive": "numactl-2.0.19.tar.gz",
+   "fr005_name": "numactl"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/sysdeps/linux/util-linux/CMakeLists.txt",
+   "line": 9,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": true,
+   "name": "therock-util-linux-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/util-linux-2.42.1.tar.gz",
+    "URL_HASH": "SHA256=138a3bd9049afa5eeeea73f1e9c0ed7bddf3e55ba4ec29924965a932ec738f01"
+   },
+   "identity_literal": true,
+   "url_version": "2.42.1",
+   "archive": "util-linux-2.42.1.tar.gz",
+   "fr005_name": "util-linux"
+  },
+  {
+   "wrapper": "therock_subproject_fetch",
+   "file": "third-party/yaml-cpp/CMakeLists.txt",
+   "line": 4,
+   "in_function": null,
+   "in_loop": false,
+   "conditional": false,
+   "name": "therock-yaml-cpp-sources",
+   "name_literal": true,
+   "keywords": {
+    "URL": "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/yaml-cpp-0.8.0.tar.gz",
+    "URL_HASH": "SHA256=fbe74bbdcee21d656715688706da3c8becfd946d92cd44705cc6098bb23b3a16"
+   },
+   "identity_literal": true,
+   "url_version": "0.8.0",
+   "archive": "yaml-cpp-0.8.0.tar.gz",
+   "fr005_name": "yaml-cpp"
+  }
+ ],
+ "duplicates": {
+  "rocm_libs_declare_shared_deps": [
+   [
+    "rocm-libraries/cmake/modules/shared_third_party.cmake",
+    138,
+    "90aff7f05382"
+   ],
+   [
+    "rocm-libraries/projects/hipccl/hipccl3/cmake/modules/shared_third_party.cmake",
+    158,
+    "90aff7f05382"
+   ]
+  ]
+ }
+}
