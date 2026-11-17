@@ -189,7 +189,7 @@
   - C234's union in `one_per_purl` dropped;
   - command-name lookup made case-sensitive;
   - the call site's `function()` replaced by the wrapper's own for `cmake-function-body`.
-- [ ] T022 Corpora in CI.
+- [X] T022 Corpora in CI.
   - **Public corpus:** dispatch `public-corpus.yml` in compare mode at the branch. Expected: identical, or every changed target traced to a CMake wrapper definition or call in its tree (SC-006). A C231-only change from a template moving out of `read` is expected where a target defines a parameterised wrapper (research R13). Regenerate goldens only after tracing, with `-f regen_goldens=true`.
   - **Quality corpus:** compare against `main`, PURL by PURL. pytorch's C-13b components (dlfcn-win32, xz) must be unchanged (R2).
   - **Record** in `measurements/corpus.md`, labelling any attribution not traced as inference.
@@ -201,7 +201,7 @@
   - `cmake_fetch_wrappers` N of N;
   - `cmake_nested_fetches` N of N;
   - `git diff --quiet main -- Cargo.toml Cargo.lock '*/Cargo.toml'` (FR-013).
-- [ ] T025 Open the PR against `main`.
+- [X] T025 Open the PR against `main`.
   - **Title:** `feat(cmake): fetches made through user-defined wrappers (#1518)`.
   - **Body:** the census and probe findings, TheRock's before and after from T018/T019, corpus results, the mutation count, the spec changes (FR-008 note, C-13), and `Refs #1539` (not "fixes"). End it with the attribution line. No session links.
   - **After opening:** tick #1518 on tracker #1542 only after the user lands it.
