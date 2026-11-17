@@ -120,7 +120,7 @@
 - [X] T016 [P] Docs:
   - **`docs/ecosystems.md`, "Fetches made through wrappers":** DownloadProject recognised by name and shape; keywords from each copy; the `<PROJ>` name; the branch-tag gap (#1598).
   - **`CHANGELOG.md` `[Unreleased]`:** Fixed #1594, with TheRock's numbers from T012.
-- [ ] T017 Run the gate alone and record it in `specs/1540-cmake-download-project/measurements/gate-log.md`:
+- [X] T017 Run the gate alone and record it in `specs/1540-cmake-download-project/measurements/gate-log.md`:
   - the ok-line count, 0 failed, and the expected line found;
   - `cmake_fetch_wrappers` N/N and `cmake_nested_fetches` N/N;
   - no Cargo changes.
