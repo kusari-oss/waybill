@@ -11,6 +11,7 @@ One `function()` or `macro()` definition whose body calls a fetch built-in or an
 | `name` | `String` | As written. Lookup is by the lowercased name, because CMake command names are case-insensitive. |
 | `kind` | `Function \| Macro` | Probe W7: both expose the same argument variables, so binding does not depend on it. |
 | `file` | `PathBuf` | Relative to the scan root. |
+| `ordinal` | `usize` | The definition's index among the `function()`/`macro()` definitions in its file. With `file`, it identifies the definition, because tokenised commands carry no line numbers (spec 1538 R15). |
 | `params` | `Vec<String>` | Named positional parameters. |
 | `parses` | `Vec<ParseArgs>` | The body's `cmake_parse_arguments` calls, in body order. |
 | `defaults` | `Vec<Default>` | Literal values the body sets for a parsed variable when the call did not set it (R4). |
@@ -29,12 +30,14 @@ enum ForwardingShape {   // closed; the census (SC-001) fixed this list
     Argn,                // ${ARGN}
     Argv,                // ${ARGV}
     Unparsed,            // ${<P>_UNPARSED_ARGUMENTS}
-    NamedKeyword,        // URL ${<P>_URL}
+    ParsedVariable,      // any ${<P>_<KW>}: URL ${<P>_URL}, URL ${<P>_SOURCE_URL}
     NameParameter,       // the call's first argument is a parameter or ${ARGV<n>}
 }
 ```
 
 **Validation (R2).** A definition is a `WrapperDef` only when its body call, read on its own as spec 1538 reads it, has **no identity**: `fetch_entry` gives no PURL, or a PURL containing `${…}`. Otherwise the call is a direct fetch in a function body, spec 1538's `cmake-function-body`, unchanged, and calls to the function are not read. That covers a body with only literal arguments (spec edge case) and spec 1538's C-13b, a parameterised name with a literal GitHub `GIT_REPOSITORY`.
+
+A body whose call targets **another wrapper** (`BodyTarget::Wrapper`) is a wrapper whenever it forwards by a recognised shape. The own-identity check applies only to a body that calls a built-in, because a wrapper-to-wrapper call has no `fetch_entry` reading of its own. On TheRock this covers LLVM's four `builtin_*` and `runtime_*` functions.
 
 ## Definitions
 

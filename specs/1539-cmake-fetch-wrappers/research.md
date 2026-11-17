@@ -13,13 +13,13 @@ The evidence:
 |---|---|---|
 | `NameParameter` | `ExternalProject_Add("${target_name}" …)`, or `${ARGV0}` | `therock_subproject_fetch`, `llvm_ExternalProject_Add`, `add_custom_libcxx` |
 | `Unparsed` | `${ARG_UNPARSED_ARGUMENTS}` after `cmake_parse_arguments(ARG …)` or `(PARSE_ARGV <n> ARG …)` | `therock_subproject_fetch`, the only identity carrier: 40 calls |
-| `NamedKeyword` | `URL ${ARG_URL}`, `SOURCE_DIR ${ARG_SOURCE_DIR}` | all of LLVM's, and `therock_subproject_fetch`'s `SOURCE_DIR` / `PREFIX` |
+| `ParsedVariable` | any `${<P>_<KW>}`: `URL ${ARG_URL}`, `SOURCE_DIR ${ARG_SOURCE_DIR}`, and after a different keyword, `DEPENDS ${ARG_DEPENDS}` | all of LLVM's, and `therock_subproject_fetch`'s `SOURCE_DIR` / `PREFIX` |
 | `Argn` | `${ARGN}` | none directly. #1518's repro. |
 | `Argv` | `${ARGV}` | none |
 
 **Rationale.**
 - The census (SC-001) finds one shape pair carrying an identity on TheRock: the name parameter with `${ARG_UNPARSED_ARGUMENTS}`. FR-001 requires it.
-- `NamedKeyword` costs nothing extra: binding already computes every `<P>_<KEYWORD>`. It is how LLVM's wrappers pass everything, so supporting it is what makes LLVM's 13 in-tree calls *countable* as unresolved rather than invisible (US2).
+- `ParsedVariable` costs nothing extra: binding already computes every `<P>_<KEYWORD>`. It is how LLVM's wrappers pass everything, so supporting it is what makes LLVM's 13 in-tree calls *countable* as unresolved rather than invisible (US2). Requiring the keyword to equal the variable's suffix would miss `URL ${ARG_SOURCE_URL}` and gains nothing, because the binder computes every `<P>_*` either way.
 - `Argn` is #1518's own repro, and the commonest wrapper idiom outside TheRock. `Argv` is the same mechanism.
 - A body that calls more than one fetch is not a wrapper. The census finds no such forwarding body, and binding one call to two fetches is a different feature.
 
@@ -34,6 +34,8 @@ The evidence:
 **Rationale.**
 - Spec 1538's C-13b is exactly this case: `ExternalProject_Add(${dep} GIT_REPOSITORY https://github.com/<o>/<r>.git GIT_TAG v1.2)` inside a function. Its identity is literal, and it is emitted today (pytorch's dlfcn-win32 and xz in the quality corpus). Making it a template would make those components depend on resolving every call, and lose them where a call's name comes from a loop.
 - It keeps FR-011 strong. Every declaration that produces a component on `main` produces the same component on the branch, because the only bodies that become templates are those that produced nothing.
+
+**A body that calls another wrapper** is a wrapper whenever it forwards by a recognised shape. The own-identity check applies only to a body that calls a built-in, because a wrapper-to-wrapper call has no `fetch_entry` reading of its own. On TheRock this covers LLVM's four `builtin_*` and `runtime_*` functions.
 
 **Spec effect.** FR-008's "the fetch call inside a recognised wrapper's body is a template" holds, and R2 says which bodies are recognised. A one-line note is added to FR-008.
 

@@ -16,7 +16,7 @@ The wrapper's body is read once, as a declaration named `${target_name}`, and co
 **The fix, in four parts:**
 1. **Definitions** (R1, R2). The pre-pass that already tokenises every walked CMake file also records `function()`/`macro()` bodies. A body is a wrapper when its single fetch or wrapper call:
    - has no identity of its own (so spec 1538's C-13b body stays as it is);
-   - receives the caller's arguments by one of five shapes: name parameter, `${<P>_UNPARSED_ARGUMENTS}`, a parsed keyword re-passed by name, `${ARGN}` or `${ARGV}`.
+   - receives the caller's arguments by one of five shapes: name parameter, `${<P>_UNPARSED_ARGUMENTS}`, a parsed variable (`${<P>_<KW>}`), `${ARGN}` or `${ARGV}`.
 
    Wrappers of wrappers are found to a fixed point.
 2. **Binding** (R3–R5). Each call site is bound as CMake 4.4.5 was measured to bind it:
@@ -118,8 +118,7 @@ waybill-cli/src/scan_fs/package_db/
 ├── cmake.rs                  # FR-005 archive-name helper beside parse_version_from_url
 └── cmake/
     ├── wrappers.rs           # new: Definitions, ForwardingShape, cmake_parse_arguments binder, bind(), fixed point
-    ├── fetches.rs            # pre-pass builds Definitions; main pass binds call sites, skips templates; C231 `wrappers`; C234 through one_per_purl
-    └── blocks.rs             # function bodies captured for the pre-pass (body commands, inner if-conditions)
+    └── fetches.rs            # pre-pass builds Definitions; main pass binds call sites, skips templates; C231 `wrappers`; C234 through one_per_purl
 waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs   # C234
 waybill-cli/tests/cmake_fetch_wrappers.rs                    # new: W-1…W-22
 waybill-cli/tests/cmake_nested_fetches.rs                    # C-13 expectation (R9)

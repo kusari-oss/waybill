@@ -49,7 +49,9 @@ These tarballs are code compiled into ROCm, so none of TheRock's third-party sou
 
 Spec 1538's census (`specs/1538-cmake-nested-fetches/measurements/census.md`) found 17 fetch calls inside function or macro bodies, 8 of them with a `${…}` name. Among them:
 - LLVM's `llvm_ExternalProject_Add` and `add_custom_libcxx`;
-- test-build wrappers in rocdecode and rocjpeg (`rocdecode_add_test_ext`, `rocjpeg_add_test_ext`).
+- LLVM's `builtin_*` and `runtime_*` functions, which call `llvm_ExternalProject_Add`.
+
+The census (`measurements/census.md`) finds 7 wrappers, all of them TheRock's or LLVM's. rocdecode's and rocjpeg's test-build functions (`rocdecode_add_test_ext`, `rocjpeg_add_test_ext`) call a fetch but forward nothing, so they stay spec 1538 function-body fetches.
 
 Several of these build in-tree sources and pass no URL or repository. They must stay unresolved, not become components.
 
@@ -138,7 +140,7 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 - **Called but defined outside the scan,** for example in an installed CMake package. The call is not recognised. That is the same as today, and it is counted nowhere.
 - **Recursion.** A wrapper that calls itself, directly or through another wrapper, is followed to a bounded depth and never loops (FR-004).
 - **Both keyword sources.** A wrapper body with its own literal `URL` that also forwards the caller's arguments: the effective value follows CMake's rule for a repeated keyword. That rule is probed in plan, as spec 1538 probed its semantics.
-- **Variable arguments.** A call-site argument that is `${VAR}` with a same-file literal `set()` is expanded as direct calls are today. Otherwise the call is unresolved.
+- **Variable arguments.** A call-site argument `${VAR}` is expanded from a same-file literal `set()`, as for direct calls. A variable that cannot be expanded decides nothing unless the identity depends on it. The call is unresolved only if its bound `URL`, `GIT_REPOSITORY` or `GIT_TAG` still contains `${…}` (FR-007). TheRock's calls pass `SOURCE_DIR "${_source_dir}"` and `TOUCH "${_download_stamp}"`, which do not affect identity.
 - **Positional parameters.** A wrapper whose name parameter is not first, or that reads `${ARGV0}`/`${ARGV1}`: bound by position like any other parameter.
 - **An archive filename that does not parse.** A wrapper call whose URL ends in a filename without a `<name>-<version>` form (for example `v1.5.7.tar.gz`, or a URL with no version) is named from the bound name, as a direct call is (FR-005).
 - **Shapes and merges.** A wrapper call under `if(NOT X_FOUND)`, or in a `tests/` directory, gets spec 1538's shapes from the **call site**. Conditions inside the wrapper body add to them (FR-006).
@@ -150,10 +152,10 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 
 ### Functional Requirements
 
-- **FR-001: What counts as a wrapper.** A `function()` or `macro()` defined in any CMake file the reader reads MUST be treated as a fetch wrapper when its body calls `FetchContent_Declare`, `ExternalProject_Add`, or another wrapper (FR-004), and forwards the caller's arguments by a recognised shape. The recognised shapes are fixed from the census (SC-001). They MUST include those the census finds carrying an identity on TheRock. The candidates are:
+- **FR-001: What counts as a wrapper.** A `function()` or `macro()` defined in any CMake file the reader reads MUST be treated as a fetch wrapper when its body calls `FetchContent_Declare`, `ExternalProject_Add`, or another wrapper (FR-004), and forwards the caller's arguments by a recognised shape. The recognised shapes were fixed from the census (SC-001), and include those the census finds carrying an identity on TheRock. They are (research R1):
   - `${ARGN}`, `${ARGV}`;
   - `${<P>_UNPARSED_ARGUMENTS}` after `cmake_parse_arguments(<P> …)` or `cmake_parse_arguments(PARSE_ARGV <n> <P> …)`;
-  - a parsed keyword re-passed by name, such as `URL ${<P>_URL}`;
+  - a parsed variable `${<P>_<KW>}`, such as `URL ${<P>_URL}` or `URL ${<P>_SOURCE_URL}`;
   - a named parameter used as the fetch's name, such as `${target_name}`.
 - **FR-002: Binding a call.** For each call to a wrapper, the reader MUST bind the call-site arguments to the wrapper's parameters as CMake would:
   - positional parameters first;
@@ -184,7 +186,7 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
   - Both keys are registered with C231's documentation.
 - **FR-009: Evidence row.** Each component produced by a wrapper call MUST carry a new per-component row, `waybill:cmake-fetch-wrapper`: a sorted JSON array of the wrapper chains that produced it, each chain outermost first. It is registered in the catalog with parity extractors for CycloneDX, SPDX 2.3 and SPDX 3. A component that also has a direct declaration keeps the row for its wrapped declarations.
 - **FR-010: No operator flag unless measured.** No option for naming extra wrapper commands is added unless the census (SC-001) finds call sites with an identity that the static shapes cannot bind. If it does, the decision and the count are recorded, and a flag becomes its own follow-up.
-- **FR-011: Direct calls unchanged.** Every direct `FetchContent_Declare` / `ExternalProject_Add` MUST produce byte-identical output to `main`.
+- **FR-011: Direct calls unchanged.** Every direct `FetchContent_Declare` / `ExternalProject_Add` MUST produce byte-identical output to `main`. The document-level C231 may change where the tree defines a wrapper, because a wrapper body is no longer counted as a declaration (research R9). Components may not.
 - **FR-012: Formats agree.** CycloneDX, SPDX 2.3 and SPDX 3 MUST carry the same wrapped components, edges and rows, and the three formats MUST agree on the root's direct targets (spec 1537 I-1).
 - **FR-013: No new dependencies.** Zero new Cargo dependencies. Test fixtures use synthetic `waybill-fixture-*` names.
 
@@ -201,10 +203,10 @@ The maintainer sees, from CI runs in the fixture repository, what this changes o
 
 - **SC-001 (census first):** Before the shape list in FR-001 is fixed, a CI census of TheRock at its pin lists every function or macro whose body calls a fetch built-in or another such function. For each, it records the forwarding shape, the number of call sites, and how many of those pass a URL or repository.
 - **SC-002 (TheRock's third-party sources):**
-  - Every `therock_subproject_fetch` call site with a literal `URL` is emitted as a component with the URL's version and the declared SHA-256, named from the archive filename where it parses (FR-005).
-  - The count equals the census's count of such call sites. #1539 counted about 40 calls over 39 distinct tarballs; the census re-measures this.
-- **SC-003 (no fabrication):** Every wrapper call the census marks as having no URL or repository emits nothing and is counted unresolved. That covers LLVM's in-tree runtimes and the test-build wrappers. 0 components on TheRock are named after a wrapper parameter or a target variable.
-- **SC-004 (accounting):** On TheRock, C231 V1 and V2 hold, and every census call site is accounted for as emitted, merged or unresolved. Wrapper definitions are counted separately and match the census count.
+  - Every `therock_subproject_fetch` call site whose `URL` is literal after same-file `set()` expansion is emitted as a component with the URL's version and the declared SHA-256, named from the archive filename where it parses (FR-005).
+  - The census (`measurements/census.md`) counts 40 such calls, 36 with literal URLs and 4 whose URLs expand from same-file `set()`s. They cover 39 distinct URLs, because `third-party/fftw3` calls twice with one URL. So 40 declarations are emitted, as 39 components.
+- **SC-003 (no fabrication):** Every wrapper call the census marks as having no URL or repository emits nothing and is counted unresolved. That covers LLVM's 13 in-tree calls. 0 components on TheRock have a name containing `${`. A component named from its bound name under FR-005's fallback (`therock-OpenBLAS-sources`) is a literal name the source declares, and is allowed.
+- **SC-004 (accounting):** On TheRock, C231 V1 and V2 hold, and every census call site is accounted for as emitted, merged or unresolved. Wrapper definitions are counted separately: C231 `wrappers.definitions` equals the census's `wrappers`, 7.
 - **SC-005 (cost):** The median full-tree scan time of TheRock with submodules is at most 1.5× `main`'s. It is measured by the interleaved `measure-source` workflow: a warm-up, then three alternating rounds.
 - **SC-006 (corpora):**
   - The public corpus goldens are byte-identical, or every change is traced to a wrapper call in that target.

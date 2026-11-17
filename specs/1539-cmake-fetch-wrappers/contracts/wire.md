@@ -29,6 +29,8 @@ Each case is a synthetic `waybill-fixture-*` tree, scanned with `--offline` and 
 | W-20 | `wf_parse` is defined in a file excluded by `--exclude-path` | the call is not recognised and counted nowhere, as today (edge case "defined outside the scan") |
 | W-21 | the wrapper names its fetch `${ARGV0}` and reads `${ARGV1}` as the URL | bound by position like a named parameter |
 | W-22 | the same tree as W-2 but with the call spelt `WF_PARSE(…)` | identical to W-2: command names are case-insensitive |
+| W-23 | a git submodule `third_party/g` of `https://github.com/waybill-org/waybill-fixture-g.git` at commit X; elsewhere, under `if(NOT TARGET g)`, a call to a `GIT_REPOSITORY` wrapper binding that repository at `GIT_TAG X` | one component, the submodule's, with mechanism `git-submodule`. The call is in C233, and `merged.existing-component` = 1. This is spec 1538's C-12f through a wrapper. The survivor carries no C234 (R10). |
+| W-24 | a wrapped URL fetch called from inside submodule `third_party/x`'s tree | an edge from the submodule's component, not the root (ownership by the call site, FR-006). This is spec 1538's C-14 through a wrapper. I-1 holds. |
 
 Spec 1538's contract cases C-1 to C-15 still hold, with one change. **C-13**'s parameterised declaration inside `function(wf_fetch)` is now a wrapper template. When nothing calls it: `wrappers.definitions` = 1, `unresolved.identity` = 0, and `read` no longer counts it. C-13's literal declaration is unchanged.
 

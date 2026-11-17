@@ -23,7 +23,7 @@
   - **Types:**
     - `WrapperDef`, with `name`, `kind`, `file`, `params`, `parses: Vec<ParseArgs>`, `defaults`, `locals`, `call: BodyCall`, `conditions` and `shapes`;
     - `BodyTarget { Builtin(FetchKind), Wrapper(String) }`;
-    - `ForwardingShape { Argn, Argv, Unparsed, NamedKeyword, NameParameter }`;
+    - `ForwardingShape { Argn, Argv, Unparsed, ParsedVariable, NameParameter }`;
     - `Definitions = BTreeMap<String, Vec<WrapperDef>>`, keyed by the lowercased name.
   - **`collect_definitions(files: &[(PathBuf rel, Vec<(String, Vec<Arg>)>)]) -> Definitions`.** Walk each file's commands with a local block stack. For each `function()`/`macro()`, capture:
     - its parameters (args after the name);
@@ -34,15 +34,18 @@
     - the `if()` conditions enclosing the body call **inside** the body.
   - **The wrapper rule (R1, R2), to a fixed point:**
     - a body is a candidate when it has exactly one call to a fetch built-in or to a name already known to be a wrapper;
-    - it is a wrapper when at least one `ForwardingShape` is present on that call, **and** the call read on its own through the existing `fetch_entry` has no identity (no PURL, or a PURL containing `${`);
+    - it is a wrapper when at least one `ForwardingShape` is present on that call, **and**, for a call to a built-in, the call read on its own through the existing `fetch_entry` has no identity (no PURL, or a PURL containing `${`). A call to another wrapper needs only the shape (R2);
+    - each `WrapperDef` records its `(file, ordinal)`: its index among the file's `function()`/`macro()` definitions;
     - iterate until no name is added.
   - **Unit tests, `#[cfg(test)]` with `allow(clippy::unwrap_used)`:**
-    - each of the five shapes detected (W-1, W-2, W-3 and W-21 bodies);
+    - each of the five shapes detected (W-1, W-2, W-3 and W-21 bodies), including `ParsedVariable` after a different keyword (`URL ${W_SOURCE_URL}`);
+    - a body calling another wrapper is a wrapper without the own-identity check (LLVM's `builtin_default_target` shape);
+    - W-10c: a same-named wrapper and non-wrapper get distinct `(file, ordinal)`;
     - not a wrapper: a literal-only body; spec 1538's C-13b body (literal GitHub repository); a body with two fetch calls;
     - a wrapper of a wrapper found only on the second iteration (W-8);
     - case-insensitive names (W-22);
     - two definitions of one name both kept, in walk order.
-- [ ] T004 [P] Implement the argument binder in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs`: `bind_args(call: &[Arg], def: &WrapperDef) -> Option<BTreeMap<String, Value>>`, where a value is a scalar or a list. It covers data-model "Binding" steps 1 to 4:
+- [ ] T004 Implement the argument binder in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs`: `bind_args(call: &[Arg], def: &WrapperDef) -> Option<BTreeMap<String, Value>>`, where a value is a scalar or a list. It covers data-model "Binding" steps 1 to 4:
   - **Positional binding:** named parameters take `ARGV0…`; `ARGN` is the rest; `ARGV` is everything; `ARGV<n>` (W7). Too few arguments gives `None`.
   - **`cmake_parse_arguments`**, in body order:
     - `PARSE_ARGV <n>` reads `ARGV[n..]`, and the other form reads its expanded trailing arguments;
@@ -96,7 +99,7 @@
   - **Unit tests:** a two-level chain; recursion `a → b → a`; a depth of 9; agreement and disagreement across two definitions.
 - [ ] T010 [US1] Wire binding into `read_fetches` in `waybill-cli/src/scan_fs/package_db/cmake/fetches.rs` (research R7).
   - **Pre-pass:** build `Definitions` with `collect_definitions` from the already-parsed files, and set `wrapper_definitions` to the number of `WrapperDef`s.
-  - **Template bodies:** in the main pass, when the block stack is inside the body of a function that is a `WrapperDef`, its built-in fetch call and any wrapper call are part of the template. Skip them: no `read`, no `unresolved.identity`.
+  - **Template bodies:** in the main pass, count `function()`/`macro()` openings per file. When the block stack is inside the body whose `(file, ordinal)` is a `WrapperDef`'s (a same-named definition that is not a wrapper is read as spec 1538 reads it), its built-in fetch call and any wrapper call are part of the template. Skip them: no `read`, no `unresolved.identity`.
   - **Call sites:** a command whose lowercased name is in `Definitions` is a call site, outside a wrapper body.
     - Increment `read` and `wrapper_calls`.
     - Expand the call's arguments with the file's literal `set()`s, as direct calls are.
@@ -113,9 +116,9 @@
 ## Phase 4: User Story 2 — a wrapper around an in-tree build adds nothing false (P1)
 
 **Goal:** wrapper calls with no identity, ambiguous definitions, recursion, multi-value swallowing, excluded definitions and spec 1538's literal-identity bodies emit nothing false, and are counted.
-**Independent test:** contract cases W-6, W-7, W-9, W-10, W-10b, W-10c, W-11, W-19 and W-20, plus I-2 and I-6.
+**Independent test:** contract cases W-6, W-7, W-9, W-10, W-10b, W-10c, W-11, W-19, W-20, W-23 and W-24, plus I-2 and I-6.
 
-- [ ] T014 [US2] Add cases W-6, W-7, W-9, W-10, W-10b, W-10c, W-11, W-19 and W-20 to `waybill-cli/tests/cmake_fetch_wrappers.rs`, with an `assert_i6(docs)` helper (`ambiguous-calls ≤ unresolved.identity`, `calls ≤ read`) called from `coverage()`.
+- [ ] T014 [US2] Add cases W-6, W-7, W-9, W-10, W-10b, W-10c, W-11, W-19, W-20, W-23 (R9 merge through a wrapper) and W-24 (ownership by a submodule's call site) to `waybill-cli/tests/cmake_fetch_wrappers.rs`, with an `assert_i6(docs)` helper (`ambiguous-calls ≤ unresolved.identity`, `calls ≤ read`) called from `coverage()`.
   - **The two cases that would catch a wrong reader:**
     - W-11: a component here means the binder read `URL` by keyword search instead of CMake's multi-value rule;
     - W-19: a missing component means R2 was skipped.
@@ -198,7 +201,7 @@
 ## Dependencies
 
 - **Setup** (T001, T002) is done.
-- **Foundational:** T003, T004 and T005 are independent. T006 and T007 can run beside them. All of them block the stories.
+- **Foundational:** T003 and T005 are independent. T004 follows T003, in the same file. T006 and T007 can run beside them. All of them block the stories.
 - **US1:** T008 (tests first) → T009 → T010 → T011 → T012 → T013.
 - **US2:** T014 needs T010. T015 follows T014. US1 and US2 land together, in one PR.
 - **US3:** T016 needs T010 and T007; T017 follows T016.
@@ -207,7 +210,7 @@
 
 ## Parallel examples
 
-- **Foundational:** T003 (definitions), T004 (binder) and T005 (archive name) are separate functions with their own unit tests. T004 touches the same file as T003, so write them as separate `impl` blocks, or do T003 first if the edits collide.
+- **Foundational:** T003 (definitions) and T005 (archive name) run in parallel. T006 and T007 can run beside them. T004 (binder) follows T003 in `wrappers.rs`.
 - **CI:** T018, T019 and T022 are independent dispatches, and run concurrently in CI. Run nothing that compiles locally at the same time as the gate.
 - **US1 vs US2:** T014's cases can be written while T009 to T011 are in progress, because they only need the helpers from T008.
 
