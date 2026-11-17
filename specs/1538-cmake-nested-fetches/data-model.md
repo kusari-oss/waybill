@@ -87,6 +87,8 @@ Scope typing comes from `apply_lifecycle_scope_to_edges`.
  "read":N,"test":N,"unparseable-files":N,"unresolved":{"identity":N}}
 ```
 
+`unparseable-files` counts files that cannot be read (I/O errors, or text that is not UTF-8) and files that end inside an open command or bracket argument.
+
 **Invariants:**
 - **V1:** `read == emitted + merged.existing-component + merged.first-declaration-wins + unresolved.identity`.
 - **V2:** `conditional <= emitted` and `test <= emitted`. Both are counts of emitted components.

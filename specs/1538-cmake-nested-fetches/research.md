@@ -153,3 +153,9 @@ Unconditional fetches are never merged across versions. They are separate claims
 - If they use the function's parameters (`${name}`), it is `unresolved.identity`.
 
 Resolving a wrapper's *call sites* (TheRock's `therock_subproject_fetch`, `rocm_libs_declare_shared_deps`) remains #1518 and #1539. The census finds 17 declarations in function or macro bodies, 8 of them with `${…}` names.
+
+## R14. C57 references stay on today's file set
+
+**Decision.** C57 `waybill:build-reference` reads `add_subdirectory()` / `SOURCE_DIR` references to decide whether a git submodule is `declared-and-used`. It stays on today's file set (`discover_cmake_files`).
+
+This feature widens fetch declarations only (FR-002). C57's catalog note, that #1516's limit applies, therefore remains true after this feature and is not edited. Whether to widen it is part of the SC-008 follow-up, which decides what else the nested files should contribute.

@@ -22,7 +22,7 @@ Issues #1516 and #1519, which land together.
 **Storage**: N/A. Everything is in process for one scan.
 **Testing**:
 - **Unit:** the command tokeniser (comments, bracket arguments, quoted strings, nested parentheses); the block stack (`if`/`elseif`/`else`/`endif`, `function`/`macro`); each shape's classification, including the `NEVER` cancellation and the provider's method list; first-declaration-wins against ancestors versus siblings; C231's accounting invariant.
-- **Integration:** a new `waybill-cli/tests/cmake_nested_fetches.rs` covering the contract cases C-1 to C-14 (`contracts/wire.md`). Synthetic `waybill-fixture-*` trees, checked in all three formats.
+- **Integration:** a new `waybill-cli/tests/cmake_nested_fetches.rs` covering the contract cases C-1 to C-15 (`contracts/wire.md`). Synthetic `waybill-fixture-*` trees, checked in all three formats.
 - **Parity:** extractors for C231 to C233. The catalog gate lives in the lib target, so each row lands with its extractor.
 - **Conformance:** the CycloneDX schema and `spdx3-validate`.
 - **Mutations:** each shape, the merge rules and the accounting are mutated and must fail a test (`measurements/mutate.py`, the spec 1537 pattern).
@@ -69,7 +69,7 @@ specs/1538-cmake-nested-fetches/
 ├── research.md             # R1–R13
 ├── data-model.md
 ├── quickstart.md
-├── contracts/wire.md       # C-1…C-14, invariants
+├── contracts/wire.md       # C-1…C-15, invariants
 ├── measurements/
 │   ├── census.md           # TheRock census + baseline (SC-007, SC-008)
 │   ├── census-summary.json, census-fetches.json, census-refs.txt
@@ -93,7 +93,7 @@ waybill-cli/src/scan_fs/
 └── mod.rs                    # wire the pass; carry C231 to emit
 waybill-cli/src/generate/                     # C231 document-scope; C232/C233 per-component, all three formats
 waybill-cli/src/parity/extractors/            # C231–C233 extractors
-waybill-cli/tests/cmake_nested_fetches.rs     # contract C-1…C-14
+waybill-cli/tests/cmake_nested_fetches.rs     # contract C-1…C-15
 docs/reference/sbom-format-mapping.md         # C231–C233 rows; C122 and C62 new values
 docs/ecosystems.md                            # CMake section
 ```

@@ -93,7 +93,7 @@ The same engineer's subprojects guard their fetches: "use the super-build's copy
 
 1. **Given** an inner `FetchContent_Declare(… FIND_PACKAGE_ARGS …)`, **When** scanned, **Then** the component is marked conditional, with the reason `FIND_PACKAGE_ARGS`.
 2. **Given** an inner fetch inside `if(NOT TARGET <t>)`, **When** scanned, **Then** it is marked conditional, with the guard as its reason.
-3. **Given** a super-project that sets `FETCHCONTENT_TRY_FIND_PACKAGE_MODE` or installs a dependency provider, **When** scanned, **Then** fetches declared below it are marked conditional, with that mechanism as the reason.
+3. **Given** a super-project that sets `FETCHCONTENT_TRY_FIND_PACKAGE_MODE ALWAYS`, or defines a dependency provider supporting `FETCHCONTENT_MAKEAVAILABLE_SERIAL`, **When** scanned, **Then** the `FetchContent_Declare` calls below it are marked conditional, with that mechanism as the reason. An `ExternalProject_Add` below it is not marked, and neither is a fetch under a provider that supports `FIND_PACKAGE` only (research R3).
 4. **Given** an unguarded fetch with no provider in force, **When** scanned, **Then** it is not marked conditional.
 
 ---
@@ -136,7 +136,7 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
 - **A condition that cannot be read statically** (a variable set elsewhere, a generator expression) still marks the fetch conditional, with the reason `conditional` and the condition's text. It is never treated as unconditional.
 - **A configuration switch rather than a fallback** (`if(WIN32)`, `if(ENABLE_FOO)`) also marks the fetch conditional (FR-004). That holds in the root file too, which changes today's root output by adding the marker.
 - **A fetch inside a submodule's tree** belongs to that submodule (spec 1537's ownership rule). A fetch with no enclosing project belongs to the document root.
-- **A CMake file that does not parse** is skipped with a warning naming its path. It never aborts the scan.
+- **A CMake file that cannot be read or does not parse** is skipped with a warning naming its path, and counted in C231 `unparseable-files`. It never aborts the scan. "Cannot be read" means an I/O error or text that is not UTF-8. "Does not parse" means a command or bracket argument still open at the end of the file.
 - **Very large trees.** The measured super-build has 6,161 CMake files. Reading all of them must not make the scan impractical (SC-006).
 - **A subproject that is itself fetched** (its source arrives by `FetchContent`, so is not in the scanned tree) is not followed. Source scanning reads only what is on disk.
 
@@ -144,7 +144,7 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
 
 ### Functional Requirements
 
-- **FR-001**: A `FetchContent_Declare` or `ExternalProject_Add` in any CMake file of the scanned project MUST be read, not only in the root, `cmake/`, `Modules/` and `third_party/`. Which files belong to "the scanned project" is decided by evidence (research). The two candidate rules are "every CMake file the walker finds" and "files reachable through `add_subdirectory()`/`include()` from the root". The existing walker skip set and `--exclude-path` still apply.
+- **FR-001**: A `FetchContent_Declare` or `ExternalProject_Add` in any CMake file of the scanned project MUST be read, not only in the root, `cmake/`, `Modules/` and `third_party/`. Which files belong to "the scanned project" is decided by evidence (research). The two candidate rules are "every CMake file the walker finds" and "files reachable through `add_subdirectory()`/`include()` from the root". The existing walker skip set and `--exclude-path` still apply. *Decided at planning (research R1):* every CMake file the walk reaches. Literal `add_subdirectory()`/`include()` reachability reaches 0 of TheRock's 191 fetch calls.
 - **FR-002**: Widened discovery MUST apply to `FetchContent_Declare` and `ExternalProject_Add` only.
   - `find_package` and `pkg_check_modules` stay on today's file set, so their output is unchanged.
   - The measurement task MUST also count the `find_package` and `pkg_check_modules` calls in TheRock's nested CMake files, which this feature does not read, and file a follow-up issue with those numbers. Whether to read them is decided there, on evidence.
@@ -155,7 +155,8 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
   - `FETCHCONTENT_TRY_FIND_PACKAGE_MODE` set to `ALWAYS` by the declaring directory or an enclosing one;
   - a dependency provider whose `SUPPORTED_METHODS` include `FETCHCONTENT_MAKEAVAILABLE_SERIAL` (FetchContent only);
   - an enclosing `NOT <X>_FOUND` condition, the "find_package, else fetch" idiom;
-  - **first declaration wins:** a `FetchContent_Declare` of a name an enclosing project also declares. CMake ignores every declaration of a name after the first, guarded or not, and a project's own declarations normally precede its `add_subdirectory()` calls. "Earlier" is approximated statically as "declared by an enclosing project", and the reason value says so. This shape does not apply to `ExternalProject_Add`, where a duplicate target name is an error, and it does not apply between sibling subprojects, whose order a static scan cannot know.
+  - a declaration inside a `function()` or `macro()` body, which runs only when the function is called. It is emitted only if its name and URL are literal; one built from the function's parameters is counted as unresolved (research R13);
+  - **first declaration wins.** Unlike the shapes above, this is a **merge**, not a conditional mark (FR-005): a `FetchContent_Declare` of a name an enclosing project also declares. CMake ignores every declaration of a name after the first, guarded or not, and a project's own declarations normally precede its `add_subdirectory()` calls. "Earlier" is approximated statically as "declared by an enclosing project", and the reason value says so. This shape does not apply to `ExternalProject_Add`, where a duplicate target name is an error, and it does not apply between sibling subprojects, whose order a static scan cannot know.
 
   *Corrected at planning (research R3), from CMake behaviour measured with CMake 4.4.5:*
   - `NOT <X>_FOUND` is TheRock's commonest fallback (census), so it is a recognised shape.
@@ -167,7 +168,11 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
   - A recognised shape (FR-003) gives its own reason.
   - Any other condition, such as `if(WIN32)`, `if(ENABLE_FOO)` or a condition the reader cannot evaluate, gives the reason `conditional`, with the condition's text recorded.
   - An unrecognised condition MUST NOT be read as "unconditional".
-- **FR-005**: When the scan already holds a component for the package a fallback declares (including a `first-declaration-wins` declaration, whose package is the enclosing project's same-name fetch), the declaration MUST be recorded on that component as an additional detection (C56), not emitted as a second component. "The scan holds" includes a super-project fetch, a git submodule, or another reader's component. Matching MUST use the package's identity (URL or repository), not its name alone, so that two packages that share a name are not merged.
+- **FR-005**: A declaration MUST be recorded on an existing component, not emitted as a second one, in two cases. Each case matches differently.
+  - **First declaration wins.** A `FetchContent_Declare` whose name an ancestor directory also declares is matched **by name**, compared case-insensitively. That is CMake's own rule (research R3, P1). It applies to ancestors only, never to siblings, and never to `ExternalProject_Add`.
+  - **An existing component.** A **conditional** fetch is matched against a component the scan already holds by its **identity**: the repository or URL, without the version. The existing component may be a git submodule, another reader's component, or an unconditional fetch. A name alone never merges two packages here.
+
+  Either way, the declaration's file and version are recorded on the surviving component (C18 and C233, and C56 when the mechanism differs).
 - **FR-006**: A fallback for a package nothing else supplies MUST be emitted as its own component, marked per FR-003.
 - **FR-007**: Each nested fetch MUST be a dependency of the project that declares it, by spec 1537's ownership rule. That is the nearest enclosing project component (main module or git submodule), and otherwise the document root. All three formats MUST agree on the root's direct targets (invariant I-1).
 - **FR-008**: A fetch MUST carry the test lifecycle scope in either of two cases:
@@ -175,7 +180,7 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
   - it is inside `if(BUILD_TESTING)`, alone or `AND`-combined with other conditions. `BUILD_TESTING` is CTest's standard switch.
 
   It also keeps the conditional mark (FR-004). The component's scope is single-valued, so its scope is test, and the condition stays recorded with it (research R7). Project-specific test options (`<PROJ>_BUILD_TESTS`, `ENABLE_TESTS` and similar) are NOT matched by name; such a fetch is `conditional` only. That follows the test-scope rules of #1564 and #1524, which do not guess from names.
-- **FR-009**: Fetch declarations that are counted but not emitted MUST be counted in the document, by reason, so that "accounted for" in SC-002 is checkable from the document alone. Examples are unparseable files, fetches of a subproject that is not on disk, and declarations merged by FR-005.
+- **FR-009**: Fetch declarations that are read but not emitted MUST be counted in the document, by reason, so that "accounted for" in SC-002 is checkable from the document alone. The reasons are declarations merged by FR-005 and names or URLs that cannot be resolved. Files that cannot be read or do not parse are counted too.
 - **FR-010**: Output for a tree whose fetches are all in the root, `cmake/` and `Modules/` MUST be unchanged, except for two additions: the conditional marker on fetches inside an `if()` (FR-004), and this feature's document-scope rows.
 - **FR-011**: No new Cargo dependency.
 - **FR-012**: `--cmake-third-party-recursive` MUST still be accepted. Its behaviour becomes a subset of the default. Removing the flag is a separate decision.
@@ -183,7 +188,16 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
 ### Key Entities
 
 - **Fetch declaration**: one `FetchContent_Declare` or `ExternalProject_Add` call. It has a declaring file, an identity (URL or repository), a pinned revision or version, and a declared hash.
-- **Fallback shape**: the reason a declaration is conditional. One of the five recognised shapes (four guards, plus first declaration wins), or `conditional` for any other enclosing `if()`, recorded with the condition's text.
+- **Fallback shape**: the reason a declaration is conditional. The shapes are:
+  - `FIND_PACKAGE_ARGS`;
+  - `NOT TARGET`;
+  - `NOT <X>_FOUND`;
+  - `TRY_FIND_PACKAGE_MODE ALWAYS`;
+  - a FetchContent-capable provider;
+  - a function or macro body;
+  - `conditional`, for any other enclosing `if()`, recorded with the condition's text.
+
+  First declaration wins is not a shape. It is a merge (FR-005).
 - **Declaring project**: the component a fetch is a dependency of (FR-007).
 - **Additional detection**: a fallback declaration recorded on an existing component instead of emitted as a second one (FR-005).
 
@@ -192,9 +206,15 @@ The feature is checked against the tree that motivated it, a large C++ super-bui
 ### Measurable Outcomes
 
 - **SC-001**: For each nested shape in User Story 1, a synthetic fixture's nested fetch is emitted with the same identity, URL and hash as the same declaration in the root file. That is 100% of shapes.
-- **SC-002**: On TheRock's source tree, measured in CI only, every `FetchContent_Declare` and `ExternalProject_Add` call in the tree is accounted for in the document at the feature branch. Each is a component, an additional detection, or counted with a reason. **Zero are silently dropped.** The baseline count at `main` is measured first.
+- **SC-002**: On TheRock's source tree, measured in CI only, every `FetchContent_Declare` and `ExternalProject_Add` call in the tree is accounted for at the feature branch. **Zero are silently dropped.** Each call is one of two things:
+  - **read**, and in the document as a component, an additional detection, or a counted reason;
+  - **in a file the walk skips** (its skip set or `--exclude-path`). Such files are listed by path.
+
+  The check compares the census's declaration list against what was read, file by file, not totals, so a legitimately skipped file cannot pass for a silent drop. The baseline at `main` is measured first.
 - **SC-003**: Every declaration that matches a recognised fallback shape carries the conditional marker with its reason. On the fixtures, 0 do not. On TheRock, the number marked and the number unmarked are both recorded, by shape.
-- **SC-004**: No package appears as more than one component because of a fallback declaration (FR-005). Checked on the fixtures and on TheRock: the number of distinct package identities equals the number of fetch-derived components.
+- **SC-004**: No package appears as more than one component because of a fallback declaration (FR-005). Checked on the fixtures and on TheRock:
+  - no two fetch-derived components share a PURL;
+  - a versionless identity appears on more than one component only when every one of them comes from sibling declarations (clarification 1). Each such identity is listed.
 - **SC-005**: On the public corpus, every changed golden is explained by FR-001 to FR-009. On the quality corpus, every band that moves is re-authored with its cause, as spec 1537 did.
 - **SC-006**: Scanning TheRock's source takes no more than 1.5× the time `main` takes, as a median of 3 runs of each in the same CI job.
 - **SC-007**: The #1516 figures (6,161 files, 6 components, 137 + 35 calls) are re-measured at `main` before design decisions rest on them, and the measurement is committed.

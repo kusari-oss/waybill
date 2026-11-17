@@ -2,7 +2,7 @@
 
 **Input**: `specs/1538-cmake-nested-fetches/` (`spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/wire.md`, `quickstart.md`, `measurements/`)
 
-**Tests are required.** The spec defines contract cases C-1 to C-14 and invariants I-1 to I-4, and plan.md names unit, contract, parity and mutation tests. Each story's tests are written first, and must fail at `main` before the code that passes them.
+**Tests are required.** The spec defines contract cases C-1 to C-15 and invariants I-1 to I-4, and plan.md names unit, contract, parity and mutation tests. Each story's tests are written first, and must fail at `main` before the code that passes them.
 
 **Conventions:**
 - Synthetic `waybill-fixture-*` names only.
@@ -27,6 +27,7 @@
 - [ ] T004 [P] Create a CMake command tokeniser, `waybill-cli/src/scan_fs/package_db/cmake/commands.rs`, declared from `cmake.rs`.
   - **Output:** `commands(text) -> impl Iterator<Item = Command { name (lowercased), args, line }>`.
   - **Behaviour to port from `census/fetches.py`'s `commands()`:** skip `#` line comments and `#[=*[ … ]=*]` bracket comments; inside arguments, respect quoted strings with `\` escapes, bracket arguments and nested parentheses; report 1-based start lines.
+  - **Unterminated input:** a command or bracket argument still open at the end of a file is reported as unterminated, for C231 `unparseable-files`.
   - **Unit tests:**
     - a commented-out declaration is not a command;
     - `"a)b"` inside arguments does not close the call;
@@ -70,9 +71,9 @@
 
 - [ ] T010 [US1] Create `waybill-cli/tests/cmake_nested_fetches.rs`.
   - **Helpers:** `scan(fixture, extra_args) -> Docs` in all three formats, mirroring `tests/declared_requirements.rs`; per-format component and root-target extractors; `coverage(docs)`, which reads C231 and asserts I-2's V1 identity.
-  - **Cases C-1, C-2 and C-14** (`contracts/wire.md`).
+  - **Cases C-1, C-2, C-14 and C-15** (`contracts/wire.md`). C-15 checks that the skip set and `--exclude-path` still apply to the widened walk.
   - **I-4:** a CMake tree with no fetch carries no C231, C232 or C233.
-  - **Prove they bite:** run against `main`'s reader. C-1, C-2 and C-14 must fail. Record which, in this task's text.
+  - **Prove they bite:** run against `main`'s reader. C-1, C-2 and C-14 must fail; C-15 is a control and passes. Record which, in this task's text.
 - [ ] T011 [US1] Split discovery in `waybill-cli/src/scan_fs/package_db/cmake.rs`.
   - **Fetch declarations** are read from every `CMakeLists.txt` and `*.cmake` the scan reaches. Use the existing `safe_walk` with the exclusion set and the walker's skip set, as `collect_cmake_files_recursive` does.
   - **`find_package` / `pkg_check_modules` / `pkg_search_module`** stay on `discover_cmake_files`' set (FR-002). `discover_cmake_files`' callers for submodule references (C57, line ~600) keep their set.
@@ -83,12 +84,15 @@
   - **No owner:** the fetch becomes a declared root anchor (spec 1537 channel).
   - **No duplicates:** no self-edge, and no edge that already exists.
 - [ ] T013 [US1] Compute C231 in `cmake_fetch_attach.rs`.
-  - **The counts:** `read`, `emitted`, `unresolved.identity` (a `${…}` name or URL with no same-file literal `set()`), `unparseable-files`, and zero-filled `merged.*`, `conditional` and `test` until US2 and US3.
+  - **The counts:** `read`, `emitted`, `unresolved.identity` (a `${…}` name or URL with no same-file literal `set()`), `unparseable-files`, and zero-filled `merged.*`, `conditional` and `test` until US2 and US3. `unparseable-files` counts I/O or non-UTF-8 errors, and files that end inside an open command or bracket argument; the tokeniser reports the latter (T004).
   - **Sorted keys**, encoded as a string.
   - **Absent when `read == 0`** (I-4).
   - Thread it into `ScanResult.cmake_fetch_coverage` (T008).
   - **Unit test:** V1 holds on a mixed fixture.
-- [ ] T014 [US1] **The control for FR-010:** a root-only fetch tree emits byte-identical components and edges to `main`, apart from C231. Add a test in `tests/cmake_nested_fetches.rs` comparing against a golden taken at `main`, and run the existing `cmake` unit tests unchanged.
+- [ ] T014 [US1] **The control for FR-010** is the existing CMake regression goldens: `cdx_regression_cmake`, plus the SPDX 2.3 and SPDX 3 `cmake` cases, in `tests/{cdx,spdx,spdx3}_regression.rs`.
+  - They MUST stay byte-identical, except for C231, and except for the conditional marker on any of their fetches inside an `if()` (FR-010).
+  - Diff any change field by field, and explain it in this task's text before regenerating.
+  - The existing `cmake` unit tests run unchanged.
 
 **Checkpoint:** C-1, C-2, C-14, I-2 and I-4 pass. With no US2, nested fallbacks are emitted as *required*. That over-reports, which is why US1 and US2 land together.
 
@@ -131,7 +135,7 @@
   - **What happens:** the fetch merges into that component. C56 gains the CMake mechanism when it differs, C233 gains `{file, version}`, and C231 counts `merged.existing-component`.
   - **Unconditional fetches never merge across versions.**
 
-**Checkpoint:** C-1 to C-14 all pass.
+**Checkpoint:** C-1 to C-15 all pass.
 
 ## Phase 6: User Story 4 — TheRock measured in CI (P2)
 
@@ -139,9 +143,9 @@
 **Independent test:** `census-fetches` at the branch.
 
 - [ ] T023 [US4] Push the branch and dispatch `census-fetches` with `waybill_ref = 1538-cmake-nested-fetches` and `base_ref = main` (T003). Record in `specs/1538-cmake-nested-fetches/measurements/therock.md`:
-  - **SC-002:** C231's `read` equals the census's 191, and V1 holds. Zero are silently dropped.
+  - **SC-002:** compare file by file. Every declaration in the census's `fetches.json` is either read, which its file appears in C18 or the C231 accounting shows, or in a directory the walk skips, listed by path. V1 holds. Zero are silently dropped.
   - **SC-003:** counts by C122 value against the census's shape counts: 148 under an `if`, 5 `FIND_PACKAGE_ARGS`, 32 `NOT TARGET`, and `NOT <X>_FOUND`.
-  - **SC-004:** the number of fetch-derived components equals their distinct PURLs.
+  - **SC-004:** no two fetch-derived components share a PURL. List every versionless identity on more than one component, and confirm each comes only from sibling declarations.
   - **SC-006:** the branch's median of 3 is at most 1.5× `main`'s, in the same job.
   - **Ownership:** the components' owners, by submodule.
 - [ ] T024 [US4] File the SC-008 follow-up issue: nested `find_package` 2,030, `pkg_check_modules` 42, `pkg_search_module` 3 (`measurements/census.md`). Ask whether to read them and how fallbacks would apply. Link it from `measurements/census.md`.
