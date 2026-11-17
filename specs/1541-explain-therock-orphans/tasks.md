@@ -87,6 +87,9 @@
     - O-9's container is an installed package that no rule here explains, and O-9 exempts it by name.
     - O-12 (cargo) and O-13 (claimed binary) passed before any change.
   - Every suite touching uv, binaries or orphan reasons (24) passes, plus the three regression goldens; no golden changed.
+- [X] T011b [US1] FR-011 (clarification Q3): decide #1524's test-input skip per binary in `waybill-cli/src/scan_fs/binary/discover.rs` (`TestInputs { skipped, installed_prefixes }`), `installed_lib/resolve.rs` (`installed_prefixes`) and `scan_fs/mod.rs`. Contract O-14; unit test `s1541_only_test_inputs_under_an_installed_prefix_are_kept`.
+  - O-14 fails with the old whole-tree rule ("the LLVM test input is skipped"), and passes with the fix.
+  - Green after the change: binary, installed-lib and test-scope unit tests (553), and every integration suite touching test binaries, installed libraries or test scope (17 files).
 - [ ] T012 [US1] Re-probe the source-tree document at the branch (after T013's CI run). For each population in `source-trace.md` still unexplained (expected: none of the cargo, npm, conan or vcpkg ones after T005), trace it, and record the cause in `measurements/source-trace.md` under "At the branch". Covers `pkg:generic/tensile` and `pkg:generic/wkmi@1.0.0` (FR-007). A waybill defect is declared in `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` with a new issue, not given a code.
 
 ## Phase 5: User Story 3 — measured on TheRock, the corpora traced (P2)

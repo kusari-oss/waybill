@@ -32,6 +32,8 @@ The classifier (`classify_orphans_pre_emit`) instead uses `RootComponentOverride
 
 ## R3. Binaries found by binary analysis (FR-004, clarification Q2)
 
+**Amended at implementation (T009, clarification Q3, FR-011).** Of the 572, **550** have every source file under one of #1524's directories and should never have been analyzed. One vendored CMake version file made `has_installed_record` mark the whole source tree installed, which turned #1524's skip off. The skip is now decided per binary (FR-011), so they leave the document. The other **22** (under `testsuite`, `fixtures`, `test_assets` and the like) take `test-data-binary`, and the 215 take `unowned-binary`. Measured from the CI document (`measure-source` 44149685219) by classifying every analyzed component's source files.
+
 **Finding** (`source-trace.md`): 787 unexplained `pkg:generic` components from binary analysis (`waybill:sbom-tier` = `analyzed`).
 - **572** have every source file under a test-data directory.
 - **215** do not: 212 `.co` GPU code objects in `hip-kernel-provider/src`, 2 `.hsaco` and 1 `.winmd`.

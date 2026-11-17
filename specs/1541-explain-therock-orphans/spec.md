@@ -64,6 +64,7 @@ This feature traces that before designing (FR-001).
 
 - Q: How are components nested inside another component treated? → A: Containment counts as reachability in graph-completeness, the classifier and I7: a component nested in a reachable component is reachable. The same rule applies in all three formats.
 - Q: One reason code or two for binary-analysis components in a source tree? → A: Two: one for binaries under a test-data directory, one for the rest.
+- Q: (raised at implementation, T009) 550 of TheRock's 572 test-data binaries are reported only because one vendored CMake package-version file (`rocm-systems/shared/amdgpu-windows-interop/wkmi/lnx/lib/cmake/wkmi/wkmiConfigVersion.cmake`) makes `has_installed_record` classify the whole source tree as installed, which turns #1524's test-input skip off. Fix here, file separately, or count only OS claims? → A: Fix here, per binary: a test-input binary is kept only under an installed record's own prefix, or when the tree is an image or has OS package claims (FR-011).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -155,6 +156,7 @@ The maintainer sees, from CI, the before and after on TheRock source and SDK, th
 - **FR-008: #1214.** #1214's own corpus populations are not re-opened. If this feature's rules newly explain any of them, the corpus run shows it, and #1214 is closed only when every population it lists is explained or declared.
 - **FR-009: Formats agree.** CycloneDX, SPDX 2.3 and SPDX 3 MUST agree on which components are unreachable and on their markers. The root's direct targets keep agreeing (spec 1537 I-1).
 - **FR-010: No new dependencies.** Zero new Cargo dependencies. Test fixtures use synthetic `waybill-fixture-*` names.
+- **FR-011: #1524's skip, per binary.** A directory scan that is not an image, and in which no OS package database claims files, MUST skip a binary under a #1524 test-input directory (`test`, `tests`, `unittests`, `Inputs`) unless that binary lies under the install prefix of an installed-library record no OS package owns. One vendored prefix must not make the rest of the tree's test inputs reportable. On TheRock this removes 550 test-input binaries from the document; the 22 under other test-data directories take `test-data-binary`. `test_scope`'s installed-tree classification is unchanged.
 
 ### Key Entities
 

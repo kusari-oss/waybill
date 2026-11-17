@@ -20,6 +20,7 @@ Synthetic `waybill-fixture-*` trees, scanned in the three formats. "Reachable" m
 | O-11 | a `uv.lock` root depending on three versions of one package under markers | an edge to each version |
 | O-12 | a `Cargo.lock` with an older second version that nothing references, beside a reachable newer one | `dead-lockfile-entry` |
 | O-13 | a binary inside a package's installed files (claimed by the package) | no orphan code: it is the package's contents |
+| O-14 | a source tree holding one vendored CMake package-version file under `<x>/lnx/lib/cmake/<pkg>/`, a binary under `llvm/test/Object/Inputs/`, and one under `<x>/lnx/lib/<pkg>/tests/` | the LLVM test input is skipped (C223 = 1) and absent; the vendored package's own test binary is analyzed (FR-011) |
 
 ## Invariants
 

@@ -160,6 +160,22 @@ pub(crate) fn has_installed_record(phase1: &Phase1, scan_root: &Path, claims: &O
     phase1.records.iter().any(|r| r.prefix.is_some() && !os_owned(r, scan_root, claims))
 }
 
+/// Spec 1541 (#1593): the install prefixes of the records
+/// [`has_installed_record`] counts, deduplicated. #1524's test-input skip
+/// spares the binaries under these and nothing else, so one vendored
+/// prefix in a source tree does not turn the skip off for the whole tree.
+pub(crate) fn installed_prefixes(phase1: &Phase1, scan_root: &Path, claims: &OsClaims<'_>) -> Vec<PathBuf> {
+    let mut out: Vec<PathBuf> = phase1
+        .records
+        .iter()
+        .filter(|r| !os_owned(r, scan_root, claims))
+        .filter_map(|r| r.prefix.clone())
+        .collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
 /// Spec 1534 (research R5): the lowercased names of the records phase 2
 /// will turn into versioned components, minus the embedded-path stoplist.
 /// Computed before the binary scan so that each binary keeps only the names

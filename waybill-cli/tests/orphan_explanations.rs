@@ -531,3 +531,44 @@ fn o12_an_unreferenced_older_cargo_version_is_a_dead_lock_entry() {
     assert_eq!(marker(&docs, "pkg:cargo/waybill-fixture-x@2.0.0"), None);
     assert_one_answer(&docs);
 }
+
+// ---------------------------------------------------------------------
+// User Story 1: #1524's skip in a source tree with a vendored SDK
+// ---------------------------------------------------------------------
+
+/// O-14: TheRock's shape. One committed CMake package-version file in an
+/// install-looking location used to mark the whole source tree installed,
+/// which turned #1524's test-input skip off everywhere. The skip now spares
+/// only binaries under that record's prefix.
+#[test]
+fn o14_a_vendored_sdk_does_not_unskip_the_trees_test_inputs() {
+    let dir = tempfile::tempdir().unwrap();
+    let sdk = "shared/waybill-fixture-interop/waybill-fixture-kit/lnx";
+    write(
+        dir.path(),
+        &format!("{sdk}/lib/cmake/waybill-fixture-kit/waybill-fixture-kitConfigVersion.cmake"),
+        "set(PACKAGE_VERSION \"1.0.0\")\n",
+    );
+    plant(dir.path(), "llvm/test/Object/Inputs/libwaybill-fixture-z.dylib", &zlib_dylib());
+    plant(dir.path(), &format!("{sdk}/lib/waybill-fixture-kit/tests/libwaybill-fixture-kept.dylib"), &zlib_dylib());
+    let docs = scan(dir.path(), &[]);
+    assert!(
+        common::installed_lib::purls_with_prefix(&docs.cdx, "pkg:generic/waybill-fixture-kit@").len() == 1,
+        "control: the version file is read as an installed record"
+    );
+    let files: Vec<String> = cdx_components_with_containers(&docs.cdx)
+        .into_iter()
+        .map(|(c, _)| c)
+        .filter(|c| cdx_prop(c, "waybill:sbom-tier") == Some("analyzed"))
+        .flat_map(common::installed_lib::source_files)
+        .collect();
+    assert!(
+        files.iter().all(|f| !f.starts_with("llvm/")),
+        "the LLVM test input is skipped: {files:?}"
+    );
+    assert!(
+        files.iter().any(|f| f.contains("waybill-fixture-kit/tests/")),
+        "the installed package's own test is kept: {files:?}"
+    );
+    assert_eq!(doc_raw(&docs, "waybill:binary-scan-skipped-test-inputs").as_deref(), Some("1"));
+}
