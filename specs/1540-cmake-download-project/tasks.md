@@ -100,7 +100,7 @@
   - **SC-008:** C234 naming `download_project` in all three formats.
   - **I-1:** the root's direct targets agree in the three formats (`specs/1537-requirements-root-attach/measurements/root_targets.py`).
   - **The sparse-tree scan times.**
-- [ ] T013 [US3] Dispatch `measure-source` with the branch against `main` (interleaved: a warm-up, then three alternating rounds). Record the medians and their ratio in `measurements/therock.md` (SC-005, ≤ 1.5×).
+- [X] T013 [US3] Dispatch `measure-source` with the branch against `main` (interleaved: a warm-up, then three alternating rounds). Record the medians and their ratio in `measurements/therock.md` (SC-005, ≤ 1.5×).
 
 ## Phase 6: Polish and cross-cutting
 
@@ -114,7 +114,7 @@
   - keyword lists spliced as arguments instead of expanded as one string;
   - `UnknownKeywords` treated as bound with an empty list;
   - `UnknownKeywords` not counted in `unresolved_identity`.
-- [ ] T015 Corpora in CI. Record in `measurements/corpus.md`:
+- [X] T015 Corpora in CI. Record in `measurements/corpus.md`:
   - **Public corpus:** dispatch `public-corpus.yml` at the branch, and a `main` control at the same time. Expected: identical, or each change traced to a `download_project` call or a wrapper whose keyword lists are variables (T005).
   - **Quality corpus:** dispatch at the branch with a `main` control, and trace every movement PURL by PURL.
 - [X] T016 [P] Docs:

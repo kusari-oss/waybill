@@ -57,3 +57,18 @@ No component's PURL contains `${`, `%24`, `DL_ARGS` or `-download`.
 |---|---|---|---|---|
 | `main` | 6.744 s | 6.723 s | 6.711 s | 6.723 s |
 | branch | 6.755 s | 6.751 s | 6.744 s | 6.751 s |
+
+## SC-005: full tree with submodules (T013)
+
+`measure-source` 44149685219 in the fixture repository scanned the full 17 GB tree with all submodules at `main` (`f0133adc`) and at the branch (`cc85a5e9`). Each side had one untimed warm-up, then three alternating timed rounds.
+
+| | warm-up | run 1 | run 2 | run 3 | median |
+|---|---|---|---|---|---|
+| `main` | 140.8 s | 112.9 s | 111.2 s | 109.6 s | 111.2 s |
+| branch | 112.4 s | 113.1 s | 109.4 s | 107.8 s | 109.4 s |
+
+**Ratio of medians: 0.984**, within SC-005's 1.5× and within each side's own spread.
+
+The same documents:
+- **Components:** 4,346 → 4,348, and unique PURLs 2,670 → 2,672: the two new components.
+- **C231** is identical to the sparse census above, at both refs.
