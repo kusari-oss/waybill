@@ -174,7 +174,7 @@
   - In `waybill-cli/src/cli/scan_cmd.rs`, `--cmake-third-party-recursive`'s help text says it now affects `find_package` only (FR-012).
   - Add CHANGELOG `[Unreleased]` entries: Added (C231 to C233); Fixed (#1516, #1519, with T023's TheRock numbers).
 - [X] T028 Run the gate and record it in `measurements/gate-log.md`: the ok-line count, 0 failed, the expected line found, and `cmake_nested_fetches` N of N. Also check `git diff --quiet main -- Cargo.lock Cargo.toml '*/Cargo.toml'`.
-- [ ] T029 Open the PR. The body carries:
+- [X] T029 Open the PR. The body carries:
   - the census baseline and T023's TheRock numbers;
   - the CMake probe table;
   - the R2 marker decision;
