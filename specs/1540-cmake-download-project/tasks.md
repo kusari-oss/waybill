@@ -104,7 +104,7 @@
 
 ## Phase 6: Polish and cross-cutting
 
-- [ ] T014 Mutations: `specs/1540-cmake-download-project/measurements/mutate.py` and `mutate-run.sh`, in spec 1539's pattern, recorded in `measurements/mutations.md`. At least these, each caught by a named test:
+- [X] T014 Mutations: `specs/1540-cmake-download-project/measurements/mutate.py` and `mutate-run.sh`, in spec 1539's pattern, recorded in `measurements/mutations.md`. At least these, each caught by a named test:
   - each shape condition removed in turn: the `DL_ARGS` prefix, `PROJ` in the list, the template name (×3);
   - the name check made case-sensitive;
   - the synthesized call named `${DL_ARGS_PROJ}-download`;

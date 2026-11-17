@@ -892,7 +892,9 @@ mod tests {
     fn downloadproject_is_recognised_only_with_its_shape() {
         let t = "DownloadProject.CMakeLists.cmake.in";
         assert!(defs(&[("a.cmake", &dp(UPSTREAM, "DL_ARGS", t))]).is_wrapper("download_project"));
-        assert!(!defs(&[("a.cmake", &dp(UPSTREAM, "ARGS", t))]).is_wrapper("download_project"), "no DL_ARGS");
+        // `DL`, not `ARGS`: `${DL_ARGS_PROJ}` would still look like one of a
+        // `DL` parse's variables, so only the prefix check rejects it.
+        assert!(!defs(&[("a.cmake", &dp(UPSTREAM, "DL", t))]).is_wrapper("download_project"), "no DL_ARGS");
         assert!(!defs(&[("a.cmake", &dp("PREFIX SOURCE_DIR", "DL_ARGS", t))]).is_wrapper("download_project"), "no PROJ");
         assert!(!defs(&[("a.cmake", &dp(UPSTREAM, "DL_ARGS", "Other.cmake.in"))]).is_wrapper("download_project"), "another template");
         assert!(
