@@ -899,6 +899,8 @@ mod tests {
             !defs(&[("a.cmake", "function(download_project)\nmessage(STATUS x)\nendfunction()\n")]).is_wrapper("download_project"),
             "a same-named function"
         );
+        let mixed = dp(UPSTREAM, "DL_ARGS", t).replace("function(download_project)", "function(Download_Project)");
+        assert!(defs(&[("a.cmake", &mixed)]).is_wrapper("download_project"), "command names are case-insensitive");
         let other = dp(UPSTREAM, "DL_ARGS", t).replace("function(download_project)", "function(fetch_project)");
         assert!(!defs(&[("a.cmake", &other)]).is_wrapper("fetch_project"), "the shape alone is not enough");
     }
