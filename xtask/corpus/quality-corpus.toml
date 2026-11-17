@@ -425,10 +425,17 @@ ecosystem = "pip"
 #   project), to packages in requirements*.txt, docs/ and three tool
 #   directories. None of the 52 had an incoming edge before.
 #   Bound +/-10% (min +/-3) of the observed 97.
+#
+# Re-measured 2026-11-17 for spec 1538 (#1516, #1519), CI run 44020744424
+# @ d3e8b0c6: pkgs 151 -> 158, edges 97 -> 109. Traced against v0.17.0
+# locally, PURL by PURL (specs/1538-cmake-nested-fetches/measurements/corpus.md):
+# +8 CMake fetches in nested projects (seven from qnnpack's Download*.cmake
+# files, one test-scoped googletest in test/inductor), -1 `pkg:generic/${project}` (a parameterised
+# name, no longer a component). Only `edges` violated; bound +/-10% of 109.
 [targets.expect]
 pkgs      = { min = 135, max = 167 }
 files     = { min = 57, max = 71 }
-edges     = { min = 87, max = 107 }
+edges     = { min = 98, max = 120 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.41, max = 6.41 }
 wall_ms   = { min = 5, max = 50000 }

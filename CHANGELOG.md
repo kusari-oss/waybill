@@ -7,6 +7,68 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added
+
+- **What the CMake fetch reader read, and why a fetch is conditional, are
+  on the wire (C231 to C233).**
+  - `waybill:cmake-fetch-coverage` (C231, document scope) counts the
+    `FetchContent_Declare` and `ExternalProject_Add` declarations read and
+    what became of each: emitted, merged into an existing component,
+    superseded by an ancestor's declaration (first declaration wins), or
+    unresolved because its identity cannot be built. The counts add up to
+    what was read.
+  - `waybill:cmake-fetch-conditions` (C232) gives the enclosing `if()`
+    conditions of a conditional or test-scoped fetch, verbatim, with
+    `function: <name>` for a function body.
+  - `waybill:superseded-declarations` (C233) lists the `{file, version}` of
+    every declaration recorded on a component instead of emitted as a
+    second one.
+  - `waybill:optional-derivation` (C122) gains `cmake-*` values, one per
+    recognised shape. `waybill:lifecycle-scope-derivation` (C62) gains
+    `source-test-directory` and `cmake-build-testing`.
+
+### Fixed
+
+- **CMake fetches in nested projects are reported, and a subproject's
+  standalone-build fallback is marked as one (#1516, #1519).**
+  - **Where fetches are read.** Fetch declarations are now read from every
+    CMake file the scan walks, not only the files reached from the root.
+    In a super-project, almost every fetch lives in a subproject that the
+    root reaches through variables, or not at all.
+  - **Which fetches are fallbacks.** A fetch under any `if()` is optional,
+    with its reason in C122 and its condition in C232. The reasons are
+    `NOT <X>_FOUND` after a `find_package`, `NOT TARGET`,
+    `FIND_PACKAGE_ARGS` (unless `NEVER`), `TRY_FIND_PACKAGE_MODE ALWAYS`, a
+    FetchContent-capable dependency provider, a function body, or any other
+    condition. A fetch in a `test`/`tests` directory, or under
+    `BUILD_TESTING`, is test-scoped.
+  - **What CMake would not fetch is not reported twice.**
+    - A `FetchContent_Declare` of a name an ancestor directory already
+      declared never runs (CMake keeps the first), so it is recorded on the
+      ancestor's component.
+    - A fallback for a package an enclosing project supplies (its git
+      submodule, another reader's component, or an unconditional fetch) is
+      recorded on that component.
+    - A sibling project's component never supplies a fallback.
+  - **Each fetch is a dependency of the project that declares it,** by
+    spec 1537's ownership rule.
+  - **A parameterised name** such as `ExternalProject_Add(${dep} …)` no
+    longer becomes a component named after the variable. It is emitted
+    when a GitHub `GIT_REPOSITORY` names the package, and counted as
+    unresolved otherwise.
+  - **Measured on ROCm's TheRock, in CI.**
+    - Of 191 fetch declarations, `main` emitted none. Now all 191 are read:
+      110 are emitted as 65 components, 37 are recorded on TheRock's
+      `rocm-cmake` submodule or on `rocm-libraries`' googletest, and 44 have
+      no identity (in-tree builds, `SOURCE_DIR`-only fetches, and
+      parameterised names).
+    - Of the 65 components, 42 are optional fallbacks and 9 are test-scoped.
+    - Unique PURLs go from 50 to 115, with none lost. The three formats
+      agree on the root's 79 direct targets.
+    - The scan takes 1.08× as long as `main`.
+    - Elsewhere, mongo gains wiredtiger's four cloud-SDK fetches, and
+      pytorch qnnpack's seven.
+
 ## [0.17.0] - 2026-11-16
 
 A minor release. It adds surface: `--include-test-binaries`, and document rows

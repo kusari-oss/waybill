@@ -39,7 +39,7 @@ const RANK_SUBMODULE: u8 = 2;
 
 /// `p` as a path relative to the scan root, without `.` or `..`. `None`
 /// when it is absolute outside the root or escapes it.
-fn relative(p: &str, scan_root: &Path, canonical_root: &Path) -> Option<PathBuf> {
+pub(crate) fn relative(p: &str, scan_root: &Path, canonical_root: &Path) -> Option<PathBuf> {
     // Main-module readers write `path+file://<absolute path>` (the
     // workspace-member tagger reads the same form).
     let path = Path::new(p.strip_prefix("path+file://").unwrap_or(p));
@@ -125,7 +125,7 @@ impl OwnerIndex {
 
     /// The nearest owner of a file, walking up from its directory to the
     /// scan root inclusive (`""`).
-    fn owner_of(&self, file: &Path) -> Option<&str> {
+    pub(crate) fn owner_of(&self, file: &Path) -> Option<&str> {
         let dir = file.parent()?;
         dir.ancestors()
             .find_map(|d| self.by_dir.get(d).map(String::as_str))

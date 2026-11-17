@@ -714,6 +714,10 @@ pub fn annotate_document(
     if let Some(record) = artifacts.declared_downloads {
         push(&mut out, crate::scan_fs::package_db::cmake_download::ANN_DECLARED_DOWNLOADS, json!(record));
     }
+    // C231 (spec 1538).
+    if let Some(record) = artifacts.cmake_fetch_coverage {
+        push(&mut out, crate::scan_fs::package_db::cmake::fetches::ANN_CMAKE_FETCH_COVERAGE, json!(record));
+    }
     // C230 (spec 1536).
     if let Some(record) = artifacts.python_owned_binaries {
         push(&mut out, crate::scan_fs::binary::owned::ANN_PYTHON_OWNED_BINARIES, json!(record));

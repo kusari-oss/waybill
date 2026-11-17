@@ -679,6 +679,7 @@ pub(crate) mod tests {
             test_scope_coverage: None,
             bundled_source_trees: None,
             declared_downloads: None,
+            cmake_fetch_coverage: None,
             python_owned_binaries: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,

@@ -1310,6 +1310,11 @@ pub struct ScanArgs {
     /// Also accepts `WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE=1` env var,
     /// read directly by the milestone-156 cmake reader (mirrors the
     /// `WAYBILL_INCLUDE_VENDORED` env-var propagation pattern).
+    ///
+    /// Spec 1538: it now affects `find_package`, `pkg_check_modules` and
+    /// `file(DOWNLOAD)` only. `FetchContent_Declare` and
+    /// `ExternalProject_Add` are read from every CMake file the scan
+    /// reaches, with or without it.
     #[arg(long)]
     pub cmake_third_party_recursive: bool,
 
@@ -3928,6 +3933,7 @@ pub async fn execute(
         git_submodule_coverage,
         declared_root_anchors,
         declared_downloads,
+        cmake_fetch_coverage,
         python_owned_binaries,
         installed_library_coverage,
         test_scope_inputs,
@@ -6031,6 +6037,7 @@ pub async fn execute(
         test_scope_coverage: test_scope_coverage.as_deref(),
         bundled_source_trees: bundled_source_trees.as_deref(),
         declared_downloads: declared_downloads.as_deref(),
+        cmake_fetch_coverage: cmake_fetch_coverage.as_deref(),
         python_owned_binaries: python_owned_binaries.as_deref(),
         closure_ecosystem_identity: closure_ecosystem_identity_value,
         cpe_coverage: Some(cpe_coverage_json.as_str()),

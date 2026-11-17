@@ -285,6 +285,10 @@
         "value": "{\"addressable_without_cpe\":0,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":3,\"with_candidates\":1}"
       },
       {
+        "name": "waybill:cmake-fetch-coverage",
+        "value": "{\"components\":3,\"conditional\":0,\"emitted\":3,\"merged\":{\"existing-component\":0,\"first-declaration-wins\":0},\"read\":3,\"test\":0,\"unparseable-files\":0,\"unresolved\":{\"identity\":0}}"
+      },
+      {
         "name": "waybill:os-release-missing-fields",
         "value": "[\"ID\",\"VERSION_ID\"]"
       },

@@ -105,6 +105,13 @@ pub(crate) fn strip_comments(content: &str) -> String {
 /// `name(args…)` invocations, in order. Arguments are whitespace-separated;
 /// a quoted argument keeps its inner text with the quotes removed.
 pub(crate) fn commands(text: &str) -> Vec<(String, Vec<Arg>)> {
+    commands_checked(text).0
+}
+
+/// [`commands`], and whether the text ends inside a command whose `(` was
+/// never closed (spec 1538: such a file is counted as unparseable, C231).
+pub(crate) fn commands_checked(text: &str) -> (Vec<(String, Vec<Arg>)>, bool) {
+    let mut unterminated = false;
     let chars: Vec<char> = text.chars().collect();
     let mut out = Vec::new();
     let mut i = 0;
@@ -125,16 +132,17 @@ pub(crate) fn commands(text: &str) -> Vec<(String, Vec<Arg>)> {
         if j >= chars.len() || chars[j] != '(' {
             continue;
         }
-        let (args, end) = arguments(&chars, j + 1);
+        let (args, end, closed) = arguments(&chars, j + 1);
+        unterminated |= !closed;
         out.push((name, args));
         i = end;
     }
-    out
+    (out, unterminated)
 }
 
 /// Parse arguments from just after `(` to the matching `)`. Returns the
 /// arguments and the index after `)`.
-fn arguments(chars: &[char], mut i: usize) -> (Vec<Arg>, usize) {
+fn arguments(chars: &[char], mut i: usize) -> (Vec<Arg>, usize, bool) {
     let mut args = Vec::new();
     let mut depth = 0usize;
     while i < chars.len() {
@@ -143,7 +151,7 @@ fn arguments(chars: &[char], mut i: usize) -> (Vec<Arg>, usize) {
             i += 1;
         } else if c == ')' {
             if depth == 0 {
-                return (args, i + 1);
+                return (args, i + 1, true);
             }
             depth -= 1;
             i += 1;
@@ -177,7 +185,7 @@ fn arguments(chars: &[char], mut i: usize) -> (Vec<Arg>, usize) {
             args.push(Arg { text: chars[start..i].iter().collect() });
         }
     }
-    (args, i)
+    (args, i, false)
 }
 
 /// A bracket argument starting at `i`: `[`, `=`×n, `[`, content, `]`, `=`×n,
@@ -282,5 +290,16 @@ mod tests {
         // Not a bracket opener, and an unclosed one: ordinary text.
         assert_eq!(texts("f([x] y)"), vec!["[x]", "y"]);
         assert_eq!(texts("f([=[x y)"), vec!["[=[x", "y"]);
+    }
+
+    #[test]
+    fn s1538_an_open_command_at_the_end_of_the_file_is_reported() {
+        let (cmds, open) = commands_checked("project(x)\nFetchContent_Declare(a URL u\n");
+        assert!(open);
+        assert_eq!(cmds.len(), 2);
+        let (_, open) = commands_checked("project(x)\nset(a (b))\n");
+        assert!(!open, "nested parentheses close normally");
+        let (_, open) = commands_checked("message(\"a)b\")\n");
+        assert!(!open, "a parenthesis inside a quoted argument does not close or open");
     }
 }

@@ -23,6 +23,12 @@
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-0.17.0",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cmake-fetch-coverage\",\"value\":\"{\\\"components\\\":3,\\\"conditional\\\":0,\\\"emitted\\\":3,\\\"merged\\\":{\\\"existing-component\\\":0,\\\"first-declaration-wins\\\":0},\\\"read\\\":3,\\\"test\\\":0,\\\"unparseable-files\\\":0,\\\"unresolved\\\":{\\\"identity\\\":0}}\"}"
+    },
+    {
+      "annotationDate": "1970-01-01T00:00:00Z",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.17.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}"
     },
     {

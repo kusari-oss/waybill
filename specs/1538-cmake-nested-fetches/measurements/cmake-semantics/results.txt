@@ -1,0 +1,8 @@
+P1 first-declaration-wins across add_subdirectory: exit=0 P1 X_SOURCE_DIR=<scratch>/src/a
+P2a mode=default args='FIND_PACKAGE_ARGS': exit=0 R found=1 populated=1 src=
+P2b mode=default args='': exit=0 R found= populated=True src=<scratch>/src/a
+P3 mode=ALWAYS args='': exit=0 R found=1 populated=1 src=
+P4 mode=NEVER args='FIND_PACKAGE_ARGS': exit=0 R found= populated=True src=<scratch>/src/a
+P5 provider via CMAKE_PROJECT_TOP_LEVEL_INCLUDES: exit=0 P5 provider saw FETCHCONTENT_MAKEAVAILABLE_SERIAL Z;
+P5b provider set from an ordinary CMakeLists include: exit=1 CMake Error at provider.cmake:4 (cmake_language):
+P6 duplicate ExternalProject_Add: exit=1 add_custom_target cannot create target "E" because another target with the

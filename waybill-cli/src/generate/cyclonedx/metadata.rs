@@ -213,6 +213,7 @@ pub struct MetadataExtras<'a> {
     pub bundled_source_trees: Option<&'a str>,
     /// C229 (spec 1535) — declared CMake downloads.
     pub declared_downloads: Option<&'a str>,
+    pub cmake_fetch_coverage: Option<&'a str>,
     /// C230 (spec 1536) — binaries a Python package owns.
     pub python_owned_binaries: Option<&'a str>,
     /// C208 (m1366, #1365) — the closure ecosystem identity pass's record.
@@ -314,6 +315,7 @@ pub fn build_metadata(
         test_scope_coverage,
         bundled_source_trees,
         declared_downloads,
+        cmake_fetch_coverage,
         python_owned_binaries,
         closure_ecosystem_identity,
         cpe_coverage,
@@ -560,6 +562,10 @@ pub fn build_metadata(
     // C229 (spec 1535): present only when a `file(DOWNLOAD)` was read.
     if let Some(record) = declared_downloads {
         properties.push(json!({ "name": crate::scan_fs::package_db::cmake_download::ANN_DECLARED_DOWNLOADS, "value": record }));
+    }
+    // C231 (spec 1538): present only when a CMake fetch declaration was read.
+    if let Some(record) = cmake_fetch_coverage {
+        properties.push(json!({ "name": crate::scan_fs::package_db::cmake::fetches::ANN_CMAKE_FETCH_COVERAGE, "value": record }));
     }
     // C230 (spec 1536): present only when a binary a Python package owns
     // was analysed.

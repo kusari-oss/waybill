@@ -431,6 +431,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-JPKRMSSXDWTX5BKRAFBX3RM3/anno-VSJE724EGEVCECEJ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cmake-fetch-coverage\",\"value\":\"{\\\"components\\\":3,\\\"conditional\\\":0,\\\"emitted\\\":3,\\\"merged\\\":{\\\"existing-component\\\":0,\\\"first-declaration-wins\\\":0},\\\"read\\\":3,\\\"test\\\":0,\\\"unparseable-files\\\":0,\\\"unresolved\\\":{\\\"identity\\\":0}}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-JPKRMSSXDWTX5BKRAFBX3RM3",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-JPKRMSSXDWTX5BKRAFBX3RM3/anno-VVTYU6MLLHSUQUVA",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-JPKRMSSXDWTX5BKRAFBX3RM3/pkg-JCUJXG5KKFFE45OL",
