@@ -1,0 +1,458 @@
+{
+ "summary": {
+  "cmake_files": 6172,
+  "definitions": 9,
+  "definitions_with_shape": 9,
+  "distinct_definition_files": 5,
+  "keyword_lists": {
+   "{\"multi\": [], \"one\": [\"PROJ\", \"PREFIX\", \"DOWNLOAD_DIR\", \"SOURCE_DIR\", \"BINARY_DIR\", \"BUILD_PROJECT\"], \"options\": [\"QUIET\"]}": 4,
+   "{\"multi\": [], \"one\": [\"PROJ\", \"PREFIX\", \"DOWNLOAD_DIR\", \"SOURCE_DIR\", \"BINARY_DIR\", \"BUILD_PROJECT\", \"STATUS_MSG\"], \"options\": [\"QUIET\"]}": 3,
+   "{\"multi\": [], \"one\": [\"PROJ\", \"PREFIX\", \"DOWNLOAD_DIR\", \"SOURCE_DIR\", \"BINARY_DIR\"], \"options\": [\"QUIET\"]}": 2
+  },
+  "templates_beside_definition": 0,
+  "calls": 8,
+  "calls_with_literal_identity": 8,
+  "calls_without_identity": 0,
+  "calls_with_variable_identity": 0,
+  "tag_kinds": {
+   "branch-like": 5,
+   "release-like": 3
+  },
+  "calls_conditional": 8,
+  "calls_in_loop": 0,
+  "calls_in_function": 0,
+  "distinct_identities": 5
+ },
+ "definitions": [
+  {
+   "file": "math-libs/libhipcxx/cmake/DownloadProject.cmake",
+   "line": 111,
+   "kind": "function",
+   "parse": [
+    "DL_ARGS",
+    "${options}",
+    "${oneValueArgs}",
+    "${multiValueArgs}",
+    "${ARGN}"
+   ],
+   "configure_file": [
+    "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in"
+   ],
+   "file_sha256": "457f9f585be17ec5",
+   "prefix": "DL_ARGS",
+   "keywords": {
+    "options": [
+     "QUIET"
+    ],
+    "one": [
+     "PROJ",
+     "PREFIX",
+     "DOWNLOAD_DIR",
+     "SOURCE_DIR",
+     "BINARY_DIR",
+     "BUILD_PROJECT"
+    ],
+    "multi": []
+   },
+   "template": "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in",
+   "template_name": "DownloadProject.CMakeLists.cmake.in",
+   "template_beside": false,
+   "shape": true
+  },
+  {
+   "file": "rocm-libraries/projects/hipccl/hipccl2/rocprim/cmake/DownloadProject.cmake",
+   "line": 89,
+   "kind": "function",
+   "parse": [
+    "DL_ARGS",
+    "${options}",
+    "${oneValueArgs}",
+    "${multiValueArgs}",
+    "${ARGN}"
+   ],
+   "configure_file": [
+    "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in"
+   ],
+   "file_sha256": "3ba3a418df19fd53",
+   "prefix": "DL_ARGS",
+   "keywords": {
+    "options": [
+     "QUIET"
+    ],
+    "one": [
+     "PROJ",
+     "PREFIX",
+     "DOWNLOAD_DIR",
+     "SOURCE_DIR",
+     "BINARY_DIR",
+     "BUILD_PROJECT"
+    ],
+    "multi": []
+   },
+   "template": "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in",
+   "template_name": "DownloadProject.CMakeLists.cmake.in",
+   "template_beside": false,
+   "shape": true
+  },
+  {
+   "file": "rocm-libraries/projects/hipccl/hipccl2/rocthrust/cmake/DownloadProject.cmake",
+   "line": 89,
+   "kind": "function",
+   "parse": [
+    "DL_ARGS",
+    "${options}",
+    "${oneValueArgs}",
+    "${multiValueArgs}",
+    "${ARGN}"
+   ],
+   "configure_file": [
+    "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in"
+   ],
+   "file_sha256": "ca81ec930cd4bd79",
+   "prefix": "DL_ARGS",
+   "keywords": {
+    "options": [
+     "QUIET"
+    ],
+    "one": [
+     "PROJ",
+     "PREFIX",
+     "DOWNLOAD_DIR",
+     "SOURCE_DIR",
+     "BINARY_DIR",
+     "BUILD_PROJECT",
+     "STATUS_MSG"
+    ],
+    "multi": []
+   },
+   "template": "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in",
+   "template_name": "DownloadProject.CMakeLists.cmake.in",
+   "template_beside": false,
+   "shape": true
+  },
+  {
+   "file": "rocm-libraries/projects/hipccl/hipccl3/rocprim/cmake/DownloadProject.cmake",
+   "line": 89,
+   "kind": "function",
+   "parse": [
+    "DL_ARGS",
+    "${options}",
+    "${oneValueArgs}",
+    "${multiValueArgs}",
+    "${ARGN}"
+   ],
+   "configure_file": [
+    "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in"
+   ],
+   "file_sha256": "3ba3a418df19fd53",
+   "prefix": "DL_ARGS",
+   "keywords": {
+    "options": [
+     "QUIET"
+    ],
+    "one": [
+     "PROJ",
+     "PREFIX",
+     "DOWNLOAD_DIR",
+     "SOURCE_DIR",
+     "BINARY_DIR",
+     "BUILD_PROJECT"
+    ],
+    "multi": []
+   },
+   "template": "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in",
+   "template_name": "DownloadProject.CMakeLists.cmake.in",
+   "template_beside": false,
+   "shape": true
+  },
+  {
+   "file": "rocm-libraries/projects/hipccl/hipccl3/rocthrust/cmake/DownloadProject.cmake",
+   "line": 89,
+   "kind": "function",
+   "parse": [
+    "DL_ARGS",
+    "${options}",
+    "${oneValueArgs}",
+    "${multiValueArgs}",
+    "${ARGN}"
+   ],
+   "configure_file": [
+    "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in"
+   ],
+   "file_sha256": "ca81ec930cd4bd79",
+   "prefix": "DL_ARGS",
+   "keywords": {
+    "options": [
+     "QUIET"
+    ],
+    "one": [
+     "PROJ",
+     "PREFIX",
+     "DOWNLOAD_DIR",
+     "SOURCE_DIR",
+     "BINARY_DIR",
+     "BUILD_PROJECT",
+     "STATUS_MSG"
+    ],
+    "multi": []
+   },
+   "template": "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in",
+   "template_name": "DownloadProject.CMakeLists.cmake.in",
+   "template_beside": false,
+   "shape": true
+  },
+  {
+   "file": "rocm-libraries/projects/hiprand/cmake/DownloadProject.cmake",
+   "line": 89,
+   "kind": "function",
+   "parse": [
+    "DL_ARGS",
+    "${options}",
+    "${oneValueArgs}",
+    "${multiValueArgs}",
+    "${ARGN}"
+   ],
+   "configure_file": [
+    "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in"
+   ],
+   "file_sha256": "a39cad8c4eb07ce5",
+   "prefix": "DL_ARGS",
+   "keywords": {
+    "options": [
+     "QUIET"
+    ],
+    "one": [
+     "PROJ",
+     "PREFIX",
+     "DOWNLOAD_DIR",
+     "SOURCE_DIR",
+     "BINARY_DIR"
+    ],
+    "multi": []
+   },
+   "template": "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in",
+   "template_name": "DownloadProject.CMakeLists.cmake.in",
+   "template_beside": false,
+   "shape": true
+  },
+  {
+   "file": "rocm-libraries/projects/rocprim/cmake/DownloadProject.cmake",
+   "line": 89,
+   "kind": "function",
+   "parse": [
+    "DL_ARGS",
+    "${options}",
+    "${oneValueArgs}",
+    "${multiValueArgs}",
+    "${ARGN}"
+   ],
+   "configure_file": [
+    "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in"
+   ],
+   "file_sha256": "3ba3a418df19fd53",
+   "prefix": "DL_ARGS",
+   "keywords": {
+    "options": [
+     "QUIET"
+    ],
+    "one": [
+     "PROJ",
+     "PREFIX",
+     "DOWNLOAD_DIR",
+     "SOURCE_DIR",
+     "BINARY_DIR",
+     "BUILD_PROJECT"
+    ],
+    "multi": []
+   },
+   "template": "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in",
+   "template_name": "DownloadProject.CMakeLists.cmake.in",
+   "template_beside": false,
+   "shape": true
+  },
+  {
+   "file": "rocm-libraries/projects/rocthrust/cmake/DownloadProject.cmake",
+   "line": 89,
+   "kind": "function",
+   "parse": [
+    "DL_ARGS",
+    "${options}",
+    "${oneValueArgs}",
+    "${multiValueArgs}",
+    "${ARGN}"
+   ],
+   "configure_file": [
+    "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in"
+   ],
+   "file_sha256": "ca81ec930cd4bd79",
+   "prefix": "DL_ARGS",
+   "keywords": {
+    "options": [
+     "QUIET"
+    ],
+    "one": [
+     "PROJ",
+     "PREFIX",
+     "DOWNLOAD_DIR",
+     "SOURCE_DIR",
+     "BINARY_DIR",
+     "BUILD_PROJECT",
+     "STATUS_MSG"
+    ],
+    "multi": []
+   },
+   "template": "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in",
+   "template_name": "DownloadProject.CMakeLists.cmake.in",
+   "template_beside": false,
+   "shape": true
+  },
+  {
+   "file": "rocm-systems/projects/rccl/cmake/DownloadProject.cmake",
+   "line": 89,
+   "kind": "function",
+   "parse": [
+    "DL_ARGS",
+    "${options}",
+    "${oneValueArgs}",
+    "${multiValueArgs}",
+    "${ARGN}"
+   ],
+   "configure_file": [
+    "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in"
+   ],
+   "file_sha256": "f7f8cedb5cb58854",
+   "prefix": "DL_ARGS",
+   "keywords": {
+    "options": [
+     "QUIET"
+    ],
+    "one": [
+     "PROJ",
+     "PREFIX",
+     "DOWNLOAD_DIR",
+     "SOURCE_DIR",
+     "BINARY_DIR"
+    ],
+    "multi": []
+   },
+   "template": "${_DownloadProjectDir}/DownloadProject.CMakeLists.cmake.in",
+   "template_name": "DownloadProject.CMakeLists.cmake.in",
+   "template_beside": false,
+   "shape": true
+  }
+ ],
+ "calls": [
+  {
+   "file": "rocm-libraries/projects/hipccl/hipccl2/rocprim/cmake/Dependencies.cmake",
+   "line": 211,
+   "keywords": {
+    "PROJ": "rocrand",
+    "GIT_REPOSITORY": "https://github.com/ROCmSoftwarePlatform/rocRAND.git",
+    "GIT_TAG": "develop"
+   },
+   "identity_literal": true,
+   "tag_kind": "branch-like",
+   "conditional": true,
+   "in_loop": false,
+   "in_function": null
+  },
+  {
+   "file": "rocm-libraries/projects/hipccl/hipccl2/rocthrust/extra/CMakeLists.txt",
+   "line": 32,
+   "keywords": {
+    "PROJ": "rocprim",
+    "GIT_REPOSITORY": "https://github.com/ROCmSoftwarePlatform/rocPRIM.git",
+    "GIT_TAG": "master"
+   },
+   "identity_literal": true,
+   "tag_kind": "branch-like",
+   "conditional": true,
+   "in_loop": false,
+   "in_function": null
+  },
+  {
+   "file": "rocm-libraries/projects/hipccl/hipccl3/rocprim/cmake/Dependencies.cmake",
+   "line": 211,
+   "keywords": {
+    "PROJ": "rocrand",
+    "GIT_REPOSITORY": "https://github.com/ROCmSoftwarePlatform/rocRAND.git",
+    "GIT_TAG": "develop"
+   },
+   "identity_literal": true,
+   "tag_kind": "branch-like",
+   "conditional": true,
+   "in_loop": false,
+   "in_function": null
+  },
+  {
+   "file": "rocm-libraries/projects/hipccl/hipccl3/rocthrust/extra/CMakeLists.txt",
+   "line": 32,
+   "keywords": {
+    "PROJ": "rocprim",
+    "GIT_REPOSITORY": "https://github.com/ROCm/rocm-libraries.git",
+    "GIT_TAG": "rocm-7.2.4"
+   },
+   "identity_literal": true,
+   "tag_kind": "release-like",
+   "conditional": true,
+   "in_loop": false,
+   "in_function": null
+  },
+  {
+   "file": "rocm-libraries/projects/hiprand/cmake/Dependencies.cmake",
+   "line": 323,
+   "keywords": {
+    "PROJ": "googletest",
+    "GIT_REPOSITORY": "https://github.com/google/googletest.git",
+    "GIT_TAG": "release-1.11.0"
+   },
+   "identity_literal": true,
+   "tag_kind": "release-like",
+   "conditional": true,
+   "in_loop": false,
+   "in_function": null
+  },
+  {
+   "file": "rocm-libraries/projects/rocprim/cmake/Dependencies.cmake",
+   "line": 178,
+   "keywords": {
+    "PROJ": "rocrand",
+    "GIT_REPOSITORY": "https://github.com/ROCmSoftwarePlatform/rocRAND.git",
+    "GIT_TAG": "develop"
+   },
+   "identity_literal": true,
+   "tag_kind": "branch-like",
+   "conditional": true,
+   "in_loop": false,
+   "in_function": null
+  },
+  {
+   "file": "rocm-libraries/projects/rocthrust/extra/CMakeLists.txt",
+   "line": 32,
+   "keywords": {
+    "PROJ": "rocprim",
+    "GIT_REPOSITORY": "https://github.com/ROCmSoftwarePlatform/rocPRIM.git",
+    "GIT_TAG": "master"
+   },
+   "identity_literal": true,
+   "tag_kind": "branch-like",
+   "conditional": true,
+   "in_loop": false,
+   "in_function": null
+  },
+  {
+   "file": "rocm-systems/projects/rccl/cmake/Dependencies.cmake",
+   "line": 51,
+   "keywords": {
+    "PROJ": "googletest",
+    "GIT_REPOSITORY": "https://github.com/google/googletest.git",
+    "GIT_TAG": "release-1.12.0"
+   },
+   "identity_literal": true,
+   "tag_kind": "release-like",
+   "conditional": true,
+   "in_loop": false,
+   "in_function": null
+  }
+ ]
+}

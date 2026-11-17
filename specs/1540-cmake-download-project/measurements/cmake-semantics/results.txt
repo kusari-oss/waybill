@@ -1,0 +1,8 @@
+D1 URL: exit=0 PROBE proj=p1 unparsed=[URL;a-1.0.tar.gz] src=<W>/d1/_b/p1-src PROBE configure=0 build=0  generated=[ExternalProject_Add(p1-download URL;a-1.0.tar.gz] downloaded=[a ]
+D2a BUILD_PROJECT TRUE: exit=0 PROBE proj=p2 unparsed=[URL;a-1.0.tar.gz] src=<W>/d2a/_b/p2-src PROBE configure=0 build=0  generated=[ExternalProject_Add(p2-download URL;a-1.0.tar.gz] downloaded=[a ]
+D2b BUILD_PROJECT FALSE: exit=0 PROBE proj=p2 unparsed=[URL;a-1.0.tar.gz] src=<W>/d2b/_b/p2-src PROBE configure=0 build=0  generated=[ExternalProject_Add(p2-download URL;a-1.0.tar.gz] downloaded=[a ]
+D3 PROJ twice: exit=0 PROBE proj=second unparsed=[URL;a-1.0.tar.gz] src=<W>/d3/_b/second-src PROBE configure=0 build=0  generated=[ExternalProject_Add(second-download URL;a-1.0.tar.gz] downloaded=[a ]
+D4 SOURCE_DIR is consumed: exit=0 PROBE proj=p4 unparsed=[URL;a-1.0.tar.gz] src=<W>/d4/custom PROBE configure=0 build=0  generated=[ExternalProject_Add(p4-download URL;a-1.0.tar.gz] downloaded=[a ]
+D5a added keyword, modified copy: exit=0 PROBE proj=p5 unparsed=[URL;a-1.0.tar.gz] src=<W>/d5a/_b/p5-src PROBE configure=0 build=0  generated=[ExternalProject_Add(p5-download URL;a-1.0.tar.gz] downloaded=[a ]
+D5b same call, unmodified copy: exit=0 PROBE proj=p5 unparsed=[URL;a-1.0.tar.gz;EXTRA_KW;x] src=<W>/d5b/_b/p5-src PROBE configure=1 build=2  generated=[ExternalProject_Add(p5-download URL;a-1.0.tar.gz;EXTRA_KW;x] downloaded=[none]
+D6 URL twice: exit=0 PROBE proj=p6 unparsed=[URL;a-1.0.tar.gz;URL;b-1.0.tar.gz] src=<W>/d6/_b/p6-src PROBE configure=0 build=0  generated=[ExternalProject_Add(p6-download URL;a-1.0.tar.gz;URL;b-1.0.tar.gz] downloaded=[a ]
