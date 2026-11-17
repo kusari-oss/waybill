@@ -19,7 +19,7 @@
 
 ## Phase 2: Foundational (blocks every story)
 
-- [ ] T003 [P] Create `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs`, declared from `cmake.rs` beside `blocks`, `fallback` and `fetches`. It holds the definitions side of data-model.md:
+- [X] T003 [P] Create `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs`, declared from `cmake.rs` beside `blocks`, `fallback` and `fetches`. It holds the definitions side of data-model.md:
   - **Types:**
     - `WrapperDef`, with `name`, `kind`, `file`, `params`, `parses: Vec<ParseArgs>`, `defaults`, `locals`, `call: BodyCall`, `conditions` and `shapes`;
     - `BodyTarget { Builtin(FetchKind), Wrapper(String) }`;
@@ -45,7 +45,8 @@
     - a wrapper of a wrapper found only on the second iteration (W-8);
     - case-insensitive names (W-22);
     - two definitions of one name both kept, in walk order.
-- [ ] T004 Implement the argument binder in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs`: `bind_args(call: &[Arg], def: &WrapperDef) -> Option<BTreeMap<String, Value>>`, where a value is a scalar or a list. It covers data-model "Binding" steps 1 to 4:
+  - **Changed at implementation:** `NameParameter` became `Parameter`, any named parameter or `${ARGV<n>}` **in any position**. A wrapper that takes its URL positionally (`URL ${url}`) is the same mechanism, and W-21 uses it.
+- [X] T004 Implement the argument binder in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs`: `bind_args(call: &[Arg], def: &WrapperDef) -> Option<BTreeMap<String, Value>>`, where a value is a scalar or a list. It covers data-model "Binding" steps 1 to 4:
   - **Positional binding:** named parameters take `ARGV0…`; `ARGN` is the rest; `ARGV` is everything; `ARGV<n>` (W7). Too few arguments gives `None`.
   - **`cmake_parse_arguments`**, in body order:
     - `PARSE_ARGV <n>` reads `ARGV[n..]`, and the other form reads its expanded trailing arguments;
@@ -58,7 +59,8 @@
     - a list value expands to one `Arg` per element, quoted or not (W6);
     - an unknown `${…}` stays as written.
   - **Unit tests, one per probe:** W1 (multi-value swallows `URL`, so `unparsed` is empty), W1b, W4, W6, W7, W8, plus `ARGV1`. Each test's comment names its probe line in `results.txt`.
-- [ ] T005 [P] Add the FR-005 helper beside `parse_version_from_url` in `waybill-cli/src/scan_fs/package_db/cmake.rs`: `archive_name(url: &str, version: &str) -> Option<String>` (research R6).
+  - **Done as:** a sequential evaluator of the wrapper body up to its call (`Scope` in `wrappers.rs`), instead of precomputed `parses`/`defaults`/`locals` fields. It applies `cmake_parse_arguments`, guarded and unguarded `set()`, `unset()`, and marks a variable unknown when any other command names it (`list(APPEND X …)`). The same rules, one code path, and the unit tests are one per probe.
+- [X] T005 [P] Add the FR-005 helper beside `parse_version_from_url` in `waybill-cli/src/scan_fs/package_db/cmake.rs`: `archive_name(url: &str, version: &str) -> Option<String>` (research R6).
   - **The rule:** take the last path segment, without query; strip one archive extension from `.tar.gz`, `.tgz`, `.tar.bz2`, `.tbz2`, `.tar.xz`, `.txz`, `.tar.zst`, `.zip`, `.tar` and `.7z`; match `^(.+?)[-_]v?<version>$`, where `<version>` is the given version, escaped.
   - **Unit tests over every filename shape in `measurements/census.md`:**
     - `zstd-1.5.7.tar.gz` → `zstd`;
@@ -70,10 +72,10 @@
     - `libbacktrace-<40 hex>.zip` → `None`;
     - `sqlite-amalgamation-3510300.zip` → `None`;
     - plus `v2.1.tar.gz` → `None` and a URL with a query string.
-- [ ] T006 Extend `FetchCoverage` in `waybill-cli/src/scan_fs/package_db/cmake/fetches.rs` with `wrapper_definitions`, `wrapper_calls` and `wrapper_ambiguous_calls` (research R9).
+- [X] T006 Extend `FetchCoverage` in `waybill-cli/src/scan_fs/package_db/cmake/fetches.rs` with `wrapper_definitions`, `wrapper_calls` and `wrapper_ambiguous_calls` (research R9).
   - **Wire format:** `wire()` adds `"wrappers":{"ambiguous-calls":N,"calls":N,"definitions":N}` **only when `wrapper_definitions > 0`**, so trees without wrappers keep `main`'s C231 byte for byte (I-7).
   - **Unit test:** both wire shapes, with sorted keys.
-- [ ] T007 Register C234 `waybill:cmake-fetch-wrapper` in `docs/reference/sbom-format-mapping.md`:
+- [X] T007 Register C234 `waybill:cmake-fetch-wrapper` in `docs/reference/sbom-format-mapping.md`:
   - **The row:** the value shape (sorted array of chains, outermost first), presence (iff a wrapper call is among the component's declarations), and R10's Principle V audit.
   - **Same file:** extend C231's row with the `wrappers` keys, their meanings, and "outside V1".
   - **Extractors, in the same commit:** the catalog gate is in the lib target. Add `cdx_anno!(c234_cdx, …, component)`, `spdx23_anno!(c234_spdx23, …)` and `spdx3_anno!(c234_spdx3, …)` to `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs`, registered in `parity/extractors/mod.rs` as `SymmetricEqual`, `order_sensitive: false`.
@@ -85,19 +87,20 @@
 **Goal:** every call to a recognised wrapper that binds to a `URL` or `GIT_REPOSITORY` is emitted, exactly as a direct call with the bound arguments would be, apart from FR-005's name.
 **Independent test:** contract cases W-1 to W-5, W-8, W-12 to W-18b, W-21 and W-22, plus I-1, I-2 and I-7.
 
-- [ ] T008 [US1] Create `waybill-cli/tests/cmake_fetch_wrappers.rs`.
+- [X] T008 [US1] Create `waybill-cli/tests/cmake_fetch_wrappers.rs`.
   - **Helpers:** `mod common;` with `common::git_fixture::GitFixture`, as `tests/cmake_nested_fetches.rs` does. Its `scan`, per-format component extractors and `coverage(docs)` (which asserts V1) are local to that file, so move them into a new `waybill-cli/tests/common/cmake_fetch.rs` and use them from both files, rather than copying.
   - **Fixtures:** write `cmake/wrap.cmake` per case.
   - **Cases:** W-1, W-2, W-3, W-4, W-5, W-8, W-12, W-13, W-14, W-15, W-16, W-17, W-18, W-18b, W-21 and W-22, as written in `contracts/wire.md`, checking PURL, hash, mechanism, scope, C122, C232, C18 (the call site) and C231 in all three formats.
   - **Not yet:** C234 assertions belong to US3 (T016). Leave a `// C234: T016` marker at each.
   - **I-7:** a tree with a direct fetch and no wrapper definitions yields the same C231 string as before this feature, with no `wrappers` key.
   - **Prove they bite:** run against `main`'s reader. Record in this task's text which cases fail (expected: all but W-5's "no component") and which pass as controls.
-- [ ] T009 [US1] Implement `bind(call, defs, name, depth, chain) -> Binding` in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs` (data-model steps 5 and 6).
+  - **Done:** 25 cases. Against the unwired reader, 22 failed and 3 controls passed (W-19, W-20, I-7). W-6, W-7, W-9 and W-11 at first passed **by coincidence**: the unwired reader counted the wrapper template as the one unresolved declaration, matching `read` = `unresolved` = 1. Each now also asserts `wrappers`, and fails without the feature.
+- [X] T009 [US1] Implement `bind(call, defs, name, depth, chain) -> Binding` in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs` (data-model steps 5 and 6).
   - **Recursion:** for `BodyTarget::Wrapper(w)`, recurse with the substituted arguments. A name already on `chain` gives `Unresolved(Recursion)`, and depth > 8 gives `DepthExceeded`.
   - **Built-in target:** `BodyTarget::Builtin(kind)` gives `Bound { kind, args, conditions, chain }`, with conditions the call site's then each body's, outermost first (R8).
   - **Several definitions (R5):** bind against every definition of the name. If every result is `Bound` with the same PURL and hash (computed through `fetch_entry`), use the first in walk order; otherwise `Unresolved(AmbiguousDefinitions)`. A definition of that name that is not a wrapper counts as disagreeing (W-10c).
   - **Unit tests:** a two-level chain; recursion `a → b → a`; a depth of 9; agreement and disagreement across two definitions.
-- [ ] T010 [US1] Wire binding into `read_fetches` in `waybill-cli/src/scan_fs/package_db/cmake/fetches.rs` (research R7).
+- [X] T010 [US1] Wire binding into `read_fetches` in `waybill-cli/src/scan_fs/package_db/cmake/fetches.rs` (research R7).
   - **Pre-pass:** build `Definitions` with `collect_definitions` from the already-parsed files, and set `wrapper_definitions` to the number of `WrapperDef`s.
   - **Template bodies:** in the main pass, count `function()`/`macro()` openings per file. When the block stack is inside the body whose `(file, ordinal)` is a `WrapperDef`'s (a same-named definition that is not a wrapper is read as spec 1538 reads it), its built-in fetch call and any wrapper call are part of the template. Skip them: no `read`, no `unresolved.identity`.
   - **Call sites:** a command whose lowercased name is in `Definitions` is a call site, outside a wrapper body.
@@ -107,9 +110,11 @@
     - A `Bound` result goes through the existing path: `fetch_entry(bound_name, bound_args.join(" "), call_site_path, rule, vars)`, the parameterised-name rule, `fallback::classify` with the bound arguments, the merged conditions and the **call site's** `blocks.function()`, test scope from the call site's directory, `mark()`, and a `Declaration` keyed on the bound name.
     - `Unresolved(_)` increments `unresolved_identity`, and also `wrapper_ambiguous_calls` for `AmbiguousDefinitions`.
   - **Chain for C234:** carry the chain on the `Declaration` (a new `chain: Vec<String>` field; empty for direct calls), unused until T017.
-- [ ] T011 [US1] Apply FR-005 in `fetches.rs`. For a bound declaration whose entry came from a `URL` (mechanism `cmake-externalproject` or `cmake-fetchcontent-url`, with no `GIT_REPOSITORY`) and whose version is not `unknown`: if `archive_name(url, version)` is `Some(n)`, rebuild the PURL as `pkg:generic/<n>@<version>` with `encode_purl_segment`, and set `entry.name = n`. Direct declarations are never renamed (FR-011).
-- [ ] T012 [US1] Update spec 1538's C-13 expectation in `waybill-cli/tests/cmake_nested_fetches.rs`. The parameterised declaration inside `function(wf_fetch)`, never called, is now a template: assert `wrappers.definitions` = 1, and `unresolved.identity` reduced by 1 (research R9; `contracts/wire.md` note). Leave C-13's literal declaration and C-13b's assertions unchanged.
-- [ ] T013 [US1] **The FR-011 control.** The existing CMake regression goldens (`cdx_regression_cmake`, plus the SPDX 2.3 and SPDX 3 `cmake` cases in `tests/{cdx,spdx,spdx3}_regression.rs`) and all of `tests/cmake_nested_fetches.rs` except C-13 pass unchanged, with no golden regenerated. If a golden changes, stop and trace it to a wrapper definition in that fixture before going on.
+- [X] T011 [US1] Apply FR-005 in `fetches.rs`. For a bound declaration whose entry came from a `URL` (mechanism `cmake-externalproject` or `cmake-fetchcontent-url`, with no `GIT_REPOSITORY`) and whose version is not `unknown`: if `archive_name(url, version)` is `Some(n)`, rebuild the PURL as `pkg:generic/<n>@<version>` with `encode_purl_segment`, and set `entry.name = n`. Direct declarations are never renamed (FR-011).
+- [X] T012 [US1] Update spec 1538's C-13 expectation in `waybill-cli/tests/cmake_nested_fetches.rs`. The parameterised declaration inside `function(wf_fetch)`, never called, is now a template: assert `wrappers.definitions` = 1, and `unresolved.identity` reduced by 1 (research R9; `contracts/wire.md` note). Leave C-13's literal declaration and C-13b's assertions unchanged.
+  - **No change needed.** C-13's `wf_fetch` body makes **two** fetch calls (a literal one and a parameterised one), so by R1 it is not a wrapper, and C-13 holds unchanged with `unresolved.identity` = 1. `contracts/wire.md`' note about C-13 is corrected in T023.
+- [X] T013 [US1] **The FR-011 control.** The existing CMake regression goldens (`cdx_regression_cmake`, plus the SPDX 2.3 and SPDX 3 `cmake` cases in `tests/{cdx,spdx,spdx3}_regression.rs`) and all of `tests/cmake_nested_fetches.rs` except C-13 pass unchanged, with no golden regenerated. If a golden changes, stop and trace it to a wrapper definition in that fixture before going on.
+  - **Done:** `cdx_regression` 11/11, `spdx_regression` 11/11, `spdx3_regression` 11/11, `cmake_nested_fetches` 22/22, with no golden regenerated. The catalog gates (`sbom_format_mapping_coverage`, `mapping_doc_bidirectional`, `holistic_parity`, `parity_synthetic_drift`) pass with C234.
 
 **Checkpoint:** the US1 cases, C-1 to C-15 and the goldens all pass. Without US2's cases written, in-tree wrappers are already unresolved by construction, but unverified, which is why US1 and US2 land together.
 
@@ -118,12 +123,13 @@
 **Goal:** wrapper calls with no identity, ambiguous definitions, recursion, multi-value swallowing, excluded definitions and spec 1538's literal-identity bodies emit nothing false, and are counted.
 **Independent test:** contract cases W-6, W-7, W-9, W-10, W-10b, W-10c, W-11, W-19, W-20, W-23 and W-24, plus I-2 and I-6.
 
-- [ ] T014 [US2] Add cases W-6, W-7, W-9, W-10, W-10b, W-10c, W-11, W-19, W-20, W-23 (R9 merge through a wrapper) and W-24 (ownership by a submodule's call site) to `waybill-cli/tests/cmake_fetch_wrappers.rs`, with an `assert_i6(docs)` helper (`ambiguous-calls ≤ unresolved.identity`, `calls ≤ read`) called from `coverage()`.
+- [X] T014 [US2] Add cases W-6, W-7, W-9, W-10, W-10b, W-10c, W-11, W-19, W-20, W-23 (R9 merge through a wrapper) and W-24 (ownership by a submodule's call site) to `waybill-cli/tests/cmake_fetch_wrappers.rs`, with an `assert_i6(docs)` helper (`ambiguous-calls ≤ unresolved.identity`, `calls ≤ read`) called from `coverage()`.
   - **The two cases that would catch a wrong reader:**
     - W-11: a component here means the binder read `URL` by keyword search instead of CMake's multi-value rule;
     - W-19: a missing component means R2 was skipped.
   - **Run against the US1 implementation** and record any that fail. Each failure is fixed in T015, not by changing the case.
-- [ ] T015 [US2] Fix whatever T014 found, in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs` or `fetches.rs`. Record each fix and its cause in this task's text; "none" is a valid result, stated as such.
+- [X] T015 [US2] Fix whatever T014 found, in `waybill-cli/src/scan_fs/package_db/cmake/wrappers.rs` or `fetches.rs`. Record each fix and its cause in this task's text; "none" is a valid result, stated as such.
+  - **Found:** nothing in the reader. One contract case was wrong: W-9's "`wf_a` calls `wf_b`, which calls `wf_a`" can never reach a built-in, so neither is a wrapper and the call is not read. The cycle that **can** reach one goes through a second definition of a name, and resolves as ambiguous (W-9 as written: `wrappers` = 3/1/1). `contracts/wire.md` is corrected in T023.
 
 **Checkpoint:** all W cases except C234's assertions pass, with I-1, I-2, I-6 and I-7. This is the MVP: US1 + US2.
 
@@ -132,14 +138,15 @@
 **Goal:** C234 on every component a wrapper call stands for, and on no other.
 **Independent test:** I-5 over every W case. W-8's chain is `[["wf_outer","wf_argn"]]`.
 
-- [ ] T016 [US3] Replace the `// C234: T016` markers in `waybill-cli/tests/cmake_fetch_wrappers.rs` with assertions, in all three formats, and add `assert_i5(docs)` to `coverage()`:
+- [X] T016 [US3] Replace the `// C234: T016` markers in `waybill-cli/tests/cmake_fetch_wrappers.rs` with assertions, in all three formats, and add `assert_i5(docs)` to `coverage()`:
   - W-1's direct component has no C234;
   - W-8's chain is outermost first;
   - W-16's survivor has none;
   - fftw's shape: two calls of one URL through one wrapper give one component with one chain, `[["wf_argn"]]`, not two.
+  - **Done differently:** the C234 assertions were written into T008's cases from the start, and were among the 22 that failed against the unwired reader. Added here: `w4b` (fftw's shape: two calls, one component, one chain) and `w4c` (a direct declaration of the same PURL is the survivor, so the chain arrives only through the union; FR-009).
 
   These must fail before T017.
-- [ ] T017 [US3] Emit C234 in `fetches.rs`.
+- [X] T017 [US3] Emit C234 in `fetches.rs`.
   - **On the entry:** a bound declaration sets `entry.extra_annotations["waybill:cmake-fetch-wrapper"] = [chain]`, with names as defined.
   - **`one_per_purl`:** unions the chains of the declarations it combines, sorted and deduplicated.
   - **`first_declaration_wins` and `merge_into_existing`:** do **not** carry the loser's chain (research R10).

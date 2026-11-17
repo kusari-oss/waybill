@@ -11,14 +11,22 @@
 //!   ancestor directory also declares is recorded on the ancestor's
 //!   component (C18, C233), never emitted.
 //! - One component per PURL (R4): Optional only if every declaration is.
+//!
+//! Spec 1539 (#1518): a call to a user-defined wrapper (`wrappers.rs`) is
+//! bound to the built-in it makes, and becomes the same `Declaration` a
+//! direct call is, with the call site's file, conditions and directory, so
+//! every rule above applies to it unchanged. The built-in call inside a
+//! wrapper's body is a template, not a declaration (FR-008).
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Component, Path, PathBuf};
 
 use waybill_common::resolution::LifecycleScope;
+use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::super::PackageDbEntry;
 use super::fallback::{self, Context, FallbackShape, FetchKind, TryMode};
+use super::wrappers::{Bound, Definitions, Unbound};
 use crate::scan_fs::package_db::installed_lib::cmake_version::{commands_checked, strip_comments};
 
 /// C231 `waybill:cmake-fetch-coverage`.
@@ -27,6 +35,8 @@ pub(crate) const ANN_CMAKE_FETCH_COVERAGE: &str = "waybill:cmake-fetch-coverage"
 pub(crate) const ANN_CMAKE_FETCH_CONDITIONS: &str = "waybill:cmake-fetch-conditions";
 /// C233 `waybill:superseded-declarations`.
 pub(crate) const ANN_SUPERSEDED: &str = "waybill:superseded-declarations";
+/// C234 `waybill:cmake-fetch-wrapper` (spec 1539).
+pub(crate) const ANN_CMAKE_FETCH_WRAPPER: &str = "waybill:cmake-fetch-wrapper";
 const ANN_OPTIONAL_DERIVATION: &str = "waybill:optional-derivation";
 const ANN_SCOPE_DERIVATION: &str = "waybill:lifecycle-scope-derivation";
 const TEST_DIRS: [&str; 3] = ["test", "tests", "unittests"];
@@ -49,13 +59,22 @@ pub(crate) struct FetchCoverage {
     pub(crate) unparseable_files: usize,
     /// Declarations each emitted component stands for, by PURL.
     pub(crate) declarations: BTreeMap<String, usize>,
+    /// Spec 1539 R9, outside V1: wrapper definitions (their body calls are
+    /// templates, not declarations), wrapper call sites (each one
+    /// declaration in `read`), and calls whose definitions disagree (each
+    /// also in `unresolved_identity`).
+    pub(crate) wrapper_definitions: usize,
+    pub(crate) wrapper_calls: usize,
+    pub(crate) wrapper_ambiguous_calls: usize,
 }
 
 impl FetchCoverage {
     /// Sorted-key JSON, or `None` when no declaration was read (I-4).
+    /// `wrappers` is present only when a wrapper was defined, so a tree
+    /// without one keeps spec 1538's value byte for byte (spec 1539 I-7).
     pub(crate) fn wire(&self) -> Option<String> {
         (self.read > 0).then(|| {
-            serde_json::json!({
+            let mut v = serde_json::json!({
                 "components": self.components,
                 "conditional": self.conditional,
                 "emitted": self.emitted,
@@ -67,8 +86,15 @@ impl FetchCoverage {
                 "test": self.test,
                 "unparseable-files": self.unparseable_files,
                 "unresolved": { "identity": self.unresolved_identity },
-            })
-            .to_string()
+            });
+            if self.wrapper_definitions > 0 {
+                v["wrappers"] = serde_json::json!({
+                    "ambiguous-calls": self.wrapper_ambiguous_calls,
+                    "calls": self.wrapper_calls,
+                    "definitions": self.wrapper_definitions,
+                });
+            }
+            v.to_string()
         })
     }
 }
@@ -142,52 +168,87 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
         parsed.push((path.clone(), rel, content, cmds));
     }
 
+    // Spec 1539: every function and macro, and which are wrappers. A body
+    // call that names a package on its own is spec 1538's function-body
+    // fetch, never a wrapper (research R2).
+    let vars_of: HashMap<&Path, Vars> =
+        parsed.iter().map(|(_, rel, content, _)| (rel.as_path(), super::collect_set_vars(content))).collect();
+    let no_vars = Vars::new();
+    let defs = Definitions::collect(parsed.iter().map(|(_, rel, _, cmds)| (rel.as_path(), cmds.as_slice())), |file, kind, args| {
+        declared(kind, args, "", vars_of.get(file).unwrap_or(&no_vars)).is_some()
+    });
+    cov.wrapper_definitions = defs.wrapper_count();
+
     let mut decls: Vec<Declaration> = Vec::new();
-    for (path, rel, content, cmds) in &parsed {
-        let vars = super::collect_set_vars(content);
+    for (path, rel, _, cmds) in &parsed {
+        let vars = vars_of.get(rel.as_path()).unwrap_or(&no_vars);
         let source_path = path.to_string_lossy().into_owned();
         let dir = rel.parent().map(Path::to_path_buf).unwrap_or_default();
         let in_test_dir = rel.parent().is_some_and(|d| {
             d.components().any(|c| matches!(c, Component::Normal(s) if TEST_DIRS.iter().any(|t| s == *t)))
         });
         let mut blocks = super::blocks::BlockStack::default();
+        let mut ordinal = 0usize;
+        let mut open: Vec<usize> = Vec::new();
         for (name, args) in cmds {
+            match name.as_str() {
+                "function" | "macro" => {
+                    open.push(ordinal);
+                    ordinal += 1;
+                }
+                "endfunction" | "endmacro" => {
+                    open.pop();
+                }
+                _ => {}
+            }
             if blocks.observe(name, args) {
                 continue;
             }
-            let (kind, rule) = match name.as_str() {
-                "fetchcontent_declare" => (FetchKind::FetchContent, "FetchContent_Declare"),
-                "externalproject_add" => (FetchKind::ExternalProject, "ExternalProject_Add"),
-                _ => continue,
+            let builtin = match name.as_str() {
+                "fetchcontent_declare" => Some(FetchKind::FetchContent),
+                "externalproject_add" => Some(FetchKind::ExternalProject),
+                _ => None,
             };
+            if builtin.is_none() && !defs.is_wrapper(name) {
+                continue;
+            }
+            // FR-008: the call inside a wrapper's body is a template.
+            if open.iter().any(|&o| defs.is_template(rel, o)) {
+                continue;
+            }
             cov.read += 1;
-            let raw_name = args.first().cloned().unwrap_or_default();
-            let decl_name = super::expand_known_vars(&raw_name, &vars);
-            // A name the reader cannot expand is unresolved only when the
-            // identity depends on it: a GitHub `GIT_REPOSITORY` names the
-            // package by itself, and the component takes that name.
-            let unexpanded = |s: &str| s.contains("${") || s.contains("$<") || s.contains("%24");
-            let name_unexpanded = unexpanded(&decl_name);
-            let entry = if decl_name.is_empty() {
-                None
-            } else {
-                super::fetch_entry(&decl_name, &args[1..].join(" "), &source_path, rule, &vars)
-                    .filter(|e| !unexpanded(e.purl.as_str()))
-                    .map(|mut e| {
-                        if name_unexpanded {
-                            e.name = e.purl.name().to_string();
+            let (kind, decl_args, body_conditions, chain) = match builtin {
+                Some(kind) => (kind, args.clone(), Vec::new(), Vec::new()),
+                None => {
+                    cov.wrapper_calls += 1;
+                    let call: Vec<String> = args.iter().map(|a| super::expand_known_vars(a, vars)).collect();
+                    let identity = |b: &Bound| declared(b.kind, &b.args, &source_path, vars).map(|d| identity_key(&d.entry));
+                    match defs.bind(name, &call, &identity) {
+                        Ok(b) => (b.kind, b.args, b.conditions, b.chain),
+                        Err(e) => {
+                            cov.unresolved_identity += 1;
+                            if e == Unbound::Ambiguous {
+                                cov.wrapper_ambiguous_calls += 1;
+                            }
+                            continue;
                         }
-                        e
-                    })
+                    }
+                }
             };
-            let Some(mut entry) = entry else {
+            let Some(Declared { mut entry, name: decl_name }) = declared(kind, &decl_args, &source_path, vars) else {
                 cov.unresolved_identity += 1;
                 continue;
             };
-            let if_conds = blocks.if_conditions();
-            let conditions = blocks.conditions();
+            if !chain.is_empty() {
+                name_from_archive(&mut entry, &decl_args, vars);
+                entry.extra_annotations.insert(ANN_CMAKE_FETCH_WRAPPER.to_string(), serde_json::json!([chain]));
+            }
+            let mut if_conds = blocks.if_conditions();
+            if_conds.extend(body_conditions.iter().cloned());
+            let mut conditions = blocks.conditions();
+            conditions.extend(body_conditions);
             let ctx = Context { mode: mode_for(&dir, &modes), fetchcontent_provider: provider };
-            let shape = fallback::classify(kind, args, &if_conds, blocks.function().is_some(), ctx);
+            let shape = fallback::classify(kind, &decl_args, &if_conds, blocks.function().is_some(), ctx);
             let test = if in_test_dir {
                 Some("source-test-directory")
             } else if fallback::build_testing(&if_conds) {
@@ -196,9 +257,7 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
                 None
             };
             mark(&mut entry, shape, test, &conditions);
-            // An unexpanded name is no name: it never matches under R5.
-            let name = if name_unexpanded { String::new() } else { decl_name.to_ascii_lowercase() };
-            decls.push(Declaration { kind, name, rel: rel.clone(), entry: Some(entry) });
+            decls.push(Declaration { kind, name: decl_name, rel: rel.clone(), entry: Some(entry) });
         }
     }
 
@@ -215,10 +274,87 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
             test = cov.test,
             first_declaration_wins = cov.merged_first_declaration_wins,
             unresolved = cov.unresolved_identity,
-            "cmake: fetch declarations (spec 1538)"
+            wrapper_definitions = cov.wrapper_definitions,
+            wrapper_calls = cov.wrapper_calls,
+            wrapper_ambiguous_calls = cov.wrapper_ambiguous_calls,
+            "cmake: fetch declarations (spec 1538, 1539)"
         );
     }
     (entries, cov)
+}
+
+type Vars = HashMap<String, Option<String>>;
+
+/// One declaration read as spec 1538 reads it: the component, and the
+/// lowercased name first-declaration-wins keys on (empty when the name is
+/// unexpanded, so it never matches). `None` when it has no identity.
+struct Declared {
+    entry: PackageDbEntry,
+    name: String,
+}
+
+fn rule_of(kind: FetchKind) -> &'static str {
+    match kind {
+        FetchKind::FetchContent => "FetchContent_Declare",
+        FetchKind::ExternalProject => "ExternalProject_Add",
+    }
+}
+
+fn declared(kind: FetchKind, args: &[String], source_path: &str, vars: &Vars) -> Option<Declared> {
+    let raw_name = args.first().cloned().unwrap_or_default();
+    let decl_name = super::expand_known_vars(&raw_name, vars);
+    if decl_name.is_empty() {
+        return None;
+    }
+    // A name the reader cannot expand is unresolved only when the identity
+    // depends on it: a GitHub `GIT_REPOSITORY` names the package by itself,
+    // and the component takes that name.
+    let unexpanded = |s: &str| s.contains("${") || s.contains("$<") || s.contains("%24");
+    let name_unexpanded = unexpanded(&decl_name);
+    let entry = super::fetch_entry(&decl_name, &args.get(1..).unwrap_or_default().join(" "), source_path, rule_of(kind), vars)
+        .filter(|e| !unexpanded(e.purl.as_str()))
+        .map(|mut e| {
+            if name_unexpanded {
+                e.name = e.purl.name().to_string();
+            }
+            e
+        })?;
+    // An unexpanded name is no name: it never matches under R5.
+    let name = if name_unexpanded { String::new() } else { decl_name.to_ascii_lowercase() };
+    Some(Declared { entry, name })
+}
+
+/// What two definitions of one wrapper must agree on (spec 1539 R5).
+fn identity_key(e: &PackageDbEntry) -> String {
+    format!("{} {:?}", e.purl.as_str(), e.hashes)
+}
+
+/// Spec 1539 FR-005: a wrapped URL fetch is named from its archive when the
+/// filename is `<name>-<version>` for the version the URL gave.
+fn name_from_archive(entry: &mut PackageDbEntry, args: &[String], vars: &Vars) {
+    let body = super::expand_known_vars(&args.get(1..).unwrap_or_default().join(" "), vars);
+    if super::extract_keyword(&body, "GIT_REPOSITORY").is_some() || entry.purl.ecosystem() != "generic" {
+        return;
+    }
+    let Some(url) = super::extract_keyword(&body, "URL") else { return };
+    if entry.version.is_empty() || entry.version == "unknown" {
+        return;
+    }
+    let Some(n) = super::archive_name(&url, &entry.version) else { return };
+    let Ok(purl) = Purl::new(&format!("pkg:generic/{}@{}", encode_purl_segment(&n), encode_purl_segment(&entry.version))) else {
+        return;
+    };
+    entry.purl = purl;
+    entry.name = n;
+}
+
+fn wrapper_chains(e: &PackageDbEntry) -> BTreeSet<Vec<String>> {
+    e.extra_annotations
+        .get(ANN_CMAKE_FETCH_WRAPPER)
+        .and_then(|v| serde_json::from_value::<Vec<Vec<String>>>(v.clone()).ok())
+        .unwrap_or_default()
+        .into_iter()
+        .collect()
 }
 
 /// Test outranks Optional: a component's scope is one value (R7).
@@ -312,10 +448,12 @@ fn one_per_purl(entries: Vec<Counted>, cov: &mut FetchCoverage) -> Vec<PackageDb
         group.sort_by_key(|e| (rank(e), e.source_path.clone()));
         let mut first = group.remove(0);
         let mut conds: BTreeSet<String> = conditions_of(&first).into_iter().collect();
+        let mut chains = wrapper_chains(&first);
         let mut sup: Vec<serde_json::Value> =
             first.extra_annotations.get(ANN_SUPERSEDED).and_then(|v| v.as_array().cloned()).unwrap_or_default();
         for other in group {
             conds.extend(conditions_of(&other));
+            chains.extend(wrapper_chains(&other));
             first.extra_source_paths.push(other.source_path.clone());
             first.extra_source_paths.extend(other.extra_source_paths.iter().cloned());
             if let Some(a) = other.extra_annotations.get(ANN_SUPERSEDED).and_then(|v| v.as_array()) {
@@ -328,6 +466,9 @@ fn one_per_purl(entries: Vec<Counted>, cov: &mut FetchCoverage) -> Vec<PackageDb
             first.extra_annotations.insert(ANN_CMAKE_FETCH_CONDITIONS.to_string(), serde_json::json!(conds));
         } else {
             first.extra_annotations.remove(ANN_CMAKE_FETCH_CONDITIONS);
+        }
+        if !chains.is_empty() {
+            first.extra_annotations.insert(ANN_CMAKE_FETCH_WRAPPER.to_string(), serde_json::json!(chains));
         }
         if !sup.is_empty() {
             sup.sort_by_key(|v| (v["file"].as_str().unwrap_or("").to_string(), v["version"].as_str().unwrap_or("").to_string()));
@@ -509,6 +650,10 @@ mod tests {
         let v: serde_json::Value = serde_json::from_str(&c.wire().unwrap()).unwrap();
         assert_eq!(v["read"], 4);
         assert_eq!(v["merged"]["first-declaration-wins"], 1);
+        assert!(v.get("wrappers").is_none(), "no wrapper defined: spec 1538's shape");
+        let w = FetchCoverage { wrapper_definitions: 1, wrapper_calls: 2, wrapper_ambiguous_calls: 1, ..c };
+        let wire = w.wire().unwrap();
+        assert!(wire.contains(r#""wrappers":{"ambiguous-calls":1,"calls":2,"definitions":1}"#), "{wire}");
     }
 
     #[test]
