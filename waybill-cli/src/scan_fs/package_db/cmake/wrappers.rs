@@ -65,6 +65,9 @@ pub(crate) struct Definition {
     /// The body's single fetch or wrapper call, when this is a wrapper.
     call: Option<usize>,
     pub(crate) shapes: BTreeSet<ForwardingShape>,
+    /// The variable that must name the fetch: `DL_ARGS_PROJ` for
+    /// DownloadProject (spec 1540).
+    name_var: Option<String>,
 }
 
 /// A call bound through its wrappers to a fetch built-in.
@@ -88,7 +91,19 @@ pub(crate) enum Unbound {
     DepthExceeded,
     /// The definitions of a name disagree (FR-002, research R5).
     Ambiguous,
+    /// A `cmake_parse_arguments` keyword list could not be resolved in the
+    /// body's scope (spec 1540 FR-002).
+    UnknownKeywords,
+    /// A `download_project` call with no `PROJ` (spec 1540 FR-007).
+    MissingName,
 }
+
+/// Spec 1540 (#1594): DownloadProject's template, which its
+/// `download_project()` configures and runs. The template is not read.
+const DOWNLOAD_PROJECT_TEMPLATE: &str = "DownloadProject.CMakeLists.cmake.in";
+/// What the template's `ExternalProject_Add` fetches (probe D1), named
+/// `<PROJ>` rather than its internal `<PROJ>-download` target (FR-004).
+const DOWNLOAD_PROJECT_CALL: [&str; 2] = ["${DL_ARGS_PROJ}", "${DL_ARGS_UNPARSED_ARGUMENTS}"];
 
 /// Every definition of every name, by lowercased name: CMake command names
 /// are case-insensitive.
@@ -208,6 +223,7 @@ impl Definitions {
                                 body: Vec::new(),
                                 call: None,
                                 shapes: BTreeSet::new(),
+                                name_var: None,
                             },
                             BlockStack::default(),
                         ));
@@ -231,6 +247,10 @@ impl Definitions {
                     }
                 }
             }
+        }
+
+        for d in &mut all {
+            recognise_download_project(d);
         }
 
         // A definition is a wrapper when its body makes exactly one call to
@@ -337,6 +357,11 @@ impl Definitions {
     ) -> Result<Bound, Unbound> {
         let call = d.call.ok_or(Unbound::NotAWrapper)?;
         let scope = Scope::evaluate(d, call, args)?;
+        if let Some(v) = &d.name_var {
+            if !matches!(scope.vars.get(v), Some(Val::Known(x)) if x.iter().any(|s| !s.is_empty())) {
+                return Err(Unbound::MissingName);
+            }
+        }
         let body_call = &d.body[call];
         let bound_args = scope.substitute(&body_call.args);
         let mut chain = chain.to_vec();
@@ -352,6 +377,46 @@ impl Definitions {
             }
         }
     }
+}
+
+/// Spec 1540 FR-001: a `download_project` definition with DownloadProject's
+/// shape gets the fetch its template makes, in place of the
+/// `configure_file()`, and is then an ordinary wrapper. The shape: a
+/// `cmake_parse_arguments(DL_ARGS …)` whose one-value keywords include
+/// `PROJ` (or cannot be resolved, which binding then reports), and a
+/// `configure_file()` of DownloadProject's template.
+fn recognise_download_project(d: &mut Definition) {
+    if !d.name.eq_ignore_ascii_case("download_project") {
+        return;
+    }
+    let Some(parse) = d
+        .body
+        .iter()
+        .position(|c| c.name == "cmake_parse_arguments" && parse_args(&c.args).is_some_and(|p| p.prefix == "DL_ARGS"))
+    else {
+        return;
+    };
+    let Some(configure) = d.body.iter().position(|c| {
+        c.name == "configure_file"
+            && c.args.first().is_some_and(|a| a.rsplit('/').next() == Some(DOWNLOAD_PROJECT_TEMPLATE))
+    }) else {
+        return;
+    };
+    let lists = Scope::evaluate(d, parse, &[]).and_then(|s| s.keyword_lists(&d.body[parse].args));
+    let proj = match lists {
+        Ok(Some(resolved)) => parse_args(&resolved).is_some_and(|p| p.one.iter().any(|k| k == "PROJ")),
+        Ok(None) => false,
+        Err(_) => true,
+    };
+    if !proj {
+        return;
+    }
+    d.body[configure] = BodyCommand {
+        name: "externalproject_add".to_string(),
+        args: DOWNLOAD_PROJECT_CALL.iter().map(|a| a.to_string()).collect(),
+        if_conditions: Vec::new(),
+    };
+    d.name_var = Some("DL_ARGS_PROJ".to_string());
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -409,7 +474,7 @@ impl Scope {
         for cmd in &d.body[..call] {
             match cmd.name.as_str() {
                 "cmake_parse_arguments" => {
-                    if let Some(p) = parse_args(&cmd.args) {
+                    if let Some(p) = s.keyword_lists(&cmd.args)?.as_deref().and_then(parse_args) {
                         let input = match p.parse_argv {
                             Some(n) => args.get(n..).map(<[String]>::to_vec).unwrap_or_default(),
                             None => s.substitute(&p.input),
@@ -439,6 +504,49 @@ impl Scope {
             }
         }
         Ok(s)
+    }
+
+    /// Spec 1540 FR-002: the three keyword-list arguments of a
+    /// `cmake_parse_arguments` call, expanded in this scope as CMake expands
+    /// them before the command runs. Each is expanded as one string, so an
+    /// empty list keeps its position. A list still holding `${…}` cannot be
+    /// resolved statically, and binds nothing. `None` when the call has too
+    /// few arguments to be one.
+    fn keyword_lists(&self, args: &[String]) -> Result<Option<Vec<String>>, Unbound> {
+        let lists = if args.first().map(String::as_str) == Some("PARSE_ARGV") { 3..6 } else { 1..4 };
+        if args.len() < lists.end {
+            return Ok(None);
+        }
+        let mut out = args.to_vec();
+        for i in lists {
+            let v = self.expand_one(&args[i]);
+            if v.contains("${") {
+                return Err(Unbound::UnknownKeywords);
+            }
+            out[i] = v;
+        }
+        Ok(Some(out))
+    }
+
+    /// One argument expanded as a string: a known list joins with `;`, an
+    /// unset local is empty, anything else stays as written.
+    fn expand_one(&self, a: &str) -> String {
+        let Some(re) = var_re() else { return a.to_string() };
+        let mut s = a.to_string();
+        for _ in 0..MAX_DEPTH {
+            let next = re
+                .replace_all(&s, |c: &regex::Captures<'_>| match self.vars.get(&c[1]) {
+                    Some(Val::Known(v)) => v.join(";"),
+                    None if self.local.contains(&c[1]) => String::new(),
+                    _ => c[0].to_string(),
+                })
+                .into_owned();
+            if next == s {
+                break;
+            }
+            s = next;
+        }
+        s
     }
 
     /// W1, W1b, W4: CMake's keyword rules.
@@ -548,21 +656,7 @@ impl Scope {
                     _ => {}
                 }
             }
-            let mut s = a.clone();
-            for _ in 0..MAX_DEPTH {
-                let next = re
-                    .replace_all(&s, |c: &regex::Captures<'_>| match self.vars.get(&c[1]) {
-                        Some(Val::Known(v)) => v.join(";"),
-                        None if self.local.contains(&c[1]) => String::new(),
-                        _ => c[0].to_string(),
-                    })
-                    .into_owned();
-                if next == s {
-                    break;
-                }
-                s = next;
-            }
-            out.push(s);
+            out.push(self.expand_one(a));
         }
         out
     }
@@ -745,6 +839,103 @@ mod tests {
             "function(wf name)\nif(WIN32)\nset(u https://w.invalid/w-1.0.zip)\nendif()\nExternalProject_Add(${name} URL ${u})\nendfunction()\n",
         )]);
         assert_eq!(bind(&d, "wf(x)").unwrap().args, vec!["x", "URL", "${u}"]);
+    }
+
+    /// Spec 1540 FR-002: keyword lists held in variables are expanded in
+    /// the body's scope before `cmake_parse_arguments` reads them, as CMake
+    /// expands them before the command runs.
+    #[test]
+    fn keyword_lists_held_in_variables_resolve() {
+        let d = defs(&[(
+            "w.cmake",
+            "function(wf)\nset(one NAME URL)\nset(opts \"\")\ncmake_parse_arguments(W \"${opts}\" \"${one}\" \"\" ${ARGN})\nFetchContent_Declare(${W_NAME} URL ${W_URL})\nendfunction()\n",
+        )]);
+        assert_eq!(bind(&d, "wf(NAME n URL u)").unwrap().args, vec!["n", "URL", "u"], "an empty list keeps its position");
+        let p = defs(&[(
+            "w.cmake",
+            "function(wf name)\nset(one URL)\ncmake_parse_arguments(PARSE_ARGV 1 W \"\" \"${one}\" \"\")\nExternalProject_Add(${name} URL ${W_URL})\nendfunction()\n",
+        )]);
+        assert_eq!(bind(&p, "wf(x URL u)").unwrap().args, vec!["x", "URL", "u"], "PARSE_ARGV form");
+    }
+
+    /// A keyword list the body sets conditionally, or changes with another
+    /// command, is unresolved, never guessed.
+    #[test]
+    fn unresolved_keyword_lists_are_unbound() {
+        for body in [
+            "if(X)\nset(one NAME URL)\nendif()\n",
+            "set(one NAME)\nlist(APPEND one URL)\n",
+            "",
+        ] {
+            let d = defs(&[(
+                "w.cmake",
+                &format!("function(wf)\n{body}cmake_parse_arguments(W \"\" \"${{one}}\" \"\" ${{ARGN}})\nFetchContent_Declare(${{W_NAME}} URL ${{W_URL}})\nendfunction()\n"),
+            )]);
+            assert_eq!(bind(&d, "wf(NAME n URL u)"), Err(Unbound::UnknownKeywords), "{body:?}");
+        }
+    }
+
+    /// A DownloadProject-shaped body (spec 1540), parameterised by its
+    /// one-value keyword list, its parse prefix and its template name.
+    fn dp(one: &str, prefix: &str, template: &str) -> String {
+        format!(
+            "function(download_project)\nset(options QUIET)\nset(oneValueArgs {one})\nset(multiValueArgs \"\")\n\
+             cmake_parse_arguments({prefix} \"${{options}}\" \"${{oneValueArgs}}\" \"${{multiValueArgs}}\" ${{ARGN}})\n\
+             configure_file(\"${{_DownloadProjectDir}}/{template}\" \"${{DL_ARGS_DOWNLOAD_DIR}}/CMakeLists.txt\")\n\
+             execute_process(COMMAND ${{CMAKE_COMMAND}} .)\nendfunction()\n"
+        )
+    }
+
+    const UPSTREAM: &str = "PROJ PREFIX DOWNLOAD_DIR SOURCE_DIR BINARY_DIR BUILD_PROJECT";
+
+    #[test]
+    fn downloadproject_is_recognised_only_with_its_shape() {
+        let t = "DownloadProject.CMakeLists.cmake.in";
+        assert!(defs(&[("a.cmake", &dp(UPSTREAM, "DL_ARGS", t))]).is_wrapper("download_project"));
+        assert!(!defs(&[("a.cmake", &dp(UPSTREAM, "ARGS", t))]).is_wrapper("download_project"), "no DL_ARGS");
+        assert!(!defs(&[("a.cmake", &dp("PREFIX SOURCE_DIR", "DL_ARGS", t))]).is_wrapper("download_project"), "no PROJ");
+        assert!(!defs(&[("a.cmake", &dp(UPSTREAM, "DL_ARGS", "Other.cmake.in"))]).is_wrapper("download_project"), "another template");
+        assert!(
+            !defs(&[("a.cmake", "function(download_project)\nmessage(STATUS x)\nendfunction()\n")]).is_wrapper("download_project"),
+            "a same-named function"
+        );
+        let other = dp(UPSTREAM, "DL_ARGS", t).replace("function(download_project)", "function(fetch_project)");
+        assert!(!defs(&[("a.cmake", &other)]).is_wrapper("fetch_project"), "the shape alone is not enough");
+    }
+
+    /// TheRock's three keyword lists (`measurements/census.md`): each copy
+    /// consumes exactly its own keywords.
+    #[test]
+    fn each_of_therocks_keyword_lists_binds_with_its_own_keywords() {
+        let t = "DownloadProject.CMakeLists.cmake.in";
+        let git = ["GIT_REPOSITORY", "https://github.com/o/r.git", "GIT_TAG", "develop"];
+        for (one, call, extra) in [
+            (UPSTREAM, "download_project(PROJ rr PREFIX p BUILD_PROJECT TRUE GIT_REPOSITORY https://github.com/o/r.git GIT_TAG develop)", vec![]),
+            (
+                "PROJ PREFIX DOWNLOAD_DIR SOURCE_DIR BINARY_DIR BUILD_PROJECT STATUS_MSG",
+                "download_project(PROJ rr STATUS_MSG hello GIT_REPOSITORY https://github.com/o/r.git GIT_TAG develop)",
+                vec![],
+            ),
+            (
+                "PROJ PREFIX DOWNLOAD_DIR SOURCE_DIR BINARY_DIR",
+                "download_project(PROJ rr BUILD_PROJECT TRUE GIT_REPOSITORY https://github.com/o/r.git GIT_TAG develop)",
+                vec!["BUILD_PROJECT", "TRUE"],
+            ),
+        ] {
+            let d = defs(&[("a.cmake", &dp(one, "DL_ARGS", t))]);
+            let b = bind(&d, call).unwrap();
+            let mut want: Vec<&str> = vec!["rr"];
+            want.extend(&extra);
+            want.extend(git);
+            assert_eq!(b.args, want, "{one}");
+            assert_eq!(b.chain, vec!["download_project".to_string()]);
+        }
+    }
+
+    #[test]
+    fn a_download_project_call_without_proj_is_unbound() {
+        let d = defs(&[("a.cmake", &dp(UPSTREAM, "DL_ARGS", "DownloadProject.CMakeLists.cmake.in"))]);
+        assert_eq!(bind(&d, "download_project(URL https://example.invalid/u-1.0.tar.gz)"), Err(Unbound::MissingName));
     }
 
     /// A command the binder does not model, naming a variable, makes it
