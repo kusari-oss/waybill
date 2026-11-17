@@ -137,7 +137,8 @@
   - **`docs/reference/sbom-format-mapping.md`:** C45's row.
   - **`CHANGELOG.md`:** Fixed #1593, with TheRock's before and after.
 - [X] T018 Run the gate alone and record it in `specs/1541-explain-therock-orphans/measurements/gate-log.md`: the ok-line count, 0 failed, the expected line, `orphan_explanations` N/N, and `git diff --quiet main -- Cargo.toml Cargo.lock '*/Cargo.toml'` (FR-010).
-- [ ] T019 Open the PR: `fix: every unreachable component on TheRock explains itself (#1593)`. The body carries the trace, the before and after, the corpora, the mutations and the reader change (`Refs #1214`), ending with the attribution line. After it lands, tick #1593 on #1542.
+- [X] T019 Open the PR: `fix: every unreachable component on TheRock explains itself (#1593)`. The body carries the trace, the before and after, the corpora, the mutations and the reader change (`Refs #1214`), ending with the attribution line. After it lands, tick #1593 on #1542.
+  - Opened as #1603. Ticking #1593 on #1542 waits for the land.
 
 ## Dependencies
 
