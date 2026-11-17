@@ -13422,6 +13422,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-54OJYIIFW6Q7UZJM",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unreferenced-lock-node\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-V5BGVK7MRGINL47S",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5633NNSZK4EELFDN",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-resolved-via\",\"value\":{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"567a49d1913ce81ac6e9582e3553dd90a955875f\",\"source\":\"nixpkgs\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LXSZRRW2SSKDKLQA",
@@ -20414,6 +20422,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OLJJTBJAECGYNNMH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unreferenced-lock-node\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RL6RS2IUOUC3PTCB",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OMOYTJOWIRZGRWVP",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RWQIFHYVXFNXV2MJ",
@@ -24273,6 +24289,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YMERH455X5MLIYZC",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DHGXTOTTIVEVJJVQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YMSDQUO7Q35GFZLV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unreferenced-lock-node\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EWU5MMUJVZGNNXN3",
       "type": "Annotation"
     },
     {

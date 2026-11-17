@@ -54,6 +54,10 @@
           "value": "default-branch"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "unreferenced-lock-node"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -120,6 +124,10 @@
           "value": "nixos-unstable"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "unreferenced-lock-node"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -180,6 +188,10 @@
         {
           "name": "waybill:nix-original-pin-state",
           "value": "default-branch"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "unreferenced-lock-node"
         },
         {
           "name": "waybill:workspace-member",

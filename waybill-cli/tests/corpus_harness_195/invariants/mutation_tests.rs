@@ -561,25 +561,36 @@ fn m1218_foreign_build_system_can_be_made_to_fail() {
 
 /// `dead-lockfile-entry`: python-flask's ten `uv.lock` resolution forks.
 ///
-/// Until spec 1537 this was count-based, because the cell also held issue
-/// #1234's thirteen `examples/celery/requirements.txt` components, which had
-/// no edge and no reason. The pip reader now reads that compiled file's
-/// `# via` lines as edges, so the thirteen are reached and the cell passes:
-/// withholding the ten markers must fail it with exactly ten.
+/// Until spec 1541 this withheld the ten markers and expected I7 to fail
+/// with exactly ten. Spec 1541 (#1593) wires each fork to the dependents the
+/// lock pins it to, and resolves a lock's names inside the lock, so the
+/// forks are no longer orphans: no golden carries `dead-lockfile-entry`.
+/// The withheld-marker case for that code is covered by
+/// `generate::orphan_reason`'s unit tests and contract case O-12.
+///
+/// What this asserts instead is the stronger fact, that the forks are
+/// **reached**. If one becomes an orphan again, this fails before any
+/// marker could hide it.
 #[test]
-fn m1218_dead_lockfile_entry_withheld_raises_the_residual_count() {
+fn m1218_python_flask_lock_forks_are_reached() {
     let inv = registry_entry("I7");
-    let mut sboms = goldens::load("python-flask").expect("golden triple");
-    assert!(
-        matches!((inv.checker)(&sboms), CellOutcome::Pass),
-        "python-flask I7 must pass before the mutation, else it proves nothing",
-    );
-    let stripped = strip_orphan_reason(&mut sboms.cdx, "pkg:pypi/");
-    assert_eq!(stripped, 10, "the ten uv.lock resolution forks carry the marker");
-    match (inv.checker)(&sboms) {
-        CellOutcome::Fail(vs) => assert_eq!(vs[0].count, 10, "withholding the ten must fail exactly ten"),
-        other => panic!("expected Fail, got {other:?}"),
+    let sboms = goldens::load("python-flask").expect("golden triple");
+    assert!(matches!((inv.checker)(&sboms), CellOutcome::Pass), "python-flask I7 passes");
+    let reachable = checks::orphan_explained::reachable_with_containment(&sboms.cdx);
+    for fork in [
+        "pkg:pypi/click@8.1.8",
+        "pkg:pypi/click@8.2.1",
+        "pkg:pypi/sphinx@7.4.7",
+        "pkg:pypi/sphinx@8.1.3",
+        "pkg:pypi/alabaster@0.7.16",
+    ] {
+        assert!(reachable.contains(fork), "{fork} is reached");
     }
+    let marked = checks::orphan_explained::cdx_components_with_containers(&sboms.cdx)
+        .into_iter()
+        .filter(|(c, _)| checks::cdx_prop(c, "waybill:orphan-reason") == Some("dead-lockfile-entry"))
+        .count();
+    assert_eq!(marked, 0, "no fork is left to explain");
 }
 
 /// Feature 1218 T037 — the positive control required by FR-017.
@@ -591,22 +602,24 @@ fn m1218_dead_lockfile_entry_withheld_raises_the_residual_count() {
 /// passes its own suite.
 ///
 /// Both halves are real corpus targets rather than a synthetic fixture:
-/// `haskell-security-advisories` carries three `pkg:github/*` flake inputs
-/// that no vocabulary can reach (issue #1237), and `go-cobra` carries no
-/// unexplained orphan at all.
+/// `maven-guice` carries three `pkg:maven/*` components that are a declared
+/// waybill defect (issue #1235), and `go-cobra` carries no unexplained
+/// orphan at all. Until spec 1541 the population half was
+/// `haskell-security-advisories`' three flake inputs (#1237), which one
+/// reachability answer now explains.
 #[test]
 fn m1218_a_non_go_npm_orphan_population_is_distinguishable_from_none() {
     let inv = registry_entry("I7");
 
-    let with_population = (inv.checker)(&goldens::load("haskell-security-advisories").expect("golden"));
+    let with_population = (inv.checker)(&goldens::load("maven-guice").expect("golden"));
     let without = (inv.checker)(&goldens::load("go-cobra").expect("golden"));
 
     match &with_population {
         CellOutcome::Fail(vs) => {
             assert_eq!(vs[0].kind, checks::orphan_explained::KIND_UNREACHABLE_AND_UNEXPLAINED);
-            assert_eq!(vs[0].count, 3, "issue #1237's three flake inputs");
+            assert_eq!(vs[0].count, 3, "issue #1235's three duplicate-identity components");
             assert!(
-                vs[0].example.as_deref().unwrap_or_default().starts_with("pkg:github/"),
+                vs[0].example.as_deref().unwrap_or_default().starts_with("pkg:maven/"),
                 "the population is non-Go/npm; got {:?}",
                 vs[0].example,
             );
