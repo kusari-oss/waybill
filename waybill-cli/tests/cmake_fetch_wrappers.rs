@@ -81,7 +81,7 @@ fn w1_an_argn_wrapper_call_is_a_component() {
                 "wf_argn(waybill-fixture-a URL {} URL_HASH SHA256={})\nExternalProject_Add(waybill-fixture-d URL {})\n",
                 url("waybill-fixture-a", "2.1"),
                 h(),
-                url("waybill-fixture-d", "3.0")
+                url("waybill-fixture-dd", "3.0")
             )),
         ),
     ]);
@@ -92,6 +92,8 @@ fn w1_an_argn_wrapper_call_is_a_component() {
     assert!(required(a), "{a}");
     assert_eq!(source_files(a), vec!["CMakeLists.txt".to_string()]);
     assert_eq!(wrapper_chains(a), chain(&["wf_argn"]));
+    // FR-011: a direct call keeps its declared name even where its archive
+    // names another package.
     let d = the(&docs, "pkg:generic/waybill-fixture-d@3.0");
     assert_eq!(wrapper_chains(d), None, "a direct call carries no C234");
     assert_eq!(n(&cov(&docs), &["read"]), 2);
@@ -478,16 +480,17 @@ fn w21_positional_arguments() {
     assert_eq!(wrapper_chains(c), chain(&["wf_pos"]));
 }
 
-/// W-22: command names are case-insensitive.
+/// W-22: command names are case-insensitive, in the call and in the
+/// definition.
 #[test]
 fn w22_a_call_in_another_case_is_the_same_call() {
     let fx = tree(&[
-        ("cmake/wrap.cmake", PARSE),
+        ("cmake/wrap.cmake", &PARSE.replace("function(wf_parse", "function(WF_Parse")),
         ("CMakeLists.txt", &root(&format!("WF_PARSE(waybill-fixture-cs-sources URL {})\n", url("waybill-fixture-cs", "1.0")))),
     ]);
     let docs = scan(&fx, &fx.path("t"), &[]);
     let c = the(&docs, "pkg:generic/waybill-fixture-cs@1.0");
-    assert_eq!(wrapper_chains(c), chain(&["wf_parse"]), "named as defined");
+    assert_eq!(wrapper_chains(c), chain(&["WF_Parse"]), "named as defined");
 }
 
 /// W-23: spec 1538's C-12f through a wrapper. A guarded wrapped fetch of a
@@ -548,6 +551,26 @@ fn w24_a_wrapped_call_in_a_submodule_is_its_dependency() {
         .unwrap();
     assert_ne!(owner, root_ref, "not the root's");
     assert!(owner.contains("x"), "owned by the submodule: {owner}");
+}
+
+/// W-25: TheRock's openmpi, simde, xz and sqlite calls build the URL from
+/// a same-file literal `set()`, which is expanded at the call site.
+#[test]
+fn w25_a_call_site_variable_with_a_literal_set_is_expanded() {
+    let fx = tree(&[
+        ("cmake/wrap.cmake", PARSE),
+        (
+            "CMakeLists.txt",
+            &root(
+                "set(WF_V \"5.0.9\")\nset(_u \"https://mirror.invalid/waybill-fixture-xz-5.8.1.tar.bz2\")\n\
+                 wf_parse(waybill-fixture-mpi-sources URL \"https://mirror.invalid/waybill-fixture-mpi-${WF_V}.tar.bz2\")\n\
+                 wf_parse(waybill-fixture-lzma-sources URL \"${_u}\")\n",
+            ),
+        ),
+    ]);
+    let docs = scan(&fx, &fx.path("t"), &[]);
+    the(&docs, "pkg:generic/waybill-fixture-mpi@5.0.9");
+    the(&docs, "pkg:generic/waybill-fixture-xz@5.8.1");
 }
 
 /// I-7: a tree with no wrapper definitions keeps spec 1538's C231, with no

@@ -747,6 +747,17 @@ mod tests {
         assert_eq!(bind(&d, "wf(x)").unwrap().args, vec!["x", "URL", "${u}"]);
     }
 
+    /// A command the binder does not model, naming a variable, makes it
+    /// unknown rather than leaving a stale value.
+    #[test]
+    fn a_list_command_makes_a_variable_unknown() {
+        let d = defs(&[(
+            "w.cmake",
+            "function(wf name)\nset(u https://a.invalid/a-1.0.tar.gz)\nlist(APPEND u https://b.invalid/b-1.0.tar.gz)\nExternalProject_Add(${name} URL ${u})\nendfunction()\n",
+        )]);
+        assert_eq!(bind(&d, "wf(x)").unwrap().args, vec!["x", "URL", "${u}"]);
+    }
+
     /// Probe W2: the body's own `URL` comes before the caller's, and CMake
     /// fetches the first.
     #[test]
