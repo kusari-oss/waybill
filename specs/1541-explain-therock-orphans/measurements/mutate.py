@@ -12,24 +12,14 @@ O = "waybill-cli/src/generate/orphan_reason.rs"
 U = "waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs"
 S = "waybill-cli/src/scan_fs/mod.rs"
 D = "waybill-cli/src/scan_fs/binary/discover.rs"
-CONTAIN = """        if let Some(parent) = &c.parent_purl {
-            edges
-                .entry(parent.clone())
-                .or_default()
-                .push(c.purl.as_str().to_string());
-        }"""
 M = {
  # M1 (FR-002): the classifier without the operator's root again.
  "M1": [(C, "            &mut components,\n            &relationships,\n            &root_override,\n",
             "            &mut components,\n            &relationships,\n            &crate::generate::RootComponentOverride::default(),\n")],
  # M2, M3 (FR-003): containment edges removed; reversed.
- "M2": [(G, CONTAIN, "        let _ = &c.parent_purl;")],
- "M3": [(G, CONTAIN, """        if let Some(parent) = &c.parent_purl {
-            edges
-                .entry(c.purl.as_str().to_string())
-                .or_default()
-                .push(parent.clone());
-        }""")],
+ "M2": [(G, "    add_containment_edges(components, &mut edges);\n", "")],
+ "M3": [(G, "            edges.entry(container).or_default().push(child.clone());",
+            "            edges.entry(child.clone()).or_default().push(container);")],
  # M4, M5 (I7 harness): nested components ignored; containment not reachability.
  "M4": [(H, "        cdx_components_with_containers(cdx).into_iter().map(|(c, _)| c).collect();",
             "        cdx_components(cdx).iter().collect();")],
