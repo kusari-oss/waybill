@@ -1,0 +1,12 @@
+uv atroot plain	subject=pkg:pypi/waybill-fixture-rocisa@0.1.0	incoming=	orphan-reason=foreign-build-system
+uv atroot op	subject=x@1	incoming=	orphan-reason=foreign-build-system
+uv sub plain	subject=sub@0.0.0	incoming=sub@0.0.0	orphan-reason=
+uv sub op	subject=x@1	incoming=	orphan-reason=foreign-build-system
+bun atroot plain	subject=pkg:npm/waybill-fixture-a@1.0.0	incoming=	orphan-reason=foreign-build-system
+bun atroot op	subject=x@1	incoming=	orphan-reason=foreign-build-system
+bun sub plain	subject=sub@0.0.0	incoming=sub@0.0.0	orphan-reason=
+bun sub op	subject=x@1	incoming=	orphan-reason=foreign-build-system
+kts atroot plain	subject=atroot@0.0.0	incoming=atroot@0.0.0	orphan-reason=
+kts atroot op	subject=x@1	incoming=x@1	orphan-reason=
+kts sub plain	subject=pkg:cargo/waybill-fixture-top@1.0.0	incoming=pkg:cargo/waybill-fixture-top@1.0.0	orphan-reason=
+kts sub op	subject=x@1	incoming=	orphan-reason=
