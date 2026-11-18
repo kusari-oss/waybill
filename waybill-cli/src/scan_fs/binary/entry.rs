@@ -645,18 +645,32 @@ pub(super) fn rename_file_level(entry: &mut PackageDbEntry, name: &str) {
     }
 }
 
+#[cfg(test)]
 pub(super) fn make_file_level_component(
     path: &Path,
     bytes: &[u8],
     scan: &BinaryScan,
     detected_go: bool,
 ) -> PackageDbEntry {
-    let sha256 = {
-        let mut hasher = Sha256::new();
-        hasher.update(bytes);
-        format!("{:x}", hasher.finalize())
-    };
-    let hash = ContentHash::sha256(&sha256)
+    make_file_level_component_hashed(path, &sha256_hex(bytes), scan, detected_go)
+}
+
+/// Lowercase hex SHA-256 of `bytes`: a binary's file-level identity.
+pub(super) fn sha256_hex(bytes: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    format!("{:x}", hasher.finalize())
+}
+
+/// [`make_file_level_component`] with the SHA-256 already computed, so the
+/// hash can run on a worker thread with the read (#1611 follow-up).
+pub(super) fn make_file_level_component_hashed(
+    path: &Path,
+    sha256: &str,
+    scan: &BinaryScan,
+    detected_go: bool,
+) -> PackageDbEntry {
+    let hash = ContentHash::sha256(sha256)
         .expect("Sha256 hex is always well-formed");
 
     // File-level binary components get a synthetic pkg:generic PURL
