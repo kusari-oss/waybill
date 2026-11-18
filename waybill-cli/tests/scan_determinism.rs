@@ -357,3 +357,79 @@ fn d6_a_qualifier_only_merge_has_one_survivor() {
     assert!(!debs.is_empty(), "control: the dpkg database is read");
     assert_repeatable(&docs);
 }
+
+// ---------------------------------------------------------------------
+// User Story 3: one identity in every format (T012)
+// ---------------------------------------------------------------------
+
+/// The PURLs of the components that contain `purl`, in each format:
+/// CycloneDX by nesting, SPDX 2.3 and SPDX 3 by `CONTAINS`.
+fn containers(d: &Docs, purl: &str) -> [Vec<String>; 3] {
+    let cdx_purl: BTreeMap<&str, &str> = cdx_components_with_containers(&d.cdx)
+        .into_iter()
+        .filter_map(|(c, _)| Some((cdx_component_ref(c)?, c["purl"].as_str()?)))
+        .collect();
+    let mut cdx: Vec<String> = cdx_components_with_containers(&d.cdx)
+        .into_iter()
+        .filter(|(c, _)| c["purl"] == purl)
+        .map(|(_, parent)| parent.and_then(|p| cdx_purl.get(p).copied()).unwrap_or("DOCUMENT").to_string())
+        .collect();
+
+    let s2_purl: BTreeMap<&str, &str> = d.spdx23["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|p| {
+            let loc = p["externalRefs"].as_array()?.iter().find(|r| r["referenceType"] == "purl")?["referenceLocator"].as_str()?;
+            Some((p["SPDXID"].as_str()?, loc))
+        })
+        .collect();
+    let mut s2: Vec<String> = d.spdx23["relationships"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|r| r["relationshipType"] == "CONTAINS")
+        .filter(|r| r["relatedSpdxElement"].as_str().and_then(|id| s2_purl.get(id)) == Some(&purl))
+        .filter_map(|r| s2_purl.get(r["spdxElementId"].as_str()?).map(|p| p.to_string()))
+        .collect();
+
+    let graph = d.spdx3["@graph"].as_array().cloned().unwrap_or_default();
+    let s3_purl: BTreeMap<String, String> = graph
+        .iter()
+        .filter_map(|e| Some((e["spdxId"].as_str()?.to_string(), e["software_packageUrl"].as_str()?.to_string())))
+        .collect();
+    let mut s3: Vec<String> = graph
+        .iter()
+        .filter(|e| e["relationshipType"] == "contains")
+        .filter(|e| e["to"].as_array().is_some_and(|t| t.iter().any(|x| x.as_str().and_then(|x| s3_purl.get(x)).map(String::as_str) == Some(purl))))
+        .filter_map(|e| s3_purl.get(e["from"].as_str()?).cloned())
+        .collect();
+
+    for v in [&mut cdx, &mut s2, &mut s3] {
+        v.sort();
+    }
+    [cdx, s2, s3]
+}
+
+/// D-5: one bundled tree named by two different binaries. Every format
+/// places it in the same two containers.
+#[test]
+fn d5_the_formats_agree_on_containers() {
+    let dir = tempfile::tempdir().unwrap();
+    let tree = "pkg:generic/waybill-fixture-common";
+    std::fs::create_dir_all(dir.path().join("lib")).unwrap();
+    std::fs::write(dir.path().join("lib/libwaybill-fixture-one.so"), lib(&[&bundled("waybill-fixture-common")], "one")).unwrap();
+    std::fs::write(dir.path().join("lib/libwaybill-fixture-two.so"), lib(&[&bundled("waybill-fixture-common")], "two")).unwrap();
+    let docs = scan_n(dir.path(), SCANS, &[]);
+    for d in &docs {
+        let [cdx, s2, s3] = containers(d, tree);
+        assert_eq!(cdx.len(), 2, "two containers in CycloneDX: {cdx:?}");
+        assert!(cdx.iter().all(|c| c.contains("file-sha256=")), "both are file components: {cdx:?}");
+        assert_eq!(cdx, s2, "SPDX 2.3 CONTAINS gives the same containers");
+        assert_eq!(cdx, s3, "SPDX 3 contains gives the same containers");
+        for row in ["C45", "C104", "C105"] {
+            common::installed_lib::row_all_formats(d, row);
+        }
+    }
+    assert_repeatable(&docs);
+}

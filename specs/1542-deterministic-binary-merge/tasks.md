@@ -95,7 +95,9 @@
 **Goal:** the three formats report one component set (FR-004).
 **Independent test:** D-5.
 
-- [ ] T012 [US3] Add D-5 to `waybill-cli/tests/scan_determinism.rs`: one bundled tree named by two different binaries. Through `common::installed_lib::row_all_formats`, the three formats agree on C45, C104 and C105, and the (PURL, container) pairs are equal across the formats: read from CycloneDX nesting and from SPDX `CONTAINS`, with two pairs for the tree. Research R4 expects no SPDX 2.3 change. If D-5 fails after T005 and T009, the cause is traced and recorded here before any format change.
+- [X] T012 [US3] Add D-5 to `waybill-cli/tests/scan_determinism.rs`: one bundled tree named by two different binaries. Through `common::installed_lib::row_all_formats`, the three formats agree on C45, C104 and C105, and the (PURL, container) pairs are equal across the formats: read from CycloneDX nesting and from SPDX `CONTAINS`, with two pairs for the tree. Research R4 expects no SPDX 2.3 change. If D-5 fails after T005 and T009, the cause is traced and recorded here before any format change.
+  - **Done.** In all 20 scans, CycloneDX nesting, SPDX 2.3 `CONTAINS` and SPDX 3 `contains` place the tree in the same two file components, and C45, C104 and C105 agree through the parity extractors. No SPDX 2.3 change was needed (R4).
+  - With `main`'s deduplicator, D-5's containers still agree, but SPDX 2.3 repeatability fails (2 variants, 13 against 7 of 20): the same-PURL tie. D-5 therefore also guards T010's output sort.
 
 ## Phase 6: The determinism audit (FR-006) and measurement
 
