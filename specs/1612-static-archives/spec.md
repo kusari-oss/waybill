@@ -49,6 +49,14 @@ Only that last group is new information, and its size decides this feature's val
 - **Mach-O universal (fat) archives** occur in the Nix closure tier (`lib_links.rs`). They do not occur on the TheRock SDK, which is Linux-only.
 - **The binary tier is parallel** (#1613): files are read, parsed and hashed on several threads, and stateful work stays in walk order. Two recent fixes removed whole-file re-reads (#1608, #1611), and this feature must not bring them back.
 
+## Clarifications
+
+### Session 2026-11-18
+
+- Q: Which opened archives become components? → A: Every opened archive becomes one binary component with a `file-sha256` identity, like a shared library, whether or not its members reveal anything. Findings nest under it. On the SDK that is up to 822 new components.
+- Q: Should an archive owned by an OS package (dpkg, rpm, apk) be opened? → A: No. It is reported through its package, as a claimed binary is, and counted in the coverage record as `owned-by-os-package`.
+- Q: On by default, or opt-in? → A: On by default in installed trees. `--no-binary-scan all` turns it off with the rest of the binary tier; there is no separate flag.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Third-party code compiled into a shipped static library is identified (Priority: P1)
@@ -130,6 +138,7 @@ Archives produced by the GNU and LLVM toolchains are read correctly: symbol inde
 - **A malformed archive** (truncated header, size field past end of file). It is recorded as failed. The scan continues, and nothing partial from that archive is emitted unless the members read before the fault are well-formed.
 - **A Mach-O universal (fat) archive.** It is out of scope for this feature; it is counted as skipped by format.
 - **An `.a` that is not an archive** (wrong magic). It is counted under its own reason and not opened.
+- **An archive owned by an OS package** (for example `libc.a` from a `.deb` in a container image). It is not opened; it is counted as `owned-by-os-package`.
 - **Archives in an installed tree's test payload** (spec 1533's test scope). They are opened, and their components inherit the test scope, as other test-scoped content does.
 
 ## Requirements *(mandatory)*
@@ -143,6 +152,7 @@ Archives produced by the GNU and LLVM toolchains are read correctly: symbol inde
   It MUST report which third-party trees appear only inside archives, and which also appear in shared libraries or executables. The success criteria's targets are taken from this census. The census is a measuring script, not a model of the reader.
 - **FR-002**: Static archives MUST be opened only in a tree recognised as installed (spec 1533). Elsewhere the existing build-intermediate gate applies, unchanged.
 - **FR-003**: An archive under a compiler test-input directory (#1524's rule) MUST NOT be opened, even in an installed tree.
+- **FR-003a**: An archive claimed by an OS package (dpkg, rpm, apk) MUST NOT be opened. This is the same claim check the binary tier applies to claimed binaries; it prevents the package's content from being reported a second time under another identity.
 - **FR-004**: The archive reader MUST read:
   - BSD-format archives (short names and `#1/N` inline long names);
   - GNU-format archives (`/` and `/SYM64/` symbol indexes, the `//` long-name table, and `/N` member references).
@@ -156,7 +166,7 @@ Archives produced by the GNU and LLVM toolchains are read correctly: symbol inde
   - symbol fingerprints.
   
   It MUST merge the results per archive into at most one finding per third-party package or tree.
-- **FR-008**: An archive that is opened MUST be represented as one binary component. What its members reveal MUST be nested under it, as bundled components, with the evidence kind and the supporting member names. Members MUST NOT become components of their own.
+- **FR-008**: Every archive that is opened MUST be represented as one binary component, whether or not its members reveal anything. Its identity is the file's SHA-256, as a shared library's is today. What its members reveal MUST be nested under it, as bundled components, with the evidence kind and the supporting member names. Members MUST NOT become components of their own.
 - **FR-009**: An archive already attributed to a package MUST keep that attribution unchanged.
 - **FR-010**: The system MUST enforce:
   - a per-archive size bound;
@@ -164,7 +174,7 @@ Archives produced by the GNU and LLVM toolchains are read correctly: symbol inde
   - a member-count bound.
   
   It MUST record every archive skipped or partly opened because of one, with the reason.
-- **FR-011**: The document MUST carry a document-scope archive coverage record. It counts the archives found, opened, partly opened, and skipped by each reason (bound, thin, fat, not an archive, malformed, test input), and the counts MUST sum to the archives found.
+- **FR-011**: The document MUST carry a document-scope archive coverage record. It counts the archives found, opened, partly opened, and skipped by each reason (bound, thin, fat, not an archive, malformed, test input, owned by an OS package), and the counts MUST sum to the archives found.
 - **FR-012**: Every new annotation MUST be registered as a catalog row, with parity extractors for all three formats, before it is emitted. All three formats MUST agree on it.
 - **FR-013**: Opening archives MUST NOT add whole-file re-reads. Each archive is read once, in the binary tier's per-file stage.
 - **FR-014**: Documents MUST be identical across repeated scans of the same tree (spec 1542's repeat check), whatever the thread scheduling.
@@ -175,11 +185,12 @@ Archives produced by the GNU and LLVM toolchains are read correctly: symbol inde
   - a thin archive;
   - an archive under a compiler test-input directory;
   - an archive in a tree not recognised as installed.
+- **FR-015a**: Archive opening MUST be on by default, in trees recognised as installed. `--no-binary-scan all` MUST turn it off along with the rest of the binary tier. No new flag is added.
 - **FR-016**: No new Cargo dependencies.
 
 ### Key Entities
 
-- **Static archive**: a shipped `.a` file, identified by its path and content hash. Attributes: format (BSD, GNU, thin, fat), member count, and whether it was opened, partly opened or skipped, with the reason.
+- **Static archive**: a shipped `.a` file, identified by its content hash, as a shared library is. It is emitted as a component whenever it is opened. Attributes: format (BSD, GNU, thin, fat), member count, and whether it was opened, partly opened or skipped, with the reason.
 - **Member**: an object file inside an archive, identified by its full name within the archive. It is analysed, never emitted as a component.
 - **Archive finding**: a third-party package or tree revealed by one or more members of one archive. It carries the evidence kind, version where known, and the supporting member names. It is nested under the archive.
 - **Archive coverage record**: the document-scope counts of archives found, opened, partly opened, and skipped, by reason.
@@ -201,7 +212,7 @@ Archives produced by the GNU and LLVM toolchains are read correctly: symbol inde
 
 - **Installed trees only.** "Installed tree" means spec 1533's recognition. Archives in trees it does not recognise keep today's behaviour, even if some are genuinely shipped. Widening that is a separate decision.
 - **Per-member analysis reuses existing scanners.** The embedded-path, version-string and symbol-fingerprint scanners apply to object members as to whole binaries. Gaps in their coverage (#1527) are out of scope here.
-- **One component per archive.** Representing the archive as a single binary component, with findings nested under it, is consistent with how installed binaries and their bundled trees are represented today (spec 1534).
+- **One component per archive.** Representing the archive as a single binary component, with findings nested under it, is consistent with how installed binaries and their bundled trees are represented today (spec 1534). Shared libraries get a component each whether or not anything is found inside them (508 on the SDK), and archives are treated the same.
 - **Fat archives are deferred.** They occur only in the Nix closure tier, not on the TheRock SDK, so they are excluded and counted.
 - **Thin archives are not followed** through the archive. Their members are separate files, which the walk already examines.
 - **Bounds are set in the plan.** The values are chosen from the census's observed distribution of archive and member sizes, not here.
