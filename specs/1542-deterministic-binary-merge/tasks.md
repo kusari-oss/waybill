@@ -20,17 +20,19 @@
 
 ## Phase 2: Foundational (blocks every story)
 
-- [ ] T002 Create `waybill-cli/tests/scan_determinism.rs` with three helpers:
+- [X] T002 Create `waybill-cli/tests/scan_determinism.rs` with three helpers:
   - `scan_n(root, n, extra) -> Vec<Docs>`, which scans `n` times through `common::installed_lib::scan_with`;
   - `masked(&Docs) -> (Value, Value, Value)`, with the masking in data-model.md;
   - `assert_repeatable(&[Docs])`, which asserts one masked document per format and one `waybill:graph-completeness-reason`, and on failure prints the distinct variants with their scan indices. The comparison is byte-for-byte on the masked documents, array order included. A failure reports whether the scans differ only in order (the same multiset of array elements) or in content.
 
   Reuse the corpus harness's masking (`corpus_harness_195::layer2_golden::mask_nondeterministic`), made `pub(crate)` or reached through a `#[path]` include, as `orphan_explanations.rs` does. Never re-derive it.
-- [ ] T003 Port the trace's fixture builders into `waybill-cli/tests/scan_determinism.rs`:
+- [X] T003 Port the trace's fixture builders into `waybill-cli/tests/scan_determinism.rs`:
   - `chain(root, dir, base, versions, bytes)`, which builds a symlink chain `base` → `base.<v1>` → … → final file;
   - `lib(paths, tag) -> Vec<u8>`, an ELF whose `.rodata` holds the embedded bundled-tree paths.
 
   Gate the file `#![cfg(unix)]`: symlinks, and the Windows clippy rule for platform shims.
+
+**Done.** The control (`control_the_comparison_detects_a_difference`) found real variation in its first runs, at `main`. Two scans of **one** symlinked library differ in SPDX 2.3's `evidence.occurrences` annotation: the deduplicator merges occurrences in member order, and member order varies between scans. It failed in 2 of 3 runs. This is in the binary merge path, so it is fixed here (clarification), by T010's total order on group members.
 
 **Checkpoint:** an empty fixture scanned 20 times is repeatable (a control that the masking does not hide a real difference: add a deliberate one and see it reported).
 
@@ -39,18 +41,25 @@
 **Goal:** different files with one name are different components (R1).
 **Independent test:** D-1, D-2, D-3, D-7.
 
-- [ ] T004 [US2] Add contract cases D-1 (symlink chains to different bytes), D-2 (one name, same bytes), D-3 (one name, different bytes, no symlinks) and D-7 (same bytes, different names) to `waybill-cli/tests/scan_determinism.rs`. Each asserts:
+- [X] T004 [US2] Add contract cases D-1 (symlink chains to different bytes), D-2 (one name, same bytes), D-3 (one name, different bytes, no symlinks) and D-7 (same bytes, different names) to `waybill-cli/tests/scan_determinism.rs`. Each asserts:
   - the file components per name and hash;
   - every bundled tree is nested under its own file;
   - no identification is top-level (I-D);
   - repeatability, over 20 scans.
 
   Run at `main` and record which fail, and for D-1 how many of the 20 scans differ.
-- [ ] T005 [US2] Add the `file-sha256` qualifier to the dedup group key in `waybill-cli/src/resolve/deduplicator.rs` (`content_hash`, research R1; the doc comment cites #1600 and the SDK's `libgotcha.so`). Unit tests beside the existing ones:
+- [X] T005 [US2] Add the `file-sha256` qualifier to the dedup group key in `waybill-cli/src/resolve/deduplicator.rs` (`content_hash`, research R1; the doc comment cites #1600 and the SDK's `libgotcha.so`). Unit tests beside the existing ones:
   - two components with one name and different `file-sha256` stay two;
   - with the same `file-sha256` they merge;
   - two `deb` components that differ only in `?arch=` still merge (milestone 1064).
-- [ ] T006 [US2] Run `python_owned_binaries`, `installed_lib_embedded_paths`, `installed_lib_*`, `binary_*` and the three regression suites. Record any changed expectation and its cause in this task.
+- [X] T006 [US2] Run `python_owned_binaries`, `installed_lib_embedded_paths`, `installed_lib_*`, `binary_*` and the three regression suites. Record any changed expectation and its cause in this task.
+  - **At `main` (T004):**
+    - D-1 fails: one file component where two are expected.
+    - D-3 fails: the same merge, without symlinks.
+    - D-7 fails repeatability: the occurrence-order variation, 12 scans against 8 of 20.
+    - D-2 passes.
+  - **After R1 (T005):** the unit tests pass, and D-1 and D-3 get two file components. D-1 still varies in occurrence order (9 variants in 20 scans) until T010.
+  - **T006:** every suite passes, with no golden change: `python_owned_binaries` 22, `installed_lib_*` 18, `installed_test_scope` 7, the `binary_*` suites 23, the three regression suites 11 each, and `orphan_explanations` 146.
 
 ## Phase 4: User Story 1 — a scan of a fixed input says the same thing every time (P1)
 

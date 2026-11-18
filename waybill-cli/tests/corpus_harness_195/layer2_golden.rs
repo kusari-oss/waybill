@@ -210,7 +210,7 @@ fn first_divergences(golden: &[u8], actual: &[u8], limit: usize) -> String {
 /// `feedback_cross_host_goldens`: masks known volatile fields to
 /// stable placeholders so byte-identity compares across hosts, dates,
 /// and workspace paths.
-fn mask_nondeterministic(v: &serde_json::Value) -> serde_json::Value {
+pub fn mask_nondeterministic(v: &serde_json::Value) -> serde_json::Value {
     let mut cloned = v.clone();
     walk_mask(&mut cloned);
     cloned

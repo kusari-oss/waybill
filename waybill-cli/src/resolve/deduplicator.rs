@@ -10,10 +10,25 @@ use std::collections::HashMap;
 use waybill_common::resolution::ResolvedComponent;
 
 /// `(ecosystem, name, version, parent_purl, pants-namespace qualifier)`.
-type DedupKey = (String, String, String, Option<String>, Option<String>);
+type DedupKey = (String, String, String, Option<String>, Option<String>, Option<String>);
+
+/// Spec 1542 (#1600): the `file-sha256` qualifier of a component that names
+/// one file's bytes (a binary's file-level component). Two such components
+/// with one name and different contents are different files and must not
+/// merge: on the ROCm SDK, `rocprofiler-sdk/libgotcha.so` and
+/// `rocprofiler-systems/libgotcha.so` end symlink chains to different
+/// libraries, and merging them left the loser's identifications without
+/// their container. Every other qualifier stays out of the key (milestone
+/// 1064).
+fn content_hash(purl: &waybill_common::types::purl::Purl) -> Option<String> {
+    purl.as_str()
+        .split_once("file-sha256=")
+        .map(|(_, rest)| rest.split(['&', '#']).next().unwrap_or(rest).to_string())
+}
 
 /// Deduplicate resolved components by
-/// `(ecosystem, name, version, parent_purl, pants-namespace qualifier)`.
+/// `(ecosystem, name, version, parent_purl, pants-namespace qualifier,
+/// file-sha256 qualifier)`.
 ///
 /// For each group of duplicates:
 /// - Keep the entry with the highest confidence score.
@@ -49,6 +64,7 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             component.parent_purl.clone(),
             crate::scan_fs::package_db::pants_resolve::anchor_namespace(&component.purl)
                 .map(str::to_string),
+            content_hash(&component.purl),
         );
         groups.entry(key).or_default().push(component);
     }
@@ -1755,5 +1771,38 @@ mod tests {
                 "Edge Case 1: entry {i} MUST carry the full 3-path alphabetically-sorted union",
             );
         }
+    }
+
+    // ── Spec 1542 (#1600) ──────────────────────────────────────────────
+
+    /// Two binaries with one file name and different contents are two
+    /// files. Merging them left the loser's identifications without their
+    /// container (the ROCm SDK's two `libgotcha.so`).
+    #[test]
+    fn s1542_one_name_different_hashes_stay_two() {
+        let a = make_component_with_parent("pkg:generic/libg.so?file-sha256=aaaa", None, vec!["sdk/libg.so"]);
+        let b = make_component_with_parent("pkg:generic/libg.so?file-sha256=bbbb", None, vec!["systems/libg.so"]);
+        let out = deduplicate(vec![a, b]);
+        let purls: Vec<&str> = out.iter().map(|c| c.purl.as_str()).collect();
+        assert_eq!(purls, vec!["pkg:generic/libg.so?file-sha256=aaaa", "pkg:generic/libg.so?file-sha256=bbbb"]);
+    }
+
+    /// The same bytes under one name in two places are one file.
+    #[test]
+    fn s1542_one_name_same_hash_merges() {
+        let a = make_component_with_parent("pkg:generic/libg.so?file-sha256=aaaa", None, vec!["a/libg.so"]);
+        let b = make_component_with_parent("pkg:generic/libg.so?file-sha256=aaaa", None, vec!["b/libg.so"]);
+        let out = deduplicate(vec![a, b]);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].evidence.source_file_paths.len(), 2);
+    }
+
+    /// Milestone 1064 kept every other qualifier out of the key: qualifier-
+    /// only variants still merge.
+    #[test]
+    fn s1542_other_qualifiers_still_merge() {
+        let a = make_component_with_parent("pkg:deb/debian/libc6@2.36?arch=amd64", None, vec!["var/lib/dpkg/status"]);
+        let b = make_component_with_parent("pkg:deb/debian/libc6@2.36?arch=arm64", None, vec!["var/lib/dpkg/status"]);
+        assert_eq!(deduplicate(vec![a, b]).len(), 1);
     }
 }
