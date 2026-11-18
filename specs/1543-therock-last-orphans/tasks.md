@@ -116,7 +116,7 @@
 
 ## Phase 6: Polish & cross-cutting
 
-- [ ] T024 [P] Write a mutation script `specs/1543-therock-last-orphans/measurements/mutate.py` and runner `mutate-run.sh` (as in spec 1542). Mutate each of:
+- [X] T024 [P] Write a mutation script `specs/1543-therock-last-orphans/measurements/mutate.py` and runner `mutate-run.sh` (as in spec 1542). Mutate each of:
   - the anchor;
   - the subject rung;
   - the C69 heuristic (returned as `RepoRoot`);
@@ -129,7 +129,7 @@
   - the scope rule.
 
   Record which test fails for each in `measurements/mutations.md`. Revert with `cp`, never `git checkout`.
-- [ ] T025 [P] File the follow-up issue for reading fetches, `find_package` and downloads through `include()` (research R3, trace §2), and link it in `research.md`.
+- [X] T025 [P] File the follow-up issue for reading fetches, `find_package` and downloads through `include()` (research R3, trace §2), and link it in `research.md`.
 - [ ] T026 Dispatch `public-corpus.yml` with `repeat=2` at the branch and at `main`, and the quality corpus against `main`. Trace every golden or score movement in `measurements/audit.md` (expect no golden change, per trace §1).
 - [ ] T027 Add a `CHANGELOG.md` entry (#1601, #1602) and a line in `docs/reference/sbom-invariants.md` if the I7 wording names workspace roots.
 - [ ] T028 Run the gate alone: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record the per-target pass counts in `measurements/gate-log.md`.

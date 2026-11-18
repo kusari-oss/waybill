@@ -541,7 +541,17 @@ fn l8_the_linking_projects_submodule_owns_the_edge() {
         .map(|e| e["ref"].as_str().unwrap())
         .collect();
     assert_eq!(owners.len(), 1, "one edge into the record: {owners:?}");
-    assert!(owners[0].contains("x"), "owned by the submodule: {}", owners[0]);
+    // Not `contains("x")`: the root's ref, `waybill-fixture-root`, has an x
+    // too, and mutation M8 (owner forced to the root) survived that check.
+    let root = docs.cdx["metadata"]["component"]["bom-ref"].as_str().unwrap();
+    assert_ne!(owners[0], root, "the root does not own the link");
+    let owner = docs.cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["bom-ref"] == owners[0])
+        .unwrap_or_else(|| panic!("the owner {} is a component", owners[0]));
+    assert_eq!(prop(owner, "waybill:source-mechanism"), Some("git-submodule"), "owned by the submodule");
     let optional = docs.spdx23["relationships"]
         .as_array()
         .unwrap()

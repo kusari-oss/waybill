@@ -38,7 +38,7 @@ The evidence for every decision is in `measurements/trace.md`.
 
 `CMAKE_CURRENT_SOURCE_DIR` stays the *including* `CMakeLists.txt`'s directory. `CMAKE_CURRENT_LIST_DIR` is the included file's own directory, which is CMake's semantics. The included file is read with the include site's open blocks already on the stack. A visited set and a depth bound of 8 stop cycles.
 
-**Scope.** This applies to link declarations only. Reading fetches, `find_package` and downloads through `include()` would also cure the condition gap noted in trace §2, but it would move fetch output on corpus targets. That is filed as its own issue, with this mechanism as the starting point.
+**Scope.** This applies to link declarations only. Reading fetches, `find_package` and downloads through `include()` would also cure the condition gap noted in trace §2, but it would move fetch output on corpus targets. That is filed as #1605, with this mechanism as the starting point.
 
 **Alternatives rejected.**
 - *Widen the walker to `CMakeLists*.txt`.* That reads the WSL file, but without the `if (WIN_SDK)` that makes it conditional, so SC-003 would be false. It also reads files nothing includes.
