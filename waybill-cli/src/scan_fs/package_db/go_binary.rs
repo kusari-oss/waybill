@@ -165,7 +165,7 @@ pub fn detect_is_go(path: &Path) -> DetectResult {
     let Ok(file) = std::fs::File::open(path) else {
         return DetectResult::AmbiguousError;
     };
-    match read_if_binary_shape(file, size) {
+    match read_if_maybe_go(file, size) {
         Ok(Some(bytes)) => detect_is_go_bytes(&bytes),
         Ok(None) => DetectResult::NotGoBinary,
         Err(_) => DetectResult::AmbiguousError,
@@ -187,12 +187,61 @@ fn is_binary_shape(prefix: &[u8]) -> bool {
     ) || matches!(prefix.first_chunk::<2>(), Some(b"MZ"))
 }
 
-/// #1608: the whole of `r` when its first bytes are a binary shape, else
-/// `None` after reading at most those bytes. #781 rejected a non-binary
-/// by its magic only after the whole file was in memory, so a source scan
-/// still read every candidate in full: on TheRock's 17 GB source tree that
-/// was about two thirds of the scan.
-fn read_if_binary_shape<R: std::io::Read>(mut r: R, size: u64) -> std::io::Result<Option<Vec<u8>>> {
+/// What a file's section table says about Go, read without loading the file.
+#[derive(Debug, PartialEq, Eq)]
+enum SectionVerdict {
+    /// An ELF or Mach-O whose sections parse and include none Go writes
+    /// BuildInfo to.
+    NoGoSection,
+    /// Anything else: a Go section, a PE (Go's PE BuildInfo has no named
+    /// section; `debug/buildinfo` searches the data section), no section
+    /// table at all (stripped headers, where `debug/buildinfo` falls back to
+    /// the first writable segment), or headers that do not parse.
+    Unknown,
+}
+
+/// #1611: decide from the section table alone, reading only the ranges the
+/// parser asks for. Go's linker writes BuildInfo to `.go.buildinfo` (ELF)
+/// or `__go_buildinfo` (Mach-O), so a file with a parsed section table and
+/// neither section is not Go, and the whole-file search for the magic
+/// (Tier 2 of [`detect_is_go_bytes`]) cannot be needed.
+fn section_verdict<R: std::io::Read + std::io::Seek>(r: R) -> SectionVerdict {
+    let cache = object::ReadCache::new(r);
+    let Ok(obj) = object::File::parse(&cache) else {
+        return SectionVerdict::Unknown;
+    };
+    if !matches!(obj.format(), object::BinaryFormat::Elf | object::BinaryFormat::MachO) {
+        return SectionVerdict::Unknown;
+    }
+    let mut any = false;
+    for section in obj.sections() {
+        let Ok(name) = section.name() else { continue };
+        if name.is_empty() {
+            continue;
+        }
+        any = true;
+        if name == ".go.buildinfo" || name == "__go_buildinfo" {
+            return SectionVerdict::Unknown;
+        }
+    }
+    if any {
+        SectionVerdict::NoGoSection
+    } else {
+        SectionVerdict::Unknown
+    }
+}
+
+/// #1608, #1611: the whole of `r` when it may be a Go binary, else `None`.
+///
+/// - Not a binary shape by its first 4 bytes: `None` (#1608: #781 checked
+///   the magic only after the whole file was in memory, so a source scan
+///   read every candidate in full).
+/// - An ELF or Mach-O whose section table rules Go out: `None`, having read
+///   only the header and section table (#1611: on TheRock's installed SDK
+///   the whole-file search over every non-Go ELF was a fifth of the scan).
+/// - Otherwise the whole file, for [`detect_is_go_bytes`] to decide.
+fn read_if_maybe_go<R: std::io::Read + std::io::Seek>(mut r: R, size: u64) -> std::io::Result<Option<Vec<u8>>> {
+    use std::io::{Read, Seek, SeekFrom};
     let mut prefix = [0u8; 4];
     let mut got = 0;
     while got < prefix.len() {
@@ -204,8 +253,12 @@ fn read_if_binary_shape<R: std::io::Read>(mut r: R, size: u64) -> std::io::Resul
     if !is_binary_shape(&prefix[..got]) {
         return Ok(None);
     }
+    r.seek(SeekFrom::Start(0))?;
+    if section_verdict(&mut r) == SectionVerdict::NoGoSection {
+        return Ok(None);
+    }
+    r.seek(SeekFrom::Start(0))?;
     let mut bytes = Vec::with_capacity(usize::try_from(size).unwrap_or(0));
-    bytes.extend_from_slice(&prefix[..got]);
     r.read_to_end(&mut bytes)?;
     Ok(Some(bytes))
 }
@@ -516,7 +569,7 @@ pub fn read_binary(path: &Path) -> (BuildInfoStatus, Option<GoBinaryInfo>) {
     let Ok(file) = std::fs::File::open(path) else {
         return (BuildInfoStatus::NotGoBinary, None);
     };
-    match read_if_binary_shape(file, size) {
+    match read_if_maybe_go(file, size) {
         Ok(Some(bytes)) => read_binary_bytes(path, &bytes),
         Ok(None) | Err(_) => (BuildInfoStatus::NotGoBinary, None),
     }
@@ -1380,7 +1433,7 @@ mod tests {
 
     impl std::io::Read for Counting<'_> {
         fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-            let n = buf.len().min(self.chunk).min(self.data.len() - self.pos);
+            let n = buf.len().min(self.chunk).min(self.data.len().saturating_sub(self.pos));
             buf[..n].copy_from_slice(&self.data[self.pos..self.pos + n]);
             self.pos += n;
             self.handed += n;
@@ -1388,11 +1441,27 @@ mod tests {
         }
     }
 
+    impl std::io::Seek for Counting<'_> {
+        fn seek(&mut self, to: std::io::SeekFrom) -> std::io::Result<u64> {
+            let base = match to {
+                std::io::SeekFrom::Start(n) => return Ok({ self.pos = n as usize; n }),
+                std::io::SeekFrom::End(d) => self.data.len() as i64 + d,
+                std::io::SeekFrom::Current(d) => self.pos as i64 + d,
+            };
+            self.pos = base.max(0) as usize;
+            Ok(self.pos as u64)
+        }
+    }
+
+    fn counting(data: &[u8], chunk: usize) -> Counting<'_> {
+        Counting { data, pos: 0, chunk, handed: 0 }
+    }
+
     #[test]
     fn s1608_a_non_binary_is_not_read_past_its_magic() {
         let text = vec![b'a'; 8 * 1024 * 1024];
-        let mut r = Counting { data: &text, pos: 0, chunk: usize::MAX, handed: 0 };
-        assert!(read_if_binary_shape(&mut r, text.len() as u64).unwrap().is_none());
+        let mut r = counting(&text, usize::MAX);
+        assert!(read_if_maybe_go(&mut r, text.len() as u64).unwrap().is_none());
         assert_eq!(r.handed, 4);
     }
 
@@ -1401,21 +1470,108 @@ mod tests {
         let mut bin = synth_padding(4096);
         bin.extend_from_slice(&build_inline_buildinfo("path\tx\nmod\tx\tv0.0.0\t\n", ""));
         for chunk in [1, 3, usize::MAX] {
-            let mut r = Counting { data: &bin, pos: 0, chunk, handed: 0 };
-            let got = read_if_binary_shape(&mut r, bin.len() as u64).unwrap().expect("binary shape");
+            let mut r = counting(&bin, chunk);
+            let got = read_if_maybe_go(&mut r, bin.len() as u64).unwrap().expect("binary shape");
             assert_eq!(got, bin, "chunk {chunk}");
             assert!(matches!(detect_is_go_bytes(&got), DetectResult::Found { .. }));
         }
         let mut pe = b"MZ".to_vec();
         pe.extend(vec![0u8; 2048]);
-        let mut r = Counting { data: &pe, pos: 0, chunk: 1, handed: 0 };
-        assert_eq!(read_if_binary_shape(&mut r, pe.len() as u64).unwrap(), Some(pe.clone()));
+        let mut r = counting(&pe, 1);
+        assert_eq!(read_if_maybe_go(&mut r, pe.len() as u64).unwrap(), Some(pe.clone()));
     }
 
     #[test]
     fn s1608_a_file_shorter_than_the_magic_is_not_a_binary() {
-        let mut r = Counting { data: b"\x7fE", pos: 0, chunk: usize::MAX, handed: 0 };
-        assert!(read_if_binary_shape(&mut r, 2).unwrap().is_none());
+        let mut r = counting(b"\x7fE", usize::MAX);
+        assert!(read_if_maybe_go(&mut r, 2).unwrap().is_none());
+    }
+
+    use crate::scan_fs::binary::embedded::fixtures::elf_with_section;
+
+    /// `elf_with_section` with `extra` zero bytes appended, so the file is
+    /// far larger than its header and section table.
+    fn big(mut elf: Vec<u8>, extra: usize) -> Vec<u8> {
+        elf.extend(std::iter::repeat_n(0u8, extra));
+        elf
+    }
+
+    #[test]
+    fn s1611_an_elf_without_a_go_section_is_ruled_out_from_its_section_table() {
+        let elf = big(elf_with_section(".text", &[0x90; 64]), 8 * 1024 * 1024);
+        assert_eq!(section_verdict(counting(&elf, usize::MAX)), SectionVerdict::NoGoSection);
+        let mut r = counting(&elf, usize::MAX);
+        assert!(read_if_maybe_go(&mut r, elf.len() as u64).unwrap().is_none());
+        assert!(r.handed < 16 * 1024, "read {} of {} bytes", r.handed, elf.len());
+    }
+
+    #[test]
+    fn s1611_an_elf_with_a_go_section_is_read_whole_and_found() {
+        let blob = build_inline_buildinfo("path\tx\nmod\tx\tv0.0.0\t\n", "");
+        let elf = big(elf_with_section(".go.buildinfo", &blob), 64 * 1024);
+        assert_eq!(section_verdict(counting(&elf, usize::MAX)), SectionVerdict::Unknown);
+        let got = read_if_maybe_go(counting(&elf, usize::MAX), elf.len() as u64).unwrap().expect("read whole");
+        assert_eq!(got, elf);
+        assert!(matches!(detect_is_go_bytes(&got), DetectResult::Found { .. }));
+    }
+
+    /// Stripped section headers: Go's own reader falls back to the first
+    /// writable segment, so the magic search must still run.
+    #[test]
+    fn s1611_an_elf_with_no_section_table_falls_back_to_the_whole_file() {
+        let blob = build_inline_buildinfo("path\tx\nmod\tx\tv0.0.0\t\n", "");
+        let mut elf = elf_with_section(".data", &blob);
+        elf[40..48].copy_from_slice(&0u64.to_le_bytes()); // e_shoff
+        elf[60..62].copy_from_slice(&0u16.to_le_bytes()); // e_shnum
+        elf[62..64].copy_from_slice(&0u16.to_le_bytes()); // e_shstrndx
+        assert_eq!(section_verdict(counting(&elf, usize::MAX)), SectionVerdict::Unknown);
+        let got = read_if_maybe_go(counting(&elf, usize::MAX), elf.len() as u64).unwrap().expect("read whole");
+        assert!(matches!(detect_is_go_bytes(&got), DetectResult::Found { .. }));
+    }
+
+    /// A minimal PE32+ whose headers parse, with one `.text` section and no
+    /// Go section.
+    fn pe_with_text_section(total: usize) -> Vec<u8> {
+        let mut f = vec![0u8; total];
+        f[0..2].copy_from_slice(b"MZ");
+        f[0x3c..0x40].copy_from_slice(&0x80u32.to_le_bytes()); // e_lfanew
+        let nt = 0x80;
+        f[nt..nt + 4].copy_from_slice(b"PE\0\0");
+        let fh = nt + 4;
+        f[fh..fh + 2].copy_from_slice(&0x8664u16.to_le_bytes()); // AMD64
+        f[fh + 2..fh + 4].copy_from_slice(&1u16.to_le_bytes()); // sections
+        f[fh + 16..fh + 18].copy_from_slice(&240u16.to_le_bytes()); // optional header size
+        f[fh + 18..fh + 20].copy_from_slice(&0x22u16.to_le_bytes()); // executable, large-address-aware
+        let oh = fh + 20;
+        f[oh..oh + 2].copy_from_slice(&0x20bu16.to_le_bytes()); // PE32+
+        f[oh + 32..oh + 36].copy_from_slice(&0x1000u32.to_le_bytes()); // section alignment
+        f[oh + 36..oh + 40].copy_from_slice(&0x200u32.to_le_bytes()); // file alignment
+        f[oh + 56..oh + 60].copy_from_slice(&0x2000u32.to_le_bytes()); // size of image
+        f[oh + 60..oh + 64].copy_from_slice(&0x200u32.to_le_bytes()); // size of headers
+        f[oh + 108..oh + 112].copy_from_slice(&16u32.to_le_bytes()); // data directories
+        let sh = oh + 240;
+        f[sh..sh + 5].copy_from_slice(b".text");
+        f[sh + 8..sh + 12].copy_from_slice(&0x200u32.to_le_bytes()); // virtual size
+        f[sh + 12..sh + 16].copy_from_slice(&0x1000u32.to_le_bytes()); // virtual address
+        f[sh + 16..sh + 20].copy_from_slice(&0x200u32.to_le_bytes()); // raw size
+        f[sh + 20..sh + 24].copy_from_slice(&0x200u32.to_le_bytes()); // raw offset
+        f[sh + 36..sh + 40].copy_from_slice(&0x6000_0020u32.to_le_bytes()); // code, read, execute
+        f
+    }
+
+    /// Go's PE BuildInfo has no named section (`debug/buildinfo` searches
+    /// the data section), so a PE whose sections parse is still read whole.
+    #[test]
+    fn s1611_a_pe_is_never_ruled_out_by_its_sections() {
+        let pe = pe_with_text_section(8192);
+        let names: Vec<String> = object::File::parse(&*pe)
+            .expect("the fixture parses as PE")
+            .sections()
+            .filter_map(|s| s.name().ok().map(str::to_string))
+            .collect();
+        assert_eq!(names, [".text"], "fixture must parse, or this test exercises nothing");
+        assert_eq!(section_verdict(counting(&pe, usize::MAX)), SectionVerdict::Unknown);
+        assert_eq!(read_if_maybe_go(counting(&pe, usize::MAX), pe.len() as u64).unwrap(), Some(pe.clone()));
     }
 
     #[test]
