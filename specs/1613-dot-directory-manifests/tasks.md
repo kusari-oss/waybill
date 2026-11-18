@@ -17,7 +17,7 @@
   - Add `.github/workflows/test-suite/waybill-fixture.cmake` holding a `FetchContent_Declare`. Then set the CMake registration's `descend_into` to `.github` in a scratch copy and confirm the CMake reader receives the file. This proves R2's claim that CMake discovers through the shared walker, and not only by its registration's pattern.
   - Confirm how the deduplicator merges a pip package declared both in a scoped requirements file (`Optional`, C155) and in an unscoped `requirements.txt`. Use `requirements-ci.txt` beside `requirements.txt`, which needs no dot-directory and so runs on `main`. Record which scope and which C155 value survive. If the runtime declaration doesn't win, FR-006 needs a merge rule of its own, and T010 gains it.
   - Revert the scratch change with `cp`.
-- [ ] T002 [P] Create `waybill-cli/tests/scan_dot_directory_manifests.rs` (file-scope `#![cfg(unix)]`), including the corpus harness by `#[path]` as `waybill-cli/tests/scan_therock_last_orphans.rs` does. Add helpers:
+- [X] T002 [P] Create `waybill-cli/tests/scan_dot_directory_manifests.rs` (file-scope `#![cfg(unix)]`), including the corpus harness by `#[path]` as `waybill-cli/tests/scan_therock_last_orphans.rs` does. Add helpers:
   - `scan(dir, flags) -> [cdx, spdx23, spdx3]`;
   - `component(cdx, name)`;
   - `prop_all_formats(docs, name, key)`, through the parity extractors for C155 and C62;
@@ -27,14 +27,14 @@
 
 ## Phase 2: Foundational
 
-- [ ] T003 In `waybill-cli/src/scan_fs/package_db/project_roots.rs`, add:
+- [X] T003 In `waybill-cli/src/scan_fs/package_db/project_roots.rs`, add:
   - `pub(crate) const LISTED_DOT_DIRECTORIES: [&str; 7]` (`.github`, `.ci`, `.gitlab`, `.circleci`, `.buildkite`, `.devcontainer`, `.sphinx`);
   - `pub(crate) fn listed_dot_dir_class(name: &str) -> Option<DotDirClass>`, case-insensitive, with `DotDirClass::{Ci, Docs}`;
   - `pub(crate) fn listed_ancestor_class(path: &Path, root: &Path) -> Option<DotDirClass>`, giving the nearest listed ancestor between `root` and the file;
   - `pub(crate) fn listed_dot_dir_globset() -> anyhow::Result<globset::GlobSet>`, through `globset_from_patterns_case_insensitive`.
   
   Unit tests: case (`.CI`, `.GitHub`); nesting (the nearest ancestor wins); non-listed names (`.venv`, `.upstream-tests`, `.tox`) give `None`; `should_skip_default_descent` is unchanged for every name.
-- [ ] T004 Add `ci-directory` and `docs-directory` to C62's value list in `docs/reference/sbom-format-mapping.md`, with one sentence naming spec 1613 and the rule (every evidence source file under a listed directory; `Development`). Confirm that C62's extractor carries any string value, and say so in the commit message. Run `cargo build --all-targets`.
+- [X] T004 Add `ci-directory` and `docs-directory` to C62's value list in `docs/reference/sbom-format-mapping.md`, with one sentence naming spec 1613 and the rule (every evidence source file under a listed directory; `Development`). Confirm that C62's extractor carries any string value, and say so in the commit message. Run `cargo build --all-targets`.
 
 ## Phase 3: User Story 1 — CI and docs packages appear, labelled (P1)
 
@@ -42,7 +42,7 @@
 
 **Independent test**: D-1 to D-5, D-8, D-10 and D-11 in all three formats.
 
-- [ ] T005 [US1] Write the tests first, in `waybill-cli/tests/scan_dot_directory_manifests.rs`:
+- [X] T005 [US1] Write the tests first, in `waybill-cli/tests/scan_dot_directory_manifests.rs`:
   - D-1 `.ci/requirements.txt`, D-2 `.ci/metrics/requirements.txt`, D-3 `.github/requirements-tool-ci.txt`, D-4 `docs/.sphinx/requirements.txt`, D-5 `.CI/requirements.txt`: each present, `Optional`, C155 `ci` (D-4 `docs`).
   - D-8: `.ci/all_requirements.txt` gives C155 `ci`; root `dev-requirements.txt` gives `dev`.
   - D-10: `.github/actions/waybill-fixture-act/package.json` gives `Development` and C62 `ci-directory`, with nothing from its `node_modules/`.

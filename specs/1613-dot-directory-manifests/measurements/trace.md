@@ -38,3 +38,13 @@ The tree is a root `requirements.txt` declaring `waybill-fixture-both==1.0`, bes
 This is existing `main` behaviour, and the feature makes it more common: a `.github/requirements.txt` often repeats the root's packages.
 
 **Decision** (recorded as research R8; folded into T010): after deduplication, the R5 pass removes C155 from any component whose final scope is runtime (no scope, or `Runtime`). The label then agrees with the scope FR-006 gives. This also changes `main`'s output for the `requirements-<scope>.txt` + `requirements.txt` case; public-corpus goldens that move are traced in T022.
+
+## T005: the US1 tests fail on `main`'s code
+
+`cargo test -p waybill --test scan_dot_directory_manifests` (before T006–T011): 4 failed. Each fails at the "missing" assertion in `present()`:
+- `d01_to_d05_…`;
+- `d08_…`;
+- `d10_…`;
+- `d11_…`, where `waybill-fixture-cionly` is absent because `.ci` is not walked.
+
+The other 135 passing tests in the binary are the corpus harness module the file includes.
