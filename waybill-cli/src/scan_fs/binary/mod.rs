@@ -369,7 +369,15 @@ pub fn read(
         source_binding::BuildAttributionRegistry::from_observations(Vec::new())
     };
 
-    for path in discover_binaries(rootfs, claimed_paths, exclude_set, test_inputs) {
+    // #1611 follow-up: where the binary tier's time goes, one INFO line per
+    // scan. Wall time per stage, summed over binaries.
+    let mut timing = TierTiming::default();
+    let t_discover = std::time::Instant::now();
+    let candidates = discover_binaries(rootfs, claimed_paths, exclude_set, test_inputs);
+    timing.discover = t_discover.elapsed();
+    timing.candidates = candidates.len();
+    let t_loop = std::time::Instant::now();
+    for path in candidates {
         // Size bounds via metadata BEFORE the full-file read. A
         // multi-GB file that exceeds MAX_BINARY_SIZE_BYTES used to be
         // slurped into memory in its entirety just to be rejected by
@@ -428,13 +436,20 @@ pub fn read(
             continue;
         }
 
-        let Ok(bytes) = std::fs::read(&path) else {
+        let t = std::time::Instant::now();
+        let read = std::fs::read(&path);
+        timing.read += t.elapsed();
+        let Ok(bytes) = read else {
             if walker_debug {
                 eprintln!("WALKER {}: DROPPED reason=read-error", path.display());
             }
             continue;
         };
-        let Some(scan) = scan_binary(&path, &bytes) else {
+        timing.bytes += bytes.len() as u64;
+        let t = std::time::Instant::now();
+        let scanned = scan_binary(&path, &bytes);
+        timing.parse += t.elapsed();
+        let Some(scan) = scanned else {
             if walker_debug {
                 eprintln!(
                     "WALKER {}: DROPPED reason=scan-failed",
@@ -647,7 +662,9 @@ pub fn read(
         // those crates are real, even when the file-level component
         // is shadowed by an authoritative package-db entry). Build
         // it once outside the skip branch.
+        let t = std::time::Instant::now();
         let mut file_level = make_file_level_component(&path, &bytes, &scan, go_in_linux);
+        timing.hash += t.elapsed();
         // Spec 1536 FR-008: an owned library auditwheel renamed is named
         // without the hash. Only owned binaries: elsewhere the name is left
         // as the file has it.
@@ -677,7 +694,9 @@ pub fn read(
             // binaries are never attributed through their strings.
             if !skip_secondary_evidence {
                 if let Some(ctx) = embedded.as_mut() {
+                    let t = std::time::Instant::now();
                     let finding = embedded_paths::extract(&scan.string_region, ctx.names);
+                    timing.embedded_paths += t.elapsed();
                     // US2: each bundled tree, nested under this binary.
                     for name in &finding.bundled {
                         if let Some(entry) = entry::bundled_tree_to_entry(name, &path, &parent_bom_ref) {
@@ -798,7 +817,10 @@ pub fn read(
                 PackageDbEntry,
             > = std::collections::HashMap::new();
 
-            for m in version_strings::scan(&scan.string_region) {
+            let t = std::time::Instant::now();
+            let version_matches = version_strings::scan(&scan.string_region);
+            timing.version_strings += t.elapsed();
+            for m in version_matches {
                 if let Some(entry) = version_match_to_entry(&m, &path) {
                     by_library.insert(m.library.slug().to_string(), entry);
                 }
@@ -810,6 +832,7 @@ pub fn read(
             // through the legacy `scan()` wrapper — preserves the
             // SC-003 byte-identity contract for the 33 byte-identity
             // goldens.
+            let t = std::time::Instant::now();
             let symbol_matches = match &external_corpus {
                 Some(corpus) => symbol_fingerprint::scan_with_corpus(
                     &scan.symbol_names,
@@ -824,6 +847,7 @@ pub fn read(
                 ),
                 None => symbol_fingerprint::scan(&scan.symbol_names),
             };
+            timing.symbols += t.elapsed();
             for m in symbol_matches {
                 // Q1: if the version-string scanner already produced an
                 // entry for this library on this binary, just record the
@@ -969,6 +993,8 @@ pub fn read(
         }
     }
 
+    timing.loop_total = t_loop.elapsed();
+    timing.log();
     out.extend(linkage_agg.into_entries());
     out.extend(python_collapser.into_entries());
     out.extend(jdk_collapser.into_entries());
@@ -978,6 +1004,41 @@ pub fn read(
 
 
 
+
+/// Per-stage wall time of [`read`], summed over the binaries it examined.
+#[derive(Default)]
+struct TierTiming {
+    candidates: usize,
+    bytes: u64,
+    discover: std::time::Duration,
+    read: std::time::Duration,
+    parse: std::time::Duration,
+    hash: std::time::Duration,
+    embedded_paths: std::time::Duration,
+    version_strings: std::time::Duration,
+    symbols: std::time::Duration,
+    loop_total: std::time::Duration,
+}
+
+impl TierTiming {
+    fn log(&self) {
+        let ms = |d: std::time::Duration| d.as_millis() as u64;
+        let timed = self.read + self.parse + self.hash + self.embedded_paths + self.version_strings + self.symbols;
+        tracing::info!(
+            candidates = self.candidates,
+            mib_read = self.bytes / (1024 * 1024),
+            discover_ms = ms(self.discover),
+            read_ms = ms(self.read),
+            parse_ms = ms(self.parse),
+            hash_ms = ms(self.hash),
+            embedded_paths_ms = ms(self.embedded_paths),
+            version_strings_ms = ms(self.version_strings),
+            symbols_ms = ms(self.symbols),
+            other_ms = ms(self.loop_total.saturating_sub(timed)),
+            "binary tier timing"
+        );
+    }
+}
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
