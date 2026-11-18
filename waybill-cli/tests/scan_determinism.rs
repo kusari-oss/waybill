@@ -82,7 +82,7 @@ fn first_difference(a: &Value, b: &Value, path: &str) -> Option<String> {
 
 fn truncate(v: &Value) -> String {
     let s = v.to_string();
-    if s.len() > 160 { format!("{}…", &s[..160]) } else { s }
+    if s.len() > 1200 { format!("{}…", &s[..1200]) } else { s }
 }
 
 /// One masked document per format, byte for byte with array order
@@ -272,5 +272,88 @@ fn d7_same_bytes_different_names_are_two_files() {
         assert_eq!(file_components(d, "libwaybill-fixture-q.so").len(), 1);
         assert_nested(d, "pkg:generic/waybill-fixture-twin");
     }
+    assert_repeatable(&docs);
+}
+
+// ---------------------------------------------------------------------
+// User Story 1: the same answer every scan (T007)
+// ---------------------------------------------------------------------
+
+use corpus_harness_195::invariants::checks::cdx_prop;
+use corpus_harness_195::invariants::checks::orphan_explained::{is_explained, reachable_with_containment};
+
+/// Spec 1541's I-A in one scan: no reachable component carries C45, every
+/// unreachable one is explained, and the completeness count equals the
+/// non-file-tier unreachable population.
+fn assert_one_answer(d: &Docs) -> usize {
+    let reachable = reachable_with_containment(&d.cdx);
+    let subject = d.cdx["metadata"]["component"]["bom-ref"].as_str();
+    let mut orphans = 0usize;
+    for (c, _) in cdx_components_with_containers(&d.cdx) {
+        let Some(r) = cdx_component_ref(c) else { continue };
+        if Some(r) == subject || cdx_prop(c, "waybill:component-tier") == Some("file") {
+            continue;
+        }
+        if reachable.contains(r) {
+            assert_eq!(cdx_prop(c, "waybill:orphan-reason"), None, "I-A: reachable {r} carries C45");
+        } else {
+            assert!(is_explained(c), "I-A: unreachable {r} is unexplained");
+            orphans += 1;
+        }
+    }
+    let stated = completeness_reason(d)
+        .split(';')
+        .find_map(|c| c.trim().strip_prefix("orphaned-components-detected: "))
+        .map(|r| r.split_whitespace().next().unwrap().parse::<usize>().unwrap())
+        .unwrap_or(0);
+    assert_eq!(stated, orphans, "I-A: completeness count vs the I7 population");
+    orphans
+}
+
+/// An npm project at the scan root with an edge: its main module roots the
+/// graph and closes the root fallback, so the binaries are unreachable.
+fn npm_app(root: &Path) {
+    let pkg = serde_json::json!({ "name": "waybill-fixture-app", "version": "1.0.0", "dependencies": { "waybill-fixture-dep": "^1.0.0" } });
+    std::fs::write(root.join("package.json"), pkg.to_string()).unwrap();
+    let lock = serde_json::json!({
+        "name": "waybill-fixture-app", "version": "1.0.0", "lockfileVersion": 3, "requires": true,
+        "packages": {
+            "": { "name": "waybill-fixture-app", "version": "1.0.0", "dependencies": { "waybill-fixture-dep": "^1.0.0" } },
+            "node_modules/waybill-fixture-dep": { "version": "1.0.0", "resolved": "https://registry.npmjs.org/waybill-fixture-dep/-/waybill-fixture-dep-1.0.0.tgz", "integrity": "sha512-fake" }
+        }
+    });
+    std::fs::write(root.join("package-lock.json"), lock.to_string()).unwrap();
+}
+
+/// D-4: D-1 behind an npm app. The binaries and what they identify are
+/// unreachable; the answer about them is the same in every scan.
+#[test]
+fn d4_unreachable_binaries_answer_the_same_every_scan() {
+    let dir = tempfile::tempdir().unwrap();
+    d1_tree(dir.path());
+    npm_app(dir.path());
+    let docs = scan_n(dir.path(), SCANS, &[]);
+    let counts: Vec<usize> = docs.iter().map(assert_one_answer).collect();
+    assert!(counts.iter().all(|n| *n > 0), "control: the binaries are unreachable: {counts:?}");
+    assert_repeatable(&docs);
+}
+
+/// D-6: one Debian package installed at two architectures. Milestone 1064
+/// merges qualifier-only variants; the survivor is the same in every scan.
+#[test]
+fn d6_a_qualifier_only_merge_has_one_survivor() {
+    let dir = tempfile::tempdir().unwrap();
+    let status = "Package: waybill-fixture-lib\nStatus: install ok installed\nArchitecture: amd64\nMulti-Arch: same\nVersion: 1.0-1\n\n\
+                  Package: waybill-fixture-lib\nStatus: install ok installed\nArchitecture: i386\nMulti-Arch: same\nVersion: 1.0-1\n";
+    common::installed_lib::write(dir.path(), "var/lib/dpkg/status", status);
+    common::installed_lib::write(dir.path(), "etc/os-release", "ID=debian\nVERSION_CODENAME=bookworm\n");
+    let docs = scan_n(dir.path(), SCANS, &[]);
+    let debs: Vec<String> = cdx_components_with_containers(&docs[0].cdx)
+        .into_iter()
+        .filter_map(|(c, _)| c["purl"].as_str())
+        .filter(|p| p.starts_with("pkg:deb/"))
+        .map(str::to_string)
+        .collect();
+    assert!(!debs.is_empty(), "control: the dpkg database is read");
     assert_repeatable(&docs);
 }

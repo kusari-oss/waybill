@@ -66,18 +66,29 @@
 **Goal:** reachability and the deduplicator's output are independent of order (R2, R3).
 **Independent test:** D-4, D-6, and exhaustive permutation unit tests.
 
-- [ ] T007 [US1] Add contract cases to `waybill-cli/tests/scan_determinism.rs`, and record two variation counts: at `main` (both causes present), and at the branch after T005 and before T009 (only R2 missing), so the second count isolates R2:
+- [X] T007 [US1] Add contract cases to `waybill-cli/tests/scan_determinism.rs`, and record two variation counts: at `main` (both causes present), and at the branch after T005 and before T009 (only R2 missing), so the second count isolates R2:
   - **D-4:** D-1 plus an npm app. The binaries are unreachable, and their codes and the completeness reason are the same in all 20 scans. I-A holds in every scan, with the corpus harness's I7 functions.
   - **D-6:** a dpkg status file with one package at two `?arch=` values. The survivor is the same in all 20 scans.
 
   Record both counts.
-- [ ] T008 [US1] Write a unit test in `waybill-cli/src/generate/graph_completeness/mod.rs`: for a component set holding a top-level PURL copy and two nested copies (the trace's shape), every permutation of the component order (3! × the other components, at least 24 orders) gives one `reachable_set`. It must fail before T009.
-- [ ] T009 [US1] Make `add_containment_edges` in `waybill-cli/src/generate/graph_completeness/mod.rs` read rule R2's edges from a snapshot taken before the loop (research R2). The comment cites #1600 and says this was spec 1541's defect.
-- [ ] T010 [US1] Make the deduplicator deterministic in `waybill-cli/src/resolve/deduplicator.rs` (research R3):
+- [X] T008 [US1] Write a unit test in `waybill-cli/src/generate/graph_completeness/mod.rs`: for a component set holding a top-level PURL copy and two nested copies (the trace's shape), every permutation of the component order (3! × the other components, at least 24 orders) gives one `reachable_set`. It must fail before T009.
+- [X] T009 [US1] Make `add_containment_edges` in `waybill-cli/src/generate/graph_completeness/mod.rs` read rule R2's edges from a snapshot taken before the loop (research R2). The comment cites #1600 and says this was spec 1541's defect.
+- [X] T010 [US1] Make the deduplicator deterministic in `waybill-cli/src/resolve/deduplicator.rs` (research R3):
   - **Output order:** the final sort (deduplicator.rs:324) is completed to `(purl, parent_purl, content hash, first source path)`.
   - **Survivor:** chosen by confidence, then PURL string, then first source path.
   - **Tests:** a unit test feeds one input set in every permutation (at least 24) and asserts one output, order included.
-- [ ] T011 [US1] Run every suite T006 ran, plus `orphan_explanations`, `public_corpus` and the closure suites. Trace any change.
+- [X] T011 [US1] Run every suite T006 ran, plus `orphan_explanations`, `public_corpus` and the closure suites. Trace any change.
+  - **T007:**
+    - **D-4:** I-A held in every scan both at `main` and after R1. Its binaries are unreachable either way, so containment order cannot change the answer. Both states varied only in SPDX 2.3 occurrences (8 variants in 20 scans each). R2's own failure is isolated by T008 instead.
+    - **D-6** passes.
+  - **T008:** fails before T009, with reachability taking more than one value over 120 component orders, and passes after.
+  - **T010, refined by the suites.** A within-group tie-break by first path overrode the installed-library reader's deliberate `.pc`-before-CMake precedence (`installed_lib_us1`, spec 1531 SC-003), so it was removed:
+    - the survivor follows the stable confidence order, as before;
+    - the merged `source_file_paths` and `source_connection_ids` are sorted, like occurrences and requirement ranges already are;
+    - the output sort is completed to a total order.
+
+    The variation the tests found was between same-PURL groups (SPDX 2.3 takes the first copy's annotations), which the output sort fixes. The permutation test fails with a PURL-only output sort (3 of 3 runs), and passes with the fix.
+  - **T011:** 27 integration suites and 96 unit tests, all clean, with no golden change; clippy clean.
 
 ## Phase 5: User Story 3 — one identity in every format (P2)
 

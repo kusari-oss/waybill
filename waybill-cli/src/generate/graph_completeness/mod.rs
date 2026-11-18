@@ -191,6 +191,12 @@ fn add_containment_edges(
         .filter(|c| c.parent_purl.is_none())
         .map(|c| c.purl.as_str())
         .collect();
+    // Spec 1542 (#1600): a child's own dependency edges are read from the
+    // graph as it stood before this loop. Reading the live map picked up the
+    // bare-PURL links this loop adds below, so a nested copy visited after a
+    // sibling gained edges to it, and reachability followed component order
+    // (which varies between scans). This was spec 1541's defect.
+    let dependency_edges = edges.clone();
     for c in components {
         let Some(parent) = &c.parent_purl else { continue };
         let child = node_key(c);
@@ -198,7 +204,7 @@ fn add_containment_edges(
         for container in containers {
             edges.entry(container).or_default().push(child.clone());
         }
-        if let Some(own) = edges.get(c.purl.as_str()).cloned() {
+        if let Some(own) = dependency_edges.get(c.purl.as_str()).cloned() {
             edges.entry(child.clone()).or_default().extend(own);
         }
         if !top_level.contains(c.purl.as_str()) {
@@ -1218,5 +1224,48 @@ mod s1541_containment_tests {
         let r = grade(&comps, &[mk_rel(ROOT, BIN), mk_rel(LIB, LOOSE)]);
         assert!(r.reachable_set.contains(LOOSE), "{:?}", r.reachable_set);
         assert_eq!(r.orphan_count, 0);
+    }
+
+    /// Spec 1542 (#1600): reachability does not depend on component order.
+    /// The trace's shape: one PURL nested in a reachable binary and in an
+    /// unreachable one, plus a top-level copy whose declared container is not
+    /// emitted. The nested copy under the reachable binary must not make its
+    /// siblings reachable in any order.
+    #[test]
+    fn s1542_reachability_is_the_same_in_every_component_order() {
+        const GONE: &str = "pkg:generic/waybill-fixture-merged-away@1";
+        let base = [
+            mk_component(BIN),
+            mk_component(LOOSE),
+            nested(LIB, BIN),
+            nested(LIB, LOOSE),
+            nested(LIB, GONE),
+        ];
+        let rels = vec![mk_rel(ROOT, BIN)];
+        let mut answers: std::collections::BTreeSet<Vec<String>> = std::collections::BTreeSet::new();
+        let mut order: Vec<usize> = (0..base.len()).collect();
+        // Every permutation of five components (120 orders).
+        fn permute(k: usize, order: &mut Vec<usize>, f: &mut dyn FnMut(&[usize])) {
+            if k == order.len() {
+                f(order);
+                return;
+            }
+            for i in k..order.len() {
+                order.swap(k, i);
+                permute(k + 1, order, f);
+                order.swap(k, i);
+            }
+        }
+        permute(0, &mut order, &mut |o: &[usize]| {
+            let comps: Vec<ResolvedComponent> = o.iter().map(|&i| base[i].clone()).collect();
+            let mut reached: Vec<String> = grade(&comps, &rels).reachable_set.into_iter().collect();
+            reached.sort();
+            answers.insert(reached);
+        });
+        assert_eq!(answers.len(), 1, "reachability varies with component order: {answers:?}");
+        let only = answers.into_iter().next().unwrap();
+        assert!(only.contains(&node_key(&nested(LIB, BIN))));
+        assert!(!only.contains(&node_key(&nested(LIB, LOOSE))), "an unreachable container's copy stays unreachable");
+        assert!(!only.contains(&node_key(&nested(LIB, GONE))), "a copy whose container is gone stays unreachable");
     }
 }

@@ -26,7 +26,7 @@
 
 **Decision.**
 - The deduplicator keeps its final sort by PURL (deduplicator.rs:324), and completes it to a total order: `(purl, parent_purl, content hash, first source path)`.
-- Within a group, the survivor is chosen by confidence, then PURL string, then first source path.
+- Within a group, the survivor follows the stable confidence order, as before, because readers use it as precedence (`.pc` before CMake, spec 1531 SC-003). *(Revised at implementation: a tie-break by path overrode that.)* The merged path and connection lists are sorted, as occurrences and requirement ranges already were, so the output does not depend on which member survived.
 
 **Rationale.** The output is already sorted by PURL. Components that share one PURL keep `HashMap` order among themselves, through the stable sort. Nested copies of one identification under different parents are exactly that case, and they fed R2's order bug in the trace. A total order removes the last order the input can influence, without reordering any document whose PURLs are distinct.
 

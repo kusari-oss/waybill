@@ -8,7 +8,7 @@ Everything is in process for one scan. Nothing new reaches the wire.
 
 `content hash` is the PURL's `file-sha256` qualifier, or `None`. Only components that name one file's bytes carry it: a binary's file-level component.
 
-**Survivor:** highest confidence, then the lexicographically smallest PURL, then the smallest first source path.
+**Survivor:** highest confidence; among equals, the reader's order (precedence, unchanged). Merged `source_file_paths` and `source_connection_ids` are sorted.
 
 **Output order:** sorted by `(purl, parent_purl, content hash, first source path)`. Before this feature it was sorted by PURL alone, leaving ties among same-PURL components in `HashMap` order.
 
