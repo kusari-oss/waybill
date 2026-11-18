@@ -111,3 +111,19 @@ C62 is an open enum, so this adds two values and no new row. The catalog's value
 ## R7. Walker-audit gate
 
 No new walk function is added: `descend_into` is a registration field. `walk.audit-allowlist` is unchanged. The local reproduction of the audit grep runs before the PR (`feedback_walker_audit_local_check`).
+
+## R9. Merged declarations keep a non-runtime scope (found on the quality corpus)
+
+**Finding.** The quality corpus run at `bc13f385` (run 44412940263) violated pytorch's `pkgs` and `edges` bounds. Comparing against `main`'s build with the harness's exact invocation (pin `2b3ec348`) showed three defects. Each turned CI tooling into runtime content:
+1. **Two `Optional` declarations merged to no scope.** The deduplicator's rule had no `Optional` arm, so `Optional + Optional` fell to `None`, which reads as runtime. Examples: tensorboard (a CI and a docs requirements file) and `spin@0.17` (pinned twice in one file).
+2. **pip's cross-project merge was first-wins.** `merge_without_override` kept the first project root's scope. A package in the scan root's `requirements-dev.txt` and in a nested project's unscoped `requirements.txt` stayed `dev`. This already happens on `main` with no dot-directory involved (reproduced with `main`'s build); this spec made it frequent. Example: `tqdm`, runtime on `main`, `ci` here.
+3. **R5 skipped an explicit `Runtime`.** A `.ci/` project's pyproject dependencies carry `Some(Runtime)`, not `None`. Example: `docker` and `gitpython` under `.ci/lumen_cli`.
+
+**Decision.**
+- The deduplicator's rule is now `merge_lifecycle_scope`, with `Optional + Optional → Optional`. `Optional + None` stays `None`: an unscoped requirements file is a runtime declaration, so it wins (FR-006).
+- pip's cross-project merge calls the same function. A pair merged early then gets the scope it would get if merged late.
+- R5 treats `None` and `Runtime` alike.
+
+**After the fix,** on the pytorch pin: of the 159 components shared with `main`, only tensorboard's C155 label differs (`docs` → `ci`; non-runtime either way). C155 holds one value, and the first file wins, as before. All 101 new components come from listed directories. 6 listed components are runtime, each also declared in an unscoped root file.
+
+**Known, unchanged:** the reconciler folds pyproject's `opt-einsum@unresolved` extra into the `.ci` pin `opt-einsum@3.3`. The edge from `torch` is kept, but the pyproject source path is not unioned into the survivor. That is existing reconciler behaviour.

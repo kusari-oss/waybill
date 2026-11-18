@@ -15,5 +15,8 @@ Run with `measurements/mutate-run.sh` (from the repository root). Each mutation 
 | M7 | the R5 pass removed | 2 | 0 | yes | d10, only_under_listed_directories… |
 | M8 | R5 "every file" made "any file" | 2 | 0 | yes | d11, mixed_locations…, a_runtime_component_loses… |
 | M9 | R5 overwrites an existing scope | 1 | 0 | yes | mixed_locations_scoped_components… |
+| M10 | two `Optional` declarations merge to no scope | 3 | 0 | yes | d11b, s1613_two_optional_declarations… |
+| M11 | pip's cross-project merge first-wins again | 1 | 0 | yes | d11b |
+| M12 | R5 skips an explicit `Runtime` | 2 | 0 | yes | d11b, an_explicit_runtime_scope… |
 
-**All 9 are caught.** Every mutation turns at least one named test red. With 0 compile errors each time, these are behavioural failures, not build breaks. `git status --short waybill-cli/src` was empty after the run.
+**All 12 are caught** (M1–M9 at `bc13f385`; all 12 re-run at `e4045f0e`, after R9, with the same results for M1–M9 plus d11b where it applies). Every mutation turns at least one named test red. With 0 compile errors each time, these are behavioural failures, not build breaks. `git status --short waybill-cli/src` was empty after the run.
