@@ -94,7 +94,7 @@
 
 ## Phase 6: Polish and cross-cutting
 
-- [ ] T016 Mutations, in `specs/1613-dot-directory-manifests/measurements/mutate.py` and `mutate-run.sh`, each applied, tested and reverted with `cp`, with the results in `measurements/mutations.md`. Each must turn a named test red:
+- [X] T016 Mutations, in `specs/1613-dot-directory-manifests/measurements/mutate.py` and `mutate-run.sh`, each applied, tested and reverted with `cp`, with the results in `measurements/mutations.md`. Each must turn a named test red:
   - M1: no `descend_into` on pip;
   - M2: case-sensitive glob;
   - M3: `.venv` added to the listed set;
@@ -104,13 +104,13 @@
   - M7: R5 pass removed;
   - M8: R5 "all files" made "any file";
   - M9: R5 overwrites an existing scope.
-- [ ] T017 [P] Document in `docs/ecosystems.md` (pip and CI-directory sections):
+- [X] T017 [P] Document in `docs/ecosystems.md` (pip and CI-directory sections):
   - which requirements names are read;
   - the listed directories;
   - the `ci`/`docs` labels;
   - the `tox-requirements.txt` gap.
-- [ ] T018 [P] Add a `### Fixed` entry to `CHANGELOG.md` for #1610: what was hidden, what is read now, and the labels.
-- [ ] T019 Reproduce the walker-audit gate locally (the grep and diff from the CI workflow against `waybill-cli/src/scan_fs/walk.audit-allowlist.txt`) and confirm no change.
+- [X] T018 [P] Add a `### Fixed` entry to `CHANGELOG.md` for #1610: what was hidden, what is read now, and the labels.
+- [X] T019 Reproduce the walker-audit gate locally (the grep and diff from the CI workflow against `waybill-cli/src/scan_fs/walk.audit-allowlist.txt`) and confirm no change.
 - [ ] T020 Run the gate on its own: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record the `ok` count, passed/failed totals and failure blocks in `measurements/gate-log.md`.
 - [ ] T021 TheRock in CI: run `measure-source` with `waybill_ref=<branch sha>` and `base_ref=main`. Record in `measurements/therock.md`:
   - SC-001: the 8 files' packages present, labelled;

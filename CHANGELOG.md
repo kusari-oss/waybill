@@ -39,6 +39,20 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Dependency manifests in CI and docs dot-directories are read (#1610).**
+  Every directory starting with `.` used to be skipped, so requirements files
+  under `.ci/`, `.github/` and `.sphinx/` (8 on ROCm TheRock, declaring about a
+  dozen packages found nowhere else) never reached the document. The pip, npm
+  and CMake readers now descend into `.github`, `.ci`, `.gitlab`,
+  `.circleci`, `.buildkite`, `.devcontainer` and `.sphinx`. Every other
+  dot-directory, and the file tier, still skip them. What is found there is
+  labelled non-runtime: a pip requirements file gets C155 `ci` or `docs`, and
+  any other component declared only there is `Development` with C62
+  `ci-directory` or `docs-directory`. The pip reader also reads
+  `<scope>-requirements*.txt` (for example `dev-requirements.txt`), and any
+  `*requirements*.txt` inside a listed directory. A package also declared in a
+  runtime requirements file no longer carries the scoped file's C155 label.
+
 - **The binary tier reads, parses and hashes binaries on several threads.**
   It used one. Each batch of 64 binaries is read, parsed, SHA-256 hashed and
   string-scanned on up to 8 threads; everything that depends on order

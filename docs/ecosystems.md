@@ -1746,6 +1746,50 @@ yet — tracked as a follow-up.
   - **Not followed:** `-r` and `-c` includes (#1583), so a file reached only
     through `-r` is not read.
 
+**Which requirements files are read** (spec 1613, #1610):
+- `requirements*.txt`.
+- `<scope>-requirements*.txt`, for scope `dev`, `test`, `docs` or `ci` (for
+  example `dev-requirements.txt`).
+- Any `*requirements*.txt` inside a CI or docs dot-directory (below).
+
+Another name, such as `tox-requirements.txt` at a project root, is not read:
+nothing would give it a scope, and it would read as a runtime dependency.
+
+**Scope of a requirements file** (C155 `waybill:python-req-file-scope`; the
+packages are `Optional`). The first of these that applies:
+1. The file's own directory: `docs`, `test`/`tests`, or `ci`/`.ci`.
+2. The file's name: `requirements-<scope>…` or `<scope>-requirements…`.
+3. The nearest CI or docs dot-directory above the file: `ci`, or `docs` for
+   `.sphinx`.
+
+A package also declared in an unscoped file keeps the runtime scope and
+carries no C155.
+
+## CI and docs dot-directories
+
+waybill skips every directory whose name starts with `.` (VCS metadata,
+virtualenvs, tool caches, editor state, upstream test suites). Seven
+directories are the exception: `.github`, `.ci`, `.gitlab`, `.circleci`,
+`.buildkite`, `.devcontainer` and `.sphinx`, matched by name in any case and
+at any depth (spec 1613, #1610).
+
+- **Who descends into them:** the pip, npm and CMake readers. The file tier
+  does not, so a workflow or CI script never becomes a file-tier component.
+- **Below a listed directory,** the usual skips still apply. `.ci/.venv/` is
+  not read, and no project is found inside `node_modules/`.
+- **A project inside one keeps its usual reading.** A JavaScript action under
+  `.github/actions/<name>/` that commits its `node_modules/` is read like any
+  npm project, its installed tree included.
+- **Labels.**
+  - A pip requirements file is labelled through C155 (above).
+  - Any other component whose every source file lies under a listed directory
+    is `Development`, with C62 `waybill:lifecycle-scope-derivation` =
+    `ci-directory`, or `docs-directory` for `.sphinx`.
+  - So CI tooling is non-runtime either way. To select it by label, check
+    C155 for pip packages and C62 otherwise.
+- **Not read yet:** GitHub Actions workflows (#435, #821) and Dockerfiles
+  (#1537). Their files are now reachable, but no reader exists.
+
 **Hashes:** `requirements.txt --hash=alg:hex` flags become
 `PackageDbEntry.hashes` → `components[].hashes[]`. Multiple hashes per
 requirement are supported. Other sources (venv METADATA, Poetry, Pipfile)
