@@ -109,12 +109,12 @@
   - **`public-corpus.yml`:** gains `repeat` (default `'1'`). The YAML is checked with Ruby's parser.
   - It generalises milestone 195's `byte_identity_across_two_runs`, which covers one target, CycloneDX only, unmasked.
 - [X] T014 In the fixture repository's `.github/workflows/measure-full.yml`, keep every scan's documents: `out/{side}-{tag}.cdx.json` and the SPDX equivalents, not only the last. This needs nothing else from the workflow.
-- [ ] T015 Push the branch. Dispatch:
+- [X] T015 Push the branch. Dispatch:
   - `public-corpus.yml` with `repeat=2`, at the branch and at `main`;
   - `measure-full` (`--ref main -f waybill_ref=1542-deterministic-binary-merge -f base_ref=main`), at least twice, for at least 8 branch scans;
   - `measure-source` once;
   - `quality-corpus.yml` at the branch and at `main`.
-- [ ] T016 Record in `specs/1542-deterministic-binary-merge/measurements/audit.md`:
+- [X] T016 Record in `specs/1542-deterministic-binary-merge/measurements/audit.md`:
   - every corpus target's repeat result, at both refs;
   - the SDK's masked documents, compared across all branch scans and against `main`'s;
   - `gotcha`'s outcome in every scan;
@@ -123,7 +123,7 @@
   - the interleaved medians of both `measure-full` and `measure-source` against `main`, each at most 1.1× (SC-007).
 
   Any variation outside the binary path is filed as its own issue and named here (clarification).
-- [ ] T017 Trace every golden change, regenerate with `-f regen_goldens=true` only after tracing, and record in `measurements/corpus.md`. Trace every quality-corpus movement against `main`.
+- [X] T017 Trace every golden change, regenerate with `-f regen_goldens=true` only after tracing, and record in `measurements/corpus.md`. Trace every quality-corpus movement against `main`.
 
 ## Phase 7: Polish
 

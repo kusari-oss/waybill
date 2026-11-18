@@ -39,8 +39,24 @@ No violations at either ref. **No target moved:** across all 18 targets, every m
 ## Public corpus
 
 - **44212396088 (`main`), 44212392500 (branch, `repeat=2`):** both passed, with no golden drift at the branch (FR-007).
-- **The branch's repeat pass is not counted as evidence.** The layer printed nothing on success, and the run took no longer than `main`'s single scan (1,029 s against 1,082 s), so a run in which the comparison never executed would look the same. It was rerun after the layer gained a success line (`4b1b65d8`): run 44215765635, pending.
+- **The branch's first repeat pass is not counted as evidence.** The layer printed nothing on success, and the run took no longer than `main`'s single scan (1,029 s against 1,082 s), so a run in which the comparison never executed would look the same.
+- **The rerun (44215765635, at `4b1b65d8`, `repeat=2`) passed with a success line from every target:** all 21 report "2 scans, identical after masking in all 3 formats", and the run has 165 passed, 0 failed. The FR-006 audit finds no variation in the corpus at the branch.
 
-## Source tree (`measure-source` 44212411228)
+## Source tree (`measure-source` 44212411228; branch `455a6d1f`, base `main` `37de8e08`, TheRock `b1cae390`)
 
-Pending.
+| | `main` | branch |
+|---|---|---|
+| components | 2,123 | 2,272 |
+| file components (`file-sha256`) | 231 | **380** |
+| completeness reason | 261 not reachable | 410 not reachable |
+| I7 unexplained | 2 (#1601, #1602) | **2** (the same) |
+| C45 | 12 `dead-lockfile-entry`, 4 `foreign-build-system`, 23 `test-data-binary`, 215 `unowned-binary` | the same, except **28** `test-data-binary` and **359** `unowned-binary` |
+| C45, C104, C105 across formats | agree | agree |
+| median scan, interleaved (3 runs) | 111.7 s | 109.1 s (**0.977×**) |
+
+**The 149 additional unreachable components are R1 working as specified.**
+- **What they are:** all binaries that share a file name and differ in content, mostly GPU code objects built once per architecture: 25 variants each of `gpuReadWrite_kernels.hsaco` and `binary_search_kernels.hsaco`, and pairs of `fwd_*_group.co` kernels.
+- **How `main` showed them:** it collapsed each name into one component listing every path under one hash, which misstated the content of all but one.
+- **On the branch:** 174 PURLs are new and 25 of `main`'s are gone (each collapsed survivor is replaced by one component per hash), a net 149. All are `file-sha256` components, and **no non-binary component changed**. Every new component is explained: `unowned-binary` +144 and `test-data-binary` +5 make exactly 149.
+
+**SC-007 holds on both trees** (0.977×, 0.825× and 0.905×).
