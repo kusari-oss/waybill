@@ -12,7 +12,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Trace the plan's predictions on `main` before any change, and record them in `specs/1613-dot-directory-manifests/measurements/trace.md`:
+- [X] T001 Trace the plan's predictions on `main` before any change, and record them in `specs/1613-dot-directory-manifests/measurements/trace.md`:
   - Build the quickstart tree (`quickstart.md`), scan it with `main`'s binary, and confirm none of its four packages appear.
   - Add `.github/workflows/test-suite/waybill-fixture.cmake` holding a `FetchContent_Declare`. Then set the CMake registration's `descend_into` to `.github` in a scratch copy and confirm the CMake reader receives the file. This proves R2's claim that CMake discovers through the shared walker, and not only by its registration's pattern.
   - Confirm how the deduplicator merges a pip package declared both in a scoped requirements file (`Optional`, C155) and in an unscoped `requirements.txt`. Use `requirements-ci.txt` beside `requirements.txt`, which needs no dot-directory and so runs on `main`. Record which scope and which C155 value survive. If the runtime declaration doesn't win, FR-006 needs a merge rule of its own, and T010 gains it.
@@ -46,7 +46,7 @@
   - D-1 `.ci/requirements.txt`, D-2 `.ci/metrics/requirements.txt`, D-3 `.github/requirements-tool-ci.txt`, D-4 `docs/.sphinx/requirements.txt`, D-5 `.CI/requirements.txt`: each present, `Optional`, C155 `ci` (D-4 `docs`).
   - D-8: `.ci/all_requirements.txt` gives C155 `ci`; root `dev-requirements.txt` gives `dev`.
   - D-10: `.github/actions/waybill-fixture-act/package.json` gives `Development` and C62 `ci-directory`, with nothing from its `node_modules/`.
-  - D-11: a package in both `.ci/requirements.txt` and the root `requirements.txt` appears once, with the runtime scope.
+  - D-11: a package in both `.ci/requirements.txt` and the root `requirements.txt` appears once, with the runtime scope and no C155.
   
   Run them on `main`'s code and record in `measurements/trace.md` that they fail.
 - [ ] T006 [US1] In `waybill-cli/src/scan_fs/package_db/pip/mod.rs`, set the pip registration's `descend_into: Some(project_roots::listed_dot_dir_globset()?)`.
@@ -65,7 +65,7 @@
   - `Development`;
   - C62 = `ci-directory`, or `docs-directory` when every file's nearest listed ancestor is `.sphinx`.
   
-  It logs one INFO summary. Unit tests: only-under-listed; mixed locations (unchanged, FR-006); already scoped (unchanged); no source files (unchanged); `.sphinx` only (`docs-directory`).
+  It also removes C155 `waybill:python-req-file-scope` from any component whose final scope is runtime (research R8). It logs one INFO summary. Unit tests: only-under-listed; mixed locations (unchanged, FR-006); already scoped (unchanged); no source files (unchanged); `.sphinx` only (`docs-directory`); a runtime-scoped component carrying C155 loses it.
 - [ ] T011 [US1] Call `ci_scope::apply` in `waybill-cli/src/scan_fs/mod.rs` after deduplication, beside the spec 1533 test-scope pass. Declare `mod ci_scope;`.
 - [ ] T012 [US1] Run T005's tests until they pass, in all three formats. Record the run in `measurements/trace.md`.
 

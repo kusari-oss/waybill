@@ -14,7 +14,7 @@ Every case is a synthetic `waybill-fixture-*` tree built at test time. Each is a
 | D-8 | `.ci/all_requirements.txt`, and `dev-requirements.txt` at the root | both read; C155 `ci` and `dev` |
 | D-9 | `tox-requirements.txt` at the root | not read (known gap) |
 | D-10 | `.github/actions/waybill-fixture-act/package.json` (dependency `waybill-fixture-npm-a`), with a committed `node_modules/` | dependency present; `Development`; C62 `ci-directory`; nothing from `node_modules/` |
-| D-11 | `waybill-fixture-both==1.0` in `.ci/requirements.txt` and in the root `requirements.txt` | one component; the runtime scope from the root declaration (FR-006) |
+| D-11 | `waybill-fixture-both==1.0` in `.ci/requirements.txt` and in the root `requirements.txt` | one component; the runtime scope from the root declaration, and no C155 (FR-006, research R8) |
 | D-12a | root `requirements.txt`, plus manifests under `.cache/`, `.venv/` and `.tox/` | same document (masked) as without those directories |
 | D-12b | any tree with no listed directory and no `<scope>-requirements*.txt` | byte-identical to `main` (existing goldens; public corpus, which holds 0 such names) |
 | D-12c | file inventory on; `.github/workflows/ci.yml`, `.ci/script.sh` | no file-tier component under `.github` or `.ci` |

@@ -92,6 +92,16 @@ C62 is an open enum, so this adds two values and no new row. The catalog's value
 - **Development, not Optional.** CI and docs tooling is development-time, and SPDX 3's `LifecycleScopeType` has `development`, where `Optional` would say the dependency is declared optional.
 - **The pip mismatch is noted, not fixed.** pip's existing `Optional` for `ci` and `docs` files is a separate milestone's decision (670). Changing it is out of scope.
 
+## R8. A runtime component keeps no CI label (found in the T001 trace)
+
+**Finding** (`measurements/trace.md` §c): when a pip package is declared in both a scoped requirements file and an unscoped one, the deduplicator keeps the runtime scope (CycloneDX `required`), but C155 from the scoped file survives (`ci`).
+
+**Decision:** the post-dedup pass (`ci_scope::apply`) removes C155 from any component whose final lifecycle scope is runtime.
+
+**Rationale:** FR-006 requires the non-CI declaration's scope to be the component's scope. A label contradicting that scope defeats consumers who select by label.
+
+**Effect on existing output:** this changes existing output for `requirements-<scope>.txt` beside `requirements.txt` with shared packages, which is traced in the public corpus (T022).
+
 ## R6. Performance
 
 **Expectation:** TheRock's listed directories hold about 1,000 files (930 + 46 + 4) out of 335,551 walked. Only the opted-in readers' patterns are matched there. The remaining cost is reading 8 requirements files and 4 CMake files.
