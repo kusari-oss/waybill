@@ -43,10 +43,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   It used one. Each batch of 64 binaries is read, parsed, SHA-256 hashed and
   string-scanned on up to 8 threads; everything that depends on order
   (collapsing, linkage, claims, output) still runs in walk order, so the
-  document is unchanged. On ROCm TheRock's installed SDK the scan went from
-  29.4 s to 22.9 s on a 4-vCPU runner (median of three, interleaved), with
-  identical documents in all three formats across repeated scans. A new INFO
-  line, `binary tier timing`, reports where the tier's time goes.
+  document is unchanged. File bytes held at once are capped at 512 MiB. On
+  ROCm TheRock's installed SDK the scan went from 30.1 s to 25.7 s on a
+  4-vCPU runner (median of three, interleaved), with identical documents in
+  all three formats across repeated scans; peak RSS went from 571 MB to
+  868 MB. A new INFO line, `binary tier timing`, reports where the tier's
+  time goes.
 
 - **The Go binary probe rules out a non-Go ELF or Mach-O from its section
   table (#1611).** After #1608 every native binary was still read whole and,
