@@ -290,3 +290,274 @@ fn w8_a_targeted_workspace_root_gets_no_extra_edge() {
     assert_explained(&d);
     assert_repeatable(dir.path(), &[]);
 }
+
+// ---------------------------------------------------------------------
+// Link fixtures (T002)
+// ---------------------------------------------------------------------
+
+const SDK: &str = "pkg:generic/waybill-fixture-sdk@1.0.0";
+
+#[derive(Clone, Copy)]
+enum Lib {
+    Present,
+    Absent,
+    Dvc,
+}
+
+/// A vendored prebuilt package at `dir`: a CMake version file under
+/// `lnx/lib/cmake/<name>/`, and the library (or its DVC pointer) in
+/// `lnx/lib`. Its prefix is `dir/lnx`.
+fn sdk_record(root: &Path, dir: &str, name: &str, lib: Lib) {
+    write(root, &format!("{dir}/lnx/lib/cmake/{name}/{name}ConfigVersion.cmake"), "set(PACKAGE_VERSION \"1.0.0\")\n");
+    let file = format!("{dir}/lnx/lib/lib{name}.a");
+    match lib {
+        Lib::Present => write(root, &file, "!<arch>\n"),
+        Lib::Absent => {}
+        Lib::Dvc => write(
+            root,
+            &format!("{file}.dvc"),
+            &format!("outs:\n- md5: 3c217a9769930ece24c1d54c2342989d\n  size: 8\n  path: lib{name}.a\n"),
+        ),
+    }
+}
+
+/// A CMake tree with `body` in the root `CMakeLists.txt`.
+fn cmake_tree(sdk_name: &str, lib: Lib, body: &str) -> tempfile::TempDir {
+    let dir = tempfile::tempdir().unwrap();
+    sdk_record(dir.path(), "shared/sdk", sdk_name, lib);
+    write(dir.path(), "CMakeLists.txt", &format!("project(top)\n{body}"));
+    dir
+}
+
+const LINK_SDK: &str = "target_link_directories(t PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/shared/sdk/lnx/lib)\n\
+                        target_link_libraries(t PRIVATE waybill-fixture-sdk)\n";
+
+fn conditional(body: &str) -> String {
+    format!("if(FLAG)\n{body}endif()\n")
+}
+
+/// The record is reachable, Optional, with C122 `cmake-conditional-link`
+/// and C235 `conditions`, agreeing across formats.
+fn assert_conditional(d: &Docs, purl: &str, conditions: &str) {
+    let c = component(&d.cdx, purl).unwrap_or_else(|| panic!("control: {purl} is emitted"));
+    assert!(reachable(d, purl), "{purl} is unreachable");
+    assert_eq!(c["scope"], "excluded", "{purl} is optional");
+    let c122 = row_all_formats(d, "C122");
+    assert!(c122.iter().any(|v| v.contains("cmake-conditional-link")), "C122: {c122:?}");
+    // The extractor yields each element, JSON-encoded.
+    let c235 = row_all_formats(d, "C235");
+    let expected: std::collections::BTreeSet<String> = serde_json::from_str::<Vec<String>>(conditions)
+        .unwrap()
+        .iter()
+        .map(|c| serde_json::to_string(c).unwrap())
+        .collect();
+    assert_eq!(c235, expected, "C235 holds {conditions}");
+    assert_eq!(prop(c, "waybill:cmake-link-conditions"), Some(conditions));
+    assert_explained(d);
+}
+
+/// The record is reachable and keeps its scope; no C122 value of this
+/// feature, no C235.
+fn assert_required(d: &Docs, purl: &str) {
+    let c = component(&d.cdx, purl).unwrap_or_else(|| panic!("control: {purl} is emitted"));
+    assert!(reachable(d, purl), "{purl} is unreachable");
+    assert_ne!(c["scope"], "excluded");
+    assert_eq!(prop(c, "waybill:cmake-link-conditions"), None);
+    assert!(row_all_formats(d, "C235").is_empty());
+    assert_explained(d);
+}
+
+// ---------------------------------------------------------------------
+// L-1..L-4 (T013)
+// ---------------------------------------------------------------------
+
+#[test]
+fn l1_a_conditional_link_makes_the_record_an_optional_dependency() {
+    let dir = cmake_tree("waybill-fixture-sdk", Lib::Present, &conditional(LINK_SDK));
+    assert_conditional(&scan(dir.path(), &[]), SDK, r#"["FLAG"]"#);
+    assert_repeatable(dir.path(), &[]);
+}
+
+#[test]
+fn l2_an_unconditional_link_keeps_the_scope() {
+    let dir = cmake_tree("waybill-fixture-sdk", Lib::Present, LINK_SDK);
+    assert_required(&scan(dir.path(), &[]), SDK);
+    assert_repeatable(dir.path(), &[]);
+}
+
+#[test]
+fn l3_the_library_need_not_be_present() {
+    let dir = cmake_tree("waybill-fixture-sdk", Lib::Absent, &conditional(LINK_SDK));
+    assert_conditional(&scan(dir.path(), &[]), SDK, r#"["FLAG"]"#);
+    assert_repeatable(dir.path(), &[]);
+}
+
+/// L-4: the record is named differently from the linked library, so only
+/// the DVC pointer in the link directory connects them.
+#[test]
+fn l4_a_dvc_pointer_matches_by_file() {
+    let dir = tempfile::tempdir().unwrap();
+    sdk_record(dir.path(), "shared/sdk", "waybill-fixture-sdk", Lib::Absent);
+    write(dir.path(), "shared/sdk/lnx/lib/libwaybill-fixture-core.a.dvc", "outs:\n- md5: 00\n  path: libwaybill-fixture-core.a\n");
+    write(
+        dir.path(),
+        "CMakeLists.txt",
+        "project(top)\nif(FLAG)\n  target_link_directories(t PRIVATE shared/sdk/lnx/lib)\n  target_link_libraries(t PRIVATE waybill-fixture-core)\nendif()\n",
+    );
+    assert_conditional(&scan(dir.path(), &[]), SDK, r#"["FLAG"]"#);
+    assert_repeatable(dir.path(), &[]);
+}
+
+// ---------------------------------------------------------------------
+// L-5, L-6, L-11, L-12 (T014)
+// ---------------------------------------------------------------------
+
+/// The component and relationship sets of `with` and `without` are equal.
+fn assert_same_graph(with: &Docs, without: &Docs) {
+    let comps = |d: &Docs| -> Vec<String> {
+        let mut v: Vec<String> = cdx_components_with_containers(&d.cdx)
+            .iter()
+            .map(|(c, _)| serde_json::to_string(&mask_nondeterministic(c)).unwrap())
+            .collect();
+        v.sort();
+        v
+    };
+    assert_eq!(comps(with), comps(without), "FR-006: no component is changed or invented");
+    // The subject is named after the scanned directory, which differs.
+    let deps = |d: &Docs| -> String {
+        serde_json::to_string(&d.cdx["dependencies"]).unwrap().replace(&subject(d), "SUBJECT")
+    };
+    assert_eq!(deps(with), deps(without), "FR-006: no edge is invented");
+}
+
+#[test]
+fn l5_a_directory_outside_every_prefix_links_nothing() {
+    let body = conditional(
+        "target_link_directories(t PRIVATE elsewhere/lib)\ntarget_link_libraries(t PRIVATE waybill-fixture-sdk)\n",
+    );
+    let with = cmake_tree("waybill-fixture-sdk", Lib::Present, &body);
+    let without = cmake_tree("waybill-fixture-sdk", Lib::Present, "");
+    assert_same_graph(&scan(with.path(), &[]), &scan(without.path(), &[]));
+    assert_repeatable(with.path(), &[]);
+}
+
+#[test]
+fn l6_a_name_matching_nothing_links_nothing() {
+    let body = conditional(
+        "target_link_directories(t PRIVATE shared/sdk/lnx/lib)\ntarget_link_libraries(t PRIVATE waybill-fixture-other)\n",
+    );
+    let with = cmake_tree("waybill-fixture-sdk", Lib::Present, &body);
+    let without = cmake_tree("waybill-fixture-sdk", Lib::Present, "");
+    assert_same_graph(&scan(with.path(), &[]), &scan(without.path(), &[]));
+    assert_repeatable(with.path(), &[]);
+}
+
+#[test]
+fn l11_link_directories_apply_to_every_later_target() {
+    let body = conditional("link_directories(shared/sdk/lnx/lib)\ntarget_link_libraries(other PRIVATE waybill-fixture-sdk)\n");
+    let dir = cmake_tree("waybill-fixture-sdk", Lib::Present, &body);
+    assert_conditional(&scan(dir.path(), &[]), SDK, r#"["FLAG"]"#);
+    assert_repeatable(dir.path(), &[]);
+}
+
+/// L-12: an inner record's prefix lies inside an outer record's. Only the
+/// inner one is linked.
+#[test]
+fn l12_the_innermost_prefix_wins() {
+    let dir = tempfile::tempdir().unwrap();
+    sdk_record(dir.path(), "shared/outer", "waybill-fixture-sdk", Lib::Present);
+    sdk_record(dir.path(), "shared/outer/lnx/inner", "waybill-fixture-sdk", Lib::Present);
+    write(
+        dir.path(),
+        "shared/outer/lnx/inner/lnx/lib/cmake/waybill-fixture-sdk/waybill-fixture-sdkConfigVersion.cmake",
+        "set(PACKAGE_VERSION \"2.0.0\")\n",
+    );
+    write(
+        dir.path(),
+        "CMakeLists.txt",
+        "project(top)\nif(FLAG)\n  link_directories(shared/outer/lnx/inner/lnx/lib)\n  link_libraries(waybill-fixture-sdk)\nendif()\n",
+    );
+    let d = scan(dir.path(), &[]);
+    let inner = "pkg:generic/waybill-fixture-sdk@2.0.0";
+    assert_eq!(prop(component(&d.cdx, inner).unwrap(), "waybill:cmake-link-conditions"), Some(r#"["FLAG"]"#));
+    assert_eq!(prop(component(&d.cdx, SDK).unwrap(), "waybill:cmake-link-conditions"), None, "the outer record is not linked");
+    assert_repeatable(dir.path(), &[]);
+}
+
+// ---------------------------------------------------------------------
+// L-7, L-10 (T015)
+// ---------------------------------------------------------------------
+
+/// L-7: TheRock's shape. The link is unconditional inside a file the reader's
+/// patterns never match, included under `if (WIN_SDK)`.
+#[test]
+fn l7_an_included_file_carries_the_include_site_condition() {
+    let dir = tempfile::tempdir().unwrap();
+    sdk_record(dir.path(), "shared/sdk", "waybill-fixture-sdk", Lib::Dvc);
+    write(dir.path(), "CMakeLists.txt", "project(top)\nadd_subdirectory(proj)\n");
+    write(dir.path(), "proj/CMakeLists.txt", "if (WIN_SDK)\n  include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_wsl.txt)\nendif()\n");
+    write(
+        dir.path(),
+        "proj/CMakeLists_wsl.txt",
+        "target_link_directories(${T} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../shared/sdk/lnx/lib)\n\
+         target_link_libraries(${T} PRIVATE waybill-fixture-sdk)\n",
+    );
+    assert_conditional(&scan(dir.path(), &[]), SDK, r#"["WIN_SDK"]"#);
+    assert_repeatable(dir.path(), &[]);
+}
+
+#[test]
+fn l10_module_includes_are_ignored_and_include_cycles_terminate() {
+    let dir = cmake_tree("waybill-fixture-sdk", Lib::Present, "include(FetchContent)\ninclude(a.cmake)\n");
+    write(dir.path(), "a.cmake", &format!("include(b.cmake)\n{}", conditional(LINK_SDK.replace("${CMAKE_CURRENT_SOURCE_DIR}/", "").as_str())));
+    write(dir.path(), "b.cmake", "include(a.cmake)\n");
+    assert_conditional(&scan(dir.path(), &[]), SDK, r#"["FLAG"]"#);
+    assert_repeatable(dir.path(), &[]);
+}
+
+// ---------------------------------------------------------------------
+// L-8, L-9 (T016)
+// ---------------------------------------------------------------------
+
+/// L-8: the linking file inside a git submodule. The submodule depends on
+/// the record, typed optional in SPDX 2.3; the root does not.
+#[test]
+fn l8_the_linking_projects_submodule_owns_the_edge() {
+    use common::git_fixture::GitFixture;
+    let fx = GitFixture::new();
+    fx.repo("x");
+    fx.write("x/CMakeLists.txt", &format!("project(x)\n{}", conditional(&LINK_SDK.replace("shared/sdk", "../../shared/sdk"))));
+    fx.git(&fx.path("x"), &["add", "-A"]);
+    fx.git(&fx.path("x"), &["commit", "-q", "-m", "files"]);
+    fx.repo("app");
+    fx.add_submodule("app", "x", "third-party/x");
+    fx.write("app/CMakeLists.txt", "project(top)\nadd_subdirectory(third-party/x)\n");
+    sdk_record(&fx.path("app"), "shared/sdk", "waybill-fixture-sdk", Lib::Present);
+    let docs = common::cmake_fetch::scan(&fx, &fx.path("app"), &[]);
+    let deps = docs.cdx["dependencies"].as_array().unwrap();
+    let owners: Vec<&str> = deps
+        .iter()
+        .filter(|e| e["dependsOn"].as_array().into_iter().flatten().any(|t| t == SDK))
+        .map(|e| e["ref"].as_str().unwrap())
+        .collect();
+    assert_eq!(owners.len(), 1, "one edge into the record: {owners:?}");
+    assert!(owners[0].contains("x"), "owned by the submodule: {}", owners[0]);
+    let optional = docs.spdx23["relationships"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|r| r["relationshipType"] == "OPTIONAL_DEPENDENCY_OF")
+        .count();
+    assert!(optional >= 1, "SPDX 2.3 types the edge OPTIONAL_DEPENDENCY_OF");
+}
+
+#[test]
+fn l9_conditions_union_and_one_unconditional_link_makes_it_required() {
+    let two = format!("if(A)\n{LINK_SDK}endif()\nif(B)\n{LINK_SDK}endif()\n");
+    let dir = cmake_tree("waybill-fixture-sdk", Lib::Present, &two);
+    assert_conditional(&scan(dir.path(), &[]), SDK, r#"["A","B"]"#);
+    assert_repeatable(dir.path(), &[]);
+    let three = format!("{two}{LINK_SDK}");
+    let dir = cmake_tree("waybill-fixture-sdk", Lib::Present, &three);
+    assert_required(&scan(dir.path(), &[]), SDK);
+}

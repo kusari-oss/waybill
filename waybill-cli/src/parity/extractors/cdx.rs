@@ -1068,6 +1068,8 @@ cdx_anno!(c231_cdx, "waybill:cmake-fetch-coverage", document);
 cdx_anno!(c232_cdx, "waybill:cmake-fetch-conditions", component);
 cdx_anno!(c233_cdx, "waybill:superseded-declarations", component);
 cdx_anno!(c234_cdx, "waybill:cmake-fetch-wrapper", component);
+// Spec 1543 (#1602): C235 — the conditions a vendored library is linked under.
+cdx_anno!(c235_cdx, "waybill:cmake-link-conditions", component);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

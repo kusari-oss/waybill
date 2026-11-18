@@ -25,6 +25,7 @@ pub mod podman_source;
 // SBOM emission, and the new C-rows.
 pub(crate) mod declared_attach;
 pub(crate) mod cmake_fetch_attach;
+pub(crate) mod cmake_link_attach;
 pub(crate) mod file_tier;
 #[cfg(feature = "oci-registry")]
 pub mod oci_pull;
@@ -439,6 +440,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut git_submodule_coverage: Option<String> = None;
     // Spec 1537: submodule directories, for the declared-requirements pass.
     let mut git_submodule_dirs = package_db::git_submodule::SubmoduleDirs::new();
+    let mut cmake_links: Vec<package_db::cmake::links::LinkDeclaration> = Vec::new();
     let mut declared_downloads: Option<String> = None;
     let mut cmake_fetch_coverage: Option<String> = None;
     let mut python_owned_binaries: Option<String> = None;
@@ -524,6 +526,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
         git_submodule_coverage = scan_result.diagnostics.git_submodule_coverage.as_ref().map(|c| c.wire());
         git_submodule_dirs = std::mem::take(&mut scan_result.diagnostics.git_submodule_dirs);
+        cmake_links = std::mem::take(&mut scan_result.diagnostics.cmake_links);
         declared_downloads = scan_result.diagnostics.cmake_declared_downloads.clone();
         cmake_fetch_coverage = scan_result.diagnostics.cmake_fetch_coverage.clone();
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
@@ -1549,6 +1552,12 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // project whose tree declares it, by the same owner rule.
         let fetches = cmake_fetch_attach::attach(&components, &relationships, &index, root);
         relationships.extend(fetches.edges);
+        // Spec 1543 (#1602): a vendored library linked by link directory
+        // is a dependency of the project that links it, the same way. Its
+        // scope is set here, before the rewrite below types the edge.
+        let links = cmake_link_attach::attach(&components, &relationships, &cmake_links, &index, root);
+        relationships.extend(links.attached.edges);
+        cmake_link_attach::apply_scope(&mut components, &links.conditional);
     }
 
     apply_lifecycle_scope_to_edges(&components, &mut relationships);
@@ -1663,6 +1672,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let index = declared_attach::OwnerIndex::build(&components, &git_submodule_dirs, root, scan_mode);
         let mut anchors = declared_attach::attach(&components, &relationships, &index, root).root_anchors;
         anchors.extend(cmake_fetch_attach::attach(&components, &relationships, &index, root).root_anchors);
+        anchors.extend(cmake_link_attach::attach(&components, &relationships, &cmake_links, &index, root).attached.root_anchors);
         anchors.extend(workspace_root_anchors(&components, &relationships));
         anchors.into_iter().collect()
     };

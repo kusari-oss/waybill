@@ -173,6 +173,32 @@ widen them).
 - **Ownership.** A fetch is a dependency of the nearest enclosing project — a
   main module or a git submodule (spec 1537's rule) — or of the document root
   when there is none.
+- **Libraries linked by directory** (spec 1543, #1602). A prebuilt package
+  vendored in the tree, with a CMake version file or `.pc` file (an
+  installed-library record, spec 1531), is often linked without
+  `find_package`:
+  `target_link_directories(t PRIVATE …/sdk/lib)` plus
+  `target_link_libraries(t PRIVATE sdk)`. Such a link makes the record a
+  dependency of the linking file's project, by the ownership rule above.
+  - **Match.** The link directory lies inside the record's prefix, and the
+    linked name is the record's name (ignoring case), or names a
+    `lib<name>.a`, `lib<name>.so` or `lib<name>.so.*` in that directory —
+    or a DVC pointer to one (`<file>.dvc`), since the library itself is often
+    not in the checkout. `link_directories()` applies to every later link in
+    the file; `target_link_directories()` to its own target's links. With
+    nested prefixes, the innermost record wins. Targets (`a::b`), paths,
+    generator expressions, variables and flags are not plain names.
+  - **Scope.** A record linked only inside `if()`/`function()` blocks, and
+    depended on by nothing else, is optional, with C122
+    `cmake-conditional-link` and the conditions in
+    `waybill:cmake-link-conditions` (C235). One unconditional link, or an
+    existing edge into the record, leaves its scope as it was.
+  - **`include()`.** A file pulled in by `include(<path>)` is read for links,
+    whatever its name (TheRock links its vendored `wkmi` from
+    `CMakeLists_wsl.txt`), and the blocks open at the `include()` site are its
+    first conditions. Module names (`include(FetchContent)`), paths with
+    unknown variables, cycles and chains deeper than 8 are skipped. Fetches,
+    `find_package` and downloads are not yet read through `include()`.
 - **Accounting.** `waybill:cmake-fetch-coverage` (C231) counts every
   declaration read: `read` = `emitted` + `merged.first-declaration-wins` +
   `merged.existing-component` + `unresolved.identity`. A name built from a
