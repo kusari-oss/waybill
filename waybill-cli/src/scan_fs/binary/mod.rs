@@ -173,7 +173,7 @@ use discover::discover_binaries;
 pub(crate) const ANN_BINARY_SCAN_SKIPPED_TEST_INPUTS: &str =
     "waybill:binary-scan-skipped-test-inputs";
 use entry::{
-    cargo_auditable_packages_to_entries, make_file_level_component, note_package_to_entry,
+    cargo_auditable_packages_to_entries, make_file_level_component_hashed, note_package_to_entry, sha256_hex,
     symbol_match_to_entry, v2_match_to_entry, version_match_to_entry,
 };
 use predicates::{
@@ -369,72 +369,93 @@ pub fn read(
         source_binding::BuildAttributionRegistry::from_observations(Vec::new())
     };
 
-    for path in discover_binaries(rootfs, claimed_paths, exclude_set, test_inputs) {
-        // Size bounds via metadata BEFORE the full-file read. A
-        // multi-GB file that exceeds MAX_BINARY_SIZE_BYTES used to be
-        // slurped into memory in its entirety just to be rejected by
-        // the bounds check below.
-        let file_len = match std::fs::metadata(&path) {
-            Ok(m) => m.len(),
-            Err(_) => {
-                if walker_debug {
-                    eprintln!("WALKER {}: DROPPED reason=read-error", path.display());
+    // #1611 follow-up: where the binary tier's time goes, one INFO line per
+    // scan. Wall time per stage, summed over binaries.
+    let mut timing = TierTiming::default();
+    let t_discover = std::time::Instant::now();
+    let candidates = discover_binaries(rootfs, claimed_paths, exclude_set, test_inputs);
+    timing.discover = t_discover.elapsed();
+    timing.candidates = candidates.len();
+    let t_loop = std::time::Instant::now();
+    let eligible: Vec<std::path::PathBuf> = candidates
+        .into_iter()
+        .filter(|path| {
+            // Size bounds via metadata BEFORE the full-file read. A
+            // multi-GB file that exceeds MAX_BINARY_SIZE_BYTES used to be
+            // slurped into memory in its entirety just to be rejected by
+            // the bounds check below.
+            let file_len = match std::fs::metadata(path) {
+                Ok(m) => m.len(),
+                Err(_) => {
+                    if walker_debug {
+                        eprintln!("WALKER {}: DROPPED reason=read-error", path.display());
+                    }
+                    return false;
                 }
-                continue;
+            };
+            if !(elf::MIN_BINARY_SIZE_BYTES..=elf::MAX_BINARY_SIZE_BYTES).contains(&file_len) {
+                if walker_debug {
+                    eprintln!(
+                        "WALKER {}: DROPPED reason=size-out-of-bounds bytes={}",
+                        path.display(),
+                        file_len
+                    );
+                }
+                return false;
             }
-        };
-        if !(elf::MIN_BINARY_SIZE_BYTES..=elf::MAX_BINARY_SIZE_BYTES).contains(&file_len) {
-            if walker_debug {
-                eprintln!(
-                    "WALKER {}: DROPPED reason=size-out-of-bounds bytes={}",
-                    path.display(),
-                    file_len
-                );
-            }
-            continue;
-        }
 
-        // Early build-intermediate gate. `.o` / `.a` files used to be
-        // fully read AND fully introspected by `scan_binary` before
-        // the post-scan build-intermediate check threw the result
-        // away — on a Rust `target/` directory that meant reading +
-        // parsing hundreds of thousands of Mach-O objects (tens of
-        // GB) for nothing.
-        //
-        // Drop them here, BEFORE the read, with one carve-out: paths
-        // that could route into a cpython/openjdk umbrella fall
-        // through to the unchanged full pipeline, so collapse side
-        // effects keep firing only after a successful binary parse
-        // (exactly the pre-gate ordering). Every other `.o`/`.a`
-        // outcome in the old pipeline — parse failure, format
-        // mismatch, claimed path, rpm-dir heuristic, the
-        // build-intermediate drop itself — ended in a side-effect-free
-        // skip, so dropping unconditionally is observably identical.
-        let is_o_or_a_extension = matches!(
-            path.extension().and_then(|e| e.to_str()),
-            Some("o") | Some("a")
-        );
-        if is_o_or_a_extension
-            && !python_collapser.would_collapse(&path, rootfs)
-            && !jdk_collapser.would_collapse(&path, rootfs)
-        {
-            if walker_debug {
-                eprintln!(
-                    "WALKER {}: DROPPED reason=build-intermediate ext={:?}",
-                    path.display(),
-                    path.extension().and_then(|e| e.to_str())
-                );
+            // Early build-intermediate gate. `.o` / `.a` files used to be
+            // fully read AND fully introspected by `scan_binary` before
+            // the post-scan build-intermediate check threw the result
+            // away — on a Rust `target/` directory that meant reading +
+            // parsing hundreds of thousands of Mach-O objects (tens of
+            // GB) for nothing.
+            //
+            // Drop them here, BEFORE the read, with one carve-out: paths
+            // that could route into a cpython/openjdk umbrella fall
+            // through to the unchanged full pipeline, so collapse side
+            // effects keep firing only after a successful binary parse
+            // (exactly the pre-gate ordering). Every other `.o`/`.a`
+            // outcome in the old pipeline — parse failure, format
+            // mismatch, claimed path, rpm-dir heuristic, the
+            // build-intermediate drop itself — ended in a side-effect-free
+            // skip, so dropping unconditionally is observably identical.
+            let is_o_or_a_extension = matches!(
+                path.extension().and_then(|e| e.to_str()),
+                Some("o") | Some("a")
+            );
+            if is_o_or_a_extension
+                && !python_collapser.would_collapse(path, rootfs)
+                && !jdk_collapser.would_collapse(path, rootfs)
+            {
+                if walker_debug {
+                    eprintln!(
+                        "WALKER {}: DROPPED reason=build-intermediate ext={:?}",
+                        path.display(),
+                        path.extension().and_then(|e| e.to_str())
+                    );
+                }
+                return false;
             }
-            continue;
-        }
 
-        let Ok(bytes) = std::fs::read(&path) else {
+            true
+        })
+        .collect();
+    let names = embedded.as_ref().map(|ctx| ctx.names);
+    for chunk in eligible.chunks(PREPARE_CHUNK) {
+        let t = std::time::Instant::now();
+        let prepared = prepare_chunk(chunk, names);
+        timing.prepare_wall += t.elapsed();
+        for (path, prep) in chunk.iter().zip(prepared) {
+        let path = path.clone();
+        let Some(mut prep) = prep else {
             if walker_debug {
                 eprintln!("WALKER {}: DROPPED reason=read-error", path.display());
             }
             continue;
         };
-        let Some(scan) = scan_binary(&path, &bytes) else {
+        timing.add(&prep);
+        let Some(scan) = prep.scan.take() else {
             if walker_debug {
                 eprintln!(
                     "WALKER {}: DROPPED reason=scan-failed",
@@ -522,7 +543,7 @@ pub fn read(
             && has_rpmdb
             && is_os_managed_directory(rootfs, &path);
         let go_in_linux =
-            rootfs_kind == RootfsKind::Linux && is_go_binary(&bytes);
+            rootfs_kind == RootfsKind::Linux && prep.is_go;
 
         // Python-stdlib collapse (v3 fix): when this binary matches
         // a CPython stdlib layout AND isn't already claimed by a
@@ -647,7 +668,7 @@ pub fn read(
         // those crates are real, even when the file-level component
         // is shadowed by an authoritative package-db entry). Build
         // it once outside the skip branch.
-        let mut file_level = make_file_level_component(&path, &bytes, &scan, go_in_linux);
+        let mut file_level = make_file_level_component_hashed(&path, &prep.sha256, &scan, go_in_linux);
         // Spec 1536 FR-008: an owned library auditwheel renamed is named
         // without the hash. Only owned binaries: elsewhere the name is left
         // as the file has it.
@@ -677,7 +698,10 @@ pub fn read(
             // binaries are never attributed through their strings.
             if !skip_secondary_evidence {
                 if let Some(ctx) = embedded.as_mut() {
-                    let finding = embedded_paths::extract(&scan.string_region, ctx.names);
+                    let finding = prep
+                        .embedded
+                        .take()
+                        .unwrap_or_else(|| embedded_paths::extract(&scan.string_region, ctx.names));
                     // US2: each bundled tree, nested under this binary.
                     for name in &finding.bundled {
                         if let Some(entry) = entry::bundled_tree_to_entry(name, &path, &parent_bom_ref) {
@@ -798,7 +822,8 @@ pub fn read(
                 PackageDbEntry,
             > = std::collections::HashMap::new();
 
-            for m in version_strings::scan(&scan.string_region) {
+            let version_matches = std::mem::take(&mut prep.version_matches);
+            for m in version_matches {
                 if let Some(entry) = version_match_to_entry(&m, &path) {
                     by_library.insert(m.library.slug().to_string(), entry);
                 }
@@ -810,6 +835,7 @@ pub fn read(
             // through the legacy `scan()` wrapper — preserves the
             // SC-003 byte-identity contract for the 33 byte-identity
             // goldens.
+            let t = std::time::Instant::now();
             let symbol_matches = match &external_corpus {
                 Some(corpus) => symbol_fingerprint::scan_with_corpus(
                     &scan.symbol_names,
@@ -824,6 +850,7 @@ pub fn read(
                 ),
                 None => symbol_fingerprint::scan(&scan.symbol_names),
             };
+            timing.symbols += t.elapsed();
             for m in symbol_matches {
                 // Q1: if the version-string scanner already produced an
                 // entry for this library on this binary, just record the
@@ -967,8 +994,11 @@ pub fn read(
                 children: owned_children,
             });
         }
+        }
     }
 
+    timing.loop_total = t_loop.elapsed();
+    timing.log();
     out.extend(linkage_agg.into_entries());
     out.extend(python_collapser.into_entries());
     out.extend(jdk_collapser.into_entries());
@@ -979,10 +1009,244 @@ pub fn read(
 
 
 
+/// Binaries prepared per parallel batch: bounds the parsed scans held at once.
+const PREPARE_CHUNK: usize = 64;
+
+/// File bytes the workers may hold at once. Without it, the SDK's four
+/// largest libraries (454, 389, 337 and 186 MB, all in `lib/`) were read at
+/// the same time, and peak RSS rose from 571 MB (one thread) to 1,900 MB.
+/// A file larger than the budget is still read, alone.
+const READ_BUDGET_BYTES: u64 = 512 * 1024 * 1024;
+
+/// Bytes reserved by workers that are reading or hashing a file.
+struct ReadBudget {
+    in_flight: std::sync::Mutex<u64>,
+    freed: std::sync::Condvar,
+    limit: u64,
+}
+
+impl ReadBudget {
+    fn new(limit: u64) -> Self {
+        Self { in_flight: std::sync::Mutex::new(0), freed: std::sync::Condvar::new(), limit }
+    }
+
+    /// Wait until `n` bytes fit, or nothing else is in flight.
+    fn acquire(&self, n: u64) {
+        let mut held = self.in_flight.lock().unwrap_or_else(|e| e.into_inner());
+        while *held > 0 && *held + n > self.limit {
+            held = self.freed.wait(held).unwrap_or_else(|e| e.into_inner());
+        }
+        *held += n;
+    }
+
+    fn release(&self, n: u64) {
+        let mut held = self.in_flight.lock().unwrap_or_else(|e| e.into_inner());
+        *held = held.saturating_sub(n);
+        self.freed.notify_all();
+    }
+}
+
+/// What a worker computes for one binary: everything that needs the file's
+/// bytes or is a pure function of its parse. The bytes are dropped before
+/// it returns. Stateful steps (collapsers, linkage, claims, output order)
+/// stay in [`read`]'s serial loop, which consumes these in walk order, so
+/// the output does not depend on scheduling.
+struct Prepared {
+    len: u64,
+    scan: Option<entry::BinaryScan>,
+    is_go: bool,
+    sha256: String,
+    version_matches: Vec<version_strings::EmbeddedVersionMatch>,
+    embedded: Option<embedded_paths::EmbeddedPathFinding>,
+    read: std::time::Duration,
+    parse: std::time::Duration,
+    hash: std::time::Duration,
+    strings: std::time::Duration,
+}
+
+fn prepare(
+    path: &std::path::Path,
+    names: Option<&std::collections::BTreeSet<String>>,
+    budget: &ReadBudget,
+) -> Option<Prepared> {
+    let size = std::fs::metadata(path).map_or(0, |m| m.len());
+    budget.acquire(size);
+    let p = prepare_held(path, names);
+    budget.release(size);
+    p
+}
+
+/// [`prepare`] once the file's bytes are budgeted. The bytes are dropped
+/// before it returns.
+fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSet<String>>) -> Option<Prepared> {
+    let t = std::time::Instant::now();
+    let bytes = std::fs::read(path).ok()?;
+    let read = t.elapsed();
+    let t = std::time::Instant::now();
+    let scan = scan_binary(path, &bytes);
+    let parse = t.elapsed();
+    let mut p = Prepared {
+        len: bytes.len() as u64,
+        scan: None,
+        is_go: false,
+        sha256: String::new(),
+        version_matches: Vec::new(),
+        embedded: None,
+        read,
+        parse,
+        hash: std::time::Duration::ZERO,
+        strings: std::time::Duration::ZERO,
+    };
+    let Some(scan) = scan else { return Some(p) };
+    p.is_go = is_go_binary(&bytes);
+    let t = std::time::Instant::now();
+    p.sha256 = sha256_hex(&bytes);
+    p.hash = t.elapsed();
+    drop(bytes);
+    let t = std::time::Instant::now();
+    p.version_matches = version_strings::scan(&scan.string_region);
+    p.embedded = names.map(|n| embedded_paths::extract(&scan.string_region, n));
+    p.strings = t.elapsed();
+    p.scan = Some(scan);
+    Some(p)
+}
+
+/// [`prepare`] over `paths` on up to 8 threads; results in `paths` order.
+fn prepare_chunk(
+    paths: &[std::path::PathBuf],
+    names: Option<&std::collections::BTreeSet<String>>,
+) -> Vec<Option<Prepared>> {
+    let workers = std::thread::available_parallelism().map_or(1, |n| n.get()).clamp(1, 8).min(paths.len().max(1));
+    let budget = ReadBudget::new(READ_BUDGET_BYTES);
+    if workers == 1 {
+        return paths.iter().map(|p| prepare(p, names, &budget)).collect();
+    }
+    let next = std::sync::atomic::AtomicUsize::new(0);
+    let mut done: Vec<(usize, Option<Prepared>)> = std::thread::scope(|s| {
+        let handles: Vec<_> = (0..workers)
+            .map(|_| {
+                s.spawn(|| {
+                    let mut mine = Vec::new();
+                    loop {
+                        let i = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        let Some(path) = paths.get(i) else { break };
+                        mine.push((i, prepare(path, names, &budget)));
+                    }
+                    mine
+                })
+            })
+            .collect();
+        handles.into_iter().flat_map(|h| h.join().unwrap_or_default()).collect()
+    });
+    done.sort_unstable_by_key(|(i, _)| *i);
+    debug_assert!(done.iter().enumerate().all(|(k, (i, _))| k == *i));
+    done.into_iter().map(|(_, p)| p).collect()
+}
+
+/// Where the binary tier's time goes, one INFO line per scan. Worker stages
+/// are summed over binaries (CPU-like, across threads); `prepare_wall` is
+/// the parallel stage's elapsed time and `serial_ms` the rest of the loop.
+#[derive(Default)]
+struct TierTiming {
+    candidates: usize,
+    bytes: u64,
+    discover: std::time::Duration,
+    read: std::time::Duration,
+    parse: std::time::Duration,
+    hash: std::time::Duration,
+    strings: std::time::Duration,
+    symbols: std::time::Duration,
+    prepare_wall: std::time::Duration,
+    loop_total: std::time::Duration,
+}
+
+impl TierTiming {
+    fn add(&mut self, p: &Prepared) {
+        self.bytes += p.len;
+        self.read += p.read;
+        self.parse += p.parse;
+        self.hash += p.hash;
+        self.strings += p.strings;
+    }
+
+    fn log(&self) {
+        let ms = |d: std::time::Duration| d.as_millis() as u64;
+        tracing::info!(
+            candidates = self.candidates,
+            mib_read = self.bytes / (1024 * 1024),
+            discover_ms = ms(self.discover),
+            prepare_wall_ms = ms(self.prepare_wall),
+            worker_read_ms = ms(self.read),
+            worker_parse_ms = ms(self.parse),
+            worker_hash_ms = ms(self.hash),
+            worker_strings_ms = ms(self.strings),
+            symbols_ms = ms(self.symbols),
+            serial_ms = ms(self.loop_total.saturating_sub(self.prepare_wall)),
+            "binary tier timing"
+        );
+    }
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// The parallel stage hands results back in path order whatever the
+    /// scheduling, including missing files, so the serial loop sees the
+    /// walk order a single-threaded read would.
+    /// The budget never admits more than its limit at once, except one
+    /// oversized reservation on its own, and every waiter is eventually let in.
+    #[test]
+    fn read_budget_caps_bytes_in_flight() {
+        let budget = ReadBudget::new(100);
+        let peak = std::sync::atomic::AtomicU64::new(0);
+        let now = std::sync::atomic::AtomicU64::new(0);
+        let sizes: Vec<u64> = (0..64).map(|i| [10, 40, 70, 250][i % 4]).collect();
+        std::thread::scope(|s| {
+            for chunk in sizes.chunks(16) {
+                let (budget, peak, now) = (&budget, &peak, &now);
+                s.spawn(move || {
+                    for &n in chunk {
+                        budget.acquire(n);
+                        let cur = now.fetch_add(n, std::sync::atomic::Ordering::SeqCst) + n;
+                        assert!(cur <= 100 || cur == n, "{cur} bytes in flight with a 100-byte budget");
+                        peak.fetch_max(cur, std::sync::atomic::Ordering::SeqCst);
+                        std::thread::yield_now();
+                        now.fetch_sub(n, std::sync::atomic::Ordering::SeqCst);
+                        budget.release(n);
+                    }
+                });
+            }
+        });
+        assert_eq!(*budget.in_flight.lock().unwrap(), 0);
+        assert!(peak.load(std::sync::atomic::Ordering::SeqCst) >= 250, "the oversized reservation never ran");
+    }
+
+    #[test]
+    fn prepare_chunk_keeps_path_order() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut paths = Vec::new();
+        for i in 0..PREPARE_CHUNK {
+            let p = dir.path().join(format!("f{i:03}"));
+            if i % 7 != 3 {
+                // Distinct sizes, so a misplaced result shows in `len`.
+                std::fs::write(&p, vec![b'x'; 2048 + i * 37]).unwrap();
+            }
+            paths.push(p);
+        }
+        // Repeated: one schedule can come back in order by luck.
+        for _ in 0..20 {
+            let got = prepare_chunk(&paths, None);
+            assert_eq!(got.len(), paths.len());
+            for (i, r) in got.iter().enumerate() {
+                match r {
+                    None => assert_eq!(i % 7, 3, "file {i} exists but was not read"),
+                    Some(p) => assert_eq!(p.len, (2048 + i * 37) as u64, "result {i} is another file's"),
+                }
+            }
+        }
+    }
 
 
 
