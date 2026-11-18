@@ -162,32 +162,62 @@ pub fn detect_is_go(path: &Path) -> DetectResult {
     if !(MIN_BINARY_SIZE_BYTES..=MAX_BINARY_SIZE_BYTES).contains(&size) {
         return DetectResult::NotGoBinary;
     }
-    let Ok(bytes) = std::fs::read(path) else {
+    let Ok(file) = std::fs::File::open(path) else {
         return DetectResult::AmbiguousError;
     };
-    detect_is_go_bytes(&bytes)
+    match read_if_binary_shape(file, size) {
+        Ok(Some(bytes)) => detect_is_go_bytes(&bytes),
+        Ok(None) => DetectResult::NotGoBinary,
+        Err(_) => DetectResult::AmbiguousError,
+    }
+}
+
+/// Issue #781 — magic-byte prefilter. Every real Go binary is ELF, Mach-O,
+/// or PE — so gating on "first bytes are a known binary magic" is safe.
+/// Fat Mach-O magic (`0xCAFEBABE` etc.) is not included: Go's toolchain
+/// doesn't emit fat binaries directly.
+fn is_binary_shape(prefix: &[u8]) -> bool {
+    matches!(
+        prefix.first_chunk::<4>(),
+        Some(b"\x7fELF")
+            | Some(&[0xCF, 0xFA, 0xED, 0xFE]) // Mach-O 64-le
+            | Some(&[0xCE, 0xFA, 0xED, 0xFE]) // Mach-O 32-le
+            | Some(&[0xFE, 0xED, 0xFA, 0xCF]) // Mach-O 64-be
+            | Some(&[0xFE, 0xED, 0xFA, 0xCE]) // Mach-O 32-be
+    ) || matches!(prefix.first_chunk::<2>(), Some(b"MZ"))
+}
+
+/// #1608: the whole of `r` when its first bytes are a binary shape, else
+/// `None` after reading at most those bytes. #781 rejected a non-binary
+/// by its magic only after the whole file was in memory, so a source scan
+/// still read every candidate in full: on TheRock's 17 GB source tree that
+/// was about two thirds of the scan.
+fn read_if_binary_shape<R: std::io::Read>(mut r: R, size: u64) -> std::io::Result<Option<Vec<u8>>> {
+    let mut prefix = [0u8; 4];
+    let mut got = 0;
+    while got < prefix.len() {
+        match r.read(&mut prefix[got..])? {
+            0 => break,
+            n => got += n,
+        }
+    }
+    if !is_binary_shape(&prefix[..got]) {
+        return Ok(None);
+    }
+    let mut bytes = Vec::with_capacity(usize::try_from(size).unwrap_or(0));
+    bytes.extend_from_slice(&prefix[..got]);
+    r.read_to_end(&mut bytes)?;
+    Ok(Some(bytes))
 }
 
 /// Bytes-based core of [`detect_is_go`]. Lets callers that already
 /// hold the file contents (e.g. [`read_binary`]) avoid a second full
 /// read of the same file from disk.
 pub fn detect_is_go_bytes(bytes: &[u8]) -> DetectResult {
-    // Issue #781 — magic-byte prefilter. Tier 2 below is a whole-file
-    // memmem for the BuildInfo magic; on source-heavy trees (mongo:
-    // 55K files, 0 Go binaries) that scan is the dominant cost of
-    // the whole binary tier. Every real Go binary is ELF, Mach-O,
-    // or PE — so gating on \"first bytes are a known binary magic\"
-    // is safe. Fat Mach-O magic (`0xCAFEBABE` etc.) is not included:
-    // Go's toolchain doesn't emit fat binaries directly.
-    let is_binary_shape = matches!(
-        bytes.first_chunk::<4>(),
-        Some(b"\x7fELF")
-            | Some(&[0xCF, 0xFA, 0xED, 0xFE]) // Mach-O 64-le
-            | Some(&[0xCE, 0xFA, 0xED, 0xFE]) // Mach-O 32-le
-            | Some(&[0xFE, 0xED, 0xFA, 0xCF]) // Mach-O 64-be
-            | Some(&[0xFE, 0xED, 0xFA, 0xCE]) // Mach-O 32-be
-    ) || matches!(bytes.first_chunk::<2>(), Some(b"MZ"));
-    if !is_binary_shape {
+    // Tier 2 below is a whole-file memmem for the BuildInfo magic; on
+    // source-heavy trees (mongo: 55K files, 0 Go binaries) that scan is
+    // the dominant cost of the whole binary tier (#781).
+    if !is_binary_shape(bytes) {
         return DetectResult::NotGoBinary;
     }
 
@@ -483,11 +513,13 @@ pub fn read_binary(path: &Path) -> (BuildInfoStatus, Option<GoBinaryInfo>) {
     if !(MIN_BINARY_SIZE_BYTES..=MAX_BINARY_SIZE_BYTES).contains(&size) {
         return (BuildInfoStatus::NotGoBinary, None);
     }
-    let bytes = match std::fs::read(path) {
-        Ok(b) => b,
-        Err(_) => return (BuildInfoStatus::NotGoBinary, None),
+    let Ok(file) = std::fs::File::open(path) else {
+        return (BuildInfoStatus::NotGoBinary, None);
     };
-    read_binary_bytes(path, &bytes)
+    match read_if_binary_shape(file, size) {
+        Ok(Some(bytes)) => read_binary_bytes(path, &bytes),
+        Ok(None) | Err(_) => (BuildInfoStatus::NotGoBinary, None),
+    }
 }
 
 /// [`read_binary`] over a buffer the caller already holds.
@@ -1336,6 +1368,54 @@ mod tests {
         // Above the 1 KB minimum so it gets probed.
         std::fs::write(&p, vec![b'a'; 2048]).unwrap();
         assert_eq!(detect_is_go(&p), DetectResult::NotGoBinary);
+    }
+
+    /// Counts the bytes handed out, `chunk` at most per `read`.
+    struct Counting<'a> {
+        data: &'a [u8],
+        pos: usize,
+        chunk: usize,
+        handed: usize,
+    }
+
+    impl std::io::Read for Counting<'_> {
+        fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+            let n = buf.len().min(self.chunk).min(self.data.len() - self.pos);
+            buf[..n].copy_from_slice(&self.data[self.pos..self.pos + n]);
+            self.pos += n;
+            self.handed += n;
+            Ok(n)
+        }
+    }
+
+    #[test]
+    fn s1608_a_non_binary_is_not_read_past_its_magic() {
+        let text = vec![b'a'; 8 * 1024 * 1024];
+        let mut r = Counting { data: &text, pos: 0, chunk: usize::MAX, handed: 0 };
+        assert!(read_if_binary_shape(&mut r, text.len() as u64).unwrap().is_none());
+        assert_eq!(r.handed, 4);
+    }
+
+    #[test]
+    fn s1608_a_binary_shape_is_read_whole_even_one_byte_at_a_time() {
+        let mut bin = synth_padding(4096);
+        bin.extend_from_slice(&build_inline_buildinfo("path\tx\nmod\tx\tv0.0.0\t\n", ""));
+        for chunk in [1, 3, usize::MAX] {
+            let mut r = Counting { data: &bin, pos: 0, chunk, handed: 0 };
+            let got = read_if_binary_shape(&mut r, bin.len() as u64).unwrap().expect("binary shape");
+            assert_eq!(got, bin, "chunk {chunk}");
+            assert!(matches!(detect_is_go_bytes(&got), DetectResult::Found { .. }));
+        }
+        let mut pe = b"MZ".to_vec();
+        pe.extend(vec![0u8; 2048]);
+        let mut r = Counting { data: &pe, pos: 0, chunk: 1, handed: 0 };
+        assert_eq!(read_if_binary_shape(&mut r, pe.len() as u64).unwrap(), Some(pe.clone()));
+    }
+
+    #[test]
+    fn s1608_a_file_shorter_than_the_magic_is_not_a_binary() {
+        let mut r = Counting { data: b"\x7fE", pos: 0, chunk: usize::MAX, handed: 0 };
+        assert!(read_if_binary_shape(&mut r, 2).unwrap().is_none());
     }
 
     #[test]
