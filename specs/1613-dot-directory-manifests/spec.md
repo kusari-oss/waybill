@@ -139,7 +139,7 @@ A consumer who scans with a file inventory does not see workflow files, CI scrip
 
 - **A dot-directory that is not CI or docs but holds a manifest** (for example `.devcontainer/` is CI-adjacent; an unknown `.tools/` is not on the list). Only listed names are descended; an unlisted directory stays skipped.
 - **A virtualenv or cache nested inside a CI directory** (`.github/.venv/`, `.ci/node_modules/`). The existing skips still apply below a descended directory: descending `.ci` does not descend everything under it.
-- **A `package.json` under `.github/actions/<name>/`** (a JavaScript action). It is read by the npm reader and labelled `ci`, like a requirements file. Its `node_modules/`, if committed, stays skipped.
+- **A `package.json` under `.github/actions/<name>/`** (a JavaScript action). It is a project root like any other. Its committed `node_modules/` is read by the npm reader as the action's installed tree, as for any project root, and the packages there are labelled `ci`. The walker never finds a project root *inside* `node_modules/`.
 - **A CI directory nested deep in a submodule** (`compiler/amd-llvm/.ci/`). Recognised by name wherever it occurs, not only at the scan root.
 - **A requirements file that is also a lockfile** (`requirements.lock.txt`). Read as today's pip reader reads it; only reachability changes.
 - **The same requirements file reachable through two paths** (a symlink into `.ci/`). Read once, as the walker's existing visited set ensures.

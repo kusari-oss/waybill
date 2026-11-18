@@ -127,7 +127,8 @@ pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
         patterns,
         on_file: Some(on_cmake_file),
         on_dir: None,
-        descend_into: None,
+        // Spec 1613 (#1610): CI configuration holds CMake scripts (LLVM's .github/workflows/test-suite).
+        descend_into: Some(super::project_roots::listed_dot_dir_globset()?),
     })
 }
 

@@ -160,6 +160,13 @@ fn has_site_packages_ancestor(dir: &Path) -> bool {
 /// Per-file callback. Records the marker file's parent directory in
 /// state. The HashSet inside state auto-dedupes multi-marker dirs.
 fn on_pip_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    // Spec 1613: the pattern admits `*requirements*.txt`; only the names
+    // the reader reads make a project root.
+    if path.file_name().and_then(|s| s.to_str()).is_some_and(|n| n.contains("requirements"))
+        && !requirements_txt::is_requirements_file(path, None)
+    {
+        return;
+    }
     let Some(state) = ctx.state::<Mutex<PipDiscoveredPaths>>(ReaderId::PIP) else {
         return;
     };
@@ -181,7 +188,7 @@ pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
         "**/poetry.lock",
         "**/Pipfile.lock",
         "**/uv.lock",
-        "**/requirements*.txt",
+        "**/*requirements*.txt",
     ])?;
     Ok(ReaderRegistration {
         reader_id: ReaderId::PIP,
@@ -189,7 +196,8 @@ pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
         patterns,
         on_file: Some(on_pip_file),
         on_dir: None,
-        descend_into: None,
+        // Spec 1613 (#1610): CI and docs dot-directories hold requirements files.
+        descend_into: Some(super::project_roots::listed_dot_dir_globset()?),
     })
 }
 
@@ -324,7 +332,7 @@ pub(crate) fn finalize(
         if let Some(lockfile_entries) = uv_lock::read_uv_lock(project_root, include_dev) {
             merge_without_override(&mut entries, lockfile_entries);
         }
-        if let Some(req_entries) = requirements_txt::read_requirements_files(project_root) {
+        if let Some(req_entries) = requirements_txt::read_requirements_files(project_root, rootfs) {
             merge_without_override(&mut entries, req_entries);
         }
     }
@@ -556,10 +564,8 @@ fn has_python_project_marker(dir: &Path) -> bool {
     // `requirements*.txt` is a glob — scan the top-level of `dir`.
     if let Ok(read_dir) = std::fs::read_dir(dir) {
         for entry in read_dir.flatten() {
-            if let Some(name) = entry.file_name().to_str() {
-                if name.starts_with("requirements") && name.ends_with(".txt") {
-                    return true;
-                }
+            if requirements_txt::is_requirements_file(&entry.path(), None) {
+                return true;
             }
         }
     }

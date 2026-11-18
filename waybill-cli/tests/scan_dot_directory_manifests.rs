@@ -133,13 +133,16 @@ fn d08_widened_selector_reads_all_requirements_and_dev_requirements() {
     assert_eq!(scope(present(&d, "waybill-fixture-dev")), "excluded");
 }
 
-/// D-10: a JavaScript action's `package.json` under `.github/actions/` is
-/// read, its dependency is Development with C62 `ci-directory`, and a
-/// committed `node_modules/` stays skipped.
+/// D-10: a JavaScript action under `.github/actions/` ships its committed
+/// `node_modules/`, which the npm reader reads as the action's installed
+/// tree (as it does for any project root). Its dependency is Development
+/// with C62 `ci-directory`. No project root is found *inside*
+/// `node_modules/`: a nested `package.json` there is a package, not a project.
 #[test]
 fn d10_javascript_action_dependency_is_development_ci_directory() {
     let t = tree();
     let r = t.path();
+    requirements(r, "requirements.txt", &["waybill-fixture-root"]);
     write(
         r,
         ".github/actions/waybill-fixture-act/package.json",
@@ -147,14 +150,14 @@ fn d10_javascript_action_dependency_is_development_ci_directory() {
     );
     write(
         r,
-        ".github/actions/waybill-fixture-act/node_modules/waybill-fixture-npm-junk/package.json",
-        r#"{"name":"waybill-fixture-npm-junk","version":"9.9.9"}"#,
+        ".github/actions/waybill-fixture-act/node_modules/waybill-fixture-npm-a/package.json",
+        r#"{"name":"waybill-fixture-npm-a","version":"1.0.0"}"#,
     );
     let d = scan(r);
     let c = present(&d, "waybill-fixture-npm-a");
     assert_eq!(scope(c), "excluded", "Development is non-runtime");
     assert_eq!(prop(c, C62), Some("ci-directory"));
-    absent(&d, "waybill-fixture-npm-junk");
+    assert_eq!(scope(present(&d, "waybill-fixture-root")), "required");
 }
 
 /// D-11 (FR-006, research R8): a package declared under `.ci/` and at the

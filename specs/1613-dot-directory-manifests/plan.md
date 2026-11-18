@@ -105,8 +105,9 @@ waybill-cli/src/scan_fs/
 ├── package_db/pip/requirements_txt.rs # selector widened; classifier ancestor rule
 ├── package_db/npm/mod.rs              # registration descend_into
 ├── package_db/cmake.rs                # registration descend_into
-├── ci_scope.rs                        # new: the R5 pass
-└── mod.rs                             # calls ci_scope::apply after dedup
+├── ci_scope.rs                        # new: the R5 and R8 pass
+└── mod.rs                             # declares ci_scope
+waybill-cli/src/cli/scan_cmd.rs        # calls ci_scope::apply after dedup and propagation, beside the test-scope pass
 docs/reference/sbom-format-mapping.md  # C62 values
 docs/ecosystems.md                     # pip: which requirements names are read
 waybill-cli/tests/scan_dot_directory_manifests.rs

@@ -45,29 +45,29 @@
 - [X] T005 [US1] Write the tests first, in `waybill-cli/tests/scan_dot_directory_manifests.rs`:
   - D-1 `.ci/requirements.txt`, D-2 `.ci/metrics/requirements.txt`, D-3 `.github/requirements-tool-ci.txt`, D-4 `docs/.sphinx/requirements.txt`, D-5 `.CI/requirements.txt`: each present, `Optional`, C155 `ci` (D-4 `docs`).
   - D-8: `.ci/all_requirements.txt` gives C155 `ci`; root `dev-requirements.txt` gives `dev`.
-  - D-10: `.github/actions/waybill-fixture-act/package.json` gives `Development` and C62 `ci-directory`, with nothing from its `node_modules/`.
+  - D-10: `.github/actions/waybill-fixture-act/` with its dependency installed in a committed `node_modules/` gives that dependency `Development` and C62 `ci-directory`. Corrected during T012: the npm reader reads a project's `node_modules/` as its installed tree; see measurements/trace.md.
   - D-11: a package in both `.ci/requirements.txt` and the root `requirements.txt` appears once, with the runtime scope and no C155.
   
   Run them on `main`'s code and record in `measurements/trace.md` that they fail.
-- [ ] T006 [US1] In `waybill-cli/src/scan_fs/package_db/pip/mod.rs`, set the pip registration's `descend_into: Some(project_roots::listed_dot_dir_globset()?)`.
-- [ ] T007 [US1] Widen the pip selector (R3, FR-004a) in `waybill-cli/src/scan_fs/package_db/pip/requirements_txt.rs` (`read_requirements_files`) and `waybill-cli/src/scan_fs/package_db/pip/mod.rs` (`has_python_project_marker`), through one shared predicate `is_requirements_file(path, root)`. A file is read if its name:
+- [X] T006 [US1] In `waybill-cli/src/scan_fs/package_db/pip/mod.rs`, set the pip registration's `descend_into: Some(project_roots::listed_dot_dir_globset()?)`.
+- [X] T007 [US1] Widen the pip selector (R3, FR-004a) in `waybill-cli/src/scan_fs/package_db/pip/requirements_txt.rs` (`read_requirements_files`) and `waybill-cli/src/scan_fs/package_db/pip/mod.rs` (`has_python_project_marker`), through one shared predicate `is_requirements_file(path, root)`. A file is read if its name:
   - starts with `requirements` and ends with `.txt`; or
   - is `<scope>-requirements*.txt` with scope ∈ {`dev`, `test`, `docs`, `ci`}; or
   - is `*requirements*.txt` with a listed ancestor (T003).
   
   Unit tests: `dev-requirements.txt` read; `tox-requirements.txt` not read; `all_requirements.txt` read under `.ci` but not at the root; the #1522 rejection still applies to a widened file.
-- [ ] T008 [US1] Extend `classify_requirements_scope` in `waybill-cli/src/scan_fs/package_db/pip/requirements_txt.rs` with the ancestor rule (R4), after the parent-directory and file-name signals. It needs the scan root, so thread it through from `read_requirements_files`. Unit tests:
+- [X] T008 [US1] Extend `classify_requirements_scope` in `waybill-cli/src/scan_fs/package_db/pip/requirements_txt.rs` with the ancestor rule (R4), after the parent-directory and file-name signals. It needs the scan root, so thread it through from `read_requirements_files`. Unit tests:
   - precedence: `.ci/tests/requirements.txt` gives `test`, and `.github/docs/requirements.txt` gives `docs`;
   - the ancestor rule: `.ci/metrics/requirements.txt` gives `ci`, and `.sphinx/requirements.txt` gives `docs`;
   - unchanged for every existing test case.
-- [ ] T009 [P] [US1] Set `descend_into: Some(project_roots::listed_dot_dir_globset()?)` on the npm registration (`waybill-cli/src/scan_fs/package_db/npm/mod.rs`) and on the CMake registration (`waybill-cli/src/scan_fs/package_db/cmake.rs`).
-- [ ] T010 [US1] Create `waybill-cli/src/scan_fs/ci_scope.rs` with `pub(crate) fn apply(components: &mut [ResolvedComponent], root: &Path) -> CiScopeSummary` (R5). For each component that has no `lifecycle_scope` and whose evidence source files are all non-empty and all under a listed directory, it sets:
+- [X] T009 [P] [US1] Set `descend_into: Some(project_roots::listed_dot_dir_globset()?)` on the npm registration (`waybill-cli/src/scan_fs/package_db/npm/mod.rs`) and on the CMake registration (`waybill-cli/src/scan_fs/package_db/cmake.rs`).
+- [X] T010 [US1] Create `waybill-cli/src/scan_fs/ci_scope.rs` with `pub(crate) fn apply(components: &mut [ResolvedComponent], root: &Path) -> CiScopeSummary` (R5). For each component that has no `lifecycle_scope` and whose evidence source files are all non-empty and all under a listed directory, it sets:
   - `Development`;
   - C62 = `ci-directory`, or `docs-directory` when every file's nearest listed ancestor is `.sphinx`.
   
   It also removes C155 `waybill:python-req-file-scope` from any component whose final scope is runtime (research R8). It logs one INFO summary. Unit tests: only-under-listed; mixed locations (unchanged, FR-006); already scoped (unchanged); no source files (unchanged); `.sphinx` only (`docs-directory`); a runtime-scoped component carrying C155 loses it.
-- [ ] T011 [US1] Call `ci_scope::apply` in `waybill-cli/src/scan_fs/mod.rs` after deduplication, beside the spec 1533 test-scope pass. Declare `mod ci_scope;`.
-- [ ] T012 [US1] Run T005's tests until they pass, in all three formats. Record the run in `measurements/trace.md`.
+- [X] T011 [US1] Call `ci_scope::apply` after deduplication, beside the spec 1533 test-scope pass. That call site is `waybill-cli/src/cli/scan_cmd.rs`, where deduplication and propagation finish (a deviation from the plan's `scan_fs/mod.rs`, which only declares `mod ci_scope;`).
+- [X] T012 [US1] Run T005's tests until they pass, in all three formats. Record the run in `measurements/trace.md`.
 
 ## Phase 4: User Story 2 — caches and test suites stay skipped (P1)
 

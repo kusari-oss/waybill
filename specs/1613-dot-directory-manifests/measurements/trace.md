@@ -48,3 +48,17 @@ This is existing `main` behaviour, and the feature makes it more common: a `.git
 - `d11_…`, where `waybill-fixture-cionly` is absent because `.ci` is not walked.
 
 The other 135 passing tests in the binary are the corpus harness module the file includes.
+
+## T012: D-10's first expectation was wrong
+
+The first D-10 tree had `.github/actions/act/package.json`, which declares `waybill-fixture-npm-a`, and a committed `node_modules/` holding only `waybill-fixture-npm-junk`. It expected `npm-a` present and `npm-junk` absent. Instead it got `npm-junk` and no `npm-a`.
+
+A probe on this build showed why: this is existing npm-reader behaviour, not a defect of the change.
+- **A bare `package.json`** (no lockfile, no `node_modules/`) gets design-tier dependencies only at the scan root. Nested project roots emit nothing from a bare `package.json`.
+- **With `node_modules/`,** the npm reader reads each project root's `node_modules/` as its installed tree.
+
+GitHub JavaScript actions commit `node_modules/`, and it is what they ship. The spec's edge case conflated two things:
+- the *walker's* skip, which still holds: no project root is found inside `node_modules/`;
+- the npm reader's installed-tree read.
+
+D-10 now installs the declared dependency in the action's `node_modules/`, and the spec edge case and contract say so. Probe result on this build: `waybill-fixture-npm-a@1.0.0`, `scope: excluded`, C62 `ci-directory`, source file `.github/actions/act/node_modules/waybill-fixture-npm-a/package.json`; the root requirements package stays `required`.

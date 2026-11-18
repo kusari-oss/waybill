@@ -5750,6 +5750,12 @@ pub async fn execute(
     let test_scope_coverage: Option<String> = {
         let canonical = std::fs::canonicalize(&root_path).unwrap_or_else(|_| root_path.clone());
         let roots = if canonical == root_path { vec![canonical] } else { vec![canonical, root_path.clone()] };
+        // Spec 1613 (#1610): what is declared only in CI or docs
+        // dot-directories is Development (C62), and a runtime component
+        // carries no requirements-file label (C155). Here for the same
+        // reasons as the test scope: after deduplication merged scopes, and
+        // after propagation, so this scope never seeds it.
+        scan_fs::ci_scope::apply(&mut components, &roots);
         scan_fs::test_scope::apply(&mut components, &test_scope_inputs, &roots)
     };
 

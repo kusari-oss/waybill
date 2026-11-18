@@ -32,6 +32,7 @@ pub mod oci_pull;
 pub mod os_release;
 pub mod package_db;
 pub(crate) mod produces_binaries;
+pub(crate) mod ci_scope;
 pub(crate) mod test_scope;
 pub mod sbom_path;
 pub(crate) mod walk;
