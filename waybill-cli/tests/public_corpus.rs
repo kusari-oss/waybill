@@ -782,3 +782,24 @@ fn probe_i7_on_document() {
         }
     }
 }
+
+/// Spec 1542 probe: compare documents a CI run produced, each against the
+/// first, after the corpus masking (array order included). Ignored; run
+/// with `WAYBILL_COMPARE_DOCS=<a.json>:<b.json>:… cargo test --test
+/// public_corpus probe_compare_documents -- --ignored --nocapture`.
+#[test]
+#[ignore]
+fn probe_compare_documents() {
+    use corpus_harness_195::layer2_golden::masked_difference;
+    let Ok(list) = std::env::var("WAYBILL_COMPARE_DOCS") else { return };
+    let paths: Vec<&str> = list.split(':').filter(|p| !p.is_empty()).collect();
+    let read = |p: &str| -> serde_json::Value { serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap() };
+    let first = read(paths[0]);
+    println!("COMPARE base {}", paths[0]);
+    for p in &paths[1..] {
+        match masked_difference(&first, &read(p)) {
+            None => println!("COMPARE same {p}"),
+            Some(d) => println!("COMPARE DIFF {p}: {}", d.chars().take(400).collect::<String>()),
+        }
+    }
+}
