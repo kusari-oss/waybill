@@ -118,7 +118,7 @@ None of their packages appear. A repository with no dot-directories produces a d
 **Acceptance Scenarios**:
 
 1. **Given** manifests under `.venv/`, `.tox/`, `.cache/`, `.idea/`, `.vscode/`, `.git/` or `.upstream-tests/`, **When** scanned, **Then** none of their packages appear.
-2. **Given** a repository with no dot-directories, **When** scanned before and after this feature, **Then** the documents are identical.
+2. **Given** a repository with no listed dot-directory and no `<scope>-requirements*.txt` file, **When** scanned before and after this feature, **Then** the documents are identical.
 3. **Given** the public corpus, **When** scanned, **Then** every golden is unchanged, or each change is traced and explained.
 
 ---
@@ -170,7 +170,7 @@ A consumer who scans with a file inventory does not see workflow files, CI scrip
   Files of the second kind are labelled by FR-004. Other names that are not `requirements*.txt` (for example `tox-requirements.txt`) stay unread, because nothing would label them and they would read as runtime. The existing #1522 check against non-pip content applies to every file read.
 - **FR-005**: For readers that have no file-location scope of their own (for example npm, for a `package.json` under `.github/actions/`), components declared only under a listed directory MUST get a non-runtime lifecycle scope. They MUST carry a derivation naming the directory class (`ci` or `docs`), carried in an existing catalog row if one fits. A new row needs registration first (FR-009).
 - **FR-006**: A package declared both under a listed directory and in a non-CI location MUST appear once, with the scope the non-CI declaration gives. This uses the existing scope-merge rules.
-- **FR-007**: A repository with no dot-directories on the list MUST produce a document byte-identical to the one produced without this feature.
+- **FR-007**: A repository with no listed dot-directory and no file named `<scope>-requirements*.txt` MUST produce a document byte-identical to the one produced without this feature. A repository that has such a file changes only by the packages that file declares, each labelled with its scope (FR-004a).
 - **FR-008**: The document MUST record CI and docs declarations only through the labels on each component (C155, and FR-005's derivation). No document-scope record is added for directories descended or skipped. Those directories are skipped on purpose, and counting their contents would mean walking the caches the skip avoids.
 - **FR-009**: Every new annotation MUST be registered as a catalog row, with parity extractors for all three formats, before it is emitted. The formats MUST agree on it.
 - **FR-010**: The walker-audit gate MUST stay green. Any new walk function is reflected in its allowlist.
@@ -203,6 +203,7 @@ A consumer who scans with a file inventory does not see workflow files, CI scrip
 ## Assumptions
 
 - **A fixed list rather than a deny-list.** A deny-list of caches would silently start reading any new dot-directory, which is the failure the skip guards against. The list can grow as new CI systems are measured.
+- **Two labels for CI tooling, by ecosystem.** A CI-only pip package is `Optional` with C155 = `ci`, the pip reader's existing treatment of `requirements-ci.txt` since milestone 670. A CI-only component from any other reader is `Development` with C62 = `ci-directory`. Both are non-runtime, so a consumer that excludes non-runtime scopes excludes both. A consumer selecting by label checks C155 for pip and C62 otherwise. Aligning pip with `Development` would change milestone 670's documents and is out of scope.
 - **The file tier stays out.** It reports unclaimed files as shipped content. CI scripts and workflows are not shipped content, and including them would contradict that.
 - **CI tooling is a non-runtime dependency.** It belongs in the document for supply-chain completeness, labelled so a consumer filtering for shipped content can exclude it. This matches how the pip reader already treats `requirements-ci.txt`.
 - **Out of scope: GitHub Actions and Dockerfiles.** No reader for workflows or Dockerfiles is added here; #435, #821 and #1537 build on the reachability this provides.

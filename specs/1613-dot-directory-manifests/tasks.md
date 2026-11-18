@@ -15,6 +15,7 @@
 - [ ] T001 Trace the plan's predictions on `main` before any change, and record them in `specs/1613-dot-directory-manifests/measurements/trace.md`:
   - Build the quickstart tree (`quickstart.md`), scan it with `main`'s binary, and confirm none of its four packages appear.
   - Add `.github/workflows/test-suite/waybill-fixture.cmake` holding a `FetchContent_Declare`. Then set the CMake registration's `descend_into` to `.github` in a scratch copy and confirm the CMake reader receives the file. This proves R2's claim that CMake discovers through the shared walker, and not only by its registration's pattern.
+  - Confirm how the deduplicator merges a pip package declared both in a scoped requirements file (`Optional`, C155) and in an unscoped `requirements.txt`. Use `requirements-ci.txt` beside `requirements.txt`, which needs no dot-directory and so runs on `main`. Record which scope and which C155 value survive. If the runtime declaration doesn't win, FR-006 needs a merge rule of its own, and T010 gains it.
   - Revert the scratch change with `cp`.
 - [ ] T002 [P] Create `waybill-cli/tests/scan_dot_directory_manifests.rs` (file-scope `#![cfg(unix)]`), including the corpus harness by `#[path]` as `waybill-cli/tests/scan_therock_last_orphans.rs` does. Add helpers:
   - `scan(dir, flags) -> [cdx, spdx23, spdx3]`;
