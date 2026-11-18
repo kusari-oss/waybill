@@ -205,6 +205,26 @@ fn d11b_nested_unscoped_files_two_scoped_files_and_ci_projects() {
     assert_eq!(prop(dep, C62), Some("ci-directory"));
 }
 
+/// TheRock's amd-llvm `.ci/` declares `PyGithub==2.8.1` in one file and
+/// `pygithub==2.8.1` in another. One project, one PURL: one component. Two
+/// came out, sharing a `bom-ref`, and the formats disagreed on C19 and C20.
+#[test]
+fn d11c_spellings_of_one_pypi_name_in_one_project_are_one_component() {
+    let t = tree();
+    let r = t.path();
+    write(r, ".ci/requirements.txt", "Waybill_Fixture-Spelled==1.0\n");
+    write(r, ".ci/all_requirements.txt", "waybill-fixture-spelled==1.0\n");
+    let d = scan(r);
+    let purl = "pkg:pypi/waybill-fixture-spelled@1.0";
+    let n = components(&d.cdx).into_iter().filter(|c| c["purl"] == purl).count();
+    assert_eq!(n, 1, "one PURL, one component");
+    let refs: Vec<&str> = components(&d.cdx).into_iter().filter_map(|c| c["bom-ref"].as_str()).collect();
+    let mut unique = refs.clone();
+    unique.sort_unstable();
+    unique.dedup();
+    assert_eq!(refs.len(), unique.len(), "every bom-ref is unique");
+}
+
 // ---------------------------------------------------------------------
 // User story 2: caches and test suites stay skipped (T013)
 // ---------------------------------------------------------------------

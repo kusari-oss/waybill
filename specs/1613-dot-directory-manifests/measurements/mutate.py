@@ -43,6 +43,12 @@ MUTATIONS = {
     "M12-explicit-runtime-skipped": ("waybill-cli/src/scan_fs/ci_scope.rs",
         "        let runtime = matches!(c.lifecycle_scope, None | Some(LifecycleScope::Runtime));\n        if runtime &&",
         "        let runtime = matches!(c.lifecycle_scope, None);\n        if runtime &&"),
+    "M13-pypi-key-declared-spelling": ("waybill-cli/src/resolve/deduplicator.rs",
+        "        let name = if component.purl.ecosystem() == \"pypi\" {",
+        "        let name = if false {"),
+    "M14-every-ecosystem-normalised": ("waybill-cli/src/resolve/deduplicator.rs",
+        "        let name = if component.purl.ecosystem() == \"pypi\" {",
+        "        let name = if true {"),
 }
 
 name = sys.argv[1]

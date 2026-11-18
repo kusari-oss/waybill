@@ -105,9 +105,18 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
     let mut groups: HashMap<DedupKey, Vec<ResolvedComponent>> = HashMap::new();
 
     for component in components {
+        // Spec 1613 (#1610): a PyPI name is case- and separator-insensitive
+        // (PEP 503), and the PURL is built from the normalised form. Keyed on
+        // the declared spelling, `PyGithub` and `pygithub` in two files of one
+        // project stayed two components with one PURL and one `bom-ref`.
+        let name = if component.purl.ecosystem() == "pypi" {
+            crate::scan_fs::package_db::pip::normalize_pypi_name_for_purl(&component.name)
+        } else {
+            component.name.clone()
+        };
         let key = (
             component.purl.ecosystem().to_string(),
-            component.name.clone(),
+            name,
             component.version.clone(),
             component.parent_purl.clone(),
             crate::scan_fs::package_db::pants_resolve::anchor_namespace(&component.purl)
@@ -977,6 +986,45 @@ mod tests {
         let deduped = deduplicate(vec![explicit_dev, no_flag]);
         assert_eq!(deduped.len(), 1);
         assert_eq!(deduped[0].lifecycle_scope, Some(waybill_common::resolution::LifecycleScope::Development));
+    }
+
+    #[test]
+    fn s1613_pypi_spellings_of_one_name_are_one_component() {
+        let mut upper = make_component(
+            "pkg:pypi/waybill-fixture-pygithub@2.8.1",
+            ResolutionTechnique::PackageDatabase,
+            0.85,
+            vec![],
+            vec!["/r/.ci/requirements.txt"],
+        );
+        upper.name = "Waybill_Fixture-PyGithub".into();
+        let mut lower = make_component(
+            "pkg:pypi/waybill-fixture-pygithub@2.8.1",
+            ResolutionTechnique::PackageDatabase,
+            0.85,
+            vec![],
+            vec!["/r/.ci/all_requirements.txt"],
+        );
+        lower.name = "waybill-fixture-pygithub".into();
+        let mut npm_upper = make_component(
+            "pkg:npm/waybill-fixture-Pkg@1.0.0",
+            ResolutionTechnique::PackageDatabase,
+            0.85,
+            vec![],
+            vec![],
+        );
+        npm_upper.name = "waybill-fixture-Pkg".into();
+        let mut npm_lower = make_component(
+            "pkg:npm/waybill-fixture-pkg@1.0.0",
+            ResolutionTechnique::PackageDatabase,
+            0.85,
+            vec![],
+            vec![],
+        );
+        npm_lower.name = "waybill-fixture-pkg".into();
+        let out = deduplicate(vec![upper, lower, npm_upper, npm_lower]);
+        assert_eq!(out.iter().filter(|c| c.purl.ecosystem() == "pypi").count(), 1);
+        assert_eq!(out.iter().filter(|c| c.purl.ecosystem() == "npm").count(), 2, "only PyPI names are normalised");
     }
 
     #[test]
