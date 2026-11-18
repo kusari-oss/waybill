@@ -132,7 +132,7 @@
 - [X] T025 [P] File the follow-up issue for reading fetches, `find_package` and downloads through `include()` (research R3, trace §2), and link it in `research.md`.
 - [ ] T026 Dispatch `public-corpus.yml` with `repeat=2` at the branch and at `main`, and the quality corpus against `main`. Trace every golden or score movement in `measurements/audit.md` (expect no golden change, per trace §1).
 - [ ] T027 Add a `CHANGELOG.md` entry (#1601, #1602) and a line in `docs/reference/sbom-invariants.md` if the I7 wording names workspace roots.
-- [ ] T028 Run the gate alone: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record the per-target pass counts in `measurements/gate-log.md`.
+- [X] T028 Run the gate alone: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record the per-target pass counts in `measurements/gate-log.md`.
 
 ## Dependencies & execution order
 
