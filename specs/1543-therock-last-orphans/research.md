@@ -19,7 +19,7 @@ The evidence for every decision is in `measurements/trace.md`.
 
 ## R2. At the scan root, the workspace root is the subject (clarification 1)
 
-**Decision.** `root_selector` gains a rung ahead of the main-module ladder. Without an operator override, if *exactly one* synthesized workspace root has its manifest (its first source file) directly in the scan root, it is the subject. With two or more, none is promoted; R1 anchors them all, and the existing ladder picks the subject as today.
+**Decision.** `root_selector` gains a rung ahead of the main-module ladder, beside `evaluated_nix_package` (`root_selector.rs:407`). Without an operator override, if *exactly one* component has role `workspace-root` and its first `waybill:source-files` entry contains no `/`, it is the subject. The files are scan-root-relative: measured `pyproject.toml`, `package.json`, `settings.gradle.kts` at the root and `proj/settings.gradle.kts` below it. So the rung is a pure function of the components, and no caller needs the scan root. Its C69 heuristic is a new registered value, `workspace-root` (confidence 0.95, matching `repo-root-main-module`), and the members become `losers`. None of C69's seven existing names describes this subject. With two or more, none is promoted; R1 anchors them all, and the existing ladder picks the subject as today.
 
 **Rationale.**
 - Measured, uv and bun currently pick a *member* as the subject, so the workspace is described as one of its parts.
@@ -55,9 +55,12 @@ The evidence for every decision is in `measurements/trace.md`.
 - **Correlation.** N links an installed-library record R (cmake-version or pkg-config, spec 1531) when D lies inside R's prefix (`installed_lib::location::prefix_of` on R's source file) and either:
   - N equals R's name, case-insensitively; or
   - D holds `lib<N>.a`, `lib<N>.so`, `lib<N>.so.*`, or a DVC pointer to one of them (R6).
+- **Nested prefixes:** when D lies inside several matching records' prefixes, only the record with the longest prefix is linked.
 - **Otherwise nothing:** no component, edge or record is created (FR-006).
 
-**Where.** The CMake reader records link declarations (file, directory, name, conditions) in a scan-scoped list, like its fetch coverage. A post-pass in `scan_fs` beside `cmake_fetch_attach` correlates them against the final components, so a PURL the reconciler rewrote is matched under its final name. That is the same reason `declared_root_anchors` is computed late.
+**Where.** The CMake reader records link declarations (file, directory, name, conditions) in a scan-scoped list, like its fetch coverage. A pass beside `cmake_fetch_attach` correlates them, and runs where fetches run (`scan_fs/mod.rs`):
+- edges and component scope in the owner block (≈1550), before `apply_lifecycle_scope_to_edges` (≈1554) and the dedup;
+- root anchors at the `declared_root_anchors` computation (≈1665), from the final components, so a PURL the reconciler rewrote is anchored under its final name.
 
 ## R5. Owner, scope and conditions (FR-004, FR-005)
 

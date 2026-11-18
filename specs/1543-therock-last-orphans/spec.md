@@ -1,7 +1,7 @@
 # Feature Specification: TheRock's last two unexplained components
 
 **Feature Branch**: `1543-therock-last-orphans`
-**Created**: 2026-11-18
+**Created**: 2026-11-17
 **Status**: Draft
 **Input**: User description: "#1601 and #1602: the last two unexplained components on ROCm TheRock's full source tree … (1) #1601: pkg:generic/tensile, the uv workspace root the uv reader synthesizes … Decision (maintainer): attach it to the document root. Trace which readers synthesize workspace roots … and apply one rule to all of them … (2) #1602: pkg:generic/wkmi@1.0.0 … Decision (maintainer): a dependency edge from the link path, not an orphan reason. It is conditional (WIN_SDK) … a root edge, optional, carrying its condition … Generalize as link-path correlation in the CMake reader … Acceptance: on TheRock's source tree, 0 unreachable components without an I7 marker …" (full text in the conversation that created this branch)
 
@@ -43,7 +43,7 @@ Under an operator root, a subproject's main modules are dropped, and their edges
 
 ## Clarifications
 
-### Session 2026-11-18
+### Session 2026-11-17
 
 - Q: A uv or bun workspace scanned at its own root, without `--root-name`, makes one of its members the subject (measured), leaving the workspace root stranded. What should this feature do? → A: At the scan root, a synthesized workspace root outranks its own members as the subject. Everywhere else it is anchored.
 - Q: C232 is `waybill:cmake-fetch-conditions`, defined for fetches. Which carrier for a conditional link? → A: A new row for links, with C232's shape, plus a new C122 value. C232's contract is unchanged.
@@ -130,7 +130,7 @@ On ROCm TheRock's full source tree, every unreachable component carries an I7 ma
 - **FR-003: Members unchanged.** Attaching a workspace root MUST NOT give its members a second contradictory edge, or change their scope or their existing edges.
 - **FR-004: Link-path correlation.** A linked name MUST become a dependency edge to the installed-library record's component when both hold:
   - a CMake link directory (`target_link_directories`, `link_directories`) lies inside that record's prefix;
-  - the name (in `target_link_libraries` or `link_libraries`) matches that record: `lib<name>.a`, `lib<name>.so`, or a DVC pointer to one of them in that directory.
+  - the name (in `target_link_libraries` or `link_libraries`) matches that record: `lib<name>.a`, `lib<name>.so`, `lib<name>.so.*`, or a DVC pointer to one of them in that directory.
 
   The edge comes from the linking file's owner, found the way spec 1538 attaches CMake fetches: the nearest enclosing main module or git submodule, else a root anchor. No component stands for the consuming target itself.
 - **FR-005: Conditions and scope.** A component linked only inside `if` blocks MUST be optional, with C122 = `cmake-conditional-link`, and carry its conditions in a new row, `waybill:cmake-link-conditions`, with C232's shape and normalisation. Conditions open at an `include()` site apply to the included file. A component linked at least once unconditionally keeps its existing scope, and carries no conditions.
@@ -160,7 +160,7 @@ On ROCm TheRock's full source tree, every unreachable component carries an I7 ma
 
 ## Assumptions
 
-- **Scope** is attaching synthesized workspace roots, and correlating CMake link paths with existing installed-library records. No new CMake target model is introduced: the edge comes from the document root, as fetches do.
+- **Scope** is attaching synthesized workspace roots, and correlating CMake link paths with existing installed-library records. No new CMake target model is introduced: the edge comes from the linking file's owner, as fetch edges do, and from the document root only when there is none.
 - **TheRock is measured in CI only**, through the fixture repository. Single public files are read through the GitHub API; TheRock is never cloned or scanned locally.
 - **The Windows `win/lib/wkmi.lib` path gets no edge.** It is not inside any record's prefix: that variant has no package files.
 - **DVC** is detected only by its pointer file's name (`<file>.dvc`) and its documented YAML shape (`outs:` with `path:`). Nothing is fetched.

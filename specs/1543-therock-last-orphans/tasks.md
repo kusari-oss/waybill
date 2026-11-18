@@ -21,7 +21,7 @@
 
 ## Phase 2: Foundational
 
-- [ ] T003 Register catalog row **C235** `waybill:cmake-link-conditions` in `docs/reference/sbom-format-mapping.md`. It has C232's shape, normalisation and Principle V audit, and is present iff C122 = `cmake-conditional-link`. Add the C122 value `cmake-conditional-link` to C122's row. Add the C235 extractors beside C232's in `waybill-cli/src/parity/extractors/{mod.rs,cdx.rs,spdx2.rs,spdx3.rs}`. The row and its extractors land in the same commit (the lib-target gate).
+- [ ] T003 Add `workspace-root` (confidence 0.95) to C69's `<name>` set in `docs/reference/sbom-format-mapping.md`, with a sentence naming spec 1543's rung. Register catalog row **C235** `waybill:cmake-link-conditions` in `docs/reference/sbom-format-mapping.md`. It has C232's shape, normalisation and Principle V audit, and is present iff C122 = `cmake-conditional-link`. Add the C122 value `cmake-conditional-link` to C122's row. Add the C235 extractors beside C232's in `waybill-cli/src/parity/extractors/{mod.rs,cdx.rs,spdx2.rs,spdx3.rs}`. The row and its extractors land in the same commit (the lib-target gate).
 - [ ] T004 Add `pub(crate) const ANN_CMAKE_LINK_CONDITIONS` and `pub(crate) const DERIVATION_CMAKE_CONDITIONAL_LINK` beside `ANN_CMAKE_FETCH_CONDITIONS` in `waybill-cli/src/scan_fs/package_db/cmake/fetches.rs`, or a shared `cmake/mod`-level module if the constants are used outside `fetches.rs`. Run `cargo build --all-targets`.
 
 **Checkpoint**: the gate is green with no behaviour change. Running `cargo test -p waybill --lib parity` passes.
@@ -39,9 +39,9 @@
   - `<ws>` → each member;
   - the members' root edges are still present;
   - no `foreign-build-system` on `<ws>`;
-  - `assert_explained`, `assert_agree(C45, C104, C105)`.
-- [ ] T006 [P] [US1] Add W-4, W-5 and W-6 to the same file. Each workspace is at the scan root, with no flags. Assert the subject is `pkg:generic/<ws>`, the members are reachable through it, and `assert_explained`.
-- [ ] T007 [P] [US1] Add W-7 (uv and bun at one root: neither promoted, both anchored) and W-8 (the workspace root is already a relationship target: no extra root edge) to the same file.
+  - `assert_explained`, `assert_agree(C45, C104, C105)`, and `assert_repeatable(…, 20)`.
+- [ ] T006 [P] [US1] Add W-4, W-5 and W-6 to the same file. Each workspace is at the scan root, with no flags. Assert the subject is `pkg:generic/<ws>`, C69 = `workspace-root` in all three formats, the members are reachable through it, `assert_explained`, and `assert_repeatable(…, 20)`.
+- [ ] T007 [P] [US1] Add W-7 (uv and bun at one root: neither promoted, both anchored) and W-8 (the workspace root is already a relationship target: no extra root edge) to the same file. Each also calls `assert_repeatable(…, 20)`.
 - [ ] T008 [P] [US1] Add a unit test in `waybill-cli/src/generate/root_selector.rs` for the rung with zero, one, and two workspace roots at the scan root, and with one in a subdirectory, each with and without an operator override.
 
 ### Implementation
@@ -51,7 +51,7 @@
   - no relationship has it as its `to`.
 
   Sort and deduplicate as the existing anchors are. Comment with the trace's 7-of-12 finding.
-- [ ] T010 [US1] R2: in `waybill-cli/src/generate/root_selector.rs`, before the main-module ladder and only without an operator override, add the rung. If exactly one component has role `workspace-root` and the directory of its first source file (resolved like `declared_attach::relative`) is the scan root, select it as `MainModule(idx)`. Check that every caller of `select_root` (CycloneDX builder, SPDX 2.3 and SPDX 3 documents, `graph_completeness::document`) passes what the rung needs (the scan root and the components). Thread it where it is missing.
+- [ ] T010 [US1] R2: in `waybill-cli/src/generate/root_selector.rs`, add the rung as a function beside `evaluated_nix_package`, called after the operator-override and image rungs and before the main-module ladder. If exactly one component has role `workspace-root` and its first `waybill:source-files` entry contains no `/`, select it as `MainModule(idx)`, with a new `RootSelectionHeuristic::WorkspaceRoot` variant (`as_str` `workspace-root`, confidence 0.95) and the main modules as `losers`. No caller changes: the rung reads only the components.
 - [ ] T011 [US1] Update the existing expectations this changes, after reading each failure. A Kotlin-at-root subject moves from a placeholder to `pkg:generic/<rootProject.name>@0.0.0`. Check `waybill-cli/tests/scan_kotlin_dsl.rs`, `scan_kmp_polyglot.rs`, `dart_edge_cases.rs`, and unit tests in `pip/uv_lock.rs` and `npm/bun_lock.rs`. Record each changed assertion and its cause in `specs/1543-therock-last-orphans/measurements/audit.md`.
 - [ ] T012 [US1] Rerun `specs/1543-therock-last-orphans/measurements/workspace-roots.sh` on the branch binary. Save the output as `measurements/workspace-roots.branch.out`. Expected: no empty `incoming=` cell, and the three `atroot plain` subjects are the `pkg:generic/` roots.
 
@@ -70,10 +70,11 @@
   - the scope (CycloneDX `scope`, SPDX 2.3 `OPTIONAL_DEPENDENCY_OF`);
   - C122;
   - C235 via `row_all_formats`;
-  - `assert_explained`.
-- [ ] T014 [P] [US2] Add L-5 and L-6 (nothing invented: compare the component and relationship sets with a scan that has no link lines) and L-11 (`link_directories` directory scope) to the same file.
-- [ ] T015 [P] [US2] Add L-7 (the link in `CMakeLists_wsl.txt`, included under `if (WIN_SDK)`, giving C235 `["WIN_SDK"]`) and L-10 (`include(FetchContent)` ignored; an include cycle terminates) to the same file.
-- [ ] T016 [P] [US2] Add L-8 (the linking file inside a git submodule directory, using the submodule fixture helper from spec 1530's tests: the edge is from the submodule; no owner gives a root anchor) and L-9 (conditions union; one unconditional link makes the record required with no C235) to the same file.
+  - `assert_explained`;
+  - `assert_repeatable(…, 20)`.
+- [ ] T014 [P] [US2] Add L-5 and L-6 (nothing invented: compare the component and relationship sets with a scan that has no link lines) L-11 (`link_directories` directory scope) and L-12 (nested prefixes: only the innermost record is linked) to the same file. Each also calls `assert_repeatable(…, 20)`.
+- [ ] T015 [P] [US2] Add L-7 (the link in `CMakeLists_wsl.txt`, included under `if (WIN_SDK)`, giving C235 `["WIN_SDK"]`) and L-10 (`include(FetchContent)` ignored; an include cycle terminates) to the same file. Each also calls `assert_repeatable(…, 20)`.
+- [ ] T016 [P] [US2] Add L-8 (the linking file inside a git submodule directory, using the submodule fixture helper from spec 1530's tests: the edge is from the submodule; no owner gives a root anchor) and L-9 (conditions union; one unconditional link makes the record required with no C235) to the same file. Each also calls `assert_repeatable(…, 20)`.
 - [ ] T017 [P] [US2] Add unit tests in the new `waybill-cli/src/scan_fs/package_db/cmake/links.rs`:
   - plain-item filtering (`::`, `/`, `$<`, `${`, `-l…`, keywords);
   - `target_link_directories` with `BEFORE` and scope keywords;
@@ -87,11 +88,13 @@
 - [ ] T019 [US2] Collect link declarations in `cmake.rs::read_with_downloads` over the walked CMake files, the same set fetches use. Return them through the reader's coverage, as `FetchCoverage` is, and carry them to `ScanResult` in `waybill-cli/src/scan_fs/mod.rs`.
 - [ ] T020 [US2] R4/R5: create `waybill-cli/src/scan_fs/cmake_link_attach.rs`, mirroring `cmake_fetch_attach.rs`. For each final component with `waybill:source-mechanism` `cmake-package-version` or `pkg-config`:
   - compute its prefix with `installed_lib::location::prefix_of` on its source file;
-  - match declarations per R4, including the DVC pointer;
+  - match declarations per R4, including the DVC pointer and the longest-prefix rule;
   - emit `owner_of(file)` → record edges (provenance `cmake-link-declaration`), or root anchors;
   - set the scope, C122 and C235 per R5, with spec 1538's merge (Test outranks Optional; required if any link is unconditional).
 
-  Call it beside `cmake_fetch_attach::attach` in `scan_fs/mod.rs` (≈ line 1665), applying its scope changes to `components` before the anchors are computed.
+  It returns a `DeclaredAttachment` plus per-record scope changes. Call it at two sites in `scan_fs/mod.rs`, as fetches are:
+  - **(a)** in the owner block (≈1550), after `cmake_fetch_attach`: apply the scope, C122 and C235 to `components`, and extend `relationships` with its edges, before `apply_lifecycle_scope_to_edges` (≈1554);
+  - **(b)** at the `declared_root_anchors` computation (≈1665): extend the anchors with its `root_anchors`, computed from the final components.
 - [ ] T021 [US2] Document links and includes in `docs/ecosystems.md`, in the CMake section beside the `cmake-conditional` table: the match rule, owner, scope, C235, the DVC rule, and that fetches are not yet read through `include()`.
 
 **Checkpoint**: T013–T017 pass; US2 is independently shippable.
@@ -116,7 +119,9 @@
 - [ ] T024 [P] Write a mutation script `specs/1543-therock-last-orphans/measurements/mutate.py` and runner `mutate-run.sh` (as in spec 1542). Mutate each of:
   - the anchor;
   - the subject rung;
+  - the C69 heuristic (returned as `RepoRoot`);
   - the include-site seeding;
+  - the longest-prefix rule;
   - the prefix test;
   - the name/file test;
   - the DVC match;

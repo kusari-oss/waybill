@@ -1,6 +1,6 @@
 # FR-001 trace
 
-Measured on `main` at `26271222` (the binary is `target/debug/waybill`, built from that commit), 2026-11-18. TheRock facts were read through the GitHub API at `rocm-systems` `c1ab6df5` and TheRock `b1cae390`. Nothing was cloned or scanned locally.
+Measured on `main` at `26271222` (the binary is `target/debug/waybill`, built from that commit), 2026-11-17. TheRock facts were read through the GitHub API at `rocm-systems` `c1ab6df5` and TheRock `b1cae390`. Nothing was cloned or scanned locally.
 
 ## 1. Workspace roots (#1601)
 

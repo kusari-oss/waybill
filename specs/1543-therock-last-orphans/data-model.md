@@ -12,9 +12,9 @@ It is appended to `ScanResult.declared_root_anchors`. `root_edges` drops it when
 
 ## Subject rung (R2)
 
-**Input:** components, the scan root, and the operator override.
+**Input:** components and the operator override.
 
-**Output:** `MainModule(idx)` for the single workspace root whose first source file's directory is the scan root. Otherwise, fall through to the existing ladder.
+**Output:** `MainModule(idx)`, with C69 heuristic `workspace-root` (0.95), for the single workspace root whose first `waybill:source-files` entry contains no `/`. Otherwise, fall through to the existing ladder.
 
 **Never applies** under `--root-name`.
 
@@ -33,7 +33,7 @@ Produced by `cmake/links.rs` for each walked file and its includes. Held in the 
 
 `(LinkDeclaration, record)` pairs:
 - **record:** an installed-library component (`waybill:source-mechanism` `cmake-package-version` or `pkg-config`), with a prefix from `prefix_of`;
-- **match:** `directory` is inside the prefix, and `name` equals the record name (case-insensitively), or the directory holds `lib<name>.a`, `lib<name>.so`, `lib<name>.so.*` or a `.dvc` pointer to one of them.
+- **match:** `directory` is inside the prefix, and `name` equals the record name (case-insensitively), or the directory holds `lib<name>.a`, `lib<name>.so`, `lib<name>.so.*` or a `.dvc` pointer to one of them. When several matching records' prefixes contain the directory, only the longest prefix's record is linked.
 
 **Per matched record:**
 - **edge:** `owner_of(file)` → record, `DependsOn`, provenance `cmake-link-declaration`. With no owner, the record is a root anchor. There is no self-edge and no duplicate.
@@ -47,4 +47,5 @@ Produced by `cmake/links.rs` for each walked file and its includes. Held in the 
 | row | key | shape |
 |---|---|---|
 | C122 (existing, new value) | `waybill:optional-derivation` | `cmake-conditional-link` |
+| C69 (existing, new value) | `waybill:root-selection-heuristic` | `workspace-root`, confidence 0.95 |
 | C235 (new) | `waybill:cmake-link-conditions` | per component, a sorted JSON array of strings; present iff the C122 value is `cmake-conditional-link` |
