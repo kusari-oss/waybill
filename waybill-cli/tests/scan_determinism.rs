@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use common::installed_lib::{elf_shared_lib, scan_with, Docs};
-use corpus_harness_195::layer2_golden::mask_nondeterministic;
+use corpus_harness_195::layer2_golden::{mask_nondeterministic, masked_difference};
 use serde_json::Value;
 
 const SCANS: usize = 20;
@@ -44,47 +44,6 @@ fn completeness_reason(d: &Docs) -> String {
         .to_string()
 }
 
-/// Every value in a JSON document, as a sorted multiset of leaf paths with
-/// array indices removed: equal for two documents that differ only in order.
-fn order_insensitive(v: &Value) -> Vec<String> {
-    fn walk(v: &Value, path: &str, out: &mut Vec<String>) {
-        match v {
-            Value::Object(m) => m.iter().for_each(|(k, x)| walk(x, &format!("{path}/{k}"), out)),
-            Value::Array(a) => a.iter().for_each(|x| walk(x, &format!("{path}/[]"), out)),
-            leaf => out.push(format!("{path}={leaf}")),
-        }
-    }
-    let mut out = Vec::new();
-    walk(v, "", &mut out);
-    out.sort();
-    out
-}
-
-/// The first JSON path at which `a` and `b` differ, with both values.
-fn first_difference(a: &Value, b: &Value, path: &str) -> Option<String> {
-    match (a, b) {
-        (Value::Object(x), Value::Object(y)) => {
-            let keys: std::collections::BTreeSet<&String> = x.keys().chain(y.keys()).collect();
-            keys.into_iter().find_map(|k| match (x.get(k), y.get(k)) {
-                (Some(p), Some(q)) => first_difference(p, q, &format!("{path}/{k}")),
-                _ => Some(format!("{path}/{k}: present in one only")),
-            })
-        }
-        (Value::Array(x), Value::Array(y)) if x.len() == y.len() => x
-            .iter()
-            .zip(y)
-            .enumerate()
-            .find_map(|(i, (p, q))| first_difference(p, q, &format!("{path}[{i}]"))),
-        _ if a == b => None,
-        _ => Some(format!("{path}: {} | {}", truncate(a), truncate(b))),
-    }
-}
-
-fn truncate(v: &Value) -> String {
-    let s = v.to_string();
-    if s.len() > 1200 { format!("{}…", &s[..1200]) } else { s }
-}
-
 /// One masked document per format, byte for byte with array order
 /// included, and one completeness reason. A failure names the scans in
 /// each variant and whether they differ only in order.
@@ -101,14 +60,12 @@ fn assert_repeatable(docs: &[Docs]) {
         }
         if variants.len() > 1 {
             let parsed: Vec<Value> = variants.keys().map(|s| serde_json::from_str(s).unwrap()).collect();
-            let order_only = parsed.windows(2).all(|w| order_insensitive(&w[0]) == order_insensitive(&w[1]));
-            let kind = if order_only { "only in array order" } else { "in content" };
             panic!(
-                "{name}: {} variants across {} scans, differing {kind}; scans per variant: {:?}; first difference: {}",
+                "{name}: {} variants across {} scans; scans per variant: {:?}; {}",
                 variants.len(),
                 docs.len(),
                 variants.values().collect::<Vec<_>>(),
-                first_difference(&parsed[0], &parsed[1], "").unwrap_or_default()
+                masked_difference(&parsed[0], &parsed[1]).unwrap_or_default()
             );
         }
     }

@@ -19,6 +19,10 @@ on:
         description: 'Regenerate public-corpus goldens in-place (writes to fixtures/, uploads as artifact).'
         type: boolean
         default: false
+      repeat:
+        description: 'Scan each target this many times and fail on any difference between scans (spec 1542, #1600).'
+        type: string
+        default: '1'
 
 concurrency:
   group: public-corpus-${{ github.ref }}
@@ -105,6 +109,8 @@ jobs:
           # instead of comparing (see layer2_golden::compare_golden).
           # Nightly cron never sets this — remains empty string = verify mode.
           WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS: ${{ inputs.regen_goldens == true && '1' || '' }}
+          # Spec 1542 (#1600): repeat-and-compare, off by default (1).
+          WAYBILL_CORPUS_REPEAT: ${{ inputs.repeat || '1' }}
         run: |
           set -o pipefail
           mkdir -p corpus-artifacts

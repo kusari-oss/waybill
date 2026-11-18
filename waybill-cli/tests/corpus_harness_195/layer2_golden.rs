@@ -206,6 +206,61 @@ fn first_divergences(golden: &[u8], actual: &[u8], limit: usize) -> String {
     }
 }
 
+/// Spec 1542 (#1600): how two scans of one input differ after masking, or
+/// `None` when they are identical byte for byte, array order included.
+/// The result says whether the difference is only in array order (the same
+/// multiset of values) or in content, and names the first differing path.
+pub fn masked_difference(a: &serde_json::Value, b: &serde_json::Value) -> Option<String> {
+    let (ma, mb) = (mask_nondeterministic(a), mask_nondeterministic(b));
+    if ma == mb {
+        return None;
+    }
+    let kind = if order_insensitive(&ma) == order_insensitive(&mb) { "order-only" } else { "content" };
+    let at = first_difference(&ma, &mb, "").unwrap_or_default();
+    Some(format!("{kind}: {at}"))
+}
+
+/// Every leaf of a JSON value as a path with array indices removed, sorted:
+/// equal for two values that differ only in array order.
+fn order_insensitive(v: &serde_json::Value) -> Vec<String> {
+    fn walk(v: &serde_json::Value, path: &str, out: &mut Vec<String>) {
+        match v {
+            serde_json::Value::Object(m) => m.iter().for_each(|(k, x)| walk(x, &format!("{path}/{k}"), out)),
+            serde_json::Value::Array(a) => a.iter().for_each(|x| walk(x, &format!("{path}/[]"), out)),
+            leaf => out.push(format!("{path}={leaf}")),
+        }
+    }
+    let mut out = Vec::new();
+    walk(v, "", &mut out);
+    out.sort();
+    out
+}
+
+/// The first JSON path at which `a` and `b` differ, with both values.
+pub fn first_difference(a: &serde_json::Value, b: &serde_json::Value, path: &str) -> Option<String> {
+    use serde_json::Value;
+    match (a, b) {
+        (Value::Object(x), Value::Object(y)) => {
+            let keys: std::collections::BTreeSet<&String> = x.keys().chain(y.keys()).collect();
+            keys.into_iter().find_map(|k| match (x.get(k), y.get(k)) {
+                (Some(p), Some(q)) => first_difference(p, q, &format!("{path}/{k}")),
+                _ => Some(format!("{path}/{k}: present in one only")),
+            })
+        }
+        (Value::Array(x), Value::Array(y)) if x.len() == y.len() => x
+            .iter()
+            .zip(y)
+            .enumerate()
+            .find_map(|(i, (p, q))| first_difference(p, q, &format!("{path}[{i}]"))),
+        _ if a == b => None,
+        _ => {
+            let (sa, sb) = (a.to_string(), b.to_string());
+            let cut = |s: &str| if s.len() > 1200 { format!("{}…", &s[..1200]) } else { s.to_string() };
+            Some(format!("{path}: {} | {}", cut(&sa), cut(&sb)))
+        }
+    }
+}
+
 /// Structural mask of non-deterministic fields per memory
 /// `feedback_cross_host_goldens`: masks known volatile fields to
 /// stable placeholders so byte-identity compares across hosts, dates,
@@ -663,5 +718,37 @@ mod regen_verdict_tests {
         // Goldens are compared as bytes elsewhere in this file, so the
         // verdict must not be cleverer than the thing it reports on.
         assert_eq!(regen_verdict(Some(b"{}\n"), b"{}"), "CHANGED");
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod s1542_difference_tests {
+    use super::*;
+    use serde_json::json;
+
+    /// A masked field differing is not a difference.
+    #[test]
+    fn a_masked_field_is_no_difference() {
+        let a = json!({ "serialNumber": "urn:uuid:1", "components": [{ "purl": "pkg:generic/x" }] });
+        let b = json!({ "serialNumber": "urn:uuid:2", "components": [{ "purl": "pkg:generic/x" }] });
+        assert_eq!(masked_difference(&a, &b), None);
+    }
+
+    /// An unmasked field differing is a content difference, at its path.
+    #[test]
+    fn an_unmasked_field_is_a_content_difference() {
+        let a = json!({ "components": [{ "purl": "pkg:generic/x" }] });
+        let b = json!({ "components": [{ "purl": "pkg:generic/y" }] });
+        let d = masked_difference(&a, &b).unwrap();
+        assert!(d.starts_with("content: /components[0]/purl"), "{d}");
+    }
+
+    /// The same elements in another order is an order-only difference.
+    #[test]
+    fn a_reordered_array_is_an_order_only_difference() {
+        let a = json!({ "components": [{ "purl": "pkg:generic/x" }, { "purl": "pkg:generic/y" }] });
+        let b = json!({ "components": [{ "purl": "pkg:generic/y" }, { "purl": "pkg:generic/x" }] });
+        assert!(masked_difference(&a, &b).unwrap().starts_with("order-only"));
     }
 }

@@ -101,9 +101,13 @@
 
 ## Phase 6: The determinism audit (FR-006) and measurement
 
-- [ ] T013 Add repeat-and-compare to the corpus harness (`waybill-cli/tests/corpus_harness_195/harness.rs`). With `WAYBILL_CORPUS_REPEAT=N`, each target is scanned `N` times, and its masked documents compared through `layer2_golden`'s masking. The comparison includes array order. A content difference fails the target with class `nondeterministic-output`, and an order-only difference with `nondeterministic-order`, each naming the first differing JSON path.
+- [X] T013 Add repeat-and-compare to the corpus harness (`waybill-cli/tests/corpus_harness_195/harness.rs`). With `WAYBILL_CORPUS_REPEAT=N`, each target is scanned `N` times, and its masked documents compared through `layer2_golden`'s masking. The comparison includes array order. A content difference fails the target with class `nondeterministic-output`, and an order-only difference with `nondeterministic-order`, each naming the first differing JSON path.
   - Add a `repeat` input to `.github/workflows/public-corpus.yml`, passed to the environment.
   - Unit-test the comparison with two hand-built documents that differ in one masked field (passes) and in one unmasked field (fails).
+  - **Done.** `layer2_golden::masked_difference` and `first_difference` are the shared comparison; `scan_determinism.rs` now uses them instead of local copies. Three unit tests cover a masked field (no difference), an unmasked field (`content`, at its path) and a reordered array (`order-only`).
+  - **`public_corpus.rs`:** a `determinism_layer` runs first when `WAYBILL_CORPUS_REPEAT` ≥ 2, failing with class `nondeterministic-output` or `nondeterministic-order`.
+  - **`public-corpus.yml`:** gains `repeat` (default `'1'`). The YAML is checked with Ruby's parser.
+  - It generalises milestone 195's `byte_identity_across_two_runs`, which covers one target, CycloneDX only, unmasked.
 - [ ] T014 In the fixture repository's `.github/workflows/measure-full.yml`, keep every scan's documents: `out/{side}-{tag}.cdx.json` and the SPDX equivalents, not only the last. This needs nothing else from the workflow.
 - [ ] T015 Push the branch. Dispatch:
   - `public-corpus.yml` with `repeat=2`, at the branch and at `main`;

@@ -167,6 +167,38 @@ fn invariant_layer(target_name: &str, sboms: &corpus_harness_195::harness::Emitt
 /// always preempts them. Milestone 840 T024 requires exactly that
 /// demonstration: a format whose comparison silently no-ops must not
 /// be able to hide behind the other two.
+/// Spec 1542: how many times each target is scanned (`WAYBILL_CORPUS_REPEAT`,
+/// default 1, meaning no repeat check).
+fn corpus_repeat() -> usize {
+    std::env::var("WAYBILL_CORPUS_REPEAT").ok().and_then(|v| v.parse().ok()).unwrap_or(1)
+}
+
+fn determinism_layer(
+    target: &corpus_harness_195::manifest::CorpusTarget,
+    first: &corpus_harness_195::harness::EmittedSboms,
+    repeat: usize,
+) -> Result<(), String> {
+    use corpus_harness_195::layer2_golden::masked_difference;
+    for scan in 1..repeat {
+        let again = scan_target(target).map_err(|e| format!("{e}"))?;
+        for (name, a, b) in [
+            ("CycloneDX", &first.cdx, &again.cdx),
+            ("SPDX 2.3", &first.spdx_2_3, &again.spdx_2_3),
+            ("SPDX 3", &first.spdx_3, &again.spdx_3),
+        ] {
+            if let Some(d) = masked_difference(a, b) {
+                let class = if d.starts_with("order-only") { "nondeterministic-order" } else { "nondeterministic-output" };
+                return Err(format!(
+                    "class: {class}\n{name} differs between scan 1 and scan {} of {}: {d}",
+                    scan + 1,
+                    target.name
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
 fn layer2_golden(
     target_name: &str,
     sboms: &corpus_harness_195::harness::EmittedSboms,
@@ -225,7 +257,12 @@ fn run_target(name: &str) {
         Err(infra_err) => panic!("{infra_err}"),
     };
     let regen = update_goldens_gate();
+    let repeat = corpus_repeat();
     let mut pre: Vec<Layer> = vec![
+        // Spec 1542 (#1600) — the same target, scanned again, gives the same
+        // documents after masking, array order included. Off unless
+        // `WAYBILL_CORPUS_REPEAT` is 2 or more: it multiplies the scan cost.
+        Box::new(|| determinism_layer(target, &sboms, repeat)),
         // Layer 0 — document integrity, identical for every target (#980).
         //
         // Runs before the per-target tripwires because what it catches is not
