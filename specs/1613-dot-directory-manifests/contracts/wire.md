@@ -15,7 +15,9 @@ Every case is a synthetic `waybill-fixture-*` tree built at test time. Each is a
 | D-9 | `tox-requirements.txt` at the root | not read (known gap) |
 | D-10 | `.github/actions/waybill-fixture-act/package.json` (dependency `waybill-fixture-npm-a`), with a committed `node_modules/` | dependency present; `Development`; C62 `ci-directory`; nothing from `node_modules/` |
 | D-11 | `waybill-fixture-both==1.0` in `.ci/requirements.txt` and in the root `requirements.txt` | one component; the runtime scope from the root declaration (FR-006) |
-| D-12 | no dot-directories and no `<scope>-requirements*.txt`; scanned with `--file-inventory` on a tree holding `.github/workflows/ci.yml` | byte-identical to `main`'s document; no file-tier component under `.github` |
+| D-12a | root `requirements.txt`, plus manifests under `.cache/`, `.venv/` and `.tox/` | same document (masked) as without those directories |
+| D-12b | any tree with no listed directory | byte-identical to `main` (existing goldens; public corpus) |
+| D-12c | file inventory on; `.github/workflows/ci.yml`, `.ci/script.sh` | no file-tier component under `.github` or `.ci` |
 
 Wire values:
 - **C155** `waybill:python-req-file-scope`: unchanged closed enum `dev`/`test`/`docs`/`ci`.
