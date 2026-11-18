@@ -25,14 +25,12 @@
 ## R3. The deduplicator's output order and survivor (FR-002)
 
 **Decision.**
-- The deduplicator returns its groups in a fixed order: the order each group's first member arrived in.
-- Within a group, the survivor is chosen by confidence, with ties broken by PURL string and then by first source path.
+- The deduplicator keeps its final sort by PURL (deduplicator.rs:324), and completes it to a total order: `(purl, parent_purl, content hash, first source path)`.
+- Within a group, the survivor is chosen by confidence, then PURL string, then first source path.
 
-**Rationale.** Both currently follow `HashMap` iteration and input order. R2 removes the one consumer the trace showed to be order-sensitive, but FR-002 asks for order independence, not for every consumer to be audited.
+**Rationale.** The output is already sorted by PURL. Components that share one PURL keep `HashMap` order among themselves, through the stable sort. Nested copies of one identification under different parents are exactly that case, and they fed R2's order bug in the trace. A total order removes the last order the input can influence, without reordering any document whose PURLs are distinct.
 
-**First-arrival order** keeps today's order wherever input order is already fixed. A sort by PURL would reorder every document's components, a golden churn with no information in it.
-
-*Inference, to be measured by the audit (R5):* whether any emitted document's component order follows the deduplicator's output directly.
+**Rejected:** first-arrival order. It would remove the PURL sort and make every document's order follow input order. *(Found by `/speckit-analyze`, I1.)*
 
 ## R4. SPDX 2.3 identity (FR-004)
 

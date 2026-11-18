@@ -8,8 +8,9 @@ Synthetic `waybill-fixture-*` trees, scanned in the three formats. "Repeatable" 
 | D-2 | two regular files with one name and the **same** bytes, in different directories, naming one bundled tree | repeatable; **one** file component carrying both paths; the bundled tree nested under it |
 | D-3 | two regular files with one name and different bytes (no symlinks) | as D-1: two file components |
 | D-4 | D-1 plus an npm app, so the root fallback is closed | repeatable; the binaries are unreachable and coded `unowned-binary`, the same in every scan; I-A holds in every scan |
-| D-5 | one bundled tree named by two different binaries | the three formats report the same components for it, and agree on C45, C104 and C105 |
+| D-5 | one bundled tree named by two different binaries | the three formats give the same (PURL, container) pairs for the tree, two pairs (one per binary), and agree on C45, C104 and C105 |
 | D-6 | a `deb` package database with one package at two `?arch=` values | merged as today (milestone 1064); the survivor is the same in every scan |
+| D-7 | two files with the same bytes and different names | two file components, as today (the name is part of the key), in every scan |
 
 ## Invariants on every case
 

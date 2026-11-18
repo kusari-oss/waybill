@@ -10,7 +10,7 @@ Everything is in process for one scan. Nothing new reaches the wire.
 
 **Survivor:** highest confidence, then the lexicographically smallest PURL, then the smallest first source path.
 
-**Output order:** each group's first arrival.
+**Output order:** sorted by `(purl, parent_purl, content hash, first source path)`. Before this feature it was sorted by PURL alone, leaving ties among same-PURL components in `HashMap` order.
 
 ## Containment edges (`generate/graph_completeness/mod.rs`)
 

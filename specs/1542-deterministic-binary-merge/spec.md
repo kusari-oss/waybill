@@ -87,7 +87,7 @@ CycloneDX, SPDX 2.3 and SPDX 3 report the same set of components for the same sc
 
 **Acceptance Scenarios**:
 
-1. **Given** one PURL nested in two different binaries, **When** scanned, **Then** the three formats agree on the component set, its reachability and its markers.
+1. **Given** one PURL nested in two different binaries, **When** scanned, **Then** the three formats give the same (PURL, container) pairs, two for that PURL, and agree on its reachability and markers.
 
 ---
 
@@ -113,7 +113,7 @@ CycloneDX, SPDX 2.3 and SPDX 3 report the same set of components for the same sc
   The findings decide FR-002 to FR-004.
 - **FR-002: Order independence.** For a fixed input and build, the emitted documents MUST be identical, apart from the serial number and timestamps, regardless of the order in which files are walked, analysed or merged.
 - **FR-003: No identification loses its file.** Components that each name one file's bytes MUST merge only when the bytes match: same name and same content hash. Every identification binary analysis found in a file MUST be reported nested under that file's component, so none is left without a container. *(Amended by the FR-001 trace: the SDK's two `libgotcha.so` share a name, not a hash.)*
-- **FR-004: One identity across formats.** The three formats MUST report the same component set for one scan. If the trace shows SPDX 2.3's PURL-keyed packages still fold distinct components after FR-003, SPDX 2.3 adopts spec 1541's component key for nested components.
+- **FR-004: One identity across formats.** The three formats MUST report the same set of (PURL, container PURL) pairs for one scan, where a container is given by CycloneDX nesting and by SPDX `CONTAINS`. A top-level component's container is the document. SPDX 2.3's one package per PURL is not a mismatch, provided its `CONTAINS` relationships give the same pairs. If the trace shows SPDX 2.3's PURL-keyed packages still fold distinct components after FR-003, SPDX 2.3 adopts spec 1541's component key for nested components.
 - **FR-005: One reachability answer.** On every input, including the SDK in every scan, graph-completeness, the orphan classifier, invariant I7 and the three formats MUST agree on which components are unreachable and on their markers (spec 1541 I-A).
 - **FR-006: Determinism audit.** The plan MUST measure whether anything else varies between repeated scans of one build: on TheRock's SDK and on every public corpus target, with documents compared after masking serial number and timestamps. Variation in the binary walk, analysis or merge path (the path #1600's lies in) is fixed in this feature. Variation anywhere else is filed as its own issue, and recorded in the measurements with the issue number.
 - **FR-007: Nothing else moves.** Outside the components this feature changes, every document is unchanged. Every golden change is traced to FR-002 to FR-004.

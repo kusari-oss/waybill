@@ -23,7 +23,7 @@
 - [ ] T002 Create `waybill-cli/tests/scan_determinism.rs` with three helpers:
   - `scan_n(root, n, extra) -> Vec<Docs>`, which scans `n` times through `common::installed_lib::scan_with`;
   - `masked(&Docs) -> (Value, Value, Value)`, with the masking in data-model.md;
-  - `assert_repeatable(&[Docs])`, which asserts one masked document per format and one `waybill:graph-completeness-reason`, and on failure prints the distinct variants with their scan indices.
+  - `assert_repeatable(&[Docs])`, which asserts one masked document per format and one `waybill:graph-completeness-reason`, and on failure prints the distinct variants with their scan indices. The comparison is byte-for-byte on the masked documents, array order included. A failure reports whether the scans differ only in order (the same multiset of array elements) or in content.
 
   Reuse the corpus harness's masking (`corpus_harness_195::layer2_golden::mask_nondeterministic`), made `pub(crate)` or reached through a `#[path]` include, as `orphan_explanations.rs` does. Never re-derive it.
 - [ ] T003 Port the trace's fixture builders into `waybill-cli/tests/scan_determinism.rs`:
@@ -37,9 +37,9 @@
 ## Phase 3: User Story 2 — no identification loses its file (P1) 🎯 MVP with US1
 
 **Goal:** different files with one name are different components (R1).
-**Independent test:** D-1, D-2, D-3.
+**Independent test:** D-1, D-2, D-3, D-7.
 
-- [ ] T004 [US2] Add contract cases D-1 (symlink chains to different bytes), D-2 (one name, same bytes) and D-3 (one name, different bytes, no symlinks) to `waybill-cli/tests/scan_determinism.rs`. Each asserts:
+- [ ] T004 [US2] Add contract cases D-1 (symlink chains to different bytes), D-2 (one name, same bytes), D-3 (one name, different bytes, no symlinks) and D-7 (same bytes, different names) to `waybill-cli/tests/scan_determinism.rs`. Each asserts:
   - the file components per name and hash;
   - every bundled tree is nested under its own file;
   - no identification is top-level (I-D);
@@ -57,15 +57,15 @@
 **Goal:** reachability and the deduplicator's output are independent of order (R2, R3).
 **Independent test:** D-4, D-6, and exhaustive permutation unit tests.
 
-- [ ] T007 [US1] Add contract cases to `waybill-cli/tests/scan_determinism.rs`, and run them at `main` (after T005 is reverted locally with `cp`, so only R2 is missing):
+- [ ] T007 [US1] Add contract cases to `waybill-cli/tests/scan_determinism.rs`, and record two variation counts: at `main` (both causes present), and at the branch after T005 and before T009 (only R2 missing), so the second count isolates R2:
   - **D-4:** D-1 plus an npm app. The binaries are unreachable, and their codes and the completeness reason are the same in all 20 scans. I-A holds in every scan, with the corpus harness's I7 functions.
   - **D-6:** a dpkg status file with one package at two `?arch=` values. The survivor is the same in all 20 scans.
 
-  Record the variation counts.
+  Record both counts.
 - [ ] T008 [US1] Write a unit test in `waybill-cli/src/generate/graph_completeness/mod.rs`: for a component set holding a top-level PURL copy and two nested copies (the trace's shape), every permutation of the component order (3! × the other components, at least 24 orders) gives one `reachable_set`. It must fail before T009.
 - [ ] T009 [US1] Make `add_containment_edges` in `waybill-cli/src/generate/graph_completeness/mod.rs` read rule R2's edges from a snapshot taken before the loop (research R2). The comment cites #1600 and says this was spec 1541's defect.
 - [ ] T010 [US1] Make the deduplicator deterministic in `waybill-cli/src/resolve/deduplicator.rs` (research R3):
-  - **Groups:** returned in first-arrival order.
+  - **Output order:** the final sort (deduplicator.rs:324) is completed to `(purl, parent_purl, content hash, first source path)`.
   - **Survivor:** chosen by confidence, then PURL string, then first source path.
   - **Tests:** a unit test feeds one input set in every permutation (at least 24) and asserts one output, order included.
 - [ ] T011 [US1] Run every suite T006 ran, plus `orphan_explanations`, `public_corpus` and the closure suites. Trace any change.
@@ -75,11 +75,11 @@
 **Goal:** the three formats report one component set (FR-004).
 **Independent test:** D-5.
 
-- [ ] T012 [US3] Add D-5 to `waybill-cli/tests/scan_determinism.rs`: one bundled tree named by two different binaries. Through `common::installed_lib::row_all_formats`, the three formats agree on C45, C104 and C105, and each reports the tree under both binaries. Research R4 expects no SPDX 2.3 change. If D-5 fails after T005 and T009, the cause is traced and recorded here before any format change.
+- [ ] T012 [US3] Add D-5 to `waybill-cli/tests/scan_determinism.rs`: one bundled tree named by two different binaries. Through `common::installed_lib::row_all_formats`, the three formats agree on C45, C104 and C105, and the (PURL, container) pairs are equal across the formats: read from CycloneDX nesting and from SPDX `CONTAINS`, with two pairs for the tree. Research R4 expects no SPDX 2.3 change. If D-5 fails after T005 and T009, the cause is traced and recorded here before any format change.
 
 ## Phase 6: The determinism audit (FR-006) and measurement
 
-- [ ] T013 Add repeat-and-compare to the corpus harness (`waybill-cli/tests/corpus_harness_195/harness.rs`). With `WAYBILL_CORPUS_REPEAT=N`, each target is scanned `N` times, and its masked documents compared through `layer2_golden`'s masking. A difference fails the target with class `nondeterministic-output`, naming the first differing JSON path.
+- [ ] T013 Add repeat-and-compare to the corpus harness (`waybill-cli/tests/corpus_harness_195/harness.rs`). With `WAYBILL_CORPUS_REPEAT=N`, each target is scanned `N` times, and its masked documents compared through `layer2_golden`'s masking. The comparison includes array order. A content difference fails the target with class `nondeterministic-output`, and an order-only difference with `nondeterministic-order`, each naming the first differing JSON path.
   - Add a `repeat` input to `.github/workflows/public-corpus.yml`, passed to the environment.
   - Unit-test the comparison with two hand-built documents that differ in one masked field (passes) and in one unmasked field (fails).
 - [ ] T014 In the fixture repository's `.github/workflows/measure-full.yml`, keep every scan's documents: `out/{side}-{tag}.cdx.json` and the SPDX equivalents, not only the last. This needs nothing else from the workflow.
@@ -94,7 +94,7 @@
   - `gotcha`'s outcome in every scan;
   - I-A per scan, with `probe_i7_on_document` per document;
   - the formats' agreement;
-  - the interleaved timing (SC-007, at most 1.1×).
+  - the interleaved medians of both `measure-full` and `measure-source` against `main`, each at most 1.1× (SC-007).
 
   Any variation outside the binary path is filed as its own issue and named here (clarification).
 - [ ] T017 Trace every golden change, regenerate with `-f regen_goldens=true` only after tracing, and record in `measurements/corpus.md`. Trace every quality-corpus movement against `main`.
