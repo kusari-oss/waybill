@@ -411,6 +411,8 @@ pub struct ScanDiagnostics {
     /// Spec 1537 (research R3): each emitted submodule's directory and PURL,
     /// for the declared-requirements pass. Empty without `.gitmodules`.
     pub git_submodule_dirs: git_submodule::SubmoduleDirs,
+    /// Spec 1543 (#1602): CMake link declarations, for the link pass.
+    pub cmake_links: Vec<cmake::links::LinkDeclaration>,
     /// #1154: the `go mod why` pass's outcome (C195/C196). `None` when no
     /// Go main module was found.
     pub go_mod_why: Option<GoModWhyStatus>,
@@ -2489,6 +2491,7 @@ pub fn read_all(
     // component. Every reader's entries are in `out` by now.
     cmake::fetches::merge_into_existing(&mut out, &mut cmake_fetches, rootfs);
     diagnostics.cmake_fetch_coverage = cmake_fetches.wire();
+    diagnostics.cmake_links = std::mem::take(&mut cmake_fetches.links);
     Ok(DbScanResult {
         entries: out,
         claimed_paths: claimed,

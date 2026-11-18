@@ -39,6 +39,42 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A workspace root is never left unattached (#1601, spec 1543).** The uv,
+  bun and Kotlin DSL readers synthesize a component for a workspace's root
+  (`waybill:component-role` = `workspace-root`). Only the fallback that hangs
+  leftover components off the document root attached it, and anything that
+  gave the root an edge closed that fallback — `--root-name` always does.
+  Measured, 7 of 12 reader/shape combinations left it stranded, unexplained
+  or with a false `foreign-build-system`.
+  - A workspace root nothing depends on is now a direct dependency of the
+    document root, in every format.
+  - Scanned at its own root, a workspace's root is the subject, ahead of its
+    members (C69 `workspace-root`). A uv or bun scan used to make a member
+    the subject.
+  - Bun's workspace root lists its members by PURL, as uv's has since spec
+    1541, so its edges resolve; before, it had none.
+  - Quality corpus: `gradle-bitwarden-android` gains the edge to its Kotlin
+    workspace root (150 → 151 edges), which was unreachable and unexplained.
+
+- **A vendored library linked by directory is a dependency (#1602, spec
+  1543).** A prebuilt package with a CMake version or `.pc` file, linked as
+  `target_link_directories(… <prefix>/lib)` plus
+  `target_link_libraries(… <name>)` rather than through `find_package`, is now
+  a dependency of the project that links it. The match also accepts the
+  library's file in that directory, or a DVC pointer to it. A package linked
+  only inside `if()` blocks is optional, with C122 `cmake-conditional-link`
+  and its conditions in the new row `waybill:cmake-link-conditions` (C235).
+  Files pulled in by `include()` are read for these links, whatever their
+  name, with the conditions open at the `include()` site (fetches are not yet:
+  #1605).
+
+- **Measured on ROCm's TheRock, in CI (#1601, #1602).** On the full source
+  tree, unexplained unreachable components go from 2 to 0: `tensile` is
+  attached to the root, and `wkmi` is an optional dependency of
+  `rocm-systems` under `WIN_SDK`. Nothing else in the document changes. Scan
+  time 0.990× `main`. The public corpus is unchanged and deterministic across
+  repeated scans.
+
 - **A scan of a fixed input gives the same document every time (#1600,
   spec 1542).** On the ROCm SDK, one component was reachable in some scans
   of one build and orphaned in others. The trace found three

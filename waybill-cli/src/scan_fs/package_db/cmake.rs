@@ -55,6 +55,7 @@ pub(crate) mod blocks;
 pub(crate) mod fallback;
 pub(crate) mod fetches;
 pub(crate) mod wrappers;
+pub mod links;
 pub(crate) use fetches::{read_fetches, FetchCoverage};
 
 // Milestone 664 US2 T056: shared-walker marker-detect registration.
@@ -242,7 +243,8 @@ pub(crate) fn read_with_downloads(
     let mut fetch_files = walked.unwrap_or(cmake_files);
     fetch_files.sort();
     fetch_files.dedup();
-    let (fetch_entries, fetches) = read_fetches(scan_root, &fetch_files);
+    let (fetch_entries, mut fetches) = read_fetches(scan_root, &fetch_files);
+    fetches.links = links::read_links(scan_root, &fetch_files);
     entries.extend(fetch_entries);
     (entries, coverage, fetches)
 }

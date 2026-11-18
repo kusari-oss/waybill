@@ -66,6 +66,9 @@ pub(crate) struct FetchCoverage {
     pub(crate) wrapper_definitions: usize,
     pub(crate) wrapper_calls: usize,
     pub(crate) wrapper_ambiguous_calls: usize,
+    /// Spec 1543 (#1602): link declarations read from the same files, for
+    /// `scan_fs::cmake_link_attach`. Not part of C231.
+    pub(crate) links: Vec<super::links::LinkDeclaration>,
 }
 
 impl FetchCoverage {

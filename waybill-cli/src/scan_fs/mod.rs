@@ -25,6 +25,7 @@ pub mod podman_source;
 // SBOM emission, and the new C-rows.
 pub(crate) mod declared_attach;
 pub(crate) mod cmake_fetch_attach;
+pub(crate) mod cmake_link_attach;
 pub(crate) mod file_tier;
 #[cfg(feature = "oci-registry")]
 pub mod oci_pull;
@@ -439,6 +440,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut git_submodule_coverage: Option<String> = None;
     // Spec 1537: submodule directories, for the declared-requirements pass.
     let mut git_submodule_dirs = package_db::git_submodule::SubmoduleDirs::new();
+    let mut cmake_links: Vec<package_db::cmake::links::LinkDeclaration> = Vec::new();
     let mut declared_downloads: Option<String> = None;
     let mut cmake_fetch_coverage: Option<String> = None;
     let mut python_owned_binaries: Option<String> = None;
@@ -524,6 +526,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
         git_submodule_coverage = scan_result.diagnostics.git_submodule_coverage.as_ref().map(|c| c.wire());
         git_submodule_dirs = std::mem::take(&mut scan_result.diagnostics.git_submodule_dirs);
+        cmake_links = std::mem::take(&mut scan_result.diagnostics.cmake_links);
         declared_downloads = scan_result.diagnostics.cmake_declared_downloads.clone();
         cmake_fetch_coverage = scan_result.diagnostics.cmake_fetch_coverage.clone();
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
@@ -1549,6 +1552,12 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // project whose tree declares it, by the same owner rule.
         let fetches = cmake_fetch_attach::attach(&components, &relationships, &index, root);
         relationships.extend(fetches.edges);
+        // Spec 1543 (#1602): a vendored library linked by link directory
+        // is a dependency of the project that links it, the same way. Its
+        // scope is set here, before the rewrite below types the edge.
+        let links = cmake_link_attach::attach(&components, &relationships, &cmake_links, &index, root);
+        relationships.extend(links.attached.edges);
+        cmake_link_attach::apply_scope(&mut components, &links.conditional);
     }
 
     apply_lifecycle_scope_to_edges(&components, &mut relationships);
@@ -1663,6 +1672,8 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let index = declared_attach::OwnerIndex::build(&components, &git_submodule_dirs, root, scan_mode);
         let mut anchors = declared_attach::attach(&components, &relationships, &index, root).root_anchors;
         anchors.extend(cmake_fetch_attach::attach(&components, &relationships, &index, root).root_anchors);
+        anchors.extend(cmake_link_attach::attach(&components, &relationships, &cmake_links, &index, root).attached.root_anchors);
+        anchors.extend(workspace_root_anchors(&components, &relationships));
         anchors.into_iter().collect()
     };
     Ok(ScanResult {
@@ -2220,6 +2231,29 @@ fn apply_go_cache_zip_filter(components: &mut Vec<waybill_common::resolution::Re
 /// makes the second call type exactly the newly-marked targets' edges
 /// and a no-op on everything the first call already typed — so the
 /// call did not need to move, and the tests below still pin it here.
+/// Spec 1543 R1 (#1601): a synthesized workspace root that nothing depends
+/// on is a direct dependency of the document root.
+///
+/// The uv, bun and Kotlin DSL readers synthesize one. Until now only the
+/// graph-top fallback attached it, and anything that gave the root an edge
+/// closed the fallback: `--root-name` always does, by anchoring the retained
+/// main modules. Measured, 7 of 12 reader/shape combinations left the
+/// workspace root stranded (`specs/1543-therock-last-orphans/measurements/
+/// trace.md`). An anchor is added after the fallback gate is decided and is
+/// dropped when the workspace root is itself the chosen root.
+fn workspace_root_anchors(components: &[ResolvedComponent], relationships: &[Relationship]) -> Vec<String> {
+    let targeted: std::collections::HashSet<&str> = relationships.iter().map(|r| r.to.as_str()).collect();
+    components
+        .iter()
+        .filter(|c| {
+            c.extra_annotations.get("waybill:component-role").and_then(|v| v.as_str()) == Some("workspace-root")
+        })
+        .map(|c| c.purl.as_str())
+        .filter(|p| !targeted.contains(p))
+        .map(str::to_string)
+        .collect()
+}
+
 pub(crate) fn apply_lifecycle_scope_to_edges(
     components: &[waybill_common::resolution::ResolvedComponent],
     relationships: &mut [waybill_common::resolution::Relationship],

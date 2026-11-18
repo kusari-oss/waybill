@@ -544,6 +544,9 @@ pub(crate) fn parse_bun_lock(
     // packages-map walk below.
     let mut workspace_root_name_field: Option<String> = None;
     let mut workspace_member_names: HashSet<String> = HashSet::new();
+    // Spec 1543 (#1601): each member's exact PURL, for the workspace root's
+    // edges. Sorted, so the root's `depends` has one order in every scan.
+    let mut workspace_member_purls: std::collections::BTreeMap<String, String> = Default::default();
 
     if let Some(workspaces) = root.get("workspaces").and_then(|v| v.as_object()) {
         for (path, info) in workspaces {
@@ -594,6 +597,8 @@ pub(crate) fn parse_bun_lock(
                 );
                 continue;
             };
+
+            workspace_member_purls.insert(member_name.clone(), purl.as_str().to_string());
 
             let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
                 Default::default();
@@ -1160,7 +1165,17 @@ pub(crate) fn parse_bun_lock(
         let root_pkg_json = rootfs.join("package.json");
         let root_name = workspace_root_name(workspace_root_name_field.as_deref());
         if let Some(mut root_entry) = synthesize_workspace_root(&root_name, &root_pkg_json) {
-            root_entry.depends = workspace_member_names.iter().cloned().collect();
+            // Each member by its exact PURL. Spec 1543 (#1601), as spec 1541
+            // did for uv: the root is `pkg:generic`, and a bare name resolves
+            // in the depender's ecosystem, so an npm member never resolved
+            // and the root had no edge at all. A member whose PURL could not
+            // be built keeps its name, as before.
+            let mut depends: Vec<String> = workspace_member_names
+                .iter()
+                .map(|n| workspace_member_purls.get(n).cloned().unwrap_or_else(|| n.clone()))
+                .collect();
+            depends.sort();
+            root_entry.depends = depends;
             out.push(root_entry);
         }
     }
@@ -1778,7 +1793,9 @@ mod tests {
             shared.depends,
         );
 
-        // Workspace-root shim: depends = member names.
+        // Workspace-root shim: depends = each member's PURL. Spec 1543
+        // (#1601): a bare name resolved in the root's `pkg:generic`
+        // ecosystem, so these edges were never emitted.
         let root = entries
             .iter()
             .find(|e| e.purl.as_str() == "pkg:generic/ws-only")
@@ -1787,8 +1804,8 @@ mod tests {
         root_depends.sort();
         assert_eq!(
             root_depends,
-            vec!["@my/shared".to_string(), "@my/web".to_string()],
-            "workspace-root.depends MUST list each member by bare name; \
+            vec!["pkg:npm/%40my/shared@0.5.0".to_string(), "pkg:npm/%40my/web@1.0.0".to_string()],
+            "workspace-root.depends MUST list each member by PURL; \
              got: {:?}",
             root.depends,
         );
@@ -1951,11 +1968,10 @@ mod tests {
                 .and_then(|v| v.as_str()),
             Some("workspace-root"),
         );
-        let mut depends_sorted = ws_root.depends.clone();
-        depends_sorted.sort();
+        // Spec 1543 (#1601): members by PURL, so the edges resolve.
         assert_eq!(
-            depends_sorted,
-            vec!["@my/shared".to_string(), "@my/web".to_string()]
+            ws_root.depends,
+            vec!["pkg:npm/%40my/shared@0.5.0".to_string(), "pkg:npm/%40my/web@1.0.0".to_string()]
         );
     }
 

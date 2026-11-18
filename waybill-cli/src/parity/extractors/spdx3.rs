@@ -837,6 +837,7 @@ spdx3_anno!(c231_spdx3, "waybill:cmake-fetch-coverage", document);
 spdx3_anno!(c232_spdx3, "waybill:cmake-fetch-conditions", component);
 spdx3_anno!(c233_spdx3, "waybill:superseded-declarations", component);
 spdx3_anno!(c234_spdx3, "waybill:cmake-fetch-wrapper", component);
+spdx3_anno!(c235_spdx3, "waybill:cmake-link-conditions", component);
 spdx3_anno!(c42_spdx3, "waybill:lifecycle-scope", component);
 spdx3_anno!(c194_spdx3_raw, "waybill:derivation", document);
 spdx3_anno!(c195_spdx3, "waybill:go-mod-why", document);

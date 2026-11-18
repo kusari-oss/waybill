@@ -1,0 +1,12 @@
+uv atroot plain	subject=pkg:generic/waybill-fixture-tensile	incoming=	orphan-reason=
+uv atroot op	subject=x@1	incoming=x@1	orphan-reason=
+uv sub plain	subject=sub@0.0.0	incoming=sub@0.0.0	orphan-reason=
+uv sub op	subject=x@1	incoming=x@1	orphan-reason=
+bun atroot plain	subject=pkg:generic/waybill-fixture-mono	incoming=	orphan-reason=
+bun atroot op	subject=x@1	incoming=x@1	orphan-reason=
+bun sub plain	subject=sub@0.0.0	incoming=sub@0.0.0	orphan-reason=
+bun sub op	subject=x@1	incoming=x@1	orphan-reason=
+kts atroot plain	subject=pkg:generic/waybill-fixture-kts@0.0.0	incoming=	orphan-reason=
+kts atroot op	subject=x@1	incoming=x@1	orphan-reason=
+kts sub plain	subject=pkg:cargo/waybill-fixture-top@1.0.0	incoming=pkg:cargo/waybill-fixture-top@1.0.0	orphan-reason=
+kts sub op	subject=x@1	incoming=x@1	orphan-reason=
