@@ -39,6 +39,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **The Go binary probe rules out a non-Go ELF or Mach-O from its section
+  table (#1611).** After #1608 every native binary was still read whole and,
+  if it was not Go, searched end to end for the BuildInfo magic. The probe now
+  reads only the section table and reads the file whole only when Go cannot
+  be ruled out: a Go section, a PE (whose BuildInfo has no named section), no
+  section table, or headers that do not parse. On ROCm TheRock's installed
+  SDK the scan went from 36.3 s to 29.1 s (median of three), with an
+  identical document.
+
 - **A source scan no longer reads every file whole to rule out Go binaries
   (#1608).** The Go binary reader read each candidate file — any regular
   file of 1 KiB to 500 MiB — in full before #781's magic-byte check could
