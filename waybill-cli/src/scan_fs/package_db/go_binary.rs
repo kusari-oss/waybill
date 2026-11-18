@@ -241,7 +241,7 @@ fn section_verdict<R: std::io::Read + std::io::Seek>(r: R) -> SectionVerdict {
 ///   the whole-file search over every non-Go ELF was a fifth of the scan).
 /// - Otherwise the whole file, for [`detect_is_go_bytes`] to decide.
 fn read_if_maybe_go<R: std::io::Read + std::io::Seek>(mut r: R, size: u64) -> std::io::Result<Option<Vec<u8>>> {
-    use std::io::{Read, Seek, SeekFrom};
+    use std::io::SeekFrom;
     let mut prefix = [0u8; 4];
     let mut got = 0;
     while got < prefix.len() {
