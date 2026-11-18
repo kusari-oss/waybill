@@ -25,3 +25,16 @@ Measured in CI only, in `kusari-sandbox/waybill-fixture-therock-sdk`, branch `75
 - Branch document equal to `main`'s after masking (`probe_compare_documents`: `same`). The SDK has no workspace root and no vendored link, as expected.
 - The 4 branch scans (warm-up, run0–2) are identical after masking.
 - Time, 3 runs per side: `main` 38.3 / 42.0 / 39.6 s (median 39.6), branch 43.7 / 44.6 / 41.8 s (median 43.7), ratio 1.105×; warm-ups 53.2 (`main`) and 39.9 (branch). One sample; re-measured below.
+
+### Second sample (`measure-full` run 44234511366)
+
+- Branch document equal to `main`'s; the branch's 5 documents identical after masking.
+- Time: `main` 56.7 / 46.4 / 39.3 s (median 46.4), branch 55.3 / 40.6 / 47.8 s (median 47.8), ratio **1.028×**; warm-ups 56.4 and 57.1.
+
+| | sample 1 | sample 2 | pooled 6 runs |
+|---|---|---|---|
+| `main` median | 39.6 | 46.4 | 40.8 |
+| branch median | 43.7 | 47.8 | 44.2 |
+| ratio | 1.105× | 1.028× | 1.08× |
+
+Within one side, runs spread from 38.3 to 56.7 s (`main`) and 40.6 to 55.3 s (branch), so a 1.03–1.10× ratio is inside the host's run-to-run spread, and these samples cannot separate a small real cost from noise. **Inference, not measured:** on the SDK the new work is the link reader over the walked CMake files (two extra reads of each) and two passes over the installed-library records; neither emits anything there (the documents are identical to `main`). No spec criterion covers the SDK; SC-006 (the source tree) measured 0.990×.
