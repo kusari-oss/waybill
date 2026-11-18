@@ -34,8 +34,8 @@ Fixtures use `waybill-fixture-*` names.
 | L-8 | the linking file inside a git submodule directory / no owner at all | edge from the submodule / root anchor |
 | L-9 | one record linked under `if(A)` and under `if(B)`; then a third, unconditional, link | `["A","B"]`, Optional; then required, no C235 |
 | L-10 | `include(FetchContent)`; an `include()` cycle | ignored; terminates |
-| L-12 | a record at `vendor/a` and another at `vendor/a/sub`; link directory under `vendor/a/sub/lib` | edge to the inner record only |
 | L-11 | `link_directories(…)` then `target_link_libraries(other PRIVATE pkg)` | edge (directory scope applies to every target) |
+| L-12 | a record at `vendor/a` and another at `vendor/a/sub`; link directory under `vendor/a/sub/lib` | edge to the inner record only |
 
 ## TheRock (CI)
 
