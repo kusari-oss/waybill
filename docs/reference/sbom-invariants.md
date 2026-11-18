@@ -344,6 +344,8 @@ ones. Before, it read only the top level: on a ROCm SDK, 644 libraries
 nested in binaries were counted unreachable by the completeness pass and
 were invisible to this check, so the two disagreed by exactly that many.
 
+**The answer is the same in every scan since spec 1542** (#1600). Reachability, and with it every orphan marker, is a function of the component set and its relationships, not of their order. A permutation test over 120 component orders pins this. The deduplicator's output is in a total order, and the public corpus's `repeat` input rescans every target and fails on any difference after masking.
+
 **The classifier sees the document's graph since spec 1541.** It used to
 root the graph at a placeholder without the operator's `--root-*` override.
 With no edge from that root, the root fallback attached every graph-top, so

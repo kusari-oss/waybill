@@ -108,7 +108,7 @@
   - **`public_corpus.rs`:** a `determinism_layer` runs first when `WAYBILL_CORPUS_REPEAT` ≥ 2, failing with class `nondeterministic-output` or `nondeterministic-order`.
   - **`public-corpus.yml`:** gains `repeat` (default `'1'`). The YAML is checked with Ruby's parser.
   - It generalises milestone 195's `byte_identity_across_two_runs`, which covers one target, CycloneDX only, unmasked.
-- [ ] T014 In the fixture repository's `.github/workflows/measure-full.yml`, keep every scan's documents: `out/{side}-{tag}.cdx.json` and the SPDX equivalents, not only the last. This needs nothing else from the workflow.
+- [X] T014 In the fixture repository's `.github/workflows/measure-full.yml`, keep every scan's documents: `out/{side}-{tag}.cdx.json` and the SPDX equivalents, not only the last. This needs nothing else from the workflow.
 - [ ] T015 Push the branch. Dispatch:
   - `public-corpus.yml` with `repeat=2`, at the branch and at `main`;
   - `measure-full` (`--ref main -f waybill_ref=1542-deterministic-binary-merge -f base_ref=main`), at least twice, for at least 8 branch scans;
@@ -127,13 +127,13 @@
 
 ## Phase 7: Polish
 
-- [ ] T018 Mutations: `specs/1542-deterministic-binary-merge/measurements/mutate.py` and `mutate-run.sh`, recorded in `measurements/mutations.md`. At least these, each caught by a named test:
+- [X] T018 Mutations: `specs/1542-deterministic-binary-merge/measurements/mutate.py` and `mutate-run.sh`, recorded in `measurements/mutations.md`. At least these, each caught by a named test:
   - the `file-sha256` field dropped from the key;
   - the snapshot reverted to the live map;
   - group order back to `HashMap` order;
   - the survivor tie-breaks removed;
   - the content-hash parse returning `None`.
-- [ ] T019 [P] Docs:
+- [X] T019 [P] Docs:
   - **`CHANGELOG.md`:** Fixed #1600, with the trace's two causes and the SDK result.
   - **`docs/reference/sbom-invariants.md`, I7:** a sentence that reachability is order-independent and a test pins it.
 - [ ] T020 Run the gate alone and record it in `specs/1542-deterministic-binary-merge/measurements/gate-log.md`, with `git diff --quiet main -- Cargo.toml Cargo.lock '*/Cargo.toml'` (FR-008).
