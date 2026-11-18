@@ -103,8 +103,8 @@
 
 **Goal**: SC-002, SC-003 and SC-006 on TheRock, measured in CI only.
 
-- [ ] T022 [US3] Push the branch, then dispatch `measure-source.yml` (≥5 interleaved pairs) and `measure-full.yml` in `kusari-sandbox/waybill-fixture-therock-sdk`, with `--ref main -f waybill_ref=<sha> -f base_ref=main`.
-- [ ] T023 [US3] Probe the branch documents with `probe_i7_on_document` and `row_all_formats`. Record in `specs/1543-therock-last-orphans/measurements/therock.md`:
+- [X] T022 [US3] Push the branch, then dispatch `measure-source.yml` (≥5 interleaved pairs) and `measure-full.yml` in `kusari-sandbox/waybill-fixture-therock-sdk`, with `--ref main -f waybill_ref=<sha> -f base_ref=main`.
+- [X] T023 [US3] Probe the branch documents with `probe_i7_on_document` and `row_all_formats`. Record in `specs/1543-therock-last-orphans/measurements/therock.md`:
   - the unexplained count (expect 0);
   - `tensile` reachable;
   - `wkmi`'s edge source (`rocm-systems`), scope and C235 `["WIN_SDK"]` in all three formats;
@@ -130,8 +130,8 @@
 
   Record which test fails for each in `measurements/mutations.md`. Revert with `cp`, never `git checkout`.
 - [X] T025 [P] File the follow-up issue for reading fetches, `find_package` and downloads through `include()` (research R3, trace §2), and link it in `research.md`.
-- [ ] T026 Dispatch `public-corpus.yml` with `repeat=2` at the branch and at `main`, and the quality corpus against `main`. Trace every golden or score movement in `measurements/audit.md` (expect no golden change, per trace §1).
-- [ ] T027 Add a `CHANGELOG.md` entry (#1601, #1602) and a line in `docs/reference/sbom-invariants.md` if the I7 wording names workspace roots.
+- [X] T026 Dispatch `public-corpus.yml` with `repeat=2` at the branch and at `main`, and the quality corpus against `main`. Trace every golden or score movement in `measurements/audit.md` (expect no golden change, per trace §1).
+- [X] T027 Add a `CHANGELOG.md` entry (#1601, #1602) and a line in `docs/reference/sbom-invariants.md` if the I7 wording names workspace roots.
 - [X] T028 Run the gate alone: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record the per-target pass counts in `measurements/gate-log.md`.
 
 ## Dependencies & execution order
