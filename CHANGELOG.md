@@ -52,6 +52,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `<scope>-requirements*.txt` (for example `dev-requirements.txt`), and any
   `*requirements*.txt` inside a listed directory. A package also declared in a
   runtime requirements file no longer carries the scoped file's C155 label.
+- **Non-runtime declarations stay non-runtime when merged (#1610).** Three
+  merges turned development tooling into runtime content, on `main` too:
+  - a package declared optional twice (for example in a CI and a docs
+    requirements file, or two Conan conditional requirements) lost its scope;
+  - a package in two Python projects took the first project's scope, so a
+    scoped file at the scan root could hide a nested project's unscoped one;
+  - two spellings of one PyPI name in one project (`PyGithub`, `pygithub`)
+    became two components with one PURL and one `bom-ref`.
 
 - **The binary tier reads, parses and hashes binaries on several threads.**
   It used one. Each batch of 64 binaries is read, parsed, SHA-256 hashed and

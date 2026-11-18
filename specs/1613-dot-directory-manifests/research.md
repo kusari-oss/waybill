@@ -127,3 +127,13 @@ No new walk function is added: `descend_into` is a registration field. `walk.aud
 **After the fix,** on the pytorch pin: of the 159 components shared with `main`, only tensorboard's C155 label differs (`docs` → `ci`; non-runtime either way). C155 holds one value, and the first file wins, as before. All 101 new components come from listed directories. 6 listed components are runtime, each also declared in an unscoped root file.
 
 **Known, unchanged:** the reconciler folds pyproject's `opt-einsum@unresolved` extra into the `.ci` pin `opt-einsum@3.3`. The edge from `torch` is kept, but the pyproject source path is not unioned into the survivor. That is existing reconciler behaviour.
+
+## R10. One component per PyPI name, however it is spelled (found on TheRock)
+
+**Finding.** TheRock's measure-source run 44418718300 (branch `38c4babb` against `main` `4281e826`) was passed through `waybill sbom parity-check`. It showed two gaps that `main` does not have: C19 (`waybill:cpe-candidates`) and C20 (`waybill:requirement-ranges`), with CycloneDX one value ahead. The cause is `pkg:pypi/pygithub@2.8.1`, emitted twice in CycloneDX with one `bom-ref`.
+
+amd-llvm's `.ci/requirements.txt` declares `PyGithub==2.8.1` and its compiled `.ci/all_requirements.txt` declares `pygithub==2.8.1` (read through the GitHub API at `ROCm/llvm-project` `4b5cc061`). Both files belong to one project, so they reach the deduplicator as two entries. Its key used the declared name, so it kept them apart.
+
+The same split happens on `main` for any one project with two spellings (reproduced with `main`'s build: `requirements.txt` + `requirements-dev.txt`). Across projects, pip's merge goes by PURL and hides it.
+
+**Decision.** For `pypi`, the dedup key uses `normalize_pypi_name_for_purl`, the transform the PURL is built from. So the key matches the PURL: case and `_` fold, `.` does not, as packageurl-python requires. Other ecosystems keep the declared name; Maven, for one, relies on it.
