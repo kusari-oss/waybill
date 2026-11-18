@@ -39,6 +39,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A source scan no longer reads every file whole to rule out Go binaries
+  (#1608).** The Go binary reader read each candidate file — any regular
+  file of 1 KiB to 500 MiB — in full before #781's magic-byte check could
+  reject it. It now reads the first 4 bytes and reads only an ELF, Mach-O
+  or PE file whole; what it decides is unchanged. On ROCm TheRock's 17 GB
+  source tree the scan went from a 92.8 s median (77–198 s) to 33.1 s in
+  each of three runs, with an identical document.
+
 - **A workspace root is never left unattached (#1601, spec 1543).** The uv,
   bun and Kotlin DSL readers synthesize a component for a workspace's root
   (`waybill:component-role` = `workspace-root`). Only the fallback that hangs
