@@ -16,7 +16,7 @@ Fixtures use `waybill-fixture-*` names.
 | W-3 | W-1 with Kotlin DSL | same (today: stranded, no reason) |
 | W-4 | uv workspace at the scan root, no flags | subject = `pkg:generic/<ws>`; C69 heuristic `workspace-root`; members reached through it |
 | W-5 | W-4 with bun | subject = `pkg:generic/<ws>` |
-| W-6 | Kotlin at the scan root, no flags | subject = `pkg:generic/<rootProject.name>@0.0.0` (today: placeholder `<dir>@0.0.0`) |
+| W-6 | Kotlin at the scan root, no flags | subject = `pkg:generic/<rootProject.name>@0.0.0` (today: placeholder `<dir>@0.0.0`); no C69, which milestone 127 emits only when a main module lost, and Kotlin emits none |
 | W-7 | uv and bun workspaces both at the scan root | neither is promoted; both are anchored to the subject the ladder picks |
 | W-8 | workspace root already targeted by a relationship | no anchor; output equal to `main` |
 

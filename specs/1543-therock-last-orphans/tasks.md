@@ -8,7 +8,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `waybill-cli/tests/scan_therock_last_orphans.rs` (file-scope `#![cfg(unix)]`), including the corpus harness by `#[path]` as `waybill-cli/tests/scan_determinism.rs` does. Add helpers:
+- [X] T001 Create `waybill-cli/tests/scan_therock_last_orphans.rs` (file-scope `#![cfg(unix)]`), including the corpus harness by `#[path]` as `waybill-cli/tests/scan_determinism.rs` does. Add helpers:
   - `scan(dir, flags) -> [cdx, spdx23, spdx3]`;
   - `assert_explained(docs)` (I7 via the harness's `probe_i7_on_document` logic);
   - `assert_agree(docs, rows)` (via `row_all_formats`);
@@ -34,26 +34,26 @@
 
 ### Tests (write first; they must fail on `main`)
 
-- [ ] T005 [P] [US1] Add W-1, W-2 and W-3 to `waybill-cli/tests/scan_therock_last_orphans.rs`. Each is a workspace in `proj/` under a Cargo main module, scanned with `--root-name`. Assert:
+- [X] T005 [P] [US1] Add W-1, W-2 and W-3 to `waybill-cli/tests/scan_therock_last_orphans.rs`. Each is a workspace in `proj/` under a Cargo main module, scanned with `--root-name`. Assert:
   - the root → `pkg:generic/<ws>`;
   - `<ws>` → each member;
   - the members' root edges are still present;
   - no `foreign-build-system` on `<ws>`;
   - `assert_explained`, `assert_agree(C45, C104, C105)`, and `assert_repeatable(…, 20)`.
-- [ ] T006 [P] [US1] Add W-4, W-5 and W-6 to the same file. Each workspace is at the scan root, with no flags. Assert the subject is `pkg:generic/<ws>`, C69 = `workspace-root` in all three formats, the members are reachable through it, `assert_explained`, and `assert_repeatable(…, 20)`.
-- [ ] T007 [P] [US1] Add W-7 (uv and bun at one root: neither promoted, both anchored) and W-8 (the workspace root is already a relationship target: no extra root edge) to the same file. Each also calls `assert_repeatable(…, 20)`.
-- [ ] T008 [P] [US1] Add a unit test in `waybill-cli/src/generate/root_selector.rs` for the rung with zero, one, and two workspace roots at the scan root, and with one in a subdirectory, each with and without an operator override.
+- [X] T006 [P] [US1] Add W-4, W-5 and W-6 to the same file. Each workspace is at the scan root, with no flags. Assert the subject is `pkg:generic/<ws>`, C69 = `workspace-root` in all three formats, the members are reachable through it, `assert_explained`, and `assert_repeatable(…, 20)`.
+- [X] T007 [P] [US1] Add W-7 (uv and bun at one root: neither promoted, both anchored) and W-8 (the workspace root is already a relationship target: no extra root edge) to the same file. Each also calls `assert_repeatable(…, 20)`.
+- [X] T008 [P] [US1] Add a unit test in `waybill-cli/src/generate/root_selector.rs` for the rung with zero, one, and two workspace roots at the scan root, and with one in a subdirectory, each with and without an operator override.
 
 ### Implementation
 
-- [ ] T009 [US1] R1: in `waybill-cli/src/scan_fs/mod.rs`, where `declared_root_anchors` is computed (≈ line 1662), append the PURL of every component that meets both conditions:
+- [X] T009 [US1] R1: in `waybill-cli/src/scan_fs/mod.rs`, where `declared_root_anchors` is computed (≈ line 1662), append the PURL of every component that meets both conditions:
   - its `waybill:component-role` is `workspace-root`;
   - no relationship has it as its `to`.
 
   Sort and deduplicate as the existing anchors are. Comment with the trace's 7-of-12 finding.
-- [ ] T010 [US1] R2: in `waybill-cli/src/generate/root_selector.rs`, add the rung as a function beside `evaluated_nix_package`, called after the operator-override and image rungs and before the main-module ladder. If exactly one component has role `workspace-root` and its first `waybill:source-files` entry contains no `/`, select it as `MainModule(idx)`, with a new `RootSelectionHeuristic::WorkspaceRoot` variant (`as_str` `workspace-root`, confidence 0.95) and the main modules as `losers`. No caller changes: the rung reads only the components.
-- [ ] T011 [US1] Update the existing expectations this changes, after reading each failure. A Kotlin-at-root subject moves from a placeholder to `pkg:generic/<rootProject.name>@0.0.0`. Check `waybill-cli/tests/scan_kotlin_dsl.rs`, `scan_kmp_polyglot.rs`, `dart_edge_cases.rs`, and unit tests in `pip/uv_lock.rs` and `npm/bun_lock.rs`. Record each changed assertion and its cause in `specs/1543-therock-last-orphans/measurements/audit.md`.
-- [ ] T012 [US1] Rerun `specs/1543-therock-last-orphans/measurements/workspace-roots.sh` on the branch binary. Save the output as `measurements/workspace-roots.branch.out`. Expected: no empty `incoming=` cell, and the three `atroot plain` subjects are the `pkg:generic/` roots.
+- [X] T010 [US1] R2: in `waybill-cli/src/generate/root_selector.rs`, add the rung as a function beside `evaluated_nix_package`, called after the operator-override and image rungs and before the main-module ladder. If exactly one component has role `workspace-root` and its first `waybill:source-files` entry contains no `/`, select it as `MainModule(idx)`, with a new `RootSelectionHeuristic::WorkspaceRoot` variant (`as_str` `workspace-root`, confidence 0.95) and the main modules as `losers`. No caller changes: the rung reads only the components.
+- [X] T011 [US1] Update the existing expectations this changes, after reading each failure. A Kotlin-at-root subject moves from a placeholder to `pkg:generic/<rootProject.name>@0.0.0`. Check `waybill-cli/tests/scan_kotlin_dsl.rs`, `scan_kmp_polyglot.rs`, `dart_edge_cases.rs`, and unit tests in `pip/uv_lock.rs` and `npm/bun_lock.rs`. Record each changed assertion and its cause in `specs/1543-therock-last-orphans/measurements/audit.md`.
+- [X] T012 [US1] Rerun `specs/1543-therock-last-orphans/measurements/workspace-roots.sh` on the branch binary. Save the output as `measurements/workspace-roots.branch.out`. Expected: no empty `incoming=` cell, and the three `atroot plain` subjects are the `pkg:generic/` roots.
 
 **Checkpoint**: T005–T008 pass; US1 is independently shippable.
 

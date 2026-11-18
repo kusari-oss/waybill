@@ -79,6 +79,10 @@ pub enum RootSelectionHeuristic {
     /// Nix analogue of [`Self::ExplicitScanTarget`]: the operator named the
     /// installable, so a main module found beside it does not displace it.
     NixEvaluatedPackage,
+    /// Spec 1543 (#1601) — the one workspace root a reader synthesized for
+    /// a workspace at the scan root. It is what was scanned; its members
+    /// are its parts, and the ladder below would pick one of them.
+    WorkspaceRoot,
     /// Fallback to the existing Maven JAR-walker `scan_target_coord`.
     MavenScanTargetCoord,
     /// Fallback to `pkg:generic/<target>@0.0.0`.
@@ -94,6 +98,7 @@ impl RootSelectionHeuristic {
             Self::LongestCommonPrefix => "longest-common-prefix",
             Self::ExplicitScanTarget => "explicit-scan-target",
             Self::NixEvaluatedPackage => "nix-evaluated-package",
+            Self::WorkspaceRoot => "workspace-root",
             Self::MavenScanTargetCoord => "maven-scan-target-coord",
             Self::SyntheticPlaceholder => "synthetic-placeholder",
         }
@@ -106,6 +111,7 @@ impl RootSelectionHeuristic {
             Self::ExplicitScanTarget => 0.99,
             Self::NixEvaluatedPackage => 0.99,
             Self::RepoRoot => 0.95,
+            Self::WorkspaceRoot => 0.95,
             Self::LongestCommonPrefix => 0.80,
             Self::EcosystemPriority => 0.70,
             Self::MavenScanTargetCoord => 0.60,
@@ -291,6 +297,16 @@ pub fn select_root(
     }
 
     // Ladder branch 3 — count==1 fast path (byte-identity preserved).
+    if target_kind == ScanTargetKind::Path {
+        if let Some(picked) = workspace_root_at_scan_root(components) {
+            return RootSelectionResult {
+                subject: ResolvedRootSubject::MainModule(picked),
+                heuristic: Some(RootSelectionHeuristic::WorkspaceRoot),
+                losers: main_modules.iter().map(|&i| components[i].purl.clone()).collect(),
+            };
+        }
+    }
+
     if main_modules.len() == 1 {
         return RootSelectionResult {
             subject: ResolvedRootSubject::MainModule(main_modules[0]),
@@ -425,6 +441,25 @@ pub fn evaluated_nix_package(
 
 /// Read the `waybill:is-workspace-root` annotation. Absent or
 /// non-bool → `false` (degrades gracefully per FR-001 contract).
+/// Spec 1543 R2 (#1601): the index of the one synthesized workspace root
+/// whose manifest is at the scan root, if exactly one exists.
+///
+/// Source files are recorded relative to the scan root, so a manifest at
+/// the root is one with no directory part. Measured before this rung, a uv
+/// or bun workspace scanned at its root made a member the subject and
+/// stranded the workspace root. Two at the root (say uv and bun) promote
+/// neither; both are then root anchors (`scan_fs::workspace_root_anchors`).
+fn workspace_root_at_scan_root(components: &[ResolvedComponent]) -> Option<usize> {
+    let mut at_root = components.iter().enumerate().filter(|(_, c)| {
+        c.extra_annotations.get(COMPONENT_ROLE_KEY).and_then(|v| v.as_str()) == Some("workspace-root")
+            && c.evidence.source_file_paths.first().is_some_and(|p| !p.contains(['/', '\\']))
+    });
+    match (at_root.next(), at_root.next()) {
+        (Some((i, _)), None) => Some(i),
+        _ => None,
+    }
+}
+
 fn is_workspace_root(c: &ResolvedComponent) -> bool {
     c.extra_annotations
         .get(IS_WORKSPACE_ROOT_KEY)
@@ -1682,5 +1717,70 @@ mod tests {
                 "vendor/foo-internal/Cargo.toml".to_string(),
             ],
         );
+    }
+
+    // ============================================================
+    // Spec 1543 (#1601): a workspace root at the scan root is the subject
+    // ============================================================
+
+    fn make_workspace_root(purl_str: &str, manifest: &str) -> ResolvedComponent {
+        let mut c = make_library(purl_str);
+        c.extra_annotations.insert(COMPONENT_ROLE_KEY.to_string(), serde_json::json!("workspace-root"));
+        c.evidence.source_file_paths = vec![manifest.to_string()];
+        c
+    }
+
+    fn members() -> Vec<ResolvedComponent> {
+        vec![
+            make_main_module("pkg:pypi/waybill-fixture-a@0.1.0", "/p/a/pyproject.toml", false),
+            make_main_module("pkg:pypi/waybill-fixture-root@5.0.0", "/p/pyproject.toml", true),
+        ]
+    }
+
+    #[test]
+    fn s1543_one_workspace_root_at_the_scan_root_is_the_subject() {
+        let mut comps = members();
+        comps.push(make_workspace_root("pkg:generic/waybill-fixture-ws", "pyproject.toml"));
+        let r = select_root(&comps, &no_override(), None, "t", "0.0.0", ScanTargetKind::Path);
+        assert!(matches!(r.subject, ResolvedRootSubject::MainModule(2)), "{:?}", r.subject);
+        assert_eq!(r.heuristic, Some(RootSelectionHeuristic::WorkspaceRoot));
+        assert_eq!(r.heuristic.map(|h| (h.name(), h.confidence())), Some(("workspace-root", 0.95)));
+        let losers: Vec<&str> = r.losers.iter().map(|p| p.as_str()).collect();
+        assert_eq!(losers, ["pkg:pypi/waybill-fixture-a@0.1.0", "pkg:pypi/waybill-fixture-root@5.0.0"]);
+    }
+
+    #[test]
+    fn s1543_a_workspace_root_below_the_scan_root_is_not_promoted() {
+        let mut comps = members();
+        comps.push(make_workspace_root("pkg:generic/waybill-fixture-ws", "proj/pyproject.toml"));
+        let r = select_root(&comps, &no_override(), None, "t", "0.0.0", ScanTargetKind::Path);
+        assert_ne!(r.heuristic, Some(RootSelectionHeuristic::WorkspaceRoot));
+        assert!(!matches!(r.subject, ResolvedRootSubject::MainModule(2)), "{:?}", r.subject);
+    }
+
+    #[test]
+    fn s1543_two_workspace_roots_at_the_scan_root_promote_neither() {
+        let mut comps = members();
+        comps.push(make_workspace_root("pkg:generic/waybill-fixture-ws", "pyproject.toml"));
+        comps.push(make_workspace_root("pkg:generic/waybill-fixture-mono", "package.json"));
+        let r = select_root(&comps, &no_override(), None, "t", "0.0.0", ScanTargetKind::Path);
+        assert_ne!(r.heuristic, Some(RootSelectionHeuristic::WorkspaceRoot));
+        assert!(!matches!(r.subject, ResolvedRootSubject::MainModule(2 | 3)), "{:?}", r.subject);
+    }
+
+    #[test]
+    fn s1543_no_workspace_root_leaves_the_ladder_unchanged() {
+        let r = select_root(&members(), &no_override(), None, "t", "0.0.0", ScanTargetKind::Path);
+        assert_ne!(r.heuristic, Some(RootSelectionHeuristic::WorkspaceRoot));
+    }
+
+    #[test]
+    fn s1543_an_operator_override_or_an_image_outranks_the_workspace_root() {
+        let mut comps = members();
+        comps.push(make_workspace_root("pkg:generic/waybill-fixture-ws", "pyproject.toml"));
+        let r = select_root(&comps, &active_override(), None, "t", "0.0.0", ScanTargetKind::Path);
+        assert!(matches!(r.subject, ResolvedRootSubject::OperatorOverride), "{:?}", r.subject);
+        let r = select_root(&comps, &no_override(), None, "t", "0.0.0", ScanTargetKind::ExplicitImage);
+        assert_eq!(r.heuristic, Some(RootSelectionHeuristic::ExplicitScanTarget));
     }
 }

@@ -1663,6 +1663,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let index = declared_attach::OwnerIndex::build(&components, &git_submodule_dirs, root, scan_mode);
         let mut anchors = declared_attach::attach(&components, &relationships, &index, root).root_anchors;
         anchors.extend(cmake_fetch_attach::attach(&components, &relationships, &index, root).root_anchors);
+        anchors.extend(workspace_root_anchors(&components, &relationships));
         anchors.into_iter().collect()
     };
     Ok(ScanResult {
@@ -2220,6 +2221,29 @@ fn apply_go_cache_zip_filter(components: &mut Vec<waybill_common::resolution::Re
 /// makes the second call type exactly the newly-marked targets' edges
 /// and a no-op on everything the first call already typed — so the
 /// call did not need to move, and the tests below still pin it here.
+/// Spec 1543 R1 (#1601): a synthesized workspace root that nothing depends
+/// on is a direct dependency of the document root.
+///
+/// The uv, bun and Kotlin DSL readers synthesize one. Until now only the
+/// graph-top fallback attached it, and anything that gave the root an edge
+/// closed the fallback: `--root-name` always does, by anchoring the retained
+/// main modules. Measured, 7 of 12 reader/shape combinations left the
+/// workspace root stranded (`specs/1543-therock-last-orphans/measurements/
+/// trace.md`). An anchor is added after the fallback gate is decided and is
+/// dropped when the workspace root is itself the chosen root.
+fn workspace_root_anchors(components: &[ResolvedComponent], relationships: &[Relationship]) -> Vec<String> {
+    let targeted: std::collections::HashSet<&str> = relationships.iter().map(|r| r.to.as_str()).collect();
+    components
+        .iter()
+        .filter(|c| {
+            c.extra_annotations.get("waybill:component-role").and_then(|v| v.as_str()) == Some("workspace-root")
+        })
+        .map(|c| c.purl.as_str())
+        .filter(|p| !targeted.contains(p))
+        .map(str::to_string)
+        .collect()
+}
+
 pub(crate) fn apply_lifecycle_scope_to_edges(
     components: &[waybill_common::resolution::ResolvedComponent],
     relationships: &mut [waybill_common::resolution::Relationship],
