@@ -37,6 +37,12 @@ The surrounding shape is observed in the documents:
 
 The binary walker is parallel (milestone 772). The issue (#1600) infers that which of the two same-name, same-hash files is merged first varies between scans, and with it which identification keeps a container. This is inference. Nobody has seen the top-level `gotcha`'s `parent_purl` in either outcome, or why the CycloneDX emitter renders it top-level when completeness counts it nested. Nobody has checked whether anything else in a document varies between scans either.
 
+## Clarifications
+
+### Session 2026-11-17
+
+- Q: Variation the determinism audit finds other than #1600's: fixed here or filed separately? → A: Fixed here if it is in the binary walk, analysis or merge path; otherwise filed as its own issue and recorded (FR-006).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A scan of a fixed input says the same thing every time (Priority: P1)
@@ -51,7 +57,7 @@ A consumer scans the same build twice and compares the two SBOMs. Every differen
 
 1. **Given** a tree holding two same-name, same-hash binaries in different directories, **When** it is scanned repeatedly, **Then** every document is identical after masking serial number and timestamps, in all three formats.
 2. **Given** TheRock's built SDK, **When** the branch is scanned at least five times, interleaved with `main`, **Then** every branch document is identical after masking, and `gotcha`'s outcome is the same in every scan.
-3. **Given** any public corpus target, **When** it is scanned repeatedly, **Then** its documents are identical after masking, or the variation is traced and fixed or declared (FR-006).
+3. **Given** any public corpus target, **When** it is scanned repeatedly, **Then** its documents are identical after masking. Otherwise the variation is traced: fixed here if it is in the binary path, filed as its own issue if not (FR-006).
 
 ---
 
@@ -108,7 +114,7 @@ CycloneDX, SPDX 2.3 and SPDX 3 report the same set of components for the same sc
 - **FR-003: A merge keeps every identification.** When files are one component because they share a name and content hash, every identification binary analysis found in any of them MUST be reported nested under that component. None is left without a container.
 - **FR-004: One identity across formats.** The three formats MUST report the same component set for one scan. If the trace shows SPDX 2.3's PURL-keyed packages still fold distinct components after FR-003, SPDX 2.3 adopts spec 1541's component key for nested components.
 - **FR-005: One reachability answer.** On every input, including the SDK in every scan, graph-completeness, the orphan classifier, invariant I7 and the three formats MUST agree on which components are unreachable and on their markers (spec 1541 I-A).
-- **FR-006: Determinism audit.** The plan MUST measure whether anything else varies between repeated scans of one build: on TheRock's SDK and on every public corpus target, with documents compared after masking serial number and timestamps. Any variation found is [NEEDS CLARIFICATION: fixed in this feature, or each filed as its own issue and declared?].
+- **FR-006: Determinism audit.** The plan MUST measure whether anything else varies between repeated scans of one build: on TheRock's SDK and on every public corpus target, with documents compared after masking serial number and timestamps. Variation in the binary walk, analysis or merge path (the path #1600's lies in) is fixed in this feature. Variation anywhere else is filed as its own issue, and recorded in the measurements with the issue number.
 - **FR-007: Nothing else moves.** Outside the components this feature changes, every document is unchanged. Every golden change is traced to FR-002 to FR-004.
 - **FR-008: No new dependencies.** Zero new Cargo dependencies. Test fixtures use synthetic `waybill-fixture-*` names and synthetic binaries.
 

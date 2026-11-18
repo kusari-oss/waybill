@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,6 +31,6 @@
 
 ## Notes
 
-- One marker remains (FR-006): whether variation found by the determinism audit, other than #1600's, is fixed here or filed separately. It is asked of the maintainer.
+- FR-006's marker was resolved at specify time (Clarifications, 2026-11-17). Variation in the binary path is fixed here, and anything else is filed.
 - SBOM-domain terms (PURL, CycloneDX, SPDX, C45) name the formats and fields the product emits. They are the product's subject, not implementation choices.
 - The design questions in the input (union rule, order independence, SPDX 2.3 identity) are requirements to decide after the trace (FR-001), as spec 1541 did, rather than guesses written into the spec.
