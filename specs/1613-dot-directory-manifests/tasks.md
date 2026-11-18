@@ -111,7 +111,7 @@
   - the `tox-requirements.txt` gap.
 - [X] T018 [P] Add a `### Fixed` entry to `CHANGELOG.md` for #1610: what was hidden, what is read now, and the labels.
 - [X] T019 Reproduce the walker-audit gate locally (the grep and diff from the CI workflow against `waybill-cli/src/scan_fs/walk.audit-allowlist.txt`) and confirm no change.
-- [ ] T020 Run the gate on its own: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record the `ok` count, passed/failed totals and failure blocks in `measurements/gate-log.md`.
+- [X] T020 Run the gate on its own: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record the `ok` count, passed/failed totals and failure blocks in `measurements/gate-log.md`.
 - [ ] T021 TheRock in CI: run `measure-source` with `waybill_ref=<branch sha>` and `base_ref=main`. Record in `measurements/therock.md`:
   - SC-001: the 8 files' packages present, labelled;
   - SC-001a: the `dev-requirements.txt` packages present, labelled `dev`; `tox-requirements.txt` absent;
