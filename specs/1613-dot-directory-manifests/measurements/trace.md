@@ -62,3 +62,9 @@ GitHub JavaScript actions commit `node_modules/`, and it is what they ship. The 
 - the npm reader's installed-tree read.
 
 D-10 now installs the declared dependency in the action's `node_modules/`, and the spec edge case and contract say so. Probe result on this build: `waybill-fixture-npm-a@1.0.0`, `scope: excluded`, C62 `ci-directory`, source file `.github/actions/act/node_modules/waybill-fixture-npm-a/package.json`; the root requirements package stays `required`.
+
+## T013: D-12a's first premise was too strong
+
+Adding manifests under `.cache/`, `.venv/` and `.tox/` changes one thing in an otherwise identical document: the file tier's existing `waybill:file-inventory-skipped-build-dirs` count (here `3`), which records that those directories were skipped. That is existing behaviour, and it is correct. D-12a now compares the documents without that one property, in all three formats.
+
+The two trees are created with the same directory name under separate temp parents. SPDX 3 derives the root element's IRI from the scanned directory's name, so masking the name text alone left the IRIs different.

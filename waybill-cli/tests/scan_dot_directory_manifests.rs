@@ -174,3 +174,137 @@ fn d11_a_package_also_declared_at_the_root_keeps_the_runtime_scope_and_no_ci_lab
     assert_eq!(prop(both, C155), None, "a runtime component carries no CI label");
     assert_eq!(prop(present(&d, "waybill-fixture-cionly"), C155), Some("ci"));
 }
+
+// ---------------------------------------------------------------------
+// User story 2: caches and test suites stay skipped (T013)
+// ---------------------------------------------------------------------
+
+/// D-6, D-7, D-9: nothing from a non-listed dot-directory, from a cache
+/// nested inside a listed one, or from an unlabellable requirements name.
+#[test]
+fn d06_d07_d09_caches_test_suites_and_unlabellable_names_stay_out() {
+    let t = tree();
+    let r = t.path();
+    requirements(r, "requirements.txt", &["waybill-fixture-root"]);
+    for (dir, name) in [
+        (".venv", "waybill-fixture-venv"),
+        (".tox", "waybill-fixture-tox-env"),
+        (".cache", "waybill-fixture-cache"),
+        (".upstream-tests", "waybill-fixture-upstream"),
+        (".ci/.venv", "waybill-fixture-nested-venv"),
+    ] {
+        requirements(r, &format!("{dir}/requirements.txt"), &[name]);
+    }
+    requirements(r, "tox-requirements.txt", &["waybill-fixture-toxreq"]);
+    let d = scan(r);
+    present(&d, "waybill-fixture-root");
+    for name in [
+        "waybill-fixture-venv",
+        "waybill-fixture-tox-env",
+        "waybill-fixture-cache",
+        "waybill-fixture-upstream",
+        "waybill-fixture-nested-venv",
+        "waybill-fixture-toxreq",
+    ] {
+        absent(&d, name);
+    }
+}
+
+/// D-12a: adding manifests under non-listed dot-directories changes nothing
+/// but the file tier's existing count of the directories it skipped
+/// (`waybill:file-inventory-skipped-build-dirs`), which records exactly that
+/// they were skipped.
+#[test]
+fn d12a_non_listed_dot_directories_change_nothing() {
+    // The same directory name under two parents: the subject, and SPDX 3's
+    // root IRI derived from it, are then the same in both documents.
+    let (plain_parent, noisy_parent) = (tree(), tree());
+    let plain = plain_parent.path().join("waybill-fixture-tree");
+    let noisy = noisy_parent.path().join("waybill-fixture-tree");
+    requirements(&plain, "requirements.txt", &["waybill-fixture-root"]);
+    requirements(&noisy, "requirements.txt", &["waybill-fixture-root"]);
+    for dir in [".cache", ".venv", ".tox"] {
+        requirements(&noisy, &format!("{dir}/requirements.txt"), &["waybill-fixture-hidden"]);
+    }
+    let (a, b) = (scan(&plain), scan(&noisy));
+    for (name, x, y) in [("CycloneDX", &a.cdx, &b.cdx), ("SPDX 2.3", &a.spdx23, &b.spdx23), ("SPDX 3", &a.spdx3, &b.spdx3)] {
+        let (x, y) = (mask_tree_name(x), mask_tree_name(y));
+        assert_eq!(masked_difference(&x, &y), None, "{name}: a non-listed dot-directory changed the document");
+    }
+}
+
+/// The two trees live in different temp directories; their names reach the
+/// subject. Replace every temp-directory name with one token so only the
+/// content is compared.
+fn mask_tree_name(v: &Value) -> Value {
+    let s = serde_json::to_string(&mask_nondeterministic(v)).unwrap();
+    let re = regex::Regex::new(r"\.tmp[A-Za-z0-9]{6}").unwrap();
+    without_mentions(&serde_json::from_str(&re.replace_all(&s, ".tmpXXXXXX")).unwrap(), SKIP_COUNT)
+}
+
+/// The file tier's count of the directories it skipped: present in the
+/// noisy tree only, in each format's own encoding.
+const SKIP_COUNT: &str = "waybill:file-inventory-skipped-build-dirs";
+
+/// `v` without any array element that mentions `needle`, at any depth.
+fn without_mentions(v: &Value, needle: &str) -> Value {
+    match v {
+        Value::Array(a) => Value::Array(
+            a.iter().filter(|e| !e.to_string().contains(needle)).map(|e| without_mentions(e, needle)).collect(),
+        ),
+        Value::Object(o) => Value::Object(o.iter().map(|(k, e)| (k.clone(), without_mentions(e, needle))).collect()),
+        other => other.clone(),
+    }
+}
+
+/// FR-011: repeated scans of the US1 tree are identical.
+#[test]
+fn repeated_scans_of_a_tree_with_listed_directories_are_identical() {
+    let t = tree();
+    let r = t.path();
+    requirements(r, "requirements.txt", &["waybill-fixture-root", "waybill-fixture-both"]);
+    requirements(r, ".ci/requirements.txt", &["waybill-fixture-both", "waybill-fixture-d01"]);
+    requirements(r, ".github/requirements-tool-ci.txt", &["waybill-fixture-d03"]);
+    write(
+        r,
+        ".github/actions/waybill-fixture-act/node_modules/waybill-fixture-npm-a/package.json",
+        r#"{"name":"waybill-fixture-npm-a","version":"1.0.0"}"#,
+    );
+    write(
+        r,
+        ".github/actions/waybill-fixture-act/package.json",
+        r#"{"name":"waybill-fixture-act","version":"1.0.0","dependencies":{"waybill-fixture-npm-a":"1.0.0"}}"#,
+    );
+    assert_repeatable(r);
+}
+
+// ---------------------------------------------------------------------
+// User story 3: the file tier does not report CI files (T015)
+// ---------------------------------------------------------------------
+
+/// D-12c: with the file inventory on, nothing under a listed directory
+/// becomes a file-tier component. `src/app.py` is the positive control: it
+/// shows the file tier ran and reports source files in this mode.
+#[test]
+fn d12c_the_file_tier_reports_nothing_under_listed_directories() {
+    let t = tree();
+    let r = t.path();
+    write(r, ".github/workflows/ci.yml", "on: push\njobs: {}\n");
+    write(r, ".github/scripts/release.py", "print('waybill-fixture release')\n");
+    write(r, ".ci/script.sh", "#!/bin/sh\necho waybill-fixture\n");
+    write(r, "src/app.py", "print('waybill-fixture app')\n");
+    for mode in ["full", "source-tree"] {
+        let d = scan_with("--path", r, &["--file-inventory", mode]);
+        let paths: Vec<String> = components(&d.cdx)
+            .into_iter()
+            .filter(|c| prop(c, "waybill:component-tier") == Some("file"))
+            .filter_map(|c| prop(c, "waybill:file-paths").map(str::to_string))
+            .collect();
+        if mode == "source-tree" {
+            assert!(paths.iter().any(|p| p.contains("src/app.py")), "{mode}: control file-tier entry missing: {paths:?}");
+        }
+        for p in &paths {
+            assert!(!p.contains(".github/") && !p.contains(".ci/"), "{mode}: file-tier entry under a listed directory: {p}");
+        }
+    }
+}

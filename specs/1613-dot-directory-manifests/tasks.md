@@ -75,14 +75,14 @@
 
 **Independent test**: D-6, D-7, D-9, D-12a, and 20 repeated scans.
 
-- [ ] T013 [US2] Add tests to `waybill-cli/tests/scan_dot_directory_manifests.rs`:
+- [X] T013 [US2] Add tests to `waybill-cli/tests/scan_dot_directory_manifests.rs`:
   - D-6: requirements under `.venv/`, `.tox/`, `.cache/` and `.upstream-tests/` are absent.
   - D-7: `.ci/.venv/requirements.txt` is absent.
   - D-9: root `tox-requirements.txt` is not read.
   - D-12a: a tree with a root `requirements.txt` gives, after masking (`masked_difference`), the same document as the same tree plus `.cache/requirements.txt`, `.venv/requirements.txt` and `.tox/requirements.txt`. Non-listed dot-directories change nothing.
   - D-12b, byte-identity against `main` for trees with no listed directory: this is not repeated in this file. It is asserted by the existing byte-identity goldens in the gate (T020) and by the public corpus at the branch and at `main` (T022, SC-003).
   - `assert_repeatable` over the US1 tree, 20 scans.
-- [ ] T014 [US2] Run T013's tests until they pass. Fix any nested-skip leak in the registrations, not in `should_skip_default_descent`.
+- [X] T014 [US2] Run T013's tests until they pass. Fix any nested-skip leak in the registrations, not in `should_skip_default_descent`.
 
 ## Phase 5: User Story 3 — the file tier does not report CI files (P2)
 
@@ -90,7 +90,7 @@
 
 **Independent test**: D-12c.
 
-- [ ] T015 [US3] Add D-12c to `waybill-cli/tests/scan_dot_directory_manifests.rs`: scan a tree holding `.github/workflows/ci.yml` and `.ci/script.sh` with the file inventory on, and assert that no file-tier component's path lies under `.github` or `.ci`. Run it until it passes. No implementation is expected (R1: the file tier keeps its own walker); if it fails, the fix belongs in the registrations.
+- [X] T015 [US3] Add D-12c to `waybill-cli/tests/scan_dot_directory_manifests.rs`: scan a tree holding `.github/workflows/ci.yml` and `.ci/script.sh` with the file inventory on, and assert that no file-tier component's path lies under `.github` or `.ci`. Run it until it passes. No implementation is expected (R1: the file tier keeps its own walker); if it fails, the fix belongs in the registrations.
 
 ## Phase 6: Polish and cross-cutting
 
