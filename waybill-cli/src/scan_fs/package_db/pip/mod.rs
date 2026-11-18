@@ -595,6 +595,15 @@ fn merge_without_override(
         match existing.get(a.purl.as_str()) {
             Some(&i) => {
                 let kept = &mut entries[i];
+                // Spec 1613 (#1610): the deduplicator's scope rule, not
+                // first-wins. A package in the scan root's
+                // `requirements-dev.txt` and in a nested project's unscoped
+                // `requirements.txt` is runtime, as it is when both files
+                // belong to one project and the deduplicator merges them.
+                kept.lifecycle_scope = crate::resolve::deduplicator::merge_lifecycle_scope(
+                    kept.lifecycle_scope,
+                    a.lifecycle_scope,
+                );
                 if kept.source_path != a.source_path
                     && !kept.extra_source_paths.contains(&a.source_path)
                 {

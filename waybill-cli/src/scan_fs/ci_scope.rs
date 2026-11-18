@@ -1,7 +1,7 @@
 //! Spec 1613 (#1610): the scope of what is declared only in CI and docs
 //! dot-directories.
 //!
-//! - **R5:** a component with no lifecycle scope whose every evidence source
+//! - **R5:** a runtime component (no lifecycle scope, or `Runtime`) whose every evidence source
 //!   file lies under a listed CI or docs dot-directory (`project_roots::
 //!   LISTED_DOT_DIRECTORIES`) is `Development`, with C62 `ci-directory`, or
 //!   `docs-directory` when every file lies under `.sphinx`. A pip
@@ -44,7 +44,8 @@ fn class_of(path: &str, roots: &[PathBuf]) -> Option<DotDirClass> {
 pub(crate) fn apply(components: &mut [ResolvedComponent], roots: &[PathBuf]) -> CiScopeSummary {
     let mut summary = CiScopeSummary::default();
     for c in components.iter_mut() {
-        if c.lifecycle_scope.is_none() && !c.evidence.source_file_paths.is_empty() {
+        let runtime = matches!(c.lifecycle_scope, None | Some(LifecycleScope::Runtime));
+        if runtime && !c.evidence.source_file_paths.is_empty() {
             let classes: Option<Vec<DotDirClass>> =
                 c.evidence.source_file_paths.iter().map(|p| class_of(p, roots)).collect();
             if let Some(classes) = classes {
@@ -111,6 +112,18 @@ mod tests {
         assert_eq!(c62(&cs[0]), Some(DERIVATION_CI_DIRECTORY));
         assert_eq!(c62(&cs[1]), Some(DERIVATION_DOCS_DIRECTORY));
         assert_eq!(c62(&cs[2]), Some(DERIVATION_CI_DIRECTORY), "a mixed CI and docs component is CI");
+    }
+
+    #[test]
+    fn an_explicit_runtime_scope_under_listed_directories_is_development() {
+        // A manifest-declared dependency of a project under `.ci/` carries
+        // an explicit `Runtime`, not `None` (seen on the quality corpus).
+        let mut c = at("pkg:pypi/waybill-fixture-r@unresolved", &[".ci/tool"]);
+        c.lifecycle_scope = Some(LifecycleScope::Runtime);
+        let mut cs = vec![c];
+        assert_eq!(apply(&mut cs, &roots()).ci, 1);
+        assert_eq!(cs[0].lifecycle_scope, Some(LifecycleScope::Development));
+        assert_eq!(c62(&cs[0]), Some(DERIVATION_CI_DIRECTORY));
     }
 
     #[test]

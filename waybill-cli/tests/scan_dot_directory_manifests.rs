@@ -175,6 +175,36 @@ fn d11_a_package_also_declared_at_the_root_keeps_the_runtime_scope_and_no_ci_lab
     assert_eq!(prop(present(&d, "waybill-fixture-cionly"), C155), Some("ci"));
 }
 
+/// Three shapes from the quality corpus's pytorch pin, each wrong on the first
+/// implementation:
+/// - a package also declared in a NESTED project's unscoped file is runtime
+///   (the pip reader's cross-project merge was first-wins);
+/// - a package in two non-runtime files stays non-runtime (two `Optional`
+///   declarations merged to no scope, read as runtime);
+/// - a project under `.ci/` declares its dependencies with an explicit
+///   runtime scope, and they are CI tooling all the same.
+#[test]
+fn d11b_nested_unscoped_files_two_scoped_files_and_ci_projects() {
+    let t = tree();
+    let r = t.path();
+    requirements(r, ".ci/docker/requirements-ci.txt", &["waybill-fixture-nested", "waybill-fixture-twice"]);
+    requirements(r, "scripts/notes/requirements.txt", &["waybill-fixture-nested"]);
+    requirements(r, "docs/requirements.txt", &["waybill-fixture-twice"]);
+    write(
+        r,
+        ".ci/tool/pyproject.toml",
+        "[project]\nname = \"waybill-fixture-ci-tool\"\nversion = \"0.1.0\"\ndependencies = [\"waybill-fixture-tool-dep\"]\n",
+    );
+    let d = scan(r);
+    let nested = present(&d, "waybill-fixture-nested");
+    assert_eq!(scope(nested), "required", "the nested project's unscoped file is a runtime declaration");
+    assert_eq!(prop(nested, C155), None);
+    assert_eq!(scope(present(&d, "waybill-fixture-twice")), "excluded", "two non-runtime declarations stay non-runtime");
+    let dep = present(&d, "waybill-fixture-tool-dep");
+    assert_eq!(scope(dep), "excluded");
+    assert_eq!(prop(dep, C62), Some("ci-directory"));
+}
+
 // ---------------------------------------------------------------------
 // User story 2: caches and test suites stay skipped (T013)
 // ---------------------------------------------------------------------
