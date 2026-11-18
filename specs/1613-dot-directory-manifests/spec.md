@@ -70,6 +70,12 @@ Under that rule, of the eight files only those whose immediate parent is `.ci`, 
 
 This feature only makes their inputs reachable: once it lands, the 513 workflows, 30 actions and 5 Dockerfiles on TheRock are within the walk.
 
+## Clarifications
+
+### Session 2026-11-18
+
+- Q: Should the document record what was descended or still skipped? → A: Nothing beyond the labels on each component. No document-scope count.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Packages declared for CI and docs builds appear, labelled as such (Priority: P1)
@@ -159,7 +165,7 @@ A consumer who scans with a file inventory does not see workflow files, CI scrip
 - **FR-005**: For readers that have no file-location scope of their own (for example npm, for a `package.json` under `.github/actions/`), components declared only under a listed directory MUST get a non-runtime lifecycle scope. They MUST carry a derivation naming the directory class (`ci` or `docs`), carried in an existing catalog row if one fits. A new row needs registration first (FR-009).
 - **FR-006**: A package declared both under a listed directory and in a non-CI location MUST appear once, with the scope the non-CI declaration gives. This uses the existing scope-merge rules.
 - **FR-007**: A repository with no dot-directories on the list MUST produce a document byte-identical to the one produced without this feature.
-- **FR-008**: [NEEDS CLARIFICATION: Should the document record what was descended or still skipped? Options: (a) nothing beyond the per-component labels; (b) a document-scope count of manifests read from each listed dot-directory class; (c) (b) plus a count of manifest-named files under dot-directories that stayed skipped, which needs those directories listed without being read.]
+- **FR-008**: The document MUST record CI and docs declarations only through the labels on each component (C155, and FR-005's derivation). No document-scope record is added for directories descended or skipped. Those directories are skipped on purpose, and counting their contents would mean walking the caches the skip avoids.
 - **FR-009**: Every new annotation MUST be registered as a catalog row, with parity extractors for all three formats, before it is emitted. The formats MUST agree on it.
 - **FR-010**: The walker-audit gate MUST stay green. Any new walk function is reflected in its allowlist.
 - **FR-011**: Documents MUST be identical across repeated scans (spec 1542's repeat check).

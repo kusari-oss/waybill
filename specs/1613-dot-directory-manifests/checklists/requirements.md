@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain — FR-008 (what is recorded about descended or skipped dot-directories) awaits the maintainer
+- [x] No [NEEDS CLARIFICATION] markers remain (FR-008 resolved 2026-11-18: labels on each component only)
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
