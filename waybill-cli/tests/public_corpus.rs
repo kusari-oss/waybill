@@ -196,6 +196,11 @@ fn determinism_layer(
             }
         }
     }
+    // Positive evidence that the comparison ran: a silent pass cannot be
+    // told from a layer that never executed.
+    if repeat >= 2 {
+        println!("determinism: {}: {repeat} scans, identical after masking in all 3 formats", target.name);
+    }
     Ok(())
 }
 
