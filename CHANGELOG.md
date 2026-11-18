@@ -39,6 +39,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A scan of a fixed input gives the same document every time (#1600,
+  spec 1542).** On the ROCm SDK, one component was reachable in some scans
+  of one build and orphaned in others. The trace found three
+  order-dependent defects, each fixed and pinned by a test:
+  - **Two different binaries with one file name were merged.** The
+    deduplicator ignored the `file-sha256` qualifier, so the SDK's two
+    `libgotcha.so` (symlink chains to different libraries) became one, and
+    the other's identifications were reported detached. They are now two
+    file components, each holding what was found in it.
+  - **Reachability depended on component order.** Spec 1541's containment
+    edges read a map they were writing, so a nested copy could reach its
+    same-PURL siblings or not, depending on order.
+  - **Components sharing a PURL kept `HashMap` order.** SPDX 2.3, which
+    keys packages by PURL, took a different copy's annotations from scan to
+    scan. The output order is now total.
+
+  `scan_determinism.rs` scans each contract fixture 20 times and compares
+  the masked documents, array order included. The public corpus gains a
+  `repeat` input that does the same for every target.
+
 - **Every unreachable component on ROCm TheRock explains itself (#1593,
   spec 1541).** On TheRock's source tree, unexplained components fell from
   841 to 2, both filed defects (#1601, #1602). On the built SDK, 645

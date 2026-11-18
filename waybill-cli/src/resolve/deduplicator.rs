@@ -10,10 +10,36 @@ use std::collections::HashMap;
 use waybill_common::resolution::ResolvedComponent;
 
 /// `(ecosystem, name, version, parent_purl, pants-namespace qualifier)`.
-type DedupKey = (String, String, String, Option<String>, Option<String>);
+type DedupKey = (String, String, String, Option<String>, Option<String>, Option<String>);
+
+/// Spec 1542: PURL, then container, then content hash, then first source
+/// path. Distinct components differ in at least one.
+fn total_order(a: &ResolvedComponent, b: &ResolvedComponent) -> std::cmp::Ordering {
+    a.purl
+        .as_str()
+        .cmp(b.purl.as_str())
+        .then_with(|| a.parent_purl.cmp(&b.parent_purl))
+        .then_with(|| content_hash(&a.purl).cmp(&content_hash(&b.purl)))
+        .then_with(|| a.evidence.source_file_paths.first().cmp(&b.evidence.source_file_paths.first()))
+}
+
+/// Spec 1542 (#1600): the `file-sha256` qualifier of a component that names
+/// one file's bytes (a binary's file-level component). Two such components
+/// with one name and different contents are different files and must not
+/// merge: on the ROCm SDK, `rocprofiler-sdk/libgotcha.so` and
+/// `rocprofiler-systems/libgotcha.so` end symlink chains to different
+/// libraries, and merging them left the loser's identifications without
+/// their container. Every other qualifier stays out of the key (milestone
+/// 1064).
+fn content_hash(purl: &waybill_common::types::purl::Purl) -> Option<String> {
+    purl.as_str()
+        .split_once("file-sha256=")
+        .map(|(_, rest)| rest.split(['&', '#']).next().unwrap_or(rest).to_string())
+}
 
 /// Deduplicate resolved components by
-/// `(ecosystem, name, version, parent_purl, pants-namespace qualifier)`.
+/// `(ecosystem, name, version, parent_purl, pants-namespace qualifier,
+/// file-sha256 qualifier)`.
 ///
 /// For each group of duplicates:
 /// - Keep the entry with the highest confidence score.
@@ -49,6 +75,7 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             component.parent_purl.clone(),
             crate::scan_fs::package_db::pants_resolve::anchor_namespace(&component.purl)
                 .map(str::to_string),
+            content_hash(&component.purl),
         );
         groups.entry(key).or_default().push(component);
     }
@@ -62,6 +89,11 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
         }
 
         // Sort by confidence descending; the first entry is our "winner".
+        // A stable sort: among equal confidence, the reader's order decides,
+        // and readers use it as precedence (the installed-library reader
+        // emits `.pc` before CMake so pkg-config wins, spec 1531 SC-003).
+        // Spec 1542 found no variation here; the scan-to-scan order it found
+        // was between groups, which the output sort below makes total.
         group.sort_by(|a, b| {
             b.evidence
                 .confidence
@@ -298,6 +330,13 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             }
         }
 
+        // Spec 1542 (#1600): the merged path list, sorted like the merged
+        // occurrences and requirement ranges, so it does not depend on which
+        // member survived. The survivor itself still follows the stable
+        // confidence order above, which readers use as precedence.
+        best.evidence.source_file_paths.sort();
+        best.evidence.source_connection_ids.sort();
+
         result.push(best);
     }
 
@@ -320,8 +359,12 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
     // `--path` scans expect them.
     fold_declared_not_cached(&mut result);
 
-    // Sort the output deterministically by PURL string.
-    result.sort_by(|a, b| a.purl.as_str().cmp(b.purl.as_str()));
+    // Sort the output deterministically. By PURL first, as always; spec 1542
+    // (#1600) completes it to a total order, because components sharing one
+    // PURL (nested copies under different parents) kept `HashMap` order among
+    // themselves. SPDX 2.3, which keys packages by PURL, then took a
+    // different copy's annotations from scan to scan.
+    result.sort_by(total_order);
 
     // #1292: and each component's occurrences by location, for the same
     // reason — a reader appends them in walk order, which m772's
@@ -1755,5 +1798,69 @@ mod tests {
                 "Edge Case 1: entry {i} MUST carry the full 3-path alphabetically-sorted union",
             );
         }
+    }
+
+    // ── Spec 1542 (#1600) ──────────────────────────────────────────────
+
+    /// Two binaries with one file name and different contents are two
+    /// files. Merging them left the loser's identifications without their
+    /// container (the ROCm SDK's two `libgotcha.so`).
+    #[test]
+    fn s1542_one_name_different_hashes_stay_two() {
+        let a = make_component_with_parent("pkg:generic/libg.so?file-sha256=aaaa", None, vec!["sdk/libg.so"]);
+        let b = make_component_with_parent("pkg:generic/libg.so?file-sha256=bbbb", None, vec!["systems/libg.so"]);
+        let out = deduplicate(vec![a, b]);
+        let purls: Vec<&str> = out.iter().map(|c| c.purl.as_str()).collect();
+        assert_eq!(purls, vec!["pkg:generic/libg.so?file-sha256=aaaa", "pkg:generic/libg.so?file-sha256=bbbb"]);
+    }
+
+    /// The same bytes under one name in two places are one file.
+    #[test]
+    fn s1542_one_name_same_hash_merges() {
+        let a = make_component_with_parent("pkg:generic/libg.so?file-sha256=aaaa", None, vec!["a/libg.so"]);
+        let b = make_component_with_parent("pkg:generic/libg.so?file-sha256=aaaa", None, vec!["b/libg.so"]);
+        let out = deduplicate(vec![a, b]);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].evidence.source_file_paths.len(), 2);
+    }
+
+    /// Milestone 1064 kept every other qualifier out of the key: qualifier-
+    /// only variants still merge.
+    #[test]
+    fn s1542_other_qualifiers_still_merge() {
+        let a = make_component_with_parent("pkg:deb/debian/libc6@2.36?arch=amd64", None, vec!["var/lib/dpkg/status"]);
+        let b = make_component_with_parent("pkg:deb/debian/libc6@2.36?arch=arm64", None, vec!["var/lib/dpkg/status"]);
+        assert_eq!(deduplicate(vec![a, b]).len(), 1);
+    }
+
+    /// Spec 1542: one input set in every order gives one output, order
+    /// included: the survivor, the merged lists and the output order.
+    #[test]
+    fn s1542_output_is_independent_of_input_order() {
+        let base = [
+            make_component_with_parent("pkg:generic/twin", Some("pkg:generic/p.so?file-sha256=aa"), vec!["lib/p.so"]),
+            make_component_with_parent("pkg:generic/twin", Some("pkg:generic/q.so?file-sha256=aa"), vec!["lib/q.so"]),
+            make_component_with_parent("pkg:generic/libg.so?file-sha256=bb", None, vec!["a/libg.so"]),
+            make_component_with_parent("pkg:generic/libg.so?file-sha256=bb", None, vec!["b/libg.so"]),
+            make_component_with_parent("pkg:deb/debian/libc6@2.36?arch=amd64", None, vec!["status"]),
+        ];
+        let mut outputs: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        let mut order: Vec<usize> = (0..base.len()).collect();
+        fn permute(k: usize, order: &mut Vec<usize>, f: &mut dyn FnMut(&[usize])) {
+            if k == order.len() {
+                f(order);
+                return;
+            }
+            for i in k..order.len() {
+                order.swap(k, i);
+                permute(k + 1, order, f);
+                order.swap(k, i);
+            }
+        }
+        permute(0, &mut order, &mut |o: &[usize]| {
+            let input: Vec<ResolvedComponent> = o.iter().map(|&i| base[i].clone()).collect();
+            outputs.insert(serde_json::to_string(&deduplicate(input)).unwrap());
+        });
+        assert_eq!(outputs.len(), 1, "{} distinct outputs over 120 input orders", outputs.len());
     }
 }
