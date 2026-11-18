@@ -29,13 +29,13 @@ The varying component is `pkg:generic/gotcha`:
 
 The surrounding shape is observed in the documents:
 
-- **One merged file component.** `lib/rocprofiler-sdk/libgotcha.so` and `lib/rocprofiler-systems/libgotcha.so` share a file name and content hash (`10e333b8…`). They are one component, `pkg:generic/libgotcha.so?file-sha256=10e333b8…`, which nests only `pkg:generic/timemory`.
+- **One merged file component.** `lib/rocprofiler-sdk/libgotcha.so` and `lib/rocprofiler-systems/libgotcha.so` are one component, `pkg:generic/libgotcha.so?file-sha256=10e333b8…`, which nests only `pkg:generic/timemory`. *Corrected by the FR-001 trace (`measurements/trace.md`):* they share a file name, **not** a content hash. They end two symlink chains in different directories, and the sdk one's content is `56af308b…`.
 - **Three `gotcha` components.** Two are nested in `libgotcha.so.3.0.0` and `libgotcha.so.3` (hash `56af308b…`). The third is top-level, and its source files name all three paths, because milestone 148 unions source files across components with one PURL.
 - **SPDX 2.3 has one.** It keys packages by PURL and folds the three into one package reached by `CONTAINS`. The formats therefore disagree on the component set, and since spec 1541 on its C45 marker.
 
 ### What is suspected but not traced
 
-The binary walker is parallel (milestone 772). The issue (#1600) infers that which of the two same-name, same-hash files is merged first varies between scans, and with it which identification keeps a container. This is inference. Nobody has seen the top-level `gotcha`'s `parent_purl` in either outcome, or why the CycloneDX emitter renders it top-level when completeness counts it nested. Nobody has checked whether anything else in a document varies between scans either.
+The binary walker is parallel (milestone 772). The issue (#1600) inferred that which of the two same-name, same-hash files is merged first varies between scans, and with it which identification keeps a container. This was inference, and the FR-001 trace (`measurements/trace.md`) corrects it: the files share a name, not a hash, and the variation is in reachability over a fixed document. Nobody has seen the top-level `gotcha`'s `parent_purl` in either outcome, or why the CycloneDX emitter renders it top-level when completeness counts it nested. Nobody has checked whether anything else in a document varies between scans either.
 
 ## Clarifications
 
@@ -55,24 +55,25 @@ A consumer scans the same build twice and compares the two SBOMs. Every differen
 
 **Acceptance Scenarios**:
 
-1. **Given** a tree holding two same-name, same-hash binaries in different directories, **When** it is scanned repeatedly, **Then** every document is identical after masking serial number and timestamps, in all three formats.
+1. **Given** a tree holding two binaries with one name and different contents (the ends of two symlink chains) in different directories, **When** it is scanned repeatedly, **Then** every document is identical after masking serial number and timestamps, in all three formats.
 2. **Given** TheRock's built SDK, **When** the branch is scanned at least five times, interleaved with `main`, **Then** every branch document is identical after masking, and `gotcha`'s outcome is the same in every scan.
 3. **Given** any public corpus target, **When** it is scanned repeatedly, **Then** its documents are identical after masking. Otherwise the variation is traced: fixed here if it is in the binary path, filed as its own issue if not (FR-006).
 
 ---
 
-### User Story 2 - A merged file loses nothing it identified (Priority: P1)
+### User Story 2 - No identification loses its file (Priority: P1)
 
-When two files are one component because they share a name and content hash, everything binary analysis found in either one is reported, under that component.
+Two files with one name and different contents are two components. Every identification binary analysis found in a file is reported under that file's component.
 
 **Why this priority**: today one file's identification is detached and reported at the top level with no container. That is the mechanism behind the varying answer, and the document is wrong about where that identification lives even in the scans where reachability happens to agree.
 
-**Independent Test**: two same-name, same-hash binaries, each carrying an identification, plus one copy elsewhere that carries a different one. After the scan, every identification is nested under a file component, and none is top-level.
+**Independent Test**: two binaries with one name and different contents, each carrying an identification. After the scan, both file components exist, every identification is nested under its own file's component, and none is top-level.
 
 **Acceptance Scenarios**:
 
-1. **Given** two same-name, same-hash binaries in different directories, **When** scanned, **Then** every identification found in either is nested under the merged file component, and none is emitted at the top level.
-2. **Given** the SDK, **When** scanned, **Then** `gotcha` is not emitted as a detached top-level component, and every identification the merged `libgotcha.so` file holds is nested under it.
+1. **Given** two binaries with one name and different contents, in different directories, **When** scanned, **Then** each is its own file component, every identification is nested under the file it came from, and none is emitted at the top level.
+2. **Given** two binaries with one name and the **same** contents, **When** scanned, **Then** they are one file component carrying both paths, with every identification nested under it, as today.
+3. **Given** the SDK, **When** scanned, **Then** `gotcha` is not emitted as a detached top-level component, and the two `libgotcha.so` are two file components.
 
 ---
 
@@ -92,7 +93,7 @@ CycloneDX, SPDX 2.3 and SPDX 3 report the same set of components for the same sc
 
 ### Edge Cases
 
-- **Two same-name, same-hash files in which binary analysis finds nothing.** The merge is unchanged, and still independent of order.
+- **Two same-name, same-hash files.** One component carrying both paths, as today, independent of order.
 - **Same name, different hash.** Not merged (different PURLs, `file-sha256` differs). Unchanged.
 - **Same hash, different name.** Whatever waybill does today is kept, provided it is independent of walk order.
 - **A file merged into a component a package owns** (spec 1536). Ownership and nesting follow the package, as today, and are independent of order.
@@ -111,7 +112,7 @@ CycloneDX, SPDX 2.3 and SPDX 3 report the same set of components for the same sc
 
   The findings decide FR-002 to FR-004.
 - **FR-002: Order independence.** For a fixed input and build, the emitted documents MUST be identical, apart from the serial number and timestamps, regardless of the order in which files are walked, analysed or merged.
-- **FR-003: A merge keeps every identification.** When files are one component because they share a name and content hash, every identification binary analysis found in any of them MUST be reported nested under that component. None is left without a container.
+- **FR-003: No identification loses its file.** Components that each name one file's bytes MUST merge only when the bytes match: same name and same content hash. Every identification binary analysis found in a file MUST be reported nested under that file's component, so none is left without a container. *(Amended by the FR-001 trace: the SDK's two `libgotcha.so` share a name, not a hash.)*
 - **FR-004: One identity across formats.** The three formats MUST report the same component set for one scan. If the trace shows SPDX 2.3's PURL-keyed packages still fold distinct components after FR-003, SPDX 2.3 adopts spec 1541's component key for nested components.
 - **FR-005: One reachability answer.** On every input, including the SDK in every scan, graph-completeness, the orphan classifier, invariant I7 and the three formats MUST agree on which components are unreachable and on their markers (spec 1541 I-A).
 - **FR-006: Determinism audit.** The plan MUST measure whether anything else varies between repeated scans of one build: on TheRock's SDK and on every public corpus target, with documents compared after masking serial number and timestamps. Variation in the binary walk, analysis or merge path (the path #1600's lies in) is fixed in this feature. Variation anywhere else is filed as its own issue, and recorded in the measurements with the issue number.
@@ -120,7 +121,7 @@ CycloneDX, SPDX 2.3 and SPDX 3 report the same set of components for the same sc
 
 ### Key Entities
 
-- **Merged file component**: one component standing for several files that share a name and content hash. It carries all their paths.
+- **File component**: the component standing for one file's bytes (`pkg:generic/<name>?file-sha256=<hash>`). Several files with one name and one hash are one file component, carrying all their paths. One name with different hashes means different file components.
 - **Identification**: a component binary analysis derives from a file's contents (an embedded version string, a symbol fingerprint, a package note, a linkage), nested under that file's component.
 - **Masked document**: an emitted document with its serial number and timestamps replaced by fixed values, so two scans can be compared byte for byte.
 
@@ -132,7 +133,7 @@ CycloneDX, SPDX 2.3 and SPDX 3 report the same set of components for the same sc
 - **SC-002 (the SDK is stable):** On TheRock's built SDK, at least 5 interleaved scans of the branch emit documents identical after masking, in all three formats.
 - **SC-003 (one answer on the SDK):** In every one of those scans, graph-completeness, the classifier, I7 and the three formats agree on every component's reachability and markers. That is I-A on the SDK, where spec 1541 left one component that varied.
 - **SC-004 (nothing detached):** No identification in the SDK document is top-level when the file it came from is a merged file component.
-- **SC-005 (synthetic repeatability):** The two-same-name-binaries fixture, scanned at least 20 times, gives one masked document in each format.
+- **SC-005 (synthetic repeatability):** The two-same-name-binaries fixture, scanned at least 20 times, gives one masked document in each format, and one completeness count. The trace saw the old code vary in 4 of 12 scans of it.
 - **SC-006 (corpora):** The determinism audit (FR-006) is recorded for every public corpus target. The public corpus invariant gate stays green, and every golden change is traced. Every quality-corpus movement is traced against a `main` control.
 - **SC-007 (cost):** The median built-SDK scan is at most 1.1× `main`'s, by the interleaved `measure-full` workflow, and the full-tree source scan likewise by `measure-source`.
 - **SC-008 (tests have teeth):** Each rule (order independence, the identification union, format identity if changed) is pinned by a test that fails when the rule is removed. Repeatability tests scan enough times to have seen the old variation: across spec 1541's eight branch scans of the SDK, each outcome appeared four times.

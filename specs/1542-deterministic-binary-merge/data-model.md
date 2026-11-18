@@ -1,0 +1,25 @@
+# Data model: the same build gives the same answer, scan after scan
+
+Everything is in process for one scan. Nothing new reaches the wire.
+
+## Dedup group key (`resolve/deduplicator.rs`)
+
+`(ecosystem, name, version, parent_purl, pants namespace, content hash)`
+
+`content hash` is the PURL's `file-sha256` qualifier, or `None`. Only components that name one file's bytes carry it: a binary's file-level component.
+
+**Survivor:** highest confidence, then the lexicographically smallest PURL, then the smallest first source path.
+
+**Output order:** each group's first arrival.
+
+## Containment edges (`generate/graph_completeness/mod.rs`)
+
+`add_containment_edges` takes `dependency_edges = edges.clone()` before its loop. Rule R2 reads `dependency_edges`; rules R1 and R3 write `edges`. Reachability is then a function of the component set and relationships, not their order.
+
+## Masked document (tests and the audit)
+
+An emitted document with these fields replaced by fixed values:
+- CycloneDX: `serialNumber` and `metadata.timestamp`;
+- SPDX 2.3: `documentNamespace` and `creationInfo.created`;
+- SPDX 3: the creation-info `created` field and document IRIs;
+- anything else the corpus golden comparison already masks.

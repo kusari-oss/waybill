@@ -485,6 +485,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-17
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `regex`, `serde_json`, `tracing`, the existing tokeniser `installed_lib::cmake_version::{commands_checked, strip_comments}`, and spec 1538's `cmake/{blocks,fallback,fetches}.rs`. **Zero new Cargo dependencies** (FR-013). (1539-cmake-fetch-wrappers)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. Spec 1539's `cmake/wrappers.rs` (`Definitions`, `Scope`, `bind`), `regex`, `serde_json`, `tracing`. **Zero new Cargo dependencies** (FR-011). (1540-cmake-download-project)
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `generate::graph_completeness`, `generate::orphan_reason`, `generate::root_selector`, `scan_fs::package_db::pip::uv_lock`, `serde_json`, `tracing`. **Zero new Cargo dependencies** (FR-010). (1541-explain-therock-orphans)
+- Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `resolve::deduplicator`, `generate::graph_completeness`, `serde_json`. **Zero new Cargo dependencies** (FR-008). (1542-deterministic-binary-merge)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -717,9 +718,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1542-deterministic-binary-merge: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `resolve::deduplicator`, `generate::graph_completeness`, `serde_json`. **Zero new Cargo dependencies** (FR-008).
 - 1541-explain-therock-orphans: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `generate::graph_completeness`, `generate::orphan_reason`, `generate::root_selector`, `scan_fs::package_db::pip::uv_lock`, `serde_json`, `tracing`. **Zero new Cargo dependencies** (FR-010).
 - 1540-cmake-download-project: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. Spec 1539's `cmake/wrappers.rs` (`Definitions`, `Scope`, `bind`), `regex`, `serde_json`, `tracing`. **Zero new Cargo dependencies** (FR-011).
-- 1539-cmake-fetch-wrappers: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only. `regex`, `serde_json`, `tracing`, the existing tokeniser `installed_lib::cmake_version::{commands_checked, strip_comments}`, and spec 1538's `cmake/{blocks,fallback,fetches}.rs`. **Zero new Cargo dependencies** (FR-013).
 
 
 <!-- MANUAL ADDITIONS START -->
