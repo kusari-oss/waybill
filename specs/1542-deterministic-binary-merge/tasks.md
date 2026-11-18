@@ -136,7 +136,7 @@
 - [X] T019 [P] Docs:
   - **`CHANGELOG.md`:** Fixed #1600, with the trace's two causes and the SDK result.
   - **`docs/reference/sbom-invariants.md`, I7:** a sentence that reachability is order-independent and a test pins it.
-- [ ] T020 Run the gate alone and record it in `specs/1542-deterministic-binary-merge/measurements/gate-log.md`, with `git diff --quiet main -- Cargo.toml Cargo.lock '*/Cargo.toml'` (FR-008).
+- [X] T020 Run the gate alone and record it in `specs/1542-deterministic-binary-merge/measurements/gate-log.md`, with `git diff --quiet main -- Cargo.toml Cargo.lock '*/Cargo.toml'` (FR-008).
 - [ ] T021 Open the PR: `fix: the same build gives the same answer, scan after scan (#1600)`, ending with the attribution line. After it lands, tick #1600 where it is tracked.
 
 ## Dependencies
