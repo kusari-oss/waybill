@@ -86,7 +86,7 @@ A consumer scans a source checkout or a build tree full of `.o` and `.a` interme
 
 **Acceptance Scenarios**:
 
-1. **Given** a tree not recognised as installed, **When** it is scanned, **Then** no archive is opened, and the document is identical to the one produced without this feature.
+1. **Given** a source tree, including one with a vendored `lib/cmake/<pkg>/` directory that makes spec 1533 recognise the whole tree as installed, **When** it is scanned, **Then** no archive outside an installed library's own prefix is opened, and the document is identical to the one produced without this feature.
 2. **Given** an installed tree with an archive under a compiler test-input directory (#1524's rule), **When** it is scanned, **Then** that archive is not opened.
 3. **Given** TheRock's source tree and the public corpus, **When** they are scanned, **Then** their documents are unchanged, except for differences that have been traced and explained.
 
@@ -150,7 +150,12 @@ Archives produced by the GNU and LLVM toolchains are read correctly: symbol inde
   - for each member: its embedded source paths (spec 1534's rules), curated version strings, and defined and dynamic symbols.
   
   It MUST report which third-party trees appear only inside archives, and which also appear in shared libraries or executables. The success criteria's targets are taken from this census. The census is a measuring script, not a model of the reader.
-- **FR-002**: Static archives MUST be opened only in a tree recognised as installed (spec 1533). Elsewhere the existing build-intermediate gate applies, unchanged.
+- **FR-002**: Static archives MUST be opened only where spec 1541's per-file rule keeps a binary:
+  - in an image;
+  - in a tree where an OS package database claims files;
+  - otherwise, only for an archive under an installed library's own prefix (spec 1531's install locations).
+  
+  Elsewhere the existing build-intermediate gate applies, unchanged. *Amended after research R2:* spec 1533's whole-tree recognition is not enough. One vendored `lib/cmake/<pkg>/` in a source tree marks the whole tree installed, and TheRock's source document does carry `"installed-tree": "recognised"`.
 - **FR-003**: An archive under a compiler test-input directory (#1524's rule) MUST NOT be opened, even in an installed tree.
 - **FR-003a**: An archive claimed by an OS package (dpkg, rpm, apk) MUST NOT be opened. This is the same claim check the binary tier applies to claimed binaries; it prevents the package's content from being reported a second time under another identity.
 - **FR-004**: The archive reader MUST read:
@@ -210,7 +215,7 @@ Archives produced by the GNU and LLVM toolchains are read correctly: symbol inde
 
 ## Assumptions
 
-- **Installed trees only.** "Installed tree" means spec 1533's recognition. Archives in trees it does not recognise keep today's behaviour, even if some are genuinely shipped. Widening that is a separate decision.
+- **Installed locations only.** An archive is opened under spec 1541's per-file rule (FR-002), not spec 1533's whole-tree recognition. Archives outside an image, an OS-claimed tree or an installed library's prefix keep today's behaviour, even if some are genuinely shipped. Widening that is a separate decision.
 - **Per-member analysis reuses existing scanners.** The embedded-path, version-string and symbol-fingerprint scanners apply to object members as to whole binaries. Gaps in their coverage (#1527) are out of scope here.
 - **One component per archive.** Representing the archive as a single binary component, with findings nested under it, is consistent with how installed binaries and their bundled trees are represented today (spec 1534). Shared libraries get a component each whether or not anything is found inside them (508 on the SDK), and archives are treated the same.
 - **Fat archives are deferred.** They occur only in the Nix closure tier, not on the TheRock SDK, so they are excluded and counted.
