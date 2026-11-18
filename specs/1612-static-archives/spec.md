@@ -2,7 +2,7 @@
 
 **Feature Branch**: `1612-static-archives`
 **Created**: 2026-11-18
-**Status**: Draft
+**Status**: Shelved, 2026-11-18. The research R1 census found no third-party tree that occurs only inside the TheRock SDK's archives (see research.md and #1534). Plan and tasks not written.
 **Input**: User description: "#1534: open static archives (.a) on installed trees, so third-party code compiled into a shipped static library is identified. Measured in CI only … .a files are 822 files and 4.58 GB, 27.6% of the tree's 16.55 GB … 758 of them already appear in the SBOM as files of a package … the binary tier drops every .o/.a before reading it as a build intermediate … trace before designing: extend the fixture's census … Decisions to make: (1) where archives are opened … (2) how an archive is represented … (3) which per-member analyses run … (4) the ar format … (5) bounds … Acceptance: on the TheRock SDK, the census's archive-only third-party trees appear as components nested under their archive with evidence; documents identical across repeated scans …" (full text in the conversation that created this branch)
 
 The spec number (1612) is the next in sequence. It is unrelated to issue or PR #1612.
