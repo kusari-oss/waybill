@@ -1009,9 +1009,42 @@ pub fn read(
 
 
 
-/// Binaries prepared per parallel batch. Bounds what is held at once: a
-/// batch's parsed scans, never more than one file's bytes per worker.
+/// Binaries prepared per parallel batch: bounds the parsed scans held at once.
 const PREPARE_CHUNK: usize = 64;
+
+/// File bytes the workers may hold at once. Without it, the SDK's four
+/// largest libraries (454, 389, 337 and 186 MB, all in `lib/`) were read at
+/// the same time, and peak RSS rose from 571 MB (one thread) to 1,900 MB.
+/// A file larger than the budget is still read, alone.
+const READ_BUDGET_BYTES: u64 = 512 * 1024 * 1024;
+
+/// Bytes reserved by workers that are reading or hashing a file.
+struct ReadBudget {
+    in_flight: std::sync::Mutex<u64>,
+    freed: std::sync::Condvar,
+    limit: u64,
+}
+
+impl ReadBudget {
+    fn new(limit: u64) -> Self {
+        Self { in_flight: std::sync::Mutex::new(0), freed: std::sync::Condvar::new(), limit }
+    }
+
+    /// Wait until `n` bytes fit, or nothing else is in flight.
+    fn acquire(&self, n: u64) {
+        let mut held = self.in_flight.lock().unwrap_or_else(|e| e.into_inner());
+        while *held > 0 && *held + n > self.limit {
+            held = self.freed.wait(held).unwrap_or_else(|e| e.into_inner());
+        }
+        *held += n;
+    }
+
+    fn release(&self, n: u64) {
+        let mut held = self.in_flight.lock().unwrap_or_else(|e| e.into_inner());
+        *held = held.saturating_sub(n);
+        self.freed.notify_all();
+    }
+}
 
 /// What a worker computes for one binary: everything that needs the file's
 /// bytes or is a pure function of its parse. The bytes are dropped before
@@ -1031,7 +1064,21 @@ struct Prepared {
     strings: std::time::Duration,
 }
 
-fn prepare(path: &std::path::Path, names: Option<&std::collections::BTreeSet<String>>) -> Option<Prepared> {
+fn prepare(
+    path: &std::path::Path,
+    names: Option<&std::collections::BTreeSet<String>>,
+    budget: &ReadBudget,
+) -> Option<Prepared> {
+    let size = std::fs::metadata(path).map_or(0, |m| m.len());
+    budget.acquire(size);
+    let p = prepare_held(path, names);
+    budget.release(size);
+    p
+}
+
+/// [`prepare`] once the file's bytes are budgeted. The bytes are dropped
+/// before it returns.
+fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSet<String>>) -> Option<Prepared> {
     let t = std::time::Instant::now();
     let bytes = std::fs::read(path).ok()?;
     let read = t.elapsed();
@@ -1070,8 +1117,9 @@ fn prepare_chunk(
     names: Option<&std::collections::BTreeSet<String>>,
 ) -> Vec<Option<Prepared>> {
     let workers = std::thread::available_parallelism().map_or(1, |n| n.get()).clamp(1, 8).min(paths.len().max(1));
+    let budget = ReadBudget::new(READ_BUDGET_BYTES);
     if workers == 1 {
-        return paths.iter().map(|p| prepare(p, names)).collect();
+        return paths.iter().map(|p| prepare(p, names, &budget)).collect();
     }
     let next = std::sync::atomic::AtomicUsize::new(0);
     let mut done: Vec<(usize, Option<Prepared>)> = std::thread::scope(|s| {
@@ -1082,7 +1130,7 @@ fn prepare_chunk(
                     loop {
                         let i = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                         let Some(path) = paths.get(i) else { break };
-                        mine.push((i, prepare(path, names)));
+                        mine.push((i, prepare(path, names, &budget)));
                     }
                     mine
                 })
@@ -1147,6 +1195,34 @@ mod tests {
     /// The parallel stage hands results back in path order whatever the
     /// scheduling, including missing files, so the serial loop sees the
     /// walk order a single-threaded read would.
+    /// The budget never admits more than its limit at once, except one
+    /// oversized reservation on its own, and every waiter is eventually let in.
+    #[test]
+    fn read_budget_caps_bytes_in_flight() {
+        let budget = ReadBudget::new(100);
+        let peak = std::sync::atomic::AtomicU64::new(0);
+        let now = std::sync::atomic::AtomicU64::new(0);
+        let sizes: Vec<u64> = (0..64).map(|i| [10, 40, 70, 250][i % 4]).collect();
+        std::thread::scope(|s| {
+            for chunk in sizes.chunks(16) {
+                let (budget, peak, now) = (&budget, &peak, &now);
+                s.spawn(move || {
+                    for &n in chunk {
+                        budget.acquire(n);
+                        let cur = now.fetch_add(n, std::sync::atomic::Ordering::SeqCst) + n;
+                        assert!(cur <= 100 || cur == n, "{cur} bytes in flight with a 100-byte budget");
+                        peak.fetch_max(cur, std::sync::atomic::Ordering::SeqCst);
+                        std::thread::yield_now();
+                        now.fetch_sub(n, std::sync::atomic::Ordering::SeqCst);
+                        budget.release(n);
+                    }
+                });
+            }
+        });
+        assert_eq!(*budget.in_flight.lock().unwrap(), 0);
+        assert!(peak.load(std::sync::atomic::Ordering::SeqCst) >= 250, "the oversized reservation never ran");
+    }
+
     #[test]
     fn prepare_chunk_keeps_path_order() {
         let dir = tempfile::tempdir().unwrap();
