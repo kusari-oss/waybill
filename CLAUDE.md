@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-11-17
+Auto-generated from all feature plans. Last updated: 2026-11-18
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -488,6 +488,7 @@ Auto-generated from all feature plans. Last updated: 2026-11-17
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `resolve::deduplicator`, `generate::graph_completeness`, `serde_json`. **Zero new Cargo dependencies** (FR-008). (1542-deterministic-binary-merge)
 - Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only: (1543-therock-last-orphans)
 - N/A. In process per scan. (1543-therock-last-orphans)
+- Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only: (1613-dot-directory-manifests)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -720,9 +721,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1613-dot-directory-manifests: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only:
 - 1543-therock-last-orphans: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only:
 - 1542-deterministic-binary-merge: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `resolve::deduplicator`, `generate::graph_completeness`, `serde_json`. **Zero new Cargo dependencies** (FR-008).
-- 1541-explain-therock-orphans: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `generate::graph_completeness`, `generate::orphan_reason`, `generate::root_selector`, `scan_fs::package_db::pip::uv_lock`, `serde_json`, `tracing`. **Zero new Cargo dependencies** (FR-010).
 
 
 <!-- MANUAL ADDITIONS START -->

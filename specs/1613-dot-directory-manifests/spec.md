@@ -75,6 +75,7 @@ This feature only makes their inputs reachable: once it lands, the 513 workflows
 ### Session 2026-11-18
 
 - Q: Should the document record what was descended or still skipped? → A: Nothing beyond the labels on each component. No document-scope count.
+- Q (raised in planning): the pip selector reads only names starting with `requirements`, so `.ci/all_requirements.txt`, the only file declaring most of TheRock's CI-only packages, would stay unread even once `.ci` is walked. Include the fix here? → A: Yes. Widen the selector to the names the scope classifier can label (research R3).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -148,7 +149,7 @@ A consumer who scans with a file inventory does not see workflow files, CI scrip
 
 ### Functional Requirements
 
-- **FR-001**: The manifest readers' walkers MUST descend into dot-directories whose name is on a fixed list of CI and docs directories. The list is:
+- **FR-001**: The manifest readers that discover files through the shared walker MUST descend into dot-directories whose name is on a fixed list of CI and docs directories. The list is:
   - `.github`;
   - `.ci`;
   - `.gitlab`;
@@ -157,11 +158,16 @@ A consumer who scans with a file inventory does not see workflow files, CI scrip
   - `.devcontainer`;
   - `.sphinx`.
   
-  Names are matched case-insensitively. Every other dot-directory MUST stay skipped.
+  Names are matched case-insensitively. Every other dot-directory MUST stay skipped. Readers that walk the tree themselves (nuget, gradle, kotlin_dsl, swift, yocto) are unchanged: none of their manifests occur under listed directories on TheRock or the public corpus (research R2).
 - **FR-002**: Below a descended dot-directory, the existing skips MUST still apply: other dot-directories not on the list, `node_modules`, `vendor`, virtualenvs and build outputs.
 - **FR-003**: The file tier MUST NOT descend into the listed directories. Files under them MUST NOT become file-tier components.
 - **FR-004**: The pip requirements scope classifier MUST label a requirements file found anywhere under a listed CI directory (`.github`, `.ci`, `.gitlab`, `.circleci`, `.buildkite`, `.devcontainer`) as `ci`, and one under `.sphinx` as `docs`. Its packages get the Optional scope and C155, as files the classifier already labels do today.
   - Precedence: an explicit `test` or `docs` signal from the immediate parent directory or the file name keeps today's precedence over the ancestor signal.
+- **FR-004a**: The pip requirements selector MUST also read:
+  - files named `<scope>-requirements*.txt`, where `<scope>` is one the classifier labels (`dev`, `test`, `docs`, `ci`);
+  - any file named `*requirements*.txt` under a listed CI or docs directory.
+  
+  Files of the second kind are labelled by FR-004. Other names that are not `requirements*.txt` (for example `tox-requirements.txt`) stay unread, because nothing would label them and they would read as runtime. The existing #1522 check against non-pip content applies to every file read.
 - **FR-005**: For readers that have no file-location scope of their own (for example npm, for a `package.json` under `.github/actions/`), components declared only under a listed directory MUST get a non-runtime lifecycle scope. They MUST carry a derivation naming the directory class (`ci` or `docs`), carried in an existing catalog row if one fits. A new row needs registration first (FR-009).
 - **FR-006**: A package declared both under a listed directory and in a non-CI location MUST appear once, with the scope the non-CI declaration gives. This uses the existing scope-merge rules.
 - **FR-007**: A repository with no dot-directories on the list MUST produce a document byte-identical to the one produced without this feature.
@@ -186,7 +192,8 @@ A consumer who scans with a file inventory does not see workflow files, CI scrip
 
 ### Measurable Outcomes
 
-- **SC-001**: On TheRock's source tree, the packages declared in all 8 requirements files under `.ci`, `.github` and `.sphinx` appear in the document, each with a `ci` or `docs` label and a non-runtime scope. This includes the dozen or so declared nowhere else.
+- **SC-001**: On TheRock's source tree, the packages declared in all 8 requirements files under `.ci`, `.github` and `.sphinx` appear in the document, each with a `ci` or `docs` label and a non-runtime scope. This includes the dozen or so declared nowhere else, most of which only `.ci/all_requirements.txt` declares.
+- **SC-001a**: On TheRock's source tree, the packages of the two `dev-requirements.txt` files (composablekernel, MIOpen) appear, labelled `dev`. `tox-requirements.txt` stays unread, and is recorded as a known gap.
 - **SC-002**: On TheRock's source tree, no package declared only under `.upstream-tests`, `._upstream`, `.gitlab-ci`, `.jenkins` or `.claude` appears, and no file under any dot-directory becomes a file-tier component.
 - **SC-003**: Every public-corpus golden is unchanged, or each change is traced. The prediction is none, because the corpus's dot-directory content is workflows and actions that no reader reads yet.
 - **SC-004**: The three formats agree on every new or extended annotation on TheRock's source tree, and repeated scans are identical.
