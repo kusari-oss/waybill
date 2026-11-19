@@ -156,7 +156,7 @@
   - pairing, and the in-tree rule with #1616.
 
   `CHANGELOG.md` gets `### Fixed` / `### Added` entries for #1591 and #1605, including the duplicates fixed on `main` (R7).
-- [ ] T031 Walker audit (`bash scripts/check-walker-audit.sh`) and the gate (`./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`), with no `+toolchain`. Record `GATE_RESULT`, the `ok` count, passed/failed and the failure blocks in `measurements/gate-log.md`. Also record that `git diff main -- Cargo.toml '*/Cargo.toml' Cargo.lock` is empty (FR-013).
+- [X] T031 Walker audit (`bash scripts/check-walker-audit.sh`) and the gate (`./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`), with no `+toolchain`. Record `GATE_RESULT`, the `ok` count, passed/failed and the failure blocks in `measurements/gate-log.md`. Also record that `git diff main -- Cargo.toml '*/Cargo.toml' Cargo.lock` is empty (FR-013).
 - [ ] T032 TheRock, CI only: two measure-source runs at the branch head against `main` (full SHAs). Record in `measurements/therock.md`:
   - **SC-001:** `cmake-find-package` components against `predict.py` (110 ± the Python calls), each difference traced by name.
   - **SC-002:** the conditional-only names are non-runtime, including the 6–9 fetch components named in the spec.
