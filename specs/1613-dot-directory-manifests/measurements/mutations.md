@@ -20,5 +20,6 @@ Run with `measurements/mutate-run.sh` (from the repository root). Each mutation 
 | M12 | R5 skips an explicit `Runtime` | 2 | 0 | yes | d11b, an_explicit_runtime_scope… |
 | M13 | dedup keys PyPI on the declared spelling | 3 | 0 | yes | d11c, s1613_pypi_spellings… |
 | M14 | dedup normalises every ecosystem's name | 2 | 0 | yes | s1613_pypi_spellings… (its npm half) |
+| M15 | a scoped requirements file covers a runtime pyproject declaration | 1 | 0 | yes | d11d |
 
-**All 14 are caught** (M1–M9 at `bc13f385`; all 12 re-run at `e4045f0e` after R9, and M13–M14 at `4d73b990` after R10, with the same results for M1–M9 plus d11b where it applies). Every mutation turns at least one named test red. With 0 compile errors each time, these are behavioural failures, not build breaks. `git status --short waybill-cli/src` was empty after the run.
+**All 15 are caught** (M1–M9 at `bc13f385`; all 12 re-run at `e4045f0e` after R9, M13–M14 at `4d73b990` after R10, and M15 at `b15bc8d7` after R11, with the same results for M1–M9 plus d11b where it applies). Every mutation turns at least one named test red. With 0 compile errors each time, these are behavioural failures, not build breaks. `git status --short waybill-cli/src` was empty after the run.

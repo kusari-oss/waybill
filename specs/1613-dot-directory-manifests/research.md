@@ -137,3 +137,15 @@ amd-llvm's `.ci/requirements.txt` declares `PyGithub==2.8.1` and its compiled `.
 The same split happens on `main` for any one project with two spellings (reproduced with `main`'s build: `requirements.txt` + `requirements-dev.txt`). Across projects, pip's merge goes by PURL and hides it.
 
 **Decision.** For `pypi`, the dedup key uses `normalize_pypi_name_for_purl`, the transform the PURL is built from. So the key matches the PURL: case and `_` fold, `.` does not, as packageurl-python requires. Other ecosystems keep the declared name; Maven, for one, relies on it.
+
+## R11. A scoped requirements file does not cover a runtime declaration (found on TheRock)
+
+**Finding.** TheRock run 44423036451 (`bbeb4c5c` against `main`). On `main`, `pkg:pypi/pydantic@unresolved` is runtime: `rocm-systems/experimental/python/perfxpert` declares `pydantic>=2.0` in its `pyproject.toml`. On the branch it is gone, and perfxpert's edge resolves to `pkg:pypi/pydantic`, which `.github/requirements.txt` declares and which is `excluded` / `ci`.
+
+The cause is milestone 670's name coverage. A pyproject dependency is emitted only if no earlier entry has its name. pytorch's `opt-einsum@unresolved` disappeared the same way, harmlessly, because that declaration is optional.
+
+**Rejected first attempt:** merging the covered declaration's scope, project path and range into every entry of the name. On pytorch that attached `torch`'s declarations to every CI pin of the same package: `pyyaml@6.0.2` and `@6.0.3` became runtime, and dozens of pins gained `.` and `torch`'s ranges. One name maps to several components, and the declaration cannot say which one it means.
+
+**Decision.** A runtime declaration whose name is covered only by packages of scoped requirements files (C155) is emitted as though uncovered, as on `main`. Coverage by anything else stays a suppression: a lockfile pin, an unscoped requirements file, an earlier pyproject, or an optional declaration.
+
+**Effect on pytorch:** one component, `pkg:pypi/uv@unresolved`. It is `.ci/lumen_cli`'s runtime dependency, which R5 then labels `Development` / `ci-directory`. Edges are unchanged at 211.
