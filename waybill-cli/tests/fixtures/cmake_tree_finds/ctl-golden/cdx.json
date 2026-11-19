@@ -1,0 +1,564 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:generic/waybill-fixture-pc",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-pc",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-pkg-check-modules"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill-fixture-pc",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill-fixture-ps",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "cmake/deps.cmake"
+          }
+        ]
+      },
+      "name": "waybill-fixture-ps",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"cmake/deps.cmake\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-pkg-check-modules"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"cmake\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill-fixture-ps",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill_fixture_a",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill_fixture_a",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-find-package"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "find_package() states a requirement; the version found at build time is not in source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_a",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill_fixture_b",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill_fixture_b",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=2.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-find-package"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "find_package() states a requirement; the version found at build time is not in source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_b",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill_fixture_c",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill_fixture_c",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"==3.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-find-package"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "find_package() states a requirement; the version found at build time is not in source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_c",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill_fixture_d",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "cmake/deps.cmake"
+          }
+        ]
+      },
+      "name": "waybill_fixture_d",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"cmake/deps.cmake\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=4.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-find-package"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "find_package() states a requirement; the version found at build time is not in source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"cmake\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_d",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill_fixture_mixed",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill_fixture_mixed",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:cmake-find-package-name",
+          "value": "Waybill_Fixture_Mixed"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-find-package"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "find_package() states a requirement; the version found at build time is not in source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_mixed",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:github/waybill-fixture/dep@v1.2.3",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill_fixture_dep",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:download-url",
+          "value": "https://github.com/waybill-fixture/dep.git"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-fetchcontent-git"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:github/waybill-fixture/dep@v1.2.3",
+      "type": "library",
+      "version": "v1.2.3"
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "waybill-fixture-tree@0.0.0"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "waybill-fixture-tree@0.0.0"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill-fixture-pc"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill-fixture-ps"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill_fixture_a"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill_fixture_b"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill_fixture_c"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill_fixture_d"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill_fixture_mixed"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:github/waybill-fixture/dep@v1.2.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:generic/waybill-fixture-pc",
+        "pkg:generic/waybill-fixture-ps",
+        "pkg:generic/waybill_fixture_a",
+        "pkg:generic/waybill_fixture_b",
+        "pkg:generic/waybill_fixture_c",
+        "pkg:generic/waybill_fixture_d",
+        "pkg:generic/waybill_fixture_mixed",
+        "pkg:github/waybill-fixture/dep@v1.2.3"
+      ],
+      "ref": "waybill-fixture-tree@0.0.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "waybill-fixture-tree@0.0.0",
+      "name": "waybill-fixture-tree",
+      "purl": "pkg:generic/waybill-fixture-tree@0.0.0",
+      "type": "application",
+      "version": "0.0.0"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "design"
+      },
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:cpe-coverage",
+        "value": "{\"addressable_without_cpe\":0,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":8,\"with_candidates\":0}"
+      },
+      {
+        "name": "waybill:cmake-fetch-coverage",
+        "value": "{\"components\":1,\"conditional\":0,\"emitted\":1,\"merged\":{\"existing-component\":0,\"first-declaration-wins\":0},\"read\":1,\"test\":0,\"unparseable-files\":0,\"unresolved\":{\"identity\":0}}"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "[\"ID\",\"VERSION_ID\"]"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "transitive-edges-unresolvable: generic"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\",\"cmake\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "<masked-tool-version>"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

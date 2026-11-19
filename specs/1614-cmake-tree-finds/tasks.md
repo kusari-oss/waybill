@@ -14,14 +14,14 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Trace the plan's premises on `main` before any change, and record them in `specs/1614-cmake-tree-finds/measurements/trace.md`:
+- [X] T001 Trace the plan's premises on `main` before any change, and record them in `specs/1614-cmake-tree-finds/measurements/trace.md`:
   - (a) Re-run research R7's probe tree with `main`'s binary. Record the two duplicate pairs (fetch and installed record) by PURL.
   - (b) Confirm a nested `find_package` is absent on `main` (W-1's premise).
   - (c) Confirm `vendor/` is in the walker's default skip set, which is why R7's probe moved the SDK to `sdk/`. Name the constant and file.
   - (d) Confirm `read_fetches` receives every walked `CMakeLists.txt` / `*.cmake` file, and that `read()` (no walker, the binary tier) uses `discover_cmake_files`. Cite the lines.
   - (e) Confirm where C231 is built and emitted (`scan_fs/mod.rs:154`, `generate/mod.rs:174`) as the template for C237.
   - Revert any scratch change with `cp`.
-- [ ] T002 [P] Create `waybill-cli/tests/scan_cmake_tree_finds.rs` (file-scope `#![cfg(unix)]`), on the pattern of `waybill-cli/tests/scan_dot_directory_manifests.rs`. Add helpers:
+- [X] T002 [P] Create `waybill-cli/tests/scan_cmake_tree_finds.rs` (file-scope `#![cfg(unix)]`), on the pattern of `waybill-cli/tests/scan_dot_directory_manifests.rs`. Add helpers:
   - `scan(root) -> Docs`, asserting `row_all_formats` for C42, C62, C122, C232, C236 and C237;
   - `by_purl(docs, purl)`, failing on a duplicate;
   - `absent_purl`;
@@ -31,7 +31,7 @@
   - `assert_repeatable(root, 20)`.
 
   Names are `waybill-fixture-*` / `waybill_fixture_*` only.
-- [ ] T003 [P] W-ctl, the byte-identity control (FR-009):
+- [X] T003 [P] W-ctl, the byte-identity control (FR-009):
   - Build the tree in `waybill-cli/tests/fixtures/cmake_tree_finds/ctl/`: the root `CMakeLists.txt` and `cmake/deps.cmake` with unconditional `find_package` (with and without a version, with `EXACT`, a mixed-case name for C103), `pkg_check_modules`, and an unconditional `FetchContent_Declare` with no chain conditions.
   - Commit the masked three-format golden of `main`'s output, generated with `main`'s binary before any source change.
   - Add `w_ctl_is_byte_identical_to_main` to the test file. It compares the documents after removing C237; it must pass on `main`, and from T008 on it also asserts that C237 is present with counts that match the tree (FR-009).
