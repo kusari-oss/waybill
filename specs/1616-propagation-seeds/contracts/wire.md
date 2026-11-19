@@ -13,5 +13,5 @@ Every case is asserted in CycloneDX, SPDX 2.3 and SPDX 3 through the parity extr
 | P-9 | a non-top npm project `n` declares `waybill-fixture-shared` at runtime; a pip dev-group member reaches the same npm package over a declared edge | `waybill-fixture-shared` required (cross-ecosystem edge case). If no reader emits a declared pip → npm edge, record that in `trace.md`, and assert the case as a unit test in `SP` instead. |
 | P-10 | P-1 scanned with `--root-name waybill-fixture-root` | same as P-1: main modules are seeds under an operator override (edge case; research R1) |
 | P-7 | a tree with one main module per ecosystem | byte-identical to a golden of `main`'s output (FR-008) |
-| P-8 | P-1 | the propagation summary log reports `immune_by_added_seeds=1` (FR-006) |
+| P-8 | P-1 | the propagation summary log reports `immune_by_added_seeds=2`: `shipped` and `shipped-dep`, both protected by `b` alone (FR-006; corrected at T015 from 1, an arithmetic slip) |
 | P-rep | P-1 to P-5 in one tree, scanned 20 times | identical |

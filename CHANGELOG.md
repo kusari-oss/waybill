@@ -64,6 +64,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A project's declared runtime dependencies are no longer marked
+  non-runtime when it is not the first project of its ecosystem (#1618).**
+  Transitive scope propagation (C62 `transitive`, #1209) protected only what a
+  runtime path from the primary root or from one main module per ecosystem
+  reached. In a tree with several projects of one ecosystem, the others'
+  runtime dependencies took the scope of any dev or docs tool that also
+  depended on them. On ROCm TheRock that was 11 packages, among them
+  `pygithub`, `numpy` and `requests`. Every runtime main module now protects
+  its runtime dependencies. A project that is itself non-runtime, or declared
+  only under a CI or docs dot-directory, protects nothing. Graph completeness
+  is unchanged.
+
 - **Python requirements files under `docs/` and `tests/` directories are no
   longer read as runtime (#1614).** A file was labelled only by its own
   directory, its name, or a CI/docs dot-directory above it, so

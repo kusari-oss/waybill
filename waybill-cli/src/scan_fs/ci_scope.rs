@@ -41,6 +41,14 @@ fn class_of(path: &str, roots: &[PathBuf]) -> Option<DotDirClass> {
     listed_ancestor_class(rel, Path::new(""))
 }
 
+/// Spec 1616 (#1618): whether every evidence source file of `c` lies under a
+/// listed CI or docs dot-directory, which is when [`apply`] makes a runtime
+/// component non-runtime.
+pub(crate) fn declared_only_under_listed_dirs(c: &ResolvedComponent, roots: &[PathBuf]) -> bool {
+    !c.evidence.source_file_paths.is_empty()
+        && c.evidence.source_file_paths.iter().all(|p| class_of(p, roots).is_some())
+}
+
 pub(crate) fn apply(components: &mut [ResolvedComponent], roots: &[PathBuf]) -> CiScopeSummary {
     let mut summary = CiScopeSummary::default();
     for c in components.iter_mut() {

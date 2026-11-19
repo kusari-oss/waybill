@@ -1,0 +1,7 @@
+[project]
+name = "waybill-fixture-c"
+version = "1.0.0"
+requires-python = ">=3.10"
+dependencies = [
+    "waybill-fixture-cdep>=1.0.0",
+]
