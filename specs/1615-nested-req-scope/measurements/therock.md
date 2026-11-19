@@ -29,6 +29,8 @@ Every other file keeps its label, including the 20 labelled today.
 3. llvm's `utils/git` requirements files belong to the `pkg:pypi/llvm@0.0.0-unknown` project, and numpy's runtime file to `rocprof-compute`. Both are required main modules (`waybill:demoted-from-main-module`), but neither is the seeded pip main module.
 4. On `main` their pins were reachable from the root only through runtime-labelled docs packages: `rocm-docs-core → pygithub → requests → certifi`, and `matplotlib → numpy`. With those packages now Optional, propagation reaches the pins from the docs seeds and assigns the docs packages' scope.
 
+**Decision (2026-11-19, option A):** excepted in FR-007 and SC-002, tracked in #1618.
+
 **This predates this feature.** Walking `main`'s emitted graph from all 64 main modules, over edges into components without a reader-declared non-runtime scope, about 250 components that spec 1269 marked `transitive` are reachable. On the branch it is 68. This walk approximates what an all-main-module seed set would protect; waybill did not compute it.
 
 ## Formats, identity, repeats (SC-003, SC-004)

@@ -55,6 +55,7 @@ Outside pip, the same shape is small on TheRock: 15 required components are decl
 
 ### Session 2026-11-19
 
+- Q (after TheRock CI): 11 packages declared in runtime files come out non-runtime through spec 1269's propagation, whose seed set holds one main module per ecosystem. Fix here, hold, or except? → A: Except them in FR-007 and SC-002, and track the fix in #1618.
 - Q: Where does the ancestor search stop: the scan root, or the root of the project that declares the file? → A: The scan root. Anything under a `docs` or `tests` directory below the scan root is non-runtime, a vendored project included, as for spec 1613's dot-directories.
 - Q: Does the name rule recognise the long forms of its scope words (`development`, `documentation`, `testing`)? → A: Yes.
 
@@ -128,7 +129,7 @@ A project keeps requirements for a test corpus or harness at `tests/<suite>/requ
 - **FR-004**: The ancestor search MUST run to the scan root, excluding the scan root itself, as spec 1613's does. A project vendored under a `tests/` or `docs/` directory is labelled by that directory: none of it ships.
 - **FR-005**: Directory names other than FR-002's MUST NOT label a file. That covers `examples`, `example`, `benchmarks`, `benchmark`, `samples`, `tools`, `scripts`, `test_data` and `website`. They hold code that runs, or data, and no convention marks their requirements as non-runtime.
 - **FR-006**: The name rule MUST also recognise the long forms of its scope words: `development` (dev), `documentation` (docs), and `testing` and `tests` (test), with the existing word boundary. (`tests` added at planning, research R1: `requirements-tests.txt` fails the boundary today as `requirements-doc.txt` does.) On TheRock this labels `rocprofiler-compute/requirements-development.txt` (3 packages) dev.
-- **FR-007**: A package declared both in a newly labelled file and in a file that reads as runtime MUST stay required, by spec 1613's existing merge rule.
+- **FR-007**: A package declared both in a newly labelled file and in a file that reads as runtime MUST stay required, by spec 1613's existing merge rule. **Exception, decided 2026-11-19:** spec 1269's transitive propagation can still mark such a package non-runtime afterwards, when the project that declares it is not one of that pass's seeds (#1618). On TheRock this affects 11 packages (`measurements/therock.md`). It is not fixed here.
 - **FR-008**: A labelled package MUST carry the native non-runtime scope in each format (CycloneDX `scope`, SPDX 2.3 relationship type, SPDX 3 `LifecycleScopeType`) and C155 with its scope word, exactly as a file labelled by its parent does today. No new catalog row.
 - **FR-009**: A tree with no newly labelled requirements file MUST produce output byte-identical to `main`.
 - **FR-010**: Only pip requirements files change. Components from other ecosystems declared only under docs or test directories stay as they are (TheRock: 15 Cargo crates in one test crate). A follow-up issue records them.
@@ -145,7 +146,7 @@ A project keeps requirements for a test corpus or harness at `tests/<suite>/requ
 ### Measurable Outcomes
 
 - **SC-001**: On TheRock's source tree, every package declared only in the 14 files is non-runtime with C155 `docs` or `test`. Predicted 98, from the document of run 44477517009. The count is a prediction until the CI run measures it.
-- **SC-002**: On TheRock, no package also declared in a runtime file outside the 14 changes scope (11 predicted), and no requirements file other than a newly labelled one changes label. Every file labelled today keeps its label: checked against all 20 labelled files in run 44477517009's document (research R7).
+- **SC-002**: On TheRock, no package also declared in a runtime file outside the 14 changes scope (11 predicted), and no requirements file other than a newly labelled one changes label. Every file labelled today keeps its label: checked against all 20 labelled files in run 44477517009's document (research R7). Excepted: the 11 packages FR-007's exception names (#1618).
 - **SC-003**: The three formats agree on C42, C62 and C155 (`waybill sbom parity-check` shows no gap that `main` does not), and there are no duplicate `bom-ref`s.
 - **SC-004**: Two scans at one commit on two runners give identical documents, timestamps and serials aside.
 - **SC-005**: The public corpus invariant gate stays green. Every golden change is traced to a newly labelled file.

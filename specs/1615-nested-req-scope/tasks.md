@@ -94,16 +94,16 @@
 
   Each must turn at least one test red, with 0 compile errors.
 - [X] T017 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, a `git diff --stat main -- '*Cargo.toml' Cargo.lock` showing no change (FR-011), the ok and non-ok line counts, the passed/failed totals and the failure blocks in `specs/1615-nested-req-scope/measurements/gate-log.md`. Regenerate any golden that changes, and trace each change.
-- [ ] T018 Push. Dispatch two TheRock measure-source runs against `main` with full SHAs (`quickstart.md`). Record in `specs/1615-nested-req-scope/measurements/therock.md`:
+- [X] T018 Push. Dispatch two TheRock measure-source runs against `main` with full SHAs (`quickstart.md`). Record in `specs/1615-nested-req-scope/measurements/therock.md`:
   - scan time (SC-007);
   - the pip components that changed scope or C155, against the 14 files and the predicted 98 (SC-001) and 11 (SC-002);
   - `requirements-development.txt`;
   - `parity-check` gaps against `main`'s, and duplicate `bom-ref`s (SC-003);
   - identity across the two runners (SC-004);
   - unreachable components without an orphan reason.
-- [ ] T019 Dispatch the public corpus (`repeat=2`) and the quality corpus at the branch, with `main`'s quality run as control. Trace every change against research R7's prediction (ansible, mongo, nlohmann) in `specs/1615-nested-req-scope/measurements/corpus.md` (SC-005, SC-006). Re-centre a bound only with a traced reason.
-- [ ] T020 File a follow-up issue for FR-010: non-pip components declared only under docs or test directories (TheRock: 15 Cargo crates from `rccl/contrib/nccl4rust/tests/cuda-oxide-smoke/Cargo.lock`). Measured counts only; attribution line.
-- [ ] T021 Open the PR, with a body citing T016–T019, `Closes #1614` and the attribution line. Do not merge.
+- [X] T019 Dispatch the public corpus (`repeat=2`) and the quality corpus at the branch, with `main`'s quality run as control. Trace every change against research R7's prediction (ansible, mongo, nlohmann) in `specs/1615-nested-req-scope/measurements/corpus.md` (SC-005, SC-006). Re-centre a bound only with a traced reason.
+- [X] T020 (#1619) File a follow-up issue for FR-010: non-pip components declared only under docs or test directories (TheRock: 15 Cargo crates from `rccl/contrib/nccl4rust/tests/cuda-oxide-smoke/Cargo.lock`). Measured counts only; attribution line.
+- [X] T021 Open the PR, with a body citing T016–T019, `Closes #1614` and the attribution line. Do not merge.
 
 ## Dependencies
 
