@@ -91,7 +91,7 @@
   - (M6) added seeds traverse excluded edges, using a separate adjacency without the exclusion.
 
   Each must turn at least one test red, with 0 compile errors.
-- [ ] T020 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, the ok and non-ok counts, passed/failed, failure blocks, and an empty `git diff --stat main -- '*Cargo.toml' Cargo.lock` in `specs/1616-propagation-seeds/measurements/gate-log.md`. Trace any repository golden that changes, component by component.
+- [X] T020 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, the ok and non-ok counts, passed/failed, failure blocks, and an empty `git diff --stat main -- '*Cargo.toml' Cargo.lock` in `specs/1616-propagation-seeds/measurements/gate-log.md`. Trace any repository golden that changes, component by component.
 - [ ] T021 Push. Dispatch two TheRock measure-source runs against `main` with full SHAs. In `specs/1616-propagation-seeds/measurements/therock.md`, record:
   - scan time (SC-005);
   - the 11 packages (SC-001);
