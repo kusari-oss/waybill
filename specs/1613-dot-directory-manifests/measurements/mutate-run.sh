@@ -22,3 +22,6 @@ for name in ${MUTATIONS:-M1-pip-no-descend M2-case-sensitive M3-venv-listed M4-n
   echo "$name | failed-binaries=$failed | compile-errors=$compile | restored=$restored | red: $reds"
 done
 git status --short waybill-cli/src
+# The last test run built the last mutation's binary; the restore does not
+# rebuild it. Rebuild, so target/debug/waybill is the code on disk.
+cargo build -q -p waybill
