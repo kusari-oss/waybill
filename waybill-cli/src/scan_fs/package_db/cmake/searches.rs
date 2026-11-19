@@ -190,7 +190,10 @@ fn components(args: &[String]) -> Vec<String> {
 /// The package searches one command makes: `None` when it is not a search;
 /// otherwise the searches read and the number left unresolved. `name` is
 /// lowercase.
-fn parse(name: &str, args: &[String]) -> Option<(Vec<(SearchKind, String, Option<String>, Vec<String>)>, usize)> {
+/// One parsed search: kind, declared name, version requirement, components.
+type Parsed = (SearchKind, String, Option<String>, Vec<String>);
+
+fn parse(name: &str, args: &[String]) -> Option<(Vec<Parsed>, usize)> {
     match name {
         "find_package" => {
             let Some(pkg) = args.first() else { return Some((Vec::new(), 1)) };
