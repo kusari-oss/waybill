@@ -112,16 +112,16 @@
 - [X] T018 [P] Add a `### Fixed` entry to `CHANGELOG.md` for #1610: what was hidden, what is read now, and the labels.
 - [X] T019 Reproduce the walker-audit gate locally (the grep and diff from the CI workflow against `waybill-cli/src/scan_fs/walk.audit-allowlist.txt`) and confirm no change.
 - [X] T020 Run the gate on its own: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record the `ok` count, passed/failed totals and failure blocks in `measurements/gate-log.md`.
-- [ ] T021 TheRock in CI: run `measure-source` with `waybill_ref=<branch sha>` and `base_ref=main`. Record in `measurements/therock.md`:
+- [X] T021 TheRock in CI: run `measure-source` with `waybill_ref=<branch sha>` and `base_ref=main`. Record in `measurements/therock.md`:
   - SC-001: the 8 files' packages present, labelled;
   - SC-001a: the `dev-requirements.txt` packages present, labelled `dev`; `tox-requirements.txt` absent;
   - SC-002: nothing from `.upstream-tests`, `._upstream`, `.gitlab-ci`, `.jenkins` or `.claude`, and no file-tier entry under a dot-directory;
   - SC-004: the formats agree on C155 and C62, and repeated scans are identical;
   - SC-005: interleaved medians, with the ratio ≤ 1.05;
   - every other difference from `main`, from a normalised, `LC_ALL=C`-sorted diff, including what the 4 `.github` CMake scripts produced.
-- [ ] T022 [P] Public corpus: `public-corpus.yml` at the branch and at `main` (`repeat=2`). SC-003 predicts no golden change; trace any that occurs.
-- [ ] T023 [P] Quality corpus at the branch and at `main` (SC-006). Trace every changed target.
-- [ ] T024 Open the PR, with a body citing T020–T023's evidence and the attribution line. Do not merge.
+- [X] T022 [P] Public corpus: `public-corpus.yml` at the branch and at `main` (`repeat=2`). SC-003 predicts no golden change; trace any that occurs.
+- [X] T023 [P] Quality corpus at the branch and at `main` (SC-006). Trace every changed target.
+- [X] T024 Open the PR, with a body citing T020–T023's evidence and the attribution line. Do not merge.
 
 ## Dependencies
 
