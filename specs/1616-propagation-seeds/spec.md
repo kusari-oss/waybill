@@ -94,6 +94,7 @@ An operator comparing two waybill versions on one project sees fewer C62 `transi
 - **Excluded edges.** Inferred cross-ecosystem edges (milestone 218) and nix build-graph edges (milestone 1280) are not traversed from the new seeds either, so they confer no protection.
 - **Ecosystem with no seed.** An ecosystem with no main module stays under spec 1269's FR-012, unchanged.
 - **Operator root override.** With `--root-name`, main modules keep their role at propagation time (milestone 149 demotes later), so they are seeds as without the override.
+- **A project under a dot-directory.** A project whose manifests all lie under `.github/actions/x/` is not a seed, although it has no non-runtime scope yet when propagation runs (FR-002).
 - **Scope only grows.** No component may gain a non-runtime scope that it does not have on `main`. Every change is a loss of C62 `transitive`.
 
 ## Requirements *(mandatory)*
@@ -101,7 +102,7 @@ An operator comparing two waybill versions on one project sees fewer C62 `transi
 ### Functional Requirements
 
 - **FR-001**: Spec 1269's immunity search MUST start from every main module that is itself runtime, in addition to its current seeds. "Runtime" means the main module has no non-runtime lifecycle scope of its own.
-- **FR-002**: A main module with a non-runtime scope MUST NOT be a seed (US2).
+- **FR-002**: A main module MUST NOT be a seed if it has a non-runtime scope of its own, or if every one of its manifests lies under a listed CI or docs dot-directory. Spec 1613's pass makes such a project non-runtime, but only after propagation has run (research R2). (US2)
 - **FR-003**: The immunity search MUST traverse from the new seeds under the same rules as today, with the same excluded edge types and the same stop at components with a non-runtime scope of their own.
 - **FR-004**: The wider seeds MUST apply only to the propagation's immunity search. Graph completeness keeps its own roots, and every catalog row it feeds (orphan reasons, the completeness record) is unchanged. This departs on purpose from spec 1269's contract P3, which shares one seed set with completeness: every newly protected component sits under a main module the scan found, while the document still declares one root per ecosystem. Whether completeness should also treat every main module as a root is a separate decision.
 - **FR-005**: The change MUST only remove propagated scopes. A component's scope on `main` is either kept or, if it was propagated (C62 `transitive`), may become runtime; nothing may become newly non-runtime.
