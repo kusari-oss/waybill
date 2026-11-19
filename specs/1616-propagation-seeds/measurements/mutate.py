@@ -25,6 +25,9 @@ MUTATIONS = {
     "M6-added-seeds-cross-excluded-edges": (SP,
         "            runtime_reachable(components, &adj, &all)",
         "            {\n                let mut full: HashMap<&str, Vec<&str>> = HashMap::new();\n                for r in relationships {\n                    full.entry(r.from.as_str()).or_default().push(r.to.as_str());\n                }\n                runtime_reachable(components, &full, &all)\n            }"),
+    "M4b-base-seeds-dropped": (SP,
+        "        let mut immune = runtime_reachable(components, &adj, seeds);\n        // Spec 1616",
+        "        let seeds = if added_seeds.is_empty() { seeds } else { added_seeds };\n        let mut immune = runtime_reachable(components, &adj, seeds);\n        // Spec 1616"),
 }
 
 name = sys.argv[1]

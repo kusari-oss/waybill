@@ -6,7 +6,7 @@
 set -uo pipefail
 M=specs/1616-propagation-seeds/measurements
 BK=$(mktemp -d -t waybill1616-mut)
-ALL="M1-no-added-seeds M2-non-runtime-main-modules-seeded M3-dot-directory-main-modules-seeded M4-added-seeds-replace-seeds M5-count-includes-base-protection M6-added-seeds-cross-excluded-edges"
+ALL="M1-no-added-seeds M2-non-runtime-main-modules-seeded M3-dot-directory-main-modules-seeded M4-added-seeds-replace-seeds M4b-base-seeds-dropped M5-count-includes-base-protection M6-added-seeds-cross-excluded-edges"
 for name in ${MUTATIONS:-$ALL}; do
   file=$(python3 -I -B $M/mutate.py "$name") || { echo "$name: anchor failed"; continue; }
   git show "HEAD:$file" > "$BK/orig"

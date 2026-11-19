@@ -82,7 +82,7 @@
 - [X] T016 [P] P-rep in `IT`: P-1 to P-5 in one tree, scanned 20 times, identical each time.
 - [X] T017 [P] Docs: in `docs/reference/sbom-format-mapping.md`, C62's description of `transitive` says which roots protect a component (the primary root, one main module per ecosystem, and every other runtime main module), and why graph completeness keeps its own roots.
 - [X] T018 [P] Add a `CHANGELOG.md` entry under Unreleased / Fixed.
-- [ ] T019 Mutations, in `specs/1616-propagation-seeds/measurements/{mutate.py,mutate-run.sh,mutations.md}`, adapted from spec 1615's runner: restore with `cp`, rebuild after the last one, and use the `^error\[E…\]` compile pattern. One each:
+- [X] T019 Mutations, in `specs/1616-propagation-seeds/measurements/{mutate.py,mutate-run.sh,mutations.md}`, adapted from spec 1615's runner: restore with `cp`, rebuild after the last one, and use the `^error\[E…\]` compile pattern. One each:
   - (M1) empty added seeds;
   - (M2) non-runtime main modules seeded;
   - (M3) dot-directory main modules seeded;
