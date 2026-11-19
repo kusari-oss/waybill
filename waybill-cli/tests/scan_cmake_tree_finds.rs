@@ -30,7 +30,7 @@ const C237: &str = "waybill:cmake-find-coverage";
 /// feature touches asserted to agree across them.
 fn scan(root: &Path) -> Docs {
     let d = scan_with("--path", root, &[]);
-    for row in ["C42", "C62", "C122", "C232"] {
+    for row in ["C42", "C62", "C122", "C232", "C236", "C237"] {
         row_all_formats(&d, row);
     }
     d

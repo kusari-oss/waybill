@@ -38,7 +38,7 @@
 
 ## Phase 2: Foundational
 
-- [ ] T004 Register the catalog rows in `docs/reference/sbom-format-mapping.md`, with their extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`, following C232 and C231:
+- [X] T004 Register the catalog rows in `docs/reference/sbom-format-mapping.md`, with their extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`, following C232 and C231:
   - **C236** `waybill:cmake-find-conditions`: per component, a sorted JSON array.
   - **C237** `waybill:cmake-find-coverage`: document scope, the object of `contracts/wire.md`.
   - Extend C232's description (conditions include the `include()` / `add_subdirectory()` chain) and C57's (names from every CMake file read for package searches).
