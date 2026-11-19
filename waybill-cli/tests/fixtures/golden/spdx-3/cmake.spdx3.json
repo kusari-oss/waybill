@@ -479,6 +479,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-JPKRMSSXDWTX5BKRAFBX3RM3/anno-XUCUM4N54GOVROCF",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cmake-find-coverage\",\"value\":\"{\\\"components\\\":1,\\\"conditional\\\":0,\\\"in-tree\\\":[],\\\"in-tree-declarations\\\":0,\\\"paired\\\":{\\\"fetch\\\":0,\\\"installed\\\":0,\\\"submodule\\\":0},\\\"read\\\":1,\\\"test\\\":0,\\\"tools\\\":0,\\\"unresolved\\\":0}\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-JPKRMSSXDWTX5BKRAFBX3RM3",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-JPKRMSSXDWTX5BKRAFBX3RM3/anno-YCOO3SO2OMBKANG3",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-JPKRMSSXDWTX5BKRAFBX3RM3",

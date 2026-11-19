@@ -442,6 +442,7 @@ mod tests {
             bundled_source_trees: None,
             declared_downloads: None,
             cmake_fetch_coverage: None,
+            cmake_find_coverage: None,
             python_owned_binaries: None,
             closure_ecosystem_identity: None,
             cpe_coverage: None,

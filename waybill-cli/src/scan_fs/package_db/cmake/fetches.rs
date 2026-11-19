@@ -27,7 +27,6 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 use super::super::PackageDbEntry;
 use super::fallback::{self, Context, FallbackShape, FetchKind, TryMode};
 use super::wrappers::{Bound, Definitions, Unbound};
-use crate::scan_fs::package_db::installed_lib::cmake_version::{commands_checked, strip_comments};
 
 /// C231 `waybill:cmake-fetch-coverage`.
 pub(crate) const ANN_CMAKE_FETCH_COVERAGE: &str = "waybill:cmake-fetch-coverage";
@@ -39,7 +38,7 @@ pub(crate) const ANN_SUPERSEDED: &str = "waybill:superseded-declarations";
 pub(crate) const ANN_CMAKE_FETCH_WRAPPER: &str = "waybill:cmake-fetch-wrapper";
 const ANN_OPTIONAL_DERIVATION: &str = "waybill:optional-derivation";
 const ANN_SCOPE_DERIVATION: &str = "waybill:lifecycle-scope-derivation";
-const TEST_DIRS: [&str; 3] = ["test", "tests", "unittests"];
+pub(crate) const TEST_DIRS: [&str; 3] = ["test", "tests", "unittests"];
 
 /// What the fetch pass read (C231), plus what the cross-reader merge
 /// (research R9) needs to keep the accounting exact.
@@ -69,6 +68,14 @@ pub(crate) struct FetchCoverage {
     /// Spec 1543 (#1602): link declarations read from the same files, for
     /// `scan_fs::cmake_link_attach`. Not part of C231.
     pub(crate) links: Vec<super::links::LinkDeclaration>,
+    /// Spec 1614 (C237): the package-search accounting, finished by
+    /// `scan_fs::cmake_search_pair` once every reader has run.
+    pub(crate) finds: super::searches::FindCoverage,
+    /// Spec 1614 research R7.1: (fetch PURL, search file) for each search a
+    /// fetch answers. Added to the fetch's evidence only after
+    /// [`merge_into_existing`]: that merge reads a fetch's source files as
+    /// where it is declared, and a search file is not a fetch declaration.
+    pub(crate) search_evidence: Vec<(String, String)>,
 }
 
 impl FetchCoverage {
@@ -111,7 +118,7 @@ struct Declaration {
 
 /// One parsed CMake file: absolute path, path relative to the scan root,
 /// raw text, and its commands (lowercased name, argument texts).
-type ParsedFile = (PathBuf, PathBuf, String, Vec<(String, Vec<String>)>);
+type ParsedFile = (PathBuf, PathBuf, String, super::reach::Commands);
 
 /// An entry and the number of declarations it stands for. Counted, never
 /// inferred from its paths: a first-declaration-wins merge adds the loser's
@@ -129,7 +136,34 @@ fn mode_for(dir: &Path, modes: &BTreeMap<PathBuf, TryMode>) -> TryMode {
     dir.ancestors().find_map(|d| modes.get(d).copied()).unwrap_or_default()
 }
 
+#[cfg(test)]
 pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageDbEntry>, FetchCoverage) {
+    let (entries, cov, _) = read_declarations(scan_root, files);
+    (entries, cov)
+}
+
+/// Spec 1614 (#1591, #1605): what [`read_declarations`] reads besides fetches.
+#[derive(Debug, Default)]
+pub(crate) struct Declarations {
+    /// Every package search in the files, in file order (`searches.rs`).
+    pub(crate) searches: Vec<super::searches::PackageSearch>,
+    /// Package searches whose name could not be read (C237 `unresolved`).
+    pub(crate) unresolved_searches: usize,
+    /// Each fetch's declared name (lowercased) and the PURL of the component
+    /// it is (research R7.1).
+    pub(crate) fetch_purls: BTreeMap<String, String>,
+    /// `project()` names, lowercased (research R9).
+    pub(crate) projects: BTreeSet<String>,
+}
+
+/// [`read_fetches`], plus the package searches in the same files, read from
+/// the same parsed commands under the same blocks.
+pub(crate) fn read_declarations(
+    scan_root: &Path,
+    files: &[PathBuf],
+) -> (Vec<PackageDbEntry>, FetchCoverage, Declarations) {
+    let mut found = super::searches::FileSearches::default();
+    let mut projects: BTreeSet<String> = BTreeSet::new();
     let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
     let mut cov = FetchCoverage::default();
     // Pre-pass: every file's commands, the mode each directory sets, and
@@ -137,27 +171,19 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
     let mut parsed: Vec<ParsedFile> = Vec::new();
     let mut modes: BTreeMap<PathBuf, TryMode> = BTreeMap::new();
     let mut provider = false;
-    for path in files {
-        let content = match std::fs::read_to_string(path) {
-            Ok(c) => c,
-            Err(e) => {
-                tracing::warn!(path = %path.display(), error = %e, "cmake: a CMake file could not be read (spec 1538 C231)");
-                cov.unparseable_files += 1;
-                continue;
-            }
+    let mut parse_one = |path: &PathBuf, parsed: &mut Vec<ParsedFile>| {
+        let Some((cmds, content, unterminated)) = super::reach::parse_commands(path) else {
+            tracing::warn!(path = %path.display(), "cmake: a CMake file could not be read (spec 1538 C231)");
+            cov.unparseable_files += 1;
+            return;
         };
-        let (cmds, unterminated) = commands_checked(&strip_comments(&content));
         if unterminated {
             tracing::warn!(path = %path.display(), "cmake: a CMake file ends inside an open command (spec 1538 C231)");
             cov.unparseable_files += 1;
         }
-        let cmds: Vec<(String, Vec<String>)> = cmds
-            .into_iter()
-            .map(|(n, a)| (n.to_ascii_lowercase(), a.into_iter().map(|x| x.text).collect()))
-            .collect();
         let rel = relative(path, scan_root, &canonical_root);
         let dir = rel.parent().map(Path::to_path_buf).unwrap_or_default();
-        for (name, args) in &cmds {
+        for (name, args) in cmds.iter() {
             match name.as_str() {
                 "set" => {
                     if let Some(m) = fallback::mode_set(args) {
@@ -169,6 +195,19 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
             }
         }
         parsed.push((path.clone(), rel, content, cmds));
+    };
+    for path in files {
+        parse_one(path, &mut parsed);
+    }
+    // Spec 1614 (#1605): the conditions under which each file is reached
+    // through include() / add_subdirectory() enclose all its declarations.
+    // Computed from the commands just parsed (research R12).
+    let walked: Vec<(PathBuf, super::reach::Commands)> = parsed.iter().map(|(p, _, _, c)| (p.clone(), c.clone())).collect();
+    let reach = super::reach::compute(scan_root, &walked);
+    // FR-004 (research R2): a file `include()` reaches under a name the
+    // walker does not match (`CMakeLists_wsl.txt`) is read too.
+    for path in &reach.extra_files {
+        parse_one(path, &mut parsed);
     }
 
     // Spec 1539: every function and macro, and which are wrappers. A body
@@ -190,10 +229,10 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
         let in_test_dir = rel.parent().is_some_and(|d| {
             d.components().any(|c| matches!(c, Component::Normal(s) if TEST_DIRS.iter().any(|t| s == *t)))
         });
-        let mut blocks = super::blocks::BlockStack::default();
+        let mut blocks = super::blocks::BlockStack::seeded(reach.seed(path));
         let mut ordinal = 0usize;
         let mut open: Vec<usize> = Vec::new();
-        for (name, args) in cmds {
+        for (name, args) in cmds.iter() {
             match name.as_str() {
                 "function" | "macro" => {
                     open.push(ordinal);
@@ -206,6 +245,12 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
             }
             if blocks.observe(name, args) {
                 continue;
+            }
+            super::searches::collect(&blocks, name, args, &source_path, in_test_dir, &mut found);
+            if name == "project" {
+                if let Some(p) = args.first().filter(|p| !p.contains("${")) {
+                    projects.insert(p.to_lowercase());
+                }
             }
             let builtin = match name.as_str() {
                 "fetchcontent_declare" => Some(FetchKind::FetchContent),
@@ -265,6 +310,11 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
     }
 
     first_declaration_wins(&mut decls, &mut cov);
+    let fetch_purls: BTreeMap<String, String> = decls
+        .iter()
+        .filter(|d| !d.name.is_empty())
+        .filter_map(|d| d.entry.as_ref().map(|e| (d.name.clone(), e.purl.as_str().to_string())))
+        .collect();
     let entries = one_per_purl(decls.into_iter().filter_map(|d| d.entry).map(|e| (e, 1)).collect(), &mut cov);
     cov.components = entries.len();
     cov.conditional = entries.iter().filter(|e| e.lifecycle_scope == Some(LifecycleScope::Optional)).count();
@@ -283,7 +333,8 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
             "cmake: fetch declarations (spec 1538, 1539)"
         );
     }
-    (entries, cov)
+    let decls = Declarations { searches: found.searches, unresolved_searches: found.unresolved, fetch_purls, projects };
+    (entries, cov, decls)
 }
 
 type Vars = HashMap<String, Option<String>>;

@@ -173,6 +173,8 @@ pub struct ScanArtifacts<'a> {
     pub declared_downloads: Option<&'a str>,
     /// Spec 1538 (C231): CMake fetch-declaration counts.
     pub cmake_fetch_coverage: Option<&'a str>,
+    /// Spec 1614 (C237): CMake package-search counts.
+    pub cmake_find_coverage: Option<&'a str>,
     /// Spec 1536 (C230): binaries a Python package owns.
     pub python_owned_binaries: Option<&'a str>,
     /// Milestone 1366 (#1365; C208) — what the closure's ecosystem identity

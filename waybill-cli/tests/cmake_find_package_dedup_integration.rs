@@ -7,8 +7,11 @@
 //! is a requirement: the call emits a versionless design-tier
 //! `pkg:generic/<name>`, and the fetch is what resolves it. The milestone-191
 //! reconciler collapses the requirement into the fetch when both are
-//! declared in the same directory, its match scope. Declared in different
-//! directories, they stay two components.
+//! declared in the same directory, its match scope. Since spec 1614
+//! (#1591, research R7.1) the CMake reader pairs a package search with a
+//! fetch of the same name wherever each is declared, so different
+//! directories give one component too, with the search's file in its
+//! evidence.
 //!
 //! NOTE: cross-namespace scenarios (e.g., cmake vs dpkg) are OUT OF
 //! SCOPE for milestone 155 — those require milestone-111 alias-binding
@@ -110,7 +113,7 @@ FetchContent_Declare(openssl URL https://example.com/openssl-1.1.0.tar.gz)
 }
 
 #[test]
-fn cmake_find_package_requirement_and_fetch_in_different_directories_stay_apart() {
+fn cmake_find_package_requirement_and_fetch_in_different_directories_pair() {
     let tmp = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(tmp.path().join("cmake")).unwrap();
     std::fs::write(
@@ -133,10 +136,7 @@ FetchContent_Declare(openssl URL https://example.com/openssl-1.1.0.tar.gz)
     let doc = run_scan(tmp.path());
     assert_eq!(
         purls_and_mechanisms(&doc),
-        [
-            ("pkg:generic/openssl".to_string(), "cmake-find-package".to_string()),
-            ("pkg:generic/openssl@1.1.0".to_string(), "cmake-fetchcontent-url".to_string()),
-        ],
-        "#1520: outside the reconciler's directory scope the requirement is its own component",
+        [("pkg:generic/openssl@1.1.0".to_string(), "cmake-fetchcontent-url".to_string())],
+        "spec 1614 R7.1: the search pairs with the fetch of the same name, in any directory",
     );
 }

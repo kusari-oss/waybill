@@ -405,6 +405,9 @@ pub struct ScanDiagnostics {
     /// Spec 1538 (C231): the CMake reader's fetch-declaration counts, as
     /// their wire value. `None` when no fetch declaration was read.
     pub cmake_fetch_coverage: Option<String>,
+    /// Spec 1614 (C237): the CMake reader's package-search counts, finished
+    /// in `scan_fs` after the pairing pass. `None` when no search was read.
+    pub(crate) cmake_find_coverage: Option<cmake::searches::FindCoverage>,
     /// Spec 1530 FR-011 (C222): the git-submodule reader's coverage.
     /// `None` when no `.gitmodules` file was seen.
     pub git_submodule_coverage: Option<git_submodule::SubmoduleCoverage>,
@@ -2490,7 +2493,18 @@ pub fn read_all(
     // repository another component already stands for is recorded on that
     // component. Every reader's entries are in `out` by now.
     cmake::fetches::merge_into_existing(&mut out, &mut cmake_fetches, rootfs);
+    // Spec 1614 research R7.1: a search a fetch answers joins its evidence
+    // now, after the merge above has read fetches' declaration sites.
+    for (purl, file) in std::mem::take(&mut cmake_fetches.search_evidence) {
+        if let Some(e) = out.iter_mut().find(|e| e.purl.as_str() == purl) {
+            if e.source_path != file && !e.extra_source_paths.contains(&file) {
+                e.extra_source_paths.push(file);
+            }
+        }
+    }
     diagnostics.cmake_fetch_coverage = cmake_fetches.wire();
+    let finds = std::mem::take(&mut cmake_fetches.finds);
+    diagnostics.cmake_find_coverage = (finds.read > 0).then_some(finds);
     diagnostics.cmake_links = std::mem::take(&mut cmake_fetches.links);
     Ok(DbScanResult {
         entries: out,

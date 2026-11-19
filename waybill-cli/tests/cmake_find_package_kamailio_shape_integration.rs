@@ -80,16 +80,17 @@ fn property_value<'a>(component: &'a Value, key: &str) -> Option<&'a str> {
 fn kamailio_shape_emits_expected_cmake_components() {
     let doc = run_scan(&fixture_root());
 
-    // SC-004 assertion (a): ≥5 components with mechanism cmake-find-package.
+    // SC-004 assertion (a): the fixture's five find_package calls give four
+    // components. Spec 1614 FR-006 (#1591): `Threads` is a CMake helper,
+    // not a dependency, so it yields none.
     let fp = components_by_mechanism(&doc, "cmake-find-package");
-    assert!(
-        fp.len() >= 5,
-        "expected ≥5 cmake-find-package components; got {}: {:?}",
-        fp.len(),
-        fp.iter()
-            .map(|c| c.get("purl").and_then(|v| v.as_str()).unwrap_or("<none>"))
-            .collect::<Vec<_>>()
+    let purls: Vec<&str> = fp.iter().map(|c| c.get("purl").and_then(|v| v.as_str()).unwrap_or("<none>")).collect();
+    assert_eq!(
+        purls,
+        ["pkg:generic/libev", "pkg:generic/netsnmp", "pkg:generic/openssl", "pkg:generic/zlib"],
+        "expected the four library searches"
     );
+    assert!(!purls.contains(&"pkg:generic/threads"), "spec 1614 FR-006: Threads is not a dependency");
 
     // SC-004 assertion (b): ≥1 component with mechanism cmake-pkg-check-modules.
     let pcm = components_by_mechanism(&doc, "cmake-pkg-check-modules");

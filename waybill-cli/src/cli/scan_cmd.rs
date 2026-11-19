@@ -1311,10 +1311,11 @@ pub struct ScanArgs {
     /// read directly by the milestone-156 cmake reader (mirrors the
     /// `WAYBILL_INCLUDE_VENDORED` env-var propagation pattern).
     ///
-    /// Spec 1538: it now affects `find_package`, `pkg_check_modules` and
-    /// `file(DOWNLOAD)` only. `FetchContent_Declare` and
-    /// `ExternalProject_Add` are read from every CMake file the scan
-    /// reaches, with or without it.
+    /// Spec 1538 and spec 1614: it now affects vendored-directory and
+    /// `file(DOWNLOAD)` discovery only. Fetches (`FetchContent_Declare`,
+    /// `ExternalProject_Add`) and package searches (`find_package`,
+    /// `pkg_check_modules`, `pkg_search_module`) are read from every CMake
+    /// file the scan reaches, with or without it.
     #[arg(long)]
     pub cmake_third_party_recursive: bool,
 
@@ -3934,6 +3935,7 @@ pub async fn execute(
         declared_root_anchors,
         declared_downloads,
         cmake_fetch_coverage,
+        cmake_find_coverage,
         python_owned_binaries,
         installed_library_coverage,
         test_scope_inputs,
@@ -6068,6 +6070,7 @@ pub async fn execute(
         bundled_source_trees: bundled_source_trees.as_deref(),
         declared_downloads: declared_downloads.as_deref(),
         cmake_fetch_coverage: cmake_fetch_coverage.as_deref(),
+        cmake_find_coverage: cmake_find_coverage.as_deref(),
         python_owned_binaries: python_owned_binaries.as_deref(),
         closure_ecosystem_identity: closure_ecosystem_identity_value,
         cpe_coverage: Some(cpe_coverage_json.as_str()),

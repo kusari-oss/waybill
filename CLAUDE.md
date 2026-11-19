@@ -721,9 +721,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1614-cmake-tree-finds: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only.
 - 1613-dot-directory-manifests: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + existing only:
 - 1543-therock-last-orphans: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate (#1189). + Existing only:
-- 1542-deterministic-binary-merge: Added Rust stable, pinned by `rust-toolchain.toml` (1.98.1). No nightly; `waybill-ebpf` untouched. No `+toolchain` on the gate. + Existing only: `resolve::deduplicator`, `generate::graph_completeness`, `serde_json`. **Zero new Cargo dependencies** (FR-008).
 
 
 <!-- MANUAL ADDITIONS START -->

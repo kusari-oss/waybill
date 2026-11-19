@@ -54,9 +54,11 @@ use super::PackageDbEntry;
 pub(crate) mod blocks;
 pub(crate) mod fallback;
 pub(crate) mod fetches;
+pub(crate) mod reach;
+pub(crate) mod searches;
 pub(crate) mod wrappers;
 pub mod links;
-pub(crate) use fetches::{read_fetches, FetchCoverage};
+pub(crate) use fetches::FetchCoverage;
 
 // Milestone 664 US2 T056: shared-walker marker-detect registration.
 use crate::scan_fs::walk_registry::{
@@ -96,12 +98,16 @@ pub(crate) struct CMakeMarkerState {
     /// reader. Fetch declarations are read from these, so the walker's skip
     /// set and `--exclude-path` apply exactly as they do to every reader.
     pub(crate) files: Vec<PathBuf>,
+    /// Spec 1614 research R9: `<name>Config.cmake.in` / `-config.cmake.in`
+    /// templates, collected by name only: the tree builds `<name>`.
+    pub(crate) config_templates: Vec<PathBuf>,
 }
 
 fn on_cmake_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let template = config_template_stem(path).is_some();
     // `is_cmake_file` matches basename `CMakeLists.txt`
     // (case-insensitive) OR extension `.cmake` (case-insensitive).
-    if !is_cmake_file(path) {
+    if !is_cmake_file(path) && !template {
         return;
     }
     let Some(state) = ctx.state::<Mutex<CMakeMarkerState>>(ReaderId::CMAKE) else {
@@ -111,8 +117,43 @@ fn on_cmake_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
         Ok(g) => g,
         Err(poisoned) => poisoned.into_inner(),
     };
+    if template {
+        guard.config_templates.push(path.to_path_buf());
+        return;
+    }
     guard.seen = true;
     guard.files.push(path.to_path_buf());
+}
+
+/// `<name>` of a `<name>Config.cmake.in` / `<name>-config.cmake.in`
+/// template, lowercased (spec 1614 research R9).
+fn config_template_stem(path: &Path) -> Option<String> {
+    let lower = path.file_name()?.to_string_lossy().to_lowercase();
+    let stem = lower.strip_suffix("config.cmake.in")?;
+    let stem = stem.strip_suffix('-').unwrap_or(stem);
+    (!stem.is_empty()).then(|| stem.to_string())
+}
+
+/// `<name>` of a `<name>Config.cmake` / `<name>-config.cmake` with no
+/// package version file beside it, lowercased: a config file the tree
+/// provides rather than an installed record (spec 1614 research R9).
+fn provided_config_stem(path: &Path) -> Option<String> {
+    let lower = path.file_name()?.to_string_lossy().to_lowercase();
+    let stem = lower.strip_suffix("config.cmake")?;
+    let (stem, version) = match stem.strip_suffix('-') {
+        Some(s) => (s, format!("{s}-config-version.cmake")),
+        None => (stem, format!("{stem}configversion.cmake")),
+    };
+    if stem.is_empty() {
+        return None;
+    }
+    let dir = path.parent()?;
+    let has_version = std::fs::read_dir(dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .any(|e| e.file_name().to_string_lossy().to_lowercase() == version);
+    (!has_version).then(|| stem.to_string())
 }
 
 pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
@@ -120,6 +161,9 @@ pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
     let patterns = globset_from_patterns_case_insensitive(&[
         "**/CMakeLists.txt",
         "**/*.cmake",
+        // Spec 1614 research R9: collected by name only.
+        "**/*Config.cmake.in",
+        "**/*-config.cmake.in",
     ])?;
     Ok(ReaderRegistration {
         reader_id: ReaderId::CMAKE,
@@ -163,7 +207,7 @@ pub(crate) fn finalize(
     {
         return (Vec::new(), Default::default(), Default::default());
     }
-    read_with_downloads(scan_root, include_vendored, exclude_set, Some(marker.files))
+    read_with_downloads(scan_root, include_vendored, exclude_set, Some(marker.files), &marker.config_templates)
 }
 
 pub fn read(
@@ -171,7 +215,7 @@ pub fn read(
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
-    read_with_downloads(scan_root, include_vendored, exclude_set, None).0
+    read_with_downloads(scan_root, include_vendored, exclude_set, None, &[]).0
 }
 
 /// [`read`], plus the spec 1535 declared-download counts (C229) and the
@@ -187,6 +231,7 @@ pub(crate) fn read_with_downloads(
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
     walked: Option<Vec<PathBuf>>,
+    config_templates: &[PathBuf],
 ) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage, FetchCoverage) {
     // Milestone 156: opt-in recursive descent for third_party/. Default
     // depth-1 (matches milestone-102 behavior) unless the CLI flag
@@ -200,6 +245,34 @@ pub(crate) fn read_with_downloads(
         .unwrap_or(false);
     let cmake_files = discover_cmake_files(scan_root, include_third_party_recursive, exclude_set);
     let mut entries = Vec::new();
+    // Spec 1614 (#1591, #1605): with the shared walker, package searches and
+    // fetches are read from every walked file, from the same parsed commands
+    // under the same blocks. Without it (the binary tier's `read`), both stay
+    // on the narrow set and package searches on the regexes.
+    let tree_wide = walked.is_some();
+    let mut search_scopes = std::collections::BTreeMap::new();
+    let mut fetch_files = walked.unwrap_or_else(|| cmake_files.clone());
+    fetch_files.sort();
+    fetch_files.dedup();
+    let (fetch_entries, mut fetches, mut decls) = fetches::read_declarations(scan_root, &fetch_files);
+    if tree_wide {
+        // FR-009: a narrow-set file the walker skips (`cmake/**/vendor/`)
+        // was read for package searches before; it still is.
+        // Both lists are built from `scan_root`, so the paths compare as
+        // given; W-ctl's C237 `read` count would show a file read twice.
+        let walked: std::collections::HashSet<&PathBuf> = fetch_files.iter().collect();
+        for f in &cmake_files {
+            if walked.contains(f) {
+                continue;
+            }
+            let in_test_dir = f.strip_prefix(scan_root).ok().and_then(Path::parent).is_some_and(|d| {
+                d.components().any(|c| matches!(c, std::path::Component::Normal(s) if fetches::TEST_DIRS.iter().any(|t| s == *t)))
+            });
+            let found = searches::read_file(f, Vec::new(), in_test_dir);
+            decls.searches.extend(found.searches);
+            decls.unresolved_searches += found.unresolved;
+        }
+    }
     // Milestone 155: accumulate find_package + pkg_check_modules hits
     // across ALL discovered CMake files so we can pick the highest
     // declared version per name (Q1 clarification) before emitting.
@@ -224,12 +297,66 @@ pub(crate) fn read_with_downloads(
         if include_vendored {
             entries.extend(parse_vendored(&content, &source_path, scan_root));
         }
-        find_package_hits.extend(parse_find_package_calls(&content, &source_path));
-        pkg_check_hits.extend(parse_pkg_check_modules_calls(&content, &source_path));
+        if !tree_wide {
+            find_package_hits.extend(parse_find_package_calls(&content, &source_path));
+            pkg_check_hits.extend(parse_pkg_check_modules_calls(&content, &source_path));
+        }
         downloads.extend(super::cmake_download::parse_downloads(&content, &source_path));
     }
-    entries.extend(emit_find_package_entries(find_package_hits));
-    entries.extend(emit_pkg_check_module_entries(pkg_check_hits));
+    if tree_wide {
+        fetches.finds.read = decls.searches.len() + decls.unresolved_searches;
+        fetches.finds.unresolved = decls.unresolved_searches;
+        fetches.finds.searched = decls.searches.iter().map(|s| s.name.to_lowercase()).collect();
+        // FR-006, research R6: a tool or CMake helper is not a dependency.
+        let before = decls.searches.len();
+        decls.searches.retain(|s| !searches::is_tool(s));
+        fetches.finds.tools = before - decls.searches.len();
+        // Research R7.1: a search for a name a fetch declares is that fetch.
+        let (paired, rest): (Vec<_>, Vec<_>) = std::mem::take(&mut decls.searches)
+            .into_iter()
+            .partition(|s| decls.fetch_purls.contains_key(&s.name.to_lowercase()));
+        for s in paired {
+            let purl = decls.fetch_purls[&s.name.to_lowercase()].clone();
+            fetches.search_evidence.push((purl, s.source_path));
+            fetches.finds.paired_fetch += 1;
+        }
+        decls.searches = rest;
+        // Research R9: names the tree builds itself. Decided after the
+        // installed and submodule pairing in `scan_fs::cmake_search_pair`.
+        fetches.finds.built_in_tree = decls
+            .projects
+            .iter()
+            .cloned()
+            .chain(config_templates.iter().filter_map(|p| config_template_stem(p)))
+            .chain(fetch_files.iter().filter_map(|p| provided_config_stem(p)))
+            .collect();
+        for s in &decls.searches {
+            *fetches.finds.declarations.entry(s.name.to_lowercase()).or_default() += 1;
+        }
+        fetches.finds.components = fetches.finds.declarations.len();
+        search_scopes = searches::scopes(&decls.searches);
+        for s in decls.searches {
+            match s.kind {
+                searches::SearchKind::FindPackage => find_package_hits.push(FindPackageHit {
+                    lowercased_name: s.name.to_lowercase(),
+                    original_casing: s.name,
+                    requirement: s.requirement,
+                    source_path: s.source_path,
+                }),
+                searches::SearchKind::PkgConfig => pkg_check_hits.push(PkgCheckHit {
+                    lowercased_module: s.name.to_lowercase(),
+                    original_casing: s.name,
+                    source_path: s.source_path,
+                }),
+            }
+        }
+    }
+    let mut search_entries = emit_find_package_entries(find_package_hits);
+    search_entries.extend(emit_pkg_check_module_entries(pkg_check_hits));
+    let (conditional, test) = searches::mark(&mut search_entries, &search_scopes);
+    fetches.finds.conditional = conditional;
+    fetches.finds.test = test;
+    entries.extend(search_entries);
     let (datasets, coverage) = super::cmake_download::datasets(&downloads);
     if coverage.read > 0 {
         tracing::info!(
@@ -241,10 +368,6 @@ pub(crate) fn read_with_downloads(
         );
     }
     entries.extend(datasets.iter().filter_map(dataset_entry));
-    let mut fetch_files = walked.unwrap_or(cmake_files);
-    fetch_files.sort();
-    fetch_files.dedup();
-    let (fetch_entries, mut fetches) = read_fetches(scan_root, &fetch_files);
     fetches.links = links::read_links(scan_root, &fetch_files);
     entries.extend(fetch_entries);
     (entries, coverage, fetches)

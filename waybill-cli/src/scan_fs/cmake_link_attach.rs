@@ -46,6 +46,9 @@ const ANN_OPTIONAL_DERIVATION: &str = "waybill:optional-derivation";
 pub(crate) struct LinkAttachment {
     pub(crate) attached: DeclaredAttachment,
     pub(crate) conditional: BTreeMap<String, BTreeSet<String>>,
+    /// Spec 1614 research R7.2: every record a link matched, conditional or
+    /// not, so a package search's scope can combine with the links'.
+    pub(crate) linked: BTreeSet<String>,
 }
 
 fn record_kind(c: &ResolvedComponent) -> Option<RecordKind> {
@@ -115,6 +118,7 @@ pub(crate) fn attach(
         let Some((_, record)) = best else { continue };
         let purl = record.purl.as_str().to_string();
         matched.entry(purl.clone()).or_default().push(l.conditions.clone());
+        out.linked.insert(purl.clone());
         let Some(rel) = relative(&l.file.to_string_lossy(), scan_root, &canonical_root) else { continue };
         match index.owner_of(&rel) {
             Some(owner) if owner == purl => {}
