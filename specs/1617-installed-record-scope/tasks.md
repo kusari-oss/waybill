@@ -102,7 +102,7 @@
   - (M7) a record with an Optional pairing made Test.
 
   Each must turn at least one test red, with 0 compile errors.
-- [ ] T019 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, the ok and non-ok counts, passed/failed, failure blocks, and an empty `git diff --stat main -- '*Cargo.toml' Cargo.lock` in `specs/1617-installed-record-scope/measurements/gate-log.md`. Trace any repository golden that changes.
+- [X] T019 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, the ok and non-ok counts, passed/failed, failure blocks, and an empty `git diff --stat main -- '*Cargo.toml' Cargo.lock` in `specs/1617-installed-record-scope/measurements/gate-log.md`. Trace any repository golden that changes.
 - [ ] T020 Push. Dispatch measure-full (the SDK) and measure-source (TheRock source) against `main` with full SHAs. In `specs/1617-installed-record-scope/measurements/sdk.md`, record:
   - scan time (SC-006);
   - the 9 records against research R6 (SC-001);
