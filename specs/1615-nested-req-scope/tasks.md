@@ -93,7 +93,7 @@
   - (M12) make `merge_lifecycle_scope` prefer the non-runtime scope (the required half of W-10, FR-007).
 
   Each must turn at least one test red, with 0 compile errors.
-- [ ] T017 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, a `git diff --stat main -- '*Cargo.toml' Cargo.lock` showing no change (FR-011), the ok and non-ok line counts, the passed/failed totals and the failure blocks in `specs/1615-nested-req-scope/measurements/gate-log.md`. Regenerate any golden that changes, and trace each change.
+- [X] T017 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, a `git diff --stat main -- '*Cargo.toml' Cargo.lock` showing no change (FR-011), the ok and non-ok line counts, the passed/failed totals and the failure blocks in `specs/1615-nested-req-scope/measurements/gate-log.md`. Regenerate any golden that changes, and trace each change.
 - [ ] T018 Push. Dispatch two TheRock measure-source runs against `main` with full SHAs (`quickstart.md`). Record in `specs/1615-nested-req-scope/measurements/therock.md`:
   - scan time (SC-007);
   - the pip components that changed scope or C155, against the 14 files and the predicted 98 (SC-001) and 11 (SC-002);
