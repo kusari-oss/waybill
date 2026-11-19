@@ -289,6 +289,10 @@
         "value": "{\"components\":3,\"conditional\":0,\"emitted\":3,\"merged\":{\"existing-component\":0,\"first-declaration-wins\":0},\"read\":3,\"test\":0,\"unparseable-files\":0,\"unresolved\":{\"identity\":0}}"
       },
       {
+        "name": "waybill:cmake-find-coverage",
+        "value": "{\"components\":1,\"conditional\":0,\"in-tree\":[],\"in-tree-declarations\":0,\"paired\":{\"fetch\":0,\"installed\":0,\"submodule\":0},\"read\":1,\"test\":0,\"tools\":0,\"unresolved\":0}"
+      },
+      {
         "name": "waybill:os-release-missing-fields",
         "value": "[\"ID\",\"VERSION_ID\"]"
       },

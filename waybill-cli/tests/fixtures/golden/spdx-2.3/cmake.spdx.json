@@ -29,6 +29,12 @@
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-0.17.0",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cmake-find-coverage\",\"value\":\"{\\\"components\\\":1,\\\"conditional\\\":0,\\\"in-tree\\\":[],\\\"in-tree-declarations\\\":0,\\\"paired\\\":{\\\"fetch\\\":0,\\\"installed\\\":0,\\\"submodule\\\":0},\\\"read\\\":1,\\\"test\\\":0,\\\"tools\\\":0,\\\"unresolved\\\":0}\"}"
+    },
+    {
+      "annotationDate": "1970-01-01T00:00:00Z",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.17.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}"
     },
     {
