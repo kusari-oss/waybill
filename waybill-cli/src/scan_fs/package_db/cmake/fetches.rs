@@ -27,7 +27,6 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 use super::super::PackageDbEntry;
 use super::fallback::{self, Context, FallbackShape, FetchKind, TryMode};
 use super::wrappers::{Bound, Definitions, Unbound};
-use crate::scan_fs::package_db::installed_lib::cmake_version::{commands_checked, strip_comments};
 
 /// C231 `waybill:cmake-fetch-coverage`.
 pub(crate) const ANN_CMAKE_FETCH_COVERAGE: &str = "waybill:cmake-fetch-coverage";
@@ -114,7 +113,7 @@ struct Declaration {
 
 /// One parsed CMake file: absolute path, path relative to the scan root,
 /// raw text, and its commands (lowercased name, argument texts).
-type ParsedFile = (PathBuf, PathBuf, String, Vec<(String, Vec<String>)>);
+type ParsedFile = (PathBuf, PathBuf, String, super::reach::Commands);
 
 /// An entry and the number of declarations it stands for. Counted, never
 /// inferred from its paths: a first-declaration-wins merge adds the loser's
@@ -160,13 +159,6 @@ pub(crate) fn read_declarations(
 ) -> (Vec<PackageDbEntry>, FetchCoverage, Declarations) {
     let mut found = super::searches::FileSearches::default();
     let mut projects: BTreeSet<String> = BTreeSet::new();
-    // Spec 1614 (#1605): the conditions under which each file is reached
-    // through include() / add_subdirectory() enclose all its declarations.
-    let reach = super::reach::compute(scan_root, files);
-    // FR-004 (research R2): a file `include()` reaches under a name the
-    // walker does not match (`CMakeLists_wsl.txt`) is read too.
-    let files: Vec<PathBuf> = files.iter().cloned().chain(reach.extra_files.iter().cloned()).collect();
-    let files = files.as_slice();
     let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
     let mut cov = FetchCoverage::default();
     // Pre-pass: every file's commands, the mode each directory sets, and
@@ -174,27 +166,19 @@ pub(crate) fn read_declarations(
     let mut parsed: Vec<ParsedFile> = Vec::new();
     let mut modes: BTreeMap<PathBuf, TryMode> = BTreeMap::new();
     let mut provider = false;
-    for path in files {
-        let content = match std::fs::read_to_string(path) {
-            Ok(c) => c,
-            Err(e) => {
-                tracing::warn!(path = %path.display(), error = %e, "cmake: a CMake file could not be read (spec 1538 C231)");
-                cov.unparseable_files += 1;
-                continue;
-            }
+    let mut parse_one = |path: &PathBuf, parsed: &mut Vec<ParsedFile>| {
+        let Some((cmds, content, unterminated)) = super::reach::parse_commands(path) else {
+            tracing::warn!(path = %path.display(), "cmake: a CMake file could not be read (spec 1538 C231)");
+            cov.unparseable_files += 1;
+            return;
         };
-        let (cmds, unterminated) = commands_checked(&strip_comments(&content));
         if unterminated {
             tracing::warn!(path = %path.display(), "cmake: a CMake file ends inside an open command (spec 1538 C231)");
             cov.unparseable_files += 1;
         }
-        let cmds: Vec<(String, Vec<String>)> = cmds
-            .into_iter()
-            .map(|(n, a)| (n.to_ascii_lowercase(), a.into_iter().map(|x| x.text).collect()))
-            .collect();
         let rel = relative(path, scan_root, &canonical_root);
         let dir = rel.parent().map(Path::to_path_buf).unwrap_or_default();
-        for (name, args) in &cmds {
+        for (name, args) in cmds.iter() {
             match name.as_str() {
                 "set" => {
                     if let Some(m) = fallback::mode_set(args) {
@@ -206,6 +190,19 @@ pub(crate) fn read_declarations(
             }
         }
         parsed.push((path.clone(), rel, content, cmds));
+    };
+    for path in files {
+        parse_one(path, &mut parsed);
+    }
+    // Spec 1614 (#1605): the conditions under which each file is reached
+    // through include() / add_subdirectory() enclose all its declarations.
+    // Computed from the commands just parsed (research R12).
+    let walked: Vec<(PathBuf, super::reach::Commands)> = parsed.iter().map(|(p, _, _, c)| (p.clone(), c.clone())).collect();
+    let reach = super::reach::compute(scan_root, &walked);
+    // FR-004 (research R2): a file `include()` reaches under a name the
+    // walker does not match (`CMakeLists_wsl.txt`) is read too.
+    for path in &reach.extra_files {
+        parse_one(path, &mut parsed);
     }
 
     // Spec 1539: every function and macro, and which are wrappers. A body
@@ -230,7 +227,7 @@ pub(crate) fn read_declarations(
         let mut blocks = super::blocks::BlockStack::seeded(reach.seed(path));
         let mut ordinal = 0usize;
         let mut open: Vec<usize> = Vec::new();
-        for (name, args) in cmds {
+        for (name, args) in cmds.iter() {
             match name.as_str() {
                 "function" | "macro" => {
                     open.push(ordinal);

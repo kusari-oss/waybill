@@ -127,6 +127,10 @@ const REGEN: &str = "WAYBILL_UPDATE_CMAKE_TREE_FINDS_GOLDENS";
 fn w_ctl_is_byte_identical_to_main() {
     let (_parent, root) = copy_fixture("cmake_tree_finds/ctl");
     let d = scan(&root);
+    // Seven searches (five find_package, two pkg-config modules), each read
+    // once: a narrow-set file the walker also handed the reader is not read
+    // a second time.
+    assert_eq!(coverage(&d)["read"], 7, "{}", coverage(&d));
     let golden_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join(GOLDEN_DIR);
     for (name, doc) in [("cdx", &d.cdx), ("spdx23", &d.spdx23), ("spdx3", &d.spdx3)] {
         let got = comparable(doc);

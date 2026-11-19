@@ -258,10 +258,11 @@ pub(crate) fn read_with_downloads(
     if tree_wide {
         // FR-009: a narrow-set file the walker skips (`cmake/**/vendor/`)
         // was read for package searches before; it still is.
-        let walked: std::collections::HashSet<PathBuf> =
-            fetch_files.iter().map(|f| std::fs::canonicalize(f).unwrap_or_else(|_| f.clone())).collect();
+        // Both lists are built from `scan_root`, so the paths compare as
+        // given; W-ctl's C237 `read` count would show a file read twice.
+        let walked: std::collections::HashSet<&PathBuf> = fetch_files.iter().collect();
         for f in &cmake_files {
-            if walked.contains(&std::fs::canonicalize(f).unwrap_or_else(|_| f.clone())) {
+            if walked.contains(f) {
                 continue;
             }
             let in_test_dir = f.strip_prefix(scan_root).ok().and_then(Path::parent).is_some_and(|d| {

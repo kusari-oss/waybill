@@ -73,3 +73,15 @@ All 3,778 `scan_fs` unit tests pass, as do the CMake, installed-library, submodu
 ## T027: US4 and an existing test
 
 `cmake_find_package_kamailio_shape_integration` asserted at least 5 `cmake-find-package` components from a fixture whose five searches include `find_package(Threads REQUIRED)`. FR-006 (US4) makes `Threads` a CMake helper with no component, so the fixture gives 4. The test now asserts the four library searches by PURL, and that `pkg:generic/threads` is absent. The failure appeared in the run after US5's commit (`de243e74`); the fix follows it.
+
+## T032 round 1 (`93fc2cb0`): two fixes
+
+**SC-009 failed:** TheRock scan time was 1.114× and 1.082× `main` (runs 44463579565, 44463591426). The scan logs put the extra time in the CMake reader's phase: walker completion to `cmake: fetch declarations` took 2.95 s against 1.08 s on `main`; the rest of the timeline matched. Research R12 planned for the reach pre-pass to share the fetch reader's parsed commands, and the first implementation did not. It had four costs `main` doesn't pay:
+- **a second tokenization** of every walked CMake file in `reach.rs` (more than 6,000 on TheRock);
+- **a whole-list clone** of each file's commands on every traversal;
+- **`fs::canonicalize` per walked file**, twice: once in `reach.rs`, once in the narrow-set check;
+- **a quadratic `Vec::contains`** over the `CMakeLists.txt` list.
+
+Now each file is tokenized once into `Rc`-shared commands, `reach::compute` takes them, walked paths are rebased onto the canonical root by prefix swap, the narrow-set check compares paths as given, and the lookup uses a set. W-ctl gained an assertion that C237 `read` is exactly 7, which would catch a file read twice. Local timing on this machine was too noisy to judge (0.8 s to 5 s for one binary on one tree); the measurement is TheRock in CI.
+
+**FR-006 dropped a library search.** pytorch's `find_package(Python COMPONENTS Interpreter OPTIONAL_COMPONENTS ${PYTHON_COMPONENTS})` was taken for an interpreter-only tool search, but `PYTHON_COMPONENTS` is `Development.Module` (`cmake/Dependencies.cmake:866`). A component list holding a variable is no longer taken to lack `Development` (Principle III). Unit-tested in `tools_and_python_as_an_interpreter`.

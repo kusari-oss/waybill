@@ -23,6 +23,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 use super::blocks::BlockStack;
 use super::links::{canon, resolve_include, substitute};
@@ -55,16 +56,40 @@ impl Reach {
 pub(crate) struct ReachMap {
     by_file: BTreeMap<PathBuf, Reach>,
     pub(crate) extra_files: Vec<PathBuf>,
+    scan_root: PathBuf,
+    canonical_root: PathBuf,
 }
 
 impl ReachMap {
-    /// The conditions reaching `path` (canonicalised here).
+    /// The conditions reaching `path`, a walked file or an extra file.
     pub(crate) fn seed(&self, path: &Path) -> Vec<String> {
-        self.by_file.get(&canon(path)).map(Reach::seed).unwrap_or_default()
+        self.by_file.get(&rebase(path, &self.scan_root, &self.canonical_root)).map(Reach::seed).unwrap_or_default()
     }
 }
 
-type Commands = Vec<(String, Vec<String>)>;
+/// A file's commands, lowercased names, shared with the fetch reader's parse.
+pub(crate) type Commands = Rc<Vec<(String, Vec<String>)>>;
+
+/// `p` under the canonical scan root, by swapping the root prefix: one
+/// `canonicalize` for the root instead of one per file (6,000+ on TheRock).
+/// A path outside the given root is canonicalised.
+fn rebase(p: &Path, scan_root: &Path, canonical_root: &Path) -> PathBuf {
+    match p.strip_prefix(scan_root) {
+        Ok(rel) => canonical_root.join(rel),
+        Err(_) => canon(p),
+    }
+}
+
+/// A file read and tokenized as the fetch reader tokenizes it.
+pub(crate) fn parse_commands(file: &Path) -> Option<(Commands, String, bool)> {
+    let content = std::fs::read_to_string(file).ok()?;
+    let (cmds, unterminated) = commands_checked(&strip_comments(&content));
+    let cmds = cmds
+        .into_iter()
+        .map(|(n, a)| (n.to_ascii_lowercase(), a.into_iter().map(|x| x.text).collect()))
+        .collect();
+    Some((Rc::new(cmds), content, unterminated))
+}
 
 struct Graph<'a> {
     root: &'a Path,
@@ -77,14 +102,7 @@ impl Graph<'_> {
     fn commands(&mut self, file: &Path) -> Commands {
         self.parsed
             .entry(file.to_path_buf())
-            .or_insert_with(|| {
-                let Ok(content) = std::fs::read_to_string(file) else { return Vec::new() };
-                commands_checked(&strip_comments(&content))
-                    .0
-                    .into_iter()
-                    .map(|(n, a)| (n.to_ascii_lowercase(), a.into_iter().map(|x| x.text).collect()))
-                    .collect()
-            })
+            .or_insert_with(|| parse_commands(file).map(|(c, _, _)| c).unwrap_or_default())
             .clone()
     }
 
@@ -93,8 +111,8 @@ impl Graph<'_> {
         let list_dir = file.parent().unwrap_or(source_dir).to_path_buf();
         let root = self.root.to_path_buf();
         let mut blocks = BlockStack::default();
-        for (name, args) in self.commands(file) {
-            if blocks.observe(&name, &args) {
+        for (name, args) in self.commands(file).iter() {
+            if blocks.observe(name, args) {
                 continue;
             }
             let Some(arg) = args.first() else { continue };
@@ -123,18 +141,29 @@ impl Graph<'_> {
     }
 }
 
-/// Compute every file's [`Reach`] for the walked CMake files of `scan_root`.
-pub(crate) fn compute(scan_root: &Path, walked: &[PathBuf]) -> ReachMap {
+/// Compute every file's [`Reach`] for the walked CMake files of `scan_root`,
+/// given their commands as the fetch reader parsed them (spec 1614 research
+/// R12: each file is tokenized once). Files `include()` reaches that are not
+/// walked are parsed here.
+pub(crate) fn compute(scan_root: &Path, walked: &[(PathBuf, Commands)]) -> ReachMap {
     let root = canon(scan_root);
-    let walked: BTreeSet<PathBuf> = walked.iter().map(|f| canon(f)).collect();
-    let mut g = Graph { root: &root, parsed: HashMap::new(), into: BTreeMap::new() };
-    let lists: Vec<PathBuf> = walked.iter().filter(|f| f.file_name().is_some_and(|n| n == "CMakeLists.txt")).cloned().collect();
+    let mut parsed = HashMap::new();
+    let mut walked_set = BTreeSet::new();
+    for (p, cmds) in walked {
+        let c = rebase(p, scan_root, &root);
+        parsed.insert(c.clone(), cmds.clone());
+        walked_set.insert(c);
+    }
+    let walked = walked_set;
+    let mut g = Graph { root: &root, parsed, into: BTreeMap::new() };
+    let lists: BTreeSet<PathBuf> =
+        walked.iter().filter(|f| f.file_name().is_some_and(|n| n == "CMakeLists.txt")).cloned().collect();
     for f in &lists {
         let dir = f.parent().map(Path::to_path_buf).unwrap_or_default();
         g.traverse(f, &dir, 0, &mut HashSet::from([f.clone()]));
     }
     let unreached: Vec<PathBuf> =
-        walked.iter().filter(|f| !lists.contains(f) && !g.into.contains_key(*f)).cloned().collect();
+        walked.iter().filter(|f| !lists.contains(*f) && !g.into.contains_key(*f)).cloned().collect();
     for f in &unreached {
         let dir = f.parent().map(Path::to_path_buf).unwrap_or_default();
         g.traverse(f, &dir, 0, &mut HashSet::from([f.clone()]));
@@ -147,7 +176,7 @@ pub(crate) fn compute(scan_root: &Path, walked: &[PathBuf]) -> ReachMap {
         by_file.entry(n.clone()).or_insert(Reach::Unconditional);
     }
     let extra_files = nodes.into_iter().filter(|n| !walked.contains(n)).collect();
-    ReachMap { by_file, extra_files }
+    ReachMap { by_file, extra_files, scan_root: scan_root.to_path_buf(), canonical_root: root }
 }
 
 /// Every file's reach, as a fixed point: a file nothing reaches is
@@ -208,7 +237,7 @@ fn fixed_point(
 mod tests {
     use super::*;
 
-    fn tree(files: &[(&str, &str)]) -> (tempfile::TempDir, Vec<PathBuf>) {
+    fn tree(files: &[(&str, &str)]) -> (tempfile::TempDir, Vec<(PathBuf, Commands)>) {
         let d = tempfile::tempdir().unwrap();
         let mut walked = Vec::new();
         for (rel, body) in files {
@@ -219,6 +248,10 @@ mod tests {
                 walked.push(p);
             }
         }
+        let walked = walked.into_iter().map(|p| {
+            let c = parse_commands(&p).unwrap().0;
+            (p, c)
+        }).collect();
         (d, walked)
     }
 

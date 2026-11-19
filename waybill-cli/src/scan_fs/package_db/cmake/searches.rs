@@ -259,7 +259,10 @@ const TOOLS: [&str; 5] = ["threads", "pkgconfig", "git", "doxygen", "pythoninter
 
 /// Whether `s` searches for a tool or CMake helper rather than a package:
 /// one of [`TOOLS`], or Python (`python` / `python3`) asked for as an
-/// interpreter with no `Development` component.
+/// interpreter with no `Development` component. A component list holding a
+/// variable is not known to lack one (Principle III): pytorch asks for
+/// `Interpreter OPTIONAL_COMPONENTS ${PYTHON_COMPONENTS}`, set to
+/// `Development.Module`.
 pub(crate) fn is_tool(s: &PackageSearch) -> bool {
     let name = s.name.to_lowercase();
     if TOOLS.contains(&name.as_str()) {
@@ -267,7 +270,8 @@ pub(crate) fn is_tool(s: &PackageSearch) -> bool {
     }
     let python = matches!(name.as_str(), "python" | "python3");
     let interpreter = s.components.iter().any(|c| c == "Interpreter");
-    let development = s.components.iter().any(|c| c == "Development" || c.starts_with("Development."));
+    let development =
+        s.components.iter().any(|c| c == "Development" || c.starts_with("Development.") || c.contains("${"));
     python && interpreter && !development
 }
 
@@ -457,6 +461,10 @@ mod tests {
         assert!(!is_tool(&one("find_package(Python3 COMPONENTS Interpreter Development)")));
         assert!(!is_tool(&one("find_package(Python3 COMPONENTS Interpreter Development.Module)")));
         assert!(!is_tool(&one("find_package(Python3)")), "no components: not known to be the interpreter only");
+        assert!(
+            !is_tool(&one("find_package(Python COMPONENTS Interpreter OPTIONAL_COMPONENTS ${PYTHON_COMPONENTS})")),
+            "a variable component list may name Development"
+        );
         assert!(!is_tool(&one("find_package(CUDAToolkit)")));
     }
 
