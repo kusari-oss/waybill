@@ -78,7 +78,7 @@
   - `docs/ecosystems.md`, pip section: the three labelling signals in order, the word sets, the directory names, the scan-root bound, and what stays runtime (FR-005).
   - `docs/reference/sbom-format-mapping.md`: C155's description lists the signals; no new row.
 - [X] T015 [P] Add a `CHANGELOG.md` entry under the unreleased section.
-- [ ] T016 Mutations, recorded in `specs/1615-nested-req-scope/measurements/mutations.md` with the runner's output; restore with `cp` and rebuild after the last one. One each:
+- [X] T016 Mutations, recorded in `specs/1615-nested-req-scope/measurements/mutations.md` with the runner's output; restore with `cp` and rebuild after the last one. One each:
   - (M1) drop `doc`;
   - (M2) drop the long forms;
   - (M3) drop `tests`;

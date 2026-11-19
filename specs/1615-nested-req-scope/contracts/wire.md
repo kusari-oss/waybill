@@ -16,6 +16,7 @@ Packages are `waybill-fixture-*`. Paths are relative to the scan root.
 | W-8 | `proj/.github/docs/x/requirements.txt`; `proj/docs/.github/x/requirements.txt` | `docs`; `ci`: one search across both kinds (FR-003) |
 | W-9 | `proj/tests/fixtures/requirements-docs.txt`; `proj/docs/x/requirements-dev.txt` | `docs`; `dev`: the name beats an ancestor (edge case) |
 | W-10 | a package in `proj/docs/sphinx/requirements.txt` and in `proj/requirements.txt` | required, no C155 (FR-007) |
+| W-10b | a package in `a/docs/sphinx/requirements.txt` and `b/requirements.txt` (the docs declaration merged first) | required, no C155 (FR-007; added at T016, see `measurements/mutations.md`) |
 | W-11 | W-1 to W-5 together | no component is unreachable without an orphan reason (R5) |
 | W-12 | the scan root itself named `tests`, holding `proj/x/requirements.txt` | runtime: the root's name labels nothing (FR-004) |
 | W-13 | `tests/vendored/proj/requirements.txt` (a whole project under `tests/`) | `test` (FR-004, clarified) |

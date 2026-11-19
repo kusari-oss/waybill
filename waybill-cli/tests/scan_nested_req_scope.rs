@@ -216,6 +216,18 @@ fn w10_runtime_declaration_wins() {
     assert_label(&d, "waybill-fixture-w10-docs", Some("docs"));
 }
 
+/// W-10, second order: the docs file's declaration is merged first, so the
+/// runtime one must also clear its label (spec 1613 R8, `ci_scope`).
+#[test]
+fn w10b_runtime_declaration_wins_when_merged_second() {
+    let t = tree();
+    let r = t.path();
+    requirements(r, "a/docs/sphinx/requirements.txt", &["waybill-fixture-w10b"]);
+    requirements(r, "b/requirements.txt", &["waybill-fixture-w10b"]);
+    let d = scan(r);
+    assert_label(&d, "waybill-fixture-w10b", None);
+}
+
 /// W-12: the scan root's own name labels nothing (FR-004).
 #[test]
 fn w12_scan_root_name_labels_nothing() {
