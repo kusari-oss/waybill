@@ -12,7 +12,7 @@ use waybill_common::types::purl::Purl;
 use waybill_common::types::hash::{ContentHash, HashAlgorithm};
 
 use super::super::name_validation::validate_pep508_name;
-use super::super::project_roots::listed_ancestor_class;
+use super::super::project_roots::{listed_ancestor_class, listed_dot_dir_class};
 use super::super::PackageDbEntry;
 use super::{build_pypi_purl_str, normalize_pypi_name_for_purl, tokenise_requires_dist_name};
 
@@ -69,21 +69,60 @@ pub(crate) fn classify_requirements_scope(path: &Path) -> RequirementsScope {
         .file_name()
         .and_then(|s| s.to_str())
         .unwrap_or("");
-    for scope in ["dev", "test", "docs", "ci"] {
-        if matches_scope_filename(filename, scope) {
-            return RequirementsScope::Optional(scope);
-        }
+    name_scope(filename).map_or(RequirementsScope::Main, RequirementsScope::Optional)
+}
+
+/// Spec 1615 (#1614) research R1: the words a file name may use for each
+/// C155 value. `docs`/`doc`/`documentation` is the parent-directory rule's
+/// set; the long and plural forms are matched under the same word boundary.
+const SCOPE_WORDS: [(&str, &[&str]); 4] = [
+    ("dev", &["dev", "development"]),
+    ("test", &["test", "tests", "testing"]),
+    ("docs", &["doc", "docs", "documentation"]),
+    ("ci", &["ci"]),
+];
+
+/// The C155 value `filename` names, if any.
+fn name_scope(filename: &str) -> Option<&'static str> {
+    SCOPE_WORDS
+        .iter()
+        .find(|(_, words)| words.iter().any(|w| matches_scope_filename(filename, w)))
+        .map(|(scope, _)| *scope)
+}
+
+/// Spec 1615 (#1614) FR-002: the C155 value a docs or test directory gives.
+fn docs_or_test_dir_scope(name: &str) -> Option<&'static str> {
+    match name.to_ascii_lowercase().as_str() {
+        "docs" | "doc" | "documentation" => Some("docs"),
+        "test" | "tests" => Some("test"),
+        _ => None,
     }
-    RequirementsScope::Main
+}
+
+/// Spec 1615 (#1614) FR-002 to FR-004: the nearest ancestor of `path` below
+/// `root` that is a listed dot-directory or a docs or test directory gives
+/// the scope, in one nearest-first search. A path outside `root` keeps spec
+/// 1613's search over its whole path, dot-directories only (research R3).
+fn nearest_ancestor_scope(path: &Path, root: &Path) -> Option<&'static str> {
+    let Ok(rel) = path.strip_prefix(root) else {
+        return listed_ancestor_class(path, root).map(|c| c.requirements_scope());
+    };
+    rel.parent()?.components().rev().filter_map(|c| c.as_os_str().to_str()).find_map(|name| {
+        listed_dot_dir_class(name).map(|c| c.requirements_scope()).or_else(|| docs_or_test_dir_scope(name))
+    })
 }
 
 /// Spec 1613 (#1610, FR-004): [`classify_requirements_scope`], then the
 /// nearest listed CI or docs dot-directory among the file's ancestors below
 /// `root` when neither its parent directory nor its name gives a scope.
+///
+/// Spec 1615 (#1614): the same search also takes the nearest `docs`/`doc`/
+/// `documentation` or `test`/`tests` directory ([`nearest_ancestor_scope`]).
 pub(crate) fn classify_requirements_scope_under(path: &Path, root: &Path) -> RequirementsScope {
     match classify_requirements_scope(path) {
-        RequirementsScope::Main => listed_ancestor_class(path, root)
-            .map_or(RequirementsScope::Main, |c| RequirementsScope::Optional(c.requirements_scope())),
+        RequirementsScope::Main => {
+            nearest_ancestor_scope(path, root).map_or(RequirementsScope::Main, RequirementsScope::Optional)
+        }
         scoped => scoped,
     }
 }
@@ -103,7 +142,7 @@ pub(crate) fn is_requirements_file(path: &Path, root: Option<&Path>) -> bool {
     if name.starts_with("requirements") {
         return true;
     }
-    if ["dev", "test", "docs", "ci"].iter().any(|s| matches_scope_filename(name, s)) {
+    if name_scope(name).is_some() {
         return true;
     }
     name.to_ascii_lowercase().contains("requirements")
@@ -1324,6 +1363,20 @@ urllib3>=2 \\
             // but MUST NOT match the ci scope (regression guard for
             // the substring-based first draft).
             ("requirements-special.txt", None),
+            // Spec 1615 (#1614) research R1: every word of a scope's set.
+            ("requirements-doc.txt", Some("docs")),
+            ("doc-requirements.txt", Some("docs")),
+            ("requirements-documentation.txt", Some("docs")),
+            ("requirements-development.txt", Some("dev")),
+            ("requirements-tests.txt", Some("test")),
+            ("testing-requirements.txt", Some("test")),
+            ("requirements-testing-frozen.txt", Some("test")),
+            ("Requirements-Doc.txt", Some("docs")),
+            // ... and the boundary still holds.
+            ("requirements-docker.txt", None),
+            ("requirements-testinfra.txt", None),
+            ("requirements-devel.txt", None),
+            ("requirements_dev.txt", None),
         ] {
             let path = std::path::PathBuf::from(format!("/proj/{fname}"));
             let got = classify_requirements_scope(&path);
@@ -1524,6 +1577,12 @@ urllib3>=2 \\
             ("docs-requirements.txt", true),
             ("tox-requirements.txt", false),
             ("all_requirements.txt", false),
+            // Spec 1615 research R2: a name the classifier now labels is read.
+            ("doc-requirements.txt", true),
+            ("development-requirements.txt", true),
+            ("testing-requirements.txt", true),
+            ("tests-requirements.txt", true),
+            ("docker-requirements.txt", false),
             (".ci/all_requirements.txt", true),
             ("x/.github/build_requirements.txt", true),
             (".ci/notes.txt", false),
@@ -1569,5 +1628,53 @@ urllib3>=2 \\
         let top = tempfile::tempdir().unwrap();
         std::fs::write(top.path().join("tox-requirements.txt"), "waybill-fixture-tox==1.0\n").unwrap();
         assert!(read_requirements_files(top.path(), top.path()).is_none_or(|v| v.is_empty()), "tox-requirements.txt is not read");
+    }
+
+    /// Spec 1615 (#1614) research R3: the nearest docs or test directory, or
+    /// listed dot-directory, below the scan root labels a file the parent and
+    /// the name do not.
+    #[test]
+    fn s1615_nearest_docs_or_test_ancestor_labels_the_file() {
+        let root = Path::new("/r");
+        for (rel, want) in [
+            ("p/docs/sphinx/requirements.txt", Some("docs")),
+            ("p/Doc/x/y/requirements.txt", Some("docs")),
+            ("p/documentation/site/requirements.txt", Some("docs")),
+            ("p/tests/corpus/dbt/requirements-x.txt", Some("test")),
+            ("p/TEST/integration/requirements.txt", Some("test")),
+            // Nearest wins, across both kinds.
+            ("p/tests/docs/sphinx/requirements.txt", Some("docs")),
+            ("p/docs/tests/x/requirements.txt", Some("test")),
+            ("p/.github/docs/x/requirements.txt", Some("docs")),
+            ("p/docs/.github/x/requirements.txt", Some("ci")),
+            ("p/test/x/.sphinx/requirements.txt", Some("docs")),
+            // The parent and the name still come first.
+            ("p/tests/fixtures/requirements-docs.txt", Some("docs")),
+            ("p/docs/x/requirements-dev.txt", Some("dev")),
+            ("p/docs/tests/requirements.txt", Some("test")),
+            // Exact names only (FR-005).
+            ("p/examples/a/requirements.txt", None),
+            ("p/benchmarks/b/requirements.txt", None),
+            ("p/tools/c/requirements.txt", None),
+            ("p/test_data/d/requirements.txt", None),
+            ("p/documents/e/requirements.txt", None),
+            ("p/testing_utils/f/requirements.txt", None),
+            ("p/doctor/g/requirements.txt", None),
+            ("p/x/requirements.txt", None),
+        ] {
+            assert_eq!(classify_requirements_scope_under(&root.join(rel), root).as_optional_name(), want, "{rel}");
+        }
+    }
+
+    /// Spec 1615 FR-004 and research R3: the scan root bounds the search,
+    /// and a path outside the root gets the dot-directory search only.
+    #[test]
+    fn s1615_the_scan_root_bounds_the_search() {
+        let scope = |p: &str, root: &str| classify_requirements_scope_under(Path::new(p), Path::new(root)).as_optional_name();
+        assert_eq!(scope("/w/tests/p/x/requirements.txt", "/w/tests"), None, "the root's own name");
+        assert_eq!(scope("/w/docs/p/x/requirements.txt", "/w/docs/p"), None, "an ancestor of the root");
+        assert_eq!(scope("/w/docs/p/x/requirements.txt", "/w"), Some("docs"));
+        assert_eq!(scope("/home/tests/p/x/requirements.txt", "/elsewhere"), None, "outside the root: no docs/test names");
+        assert_eq!(scope("/home/.ci/p/x/requirements.txt", "/elsewhere"), Some("ci"), "outside the root: dot-directories as before");
     }
 }

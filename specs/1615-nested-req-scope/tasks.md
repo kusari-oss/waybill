@@ -10,16 +10,16 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm premises at `main` and record them in `specs/1615-nested-req-scope/measurements/trace.md`:
+- [X] T001 Confirm premises at `main` and record them in `specs/1615-nested-req-scope/measurements/trace.md`:
   - (a) `requirements-tests.txt` and `requirements-doc.txt` classify as `Main` today;
   - (b) `listed_ancestor_class`'s three callers are as research R3 lists;
   - (c) spec 1613's `ci_scope::apply` removes C155 from a runtime component.
   Use a throwaway unit test or the existing tests, not a script that re-parses paths.
-- [ ] T002 Create `IT` with the sibling suite's helpers (`scan`, `named`, `present`, `scope`, `requirements`, `tree`, `assert_repeatable`, as in `waybill-cli/tests/scan_dot_directory_manifests.rs`), plus a `c155(&Docs, name)` helper. It reads C155 through `row_all_formats`, so each assertion covers all three formats.
+- [X] T002 Create `IT` with the sibling suite's helpers (`scan`, `named`, `present`, `scope`, `requirements`, `tree`, `assert_repeatable`, as in `waybill-cli/tests/scan_dot_directory_manifests.rs`), plus a `c155(&Docs, name)` helper. It reads C155 through `row_all_formats`, so each assertion covers all three formats.
 
 ## Phase 2: Foundational
 
-- [ ] T003 Write the W-ctl byte-identity control in `IT`: a tree at `waybill-cli/tests/fixtures/nested_req_scope/ctl/` with `requirements.txt`, `requirements-dev.txt`, `docs/requirements.txt` and `.github/requirements.txt`. Generate its golden in `waybill-cli/tests/fixtures/nested_req_scope/ctl-golden/` from **`main`'s** binary, before any source change, and compare masked output (FR-009).
+- [X] T003 Write the W-ctl byte-identity control in `IT`: a tree at `waybill-cli/tests/fixtures/nested_req_scope/ctl/` with `requirements.txt`, `requirements-dev.txt`, `docs/requirements.txt` and `.github/requirements.txt`. Generate its golden in `waybill-cli/tests/fixtures/nested_req_scope/ctl-golden/` from **`main`'s** binary, before any source change, and compare masked output (FR-009).
 
 **Checkpoint**: the control passes at `main`.
 
@@ -29,20 +29,20 @@
 
 **Independent Test**: W-1, W-2, W-7, W-8, W-10, W-12, W-13 and W-14 pass.
 
-- [ ] T004 [P] [US1] Unit tests in `RT`'s test module for the ancestor search:
+- [X] T004 [P] [US1] Unit tests in `RT`'s test module for the ancestor search:
   - nearest wins across both kinds (`tests/docs/sphinx`, `docs/.github/x`, `.github/docs/x`);
   - the root's own name never counts;
   - a path outside the root gets the dot-directory search only (research R3);
   - partial names (`documents`, `testing_utils`, `test_data`) and FR-005's names label nothing;
   - the parent and the name still win (`tests/fixtures/requirements-docs.txt`).
-- [ ] T005 [P] [US1] Integration cases in `IT`: W-1, W-2, W-7, W-8, W-10, W-12, W-13, W-14. Run them and confirm they fail at this point.
-- [ ] T006 [US1] Implement the ancestor search in `RT`. Add `nearest_ancestor_scope(path, root) -> Option<&'static str>`:
+- [X] T005 [P] [US1] Integration cases in `IT`: W-1, W-2, W-7, W-8, W-10, W-12, W-13, W-14. Run them and confirm they fail at this point.
+- [X] T006 [US1] Implement the ancestor search in `RT`. Add `nearest_ancestor_scope(path, root) -> Option<&'static str>`:
   - It walks the path's ancestors relative to `root`, nearest first.
   - Each is matched case-insensitively against `project_roots::listed_dot_dir_class` and against `docs`/`doc`/`documentation` (`"docs"`) or `test`/`tests` (`"test"`).
   - When `path` is not under `root`, it falls back to `listed_ancestor_class(path, root)` unchanged.
 
   Call it from `classify_requirements_scope_under` in place of `listed_ancestor_class`. Leave `project_roots.rs` and `scan_fs/ci_scope.rs` unchanged (research R3).
-- [ ] T007 [US1] Run T004, T005 and W-ctl until they pass. Also run `scan_dot_directory_manifests` and `cargo test -p waybill --bins requirements_txt::`: spec 1613's dot-directory behaviour must be unchanged.
+- [X] T007 [US1] Run T004, T005 and W-ctl until they pass. Also run `scan_dot_directory_manifests` and `cargo test -p waybill --bins requirements_txt::`: spec 1613's dot-directory behaviour must be unchanged.
 
 **Checkpoint**: US1 complete.
 
@@ -52,14 +52,14 @@
 
 **Independent Test**: W-4, W-5, W-6 pass, and W-11 shows no unreachable component without an orphan reason.
 
-- [ ] T008 [P] [US2] Extend `m670_scope_classify_filename_signals` in `RT`:
+- [X] T008 [P] [US2] Extend `m670_scope_classify_filename_signals` in `RT`:
   - `requirements-doc.txt`, `doc-requirements.txt`, `requirements-development.txt`, `requirements-documentation.txt`, `requirements-tests.txt`, `testing-requirements.txt` and `requirements-testing-frozen.txt` are scoped;
   - `requirements-docker.txt`, `requirements-testinfra.txt`, `requirements-devel.txt` and `requirements_dev.txt` are not.
 
   Extend the `is_requirements_file` test table: `doc-requirements.txt`, `development-requirements.txt` and `testing-requirements.txt` are read; `docker-requirements.txt` is not.
-- [ ] T009 [P] [US2] Integration cases W-4, W-5, W-6 and W-11 in `IT`. Confirm they fail.
-- [ ] T010 [US2] Implement R1 in `RT`. Add one typed table, `SCOPE_WORDS: [(&str, &[&str]); 4]`, mapping each C155 value to its words. `classify_requirements_scope` and `is_requirements_file` both iterate it in place of the literal `["dev", "test", "docs", "ci"]` lists. `matches_scope_filename` is unchanged.
-- [ ] T011 [US2] Run T008, T009, W-ctl and the whole `requirements_txt::` unit module until they pass. Re-run US1's cases.
+- [X] T009 [P] [US2] Integration cases W-4, W-5, W-6 and W-11 in `IT`. Confirm they fail.
+- [X] T010 [US2] Implement R1 in `RT`. Add one typed table, `SCOPE_WORDS: [(&str, &[&str]); 4]`, mapping each C155 value to its words. `classify_requirements_scope` and `is_requirements_file` both iterate it in place of the literal `["dev", "test", "docs", "ci"]` lists. `matches_scope_filename` is unchanged.
+- [X] T011 [US2] Run T008, T009, W-ctl and the whole `requirements_txt::` unit module until they pass. Re-run US1's cases.
 
 **Checkpoint**: US1 and US2 complete.
 
@@ -69,15 +69,15 @@
 
 **Independent Test**: W-3 passes.
 
-- [ ] T012 [US3] Integration case W-3 in `IT` (`proj/tests/corpus/dbt/requirements-x.txt`, `proj/test/integration/requirements.txt`). It passes on T006 alone. Its negative control is mutation M5 (T016).
+- [X] T012 [US3] Integration case W-3 in `IT` (`proj/tests/corpus/dbt/requirements-x.txt`, `proj/test/integration/requirements.txt`). It passes on T006 alone. Its negative control is mutation M5 (T016).
 
 ## Phase 6: Polish & cross-cutting
 
-- [ ] T013 [P] W-rep in `IT`: W-1 to W-14 in one tree, scanned 20 times, identical each time.
-- [ ] T014 [P] Docs:
+- [X] T013 [P] W-rep in `IT`: W-1 to W-14 in one tree, scanned 20 times, identical each time.
+- [X] T014 [P] Docs:
   - `docs/ecosystems.md`, pip section: the three labelling signals in order, the word sets, the directory names, the scan-root bound, and what stays runtime (FR-005).
   - `docs/reference/sbom-format-mapping.md`: C155's description lists the signals; no new row.
-- [ ] T015 [P] Add a `CHANGELOG.md` entry under the unreleased section.
+- [X] T015 [P] Add a `CHANGELOG.md` entry under the unreleased section.
 - [ ] T016 Mutations, recorded in `specs/1615-nested-req-scope/measurements/mutations.md` with the runner's output; restore with `cp` and rebuild after the last one. One each:
   - (M1) drop `doc`;
   - (M2) drop the long forms;

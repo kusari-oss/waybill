@@ -1,0 +1,410 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:pypi/waybill-fixture-ctl-ci@1.0",
+      "cpe": "cpe:2.3:a:waybill-fixture-ctl-ci:waybill-fixture-ctl-ci:1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": ".github/requirements.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-ctl-ci",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:waybill-fixture-ctl-ci:waybill-fixture-ctl-ci:1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-ctl-ci:waybill-fixture-ctl-ci:1.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\".github/requirements.txt\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"waybill-fixture-ctl-ci==1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:python-req-file-scope",
+          "value": "ci"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".github\"]"
+        }
+      ],
+      "purl": "pkg:pypi/waybill-fixture-ctl-ci@1.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/waybill-fixture-ctl-dev@1.0",
+      "cpe": "cpe:2.3:a:waybill-fixture-ctl-dev:waybill-fixture-ctl-dev:1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements-dev.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-ctl-dev",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:waybill-fixture-ctl-dev:waybill-fixture-ctl-dev:1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-ctl-dev:waybill-fixture-ctl-dev:1.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements-dev.txt\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"waybill-fixture-ctl-dev==1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:python-req-file-scope",
+          "value": "dev"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/waybill-fixture-ctl-dev@1.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/waybill-fixture-ctl-docs@1.0",
+      "cpe": "cpe:2.3:a:waybill-fixture-ctl-docs:waybill-fixture-ctl-docs:1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "docs/requirements.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-ctl-docs",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:waybill-fixture-ctl-docs:waybill-fixture-ctl-docs:1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-ctl-docs:waybill-fixture-ctl-docs:1.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"docs/requirements.txt\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"waybill-fixture-ctl-docs==1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:python-req-file-scope",
+          "value": "docs"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"docs\"]"
+        }
+      ],
+      "purl": "pkg:pypi/waybill-fixture-ctl-docs@1.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/waybill-fixture-ctl-runtime@1.0",
+      "cpe": "cpe:2.3:a:waybill-fixture-ctl-runtime:waybill-fixture-ctl-runtime:1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-ctl-runtime",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:waybill-fixture-ctl-runtime:waybill-fixture-ctl-runtime:1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-ctl-runtime:waybill-fixture-ctl-runtime:1.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"waybill-fixture-ctl-runtime==1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/waybill-fixture-ctl-runtime@1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0"
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:pypi/waybill-fixture-ctl-ci@1.0",
+        "pkg:pypi/waybill-fixture-ctl-dev@1.0",
+        "pkg:pypi/waybill-fixture-ctl-docs@1.0",
+        "pkg:pypi/waybill-fixture-ctl-runtime@1.0"
+      ],
+      "dependencies": [
+        "pkg:pypi/waybill-fixture-ctl-ci@1.0",
+        "pkg:pypi/waybill-fixture-ctl-dev@1.0",
+        "pkg:pypi/waybill-fixture-ctl-docs@1.0",
+        "pkg:pypi/waybill-fixture-ctl-runtime@1.0"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "waybill-fixture-tree@0.0.0"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "waybill-fixture-tree@0.0.0"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/waybill-fixture-ctl-ci@1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/waybill-fixture-ctl-dev@1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/waybill-fixture-ctl-docs@1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/waybill-fixture-ctl-runtime@1.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/waybill-fixture-ctl-ci@1.0",
+        "pkg:pypi/waybill-fixture-ctl-dev@1.0",
+        "pkg:pypi/waybill-fixture-ctl-docs@1.0",
+        "pkg:pypi/waybill-fixture-ctl-runtime@1.0"
+      ],
+      "ref": "waybill-fixture-tree@0.0.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "waybill-fixture-tree@0.0.0",
+      "name": "waybill-fixture-tree",
+      "purl": "pkg:generic/waybill-fixture-tree@0.0.0",
+      "type": "application",
+      "version": "0.0.0"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:cpe-coverage",
+        "value": "{\"addressable_without_cpe\":0,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":0,\"with_candidates\":4}"
+      },
+      {
+        "name": "waybill:file-inventory-skipped-build-dirs",
+        "value": "1"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "[\"ID\",\"VERSION_ID\"]"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "complete"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\",\".github\",\"docs\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "<masked-tool-version>"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

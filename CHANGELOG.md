@@ -64,6 +64,20 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Python requirements files under `docs/` and `tests/` directories are no
+  longer read as runtime (#1614).** A file was labelled only by its own
+  directory, its name, or a CI/docs dot-directory above it, so
+  `docs/sphinx/requirements.txt` and `tests/corpus/x/requirements.txt` read as
+  runtime dependencies. On ROCm TheRock that was 14 files, mostly Sphinx
+  documentation sites. The nearest `docs`/`doc`/`documentation` or
+  `test`/`tests` directory below the scan root now labels a file, in one
+  search with the dot-directories. File names also take `doc`,
+  `development`, `documentation`, `tests` and `testing` as scope words
+  (`requirements-doc.txt`, `requirements-tests.txt`), and
+  `doc-requirements.txt` and its kind are now read. A package also declared
+  in a runtime file stays a runtime requirement. Other directory names
+  (`examples`, `tools`, `benchmarks`) give no scope.
+
 - **Dependency manifests in CI and docs dot-directories are read (#1610).**
   Every directory starting with `.` used to be skipped, so requirements files
   under `.ci/`, `.github/` and `.sphinx/` (8 on ROCm TheRock, declaring about a
