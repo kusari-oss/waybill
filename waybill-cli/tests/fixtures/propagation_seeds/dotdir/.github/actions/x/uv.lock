@@ -1,0 +1,20 @@
+version = 1
+revision = 1
+requires-python = ">=3.10"
+
+[[package]]
+name = "waybill-fixture-action"
+version = "1.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "waybill-fixture-actdep" },
+]
+
+[[package]]
+name = "waybill-fixture-actdep"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/dd/waybill_fixture_actdep-1.0.0.tar.gz", hash = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", size = 1024 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dd/dd/waybill_fixture_actdep-1.0.0-py3-none-any.whl", hash = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", size = 2048 },
+]

@@ -1,0 +1,58 @@
+version = 1
+revision = 1
+requires-python = ">=3.10"
+
+[[package]]
+name = "waybill-fixture-uv-root"
+version = "1.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "waybill-fixture-runtime" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "waybill-fixture-devtool" },
+]
+
+[[package]]
+name = "waybill-fixture-devtool"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "waybill-fixture-devtool-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bb/bb/waybill_fixture_devtool-2.0.0.tar.gz", hash = "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", size = 1024 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bb/bb/waybill_fixture_devtool-2.0.0-py3-none-any.whl", hash = "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", size = 2048 },
+]
+
+[[package]]
+name = "waybill-fixture-devtool-core"
+version = "3.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/cc/waybill_fixture_devtool_core-3.0.0.tar.gz", hash = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", size = 1024 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/cc/waybill_fixture_devtool_core-3.0.0-py3-none-any.whl", hash = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", size = 2048 },
+]
+
+[[package]]
+name = "waybill-fixture-runtime"
+version = "1.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "waybill-fixture-runtime-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dd/dd/waybill_fixture_runtime-1.5.0.tar.gz", hash = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", size = 1024 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dd/dd/waybill_fixture_runtime-1.5.0-py3-none-any.whl", hash = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", size = 2048 },
+]
+
+[[package]]
+name = "waybill-fixture-runtime-core"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/ee/waybill_fixture_runtime_core-1.0.0.tar.gz", hash = "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", size = 1024 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/ee/waybill_fixture_runtime_core-1.0.0-py3-none-any.whl", hash = "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", size = 2048 },
+]

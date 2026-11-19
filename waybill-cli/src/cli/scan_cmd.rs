@@ -5388,11 +5388,20 @@ pub async fn execute(
             &mut relationships,
             &boot_libraries,
         );
+        // Spec 1616 (#1618): every other runtime main module also protects
+        // its runtime dependencies. Only the immunity search widens; graph
+        // completeness and the FR-012 gate keep `seeds` (FR-004).
+        let added_seeds = {
+            let canonical = std::fs::canonicalize(&root_path).unwrap_or_else(|_| root_path.clone());
+            let roots = if canonical == root_path { vec![canonical] } else { vec![canonical, root_path.clone()] };
+            crate::resolve::scope_propagation::added_seeds(&components, &seeds, &roots)
+        };
         let scope_propagation_summary =
-            crate::resolve::scope_propagation::propagate_non_runtime_scope(
+            crate::resolve::scope_propagation::propagate_non_runtime_scope_seeded(
                 &mut components,
                 &relationships,
                 &seeds,
+                &added_seeds,
                 &ecosystems_with_root,
                 &boot_libraries,
             );

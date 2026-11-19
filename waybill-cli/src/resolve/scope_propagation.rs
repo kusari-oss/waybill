@@ -149,6 +149,10 @@ pub(crate) struct PropagationSummary {
     pub skipped_unrooted_ecosystem: usize,
     /// Ecosystems that had a resolvable root seed, sorted.
     pub rooted_ecosystems: Vec<String>,
+    /// Spec 1616 (#1618) FR-006: components Phase B reached, unscoped and
+    /// not compiler-supplied, that only the added seeds (runtime main
+    /// modules other than the per-ecosystem root) made immune.
+    pub immune_by_added_seeds: usize,
 }
 
 impl PropagationSummary {
@@ -312,10 +316,61 @@ fn runtime_reachable<'a>(
 /// pass declines to assign into it (FR-012) rather than guessing.
 ///
 /// Returns what it did; mutates `components` in place.
+#[cfg(test)]
 pub(crate) fn propagate_non_runtime_scope(
     components: &mut [ResolvedComponent],
     relationships: &[Relationship],
     seeds: &HashSet<String>,
+    ecosystems_with_root: &HashSet<String>,
+    boot_libraries: &HashSet<String>,
+) -> PropagationSummary {
+    propagate_non_runtime_scope_seeded(
+        components,
+        relationships,
+        seeds,
+        &HashSet::new(),
+        ecosystems_with_root,
+        boot_libraries,
+    )
+}
+
+/// Spec 1616 (#1618) research R2: whether main module `c` may protect its
+/// runtime dependencies from propagation. It must be runtime now (no
+/// non-runtime scope of its own) and must not be a project spec 1613's
+/// `ci_scope` pass will make non-runtime later (every manifest under a listed
+/// CI or docs dot-directory), since that pass runs after this one.
+pub(crate) fn is_runtime_seed_candidate(c: &ResolvedComponent, roots: &[std::path::PathBuf]) -> bool {
+    !c.lifecycle_scope.is_some_and(|s| s.is_non_runtime())
+        && !crate::scan_fs::ci_scope::declared_only_under_listed_dirs(c, roots)
+}
+
+/// Spec 1616 (#1618) FR-001: every runtime main module that `seeds` does not
+/// already hold. Graph completeness keeps `seeds` (FR-004); only the
+/// propagation's immunity search starts from these too.
+pub(crate) fn added_seeds(
+    components: &[ResolvedComponent],
+    seeds: &HashSet<String>,
+    roots: &[std::path::PathBuf],
+) -> HashSet<String> {
+    components
+        .iter()
+        .filter(|c| {
+            c.extra_annotations.get("waybill:component-role").and_then(|v| v.as_str()) == Some("main-module")
+        })
+        .filter(|c| !seeds.contains(c.purl.as_str()))
+        .filter(|c| is_runtime_seed_candidate(c, roots))
+        .map(|c| c.purl.as_str().to_string())
+        .collect()
+}
+
+/// [`propagate_non_runtime_scope`], with Phase A also starting from
+/// `added_seeds` (spec 1616, #1618). `ecosystems_with_root` and the FR-012
+/// gate still come from `seeds` alone.
+pub(crate) fn propagate_non_runtime_scope_seeded(
+    components: &mut [ResolvedComponent],
+    relationships: &[Relationship],
+    seeds: &HashSet<String>,
+    added_seeds: &HashSet<String>,
     ecosystems_with_root: &HashSet<String>,
     // Milestone 1276 — the packages the pinned revision's compiler supplies.
     // Empty when unknown, which exempts nothing (FR-005).
@@ -338,8 +393,25 @@ pub(crate) fn propagate_non_runtime_scope(
     let exempt = compiler_supplied(components, boot_libraries);
     let immune_compiler_supplied = exempt.len();
 
-    let (immune, assigned, skipped_unrooted): (usize, HashMap<String, LifecycleScope>, usize) = {
+    let (immune, assigned, skipped_unrooted, immune_by_added_seeds): (
+        usize,
+        HashMap<String, LifecycleScope>,
+        usize,
+        usize,
+    ) = {
         let mut immune = runtime_reachable(components, &adj, seeds);
+        // Spec 1616 (#1618): what only the added seeds protect, kept apart
+        // so the summary can say how much the wider seed set did (FR-006).
+        let added_only: HashSet<&str> = if added_seeds.is_empty() {
+            HashSet::new()
+        } else {
+            let all: HashSet<String> = seeds.union(added_seeds).cloned().collect();
+            runtime_reachable(components, &adj, &all)
+                .into_iter()
+                .filter(|p| !immune.contains(p) && !exempt.contains(p))
+                .collect()
+        };
+        immune.extend(added_only.iter().copied());
         immune.extend(exempt.iter().copied());
 
         let scope_by_purl: HashMap<&str, LifecycleScope> = components
@@ -365,6 +437,7 @@ pub(crate) fn propagate_non_runtime_scope(
 
         let mut assigned: HashMap<String, LifecycleScope> = HashMap::new();
         let mut skipped_unrooted: HashSet<&str> = HashSet::new();
+        let mut protected_by_added: HashSet<&str> = HashSet::new();
         for scope in BY_DESCENDING_STRENGTH {
             let mut seen: HashSet<&str> = HashSet::new();
             let mut queue: VecDeque<&str> = VecDeque::new();
@@ -388,6 +461,9 @@ pub(crate) fn propagate_non_runtime_scope(
             }
             for purl in seen {
                 if immune.contains(purl) {
+                    if added_only.contains(purl) && !scope_by_purl.contains_key(purl) {
+                        protected_by_added.insert(purl);
+                    }
                     continue; // FR-002
                 }
                 if scope_by_purl.contains_key(purl) {
@@ -405,7 +481,7 @@ pub(crate) fn propagate_non_runtime_scope(
                     .or_insert_with(|| *scope); // FR-004, by iteration order
             }
         }
-        (immune.len(), assigned, skipped_unrooted.len())
+        (immune.len(), assigned, skipped_unrooted.len(), protected_by_added.len())
     };
 
     let mut rooted: Vec<String> = ecosystems_with_root.iter().cloned().collect();
@@ -419,6 +495,7 @@ pub(crate) fn propagate_non_runtime_scope(
             .count(),
         skipped_unrooted_ecosystem: skipped_unrooted,
         rooted_ecosystems: rooted,
+        immune_by_added_seeds,
         ..Default::default()
     };
     if assigned.is_empty() {
@@ -431,6 +508,7 @@ pub(crate) fn propagate_non_runtime_scope(
         // and the only way to learn that was to read the readers.
         tracing::info!(
             immune = summary.immune,
+            immune_by_added_seeds = summary.immune_by_added_seeds,
             seeded_from = summary.seeded_from,
             skipped_unrooted_ecosystem = summary.skipped_unrooted_ecosystem,
             rooted_ecosystems = ?summary.rooted_ecosystems,
@@ -471,6 +549,7 @@ pub(crate) fn propagate_non_runtime_scope(
 
     tracing::info!(
         immune = summary.immune,
+        immune_by_added_seeds = summary.immune_by_added_seeds,
         seeded_from = summary.seeded_from,
         assigned = summary.assigned_total(),
         by_scope = ?summary.assigned_by_scope,
@@ -1474,5 +1553,156 @@ mod tests {
         let exempt = compiler_supplied(&comps, &boot_set(&["os-string"]));
         assert!(exempt.contains("pkg:hackage/os-string@2.0.7"), "{exempt:?}");
         assert!(!exempt.contains("pkg:hackage/os-string@2.0.10"), "{exempt:?}");
+    }
+
+    // ---- spec 1616 (#1618): every runtime main module is a seed ----
+
+    const ROOT_A: &str = "pkg:pypi/waybill-fixture-a@1.0.0";
+    const PROJ_B: &str = "pkg:pypi/waybill-fixture-b@1.0.0";
+    const S1616_DEVTOOL: &str = "pkg:pypi/waybill-fixture-devtool@1.0.0";
+    const SHIPPED: &str = "pkg:pypi/waybill-fixture-shipped@1.0.0";
+    const SHIPPED_DEP: &str = "pkg:pypi/waybill-fixture-shipped-dep@1.0.0";
+    const DEVONLY: &str = "pkg:pypi/waybill-fixture-devonly@1.0.0";
+
+    fn main_module(purl: &str) -> ResolvedComponent {
+        let mut c = mk_component(purl);
+        c.extra_annotations.insert("waybill:component-role".into(), serde_json::json!("main-module"));
+        c
+    }
+
+    /// `a` (seed) -dev-> devtool -> {shipped, devonly}; `b` -> shipped -> shipped-dep.
+    fn two_projects() -> (Vec<ResolvedComponent>, Vec<Relationship>) {
+        let comps = vec![
+            main_module(ROOT_A),
+            main_module(PROJ_B),
+            scoped(S1616_DEVTOOL, LifecycleScope::Development),
+            mk_component(SHIPPED),
+            mk_component(SHIPPED_DEP),
+            mk_component(DEVONLY),
+        ];
+        let rels = vec![
+            mk_rel(ROOT_A, S1616_DEVTOOL),
+            mk_rel(S1616_DEVTOOL, SHIPPED),
+            mk_rel(S1616_DEVTOOL, DEVONLY),
+            mk_rel(PROJ_B, SHIPPED),
+            mk_rel(SHIPPED, SHIPPED_DEP),
+        ];
+        (comps, rels)
+    }
+
+    fn run(comps: &mut [ResolvedComponent], rels: &[Relationship], added: &[&str]) -> PropagationSummary {
+        propagate_non_runtime_scope_seeded(
+            comps,
+            rels,
+            &seeds(&[ROOT_A]),
+            &seeds(added),
+            &ecosystems(&["pypi"]),
+            &HashSet::new(),
+        )
+    }
+
+    /// T005: an added seed protects its runtime closure; what only the dev
+    /// tool reaches keeps the propagated scope (R4: the same scope).
+    #[test]
+    fn s1616_an_added_seed_protects_its_runtime_closure() {
+        let (mut comps, rels) = two_projects();
+        let summary = run(&mut comps, &rels, &[PROJ_B]);
+        assert_eq!(scope_of(&comps, SHIPPED), None);
+        assert_eq!(scope_of(&comps, SHIPPED_DEP), None);
+        assert_eq!(derivation_of(&comps, SHIPPED), None);
+        assert_eq!(scope_of(&comps, DEVONLY), Some(LifecycleScope::Development));
+        assert_eq!(derivation_of(&comps, DEVONLY).as_deref(), Some(DERIVATION_TRANSITIVE));
+        assert_eq!(summary.immune_by_added_seeds, 2, "shipped and shipped-dep; summary={summary:?}");
+    }
+
+    /// T005: with no added seeds the pass is today's.
+    #[test]
+    fn s1616_no_added_seeds_is_todays_pass() {
+        let (mut today, rels) = two_projects();
+        let (mut seeded, _) = two_projects();
+        let a = propagate_non_runtime_scope(&mut today, &rels, &seeds(&[ROOT_A]), &ecosystems(&["pypi"]), &HashSet::new());
+        let b = run(&mut seeded, &rels, &[]);
+        for c in &today {
+            let p = c.purl.as_str();
+            assert_eq!(scope_of(&today, p), scope_of(&seeded, p), "{p}");
+            assert_eq!(derivation_of(&today, p), derivation_of(&seeded, p), "{p}");
+        }
+        assert_eq!(scope_of(&today, SHIPPED), Some(LifecycleScope::Development), "the defect: b is not a seed");
+        assert_eq!(a.immune, b.immune);
+        assert_eq!(b.immune_by_added_seeds, 0);
+    }
+
+    /// T005 / FR-003: an added seed does not cross an excluded edge.
+    #[test]
+    fn s1616_an_added_seed_does_not_cross_an_excluded_edge() {
+        for data_type in INFERRED_EDGE_DATA_TYPES {
+            let (mut comps, mut rels) = two_projects();
+            rels.retain(|r| !(r.from == PROJ_B && r.to == SHIPPED));
+            let mut inferred = mk_rel(PROJ_B, SHIPPED);
+            inferred.provenance.data_type = (*data_type).to_string();
+            rels.push(inferred);
+            run(&mut comps, &rels, &[PROJ_B]);
+            assert_eq!(scope_of(&comps, SHIPPED), Some(LifecycleScope::Development), "{data_type}");
+        }
+    }
+
+    /// T011 / FR-002: a main module with a non-runtime scope, or declared
+    /// only under a listed dot-directory, is not a seed candidate.
+    #[test]
+    fn s1616_non_runtime_main_modules_are_not_seed_candidates() {
+        let roots = vec![std::path::PathBuf::from("/scan")];
+        for s in [LifecycleScope::Development, LifecycleScope::Test, LifecycleScope::Optional, LifecycleScope::Build] {
+            let mut c = main_module(PROJ_B);
+            c.lifecycle_scope = Some(s);
+            assert!(!is_runtime_seed_candidate(&c, &roots), "{s:?}");
+        }
+        let mut runtime = main_module(PROJ_B);
+        runtime.lifecycle_scope = Some(LifecycleScope::Runtime);
+        assert!(is_runtime_seed_candidate(&runtime, &roots));
+        assert!(is_runtime_seed_candidate(&main_module(PROJ_B), &roots), "no scope is runtime");
+        let mut ci = main_module(PROJ_B);
+        ci.evidence.source_file_paths = vec![".github/actions/x/uv.lock".into()];
+        assert!(!is_runtime_seed_candidate(&ci, &roots), "every manifest under .github");
+        let mut mixed = main_module(PROJ_B);
+        mixed.evidence.source_file_paths = vec![".github/actions/x/uv.lock".into(), "b/uv.lock".into()];
+        assert!(is_runtime_seed_candidate(&mixed, &roots), "one manifest outside");
+        let comps = vec![main_module(ROOT_A), main_module(PROJ_B), ci.clone()];
+        let got = added_seeds(&comps, &seeds(&[ROOT_A]), &roots);
+        assert_eq!(got, seeds(&[PROJ_B]), "the base seed is not re-added; the CI project is not added");
+    }
+
+    /// T013 / FR-006: the count excludes what the base seeds already protect.
+    #[test]
+    fn s1616_the_count_excludes_what_base_seeds_protect() {
+        let (mut comps, mut rels) = two_projects();
+        // `a` also declares shipped-dep at runtime: the base seed protects it.
+        rels.push(mk_rel(ROOT_A, SHIPPED_DEP));
+        let summary = run(&mut comps, &rels, &[PROJ_B]);
+        assert_eq!(scope_of(&comps, SHIPPED_DEP), None);
+        assert_eq!(summary.immune_by_added_seeds, 1, "only shipped; summary={summary:?}");
+    }
+
+    /// P-9 (unit, see `specs/1616-propagation-seeds/measurements/trace.md`):
+    /// a non-top main module of another ecosystem protects a runtime
+    /// dependency that a dev component reaches over a declared edge.
+    #[test]
+    fn s1616_cross_ecosystem_added_seed_protects() {
+        const NPM_TOP: &str = "pkg:npm/waybill-fixture-top@1.0.0";
+        const NPM_N: &str = "pkg:npm/waybill-fixture-n@1.0.0";
+        const SHARED: &str = "pkg:npm/waybill-fixture-shared@1.0.0";
+        let mut comps = vec![
+            main_module(ROOT_A),
+            main_module(NPM_TOP),
+            main_module(NPM_N),
+            scoped(S1616_DEVTOOL, LifecycleScope::Development),
+            mk_component(SHARED),
+        ];
+        let rels = vec![mk_rel(ROOT_A, S1616_DEVTOOL), mk_rel(S1616_DEVTOOL, SHARED), mk_rel(NPM_N, SHARED)];
+        let base = seeds(&[ROOT_A, NPM_TOP]);
+        let mut before = comps.clone();
+        propagate_non_runtime_scope_seeded(&mut before, &rels, &base, &HashSet::new(), &ecosystems(&["pypi", "npm"]), &HashSet::new());
+        assert_eq!(scope_of(&before, SHARED), Some(LifecycleScope::Development), "the defect, across ecosystems");
+        propagate_non_runtime_scope_seeded(&mut comps, &rels, &base, &seeds(&[NPM_N]), &ecosystems(&["pypi", "npm"]), &HashSet::new());
+        assert_eq!(scope_of(&comps, SHARED), None);
     }
 }
