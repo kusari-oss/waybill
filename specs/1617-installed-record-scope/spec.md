@@ -36,6 +36,13 @@ In an installed tree, a shipped config file's conditional `find_dependency` says
 
 **A scan-type gate would be too blunt.** Spec 1533's "installed tree" classification (`InstalledTree::Recognised`) is set whenever the scan holds an installed library that no OS package owns. A source tree with one vendored prebuilt library qualifies. A rule gated on that classification would also change source trees.
 
+## Clarifications
+
+### Session 2026-11-19
+
+- Q: Which records may the search conditions no longer make Optional? → A: Any installed record whose own evidence includes a library file it ships, decided per record (FR-001).
+- Q: How is a record scoped when it ships no library file and is searched only from test contexts? → A: Test, with the C62 derivation its searches carry (FR-004).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A library an SDK ships is a runtime component (Priority: P1)
@@ -65,7 +72,7 @@ An SDK ships test projects next to its libraries. A library that only those test
 **Acceptance Scenarios**:
 
 1. **Given** a shipped library whose only searches are in a shipped test project, **When** it is scanned, **Then** the record is required.
-2. **Given** a record that ships no library file and is searched only from a test project (like `rocprofiler-sdk-tests`), **When** it is scanned, **Then** it is scoped as decided by FR-004.
+2. **Given** a record that ships no library file and is searched only from a test project (like `rocprofiler-sdk-tests`), **When** it is scanned, **Then** it is Test, with its searches' C62 derivation (FR-004).
 
 ---
 
@@ -95,10 +102,10 @@ A conditional search for a library that the tree does not contain is still an op
 
 ### Functional Requirements
 
-- **FR-001**: The search half of the record-scope rule MUST NOT make Optional [NEEDS CLARIFICATION: Which records? (A) any installed record whose evidence includes a library file it ships (`.so*`, `.a`, `.dll`, `.dylib`), decided per record; (B) any installed record at all when the scan is an installed tree, decided per scan by spec 1533's classification (which also matches a source tree holding one vendored prebuilt library); (C) any installed record anywhere, which removes the search half and leaves searches as evidence and edges only.]
+- **FR-001**: The search half of the record-scope rule MUST NOT make Optional any installed record whose own evidence includes a library file it ships (`.so`, `.so.*`, `.a`, `.dll`, `.dylib`). This is decided per record, not by how the whole scan is classified: a library present in the tree is runtime content of it. A vendored prebuilt library in a source tree is treated the same way.
 - **FR-002**: A search MUST still pair with the installed record it names, give the record its edge, and record its conditions in C236, whatever FR-001 decides.
 - **FR-003**: A conditional search that pairs with no installed record MUST keep spec 1614's behaviour (US3).
-- **FR-004**: A record whose only searches come from test contexts, and which FR-001 still lets the search half scope, MUST be [NEEDS CLARIFICATION: (A) Test, with the C62 derivation its searches carry (for example `source-test-directory`), since its searches are test-scoped; or (B) left unscoped by this rule, so that spec 1533's test-scope pass (exported-targets test package, test directory) decides; or (C) Optional, as today.]
+- **FR-004**: A record that ships no library file, and whose every search comes from a test context, MUST be Test, with the C62 derivation its searches carry (for example `source-test-directory`), not Optional. A record with at least one non-test conditional search keeps spec 1614's Optional, with C236.
 - **FR-005**: Spec 1543's link half (C235) MUST keep its behaviour. This feature changes only the search half.
 - **FR-006**: The emitted catalog rows MUST keep their values: C235, C236 and C237 (`paired`, `read`, `conditional`, …). Only C42, C62 and C122 may change on affected records, plus the edges' relationship types that follow from scope.
 - **FR-007**: A tree whose installed records are not searched only conditionally or from test contexts MUST produce output byte-identical to `main`.
@@ -113,7 +120,7 @@ A conditional search for a library that the tree does not contain is still an op
 
 ### Measurable Outcomes
 
-- **SC-001**: On the TheRock SDK, `hsa-runtime64`, `amd_smi`, `zstd`, `absl`, `openblas`, `openblas64` and `rocprofiler-sdk-rocattach` are required, each still carrying C236 where it has one today.
+- **SC-001**: On the TheRock SDK, `hsa-runtime64`, `amd_smi`, `zstd`, `absl`, `openblas`, `openblas64` and `rocprofiler-sdk-rocattach` are required, each still carrying C236 where it has one today. `rocprofiler-sdk-tests` is Test, and `rocmcmakebuildtools` (no library file; a non-test conditional search) stays Optional with C236.
 - **SC-002**: On the SDK, every other change in scope is traced to a record FR-001 or FR-004 covers. No component gains a non-runtime scope, and none is added or removed.
 - **SC-003**: TheRock's source tree is unchanged against `main`.
 - **SC-004**: Every public-corpus golden change (from a regeneration) and every quality-corpus change against a `main` control is traced component by component.

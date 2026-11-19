@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,6 +31,6 @@
 
 ## Notes
 
-- Two clarifications open: FR-001 (which records the search half may no longer scope) and FR-004 (records searched only from test contexts).
+- Clarified 2026-11-19: FR-001 A (per-record, ships a library file); FR-004 A (Test with the searches' derivation).
 - Background names source files and catalog rows: the trace the issue asked for, and the wire contract. They are not design choices.
 - (b) of the input is decided in FR-005: the link half is unchanged, and measured 0 records with C235 on the SDK.
