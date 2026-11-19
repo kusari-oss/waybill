@@ -99,7 +99,7 @@
   - parity, duplicates, unexplained orphans and runner identity (SC-004).
 - [X] T022 Dispatch the public corpus with `regen_goldens=true`, and the quality corpus at the branch with a `main` control. Trace every golden change and every changed quality document (locally cached targets, as in spec 1615) to a protecting seed. Commit the regenerated goldens. Record all of it in `specs/1616-propagation-seeds/measurements/corpus.md`.
 - [X] T023 Remove spec 1615's exception: edit `specs/1615-nested-req-scope/spec.md` FR-007, SC-002 and the clarification, and `measurements/therock.md`, citing T021's measurement (FR-007).
-- [ ] T024 Open the PR, with a body citing T019–T023, `Closes #1618` and the attribution line. Do not merge.
+- [X] T024 Open the PR, with a body citing T019–T023, `Closes #1618` and the attribution line. Do not merge.
 
 ## Dependencies
 
