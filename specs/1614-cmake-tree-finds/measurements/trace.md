@@ -44,3 +44,9 @@ C237 follows the same route.
 | `cmake_walker_depth_deep_emission` | Its fixture is `cmake/modules/vendor/Extra.cmake`. The narrow set walked `cmake/**` with its own walker, `vendor/` included; the shared walker skips `vendor/` (`should_skip_default_descent`). A search the old reader saw disappeared. **FR-009 regression.** | Package searches also read every narrow-set file the walker did not hand the reader, through the same tokenized path, with conditions (`searches::read_file`). Fetches still read the walked files only, unchanged. |
 | `cmake_walker_depth_exclude_path` | Asserted `find_package(NotEmitted)` in `src/CMakeLists.txt` is not read (milestone 156 FR-017). | FR-001's intended change: now 1. The test's `--exclude-path` assertions are unchanged and still pass. |
 | `cmake_walker_depth_third_party_opt_in` (default case) | Asserted a search at `third_party/somedep/cmake/` depth 3 is not read without `--cmake-third-party-recursive` (milestone 156 FR-019). | FR-001's intended change: now read by default. The flag still governs vendored-directory and `file(DOWNLOAD)` discovery, and its opt-in test is unchanged. |
+
+## T010: US1 against W-ctl
+
+After T007–T009, W-ctl is still identical to `main`'s golden once C237 is removed. Research R8 moves root-level package searches from the graph-top fallback to declared root anchors; the root's edges to them and their SPDX relationships came out unchanged, so T010's provenance check found no drift.
+
+One unit test asserted spec 1538's rule that only fetches attach: `cmake_fetch_attach::tests::only_fetch_components_are_attached`. It is rewritten for R8 as `fetches_and_package_searches_are_attached_and_nothing_else`: a package search attaches, and a `cmake-package-version` record still does not.

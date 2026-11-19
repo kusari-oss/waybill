@@ -12,11 +12,20 @@ use waybill_common::resolution::{EnrichmentProvenance, Relationship, Relationshi
 
 use super::declared_attach::{relative, DeclaredAttachment, OwnerIndex};
 
-fn is_fetch(c: &ResolvedComponent) -> bool {
+/// A CMake fetch, or (spec 1614, research R8) a CMake package search: both
+/// are a dependency of the project whose file declares them. Before spec
+/// 1614 a package search reached the root only through the graph-top
+/// fallback, which strands it once the root has any other edge.
+fn is_cmake_declaration(c: &ResolvedComponent) -> bool {
     c.extra_annotations
         .get("waybill:source-mechanism")
         .and_then(|v| v.as_str())
-        .is_some_and(|m| m.starts_with("cmake-fetchcontent") || m == "cmake-externalproject")
+        .is_some_and(|m| {
+            m.starts_with("cmake-fetchcontent")
+                || m == "cmake-externalproject"
+                || m == "cmake-find-package"
+                || m == "cmake-pkg-check-modules"
+        })
 }
 
 /// One edge from each declaring file's owner; a file with no owner gives a
@@ -31,7 +40,7 @@ pub(crate) fn attach(
     let mut seen: HashSet<(String, String)> =
         relationships.iter().map(|r| (r.from.clone(), r.to.clone())).collect();
     let mut out = DeclaredAttachment::default();
-    for c in components.iter().filter(|c| is_fetch(c)) {
+    for c in components.iter().filter(|c| is_cmake_declaration(c)) {
         for p in &c.evidence.source_file_paths {
             let Some(rel) = relative(p, scan_root, &canonical_root) else { continue };
             match index.owner_of(&rel) {
@@ -90,13 +99,27 @@ mod tests {
         assert_eq!(d.root_anchors.into_iter().collect::<Vec<_>>(), vec![b.to_string()]);
     }
 
+    /// Spec 1614 research R8: a package search attaches as a fetch does
+    /// (before, spec 1538 attached fetches only). Any other mechanism does not.
     #[test]
-    fn only_fetch_components_are_attached() {
-        let mut c = mk_component("pkg:generic/waybill-fixture-fp");
-        c.evidence.source_file_paths = vec!["sub/CMakeLists.txt".into()];
-        c.extra_annotations.insert("waybill:source-mechanism".into(), serde_json::json!("cmake-find-package"));
+    fn fetches_and_package_searches_are_attached_and_nothing_else() {
+        let with = |purl: &str, mechanism: &str| {
+            let mut c = mk_component(purl);
+            c.evidence.source_file_paths = vec!["sub/CMakeLists.txt".into()];
+            c.extra_annotations.insert("waybill:source-mechanism".into(), serde_json::json!(mechanism));
+            c
+        };
+        let comps = [
+            with("pkg:generic/waybill-fixture-fp", "cmake-find-package"),
+            with("pkg:generic/waybill-fixture-pc", "cmake-pkg-check-modules"),
+            with("pkg:generic/waybill-fixture-other@1.0", "cmake-package-version"),
+        ];
         let index = OwnerIndex::build(&[], &BTreeMap::new(), Path::new(ROOT), crate::scan_fs::ScanMode::Path);
-        let d = attach(&[c], &[], &index, Path::new(ROOT));
-        assert!(d.edges.is_empty() && d.root_anchors.is_empty());
+        let d = attach(&comps, &[], &index, Path::new(ROOT));
+        assert!(d.edges.is_empty());
+        assert_eq!(
+            d.root_anchors.into_iter().collect::<Vec<_>>(),
+            vec!["pkg:generic/waybill-fixture-fp".to_string(), "pkg:generic/waybill-fixture-pc".to_string()]
+        );
     }
 }

@@ -153,6 +153,8 @@ pub struct ScanResult {
     pub declared_downloads: Option<String>,
     /// Spec 1538 (C231): CMake fetch-declaration counts, as their wire value.
     pub cmake_fetch_coverage: Option<String>,
+    /// Spec 1614 (C237): package-search counts, as their wire value.
+    pub cmake_find_coverage: Option<String>,
     /// Spec 1536 (C230): binaries a Python package owns, analysed and
     /// identified, as the wire value. `None` when none was analysed.
     pub python_owned_binaries: Option<String>,
@@ -444,6 +446,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut cmake_links: Vec<package_db::cmake::links::LinkDeclaration> = Vec::new();
     let mut declared_downloads: Option<String> = None;
     let mut cmake_fetch_coverage: Option<String> = None;
+    let mut cmake_find_coverage: Option<package_db::cmake::searches::FindCoverage> = None;
     let mut python_owned_binaries: Option<String> = None;
     let mut installed_library_coverage: Option<String> = None;
     let mut test_scope_inputs = test_scope::Inputs::default();
@@ -530,6 +533,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         cmake_links = std::mem::take(&mut scan_result.diagnostics.cmake_links);
         declared_downloads = scan_result.diagnostics.cmake_declared_downloads.clone();
         cmake_fetch_coverage = scan_result.diagnostics.cmake_fetch_coverage.clone();
+        cmake_find_coverage = scan_result.diagnostics.cmake_find_coverage.clone();
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
         // Milestone 172: mirror gosum_fallback_count from
         // ScanDiagnostics into the local for the ScanResult return.
@@ -1691,6 +1695,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         git_submodule_coverage,
         declared_downloads,
         cmake_fetch_coverage,
+        cmake_find_coverage: cmake_find_coverage.as_ref().and_then(|c| c.wire()),
         python_owned_binaries,
         installed_library_coverage,
         test_scope_inputs,

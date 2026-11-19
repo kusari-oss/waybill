@@ -258,6 +258,10 @@ pub(crate) fn read_with_downloads(
         downloads.extend(super::cmake_download::parse_downloads(&content, &source_path));
     }
     if tree_wide {
+        fetches.finds.read = decls.searches.len() + decls.unresolved_searches;
+        fetches.finds.unresolved = decls.unresolved_searches;
+        fetches.finds.components =
+            decls.searches.iter().map(|s| s.name.to_lowercase()).collect::<BTreeSet<_>>().len();
         for s in decls.searches {
             match s.kind {
                 searches::SearchKind::FindPackage => find_package_hits.push(FindPackageHit {

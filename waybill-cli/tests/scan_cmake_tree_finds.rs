@@ -14,7 +14,8 @@ mod corpus_harness_195;
 
 use std::path::{Path, PathBuf};
 
-use common::installed_lib::{row_all_formats, scan_with, Docs};
+use common::git_fixture::GitFixture;
+use common::installed_lib::{components, depends_on, doc_field_all_formats, prop, row_all_formats, scan_with, source_files, write, Docs};
 use corpus_harness_195::layer2_golden::{mask_nondeterministic, masked_difference};
 use serde_json::Value;
 
@@ -34,6 +35,35 @@ fn scan(root: &Path) -> Docs {
         row_all_formats(&d, row);
     }
     d
+}
+
+/// The one component with `purl`; fails on none or several.
+fn by_purl<'a>(d: &'a Docs, purl: &str) -> &'a Value {
+    let found: Vec<&Value> = components(&d.cdx).into_iter().filter(|c| c["purl"] == purl).collect();
+    assert_eq!(found.len(), 1, "{purl}: {} components; all: {:?}", found.len(), purls(d));
+    found[0]
+}
+
+fn absent_purl(d: &Docs, purl: &str) {
+    assert!(!purls(d).iter().any(|p| p == purl), "{purl} must not appear");
+}
+
+fn purls(d: &Docs) -> Vec<String> {
+    components(&d.cdx).into_iter().filter_map(|c| c["purl"].as_str().map(str::to_string)).collect()
+}
+
+/// CycloneDX `scope`, which is absent for a required component.
+fn scope(c: &Value) -> &str {
+    c["scope"].as_str().unwrap_or("required")
+}
+
+/// C237, parsed, agreeing across the three formats.
+fn coverage(d: &Docs) -> Value {
+    doc_field_all_formats(d, C237).unwrap_or_else(|| panic!("C237 missing"))
+}
+
+fn tree() -> tempfile::TempDir {
+    tempfile::tempdir().unwrap()
 }
 
 /// The fixture tree copied under a fresh temporary parent, as a directory
@@ -106,4 +136,100 @@ fn w_ctl_is_byte_identical_to_main() {
             panic!("{name}: differs from main's output; {}", masked_difference(&want, &got).unwrap_or_default());
         }
     }
+}
+
+// ---------------------------------------------------------------------
+// User story 1: every package a tree searches for is in its SBOM (T007)
+// ---------------------------------------------------------------------
+
+/// W-1: a nested `find_package` becomes a component, with its range and its
+/// file. Absent on `main` (measurements/trace.md (b)).
+#[test]
+fn w01_nested_find_package_is_a_component() {
+    let t = tree();
+    write(t.path(), "projects/a/CMakeLists.txt", "find_package(waybill_fixture_ext 2.1)\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_ext");
+    assert_eq!(scope(c), "required");
+    assert_eq!(prop(c, "waybill:requirement-ranges"), Some("[\">=2.1\"]"));
+    assert_eq!(source_files(c), vec!["projects/a/CMakeLists.txt".to_string()]);
+}
+
+/// W-2: two files searching for one package give one component with both
+/// files and both ranges.
+#[test]
+fn w02_two_files_one_component_both_ranges() {
+    let t = tree();
+    write(t.path(), "projects/a/CMakeLists.txt", "find_package(waybill_fixture_ext 2.1)\n");
+    write(t.path(), "projects/b/cmake/deps.cmake", "find_package(waybill_fixture_ext 3.0 EXACT)\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_ext");
+    assert_eq!(source_files(c), vec!["projects/a/CMakeLists.txt".to_string(), "projects/b/cmake/deps.cmake".to_string()]);
+    let ranges: Vec<String> = serde_json::from_str(prop(c, "waybill:requirement-ranges").unwrap()).unwrap();
+    assert_eq!(ranges, vec!["==3.0".to_string(), ">=2.1".to_string()]);
+}
+
+/// W-3: nested pkg-config searches become components as milestone 155 emits
+/// them from the root.
+#[test]
+fn w03_nested_pkg_config_searches() {
+    let t = tree();
+    write(
+        t.path(),
+        "projects/a/CMakeLists.txt",
+        "pkg_check_modules(X REQUIRED waybill-fixture-pc>=1.0)\npkg_search_module(Y waybill-fixture-ps)\n",
+    );
+    let d = scan(t.path());
+    for purl in ["pkg:generic/waybill-fixture-pc", "pkg:generic/waybill-fixture-ps"] {
+        let c = by_purl(&d, purl);
+        assert_eq!(prop(c, "waybill:source-mechanism"), Some("cmake-pkg-check-modules"));
+    }
+}
+
+/// W-4: a search whose name is a variable is counted, not emitted.
+#[test]
+fn w04_variable_name_is_counted_as_unresolved() {
+    let t = tree();
+    write(t.path(), "projects/a/CMakeLists.txt", "find_package(${WAYBILL_PKG})\nfind_package(waybill_fixture_known)\n");
+    let d = scan(t.path());
+    by_purl(&d, "pkg:generic/waybill_fixture_known");
+    let cov = coverage(&d);
+    assert_eq!(cov["unresolved"], 1, "{cov}");
+    assert_eq!(cov["read"], 2, "{cov}");
+    assert_eq!(cov["components"], 1, "{cov}");
+}
+
+/// W-16: a search inside a git submodule hangs off the submodule, not the
+/// document root (research R8).
+#[test]
+fn w16_a_search_in_a_submodule_attaches_to_the_submodule() {
+    let fx = GitFixture::new();
+    fx.repo("dep");
+    fx.write("dep/CMakeLists.txt", "find_package(waybill_fixture_w16 1.0)\n");
+    fx.git(&fx.path("dep"), &["add", "CMakeLists.txt"]);
+    fx.git(&fx.path("dep"), &["commit", "-q", "-m", "cmake"]);
+    fx.repo("app");
+    fx.add_submodule("app", "dep", "extern/waybill-fixture-dep");
+    let d = scan(&fx.path("app"));
+    let target = "pkg:generic/waybill_fixture_w16";
+    by_purl(&d, target);
+    let sub = components(&d.cdx)
+        .into_iter()
+        .find(|c| prop(c, "waybill:source-mechanism") == Some("git-submodule"))
+        .and_then(|c| c["purl"].as_str())
+        .expect("a submodule component")
+        .to_string();
+    assert!(depends_on(&d.cdx, &sub).contains(&target.to_string()), "{sub} must depend on {target}");
+    let root = d.cdx["metadata"]["component"]["bom-ref"].as_str().unwrap_or("").to_string();
+    let root_deps: Vec<String> = d.cdx["dependencies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["ref"] == root)
+        .and_then(|e| e["dependsOn"].as_array())
+        .into_iter()
+        .flatten()
+        .filter_map(|x| x.as_str().map(str::to_string))
+        .collect();
+    assert!(!root_deps.contains(&target.to_string()), "no root anchor: {root_deps:?}");
 }

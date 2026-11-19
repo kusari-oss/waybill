@@ -17,11 +17,58 @@
 //!   result prefix; every other argument that is not a modifier keyword is a
 //!   module, stripped of a `>=`/`<=`/`>`/`<`/`=` version suffix.
 
+use std::collections::BTreeSet;
 use std::sync::OnceLock;
 
 use regex::Regex;
 
 use super::blocks::BlockStack;
+
+/// C237 `waybill:cmake-find-coverage`.
+pub(crate) const ANN_CMAKE_FIND_COVERAGE: &str = "waybill:cmake-find-coverage";
+
+/// What C237 accounts for (data-model "FindCoverage"). Counts by
+/// declaration: `read`, `unresolved`, `tools`, `paired_*`,
+/// `in_tree_declarations`. By component: `components`, `conditional`,
+/// `test`.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(crate) struct FindCoverage {
+    pub(crate) read: usize,
+    pub(crate) unresolved: usize,
+    pub(crate) tools: usize,
+    pub(crate) paired_fetch: usize,
+    pub(crate) paired_installed: usize,
+    pub(crate) paired_submodule: usize,
+    pub(crate) in_tree: BTreeSet<String>,
+    pub(crate) in_tree_declarations: usize,
+    pub(crate) components: usize,
+    pub(crate) conditional: usize,
+    pub(crate) test: usize,
+}
+
+impl FindCoverage {
+    /// Sorted-key JSON, or `None` when no package search was read.
+    pub(crate) fn wire(&self) -> Option<String> {
+        (self.read > 0).then(|| {
+            serde_json::json!({
+                "components": self.components,
+                "conditional": self.conditional,
+                "in-tree": self.in_tree,
+                "in-tree-declarations": self.in_tree_declarations,
+                "paired": {
+                    "fetch": self.paired_fetch,
+                    "installed": self.paired_installed,
+                    "submodule": self.paired_submodule,
+                },
+                "read": self.read,
+                "test": self.test,
+                "tools": self.tools,
+                "unresolved": self.unresolved,
+            })
+            .to_string()
+        })
+    }
+}
 
 /// The kind of package search.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

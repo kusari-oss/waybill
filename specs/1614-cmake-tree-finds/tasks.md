@@ -60,10 +60,10 @@
 
 **Independent test**: W-1 to W-4 and W-16.
 
-- [ ] T007 [P] [US1] Write W-1 (nested `find_package` with a range), W-2 (two files, one component, both ranges), W-3 (nested `pkg_check_modules` / `pkg_search_module`), W-4 (`${VAR}` name, C237 `unresolved`) and W-16 (an edge from the owning submodule, no root anchor) in `waybill-cli/tests/scan_cmake_tree_finds.rs`. All fail on `main`.
-- [ ] T008 [US1] C237: build the coverage record in `cmake.rs` from the searches (`read`, `unresolved`, `components`, and so on, with the other buckets 0 until US2–US4 fill them). Carry it as C231 is carried: `scan_fs/mod.rs` field, then `generate/mod.rs`, then the three emitters.
-- [ ] T009 [US1] R8: in `waybill-cli/src/scan_fs/cmake_fetch_attach.rs`, attach components whose C55 mechanism is `cmake-find-package` / `cmake-pkg-check-modules` exactly as fetches attach. Rename `is_fetch` to say what it now selects.
-- [ ] T010 [US1] Run T007's tests and W-ctl, all green. Record any W-ctl drift in `measurements/trace.md`. The expected drift is none outside C237. R8 moves root-level searches from the graph-top fallback to declared root anchors, so check SPDX relationship provenance specifically: decide by trace whether a difference is expected or a defect, before any golden changes.
+- [X] T007 [P] [US1] Write W-1 (nested `find_package` with a range), W-2 (two files, one component, both ranges), W-3 (nested `pkg_check_modules` / `pkg_search_module`), W-4 (`${VAR}` name, C237 `unresolved`) and W-16 (an edge from the owning submodule, no root anchor) in `waybill-cli/tests/scan_cmake_tree_finds.rs`. All fail on `main`.
+- [X] T008 [US1] C237: build the coverage record in `cmake.rs` from the searches (`read`, `unresolved`, `components`, and so on, with the other buckets 0 until US2–US4 fill them). Carry it as C231 is carried: `scan_fs/mod.rs` field, then `generate/mod.rs`, then the three emitters.
+- [X] T009 [US1] R8: in `waybill-cli/src/scan_fs/cmake_fetch_attach.rs`, attach components whose C55 mechanism is `cmake-find-package` / `cmake-pkg-check-modules` exactly as fetches attach. Rename `is_fetch` to say what it now selects.
+- [X] T010 [US1] Run T007's tests and W-ctl, all green. Record any W-ctl drift in `measurements/trace.md`. The expected drift is none outside C237. R8 moves root-level searches from the graph-top fallback to declared root anchors, so check SPDX relationship provenance specifically: decide by trace whether a difference is expected or a defect, before any golden changes.
 
 ## Phase 4: User Story 2 — a conditional search is not a runtime requirement (P1)
 
