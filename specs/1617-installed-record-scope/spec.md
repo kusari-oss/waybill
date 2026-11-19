@@ -96,13 +96,13 @@ A conditional search for a library that the tree does not contain is still an op
 - **One unconditional search.** If any search is unconditional, the record is required, as today.
 - **Something else already scopes the record.** A record with its own reader-assigned scope keeps it, as today.
 - **A conditional link (C235).** It keeps spec 1543's behaviour unless FR-001's decision covers links as well. Measured: 0 records with C235 on the SDK.
-- **Evidence.** C236 and C235 are emitted exactly as today on every record. Only the scope and C122 change.
+- **Evidence.** C236 and C235 keep their values. On a shipped record, C236 is recorded without making the record Optional, so a required record can carry it. Only the scope, C62 and C122 change.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: The search half of the record-scope rule MUST NOT make Optional any installed record whose own evidence includes a library file it ships (`.so`, `.so.*`, `.a`, `.dll`, `.dylib`). This is decided per record, not by how the whole scan is classified: a library present in the tree is runtime content of it. A vendored prebuilt library in a source tree is treated the same way.
+- **FR-001**: The search half of the record-scope rule MUST NOT make Optional any installed record whose own evidence includes a library file it ships (`.so`, `.so.*`, `.a`, `.dylib`, `.dll`, `.lib`). This is decided per record, not by how the whole scan is classified: a library present in the tree is runtime content of it. A vendored prebuilt library in a source tree is treated the same way.
 - **FR-002**: A search MUST still pair with the installed record it names, give the record its edge, and record its conditions in C236, whatever FR-001 decides.
 - **FR-003**: A conditional search that pairs with no installed record MUST keep spec 1614's behaviour (US3).
 - **FR-004**: A record that ships no library file, and whose every search comes from a test context, MUST be Test, with the C62 derivation its searches carry (for example `source-test-directory`), not Optional. A record with at least one non-test conditional search keeps spec 1614's Optional, with C236.
@@ -126,7 +126,7 @@ A conditional search for a library that the tree does not contain is still an op
 - **SC-004**: Every public-corpus golden change (from a regeneration) and every quality-corpus change against a `main` control is traced component by component.
 - **SC-005**: The three formats agree on C42, C62, C122, C235 and C236 (`waybill sbom parity-check` shows no gap `main` does not). No duplicate `bom-ref`s; repeat scans are identical across two runners.
 - **SC-006**: SDK scan time stays within 1.05× `main`'s median, measured with measure-full.
-- **SC-007**: Each rule (FR-001, FR-003, FR-004, FR-005) has a mutation that a test catches.
+- **SC-007**: Each rule this feature changes (FR-001, FR-002's C236 on shipped records, FR-004, FR-005) has a mutation that a test catches. FR-003 is behaviour this feature does not touch; it is guarded by a regression test (I-8).
 
 ## Assumptions
 

@@ -13,7 +13,7 @@
 ## Phase 1: Setup
 
 - [ ] T001 Confirm the premises at `main` and record them in `specs/1617-installed-record-scope/measurements/trace.md`. Use a throwaway debug log at the `record_scopes` call in `MOD`, removed after:
-  - (a) at that point an installed record's `evidence.source_file_paths` holds its shared-library files and, from an exported-targets file, its static archives (research R2);
+  - (a) at that point an installed record's `evidence.source_file_paths` holds its shared-library files and, from an exported-targets file, its static archives (research R2). Check the archives on a fixture shaped like the SDK's `absl`: a `*Targets-<config>.cmake` naming a `.a` under a raised `_IMPORT_PREFIX`, as `waybill-cli/tests/installed_lib_targets.rs` builds;
   - (b) a search in a tests directory is Test with C62 `source-test-directory`, and its pairing is `conditional` with empty `conditions` (research R1, R4);
   - (c) on spec 1614's W-14b fixture (no library file) the record is Optional with C236, the I-6 baseline.
 - [ ] T002 Create `IT` with helpers:
@@ -44,7 +44,7 @@
   - `ships_library_file` accepts `x.so`, `x.so.1.2`, `x.a`, `x.dylib`, `x.dll`, `x.lib`, case-insensitively, and rejects `x.cmake`, `x.pc`, `x.so.txt`, `x.so.1a`.
 - [ ] T005 [P] [US1] Integration cases I-1, I-2, I-3, I-9 and I-10 in `IT`.
   - I-9 builds a static-archive-only record from an exported-targets file, as `waybill-cli/tests/installed_lib_targets.rs` does.
-  - I-10 builds a conditional link (C235), as `waybill-cli/tests/scan_therock_last_orphans.rs` does.
+  - I-10 builds a conditional link (C235), as `waybill-cli/tests/scan_therock_last_orphans.rs` does, and asserts C122 `cmake-conditional-link`, C235 and C236.
   - Confirm that I-1, I-2 and I-9 fail at `main`, and that I-3 and I-10 pass as guards.
 - [ ] T006 [US1] Implement in `SP`:
   - `fn ships_library_file(c: &ResolvedComponent) -> bool`, over `c.evidence.source_file_paths` file names, case-insensitive (data model);

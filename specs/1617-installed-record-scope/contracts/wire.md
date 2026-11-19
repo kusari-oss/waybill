@@ -15,7 +15,7 @@ Every case is asserted in CycloneDX, SPDX 2.3 and SPDX 3 through the parity extr
 | I-7 | a record with no library file, searched once from a tests directory and once under `if(WITH_X)` | Optional, C236 `["WITH_X"]` (R4: mixed is Optional) |
 | I-8 | a conditional search for a library the tree does not have | the search component is Optional with C236 (FR-003, as today) |
 | I-9 | a record that ships only a static archive named by an exported-targets file, searched under `if(NOT TARGET …)` | required (R2: static archives count) |
-| I-10 | a shipped library linked only under a condition (C235) and searched under a condition | Optional through the link half, with C235 (FR-005) |
+| I-10 | a shipped library linked only under a condition (C235) and searched under a condition | Optional through the link half: C122 `cmake-conditional-link` (on `main` the search half overwrote it with `cmake-conditional`), C235, and C236 still recorded (FR-005, FR-006) |
 | I-11 | a shipped library under `share/waybill-fixture/tests/lib/`, in an installed tree | Test through spec 1533 (`test-directory`), as today |
 | I-ctl | an installed prefix whose record is searched unconditionally and linked | byte-identical to a golden from `main`'s binary (FR-007) |
 | I-rep | I-1 to I-11 in one tree, scanned 20 times | identical |
