@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,6 +31,6 @@
 
 ## Notes
 
-- One clarification open: FR-004 (widen only the immunity seeds, or graph completeness too).
+- Clarified 2026-11-19: FR-004, A (immunity search only).
 - Background names source files and catalog rows: the trace the issue asked for, and the wire contract. They are not design choices.
 - SC-002 is deliberately a measurement with no predicted count: the only estimate available over-counts (Background).

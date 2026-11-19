@@ -34,6 +34,12 @@ The real population is measured by running the change (SC-002).
 - **Main modules at that point.** They still carry their main-module role. Milestone 149's demotion of main modules to libraries (`waybill:demoted-from-main-module`) happens later, when the documents are built, and only under an operator root override.
 - **Ecosystems with no seed.** Spec 1269's FR-012 forbids propagating into an ecosystem that has no seed at all.
 
+## Clarifications
+
+### Session 2026-11-19
+
+- Q: Do the wider seeds apply only to the propagation's immunity search, or to graph completeness too? → A: Only to the immunity search. Graph completeness and the rows it feeds are unchanged; the departure from spec 1269's P3 is recorded in FR-004.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Every project's runtime dependencies stay runtime (Priority: P1)
@@ -97,7 +103,7 @@ An operator comparing two waybill versions on one project sees fewer C62 `transi
 - **FR-001**: Spec 1269's immunity search MUST start from every main module that is itself runtime, in addition to its current seeds. "Runtime" means the main module has no non-runtime lifecycle scope of its own.
 - **FR-002**: A main module with a non-runtime scope MUST NOT be a seed (US2).
 - **FR-003**: The immunity search MUST traverse from the new seeds under the same rules as today, with the same excluded edge types and the same stop at components with a non-runtime scope of their own.
-- **FR-004**: [NEEDS CLARIFICATION: Do the wider seeds apply only to the propagation's immunity search, with the graph-completeness roots (and every C-row they feed) unchanged? Or should graph completeness widen too, so the two stay one implementation as spec 1269's contract P3 intends?]
+- **FR-004**: The wider seeds MUST apply only to the propagation's immunity search. Graph completeness keeps its own roots, and every catalog row it feeds (orphan reasons, the completeness record) is unchanged. This departs on purpose from spec 1269's contract P3, which shares one seed set with completeness: every newly protected component sits under a main module the scan found, while the document still declares one root per ecosystem. Whether completeness should also treat every main module as a root is a separate decision.
 - **FR-005**: The change MUST only remove propagated scopes. A component's scope on `main` is either kept or, if it was propagated (C62 `transitive`), may become runtime; nothing may become newly non-runtime.
 - **FR-006**: The propagation's INFO summary MUST report how many components only the added seeds protected. No new catalog row is added: a per-document count would change every document's bytes for a diagnostic figure, which is what spec 1276's T028 measured and rejected.
 - **FR-007**: Spec 1615's exception to its FR-007 and SC-002 MUST be removed when this feature lands, with the 11 TheRock packages required again.
