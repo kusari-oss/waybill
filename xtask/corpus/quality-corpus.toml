@@ -445,10 +445,26 @@ ecosystem = "pip"
 #   +101 edges: 96 from torch (it owns the newly read requirements files,
 #   spec 1537), 5 from lumen-ci to its dependencies, 1 root -> lumen-ci, less
 #   torch -> opt-einsum@unresolved (now -> @3.3). Bound +/-10% of each.
+#
+# Re-measured 2026-11-19 for spec 1614 (#1591, #1605), CI run 44471778242 @
+# 4d2038d8 against main @ cd2af654 (run 44463570632): pkgs 261 -> 257, edges
+# 211 -> 256. Traced component by component with this harness's invocation
+# (specs/1614-cmake-tree-finds/measurements/corpus.md):
+#   -7 components: git, pkgconfig, threads (tools, FR-006); gloo, protobuf,
+#   pybind11 (paired with their git submodules, R7.3); sycl-dpcpp- (a module
+#   name the old regex truncated at `${`, now unresolved).
+#   +3 components: acl, backtrace, python3 (nested searches).
+#   +45 edges, none removed: 44 from torch, 1 from torch-openreg, to search
+#   components that had no parent on main (the root had other edges, so the
+#   graph-top fallback never applied; R8 attaches them to their owner) and
+#   to the 3 paired submodules.
+#   37 components required on main are Optional under their real conditions,
+#   python among them (now a library search, Development.Module).
+#   Only `edges` violated; bound +/-10% of 256.
 [targets.expect]
 pkgs      = { min = 234, max = 286 }
 files     = { min = 57, max = 71 }
-edges     = { min = 190, max = 232 }
+edges     = { min = 230, max = 282 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.41, max = 6.41 }
 wall_ms   = { min = 5, max = 50000 }
