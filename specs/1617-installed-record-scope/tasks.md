@@ -92,7 +92,7 @@
   - `docs/reference/sbom-format-mapping.md`: C236 may sit on a required record (a shipped library searched only conditionally); C122 `cmake-conditional` is never set by searches on a record that ships a library file; a record searched only from test contexts is Test.
   - `docs/ecosystems.md`, CMake section: how an installed record's scope is decided.
 - [X] T017 [P] Add a `CHANGELOG.md` entry under Unreleased / Fixed.
-- [ ] T018 Mutations, in `specs/1617-installed-record-scope/measurements/{mutate.py,mutate-run.sh,mutations.md}`, adapted from `specs/1616-propagation-seeds/measurements/`: restore with `cp`, rebuild after the last one, and use the `^error\[E…\]` compile pattern. One each:
+- [X] T018 Mutations, in `specs/1617-installed-record-scope/measurements/{mutate.py,mutate-run.sh,mutations.md}`, adapted from `specs/1616-propagation-seeds/measurements/`: restore with `cp`, rebuild after the last one, and use the `^error\[E…\]` compile pattern. One each:
   - (M1) `ships_library_file` always false;
   - (M2) a shipping record put in `required` (the link half switched off; I-10 must turn red);
   - (M3) `conditions_only` writes no C236;
