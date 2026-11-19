@@ -157,7 +157,7 @@
 
   `CHANGELOG.md` gets `### Fixed` / `### Added` entries for #1591 and #1605, including the duplicates fixed on `main` (R7).
 - [X] T031 Walker audit (`bash scripts/check-walker-audit.sh`) and the gate (`./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`), with no `+toolchain`. Record `GATE_RESULT`, the `ok` count, passed/failed and the failure blocks in `measurements/gate-log.md`. Also record that `git diff main -- Cargo.toml '*/Cargo.toml' Cargo.lock` is empty (FR-013).
-- [ ] T032 TheRock, CI only: two measure-source runs at the branch head against `main` (full SHAs). Record in `measurements/therock.md`:
+- [X] T032 TheRock, CI only: two measure-source runs at the branch head against `main` (full SHAs). Record in `measurements/therock.md`:
   - **SC-001:** `cmake-find-package` components against `predict.py` (110 ± the Python calls), each difference traced by name.
   - **SC-002:** the conditional-only names are non-runtime, including the 6–9 fetch components named in the spec.
   - **SC-003:** no name with two components; 0 duplicate `bom-ref`s.
@@ -165,8 +165,8 @@
   - **SC-005:** `waybill sbom parity-check` on both sides; no new gap; C236 and C237 pass.
   - **SC-006:** the two runners' documents identical apart from timestamps.
   - **SC-009:** the interleaved ratio, ≤ 1.05×.
-- [ ] T033 Public corpus at the branch (`repeat=2`): trace every golden change by component and annotation, then regenerate the goldens through the workflow. Record in `measurements/corpus.md`. C237 is expected in every golden whose tree has a CMake package search; list those targets, and treat any other change as needing its own trace.
-- [ ] T034 Quality corpus against a `main` control: trace every changed target and re-centre only traced bounds in `xtask/corpus/quality-corpus.toml`. Record in `measurements/corpus.md`.
+- [X] T033 Public corpus at the branch (`repeat=2`): trace every golden change by component and annotation, then regenerate the goldens through the workflow. Record in `measurements/corpus.md`. C237 is expected in every golden whose tree has a CMake package search; list those targets, and treat any other change as needing its own trace.
+- [X] T034 Quality corpus against a `main` control: trace every changed target and re-centre only traced bounds in `xtask/corpus/quality-corpus.toml`. Record in `measurements/corpus.md`.
 - [ ] T035 Open the PR, with a body citing T029 and T031–T034, `Closes #1591`, `Closes #1605`, and the attribution line. Do not merge.
 
 ## Dependencies

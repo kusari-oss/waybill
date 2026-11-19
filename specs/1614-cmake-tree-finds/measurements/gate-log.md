@@ -11,3 +11,12 @@
 **The goldens change is additions only:** 4, 6 and 8 lines across CycloneDX, SPDX 2.3 and SPDX 3, all the new `waybill:cmake-find-coverage` record. No existing line changed (`git diff --numstat`: `4 0`, `6 0`, `8 0`).
 
 **FR-013:** `git diff main -- Cargo.toml '*/Cargo.toml' Cargo.lock` is empty. Walker audit: `OK (12 entries)`.
+
+## Re-runs after the CI rounds
+
+| Commit | GATE_RESULT | ok lines | passed / failed | failure blocks |
+|---|---|---|---|---|
+| `4d2038d8` (one parse; variable components) | pass | 415 | 9,324 / 0 | 0 |
+| `99e6e2f5` (evidence after merge; module-path includes) | pass | 415 | 9,327 / 0 | 0 |
+
+`5a6fb4c1` changes only `xtask/corpus/quality-corpus.toml` (pytorch's bounds); the quality corpus at it is green (run 44480610178).
