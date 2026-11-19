@@ -273,6 +273,17 @@ mod tests {
     }
 
     #[test]
+    fn a_cycle_nothing_enters_is_unconditional() {
+        let (d, w) = tree(&[
+            ("cmake/a.cmake", "include(${CMAKE_CURRENT_LIST_DIR}/b.cmake)\n"),
+            ("cmake/b.cmake", "include(${CMAKE_CURRENT_LIST_DIR}/a.cmake)\n"),
+        ]);
+        let m = compute(d.path(), &w);
+        assert!(seed(&m, d.path(), "cmake/a.cmake").is_empty());
+        assert!(seed(&m, d.path(), "cmake/b.cmake").is_empty());
+    }
+
+    #[test]
     fn a_function_body_is_a_condition_and_a_non_cmake_include_is_an_extra_file() {
         let (d, w) = tree(&[
             ("CMakeLists.txt", "if(WIN_SDK)\n include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_wsl.txt)\nendif()\nfunction(f)\n include(cmake/q.cmake)\nendfunction()\n"),

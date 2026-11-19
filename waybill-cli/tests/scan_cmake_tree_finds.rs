@@ -92,9 +92,14 @@ fn copy_dir(src: &Path, dst: &Path) {
 /// `v` masked for comparison across scans and hosts: the harness's masks,
 /// the temporary parent's name, and C237 removed.
 fn comparable(v: &Value) -> Value {
+    without_mentions(&masked(v), C237)
+}
+
+/// `v` with the harness's masks and the temporary parent's name masked.
+fn masked(v: &Value) -> Value {
     let s = serde_json::to_string(&mask_nondeterministic(v)).unwrap();
     let re = regex::Regex::new(r"/[^\x22]*?/waybill-fixture-tree").unwrap();
-    without_mentions(&serde_json::from_str(&re.replace_all(&s, "/TMP/waybill-fixture-tree")).unwrap(), C237)
+    serde_json::from_str(&re.replace_all(&s, "/TMP/waybill-fixture-tree")).unwrap()
 }
 
 /// `v` without any array element that mentions `needle`, at any depth.
@@ -539,4 +544,37 @@ fn w11_a_file_reached_only_by_include_is_read() {
     assert_optional(c);
     assert_eq!(conds(c, C236), vec!["WIN_SDK"]);
     assert_eq!(source_files(c), vec!["CMakeLists_wsl.txt".to_string()], "relative, like a walked file's");
+}
+
+// ---------------------------------------------------------------------
+// W-rep: determinism (T028, FR-011)
+// ---------------------------------------------------------------------
+
+/// The W-5..W-15 shapes in one tree (without the git ones), scanned 20
+/// times: one document per format.
+#[test]
+fn w_rep_repeated_scans_are_identical() {
+    let t = tree();
+    let r = t.path();
+    write(r, "CMakeLists.txt", "project(waybill_fixture_root)\ninclude(FetchContent)\nif(A)\n  add_subdirectory(x)\nendif()\nif(BUILD_TESTING)\n  add_subdirectory(checks)\nendif()\nif(WIN_SDK)\n  include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_wsl.txt)\nendif()\nif(NOT waybill_fixture_fmt_FOUND)\n  FetchContent_Declare(waybill_fixture_fmt GIT_REPOSITORY https://github.com/waybill-fixture/fmt.git GIT_TAG v1.0.0)\nendif()\n");
+    write(r, "x/CMakeLists.txt", "include(y.cmake)\n");
+    write(r, "x/y.cmake", "if(B)\n  find_package(waybill_fixture_ab)\nendif()\n");
+    write(r, "checks/CMakeLists.txt", "find_package(waybill_fixture_t)\n");
+    write(r, "CMakeLists_wsl.txt", "find_package(waybill_fixture_wsl)\n");
+    write(r, "projects/lib/CMakeLists.txt", "project(waybill_fixture_lib)\n");
+    write(r, "projects/app/CMakeLists.txt", "find_package(waybill_fixture_fmt QUIET)\nfind_package(waybill_fixture_lib)\nfind_package(Threads)\nfind_package(waybill_fixture_ext 2.1)\nfunction(waybill_deps)\n  find_package(waybill_fixture_body)\nendfunction()\n");
+    installed_record(r);
+    write(r, "projects/inst/CMakeLists.txt", "if(C)\n  find_package(waybill_fixture_inst)\nendif()\n");
+    let first = scan(r);
+    // C237 is kept: it must not vary either.
+    let want: Vec<Value> = [&first.cdx, &first.spdx23, &first.spdx3].iter().map(|v| masked(v)).collect();
+    for i in 1..20 {
+        let d = scan_with("--path", r, &[]);
+        for (f, got) in [&d.cdx, &d.spdx23, &d.spdx3].into_iter().enumerate() {
+            let got = masked(got);
+            if got != want[f] {
+                panic!("scan {i}, format {f}: {}", masked_difference(&want[f], &got).unwrap_or_default());
+            }
+        }
+    }
 }

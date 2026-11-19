@@ -140,7 +140,7 @@
 
 ## Phase 8: Polish and verification
 
-- [ ] T028 Determinism, W-rep: in `waybill-cli/tests/scan_cmake_tree_finds.rs`, scan the W-5..W-15 tree 20 times and assert identical documents. Confirm every W-case asserts in all three formats through `row_all_formats`.
+- [X] T028 Determinism, W-rep: in `waybill-cli/tests/scan_cmake_tree_finds.rs`, scan the W-5..W-15 tree 20 times and assert identical documents. Confirm every W-case asserts in all three formats through `row_all_formats`.
 - [ ] T029 Mutations in `specs/1614-cmake-tree-finds/measurements/mutate.py` and `mutate-run.sh`. Use exact-anchor replacement, revert with `cp`, and rebuild after the last restore. Record the results in `measurements/mutations.md`. Each mutation must turn a named test red:
   - **Reach:** M1 an unconditional edge no longer wins; M2 union replaced by the first path's conditions; M3 a cycle treated as conditional.
   - **Reading:** M4 back to the narrow file set; M5 include-reached files not read; M6 the reach seed not applied to fetches; M7 search scope ignores conditions.

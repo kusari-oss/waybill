@@ -69,3 +69,7 @@ All four reach unit tests pass. Contract W-12 (a cycle reached from an unconditi
 One existing test asserted the duplicate that FR-005 removes. `cmake_find_package_dedup_integration::cmake_find_package_requirement_and_fetch_in_different_directories_stay_apart` expected a `find_package(openssl 1.1.0)` in the root `CMakeLists.txt` and `FetchContent_Declare(openssl URL …-1.1.0.tar.gz)` in `cmake/deps.cmake` to stay two components: the milestone-191 reconciler only matches within one directory. Research R7.1 pairs them in the reader, in any directory. Renamed `…_pair`, it now expects one component, the fetch. The same-directory test beside it is unchanged and passes.
 
 All 3,778 `scan_fs` unit tests pass, as do the CMake, installed-library, submodule, TheRock, graph, orphan, root and declared-requirements integration suites.
+
+## T027: US4 and an existing test
+
+`cmake_find_package_kamailio_shape_integration` asserted at least 5 `cmake-find-package` components from a fixture whose five searches include `find_package(Threads REQUIRED)`. FR-006 (US4) makes `Threads` a CMake helper with no component, so the fixture gives 4. The test now asserts the four library searches by PURL, and that `pkg:generic/threads` is absent. The failure appeared in the run after US5's commit (`de243e74`); the fix follows it.
