@@ -42,7 +42,7 @@ Other names seen among the 51 runtime files, recorded for the decisions below:
 | under `benchmark/` | 1 | 2 |
 | under `tools/` | 3 | 2, 4, 6 |
 | under `test_data/` | 1 | 2 |
-| `requirements-development.txt` (a long form of `dev`) | 1 | 3 |
+| `requirements-development.txt` (a long form of `dev`; labelled by FR-006) | 1 | 3 |
 | `website/handbook/requirements.txt` | 1 | 2 |
 
 **Why the existing passes miss them** (traced in the source at `main` `52b96f1d`):
@@ -50,6 +50,13 @@ Other names seen among the 51 runtime files, recorded for the decisions below:
 - **Spec 1269's transitive dev-scope propagation** carries a non-runtime scope down from a non-runtime declaration. It does not create one, so a package whose only declaration reads as runtime stays required.
 
 Outside pip, the same shape is small on TheRock: 15 required components are declared only under `docs`/`doc`/`documentation`/`test`/`tests` directories. All 15 are Cargo crates from one test crate's lockfile (`rccl/contrib/nccl4rust/tests/cuda-oxide-smoke/Cargo.lock`).
+
+## Clarifications
+
+### Session 2026-11-19
+
+- Q: Where does the ancestor search stop: the scan root, or the root of the project that declares the file? → A: The scan root. Anything under a `docs` or `tests` directory below the scan root is non-runtime, a vendored project included, as for spec 1613's dot-directories.
+- Q: Does the name rule recognise the long forms of its scope words (`development`, `documentation`, `testing`)? → A: Yes.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -82,6 +89,7 @@ A project names its documentation requirements `requirements-doc.txt`. Today the
 1. **Given** `proj/requirements-doc.txt`, **When** the tree is scanned, **Then** its packages are Optional with C155 `docs`.
 2. **Given** `proj/doc-requirements.txt`, **When** the tree is scanned, **Then** the same.
 3. **Given** `proj/requirements-docker.txt`, **When** the tree is scanned, **Then** it stays runtime: `docker` is not the word `doc`.
+4. **Given** `proj/requirements-development.txt`, `proj/requirements-documentation.txt` and `proj/testing-requirements.txt`, **When** the tree is scanned, **Then** they are labelled dev, docs and test.
 
 ---
 
@@ -117,12 +125,12 @@ A project keeps requirements for a test corpus or harness at `tests/<suite>/requ
 - **FR-001**: The name rule MUST recognise `doc` as the docs scope word: `requirements-doc*.txt` and `doc-requirements*.txt` are docs. The word boundary is the existing one, so `requirements-docker.txt` is unaffected.
 - **FR-002**: When neither the parent directory nor the name labels a file, the nearest ancestor directory strictly below the scan root, and above the file's parent, that is named `docs`, `doc` or `documentation` MUST label it docs, and one named `test` or `tests` MUST label it test.
 - **FR-003**: FR-002's directories and spec 1613's listed dot-directories MUST be one ancestor search: the nearest match of either kind labels the file.
-- **FR-004**: The ancestor search MUST stop at [NEEDS CLARIFICATION: the scan root (any `tests/` above the file counts, including one holding a whole vendored project) or the root of the project that declares the file (spec 1537's owner, so a project vendored under `tests/` keeps its own runtime labels)?].
+- **FR-004**: The ancestor search MUST run to the scan root, excluding the scan root itself, as spec 1613's does. A project vendored under a `tests/` or `docs/` directory is labelled by that directory: none of it ships.
 - **FR-005**: Directory names other than FR-002's MUST NOT label a file. That covers `examples`, `example`, `benchmarks`, `benchmark`, `samples`, `tools`, `scripts`, `test_data` and `website`. They hold code that runs, or data, and no convention marks their requirements as non-runtime.
-- **FR-006**: [NEEDS CLARIFICATION: Does the name rule also recognise the long forms of its scope words: `development` (dev), `documentation` (docs) and `testing` (test)? TheRock has one such file, `rocprofiler-compute/requirements-development.txt` (3 packages).]
+- **FR-006**: The name rule MUST also recognise the long forms of its scope words: `development` (dev), `documentation` (docs) and `testing` (test), with the existing word boundary. On TheRock this labels `rocprofiler-compute/requirements-development.txt` (3 packages) dev.
 - **FR-007**: A package declared both in a file FR-001 to FR-003 label and in a file that reads as runtime MUST stay required, by spec 1613's existing merge rule.
 - **FR-008**: A labelled package MUST carry the native non-runtime scope in each format (CycloneDX `scope`, SPDX 2.3 relationship type, SPDX 3 `LifecycleScopeType`) and C155 with its scope word, exactly as a file labelled by its parent does today. No new catalog row.
-- **FR-009**: A tree with no requirements file that FR-001 to FR-003 newly label MUST produce output byte-identical to `main`.
+- **FR-009**: A tree with no requirements file that FR-001 to FR-003 and FR-006 newly label MUST produce output byte-identical to `main`.
 - **FR-010**: Only pip requirements files change. Components from other ecosystems declared only under docs or test directories stay as they are (TheRock: 15 Cargo crates in one test crate). A follow-up issue records them.
 - **FR-011**: No new Cargo dependencies.
 
@@ -142,7 +150,7 @@ A project keeps requirements for a test corpus or harness at `tests/<suite>/requ
 - **SC-005**: The public corpus invariant gate stays green. Every golden change is traced to a file FR-001 to FR-003 label.
 - **SC-006**: The quality corpus is compared with a `main` control. Every changed target is traced package by package (python-flask, the pants Python examples and pytorch are the likely movers).
 - **SC-007**: TheRock's source scan time stays within 1.05× `main`'s median, measured with the interleaved measure-source workflow.
-- **SC-008**: Every rule (FR-001, FR-002, FR-003, FR-004, FR-005, FR-007) has a mutation that a test catches.
+- **SC-008**: Every rule (FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007) has a mutation that a test catches.
 
 ## Assumptions
 

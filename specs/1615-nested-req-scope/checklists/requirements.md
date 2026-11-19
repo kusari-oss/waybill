@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,6 +31,6 @@
 
 ## Notes
 
-- Two clarifications open: FR-004 (where the ancestor search stops) and FR-006 (long forms of the scope words).
+- Clarified 2026-11-19: FR-004 (scan root) and FR-006 (long forms), both A.
 - The spec names SBOM fields (C155, CycloneDX `scope`, SPDX relationship types) and source files in Background. Those are the product's wire contract and the trace the issue asked for, not implementation choices.
 - Background counts are measured from CI run 44477517009's document; SC-001 and SC-002's 98 and 11 are labelled predictions.
