@@ -361,3 +361,127 @@ fn w17_search_in_a_function_body() {
     assert_optional(c);
     assert_eq!(conds(c, C236), vec!["function: waybill_deps"]);
 }
+
+// ---------------------------------------------------------------------
+// User story 3: a search for something the tree provides is not a second
+// component (T016)
+// ---------------------------------------------------------------------
+
+/// W-14a: a search paired with a fetch of the same name gives one
+/// component, the fetched one, with the search's file in its evidence. Both
+/// exist on `main` (measurements/trace.md (a)).
+#[test]
+fn w14a_search_paired_with_a_fetch() {
+    let t = tree();
+    write(
+        t.path(),
+        "CMakeLists.txt",
+        "project(waybill_fixture_root)\ninclude(FetchContent)\nif(NOT waybill_fixture_fmt_FOUND)\n  FetchContent_Declare(waybill_fixture_fmt GIT_REPOSITORY https://github.com/waybill-fixture/fmt.git GIT_TAG v1.0.0)\nendif()\n",
+    );
+    write(t.path(), "projects/app/CMakeLists.txt", "find_package(waybill_fixture_fmt QUIET)\n");
+    let d = scan(t.path());
+    absent_purl(&d, "pkg:generic/waybill_fixture_fmt");
+    let c = by_purl(&d, "pkg:github/waybill-fixture/fmt@v1.0.0");
+    assert!(source_files(c).contains(&"projects/app/CMakeLists.txt".to_string()), "{c}");
+    assert_eq!(coverage(&d)["paired"]["fetch"], 1);
+}
+
+fn installed_record(root: &Path) {
+    write(
+        root,
+        "sdk/lib/cmake/waybill_fixture_inst/waybill_fixture_instConfigVersion.cmake",
+        "set(PACKAGE_VERSION \"4.5.6\")\n",
+    );
+}
+
+/// W-14b: a search paired with an installed-library record gives one
+/// component, the record, with the search's file in its evidence. Both exist
+/// on `main`.
+#[test]
+fn w14b_search_paired_with_an_installed_record() {
+    let t = tree();
+    installed_record(t.path());
+    write(t.path(), "projects/app/CMakeLists.txt", "find_package(waybill_fixture_inst)\n");
+    let d = scan(t.path());
+    absent_purl(&d, "pkg:generic/waybill_fixture_inst");
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_inst@4.5.6");
+    assert!(source_files(c).contains(&"projects/app/CMakeLists.txt".to_string()), "{c}");
+    assert_eq!(scope(c), "required", "an unconditional search keeps the record required");
+    assert_eq!(coverage(&d)["paired"]["installed"], 1);
+}
+
+/// W-14b, conditional: a record searched for only under a condition, and
+/// linked and required by nothing else, is Optional with C236.
+#[test]
+fn w14b_a_record_searched_for_only_under_a_condition_is_optional() {
+    let t = tree();
+    installed_record(t.path());
+    write(t.path(), "projects/app/CMakeLists.txt", "if(A)\n  find_package(waybill_fixture_inst)\nendif()\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_inst@4.5.6");
+    assert_optional(c);
+    assert_eq!(conds(c, C236), vec!["A"]);
+}
+
+/// A git submodule at `extern/<name>` holding `body` as its CMakeLists.txt,
+/// in a super-project whose `projects/app/CMakeLists.txt` is `app`.
+fn submodule_tree(fx: &GitFixture, name: &str, body: &str, app: &str) -> PathBuf {
+    fx.repo("dep");
+    fx.write("dep/CMakeLists.txt", body);
+    fx.git(&fx.path("dep"), &["add", "CMakeLists.txt"]);
+    fx.git(&fx.path("dep"), &["commit", "-q", "-m", "cmake"]);
+    fx.repo("app");
+    fx.add_submodule("app", "dep", &format!("extern/{name}"));
+    fx.write("app/projects/app/CMakeLists.txt", app);
+    fx.path("app")
+}
+
+fn submodule(d: &Docs) -> &Value {
+    components(&d.cdx)
+        .into_iter()
+        .find(|c| prop(c, "waybill:source-mechanism") == Some("git-submodule"))
+        .expect("a submodule component")
+}
+
+/// W-14c: a search named like a git submodule's directory pairs with it,
+/// and C57 sees the nested search (FR-008).
+#[test]
+fn w14c_search_paired_with_a_submodule_and_c57_widened() {
+    let fx = GitFixture::new();
+    let root = submodule_tree(&fx, "waybill_fixture_sub", "", "find_package(waybill_fixture_sub)\n");
+    let d = scan(&root);
+    absent_purl(&d, "pkg:generic/waybill_fixture_sub");
+    let sub = submodule(&d);
+    assert_eq!(prop(sub, "waybill:build-reference"), Some("declared-and-used"), "{sub}");
+    assert_eq!(coverage(&d)["paired"]["submodule"], 1);
+}
+
+/// W-15 variant (analysis I2): a submodule that is also a CMake project
+/// pairs with the submodule; it is not counted as built in the tree.
+#[test]
+fn w15_a_submodule_that_is_a_project_pairs_rather_than_counting_in_tree() {
+    let fx = GitFixture::new();
+    let root = submodule_tree(&fx, "waybill_fixture_sub2", "project(waybill_fixture_sub2)\n", "find_package(waybill_fixture_sub2)\n");
+    let d = scan(&root);
+    absent_purl(&d, "pkg:generic/waybill_fixture_sub2");
+    let cov = coverage(&d);
+    assert_eq!(cov["paired"]["submodule"], 1, "{cov}");
+    assert_eq!(cov["in-tree"], serde_json::json!([]), "{cov}");
+}
+
+/// W-15: a search for a project the tree builds, by `project()` or by a
+/// package-config template, yields no component and no edge.
+#[test]
+fn w15_a_search_for_something_built_in_the_tree() {
+    let t = tree();
+    write(t.path(), "projects/lib/CMakeLists.txt", "project(waybill_fixture_lib VERSION 3.0)\n");
+    write(t.path(), "projects/cfg/cmake/waybill_fixture_cfgConfig.cmake.in", "@PACKAGE_INIT@\n");
+    write(t.path(), "projects/app/CMakeLists.txt", "find_package(waybill_fixture_lib)\nfind_package(waybill_fixture_cfg)\nfind_package(waybill_fixture_cfg)\n");
+    let d = scan(t.path());
+    absent_purl(&d, "pkg:generic/waybill_fixture_lib");
+    absent_purl(&d, "pkg:generic/waybill_fixture_cfg");
+    let cov = coverage(&d);
+    assert_eq!(cov["in-tree"], serde_json::json!(["waybill_fixture_cfg", "waybill_fixture_lib"]), "{cov}");
+    assert_eq!(cov["in-tree-declarations"], 3, "{cov}");
+    assert_eq!(cov["components"], 0, "{cov}");
+}

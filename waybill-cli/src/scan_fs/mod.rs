@@ -26,6 +26,7 @@ pub mod podman_source;
 pub(crate) mod declared_attach;
 pub(crate) mod cmake_fetch_attach;
 pub(crate) mod cmake_link_attach;
+pub(crate) mod cmake_search_pair;
 pub(crate) mod file_tier;
 #[cfg(feature = "oci-registry")]
 pub mod oci_pull;
@@ -1549,7 +1550,15 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // load-bearing (mutation M10, measurements/mutations.md). Packages
     // declared at the scan root are anchored to the root at the end of this
     // function, once dedup and reconciliation have settled their PURLs.
+    // Spec 1614 (research R7.2, R7.3, R9, R10): a CMake package search for
+    // an installed record, a git submodule or something the tree builds is
+    // not a second component. Before dedup, so each search is still one
+    // entry per call site.
+    let search_pairings =
+        cmake_search_pair::pair(&mut components, &git_submodule_dirs, cmake_find_coverage.as_mut());
     {
+        let targeted_before: std::collections::HashSet<String> =
+            relationships.iter().map(|r| r.to.clone()).collect();
         let index = declared_attach::OwnerIndex::build(&components, &git_submodule_dirs, root, scan_mode);
         let declared = declared_attach::attach(&components, &relationships, &index, root);
         relationships.extend(declared.edges);
@@ -1562,7 +1571,21 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // scope is set here, before the rewrite below types the edge.
         let links = cmake_link_attach::attach(&components, &relationships, &cmake_links, &index, root);
         relationships.extend(links.attached.edges);
-        cmake_link_attach::apply_scope(&mut components, &links.conditional);
+        // Spec 1614: a paired search is a dependency of its project, and an
+        // installed record's scope combines its links and its searches.
+        let paired = cmake_search_pair::attach(&relationships, &search_pairings, &index, root);
+        relationships.extend(paired.edges);
+        let scopes = cmake_search_pair::record_scopes(
+            &components,
+            &search_pairings,
+            &links.linked,
+            &links.conditional,
+            &targeted_before,
+        );
+        let mut link_conditional = links.conditional;
+        link_conditional.retain(|purl, _| !scopes.required.contains(purl));
+        cmake_link_attach::apply_scope(&mut components, &link_conditional);
+        cmake_search_pair::apply_scope(&mut components, &scopes.optional);
     }
 
     apply_lifecycle_scope_to_edges(&components, &mut relationships);
@@ -1678,6 +1701,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let mut anchors = declared_attach::attach(&components, &relationships, &index, root).root_anchors;
         anchors.extend(cmake_fetch_attach::attach(&components, &relationships, &index, root).root_anchors);
         anchors.extend(cmake_link_attach::attach(&components, &relationships, &cmake_links, &index, root).attached.root_anchors);
+        anchors.extend(cmake_search_pair::attach(&relationships, &search_pairings, &index, root).root_anchors);
         anchors.extend(workspace_root_anchors(&components, &relationships));
         anchors.into_iter().collect()
     };

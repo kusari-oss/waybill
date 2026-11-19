@@ -145,6 +145,11 @@ pub(crate) struct Declarations {
     pub(crate) searches: Vec<super::searches::PackageSearch>,
     /// Package searches whose name could not be read (C237 `unresolved`).
     pub(crate) unresolved_searches: usize,
+    /// Each fetch's declared name (lowercased) and the PURL of the component
+    /// it is (research R7.1).
+    pub(crate) fetch_purls: BTreeMap<String, String>,
+    /// `project()` names, lowercased (research R9).
+    pub(crate) projects: BTreeSet<String>,
 }
 
 /// [`read_fetches`], plus the package searches in the same files, read from
@@ -154,6 +159,7 @@ pub(crate) fn read_declarations(
     files: &[PathBuf],
 ) -> (Vec<PackageDbEntry>, FetchCoverage, Declarations) {
     let mut found = super::searches::FileSearches::default();
+    let mut projects: BTreeSet<String> = BTreeSet::new();
     // Spec 1614 (#1605): the conditions under which each file is reached
     // through include() / add_subdirectory() enclose all its declarations.
     let reach = super::reach::compute(scan_root, files);
@@ -235,6 +241,11 @@ pub(crate) fn read_declarations(
                 continue;
             }
             super::searches::collect(&blocks, name, args, &source_path, in_test_dir, &mut found);
+            if name == "project" {
+                if let Some(p) = args.first().filter(|p| !p.contains("${")) {
+                    projects.insert(p.to_lowercase());
+                }
+            }
             let builtin = match name.as_str() {
                 "fetchcontent_declare" => Some(FetchKind::FetchContent),
                 "externalproject_add" => Some(FetchKind::ExternalProject),
@@ -293,6 +304,11 @@ pub(crate) fn read_declarations(
     }
 
     first_declaration_wins(&mut decls, &mut cov);
+    let fetch_purls: BTreeMap<String, String> = decls
+        .iter()
+        .filter(|d| !d.name.is_empty())
+        .filter_map(|d| d.entry.as_ref().map(|e| (d.name.clone(), e.purl.as_str().to_string())))
+        .collect();
     let entries = one_per_purl(decls.into_iter().filter_map(|d| d.entry).map(|e| (e, 1)).collect(), &mut cov);
     cov.components = entries.len();
     cov.conditional = entries.iter().filter(|e| e.lifecycle_scope == Some(LifecycleScope::Optional)).count();
@@ -311,7 +327,7 @@ pub(crate) fn read_declarations(
             "cmake: fetch declarations (spec 1538, 1539)"
         );
     }
-    let decls = Declarations { searches: found.searches, unresolved_searches: found.unresolved };
+    let decls = Declarations { searches: found.searches, unresolved_searches: found.unresolved, fetch_purls, projects };
     (entries, cov, decls)
 }
 

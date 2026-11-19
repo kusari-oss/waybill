@@ -95,28 +95,28 @@
 
 **Independent test**: W-14a, W-14b, W-14c and W-15.
 
-- [ ] T016 [P] [US3] Write W-14a (fetch pair: one component, the search in its evidence), W-14b (installed record pair, plus the conditional variant: Optional with C236), W-14c (submodule pair and C57 `declared-and-used`) and W-15 (`project()` and `Config.cmake.in`: no component, no edge, C237 `in-tree`) in `waybill-cli/tests/scan_cmake_tree_finds.rs`. W-14a and W-14b fail on `main`, which emits both components (research R7 probe).
-- [ ] T017 [US3] R7.1, fetch pairing, in `cmake.rs`:
+- [X] T016 [P] [US3] Write W-14a (fetch pair: one component, the search in its evidence), W-14b (installed record pair, plus the conditional variant: Optional with C236), W-14c (submodule pair and C57 `declared-and-used`) and W-15 (`project()` and `Config.cmake.in`: no component, no edge, C237 `in-tree`) in `waybill-cli/tests/scan_cmake_tree_finds.rs`. W-14a and W-14b fail on `main`, which emits both components (research R7 probe).
+- [X] T017 [US3] R7.1, fetch pairing, in `cmake.rs`:
   - `read_fetches` also returns the set of fetch declared names (lowercased, after variable expansion: `Declared.name`).
   - A search whose name is in that set yields no component; its files are added to the fetch component's `extra_source_paths`.
   - Count C237 `paired.fetch`.
-- [ ] T018 [US3] R7.2 and R7.3 in a new `waybill-cli/src/scan_fs/cmake_search_pair.rs`, called from `waybill-cli/src/scan_fs/mod.rs` after `installed_lib::resolve`:
+- [X] T018 [US3] R7.2 and R7.3 in a new `waybill-cli/src/scan_fs/cmake_search_pair.rs`, called from `waybill-cli/src/scan_fs/mod.rs` after `installed_lib::resolve`:
   - **Installed records.** For each `cmake-find-package` component whose lowercased name equals a `cmake-package-version` / `pkg-config` record's, remove it, and move its evidence and declarations to the record.
   - **Submodules.** Do the same for a name equal to a git submodule directory's last segment (C57's rule).
   - **Edges** to the paired component, from the search's owner (`OwnerIndex`).
   - **The record's scope.** Extend `cmake_link_attach`'s conditional decision (`attach`, lines 139–147) so that a record is Optional only when every link (C235) **and** every search (C236) is conditional, nothing else scoped it, and nothing targets it. Write C236 on the record.
   - Count C237 `paired.installed` / `paired.submodule`.
-- [ ] T019 [US3] R9, built in the tree:
+- [X] T019 [US3] R9, built in the tree:
   - The CMake registration in `cmake.rs` gains `**/*Config.cmake.in` and `**/*-config.cmake.in`; these are collected in `CMakeMarkerState` by name only and not passed to the parsers.
   - Collect `project()` first arguments in `read_fetches`'s loop.
   - The reader does **not** drop an in-tree search. It emits the component tagged in-tree (an internal marker, never emitted), and carries the in-tree name set to `cmake_search_pair.rs`.
   - The post-pass applies R7.2, then R7.3, and only then drops each component still tagged in-tree: no component, no edge.
   - Fill C237 `in-tree` (names) and `in-tree-declarations`.
   - Add a W-15 variant: a submodule directory that holds `project(waybill_fixture_sub)` and is named by a search. It pairs with the submodule (W-14c outcome), and is not counted as in-tree.
-- [ ] T020 [US3] R10, C57 widening:
+- [X] T020 [US3] R10, C57 widening:
   - In `waybill-cli/src/scan_fs/package_db/git_submodule/mod.rs:263`, take package-search names from the CMake reader's walked declarations: pass the marker files through `read_all`, or the extracted names.
   - Keep `collect_find_package_targets` for callers without a walker.
-- [ ] T021 [US3] Run T016's tests, plus all earlier tests and W-ctl, all green.
+- [X] T021 [US3] Run T016's tests, plus all earlier tests and W-ctl, all green.
 
 ## Phase 6: User Story 4 — tools and CMake helpers are not dependencies (P2)
 

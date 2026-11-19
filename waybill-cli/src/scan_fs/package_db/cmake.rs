@@ -98,12 +98,16 @@ pub(crate) struct CMakeMarkerState {
     /// reader. Fetch declarations are read from these, so the walker's skip
     /// set and `--exclude-path` apply exactly as they do to every reader.
     pub(crate) files: Vec<PathBuf>,
+    /// Spec 1614 research R9: `<name>Config.cmake.in` / `-config.cmake.in`
+    /// templates, collected by name only: the tree builds `<name>`.
+    pub(crate) config_templates: Vec<PathBuf>,
 }
 
 fn on_cmake_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let template = config_template_stem(path).is_some();
     // `is_cmake_file` matches basename `CMakeLists.txt`
     // (case-insensitive) OR extension `.cmake` (case-insensitive).
-    if !is_cmake_file(path) {
+    if !is_cmake_file(path) && !template {
         return;
     }
     let Some(state) = ctx.state::<Mutex<CMakeMarkerState>>(ReaderId::CMAKE) else {
@@ -113,8 +117,43 @@ fn on_cmake_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
         Ok(g) => g,
         Err(poisoned) => poisoned.into_inner(),
     };
+    if template {
+        guard.config_templates.push(path.to_path_buf());
+        return;
+    }
     guard.seen = true;
     guard.files.push(path.to_path_buf());
+}
+
+/// `<name>` of a `<name>Config.cmake.in` / `<name>-config.cmake.in`
+/// template, lowercased (spec 1614 research R9).
+fn config_template_stem(path: &Path) -> Option<String> {
+    let lower = path.file_name()?.to_string_lossy().to_lowercase();
+    let stem = lower.strip_suffix("config.cmake.in")?;
+    let stem = stem.strip_suffix('-').unwrap_or(stem);
+    (!stem.is_empty()).then(|| stem.to_string())
+}
+
+/// `<name>` of a `<name>Config.cmake` / `<name>-config.cmake` with no
+/// package version file beside it, lowercased: a config file the tree
+/// provides rather than an installed record (spec 1614 research R9).
+fn provided_config_stem(path: &Path) -> Option<String> {
+    let lower = path.file_name()?.to_string_lossy().to_lowercase();
+    let stem = lower.strip_suffix("config.cmake")?;
+    let (stem, version) = match stem.strip_suffix('-') {
+        Some(s) => (s, format!("{s}-config-version.cmake")),
+        None => (stem, format!("{stem}configversion.cmake")),
+    };
+    if stem.is_empty() {
+        return None;
+    }
+    let dir = path.parent()?;
+    let has_version = std::fs::read_dir(dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .any(|e| e.file_name().to_string_lossy().to_lowercase() == version);
+    (!has_version).then(|| stem.to_string())
 }
 
 pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
@@ -122,6 +161,9 @@ pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
     let patterns = globset_from_patterns_case_insensitive(&[
         "**/CMakeLists.txt",
         "**/*.cmake",
+        // Spec 1614 research R9: collected by name only.
+        "**/*Config.cmake.in",
+        "**/*-config.cmake.in",
     ])?;
     Ok(ReaderRegistration {
         reader_id: ReaderId::CMAKE,
@@ -165,7 +207,7 @@ pub(crate) fn finalize(
     {
         return (Vec::new(), Default::default(), Default::default());
     }
-    read_with_downloads(scan_root, include_vendored, exclude_set, Some(marker.files))
+    read_with_downloads(scan_root, include_vendored, exclude_set, Some(marker.files), &marker.config_templates)
 }
 
 pub fn read(
@@ -173,7 +215,7 @@ pub fn read(
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
-    read_with_downloads(scan_root, include_vendored, exclude_set, None).0
+    read_with_downloads(scan_root, include_vendored, exclude_set, None, &[]).0
 }
 
 /// [`read`], plus the spec 1535 declared-download counts (C229) and the
@@ -189,6 +231,7 @@ pub(crate) fn read_with_downloads(
     include_vendored: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
     walked: Option<Vec<PathBuf>>,
+    config_templates: &[PathBuf],
 ) -> (Vec<PackageDbEntry>, super::cmake_download::DownloadCoverage, FetchCoverage) {
     // Milestone 156: opt-in recursive descent for third_party/. Default
     // depth-1 (matches milestone-102 behavior) unless the CLI flag
@@ -211,7 +254,7 @@ pub(crate) fn read_with_downloads(
     let mut fetch_files = walked.unwrap_or_else(|| cmake_files.clone());
     fetch_files.sort();
     fetch_files.dedup();
-    let (fetch_entries, mut fetches, mut decls) = fetches::read_declarations(scan_root, &fetch_files);
+    let (mut fetch_entries, mut fetches, mut decls) = fetches::read_declarations(scan_root, &fetch_files);
     if tree_wide {
         // FR-009: a narrow-set file the walker skips (`cmake/**/vendor/`)
         // was read for package searches before; it still is.
@@ -262,8 +305,34 @@ pub(crate) fn read_with_downloads(
     if tree_wide {
         fetches.finds.read = decls.searches.len() + decls.unresolved_searches;
         fetches.finds.unresolved = decls.unresolved_searches;
-        fetches.finds.components =
-            decls.searches.iter().map(|s| s.name.to_lowercase()).collect::<BTreeSet<_>>().len();
+        fetches.finds.searched = decls.searches.iter().map(|s| s.name.to_lowercase()).collect();
+        // Research R7.1: a search for a name a fetch declares is that fetch.
+        let (paired, rest): (Vec<_>, Vec<_>) = std::mem::take(&mut decls.searches)
+            .into_iter()
+            .partition(|s| decls.fetch_purls.contains_key(&s.name.to_lowercase()));
+        for s in paired {
+            let purl = &decls.fetch_purls[&s.name.to_lowercase()];
+            if let Some(e) = fetch_entries.iter_mut().find(|e| e.purl.as_str() == purl) {
+                if e.source_path != s.source_path && !e.extra_source_paths.contains(&s.source_path) {
+                    e.extra_source_paths.push(s.source_path);
+                }
+            }
+            fetches.finds.paired_fetch += 1;
+        }
+        decls.searches = rest;
+        // Research R9: names the tree builds itself. Decided after the
+        // installed and submodule pairing in `scan_fs::cmake_search_pair`.
+        fetches.finds.built_in_tree = decls
+            .projects
+            .iter()
+            .cloned()
+            .chain(config_templates.iter().filter_map(|p| config_template_stem(p)))
+            .chain(fetch_files.iter().filter_map(|p| provided_config_stem(p)))
+            .collect();
+        for s in &decls.searches {
+            *fetches.finds.declarations.entry(s.name.to_lowercase()).or_default() += 1;
+        }
+        fetches.finds.components = fetches.finds.declarations.len();
         search_scopes = searches::scopes(&decls.searches);
         for s in decls.searches {
             match s.kind {

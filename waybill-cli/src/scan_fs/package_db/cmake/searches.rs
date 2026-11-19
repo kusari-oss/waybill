@@ -53,6 +53,15 @@ pub(crate) struct FindCoverage {
     pub(crate) components: usize,
     pub(crate) conditional: usize,
     pub(crate) test: usize,
+    /// Not on the wire: searches per emitted package name, so the pairing
+    /// pass counts declarations, not components.
+    pub(crate) declarations: BTreeMap<String, usize>,
+    /// Not on the wire: names the tree builds itself (research R9), for the
+    /// pairing pass, which decides in-tree after installed and submodule
+    /// pairing (analysis I2).
+    pub(crate) built_in_tree: BTreeSet<String>,
+    /// Not on the wire: every searched name, paired or not, for C57.
+    pub(crate) searched: BTreeSet<String>,
 }
 
 impl FindCoverage {

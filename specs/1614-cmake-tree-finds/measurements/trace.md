@@ -63,3 +63,9 @@ The first `reach.rs` computed reach as a memoised depth-first fold. The unit tes
 - a file still unknown afterwards is reached only by a cycle with no way in, and counts as unconditional.
 
 All four reach unit tests pass. Contract W-12 (a cycle reached from an unconditional root) stays required.
+
+## T021: US3 and existing tests
+
+One existing test asserted the duplicate that FR-005 removes. `cmake_find_package_dedup_integration::cmake_find_package_requirement_and_fetch_in_different_directories_stay_apart` expected a `find_package(openssl 1.1.0)` in the root `CMakeLists.txt` and `FetchContent_Declare(openssl URL …-1.1.0.tar.gz)` in `cmake/deps.cmake` to stay two components: the milestone-191 reconciler only matches within one directory. Research R7.1 pairs them in the reader, in any directory. Renamed `…_pair`, it now expects one component, the fetch. The same-directory test beside it is unchanged and passes.
+
+All 3,778 `scan_fs` unit tests pass, as do the CMake, installed-library, submodule, TheRock, graph, orphan, root and declared-requirements integration suites.
