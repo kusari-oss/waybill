@@ -1,0 +1,260 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "annotations": [
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"excluded_files\\\":0,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":2,\\\"with_candidates\\\":0}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:installed-library-coverage\",\"value\":\"{\\\"cmake-version\\\":{\\\"emitted\\\":1,\\\"read\\\":1},\\\"pkg-config\\\":{\\\"emitted\\\":0,\\\"read\\\":0},\\\"skipped\\\":{\\\"computed-version\\\":0,\\\"malformed\\\":0,\\\"no-version\\\":0,\\\"owned-by-os-package\\\":0,\\\"unrecognised-location\\\":0,\\\"unresolved-version\\\":0},\\\"unresolved-requires\\\":0,\\\"version-disagreements\\\":0}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cmake-find-coverage\",\"value\":\"{\\\"components\\\":0,\\\"conditional\\\":0,\\\"in-tree\\\":[],\\\"in-tree-declarations\\\":0,\\\"paired\\\":{\\\"fetch\\\":0,\\\"installed\\\":1,\\\"submodule\\\":0},\\\"read\\\":1,\\\"test\\\":0,\\\"tools\\\":0,\\\"unresolved\\\":0}\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"partial\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"transitive-edges-unresolvable: generic\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\"sdk/lib\\\",\\\"sdk/lib/cmake/waybill_fixture_lib\\\",\\\"sdk/share/waybill_fixture_consumer\\\"]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[],\"target_aggregate\":\"incomplete_first_party_only\"}}"
+    }
+  ],
+  "creationInfo": "<masked>",
+  "dataLicense": "CC0-1.0",
+  "documentDescribes": [
+    "SPDXRef-DocumentRoot-<masked>"
+  ],
+  "documentNamespace": "<masked>",
+  "name": "Waybill source scan (identity unavailable)",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-DocumentRoot-<masked>",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/waybill-fixture-tree@0.0.0",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "waybill-fixture-tree",
+      "supplier": "Organization: waybill contributors",
+      "versionInfo": "0.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-XAV4NJQJDBFCFNS6",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"analyzed\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:binary-class\",\"value\":\"elf\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:binary-stripped\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:linkage-kind\",\"value\":\"static\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:binary-packed\",\"value\":\"none\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"sdk/lib/libwaybill_fixture_lib.so.1.2.3\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"sdk/lib/libwaybill_fixture_lib.so.1.2.3\",\"sha256\":\"<masked-sha256>\"}]}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/libwaybill_fixture_lib.so.1.2.3?file-sha256=d347d83f94ac9e0f40dfe78c70c6f40833baa84aeea9946f7c22d02a5f38ccb8",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "libwaybill_fixture_lib.so.1.2.3",
+      "primaryPackagePurpose": "LIBRARY",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-G3JLTWTX72JDZP7W",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"sdk/lib/cmake/waybill_fixture_lib/waybill_fixture_libConfigVersion.cmake\",\"sdk/lib/libwaybill_fixture_lib.so.1.2.3\",\"sdk/share/waybill_fixture_consumer/consumer-config.cmake\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"sdk/lib/cmake/waybill_fixture_lib/waybill_fixture_libConfigVersion.cmake\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"sdk/lib/libwaybill_fixture_lib.so.1.2.3\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"cmake-package-version\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"sdk/lib\\\",\\\"sdk/lib/cmake/waybill_fixture_lib\\\",\\\"sdk/share/waybill_fixture_consumer\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/waybill_fixture_lib@1.2.3",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "waybill_fixture_lib",
+      "versionInfo": "1.2.3"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-G3JLTWTX72JDZP7W",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-XAV4NJQJDBFCFNS6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}

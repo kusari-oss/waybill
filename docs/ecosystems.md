@@ -251,7 +251,12 @@ in C103 when it differs.
      fallback pair);
   2. an installed-library record (spec 1531) of the name. The record is
      Optional only when every search for it and every link to it (C235) is
-     conditional, and nothing else requires it;
+     conditional, and nothing else requires it. Searches never make
+     non-runtime a record that ships a library file (spec 1617, #1623): in
+     an installed tree, a config file's conditional `find_dependency` says
+     when a consumer needs the library, not whether the tree ships it. C236
+     still records the conditions. A record that ships no library file and
+     is searched only from test contexts is Test;
   3. a git submodule whose directory is the name, whose C57
      `waybill:build-reference` becomes `declared-and-used`;
   4. a name the tree builds itself — a `project(<name>)`, a

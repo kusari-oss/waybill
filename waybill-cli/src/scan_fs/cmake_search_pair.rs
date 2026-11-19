@@ -33,6 +33,10 @@ const MECHANISM: &str = "waybill:source-mechanism";
 const ANN_BUILD_REFERENCE: &str = "waybill:build-reference";
 const ANN_OPTIONAL_DERIVATION: &str = "waybill:optional-derivation";
 const DERIVATION_CMAKE_CONDITIONAL: &str = "cmake-conditional";
+/// C62, as the package-search reader writes it (`cmake/searches.rs`).
+const ANN_SCOPE_DERIVATION: &str = "waybill:lifecycle-scope-derivation";
+const DERIVATION_SOURCE_TEST_DIRECTORY: &str = "source-test-directory";
+const DERIVATION_CMAKE_BUILD_TESTING: &str = "cmake-build-testing";
 
 /// One package search answered by an existing component.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -44,6 +48,9 @@ pub(crate) struct Pairing {
     /// Whether every search of the name is non-runtime, and their conditions.
     pub(crate) conditional: bool,
     pub(crate) conditions: BTreeSet<String>,
+    /// Spec 1617 (#1623) research R4: the search's C62 when it is Test-scoped
+    /// (`source-test-directory`, `cmake-build-testing`); `None` otherwise.
+    pub(crate) test_derivation: Option<String>,
     /// An installed-library record, whose scope the searches can decide.
     pub(crate) installed: bool,
 }
@@ -54,6 +61,29 @@ fn mechanism(c: &ResolvedComponent) -> Option<&str> {
 
 fn is_search(c: &ResolvedComponent) -> bool {
     matches!(mechanism(c), Some("cmake-find-package" | "cmake-pkg-check-modules"))
+}
+
+fn test_derivation_of(c: &ResolvedComponent) -> Option<String> {
+    if c.lifecycle_scope != Some(LifecycleScope::Test) {
+        return None;
+    }
+    c.extra_annotations.get(ANN_SCOPE_DERIVATION).and_then(|v| v.as_str()).map(str::to_string)
+}
+
+/// Spec 1617 (#1623) FR-001: whether `c`'s own evidence lists a library file
+/// it ships: `.so`, `.so.<N…>`, `.a`, `.dylib`, `.dll` or `.lib`, compared
+/// case-insensitively. `installed_lib::resolve` has already attributed these
+/// files to the record (research R2).
+pub(crate) fn ships_library_file(c: &ResolvedComponent) -> bool {
+    c.evidence.source_file_paths.iter().any(|p| {
+        let name = Path::new(p).file_name().and_then(|n| n.to_str()).unwrap_or("").to_ascii_lowercase();
+        if [".so", ".a", ".dylib", ".dll", ".lib"].iter().any(|ext| name.len() > ext.len() && name.ends_with(ext)) {
+            return true;
+        }
+        name.split_once(".so.").is_some_and(|(stem, v)| {
+            !stem.is_empty() && v.split('.').all(|seg| !seg.is_empty() && seg.chars().all(|ch| ch.is_ascii_digit()))
+        })
+    })
 }
 
 fn conditions_of(c: &ResolvedComponent) -> BTreeSet<String> {
@@ -124,6 +154,7 @@ pub(crate) fn pair(
                     target: t.clone(),
                     conditional: c.lifecycle_scope.is_some(),
                     conditions: conditions_of(c),
+                    test_derivation: test_derivation_of(c),
                     installed,
                 });
                 evidence.entry(t.clone()).or_default().push(f.clone());
@@ -201,10 +232,21 @@ pub(crate) fn attach(
 /// requires. Research R7.2 extends spec 1543's link rule: a record is
 /// Optional only when every link and every search is conditional, nothing
 /// else scoped it, and nothing targets it.
+///
+/// Spec 1617 (#1623): a record that ships a library file is never scoped by
+/// its searches (`conditions_only`: C236 only, FR-001, FR-006), and a record
+/// that ships none and is searched only from test contexts is Test
+/// (FR-004). Neither joins `required`, so spec 1543's link half still
+/// applies to them (FR-005).
 #[derive(Debug, Default)]
 pub(crate) struct RecordScopes {
     pub(crate) optional: BTreeMap<String, BTreeSet<String>>,
     pub(crate) required: BTreeSet<String>,
+    /// Test records: their C62 derivation and conditions.
+    pub(crate) test: BTreeMap<String, (&'static str, BTreeSet<String>)>,
+    /// Records that ship a library file and that the search half would have
+    /// made Optional: their conditions, recorded without a scope.
+    pub(crate) conditions_only: BTreeMap<String, BTreeSet<String>>,
 }
 
 pub(crate) fn record_scopes(
@@ -229,21 +271,136 @@ pub(crate) fn record_scopes(
         if unconditionally_linked || scoped || targeted.contains(purl) {
             continue;
         }
-        let conds = ps.iter().flat_map(|p| p.conditions.iter().cloned()).collect();
-        out.optional.insert(purl.to_string(), conds);
+        let conds: BTreeSet<String> = ps.iter().flat_map(|p| p.conditions.iter().cloned()).collect();
+        if components.iter().any(|c| c.purl.as_str() == purl && ships_library_file(c)) {
+            out.conditions_only.insert(purl.to_string(), conds);
+        } else if ps.iter().all(|p| p.test_derivation.is_some()) {
+            let derivation = if ps.iter().any(|p| p.test_derivation.as_deref() == Some(DERIVATION_SOURCE_TEST_DIRECTORY)) {
+                DERIVATION_SOURCE_TEST_DIRECTORY
+            } else {
+                DERIVATION_CMAKE_BUILD_TESTING
+            };
+            out.test.insert(purl.to_string(), (derivation, conds));
+        } else {
+            out.optional.insert(purl.to_string(), conds);
+        }
     }
     out
 }
 
 /// Mark each record [`RecordScopes::optional`] holds Optional, with C122
-/// `cmake-conditional` and C236.
-pub(crate) fn apply_scope(components: &mut [ResolvedComponent], optional: &BTreeMap<String, BTreeSet<String>>) {
-    for c in components.iter_mut() {
-        let Some(conds) = optional.get(c.purl.as_str()) else { continue };
-        c.lifecycle_scope = Some(LifecycleScope::Optional);
-        c.extra_annotations.insert(ANN_OPTIONAL_DERIVATION.to_string(), serde_json::json!(DERIVATION_CMAKE_CONDITIONAL));
+/// `cmake-conditional` and C236; each [`RecordScopes::test`] record Test,
+/// with its C62 and C236; and write C236 alone on each
+/// [`RecordScopes::conditions_only`] record (spec 1617).
+pub(crate) fn apply_scope(components: &mut [ResolvedComponent], scopes: &RecordScopes) {
+    let conditions = |c: &mut ResolvedComponent, conds: &BTreeSet<String>| {
         if !conds.is_empty() {
             c.extra_annotations.insert(ANN_CMAKE_FIND_CONDITIONS.to_string(), serde_json::json!(conds));
         }
+    };
+    for c in components.iter_mut() {
+        let purl = c.purl.as_str().to_string();
+        if let Some(conds) = scopes.optional.get(&purl) {
+            c.lifecycle_scope = Some(LifecycleScope::Optional);
+            c.extra_annotations.insert(ANN_OPTIONAL_DERIVATION.to_string(), serde_json::json!(DERIVATION_CMAKE_CONDITIONAL));
+            conditions(c, conds);
+        } else if let Some((derivation, conds)) = scopes.test.get(&purl) {
+            c.lifecycle_scope = Some(LifecycleScope::Test);
+            c.extra_annotations.insert(ANN_SCOPE_DERIVATION.to_string(), serde_json::json!(derivation));
+            conditions(c, conds);
+        } else if let Some(conds) = scopes.conditions_only.get(&purl) {
+            conditions(c, conds);
+        }
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::*;
+    use crate::generate::graph_completeness::test_support::mk_component;
+
+    const REC: &str = "pkg:generic/waybill_fixture_lib@1.2.3";
+
+    fn record(files: &[&str]) -> ResolvedComponent {
+        let mut c = mk_component(REC);
+        c.evidence.source_file_paths = files.iter().map(|f| f.to_string()).collect();
+        c
+    }
+
+    fn pairing(conds: &[&str], test: Option<&str>) -> Pairing {
+        Pairing {
+            file: "share/x/consumer-config.cmake".into(),
+            target: REC.into(),
+            conditional: true,
+            conditions: conds.iter().map(|s| s.to_string()).collect(),
+            test_derivation: test.map(str::to_string),
+            installed: true,
+        }
+    }
+
+    fn scopes(c: &ResolvedComponent, ps: &[Pairing]) -> RecordScopes {
+        record_scopes(std::slice::from_ref(c), ps, &BTreeSet::new(), &BTreeMap::new(), &HashSet::new())
+    }
+
+    /// T004: library file names, case-insensitively.
+    #[test]
+    fn s1617_library_file_names() {
+        for f in ["lib/x.so", "lib/libx.so.1.2", "lib/libX.SO.3", "lib/x.a", "lib/x.dylib", "bin/x.dll", "lib/x.lib"] {
+            assert!(ships_library_file(&record(&[f])), "{f}");
+        }
+        for f in ["lib/cmake/x/xConfigVersion.cmake", "lib/pkgconfig/x.pc", "lib/x.so.txt", "lib/x.so.1a", "lib/.so", "share/data"] {
+            assert!(!ships_library_file(&record(&[f])), "{f}");
+        }
+    }
+
+    /// T004 / FR-001, FR-006: a shipping all-conditional record keeps its
+    /// conditions, with no scope, and does not switch off the link half.
+    #[test]
+    fn s1617_a_shipping_record_is_conditions_only() {
+        let c = record(&["lib/libwaybill_fixture_lib.so.1.2.3"]);
+        let s = scopes(&c, &[pairing(&["NOT TARGET t"], None)]);
+        assert_eq!(s.conditions_only.get(REC).map(|c| c.iter().cloned().collect::<Vec<_>>()), Some(vec!["NOT TARGET t".to_string()]));
+        assert!(s.optional.is_empty() && s.test.is_empty() && s.required.is_empty(), "{s:?}");
+    }
+
+    /// T004: what today's rule leaves alone, this one does too: no C236.
+    #[test]
+    fn s1617_a_shipping_record_otherwise_scoped_is_untouched() {
+        let mut scoped = record(&["lib/libx.so"]);
+        scoped.lifecycle_scope = Some(LifecycleScope::Development);
+        let s = scopes(&scoped, &[pairing(&["A"], None)]);
+        assert!(s.conditions_only.is_empty() && s.optional.is_empty(), "{s:?}");
+        let c = record(&["lib/libx.so"]);
+        let linked: BTreeSet<String> = [REC.to_string()].into();
+        let s = record_scopes(std::slice::from_ref(&c), &[pairing(&["A"], None)], &linked, &BTreeMap::new(), &HashSet::new());
+        assert!(s.conditions_only.is_empty(), "unconditionally linked: {s:?}");
+        let targeted: HashSet<String> = [REC.to_string()].into();
+        let s = record_scopes(std::slice::from_ref(&c), &[pairing(&["A"], None)], &BTreeSet::new(), &BTreeMap::new(), &targeted);
+        assert!(s.conditions_only.is_empty(), "targeted: {s:?}");
+    }
+
+    /// T004: a record that ships nothing stays Optional, as on `main`.
+    #[test]
+    fn s1617_a_bare_conditional_record_stays_optional() {
+        let s = scopes(&record(&["lib/cmake/x/xConfigVersion.cmake"]), &[pairing(&["A"], None)]);
+        assert!(s.optional.contains_key(REC), "{s:?}");
+    }
+
+    /// T009 / FR-004: all-Test pairings make a bare record Test, preferring
+    /// `source-test-directory`; one Optional pairing keeps it Optional; a
+    /// shipping all-Test record is conditions-only.
+    #[test]
+    fn s1617_test_pairings() {
+        let bare = record(&["lib/cmake/x/xConfigVersion.cmake"]);
+        let s = scopes(&bare, &[pairing(&[], Some("cmake-build-testing")), pairing(&[], Some("source-test-directory"))]);
+        assert_eq!(s.test.get(REC).map(|(d, _)| *d), Some("source-test-directory"));
+        let s = scopes(&bare, &[pairing(&["BUILD_TESTING"], Some("cmake-build-testing"))]);
+        assert_eq!(s.test.get(REC).map(|(d, c)| (*d, c.len())), Some(("cmake-build-testing", 1)));
+        let s = scopes(&bare, &[pairing(&[], Some("source-test-directory")), pairing(&["A"], None)]);
+        assert!(s.optional.contains_key(REC) && s.test.is_empty(), "{s:?}");
+        let shipping = record(&["lib/libx.so.1"]);
+        let s = scopes(&shipping, &[pairing(&[], Some("source-test-directory"))]);
+        assert!(s.conditions_only.contains_key(REC) && s.test.is_empty(), "{s:?}");
     }
 }

@@ -58,7 +58,9 @@ The test is by extension, not by module name: the evidence was already attribute
 - **Each pairing carries its search's scope and C62 derivation.**
 - **A shipping record is decided by R3 first.** `rocprofiler-sdk-rocattach` ships `lib/librocprofiler-sdk-rocattach.so*`, so it is required.
 - **A non-shipping record whose every pairing is Test becomes Test,** in a new `RecordScopes::test` set, with the derivation `source-test-directory` if any pairing has it, else `cmake-build-testing` (the same precedence as `searches::scopes`). C236 is written when the conditions are non-empty, as `apply_scope` does today.
-- **A non-shipping record with at least one non-test conditional pairing** stays Optional, with C236 from all its pairings, as today. Mixed test and optional searches give Optional, as `searches::scopes` does for a name.
+- **A non-shipping record with a pairing that is not Test** (an Optional search) stays Optional, with C236 from all its pairings, as today.
+
+**Corrected at T012.** The first version of this section said mixed test and optional searches give Optional, as `searches::scopes` does for a name. That was wrong. `searches::scopes` scopes a name **Test** whenever any of its searches is in a test directory (`else if a.test_dir`), even when another search is merely conditional, and `mark` gives every search entry of the name that scope. So a record searched from tests and under `if(WITH_X)` has only Test pairings, and is Test. I-7 failed on the first implementation and showed this. Clarified as option A: the record takes its searches' scope.
 
 ## R5. Spec 1533's test scope
 

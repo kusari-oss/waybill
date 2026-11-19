@@ -12,7 +12,7 @@ Every case is asserted in CycloneDX, SPDX 2.3 and SPDX 3 through the parity extr
 | I-4 | a shipped library searched only from `share/waybill-fixture/tests/a/CMakeLists.txt` | required (FR-001) |
 | I-5 | a record with no library file (version file only) searched only from a tests directory | Test, C62 `source-test-directory`, no C122 (FR-004) |
 | I-6 | a record with no library file, searched under `if(NOT GPU_TARGETS)` | Optional, C122 `cmake-conditional`, C236 (as today) |
-| I-7 | a record with no library file, searched once from a tests directory and once under `if(WITH_X)` | Optional, C236 `["WITH_X"]` (R4: mixed is Optional) |
+| I-7 | a record with no library file, searched once from a tests directory and once under `if(WITH_X)` | Test, C62 `source-test-directory`, C236 `["WITH_X"]`, no C122. Spec 1614's name rule scopes both searches Test (R4, corrected at T012) |
 | I-8 | a conditional search for a library the tree does not have | the search component is Optional with C236 (FR-003, as today) |
 | I-9 | a record that ships only a static archive named by an exported-targets file, searched under `if(NOT TARGET …)` | required (R2: static archives count) |
 | I-10 | a shipped library linked only under a condition (C235) and searched under a condition | Optional through the link half: C122 `cmake-conditional-link` (on `main` the search half overwrote it with `cmake-conditional`), C235, and C236 still recorded (FR-005, FR-006) |

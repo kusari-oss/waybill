@@ -16,7 +16,7 @@ No new catalog row and no new value. C42, C62 and C122 move on the affected reco
 | Set | Meaning | Applied as |
 |---|---|---|
 | `required` | some search is unconditional | unchanged; switches off the link half for the record |
-| `optional` | every pairing is conditional, at least one is not Test, the record ships no library file, and nothing else scopes it | Optional, C122 `cmake-conditional`, plus C236 when there are conditions (unchanged) |
+| `optional` | every pairing is conditional, at least one is not Test-scoped (spec 1614's name rule), the record ships no library file, and nothing else scopes it | Optional, C122 `cmake-conditional`, plus C236 when there are conditions (unchanged) |
 | `test` (**new**) | every pairing is Test, the record ships no library file, and nothing else scopes it | Test, with C62 `source-test-directory` if any pairing has it, else `cmake-build-testing`; C236 when there are conditions |
 | `conditions_only` (**new**) | today's rule would have made it Optional, but it ships a library file | no scope change; C236 when there are conditions |
 

@@ -42,6 +42,7 @@ In an installed tree, a shipped config file's conditional `find_dependency` says
 
 - Q: Which records may the search conditions no longer make Optional? → A: Any installed record whose own evidence includes a library file it ships, decided per record (FR-001).
 - Q: How is a record scoped when it ships no library file and is searched only from test contexts? → A: Test, with the C62 derivation its searches carry (FR-004).
+- Q (at implementation, T012): a record searched from a tests directory and also under a condition. Spec 1614's name rule scopes every search of that name Test. Should the record follow it, or stay Optional? → A: Follow it: Test. The paired record takes its searches' own scope. That spec 1614's rule lets Test beat Optional, against spec 1269's order, is a separate issue.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -105,7 +106,7 @@ A conditional search for a library that the tree does not contain is still an op
 - **FR-001**: The search half of the record-scope rule MUST NOT make Optional any installed record whose own evidence includes a library file it ships (`.so`, `.so.*`, `.a`, `.dylib`, `.dll`, `.lib`). This is decided per record, not by how the whole scan is classified: a library present in the tree is runtime content of it. A vendored prebuilt library in a source tree is treated the same way.
 - **FR-002**: A search MUST still pair with the installed record it names, give the record its edge, and record its conditions in C236, whatever FR-001 decides.
 - **FR-003**: A conditional search that pairs with no installed record MUST keep spec 1614's behaviour (US3).
-- **FR-004**: A record that ships no library file, and whose every search comes from a test context, MUST be Test, with the C62 derivation its searches carry (for example `source-test-directory`), not Optional. A record with at least one non-test conditional search keeps spec 1614's Optional, with C236.
+- **FR-004**: A record that ships no library file, and whose every search is Test-scoped by spec 1614's name rule, MUST be Test, with the C62 derivation its searches carry (`source-test-directory`, else `cmake-build-testing`), not Optional. The record takes the scope its searches have. Spec 1614 scopes a name Test whenever any of its searches is in a test directory or under `BUILD_TESTING`, including a name also searched under another condition (clarified 2026-11-19).
 - **FR-005**: Spec 1543's link half (C235) MUST keep its behaviour. This feature changes only the search half.
 - **FR-006**: The emitted catalog rows MUST keep their values: C235, C236 and C237 (`paired`, `read`, `conditional`, …). Only C42, C62 and C122 may change on affected records, plus the edges' relationship types that follow from scope.
 - **FR-007**: A tree whose installed records are not searched only conditionally or from test contexts MUST produce output byte-identical to `main`.

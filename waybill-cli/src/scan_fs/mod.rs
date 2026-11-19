@@ -1585,7 +1585,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let mut link_conditional = links.conditional;
         link_conditional.retain(|purl, _| !scopes.required.contains(purl));
         cmake_link_attach::apply_scope(&mut components, &link_conditional);
-        cmake_search_pair::apply_scope(&mut components, &scopes.optional);
+        cmake_search_pair::apply_scope(&mut components, &scopes);
     }
 
     apply_lifecycle_scope_to_edges(&components, &mut relationships);
