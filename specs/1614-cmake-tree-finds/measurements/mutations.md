@@ -25,5 +25,7 @@ Run with `measurements/mutate-run.sh` from the repository root, at `d123b615` pl
 | M16 | search attachment removed | 2 | 0 | yes | `fetches_and_package_searches_are_attached_and_nothing_else`, W-16 |
 | M17 | C57 not widened | 1 | 0 | yes | W-14c |
 | M18 | the record's scope ignores searches | 1 | 0 | yes | W-14b (conditional) |
+| M19 | `include(<name>)` not resolved along `CMAKE_MODULE_PATH` | 2 | 0 | yes | `modules_resolve_along_cmake_module_path`, W-18 |
+| M20 | search evidence added to a fetch before spec 1538's merge | 1 | 0 | yes | `w14a_search_evidence_does_not_move_a_fetch_declaration` |
 
-**All 18 are caught.** Every mutation turns at least one named test red, with 0 compile errors each time, so the failures are behavioural, not build breaks. `git status --short waybill-cli/src` was empty after the run.
+**All 20 are caught** (M1–M18 at `d123b615`; M19–M20, added after TheRock's second round, at `f9facc64`). Every mutation turns at least one named test red, with 0 compile errors each time, so the failures are behavioural, not build breaks. `git status --short waybill-cli/src` was empty after the run.

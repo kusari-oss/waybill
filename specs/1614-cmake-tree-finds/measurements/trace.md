@@ -85,3 +85,11 @@ All 3,778 `scan_fs` unit tests pass, as do the CMake, installed-library, submodu
 Now each file is tokenized once into `Rc`-shared commands, `reach::compute` takes them, walked paths are rebased onto the canonical root by prefix swap, the narrow-set check compares paths as given, and the lookup uses a set. W-ctl gained an assertion that C237 `read` is exactly 7, which would catch a file read twice. Local timing on this machine was too noisy to judge (0.8 s to 5 s for one binary on one tree); the measurement is TheRock in CI.
 
 **FR-006 dropped a library search.** pytorch's `find_package(Python COMPONENTS Interpreter OPTIONAL_COMPONENTS ${PYTHON_COMPONENTS})` was taken for an interpreter-only tool search, but `PYTHON_COMPONENTS` is `Development.Module` (`cmake/Dependencies.cmake:866`). A component list holding a variable is no longer taken to lack `Development` (Principle III). Unit-tested in `tools_and_python_as_an_interpreter`.
+
+## T032 round 2 (`4d2038d8`): two more fixes
+
+**SC-009 now holds:** TheRock 1.008× and 1.010× `main` (runs 44471788355, 44471802132). Parity, duplicates, unreachable-without-reason and repeat identity all held. The `main` diff turned up two defects:
+- **`fmt@11.1.3` and `googletest@f8d7` disappeared,** recorded (C233) on `fmt@master` and `googletest@e2239ee`. R7.1's search evidence had been added to the fetch before spec 1538's merge, which reads a fetch's source files as declaration sites. Fixed by adding it after the merge; regression test `w14a_search_evidence_does_not_move_a_fetch_declaration` (shown to fail with the evidence added first), and M20.
+- **`json-c` and `libvfio-user` stayed required.** rocjitsu includes its modules by name along `CMAKE_MODULE_PATH`, which reach did not resolve. Fixed (research R1 amendment); W-18, the module-path unit test, and M19.
+
+`libiberty`, a root search on `main`, is now in-tree: the tree has a `project(libiberty)`. That is FR-007 as clarified.

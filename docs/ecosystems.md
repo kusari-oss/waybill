@@ -229,7 +229,10 @@ in C103 when it differs.
   it is unconditional. A file nothing reaches, or reaches only through a
   cycle, is unconditional. Those conditions enclose everything in the file,
   before its own blocks. A file `include()` reaches under a name the walker
-  does not match (TheRock's `CMakeLists_wsl.txt`) is read too.
+  does not match (TheRock's `CMakeLists_wsl.txt`) is read too. `include(<name>)`
+  by module name is followed along `CMAKE_MODULE_PATH`, as set by literal
+  `list(APPEND|PREPEND …)` and `set(…)` and inherited by subdirectories; a
+  name not on that path (CMake's own modules) is not followed.
 - **Scope.** Per package, across all its searches, by the fetch rule: a
   runtime requirement if any search is unconditional and outside a test
   context; Optional only if every search is conditional (C122
