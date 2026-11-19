@@ -306,6 +306,10 @@ pub(crate) fn read_with_downloads(
         fetches.finds.read = decls.searches.len() + decls.unresolved_searches;
         fetches.finds.unresolved = decls.unresolved_searches;
         fetches.finds.searched = decls.searches.iter().map(|s| s.name.to_lowercase()).collect();
+        // FR-006, research R6: a tool or CMake helper is not a dependency.
+        let before = decls.searches.len();
+        decls.searches.retain(|s| !searches::is_tool(s));
+        fetches.finds.tools = before - decls.searches.len();
         // Research R7.1: a search for a name a fetch declares is that fetch.
         let (paired, rest): (Vec<_>, Vec<_>) = std::mem::take(&mut decls.searches)
             .into_iter()

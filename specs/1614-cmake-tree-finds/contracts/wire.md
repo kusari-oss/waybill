@@ -35,7 +35,7 @@
 
 | Case | Tree | Expected |
 |---|---|---|
-| W-13 | `find_package(Threads)`, `find_package(Git)`, `find_package(PkgConfig)`, `find_package(Doxygen)`, `find_package(Python3 COMPONENTS Interpreter)`, `find_package(Python3 COMPONENTS Interpreter Development)`, `find_package(CUDAToolkit)` | components only for `python3` (the second call) and `cudatoolkit`; C237 `tools` 5 |
+| W-13 | `find_package(Threads)`, `find_package(Git)`, `find_package(PkgConfig)`, `find_package(Doxygen)`, `find_package(Python3 COMPONENTS Interpreter)`, `find_package(PythonInterp)`, `find_package(Python3 COMPONENTS Interpreter Development)`, `find_package(CUDAToolkit)` | components only for `python3` (the `Development` call) and `cudatoolkit`; C237 `tools` 6 (`PythonInterp` added by analysis I4) |
 | W-14a | `find_package(waybill_fixture_fmt QUIET)` + `if(NOT waybill_fixture_fmt_FOUND) FetchContent_Declare(waybill_fixture_fmt GIT_REPOSITORY …/fmt.git GIT_TAG v1.0.0)` | one component, `pkg:github/waybill-fixture/fmt@v1.0.0`, with the search's file in its evidence; no `pkg:generic/waybill_fixture_fmt`. **Both exist on `main`.** |
 | W-14b | `find_package(waybill_fixture_inst)` + `sdk/lib/cmake/waybill_fixture_inst/waybill_fixture_instConfigVersion.cmake` (`PACKAGE_VERSION 4.5.6`) | one component, `pkg:generic/waybill_fixture_inst@4.5.6`, with both files as evidence. **Both exist on `main`.** If the search is only under `if(A)`, and nothing else links or requires the record, the record is Optional with C236 `["A"]`. |
 | W-14c | a git submodule `extern/waybill_fixture_sub` (a real gitlink in a temporary repository) + `find_package(waybill_fixture_sub)` | no `pkg:generic/waybill_fixture_sub`; the submodule's C57 is `declared-and-used` |

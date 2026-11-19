@@ -250,6 +250,24 @@ pub(crate) fn collect(
     }));
 }
 
+/// FR-006, research R6: build tools and CMake helpers, which a search for
+/// is not a dependency. Lowercased.
+const TOOLS: [&str; 5] = ["threads", "pkgconfig", "git", "doxygen", "pythoninterp"];
+
+/// Whether `s` searches for a tool or CMake helper rather than a package:
+/// one of [`TOOLS`], or Python (`python` / `python3`) asked for as an
+/// interpreter with no `Development` component.
+pub(crate) fn is_tool(s: &PackageSearch) -> bool {
+    let name = s.name.to_lowercase();
+    if TOOLS.contains(&name.as_str()) {
+        return true;
+    }
+    let python = matches!(name.as_str(), "python" | "python3");
+    let interpreter = s.components.iter().any(|c| c == "Interpreter");
+    let development = s.components.iter().any(|c| c == "Development" || c.starts_with("Development."));
+    python && interpreter && !development
+}
+
 /// One package's scope across all its searches (research R4), by the rule
 /// `fetches.rs::one_per_purl` applies to fetches: required if any search
 /// is unconditional and outside a test context; otherwise Optional only if
@@ -424,6 +442,19 @@ mod tests {
         assert_eq!(r.unresolved, 2);
         assert_eq!(r.searches.len(), 1);
         assert_eq!((r.searches[0].name.as_str(), r.searches[0].requirement.as_deref()), ("Multi", Some(">=1.0")));
+    }
+
+    #[test]
+    fn tools_and_python_as_an_interpreter() {
+        for t in ["find_package(Threads REQUIRED)", "find_package(GIT)", "find_package(PkgConfig)", "find_package(Doxygen)", "find_package(PythonInterp 3)"] {
+            assert!(is_tool(&one(t)), "{t}");
+        }
+        assert!(is_tool(&one("find_package(Python3 COMPONENTS Interpreter)")));
+        assert!(is_tool(&one("find_package(Python REQUIRED Interpreter)")));
+        assert!(!is_tool(&one("find_package(Python3 COMPONENTS Interpreter Development)")));
+        assert!(!is_tool(&one("find_package(Python3 COMPONENTS Interpreter Development.Module)")));
+        assert!(!is_tool(&one("find_package(Python3)")), "no components: not known to be the interpreter only");
+        assert!(!is_tool(&one("find_package(CUDAToolkit)")));
     }
 
     #[test]

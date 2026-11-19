@@ -485,3 +485,35 @@ fn w15_a_search_for_something_built_in_the_tree() {
     assert_eq!(cov["in-tree-declarations"], 3, "{cov}");
     assert_eq!(cov["components"], 0, "{cov}");
 }
+
+// ---------------------------------------------------------------------
+// User story 4: tools and CMake helpers are not dependencies (T022)
+// ---------------------------------------------------------------------
+
+/// W-13: `Threads`, `Git`, `PkgConfig`, `Doxygen` and Python as an
+/// interpreter yield nothing; Python with `Development` and `CUDAToolkit`
+/// are libraries.
+#[test]
+fn w13_tools_yield_no_component() {
+    let t = tree();
+    write(
+        t.path(),
+        "projects/a/CMakeLists.txt",
+        "find_package(Threads REQUIRED)\nfind_package(Git)\nfind_package(PkgConfig)\nfind_package(Doxygen)\n\
+         find_package(Python3 COMPONENTS Interpreter)\nfind_package(PythonInterp)\n",
+    );
+    write(
+        t.path(),
+        "projects/b/CMakeLists.txt",
+        "find_package(Python3 COMPONENTS Interpreter Development)\nfind_package(CUDAToolkit)\n",
+    );
+    let d = scan(t.path());
+    for tool in ["threads", "git", "pkgconfig", "doxygen", "pythoninterp"] {
+        absent_purl(&d, &format!("pkg:generic/{tool}"));
+    }
+    by_purl(&d, "pkg:generic/python3");
+    by_purl(&d, "pkg:generic/cudatoolkit");
+    let cov = coverage(&d);
+    assert_eq!(cov["tools"], 6, "{cov}");
+    assert_eq!(cov["components"], 2, "{cov}");
+}

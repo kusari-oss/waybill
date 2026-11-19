@@ -124,9 +124,9 @@
 
 **Independent test**: W-13.
 
-- [ ] T022 [P] [US4] Write W-13 in `waybill-cli/tests/scan_cmake_tree_finds.rs`: `Threads`, `Git`, `PkgConfig` and `Doxygen` yield nothing; Python3 as `Interpreter` alone yields nothing; Python3 with `Development` yields a component; `CUDAToolkit` yields a component; C237 `tools` is 5.
-- [ ] T023 [US4] In `searches.rs`, add `const TOOLS` (`threads`, `pkgconfig`, `git`, `doxygen`, `pythoninterp`) and `fn is_tool(search)`, with the Python rule: `python` / `python3` whose `COMPONENTS` has `Interpreter` and none of `Development`, `Development.Module`, `Development.Embed`. Unit tests cover each name and each Python shape. Apply it before pairing, and count C237 `tools`.
-- [ ] T024 [US4] Run T022 and every earlier test, all green.
+- [X] T022 [P] [US4] Write W-13 in `waybill-cli/tests/scan_cmake_tree_finds.rs`: `Threads`, `Git`, `PkgConfig` and `Doxygen` yield nothing; Python3 as `Interpreter` alone yields nothing; Python3 with `Development` yields a component; `CUDAToolkit` yields a component; C237 `tools` is 5.
+- [X] T023 [US4] In `searches.rs`, add `const TOOLS` (`threads`, `pkgconfig`, `git`, `doxygen`, `pythoninterp`) and `fn is_tool(search)`, with the Python rule: `python` / `python3` whose `COMPONENTS` has `Interpreter` and none of `Development`, `Development.Module`, `Development.Embed`. Unit tests cover each name and each Python shape. Apply it before pairing, and count C237 `tools`.
+- [X] T024 [US4] Run T022 and every earlier test, all green.
 
 ## Phase 7: User Story 5 — a file reached only by include() is read (P3)
 
