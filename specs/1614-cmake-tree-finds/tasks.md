@@ -167,7 +167,7 @@
   - **SC-009:** the interleaved ratio, ≤ 1.05×.
 - [X] T033 Public corpus at the branch (`repeat=2`): trace every golden change by component and annotation, then regenerate the goldens through the workflow. Record in `measurements/corpus.md`. C237 is expected in every golden whose tree has a CMake package search; list those targets, and treat any other change as needing its own trace.
 - [X] T034 Quality corpus against a `main` control: trace every changed target and re-centre only traced bounds in `xtask/corpus/quality-corpus.toml`. Record in `measurements/corpus.md`.
-- [ ] T035 Open the PR, with a body citing T029 and T031–T034, `Closes #1591`, `Closes #1605`, and the attribution line. Do not merge.
+- [X] T035 Open the PR, with a body citing T029 and T031–T034, `Closes #1591`, `Closes #1605`, and the attribution line. Do not merge.
 
 ## Dependencies
 
