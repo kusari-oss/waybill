@@ -5,7 +5,7 @@
 set -uo pipefail
 M=specs/1613-dot-directory-manifests/measurements
 BK=$(mktemp -d -t waybill1613-mut)
-for name in ${MUTATIONS:-M1-pip-no-descend M2-case-sensitive M3-venv-listed M4-no-ancestor-rule M5-selector-not-widened M6-tox-accepted M7-no-r5-pass M8-any-not-all M9-overwrites-scope M10-optional-pair-not-kept M11-cross-root-first-wins M12-explicit-runtime-skipped M13-pypi-key-declared-spelling M14-every-ecosystem-normalised}; do
+for name in ${MUTATIONS:-M1-pip-no-descend M2-case-sensitive M3-venv-listed M4-no-ancestor-rule M5-selector-not-widened M6-tox-accepted M7-no-r5-pass M8-any-not-all M9-overwrites-scope M10-optional-pair-not-kept M11-cross-root-first-wins M12-explicit-runtime-skipped M13-pypi-key-declared-spelling M14-every-ecosystem-normalised M15-scoped-file-covers-runtime}; do
   file=$(python3 -I -B $M/mutate.py "$name") || { echo "$name: anchor failed"; continue; }
   # mutate.py printed the file after editing it; back up from git's copy.
   git show "HEAD:$file" > "$BK/orig"

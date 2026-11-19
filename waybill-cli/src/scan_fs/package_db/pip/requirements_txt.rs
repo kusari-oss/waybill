@@ -137,6 +137,9 @@ fn matches_scope_filename(filename: &str, scope: &str) -> bool {
     false
 }
 
+/// C155, the scope of the requirements file a package was read from.
+pub(crate) const ANN_REQ_FILE_SCOPE: &str = "waybill:python-req-file-scope";
+
 pub(super) fn read_requirements_files(rootfs: &Path, scan_root: &Path) -> Option<Vec<PackageDbEntry>> {
     let mut out = Vec::new();
     let Ok(entries) = std::fs::read_dir(rootfs) else {
@@ -498,7 +501,7 @@ impl RequirementsTxtEntry {
         // annotation. Catalog row C158 registered by T016.
         if let Some(scope_name) = scope.as_optional_name() {
             extra_annotations.insert(
-                "waybill:python-req-file-scope".to_string(),
+                ANN_REQ_FILE_SCOPE.to_string(),
                 serde_json::Value::String(scope_name.to_string()),
             );
         }

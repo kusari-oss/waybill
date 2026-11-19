@@ -205,6 +205,52 @@ fn d11b_nested_unscoped_files_two_scoped_files_and_ci_projects() {
     assert_eq!(prop(dep, C62), Some("ci-directory"));
 }
 
+/// TheRock: `.github/requirements.txt` names `pydantic`, and a nested project
+/// (`perfxpert`) declares `pydantic>=2.0` in its pyproject. The pyproject
+/// declaration was dropped because the name was already covered, and the
+/// project's runtime dependency read as CI tooling.
+#[test]
+fn d11d_a_project_dependency_named_first_by_a_ci_file_stays_runtime() {
+    let t = tree();
+    let r = t.path();
+    requirements(r, ".github/requirements.txt", &["waybill-fixture-pyd"]);
+    write(
+        r,
+        "tools/perf/pyproject.toml",
+        "[project]\nname = \"waybill-fixture-perf\"\nversion = \"0.2.0\"\ndependencies = [\"waybill-fixture-pyd>=2.0\"]\n",
+    );
+    let d = scan(r);
+    let by_purl = |purl: &str| {
+        let mut found = components(&d.cdx).into_iter().filter(|c| c["purl"] == purl);
+        let c = found.next().unwrap_or_else(|| {
+            let all: Vec<String> = components(&d.cdx).into_iter().filter_map(|c| c["purl"].as_str().map(str::to_string)).collect();
+            panic!("{purl} missing; purls: {all:?}")
+        });
+        assert!(found.next().is_none(), "{purl} appears more than once");
+        c
+    };
+    // The project's own declaration, as on main.
+    let declared = by_purl("pkg:pypi/waybill-fixture-pyd@unresolved");
+    assert_eq!(scope(declared), "required", "the project's runtime declaration is kept");
+    assert_eq!(prop(declared, C155), None);
+    // The CI file's requirement, labelled as CI.
+    let ci = by_purl("pkg:pypi/waybill-fixture-pyd@1.0");
+    assert_eq!(scope(ci), "excluded");
+    assert_eq!(prop(ci, C155), Some("ci"));
+    let edge = d.cdx["dependencies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["ref"] == "pkg:pypi/waybill-fixture-perf@0.2.0")
+        .and_then(|e| e["dependsOn"].as_array())
+        .cloned()
+        .unwrap_or_default();
+    assert!(
+        edge.iter().any(|t| t == "pkg:pypi/waybill-fixture-pyd@unresolved"),
+        "the project depends on its own declaration: {edge:?}"
+    );
+}
+
 /// TheRock's amd-llvm `.ci/` declares `PyGithub==2.8.1` in one file and
 /// `pygithub==2.8.1` in another. One project, one PURL: one component. Two
 /// came out, sharing a `bom-ref`, and the formats disagreed on C19 and C20.

@@ -366,6 +366,8 @@ pub(crate) fn finalize(
         for entry in manifest_entries {
             if covered_names.insert(entry.name.clone()) {
                 entries.push(entry);
+            } else if covered_only_by_scoped_requirements(&entries, &entry) {
+                entries.push(entry);
             }
         }
     }
@@ -581,6 +583,23 @@ fn has_python_project_marker(dir: &Path) -> bool {
 /// `tools/requirements.txt` kept only the first path, and the second
 /// declaring project could not be found. Same shape as the Go reader's
 /// duplicate handling (`golang/legacy.rs`).
+/// Spec 1613 (#1610): whether a runtime pyproject declaration is "covered"
+/// only by packages of scoped requirements files (C155). Such a file does not
+/// declare what the project needs at run time, so the declaration is emitted
+/// as if nothing covered it. Without this, TheRock's perfxpert lost its
+/// runtime `pydantic>=2.0` to `.github/requirements.txt`, and the edge to it
+/// resolved to a CI package. Coverage by anything else (a lockfile pin, an
+/// unscoped requirements file, another pyproject) is unchanged (milestone 670).
+fn covered_only_by_scoped_requirements(entries: &[PackageDbEntry], declared: &PackageDbEntry) -> bool {
+    use waybill_common::resolution::LifecycleScope;
+    if !matches!(declared.lifecycle_scope, None | Some(LifecycleScope::Runtime)) {
+        return false;
+    }
+    let mut coverers = entries.iter().filter(|e| e.name == declared.name).peekable();
+    coverers.peek().is_some()
+        && coverers.all(|e| e.extra_annotations.contains_key(requirements_txt::ANN_REQ_FILE_SCOPE))
+}
+
 fn merge_without_override(
     entries: &mut Vec<PackageDbEntry>,
     additions: Vec<PackageDbEntry>,

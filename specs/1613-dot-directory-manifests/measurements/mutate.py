@@ -49,6 +49,9 @@ MUTATIONS = {
     "M14-every-ecosystem-normalised": ("waybill-cli/src/resolve/deduplicator.rs",
         "        let name = if component.purl.ecosystem() == \"pypi\" {",
         "        let name = if true {"),
+    "M15-scoped-file-covers-runtime": (P + "pip/mod.rs",
+        "            } else if covered_only_by_scoped_requirements(&entries, &entry) {",
+        "            } else if false && covered_only_by_scoped_requirements(&entries, &entry) {"),
 }
 
 name = sys.argv[1]
