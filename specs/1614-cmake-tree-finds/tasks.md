@@ -44,11 +44,11 @@
   - Extend C232's description (conditions include the `include()` / `add_subdirectory()` chain) and C57's (names from every CMake file read for package searches).
 
   Run the lib target's catalog gate (`cargo test -p waybill --lib sbom_format_mapping`).
-- [ ] T005 Create `waybill-cli/src/scan_fs/package_db/cmake/searches.rs`, declared in `cmake.rs`'s module list:
+- [X] T005 Create `waybill-cli/src/scan_fs/package_db/cmake/searches.rs`, declared in `cmake.rs`'s module list:
   - **`PackageSearch`** (`data-model.md`): kind, declared name, range via `find_package_requirement`, `COMPONENTS` list, file, conditions, in-test-dir.
   - **`fn extract(cmds, blocks_seed, rel, source_path) -> (Vec<PackageSearch>, unresolved: usize)`**, walking one file's commands with a `BlockStack`, as `read_fetches` does: `function`/`macro` bodies, `elseif`/`else`.
   - **Unit tests** under `#[cfg(test)] #[cfg_attr(test, allow(clippy::unwrap_used))]`: blocks; a body; `elseif`/`else`; `EXACT`; a `min...<max` range; `COMPONENTS`; `${VAR}` names counted as unresolved; a call inside a comment ignored; a multi-line call.
-- [ ] T006 Read package searches from every walked file:
+- [X] T006 Read package searches from every walked file:
   - In `waybill-cli/src/scan_fs/package_db/cmake/fetches.rs::read_fetches`, call `searches::extract` for each parsed file in the existing loop, and return the searches beside the fetch entries.
   - In `waybill-cli/src/scan_fs/package_db/cmake.rs::read_with_downloads`, when `walked` is `Some`, build `FindPackageHit` / `PkgCheckHit` from those searches instead of `parse_find_package_calls` / `parse_pkg_check_modules_calls`, and emit through the existing `emit_find_package_entries` / `emit_pkg_check_module_entries`.
   - With `walked = None`, keep today's narrow path.

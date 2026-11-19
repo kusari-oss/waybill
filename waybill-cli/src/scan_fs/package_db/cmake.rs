@@ -54,9 +54,10 @@ use super::PackageDbEntry;
 pub(crate) mod blocks;
 pub(crate) mod fallback;
 pub(crate) mod fetches;
+pub(crate) mod searches;
 pub(crate) mod wrappers;
 pub mod links;
-pub(crate) use fetches::{read_fetches, FetchCoverage};
+pub(crate) use fetches::FetchCoverage;
 
 // Milestone 664 US2 T056: shared-walker marker-detect registration.
 use crate::scan_fs::walk_registry::{
@@ -200,6 +201,32 @@ pub(crate) fn read_with_downloads(
         .unwrap_or(false);
     let cmake_files = discover_cmake_files(scan_root, include_third_party_recursive, exclude_set);
     let mut entries = Vec::new();
+    // Spec 1614 (#1591, #1605): with the shared walker, package searches and
+    // fetches are read from every walked file, from the same parsed commands
+    // under the same blocks. Without it (the binary tier's `read`), both stay
+    // on the narrow set and package searches on the regexes.
+    let tree_wide = walked.is_some();
+    let mut fetch_files = walked.unwrap_or_else(|| cmake_files.clone());
+    fetch_files.sort();
+    fetch_files.dedup();
+    let (fetch_entries, mut fetches, mut decls) = fetches::read_declarations(scan_root, &fetch_files);
+    if tree_wide {
+        // FR-009: a narrow-set file the walker skips (`cmake/**/vendor/`)
+        // was read for package searches before; it still is.
+        let walked: std::collections::HashSet<PathBuf> =
+            fetch_files.iter().map(|f| std::fs::canonicalize(f).unwrap_or_else(|_| f.clone())).collect();
+        for f in &cmake_files {
+            if walked.contains(&std::fs::canonicalize(f).unwrap_or_else(|_| f.clone())) {
+                continue;
+            }
+            let in_test_dir = f.strip_prefix(scan_root).ok().and_then(Path::parent).is_some_and(|d| {
+                d.components().any(|c| matches!(c, std::path::Component::Normal(s) if fetches::TEST_DIRS.iter().any(|t| s == *t)))
+            });
+            let found = searches::read_file(f, Vec::new(), in_test_dir);
+            decls.searches.extend(found.searches);
+            decls.unresolved_searches += found.unresolved;
+        }
+    }
     // Milestone 155: accumulate find_package + pkg_check_modules hits
     // across ALL discovered CMake files so we can pick the highest
     // declared version per name (Q1 clarification) before emitting.
@@ -224,9 +251,28 @@ pub(crate) fn read_with_downloads(
         if include_vendored {
             entries.extend(parse_vendored(&content, &source_path, scan_root));
         }
-        find_package_hits.extend(parse_find_package_calls(&content, &source_path));
-        pkg_check_hits.extend(parse_pkg_check_modules_calls(&content, &source_path));
+        if !tree_wide {
+            find_package_hits.extend(parse_find_package_calls(&content, &source_path));
+            pkg_check_hits.extend(parse_pkg_check_modules_calls(&content, &source_path));
+        }
         downloads.extend(super::cmake_download::parse_downloads(&content, &source_path));
+    }
+    if tree_wide {
+        for s in decls.searches {
+            match s.kind {
+                searches::SearchKind::FindPackage => find_package_hits.push(FindPackageHit {
+                    lowercased_name: s.name.to_lowercase(),
+                    original_casing: s.name,
+                    requirement: s.requirement,
+                    source_path: s.source_path,
+                }),
+                searches::SearchKind::PkgConfig => pkg_check_hits.push(PkgCheckHit {
+                    lowercased_module: s.name.to_lowercase(),
+                    original_casing: s.name,
+                    source_path: s.source_path,
+                }),
+            }
+        }
     }
     entries.extend(emit_find_package_entries(find_package_hits));
     entries.extend(emit_pkg_check_module_entries(pkg_check_hits));
@@ -241,10 +287,6 @@ pub(crate) fn read_with_downloads(
         );
     }
     entries.extend(datasets.iter().filter_map(dataset_entry));
-    let mut fetch_files = walked.unwrap_or(cmake_files);
-    fetch_files.sort();
-    fetch_files.dedup();
-    let (fetch_entries, mut fetches) = read_fetches(scan_root, &fetch_files);
     fetches.links = links::read_links(scan_root, &fetch_files);
     entries.extend(fetch_entries);
     (entries, coverage, fetches)

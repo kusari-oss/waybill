@@ -90,12 +90,14 @@ fn cmake_walker_exclude_path_filters_and_src_not_walked() {
         "milestone 156 FR-005: cmake/modules/ excluded → no Foo emission"
     );
 
-    // F6 remediation — src/CMakeLists.txt has find_package(NotEmitted 9.9.9)
-    // but src/ is NOT in the walked top-level dir set per FR-017.
-    // Explicitly assert NotEmitted MUST NOT appear.
+    // src/CMakeLists.txt has find_package(NotEmitted 9.9.9). Milestone 156
+    // FR-017 read package searches only from the root, cmake/, Modules/ and
+    // third_party/; spec 1614 FR-001 (#1591) reads them from every CMake file
+    // the shared walker reaches, as spec 1538 already did for fetches. The
+    // --exclude-path filtering above is unchanged.
     assert_eq!(
         count_purls_matching(&doc, "pkg:generic/notemitted"),
-        0,
-        "milestone 156 FR-017: src/ is NOT walked; find_package(NotEmitted) in src/CMakeLists.txt MUST NOT emit"
+        1,
+        "spec 1614 FR-001: find_package(NotEmitted) in src/CMakeLists.txt is read"
     );
 }

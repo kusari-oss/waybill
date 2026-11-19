@@ -14,12 +14,21 @@ pub(crate) enum Block {
 
 #[derive(Debug, Default)]
 pub(crate) struct BlockStack {
+    /// Spec 1614 (#1605): the conditions under which the file is reached
+    /// through `include()` / `add_subdirectory()`, in [`Self::conditions`]'
+    /// form. They enclose every command of the file.
+    seed: Vec<String>,
     stack: Vec<Block>,
     /// `end*` commands with no matching opener. Ignored, but counted.
     pub(crate) unbalanced: usize,
 }
 
 impl BlockStack {
+    /// A stack for a file reached under `seed` (spec 1614 research R1).
+    pub(crate) fn seeded(seed: Vec<String>) -> Self {
+        Self { seed, ..Self::default() }
+    }
+
     /// Apply one command. Returns `true` when it opened, changed or closed
     /// a block.
     pub(crate) fn observe(&mut self, name: &str, args: &[String]) -> bool {
@@ -56,14 +65,17 @@ impl BlockStack {
         }
     }
 
-    /// The enclosing `if` conditions, outermost first.
+    /// The enclosing `if` conditions, outermost first: the seed's, then the
+    /// file's own. A seed's `function: <name>` entry is not an `if`.
     pub(crate) fn if_conditions(&self) -> Vec<String> {
-        self.stack
+        self.seed
             .iter()
-            .filter_map(|b| match b {
+            .filter(|c| !c.starts_with("function: "))
+            .cloned()
+            .chain(self.stack.iter().filter_map(|b| match b {
                 Block::If { condition } => Some(condition.clone()),
                 _ => None,
-            })
+            }))
             .collect()
     }
 
@@ -78,13 +90,14 @@ impl BlockStack {
     /// What C232 records: the `if` conditions and `function: <name>` for
     /// a function or macro body, outermost first.
     pub(crate) fn conditions(&self) -> Vec<String> {
-        self.stack
+        self.seed
             .iter()
-            .filter_map(|b| match b {
+            .cloned()
+            .chain(self.stack.iter().filter_map(|b| match b {
                 Block::If { condition } => Some(condition.clone()),
                 Block::Function { name } => Some(format!("function: {name}")),
                 Block::Loop => None,
-            })
+            }))
             .collect()
     }
 
@@ -138,5 +151,17 @@ mod tests {
         let s = run(&[("endif", ""), ("if", "A"), ("endforeach", "")]);
         assert_eq!(s.unbalanced, 2);
         assert_eq!(s.if_conditions(), vec!["A".to_string()]);
+    }
+
+    #[test]
+    fn s1614_a_seed_encloses_every_command_and_its_function_entry_is_not_an_if() {
+        let mut s = BlockStack::seeded(vec!["WIN_SDK".into(), "function: outer".into()]);
+        assert_eq!(s.conditions(), vec!["WIN_SDK".to_string(), "function: outer".to_string()]);
+        assert_eq!(s.if_conditions(), vec!["WIN_SDK".to_string()]);
+        s.observe("if", &["A".into()]);
+        assert_eq!(s.if_conditions(), vec!["WIN_SDK".to_string(), "A".to_string()]);
+        s.observe("endif", &[]);
+        assert_eq!(s.conditions(), vec!["WIN_SDK".to_string(), "function: outer".to_string()]);
+        assert_eq!(s.function(), None, "a seed is not the file's own function body");
     }
 }

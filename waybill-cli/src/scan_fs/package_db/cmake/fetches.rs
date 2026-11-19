@@ -39,7 +39,7 @@ pub(crate) const ANN_SUPERSEDED: &str = "waybill:superseded-declarations";
 pub(crate) const ANN_CMAKE_FETCH_WRAPPER: &str = "waybill:cmake-fetch-wrapper";
 const ANN_OPTIONAL_DERIVATION: &str = "waybill:optional-derivation";
 const ANN_SCOPE_DERIVATION: &str = "waybill:lifecycle-scope-derivation";
-const TEST_DIRS: [&str; 3] = ["test", "tests", "unittests"];
+pub(crate) const TEST_DIRS: [&str; 3] = ["test", "tests", "unittests"];
 
 /// What the fetch pass read (C231), plus what the cross-reader merge
 /// (research R9) needs to keep the accounting exact.
@@ -129,7 +129,28 @@ fn mode_for(dir: &Path, modes: &BTreeMap<PathBuf, TryMode>) -> TryMode {
     dir.ancestors().find_map(|d| modes.get(d).copied()).unwrap_or_default()
 }
 
+#[cfg(test)]
 pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageDbEntry>, FetchCoverage) {
+    let (entries, cov, _) = read_declarations(scan_root, files);
+    (entries, cov)
+}
+
+/// Spec 1614 (#1591, #1605): what [`read_declarations`] reads besides fetches.
+#[derive(Debug, Default)]
+pub(crate) struct Declarations {
+    /// Every package search in the files, in file order (`searches.rs`).
+    pub(crate) searches: Vec<super::searches::PackageSearch>,
+    /// Package searches whose name could not be read (C237 `unresolved`).
+    pub(crate) unresolved_searches: usize,
+}
+
+/// [`read_fetches`], plus the package searches in the same files, read from
+/// the same parsed commands under the same blocks.
+pub(crate) fn read_declarations(
+    scan_root: &Path,
+    files: &[PathBuf],
+) -> (Vec<PackageDbEntry>, FetchCoverage, Declarations) {
+    let mut found = super::searches::FileSearches::default();
     let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
     let mut cov = FetchCoverage::default();
     // Pre-pass: every file's commands, the mode each directory sets, and
@@ -207,6 +228,7 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
             if blocks.observe(name, args) {
                 continue;
             }
+            super::searches::collect(&blocks, name, args, &source_path, in_test_dir, &mut found);
             let builtin = match name.as_str() {
                 "fetchcontent_declare" => Some(FetchKind::FetchContent),
                 "externalproject_add" => Some(FetchKind::ExternalProject),
@@ -283,7 +305,8 @@ pub(crate) fn read_fetches(scan_root: &Path, files: &[PathBuf]) -> (Vec<PackageD
             "cmake: fetch declarations (spec 1538, 1539)"
         );
     }
-    (entries, cov)
+    let decls = Declarations { searches: found.searches, unresolved_searches: found.unresolved };
+    (entries, cov, decls)
 }
 
 type Vars = HashMap<String, Option<String>>;

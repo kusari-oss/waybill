@@ -54,6 +54,8 @@ The result is memoised per file, with a cycle guard. A file in a cycle counts as
 - **No new file reads** beyond R2.
 - **Parse parity.** The tokenizer already handles comments, bracket arguments and multi-line calls, and the regex did not. Version and `EXACT` parsing reuse `find_package_requirement`.
 
+**Files read (amended at T006).** Package searches are read from the walked files **and** from every narrow-set file the walker did not hand the reader. The narrow set walks `cmake/**` with its own walker, which does not skip `vendor/`, so `cmake/modules/vendor/Extra.cmake` (milestone 156's fixture) would otherwise vanish. Fetches stay on the walked files, as spec 1538 decided.
+
 **Risk:** a call the regex caught and the tokenizer does not, or the reverse. The existing find_package unit tests (`cmake.rs` m155 tests) and the corpus goldens are the check (FR-009).
 
 ## R4. Scope follows the fetch reader's rule

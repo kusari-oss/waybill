@@ -63,13 +63,19 @@ fn count_vendoreddepdep(doc: &Value) -> usize {
         .count()
 }
 
+/// Milestone 156 FR-019 kept package searches below `third_party/` depth 1
+/// unless `--cmake-third-party-recursive` was given. Spec 1614 FR-001
+/// (#1591) reads package searches from every CMake file the shared walker
+/// reaches, as spec 1538 already did for fetches, so the flag no longer
+/// changes whether this one is read. It still governs vendored-directory and
+/// `file(DOWNLOAD)` discovery.
 #[test]
-fn third_party_opt_in_off_by_default() {
+fn third_party_package_searches_are_read_without_the_flag() {
     let doc = run_scan(&fixture_root(), false);
     assert_eq!(
         count_vendoreddepdep(&doc),
-        0,
-        "milestone 156 FR-019 default: third_party/somedep/cmake/deps.cmake at depth-3 MUST NOT be walked without --cmake-third-party-recursive"
+        1,
+        "spec 1614 FR-001: third_party/somedep/cmake/deps.cmake's package search is read by default"
     );
 }
 

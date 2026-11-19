@@ -32,3 +32,15 @@ In the same probe, `projects/app/CMakeLists.txt` declared `find_package(waybill_
 - **Carried** as `scan_fs::mod.rs` `cmake_fetch_coverage: Option<String>` (line 154), then `generate::mod.rs` `cmake_fetch_coverage: Option<&str>` (line 174), then into the three emitters.
 
 C237 follows the same route.
+
+## T006 findings
+
+**W-ctl passes on the new path.** Proved by mutation: with the parser's `find_package` arm renamed, W-ctl fails (its components disappear), so the control exercises the tokenized reading, not the old regexes.
+
+**Three milestone-156 tests failed. One was a real regression; two encoded the narrow set.**
+
+| Test | Cause | Resolution |
+|---|---|---|
+| `cmake_walker_depth_deep_emission` | Its fixture is `cmake/modules/vendor/Extra.cmake`. The narrow set walked `cmake/**` with its own walker, `vendor/` included; the shared walker skips `vendor/` (`should_skip_default_descent`). A search the old reader saw disappeared. **FR-009 regression.** | Package searches also read every narrow-set file the walker did not hand the reader, through the same tokenized path, with conditions (`searches::read_file`). Fetches still read the walked files only, unchanged. |
+| `cmake_walker_depth_exclude_path` | Asserted `find_package(NotEmitted)` in `src/CMakeLists.txt` is not read (milestone 156 FR-017). | FR-001's intended change: now 1. The test's `--exclude-path` assertions are unchanged and still pass. |
+| `cmake_walker_depth_third_party_opt_in` (default case) | Asserted a search at `third_party/somedep/cmake/` depth 3 is not read without `--cmake-third-party-recursive` (milestone 156 FR-019). | FR-001's intended change: now read by default. The flag still governs vendored-directory and `file(DOWNLOAD)` discovery, and its opt-in test is unchanged. |
