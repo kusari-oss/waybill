@@ -517,3 +517,26 @@ fn w13_tools_yield_no_component() {
     assert_eq!(cov["tools"], 6, "{cov}");
     assert_eq!(cov["components"], 2, "{cov}");
 }
+
+// ---------------------------------------------------------------------
+// User story 5: a file reached only by include() is read (T025)
+// ---------------------------------------------------------------------
+
+/// W-11: TheRock's `CMakeLists_wsl.txt` shape. The file's name is not one
+/// the reader opens on its own; it is read because `include()` reaches it,
+/// under the include's condition.
+#[test]
+fn w11_a_file_reached_only_by_include_is_read() {
+    let t = tree();
+    write(
+        t.path(),
+        "CMakeLists.txt",
+        "project(waybill_fixture_root)\nif(WIN_SDK)\n  include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_wsl.txt)\nendif()\n",
+    );
+    write(t.path(), "CMakeLists_wsl.txt", "find_package(waybill_fixture_wsl)\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_wsl");
+    assert_optional(c);
+    assert_eq!(conds(c, C236), vec!["WIN_SDK"]);
+    assert_eq!(source_files(c), vec!["CMakeLists_wsl.txt".to_string()], "relative, like a walked file's");
+}

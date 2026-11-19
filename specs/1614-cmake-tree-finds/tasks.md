@@ -134,9 +134,9 @@
 
 **Independent test**: W-11.
 
-- [ ] T025 [P] [US5] Write W-11 in `waybill-cli/tests/scan_cmake_tree_finds.rs`: `if(WIN_SDK) include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_wsl.txt) endif()`, the file holding `find_package(waybill_fixture_wsl)`. Expected Optional, C236 `["WIN_SDK"]`. Fails on `main`.
-- [ ] T026 [US5] `reach::compute` returns `extra_files`: files `include()` reaches inside the scan root that are not in `walked`. `read_fetches` parses them with the walked files, under their `Reach`.
-- [ ] T027 [US5] Run T025 and every earlier test, all green.
+- [X] T025 [P] [US5] Write W-11 in `waybill-cli/tests/scan_cmake_tree_finds.rs`: `if(WIN_SDK) include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_wsl.txt) endif()`, the file holding `find_package(waybill_fixture_wsl)`. Expected Optional, C236 `["WIN_SDK"]`. Fails on `main`.
+- [X] T026 [US5] `reach::compute` returns `extra_files`: files `include()` reaches inside the scan root that are not in `walked`. `read_fetches` parses them with the walked files, under their `Reach`.
+- [X] T027 [US5] Run T025 and every earlier test, all green.
 
 ## Phase 8: Polish and verification
 

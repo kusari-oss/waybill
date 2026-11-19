@@ -163,6 +163,10 @@ pub(crate) fn read_declarations(
     // Spec 1614 (#1605): the conditions under which each file is reached
     // through include() / add_subdirectory() enclose all its declarations.
     let reach = super::reach::compute(scan_root, files);
+    // FR-004 (research R2): a file `include()` reaches under a name the
+    // walker does not match (`CMakeLists_wsl.txt`) is read too.
+    let files: Vec<PathBuf> = files.iter().cloned().chain(reach.extra_files.iter().cloned()).collect();
+    let files = files.as_slice();
     let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
     let mut cov = FetchCoverage::default();
     // Pre-pass: every file's commands, the mode each directory sets, and
