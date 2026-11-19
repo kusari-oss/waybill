@@ -92,13 +92,13 @@
 
   Each must turn at least one test red, with 0 compile errors.
 - [X] T020 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, the ok and non-ok counts, passed/failed, failure blocks, and an empty `git diff --stat main -- '*Cargo.toml' Cargo.lock` in `specs/1616-propagation-seeds/measurements/gate-log.md`. Trace any repository golden that changes, component by component.
-- [ ] T021 Push. Dispatch two TheRock measure-source runs against `main` with full SHAs. In `specs/1616-propagation-seeds/measurements/therock.md`, record:
+- [X] T021 Push. Dispatch two TheRock measure-source runs against `main` with full SHAs. In `specs/1616-propagation-seeds/measurements/therock.md`, record:
   - scan time (SC-005);
   - the 11 packages (SC-001);
   - every component whose C42 or C62 changes, each traced to its protecting added seed (SC-002); nothing may gain a non-runtime scope (SC-003);
   - parity, duplicates, unexplained orphans and runner identity (SC-004).
-- [ ] T022 Dispatch the public corpus with `regen_goldens=true`, and the quality corpus at the branch with a `main` control. Trace every golden change and every changed quality document (locally cached targets, as in spec 1615) to a protecting seed. Commit the regenerated goldens. Record all of it in `specs/1616-propagation-seeds/measurements/corpus.md`.
-- [ ] T023 Remove spec 1615's exception: edit `specs/1615-nested-req-scope/spec.md` FR-007, SC-002 and the clarification, and `measurements/therock.md`, citing T021's measurement (FR-007).
+- [X] T022 Dispatch the public corpus with `regen_goldens=true`, and the quality corpus at the branch with a `main` control. Trace every golden change and every changed quality document (locally cached targets, as in spec 1615) to a protecting seed. Commit the regenerated goldens. Record all of it in `specs/1616-propagation-seeds/measurements/corpus.md`.
+- [X] T023 Remove spec 1615's exception: edit `specs/1615-nested-req-scope/spec.md` FR-007, SC-002 and the clarification, and `measurements/therock.md`, citing T021's measurement (FR-007).
 - [ ] T024 Open the PR, with a body citing T019–T023, `Closes #1618` and the attribution line. Do not merge.
 
 ## Dependencies
