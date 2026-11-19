@@ -163,7 +163,8 @@ pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
         patterns,
         on_file: Some(on_npm_file),
         on_dir: Some(on_npm_dir),
-        descend_into: None,
+        // Spec 1613 (#1610): JavaScript actions under .github/actions/ hold package.json files.
+        descend_into: Some(super::project_roots::listed_dot_dir_globset()?),
     })
 }
 

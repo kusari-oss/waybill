@@ -39,6 +39,32 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Dependency manifests in CI and docs dot-directories are read (#1610).**
+  Every directory starting with `.` used to be skipped, so requirements files
+  under `.ci/`, `.github/` and `.sphinx/` (8 on ROCm TheRock, declaring about a
+  dozen packages found nowhere else) never reached the document. The pip, npm
+  and CMake readers now descend into `.github`, `.ci`, `.gitlab`,
+  `.circleci`, `.buildkite`, `.devcontainer` and `.sphinx`. Every other
+  dot-directory, and the file tier, still skip them. What is found there is
+  labelled non-runtime: a pip requirements file gets C155 `ci` or `docs`, and
+  any other component declared only there is `Development` with C62
+  `ci-directory` or `docs-directory`. The pip reader also reads
+  `<scope>-requirements*.txt` (for example `dev-requirements.txt`), and any
+  `*requirements*.txt` inside a listed directory. A package also declared in a
+  runtime requirements file no longer carries the scoped file's C155 label.
+- **A package declared in several places keeps the right scope and identity
+  (#1610).** Four defects in how declarations are combined, all present on
+  `main` and made frequent by reading CI directories:
+  - a package declared optional twice (for example in a CI and a docs
+    requirements file, or two Conan conditional requirements) lost its scope;
+  - a package in two Python projects took the first project's scope, so a
+    scoped file at the scan root could hide a nested project's unscoped one;
+  - two spellings of one PyPI name in one project (`PyGithub`, `pygithub`)
+    became two components with one PURL and one `bom-ref`;
+  - a `pyproject.toml` runtime dependency whose name a scoped requirements
+    file also declares was dropped, so the project's edge led to the scoped
+    package. It is now emitted, as when nothing else names the package.
+
 - **The binary tier reads, parses and hashes binaries on several threads.**
   It used one. Each batch of 64 binaries is read, parsed, SHA-256 hashed and
   string-scanned on up to 8 threads; everything that depends on order

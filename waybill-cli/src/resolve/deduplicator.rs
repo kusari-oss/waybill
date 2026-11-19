@@ -37,6 +37,43 @@ fn content_hash(purl: &waybill_common::types::purl::Purl) -> Option<String> {
         .map(|(_, rest)| rest.split(['&', '#']).next().unwrap_or(rest).to_string())
 }
 
+/// The scope of one component declared twice (milestone 052, R8): production
+/// wins over any non-runtime scope; `None` merges with a non-runtime scope
+/// without overriding it; `Build > Development > Test`; and two `Optional`
+/// declarations stay `Optional` (spec 1613). Shared with the pip reader's
+/// cross-project merge, so a pair merged early gets the scope it would get
+/// merged here.
+pub(crate) fn merge_lifecycle_scope(
+    a: Option<waybill_common::resolution::LifecycleScope>,
+    b: Option<waybill_common::resolution::LifecycleScope>,
+) -> Option<waybill_common::resolution::LifecycleScope> {
+    use waybill_common::resolution::LifecycleScope;
+    match (a, b) {
+        (Some(LifecycleScope::Runtime), _) | (_, Some(LifecycleScope::Runtime)) => {
+            Some(LifecycleScope::Runtime)
+        }
+        (Some(LifecycleScope::Build), _) | (_, Some(LifecycleScope::Build)) => {
+            Some(LifecycleScope::Build)
+        }
+        (Some(LifecycleScope::Development), _) | (_, Some(LifecycleScope::Development)) => {
+            Some(LifecycleScope::Development)
+        }
+        (Some(LifecycleScope::Test), _) | (_, Some(LifecycleScope::Test)) => {
+            Some(LifecycleScope::Test)
+        }
+        // Spec 1613 (#1610): two Optional declarations stay Optional.
+        // Without this arm they fell to `None`, which reads as
+        // runtime, so a package pinned in two non-runtime files (a
+        // CI and a docs requirements file) became runtime. `Optional`
+        // with `None` stays `None`: an unscoped requirements file is
+        // a runtime declaration, and it wins (FR-006).
+        (Some(LifecycleScope::Optional), Some(LifecycleScope::Optional)) => {
+            Some(LifecycleScope::Optional)
+        }
+        _ => None,
+    }
+}
+
 /// Deduplicate resolved components by
 /// `(ecosystem, name, version, parent_purl, pants-namespace qualifier,
 /// file-sha256 qualifier)`.
@@ -68,9 +105,18 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
     let mut groups: HashMap<DedupKey, Vec<ResolvedComponent>> = HashMap::new();
 
     for component in components {
+        // Spec 1613 (#1610): a PyPI name is case- and separator-insensitive
+        // (PEP 503), and the PURL is built from the normalised form. Keyed on
+        // the declared spelling, `PyGithub` and `pygithub` in two files of one
+        // project stayed two components with one PURL and one `bom-ref`.
+        let name = if component.purl.ecosystem() == "pypi" {
+            crate::scan_fs::package_db::pip::normalize_pypi_name_for_purl(&component.name)
+        } else {
+            component.name.clone()
+        };
         let key = (
             component.purl.ecosystem().to_string(),
-            component.name.clone(),
+            name,
             component.version.clone(),
             component.parent_purl.clone(),
             crate::scan_fs::package_db::pants_resolve::anchor_namespace(&component.purl)
@@ -144,22 +190,7 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             // merger is between `Runtime` and `Development` (since
             // legacy `is_dev: Some(true)` mapped to `Development` in
             // the rename).
-            use waybill_common::resolution::LifecycleScope;
-            best.lifecycle_scope = match (best.lifecycle_scope, other.lifecycle_scope) {
-                (Some(LifecycleScope::Runtime), _) | (_, Some(LifecycleScope::Runtime)) => {
-                    Some(LifecycleScope::Runtime)
-                }
-                (Some(LifecycleScope::Build), _) | (_, Some(LifecycleScope::Build)) => {
-                    Some(LifecycleScope::Build)
-                }
-                (Some(LifecycleScope::Development), _) | (_, Some(LifecycleScope::Development)) => {
-                    Some(LifecycleScope::Development)
-                }
-                (Some(LifecycleScope::Test), _) | (_, Some(LifecycleScope::Test)) => {
-                    Some(LifecycleScope::Test)
-                }
-                _ => None,
-            };
+            best.lifecycle_scope = merge_lifecycle_scope(best.lifecycle_scope, other.lifecycle_scope);
             // Union `requirement_ranges` across the group (#936).
             //
             // This was first-wins, on the m199 reasoning that multi-declaration
@@ -955,6 +986,70 @@ mod tests {
         let deduped = deduplicate(vec![explicit_dev, no_flag]);
         assert_eq!(deduped.len(), 1);
         assert_eq!(deduped[0].lifecycle_scope, Some(waybill_common::resolution::LifecycleScope::Development));
+    }
+
+    #[test]
+    fn s1613_pypi_spellings_of_one_name_are_one_component() {
+        let mut upper = make_component(
+            "pkg:pypi/waybill-fixture-pygithub@2.8.1",
+            ResolutionTechnique::PackageDatabase,
+            0.85,
+            vec![],
+            vec!["/r/.ci/requirements.txt"],
+        );
+        upper.name = "Waybill_Fixture-PyGithub".into();
+        let mut lower = make_component(
+            "pkg:pypi/waybill-fixture-pygithub@2.8.1",
+            ResolutionTechnique::PackageDatabase,
+            0.85,
+            vec![],
+            vec!["/r/.ci/all_requirements.txt"],
+        );
+        lower.name = "waybill-fixture-pygithub".into();
+        let mut npm_upper = make_component(
+            "pkg:npm/waybill-fixture-Pkg@1.0.0",
+            ResolutionTechnique::PackageDatabase,
+            0.85,
+            vec![],
+            vec![],
+        );
+        npm_upper.name = "waybill-fixture-Pkg".into();
+        let mut npm_lower = make_component(
+            "pkg:npm/waybill-fixture-pkg@1.0.0",
+            ResolutionTechnique::PackageDatabase,
+            0.85,
+            vec![],
+            vec![],
+        );
+        npm_lower.name = "waybill-fixture-pkg".into();
+        let out = deduplicate(vec![upper, lower, npm_upper, npm_lower]);
+        assert_eq!(out.iter().filter(|c| c.purl.ecosystem() == "pypi").count(), 1);
+        assert_eq!(out.iter().filter(|c| c.purl.ecosystem() == "npm").count(), 2, "only PyPI names are normalised");
+    }
+
+    #[test]
+    fn s1613_two_optional_declarations_stay_optional_and_an_unscoped_one_wins() {
+        use waybill_common::resolution::LifecycleScope;
+        let at = |file: &str, scope: Option<LifecycleScope>| {
+            let mut c = make_component(
+                "pkg:pypi/waybill-fixture-shared@1.0",
+                ResolutionTechnique::PackageDatabase,
+                0.85,
+                vec![],
+                vec![file],
+            );
+            c.lifecycle_scope = scope;
+            c
+        };
+        let ci = at("/r/.ci/requirements-ci.txt", Some(LifecycleScope::Optional));
+        let docs = at("/r/docs/requirements.txt", Some(LifecycleScope::Optional));
+        let main = at("/r/requirements.txt", None);
+        let both = deduplicate(vec![ci.clone(), docs]);
+        assert_eq!(both.len(), 1);
+        assert_eq!(both[0].lifecycle_scope, Some(LifecycleScope::Optional));
+        let with_main = deduplicate(vec![ci, main]);
+        assert_eq!(with_main.len(), 1);
+        assert_eq!(with_main[0].lifecycle_scope, None, "an unscoped requirements file is a runtime declaration");
     }
 
     #[test]

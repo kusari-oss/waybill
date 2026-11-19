@@ -12,6 +12,7 @@ use waybill_common::types::purl::Purl;
 use waybill_common::types::hash::{ContentHash, HashAlgorithm};
 
 use super::super::name_validation::validate_pep508_name;
+use super::super::project_roots::listed_ancestor_class;
 use super::super::PackageDbEntry;
 use super::{build_pypi_purl_str, normalize_pypi_name_for_purl, tokenise_requires_dist_name};
 
@@ -76,6 +77,39 @@ pub(crate) fn classify_requirements_scope(path: &Path) -> RequirementsScope {
     RequirementsScope::Main
 }
 
+/// Spec 1613 (#1610, FR-004): [`classify_requirements_scope`], then the
+/// nearest listed CI or docs dot-directory among the file's ancestors below
+/// `root` when neither its parent directory nor its name gives a scope.
+pub(crate) fn classify_requirements_scope_under(path: &Path, root: &Path) -> RequirementsScope {
+    match classify_requirements_scope(path) {
+        RequirementsScope::Main => listed_ancestor_class(path, root)
+            .map_or(RequirementsScope::Main, |c| RequirementsScope::Optional(c.requirements_scope())),
+        scoped => scoped,
+    }
+}
+
+/// Spec 1613 (#1610, FR-004a): whether the pip reader reads `path` as a
+/// requirements file. Besides `requirements*.txt`, a name the scope
+/// classifier labels (`<scope>-requirements*.txt`), and any
+/// `*requirements*.txt` under a listed CI or docs dot-directory, which the
+/// classifier labels by that directory. Other names (`tox-requirements.txt`)
+/// are not read: nothing would label them, and they would read as runtime.
+/// With `root` absent, every ancestor counts (discovery, which has no root).
+pub(crate) fn is_requirements_file(path: &Path, root: Option<&Path>) -> bool {
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else { return false };
+    if !name.ends_with(".txt") {
+        return false;
+    }
+    if name.starts_with("requirements") {
+        return true;
+    }
+    if ["dev", "test", "docs", "ci"].iter().any(|s| matches_scope_filename(name, s)) {
+        return true;
+    }
+    name.to_ascii_lowercase().contains("requirements")
+        && listed_ancestor_class(path, root.unwrap_or(Path::new(""))).is_some()
+}
+
 /// True when `filename` matches `requirements-<scope>*.txt` OR
 /// `<scope>-requirements*.txt`, case-insensitive.
 ///
@@ -103,18 +137,17 @@ fn matches_scope_filename(filename: &str, scope: &str) -> bool {
     false
 }
 
-pub(super) fn read_requirements_files(rootfs: &Path) -> Option<Vec<PackageDbEntry>> {
+/// C155, the scope of the requirements file a package was read from.
+pub(crate) const ANN_REQ_FILE_SCOPE: &str = "waybill:python-req-file-scope";
+
+pub(super) fn read_requirements_files(rootfs: &Path, scan_root: &Path) -> Option<Vec<PackageDbEntry>> {
     let mut out = Vec::new();
     let Ok(entries) = std::fs::read_dir(rootfs) else {
         return None;
     };
     let mut paths: Vec<PathBuf> = entries
         .filter_map(|e| e.ok().map(|e| e.path()))
-        .filter(|p| {
-            p.file_name()
-                .and_then(|s| s.to_str())
-                .is_some_and(|n| n.starts_with("requirements") && n.ends_with(".txt"))
-        })
+        .filter(|p| p.is_file() && is_requirements_file(p, Some(scan_root)))
         .collect();
     paths.sort();
     for path in paths {
@@ -125,7 +158,7 @@ pub(super) fn read_requirements_files(rootfs: &Path) -> Option<Vec<PackageDbEntr
         // Milestone 670 T013 — classify the file's lifecycle scope
         // per FR-005a. All entries parsed from this file share the
         // same scope tag.
-        let scope = classify_requirements_scope(&path);
+        let scope = classify_requirements_scope_under(&path, scan_root);
         let parsed = parse_requirements(&text);
         // #1522: `requirements.txt` is also cget's file name. A file most
         // of whose lines are not PEP 508 is not a pip file; emitting its
@@ -468,7 +501,7 @@ impl RequirementsTxtEntry {
         // annotation. Catalog row C158 registered by T016.
         if let Some(scope_name) = scope.as_optional_name() {
             extra_annotations.insert(
-                "waybill:python-req-file-scope".to_string(),
+                ANN_REQ_FILE_SCOPE.to_string(),
                 serde_json::Value::String(scope_name.to_string()),
             );
         }
@@ -1408,7 +1441,7 @@ urllib3>=2 \\
              waybill-fixture-bare\n",
         )
         .unwrap();
-        assert!(read_requirements_files(dir.path()).is_none());
+        assert!(read_requirements_files(dir.path(), dir.path()).is_none());
     }
 
     /// #1522 control: a pip file with one bad line keeps its good lines.
@@ -1420,7 +1453,7 @@ urllib3>=2 \\
             "requests==2.31.0\nurllib3>=2\nwaybill-org/waybill-fixture-repo@v2.0.0\n",
         )
         .unwrap();
-        let out = read_requirements_files(dir.path()).unwrap();
+        let out = read_requirements_files(dir.path(), dir.path()).unwrap();
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert_eq!(names, ["requests", "urllib3"]);
     }
@@ -1460,7 +1493,7 @@ urllib3>=2 \\
     fn s1537_via_becomes_exact_purl_edges_between_pins_of_one_file() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(dir.path().join("requirements.txt"), COMPILED).unwrap();
-        let out = read_requirements_files(dir.path()).unwrap();
+        let out = read_requirements_files(dir.path(), dir.path()).unwrap();
         let deps = |name: &str| -> Vec<String> {
             let mut d = out.iter().find(|e| e.name == name).unwrap().depends.clone();
             d.sort();
@@ -1478,4 +1511,63 @@ urllib3>=2 \\
         assert!(deps("vine").is_empty() && deps("click").is_empty());
     }
 
+
+    // Spec 1613 (#1610): FR-004a selector and FR-004 ancestor rule.
+
+    #[test]
+    fn s1613_the_selector_reads_labelled_names_only() {
+        let root = Path::new("/r");
+        for (rel, read) in [
+            ("requirements.txt", true),
+            ("requirements-dev.txt", true),
+            ("dev-requirements.txt", true),
+            ("docs-requirements.txt", true),
+            ("tox-requirements.txt", false),
+            ("all_requirements.txt", false),
+            (".ci/all_requirements.txt", true),
+            ("x/.github/build_requirements.txt", true),
+            (".ci/notes.txt", false),
+            ("requirements.in", false),
+        ] {
+            assert_eq!(is_requirements_file(&root.join(rel), Some(root)), read, "{rel}");
+        }
+        assert!(
+            !is_requirements_file(Path::new("/r/.ci/all_requirements.txt"), Some(Path::new("/r/.ci"))),
+            "a listed directory above the scan root does not count"
+        );
+        assert!(is_requirements_file(Path::new("/r/.ci/all_requirements.txt"), None), "discovery has no root");
+    }
+
+    #[test]
+    fn s1613_the_ancestor_rule_comes_after_the_parent_and_the_name() {
+        let root = Path::new("/r");
+        for (rel, want) in [
+            (".ci/metrics/requirements.txt", Some("ci")),
+            (".github/requirements.txt", Some("ci")),
+            ("docs/.sphinx/requirements.txt", Some("docs")),
+            (".ci/tests/requirements.txt", Some("test")),
+            (".github/docs/requirements.txt", Some("docs")),
+            (".github/requirements-dev.txt", Some("dev")),
+            (".sphinx/ci/requirements.txt", Some("ci")),
+            ("src/requirements.txt", None),
+        ] {
+            assert_eq!(classify_requirements_scope_under(&root.join(rel), root).as_optional_name(), want, "{rel}");
+        }
+    }
+
+    #[test]
+    fn s1613_read_requirements_files_reads_and_labels_widened_names() {
+        let dir = tempfile::tempdir().unwrap();
+        let ci = dir.path().join(".ci");
+        std::fs::create_dir_all(&ci).unwrap();
+        std::fs::write(ci.join("all_requirements.txt"), "waybill-fixture-all==1.0\n").unwrap();
+        std::fs::write(ci.join("tox-requirements.txt"), "waybill-fixture-tox==1.0\n").unwrap();
+        let out = read_requirements_files(&ci, dir.path()).unwrap();
+        let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, ["waybill-fixture-all", "waybill-fixture-tox"], "under .ci every *requirements*.txt is read");
+        assert!(out.iter().all(|e| e.lifecycle_scope.is_some()), "and labelled, so none reads as runtime");
+        let top = tempfile::tempdir().unwrap();
+        std::fs::write(top.path().join("tox-requirements.txt"), "waybill-fixture-tox==1.0\n").unwrap();
+        assert!(read_requirements_files(top.path(), top.path()).is_none_or(|v| v.is_empty()), "tox-requirements.txt is not read");
+    }
 }

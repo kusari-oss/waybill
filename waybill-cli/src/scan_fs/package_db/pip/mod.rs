@@ -160,6 +160,13 @@ fn has_site_packages_ancestor(dir: &Path) -> bool {
 /// Per-file callback. Records the marker file's parent directory in
 /// state. The HashSet inside state auto-dedupes multi-marker dirs.
 fn on_pip_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    // Spec 1613: the pattern admits `*requirements*.txt`; only the names
+    // the reader reads make a project root.
+    if path.file_name().and_then(|s| s.to_str()).is_some_and(|n| n.contains("requirements"))
+        && !requirements_txt::is_requirements_file(path, None)
+    {
+        return;
+    }
     let Some(state) = ctx.state::<Mutex<PipDiscoveredPaths>>(ReaderId::PIP) else {
         return;
     };
@@ -181,7 +188,7 @@ pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
         "**/poetry.lock",
         "**/Pipfile.lock",
         "**/uv.lock",
-        "**/requirements*.txt",
+        "**/*requirements*.txt",
     ])?;
     Ok(ReaderRegistration {
         reader_id: ReaderId::PIP,
@@ -189,7 +196,8 @@ pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
         patterns,
         on_file: Some(on_pip_file),
         on_dir: None,
-        descend_into: None,
+        // Spec 1613 (#1610): CI and docs dot-directories hold requirements files.
+        descend_into: Some(super::project_roots::listed_dot_dir_globset()?),
     })
 }
 
@@ -324,7 +332,7 @@ pub(crate) fn finalize(
         if let Some(lockfile_entries) = uv_lock::read_uv_lock(project_root, include_dev) {
             merge_without_override(&mut entries, lockfile_entries);
         }
-        if let Some(req_entries) = requirements_txt::read_requirements_files(project_root) {
+        if let Some(req_entries) = requirements_txt::read_requirements_files(project_root, rootfs) {
             merge_without_override(&mut entries, req_entries);
         }
     }
@@ -356,7 +364,9 @@ pub(crate) fn finalize(
     for project_root in &project_roots {
         let manifest_entries = pyproject_declared_deps(project_root);
         for entry in manifest_entries {
-            if covered_names.insert(entry.name.clone()) {
+            if covered_names.insert(entry.name.clone())
+                || covered_only_by_scoped_requirements(&entries, &entry)
+            {
                 entries.push(entry);
             }
         }
@@ -556,10 +566,8 @@ fn has_python_project_marker(dir: &Path) -> bool {
     // `requirements*.txt` is a glob — scan the top-level of `dir`.
     if let Ok(read_dir) = std::fs::read_dir(dir) {
         for entry in read_dir.flatten() {
-            if let Some(name) = entry.file_name().to_str() {
-                if name.starts_with("requirements") && name.ends_with(".txt") {
-                    return true;
-                }
+            if requirements_txt::is_requirements_file(&entry.path(), None) {
+                return true;
             }
         }
     }
@@ -575,6 +583,23 @@ fn has_python_project_marker(dir: &Path) -> bool {
 /// `tools/requirements.txt` kept only the first path, and the second
 /// declaring project could not be found. Same shape as the Go reader's
 /// duplicate handling (`golang/legacy.rs`).
+/// Spec 1613 (#1610): whether a runtime pyproject declaration is "covered"
+/// only by packages of scoped requirements files (C155). Such a file does not
+/// declare what the project needs at run time, so the declaration is emitted
+/// as if nothing covered it. Without this, TheRock's perfxpert lost its
+/// runtime `pydantic>=2.0` to `.github/requirements.txt`, and the edge to it
+/// resolved to a CI package. Coverage by anything else (a lockfile pin, an
+/// unscoped requirements file, another pyproject) is unchanged (milestone 670).
+fn covered_only_by_scoped_requirements(entries: &[PackageDbEntry], declared: &PackageDbEntry) -> bool {
+    use waybill_common::resolution::LifecycleScope;
+    if !matches!(declared.lifecycle_scope, None | Some(LifecycleScope::Runtime)) {
+        return false;
+    }
+    let mut coverers = entries.iter().filter(|e| e.name == declared.name).peekable();
+    coverers.peek().is_some()
+        && coverers.all(|e| e.extra_annotations.contains_key(requirements_txt::ANN_REQ_FILE_SCOPE))
+}
+
 fn merge_without_override(
     entries: &mut Vec<PackageDbEntry>,
     additions: Vec<PackageDbEntry>,
@@ -589,6 +614,15 @@ fn merge_without_override(
         match existing.get(a.purl.as_str()) {
             Some(&i) => {
                 let kept = &mut entries[i];
+                // Spec 1613 (#1610): the deduplicator's scope rule, not
+                // first-wins. A package in the scan root's
+                // `requirements-dev.txt` and in a nested project's unscoped
+                // `requirements.txt` is runtime, as it is when both files
+                // belong to one project and the deduplicator merges them.
+                kept.lifecycle_scope = crate::resolve::deduplicator::merge_lifecycle_scope(
+                    kept.lifecycle_scope,
+                    a.lifecycle_scope,
+                );
                 if kept.source_path != a.source_path
                     && !kept.extra_source_paths.contains(&a.source_path)
                 {

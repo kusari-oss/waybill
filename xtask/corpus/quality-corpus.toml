@@ -432,10 +432,23 @@ ecosystem = "pip"
 # +8 CMake fetches in nested projects (seven from qnnpack's Download*.cmake
 # files, one test-scoped googletest in test/inductor), -1 `pkg:generic/${project}` (a parameterised
 # name, no longer a component). Only `edges` violated; bound +/-10% of 109.
+#
+# Re-measured 2026-11-18 for spec 1613 (#1610), CI run 44418707871 @ 38c4babb
+# against main @ 4281e826 (run 44412953808); the other 17 targets identical.
+# Traced component by component with this harness's exact invocation
+# (specs/1613-dot-directory-manifests/research.md R9):
+#   pkgs 160 -> 260, edges 110 -> 211, sbomqs 5.72 -> 5.93.
+#   +101 components, all declared only under .ci/, .github/, .devcontainer/
+#   (requirements files and the .ci/lumen_cli project), all non-runtime
+#   except 6 that root requirements files also declare. -1: pyproject's
+#   opt-einsum@unresolved, reconciled into the .ci pin opt-einsum@3.3.
+#   +101 edges: 96 from torch (it owns the newly read requirements files,
+#   spec 1537), 5 from lumen-ci to its dependencies, 1 root -> lumen-ci, less
+#   torch -> opt-einsum@unresolved (now -> @3.3). Bound +/-10% of each.
 [targets.expect]
-pkgs      = { min = 135, max = 167 }
+pkgs      = { min = 234, max = 286 }
 files     = { min = 57, max = 71 }
-edges     = { min = 98, max = 120 }
+edges     = { min = 190, max = 232 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.41, max = 6.41 }
 wall_ms   = { min = 5, max = 50000 }
