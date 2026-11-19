@@ -63,6 +63,12 @@ MUTATIONS = {
     "M18-record-scope-ignores-searches": (S + "mod.rs",
         "        cmake_search_pair::apply_scope(&mut components, &scopes.optional);",
         "        cmake_search_pair::apply_scope(&mut components, &Default::default());"),
+    "M19-module-names-unresolved": (C + "reach.rs",
+        "                    let Some(target) = resolve_include(arg, source_dir, &list_dir, &root).or_else(by_name) else { continue };",
+        "                    let _ = &by_name;\n                    let Some(target) = resolve_include(arg, source_dir, &list_dir, &root) else { continue };"),
+    "M20-search-evidence-before-merge": (S + "package_db/mod.rs",
+        "    cmake::fetches::merge_into_existing(&mut out, &mut cmake_fetches, rootfs);\n    // Spec 1614 research R7.1: a search a fetch answers joins its evidence\n    // now, after the merge above has read fetches' declaration sites.\n    for (purl, file) in std::mem::take(&mut cmake_fetches.search_evidence) {\n        if let Some(e) = out.iter_mut().find(|e| e.purl.as_str() == purl) {\n            if e.source_path != file && !e.extra_source_paths.contains(&file) {\n                e.extra_source_paths.push(file);\n            }\n        }\n    }\n",
+        "    for (purl, file) in std::mem::take(&mut cmake_fetches.search_evidence) {\n        if let Some(e) = out.iter_mut().find(|e| e.purl.as_str() == purl) {\n            if e.source_path != file && !e.extra_source_paths.contains(&file) {\n                e.extra_source_paths.push(file);\n            }\n        }\n    }\n    cmake::fetches::merge_into_existing(&mut out, &mut cmake_fetches, rootfs);\n"),
 }
 
 name = sys.argv[1]

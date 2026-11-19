@@ -582,3 +582,64 @@ fn w_rep_repeated_scans_are_identical() {
         }
     }
 }
+
+/// W-14a, evidence (found on TheRock): a search's file joins the fetch it
+/// pairs with only after spec 1538's merge has read fetch declaration
+/// sites. Counted as a site, the root search made one sibling's fetch look
+/// declared above the other, which then folded into it (C233).
+#[test]
+fn w14a_search_evidence_does_not_move_a_fetch_declaration() {
+    let t = tree();
+    write(t.path(), "CMakeLists.txt", "project(waybill_fixture_root)\nfind_package(waybill_fixture_rep QUIET)\nadd_subdirectory(a)\nadd_subdirectory(b)\n");
+    // The conditional fetch is in `a/`, the unconditional one in `b/`: the
+    // search pairs with the last declaration of its name, `b/`'s.
+    write(
+        t.path(),
+        "a/CMakeLists.txt",
+        "include(FetchContent)\nif(NOT waybill_fixture_rep_FOUND)\n  FetchContent_Declare(waybill_fixture_rep GIT_REPOSITORY https://github.com/waybill-fixture/rep.git GIT_TAG v1.0.0)\nendif()\n",
+    );
+    write(
+        t.path(),
+        "b/CMakeLists.txt",
+        "include(FetchContent)\nFetchContent_Declare(waybill_fixture_rep GIT_REPOSITORY https://github.com/waybill-fixture/rep.git GIT_TAG v2.0.0)\n",
+    );
+    let d = scan(t.path());
+    by_purl(&d, "pkg:github/waybill-fixture/rep@v2.0.0");
+    by_purl(&d, "pkg:github/waybill-fixture/rep@v1.0.0");
+    absent_purl(&d, "pkg:generic/waybill_fixture_rep");
+    let all: Vec<String> = ["v1.0.0", "v2.0.0"]
+        .iter()
+        .flat_map(|v| source_files(by_purl(&d, &format!("pkg:github/waybill-fixture/rep@{v}"))))
+        .collect();
+    assert!(all.contains(&"CMakeLists.txt".to_string()), "the search's file is evidence on a fetched version: {all:?}");
+}
+
+/// W-18 (found on TheRock, rocjitsu): `include(<module>)` by name, found
+/// through `CMAKE_MODULE_PATH`, is followed like a path include. The module
+/// path set in a project is inherited by the subdirectories it adds.
+#[test]
+fn w18_include_by_module_name_through_cmake_module_path() {
+    let t = tree();
+    write(
+        t.path(),
+        "CMakeLists.txt",
+        "project(waybill_fixture_root)\nlist(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)\nif(ENABLE_VFIO)\n  include(waybill_fixture_vfio)\nendif()\nadd_subdirectory(child)\n",
+    );
+    write(
+        t.path(),
+        "cmake/waybill_fixture_vfio.cmake",
+        "include(FetchContent)\nFetchContent_Declare(waybill_fixture_vfio GIT_REPOSITORY https://github.com/waybill-fixture/vfio.git GIT_TAG v0.8)\nfind_package(waybill_fixture_vfio_dep)\n",
+    );
+    write(t.path(), "child/CMakeLists.txt", "if(CHILD_OPT)\n  include(waybill_fixture_inherited)\nendif()\n");
+    write(t.path(), "cmake/waybill_fixture_inherited.cmake", "find_package(waybill_fixture_inh)\n");
+    let d = scan(t.path());
+    let fetch = by_purl(&d, "pkg:github/waybill-fixture/vfio@v0.8");
+    assert_eq!(scope(fetch), "excluded", "{fetch}");
+    assert!(conds(fetch, C232).contains(&"ENABLE_VFIO".to_string()), "{fetch}");
+    let dep = by_purl(&d, "pkg:generic/waybill_fixture_vfio_dep");
+    assert_optional(dep);
+    assert_eq!(conds(dep, C236), vec!["ENABLE_VFIO"]);
+    let inh = by_purl(&d, "pkg:generic/waybill_fixture_inh");
+    assert_optional(inh);
+    assert_eq!(conds(inh, C236), vec!["CHILD_OPT"]);
+}

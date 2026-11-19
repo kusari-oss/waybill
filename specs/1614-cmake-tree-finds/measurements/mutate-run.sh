@@ -6,7 +6,7 @@
 set -uo pipefail
 M=specs/1614-cmake-tree-finds/measurements
 BK=$(mktemp -d -t waybill1614-mut)
-ALL="M1-unconditional-edge-does-not-win M2-first-path-not-union M3-closed-cycle-conditional M4-narrow-file-set M5-include-reached-files-not-read M6-reach-seed-not-applied M7-search-scope-ignores-conditions M8-tool-list-emptied M9-python-rule-ignores-development M10-fetch-pairing-removed M11-installed-pairing-removed M12-submodule-pairing-removed M13-in-tree-before-pairing M14-in-tree-rule-removed M15-config-template-patterns-removed M16-search-attachment-removed M17-c57-not-widened M18-record-scope-ignores-searches"
+ALL="M1-unconditional-edge-does-not-win M2-first-path-not-union M3-closed-cycle-conditional M4-narrow-file-set M5-include-reached-files-not-read M6-reach-seed-not-applied M7-search-scope-ignores-conditions M8-tool-list-emptied M9-python-rule-ignores-development M10-fetch-pairing-removed M11-installed-pairing-removed M12-submodule-pairing-removed M13-in-tree-before-pairing M14-in-tree-rule-removed M15-config-template-patterns-removed M16-search-attachment-removed M17-c57-not-widened M18-record-scope-ignores-searches M19-module-names-unresolved M20-search-evidence-before-merge"
 for name in ${MUTATIONS:-$ALL}; do
   file=$(python3 -I -B $M/mutate.py "$name") || { echo "$name: anchor failed"; continue; }
   git show "HEAD:$file" > "$BK/orig"

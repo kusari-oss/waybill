@@ -254,7 +254,7 @@ pub(crate) fn read_with_downloads(
     let mut fetch_files = walked.unwrap_or_else(|| cmake_files.clone());
     fetch_files.sort();
     fetch_files.dedup();
-    let (mut fetch_entries, mut fetches, mut decls) = fetches::read_declarations(scan_root, &fetch_files);
+    let (fetch_entries, mut fetches, mut decls) = fetches::read_declarations(scan_root, &fetch_files);
     if tree_wide {
         // FR-009: a narrow-set file the walker skips (`cmake/**/vendor/`)
         // was read for package searches before; it still is.
@@ -316,12 +316,8 @@ pub(crate) fn read_with_downloads(
             .into_iter()
             .partition(|s| decls.fetch_purls.contains_key(&s.name.to_lowercase()));
         for s in paired {
-            let purl = &decls.fetch_purls[&s.name.to_lowercase()];
-            if let Some(e) = fetch_entries.iter_mut().find(|e| e.purl.as_str() == purl) {
-                if e.source_path != s.source_path && !e.extra_source_paths.contains(&s.source_path) {
-                    e.extra_source_paths.push(s.source_path);
-                }
-            }
+            let purl = decls.fetch_purls[&s.name.to_lowercase()].clone();
+            fetches.search_evidence.push((purl, s.source_path));
             fetches.finds.paired_fetch += 1;
         }
         decls.searches = rest;

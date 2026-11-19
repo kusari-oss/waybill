@@ -71,6 +71,11 @@ pub(crate) struct FetchCoverage {
     /// Spec 1614 (C237): the package-search accounting, finished by
     /// `scan_fs::cmake_search_pair` once every reader has run.
     pub(crate) finds: super::searches::FindCoverage,
+    /// Spec 1614 research R7.1: (fetch PURL, search file) for each search a
+    /// fetch answers. Added to the fetch's evidence only after
+    /// [`merge_into_existing`]: that merge reads a fetch's source files as
+    /// where it is declared, and a search file is not a fetch declaration.
+    pub(crate) search_evidence: Vec<(String, String)>,
 }
 
 impl FetchCoverage {
