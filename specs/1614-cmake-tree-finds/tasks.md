@@ -34,7 +34,7 @@
 - [ ] T003 [P] W-ctl, the byte-identity control (FR-009):
   - Build the tree in `waybill-cli/tests/fixtures/cmake_tree_finds/ctl/`: the root `CMakeLists.txt` and `cmake/deps.cmake` with unconditional `find_package` (with and without a version, with `EXACT`, a mixed-case name for C103), `pkg_check_modules`, and an unconditional `FetchContent_Declare` with no chain conditions.
   - Commit the masked three-format golden of `main`'s output, generated with `main`'s binary before any source change.
-  - Add `w_ctl_is_byte_identical_to_main` to the test file. It must pass on `main`.
+  - Add `w_ctl_is_byte_identical_to_main` to the test file. It compares the documents after removing C237; it must pass on `main`, and from T008 on it also asserts that C237 is present with counts that match the tree (FR-009).
 
 ## Phase 2: Foundational
 
@@ -63,7 +63,7 @@
 - [ ] T007 [P] [US1] Write W-1 (nested `find_package` with a range), W-2 (two files, one component, both ranges), W-3 (nested `pkg_check_modules` / `pkg_search_module`), W-4 (`${VAR}` name, C237 `unresolved`) and W-16 (an edge from the owning submodule, no root anchor) in `waybill-cli/tests/scan_cmake_tree_finds.rs`. All fail on `main`.
 - [ ] T008 [US1] C237: build the coverage record in `cmake.rs` from the searches (`read`, `unresolved`, `components`, and so on, with the other buckets 0 until US2–US4 fill them). Carry it as C231 is carried: `scan_fs/mod.rs` field, then `generate/mod.rs`, then the three emitters.
 - [ ] T009 [US1] R8: in `waybill-cli/src/scan_fs/cmake_fetch_attach.rs`, attach components whose C55 mechanism is `cmake-find-package` / `cmake-pkg-check-modules` exactly as fetches attach. Rename `is_fetch` to say what it now selects.
-- [ ] T010 [US1] Run T007's tests and W-ctl, all green. Record any W-ctl drift in `measurements/trace.md` (none expected).
+- [ ] T010 [US1] Run T007's tests and W-ctl, all green. Record any W-ctl drift in `measurements/trace.md`. The expected drift is none outside C237. R8 moves root-level searches from the graph-top fallback to declared root anchors, so check SPDX relationship provenance specifically: decide by trace whether a difference is expected or a defect, before any golden changes.
 
 ## Phase 4: User Story 2 — a conditional search is not a runtime requirement (P1)
 
@@ -71,7 +71,7 @@
 
 **Independent test**: W-5 to W-10 and W-12.
 
-- [ ] T011 [P] [US2] Write W-5 (in-file `if()`), W-6 (a fetch in a conditionally included `*.cmake`; C232 gains `WIN_SDK`; required on `main`), W-7 (`BUILD_TESTING` through `add_subdirectory()`: Test, C62 `cmake-build-testing`), W-8 (conditions union along a chain), W-9 (one unconditional declaration wins), W-10 (a file reached both ways is unconditional) and W-12 (an include cycle terminates) in `waybill-cli/tests/scan_cmake_tree_finds.rs`. All fail on `main` except W-12's termination, which must also hold.
+- [ ] T011 [P] [US2] Write W-5 (in-file `if()`), W-6 (a fetch in a conditionally included `*.cmake`; C232 gains `WIN_SDK`; required on `main`), W-7 (`BUILD_TESTING` through `add_subdirectory()`: Test, C62 `cmake-build-testing`), W-8 (conditions union along a chain), W-9 (one unconditional declaration wins), W-10 (a file reached both ways is unconditional) W-12 (an include cycle terminates) and W-17 (a search in a `function()` body: Optional, `function: <name>` in C236) in `waybill-cli/tests/scan_cmake_tree_finds.rs`. All fail on `main` except W-12's termination, which must also hold.
 - [ ] T012 [US2] Create `waybill-cli/src/scan_fs/package_db/cmake/reach.rs` (R1):
   - **`enum Reach { Unconditional, Conditional(BTreeSet<String>) }`**.
   - **`fn compute(scan_root, walked) -> (BTreeMap<PathBuf, Reach>, extra_files: Vec<PathBuf>)`**, built from `include()` (resolved with `links.rs::resolve_include` / `substitute`, made `pub(super)`, with source-directory inheritance) and `add_subdirectory()` (to `<dir>/CMakeLists.txt`). It is memoised, with a cycle guard.
@@ -109,8 +109,10 @@
 - [ ] T019 [US3] R9, built in the tree:
   - The CMake registration in `cmake.rs` gains `**/*Config.cmake.in` and `**/*-config.cmake.in`; these are collected in `CMakeMarkerState` by name only and not passed to the parsers.
   - Collect `project()` first arguments in `read_fetches`'s loop.
-  - After R7.1 (and before R7.2 / R7.3 can claim the name: carry the in-tree name set to the post-pass, and let pairing win), a search for an in-tree name yields no component.
-  - List the names in C237 `in-tree`.
+  - The reader does **not** drop an in-tree search. It emits the component tagged in-tree (an internal marker, never emitted), and carries the in-tree name set to `cmake_search_pair.rs`.
+  - The post-pass applies R7.2, then R7.3, and only then drops each component still tagged in-tree: no component, no edge.
+  - Fill C237 `in-tree` (names) and `in-tree-declarations`.
+  - Add a W-15 variant: a submodule directory that holds `project(waybill_fixture_sub)` and is named by a search. It pairs with the submodule (W-14c outcome), and is not counted as in-tree.
 - [ ] T020 [US3] R10, C57 widening:
   - In `waybill-cli/src/scan_fs/package_db/git_submodule/mod.rs:263`, take package-search names from the CMake reader's walked declarations: pass the marker files through `read_all`, or the extracted names.
   - Keep `collect_find_package_targets` for callers without a walker.
@@ -154,7 +156,7 @@
   - pairing, and the in-tree rule with #1616.
 
   `CHANGELOG.md` gets `### Fixed` / `### Added` entries for #1591 and #1605, including the duplicates fixed on `main` (R7).
-- [ ] T031 Walker audit (`bash scripts/check-walker-audit.sh`) and the gate (`./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`), with no `+toolchain`. Record `GATE_RESULT`, the `ok` count, passed/failed and the failure blocks in `measurements/gate-log.md`.
+- [ ] T031 Walker audit (`bash scripts/check-walker-audit.sh`) and the gate (`./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`), with no `+toolchain`. Record `GATE_RESULT`, the `ok` count, passed/failed and the failure blocks in `measurements/gate-log.md`. Also record that `git diff main -- Cargo.toml '*/Cargo.toml' Cargo.lock` is empty (FR-013).
 - [ ] T032 TheRock, CI only: two measure-source runs at the branch head against `main` (full SHAs). Record in `measurements/therock.md`:
   - **SC-001:** `cmake-find-package` components against `predict.py` (110 ± the Python calls), each difference traced by name.
   - **SC-002:** the conditional-only names are non-runtime, including the 6–9 fetch components named in the spec.
@@ -163,7 +165,7 @@
   - **SC-005:** `waybill sbom parity-check` on both sides; no new gap; C236 and C237 pass.
   - **SC-006:** the two runners' documents identical apart from timestamps.
   - **SC-009:** the interleaved ratio, ≤ 1.05×.
-- [ ] T033 Public corpus at the branch (`repeat=2`): trace every golden change by component and annotation, then regenerate the goldens through the workflow. Record in `measurements/corpus.md`.
+- [ ] T033 Public corpus at the branch (`repeat=2`): trace every golden change by component and annotation, then regenerate the goldens through the workflow. Record in `measurements/corpus.md`. C237 is expected in every golden whose tree has a CMake package search; list those targets, and treat any other change as needing its own trace.
 - [ ] T034 Quality corpus against a `main` control: trace every changed target and re-centre only traced bounds in `xtask/corpus/quality-corpus.toml`. Record in `measurements/corpus.md`.
 - [ ] T035 Open the PR, with a body citing T029 and T031–T034, `Closes #1591`, `Closes #1605`, and the attribution line. Do not merge.
 

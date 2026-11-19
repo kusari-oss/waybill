@@ -56,10 +56,10 @@ for r in (r for r in rows if r["kind"] == "find"):
         out["python, decided per call (FR-006)"] += 1
     elif variants(n) & fetch_names:
         out["fetch pair (FR-005)"] += 1
-    elif variants(n) & sub_names:
-        out["submodule (FR-005)"] += 1
     elif variants(n) & inst_names:
         out["installed record (FR-005)"] += 1
+    elif variants(n) & sub_names:
+        out["submodule (FR-005)"] += 1
     elif r["class"] in ("first-party-project", "first-party-config"):
         out["built in tree (FR-007)"] += 1
     else:

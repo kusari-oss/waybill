@@ -37,7 +37,7 @@ enum Reach {
 
 ## Outcome (per package name, after all declarations)
 
-The first match wins:
+The first match wins. Steps 1, 2 and 6 are decided in the CMake reader. Steps 3–5 are decided in the post-pass (`cmake_search_pair.rs`), after `installed_lib::resolve`. The reader therefore does **not** drop an in-tree name: it emits the search component tagged in-tree, and the post-pass drops it only if steps 3 and 4 did not claim it. A git submodule is usually a CMake `project()` too, so dropping it early would lose its pairing edge.
 1. **Tool** (FR-006): no component, counted.
 2. **Paired with a fetch** (R7.1): no component; the fetch gains the search files as evidence.
 3. **Paired with an installed-library record** (R7.2): no component; the record gains evidence and the combined scope rule applies.
@@ -49,9 +49,12 @@ The first match wins:
 
 ## FindCoverage, C237 (per scan)
 
-`read`, `unresolved`, `tools`, `paired.{fetch, installed, submodule}`, `in-tree` (sorted names), `components`, `conditional`, `test`.
+`read`, `unresolved`, `tools`, `paired.{fetch, installed, submodule}`, `in-tree` (sorted names), `in-tree-declarations`, `components`, `conditional`, `test`.
 
-**Invariant:** `read` = `unresolved` + the declarations accounted for in the other buckets. Counts are by declaration, except `in-tree`, which lists names.
+- **Counted by declaration:** `read`, `unresolved`, `tools`, `paired.*`, `in-tree-declarations`.
+- **Counted by component:** `components`, `conditional`, `test`, as in C231.
+- **Listed by name:** `in-tree`.
+- **Invariant:** `read` = `unresolved` + `tools` + `paired.fetch` + `paired.installed` + `paired.submodule` + `in-tree-declarations` + the declarations of emitted components.
 
 ## Changed existing state
 

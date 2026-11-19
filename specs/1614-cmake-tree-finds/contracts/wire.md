@@ -29,6 +29,7 @@
 | W-10 | a file reached by `include()` both inside `if(A)` and unconditionally | its declarations are unconditional |
 | W-11 | `if(WIN_SDK) include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_wsl.txt) endif()`; that file does `find_package(waybill_fixture_wsl)` | Optional, C236 `["WIN_SDK"]` (FR-004) |
 | W-12 | `include(a.cmake)` in `b.cmake` and `include(b.cmake)` in `a.cmake`, both included from the root | the scan terminates; both are unconditional |
+| W-17 | `function(waybill_deps) find_package(waybill_fixture_body) endfunction()` in a nested file | Optional, as spec 1538 treats a fetch in a body; C236 contains `function: waybill_deps` |
 
 ## Tools, pairing, in-tree
 
@@ -45,16 +46,21 @@
 | Case | Tree | Expected |
 |---|---|---|
 | W-16 | W-1 inside a git submodule's directory | an edge from the submodule to the search component; no root anchor (R8) |
-| W-ctl | every search in the narrow set, unconditional; fetches without chain conditions | byte-identical to the committed golden of `main`'s output (FR-009) |
+| W-ctl | every search in the narrow set, unconditional; fetches without chain conditions | byte-identical to the committed golden of `main`'s output once C237 is removed (FR-009). C237 is present, and its counts match the tree. |
 | W-rep | the W-5..W-15 tree, scanned 20 times | identical documents |
 
 ## C237 shape
 
 ```json
-{"components":N,"conditional":N,"in-tree":["…"],"paired":{"fetch":N,"installed":N,"submodule":N},"read":N,"test":N,"tools":N,"unresolved":N}
+{"components":N,"conditional":N,"in-tree":["…"],"in-tree-declarations":N,"paired":{"fetch":N,"installed":N,"submodule":N},"read":N,"test":N,"tools":N,"unresolved":N}
 ```
 
 A string with sorted keys, as C231.
+
+- **Counted by declaration:** `read`, `unresolved`, `tools`, `paired.*`, `in-tree-declarations`.
+- **Counted by component:** `components`, `conditional`, `test`, as in C231.
+- **Listed by name:** `in-tree`.
+- **Invariant:** `read` = `unresolved` + `tools` + `paired.fetch` + `paired.installed` + `paired.submodule` + `in-tree-declarations` + the declarations of emitted components.
 
 ## Catalog rows
 

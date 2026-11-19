@@ -140,6 +140,7 @@ In each case an edge runs from the search's owner to the paired component (R8).
 - **What counts.** A name the tree builds is the first argument of a `project()` in any walked CMake file, or the stem of a `<name>Config.cmake.in` / `<name>-config.cmake.in`. It is also the stem of a `<name>Config.cmake` / `<name>-config.cmake` with no version file beside it: a version file makes it an installed-library record (R7 step 2), which takes precedence.
 - **Walker patterns.** The CMake registration gains the patterns `**/*Config.cmake.in` and `**/*-config.cmake.in`. These files are collected by name only, never parsed.
 - **The result.** Such a search yields no component and no edge. The name is listed in the document-scope coverage record C237 under `in-tree`.
+- **Where it is decided.** In the post-pass, after R7.2 and R7.3, never in the reader. A git submodule is usually also a `project()` (e.g. `base/rocm-cmake`). Dropping the search in the reader would lose the submodule pairing and its edge: 9 names on TheRock.
 
 **Census** (TheRock):
 
@@ -164,7 +165,7 @@ In each case an edge runs from the search's owner to the paired component (R8).
 **Decision:** a new row, C237 `waybill:cmake-find-coverage`: a document-scope JSON object, a string with sorted keys, in C231's style:
 
 ```json
-{"components":N,"conditional":N,"in-tree":["<name>",...],"paired":{"fetch":N,"installed":N,"submodule":N},"read":N,"test":N,"tools":N,"unresolved":N}
+{"components":N,"conditional":N,"in-tree":["<name>",...],"in-tree-declarations":N,"paired":{"fetch":N,"installed":N,"submodule":N},"read":N,"test":N,"tools":N,"unresolved":N}
 ```
 
 - `read`: package-search declarations read;
