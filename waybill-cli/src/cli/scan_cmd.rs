@@ -1311,10 +1311,11 @@ pub struct ScanArgs {
     /// read directly by the milestone-156 cmake reader (mirrors the
     /// `WAYBILL_INCLUDE_VENDORED` env-var propagation pattern).
     ///
-    /// Spec 1538: it now affects `find_package`, `pkg_check_modules` and
-    /// `file(DOWNLOAD)` only. `FetchContent_Declare` and
-    /// `ExternalProject_Add` are read from every CMake file the scan
-    /// reaches, with or without it.
+    /// Spec 1538 and spec 1614: it now affects vendored-directory and
+    /// `file(DOWNLOAD)` discovery only. Fetches (`FetchContent_Declare`,
+    /// `ExternalProject_Add`) and package searches (`find_package`,
+    /// `pkg_check_modules`, `pkg_search_module`) are read from every CMake
+    /// file the scan reaches, with or without it.
     #[arg(long)]
     pub cmake_third_party_recursive: bool,
 

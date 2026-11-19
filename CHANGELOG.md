@@ -9,6 +9,31 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **CMake package searches are read from every CMake file, with the
+  conditions that reach them (#1591, #1605).** `find_package`,
+  `pkg_check_modules` and `pkg_search_module` were read only from the root
+  `CMakeLists.txt`, `cmake/`, `Modules/` and `third_party/` (one level), with
+  no conditions. On ROCm TheRock that hid 168 of the 225 package names the
+  tree searches for. They are now read from every file the walker reaches,
+  and from files `include()` reaches under other names (`CMakeLists_wsl.txt`).
+  - **Conditions reach through `include()` and `add_subdirectory()`,** for
+    fetches too. A search or fetch reached only under `if()` is Optional, with
+    its conditions in `waybill:cmake-find-conditions` (C236, new) or C232; one
+    unconditional search keeps a package a runtime requirement.
+  - **Tools are not dependencies.** `Threads`, `PkgConfig`, `Git`, `Doxygen`,
+    `PythonInterp`, and Python asked for only as an interpreter, yield no
+    component.
+  - **One identity per package.** A search for a name a fetch, an
+    installed-library record or a git submodule already stands for is that
+    component, not a second one. On `main` the fetch and installed-record
+    pairs each gave two components. A search for a name the tree builds
+    itself (`project()`, a package-config template) gives none.
+  - **Accounting.** `waybill:cmake-find-coverage` (C237, new) counts every
+    search read and where it went.
+  - `--cmake-third-party-recursive` no longer changes which package searches
+    are read; it still governs vendored-directory and `file(DOWNLOAD)`
+    discovery. C57 `waybill:build-reference` sees nested searches.
+
 - **What the CMake fetch reader read, and why a fetch is conditional, are
   on the wire (C231 to C233).**
   - `waybill:cmake-fetch-coverage` (C231, document scope) counts the

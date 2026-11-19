@@ -141,7 +141,7 @@
 ## Phase 8: Polish and verification
 
 - [X] T028 Determinism, W-rep: in `waybill-cli/tests/scan_cmake_tree_finds.rs`, scan the W-5..W-15 tree 20 times and assert identical documents. Confirm every W-case asserts in all three formats through `row_all_formats`.
-- [ ] T029 Mutations in `specs/1614-cmake-tree-finds/measurements/mutate.py` and `mutate-run.sh`. Use exact-anchor replacement, revert with `cp`, and rebuild after the last restore. Record the results in `measurements/mutations.md`. Each mutation must turn a named test red:
+- [X] T029 Mutations in `specs/1614-cmake-tree-finds/measurements/mutate.py` and `mutate-run.sh`. Use exact-anchor replacement, revert with `cp`, and rebuild after the last restore. Record the results in `measurements/mutations.md`. Each mutation must turn a named test red:
   - **Reach:** M1 an unconditional edge no longer wins; M2 union replaced by the first path's conditions; M3 a cycle treated as conditional.
   - **Reading:** M4 back to the narrow file set; M5 include-reached files not read; M6 the reach seed not applied to fetches; M7 search scope ignores conditions.
   - **Tools:** M8 the tool list emptied; M9 the Python rule ignores `Development`.
@@ -149,7 +149,7 @@
   - **In-tree and C57:** M14 the in-tree rule removed; M15 the `*Config.cmake.in` patterns removed; M17 C57 back to the narrow set.
   - **Edges:** M16 search attachment removed.
   - **Record scope:** M18 the record's scope ignores searches.
-- [ ] T030 [P] `docs/ecosystems.md`, CMake section:
+- [X] T030 [P] `docs/ecosystems.md`, CMake section:
   - package searches read from every file;
   - conditions from `if()`, `include()` and `add_subdirectory()`;
   - the tool list;

@@ -122,10 +122,10 @@ of digests, an index loop with `list(GET …)`, `file(DOWNLOAD)` and a
 Spec 1538 (#1516, #1519). Every `FetchContent_Declare` and `ExternalProject_Add`
 in every CMake file the scan's walker reaches is read: nested projects,
 `third-party/`, monorepo siblings, whether or not anything `add_subdirectory()`s
-them. The walker's skip set and `--exclude-path` apply. `find_package`,
-`pkg_check_modules` and `file(DOWNLOAD)` are still read only from the root
-`CMakeLists.txt`, `cmake/`, `Modules/` and `third_party/` (#1591 asks whether to
-widen them).
+them. The walker's skip set and `--exclude-path` apply. Package searches are
+read from the same files since spec 1614 (see [CMake package searches](#cmake-package-searches)).
+`file(DOWNLOAD)` is still read only from the root `CMakeLists.txt`, `cmake/`,
+`Modules/` and `third_party/`.
 
 - **Identity** is unchanged: `pkg:github/<owner>/<repo>@<tag>` for GitHub,
   otherwise `pkg:generic/<name>@<version>`, with the URL and declared hash.
@@ -145,6 +145,10 @@ widen them).
   | `cmake-conditional` | any other enclosing `if()` |
 
   The enclosing conditions are in `waybill:cmake-fetch-conditions` (C232).
+  Since spec 1614 (#1605) they include the conditions of the `include()` and
+  `add_subdirectory()` calls that reach the declaring file, as for package
+  searches below: a fetch in a `*.cmake` file included only under
+  `if(WIN_SDK)` is optional.
   These rules follow CMake's measured behaviour
   (`specs/1538-cmake-nested-fetches/measurements/cmake-semantics/`). Which
   fallbacks a build actually took is build-tree evidence (#1544); a source
@@ -197,16 +201,67 @@ widen them).
     whatever its name (TheRock links its vendored `wkmi` from
     `CMakeLists_wsl.txt`), and the blocks open at the `include()` site are its
     first conditions. Module names (`include(FetchContent)`), paths with
-    unknown variables, cycles and chains deeper than 8 are skipped. Fetches,
-    `find_package` and downloads are not yet read through `include()`.
+    unknown variables, cycles and chains deeper than 8 are skipped. Since spec
+    1614, fetches and package searches are read through `include()` too.
 - **Accounting.** `waybill:cmake-fetch-coverage` (C231) counts every
   declaration read: `read` = `emitted` + `merged.first-declaration-wins` +
   `merged.existing-component` + `unresolved.identity`. A name built from a
   variable the file does not set literally, or a declaration with neither
   `URL` nor `GIT_REPOSITORY` + `GIT_TAG`, is `unresolved.identity`.
 
-`--cmake-third-party-recursive` still widens `find_package` reading under
-`third_party/`; fetches no longer need it.
+`--cmake-third-party-recursive` still widens vendored-directory and
+`file(DOWNLOAD)` discovery under `third_party/`; fetches and package searches
+no longer need it.
+
+## CMake package searches
+
+Spec 1614 (#1591, #1605). Every `find_package`, `pkg_check_modules` and
+`pkg_search_module` in every CMake file the scan's walker reaches is read, as
+fetches are. A narrow-set file the walker skips (a `vendor/` under `cmake/`)
+is still read for package searches, as before. Identity is unchanged: a
+versionless design-tier `pkg:generic/<lowercased name>`, its version
+requirement in `waybill:requirement-ranges` (#1520), and the declared casing
+in C103 when it differs.
+
+- **Conditions reach through `include()` and `add_subdirectory()`.** A file is
+  reached under the conditions of every `include()` or `add_subdirectory()`
+  chain that reaches it: their union, unless one path has none, in which case
+  it is unconditional. A file nothing reaches, or reaches only through a
+  cycle, is unconditional. Those conditions enclose everything in the file,
+  before its own blocks. A file `include()` reaches under a name the walker
+  does not match (TheRock's `CMakeLists_wsl.txt`) is read too.
+- **Scope.** Per package, across all its searches, by the fetch rule: a
+  runtime requirement if any search is unconditional and outside a test
+  context; Optional only if every search is conditional (C122
+  `cmake-conditional`, conditions in `waybill:cmake-find-conditions`, C236);
+  otherwise Test (C62 `source-test-directory` / `cmake-build-testing`). A
+  search inside a `function()` body counts as conditional
+  (`function: <name>`).
+- **Tools are not dependencies.** `Threads`, `PkgConfig`, `Git`, `Doxygen`,
+  `PythonInterp`, and `Python`/`Python3` asked for with `COMPONENTS
+  Interpreter` but no `Development` component, yield no component. CMake find
+  modules for libraries (`CUDAToolkit`, `Boost`, `CURL`, `OpenGL`) do.
+- **One identity per package.** In order, a search for a name the scan
+  already represents is not a second component; its file joins that
+  component's evidence:
+  1. a fetch declaring the name (the "try the system first" half of a
+     fallback pair);
+  2. an installed-library record (spec 1531) of the name. The record is
+     Optional only when every search for it and every link to it (C235) is
+     conditional, and nothing else requires it;
+  3. a git submodule whose directory is the name, whose C57
+     `waybill:build-reference` becomes `declared-and-used`;
+  4. a name the tree builds itself — a `project(<name>)`, a
+     `<name>Config.cmake.in` / `<name>-config.cmake.in`, or a
+     `<name>Config.cmake` with no version file beside it — yields no
+     component and no edge, and is listed in C237's `in-tree`. A component
+     for each in-tree CMake project is #1616.
+- **Ownership.** A search is a dependency of the nearest enclosing project,
+  or of the document root when there is none, as fetches are.
+- **Accounting.** `waybill:cmake-find-coverage` (C237) counts every search
+  read: `read` = `unresolved` + `tools` + `paired.fetch` + `paired.installed`
+  + `paired.submodule` + `in-tree-declarations` + the searches emitted
+  components stand for. A search whose name holds `${…}` is `unresolved`.
 
 ### Fetches made through wrappers
 
