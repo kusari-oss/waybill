@@ -1806,8 +1806,8 @@ yet — tracked as a follow-up.
 
 **Which requirements files are read** (spec 1613, #1610):
 - `requirements*.txt`.
-- `<scope>-requirements*.txt`, for scope `dev`, `test`, `docs` or `ci` (for
-  example `dev-requirements.txt`).
+- `<word>-requirements*.txt`, for any word the name rule below knows (for
+  example `dev-requirements.txt`, `doc-requirements.txt`).
 - Any `*requirements*.txt` inside a CI or docs dot-directory (below).
 
 Another name, such as `tox-requirements.txt` at a project root, is not read:
@@ -1816,9 +1816,20 @@ nothing would give it a scope, and it would read as a runtime dependency.
 **Scope of a requirements file** (C155 `waybill:python-req-file-scope`; the
 packages are `Optional`). The first of these that applies:
 1. The file's own directory: `docs`, `test`/`tests`, or `ci`/`.ci`.
-2. The file's name: `requirements-<scope>…` or `<scope>-requirements…`.
-3. The nearest CI or docs dot-directory above the file: `ci`, or `docs` for
-   `.sphinx`.
+2. The file's name: `requirements-<word>…` or `<word>-requirements…`, as a
+   whole word (`requirements-docker.txt` is not `doc`). The words, by scope
+   (spec 1615, #1614):
+   - `dev`: `dev`, `development`;
+   - `test`: `test`, `tests`, `testing`;
+   - `docs`: `doc`, `docs`, `documentation`;
+   - `ci`: `ci`.
+3. The nearest directory above the file, below the scan root, that is a CI or
+   docs dot-directory (`ci`, or `docs` for `.sphinx`), or is named `docs`,
+   `doc` or `documentation` (`docs`) or `test` or `tests` (`test`). So
+   `proj/docs/sphinx/requirements.txt` is `docs`, and everything under a
+   `tests/` directory, a vendored project included, is `test` (spec 1615).
+   Other directory names, such as `examples`, `benchmarks`, `tools` or
+   `test_data`, give no scope: what is in them runs, or is data.
 
 A package also declared in an unscoped file keeps the runtime scope and
 carries no C155.
