@@ -113,7 +113,7 @@ pub(crate) fn read_links(scan_root: &Path, files: &[PathBuf]) -> Vec<LinkDeclara
     ctx.out
 }
 
-fn canon(p: &Path) -> PathBuf {
+pub(super) fn canon(p: &Path) -> PathBuf {
     std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
 }
 
@@ -139,7 +139,7 @@ fn included_files(file: &Path, source_dir: &Path, root: &Path) -> Vec<PathBuf> {
 
 /// Substitute the source-directory variables CMake defines for a file.
 /// `None` when anything else remains to expand.
-fn substitute(raw: &str, source_dir: &Path, list_dir: &Path, root: &Path) -> Option<PathBuf> {
+pub(super) fn substitute(raw: &str, source_dir: &Path, list_dir: &Path, root: &Path) -> Option<PathBuf> {
     let (src, list, top) = (source_dir.to_string_lossy(), list_dir.to_string_lossy(), root.to_string_lossy());
     let v = raw
         .replace("${CMAKE_CURRENT_SOURCE_DIR}", &src)
@@ -156,7 +156,7 @@ fn substitute(raw: &str, source_dir: &Path, list_dir: &Path, root: &Path) -> Opt
 
 /// An `include()` argument naming an existing file inside the scan root.
 /// A bare module name (`include(FetchContent)`) is not a path.
-fn resolve_include(arg: &str, source_dir: &Path, list_dir: &Path, root: &Path) -> Option<PathBuf> {
+pub(super) fn resolve_include(arg: &str, source_dir: &Path, list_dir: &Path, root: &Path) -> Option<PathBuf> {
     if !arg.contains(['/', '\\', '.']) {
         return None;
     }

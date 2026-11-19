@@ -54,6 +54,7 @@ use super::PackageDbEntry;
 pub(crate) mod blocks;
 pub(crate) mod fallback;
 pub(crate) mod fetches;
+pub(crate) mod reach;
 pub(crate) mod searches;
 pub(crate) mod wrappers;
 pub mod links;
@@ -206,6 +207,7 @@ pub(crate) fn read_with_downloads(
     // under the same blocks. Without it (the binary tier's `read`), both stay
     // on the narrow set and package searches on the regexes.
     let tree_wide = walked.is_some();
+    let mut search_scopes = std::collections::BTreeMap::new();
     let mut fetch_files = walked.unwrap_or_else(|| cmake_files.clone());
     fetch_files.sort();
     fetch_files.dedup();
@@ -262,6 +264,7 @@ pub(crate) fn read_with_downloads(
         fetches.finds.unresolved = decls.unresolved_searches;
         fetches.finds.components =
             decls.searches.iter().map(|s| s.name.to_lowercase()).collect::<BTreeSet<_>>().len();
+        search_scopes = searches::scopes(&decls.searches);
         for s in decls.searches {
             match s.kind {
                 searches::SearchKind::FindPackage => find_package_hits.push(FindPackageHit {
@@ -278,8 +281,12 @@ pub(crate) fn read_with_downloads(
             }
         }
     }
-    entries.extend(emit_find_package_entries(find_package_hits));
-    entries.extend(emit_pkg_check_module_entries(pkg_check_hits));
+    let mut search_entries = emit_find_package_entries(find_package_hits);
+    search_entries.extend(emit_pkg_check_module_entries(pkg_check_hits));
+    let (conditional, test) = searches::mark(&mut search_entries, &search_scopes);
+    fetches.finds.conditional = conditional;
+    fetches.finds.test = test;
+    entries.extend(search_entries);
     let (datasets, coverage) = super::cmake_download::datasets(&downloads);
     if coverage.read > 0 {
         tracing::info!(

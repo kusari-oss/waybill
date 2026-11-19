@@ -233,3 +233,131 @@ fn w16_a_search_in_a_submodule_attaches_to_the_submodule() {
         .collect();
     assert!(!root_deps.contains(&target.to_string()), "no root anchor: {root_deps:?}");
 }
+
+// ---------------------------------------------------------------------
+// User story 2: a conditional search is not a runtime requirement (T011)
+// ---------------------------------------------------------------------
+
+const C236: &str = "waybill:cmake-find-conditions";
+const C232: &str = "waybill:cmake-fetch-conditions";
+
+fn conds(c: &Value, row: &str) -> Vec<String> {
+    prop(c, row).map(|v| serde_json::from_str(v).unwrap()).unwrap_or_default()
+}
+
+/// Optional with C122 `cmake-conditional`.
+fn assert_optional(c: &Value) {
+    assert_eq!(scope(c), "excluded", "{c}");
+    assert_eq!(prop(c, "waybill:lifecycle-scope"), Some("optional"), "{c}");
+    assert_eq!(prop(c, "waybill:optional-derivation"), Some("cmake-conditional"), "{c}");
+}
+
+/// W-5: a search inside `if()` in a nested file.
+#[test]
+fn w05_in_file_condition() {
+    let t = tree();
+    write(t.path(), "projects/a/CMakeLists.txt", "if(WAYBILL_OPT)\n  find_package(waybill_fixture_opt)\nendif()\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_opt");
+    assert_optional(c);
+    assert_eq!(conds(c, C236), vec!["WAYBILL_OPT"]);
+}
+
+/// W-6: a fetch in a `*.cmake` file included only under `if()`. Required on
+/// `main`, which reads each file on its own.
+#[test]
+fn w06_fetch_in_conditionally_included_file() {
+    let t = tree();
+    write(t.path(), "CMakeLists.txt", "project(waybill_fixture_root)\nif(WIN_SDK)\n  include(cmake/win.cmake)\nendif()\n");
+    write(
+        t.path(),
+        "cmake/win.cmake",
+        "include(FetchContent)\nFetchContent_Declare(waybill_fixture_win GIT_REPOSITORY https://github.com/waybill-fixture/win.git GIT_TAG v1.0.0)\n",
+    );
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:github/waybill-fixture/win@v1.0.0");
+    assert_eq!(scope(c), "excluded", "{c}");
+    assert!(conds(c, C232).contains(&"WIN_SDK".to_string()), "{c}");
+}
+
+/// W-7: `BUILD_TESTING` reaching a directory through `add_subdirectory()`
+/// makes its searches test-scoped. The directory is not named like a test
+/// directory, so only the chain can say so.
+#[test]
+fn w07_build_testing_through_add_subdirectory() {
+    let t = tree();
+    write(t.path(), "CMakeLists.txt", "project(waybill_fixture_root)\nif(BUILD_TESTING)\n  add_subdirectory(checks)\nendif()\n");
+    write(t.path(), "checks/CMakeLists.txt", "find_package(waybill_fixture_t)\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_t");
+    assert_eq!(scope(c), "excluded", "{c}");
+    assert_eq!(prop(c, "waybill:lifecycle-scope-derivation"), Some("cmake-build-testing"), "{c}");
+    assert!(conds(c, C236).contains(&"BUILD_TESTING".to_string()), "{c}");
+}
+
+/// W-8: conditions accumulate along an `add_subdirectory()` then
+/// `include()` chain, and the file's own block comes last.
+#[test]
+fn w08_conditions_union_along_a_chain() {
+    let t = tree();
+    write(t.path(), "CMakeLists.txt", "project(waybill_fixture_root)\nif(A)\n  add_subdirectory(x)\nendif()\n");
+    write(t.path(), "x/CMakeLists.txt", "include(y.cmake)\n");
+    write(t.path(), "x/y.cmake", "if(B)\n  find_package(waybill_fixture_ab)\nendif()\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_ab");
+    assert_optional(c);
+    assert_eq!(conds(c, C236), vec!["A", "B"]);
+}
+
+/// W-9: one unconditional search makes the package a runtime requirement.
+#[test]
+fn w09_one_unconditional_declaration_wins() {
+    let t = tree();
+    write(t.path(), "projects/a/CMakeLists.txt", "if(A)\n  find_package(waybill_fixture_both)\nendif()\n");
+    write(t.path(), "projects/b/CMakeLists.txt", "find_package(waybill_fixture_both)\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_both");
+    assert_eq!(scope(c), "required", "{c}");
+    assert!(prop(c, C236).is_none(), "{c}");
+}
+
+/// W-10: a file reached both under a condition and without one is
+/// unconditional.
+#[test]
+fn w10_a_file_reached_both_ways_is_unconditional() {
+    let t = tree();
+    write(
+        t.path(),
+        "CMakeLists.txt",
+        "project(waybill_fixture_root)\nif(A)\n  include(cmake/shared.cmake)\nendif()\ninclude(cmake/shared.cmake)\n",
+    );
+    write(t.path(), "cmake/shared.cmake", "find_package(waybill_fixture_shared)\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_shared");
+    assert_eq!(scope(c), "required", "{c}");
+}
+
+/// W-12: an include cycle terminates, and its files stay unconditional.
+#[test]
+fn w12_include_cycle_terminates() {
+    let t = tree();
+    write(t.path(), "CMakeLists.txt", "project(waybill_fixture_root)\ninclude(cmake/a.cmake)\n");
+    write(t.path(), "cmake/a.cmake", "include(${CMAKE_CURRENT_LIST_DIR}/b.cmake)\nfind_package(waybill_fixture_cyc_a)\n");
+    write(t.path(), "cmake/b.cmake", "include(${CMAKE_CURRENT_LIST_DIR}/a.cmake)\nfind_package(waybill_fixture_cyc_b)\n");
+    let d = scan(t.path());
+    for p in ["pkg:generic/waybill_fixture_cyc_a", "pkg:generic/waybill_fixture_cyc_b"] {
+        assert_eq!(scope(by_purl(&d, p)), "required");
+    }
+}
+
+/// W-17: a search in a `function()` body is treated as spec 1538 treats a
+/// fetch in one: conditional, the body named among its conditions.
+#[test]
+fn w17_search_in_a_function_body() {
+    let t = tree();
+    write(t.path(), "projects/a/CMakeLists.txt", "function(waybill_deps)\n  find_package(waybill_fixture_body)\nendfunction()\n");
+    let d = scan(t.path());
+    let c = by_purl(&d, "pkg:generic/waybill_fixture_body");
+    assert_optional(c);
+    assert_eq!(conds(c, C236), vec!["function: waybill_deps"]);
+}

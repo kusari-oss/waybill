@@ -71,23 +71,23 @@
 
 **Independent test**: W-5 to W-10 and W-12.
 
-- [ ] T011 [P] [US2] Write W-5 (in-file `if()`), W-6 (a fetch in a conditionally included `*.cmake`; C232 gains `WIN_SDK`; required on `main`), W-7 (`BUILD_TESTING` through `add_subdirectory()`: Test, C62 `cmake-build-testing`), W-8 (conditions union along a chain), W-9 (one unconditional declaration wins), W-10 (a file reached both ways is unconditional) W-12 (an include cycle terminates) and W-17 (a search in a `function()` body: Optional, `function: <name>` in C236) in `waybill-cli/tests/scan_cmake_tree_finds.rs`. All fail on `main` except W-12's termination, which must also hold.
-- [ ] T012 [US2] Create `waybill-cli/src/scan_fs/package_db/cmake/reach.rs` (R1):
+- [X] T011 [P] [US2] Write W-5 (in-file `if()`), W-6 (a fetch in a conditionally included `*.cmake`; C232 gains `WIN_SDK`; required on `main`), W-7 (`BUILD_TESTING` through `add_subdirectory()`: Test, C62 `cmake-build-testing`), W-8 (conditions union along a chain), W-9 (one unconditional declaration wins), W-10 (a file reached both ways is unconditional) W-12 (an include cycle terminates) and W-17 (a search in a `function()` body: Optional, `function: <name>` in C236) in `waybill-cli/tests/scan_cmake_tree_finds.rs`. All fail on `main` except W-12's termination, which must also hold.
+- [X] T012 [US2] Create `waybill-cli/src/scan_fs/package_db/cmake/reach.rs` (R1):
   - **`enum Reach { Unconditional, Conditional(BTreeSet<String>) }`**.
   - **`fn compute(scan_root, walked) -> (BTreeMap<PathBuf, Reach>, extra_files: Vec<PathBuf>)`**, built from `include()` (resolved with `links.rs::resolve_include` / `substitute`, made `pub(super)`, with source-directory inheritance) and `add_subdirectory()` (to `<dir>/CMakeLists.txt`). It is memoised, with a cycle guard.
   - **Unit tests:** an unconditional edge wins; a union; a cycle; an unresolved path contributes nothing; a chain of 3; an included file resolving relative paths against the includer's source directory.
   - `extra_files` stays empty until T026.
-- [ ] T013 [US2] In `read_fetches`, compute `reach` once and seed each file's `BlockStack` with its `Reach` conditions for both fetches and searches.
+- [X] T013 [US2] In `read_fetches`, compute `reach` once and seed each file's `BlockStack` with its `Reach` conditions for both fetches and searches.
   - `blocks.if_conditions()` and `blocks.conditions()` must include the seed, so that `fallback::classify` and `fallback::build_testing` see it.
   - Add `BlockStack::seeded(conditions)` in `cmake/blocks.rs`, with a unit test.
-- [ ] T014 [US2] Scope the package-search components (R4) in `cmake.rs`, on the rule of `fetches.rs::mark` and `one_per_purl`:
+- [X] T014 [US2] Scope the package-search components (R4) in `cmake.rs`, on the rule of `fetches.rs::mark` and `one_per_purl`:
   - Test, from a test directory or a `BUILD_TESTING` condition, with C62;
   - otherwise Optional, with C122 `cmake-conditional`;
   - the strongest scope across a name's declarations;
   - C236 holds the sorted union of conditions on a non-runtime component.
 
   Fill C237 `conditional` and `test`.
-- [ ] T015 [US2] Run T011's tests, T007's and W-ctl, all green.
+- [X] T015 [US2] Run T011's tests, T007's and W-ctl, all green.
 
 ## Phase 5: User Story 3 — a search for something the tree provides is not a second component (P1)
 

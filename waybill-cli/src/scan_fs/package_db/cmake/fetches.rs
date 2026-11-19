@@ -154,6 +154,9 @@ pub(crate) fn read_declarations(
     files: &[PathBuf],
 ) -> (Vec<PackageDbEntry>, FetchCoverage, Declarations) {
     let mut found = super::searches::FileSearches::default();
+    // Spec 1614 (#1605): the conditions under which each file is reached
+    // through include() / add_subdirectory() enclose all its declarations.
+    let reach = super::reach::compute(scan_root, files);
     let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
     let mut cov = FetchCoverage::default();
     // Pre-pass: every file's commands, the mode each directory sets, and
@@ -214,7 +217,7 @@ pub(crate) fn read_declarations(
         let in_test_dir = rel.parent().is_some_and(|d| {
             d.components().any(|c| matches!(c, Component::Normal(s) if TEST_DIRS.iter().any(|t| s == *t)))
         });
-        let mut blocks = super::blocks::BlockStack::default();
+        let mut blocks = super::blocks::BlockStack::seeded(reach.seed(path));
         let mut ordinal = 0usize;
         let mut open: Vec<usize> = Vec::new();
         for (name, args) in cmds {

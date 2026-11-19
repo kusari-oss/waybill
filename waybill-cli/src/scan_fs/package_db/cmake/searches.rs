@@ -17,12 +17,21 @@
 //!   result prefix; every other argument that is not a modifier keyword is a
 //!   module, stripped of a `>=`/`<=`/`>`/`<`/`=` version suffix.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;
 
 use regex::Regex;
+use waybill_common::resolution::LifecycleScope;
 
+use super::super::PackageDbEntry;
 use super::blocks::BlockStack;
+
+/// C236 `waybill:cmake-find-conditions`.
+pub(crate) const ANN_CMAKE_FIND_CONDITIONS: &str = "waybill:cmake-find-conditions";
+const ANN_OPTIONAL_DERIVATION: &str = "waybill:optional-derivation";
+const ANN_SCOPE_DERIVATION: &str = "waybill:lifecycle-scope-derivation";
+/// C122 for a package search made only under conditions.
+const DERIVATION_CMAKE_CONDITIONAL: &str = "cmake-conditional";
 
 /// C237 `waybill:cmake-find-coverage`.
 pub(crate) const ANN_CMAKE_FIND_COVERAGE: &str = "waybill:cmake-find-coverage";
@@ -230,6 +239,85 @@ pub(crate) fn collect(
         if_conditions: if_conditions.clone(),
         in_test_dir,
     }));
+}
+
+/// One package's scope across all its searches (research R4), by the rule
+/// `fetches.rs::one_per_purl` applies to fetches: required if any search
+/// is unconditional and outside a test context; otherwise Optional only if
+/// every search is conditional and outside one; otherwise Test.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct NameScope {
+    pub(crate) scope: Option<LifecycleScope>,
+    /// C62 for Test: `source-test-directory` when any test-context search
+    /// is in a test directory, else `cmake-build-testing`.
+    pub(crate) test_derivation: Option<&'static str>,
+    /// The sorted union of every search's conditions; C236 when
+    /// non-runtime and non-empty.
+    pub(crate) conditions: BTreeSet<String>,
+}
+
+/// [`NameScope`] for every package name (lowercased) the searches name.
+pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> {
+    #[derive(Default)]
+    struct Acc {
+        runtime: bool,
+        optional: bool,
+        test_dir: bool,
+        test_cond: bool,
+        conditions: BTreeSet<String>,
+    }
+    let mut acc: BTreeMap<String, Acc> = BTreeMap::new();
+    for s in searches {
+        let a = acc.entry(s.name.to_lowercase()).or_default();
+        a.conditions.extend(s.conditions.iter().cloned());
+        if s.in_test_dir {
+            a.test_dir = true;
+        } else if super::fallback::build_testing(&s.if_conditions) {
+            a.test_cond = true;
+        } else if s.conditions.is_empty() {
+            a.runtime = true;
+        } else {
+            a.optional = true;
+        }
+    }
+    acc.into_iter()
+        .map(|(name, a)| {
+            let (scope, test_derivation) = if a.runtime {
+                (None, None)
+            } else if a.optional && !a.test_dir && !a.test_cond {
+                (Some(LifecycleScope::Optional), None)
+            } else if a.test_dir {
+                (Some(LifecycleScope::Test), Some("source-test-directory"))
+            } else {
+                (Some(LifecycleScope::Test), Some("cmake-build-testing"))
+            };
+            (name, NameScope { scope, test_derivation, conditions: a.conditions })
+        })
+        .collect()
+}
+
+/// Mark each package-search entry with its name's scope (`entry.name` is
+/// the lowercased name). Returns the (Optional, Test) component counts.
+pub(crate) fn mark(entries: &mut [PackageDbEntry], scopes: &BTreeMap<String, NameScope>) -> (usize, usize) {
+    for e in entries.iter_mut() {
+        let Some(s) = scopes.get(&e.name) else { continue };
+        let Some(scope) = s.scope else { continue };
+        e.lifecycle_scope = Some(scope);
+        match s.test_derivation {
+            Some(d) => {
+                e.extra_annotations.insert(ANN_SCOPE_DERIVATION.to_string(), serde_json::json!(d));
+            }
+            None => {
+                e.extra_annotations
+                    .insert(ANN_OPTIONAL_DERIVATION.to_string(), serde_json::json!(DERIVATION_CMAKE_CONDITIONAL));
+            }
+        }
+        if !s.conditions.is_empty() {
+            e.extra_annotations.insert(ANN_CMAKE_FIND_CONDITIONS.to_string(), serde_json::json!(s.conditions));
+        }
+    }
+    let count = |want: LifecycleScope| scopes.values().filter(|s| s.scope == Some(want)).count();
+    (count(LifecycleScope::Optional), count(LifecycleScope::Test))
 }
 
 /// The package searches in one file read on its own: no fetches, no

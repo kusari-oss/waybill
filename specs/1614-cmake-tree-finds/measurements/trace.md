@@ -50,3 +50,16 @@ C237 follows the same route.
 After T007–T009, W-ctl is still identical to `main`'s golden once C237 is removed. Research R8 moves root-level package searches from the graph-top fallback to declared root anchors; the root's edges to them and their SPDX relationships came out unchanged, so T010's provenance check found no drift.
 
 One unit test asserted spec 1538's rule that only fetches attach: `cmake_fetch_attach::tests::only_fetch_components_are_attached`. It is rewritten for R8 as `fetches_and_package_searches_are_attached_and_nothing_else`: a package search attaches, and a `cmake-package-version` record still does not.
+
+## T012: a defect in the first reach algorithm
+
+The first `reach.rs` computed reach as a memoised depth-first fold. The unit test `a_cycle_terminates_and_an_unresolved_path_contributes_nothing` failed: `a.cmake`, included only under `if(A)`, came out unconditional. A back edge (`b.cmake` → `a.cmake` while `a` was still being computed) returned "unconditional" and absorbed the whole cycle. `b`'s reach had also been memoised from `a`'s partial state.
+
+**Replaced by a fixed point:**
+- files nothing reaches start unconditional;
+- every other file takes the union over edges from sources whose reach is known;
+- "unconditional" absorbs;
+- the iteration is capped at one pass per file plus one;
+- a file still unknown afterwards is reached only by a cycle with no way in, and counts as unconditional.
+
+All four reach unit tests pass. Contract W-12 (a cycle reached from an unconditional root) stays required.
