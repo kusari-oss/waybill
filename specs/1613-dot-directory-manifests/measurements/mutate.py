@@ -50,8 +50,8 @@ MUTATIONS = {
         "        let name = if component.purl.ecosystem() == \"pypi\" {",
         "        let name = if true {"),
     "M15-scoped-file-covers-runtime": (P + "pip/mod.rs",
-        "            } else if covered_only_by_scoped_requirements(&entries, &entry) {",
-        "            } else if false && covered_only_by_scoped_requirements(&entries, &entry) {"),
+        "                || covered_only_by_scoped_requirements(&entries, &entry)",
+        "                || false && covered_only_by_scoped_requirements(&entries, &entry)"),
 }
 
 name = sys.argv[1]

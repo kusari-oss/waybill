@@ -364,9 +364,9 @@ pub(crate) fn finalize(
     for project_root in &project_roots {
         let manifest_entries = pyproject_declared_deps(project_root);
         for entry in manifest_entries {
-            if covered_names.insert(entry.name.clone()) {
-                entries.push(entry);
-            } else if covered_only_by_scoped_requirements(&entries, &entry) {
+            if covered_names.insert(entry.name.clone())
+                || covered_only_by_scoped_requirements(&entries, &entry)
+            {
                 entries.push(entry);
             }
         }
