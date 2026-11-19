@@ -80,6 +80,7 @@ Neither changes here.
   - **cmake-nlohmann-json:** `docs/mkdocs/requirements.txt`.
   - pytorch, flask and pants-backend-ai: none.
 - **TheRock:** the 14 files; plus `requirements-development.txt` (3 packages, dev).
+- **TheRock, files labelled today:** this one is measured, by reading the labels in run 44477517009's document. None of the 20 files with a C155 label today changes label. Each is labelled by its parent, its name, or a dot-directory nearer than any `docs`/`test` ancestor. The one with both kinds above it, `base/rocm-cmake/test/docsphinx/docs/.sphinx/requirements.txt`, keeps `docs` from `.sphinx`. FR-003's amendment of spec 1613 (`.github/docs/x`) has no instance on TheRock.
 
 ## R8. Scan time
 

@@ -69,7 +69,7 @@
 
 **Independent Test**: W-3 passes.
 
-- [ ] T012 [US3] Integration case W-3 in `IT` (`proj/tests/corpus/dbt/requirements-x.txt`, `proj/test/integration/requirements.txt`). It passes on T006 alone. Then confirm it fails with T006's `test`/`tests` arm removed, as a positive control.
+- [ ] T012 [US3] Integration case W-3 in `IT` (`proj/tests/corpus/dbt/requirements-x.txt`, `proj/test/integration/requirements.txt`). It passes on T006 alone. Its negative control is mutation M5 (T016).
 
 ## Phase 6: Polish & cross-cutting
 
@@ -89,10 +89,11 @@
   - (M8) include the scan root's own name;
   - (M9) match directory names by prefix;
   - (M10) `is_requirements_file` keeps the old word list;
-  - (M11) remove `ci_scope`'s C155 removal (FR-007's mechanism).
+  - (M11) remove `ci_scope`'s C155 removal (the no-C155 half of W-10);
+  - (M12) make `merge_lifecycle_scope` prefer the non-runtime scope (the required half of W-10, FR-007).
 
   Each must turn at least one test red, with 0 compile errors.
-- [ ] T017 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, the ok and non-ok line counts, the passed/failed totals and the failure blocks in `specs/1615-nested-req-scope/measurements/gate-log.md`. Regenerate any golden that changes, and trace each change.
+- [ ] T017 Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, a `git diff --stat main -- '*Cargo.toml' Cargo.lock` showing no change (FR-011), the ok and non-ok line counts, the passed/failed totals and the failure blocks in `specs/1615-nested-req-scope/measurements/gate-log.md`. Regenerate any golden that changes, and trace each change.
 - [ ] T018 Push. Dispatch two TheRock measure-source runs against `main` with full SHAs (`quickstart.md`). Record in `specs/1615-nested-req-scope/measurements/therock.md`:
   - scan time (SC-007);
   - the pip components that changed scope or C155, against the 14 files and the predicted 98 (SC-001) and 11 (SC-002);

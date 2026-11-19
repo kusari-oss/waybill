@@ -19,6 +19,6 @@ Packages are `waybill-fixture-*`. Paths are relative to the scan root.
 | W-11 | W-1 to W-5 together | no component is unreachable without an orphan reason (R5) |
 | W-12 | the scan root itself named `tests`, holding `proj/x/requirements.txt` | runtime: the root's name labels nothing (FR-004) |
 | W-13 | `tests/vendored/proj/requirements.txt` (a whole project under `tests/`) | `test` (FR-004, clarified) |
-| W-14 | `proj/examples/a/requirements.txt`, `proj/benchmarks/b/`, `proj/tools/c/`, `proj/test_data/d/`, `proj/documents/e/`, `proj/testing_utils/f/` | all runtime (FR-005, partial names) |
+| W-14 | `proj/examples/a/requirements.txt`, `proj/benchmarks/b/`, `proj/tools/c/`, `proj/test_data/d/`, `proj/documents/e/`, `proj/testing_utils/f/`, `proj/doctor/g/` | all runtime (FR-005, partial names) |
 | W-ctl | a tree with `requirements.txt`, `requirements-dev.txt`, `docs/requirements.txt` and `.github/requirements.txt` only | byte-identical to a golden of `main`'s output (FR-009) |
 | W-rep | W-1 to W-14, scanned 20 times | identical each time |

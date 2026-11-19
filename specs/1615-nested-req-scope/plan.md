@@ -35,7 +35,7 @@ The pip requirements classifier labels a file by its parent directory, its name,
   - FR-004's root bound;
   - FR-005's exact names;
   - R2's reading of new names;
-  - FR-007 relies on the existing merge, so its mutation removes spec 1613 R8's label removal.
+  - FR-007 relies on existing code: one mutation removes spec 1613 R8's label removal, one makes the deduplicator's scope merge prefer the non-runtime scope.
 - **CI:**
   - TheRock measure-source, two interleaved runs against `main`, with a document diff, `parity-check` and a repeat comparison across runners;
   - the public corpus at the branch with `repeat=2`;

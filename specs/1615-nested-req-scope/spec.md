@@ -123,20 +123,21 @@ A project keeps requirements for a test corpus or harness at `tests/<suite>/requ
 ### Functional Requirements
 
 - **FR-001**: The name rule MUST recognise `doc` as the docs scope word: `requirements-doc*.txt` and `doc-requirements*.txt` are docs. The word boundary is the existing one, so `requirements-docker.txt` is unaffected.
-- **FR-002**: When neither the parent directory nor the name labels a file, the nearest ancestor directory strictly below the scan root, and above the file's parent, that is named `docs`, `doc` or `documentation` MUST label it docs, and one named `test` or `tests` MUST label it test.
-- **FR-003**: FR-002's directories and spec 1613's listed dot-directories MUST be one ancestor search: the nearest match of either kind labels the file.
+- **FR-002**: When neither the parent directory nor the name labels a file, the nearest ancestor directory strictly below the scan root that is named `docs`, `doc` or `documentation` MUST label it docs, and one named `test` or `tests` MUST label it test.
+- **FR-003**: FR-002's directories and spec 1613's listed dot-directories MUST be one ancestor search: the nearest match of either kind labels the file. The parent directory counts in this search, as it does for dot-directories today; a `docs` or `test` parent is decided earlier by the parent rule, with the same result. This amends spec 1613's FR-004, under which a file anywhere under a listed CI directory is `ci`: `.github/docs/x/requirements.txt` is now `docs`. Both labels are non-runtime. On TheRock no file has this shape (research R7).
 - **FR-004**: The ancestor search MUST run to the scan root, excluding the scan root itself, as spec 1613's does. A project vendored under a `tests/` or `docs/` directory is labelled by that directory: none of it ships.
 - **FR-005**: Directory names other than FR-002's MUST NOT label a file. That covers `examples`, `example`, `benchmarks`, `benchmark`, `samples`, `tools`, `scripts`, `test_data` and `website`. They hold code that runs, or data, and no convention marks their requirements as non-runtime.
 - **FR-006**: The name rule MUST also recognise the long forms of its scope words: `development` (dev), `documentation` (docs), and `testing` and `tests` (test), with the existing word boundary. (`tests` added at planning, research R1: `requirements-tests.txt` fails the boundary today as `requirements-doc.txt` does.) On TheRock this labels `rocprofiler-compute/requirements-development.txt` (3 packages) dev.
-- **FR-007**: A package declared both in a file FR-001 to FR-003 label and in a file that reads as runtime MUST stay required, by spec 1613's existing merge rule.
+- **FR-007**: A package declared both in a newly labelled file and in a file that reads as runtime MUST stay required, by spec 1613's existing merge rule.
 - **FR-008**: A labelled package MUST carry the native non-runtime scope in each format (CycloneDX `scope`, SPDX 2.3 relationship type, SPDX 3 `LifecycleScopeType`) and C155 with its scope word, exactly as a file labelled by its parent does today. No new catalog row.
-- **FR-009**: A tree with no requirements file that FR-001 to FR-003 and FR-006 newly label MUST produce output byte-identical to `main`.
+- **FR-009**: A tree with no newly labelled requirements file MUST produce output byte-identical to `main`.
 - **FR-010**: Only pip requirements files change. Components from other ecosystems declared only under docs or test directories stay as they are (TheRock: 15 Cargo crates in one test crate). A follow-up issue records them.
 - **FR-011**: No new Cargo dependencies.
 
 ### Key Entities
 
 - **Requirements file scope (C155)**: one of `dev`, `test`, `docs`, `ci`, or absent for runtime. This feature changes which files receive a value; the value set and the row are unchanged.
+- **Newly labelled file**: a requirements file that reads as runtime on `main` and that FR-001 to FR-003 or FR-006 label; or a `<word>-requirements*.txt` name that is read only because FR-006's words now label it (research R2).
 - **Labelling signal**: parent directory, name, or nearest ancestor (a listed dot-directory, or after this feature a docs or test directory). The first three are evaluated in that order.
 
 ## Success Criteria *(mandatory)*
@@ -144,11 +145,11 @@ A project keeps requirements for a test corpus or harness at `tests/<suite>/requ
 ### Measurable Outcomes
 
 - **SC-001**: On TheRock's source tree, every package declared only in the 14 files is non-runtime with C155 `docs` or `test`. Predicted 98, from the document of run 44477517009. The count is a prediction until the CI run measures it.
-- **SC-002**: On TheRock, no package also declared in a runtime file outside the 14 changes scope (11 predicted), and no file outside FR-001 to FR-003's shapes changes label.
+- **SC-002**: On TheRock, no package also declared in a runtime file outside the 14 changes scope (11 predicted), and no requirements file other than a newly labelled one changes label. Every file labelled today keeps its label: checked against all 20 labelled files in run 44477517009's document (research R7).
 - **SC-003**: The three formats agree on C42, C62 and C155 (`waybill sbom parity-check` shows no gap that `main` does not), and there are no duplicate `bom-ref`s.
 - **SC-004**: Two scans at one commit on two runners give identical documents, timestamps and serials aside.
-- **SC-005**: The public corpus invariant gate stays green. Every golden change is traced to a file FR-001 to FR-003 label.
-- **SC-006**: The quality corpus is compared with a `main` control. Every changed target is traced package by package (python-flask, the pants Python examples and pytorch are the likely movers).
+- **SC-005**: The public corpus invariant gate stays green. Every golden change is traced to a newly labelled file.
+- **SC-006**: The quality corpus is compared with a `main` control. Every changed target is traced package by package. Predicted movers, from files on disk in the corpus cache (research R7): python-ansible (`test/units/`), cpp-mongo (wiredtiger's vendored `test/3rdparty/testtools-2.7.1/`) and cmake-nlohmann-json (`docs/mkdocs/`). Python-flask, pytorch and pants-backend-ai are predicted unchanged.
 - **SC-007**: TheRock's source scan time stays within 1.05× `main`'s median, measured with the interleaved measure-source workflow.
 - **SC-008**: Every rule (FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007) has a mutation that a test catches.
 
