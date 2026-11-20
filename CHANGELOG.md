@@ -80,6 +80,13 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A CMake package searched from tests and under a product condition is
+  Optional, not Test (#1624).** Spec 1614's rule gave every search of a name
+  one scope, and made it Test as soon as any search was in a test context,
+  even when another was a conditional product search. It now follows spec
+  1269's order across call sites, runtime > Optional > Test. The same
+  applies to an installed-library record that takes its searches' scope.
+
 - **A module embedded in several binaries of one Nix store output cites the
   same binary on every run (#1637).** The closure tier read an output's
   binaries in directory-listing order, which differs between machines, and

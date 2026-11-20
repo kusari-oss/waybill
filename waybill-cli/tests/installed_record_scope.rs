@@ -271,8 +271,9 @@ fn i05_bare_record_searched_only_from_tests_is_test() {
 }
 
 /// I-7: a bare record searched once from tests and once under `if(WITH_X)`.
-/// Spec 1614's name rule scopes both searches Test, so the record is Test,
-/// keeping C236 (research R4, corrected at T012).
+/// Since #1624 the name rule follows spec 1269's order, runtime > Optional >
+/// Test: the conditional product search makes the record Optional, with
+/// C122 `cmake-conditional`, keeping C236.
 #[test]
 fn i07_mixed_test_and_conditional_searches_follow_the_name_rule() {
     let t = tree();
@@ -281,9 +282,9 @@ fn i07_mixed_test_and_conditional_searches_follow_the_name_rule() {
     write(t.path(), "sdk/share/waybill_fixture_consumer/consumer-config.cmake", "if(WITH_X)\n  find_package(waybill_fixture_bare)\nendif()\n");
     let d = scan(t.path());
     let c = by_purl(&d, "pkg:generic/waybill_fixture_bare@2.0.0");
-    assert_eq!(prop(c, "waybill:lifecycle-scope"), Some("test"), "{c}");
-    assert_eq!(prop(c, C62), Some("source-test-directory"), "{c}");
-    assert_eq!(prop(c, C122), None, "{c}");
+    assert_eq!(scope(c), "excluded", "{c}");
+    assert_eq!(prop(c, C62), None, "{c}");
+    assert_eq!(prop(c, C122), Some("cmake-conditional"), "{c}");
     assert_eq!(conds(c, C236), Some(vec!["WITH_X".to_string()]));
 }
 
