@@ -376,9 +376,8 @@ pub(crate) fn record_scopes(
         let all_test = ps.iter().all(|p| p.test_derivation.is_some());
         // Spec 1618 (research R4): a project the tree builds is, like a
         // shipped library, never made Optional by a consumer's conditions.
-        if ps.iter().any(|p| p.project) && !all_test {
-            out.conditions_only.insert(purl.to_string(), conds);
-        } else if components.iter().any(|c| c.purl.as_str() == purl && ships_library_file(c)) {
+        let built_in_tree = ps.iter().any(|p| p.project) && !all_test;
+        if built_in_tree || components.iter().any(|c| c.purl.as_str() == purl && ships_library_file(c)) {
             out.conditions_only.insert(purl.to_string(), conds);
         } else if ps.iter().all(|p| p.test_derivation.is_some()) {
             let derivation = if ps.iter().any(|p| p.test_derivation.as_deref() == Some(DERIVATION_SOURCE_TEST_DIRECTORY)) {

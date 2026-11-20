@@ -275,7 +275,7 @@ fn c14_owners() {
     };
     let superbuild = "pkg:generic/waybill_fixture_superbuild";
     assert!(on(superbuild).contains(&tool), "the plain directory's fetch is the superbuild project's");
-    assert!(on(root).contains(&superbuild.to_string()), "the root depends on the superbuild project");
+    assert!(on(root).contains(superbuild), "the root depends on the superbuild project");
     assert!(!on(root).contains(&inx), "the submodule's fetch is not the root's");
     let owner = deps
         .iter()
