@@ -19,3 +19,5 @@ Harness: `mutate.py` and `mutate-run.sh` in this directory. Each mutation is res
 |`M13-cmake-root-not-held-back ` | 1 | 0 | yes | p13_a_cmake_only_tree_has_its_top_project_as_root p20_include_vendored_folds_into_the_project  |
 
 All 13 are caught. None compile with an error, and every mutated file is restored. M8 is caught only because of P-20, added after the first plan showed no case exercised `--include-vendored`.
+
+M9 was re-run after the clippy fix merged the project rule into the shipped-library condition (`let built_in_tree = …`), against its new anchor: failed binaries 1, compile errors 0, restored yes, red `p02_a_conditional_search_records_conditions_only`.
