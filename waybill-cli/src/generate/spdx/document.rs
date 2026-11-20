@@ -429,6 +429,7 @@ pub fn build_document(
         &artifacts.root_override,
     );
     let dropped_main_module_purls: Vec<String> = drop_result.retained_main_module_purls;
+    let subject_alias: Option<String> = drop_result.subject_alias;
     let filtered_components_owned: Option<Vec<waybill_common::resolution::ResolvedComponent>> =
         if override_active {
             tracing::info!(
@@ -508,8 +509,9 @@ pub fn build_document(
             let (id, root) = synthesize_root_with_override(
                 artifacts.target_name,
                 &namespace,
-                artifacts.root_override.name.as_deref(),
-                artifacts.root_override.version.as_deref(),
+                // #1626: resolved, so `--root-purl` names the root too.
+                artifacts.root_override.resolved_name(),
+                artifacts.root_override.resolved_version(),
                 &artifacts.root_override,
             );
             (vec![id], Some(root))
@@ -582,7 +584,14 @@ pub fn build_document(
     // 2.3 root pointed at the module's dependencies. Caught by
     // `root_override_preserves_root_outgoing_edges_in_all_formats`,
     // which is an FR-009 parity guard and not a superseded pin.
-    let purl_aliases: Vec<(String, SpdxId)> = Vec::new();
+    //
+    // #1626: the one exception is the module FR-011 dropped because the
+    // override names its coordinate. It IS the root, so its edges are the
+    // root's.
+    let purl_aliases: Vec<(String, SpdxId)> = match (&subject_alias, root_ids.first()) {
+        (Some(purl), Some(root_id)) => vec![(purl.clone(), root_id.clone())],
+        _ => Vec::new(),
+    };
     let _ = &override_active;
     let mut relationships =
         super::relationships::build_relationships(artifacts, &root_ids, &purl_aliases);
@@ -676,6 +685,7 @@ pub fn build_document(
             &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
                 artifacts.relationships,
                 &dropped_main_module_purls,
+                subject_alias.as_deref(),
                 &m158_target_ref,
             ),
             artifacts.components,
@@ -855,8 +865,8 @@ pub fn build_document(
     };
     // Basename/0.0.0 synthesis is not evidence of a source identity.
     let placeholder_root = synthetic_root_added
-        && (artifacts.root_override.name.is_none()
-            || artifacts.root_override.version.is_none());
+        && (artifacts.root_override.resolved_name().is_none()
+            || artifacts.root_override.resolved_version().is_none());
     document.name = super::document_name::derive(&document, artifacts, placeholder_root);
     document
 }
