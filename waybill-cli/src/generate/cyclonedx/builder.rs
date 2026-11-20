@@ -1320,7 +1320,8 @@ impl CycloneDxBuilder {
         .map(|c| c.purl.as_str().to_string());
         // Spec 1618: a CMake project the selector made the subject is in
         // `metadata.component` whatever the count, so it is held back here
-        // too. (Other ecosystems keep the count rule unchanged.)
+        // too. Other ecosystems keep the count rule unchanged, which lists a
+        // root chosen from several main modules twice (#1633).
         let subject_cmake_project = subject_main_module.filter(|p| {
             components.iter().any(|c| c.purl.as_str() == *p && crate::scan_fs::package_db::cmake::projects::is_cmake_project(c))
         });
