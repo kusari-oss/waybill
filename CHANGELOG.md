@@ -80,6 +80,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A module embedded in several binaries of one Nix store output cites the
+  same binary on every run (#1637).** The closure tier read an output's
+  binaries in directory-listing order, which differs between machines, and
+  kept the first binary's entry. So `nix-closure-slacklinker`'s crates
+  embedded in both `bin/auditable2cdx` and `bin/cargo-auditable` cited either
+  one, and the public corpus failed intermittently. Binaries are now read in
+  path order.
+
 - **A root override no longer strands the graph when it names a main
   module's own coordinate, or when it is given as `--root-purl` (#1626).**
   - When the override's PURL equals a manifest main module's (for example

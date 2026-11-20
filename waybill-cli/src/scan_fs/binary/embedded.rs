@@ -61,15 +61,25 @@ pub(crate) struct EmbeddedContents {
 /// Read the embedded build information of every binary under `path`.
 ///
 /// `path` may be a directory or a single file: a nix output is either.
+/// #1637: the order the binaries of one output are read in, which decides
+/// whose entry a module embedded in several of them keeps (the first, by
+/// `seen` here and by the closure tier's `or_insert`). `discover_binaries`
+/// yields them in `read_dir` order, which is unspecified and differs between
+/// runners, so they are read in path order.
+fn in_read_order(mut binaries: Vec<PathBuf>) -> Vec<PathBuf> {
+    binaries.sort();
+    binaries
+}
+
 pub(crate) fn embedded_contents(path: &Path) -> EmbeddedContents {
     let mut out = EmbeddedContents::default();
     let mut seen: HashSet<String> = HashSet::new();
-    let binaries = super::discover::discover_binaries(
+    let binaries = in_read_order(super::discover::discover_binaries(
         path,
         &HashSet::new(),
         &ExclusionSet::new_empty(),
         None,
-    );
+    ));
 
     for binary in binaries {
         out.binaries_examined += 1;
@@ -296,6 +306,23 @@ pub(crate) mod fixtures {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// #1637: binaries are read in path order whatever order the directory
+    /// listing gave, so a module embedded in two of them keeps the same one.
+    #[test]
+    fn i1637_binaries_are_read_in_path_order() {
+        let listed = vec![
+            PathBuf::from("/nix/store/x-waybill-fixture-tool-1.0/bin/waybill-fixture-z"),
+            PathBuf::from("/nix/store/x-waybill-fixture-tool-1.0/bin/waybill-fixture-a"),
+        ];
+        assert_eq!(
+            in_read_order(listed),
+            vec![
+                PathBuf::from("/nix/store/x-waybill-fixture-tool-1.0/bin/waybill-fixture-a"),
+                PathBuf::from("/nix/store/x-waybill-fixture-tool-1.0/bin/waybill-fixture-z"),
+            ]
+        );
+    }
 
     fn purls(c: &EmbeddedContents) -> Vec<String> {
         let mut v: Vec<String> = c.modules.iter().map(|e| e.purl.as_str().to_string()).collect();
