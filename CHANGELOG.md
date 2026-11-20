@@ -64,6 +64,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A library an installed tree ships is no longer marked optional because
+  the tree's own CMake config files search for it conditionally (#1623).**
+  Spec 1614's pairing of package searches with installed-library records
+  made a record Optional when every search for it was conditional. In an
+  installed tree, a config file's `if(NOT TARGET …)` or `else()`
+  `find_dependency` says when a consumer needs the library, not whether the
+  tree ships it. On the ROCm SDK that marked 7 shipped libraries optional,
+  the core runtime `hsa-runtime64` among them. A record whose evidence lists a
+  library file it ships is no longer scoped by its searches; C236 still
+  records the conditions. A record that ships no library file and is
+  searched only from test projects is now Test, not Optional with no reason.
+
 - **A project's declared runtime dependencies are no longer marked
   non-runtime when it is not the first project of its ecosystem (#1618).**
   Transitive scope propagation (C62 `transitive`, #1209) protected only what a
