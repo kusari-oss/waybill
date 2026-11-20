@@ -840,11 +840,21 @@ jobs:
       - name: Generate and sign source-tree SBOM (waybill-of-waybill)
         run: |
           set -euo pipefail
+          # #1622: the repository's test fixtures, the specs' measurement
+          # projects and the comparative-bench known-answer fixture are test
+          # data, not parts of waybill. Unexcluded, v0.17.0 published 582
+          # components from them as waybill's dependencies. The paths are
+          # literal, so they are anchored at the repository root.
+          # The root is not pinned to the tag yet: any root override strands
+          # the file-tier script components with no orphan reason (#1626).
           /tmp/waybill-bin/waybill sbom scan \
             --path . \
             --format cyclonedx-json \
             --output waybill-source.cdx.json \
             --no-deep-hash \
+            --exclude-path waybill-cli/tests/fixtures \
+            --exclude-path specs \
+            --exclude-path xtask/compare/fixtures \
             --sign
 
       # Milestone 668 FR-003 + contract workflow-step.md C-1/C-2/C-3.
