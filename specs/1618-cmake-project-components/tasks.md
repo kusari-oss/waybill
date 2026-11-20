@@ -85,7 +85,7 @@
 - [X] T025 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, ok/non-ok counts, passed/failed, failure blocks, and an empty `git diff --stat main -- '*Cargo.toml' Cargo.lock` in `measurements/gate-log.md`.
 - [X] T026 Push. Dispatch measure-source (TheRock) against `main` with full SHAs. In `measurements/therock.md` record: project components and edges, every ownership change traced, SC-001 against T001(b), unexplained orphans (SC-002), parity, duplicates, repeat identity on two runners (SC-005), scan time median of ≥ 3 (SC-007).
 - [X] T027 Dispatch the public corpus with `regen_goldens=true` (expected byte-identical, R12) and the quality corpus at the branch with a `main` control. Trace every change component by component for the three affected targets (SC-003, SC-004, SC-008) in `measurements/corpus.md`; commit regenerated goldens if any.
-- [ ] T028 Open the PR with a body citing T001, T002, T024–T027, `Closes #1616` and the attribution line. Do not merge.
+- [X] T028 Open the PR with a body citing T001, T002, T024–T027, `Closes #1616` and the attribution line. Do not merge.
 
 ## Dependencies
 

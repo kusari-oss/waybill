@@ -38,6 +38,6 @@ The changes were reproduced locally with the harness's invocation (`--offline`, 
 
 **`cpp-mongo`: unchanged.** Its three projects are under `src/third_party/*/dist`, and `dist` is in the shared walker's built-in skip set (FR-009). The T001 census counted them because it does not apply that skip set.
 
-**Every other target is byte-identical in counts:** the control and the branch agree on all of them.
+**The other 15 targets are identical** between the control and the branch in every measured column except wall time: sbomqs, packages, files, edges, depth, flat and waybill's self-report. That is 16 of 18 including `cpp-mongo`, compared row by row from the two runs' logs.
 
 **SC-008.** Every target with another ecosystem's main module keeps its root and its C69 heuristic. The quality harness passes `--root-name`, so its roots are overrides; within this repository P-14 and P-15 test the no-override case.
