@@ -246,7 +246,9 @@ fn c13_function_bodies() {
 }
 
 /// C-14: a fetch inside a submodule's tree is the submodule's dependency;
-/// one in a plain directory is the root's.
+/// one in a plain directory is the enclosing project's. Since spec 1618
+/// (#1616) the superbuild's `project()` is a component that owns the tree
+/// below it, and the root depends on it.
 #[test]
 fn c14_owners() {
     let fx = GitFixture::new();
@@ -271,7 +273,9 @@ fn c14_owners() {
             .map(str::to_string)
             .collect()
     };
-    assert!(on(root).contains(&tool), "the plain directory's fetch is the root's");
+    let superbuild = "pkg:generic/waybill_fixture_superbuild";
+    assert!(on(superbuild).contains(&tool), "the plain directory's fetch is the superbuild project's");
+    assert!(on(root).contains(superbuild), "the root depends on the superbuild project");
     assert!(!on(root).contains(&inx), "the submodule's fetch is not the root's");
     let owner = deps
         .iter()

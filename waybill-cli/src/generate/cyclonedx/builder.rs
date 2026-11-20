@@ -1023,7 +1023,8 @@ impl CycloneDxBuilder {
         for i in 0..self.component_identifiers.len() {
             match_counts.insert(i, 0);
         }
-        let (cdx_components, bom_refs) = self.build_components(effective_components, &mut match_counts)?;
+        let (cdx_components, bom_refs) =
+            self.build_components(effective_components, &mut match_counts, document_graph.subject_main_module.as_deref())?;
         for (idx, count) in &match_counts {
             if *count == 0 {
                 let flag = &self.component_identifiers[*idx];
@@ -1254,6 +1255,7 @@ impl CycloneDxBuilder {
         &self,
         components: &[ResolvedComponent],
         match_counts: &mut std::collections::BTreeMap<usize, usize>,
+        subject_main_module: Option<&str>,
     ) -> anyhow::Result<(serde_json::Value, BomRefIndex)> {
         // Milestones 053 (Go) + 064 (cargo) FR-001a: a main-module is
         // emitted via CDX `metadata.component` per Constitution
@@ -1274,21 +1276,26 @@ impl CycloneDxBuilder {
         // every workspace member. We detect this by counting the
         // main-modules: skip from `components[]` only when there's
         // exactly one (matching `metadata.rs`'s promotion predicate).
-        let main_module_count = components
-            .iter()
-            .filter(|c| {
-                c.extra_annotations
-                    .get("waybill:component-role")
-                    .and_then(|v| v.as_str())
-                    == Some("main-module")
-            })
-            .count();
-        let is_main_module = |c: &ResolvedComponent| {
-            c.extra_annotations
-                .get("waybill:component-role")
-                .and_then(|v| v.as_str())
-                == Some("main-module")
-        };
+        // Spec 1618 (#1616): counted over the root candidates, as
+        // `select_root` counts them, so a CMake project that cannot be the
+        // subject is neither counted nor held back. Without CMake projects
+        // this is every main module, as before.
+        let candidate_purls: std::collections::HashSet<&str> = crate::generate::root_selector::root_candidates(
+            components,
+            components
+                .iter()
+                .enumerate()
+                .filter(|(_, c)| {
+                    c.extra_annotations.get("waybill:component-role").and_then(|v| v.as_str()) == Some("main-module")
+                })
+                .map(|(i, _)| i)
+                .collect(),
+        )
+        .into_iter()
+        .map(|i| components[i].purl.as_str())
+        .collect();
+        let main_module_count = candidate_purls.len();
+        let is_main_module = |c: &ResolvedComponent| candidate_purls.contains(c.purl.as_str());
         // #1170 — `main_module_count == 1` is no longer sufficient to
         // mean "promoted". When the operator names `--image`, the image
         // itself is the subject (root_selector ladder branch 1b), so the
@@ -1311,11 +1318,19 @@ impl CycloneDxBuilder {
         )
         .and_then(|i| components.get(i))
         .map(|c| c.purl.as_str().to_string());
+        // Spec 1618: a CMake project the selector made the subject is in
+        // `metadata.component` whatever the count, so it is held back here
+        // too. Other ecosystems keep the count rule unchanged, which lists a
+        // root chosen from several main modules twice (#1633).
+        let subject_cmake_project = subject_main_module.filter(|p| {
+            components.iter().any(|c| c.purl.as_str() == *p && crate::scan_fs::package_db::cmake::projects::is_cmake_project(c))
+        });
         let is_promoted_main_module = |c: &ResolvedComponent| {
-            subject_is_a_main_module
+            (subject_is_a_main_module
                 && main_module_count == 1
                 && is_main_module(c)
-                && evaluated.as_deref().is_none_or(|p| p == c.purl.as_str())
+                && evaluated.as_deref().is_none_or(|p| p == c.purl.as_str()))
+                || subject_cmake_project == Some(c.purl.as_str())
         };
 
         // First pass: the PURLs a child can nest under — every emitted

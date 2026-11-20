@@ -54,6 +54,7 @@ use super::PackageDbEntry;
 pub(crate) mod blocks;
 pub(crate) mod fallback;
 pub(crate) mod fetches;
+pub(crate) mod projects;
 pub(crate) mod reach;
 pub(crate) mod searches;
 pub(crate) mod wrappers;
@@ -251,6 +252,7 @@ pub(crate) fn read_with_downloads(
     // on the narrow set and package searches on the regexes.
     let tree_wide = walked.is_some();
     let mut search_scopes = std::collections::BTreeMap::new();
+    let mut project_entries: Vec<PackageDbEntry> = Vec::new();
     let mut fetch_files = walked.unwrap_or_else(|| cmake_files.clone());
     fetch_files.sort();
     fetch_files.dedup();
@@ -330,6 +332,16 @@ pub(crate) fn read_with_downloads(
             .chain(config_templates.iter().filter_map(|p| config_template_stem(p)))
             .chain(fetch_files.iter().filter_map(|p| provided_config_stem(p)))
             .collect();
+        // Spec 1618 (#1616): a component per in-tree project. A project whose
+        // name a fetch declares is that fetch, and its file joins the fetch's
+        // evidence (FR-005, research R5).
+        let (claimed, unclaimed): (Vec<_>, Vec<_>) = std::mem::take(&mut decls.project_decls)
+            .into_iter()
+            .partition(|d| decls.fetch_purls.contains_key(&d.name));
+        for d in claimed {
+            fetches.search_evidence.push((decls.fetch_purls[&d.name].clone(), d.source_path));
+        }
+        project_entries = projects::entries(&unclaimed, scan_root);
         for s in &decls.searches {
             *fetches.finds.declarations.entry(s.name.to_lowercase()).or_default() += 1;
         }
@@ -370,7 +382,41 @@ pub(crate) fn read_with_downloads(
     entries.extend(datasets.iter().filter_map(dataset_entry));
     fetches.links = links::read_links(scan_root, &fetch_files);
     entries.extend(fetch_entries);
+    fold_vendored_into_projects(&mut entries, &mut project_entries, scan_root);
+    entries.extend(project_entries);
     (entries, coverage, fetches)
+}
+
+/// Spec 1618 research R5: with `--include-vendored`, a `third_party/<n>` or
+/// `vendor/<n>` entry whose directory declares a project is that project; the
+/// entry goes and the file that adds the directory joins the project's
+/// evidence.
+fn fold_vendored_into_projects(entries: &mut Vec<PackageDbEntry>, projects: &mut [PackageDbEntry], scan_root: &Path) {
+    let rel = |s: &str| Path::new(s).strip_prefix(scan_root).map(Path::to_path_buf).ok();
+    entries.retain(|e| {
+        if e.extra_annotations.get("waybill:source-mechanism").and_then(|v| v.as_str()) != Some("cmake-vendored") {
+            return true;
+        }
+        let candidates = [
+            Path::new("third_party").join(&e.name).join("CMakeLists.txt"),
+            Path::new("vendor").join(&e.name).join("CMakeLists.txt"),
+        ];
+        let owner = projects.iter_mut().find(|p| {
+            std::iter::once(&p.source_path)
+                .chain(p.extra_source_paths.iter())
+                .filter_map(|s| rel(s))
+                .any(|r| candidates.contains(&r))
+        });
+        match owner {
+            Some(p) => {
+                if !p.extra_source_paths.contains(&e.source_path) && p.source_path != e.source_path {
+                    p.extra_source_paths.push(e.source_path.clone());
+                }
+                false
+            }
+            None => true,
+        }
+    });
 }
 
 /// Spec 1535 (data-model "Dataset"): one component per declared dataset
@@ -1054,7 +1100,7 @@ fn collect_set_vars(content: &str) -> std::collections::HashMap<String, Option<S
 
 /// Substitute every `${VAR}` whose value is known, repeatedly, so a
 /// variable built from another resolves. Unknown references stay as written.
-fn expand_known_vars(text: &str, vars: &std::collections::HashMap<String, Option<String>>) -> String {
+pub(crate) fn expand_known_vars(text: &str, vars: &std::collections::HashMap<String, Option<String>>) -> String {
     static RE: OnceLock<Option<Regex>> = OnceLock::new();
     let Some(re) = RE
         .get_or_init(|| Regex::new(r"\$\{([A-Za-z_][A-Za-z0-9_.+-]*)\}").ok())

@@ -1641,6 +1641,21 @@ pub fn build_metadata(
                 "value": serde_json::Value::Array(value.clone()).to_string(),
             }));
         }
+        // Spec 1618 (#1616) — a CMake project promoted to the root keeps
+        // the annotations only CMake projects carry (C55, C197, C238–C241),
+        // as SPDX 2.3 and SPDX 3 keep them on the root package. Byte-
+        // identical for every other root: no other main module has them.
+        if crate::scan_fs::package_db::cmake::projects::is_cmake_project(c) {
+            for key in crate::scan_fs::package_db::cmake::projects::ROOT_PROPAGATED_KEYS {
+                if let Some(value) = c.extra_annotations.get(*key) {
+                    let value_str = match value {
+                        serde_json::Value::String(s) => s.clone(),
+                        other => serde_json::to_string(other).unwrap_or_default(),
+                    };
+                    comp_props.push(json!({ "name": key, "value": value_str }));
+                }
+            }
+        }
         // Milestone 134 — propagate `waybill:duplicate-purl-divergent`
         // (C99) when the deduped main-module is promoted to
         // `metadata.component`. Single-crate workspaces hit this path;

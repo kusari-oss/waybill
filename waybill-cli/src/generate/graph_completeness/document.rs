@@ -37,6 +37,9 @@ pub struct DocumentGraph {
     pub retained_main_module_purls: Vec<String>,
     /// #1626: see `root_selector::DropOrDemoteResult::subject_alias`.
     pub subject_alias: Option<String>,
+    /// Spec 1618: the PURL of the main module the selector made the subject,
+    /// if any.
+    pub subject_main_module: Option<String>,
     /// The graph root's ref: the subject main module's PURL, or
     /// `<name>@<version>` for a synthetic subject.
     pub target_ref: String,
@@ -78,6 +81,10 @@ pub fn for_document(
     );
 
     let target_ref = target_ref_for(effective_components, &selection, subject);
+    let subject_main_module = match &selection.subject {
+        ResolvedRootSubject::MainModule(idx) => effective_components.get(*idx).map(|c| c.purl.as_str().to_string()),
+        _ => None,
+    };
 
     let workspace_peer_edges = build_workspace_peer_edges(&selection, effective_components);
 
@@ -110,6 +117,7 @@ pub fn for_document(
         effective_components: effective_components_owned,
         retained_main_module_purls,
         subject_alias,
+        subject_main_module,
         target_ref,
         workspace_peer_edges,
         completeness,

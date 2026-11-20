@@ -48,6 +48,9 @@ pub(crate) struct FindCoverage {
     pub(crate) paired_fetch: usize,
     pub(crate) paired_installed: usize,
     pub(crate) paired_submodule: usize,
+    /// Spec 1618: searches answered by an in-tree project component; on the
+    /// wire only when non-zero, so C237 is unchanged without one (FR-012).
+    pub(crate) paired_project: usize,
     pub(crate) in_tree: BTreeSet<String>,
     pub(crate) in_tree_declarations: usize,
     pub(crate) components: usize,
@@ -68,16 +71,20 @@ impl FindCoverage {
     /// Sorted-key JSON, or `None` when no package search was read.
     pub(crate) fn wire(&self) -> Option<String> {
         (self.read > 0).then(|| {
+            let mut paired = serde_json::json!({
+                "fetch": self.paired_fetch,
+                "installed": self.paired_installed,
+                "submodule": self.paired_submodule,
+            });
+            if self.paired_project > 0 {
+                paired["project"] = serde_json::json!(self.paired_project);
+            }
             serde_json::json!({
                 "components": self.components,
                 "conditional": self.conditional,
                 "in-tree": self.in_tree,
                 "in-tree-declarations": self.in_tree_declarations,
-                "paired": {
-                    "fetch": self.paired_fetch,
-                    "installed": self.paired_installed,
-                    "submodule": self.paired_submodule,
-                },
+                "paired": paired,
                 "read": self.read,
                 "test": self.test,
                 "tools": self.tools,

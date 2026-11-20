@@ -840,6 +840,11 @@ spdx3_anno!(c234_spdx3, "waybill:cmake-fetch-wrapper", component);
 spdx3_anno!(c235_spdx3, "waybill:cmake-link-conditions", component);
 spdx3_anno!(c236_spdx3, "waybill:cmake-find-conditions", component);
 spdx3_anno!(c237_spdx3, "waybill:cmake-find-coverage", document);
+// Spec 1618 (#1616): C238–C241, in-tree CMake projects.
+spdx3_anno!(c238_spdx3, "waybill:declared-version-expression", component);
+spdx3_anno!(c239_spdx3, "waybill:cmake-build-reach", component);
+spdx3_anno!(c240_spdx3, "waybill:vendored", component);
+spdx3_anno!(c241_spdx3, "waybill:vendored-signals", component);
 spdx3_anno!(c42_spdx3, "waybill:lifecycle-scope", component);
 spdx3_anno!(c194_spdx3_raw, "waybill:derivation", document);
 spdx3_anno!(c195_spdx3, "waybill:go-mod-why", document);

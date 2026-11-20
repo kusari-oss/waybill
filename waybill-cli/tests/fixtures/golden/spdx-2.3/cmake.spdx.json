@@ -17,7 +17,7 @@
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-0.17.0",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"excluded_files\\\":0,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":3,\\\"with_candidates\\\":1}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"excluded_files\\\":0,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":4,\\\"with_candidates\\\":1}\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
@@ -102,28 +102,11 @@
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-6TG3R3P6MYXRB2L7"
+    "SPDXRef-Package-HXBYPTWG6GH7H4UY"
   ],
-  "documentNamespace": "https://waybill.kusari.dev/spdx/PDUFABU3R6VMOLDZMY65YBHIKTIHEXGB",
+  "documentNamespace": "https://waybill.kusari.dev/spdx/3OQFJLD5HN7OTVAP35LZ7NYDHVX4G5JF",
   "name": "Waybill source scan (identity unavailable)",
   "packages": [
-    {
-      "SPDXID": "SPDXRef-DocumentRoot-6TG3R3P6MYXRB2L7",
-      "downloadLocation": "NOASSERTION",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:generic/cmake@0.0.0",
-          "referenceType": "purl"
-        }
-      ],
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "cmake",
-      "supplier": "Organization: waybill contributors",
-      "versionInfo": "0.0.0"
-    },
     {
       "SPDXID": "SPDXRef-Package-6JWGJCRVPGZ5RSBG",
       "annotations": [
@@ -248,6 +231,73 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "openssl",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HXBYPTWG6GH7H4UY",
+      "annotations": [
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.17.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.17.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"CMakeLists.txt\"]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.17.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.17.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.17.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-role\",\"value\":\"main-module\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.17.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"cmake-project\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.17.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:version-absence\",\"value\":\"not-declared\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.17.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/test_cmake_project",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "test_cmake_project",
+      "primaryPackagePurpose": "APPLICATION",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -378,29 +428,29 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-6TG3R3P6MYXRB2L7",
+      "relatedSpdxElement": "SPDXRef-Package-HXBYPTWG6GH7H4UY",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-3ECZZDDDHD3O6FKS",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-6TG3R3P6MYXRB2L7"
+      "spdxElementId": "SPDXRef-Package-HXBYPTWG6GH7H4UY"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-6JWGJCRVPGZ5RSBG",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-6TG3R3P6MYXRB2L7"
+      "spdxElementId": "SPDXRef-Package-HXBYPTWG6GH7H4UY"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-JCUJXG5KKFFE45OL",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-6TG3R3P6MYXRB2L7"
+      "spdxElementId": "SPDXRef-Package-HXBYPTWG6GH7H4UY"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-LXTPKDHC3UVRRT5J",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-6TG3R3P6MYXRB2L7"
+      "spdxElementId": "SPDXRef-Package-HXBYPTWG6GH7H4UY"
     }
   ],
   "spdxVersion": "SPDX-2.3"

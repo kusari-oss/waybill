@@ -1556,6 +1556,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // entry per call site.
     let search_pairings =
         cmake_search_pair::pair(&mut components, &git_submodule_dirs, cmake_find_coverage.as_mut());
+    // Spec 1618 (research R10): the vendored signal only submodules give,
+    // and the verdict.
+    package_db::cmake::projects::mark_vendored(&mut components, &git_submodule_dirs, root);
     {
         let targeted_before: std::collections::HashSet<String> =
             relationships.iter().map(|r| r.to.clone()).collect();
@@ -1575,6 +1578,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // installed record's scope combines its links and its searches.
         let paired = cmake_search_pair::attach(&relationships, &search_pairings, &index, root);
         relationships.extend(paired.edges);
+        // Spec 1618 (#1616) FR-006: every in-tree project is reached, through
+        // a search, what encloses it, or the root.
+        let enclosed = cmake_search_pair::enclose_projects(&components, &relationships, &paired.root_anchors, &index, root);
+        relationships.extend(enclosed.edges);
         let scopes = cmake_search_pair::record_scopes(
             &components,
             &search_pairings,
@@ -1701,7 +1708,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         let mut anchors = declared_attach::attach(&components, &relationships, &index, root).root_anchors;
         anchors.extend(cmake_fetch_attach::attach(&components, &relationships, &index, root).root_anchors);
         anchors.extend(cmake_link_attach::attach(&components, &relationships, &cmake_links, &index, root).attached.root_anchors);
-        anchors.extend(cmake_search_pair::attach(&relationships, &search_pairings, &index, root).root_anchors);
+        let searched = cmake_search_pair::attach(&relationships, &search_pairings, &index, root).root_anchors;
+        anchors.extend(cmake_search_pair::enclose_projects(&components, &relationships, &searched, &index, root).root_anchors);
+        anchors.extend(searched);
         anchors.extend(workspace_root_anchors(&components, &relationships));
         anchors.into_iter().collect()
     };

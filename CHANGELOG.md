@@ -9,6 +9,22 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **A component for each CMake project the scanned tree builds (#1616).**
+  A literal `project(<name> …)` in a `CMakeLists.txt` is now a
+  `pkg:generic/<name>@<version>` main module, versioned from `VERSION` or a
+  same-file `set()`. A `find_package` for it is a dependency edge from the
+  searching project. Before, such a search was only counted as "in-tree",
+  so a monorepo's projects had no edges between them, and vendored code no
+  other reader finds was invisible. Projects own what is below them. Their
+  scope comes from their directory (test, example, sample, benchmark or
+  documentation). A CMake-only repository's top-level project becomes the
+  document's subject, while any repository with another ecosystem's main
+  module keeps its root. New rows: C238 (an unresolved version expression),
+  C239 (not reached from the root build) and C241 (the vendored signals that
+  hold, with no verdict derived from them); C240, the existing
+  `--include-vendored` key, is now catalogued. C55, C62, C197 and C237 gain
+  values.
+
 - **CMake package searches are read from every CMake file, with the
   conditions that reach them (#1591, #1605).** `find_package`,
   `pkg_check_modules` and `pkg_search_module` were read only from the root

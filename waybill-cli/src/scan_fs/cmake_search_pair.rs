@@ -11,10 +11,14 @@
 //!    files join the record's evidence, and each becomes a [`Pairing`].
 //! 2. **A git submodule** whose directory's last segment is the name (C57's
 //!    rule): the same.
-//! 3. **A name the tree builds itself** (`project()`, a package-config
-//!    template, a provided config file): the entries go, with no edge, and
-//!    the name is listed in C237 `in-tree`. This comes last because a
-//!    submodule is usually also a CMake project (analysis I2).
+//! 3. **An in-tree CMake project component** (spec 1618, #1616): the same;
+//!    counted in C237 `paired.project`. A project whose name an installed
+//!    record or a submodule claims is not a component: it goes first, and
+//!    its file joins that component's evidence (FR-005).
+//! 4. **A name the tree builds itself** with no project component (a
+//!    package-config template, a provided config file): the entries go,
+//!    with no edge, and the name is listed in C237 `in-tree`. This comes last
+//!    because a submodule is usually also a CMake project (analysis I2).
 //!
 //! A fetch of the same name was already paired in the reader (R7.1). C57 is
 //! widened here too: a submodule any package search names is
@@ -53,6 +57,65 @@ pub(crate) struct Pairing {
     pub(crate) test_derivation: Option<String>,
     /// An installed-library record, whose scope the searches can decide.
     pub(crate) installed: bool,
+    /// Spec 1618: an in-tree project, whose scope its directory decides;
+    /// searches add only conditions, or Test when all are from tests.
+    pub(crate) project: bool,
+}
+
+fn is_cmake_project(c: &ResolvedComponent) -> bool {
+    super::package_db::cmake::projects::is_cmake_project(c)
+}
+
+/// Spec 1618 (#1616) FR-006, research R4: an edge to each project component
+/// nothing else reaches, from what encloses its directory, or a root anchor
+/// when nothing does. A project a search edge or a search's root anchor
+/// already reaches needs none.
+pub(crate) fn enclose_projects(
+    components: &[ResolvedComponent],
+    relationships: &[Relationship],
+    reached: &BTreeSet<String>,
+    index: &OwnerIndex,
+    scan_root: &Path,
+) -> DeclaredAttachment {
+    let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+    let targeted: HashSet<&str> = relationships.iter().map(|r| r.to.as_str()).collect();
+    let mut seen: HashSet<(String, String)> = relationships.iter().map(|r| (r.from.clone(), r.to.clone())).collect();
+    let mut out = DeclaredAttachment::default();
+    for c in components.iter().filter(|c| is_cmake_project(c)) {
+        let purl = c.purl.as_str();
+        if targeted.contains(purl) || reached.contains(purl) {
+            continue;
+        }
+        let dirs: BTreeSet<std::path::PathBuf> = c
+            .evidence
+            .source_file_paths
+            .iter()
+            .filter(|f| Path::new(f).file_name().is_some_and(|n| n == "CMakeLists.txt"))
+            .filter_map(|f| relative(f, scan_root, &canonical_root))
+            .map(|r| r.parent().map(Path::to_path_buf).unwrap_or_default())
+            .collect();
+        let mut enclosed = false;
+        for dir in &dirs {
+            if let Some(owner) = index.enclosing(dir, purl) {
+                enclosed = true;
+                if seen.insert((owner.to_string(), purl.to_string())) {
+                    out.edges.push(Relationship {
+                        from: owner.to_string(),
+                        to: purl.to_string(),
+                        relationship_type: RelationshipType::DependsOn,
+                        provenance: EnrichmentProvenance {
+                            source: dir.to_string_lossy().into_owned(),
+                            data_type: "cmake-project-enclosure".to_string(),
+                        },
+                    });
+                }
+            }
+        }
+        if !enclosed {
+            out.root_anchors.insert(purl.to_string());
+        }
+    }
+    out
 }
 
 fn mechanism(c: &ResolvedComponent) -> Option<&str> {
@@ -101,7 +164,6 @@ pub(crate) fn pair(
     submodule_dirs: &SubmoduleDirs,
     cov: Option<&mut FindCoverage>,
 ) -> Vec<Pairing> {
-    let Some(cov) = cov else { return Vec::new() };
     let mut records: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for c in components.iter() {
         if matches!(mechanism(c), Some("cmake-package-version" | "pkg-config")) {
@@ -112,6 +174,41 @@ pub(crate) fn pair(
         .iter()
         .filter_map(|(dir, purl)| Some((dir.file_name()?.to_string_lossy().to_lowercase(), purl.clone())))
         .collect();
+
+    // Spec 1618 FR-005: a project named like an installed record or a
+    // submodule is that component; its declaring files join its evidence.
+    // Before the early return: a tree with no package search still has
+    // projects.
+    let mut claimed: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    components.retain(|c| {
+        if !is_cmake_project(c) {
+            return true;
+        }
+        let name = c.name.to_lowercase();
+        let owners: Vec<String> = match (records.get(&name), submodules.get(&name)) {
+            (Some(r), _) => r.clone(),
+            (None, Some(s)) => vec![s.clone()],
+            (None, None) => return true,
+        };
+        for o in owners {
+            claimed.entry(o).or_default().extend(c.evidence.source_file_paths.iter().cloned());
+        }
+        false
+    });
+    for c in components.iter_mut() {
+        if let Some(files) = claimed.get(c.purl.as_str()) {
+            for f in files {
+                if !c.evidence.source_file_paths.contains(f) {
+                    c.evidence.source_file_paths.push(f.clone());
+                }
+            }
+        }
+    }
+    let Some(cov) = cov else { return Vec::new() };
+    let mut projects: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for c in components.iter().filter(|c| is_cmake_project(c)) {
+        projects.entry(c.name.to_lowercase()).or_default().push(c.purl.as_str().to_string());
+    }
 
     // R10: C57 sees every searched name.
     for c in components.iter_mut() {
@@ -134,10 +231,12 @@ pub(crate) fn pair(
     let mut outcome: BTreeMap<String, &'static str> = BTreeMap::new();
     for c in components.iter().filter(|c| is_search(c)) {
         let name = c.name.to_lowercase();
-        let (targets, installed): (Vec<String>, bool) = if let Some(r) = records.get(&name) {
-            (r.clone(), true)
+        let (targets, installed, project): (Vec<String>, bool, bool) = if let Some(r) = records.get(&name) {
+            (r.clone(), true, false)
         } else if let Some(s) = submodules.get(&name) {
-            (vec![s.clone()], false)
+            (vec![s.clone()], false, false)
+        } else if let Some(p) = projects.get(&name) {
+            (p.clone(), false, true)
         } else if cov.built_in_tree.contains(&name) {
             outcome.insert(name, "in-tree");
             gone.insert(c.purl.as_str().to_string());
@@ -145,7 +244,7 @@ pub(crate) fn pair(
         } else {
             continue;
         };
-        outcome.insert(name, if installed { "installed" } else { "submodule" });
+        outcome.insert(name, if installed { "installed" } else if project { "project" } else { "submodule" });
         gone.insert(c.purl.as_str().to_string());
         for t in &targets {
             for f in &c.evidence.source_file_paths {
@@ -156,6 +255,7 @@ pub(crate) fn pair(
                     conditions: conditions_of(c),
                     test_derivation: test_derivation_of(c),
                     installed,
+                    project,
                 });
                 evidence.entry(t.clone()).or_default().push(f.clone());
             }
@@ -177,6 +277,7 @@ pub(crate) fn pair(
         match kind {
             "installed" => cov.paired_installed += n,
             "submodule" => cov.paired_submodule += n,
+            "project" => cov.paired_project += n,
             _ => {
                 cov.in_tree.insert(name);
                 cov.in_tree_declarations += n;
@@ -257,7 +358,7 @@ pub(crate) fn record_scopes(
     targeted: &HashSet<String>,
 ) -> RecordScopes {
     let mut by_record: BTreeMap<&str, Vec<&Pairing>> = BTreeMap::new();
-    for p in pairings.iter().filter(|p| p.installed) {
+    for p in pairings.iter().filter(|p| p.installed || p.project) {
         by_record.entry(p.target.as_str()).or_default().push(p);
     }
     let mut out = RecordScopes::default();
@@ -272,7 +373,11 @@ pub(crate) fn record_scopes(
             continue;
         }
         let conds: BTreeSet<String> = ps.iter().flat_map(|p| p.conditions.iter().cloned()).collect();
-        if components.iter().any(|c| c.purl.as_str() == purl && ships_library_file(c)) {
+        let all_test = ps.iter().all(|p| p.test_derivation.is_some());
+        // Spec 1618 (research R4): a project the tree builds is, like a
+        // shipped library, never made Optional by a consumer's conditions.
+        let built_in_tree = ps.iter().any(|p| p.project) && !all_test;
+        if built_in_tree || components.iter().any(|c| c.purl.as_str() == purl && ships_library_file(c)) {
             out.conditions_only.insert(purl.to_string(), conds);
         } else if ps.iter().all(|p| p.test_derivation.is_some()) {
             let derivation = if ps.iter().any(|p| p.test_derivation.as_deref() == Some(DERIVATION_SOURCE_TEST_DIRECTORY)) {
@@ -336,6 +441,7 @@ mod tests {
             conditions: conds.iter().map(|s| s.to_string()).collect(),
             test_derivation: test.map(str::to_string),
             installed: true,
+            project: false,
         }
     }
 
