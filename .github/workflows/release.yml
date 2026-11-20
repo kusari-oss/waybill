@@ -853,8 +853,12 @@ jobs:
           # from them as waybill's dependencies. The paths are literal, so
           # they are anchored at the scan root.
           #
-          # The root is not pinned to the tag yet: any root override strands
-          # the file-tier script components with no orphan reason (#1626).
+          # The root is pinned to `waybill` at the tag's version (`v` dropped:
+          # `0.17.0`, `0.17.1-nightly.20261119`), not the `0.0.0` a directory
+          # scan derives. It stays a generic PURL: a cargo-typed root equal to
+          # the `pkg:cargo/waybill` main module collapses into it and strands
+          # its dependencies (#1626). The workspace crates remain, as demoted
+          # main modules the root depends on.
           SRC="${RUNNER_TEMP}/waybill"
           git worktree add --detach "$SRC" HEAD
           /tmp/waybill-bin/waybill sbom scan \
@@ -865,6 +869,8 @@ jobs:
             --exclude-path waybill-cli/tests/fixtures \
             --exclude-path specs \
             --exclude-path xtask/compare/fixtures \
+            --root-name waybill \
+            --root-version "${TAG_NAME#v}" \
             --sign
           git worktree remove --force "$SRC"
 
