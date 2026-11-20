@@ -15,9 +15,12 @@ Harness: `mutate.py` and `mutate-run.sh` in this directory. Each mutation is res
 |`M9-conditional-search-makes-optional ` | 1 | 0 | yes | p02_a_conditional_search_records_conditions_only  |
 |`M10-paired-project-serialised-at-zero ` | 1 | 0 | yes | p_ctl_is_byte_identical_to_main  |
 |`M11-collisions-not-dropped ` | 1 | 0 | yes | p16b_an_installed_record_claims_the_name p16c_a_submodule_claims_its_own_name  |
-|`M12-vendored-rule-either-signal ` | 1 | 0 | yes | p09_single_signals_are_recorded_without_a_verdict  |
+|`M12-submodule-signal-dropped` | 1 | 0 | yes | p09_a_vendored_project_carries_its_signals p09_single_signals_are_recorded_without_a_verdict |
 |`M13-cmake-root-not-held-back ` | 1 | 0 | yes | p13_a_cmake_only_tree_has_its_top_project_as_root p20_include_vendored_folds_into_the_project  |
+|`M14-same-directory-projects-enclose` | 2 | 0 | yes | p21_two_projects_in_one_directory s1618_enclosing |
 
-All 13 are caught. None compile with an error, and every mutated file is restored. M8 is caught only because of P-20, added after the first plan showed no case exercised `--include-vendored`.
+All 14 are caught. None compile with an error, and every mutated file is restored. M8 is caught only because of P-20, added after the first plan showed no case exercised `--include-vendored`.
 
 M9 was re-run after the clippy fix merged the project rule into the shipped-library condition (`let built_in_tree = …`), against its new anchor: failed binaries 1, compile errors 0, restored yes, red `p02_a_conditional_search_records_conditions_only`.
+
+M12 was replaced when the vendored verdict was dropped (spec Clarifications, 2026-11-20): it used to widen the C240 rule, and it now drops the `submodule-boundary` signal. M14 was added with the same-directory enclosure fix (P-21).
