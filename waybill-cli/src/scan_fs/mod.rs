@@ -304,7 +304,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // Poetry `category = "dev"`, Pipfile `develop:`). Threaded through
     // to `package_db::read_all` so per-ecosystem readers can filter at
     // source.
-    let artifacts = walker::walk_and_hash(root, None, size_cap);
+    let artifacts = walker::walk_and_hash(root, None, size_cap, exclude_set);
     let mut components: Vec<ResolvedComponent> = Vec::with_capacity(artifacts.len());
     // Milestone 867 (#886) — declared names that resolved to nothing, across
     // every component in this scan. Surfaced document-scope so "this project

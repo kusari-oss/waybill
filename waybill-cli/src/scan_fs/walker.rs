@@ -11,6 +11,7 @@ use std::time::SystemTime;
 use rayon::prelude::*;
 use waybill_common::types::hash::ContentHash;
 
+use crate::scan_fs::package_db::exclude_path::ExclusionSet;
 use crate::trace::hasher::sha256_file_hex;
 
 /// File-extension allowlist. A path only becomes a hashing candidate if
@@ -54,9 +55,10 @@ pub fn walk_and_hash(
     root: &Path,
     since: Option<SystemTime>,
     size_cap: u64,
+    exclude: &ExclusionSet,
 ) -> Vec<HashedArtifact> {
     let mut candidates: Vec<PathBuf> = Vec::new();
-    walk(root, &mut candidates);
+    walk(root, root, exclude, &mut candidates);
 
     // Parallel per-file hashing via rayon. `.par_iter().filter_map(...).collect()`
     // preserves input order because `candidates` is an indexed source
@@ -123,7 +125,9 @@ pub fn walk_and_hash(
 // directory, so the walker physically cannot follow a symlink loop.
 // No visited-set or depth-limit needed; the lstat skip is the
 // invariant. Per FR-001 audit rubric option (b).
-fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+/// #1627: a directory `--exclude-path` matches is not descended, as in
+/// the shared walker (`walk_registry/walker.rs`).
+fn walk(root: &Path, dir: &Path, exclude: &ExclusionSet, out: &mut Vec<PathBuf>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
     };
@@ -133,7 +137,14 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
         if ft.is_file() {
             out.push(p);
         } else if ft.is_dir() {
-            walk(&p, out);
+            if !exclude.is_empty() {
+                if let Ok(rel) = p.strip_prefix(root) {
+                    if exclude.matches(&rel.to_string_lossy()) {
+                        continue;
+                    }
+                }
+            }
+            walk(root, &p, exclude, out);
         }
         // Symlinks are intentionally skipped.
     }
@@ -144,6 +155,29 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
 mod tests {
     use super::*;
 
+    /// #1627: `--exclude-path` reaches the archive walker. A literal entry
+    /// is anchored at the root; a pattern matches at any depth. Archives
+    /// outside excluded directories are still found.
+    #[test]
+    fn excluded_directories_are_not_walked() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let r = dir.path();
+        for rel in ["keep/a.crate", "specs/x/b.deb", "deep/skipme/c.whl", "keep/skipme-not/d.tgz"] {
+            let p = r.join(rel);
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            std::fs::write(&p, b"bytes").unwrap();
+        }
+        let exclude = ExclusionSet::from_iter(["specs", "**/skipme"]).unwrap();
+        let mut names: Vec<String> = walk_and_hash(r, None, 1024, &exclude)
+            .iter()
+            .map(|a| a.path.file_name().unwrap().to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        assert_eq!(names, ["a.crate", "d.tgz"]);
+        let all = walk_and_hash(r, None, 1024, &ExclusionSet::new_empty());
+        assert_eq!(all.len(), 4, "control: without exclusions every archive is found");
+    }
+
     #[test]
     fn picks_up_matching_suffixes_only() {
         let dir = tempfile::tempdir().expect("tempdir");
@@ -151,7 +185,7 @@ mod tests {
         std::fs::write(dir.path().join("jq_1.6_arm64.deb"), b"deb-bytes").unwrap();
         std::fs::write(dir.path().join("notes.txt"), b"ignored").unwrap();
 
-        let out = walk_and_hash(dir.path(), None, 1024);
+        let out = walk_and_hash(dir.path(), None, 1024, &ExclusionSet::new_empty());
         assert_eq!(out.len(), 2, "expected 2 artifacts, got {out:?}");
         let names: Vec<String> = out
             .iter()
@@ -169,7 +203,7 @@ mod tests {
         // Known SHA-256 of "abc"
         let expected = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
-        let out = walk_and_hash(dir.path(), None, 1024);
+        let out = walk_and_hash(dir.path(), None, 1024, &ExclusionSet::new_empty());
         assert_eq!(out.len(), 1);
         // ContentHash renders as a hex-encoded digest in its Display;
         // we compare via its underlying string representation.
@@ -189,7 +223,7 @@ mod tests {
         // Pick a time safely in the future
         let future =
             SystemTime::now() + std::time::Duration::from_secs(60 * 60 * 24 * 365);
-        let out = walk_and_hash(dir.path(), Some(future), 1024);
+        let out = walk_and_hash(dir.path(), Some(future), 1024, &ExclusionSet::new_empty());
         assert!(out.is_empty(), "future since should exclude all files");
     }
 
@@ -200,7 +234,7 @@ mod tests {
         // Control: a file under the cap in the same walk is hashed.
         std::fs::write(dir.path().join("small-1.0.0.crate"), b"abc").unwrap();
 
-        let out = walk_and_hash(dir.path(), None, 1024); // cap below the big file
+        let out = walk_and_hash(dir.path(), None, 1024, &ExclusionSet::new_empty()); // cap below the big file
         assert_eq!(out.len(), 2, "both artifacts must be returned: {out:?}");
         let by_name = |n: &str| {
             out.iter()
@@ -220,21 +254,21 @@ mod tests {
         std::fs::create_dir_all(&sub).unwrap();
         std::fs::write(sub.join("a-1.0.0.crate"), b"bytes").unwrap();
 
-        let out = walk_and_hash(dir.path(), None, 1024);
+        let out = walk_and_hash(dir.path(), None, 1024, &ExclusionSet::new_empty());
         assert_eq!(out.len(), 1);
     }
 
     #[test]
     fn empty_dir_returns_empty() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let out = walk_and_hash(dir.path(), None, 1024);
+        let out = walk_and_hash(dir.path(), None, 1024, &ExclusionSet::new_empty());
         assert!(out.is_empty());
     }
 
     #[test]
     fn nonexistent_root_returns_empty() {
         let p = Path::new("/definitely/does/not/exist/anywhere/xyz123");
-        let out = walk_and_hash(p, None, 1024);
+        let out = walk_and_hash(p, None, 1024, &ExclusionSet::new_empty());
         assert!(out.is_empty());
     }
 }

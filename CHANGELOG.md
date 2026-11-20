@@ -64,6 +64,15 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **`--exclude-path` now applies to package archives (#1627).** The walker
+  that finds `.tgz`, `.whl`, `.crate`, `.jar` and other package archives in
+  a scanned tree did not consult the exclusion set, so an archive under an
+  excluded directory was still emitted as a component (a `.tgz` as
+  `pkg:npm/…`) while every other reader skipped that directory. It now skips
+  excluded directories the way the shared walker does: literal entries are
+  anchored at the scan root, and patterns match at any depth. Scans with no
+  exclusions are unchanged.
+
 - **A library an installed tree ships is no longer marked optional because
   the tree's own CMake config files search for it conditionally (#1623).**
   Spec 1614's pairing of package searches with installed-library records

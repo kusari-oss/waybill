@@ -1248,7 +1248,7 @@ fn scan_artifact_dirs(
             tracing::warn!(dir = %dir.display(), "--artifact-dir is not a directory, skipping");
             continue;
         }
-        let artifacts = walk_and_hash(dir, Some(since), DEFAULT_SIZE_CAP_BYTES);
+        let artifacts = walk_and_hash(dir, Some(since), DEFAULT_SIZE_CAP_BYTES, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         for a in artifacts {
             let ts = chrono::DateTime::<chrono::Utc>::from(a.mtime);
             agg.record_synthetic_file_op(

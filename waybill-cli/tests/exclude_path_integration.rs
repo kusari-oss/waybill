@@ -621,3 +621,47 @@ fn cross_platform_separator_normalization() {
         "backslash literal must normalize and suppress fixture-app; got {names:?}"
     );
 }
+
+/// #1627: the package-archive walker honours `--exclude-path`. Before,
+/// an archive under an excluded directory was still hashed and emitted
+/// (as `pkg:npm/...` for a `.tgz`), while every other walker skipped it.
+/// A literal entry is anchored at the scan root; a pattern matches at
+/// any depth; an archive outside both is still found.
+#[test]
+fn package_archives_under_excluded_directories_are_not_emitted() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    write_cargo_project(root, "archive-root", "1.0.0");
+    for rel in [
+        "dist/waybill-fixture-dist-1.0.0.tgz",
+        "a/drop/waybill-fixture-glob-1.0.0.tgz",
+        "keep/waybill-fixture-kept-1.0.0.tgz",
+    ] {
+        let p = root.join(rel);
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(&p, b"archive-bytes").unwrap();
+    }
+
+    // Control: without exclusions all three archives are components, so
+    // their absence below is the exclusion's doing.
+    let (cdx, status) = run_scan(root, &[]);
+    assert!(status.status.success());
+    let names = component_names(&cdx);
+    for n in ["waybill-fixture-dist", "waybill-fixture-glob", "waybill-fixture-kept"] {
+        assert!(names.iter().any(|x| x == n), "control: {n} expected; got: {names:?}");
+    }
+
+    let (cdx, status) = run_scan(root, &["dist", "**/drop"]);
+    assert!(status.status.success());
+    let names = component_names(&cdx);
+    assert!(
+        names.iter().any(|n| n == "waybill-fixture-kept"),
+        "an archive outside excluded directories must remain; got: {names:?}",
+    );
+    for n in ["waybill-fixture-dist", "waybill-fixture-glob"] {
+        assert!(
+            !names.iter().any(|x| x == n),
+            "{n} is under an excluded directory; got: {names:?}",
+        );
+    }
+}
