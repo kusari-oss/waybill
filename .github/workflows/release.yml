@@ -840,12 +840,33 @@ jobs:
       - name: Generate and sign source-tree SBOM (waybill-of-waybill)
         run: |
           set -euo pipefail
+          # #1622: scan a worktree of HEAD, not the workspace. The workspace
+          # also holds this release's own archives (moved here above) and
+          # anything else the job wrote, which v0.17.0 published as required
+          # components. A worktree has only the tracked files and keeps git
+          # metadata, so the root's vcs reference is still detected. It is
+          # named `waybill` because the root's name comes from the directory.
+          #
+          # The repository's test fixtures, the specs' measurement projects
+          # and the comparative-bench known-answer fixture are test data, not
+          # parts of waybill. Unexcluded, v0.17.0 published 588 components
+          # from them as waybill's dependencies. The paths are literal, so
+          # they are anchored at the scan root.
+          #
+          # The root is not pinned to the tag yet: any root override strands
+          # the file-tier script components with no orphan reason (#1626).
+          SRC="${RUNNER_TEMP}/waybill"
+          git worktree add --detach "$SRC" HEAD
           /tmp/waybill-bin/waybill sbom scan \
-            --path . \
+            --path "$SRC" \
             --format cyclonedx-json \
             --output waybill-source.cdx.json \
             --no-deep-hash \
+            --exclude-path waybill-cli/tests/fixtures \
+            --exclude-path specs \
+            --exclude-path xtask/compare/fixtures \
             --sign
+          git worktree remove --force "$SRC"
 
       # Milestone 668 FR-003 + contract workflow-step.md C-1/C-2/C-3.
       # Emit SLSA build provenance for the source-tree SBOM. Coexists
