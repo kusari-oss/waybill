@@ -710,3 +710,23 @@ fn p_rep_repeatable() {
     assert_eq!(unreachable(&d), Vec::<String>::new());
     assert_repeatable(r);
 }
+
+/// P-20 (research R5): with `--include-vendored`, a `third_party/<n>`
+/// directory that declares a project is that project, not a second
+/// `cmake-vendored` component.
+#[test]
+fn p20_include_vendored_folds_into_the_project() {
+    let t = tree();
+    write(t.path(), "CMakeLists.txt", "add_subdirectory(third_party/vlib)\n");
+    write_project(t.path(), "third_party/vlib", "waybill-fixture-vlib", Version::Literal("1.0.0"), "");
+    write_project(t.path(), "core", "waybill-fixture-core", Version::Literal("1.0.0"), "");
+    let d = scan_args(t.path(), &["--include-vendored"]);
+    assert!(
+        !components(&d.cdx).iter().any(|c| c55(c) == Some("cmake-vendored")),
+        "{:?}",
+        purls(&d)
+    );
+    let c = by_purl(&d, "pkg:generic/waybill-fixture-vlib@1.0.0");
+    let files = source_files(c);
+    assert!(files.iter().any(|f| f == "CMakeLists.txt"), "the adding file joins the evidence: {files:?}");
+}
