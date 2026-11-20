@@ -253,6 +253,7 @@ pub fn select_root(
         })
         .map(|(i, _)| i)
         .collect();
+    let main_modules = root_candidates(components, main_modules);
 
     // Ladder branch 2 (#1170) — an explicitly named image is the
     // subject. Emitted in the same `pkg:generic/<target>@<version>`
@@ -412,6 +413,21 @@ pub fn select_root(
             losers: all_losers,
         }
     }
+}
+
+/// Spec 1618 (#1616, research R2): of the main modules `main_modules`
+/// indexes, those that compete for the root. CMake projects are main
+/// modules, but compete only when no other ecosystem has one, so every
+/// root, heuristic and loser list chosen without them is unchanged; and a
+/// project under a test or example directory is never the subject. Every
+/// other main module is a candidate, as before.
+pub fn root_candidates(components: &[ResolvedComponent], main_modules: Vec<usize>) -> Vec<usize> {
+    let is_cmake = |i: usize| crate::scan_fs::package_db::cmake::projects::is_cmake_project(&components[i]);
+    let others = main_modules.iter().any(|&i| !is_cmake(i));
+    main_modules
+        .into_iter()
+        .filter(|&i| !is_cmake(i) || (!others && components[i].lifecycle_scope.is_none()))
+        .collect()
 }
 
 /// Milestone 1377 — the index of the evaluated Nix package, when the
@@ -825,7 +841,7 @@ fn is_main_module(c: &ResolvedComponent) -> bool {
 mod tests {
     use super::*;
     use waybill_common::resolution::{
-        ResolutionEvidence, ResolutionTechnique, ResolvedComponent,
+        LifecycleScope, ResolutionEvidence, ResolutionTechnique, ResolvedComponent,
     };
     use waybill_common::types::purl::Purl;
     use std::collections::BTreeMap;
@@ -1741,6 +1757,56 @@ mod tests {
         c.extra_annotations.insert(COMPONENT_ROLE_KEY.to_string(), serde_json::json!("workspace-root"));
         c.evidence.source_file_paths = vec![manifest.to_string()];
         c
+    }
+
+    fn make_cmake_project(purl: &str, lists: &str, at_root: bool, scope: Option<LifecycleScope>) -> ResolvedComponent {
+        let mut c = make_main_module(purl, lists, at_root);
+        c.extra_annotations.insert("waybill:source-mechanism".to_string(), serde_json::json!("cmake-project"));
+        c.lifecycle_scope = scope;
+        c
+    }
+
+    /// Spec 1618 (research R2): a CMake-only tree's projects compete as main
+    /// modules do.
+    #[test]
+    fn s1618_cmake_only_projects_compete() {
+        let one = vec![make_cmake_project("pkg:generic/waybill-fixture-top@1", "/p/CMakeLists.txt", true, None)];
+        let r = select_root(&one, &no_override(), None, "t", "0.0.0", ScanTargetKind::Path);
+        assert!(matches!(r.subject, ResolvedRootSubject::MainModule(0)), "{:?}", r.subject);
+        assert_eq!(r.heuristic, None);
+        let several = vec![
+            make_cmake_project("pkg:generic/waybill-fixture-lib@1", "/p/lib/CMakeLists.txt", false, None),
+            make_cmake_project("pkg:generic/waybill-fixture-top@1", "/p/CMakeLists.txt", true, None),
+        ];
+        let r = select_root(&several, &no_override(), None, "t", "0.0.0", ScanTargetKind::Path);
+        assert!(matches!(r.subject, ResolvedRootSubject::MainModule(1)), "{:?}", r.subject);
+        assert_eq!(r.heuristic, Some(RootSelectionHeuristic::RepoRoot));
+    }
+
+    /// Spec 1618 (research R2): with any other ecosystem's main module, CMake
+    /// projects are not candidates: the same fast path, no heuristic, no
+    /// losers, as without them.
+    #[test]
+    fn s1618_another_ecosystem_keeps_the_root() {
+        let comps = vec![
+            make_cmake_project("pkg:generic/waybill-fixture-top@1", "/p/CMakeLists.txt", true, None),
+            make_main_module("pkg:pypi/waybill-fixture-py@0.1.0", "/p/py/pyproject.toml", false),
+            make_cmake_project("pkg:generic/waybill-fixture-lib@1", "/p/lib/CMakeLists.txt", false, None),
+        ];
+        let r = select_root(&comps, &no_override(), None, "t", "0.0.0", ScanTargetKind::Path);
+        assert!(matches!(r.subject, ResolvedRootSubject::MainModule(1)), "{:?}", r.subject);
+        assert_eq!(r.heuristic, None);
+        assert!(r.losers.is_empty(), "{:?}", r.losers);
+    }
+
+    /// Spec 1618: a test or example project is never the subject.
+    #[test]
+    fn s1618_a_scoped_project_is_not_a_candidate() {
+        let comps = vec![
+            make_cmake_project("pkg:generic/waybill-fixture-t@1", "/p/tests/CMakeLists.txt", false, Some(LifecycleScope::Test)),
+        ];
+        let r = select_root(&comps, &no_override(), None, "t", "0.0.0", ScanTargetKind::Path);
+        assert_eq!(r.heuristic, Some(RootSelectionHeuristic::SyntheticPlaceholder));
     }
 
     fn members() -> Vec<ResolvedComponent> {

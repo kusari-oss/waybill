@@ -403,13 +403,13 @@
     {
       "aggregate": "incomplete_first_party_only",
       "assemblies": [
-        "waybill-fixture-tree@0.0.0"
+        "pkg:generic/waybill_fixture_ctl"
       ]
     },
     {
       "aggregate": "complete",
       "dependencies": [
-        "waybill-fixture-tree@0.0.0"
+        "pkg:generic/waybill_fixture_ctl"
       ]
     }
   ],
@@ -435,18 +435,6 @@
       "ref": "pkg:generic/waybill_fixture_c"
     },
     {
-      "dependsOn": [],
-      "ref": "pkg:generic/waybill_fixture_d"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:generic/waybill_fixture_mixed"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:github/waybill-fixture/dep@v1.2.3"
-    },
-    {
       "dependsOn": [
         "pkg:generic/waybill-fixture-pc",
         "pkg:generic/waybill-fixture-ps",
@@ -457,7 +445,19 @@
         "pkg:generic/waybill_fixture_mixed",
         "pkg:github/waybill-fixture/dep@v1.2.3"
       ],
-      "ref": "waybill-fixture-tree@0.0.0"
+      "ref": "pkg:generic/waybill_fixture_ctl"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill_fixture_d"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill_fixture_mixed"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:github/waybill-fixture/dep@v1.2.3"
     }
   ],
   "metadata": {
@@ -467,11 +467,57 @@
       }
     ],
     "component": {
-      "bom-ref": "waybill-fixture-tree@0.0.0",
-      "name": "waybill-fixture-tree",
-      "purl": "pkg:generic/waybill-fixture-tree@0.0.0",
+      "bom-ref": "pkg:generic/waybill_fixture_ctl",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill_fixture_ctl",
+      "properties": [
+        {
+          "name": "waybill:component-role",
+          "value": "main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-project"
+        },
+        {
+          "name": "waybill:version-absence",
+          "value": "not-declared"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_ctl",
       "type": "application",
-      "version": "0.0.0"
+      "version": ""
     },
     "licenses": [
       {
@@ -499,7 +545,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":0,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":8,\"with_candidates\":0}"
+        "value": "{\"addressable_without_cpe\":0,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":9,\"with_candidates\":0}"
       },
       {
         "name": "waybill:cmake-fetch-coverage",

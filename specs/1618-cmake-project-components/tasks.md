@@ -46,14 +46,14 @@
 
 **Independent Test**: P-1–P-8b, P-10–P-12, P-16–P-17 pass in three formats, and P-ctl stays byte-identical.
 
-- [ ] T008 [P] [US1] Integration cases P-1, P-2, P-3, P-4, P-5, P-6, P-7, P-8, P-8b, P-10, P-11, P-12, P-16, P-16b, P-16c, P-17 in `IT`. Confirm each fails at `main`, except P-17 (a guard).
-- [ ] T009 [P] [US1] Unit tests in `PR`: merge rules (R5: same version merges; different versions split; versionless merges into versioned), directory scope (T001-adjusted lists), C197/C238 choice, C239 from the reach set.
-- [ ] T010 [P] [US1] Unit tests in `DA`: `RANK_CMAKE_PROJECT` loses to a PyPI and another main module in the same directory and beats a submodule; `owner_above(dir)` never returns the directory's own owner.
-- [ ] T011 [US1] Implement `PR`: from the declarations, build one `PackageDbEntry` per (name, effective version) with C55 `cmake-project`, `main-module`, `source`, sorted evidence, C197/C238, directory scope and C62 (`TEST_DIRS` → `source-test-directory`; example/benchmark → Development, `source-example-directory`), C239. Skip declarations under excluded or skipped directories (FR-009). Emit from `CM`.
-- [ ] T012 [US1] In `CM`, apply R5's one-identity order before emitting: a project whose name a fetch declares is dropped and its file joins the fetch's evidence; with `--include-vendored`, a `parse_vendored` entry whose directory holds a project declaration is dropped into the project's evidence.
-- [ ] T013 [US1] In `SP::pair`, after installed records and submodules, pair a search whose name is a project component's with that component (`Pairing.project = true`); count it in C237 `paired.project`, serialised only when non-zero (FR-012); leave config-only names in `in-tree` (R6). Also apply FR-005's later identities here, where they are known: drop a project component whose name an installed-library record or a submodule directory claims, and move its file into that component's evidence (P-16b, P-16c). In `record_scopes`, route project targets to `conditions_only` for conditional searches and to `test` when every pairing is Test and the project has no directory scope (R4).
-- [ ] T014 [US1] In `DA`, add `RANK_CMAKE_PROJECT` and `owner_above`. In `MOD`, at the existing attach site, give every project component no search targets an edge from `owner_above(its dir)` or a root anchor (FR-006), with provenance `cmake-project-enclosure`.
-- [ ] T015 [US1] Run T008–T010, P-ctl, and the existing CMake suites (`scan_cmake_tree_finds`, `scan_therock_last_orphans`, `installed_record_scope`, `installed_lib_targets`, `propagation_seeds`, `scan_nested_req_scope`, `cargo test -p waybill --bins cmake`) until they pass; trace any existing test that changes.
+- [X] T008 [P] [US1] Integration cases P-1, P-2, P-3, P-4, P-5, P-6, P-7, P-8, P-8b, P-10, P-11, P-12, P-16, P-16b, P-16c, P-17 in `IT`. Confirm each fails at `main`, except P-17 (a guard).
+- [X] T009 [P] [US1] Unit tests in `PR`: merge rules (R5: same version merges; different versions split; versionless merges into versioned), directory scope (T001-adjusted lists), C197/C238 choice, C239 from the reach set.
+- [X] T010 [P] [US1] Unit tests in `DA`: `RANK_CMAKE_PROJECT` loses to a PyPI and another main module in the same directory and beats a submodule; `owner_above(dir)` never returns the directory's own owner.
+- [X] T011 [US1] Implement `PR`: from the declarations, build one `PackageDbEntry` per (name, effective version) with C55 `cmake-project`, `main-module`, `source`, sorted evidence, C197/C238, directory scope and C62 (`TEST_DIRS` → `source-test-directory`; example/benchmark → Development, `source-example-directory`), C239. Skip declarations under excluded or skipped directories (FR-009). Emit from `CM`.
+- [X] T012 [US1] In `CM`, apply R5's one-identity order before emitting: a project whose name a fetch declares is dropped and its file joins the fetch's evidence; with `--include-vendored`, a `parse_vendored` entry whose directory holds a project declaration is dropped into the project's evidence.
+- [X] T013 [US1] In `SP::pair`, after installed records and submodules, pair a search whose name is a project component's with that component (`Pairing.project = true`); count it in C237 `paired.project`, serialised only when non-zero (FR-012); leave config-only names in `in-tree` (R6). Also apply FR-005's later identities here, where they are known: drop a project component whose name an installed-library record or a submodule directory claims, and move its file into that component's evidence (P-16b, P-16c). In `record_scopes`, route project targets to `conditions_only` for conditional searches and to `test` when every pairing is Test and the project has no directory scope (R4).
+- [X] T014 [US1] In `DA`, add `RANK_CMAKE_PROJECT` and `owner_above`. In `MOD`, at the existing attach site, give every project component no search targets an edge from `owner_above(its dir)` or a root anchor (FR-006), with provenance `cmake-project-enclosure`.
+- [X] T015 [US1] Run T008–T010, P-ctl, and the existing CMake suites (`scan_cmake_tree_finds`, `scan_therock_last_orphans`, `installed_record_scope`, `installed_lib_targets`, `propagation_seeds`, `scan_nested_req_scope`, `cargo test -p waybill --bins cmake`) until they pass; trace any existing test that changes.
 
 **Checkpoint**: US1 complete; P-ctl still byte-identical.
 
@@ -72,8 +72,8 @@
 
 **Independent Test**: P-13, P-14, P-15, P-18, P-19 pass.
 
-- [ ] T018 [P] [US3] Integration cases P-13, P-14, P-15, P-18, P-19 in `IT`. P-14 and P-15 must pass at `main` and on the branch with root and root-selection heuristic byte-identical (guards for SC-008); P-13 fails at `main`.
-- [ ] T019 [US3] In `RS::select_root`, drop main modules whose C55 is `cmake-project` from `main_modules` whenever any other main module exists (R2). Unit-test: CMake-only one project; CMake-only several with one at the root (`RepoRoot`); one Python module plus CMake projects (fast path, no heuristic, identical losers).
+- [X] T018 [P] [US3] Integration cases P-13, P-14, P-15, P-18, P-19 in `IT`. P-14 and P-15 must pass at `main` and on the branch with root and root-selection heuristic byte-identical (guards for SC-008); P-13 fails at `main`.
+- [X] T019 [US3] In `RS::select_root`, drop main modules whose C55 is `cmake-project` from `main_modules` whenever any other main module exists (R2). Unit-test: CMake-only one project; CMake-only several with one at the root (`RepoRoot`); one Python module plus CMake projects (fast path, no heuristic, identical losers).
 
 ## Phase 6: Polish & cross-cutting
 

@@ -35,7 +35,10 @@ use waybill_common::resolution::{
 /// Owner rank within one directory (lower wins), research R3.
 const RANK_PYPI_MAIN_MODULE: u8 = 0;
 const RANK_OTHER_MAIN_MODULE: u8 = 1;
-const RANK_SUBMODULE: u8 = 2;
+/// Spec 1618 (research R3): a CMake project owns its directory unless another
+/// ecosystem's main module is there too, and outranks a submodule.
+const RANK_CMAKE_PROJECT: u8 = 2;
+const RANK_SUBMODULE: u8 = 3;
 
 /// `p` as a path relative to the scan root, without `.` or `..`. `None`
 /// when it is absolute outside the root or escapes it.
@@ -80,6 +83,8 @@ fn is_requirements_file(path: &Path) -> bool {
 #[derive(Debug, Default)]
 pub(crate) struct OwnerIndex {
     by_dir: BTreeMap<PathBuf, String>,
+    /// Every candidate per directory, best first (spec 1618 `enclosing`).
+    all_by_dir: BTreeMap<PathBuf, Vec<(u8, String)>>,
 }
 
 impl OwnerIndex {
@@ -93,8 +98,10 @@ impl OwnerIndex {
     ) -> Self {
         let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
         let mut best: BTreeMap<PathBuf, (u8, String)> = BTreeMap::new();
+        let mut all_by_dir: BTreeMap<PathBuf, Vec<(u8, String)>> = BTreeMap::new();
         let mut offer = |dir: PathBuf, rank: u8, purl: &str| {
             let cand = (rank, purl.to_string());
+            all_by_dir.entry(dir.clone()).or_default().push(cand.clone());
             match best.get(&dir) {
                 Some(cur) if *cur <= cand => {}
                 _ => {
@@ -110,7 +117,13 @@ impl OwnerIndex {
             let Some(first) = c.evidence.source_file_paths.first() else { continue };
             let Some(ws) = crate::scan_fs::workspace_root::derive_workspace_root(first, &canonical_root, mode) else { continue };
             let dir = if ws == "." { PathBuf::new() } else { PathBuf::from(ws) };
-            let rank = if c.purl.ecosystem() == "pypi" { RANK_PYPI_MAIN_MODULE } else { RANK_OTHER_MAIN_MODULE };
+            let rank = if c.purl.ecosystem() == "pypi" {
+                RANK_PYPI_MAIN_MODULE
+            } else if crate::scan_fs::package_db::cmake::projects::is_cmake_project(c) {
+                RANK_CMAKE_PROJECT
+            } else {
+                RANK_OTHER_MAIN_MODULE
+            };
             offer(dir, rank, c.purl.as_str());
         }
         for (dir, purl) in submodule_dirs {
@@ -119,12 +132,29 @@ impl OwnerIndex {
             offer(rel, RANK_SUBMODULE, purl);
         }
         let by_dir: BTreeMap<PathBuf, String> = best.into_iter().map(|(d, (_, p))| (d, p)).collect();
+        for v in all_by_dir.values_mut() {
+            v.sort();
+            v.dedup();
+        }
         tracing::debug!(owners = ?by_dir, "declared requirements: owner index");
-        Self { by_dir }
+        Self { by_dir, all_by_dir }
     }
 
     /// The nearest owner of a file, walking up from its directory to the
     /// scan root inclusive (`""`).
+    /// Spec 1618 (research R4): what encloses the project `own` declared in
+    /// directory `dir`: the best other owner of `dir` itself (another
+    /// ecosystem's main module there, or the submodule whose root it is),
+    /// else the nearest owner of an ancestor. Never `own`.
+    pub(crate) fn enclosing(&self, dir: &Path, own: &str) -> Option<&str> {
+        if let Some(other) = self.all_by_dir.get(dir).and_then(|v| v.iter().find(|(_, p)| p != own)) {
+            return Some(other.1.as_str());
+        }
+        dir.ancestors()
+            .skip(1)
+            .find_map(|d| self.by_dir.get(d).map(String::as_str).filter(|p| *p != own))
+    }
+
     pub(crate) fn owner_of(&self, file: &Path) -> Option<&str> {
         let dir = file.parent()?;
         dir.ancestors()
@@ -287,6 +317,54 @@ mod tests {
 
     fn edges(d: &DeclaredAttachment) -> Vec<(String, String)> {
         d.edges.iter().map(|r| (r.from.clone(), r.to.clone())).collect()
+    }
+
+    fn cmake_project(purl: &str, lists: &str) -> ResolvedComponent {
+        let mut c = main_module(purl, lists);
+        c.extra_annotations.insert("waybill:source-mechanism".to_string(), serde_json::json!("cmake-project"));
+        c
+    }
+
+    fn index(comps: &[ResolvedComponent], subs: &[(&str, &str)]) -> OwnerIndex {
+        let dirs: BTreeMap<PathBuf, String> =
+            subs.iter().map(|(d, p)| (Path::new(ROOT).join(d), p.to_string())).collect();
+        OwnerIndex::build(comps, &dirs, Path::new(ROOT), crate::scan_fs::ScanMode::Path)
+    }
+
+    /// Spec 1618 (research R3): in one directory, another ecosystem's main
+    /// module and a PyPI one outrank a CMake project, which outranks a
+    /// submodule.
+    #[test]
+    fn s1618_cmake_project_rank() {
+        let cm = "pkg:generic/waybill-fixture-cm@1.0.0";
+        // Sorts after `pkg:generic`, so only the rank, not the PURL tie-break, lets it win.
+        let golang = "pkg:golang/example.com/waybill-fixture-mod@v1.0.0";
+        let py = "pkg:pypi/waybill-fixture-py@1.0.0";
+        let sub = "pkg:github/example/waybill-fixture-sub@abc";
+        let i = index(&[cmake_project(cm, "d/CMakeLists.txt"), main_module(golang, "d/go.mod")], &[]);
+        assert_eq!(i.owner_of(Path::new("d/x.txt")), Some(golang));
+        let i = index(&[cmake_project(cm, "d/CMakeLists.txt"), main_module(py, "d/pyproject.toml")], &[]);
+        assert_eq!(i.owner_of(Path::new("d/x.txt")), Some(py));
+        let i = index(&[cmake_project(cm, "d/CMakeLists.txt")], &[("d", sub)]);
+        assert_eq!(i.owner_of(Path::new("d/x.txt")), Some(cm));
+    }
+
+    /// Spec 1618 (research R4): `enclosing` never returns the project itself.
+    #[test]
+    fn s1618_enclosing() {
+        let outer = "pkg:generic/waybill-fixture-outer@1.0.0";
+        let inner = "pkg:generic/waybill-fixture-inner@1.0.0";
+        let sub = "pkg:github/example/waybill-fixture-sub@abc";
+        let i = index(&[cmake_project(outer, "CMakeLists.txt"), cmake_project(inner, "a/b/CMakeLists.txt")], &[]);
+        assert_eq!(i.enclosing(Path::new("a/b"), inner), Some(outer));
+        assert_eq!(i.enclosing(Path::new(""), outer), None, "nothing encloses the scan root's project");
+        // A project at a submodule's root is enclosed by that submodule.
+        let i = index(&[cmake_project(inner, "s/CMakeLists.txt")], &[("s", sub)]);
+        assert_eq!(i.enclosing(Path::new("s"), inner), Some(sub));
+        // Another ecosystem's main module in the same directory encloses it.
+        let py = "pkg:pypi/waybill-fixture-py@1.0.0";
+        let i = index(&[cmake_project(inner, "CMakeLists.txt"), main_module(py, "pyproject.toml")], &[]);
+        assert_eq!(i.enclosing(Path::new(""), inner), Some(py));
     }
 
     #[test]

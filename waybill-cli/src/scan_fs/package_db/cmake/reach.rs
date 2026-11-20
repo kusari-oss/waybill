@@ -65,12 +65,23 @@ pub(crate) struct ReachMap {
     pub(crate) extra_files: Vec<PathBuf>,
     scan_root: PathBuf,
     canonical_root: PathBuf,
+    /// Spec 1618 (research R9): the files the scan-root `CMakeLists.txt`
+    /// reaches through add_subdirectory() or include(), itself included;
+    /// `None` when there is no scan-root `CMakeLists.txt`.
+    from_root: Option<BTreeSet<PathBuf>>,
 }
 
 impl ReachMap {
     /// The conditions reaching `path`, a walked file or an extra file.
     pub(crate) fn seed(&self, path: &Path) -> Vec<String> {
         self.by_file.get(&rebase(path, &self.scan_root, &self.canonical_root)).map(Reach::seed).unwrap_or_default()
+    }
+
+    /// Whether the scan-root `CMakeLists.txt` reaches `path`; `None` when the
+    /// scan root has no `CMakeLists.txt`, where the question is undefined.
+    pub(crate) fn reached_from_root(&self, path: &Path) -> Option<bool> {
+        let set = self.from_root.as_ref()?;
+        Some(set.contains(&rebase(path, &self.scan_root, &self.canonical_root)))
     }
 }
 
@@ -243,8 +254,25 @@ pub(crate) fn compute(scan_root: &Path, walked: &[(PathBuf, Commands)]) -> Reach
     for n in &nodes {
         by_file.entry(n.clone()).or_insert(Reach::Unconditional);
     }
+    let root_lists = root.join("CMakeLists.txt");
+    let from_root = nodes.contains(&root_lists).then(|| {
+        let mut out: BTreeMap<&PathBuf, Vec<&PathBuf>> = BTreeMap::new();
+        for (file, edges) in &g.into {
+            for (src, _) in edges {
+                out.entry(src).or_default().push(file);
+            }
+        }
+        let mut seen: BTreeSet<PathBuf> = BTreeSet::new();
+        let mut stack = vec![&root_lists];
+        while let Some(f) = stack.pop() {
+            if seen.insert(f.clone()) {
+                stack.extend(out.get(f).into_iter().flatten().copied());
+            }
+        }
+        seen
+    });
     let extra_files = nodes.into_iter().filter(|n| !walked.contains(n)).collect();
-    ReachMap { by_file, extra_files, scan_root: scan_root.to_path_buf(), canonical_root: root }
+    ReachMap { by_file, extra_files, scan_root: scan_root.to_path_buf(), canonical_root: root, from_root }
 }
 
 /// Every file's reach, as a fixed point: a file nothing reaches is
@@ -325,6 +353,41 @@ mod tests {
 
     fn seed(m: &ReachMap, root: &Path, rel: &str) -> Vec<String> {
         m.seed(&root.join(rel))
+    }
+
+    /// Spec 1618 (research R9): reached from the scan-root `CMakeLists.txt`
+    /// through add_subdirectory() or include(), conditionally or not.
+    #[test]
+    fn s1618_reached_from_root() {
+        let (d, w) = tree(&[
+            ("CMakeLists.txt", "add_subdirectory(a)
+if(X)
+ add_subdirectory(c)
+endif()
+"),
+            ("a/CMakeLists.txt", "include(../cmake/m.cmake)
+"),
+            ("c/CMakeLists.txt", ""),
+            ("cmake/m.cmake", ""),
+            ("other/CMakeLists.txt", "add_subdirectory(inner)
+"),
+            ("other/inner/CMakeLists.txt", ""),
+        ]);
+        let m = compute(d.path(), &w);
+        let r = |rel: &str| m.reached_from_root(&d.path().join(rel));
+        assert_eq!(r("CMakeLists.txt"), Some(true));
+        assert_eq!(r("a/CMakeLists.txt"), Some(true));
+        assert_eq!(r("c/CMakeLists.txt"), Some(true), "a conditional add_subdirectory still reaches");
+        assert_eq!(r("cmake/m.cmake"), Some(true));
+        assert_eq!(r("other/CMakeLists.txt"), Some(false));
+        assert_eq!(r("other/inner/CMakeLists.txt"), Some(false), "reached only from an unreached file");
+    }
+
+    #[test]
+    fn s1618_no_root_listfile_means_undefined() {
+        let (d, w) = tree(&[("a/CMakeLists.txt", ""), ("b/CMakeLists.txt", "")]);
+        let m = compute(d.path(), &w);
+        assert_eq!(m.reached_from_root(&d.path().join("a/CMakeLists.txt")), None);
     }
 
     #[test]

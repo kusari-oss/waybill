@@ -154,6 +154,9 @@ pub(crate) struct Declarations {
     pub(crate) fetch_purls: BTreeMap<String, String>,
     /// `project()` names, lowercased (research R9).
     pub(crate) projects: BTreeSet<String>,
+    /// Spec 1618 (#1616): each top-level `project()` in a `CMakeLists.txt`,
+    /// with its version (research R1).
+    pub(crate) project_decls: Vec<super::projects::ProjectDeclaration>,
 }
 
 /// [`read_fetches`], plus the package searches in the same files, read from
@@ -164,6 +167,7 @@ pub(crate) fn read_declarations(
 ) -> (Vec<PackageDbEntry>, FetchCoverage, Declarations) {
     let mut found = super::searches::FileSearches::default();
     let mut projects: BTreeSet<String> = BTreeSet::new();
+    let mut project_decls: Vec<super::projects::ProjectDeclaration> = Vec::new();
     let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
     let mut cov = FetchCoverage::default();
     // Pre-pass: every file's commands, the mode each directory sets, and
@@ -221,6 +225,10 @@ pub(crate) fn read_declarations(
     });
     cov.wrapper_definitions = defs.wrapper_count();
 
+    // Spec 1618 FR-009: only files the walker handed over declare projects,
+    // so its skip set and `--exclude-path` hold; an include()-reached extra
+    // file does not.
+    let walked_files: std::collections::HashSet<&PathBuf> = files.iter().collect();
     let mut decls: Vec<Declaration> = Vec::new();
     for (path, rel, _, cmds) in &parsed {
         let vars = vars_of.get(rel.as_path()).unwrap_or(&no_vars);
@@ -250,6 +258,20 @@ pub(crate) fn read_declarations(
             if name == "project" {
                 if let Some(p) = args.first().filter(|p| !p.contains("${")) {
                     projects.insert(p.to_lowercase());
+                }
+                // Spec 1618: a project component needs a directory, so only a
+                // `CMakeLists.txt`'s top-level call declares one.
+                let is_lists = rel.file_name().is_some_and(|n| n == "CMakeLists.txt");
+                if is_lists && open.is_empty() && walked_files.contains(path) {
+                    if let Some((pname, version)) = super::projects::parse_project(args, vars) {
+                        project_decls.push(super::projects::ProjectDeclaration {
+                            name: pname,
+                            version,
+                            rel_file: rel.clone(),
+                            source_path: source_path.clone(),
+                            reached: reach.reached_from_root(path),
+                        });
+                    }
                 }
             }
             let builtin = match name.as_str() {
@@ -333,7 +355,7 @@ pub(crate) fn read_declarations(
             "cmake: fetch declarations (spec 1538, 1539)"
         );
     }
-    let decls = Declarations { searches: found.searches, unresolved_searches: found.unresolved, fetch_purls, projects };
+    let decls = Declarations { searches: found.searches, unresolved_searches: found.unresolved, fetch_purls, projects, project_decls };
     (entries, cov, decls)
 }
 

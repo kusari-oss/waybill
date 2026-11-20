@@ -17,7 +17,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"excluded_files\\\":0,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":8,\\\"with_candidates\\\":0}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":0,\\\"excluded_files\\\":0,\\\"excluded_members\\\":0,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":9,\\\"with_candidates\\\":0}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -89,28 +89,11 @@
   "creationInfo": "<masked>",
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-<masked>"
+    "SPDXRef-Package-3ZCJGCVHKZMM6Z4A"
   ],
   "documentNamespace": "<masked>",
   "name": "Waybill source scan (identity unavailable)",
   "packages": [
-    {
-      "SPDXID": "SPDXRef-DocumentRoot-<masked>",
-      "downloadLocation": "NOASSERTION",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:generic/waybill-fixture-tree@0.0.0",
-          "referenceType": "purl"
-        }
-      ],
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "waybill-fixture-tree",
-      "supplier": "Organization: waybill contributors",
-      "versionInfo": "0.0.0"
-    },
     {
       "SPDXID": "SPDXRef-Package-B66EGJI4UKE5G52Z",
       "annotations": [
@@ -412,6 +395,73 @@
       "versionInfo": "NOASSERTION"
     },
     {
+      "SPDXID": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"CMakeLists.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-role\",\"value\":\"main-module\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"cmake-project\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:version-absence\",\"value\":\"not-declared\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/waybill_fixture_ctl",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "waybill_fixture_ctl",
+      "primaryPackagePurpose": "APPLICATION",
+      "versionInfo": "NOASSERTION"
+    },
+    {
       "SPDXID": "SPDXRef-Package-GFOD7HEZCPSJRXKS",
       "annotations": [
         {
@@ -612,49 +662,49 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-<masked>",
+      "relatedSpdxElement": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-5FLLHAQWZ77KZEXI",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+      "spdxElementId": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-5U67C2Z5JF2QL3IN",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+      "spdxElementId": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-5USGTV6CAW3SI2A7",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+      "spdxElementId": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-B66EGJI4UKE5G52Z",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+      "spdxElementId": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-GFOD7HEZCPSJRXKS",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+      "spdxElementId": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-RJCOM5YYU6EMGM2U",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+      "spdxElementId": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-VVF5FIFV6NYRZK55",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+      "spdxElementId": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-WT4B32PN3AHMQFDW",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
+      "spdxElementId": "SPDXRef-Package-3ZCJGCVHKZMM6Z4A"
     }
   ],
   "spdxVersion": "SPDX-2.3"
