@@ -19,7 +19,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Census, before any code. Add `census/projects.py` and `.github/workflows/census-projects.yml` to `kusari-sandbox/waybill-fixture-therock-sdk`, following `census/dotdirs.py` and `census-dotdirs.yml`; run TheRock only there, and the three quality-corpus targets (`cmake-nlohmann-json`, `python-pytorch`, `cpp-mongo`) at their pinned SHAs from `xtask/corpus/quality-corpus.toml`, in the same workflow. For each tree record, in `specs/1618-cmake-project-components/measurements/census.md`:
+- [X] T001 Census, before any code. Add `census/projects.py` and `.github/workflows/census-projects.yml` to `kusari-sandbox/waybill-fixture-therock-sdk`, following `census/dotdirs.py` and `census-dotdirs.yml`; run TheRock only there, and the three quality-corpus targets (`cmake-nlohmann-json`, `python-pytorch`, `cpp-mongo`) at their pinned SHAs from `xtask/corpus/quality-corpus.toml`, in the same workflow. For each tree record, in `specs/1618-cmake-project-components/measurements/census.md`:
   - (a) every literal `project(<name> …)` in a `CMakeLists.txt`, with directory, `VERSION` form (literal / `${}` / none) and whether a same-file literal `set()` resolves it;
   - (b) the population SC-001 measures: searched names that have a project declaration, re-counting #1616's 63 on the current pin;
   - (c) how many project directories each of R8's example/benchmark names and `TEST_DIRS` catches, listing any first-party library caught;
@@ -28,15 +28,15 @@
   - (f) projects whose name equals a fetch, installed record or submodule.
 
   Adjust R8's name list from (c) before T009.
-- [ ] T002 Vendored sample, after T001(d) and **before computing any precision**. Draw a random sample of ≥ 30 projects across the four trees, seeded and listed in the file. Label each `vendored` or `first-party` from the project's own files (licence holder, upstream URL, README), and commit `specs/1618-cmake-project-components/measurements/vendored-sample.tsv` with the evidence column. Then compute each signal's and two-signal conjunction's precision and recall in `measurements/vendored-rule.md`, and apply R10's fixed criterion (precision ≥ 0.90, ties to recall). If nothing qualifies, stop US2's C240 work and report to the maintainer.
+- [X] T002 Vendored sample, after T001(d) and **before computing any precision**. Draw a random sample of ≥ 30 projects across the four trees, seeded and listed in the file. Label each `vendored` or `first-party` from the project's own files (licence holder, upstream URL, README), and commit `specs/1618-cmake-project-components/measurements/vendored-sample.tsv` with the evidence column. Then compute each signal's and two-signal conjunction's precision and recall in `measurements/vendored-rule.md`, and apply R10's fixed criterion (precision ≥ 0.90, ties to recall). If nothing qualifies, stop US2's C240 work and report to the maintainer.
 - [X] T003 Create `IT` with helpers: `scan` (three formats, parity extractors for C42, C55, C62, C197, C236, C237, C238–C241), `by_purl`, `prop`, `edges_from`, `root_of`, `assert_repeatable` (as in `waybill-cli/tests/installed_record_scope.rs`), and `write_project(root, dir, name, version_form)`.
 
 ## Phase 2: Foundational
 
 - [X] T004 P-ctl in `IT`: a tree with a FetchContent declaration and a `find_package` but **no** `project()`, in `FX/ctl/`. Generate its golden in `FX/ctl-golden/` from **`main`'s** binary before any source change; compare masked output (FR-012).
-- [ ] T005 Unit tests in `FE`/`PR` for `ProjectDeclaration` parsing: `VERSION 1.2.3`, `VERSION ${V}` with and without same-file `set(V …)`, no `VERSION`, `project(${X})` (skipped), `project(n LANGUAGES CXX VERSION 2)`, comments and multi-line calls.
-- [ ] T006 Implement `DeclaredVersion` and `ProjectDeclaration` in `PR`, and collect them in `FE::read_declarations`'s existing loop (replacing the `projects` name set, which is derived from them for `built_in_tree`), using the file's `Vars`.
-- [ ] T007 Reached-from-root set in `RE`: BFS from `<scan root>/CMakeLists.txt` over `compute`'s `into` edges, exposed on `ReachMap`; empty-means-undefined when there is no scan-root listfile. Unit-test: reached child, unreached sibling, no root listfile.
+- [X] T005 Unit tests in `FE`/`PR` for `ProjectDeclaration` parsing: `VERSION 1.2.3`, `VERSION ${V}` with and without same-file `set(V …)`, no `VERSION`, `project(${X})` (skipped), `project(n LANGUAGES CXX VERSION 2)`, comments and multi-line calls.
+- [X] T006 Implement `DeclaredVersion` and `ProjectDeclaration` in `PR`, and collect them in `FE::read_declarations`'s existing loop (replacing the `projects` name set, which is derived from them for `built_in_tree`), using the file's `Vars`.
+- [X] T007 Reached-from-root set in `RE`: BFS from `<scan root>/CMakeLists.txt` over `compute`'s `into` edges, exposed on `ReachMap`; empty-means-undefined when there is no scan-root listfile. Unit-test: reached child, unreached sibling, no root listfile.
 
 **Checkpoint**: P-ctl passes at `main`; declarations parse.
 

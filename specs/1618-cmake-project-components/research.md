@@ -99,7 +99,7 @@ All code references are to `main` at `786091a8`. "Measured" means it was run. An
 
 **Decision.**
 - **Test directories:** use `TEST_DIRS` unchanged, so a project and a search in the same directory agree.
-- **Example and benchmark directories:** `example`, `examples`, `sample`, `samples`, `benchmark`, `benchmarks`, `bench`, with a new C62 value `source-example-directory`.
+- **Example, benchmark and documentation directories:** `example`, `examples`, `sample`, `samples`, `benchmark`, `benchmarks`, `bench`, and, added by the T001 census, `doc`, `docs`, `documentation`. They take a new C62 value, `source-example-directory` (`measurements/census.md` (c)).
 - **Census before implementation.** T001 counts, on TheRock and the three quality-corpus targets, how many project directories each name catches. A name that catches a first-party library is removed, and one the census shows missing is added, before implementation.
 
 ## R9. Projects the root build does not reach (FR-016)
