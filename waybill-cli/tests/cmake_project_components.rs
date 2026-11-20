@@ -26,7 +26,7 @@ const C197: &str = "waybill:version-absence";
 const C236: &str = "waybill:cmake-find-conditions";
 const C238: &str = "waybill:declared-version-expression";
 const C239: &str = "waybill:cmake-build-reach";
-const ROWS: &[&str] = &["C42", "C55", "C62", "C197", "C236", "C237"];
+const ROWS: &[&str] = &["C42", "C55", "C62", "C197", "C236", "C237", "C238", "C239", "C240", "C241"];
 
 // ---------------------------------------------------------------------
 // Helpers (T003)
@@ -596,4 +596,117 @@ fn p19_split_has_a_document_per_project() {
         .collect();
     roots.sort();
     assert_eq!(roots, vec![A.to_string(), B.to_string()], "{manifest}");
+}
+
+// ---------------------------------------------------------------------
+// User story 2: vendored code is visible and marked (T016)
+// ---------------------------------------------------------------------
+
+const C240: &str = "waybill:vendored";
+const C241: &str = "waybill:vendored-signals";
+
+/// A git superproject `app` with project `name` at `dir`, a submodule when
+/// `submodule`, and a licence file when `licence`.
+fn vendored_tree(dir: &str, name: &str, submodule: bool, licence: bool) -> (common::git_fixture::GitFixture, Docs) {
+    use common::git_fixture::GitFixture;
+    let fx = GitFixture::new();
+    fx.repo("app");
+    // The root build reaches both directories, so `not-reached` is not among
+    // the signals under test.
+    fx.write("app/CMakeLists.txt", &format!("project(waybill-fixture-app VERSION 1.0.0)\nadd_subdirectory(core)\nadd_subdirectory({dir})\n"));
+    // A runtime sibling, so the vendored project is a component, not the root.
+    fx.write("app/core/CMakeLists.txt", "project(waybill-fixture-core VERSION 1.0.0)\n");
+    if submodule {
+        fx.repo("dep");
+        fx.add_submodule("app", "dep", dir);
+    }
+    fx.write(&format!("app/{dir}/CMakeLists.txt"), &format!("project({name} VERSION 2.0.0)\n"));
+    if licence {
+        fx.write(&format!("app/{dir}/LICENSE"), "Copyright (c) Somebody Else\n");
+    }
+    let f = common::cmake_fetch::scan(&fx, &fx.path("app"), &[]);
+    let d = Docs { cdx: f.cdx, spdx23: f.spdx23, spdx3: f.spdx3, stderr: String::new() };
+    (fx, d)
+}
+
+fn signals(c: &Value) -> Vec<String> {
+    prop(c, C241).map(|v| serde_json::from_str(v).unwrap()).unwrap_or_default()
+}
+
+/// P-9: path segment and submodule boundary: vendored (T002's rule).
+#[test]
+fn p09_a_vendored_project_is_marked() {
+    let (_fx, d) = vendored_tree("third_party/vend", "waybill-fixture-vendored", true, true);
+    let c = by_purl(&d, "pkg:generic/waybill-fixture-vendored@2.0.0");
+    assert_eq!(prop(c, C240), Some("true"), "{c}");
+    assert_eq!(signals(c), ["licence-file", "path-segment", "submodule-boundary"]);
+}
+
+/// Each signal alone is recorded, and alone is not a verdict.
+#[test]
+fn p09_single_signals_are_recorded_without_a_verdict() {
+    for (dir, sub, lic, want) in [
+        ("third_party/vend", false, false, vec!["path-segment"]),
+        ("libs/vend", true, false, vec!["submodule-boundary"]),
+        ("libs/vend", false, true, vec!["licence-file"]),
+    ] {
+        let (_fx, d) = vendored_tree(dir, "waybill-fixture-vendored", sub, lic);
+        let c = by_purl(&d, "pkg:generic/waybill-fixture-vendored@2.0.0");
+        assert_eq!(signals(c), want, "{dir} sub={sub} lic={lic}");
+        assert_eq!(prop(c, C240), None, "{dir} sub={sub} lic={lic}");
+    }
+}
+
+/// A first-party project carries neither row.
+#[test]
+fn p09_a_first_party_project_carries_neither() {
+    let (_fx, d) = vendored_tree("libs/own", "waybill-fixture-own", false, false);
+    let c = by_purl(&d, "pkg:generic/waybill-fixture-own@2.0.0");
+    assert_eq!(prop(c, C240), None);
+    assert_eq!(prop(c, C241), None);
+}
+
+// ---------------------------------------------------------------------
+// P-rep (T020, FR-013)
+// ---------------------------------------------------------------------
+
+/// The cases in one tree, scanned 20 times: identical each time.
+#[test]
+fn p_rep_repeatable() {
+    let t = tree();
+    let r = t.path();
+    write(r, "CMakeLists.txt", "cmake_minimum_required(VERSION 3.20)\nadd_subdirectory(a)\nadd_subdirectory(b)\n");
+    write_project(r, "a", "waybill-fixture-a", Version::Literal("1.0.0"), "find_package(waybill-fixture-b REQUIRED)\nif(OPT)\n find_package(waybill-fixture-c)\nendif()\n");
+    write_project(r, "b", "waybill-fixture-b", Version::Literal("2.0.0"), "");
+    write_project(r, "c", "waybill-fixture-c", Version::None, "");
+    write(r, "v/CMakeLists.txt", "set(V 3.1.4)\nproject(waybill-fixture-var VERSION ${V})\n");
+    write_project(r, "e", "waybill-fixture-expr", Version::Raw("VERSION ${FROM_ELSEWHERE}"), "");
+    write_project(r, "x", "waybill-fixture-dup", Version::Literal("1.0.0"), "");
+    write_project(r, "y", "waybill-fixture-dup", Version::None, "");
+    write_project(r, "z", "waybill-fixture-dup", Version::Literal("2.0.0"), "");
+    write_project(r, "tests/t", "waybill-fixture-t", Version::Literal("1.0.0"), "find_package(waybill-fixture-only-tests)\n");
+    write_project(r, "lib/only", "waybill-fixture-only-tests", Version::Literal("1.0.0"), "");
+    write_project(r, "examples/e", "waybill-fixture-e", Version::Literal("1.0.0"), "");
+    write_project(r, "third_party/v", "waybill-fixture-vendored", Version::Literal("2.0.0"), "");
+    write(r, "third_party/v/LICENSE", "x\n");
+    let d = scan(r);
+    // 13 declarations, 11 components: the versionless `dup` joins `dup@1.0.0`.
+    assert_eq!(
+        projects(&d),
+        [
+            "pkg:generic/waybill-fixture-a@1.0.0",
+            "pkg:generic/waybill-fixture-b@2.0.0",
+            "pkg:generic/waybill-fixture-c",
+            "pkg:generic/waybill-fixture-dup@1.0.0",
+            "pkg:generic/waybill-fixture-dup@2.0.0",
+            "pkg:generic/waybill-fixture-e@1.0.0",
+            "pkg:generic/waybill-fixture-expr",
+            "pkg:generic/waybill-fixture-only-tests@1.0.0",
+            "pkg:generic/waybill-fixture-t@1.0.0",
+            "pkg:generic/waybill-fixture-var@3.1.4",
+            "pkg:generic/waybill-fixture-vendored@2.0.0",
+        ]
+    );
+    assert_eq!(unreachable(&d), Vec::<String>::new());
+    assert_repeatable(r);
 }

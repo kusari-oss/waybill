@@ -259,17 +259,63 @@ in C103 when it differs.
      is searched only from test contexts is Test;
   3. a git submodule whose directory is the name, whose C57
      `waybill:build-reference` becomes `declared-and-used`;
-  4. a name the tree builds itself — a `project(<name>)`, a
-     `<name>Config.cmake.in` / `<name>-config.cmake.in`, or a
-     `<name>Config.cmake` with no version file beside it — yields no
-     component and no edge, and is listed in C237's `in-tree`. A component
-     for each in-tree CMake project is #1616.
+  4. an in-tree CMake project component (below): the search's file joins
+     its evidence, the searching project gets an edge to it, and it is
+     counted in C237 `paired.project`;
+  5. a name the tree builds only as a `<name>Config.cmake.in` /
+     `<name>-config.cmake.in`, or a `<name>Config.cmake` with no version
+     file beside it, yields no component and no edge, and is listed in
+     C237's `in-tree`.
 - **Ownership.** A search is a dependency of the nearest enclosing project,
   or of the document root when there is none, as fetches are.
 - **Accounting.** `waybill:cmake-find-coverage` (C237) counts every search
   read: `read` = `unresolved` + `tools` + `paired.fetch` + `paired.installed`
-  + `paired.submodule` + `in-tree-declarations` + the searches emitted
-  components stand for. A search whose name holds `${…}` is `unresolved`.
+  + `paired.submodule` + `paired.project` + `in-tree-declarations` + the
+  searches emitted components stand for. A search whose name holds `${…}` is
+  `unresolved`. `paired.project` appears only when non-zero.
+
+### Projects the tree builds
+
+Spec 1618 (#1616). Each literal `project(<name> …)` at the top level of a
+`CMakeLists.txt` the walker hands the reader is a component:
+
+- **Identity.** `pkg:generic/<lowercased name>@<version>`, the same form as
+  the installed-library record its build produces. The version is the
+  `VERSION` argument, or a `${X}` the same file's single-valued literal
+  `set(X …)` resolves. With no `VERSION`, the component is versionless with
+  C197 `not-declared`; with an unresolved expression, versionless with the
+  expression in C238. Declarations of one name and version are one
+  component; a versionless declaration joins a versioned one of its name. A
+  project whose name a fetch, an installed-library record or a git
+  submodule claims is that component instead, and its file joins the
+  evidence.
+- **Role.** A main module (C55 `cmake-project`). It owns the CMake fetches,
+  searches and links, and the pip requirements files, below it. In one
+  directory another ecosystem's main module owns before it, and it owns
+  before a git submodule.
+- **Root.** A CMake project is a root candidate only when the scan has no
+  main module of another ecosystem, and never when it is scoped below. A
+  CMake-only repository's top-level project is therefore its subject; a
+  polyglot repository keeps the root it had.
+- **Edges.** A search for it gives the searching project an edge to it. A
+  project nothing searches for is enclosed by its directory's other owner (a
+  main module beside it, or the submodule whose root it is) or by the
+  nearest owner above, or failing both by the document root.
+- **Scope.** From its directory, never from searches: under `test`, `tests`
+  or `unittests` it is Test (C62 `source-test-directory`); under an
+  example, sample, benchmark or documentation directory it is Development
+  (C62 `source-example-directory`). A conditional search records its
+  conditions (C236) without making it Optional. A project with no
+  directory scope found only by test-context searches is Test.
+- **Reach.** A project the scan-root `CMakeLists.txt` does not reach through
+  `add_subdirectory()` or `include()` carries C239 `not-reached`. Super-builds
+  that add subprojects through their own functions leave most projects
+  unreached by this measure (795 of 811 on ROCm TheRock).
+- **Vendored.** C241 records which signals hold (`path-segment`,
+  `submodule-boundary`, `licence-file`, `not-reached`); C240
+  `waybill:vendored` is set when `path-segment` and `submodule-boundary`
+  both hold, the rule chosen by measurement
+  (`specs/1618-cmake-project-components/measurements/vendored-rule.md`).
 
 ### Fetches made through wrappers
 
@@ -1791,9 +1837,10 @@ yet — tracked as a follow-up.
   - **The nearest enclosing project owns the file,** walking up from its
     directory to the scan root inclusive. A project is a main module of any
     ecosystem or a git submodule. In one directory, a Python main module
-    wins, then any other main module (lowest PURL), then a submodule. CMake,
-    Conan and vcpkg emit no project component, so a CMake-only directory
-    owns nothing and the walk continues upward.
+    wins, then any other main module (lowest PURL), then a CMake project
+    (spec 1618), then a submodule. Conan and vcpkg emit no project
+    component, so a directory with only their manifests owns nothing and
+    the walk continues upward.
   - **No project anywhere up to the scan root:** the package is a direct
     dependency of the document's subject, whatever other edges the root has,
     such as git submodules.

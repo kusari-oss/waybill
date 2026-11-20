@@ -47,5 +47,5 @@ CycloneDX `pedigree` describes ancestry and patches, not where code sits in a tr
 - **P-18**: P-13 with `--root-name waybill-fixture-override --root-version 9.9.9`. → the project is demoted and anchored (m860). With `--root-purl pkg:generic/waybill-fixture-top@1.2.3`, it is folded into the root (#1626).
 - **P-19**: `--split` on P-1. → one document per project boundary.
 - **P-ctl**: a tree with CMake fetches and searches and **no** `project()`. → byte-identical to `main` (FR-012), against a golden generated from `main`'s binary before any source change. This includes C237, which must carry no `paired.project` key.
-- **P-9b**: no vendored rule qualified (T002). → C241 present, no C240 on any project component.
+- **P-9b**: no vendored rule qualified (T002). → C241 present, no C240 on any project component. *Not applicable: T002's rule qualified (`measurements/vendored-rule.md`).*
 - **P-rep**: P-1 to P-17 in one tree, scanned 20 times. → identical each time.

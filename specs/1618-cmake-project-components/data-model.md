@@ -48,7 +48,7 @@ Ranks, best first:
 3. **`RANK_CMAKE_PROJECT`** (new);
 4. `RANK_SUBMODULE`.
 
-Adds `owner_above(dir)`: the nearest owner strictly above `dir`, used for a project's enclosing edge (R4).
+Adds `enclosing(dir, own)`: the best other owner of the project's own directory (another ecosystem's main module there, or the submodule whose root it is), else the nearest owner of an ancestor; never the project itself. Used for a project's enclosing edge (R4). It replaces the planned `owner_above`, which would have skipped a submodule sharing the project's directory.
 
 ## FindCoverage / C237 (extended)
 

@@ -1074,6 +1074,13 @@ cdx_anno!(c235_cdx, "waybill:cmake-link-conditions", component);
 // C237 — package-search accounting.
 cdx_anno!(c236_cdx, "waybill:cmake-find-conditions", component);
 cdx_anno!(c237_cdx, "waybill:cmake-find-coverage", document);
+// Spec 1618 (#1616): C238 — an in-tree CMake project's unresolved VERSION
+// expression; C239 — not reached from the root build; C240 — vendored;
+// C241 — the vendored signals that hold.
+cdx_anno!(c238_cdx, "waybill:declared-version-expression", component);
+cdx_anno!(c239_cdx, "waybill:cmake-build-reach", component);
+cdx_anno!(c240_cdx, "waybill:vendored", component);
+cdx_anno!(c241_cdx, "waybill:vendored-signals", component);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);

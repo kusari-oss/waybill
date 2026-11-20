@@ -1556,6 +1556,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // entry per call site.
     let search_pairings =
         cmake_search_pair::pair(&mut components, &git_submodule_dirs, cmake_find_coverage.as_mut());
+    // Spec 1618 (research R10): the vendored signal only submodules give,
+    // and the verdict.
+    package_db::cmake::projects::mark_vendored(&mut components, &git_submodule_dirs, root);
     {
         let targeted_before: std::collections::HashSet<String> =
             relationships.iter().map(|r| r.to.clone()).collect();

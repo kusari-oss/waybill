@@ -173,6 +173,47 @@ fn has_licence_file(dir: &Path) -> bool {
     })
 }
 
+/// Spec 1618 (research R10, T002): add `submodule-boundary` to C241 for a
+/// project at or below a git submodule's root (`submodule_dirs` holds
+/// canonical directories), and set C240 when the chosen rule holds:
+/// `path-segment` and `submodule-boundary` together. Both sides are compared
+/// relative to the scan root, as `declared_attach` compares them.
+pub(crate) fn mark_vendored(
+    components: &mut [ResolvedComponent],
+    submodule_dirs: &BTreeMap<PathBuf, String>,
+    scan_root: &Path,
+) {
+    use crate::scan_fs::declared_attach::relative;
+    let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+    let subs: Vec<PathBuf> = submodule_dirs
+        .keys()
+        .filter_map(|d| d.to_str().and_then(|s| relative(s, scan_root, &canonical_root)))
+        .collect();
+    for c in components.iter_mut().filter(|c| is_cmake_project(c)) {
+        let in_submodule = !subs.is_empty()
+            && c.evidence
+                .source_file_paths
+                .iter()
+                .filter(|f| Path::new(f).file_name().is_some_and(|n| n == "CMakeLists.txt"))
+                .filter_map(|f| relative(f, scan_root, &canonical_root))
+                .filter_map(|r| r.parent().map(Path::to_path_buf))
+                .any(|d| subs.iter().any(|s| d.starts_with(s)));
+        let mut signals: BTreeSet<String> = c
+            .extra_annotations
+            .get(ANN_VENDORED_SIGNALS)
+            .and_then(|v| v.as_array())
+            .map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect())
+            .unwrap_or_default();
+        if in_submodule {
+            signals.insert(SIGNAL_SUBMODULE_BOUNDARY.to_string());
+            c.extra_annotations.insert(ANN_VENDORED_SIGNALS.to_string(), serde_json::json!(signals));
+        }
+        if signals.contains(SIGNAL_PATH_SEGMENT) && signals.contains(SIGNAL_SUBMODULE_BOUNDARY) {
+            c.extra_annotations.insert(ANN_VENDORED.to_string(), serde_json::json!(true));
+        }
+    }
+}
+
 /// One entry per group, with the role, tier, mechanism, evidence, scope and
 /// markers of the data model. `submodule-boundary` and C240 need the
 /// submodule directories and are added in `scan_fs::cmake_search_pair`.
