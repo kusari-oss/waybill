@@ -206,26 +206,17 @@
     {
       "aggregate": "incomplete_first_party_only",
       "assemblies": [
-        "cmake@0.0.0"
+        "pkg:generic/test_cmake_project"
       ]
     },
     {
       "aggregate": "complete",
       "dependencies": [
-        "cmake@0.0.0"
+        "pkg:generic/test_cmake_project"
       ]
     }
   ],
   "dependencies": [
-    {
-      "dependsOn": [
-        "pkg:generic/boost@1.84.0",
-        "pkg:generic/openssl",
-        "pkg:generic/zlib@1.3.1",
-        "pkg:github/google/googletest@release-1.14.0"
-      ],
-      "ref": "cmake@0.0.0"
-    },
     {
       "dependsOn": [],
       "ref": "pkg:generic/boost@1.84.0"
@@ -233,6 +224,15 @@
     {
       "dependsOn": [],
       "ref": "pkg:generic/openssl"
+    },
+    {
+      "dependsOn": [
+        "pkg:generic/boost@1.84.0",
+        "pkg:generic/openssl",
+        "pkg:generic/zlib@1.3.1",
+        "pkg:github/google/googletest@release-1.14.0"
+      ],
+      "ref": "pkg:generic/test_cmake_project"
     },
     {
       "dependsOn": [],
@@ -250,11 +250,57 @@
       }
     ],
     "component": {
-      "bom-ref": "cmake@0.0.0",
-      "name": "cmake",
-      "purl": "pkg:generic/cmake@0.0.0",
+      "bom-ref": "pkg:generic/test_cmake_project",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "test_cmake_project",
+      "properties": [
+        {
+          "name": "waybill:component-role",
+          "value": "main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-project"
+        },
+        {
+          "name": "waybill:version-absence",
+          "value": "not-declared"
+        }
+      ],
+      "purl": "pkg:generic/test_cmake_project",
       "type": "application",
-      "version": "0.0.0"
+      "version": ""
     },
     "licenses": [
       {
@@ -282,7 +328,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":0,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":3,\"with_candidates\":1}"
+        "value": "{\"addressable_without_cpe\":0,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":4,\"with_candidates\":1}"
       },
       {
         "name": "waybill:cmake-fetch-coverage",
