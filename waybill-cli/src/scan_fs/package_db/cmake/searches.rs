@@ -325,7 +325,9 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
         .map(|(name, a)| {
             let (scope, test_derivation) = if a.runtime {
                 (None, None)
-            } else if a.optional && !a.test_dir && !a.test_cond {
+            } else if a.optional {
+                // #1624: spec 1269's order, the strongest call site wins. A
+                // conditional product search outranks any test-context one.
                 (Some(LifecycleScope::Optional), None)
             } else if a.test_dir {
                 (Some(LifecycleScope::Test), Some("source-test-directory"))
@@ -403,6 +405,26 @@ mod tests {
         let r = read(text, &[]);
         assert_eq!(r.searches.len(), 1, "{r:?}");
         r.searches.into_iter().next().unwrap()
+    }
+
+    /// #1624: spec 1269's order across call sites, runtime > Optional >
+    /// Test. One conditional product search makes a name Optional even when
+    /// other searches are in test contexts.
+    #[test]
+    fn i1624_the_strongest_call_site_decides_the_scope() {
+        let product = one("if(WITH_X)\n  find_package(waybill-fixture-x)\nendif()");
+        let mut from_tests = one("find_package(waybill-fixture-x)");
+        from_tests.in_test_dir = true;
+        let mut under_testing = one("if(BUILD_TESTING)\n  find_package(waybill-fixture-x)\nendif()");
+        under_testing.in_test_dir = false;
+        let unconditional = one("find_package(waybill-fixture-x)");
+        let scope = |ss: &[PackageSearch]| scopes(ss).remove("waybill-fixture-x").map(|s| (s.scope, s.test_derivation));
+        assert_eq!(scope(&[product.clone(), from_tests.clone()]), Some((Some(LifecycleScope::Optional), None)));
+        assert_eq!(scope(&[product.clone(), under_testing.clone()]), Some((Some(LifecycleScope::Optional), None)));
+        assert_eq!(scope(&[from_tests.clone(), under_testing]), Some((Some(LifecycleScope::Test), Some("source-test-directory"))));
+        assert_eq!(scope(std::slice::from_ref(&from_tests)), Some((Some(LifecycleScope::Test), Some("source-test-directory"))));
+        assert_eq!(scope(std::slice::from_ref(&product)), Some((Some(LifecycleScope::Optional), None)));
+        assert_eq!(scope(&[product, from_tests, unconditional]), Some((None, None)));
     }
 
     #[test]
