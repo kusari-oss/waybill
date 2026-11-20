@@ -103,14 +103,14 @@
 
   Each must turn at least one test red, with 0 compile errors.
 - [X] T019 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Record `GATE_RESULT`, the ok and non-ok counts, passed/failed, failure blocks, and an empty `git diff --stat main -- '*Cargo.toml' Cargo.lock` in `specs/1617-installed-record-scope/measurements/gate-log.md`. Trace any repository golden that changes.
-- [ ] T020 Push. Dispatch measure-full (the SDK) and measure-source (TheRock source) against `main` with full SHAs. In `specs/1617-installed-record-scope/measurements/sdk.md`, record:
+- [X] T020 Push. Dispatch measure-full (the SDK) and measure-source (TheRock source) against `main` with full SHAs. In `specs/1617-installed-record-scope/measurements/sdk.md`, record:
   - scan time (SC-006);
   - the 9 records against research R6 (SC-001);
   - every other component whose C42, C62 or C122 changes, traced (SC-002);
   - TheRock source unchanged (SC-003);
   - parity, duplicates and runner identity (SC-005).
-- [ ] T021 Dispatch the public corpus with `regen_goldens=true`, and the quality corpus at the branch with a `main` control. Trace every change (SC-004), commit regenerated goldens if any, and record it all in `specs/1617-installed-record-scope/measurements/corpus.md`.
-- [ ] T022 Open the PR, with a body citing T018–T021, `Closes #1623` and the attribution line. Do not merge.
+- [X] T021 Dispatch the public corpus with `regen_goldens=true`, and the quality corpus at the branch with a `main` control. Trace every change (SC-004), commit regenerated goldens if any, and record it all in `specs/1617-installed-record-scope/measurements/corpus.md`.
+- [X] T022 Open the PR, with a body citing T018–T021, `Closes #1623` and the attribution line. Do not merge.
 
 ## Dependencies
 
