@@ -143,11 +143,16 @@ impl OwnerIndex {
     /// The nearest owner of a file, walking up from its directory to the
     /// scan root inclusive (`""`).
     /// Spec 1618 (research R4): what encloses the project `own` declared in
-    /// directory `dir`: the best other owner of `dir` itself (another
-    /// ecosystem's main module there, or the submodule whose root it is),
-    /// else the nearest owner of an ancestor. Never `own`.
+    /// directory `dir`: another ecosystem's main module in `dir` itself, or
+    /// the submodule whose root it is, else the nearest owner of an ancestor.
+    /// Never `own`, and never another CMake project of the same directory:
+    /// two `project()` calls in one directory are siblings, not nested.
     pub(crate) fn enclosing(&self, dir: &Path, own: &str) -> Option<&str> {
-        if let Some(other) = self.all_by_dir.get(dir).and_then(|v| v.iter().find(|(_, p)| p != own)) {
+        if let Some(other) = self
+            .all_by_dir
+            .get(dir)
+            .and_then(|v| v.iter().find(|(rank, p)| p != own && *rank != RANK_CMAKE_PROJECT))
+        {
             return Some(other.1.as_str());
         }
         dir.ancestors()
@@ -361,6 +366,15 @@ mod tests {
         // A project at a submodule's root is enclosed by that submodule.
         let i = index(&[cmake_project(inner, "s/CMakeLists.txt")], &[("s", sub)]);
         assert_eq!(i.enclosing(Path::new("s"), inner), Some(sub));
+        // Two CMake projects in one directory do not enclose each other: the
+        // nearest owner above encloses both.
+        let twin = "pkg:generic/waybill-fixture-twin@1.0.0";
+        let i = index(
+            &[cmake_project(outer, "CMakeLists.txt"), cmake_project(inner, "a/CMakeLists.txt"), cmake_project(twin, "a/CMakeLists.txt")],
+            &[],
+        );
+        assert_eq!(i.enclosing(Path::new("a"), inner), Some(outer));
+        assert_eq!(i.enclosing(Path::new("a"), twin), Some(outer));
         // Another ecosystem's main module in the same directory encloses it.
         let py = "pkg:pypi/waybill-fixture-py@1.0.0";
         let i = index(&[cmake_project(inner, "CMakeLists.txt"), main_module(py, "pyproject.toml")], &[]);

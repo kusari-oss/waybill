@@ -730,3 +730,19 @@ fn p20_include_vendored_folds_into_the_project() {
     let files = source_files(c);
     assert!(files.iter().any(|f| f == "CMakeLists.txt"), "the adding file joins the evidence: {files:?}");
 }
+
+/// P-21: two projects declared in one directory do not enclose each other;
+/// what is above encloses both, and neither has an edge to the other.
+#[test]
+fn p21_two_projects_in_one_directory() {
+    let t = tree();
+    write_project(t.path(), "", "waybill-fixture-top", Version::Literal("1.0.0"), "add_subdirectory(a)\n");
+    write(t.path(), "a/CMakeLists.txt", "project(waybill-fixture-one VERSION 1.0.0)\nproject(waybill-fixture-two VERSION 1.0.0)\n");
+    let d = scan(t.path());
+    let one = "pkg:generic/waybill-fixture-one@1.0.0";
+    let two = "pkg:generic/waybill-fixture-two@1.0.0";
+    assert!(!edges_from(&d, one).contains(&two.to_string()), "{:?}", edges_from(&d, one));
+    assert!(!edges_from(&d, two).contains(&one.to_string()), "{:?}", edges_from(&d, two));
+    let top = edges_from(&d, "pkg:generic/waybill-fixture-top@1.0.0");
+    assert!(top.contains(&one.to_string()) && top.contains(&two.to_string()), "{top:?}");
+}
