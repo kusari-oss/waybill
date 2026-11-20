@@ -33,7 +33,7 @@ One per distinct (name, effective version). Two declarations merge when their na
 | `lifecycle_scope` / C62 | `Test` / `source-test-directory` under `TEST_DIRS`; `Development` / `source-example-directory` under an example or benchmark directory (R8); otherwise none, unless R4's test-only-search rule applies |
 | `waybill:cmake-build-reach` (C239) | `not-reached` iff no declaration is reached |
 | `waybill:vendored-signals` (C241) | sorted JSON array of the signals that hold, if any (R10) |
-| `waybill:vendored` (C240) | `true` iff the chosen rule holds (R10) |
+| `waybill:vendored` (C240) | never set (spec Clarifications, 2026-11-20) |
 | C236 | the union of the conditions of the conditional searches paired with it |
 
 ## Pairing (extended, `cmake_search_pair`)

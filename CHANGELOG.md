@@ -20,9 +20,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   documentation). A CMake-only repository's top-level project becomes the
   document's subject, while any repository with another ecosystem's main
   module keeps its root. New rows: C238 (an unresolved version expression),
-  C239 (not reached from the root build), C240 (vendored, an existing key
-  now catalogued) and C241 (the vendored signals that hold). C55, C62, C197
-  and C237 gain values.
+  C239 (not reached from the root build) and C241 (the vendored signals that
+  hold, with no verdict derived from them); C240, the existing
+  `--include-vendored` key, is now catalogued. C55, C62, C197 and C237 gain
+  values.
 
 - **CMake package searches are read from every CMake file, with the
   conditions that reach them (#1591, #1605).** `find_package`,

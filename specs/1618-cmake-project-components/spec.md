@@ -40,6 +40,8 @@ The installed-library reader (spec 1531) names records `pkg:generic/<lowercased 
 - Amended during planning (research R6): searches paired with a project component are counted in a new C237 key, `paired.project`. `in-tree` keeps the names satisfied only by config templates or installed config files, which still have no component. The key is emitted only when non-zero, so a scan with no project components keeps C237's bytes (FR-012).
 - Amended during planning (research R7): C151 `waybill:unresolved-reason` is emitted only on design-tier components, and project components are source tier. So an unresolved `VERSION ${X}` is recorded in a new row, C238 `waybill:declared-version-expression`, holding the expression verbatim. "No version declared" extends C197 with `not-declared`.
 - Amended after analysis: the vendored classification is recorded as C240 `waybill:vendored = true` (an existing, uncatalogued key) when the measured rule holds. First-party is its absence. C241 records the signals either way. If no rule reaches the precision bar (research R10), no verdict is emitted.
+- Q (2026-11-20, after T026): the rule T002 chose from its sample (`path-segment` + `submodule-boundary`, 4 of 4) marked 10 TheRock projects, 7 of them first-party `deps/` dependency super-builds (precision 3 of 10). What ships? → A: signals only. C241 is emitted; no C240 on CMake projects. Choosing a verdict on a larger, stratified sample is a follow-up.
+- Q (2026-11-20, after T027): a project's enclosing edge (FR-006) and a test project's search back to its encloser form a cycle (nlohmann-json: `nlohmann_json ⇄ dummyimportminver`). → A: accepted as specified; modelling nesting as containment is a follow-up.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -69,8 +71,8 @@ A consumer scans a tree that carries third-party code as CMake projects, such as
 
 **Acceptance Scenarios**:
 
-1. **Given** a project under a directory the classification treats as vendored, **When** it is scanned, **Then** the component carries a recorded classification and the signal or signals that produced it.
-2. **Given** a first-party project, **When** it is scanned, **Then** it carries no vendored classification.
+1. **Given** a project under a vendored-looking directory, **When** it is scanned, **Then** the component carries the signals that hold (C241) and no verdict.
+2. **Given** a project for which no signal holds, **When** it is scanned, **Then** it carries neither C240 nor C241.
 3. **Given** a project whose name equals a fetch, an installed-library record or a git submodule already in the document, **When** it is scanned, **Then** no second component is created. Spec 1614's one-identity order applies, and the project's directory joins the existing component's evidence.
 
 ---
@@ -122,13 +124,13 @@ A consumer scans a repository whose only build system is CMake. Its top-level `C
   **Root selection:** CMake projects MUST be root candidates only when the scan has no main module of any other ecosystem (research R2).
 
   **Ownership:** where one directory holds both a CMake project and another ecosystem's main module, the other module MUST own the directory. A CMake project MUST outrank a git submodule in the same directory (research R3).
-- **FR-008**: The scan MUST record, on each project component, which candidate signals hold (C241), and MUST mark the component vendored (C240 `waybill:vendored = true`) when the rule chosen by measurement holds. First-party is the absence of C240. The rule is chosen on TheRock and the quality corpus (SC-006) from these candidate signals:
+- **FR-008**: The scan MUST record, on each project component, which candidate vendored signals hold (C241). It MUST NOT set C240 `waybill:vendored` on a project component: the rule measured in T002 did not hold on TheRock's population (Clarifications, 2026-11-20). The candidate signals are:
   - a path segment such as `third_party`, `external`, `vendor` or `deps`;
   - a git-submodule boundary;
   - a licence file in the project directory;
   - whether the root build reaches the project.
 
-  No signal may change a component's identity. If no single signal or two-signal conjunction reaches the precision bar fixed in research R10, no C240 is emitted for project components. C241 is still emitted, and the verdict goes back to the maintainer.
+  No signal may change a component's identity.
 - **FR-009**: Directories excluded by `--exclude-path` or by the walker's skip set MUST contribute no project.
 - **FR-010**: C237 MUST count searches paired with a project component under a new `paired.project` key. `in-tree` MUST keep listing the names satisfied only by config templates or installed config files. The accounting equation MUST still hold (research R6).
 - **FR-011**: The three formats MUST agree on project components, their edges, scopes and annotations (`waybill sbom parity-check`). No two components may share a `bom-ref`.

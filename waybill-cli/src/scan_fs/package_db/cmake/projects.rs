@@ -23,7 +23,6 @@ pub(crate) const ROOT_PROPAGATED_KEYS: &[&str] = &[
     "waybill:version-absence",
     ANN_DECLARED_VERSION_EXPRESSION,
     ANN_CMAKE_BUILD_REACH,
-    ANN_VENDORED,
     ANN_VENDORED_SIGNALS,
 ];
 
@@ -53,8 +52,6 @@ pub(crate) const ANN_DECLARED_VERSION_EXPRESSION: &str = "waybill:declared-versi
 pub(crate) const ANN_CMAKE_BUILD_REACH: &str = "waybill:cmake-build-reach";
 /// C241: the candidate vendored signals that hold (research R10).
 pub(crate) const ANN_VENDORED_SIGNALS: &str = "waybill:vendored-signals";
-/// C240: the chosen vendored rule holds (T002: path-segment + submodule-boundary).
-pub(crate) const ANN_VENDORED: &str = "waybill:vendored";
 const ANN_VERSION_ABSENCE: &str = "waybill:version-absence";
 const ANN_SCOPE_DERIVATION: &str = "waybill:lifecycle-scope-derivation";
 /// C62 for a project under an example, sample, benchmark or documentation
@@ -173,11 +170,16 @@ fn has_licence_file(dir: &Path) -> bool {
     })
 }
 
-/// Spec 1618 (research R10, T002): add `submodule-boundary` to C241 for a
-/// project at or below a git submodule's root (`submodule_dirs` holds
-/// canonical directories), and set C240 when the chosen rule holds:
-/// `path-segment` and `submodule-boundary` together. Both sides are compared
-/// relative to the scan root, as `declared_attach` compares them.
+/// Spec 1618 (research R10): add `submodule-boundary` to C241 for a project
+/// at or below a git submodule's root (`submodule_dirs` holds canonical
+/// directories). Both sides are compared relative to the scan root, as
+/// `declared_attach` compares them.
+///
+/// No vendored verdict (C240) is set. The rule T002 chose from its sample
+/// (`path-segment` and `submodule-boundary`) marked 10 TheRock projects of
+/// which 7 are first-party dependency super-builds under `deps/`
+/// (`measurements/vendored-rule.md`), so the signals ship and the verdict
+/// waits on a larger sample.
 pub(crate) fn mark_vendored(
     components: &mut [ResolvedComponent],
     submodule_dirs: &BTreeMap<PathBuf, String>,
@@ -207,9 +209,6 @@ pub(crate) fn mark_vendored(
         if in_submodule {
             signals.insert(SIGNAL_SUBMODULE_BOUNDARY.to_string());
             c.extra_annotations.insert(ANN_VENDORED_SIGNALS.to_string(), serde_json::json!(signals));
-        }
-        if signals.contains(SIGNAL_PATH_SEGMENT) && signals.contains(SIGNAL_SUBMODULE_BOUNDARY) {
-            c.extra_annotations.insert(ANN_VENDORED.to_string(), serde_json::json!(true));
         }
     }
 }
@@ -477,7 +476,7 @@ mod tests {
         assert_eq!(ann("x", "waybill:version-absence"), None);
         assert_eq!(by("v").purl.as_str(), "pkg:generic/v@2.0");
         assert_eq!(ann("v", ANN_VENDORED_SIGNALS), Some(serde_json::json!(["licence-file", "path-segment"])));
-        assert_eq!(ann("v", ANN_VENDORED), None, "C240 needs a submodule boundary too");
+        assert_eq!(ann("v", "waybill:vendored"), None, "no verdict on a project");
         assert_eq!(ann("u", ANN_CMAKE_BUILD_REACH), Some(serde_json::json!("not-reached")));
         assert_eq!(ann("u", ANN_VENDORED_SIGNALS), Some(serde_json::json!(["not-reached"])));
         assert_eq!(ann("n", ANN_CMAKE_BUILD_REACH), None, "reach undefined without a root listfile");

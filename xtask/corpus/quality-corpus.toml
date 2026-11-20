@@ -461,10 +461,21 @@ ecosystem = "pip"
 #   37 components required on main are Optional under their real conditions,
 #   python among them (now a library search, Development.Module).
 #   Only `edges` violated; bound +/-10% of 256.
+#
+# Re-measured 2026-11-20 on CI, spec 1618 (#1616) @ a82d2f7b (run
+# 44756600371) against main @ 786091a8 (run 44756604395): pkgs 257 -> 276,
+# edges 256 -> 303, sbomqs 5.94 -> 5.83. Traced component by component
+# (specs/1618-cmake-project-components/measurements/corpus.md): +19 in-tree
+# CMake project components (c10, torch, libshm, headeronly, pytorch_qnnpack,
+# clog, pytorch_nnapi, nccl_ep and the android JNI projects runtime; eight
+# under test/ Test; one under .ci/ Development). +56 edges, 9 removed: the
+# fetches and searches pytorch_qnnpack and c10 declare move from
+# pkg:pypi/torch to those projects, and the override root anchors each
+# project (m860). Only `edges` violated; bound +/-10% of 303.
 [targets.expect]
 pkgs      = { min = 234, max = 286 }
 files     = { min = 57, max = 71 }
-edges     = { min = 230, max = 282 }
+edges     = { min = 273, max = 333 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.41, max = 6.41 }
 wall_ms   = { min = 5, max = 50000 }
@@ -664,14 +675,29 @@ ecosystem = "cmake"
 #   waybill self-report: complete
 # DIVERGENCE: self-reports `complete` while measuring FLAT (research R3).
 # The 19 packages are mostly pypi tooling, not C++ deps.
+#
+# Re-measured 2026-11-20 on CI, spec 1618 (#1616) @ a82d2f7b (run
+# 44756600371) against main @ 786091a8 (run 44756604395):
+#   sbomqs 6.56 -> 6.06, pkgs 19 -> 25, edges 20 -> 30, depth 1 -> 2,
+#   flat true -> false. Traced component by component with this harness's
+#   invocation (specs/1618-cmake-project-components/measurements/corpus.md):
+#   +6 in-tree CMake project components: nlohmann_json@3.12.0 (runtime,
+#   the root CMakeLists.txt), json_example (Development, docs/), and
+#   dummyimport, dummyimportminver, json_benchmarks, json_cuda (Test,
+#   tests/). nlohmann_json now owns what is below it, so the pypi docs
+#   tooling hangs under it rather than the root: the graph is no longer flat.
+#   The two Bazel modules lose their fallback root edge and carry
+#   `foreign-build-system`. sbomqs falls because the five test, example and
+#   docs projects declare no version, licence or supplier.
+#   Moved: pkgs, edges, sbomqs (+/-10% and +/-0.5 of the new values), flat.
 [targets.expect]
-pkgs      = { min = 16, max = 22 }
+pkgs      = { min = 22, max = 28 }
 files     = { min = 0, max = 4 }
-edges     = { min = 17, max = 23 }
+edges     = { min = 27, max = 33 }
 max_depth = { min = 1, max = 5 }
-sbomqs    = { min = 6.07, max = 7.07 }
+sbomqs    = { min = 5.56, max = 6.56 }
 wall_ms   = { min = 5, max = 3000 }
-flat      = true
+flat      = false
 
 [[targets]]
 name      = "cpp-mongo"

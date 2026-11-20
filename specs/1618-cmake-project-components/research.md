@@ -131,6 +131,8 @@ All code references are to `main` at `786091a8`. "Measured" means it was run. An
 - **The rule:** the single signal, or two-signal conjunction, with the highest precision on the labelled sample, provided that precision is ≥ 0.90. Ties go to higher recall.
 - **If nothing reaches 0.90:** C241 is still emitted, and US2's verdict (C240) is not implemented. The measurement goes to the maintainer before any further decision.
 
+**Outcome.** T002's sample chose `path-segment + submodule-boundary` (4 of 4). On TheRock's full population in T026 it marked 10 projects, 7 of them first-party `projects/*/deps/CMakeLists.txt` super-builds: precision 3 of 10. The 4-project bar was too small to carry the decision. The maintainer chose to ship the signals only (spec Clarifications, 2026-11-20).
+
 ## R11. Override demotion and `--split` (FR-007)
 
 **Finding (code).**

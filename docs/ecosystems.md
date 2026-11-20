@@ -312,10 +312,13 @@ Spec 1618 (#1616). Each literal `project(<name> …)` at the top level of a
   that add subprojects through their own functions leave most projects
   unreached by this measure (795 of 811 on ROCm TheRock).
 - **Vendored.** C241 records which signals hold (`path-segment`,
-  `submodule-boundary`, `licence-file`, `not-reached`); C240
-  `waybill:vendored` is set when `path-segment` and `submodule-boundary`
-  both hold, the rule chosen by measurement
+  `submodule-boundary`, `licence-file`, `not-reached`). No verdict is
+  derived from them: the best rule a labelled sample supported marked 7
+  first-party `deps/` super-builds of 10 TheRock projects
   (`specs/1618-cmake-project-components/measurements/vendored-rule.md`).
+- **Nesting is a dependency.** An enclosing project depends on the projects
+  below it. A test project that also `find_package`s its encloser therefore
+  forms a cycle, carrying the test project's scope.
 
 ### Fetches made through wrappers
 

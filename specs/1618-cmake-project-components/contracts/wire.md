@@ -12,7 +12,7 @@ Every case runs in all three formats through the parity extractors for C42, C55,
 | C237 | `waybill:cmake-find-coverage` | `paired.project: N` added, **only when N > 0** | a search was read (as today); the key is absent at 0, so FR-012 holds |
 | C238 | `waybill:declared-version-expression` | string, verbatim | the version is an unresolved `${…}` expression |
 | C239 | `waybill:cmake-build-reach` | closed enum `not-reached` | a scan-root `CMakeLists.txt` exists and does not reach the project |
-| C240 | `waybill:vendored` | boolean `true` (existing key, now catalogued) | the chosen vendored rule holds; also `--include-vendored`, unchanged |
+| C240 | `waybill:vendored` | boolean `true` (existing key, now catalogued) | `--include-vendored` only, unchanged; never on a CMake project (spec Clarifications, 2026-11-20) |
 | C241 | `waybill:vendored-signals` | sorted JSON array of `path-segment`, `submodule-boundary`, `licence-file`, `not-reached` | at least one signal holds |
 
 **Principle V audit, for each new row.** No CycloneDX 1.6, SPDX 2.3 or SPDX 3.0.1 field states:
@@ -33,7 +33,7 @@ CycloneDX `pedigree` describes ancestry and patches, not where code sits in a tr
 - **P-7**: the same name and version in two directories. → one component, both files in evidence.
 - **P-8**: the same name, different versions. → two components.
 - **P-8b**: the same name, once with `VERSION 1.0.0` and once with no `VERSION`. → one component `@1.0.0`, both files, no C197.
-- **P-9**: `third_party/waybill-fixture-vendored/CMakeLists.txt`. → C241 contains `path-segment`; C240 per the chosen rule (R10).
+- **P-9**: `third_party/waybill-fixture-vendored/CMakeLists.txt` in a submodule, with a licence file. → C241 `["licence-file","path-segment","submodule-boundary"]`; no C240.
 - **P-10**: a project only under `tests/`. → Test, C62 `source-test-directory`.
 - **P-11**: a project only under `examples/`. → Development, C62 `source-example-directory`.
 - **P-12**: a scan-root `CMakeLists.txt` that does not `add_subdirectory` `other/`, where `other/` declares a project. → `other`'s project carries C239 `not-reached`; it is still reachable in the graph (enclosing edge or root).

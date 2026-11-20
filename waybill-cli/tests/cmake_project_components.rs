@@ -633,16 +633,18 @@ fn signals(c: &Value) -> Vec<String> {
     prop(c, C241).map(|v| serde_json::from_str(v).unwrap()).unwrap_or_default()
 }
 
-/// P-9: path segment and submodule boundary: vendored (T002's rule).
+/// P-9: every signal that holds is recorded, and no verdict is given. T002's
+/// rule failed on TheRock's population (3 of 10 correct), so C240 is not
+/// set on projects (`measurements/vendored-rule.md`).
 #[test]
-fn p09_a_vendored_project_is_marked() {
+fn p09_a_vendored_project_carries_its_signals() {
     let (_fx, d) = vendored_tree("third_party/vend", "waybill-fixture-vendored", true, true);
     let c = by_purl(&d, "pkg:generic/waybill-fixture-vendored@2.0.0");
-    assert_eq!(prop(c, C240), Some("true"), "{c}");
     assert_eq!(signals(c), ["licence-file", "path-segment", "submodule-boundary"]);
+    assert_eq!(prop(c, C240), None, "{c}");
 }
 
-/// Each signal alone is recorded, and alone is not a verdict.
+/// Each signal alone is recorded.
 #[test]
 fn p09_single_signals_are_recorded_without_a_verdict() {
     for (dir, sub, lic, want) in [
