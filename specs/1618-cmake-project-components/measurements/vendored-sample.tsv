@@ -1,0 +1,85 @@
+# Spec 1618 T002: hand-labelled sample, committed before any precision was computed.
+# Sample: census-projects run 44746588322 (fixture repo 14bf7c4), seed 1618; every project of the three
+# quality-corpus trees (17 + 3 + 20) and 40 of TheRock's 811. Label: vendored = code originating outside
+# the scanned repository's owner; evidence from the project's path, licence holder and README.
+idx	tree	name	dir	label	evidence
+0	cmake-nlohmann-json	json_example	docs/mkdocs/docs/integration/vcpkg	first-party	owner's own project: test, example, docs or product code
+1	cmake-nlohmann-json	dummyimportminver	tests/cmake_import_minver/project	first-party	owner's own project: test, example, docs or product code
+2	cmake-nlohmann-json	dummyimport	tests/cmake_target_include_directories/project	first-party	owner's own project: test, example, docs or product code
+3	cmake-nlohmann-json	json_benchmarks	tests/benchmarks	first-party	owner's own project: test, example, docs or product code
+4	cmake-nlohmann-json	json_example	docs/mkdocs/docs/integration/homebrew	first-party	owner's own project: test, example, docs or product code
+5	cmake-nlohmann-json	json_example	docs/mkdocs/docs/integration/spack	first-party	owner's own project: test, example, docs or product code
+6	cmake-nlohmann-json	json_example	docs/mkdocs/docs/integration/macports	first-party	owner's own project: test, example, docs or product code
+7	cmake-nlohmann-json	dummyimport	tests/cmake_fetch_content/project	first-party	owner's own project: test, example, docs or product code
+8	cmake-nlohmann-json	dummyimport	tests/cmake_fetch_content2/project	first-party	owner's own project: test, example, docs or product code
+9	cmake-nlohmann-json	json_cuda	tests/cuda_example	first-party	owner's own project: test, example, docs or product code
+10	cmake-nlohmann-json	json_example	docs/mkdocs/docs/integration/cpm	first-party	owner's own project: test, example, docs or product code
+11	cmake-nlohmann-json	json_example	docs/mkdocs/docs/integration/hunter	first-party	owner's own project: test, example, docs or product code
+12	cmake-nlohmann-json	json_example	docs/mkdocs/docs/integration/conan	first-party	owner's own project: test, example, docs or product code
+13	cmake-nlohmann-json	dummyimport	tests/cmake_add_subdirectory/project	first-party	owner's own project: test, example, docs or product code
+14	cmake-nlohmann-json	dummyimport	tests/cmake_import/project	first-party	owner's own project: test, example, docs or product code
+15	cmake-nlohmann-json	nlohmann_json	.	first-party	owner's own project: test, example, docs or product code
+16	cmake-nlohmann-json	json_example	docs/mkdocs/docs/integration/cget	first-party	owner's own project: test, example, docs or product code
+17	cpp-mongo	absl_cmake_testing	src/third_party/abseil-cpp/dist/CMake/install_test_project	vendored	abseil's own install test project, under src/third_party/abseil-cpp/dist
+18	cpp-mongo	snappy	src/third_party/snappy/dist	vendored	Copyright 2011, Google Inc.; README 'Snappy'
+19	cpp-mongo	absl	src/third_party/abseil-cpp/dist	vendored	Abseil (Apache licence, Google); README 'Abseil - C++ Common Libraries'
+20	python-pytorch	jit_hooks	test/jit_hooks	first-party	owner's own project: test, example, docs or product code
+21	python-pytorch	c10	c10	first-party	owner's own project: test, example, docs or product code
+22	python-pytorch	pytorch_jni	android/pytorch_android	first-party	owner's own project: test, example, docs or product code
+23	python-pytorch	custom_backend	test/custom_backend	first-party	owner's own project: test, example, docs or product code
+24	python-pytorch	pytorch_jni_lite	android/pytorch_android	first-party	owner's own project: test, example, docs or product code
+25	python-pytorch	torch_openreg	test/cpp_extensions/open_registration_extension/torch_openreg	first-party	owner's own project: test, example, docs or product code
+26	python-pytorch	custom_build_project	test/mobile/custom_build	first-party	owner's own project: test, example, docs or product code
+27	python-pytorch	clog	aten/src/ATen/native/quantized/cpu/qnnpack/deps/clog	vendored	Copyright Marat Dukhan / Georgia Tech; clog is a separate upstream logging library
+28	python-pytorch	pytorch_qnnpack	aten/src/ATen/native/quantized/cpu/qnnpack	first-party	Copyright Facebook (pytorch's owner); QNNPACK maintained in-tree
+29	python-pytorch	my-project	test/inductor/cpp	first-party	owner's own project: test, example, docs or product code
+30	python-pytorch	libshm	torch/lib/libshm	first-party	owner's own project: test, example, docs or product code
+31	python-pytorch	torch	torch	first-party	owner's own project: test, example, docs or product code
+32	python-pytorch	pytorch_nnapi	aten/src/ATen/nnapi	first-party	owner's own project: test, example, docs or product code
+33	python-pytorch	pytorch_vision_jni	android/pytorch_android_torchvision	first-party	owner's own project: test, example, docs or product code
+34	python-pytorch	googletest-git	test/inductor/cpp	first-party	pytorch's own CMake that fetches googletest, not googletest's code
+35	python-pytorch	torch_openreg	test/cpp_extensions/open_registration_extension/torch_openreg/third_party/openreg	first-party	pytorch's own OpenReg test backend placed in a third_party dir
+36	python-pytorch	headeronly	torch/headeronly	first-party	owner's own project: test, example, docs or product code
+37	python-pytorch	nccl_ep	cmake/External/nccl_ep_build	first-party	pytorch's build glue under cmake/External
+38	python-pytorch	simple-torch-test	.ci/pytorch/test_example_code	first-party	owner's own project: test, example, docs or product code
+39	python-pytorch	custom_ops	test/custom_operator	first-party	owner's own project: test, example, docs or product code
+40	therock	rpp-test	rocm-libraries/projects/rpp/utilities/test_suite	first-party	owner's own project: test, example, docs or product code
+41	therock	rocm-debug-agent	rocm-systems/projects/rocr-debug-agent	first-party	Copyright Advanced Micro Devices
+42	therock	rocprofiler-sdk-samples-code-object-tracing	rocm-systems/projects/rocprofiler-sdk/samples/code_object_tracing	first-party	owner's own project: test, example, docs or product code
+43	therock	asm_to_exe	rocm-systems/projects/hip-tests/samples/2_Cookbook/16_assembly_to_executable	first-party	owner's own project: test, example, docs or product code
+44	therock	rocprofiler-sdk-tests-bin-vector-operations	rocm-systems/projects/rocprofiler-sdk/tests/bin/vector-operations	first-party	owner's own project: test, example, docs or product code
+45	therock	rocprofiler-systems-roctx-example	rocm-systems/projects/rocprofiler-systems/examples/roctx	first-party	owner's own project: test, example, docs or product code
+46	therock	rocprofiler-sdk-tests-anytime-early-hip-late-double-configure	rocm-systems/projects/rocprofiler-sdk/tests/anytime-tool-config/early-hip-late-double-configure	first-party	owner's own project: test, example, docs or product code
+47	therock	hrr	rocm-systems/projects/hrr	first-party	owner's own project: test, example, docs or product code
+48	therock	rocrand_package_test	rocm-libraries/projects/rocrand/test/cpp_wrapper	first-party	owner's own project: test, example, docs or product code
+49	therock	rocprofiler-sdk-tests-att-decoder-waitcnt	rocm-systems/projects/rocprofiler-sdk/source/lib/att-tool/waitcnt/tests	first-party	owner's own project: test, example, docs or product code
+50	therock	lldb	compiler/amd-llvm/lldb	vendored	LLVM project's lldb (Apache-2.0 with LLVM exception), upstream code in AMD's LLVM fork
+51	therock	rocprofiler-sdk-tests-rocprofv3-attachment-attach-once-att	rocm-systems/projects/rocprofiler-sdk/tests/rocprofv3/attachment/attach-once-att	first-party	owner's own project: test, example, docs or product code
+52	therock	test_subdirectory_embed	rocm-systems/projects/rocprofiler-systems/external/timemory/external/pybind11/tests/test_cmake_build/subdirectory_embed	vendored	pybind11's own test project, under external/timemory/external/pybind11
+53	therock	getsm	math-libs/libhipcxx/.upstream-tests/utils/nvidia/getsm	vendored	NVIDIA libcu++ upstream test utility, under libhipcxx/.upstream-tests/utils/nvidia
+54	therock	hipcc	compiler/amd-llvm/amd/hipcc	first-party	Copyright Advanced Micro Devices
+55	therock	rocwmma_openmp_consumer	rocm-libraries/projects/rocwmma/test/cmake/package_consumer/openmp	first-party	owner's own project: test, example, docs or product code
+56	therock	rocm-sha256	rocm-systems/shared/sha256	first-party	Copyright Advanced Micro Devices
+57	therock	fmt-test	rocm-systems/projects/rocprofiler-sdk/external/fmt/test/add-subdirectory-test	vendored	fmt's own test project, under external/fmt
+58	therock	module_api	rocm-systems/projects/hip-tests/samples/0_Intro/module_api	first-party	owner's own project: test, example, docs or product code
+59	therock	videodecoderaw	rocm-systems/projects/rocdecode/samples/videoDecodeRaw	first-party	owner's own project: test, example, docs or product code
+60	therock	rocprofiler-sdk-tests-counter-collection-range-filtering	rocm-systems/projects/rocprofiler-sdk/tests/rocprofv3/counter-collection/range_filtering	first-party	owner's own project: test, example, docs or product code
+61	therock	rtweekend	rocm-libraries/projects/hipthreads/examples/InOneWeekendRaytracer/step4-simdize	first-party	AMD hipthreads example (raytracer tutorial port)
+62	therock	rocprofiler-sdk-tests-rocprofv3-scratch-memory-tracing	rocm-systems/projects/rocprofiler-sdk/tests/rocprofv3/scratch-memory	first-party	owner's own project: test, example, docs or product code
+63	therock	hipdnn-example-provider	rocm-libraries/projects/hipdnn/samples/example_engine_plugin	first-party	owner's own project: test, example, docs or product code
+64	therock	amdocl	rocm-systems/projects/clr/opencl/amdocl	first-party	owner's own project: test, example, docs or product code
+65	therock	rocprofiler-systems-example-openmp-target-lib	rocm-systems/projects/rocprofiler-systems/examples/openmp/target	first-party	owner's own project: test, example, docs or product code
+66	therock	rocprofiler-sdk-tests-kernel-replay-perf	rocm-systems/projects/rocprofiler-sdk/tests/kernel-replay-perf	first-party	owner's own project: test, example, docs or product code
+67	therock	rocprofiler-sdk-tests	rocm-systems/projects/rocprofiler-sdk/tests	first-party	owner's own project: test, example, docs or product code
+68	therock	rdc_example	rocm-systems/projects/rdc/example	first-party	owner's own project: test, example, docs or product code
+69	therock	ptl_examples	rocm-systems/projects/rocprofiler-systems/external/timemory/external/ptl/examples	vendored	PTL's examples, under external/timemory/external/ptl
+70	therock	hipdnn_frontend_bindings	rocm-libraries/projects/hipdnn/python/frontend_bindings	first-party	owner's own project: test, example, docs or product code
+71	therock	rocprofiler-sdk-tests-counter-collection-input1	rocm-systems/projects/rocprofiler-sdk/tests/rocprofv3/counter-collection/input1	first-party	owner's own project: test, example, docs or product code
+72	therock	rpp-test	rocm-libraries/projects/rpp/utilities/test	first-party	owner's own project: test, example, docs or product code
+73	therock	rocjpeg-test	rocm-systems/projects/rocjpeg/test	first-party	owner's own project: test, example, docs or product code
+74	therock	yaml-cpp-consumer	rocm-systems/projects/rocprofiler-sdk/external/yaml-cpp/test/cmake	vendored	yaml-cpp's own test consumer, under external/yaml-cpp
+75	therock	rocprofiler-sdk-tests-bin-python-hsa	rocm-systems/projects/rocprofiler-sdk/tests/lib/python/python-hsa	first-party	owner's own project: test, example, docs or product code
+76	therock	sharedmemory	rocm-systems/projects/hip-tests/samples/2_Cookbook/3_shared_memory	first-party	owner's own project: test, example, docs or product code
+77	therock	nvrtcc	math-libs/libhipcxx/.upstream-tests/utils/nvidia/nvrtc	vendored	NVIDIA libcu++ upstream test utility (nvrtc), under .upstream-tests/utils/nvidia
+78	therock	pal	rocm-systems/shared/amdgpu-windows-interop/pal	first-party	Copyright Advanced Micro Devices
+79	therock	hipinfo	rocm-systems/projects/hip-tests/samples/1_Utils/hipInfo	first-party	owner's own project: test, example, docs or product code
