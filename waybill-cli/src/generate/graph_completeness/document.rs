@@ -35,6 +35,8 @@ pub struct DocumentGraph {
     /// override is active. `None` means the input components unchanged.
     effective_components: Option<Vec<ResolvedComponent>>,
     pub retained_main_module_purls: Vec<String>,
+    /// #1626: see `root_selector::DropOrDemoteResult::subject_alias`.
+    pub subject_alias: Option<String>,
     /// The graph root's ref: the subject main module's PURL, or
     /// `<name>@<version>` for a synthetic subject.
     pub target_ref: String,
@@ -62,6 +64,7 @@ pub fn for_document(
         None
     };
     let retained_main_module_purls = drop_result.retained_main_module_purls;
+    let subject_alias = drop_result.subject_alias;
     let effective_components: &[ResolvedComponent] =
         effective_components_owned.as_deref().unwrap_or(components);
 
@@ -82,7 +85,12 @@ pub fn for_document(
     // before the BFS, or the root cannot reach the dependencies that hung
     // off it.
     let relationships: Vec<Relationship> = anchor_resolve_components(
-        &anchor_retained_mainmod_edges(relationships, &retained_main_module_purls, &target_ref),
+        &anchor_retained_mainmod_edges(
+            relationships,
+            &retained_main_module_purls,
+            subject_alias.as_deref(),
+            &target_ref,
+        ),
         effective_components,
         &target_ref,
     )
@@ -101,6 +109,7 @@ pub fn for_document(
     DocumentGraph {
         effective_components: effective_components_owned,
         retained_main_module_purls,
+        subject_alias,
         target_ref,
         workspace_peer_edges,
         completeness,
@@ -113,14 +122,14 @@ fn target_ref_for(
     subject: &DocumentSubject<'_>,
 ) -> String {
     let root_override = subject.root_override;
+    // #1626: the resolved name and version, which `--root-purl` sets
+    // through the PURL alone. The raw fields are `None` under it, and the
+    // ref fell back to the directory name, matching no emitted root.
     let name = root_override
-        .name
-        .clone()
-        .unwrap_or_else(|| subject.target_name.to_string());
-    let version = root_override
-        .version
-        .clone()
-        .unwrap_or_else(|| "0.0.0".to_string());
+        .resolved_name()
+        .unwrap_or(subject.target_name)
+        .to_string();
+    let version = root_override.resolved_version().unwrap_or("0.0.0").to_string();
     let main_module = match &selection.subject {
         ResolvedRootSubject::MainModule(idx) => effective_components.get(*idx),
         _ => None,

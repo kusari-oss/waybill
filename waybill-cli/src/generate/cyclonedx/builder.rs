@@ -1107,6 +1107,7 @@ impl CycloneDxBuilder {
                 &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
                     relationships,
                     &retained_main_module_purls,
+                    document_graph.subject_alias.as_deref(),
                     &target_ref,
                 ),
                 effective_components,
@@ -1146,7 +1147,7 @@ impl CycloneDxBuilder {
                 .to_string(),
         );
         vex_refs.add_components(cdx_components.as_array().map(Vec::as_slice).unwrap_or(&[]));
-        for purl in &retained_main_module_purls {
+        for purl in retained_main_module_purls.iter().chain(&document_graph.subject_alias) {
             vex_refs.alias_root(purl);
         }
         let (vulnerabilities, vex_carried_omitted) =

@@ -666,6 +666,12 @@ pub(crate) const DEMOTED_FROM_MAIN_MODULE_KEY: &str = "waybill:demoted-from-main
 pub(crate) struct DropOrDemoteResult {
     pub effective_components: Vec<ResolvedComponent>,
     pub retained_main_module_purls: Vec<String>,
+    /// #1626: the PURL of the main module FR-011 dropped because the
+    /// override names its own coordinate. The module IS the subject, so
+    /// its edges belong to the root: every consumer re-keys this PURL onto
+    /// the root's ref (`graph_completeness::anchor_retained_mainmod_edges`,
+    /// SPDX 2.3's `purl_aliases`, the CycloneDX VEX index).
+    pub subject_alias: Option<String>,
 }
 
 /// Milestone 149: consolidate the duplicated main-module-drop logic
@@ -718,6 +724,7 @@ pub(crate) fn apply_main_module_drop_or_demote(
         return DropOrDemoteResult {
             effective_components: components.to_vec(),
             retained_main_module_purls: Vec::new(),
+            subject_alias: None,
         };
     }
 
@@ -743,10 +750,14 @@ pub(crate) fn apply_main_module_drop_or_demote(
     // modules for some ecosystems (pip apps, npm CLI tools) — the same
     // namespace `--root-name` uses. The subject wins: the module is not
     // emitted separately, so no two components assert one coordinate.
-    let subject_purl: Option<String> = match (&root_override.name, &root_override.version) {
-        (Some(n), Some(v)) => root_override.build_subject_purl(n, v),
-        _ => None,
-    };
+    // #1626: the resolved name and version, so `--root-purl`, which sets
+    // them only through the PURL, is compared too.
+    let subject_purl: Option<String> =
+        match (root_override.resolved_name(), root_override.resolved_version()) {
+            (Some(n), Some(v)) => root_override.build_subject_purl(n, v),
+            _ => None,
+        };
+    let mut subject_alias: Option<String> = None;
 
     let mut effective = Vec::with_capacity(components.len());
     let mut retained = Vec::new();
@@ -757,6 +768,7 @@ pub(crate) fn apply_main_module_drop_or_demote(
                     purl = %c.purl,
                     "override names this module's own coordinate; it IS the subject, not a separate component (FR-011)",
                 );
+                subject_alias = Some(c.purl.as_str().to_string());
                 continue;
             }
             // Demote in place. Removing the role tag flips downstream
@@ -796,6 +808,7 @@ pub(crate) fn apply_main_module_drop_or_demote(
     DropOrDemoteResult {
         effective_components: effective,
         retained_main_module_purls: retained,
+        subject_alias,
     }
 }
 

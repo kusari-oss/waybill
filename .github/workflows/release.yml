@@ -855,10 +855,9 @@ jobs:
           #
           # The root is pinned to `waybill` at the tag's version (`v` dropped:
           # `0.17.0`, `0.17.1-nightly.20261119`), not the `0.0.0` a directory
-          # scan derives. It stays a generic PURL: a cargo-typed root equal to
-          # the `pkg:cargo/waybill` main module collapses into it and strands
-          # its dependencies (#1626). The workspace crates remain, as demoted
-          # main modules the root depends on.
+          # scan derives. It is a generic PURL, so it names the release rather
+          # than the `pkg:cargo/waybill` crate: the workspace crates remain, as
+          # demoted main modules the root depends on.
           SRC="${RUNNER_TEMP}/waybill"
           git worktree add --detach "$SRC" HEAD
           /tmp/waybill-bin/waybill sbom scan \

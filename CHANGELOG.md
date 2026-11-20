@@ -64,6 +64,25 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A root override no longer strands the graph when it names a main
+  module's own coordinate, or when it is given as `--root-purl` (#1626).**
+  - When the override's PURL equals a manifest main module's (for example
+    `--root-name app --root-version 1.0.0 --root-purl-type cargo` on a crate
+    `app@1.0.0`), waybill drops the module because the root *is* that module
+    (FR-011). Its dependency edges stayed keyed by the module's PURL, which
+    named nothing: CycloneDX kept them as a `dependencies[]` entry for a
+    missing ref, SPDX 2.3 and SPDX 3 dropped them, and the root reached none
+    of its dependencies (172 of 528 crates reachable on waybill's own tree). They
+    are now re-keyed onto the root, edges into the module included, in all
+    three formats.
+  - `--root-purl` sets the subject's name and version through the PURL
+    alone, but the graph root's ref, FR-011's comparison and the SPDX roots
+    read the separate name and version, which it leaves unset. Every
+    `--root-purl` scan therefore hung the root's anchor edge off a ref named
+    after the scan directory, which the document lacked, and named the SPDX
+    roots after the directory at `0.0.0` while CycloneDX used the PURL's
+    name. All of these now use the name and version the PURL gives.
+
 - **`--exclude-path` now applies to package archives (#1627).** The walker
   that finds `.tgz`, `.whl`, `.crate`, `.jar` and other package archives in
   a scanned tree did not consult the exclusion set, so an archive under an

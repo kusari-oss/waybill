@@ -750,11 +750,46 @@ pub fn anchor_resolve_components(
     out
 }
 
+/// #1626: re-key edges at the subject alias (the main module FR-011
+/// dropped because the override names its coordinate) onto the root's
+/// ref. Edges between the alias and the root become self-edges and are
+/// dropped; duplicates the re-keying creates are dropped too.
+fn rekey_subject_alias(
+    relationships: &[Relationship],
+    subject_alias: Option<&str>,
+    target_ref: &str,
+) -> Vec<Relationship> {
+    let Some(alias) = subject_alias.filter(|a| *a != target_ref) else {
+        return relationships.to_vec();
+    };
+    let mut seen: HashSet<(String, String, RelationshipType)> = HashSet::new();
+    let mut out = Vec::with_capacity(relationships.len());
+    for r in relationships {
+        let mut r = r.clone();
+        if r.from == alias {
+            r.from = target_ref.to_string();
+        }
+        if r.to == alias {
+            r.to = target_ref.to_string();
+        }
+        if r.from == r.to {
+            continue;
+        }
+        if seen.insert((r.from.clone(), r.to.clone(), r.relationship_type.clone())) {
+            out.push(r);
+        }
+    }
+    out
+}
+
 pub fn anchor_retained_mainmod_edges(
     relationships: &[Relationship],
     retained_main_module_purls: &[String],
+    subject_alias: Option<&str>,
     target_ref: &str,
 ) -> Vec<Relationship> {
+    let relationships = rekey_subject_alias(relationships, subject_alias, target_ref);
+    let relationships = relationships.as_slice();
     if retained_main_module_purls.is_empty() {
         return relationships.to_vec();
     }
@@ -814,6 +849,35 @@ mod tests {
         }
     }
 
+    /// #1626: the subject alias is re-keyed onto the root at both ends.
+    /// An edge between the alias and the root becomes a self-edge and is
+    /// dropped; an edge the re-keying duplicates is emitted once.
+    #[test]
+    fn s1626_subject_alias_is_rekeyed_onto_the_root() {
+        let app = "pkg:cargo/app@1.0.0";
+        let rels = vec![
+            rel(app, "pkg:cargo/dep@2.0.0"),
+            rel("pkg:cargo/sibling@1.0.0", app),
+            rel("root@1", "pkg:cargo/dep@2.0.0"),
+            rel("root@1", app),
+            rel("pkg:cargo/dep@2.0.0", "pkg:cargo/leaf@3.0.0"),
+        ];
+        let out = anchor_retained_mainmod_edges(&rels, &[], Some(app), "root@1");
+        let pairs: Vec<(&str, &str)> =
+            out.iter().map(|r| (r.from.as_str(), r.to.as_str())).collect();
+        assert_eq!(
+            pairs,
+            [
+                ("root@1", "pkg:cargo/dep@2.0.0"),
+                ("pkg:cargo/sibling@1.0.0", "root@1"),
+                ("pkg:cargo/dep@2.0.0", "pkg:cargo/leaf@3.0.0"),
+            ]
+        );
+        // No alias, or an alias equal to the root's ref: unchanged.
+        assert_eq!(anchor_retained_mainmod_edges(&rels, &[], None, "root@1").len(), rels.len());
+        assert_eq!(anchor_retained_mainmod_edges(&rels, &[], Some("root@1"), "root@1").len(), rels.len());
+    }
+
     /// T014 — invariant I2 (FR-001, C-3.3). Every edge endpoint must
     /// resolve to a component present in the document.
     #[test]
@@ -821,7 +885,7 @@ mod tests {
         // crate-a is a retained module; dep-x is its dependency.
         let rels = vec![rel("pkg:cargo/crate-a@1.0.0", "pkg:cargo/dep-x@2.0.0")];
         let retained = vec!["pkg:cargo/crate-a@1.0.0".to_string()];
-        let out = anchor_retained_mainmod_edges(&rels, &retained, "root@1");
+        let out = anchor_retained_mainmod_edges(&rels, &retained, None, "root@1");
 
         // The component set that will be emitted: root + module + dep.
         let present: HashSet<&str> =
@@ -847,7 +911,7 @@ mod tests {
             "pkg:cargo/crate-a@1.0.0".to_string(),
             "pkg:cargo/crate-b@1.0.0".to_string(),
         ];
-        let out = anchor_retained_mainmod_edges(&rels, &retained, "root@1");
+        let out = anchor_retained_mainmod_edges(&rels, &retained, None, "root@1");
         for m in &retained {
             assert!(
                 out.iter().any(|r| r.from == "root@1" && &r.to == m),
@@ -865,7 +929,7 @@ mod tests {
     #[test]
     fn m860_module_matching_the_root_gets_no_self_edge() {
         let retained = vec!["root@1".to_string(), "pkg:cargo/other@1.0.0".to_string()];
-        let out = anchor_retained_mainmod_edges(&[], &retained, "root@1");
+        let out = anchor_retained_mainmod_edges(&[], &retained, None, "root@1");
         assert!(
             !out.iter().any(|r| r.from == r.to),
             "FR-011: no self-edge; got {out:?}",
@@ -879,7 +943,7 @@ mod tests {
     #[test]
     fn m860_no_retained_modules_leaves_the_graph_untouched() {
         let rels = vec![rel("a", "b"), rel("b", "c")];
-        let out = anchor_retained_mainmod_edges(&rels, &[], "root@1");
+        let out = anchor_retained_mainmod_edges(&rels, &[], None, "root@1");
         assert_eq!(out, rels, "SC-005: no retained modules ⇒ no change at all");
     }
     use crate::generate::graph_completeness::test_support::{

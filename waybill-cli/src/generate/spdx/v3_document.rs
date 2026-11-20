@@ -69,6 +69,7 @@ pub fn build_document(
         &scan.root_override,
     );
     let dropped_main_module_purls: Vec<String> = drop_result.retained_main_module_purls;
+    let subject_alias: Option<String> = drop_result.subject_alias;
     let filtered_components_owned: Option<Vec<ResolvedComponent>> =
         if override_active {
             tracing::info!(
@@ -325,7 +326,8 @@ pub fn build_document(
     // unprefixed `comment` key, so no @context change needed.
     let scope_comment = super::document::build_scope_comment(scan);
     let placeholder_root = synthetic_root_added
-        && (scan.root_override.name.is_none() || scan.root_override.version.is_none());
+        && (scan.root_override.resolved_name().is_none()
+            || scan.root_override.resolved_version().is_none());
     let document_name_owned = super::document_name::derive_v3(
         &root_iris,
         &packages,
@@ -658,6 +660,7 @@ pub fn build_document(
             &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
                 scan.relationships,
                 &dropped_main_module_purls,
+                subject_alias.as_deref(),
                 &m158_target_ref,
             ),
             scan.components,
@@ -955,12 +958,9 @@ fn pick_root_iri(
     // supplied identity AND its PURL uses RFC 3986 percent-encoding
     // (research §1) so npm-scoped names round-trip correctly.
     if scan.root_override.is_active() {
-        let name = scan
-            .root_override
-            .name
-            .as_deref()
-            .unwrap_or(scan.target_name);
-        let version = scan.root_override.version.as_deref().unwrap_or("0.0.0");
+        // #1626: resolved, so `--root-purl` names the root too.
+        let name = scan.root_override.resolved_name().unwrap_or(scan.target_name);
+        let version = scan.root_override.resolved_version().unwrap_or("0.0.0");
         // Milestone N+1: `build_subject_purl` returns `None` when
         // `--no-root-purl` is in effect; otherwise builds
         // `pkg:<type>/<name>@<version>` with the type from
