@@ -2009,6 +2009,20 @@ mod tests {
         assert_eq!(out[0].extra_annotations["waybill:also-detected-via"], serde_json::json!(["cmake-package-version"]));
     }
 
+    /// Spec 1639 S2: the Maven declared-not-cached fold records the folded
+    /// entry's mechanism when it differs from the on-disk sibling's.
+    #[test]
+    fn s1639_the_maven_fold_records_a_different_mechanism() {
+        let mut on_disk = with_mechanism("pkg:maven/aopalliance/aopalliance@1.0", 0.85, Some("maven-jar-nested"));
+        on_disk.parent_purl = Some("pkg:maven/org.springframework.boot/spring-boot@3.0.0".to_string());
+        let mut declared = make_declared_not_cached("pkg:maven/aopalliance/aopalliance@1.0");
+        declared.extra_annotations.insert("waybill:source-mechanism".to_string(), serde_json::json!("waybill-fixture-declared"));
+        let out = deduplicate(vec![on_disk, declared]);
+        assert_eq!(out.len(), 1, "pass 2 folds the declared entry: {out:?}");
+        assert_eq!(out[0].extra_annotations["waybill:source-mechanism"], serde_json::json!("maven-jar-nested"));
+        assert_eq!(out[0].extra_annotations["waybill:also-detected-via"], serde_json::json!(["waybill-fixture-declared"]));
+    }
+
     /// Spec 1639: members of one mechanism record nothing.
     #[test]
     fn s1639_one_mechanism_records_nothing() {

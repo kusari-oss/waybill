@@ -124,10 +124,13 @@ pub(super) fn symbol_match_to_entry(
     // matches against multiple corpus records (variant collision —
     // e.g., LibreSSL + OpenSSL share `SSL_*` symbols), surface the
     // sibling matches so consumers can disambiguate.
-    if !m.also_detected_via.is_empty() {
+    // Spec 1639 (FR-007): C242, not C56 — this names libraries, and C56
+    // names source mechanisms.
+    if !m.also_matched.is_empty() {
+        let names: std::collections::BTreeSet<&String> = m.also_matched.iter().collect();
         extra.insert(
-            "waybill:also-detected-via".to_string(),
-            serde_json::json!(m.also_detected_via),
+            "waybill:fingerprint-also-matched".to_string(),
+            serde_json::json!(names),
         );
     }
     Some(PackageDbEntry {
@@ -1774,5 +1777,25 @@ mod tests {
                 .and_then(|v| v.as_str()),
             Some("https://github.com/example/mycrate"),
         );
+    }
+
+    /// Spec 1639 F-1 (FR-007): a symbol-fingerprint collision is C242,
+    /// `waybill:fingerprint-also-matched`, sorted; never C56.
+    #[test]
+    fn s1639_a_fingerprint_collision_is_c242_not_c56() {
+        let m = super::symbol_fingerprint::SymbolFingerprintMatch {
+            library: "waybill-fixture-ssl".to_string(),
+            matched_count: 10,
+            total_count: 10,
+            target_purl: "pkg:generic/waybill-fixture-ssl".to_string(),
+            corpus_sha_annotation: None,
+            also_matched: vec!["waybill-fixture-tls".to_string(), "waybill-fixture-crypto".to_string()],
+        };
+        let e = super::symbol_match_to_entry(&m, std::path::Path::new("/usr/lib/libwaybill-fixture.so")).unwrap();
+        assert_eq!(
+            e.extra_annotations["waybill:fingerprint-also-matched"],
+            serde_json::json!(["waybill-fixture-crypto", "waybill-fixture-tls"])
+        );
+        assert!(!e.extra_annotations.contains_key("waybill:also-detected-via"), "{:?}", e.extra_annotations);
     }
 }

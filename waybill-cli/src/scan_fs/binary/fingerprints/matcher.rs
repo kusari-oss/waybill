@@ -54,9 +54,9 @@ pub(crate) struct BinaryArtifact {
 ///
 /// Per `contracts/matcher-api.md` + data-model.md. Multiple results from
 /// a single binary scan indicate a collision case (FR-014) — Slice B
-/// will populate `also_detected_via` with the cross-references; Slice A
+/// will populate `also_matched` with the cross-references; Slice A
 /// always emits one result per matched record with an empty
-/// `also_detected_via`.
+/// `also_matched`.
 #[derive(Clone, Debug)]
 #[allow(dead_code)] // Slice A: populated by match_binary; Slice B consumes.
 pub(crate) struct MatchResult {
@@ -83,7 +83,7 @@ pub(crate) struct MatchResult {
     /// Other records whose indicators matched this binary (collision).
     /// Slice A leaves this empty; Slice B (US4) populates from
     /// cross-record correlation.
-    pub also_detected_via: Vec<Purl>,
+    pub also_matched: Vec<Purl>,
 }
 
 /// Match a single record's indicators against a binary artifact.
@@ -279,7 +279,7 @@ fn match_exact_hash(
 ///
 /// Slice A: single-record success path with deterministic emission
 /// ordering. Collision handling (multi-record cross-references via
-/// `also_detected_via`) lands in Slice B / Phase 6 (US4).
+/// `also_matched`) lands in Slice B / Phase 6 (US4).
 ///
 /// Determinism: identical (binary, records, self_identity) inputs
 /// produce the same ordered `Vec<MatchResult>`. Order is
@@ -309,7 +309,7 @@ pub(crate) fn match_binary(
             version_range: record.version_range.clone(),
             record_id: record.id.clone(),
             source_id: source_id.clone(),
-            also_detected_via: Vec::new(),
+            also_matched: Vec::new(),
         });
     }
 
@@ -647,7 +647,7 @@ mod tests {
         assert_eq!(r.purl.as_str(), "pkg:github/openssl/openssl@openssl-3.1.4");
         assert_eq!(r.confidence, FusedConfidence::High);
         assert_eq!(r.record_id, "openssl-3.1.4-glibc-amd64");
-        assert_eq!(r.also_detected_via.len(), 0, "Slice A leaves cross-refs empty");
+        assert_eq!(r.also_matched.len(), 0, "Slice A leaves cross-refs empty");
     }
 
     #[test]

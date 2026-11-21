@@ -762,6 +762,10 @@ spdx23_anno!(c238_spdx23, "waybill:declared-version-expression", component);
 spdx23_anno!(c239_spdx23, "waybill:cmake-build-reach", component);
 spdx23_anno!(c240_spdx23, "waybill:vendored", component);
 spdx23_anno!(c241_spdx23, "waybill:vendored-signals", component);
+
+// C242 — `waybill:fingerprint-also-matched` (spec 1639 FR-007): the other
+// libraries whose symbol fingerprints matched the same binary, a sorted array.
+spdx23_anno!(c242_spdx23, "waybill:fingerprint-also-matched", component);
 spdx23_anno!(c42_spdx23, "waybill:lifecycle-scope", component);
 spdx23_anno!(c194_spdx23_raw, "waybill:derivation", document);
 spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);

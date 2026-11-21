@@ -135,9 +135,9 @@
 
 **Goal**: FR-007. **Independent test**: F-1 and F-2.
 
-- [ ] T019 [P] [US3] F-1 in `BE`'s test module: a `SymbolFingerprintMatch` with a non-empty collision list maps to an entry carrying `waybill:fingerprint-also-matched` (a sorted array) and no `waybill:also-detected-via`.
-- [ ] T020 [P] [US3] F-2: find the existing lib-level test that emits one hand-built `ResolvedComponent` in all three formats and runs the parity extractors, using `grep` across `waybill-cli/src` for a test calling the three generators. Add a case where the component carries C242 and the C242 extractors agree. If no such test exists, add one in `waybill-cli/tests/` using the crate's public generate API, and say so in the commit message.
-- [ ] T021 [US3] Make the C242 change:
+- [X] T019 [P] [US3] F-1 in `BE`'s test module: a `SymbolFingerprintMatch` with a non-empty collision list maps to an entry carrying `waybill:fingerprint-also-matched` (a sorted array) and no `waybill:also-detected-via`.
+- [X] T020 [P] [US3] F-2: find the existing lib-level test that emits one hand-built `ResolvedComponent` in all three formats and runs the parity extractors, using `grep` across `waybill-cli/src` for a test calling the three generators. Add a case where the component carries C242 and the C242 extractors agree. If no such test exists, add one in `waybill-cli/tests/` using the crate's public generate API, and say so in the commit message.
+- [X] T021 [US3] Make the C242 change:
   - in `BE`, write `waybill:fingerprint-also-matched` instead of `waybill:also-detected-via`;
   - rename `SymbolFingerprintMatch::also_detected_via` in `SF` and `MatchResult::also_detected_via` in `FM` to `also_matched`, with their tests;
   - add row C242 to `MAP`, with its Principle V audit from `contracts/wire.md`, and register `c242_*` in `PX` with the three macros, `SymmetricEqual`;

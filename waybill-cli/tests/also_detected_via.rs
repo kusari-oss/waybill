@@ -20,8 +20,8 @@ use common::git_fixture::GitFixture;
 use corpus_harness_195::layer2_golden::{mask_nondeterministic, masked_difference};
 use serde_json::Value;
 
-/// C242 joins in T021, when its row exists.
-const ROWS: &[&str] = &["C55", "C56"];
+
+const ROWS: &[&str] = &["C55", "C56", "C242"];
 const C56: &str = "waybill:also-detected-via";
 const C55: &str = "waybill:source-mechanism";
 const GH: &str = "https://github.com/waybill-org/waybill-fixture-dep.git";
