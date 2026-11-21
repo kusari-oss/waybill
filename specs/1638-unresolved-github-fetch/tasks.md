@@ -139,7 +139,7 @@
   - Trace every changed component to an FR. Unexplained orphans must not increase (SC-003).
   - Record the scan-time median of 3 for each ref; it must be ≤ 1.05× (SC-006).
   - Write `MS/therock.md`, enumerating every job's conclusion.
-- [ ] T023 Corpora (SC-002, SC-004).
+- [X] T023 Corpora (SC-002, SC-004).
   - **Public corpus.** Dispatch `public-corpus.yml` with `regen_goldens` on the branch, and diff every golden with a normalised, sorted diff (masked IDs, `LC_ALL=C sort`). Targets with no literal-repository unresolved fetch in T001's census must be byte-identical; commit regenerated goldens only for the rest.
   - **Quality corpus.** Run against a `main` control, and trace python-pytorch component by component: `aotriton_external` becomes `pkg:github/rocm/aotriton` with C151 and no version, and `aotriton_runtime` is unchanged.
   - Record both in `MS/corpus.md`.

@@ -85,8 +85,9 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   `download_project()` with a literal GitHub `GIT_REPOSITORY` and a `GIT_TAG`
   the reader cannot resolve was `pkg:generic/<declared name>`, often a build
   target's name (python-pytorch's `aotriton_external`). It is now the
-  versionless `pkg:github/<owner>/<repo>` (`pkg:github/rocm/aotriton`), still
-  with C151 and in the design tier; no version is guessed. Another literal
+  versionless `pkg:github/<owner>/<repo>` (`pkg:github/rocm/aotriton`, and
+  pytorch's `nccl` is `pkg:github/nvidia/nccl`), still with C151 and in the
+  design tier; no version is guessed. Another literal
   repository keeps its generic name but records its URL. A conditional
   fallback of such a repository now merges into the component that supplies
   it, as a resolved fallback does, and is recorded in C233 with
