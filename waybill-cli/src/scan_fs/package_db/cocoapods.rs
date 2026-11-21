@@ -729,6 +729,7 @@ fn emit_lockfile_components(
             &entry,
             &doc.external_sources,
             &doc.checkout_options,
+            &source_path,
         ) {
             Ok(p) => p,
             Err(err) => {
@@ -915,6 +916,7 @@ fn build_purl_for_pods_entry(
     entry: &PodsEntry,
     external_sources: &BTreeMap<String, serde_yaml::Value>,
     _checkout_options: &BTreeMap<String, serde_yaml::Value>,
+    manifest: &str,
 ) -> Result<Purl, String> {
     if entry.name.is_empty() {
         return Err("empty pod name".to_string());
@@ -942,11 +944,13 @@ fn build_purl_for_pods_entry(
             if url.is_empty() {
                 return Err(format!("empty git url for {}", entry.name));
             }
+            // Spec 1640 (#1647, D12).
+            let url = waybill::identifiers::sanitize::sanitize_declared_url(url, manifest);
             format!(
                 "pkg:cocoapods/{}@{}?vcs_url=git+{}",
                 entry.name,
                 entry.version,
-                minimal_qualifier_encode(url),
+                minimal_qualifier_encode(&url),
             )
         } else {
             // EXTERNAL SOURCES entry exists but is neither :git nor
@@ -1163,21 +1167,21 @@ mod tests {
     #[test]
     fn build_purl_trunk_default() {
         let e = pods_entry("AFNetworking", "4.0.1");
-        let p = build_purl_for_pods_entry(&e, &empty_map(), &empty_map()).unwrap();
+        let p = build_purl_for_pods_entry(&e, &empty_map(), &empty_map(), "Podfile.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:cocoapods/AFNetworking@4.0.1");
     }
 
     #[test]
     fn build_purl_subspec_uses_subpath_form() {
         let e = pods_entry("Firebase/Core", "10.20.0");
-        let p = build_purl_for_pods_entry(&e, &empty_map(), &empty_map()).unwrap();
+        let p = build_purl_for_pods_entry(&e, &empty_map(), &empty_map(), "Podfile.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:cocoapods/Firebase@10.20.0#Core");
     }
 
     #[test]
     fn build_purl_multi_level_subspec_preserves_slashes() {
         let e = pods_entry("Firebase/Database/Realtime", "10.20.0");
-        let p = build_purl_for_pods_entry(&e, &empty_map(), &empty_map()).unwrap();
+        let p = build_purl_for_pods_entry(&e, &empty_map(), &empty_map(), "Podfile.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:cocoapods/Firebase@10.20.0#Database/Realtime");
     }
 
@@ -1185,7 +1189,7 @@ mod tests {
     fn build_purl_case_preserved() {
         // CocoaPods is case-sensitive per purl-spec; mixed-case names round-trip.
         let e = pods_entry("AFNetworking", "1.0.0");
-        let p = build_purl_for_pods_entry(&e, &empty_map(), &empty_map()).unwrap();
+        let p = build_purl_for_pods_entry(&e, &empty_map(), &empty_map(), "Podfile.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:cocoapods/AFNetworking@1.0.0");
     }
 
@@ -1209,7 +1213,7 @@ mod tests {
     fn build_purl_git_source_emits_vcs_url_qualifier() {
         let e = pods_entry("MyFork", "1.5.0");
         let external = external_with_git("https://github.com/foo/my-fork.git");
-        let p = build_purl_for_pods_entry(&e, &external, &empty_map()).unwrap();
+        let p = build_purl_for_pods_entry(&e, &external, &empty_map(), "Podfile.lock").unwrap();
         assert_eq!(
             p.as_str(),
             "pkg:cocoapods/MyFork@1.5.0?vcs_url=git+https://github.com/foo/my-fork.git"
@@ -1225,7 +1229,7 @@ mod tests {
         let yaml = ":path: \"../firebase-core\"\n";
         let val: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
         external.insert("Firebase/Core".to_string(), val);
-        let p = build_purl_for_pods_entry(&e, &external, &empty_map()).unwrap();
+        let p = build_purl_for_pods_entry(&e, &external, &empty_map(), "Podfile.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:generic/Firebase-Core@10.20.0");
     }
 
@@ -1236,7 +1240,7 @@ mod tests {
         let yaml = ":path: \"../local\"\n";
         let val: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
         external.insert("LocalLib".to_string(), val);
-        let p = build_purl_for_pods_entry(&e, &external, &empty_map()).unwrap();
+        let p = build_purl_for_pods_entry(&e, &external, &empty_map(), "Podfile.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:generic/LocalLib@0.1.0");
     }
 

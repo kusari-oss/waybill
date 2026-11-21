@@ -703,7 +703,7 @@ fn build_entry_from_lockfile_package(
     sbom_tier: &str,
     orphan_check_against: Option<&HashSet<String>>,
 ) -> Option<PackageDbEntry> {
-    let purl = match build_purl_for_package(pkg) {
+    let purl = match build_purl_for_package(pkg, source_path) {
         Ok(p) => p,
         Err(err) => {
             tracing::warn!(
@@ -893,7 +893,10 @@ fn sanitize_purl_version(raw: &str) -> String {
 /// in `composer.json::repositories`) have `source` but no `dist`. Use
 /// `dist.is_none()` as the discriminator for VCS-source-only vs
 /// Packagist-backed entries.
-fn build_purl_for_package(pkg: &LockfilePackage) -> Result<Purl, String> {
+fn build_purl_for_package(pkg: &LockfilePackage, manifest: &str) -> Result<Purl, String> {
+    // Spec 1640 (#1647, D14): a declared source or dist URL, without
+    // userinfo, before its base is taken or it is encoded.
+    let declared = |u: &str| waybill::identifiers::sanitize::sanitize_declared_url(u, manifest).into_owned();
     if !pkg.name.contains('/') {
         return Err(format!(
             "package name not in <vendor>/<package> form: {}",
@@ -929,10 +932,11 @@ fn build_purl_for_package(pkg: &LockfilePackage) -> Result<Purl, String> {
         let url = source
             .url
             .as_deref()
+            .map(declared)
             .ok_or_else(|| format!("{} source missing url for {}", scheme, pkg.name))?;
         format!(
             "pkg:composer/{lc_name}@{version}?vcs_url={scheme}+{url}",
-            url = minimal_qualifier_encode(url),
+            url = minimal_qualifier_encode(&url),
         )
     } else {
         // Default Packagist (with or without informational `source`),
@@ -940,8 +944,8 @@ fn build_purl_for_package(pkg: &LockfilePackage) -> Result<Purl, String> {
         // self-hosted vs default Packagist via dist.url.
         let mut s = format!("pkg:composer/{lc_name}@{version}");
         if let Some(dist) = &pkg.dist {
-            if let Some(url) = dist.url.as_deref() {
-                if let Some(base) = extract_url_base(url) {
+            if let Some(url) = dist.url.as_deref().map(declared) {
+                if let Some(base) = extract_url_base(&url) {
                     if !is_default_packagist_host(&base) {
                         s.push_str("?repository_url=");
                         s.push_str(&minimal_qualifier_encode(&base));
@@ -1136,14 +1140,14 @@ mod tests {
     #[test]
     fn packagist_default_emits_bare_purl() {
         let p = pkg_packagist("symfony/console", "v7.0.4", Some("https://api.github.com/repos/symfony/console/zipball/abc"), Some(&"a".repeat(40)));
-        let purl = build_purl_for_package(&p).unwrap();
+        let purl = build_purl_for_package(&p, "composer.lock").unwrap();
         assert_eq!(purl.as_str(), "pkg:composer/symfony/console@v7.0.4");
     }
 
     #[test]
     fn packagist_self_hosted_emits_repository_url_qualifier() {
         let p = pkg_packagist("acme/internal_lib", "2.0.0", Some("https://repo.acme.example.com/dist/acme/internal_lib/abc.zip"), Some(&"a".repeat(40)));
-        let purl = build_purl_for_package(&p).unwrap();
+        let purl = build_purl_for_package(&p, "composer.lock").unwrap();
         assert_eq!(
             purl.as_str(),
             "pkg:composer/acme/internal_lib@2.0.0?repository_url=https://repo.acme.example.com"
@@ -1153,21 +1157,21 @@ mod tests {
     #[test]
     fn packagist_default_repo_packagist_org_omits_qualifier() {
         let p = pkg_packagist("foo/bar", "1.0.0", Some("https://repo.packagist.org/p/foo/bar.zip"), None);
-        let purl = build_purl_for_package(&p).unwrap();
+        let purl = build_purl_for_package(&p, "composer.lock").unwrap();
         assert_eq!(purl.as_str(), "pkg:composer/foo/bar@1.0.0");
     }
 
     #[test]
     fn packagist_default_packagist_org_omits_qualifier() {
         let p = pkg_packagist("foo/bar", "1.0.0", Some("https://packagist.org/p/foo/bar.zip"), None);
-        let purl = build_purl_for_package(&p).unwrap();
+        let purl = build_purl_for_package(&p, "composer.lock").unwrap();
         assert_eq!(purl.as_str(), "pkg:composer/foo/bar@1.0.0");
     }
 
     #[test]
     fn vendor_name_lowercased_per_purl_spec() {
         let p = pkg_packagist("ACME/MyLib", "1.0.0", None, None);
-        let purl = build_purl_for_package(&p).unwrap();
+        let purl = build_purl_for_package(&p, "composer.lock").unwrap();
         assert_eq!(purl.as_str(), "pkg:composer/acme/mylib@1.0.0");
     }
 
@@ -1175,7 +1179,7 @@ mod tests {
     fn vcs_source_emits_vcs_url_qualifier() {
         let resolved = "eb39649a76b87e8451baf75d10ce82ca3a3d5601";
         let p = pkg_vcs("acme/my-fork", "dev-main", "https://github.com/acme/my-fork.git", resolved);
-        let purl = build_purl_for_package(&p).unwrap();
+        let purl = build_purl_for_package(&p, "composer.lock").unwrap();
         assert_eq!(
             purl.as_str(),
             "pkg:composer/acme/my-fork@dev-main?vcs_url=git+https://github.com/acme/my-fork.git"
@@ -1186,33 +1190,33 @@ mod tests {
     fn vcs_source_missing_reference_errors() {
         let mut p = pkg_vcs("acme/r", "1.0.0", "https://example.com/r.git", "abc");
         p.source.as_mut().unwrap().reference = None;
-        assert!(build_purl_for_package(&p).is_err());
+        assert!(build_purl_for_package(&p, "composer.lock").is_err());
     }
 
     #[test]
     fn vcs_source_empty_reference_errors() {
         let mut p = pkg_vcs("acme/r", "1.0.0", "https://example.com/r.git", "abc");
         p.source.as_mut().unwrap().reference = Some(String::new());
-        assert!(build_purl_for_package(&p).is_err());
+        assert!(build_purl_for_package(&p, "composer.lock").is_err());
     }
 
     #[test]
     fn path_source_emits_generic_placeholder_with_flattened_vendor() {
         let p = pkg_path("acme/local-lib", "0.1.0", "../packages/local-lib");
-        let purl = build_purl_for_package(&p).unwrap();
+        let purl = build_purl_for_package(&p, "composer.lock").unwrap();
         assert_eq!(purl.as_str(), "pkg:generic/acme-local-lib@0.1.0");
     }
 
     #[test]
     fn package_name_without_slash_errors() {
         let p = pkg_packagist("nameonly", "1.0.0", None, None);
-        assert!(build_purl_for_package(&p).is_err());
+        assert!(build_purl_for_package(&p, "composer.lock").is_err());
     }
 
     #[test]
     fn empty_version_errors() {
         let p = pkg_packagist("foo/bar", "", None, None);
-        assert!(build_purl_for_package(&p).is_err());
+        assert!(build_purl_for_package(&p, "composer.lock").is_err());
     }
 
     #[test]

@@ -528,10 +528,16 @@ pub(crate) fn locked_req_to_entry(
     // Dispatch on first artifact's URL: if any artifact is non-PyPI,
     // the whole entry is treated as pkg:generic/* (PyPI wheels can't
     // be mixed with non-PyPI sources in one lock entry per R1).
-    let source_type = req
+    // Spec 1640 (#1647, D8): the first artifact's URL without userinfo,
+    // before it is classified or recorded.
+    let lockfile_display = lockfile_path.display().to_string();
+    let first_url = req
         .artifacts
         .first()
-        .map(|a| ArtifactSourceType::from_url(&a.url))
+        .map(|a| waybill::identifiers::sanitize::sanitize_declared_url(&a.url, &lockfile_display).into_owned());
+    let source_type = first_url
+        .as_deref()
+        .map(ArtifactSourceType::from_url)
         .unwrap_or(ArtifactSourceType::Local); // no artifacts → treat as local
 
     let purl_str = match source_type {
@@ -621,11 +627,11 @@ pub(crate) fn locked_req_to_entry(
     //
     // `source-type` stays gated on the type, because for a `pkg:pypi`
     // component it would only ever restate what the PURL already says.
-    if let Some(a) = req.artifacts.first() {
-        if source_type.emits_source_url(&a.url) {
+    if let Some(url) = first_url.as_deref() {
+        if source_type.emits_source_url(url) {
             extra_annotations.insert(
                 "waybill:source-url".to_string(),
-                json!(&a.url),
+                json!(url),
             );
         }
     }

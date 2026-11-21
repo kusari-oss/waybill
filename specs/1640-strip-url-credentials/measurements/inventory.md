@@ -43,3 +43,70 @@ T016 therefore changes no file.
 ## Credential strings
 
 `git grep 'wbfxuser\|wbfxtoken7c41' -- ':!specs/1640-strip-url-credentials'` counts 0 lines.
+
+## Addendum: rows the four searches missed
+
+The searches matched URL-like key names and qualifier strings. They missed fields that carry a URL inside free text or derive a PURL from a URL. Two later sources found five more rows:
+- the agent's fixture survey;
+- a sweep, measured.
+
+### The sweep
+
+One tree held a credentialled URL in common manifest forms:
+- `package.json` URL dependencies;
+- a Gemfile `git:` option;
+- a Cargo.toml `git` dependency;
+- pyproject direct URLs;
+- a `pom.xml` repository and SCM URL;
+- a `build.gradle` repository;
+- a Pipfile source and git dependency;
+- a `composer.json` vcs repository;
+- `pubspec.yaml` git and hosted dependencies;
+- a Podfile `:git`;
+- `Package.resolved`;
+- a `pnpm-lock.yaml` tarball;
+- a `yarn.lock` `resolved`;
+- `west.yml`;
+- a Dockerfile `ADD`/`git clone`;
+- requirements `-e git+…` and `--extra-index-url`.
+
+It was scanned with the branch binary after T007–T013, at `RUST_LOG=trace`.
+
+Before the new fixes, the token occurred in CycloneDX 10 times, SPDX 2.3 7, SPDX 3 8 and the log 0. Every occurrence was in one of three fields:
+
+| Field | From |
+|---|---|
+| `waybill:requirement-ranges` | `package.json` URL dependencies, pyproject direct URLs, and requirements direct URLs (why D-17 still failed after T013) |
+| `waybill:version-constraint` | pyproject direct URLs |
+| the PURL, `bom-ref` and dependency refs | `Package.resolved` `location`: `pkg:swift/wbfxuser:wbfxtoken7c41@git.example/org/j@1.0.0` |
+
+A clean result from a reader that did not fire proves nothing, so every sweep manifest was checked for components. These produced none, so the sweep says nothing about them:
+- the Gemfile, Pipfile, `west.yml` and Dockerfile;
+- the pubspec git and hosted dependencies, which have no lockfile;
+- the Cargo git dependency, since only the main crate is emitted;
+- the requirements `-e` line.
+
+The pnpm tarball, the yarn `resolved`, the `pom.xml` and `build.gradle` repositories and the Composer vcs repository all came from readers that did fire. None of their URLs reached the output.
+
+After the fixes below, the same sweep gives 0 / 0 / 0 / 0, with five warnings. Each names its manifest (`pyproject.toml` twice, `Package.resolved`, `package.json` twice) and none contains the credential.
+
+### Rows added
+
+| # | Reader | Field | Fix |
+|---|---|---|---|
+| D18 (b) | cargo-auditable | `waybill:cargo-auditable-source`, the raw non-registry source (the agent's survey) | the same sanitised `source` as D18 (`binary/entry.rs`) |
+| D20 | every reader that records a declared requirement | `waybill:requirement-ranges` | `sanitize_declared_text`, applied once, where a `PackageDbEntry`'s ranges become the component's (`scan_fs/mod.rs`) |
+| D21 | pip (pyproject) | `waybill:version-constraint` | `sanitize_declared_text` on the constraint (`pip/mod.rs`) |
+| D22 | Swift | PURL from `Package.resolved` `location` | `sanitize_declared_url` on the location, before projection or logging (`swift/lockfile.rs`) |
+| D19 (b) | Yocto | the host-typed PURL derived from `SRC_URI` (`recipe.rs` ~915) | covered by D19's sanitising of `SRC_URI` where it is read |
+| N8 | Composer | `waybill:path` | a path repository's local path, not a URL |
+
+### Cases added
+
+- **D-4g:** Bazel `git_repository` `remote`.
+- **D-6u:** a uv.lock `url` source.
+- **D-20:** a `package.json` URL dependency.
+- **D-21:** a pyproject direct URL.
+- **D-22:** `Package.resolved`.
+
+D-20 to D-22 failed before their fixes. D-4g and D-6u were written after theirs, and T022's mutations of those call sites stand in for the failing run.

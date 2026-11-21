@@ -1273,7 +1273,12 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // because both read installed-package databases.
                 lifecycle_scope: entry.lifecycle_scope,
                 build_inclusion: entry.build_inclusion,
-                requirement_ranges: entry.requirement_ranges.clone(),
+                // Spec 1640 (#1647, D20): a declared requirement can embed a URL.
+                requirement_ranges: entry
+                    .requirement_ranges
+                    .iter()
+                    .map(|r| waybill::identifiers::sanitize::sanitize_declared_text(r, &entry.source_path).into_owned())
+                    .collect(),
                 source_type: entry.source_type.clone(),
                 sbom_tier: entry.sbom_tier.clone(),
                 buildinfo_status: entry.buildinfo_status.clone(),

@@ -201,7 +201,9 @@ fn parse_workspace_bazel(path: &Path) -> Vec<PackageDbEntry> {
         for c in http_re.captures_iter(&content) {
             let name = c.get(2).map(|m| m.as_str()).unwrap_or("");
             let body = c.get(3).map(|m| m.as_str()).unwrap_or("");
-            let archive_url = extract_first_url(body);
+            // Spec 1640 (#1647, D4).
+            let archive_url = extract_first_url(body)
+                .map(|u| waybill::identifiers::sanitize::sanitize_declared_url(&u, &source_path).into_owned());
             let sha256 = extract_sha256(body);
             let version = archive_url
                 .as_deref()
@@ -227,7 +229,8 @@ fn parse_workspace_bazel(path: &Path) -> Vec<PackageDbEntry> {
         for c in git_re.captures_iter(&content) {
             let name = c.get(1).map(|m| m.as_str()).unwrap_or("");
             let body = c.get(2).map(|m| m.as_str()).unwrap_or("");
-            let remote_url = extract_simple_string(body, "remote");
+            let remote_url = extract_simple_string(body, "remote")
+                .map(|u| waybill::identifiers::sanitize::sanitize_declared_url(&u, &source_path).into_owned());
             let commit = extract_simple_string(body, "commit");
             let tag = extract_simple_string(body, "tag");
             // Prefer commit (truncated to short-SHA); fall back to tag.

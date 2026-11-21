@@ -464,7 +464,7 @@ fn emit_lockfile_entries(
             continue;
         }
 
-        let purl = match build_purl_for_lockfile_entry(name, entry) {
+        let purl = match build_purl_for_lockfile_entry(name, entry, &source_path) {
             Ok(p) => p,
             Err(err) => {
                 tracing::warn!(
@@ -674,14 +674,18 @@ fn sanitize_purl_version(raw: &str) -> String {
 fn build_purl_for_lockfile_entry(
     name: &str,
     entry: &LockfileEntry,
+    manifest: &str,
 ) -> Result<Purl, String> {
+    // Spec 1640 (#1647, D13): a declared repository or git URL, without
+    // userinfo, before it is compared or encoded.
+    let declared = |u: &str| waybill::identifiers::sanitize::sanitize_declared_url(u, manifest).into_owned();
     let purl_str = match (entry.source.as_str(), &entry.description) {
         ("hosted", LockfileDescription::Map(m)) => {
             let mut s = format!("pkg:pub/{}@{}", name, entry.version);
-            if let Some(url) = m.url.as_deref() {
+            if let Some(url) = m.url.as_deref().map(declared) {
                 if url != "https://pub.dev" && url != "https://pub.dartlang.org" {
                     s.push_str("?repository_url=");
-                    s.push_str(&minimal_qualifier_encode(url));
+                    s.push_str(&minimal_qualifier_encode(&url));
                 }
             }
             s
@@ -699,6 +703,7 @@ fn build_purl_for_lockfile_entry(
             let url = m
                 .url
                 .as_deref()
+                .map(declared)
                 .ok_or_else(|| "git source missing url".to_string())?;
             let subpath = m
                 .path
@@ -708,7 +713,7 @@ fn build_purl_for_lockfile_entry(
                 .unwrap_or_default();
             format!(
                 "pkg:pub/{name}@{resolved_ref}?vcs_url=git+{url}{subpath}",
-                url = minimal_qualifier_encode(url),
+                url = minimal_qualifier_encode(&url),
             )
         }
         ("path", LockfileDescription::Map(_)) => {
@@ -826,21 +831,21 @@ mod tests {
     #[test]
     fn hosted_default_pubdev_emits_bare_purl() {
         let e = hosted_map("https://pub.dev", "a".repeat(64).as_str());
-        let p = build_purl_for_lockfile_entry("http", &e).unwrap();
+        let p = build_purl_for_lockfile_entry("http", &e, "pubspec.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:pub/http@1.2.3");
     }
 
     #[test]
     fn hosted_legacy_dartlang_default_emits_bare_purl() {
         let e = hosted_map("https://pub.dartlang.org", "a".repeat(64).as_str());
-        let p = build_purl_for_lockfile_entry("http", &e).unwrap();
+        let p = build_purl_for_lockfile_entry("http", &e, "pubspec.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:pub/http@1.2.3");
     }
 
     #[test]
     fn hosted_self_hosted_emits_repository_url_qualifier() {
         let e = hosted_map("https://pub.acme.example.com", "a".repeat(64).as_str());
-        let p = build_purl_for_lockfile_entry("internal_lib", &e).unwrap();
+        let p = build_purl_for_lockfile_entry("internal_lib", &e, "pubspec.lock").unwrap();
         assert_eq!(
             p.as_str(),
             "pkg:pub/internal_lib@1.2.3?repository_url=https://pub.acme.example.com"
@@ -856,7 +861,7 @@ mod tests {
             Some("plugins/window_size"),
             Some("master"),
         );
-        let p = build_purl_for_lockfile_entry("window_size", &e).unwrap();
+        let p = build_purl_for_lockfile_entry("window_size", &e, "pubspec.lock").unwrap();
         assert_eq!(
             p.as_str(),
             format!(
@@ -869,11 +874,11 @@ mod tests {
     fn git_source_omits_subpath_when_dot_or_empty() {
         let resolved = "eb39649a76b87e8451baf75d10ce82ca3a3d5601";
         let e_dot = git_map("https://example.com/r.git", resolved, Some("."), None);
-        let p_dot = build_purl_for_lockfile_entry("r", &e_dot).unwrap();
+        let p_dot = build_purl_for_lockfile_entry("r", &e_dot, "pubspec.lock").unwrap();
         assert!(!p_dot.as_str().contains('#'), "got: {}", p_dot.as_str());
 
         let e_empty = git_map("https://example.com/r.git", resolved, Some(""), None);
-        let p_empty = build_purl_for_lockfile_entry("r", &e_empty).unwrap();
+        let p_empty = build_purl_for_lockfile_entry("r", &e_empty, "pubspec.lock").unwrap();
         assert!(!p_empty.as_str().contains('#'), "got: {}", p_empty.as_str());
     }
 
@@ -889,13 +894,13 @@ mod tests {
             source: "git".into(),
             version: "0.0.0".into(),
         };
-        assert!(build_purl_for_lockfile_entry("r", &e).is_err());
+        assert!(build_purl_for_lockfile_entry("r", &e, "pubspec.lock").is_err());
     }
 
     #[test]
     fn git_source_short_sha_errors() {
         let e = git_map("https://example.com/r.git", "abc123", None, None);
-        assert!(build_purl_for_lockfile_entry("r", &e).is_err());
+        assert!(build_purl_for_lockfile_entry("r", &e, "pubspec.lock").is_err());
     }
 
     #[test]
@@ -910,7 +915,7 @@ mod tests {
             source: "path".into(),
             version: "0.1.0".into(),
         };
-        let p = build_purl_for_lockfile_entry("my_local_lib", &e).unwrap();
+        let p = build_purl_for_lockfile_entry("my_local_lib", &e, "pubspec.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:generic/my_local_lib@0.1.0");
     }
 
@@ -922,7 +927,7 @@ mod tests {
             source: "sdk".into(),
             version: "0.0.0".into(),
         };
-        let p = build_purl_for_lockfile_entry("flutter", &e).unwrap();
+        let p = build_purl_for_lockfile_entry("flutter", &e, "pubspec.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:pub/flutter@0.0.0");
 
         let e2 = LockfileEntry {
@@ -931,7 +936,7 @@ mod tests {
             source: "sdk".into(),
             version: "0.0.0".into(),
         };
-        let p2 = build_purl_for_lockfile_entry("flutter_test", &e2).unwrap();
+        let p2 = build_purl_for_lockfile_entry("flutter_test", &e2, "pubspec.lock").unwrap();
         assert_eq!(p2.as_str(), "pkg:pub/flutter_test@0.0.0");
     }
 
@@ -943,7 +948,7 @@ mod tests {
             source: "hg".into(),
             version: "1.0.0".into(),
         };
-        assert!(build_purl_for_lockfile_entry("foo", &e).is_err());
+        assert!(build_purl_for_lockfile_entry("foo", &e, "pubspec.lock").is_err());
     }
 
     #[test]

@@ -75,38 +75,40 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
   D-10 and D-11 use `common::nix_stub`, following an existing closure test (`waybill-cli/tests/closure_dep_fields.rs`). D-18 is a unit test in `waybill-cli/src/scan_fs/binary/entry.rs` if no cargo-auditable binary fixture exists; say so in the commit message.
 
   **Run at this commit, before any reader change.** Every D-case must fail on `assert_no_cred` and pass `assert_field`. Every G-case must pass. Record each case's result in `MS/control.md`. A D-case that passes here has a fixture that does not reach its field: fix the fixture before going on.
-- [ ] T007 [P] [US1] CMake, D1–D3, in `PDB/cmake.rs` and `PDB/cmake/fetches.rs`:
+- [X] T007 [P] [US1] CMake, D1–D3, in `PDB/cmake.rs` and `PDB/cmake/fetches.rs`:
   - sanitise each `GIT_REPOSITORY` and `URL` value with `sanitize_declared_url` where the reader first takes it from the call's arguments, before the PURL, the GitHub recognition located by T001 and C53;
   - sanitise the dataset URL before `dataset_entry` builds its qualifier.
 
   The manifest argument is the CMake file's path.
-- [ ] T008 [P] [US1] Bazel, D4, in `PDB/bazel.rs`: sanitise the `http_archive` URL before C53.
-- [ ] T009 [P] [US1] uv.lock, D5 and D6, in `PDB/pip/uv_lock.rs`: sanitise the index URL before `waybill:pypi-source-url`, and each source URL before its `waybill:source-url` write.
-- [ ] T010 [P] [US1] Nix, D7, D10 and D11, in `PDB/nix/identity.rs` (or wherever T001 finds `source_url` set), `PDB/nix/closure/emit.rs` (`vcs_source`, `source_url`) and `PDB/nix/haskell_packages/closure_identity.rs` (`location`).
-- [ ] T011 [P] [US1] Pants, D8 and D9, in `PDB/pants/lockfile.rs` and `PDB/pants_jvm/lockfile.rs`: sanitise each artifact URL before `waybill:source-url`.
-- [ ] T012 [P] [US1] Git-source PURLs, D12–D16, in `PDB/cocoapods.rs`, `PDB/dart.rs` (both `vcs_url` and `repository_url`), `PDB/composer.rs` (both), `PDB/elixir.rs` (both sites) and `PDB/erlang.rs` (both sites). Sanitise before `minimal_qualifier_encode`.
-- [ ] T013 [P] [US1] pip, D17, in `PDB/pip/requirements_txt.rs`: sanitise a direct URL before `DirectUrlRef.url` is stored.
-- [ ] T014 [P] [US1] cargo-auditable, D18, in `waybill-cli/src/scan_fs/binary/entry.rs`: sanitise the parsed git source before `waybill:cargo-vcs-source-url`. The manifest argument is the binary's path.
-- [ ] T015 [P] [US1] Yocto, D19, in `PDB/yocto/recipe.rs`: sanitise each `SRC_URI` entry before `waybill:src-uri`.
-- [ ] T016 [P] [US1] Log sites (research N7 and T001's list). G-5 already guards the Helm SBOM. Change `PDB/helm.rs` only if T001 found that a credentialled repository URL can reach `build_helm_purl`'s no-host `warn!`; then sanitise the URL where it is read. Fix any other log site T001 listed the same way. If T001 listed none, record that in the commit message and change nothing.
+- [X] T008 [P] [US1] Bazel, D4, in `PDB/bazel.rs`: sanitise the `http_archive` URL before C53.
+- [X] T009 [P] [US1] uv.lock, D5 and D6, in `PDB/pip/uv_lock.rs`: sanitise the index URL before `waybill:pypi-source-url`, and each source URL before its `waybill:source-url` write.
+- [X] T010 [P] [US1] Nix, D7, D10 and D11, in `PDB/nix/identity.rs` (or wherever T001 finds `source_url` set), `PDB/nix/closure/emit.rs` (`vcs_source`, `source_url`) and `PDB/nix/haskell_packages/closure_identity.rs` (`location`).
+- [X] T011 [P] [US1] Pants, D8 and D9, in `PDB/pants/lockfile.rs` and `PDB/pants_jvm/lockfile.rs`: sanitise each artifact URL before `waybill:source-url`.
+- [X] T012 [P] [US1] Git-source PURLs, D12–D16, in `PDB/cocoapods.rs`, `PDB/dart.rs` (both `vcs_url` and `repository_url`), `PDB/composer.rs` (both), `PDB/elixir.rs` (both sites) and `PDB/erlang.rs` (both sites). Sanitise before `minimal_qualifier_encode`.
+- [X] T013 [P] [US1] pip, D17, in `PDB/pip/requirements_txt.rs`: sanitise a direct URL before `DirectUrlRef.url` is stored.
+- [X] T014 [P] [US1] cargo-auditable, D18, in `waybill-cli/src/scan_fs/binary/entry.rs`: sanitise the parsed git source before `waybill:cargo-vcs-source-url`. The manifest argument is the binary's path.
+- [X] T015 [P] [US1] Yocto, D19, in `PDB/yocto/recipe.rs`: sanitise each `SRC_URI` entry before `waybill:src-uri`.
+- [X] T016 [P] [US1] Log sites (research N7 and T001's list). G-5 already guards the Helm SBOM. Change `PDB/helm.rs` only if T001 found that a credentialled repository URL can reach `build_helm_purl`'s no-host `warn!`; then sanitise the URL where it is read. Fix any other log site T001 listed the same way. If T001 listed none, record that in the commit message and change nothing.
+  - **Done, no file changed:** T001 found no reachable log site (inventory, log sites). Helm's no-host branch cannot see userinfo (measured).
 - [ ] T017 [US1] Run every D-case, G-case and C-ctl until they pass, plus the existing suites of every reader touched (`cargo test -p waybill --test <suite>`, one filter per invocation). An existing assertion that changes is recorded with its reason in the commit message. None may be loosened.
 
 ## Phase 4: User Story 2: removing a credential does not change what a component is (P1)
 
 **Goal**: FR-004. **Independent test**: I-1 to I-3.
 
-- [ ] T018 [US2] Write I-1, I-2 and I-3 in `IT`:
+  - **Addendum (inventory.md):** a sweep found rows the searches missed: free-text requirement strings (D20, D21) and a PURL built from a URL (D22). They were fixed with `sanitize_declared_text`, added to `SZ`, and with cases D-20 to D-22, which failed first.
+- [X] T018 [US2] Write I-1, I-2 and I-3 in `IT`:
   - I-1 uses `common::git_fixture::GitFixture` for the submodule and the conditional-fetch shape of spec 1538's R9 tests;
   - each compares the credentialled tree's component (PURL, C53, `bom-ref`) with the all-clean tree's.
 
   I-3 fails if T005's splice regresses to re-serialising.
-- [ ] T019 [US2] Make I-1 to I-3 pass. If T007 left `cmake/fetches.rs::repository_identity` or `normalise_repository` comparing an unsanitised value, sanitise it there too. Re-run the CMake suites (`cmake_*`, `git_submodule_reader`).
+- [X] T019 [US2] Make I-1 to I-3 pass. If T007 left `cmake/fetches.rs::repository_identity` or `normalise_repository` comparing an unsanitised value, sanitise it there too. Re-run the CMake suites (`cmake_*`, `git_submodule_reader`).
 
 ## Phase 5: User Story 3: the operator learns that a credential was found (P2)
 
 **Goal**: FR-005. **Independent test**: the warning assertions on every D-case.
 
-- [ ] T020 [US3] Add `assert_warned(log, <manifest>)` to every D-case. Each case must name its own fixture's manifest (CMakeLists.txt, uv.lock, Podfile.lock and so on), which checks every call site's `manifest` argument. Add a C-ctl assertion that the log has no `stripped credentials` line, and the same for S-1 (planning amendment A1). Fix any site whose manifest argument is wrong.
+- [X] T020 [US3] Add `assert_warned(log, <manifest>)` to every D-case. Each case must name its own fixture's manifest (CMakeLists.txt, uv.lock, Podfile.lock and so on), which checks every call site's `manifest` argument. Add a C-ctl assertion that the log has no `stripped credentials` line, and the same for S-1 (planning amendment A1). Fix any site whose manifest argument is wrong.
 
 ## Phase 6: Polish and cross-cutting
 

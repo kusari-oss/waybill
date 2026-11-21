@@ -124,6 +124,43 @@ pub fn sanitize_declared_url<'a>(raw: &'a str, manifest: &str) -> Cow<'a, str> {
     out
 }
 
+/// Free text a scanned project declares, such as a requirement string
+/// (`name @ git+https://host/x.git@v1`), with the userinfo removed from every
+/// URL in it ([`sanitize_declared_url`], spec 1640 D20 and D21). A URL runs
+/// from its scheme to the next whitespace, quote or angle bracket.
+pub fn sanitize_declared_text<'a>(text: &'a str, manifest: &str) -> Cow<'a, str> {
+    if !text.contains("://") {
+        return Cow::Borrowed(text);
+    }
+    let mut out = String::with_capacity(text.len());
+    let mut changed = false;
+    let mut rest = text;
+    while let Some(i) = rest.find("://") {
+        let bytes = rest.as_bytes();
+        let mut start = i;
+        while start > 0 && (bytes[start - 1].is_ascii_alphanumeric() || matches!(bytes[start - 1], b'+' | b'.' | b'-')) {
+            start -= 1;
+        }
+        let tail = &rest[i + 3..];
+        let end = i + 3 + tail.find(|c: char| c.is_whitespace() || matches!(c, '"' | '\'' | '<' | '>')).unwrap_or(tail.len());
+        if start == i {
+            out.push_str(&rest[..i + 3]);
+            rest = &rest[i + 3..];
+            continue;
+        }
+        let clean = sanitize_declared_url(&rest[start..end], manifest);
+        changed |= matches!(clean, Cow::Owned(_));
+        out.push_str(&rest[..start]);
+        out.push_str(&clean);
+        rest = &rest[end..];
+    }
+    if !changed {
+        return Cow::Borrowed(text);
+    }
+    out.push_str(rest);
+    Cow::Owned(out)
+}
+
 fn is_ssh_git_user(raw: &str) -> bool {
     url::Url::parse(raw).is_ok_and(|p| {
         matches!(p.scheme(), "ssh" | "git+ssh") && p.username() == "git" && p.password().is_none()
@@ -423,6 +460,22 @@ mod tests {
         }
         let (_, logs) = logs_from(|| sanitize_declared_url("ssh://alice@git.example/o/r.git", "m").into_owned());
         assert_eq!(logs.matches(WARNING).count(), 1, "{logs}");
+    }
+
+    #[test]
+    fn s1640_urls_inside_free_text_lose_their_userinfo() {
+        for (input, want) in [
+            ("@ git+https://u:p@git.example/x.git@v1", "@ git+https://git.example/x.git@v1"),
+            ("a @ https://t@dl.example/a.tgz ; python_version > \"3\"", "a @ https://dl.example/a.tgz ; python_version > \"3\""),
+            ("https://u:p@one.example/a and https://u:p@two.example/b", "https://one.example/a and https://two.example/b"),
+        ] {
+            let (out, logs) = logs_from(|| sanitize_declared_text(input, "m").into_owned());
+            assert_eq!(out, want, "{input}");
+            assert!(!logs.contains("u:p") && logs.contains(WARNING), "{logs}");
+        }
+        for clean in ["^1.2.3", ">=1.0, <2", "git+https://git.example/x.git", "see ://nothing"] {
+            assert!(matches!(sanitize_declared_text(clean, "m"), Cow::Borrowed(_)), "{clean}");
+        }
     }
 
     #[test]

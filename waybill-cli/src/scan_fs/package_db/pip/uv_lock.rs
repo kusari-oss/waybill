@@ -727,9 +727,13 @@ pub(crate) fn parse_uv_lock_with_flags(
 
         // Milestone 674: per-variant annotations for non-registry
         // sources + non-default registry URLs.
+        // Spec 1640 (#1647, D5, D6): a declared index or source URL loses
+        // its userinfo before it is compared or recorded.
+        let declared = |u: &str| waybill::identifiers::sanitize::sanitize_declared_url(u, source_path).into_owned();
         let source_kind: Option<String> = match &source_shape {
             UvSourceShape::Registry { url } => {
-                if *url != DEFAULT_PYPI_REGISTRY {
+                let url = declared(url);
+                if url != DEFAULT_PYPI_REGISTRY {
                     extra.insert(
                         "waybill:pypi-source-url".to_string(),
                         serde_json::Value::String(url.to_string()),
@@ -763,7 +767,7 @@ pub(crate) fn parse_uv_lock_with_flags(
                 // collision).
                 extra.insert(
                     "waybill:source-url".to_string(),
-                    serde_json::Value::String(format!("{}@{}", url, rev)),
+                    serde_json::Value::String(format!("{}@{}", declared(url), rev)),
                 );
                 Some("git".to_string())
             }
@@ -777,7 +781,7 @@ pub(crate) fn parse_uv_lock_with_flags(
             UvSourceShape::Url { url } => {
                 extra.insert(
                     "waybill:source-url".to_string(),
-                    serde_json::Value::String(url.to_string()),
+                    serde_json::Value::String(declared(url)),
                 );
                 Some("url".to_string())
             }

@@ -256,6 +256,15 @@ fn d04_bazel_http_archive() {
     assert_reaches(&s, "https://dl.example/waybill-fixture-cred/archive/1.0.0.tar.gz");
 }
 
+#[test]
+fn d04g_bazel_git_repository() {
+    let s = d_case(
+        &[("WORKSPACE.bazel", "git_repository(\n    name = \"waybill_fixture_rules\",\n    remote = \"https://{CRED}git.example/org/waybill-fixture-rules.git\",\n    commit = \"eb39649a76b87e8451baf75d10ce82ca3a3d5601\",\n)\n")],
+        "WORKSPACE.bazel",
+    );
+    assert_reaches(&s, "https://git.example/org/waybill-fixture-rules.git");
+}
+
 const UV_INDEX: &str = "version = 1\nrequires-python = \">=3.10\"\n\n[[package]]\nname = \"waybill-fixture-reg\"\nversion = \"1.0.0\"\nsource = { registry = \"https://{CRED}internal.pypi.example/simple\" }\n";
 const UV_GIT: &str = "version = 1\nrequires-python = \">=3.10\"\n\n[[package]]\nname = \"waybill-fixture-git\"\nversion = \"0.5.0\"\nsource = { git = \"https://{CRED}git.example/org/waybill-fixture-git.git\", rev = \"abc123def456\" }\n";
 
@@ -269,6 +278,13 @@ fn d05_uv_lock_index() {
 fn d06_uv_lock_git_source() {
     let s = d_case(&[("uv.lock", UV_GIT)], "uv.lock");
     assert_reaches(&s, "https://git.example/org/waybill-fixture-git.git@abc123def456");
+}
+
+#[test]
+fn d06u_uv_lock_url_source() {
+    let lock = "version = 1\nrequires-python = \">=3.10\"\n\n[[package]]\nname = \"waybill-fixture-url\"\nversion = \"1.0.0\"\nsource = { url = \"https://{CRED}dl.example/waybill_fixture_url-1.0.0.tar.gz\" }\n";
+    let s = d_case(&[("uv.lock", lock)], "uv.lock");
+    assert_reaches(&s, "https://dl.example/waybill_fixture_url-1.0.0.tar.gz");
 }
 
 const FLAKE: &str = r#"{
@@ -560,4 +576,106 @@ fn c_ctl_clean_urls_are_byte_identical_to_main() {
         let got = masked(doc);
         assert!(got == want, "C-ctl {name} differs from main's golden; {}", masked_difference(&want, &got).unwrap_or_default());
     }
+}
+
+// ---------------------------------------------------------------------
+// Rows found by the T001 addendum sweep (measurements/inventory.md):
+// free-text requirement strings and a PURL built from a URL.
+// ---------------------------------------------------------------------
+
+#[test]
+fn d20_npm_url_dependency_range() {
+    let s = d_case(
+        &[(
+            "package.json",
+            r#"{"name":"waybill-fixture-npm","version":"1.0.0","dependencies":{"waybill-fixture-a":"git+https://{CRED}git.example/org/waybill-fixture-a.git"}}"#,
+        )],
+        "package.json",
+    );
+    assert_reaches(&s, "git+https://git.example/org/waybill-fixture-a.git");
+}
+
+#[test]
+fn d21_pyproject_direct_url_constraint() {
+    let s = d_case(
+        &[(
+            "pyproject.toml",
+            "[project]\nname = \"waybill-fixture-py\"\nversion = \"0.1.0\"\ndependencies = [\"waybill-fixture-d @ https://{CRED}dl.example/waybill-fixture-d-1.0.tar.gz\"]\n",
+        )],
+        "pyproject.toml",
+    );
+    assert_reaches(&s, "https://dl.example/waybill-fixture-d-1.0.tar.gz");
+}
+
+#[test]
+fn d22_swift_package_resolved_location() {
+    let s = d_case(
+        &[(
+            "Package.resolved",
+            r#"{"pins":[{"identity":"waybill-fixture-j","kind":"remoteSourceControl","location":"https://{CRED}git.example/org/waybill-fixture-j.git","state":{"revision":"eb39649a76b87e8451baf75d10ce82ca3a3d5601","version":"1.0.0"}}],"version":2}"#,
+        )],
+        "Package.resolved",
+    );
+    one(&s, "pkg:swift/git.example/org/waybill-fixture-j@1.0.0");
+}
+
+// ---------------------------------------------------------------------
+// US2 (T018): removing a credential does not change what a component is.
+// Each case scans a credentialled and a clean tree and requires the same
+// masked documents in all three formats.
+// ---------------------------------------------------------------------
+
+fn assert_same(a: &Scan, b: &Scan, case: &str) {
+    for (name, x, y) in [("cdx", &a.cdx, &b.cdx), ("spdx23", &a.spdx23, &b.spdx23), ("spdx3", &a.spdx3, &b.spdx3)] {
+        let (x, y) = (masked(x), masked(y));
+        assert!(x == y, "{case} {name}: the credentialled tree differs from the clean one; {}", masked_difference(&y, &x).unwrap_or_default());
+    }
+}
+
+/// A super-project with a submodule of a non-GitHub repository and a
+/// conditional fetch of the same repository (spec 1538 R9), the fetch's URL
+/// carrying `cred`.
+fn submodule_and_fetch(cred: &str) -> (GitFixture, PathBuf) {
+    let fx = GitFixture::new();
+    fx.repo("tree");
+    fx.write("tree/.gitmodules", "[submodule \"d\"]\n\tpath = extern/waybill-fixture-dep\n\turl = https://git.example/org/waybill-fixture-dep.git\n");
+    fx.write(
+        "tree/CMakeLists.txt",
+        &cmake(&format!(
+            "if(NOT TARGET waybill_fixture_dep)\nFetchContent_Declare(waybill-fixture-dep GIT_REPOSITORY https://{cred}git.example/org/waybill-fixture-dep.git GIT_TAG ${{FX_UNSET}})\nendif()\n"
+        )),
+    );
+    let path = fx.path("tree");
+    fx.git(&path, &["add", ".gitmodules"]);
+    fx.add_gitlink("tree", "extern/waybill-fixture-dep", &"a".repeat(40));
+    (fx, path)
+}
+
+#[test]
+fn i1_a_credentialled_fetch_merges_with_its_submodule() {
+    let (fx_c, p_c) = submodule_and_fetch(CRED);
+    let (fx_n, p_n) = submodule_and_fetch("");
+    let cred = scan3(&fx_c, &p_c, &[]);
+    let clean = scan3(&fx_n, &p_n, &[]);
+    assert_no_cred(&cred);
+    assert_eq!(with_purl(&clean, "pkg:generic/waybill-fixture-dep@").len(), 1, "control: the clean tree merges to one component");
+    assert_same(&cred, &clean, "I-1");
+}
+
+#[test]
+fn i2_a_credentialled_github_fetch_keeps_its_purl() {
+    let (fx_c, p_c) = tree(&[("CMakeLists.txt", &cmake(CMAKE_GH))], CRED);
+    let (fx_n, p_n) = tree(&[("CMakeLists.txt", &cmake(CMAKE_GH))], "");
+    assert_same(&scan3(&fx_c, &p_c, &[]), &scan3(&fx_n, &p_n, &[]), "I-2");
+}
+
+/// Research R3: host case, default port and dot segments survive stripping.
+#[test]
+fn i3_stripping_keeps_the_rest_of_the_url() {
+    let body = "FetchContent_Declare(waybill-fixture-case GIT_REPOSITORY https://{CRED}Git.Example:443/Org/a/../Waybill-Fixture-Case.git GIT_TAG v1.0.0)\nFetchContent_MakeAvailable(waybill-fixture-case)\n";
+    let (fx_c, p_c) = tree(&[("CMakeLists.txt", &cmake(body))], "wbfxtoken7c41@");
+    let (fx_n, p_n) = tree(&[("CMakeLists.txt", &cmake(body))], "");
+    let clean = scan3(&fx_n, &p_n, &[]);
+    assert_reaches(&clean, "https://Git.Example:443/Org/a/../Waybill-Fixture-Case.git");
+    assert_same(&scan3(&fx_c, &p_c, &[]), &clean, "I-3");
 }

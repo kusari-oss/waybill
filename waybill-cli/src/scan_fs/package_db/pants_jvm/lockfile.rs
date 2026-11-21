@@ -437,6 +437,8 @@ pub(crate) fn entry_to_package_db_entry(
         ),
     );
     if let Some(url) = entry.coord.url.as_deref().filter(|s| !s.is_empty()) {
+        // Spec 1640 (#1647, D9).
+        let url = waybill::identifiers::sanitize::sanitize_declared_url(url, &lockfile_path.display().to_string());
         extra_annotations.insert(
             "waybill:source-url".to_string(),
             json!(url),
