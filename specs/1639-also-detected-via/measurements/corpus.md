@@ -53,4 +53,14 @@ TheRock's 84 C56 values:
 
 ## Public corpus (SC-004)
 
-Run 44918352823. Result below.
+Run 44918352823 of `public-corpus.yml`, `regen_goldens=true`, on the branch. Jobs:
+- `Run public corpus (1639-also-detected-via)`: success;
+- `Report corpus failure`: skipped (its condition is `failure() && github.event_name == 'schedule'`).
+
+The log names the scanned commit three times as ebbffb21: at checkout, at "Resolve the scanned commit", and as `SCANNED_SHA` in the summary.
+
+The `corpus-goldens-regen` artifact holds 67 files for 21 targets. Each was compared with `cmp` against its committed golden: **67 identical, 0 changed, 0 missing.** No golden changes, so none is committed.
+
+As a control that the regenerated goldens are real output of the branch, C55 appears in 18 of the 67 files. C56, C242 and the `waybill-source-mechanism` methods key appear in none. No public-corpus target has a merge group with more than one mechanism, so FR-012's byte-identity holds on all 21 (SC-004).
+
+ebbffb21 precedes the fold change in b57f0c36 (`therock.md`). That change only affects a C56 key already present on a merge member, and no public-corpus golden carries one.

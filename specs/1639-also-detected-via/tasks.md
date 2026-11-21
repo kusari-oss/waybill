@@ -53,6 +53,8 @@
     - removes the key when the set is empty or the survivor has no C55;
     - otherwise writes a sorted, deduplicated JSON array of strings.
 
+  **Done as:** `normalise`'s rules live in `record`, through a private `write(survivor, set)`; there is no separate `normalise` (research R4). `marks(absorbed)` copies an absorbed member's C55 and C56 for S1 and S3, which move the member before recording.
+
   Name the key constant `ANN_ALSO_DETECTED_VIA`. Unit tests in `AD`'s test module (with `#[cfg_attr(test, allow(clippy::unwrap_used))]`):
   - union;
   - self-exclusion;
@@ -107,7 +109,7 @@
   - replace `observe` with `record`;
   - in S1, copy the loser's C55 and C56 before the fold loop, which moves the loser's map, and call `record` with the copy **after** the fold;
   - make the generic first-wins fold skip `ANN_ALSO_DETECTED_VIA`, beside the existing pants-key special cases, with a comment citing research R4. **Done, then removed after T026:** mutation M9 showed the skip is unobservable, because `record` re-unions the loser's C56 after the fold.
-- [X] T011 [P] [US1] S3 in `RC`: replace `observe` with `record`. A source-tier survivor without C55 records nothing, by `normalise`'s anchor rule (A-8, research R5).
+- [X] T011 [P] [US1] S3 in `RC`: replace `observe` with `record`. A source-tier survivor without C55 records nothing, by `record`'s anchor rule (A-8, research R5).
 - [X] T012 [P] [US1] S4–S7 in `FE` and `CM`: replace `observe` with `record`. In S6, keep the existing `superseded` call: C233 and C56 are both recorded (FR-004).
 - [X] T013 [P] [US1] S8 and S9 in `SP`: replace `observe` with `record`. Package searches are included (FR-004).
 - [X] T014 [US1] Run T008, T009, `AD`'s unit tests, A-ctl and the existing suites until they pass:
@@ -165,8 +167,8 @@
   - Fixed: the CycloneDX `methods[]` key milestone 105 specified is no longer produced (#1442).
 - [X] T026 Mutations M1–M8 (plan Testing). Restore with `cp`, rebuild after the last one, and use a `^error\[E…\]` guard so a compile failure is not counted as a kill. Record each mutation and its killing test in `MS/mutations.md`.
 - [X] T027 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Read `target/gate/prepr.log` for `GATE_RESULT=` and every `test result:` line, and record the counts in `MS/gate-log.md`.
-- [ ] T028 TheRock `measure-source` (SC-005, SC-006), with `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`. Read the scanned SHAs from `refs.txt`. Trace every changed component to an FR, and confirm component counts are equal and unexplained orphans do not increase. Record the median of 3 timed runs per side and the ratio in `MS/therock.md`.
-- [ ] T029 Corpora:
+- [X] T028 TheRock `measure-source` (SC-005, SC-006), with `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`. Read the scanned SHAs from `refs.txt`. Trace every changed component to an FR, and confirm component counts are equal and unexplained orphans do not increase. Record the median of 3 timed runs per side and the ratio in `MS/therock.md`.
+- [X] T029 Corpora:
   - **Public corpus:** `public-corpus.yml` `regen_goldens=true` (SC-004). Trace every changed golden to an FR, and commit them through the workflow's artifact.
   - **Quality corpus:** branch and `main` runs (SC-005), traced component by component with `census-merges` at both SHAs.
 
