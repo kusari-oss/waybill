@@ -143,7 +143,7 @@
   - **Public corpus.** Dispatch `public-corpus.yml` with `regen_goldens` on the branch, and diff every golden with a normalised, sorted diff (masked IDs, `LC_ALL=C sort`). Targets with no literal-repository unresolved fetch in T001's census must be byte-identical; commit regenerated goldens only for the rest.
   - **Quality corpus.** Run against a `main` control, and trace python-pytorch component by component: `aotriton_external` becomes `pkg:github/rocm/aotriton` with C151 and no version, and `aotriton_runtime` is unchanged.
   - Record both in `MS/corpus.md`.
-- [ ] T024 Verify each task's claim against the code and measurements before ticking it, then open the PR with "Refs #1517, #1518, #1594" and "Closes #1595", ending with the attribution footer. Merging is the maintainer's.
+- [X] T024 Verify each task's claim against the code and measurements before ticking it, then open the PR with "Refs #1517, #1518, #1594" and "Closes #1595", ending with the attribution footer. Merging is the maintainer's.
 
 ## Dependencies
 
