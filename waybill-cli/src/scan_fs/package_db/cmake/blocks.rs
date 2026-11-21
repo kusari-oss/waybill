@@ -6,8 +6,10 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Block {
     /// `if(<condition>)`. `elseif` replaces the condition; `else` prefixes
-    /// the last one with `else: `.
-    If { condition: String },
+    /// the last one with `else: `. Spec 1641 research R3: `earlier` keeps
+    /// the conditions of the branches before the current one and `current`
+    /// the current one's tokens (`None` in an `else`), for evaluation only.
+    If { condition: String, earlier: Vec<Vec<String>>, current: Option<Vec<String>> },
     Function { name: String },
     Loop,
 }
@@ -32,13 +34,17 @@ impl BlockStack {
     /// Apply one command. Returns `true` when it opened, changed or closed
     /// a block.
     pub(crate) fn observe(&mut self, name: &str, args: &[String]) -> bool {
-        let text = args.join(" ");
+        let text = super::conditions::without_parens(args).join(" ");
         match name {
-            "if" => self.stack.push(Block::If { condition: text }),
+            "if" => self.stack.push(Block::If { condition: text, earlier: Vec::new(), current: Some(args.to_vec()) }),
             "elseif" | "else" => match self.stack.last_mut() {
-                Some(Block::If { condition }) => {
+                Some(Block::If { condition, earlier, current }) => {
+                    if let Some(c) = current.take() {
+                        earlier.push(c);
+                    }
                     if name == "elseif" {
                         *condition = text;
+                        *current = Some(args.to_vec());
                     } else if !condition.starts_with("else: ") {
                         *condition = format!("else: {condition}");
                     }
@@ -73,9 +79,24 @@ impl BlockStack {
             .filter(|c| !c.starts_with("function: "))
             .cloned()
             .chain(self.stack.iter().filter_map(|b| match b {
-                Block::If { condition } => Some(condition.clone()),
+                Block::If { condition, .. } => Some(condition.clone()),
                 _ => None,
             }))
+            .collect()
+    }
+
+    /// Spec 1641 research R3: each enclosing `if` block in this file (the
+    /// seed excluded), outermost first, as the earlier branches' tokens and
+    /// the current branch's (`None` in an `else`).
+    pub(crate) fn branches(&self) -> Vec<super::conditions::Branch> {
+        self.stack
+            .iter()
+            .filter_map(|b| match b {
+                Block::If { earlier, current, .. } => {
+                    Some(super::conditions::Branch { earlier: earlier.clone(), current: current.clone() })
+                }
+                _ => None,
+            })
             .collect()
     }
 
@@ -94,7 +115,7 @@ impl BlockStack {
             .iter()
             .cloned()
             .chain(self.stack.iter().filter_map(|b| match b {
-                Block::If { condition } => Some(condition.clone()),
+                Block::If { condition, .. } => Some(condition.clone()),
                 Block::Function { name } => Some(format!("function: {name}")),
                 Block::Loop => None,
             }))
@@ -119,6 +140,20 @@ mod tests {
             s.observe(n, &args);
         }
         s
+    }
+
+    /// Spec 1641 research R3: branch history beside unchanged strings.
+    #[test]
+    fn s1641_branches_keep_the_earlier_conditions() {
+        let s = run(&[("if", "A"), ("elseif", "B"), ("else", "")]);
+        assert_eq!(s.if_conditions(), vec!["else: B"], "C232's string is unchanged");
+        let b = s.branches();
+        assert_eq!(b.len(), 1);
+        assert_eq!(b[0].earlier, vec![vec!["A".to_string()], vec!["B".to_string()]]);
+        assert_eq!(b[0].current, None);
+        let s = run(&[("if", "A"), ("elseif", "B")]);
+        assert_eq!(s.branches()[0].earlier, vec![vec!["A".to_string()]]);
+        assert_eq!(s.branches()[0].current, Some(vec!["B".to_string()]));
     }
 
     #[test]

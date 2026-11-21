@@ -121,6 +121,11 @@ pub(crate) struct PackageSearch {
     /// The `if` conditions alone, as `fallback::build_testing` reads them.
     pub(crate) if_conditions: Vec<String>,
     pub(crate) in_test_dir: bool,
+    /// Spec 1641 research R3: the file's own enclosing `if` blocks.
+    pub(crate) branches: Vec<super::conditions::Branch>,
+    /// Spec 1641 (FR-007): whether the search's chain holds by default. Set
+    /// by the caller once defaults and reach are known; `Unknown` until then.
+    pub(crate) eval: super::conditions::Eval,
 }
 
 /// What one file's commands hold.
@@ -257,6 +262,8 @@ pub(crate) fn collect(
         conditions: conditions.clone(),
         if_conditions: if_conditions.clone(),
         in_test_dir,
+        branches: blocks.branches(),
+        eval: super::conditions::Eval::Unknown,
     }));
 }
 
@@ -371,12 +378,22 @@ pub(crate) fn read_file(path: &std::path::Path, seed: Vec<String>, in_test_dir: 
     let mut out = FileSearches::default();
     let Ok(content) = std::fs::read_to_string(path) else { return out };
     let source_path = path.to_string_lossy();
+    // Spec 1641: no tree-wide defaults or reach here, so the seed reads in
+    // C232's string form and options are unknown.
+    let d = super::conditions::Defaults::default();
+    let mut atoms = std::collections::BTreeSet::new();
+    let reach = seed.iter().fold(super::conditions::Eval::Holds, |acc, s| acc.and(d.condition_string(s, &mut atoms)));
     let mut blocks = BlockStack::seeded(seed);
     for (name, args) in commands_checked(&strip_comments(&content)).0 {
         let name = name.to_ascii_lowercase();
-        let args: Vec<String> = args.into_iter().map(|a| a.text).collect();
+        let args: Vec<String> =
+            if name == "if" || name == "elseif" { super::conditions::with_parens(args) } else { args.into_iter().map(|a| a.text).collect() };
         if !blocks.observe(&name, &args) {
+            let before = out.searches.len();
             collect(&blocks, &name, &args, &source_path, in_test_dir, &mut out);
+            for s in &mut out.searches[before..] {
+                s.eval = d.chain(reach, &s.branches, &[], &mut atoms);
+            }
         }
     }
     out

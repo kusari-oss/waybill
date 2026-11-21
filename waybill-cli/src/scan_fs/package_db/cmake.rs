@@ -52,6 +52,7 @@ use super::PackageDbEntry;
 
 // Spec 1538 (#1516, #1519): the blocks around a fetch, and why it might not be taken.
 pub(crate) mod blocks;
+pub(crate) mod conditions;
 pub(crate) mod fallback;
 pub(crate) mod fetches;
 pub(crate) mod projects;

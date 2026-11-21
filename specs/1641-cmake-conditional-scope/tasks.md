@@ -14,13 +14,13 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Build `main`'s binary before any source change and copy it to the scratchpad (`waybill-main-<sha>`), for C-ctl's golden. Create `IT` with these helpers:
+- [X] T001 Build `main`'s binary before any source change and copy it to the scratchpad (`waybill-main-<sha>`), for C-ctl's golden. Create `IT` with these helpers:
   - `scan(fx, path)`: three formats in one invocation, as `waybill-cli/tests/declared_url_credentials.rs::scan3` does, honouring `WAYBILL_CONDITIONAL_SCOPE_BIN` for the golden;
   - `scope_of(doc, purl_prefix)`: CycloneDX `scope`, defaulting to `required`;
   - `prop`, `parity` over the rows A1, C122, C232, C236 (and the native scope through A1's component set), `assert_repeatable` (10 scans), CycloneDX validation and unique `bom-ref`s. Copy these from `declared_url_credentials.rs`.
 
   Fixtures are inline templates under `ROOT = "cmake_minimum_required(VERSION 3.25)\nproject(waybill_fixture_app VERSION 1.0.0)\ninclude(ExternalProject)\n"`, with the issue's `ExternalProject_Add(waybill-fixture-zlib URL … URL_HASH …)`.
-- [ ] T002 C-ctl (FR-009):
+- [X] T002 C-ctl (FR-009):
   - **Tree.** One CMake tree with an unconditional fetch, one under `if(NOT TARGET x)`, one under `if(BUILD_TESTING)`, and an unconditional `find_package`. None is a catch-all conditional.
   - **Golden.** Generate `FX/ctl-golden/{cdx,spdx-2.3,spdx-3}.json` with the saved `main` binary (`WAYBILL_UPDATE_CONDITIONAL_SCOPE_GOLDENS`).
   - **Check.** It passes at `main`.
@@ -29,7 +29,7 @@
 
 Scope does not change in this phase.
 
-- [ ] T003 Create `CD` (research R2, R4) and declare it in `waybill-cli/src/scan_fs/package_db/cmake.rs`'s module list.
+- [X] T003 Create `CD` (research R2, R4) and declare it in `waybill-cli/src/scan_fs/package_db/cmake.rs`'s module list.
   - `pub(crate) enum Eval { Holds, DoesNotHold, Unknown, Platform }`.
   - A tokenizer and parser for one `if()` condition string, with CMake's precedence: parentheses, unary, binary, `NOT`, `AND`, `OR`.
   - `evaluate(condition, defaults) -> Eval`, with the atom rules of R2: constants, platform variables and comparisons, the guard (both operand orders, and `PROJECT_SOURCE_DIR`), and variables through `defaults`. Everything else is `Unknown`.
@@ -37,17 +37,17 @@ Scope does not change in this phase.
   - `Defaults::collect(per-file commands)`: `option` (missing value means OFF), `cmake_dependent_option`, `set(… CACHE BOOL …)` and literal `set()`. Conflicting values give `Unknown`.
 
   Unit tests (with `#[cfg_attr(test, allow(clippy::unwrap_used))]`): every atom kind, precedence, the `Platform` algebra, the guard in both orders, each default source, a conflict, `else`, `elseif`, and nesting.
-- [ ] T004 Branch history (R3).
+- [X] T004 Branch history (R3).
   - **In `BL`:** `Block::If` keeps its earlier branch conditions and the current branch's kind beside today's string. `if_conditions()` and `conditions()` are unchanged. Add `branches()`.
   - **In `RE`:** seeds carry the same history, and a new `ReachMap::scope_files(path)` returns F, its includers transitively, and the `CMakeLists.txt` files of the directories that `add_subdirectory()` F's directory, with the files they include (R4).
   - **Unit tests:** the history through `if`/`elseif`/`else`; seeds from inside an `else()`; `scope_files` for an include chain and for a subdirectory.
   - Every existing `BL` and `RE` test passes unchanged.
-- [ ] T005 Log-only wiring.
+- [X] T005 Log-only wiring.
   - **In `FE`:** for each declaration whose shape is `Conditional`, compute the chain's `Eval` with `Defaults` restricted to `scope_files`. Emit `tracing::debug!(target: "waybill::cmake_conditions", kind = "fetch", subject, versioned, category, eval, conditions)`.
   - **In `SE`:** the same for each conditional search (`kind = "search"`).
   - `category` is R6's.
   - **Scope, C122, C232 and C236 are unchanged.** Confirm with the existing CMake suites (`cmake_*`, `git_submodule_reader`, the installed-library suites) and C-ctl.
-- [ ] T006 Census positive control: an `IT` test that scans one fixture with one catch-all conditional fetch per category at `RUST_LOG=waybill::cmake_conditions=debug`, and asserts one event per category with the expected `eval`.
+- [X] T006 Census positive control: an `IT` test that scans one fixture with one catch-all conditional fetch per category at `RUST_LOG=waybill::cmake_conditions=debug`, and asserts one event per category with the expected `eval`.
 - [ ] T007 **Census at the log-only commit** (SC-001, R6).
   - **Fixture repository** (`kusari-sandbox/waybill-fixture-therock-sdk`): add `census/conditions.py` (stdlib, `python3 -I -B`, ANSI-stripped) and `.github/workflows/census-conditions.yml`, modelled on `census-merges.yml`.
     - **Matrix:** TheRock (submodules) and the quality corpus's CMake targets at their `xtask/corpus/quality-corpus.toml` pins.
@@ -63,7 +63,7 @@ Scope does not change in this phase.
 
 **Goal**: FR-001, FR-004, FR-005, FR-006, FR-007. **Independent test**: T-1 to T-4, T-10, T-11, S-1, S-2, R-1.
 
-- [ ] T008 [US1] Write T-1, T-2, T-2r, T-3, T-4, T-10, T-11, T-12, T-13, M-1, S-1, S-2 and R-1 in `IT`. **Run them at the log-only commit:** every "Changed" case must fail on its scope assertion and every other case must pass. Record the result per case in `MS/control.md`.
+- [X] T008 [US1] Write T-1, T-2, T-2r, T-3, T-4, T-10, T-11, T-12, T-13, M-1, S-1, S-2 and R-1 in `IT`. **Run them at the log-only commit:** every "Changed" case must fail on its scope assertion and every other case must pass. Record the result per case in `MS/control.md`.
 - [ ] T009 [US1] In `FE`:
   - a `Conditional` declaration whose chain evaluates `DoesNotHold` keeps `Optional` with `cmake-conditional`. Otherwise it gets no scope and no C122 (FR-001, FR-004).
   - `mark` writes C232 whenever the declaration has conditions, in scope or not (FR-005).
@@ -76,14 +76,14 @@ Scope does not change in this phase.
 
 **Goal**: FR-002, FR-003. **Independent test**: T-5 to T-9.
 
-- [ ] T013 [US2] Write T-5, T-6, T-7, T-7e, T-8 and T-9 in `IT`. The "Changed" ones (T-6, T-8, T-9) must fail at the log-only commit; add them to `MS/control.md`. If they are written after T009, record that M-mutations stand in for the failing run (T018).
+- [X] T013 [US2] Write T-5, T-6, T-7, T-7e, T-8 and T-9 in `IT`. The "Changed" ones (T-6, T-8, T-9) must fail at the log-only commit; add them to `MS/control.md`. If they are written after T009, record that M-mutations stand in for the failing run (T018).
 - [ ] T014 [US2] Make T-5 to T-9 pass. Fix any `CD` rule they expose, adding the unit test that would have caught it.
 
 ## Phase 5: User Story 3: nothing else changes (P2)
 
 **Goal**: FR-001's exclusions, FR-006, FR-009. **Independent test**: F-1 to F-6, B-1, R-1, C-ctl.
 
-- [ ] T015 [US3] Write F-1 to F-6 and B-1 in `IT`, each asserting the same scope, C122 and C232 as `main`. They pass at the log-only commit and after T009–T011.
+- [X] T015 [US3] Write F-1 to F-6 and B-1 in `IT`, each asserting the same scope, C122 and C232 as `main`. They pass at the log-only commit and after T009–T011.
 
 ## Phase 6: Polish and cross-cutting
 

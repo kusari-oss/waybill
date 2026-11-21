@@ -243,6 +243,11 @@ pub(crate) fn read_declarations(
             d.components().any(|c| matches!(c, Component::Normal(s) if TEST_DIRS.iter().any(|t| s == *t)))
         });
         let mut blocks = super::blocks::BlockStack::seeded(reach.seed(path));
+        // Spec 1641 research R4, R5: the defaults in reach of this file and
+        // whether the file itself is reached by default.
+        let defaults = reach.defaults_for(path);
+        let mut reach_atoms = BTreeSet::new();
+        let reach_eval = reach.reach_eval(path, &defaults, &mut reach_atoms);
         let mut ordinal = 0usize;
         let mut open: Vec<usize> = Vec::new();
         for (name, args) in cmds.iter() {
@@ -259,7 +264,15 @@ pub(crate) fn read_declarations(
             if blocks.observe(name, args) {
                 continue;
             }
+            let before = found.searches.len();
             super::searches::collect(&blocks, name, args, &source_path, in_test_dir, &mut found);
+            for s in &mut found.searches[before..] {
+                let mut atoms = reach_atoms.clone();
+                s.eval = defaults.chain(reach_eval, &s.branches, &[], &mut atoms);
+                if !s.conditions.is_empty() && !s.in_test_dir && !super::fallback::build_testing(&s.if_conditions) {
+                    census("search", &s.name, false, &atoms, s.eval, &s.conditions);
+                }
+            }
             if name == "project" {
                 if let Some(p) = args.first().filter(|p| !p.contains("${")) {
                     projects.insert(p.to_lowercase());
@@ -321,9 +334,15 @@ pub(crate) fn read_declarations(
             let mut if_conds = blocks.if_conditions();
             if_conds.extend(body_conditions.iter().cloned());
             let mut conditions = blocks.conditions();
-            conditions.extend(body_conditions);
+            conditions.extend(body_conditions.iter().cloned());
             let ctx = Context { mode: mode_for(&dir, &modes), fetchcontent_provider: provider };
             let shape = fallback::classify(kind, &decl_args, &if_conds, blocks.function().is_some(), ctx);
+            if shape == Some(FallbackShape::Conditional) {
+                let mut atoms = reach_atoms.clone();
+                let eval = defaults.chain(reach_eval, &blocks.branches(), &body_conditions, &mut atoms);
+                let versioned = !entry.version.is_empty() && entry.version != "unknown";
+                census("fetch", entry.purl.as_str(), versioned, &atoms, eval, &conditions);
+            }
             let test = if in_test_dir {
                 Some("source-test-directory")
             } else if fallback::build_testing(&if_conds) {
@@ -436,6 +455,28 @@ fn wrapper_chains(e: &PackageDbEntry) -> BTreeSet<Vec<String>> {
         .unwrap_or_default()
         .into_iter()
         .collect()
+}
+
+/// Spec 1641 research R6: one census event per catch-all conditional fetch
+/// or search, read by the fixture repository's `census/conditions.py`.
+fn census(
+    kind: &str,
+    subject: &str,
+    versioned: bool,
+    atoms: &BTreeSet<super::conditions::Atom>,
+    eval: super::conditions::Eval,
+    conditions: &[String],
+) {
+    tracing::debug!(
+        target: "waybill::cmake_conditions",
+        kind,
+        subject,
+        versioned,
+        category = super::conditions::category(atoms),
+        eval = eval.as_str(),
+        conditions = %serde_json::json!(conditions),
+        "cmake: a catch-all conditional (spec 1641)"
+    );
 }
 
 /// Test outranks Optional: a component's scope is one value (R7).

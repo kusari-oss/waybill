@@ -33,6 +33,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use super::blocks::BlockStack;
+use super::conditions::{Atom, Branch, Defaults, Eval, FileDefaults};
 use super::links::{canon, resolve_include, substitute};
 use crate::scan_fs::package_db::installed_lib::cmake_version::{commands_checked, strip_comments};
 
@@ -69,6 +70,20 @@ pub(crate) struct ReachMap {
     /// reaches through add_subdirectory() or include(), itself included;
     /// `None` when there is no scan-root `CMakeLists.txt`.
     from_root: Option<BTreeSet<PathBuf>>,
+    /// Spec 1641 research R3, R4: the edges into each file, with their kind
+    /// and the branches open at the call site.
+    edges: BTreeMap<PathBuf, Vec<Edge>>,
+    /// Each file's `include()` targets.
+    includes: BTreeMap<PathBuf, Vec<PathBuf>>,
+    /// Each parsed file's declared defaults.
+    defaults: BTreeMap<PathBuf, FileDefaults>,
+}
+
+/// One edge into a file (spec 1641).
+#[derive(Debug, Clone)]
+struct Edge {
+    source: PathBuf,
+    branches: Vec<Branch>,
 }
 
 impl ReachMap {
@@ -83,7 +98,64 @@ impl ReachMap {
         let set = self.from_root.as_ref()?;
         Some(set.contains(&rebase(path, &self.scan_root, &self.canonical_root)))
     }
+
+    /// Spec 1641 research R4: the files in `path`'s scope chain. That is
+    /// `path`, every file that reaches it by `include()` or
+    /// `add_subdirectory()` (transitively), and every file those include.
+    pub(crate) fn scope_files(&self, path: &Path) -> BTreeSet<PathBuf> {
+        let start = rebase(path, &self.scan_root, &self.canonical_root);
+        let mut up: BTreeSet<PathBuf> = BTreeSet::new();
+        let mut stack = vec![start];
+        while let Some(f) = stack.pop() {
+            if up.insert(f.clone()) {
+                stack.extend(self.edges.get(&f).into_iter().flatten().map(|e| e.source.clone()));
+            }
+        }
+        let mut out = up.clone();
+        let mut stack: Vec<PathBuf> = up.into_iter().collect();
+        while let Some(f) = stack.pop() {
+            for t in self.includes.get(&f).into_iter().flatten() {
+                if out.insert(t.clone()) {
+                    stack.push(t.clone());
+                }
+            }
+        }
+        out
+    }
+
+    /// The defaults in reach of `path` (FR-002).
+    pub(crate) fn defaults_for(&self, path: &Path) -> Defaults {
+        let scope = self.scope_files(path);
+        Defaults::merge(scope.iter().filter_map(|f| self.defaults.get(f)))
+    }
+
+    /// Whether `path` is reached by default: the OR, over the edges into
+    /// it, of the edge's branches and its source's reach. A file nothing
+    /// reaches, or that only a cycle reaches, is reached.
+    pub(crate) fn reach_eval(&self, path: &Path, d: &Defaults, atoms: &mut BTreeSet<Atom>) -> Eval {
+        let start = rebase(path, &self.scan_root, &self.canonical_root);
+        self.eval_file(&start, d, atoms, &mut HashSet::new())
+    }
+
+    fn eval_file(&self, f: &Path, d: &Defaults, atoms: &mut BTreeSet<Atom>, on_stack: &mut HashSet<PathBuf>) -> Eval {
+        let Some(edges) = self.edges.get(f).filter(|e| !e.is_empty()) else { return Eval::Holds };
+        if !on_stack.insert(f.to_path_buf()) {
+            return Eval::Holds;
+        }
+        let mut v: Option<Eval> = None;
+        for e in edges {
+            let src = self.eval_file(&e.source, d, atoms, on_stack);
+            let edge = d.chain(src, &e.branches, &[], atoms);
+            v = Some(match v {
+                None => edge,
+                Some(acc) => acc.or(edge),
+            });
+        }
+        on_stack.remove(f);
+        v.unwrap_or(Eval::Holds)
+    }
 }
+
 
 /// A file's commands, lowercased names, shared with the fetch reader's parse.
 pub(crate) type Commands = Rc<Vec<(String, Vec<String>)>>;
@@ -104,7 +176,13 @@ pub(crate) fn parse_commands(file: &Path) -> Option<(Commands, String, bool)> {
     let (cmds, unterminated) = commands_checked(&strip_comments(&content));
     let cmds = cmds
         .into_iter()
-        .map(|(n, a)| (n.to_ascii_lowercase(), a.into_iter().map(|x| x.text).collect()))
+        .map(|(n, a)| {
+            let n = n.to_ascii_lowercase();
+            // Spec 1641 research R3: an `if()`/`elseif()` keeps its grouping
+            // as sentinel tokens, which `BlockStack` leaves out of C232.
+            let a = if n == "if" || n == "elseif" { super::conditions::with_parens(a) } else { a.into_iter().map(|x| x.text).collect() };
+            (n, a)
+        })
         .collect();
     Some((Rc::new(cmds), content, unterminated))
 }
@@ -114,6 +192,9 @@ struct Graph<'a> {
     parsed: HashMap<PathBuf, Commands>,
     /// Edges into each file: (source file, conditions at the call site).
     into: BTreeMap<PathBuf, BTreeSet<(PathBuf, Vec<String>)>>,
+    /// Spec 1641: the same edges with their branches, and include targets.
+    edges: BTreeMap<PathBuf, Vec<Edge>>,
+    includes: BTreeMap<PathBuf, Vec<PathBuf>>,
     /// `CMAKE_MODULE_PATH` each `CMakeLists.txt` inherits from the parent
     /// that adds it.
     inherited: HashMap<PathBuf, Vec<PathBuf>>,
@@ -194,6 +275,8 @@ impl Graph<'_> {
                     };
                     let Some(target) = resolve_include(arg, source_dir, &list_dir, &root).or_else(by_name) else { continue };
                     self.into.entry(target.clone()).or_default().insert((file.to_path_buf(), blocks.conditions()));
+                    self.edges.entry(target.clone()).or_default().push(Edge { source: file.to_path_buf(), branches: blocks.branches() });
+                    self.includes.entry(file.to_path_buf()).or_default().push(target.clone());
                     if depth < MAX_INCLUDE_DEPTH && on_stack.insert(target.clone()) {
                         self.traverse(&target, source_dir, depth + 1, on_stack, module_path);
                         on_stack.remove(&target);
@@ -206,6 +289,7 @@ impl Graph<'_> {
                         let target = canon(&target);
                         if target.starts_with(&root) && target != file {
                             self.inherited.entry(target.clone()).or_insert_with(|| module_path.clone());
+                            self.edges.entry(target.clone()).or_default().push(Edge { source: file.to_path_buf(), branches: blocks.branches() });
                             self.into.entry(target).or_default().insert((file.to_path_buf(), blocks.conditions()));
                         }
                     }
@@ -230,7 +314,7 @@ pub(crate) fn compute(scan_root: &Path, walked: &[(PathBuf, Commands)]) -> Reach
         walked_set.insert(c);
     }
     let walked = walked_set;
-    let mut g = Graph { root: &root, parsed, into: BTreeMap::new(), inherited: HashMap::new() };
+    let mut g = Graph { root: &root, parsed, into: BTreeMap::new(), edges: BTreeMap::new(), includes: BTreeMap::new(), inherited: HashMap::new() };
     let lists: BTreeSet<PathBuf> =
         walked.iter().filter(|f| f.file_name().is_some_and(|n| n == "CMakeLists.txt")).cloned().collect();
     // Parents first, so a subdirectory inherits its parent's module path.
@@ -272,7 +356,27 @@ pub(crate) fn compute(scan_root: &Path, walked: &[(PathBuf, Commands)]) -> Reach
         seen
     });
     let extra_files = nodes.into_iter().filter(|n| !walked.contains(n)).collect();
-    ReachMap { by_file, extra_files, scan_root: scan_root.to_path_buf(), canonical_root: root, from_root }
+    // Spec 1641 research R4: each parsed file's declared defaults. An edge
+    // recorded twice (a file traversed from two parents) is kept once.
+    let defaults = g.parsed.iter().map(|(p, c)| (p.clone(), FileDefaults::collect(c))).collect();
+    for edges in g.edges.values_mut() {
+        let mut seen = BTreeSet::new();
+        edges.retain(|e| seen.insert((e.source.clone(), format!("{:?}", e.branches))));
+    }
+    for inc in g.includes.values_mut() {
+        inc.sort();
+        inc.dedup();
+    }
+    ReachMap {
+        by_file,
+        extra_files,
+        scan_root: scan_root.to_path_buf(),
+        canonical_root: root.clone(),
+        from_root,
+        edges: g.edges,
+        includes: g.includes,
+        defaults,
+    }
 }
 
 /// Every file's reach, as a fixed point: a file nothing reaches is
@@ -353,6 +457,53 @@ mod tests {
 
     fn seed(m: &ReachMap, root: &Path, rel: &str) -> Vec<String> {
         m.seed(&root.join(rel))
+    }
+
+    /// Spec 1641 research R4: a file's scope is itself, what reaches it
+    /// (include or add_subdirectory, transitively), and what those include.
+    #[test]
+    fn s1641_scope_files_follow_includes_and_parents() {
+        let (d, w) = tree(&[
+            ("CMakeLists.txt", "include(cmake/options.cmake)\nadd_subdirectory(a)\n"),
+            ("cmake/options.cmake", "option(WAYBILL_FIXTURE_X \"\" ON)\n"),
+            ("a/CMakeLists.txt", "include(../cmake/m.cmake)\n"),
+            ("cmake/m.cmake", ""),
+            ("other/CMakeLists.txt", "option(WAYBILL_FIXTURE_X \"\" OFF)\n"),
+        ]);
+        let m = compute(d.path(), &w);
+        let root = canon(d.path());
+        let scope = m.scope_files(&d.path().join("cmake/m.cmake"));
+        for rel in ["cmake/m.cmake", "a/CMakeLists.txt", "CMakeLists.txt", "cmake/options.cmake"] {
+            assert!(scope.contains(&root.join(rel)), "{rel} in scope: {scope:?}");
+        }
+        assert!(!scope.contains(&root.join("other/CMakeLists.txt")), "a sibling tree is not in scope");
+        let mut atoms = BTreeSet::new();
+        let dflt = m.defaults_for(&d.path().join("a/CMakeLists.txt"));
+        let toks = vec!["WAYBILL_FIXTURE_X".to_string()];
+        assert_eq!(dflt.evaluate(&toks, &mut atoms), Eval::Holds, "the parent's included option is in reach, the sibling's is not");
+    }
+
+    /// Spec 1641: a file is reached by default through any edge whose
+    /// branches hold; one reached only under an OFF option is not.
+    #[test]
+    fn s1641_reach_eval_ors_the_edges() {
+        let (d, w) = tree(&[
+            ("CMakeLists.txt", "option(OFF1 \"\" OFF)\nif(OFF1)\n add_subdirectory(a)\nelse()\n add_subdirectory(b)\nendif()\nif(WIN32)\n add_subdirectory(c)\nendif()\nif(OFF1)\n add_subdirectory(e)\nendif()\nadd_subdirectory(e)\n"),
+            ("a/CMakeLists.txt", ""),
+            ("b/CMakeLists.txt", ""),
+            ("c/CMakeLists.txt", ""),
+            ("e/CMakeLists.txt", ""),
+        ]);
+        let m = compute(d.path(), &w);
+        let ev = |rel: &str| {
+            let p = d.path().join(rel);
+            m.reach_eval(&p, &m.defaults_for(&p), &mut BTreeSet::new())
+        };
+        assert_eq!(ev("a/CMakeLists.txt"), Eval::DoesNotHold);
+        assert_eq!(ev("b/CMakeLists.txt"), Eval::Holds, "the else of an OFF option holds");
+        assert_eq!(ev("c/CMakeLists.txt"), Eval::Holds, "a reached root AND a platform edge holds (Platform AND x is x)");
+        assert_eq!(ev("e/CMakeLists.txt"), Eval::Holds, "an unconditional edge wins");
+        assert_eq!(ev("CMakeLists.txt"), Eval::Holds);
     }
 
     /// Spec 1618 (research R9): reached from the scan-root `CMakeLists.txt`
