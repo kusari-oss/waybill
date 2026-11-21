@@ -11,6 +11,7 @@
 
 - Q: What does a fetch whose conditions evaluate to unknown get (FR-004)? → A: It is kept in scope, with C232 as the record of what gates it. This is spec 1269's safe direction: over-reporting an optional feature is the safer error. SC-001's census reports how many components this affects.
 - Q: Do spec 1614's package searches follow the same rule (FR-007)? → A: Yes. They use the same evaluation, with C236 as the record. It is the same defect, and #1623 fixed its installed-tree form.
+- Planning amendment (research R4): FR-002's "before the fetch" is dropped. The position of a definition within a file is not tracked. An `option()` defines a cache variable, visible for the rest of the configure run, and conflicting definitions in reach already make the value unknown. The census counts any option defined only after its use.
 
 ## Background
 
@@ -109,7 +110,7 @@ Fallback detection, test scoping, merging and the coverage record behave as befo
 ### Functional Requirements
 
 - **FR-001**: A CMake fetch whose only reason for being optional today is `cmake-conditional` MUST be in scope when its enclosing conditions hold in the default configuration on some supported platform (FR-003). Otherwise it stays Optional with C122 `cmake-conditional`. The six specific fallback shapes and `BUILD_TESTING` MUST be unaffected.
-- **FR-002**: An option's default MUST be read from an `option()`, `cmake_dependent_option()`, `set(… CACHE BOOL …)` or plain literal `set()`. Only definitions in reach of the fetch count: the same file before the fetch, an enclosing directory's `CMakeLists.txt`, or a file `include()`d into either before the fetch. Definitions with different values make the option unknown.
+- **FR-002**: An option's default MUST be read from an `option()`, `cmake_dependent_option()`, `set(… CACHE BOOL …)` or plain literal `set()`. Only definitions in reach of the fetch count: the same file, a file that `include()`s it, or an enclosing directory's `CMakeLists.txt` (through `add_subdirectory()`) and the files it includes. Position within a file is not tracked (Clarifications, planning amendment). Definitions with different values make the option unknown.
 - **FR-003**: Each enclosing condition MUST evaluate to one of: *holds by default*, *does not hold by default*, or *unknown*.
   - **Atoms:**
     - a platform predicate (`WIN32`, `UNIX`, `APPLE`, `LINUX`, `MSVC`, `CYGWIN`, `MINGW`, `ANDROID`, `IOS`, `CMAKE_SYSTEM_NAME`, `CMAKE_SYSTEM_PROCESSOR`, `CMAKE_HOST_*`, `CMAKE_CXX_COMPILER_ID`, `CMAKE_C_COMPILER_ID`, alone or compared with a literal) holds, and so does its negation;
