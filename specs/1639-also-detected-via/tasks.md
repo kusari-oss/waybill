@@ -106,7 +106,7 @@
 - [X] T010 [US1] S1 and S2 in `DU`:
   - replace `observe` with `record`;
   - in S1, copy the loser's C55 and C56 before the fold loop, which moves the loser's map, and call `record` with the copy **after** the fold;
-  - make the generic first-wins fold skip `ANN_ALSO_DETECTED_VIA`, beside the existing pants-key special cases, with a comment citing research R4.
+  - make the generic first-wins fold skip `ANN_ALSO_DETECTED_VIA`, beside the existing pants-key special cases, with a comment citing research R4. **Done, then removed after T026:** mutation M9 showed the skip is unobservable, because `record` re-unions the loser's C56 after the fold.
 - [X] T011 [P] [US1] S3 in `RC`: replace `observe` with `record`. A source-tier survivor without C55 records nothing, by `normalise`'s anchor rule (A-8, research R5).
 - [X] T012 [P] [US1] S4–S7 in `FE` and `CM`: replace `observe` with `record`. In S6, keep the existing `superseded` call: C233 and C56 are both recorded (FR-004).
 - [X] T013 [P] [US1] S8 and S9 in `SP`: replace `observe` with `record`. Package searches are included (FR-004).

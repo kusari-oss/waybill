@@ -67,7 +67,7 @@ The rules (implemented once, inside `record`; there is no separate `normalise`, 
   - removes C56 entirely when the survivor has no C55, or when the set is empty;
   - otherwise writes the set as a sorted, deduplicated JSON array of strings.
 
-**Invariant.** Only S1's fold can give a survivor a C55 it did not have. S1 therefore calls `record` after folding each loser's annotations, and the generic first-wins fold skips the C56 key (as it already special-cases the pants keys). Every other site leaves C55 alone.
+**Invariant.** Only S1's fold can give a survivor a C55 it did not have. S1 therefore calls `record` after folding each loser's annotations. The generic first-wins fold needs no special case for C56: whatever it copies, `record` then unions the loser's C55 and C56 into the survivor's set, so the result is the same. Mutation M9 (removing such a skip) survived every test, which is why the skip was taken out (measurements/mutations.md). Every other site leaves C55 alone.
 
 **Transitivity.** A component merged at S6 and then at S1 carries one C56: the union of both, sorted (FR-004).
 

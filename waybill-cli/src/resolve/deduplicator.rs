@@ -319,11 +319,6 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             // single-valued key like `waybill:sbom-tier` across a merge yields
             // a value true of neither side.
             for (key, value) in other.extra_annotations {
-                // Spec 1639 research R4: C56 is a union, made by `record`
-                // below, never first-wins.
-                if key == also_detected::ANN_ALSO_DETECTED_VIA {
-                    continue;
-                }
                 if key == crate::scan_fs::package_db::pants_resolve::ANNOTATION_KEY {
                     let merged = match best.extra_annotations.get(&key) {
                         Some(existing) => {
