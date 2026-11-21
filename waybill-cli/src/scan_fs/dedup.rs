@@ -190,7 +190,37 @@ pub struct DedupedComponent {
 /// outside this fn via a `then_with` on the canonical-string compare.
 #[allow(dead_code)]
 pub fn precedence_rank(record: &DetectionRecord) -> u16 {
-    let tier: u16 = match record.source_mechanism {
+    (tier(record.source_mechanism) << 8) | purl_specificity_rank(&record.canonical_purl)
+}
+
+/// Spec 1639 research R2, for the census only: the key the ranking above
+/// gives a C55 string within one PURL group, smaller winning, with the
+/// discriminant tie-break. `None` when the string is not a variant.
+pub(crate) fn rank_key(mechanism: &str, purl: &str) -> Option<(u16, &'static str)> {
+    const ALL: [SourceMechanism; 16] = [
+        SourceMechanism::VcpkgManifest,
+        SourceMechanism::ConanRecipe,
+        SourceMechanism::BazelHttpArchive,
+        SourceMechanism::CpmCmake,
+        SourceMechanism::IdfComponent,
+        SourceMechanism::IdfComponentLocal,
+        SourceMechanism::VcpkgClassic,
+        SourceMechanism::ZephyrWest,
+        SourceMechanism::OpkgInstalled,
+        SourceMechanism::YoctoImageManifest,
+        SourceMechanism::BitbakeRecipe,
+        SourceMechanism::CmakeFetchcontentGit,
+        SourceMechanism::CmakeFetchcontentUrl,
+        SourceMechanism::CmakeExternalproject,
+        SourceMechanism::CmakeVendored,
+        SourceMechanism::GitSubmodule,
+    ];
+    let m = ALL.into_iter().find(|m| m.canonical_str() == mechanism)?;
+    Some(((tier(m) << 8) | purl_specificity_rank(purl), m.canonical_str()))
+}
+
+fn tier(m: SourceMechanism) -> u16 {
+    match m {
         // Manifest-mode tier (highest priority).
         SourceMechanism::VcpkgManifest
         | SourceMechanism::VcpkgClassic
@@ -215,9 +245,7 @@ pub fn precedence_rank(record: &DetectionRecord) -> u16 {
         SourceMechanism::BitbakeRecipe => 2,
         // Filesystem-derived tier (lowest priority).
         SourceMechanism::GitSubmodule | SourceMechanism::CmakeVendored => 2,
-    };
-    let purl_rank = purl_specificity_rank(&record.canonical_purl);
-    (tier << 8) | purl_rank
+    }
 }
 
 /// Returns the PURL specificity rank (Stage 2 of the precedence

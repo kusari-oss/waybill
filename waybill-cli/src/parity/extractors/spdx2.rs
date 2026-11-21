@@ -487,22 +487,13 @@ spdx23_anno!(c53_spdx23, "waybill:download-url",             component);
 spdx23_anno!(c54_spdx23, "waybill:bazel-archive-name",       component);
 // C55 — closed-enum source-mechanism. See cdx.rs for the docs.
 spdx23_anno!(c55_spdx23, "waybill:source-mechanism",         component);
-// C56 — `waybill:also-detected-via` (FR-015). The annotation
-// value is a JSON-array-of-strings (the losing readers'
-// source-mechanism values, sorted lex). Custom extractor parses
-// the array and yields individual strings so the SymmetricEqual
-// parity check against the CDX-native side (`c56_cdx` walks
-// `evidence.identity[*].methods[*].waybill-source-mechanism`)
-// produces matching BTreeSets.
-pub(super) fn c56_spdx23(doc: &Value) -> BTreeSet<String> {
-    extract_mikebom_annotation_values(doc, "waybill:also-detected-via", false)
-        .into_iter()
-        .filter_map(|json_array_str| {
-            serde_json::from_str::<Vec<String>>(&json_array_str).ok()
-        })
-        .flatten()
-        .collect()
-}
+// C56 — `waybill:also-detected-via` (spec 1639, #1558). The other
+// readers' source mechanisms on a merged component: a sorted JSON array,
+// carried as a component property (CDX) and an annotation (SPDX), the same
+// shape C233 uses. Milestone 105's `methods[]` carrier was outside the
+// CycloneDX 1.6 schema (#1442) and is gone (spec 1639 research R1, R8).
+spdx23_anno!(c56_spdx23, "waybill:also-detected-via",   component);
+
 // C57 — `waybill:build-reference` (FR-008a). Closed enum
 // `declared-and-used` / `declared-only` — simple property.
 spdx23_anno!(c57_spdx23, "waybill:build-reference",          component);

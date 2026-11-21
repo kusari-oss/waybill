@@ -623,51 +623,12 @@ cdx_anno!(c54_cdx, "waybill:bazel-archive-name",        component);
 // idf-component-local / vcpkg-classic / git-submodule).
 cdx_anno!(c55_cdx, "waybill:source-mechanism",          component);
 
-// C56 — `waybill:also-detected-via` (FR-015). Records the
-// source-mechanism values of OTHER readers that produced the same
-// canonical PURL as the winning reader. Lets downstream consumers
-// see multi-reader corroboration without inflating component count.
-//
-// CDX-native emission per research R1: each detection record is a
-// `methods[]` entry under `evidence.identity[0].methods[]` carrying
-// `{technique, confidence, waybill-source-mechanism}`. The FIRST
-// method entry is the winning reader (its source-mechanism is the
-// component's top-level `waybill:source-mechanism` property already
-// covered by C55); the remaining entries are the losers. C56
-// extracts the loser set.
-//
-// On components that weren't dedup'd (single-reader detection),
-// `methods[]` has zero or one entry → empty set returned. The
-// SPDX-side extractor (`c56_spdx23` / `c56_spdx3`) reads the
-// `waybill:also-detected-via` JSON-array annotation and yields the
-// same BTreeSet for SymmetricEqual parity.
-pub(super) fn c56_cdx(doc: &Value) -> BTreeSet<String> {
-    let mut out = BTreeSet::new();
-    for component in walk_cdx_components_and_main_module(doc) {
-        let methods = match component
-            .get("evidence")
-            .and_then(|e| e.get("identity"))
-            .and_then(|i| i.as_array())
-            .and_then(|arr| arr.first())
-            .and_then(|first| first.get("methods"))
-            .and_then(|m| m.as_array())
-        {
-            Some(m) => m,
-            None => continue,
-        };
-        // Skip the first method (= winner). The remaining methods'
-        // `waybill-source-mechanism` sub-field values are the losers.
-        for method in methods.iter().skip(1) {
-            if let Some(s) = method
-                .get("waybill-source-mechanism")
-                .and_then(|v| v.as_str())
-            {
-                out.insert(s.to_string());
-            }
-        }
-    }
-    out
-}
+// C56 — `waybill:also-detected-via` (spec 1639, #1558). The other
+// readers' source mechanisms on a merged component: a sorted JSON array,
+// carried as a component property (CDX) and an annotation (SPDX), the same
+// shape C233 uses. Milestone 105's `methods[]` carrier was outside the
+// CycloneDX 1.6 schema (#1442) and is gone (spec 1639 research R1, R8).
+cdx_anno!(c56_cdx, "waybill:also-detected-via",         component);
 
 // C57 — `waybill:build-reference` (FR-008a). Closed enum
 // `declared-and-used` / `declared-only` attached to git-submodule

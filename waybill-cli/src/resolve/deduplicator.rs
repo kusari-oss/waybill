@@ -151,6 +151,7 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
 
         // Merge evidence from remaining entries.
         for other in group {
+            crate::scan_fs::also_detected::observe("S1", best.purl.as_str(), &best.extra_annotations, &other.extra_annotations);
             for conn_id in other.evidence.source_connection_ids {
                 if !best.evidence.source_connection_ids.contains(&conn_id) {
                     best.evidence.source_connection_ids.push(conn_id);
@@ -559,6 +560,7 @@ fn fold_declared_not_cached(components: &mut Vec<ResolvedComponent>) {
         to_remove.push(sec_idx);
         for dst_idx in on_disk_indices {
             let dst = &mut components[dst_idx];
+            crate::scan_fs::also_detected::observe("S2", dst.purl.as_str(), &dst.extra_annotations, &sec.extra_annotations);
             // Evidence-trail marker: declared-not-cached → "deps.dev",
             // transitive → "maven-cache-bfs". Avoids adding the same
             // marker twice.

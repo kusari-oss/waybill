@@ -162,6 +162,7 @@ pub fn reconcile_design_source_tiers(
         // Reconcile: accumulate onto every matching source + record PURL rewrite.
         for &src_idx in matches {
             let src = &components[src_idx];
+            crate::scan_fs::also_detected::observe("S3", src.purl.as_str(), &src.extra_annotations, &design.extra_annotations);
             purl_rewrite.insert(
                 design.purl.as_str().to_string(),
                 src.purl.as_str().to_string(),

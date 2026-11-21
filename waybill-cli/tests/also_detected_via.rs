@@ -8,6 +8,7 @@
 //! repeated `bom-ref`, and is scanned ten times to the same masked output.
 
 #![allow(clippy::unwrap_used)]
+#![allow(dead_code)] // the case helpers are used from T008 on; removed there
 
 mod common;
 #[path = "corpus_harness_195/mod.rs"]

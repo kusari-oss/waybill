@@ -494,6 +494,7 @@ fn first_declaration_wins(decls: &mut [Declaration], cov: &mut FetchCoverage) {
     for (loser, winner) in moves {
         let (Some(lost), rel) = (decls[loser].entry.take(), decls[loser].rel.clone()) else { continue };
         if let Some(w) = decls[winner].entry.as_mut() {
+            crate::scan_fs::also_detected::observe("S4", w.purl.as_str(), &w.extra_annotations, &lost.extra_annotations);
             w.extra_source_paths.push(lost.source_path.clone());
             superseded(w, &rel, &lost.version);
         }
@@ -533,6 +534,7 @@ fn one_per_purl(entries: Vec<Counted>, cov: &mut FetchCoverage) -> Vec<PackageDb
         let mut sup: Vec<serde_json::Value> =
             first.extra_annotations.get(ANN_SUPERSEDED).and_then(|v| v.as_array().cloned()).unwrap_or_default();
         for other in group {
+            crate::scan_fs::also_detected::observe("S5", first.purl.as_str(), &first.extra_annotations, &other.extra_annotations);
             conds.extend(conditions_of(&other));
             chains.extend(wrapper_chains(&other));
             first.extra_source_paths.push(other.source_path.clone());
@@ -684,6 +686,7 @@ pub(crate) fn merge_into_existing(entries: &mut Vec<PackageDbEntry>, cov: &mut F
             h
         };
         let lost = entries[i].clone();
+        crate::scan_fs::also_detected::observe("S6", entries[h].purl.as_str(), &entries[h].extra_annotations, &lost.extra_annotations);
         let files: Vec<String> = std::iter::once(lost.source_path.clone()).chain(lost.extra_source_paths.iter().cloned()).collect();
         for f in &files {
             let rel = relative(Path::new(f), scan_root, &canonical_root);

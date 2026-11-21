@@ -24,7 +24,7 @@ Nothing native says "another reader's mechanism found this component". SPDX 2.3 
 
 **Decision.** Unchanged. In the general deduplicator, members are sorted by `evidence.confidence` descending with a stable sort, so reader order breaks ties (`resolve/deduplicator.rs`). A loser's annotations are folded in, first value wins, so a survivor with no C55 takes the first loser's.
 
-**For the record (SC-001):** T001's instrumentation also logs which member milestone 105's `precedence_rank` would have chosen for each deduplicator group, or `unranked` when a member's C55 is not one of its 21 variants. The census reports how many C55 values that rule would have changed. Nothing applies it.
+**For the record (SC-001):** T001's instrumentation also logs which member milestone 105's `precedence_rank` would have chosen for each deduplicator group, or `unranked` when a member's C55 is not one of its 16 variants. The census reports how many C55 values that rule would have changed. Nothing applies it.
 
 ## R3. Merge sites (FR-004)
 

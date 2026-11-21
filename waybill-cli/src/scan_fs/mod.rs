@@ -10,6 +10,7 @@
 //!   the standalone `waybill sbom scan` subcommand.
 
 pub mod binary;
+pub(crate) mod also_detected;
 pub mod dedup;
 pub mod docker_daemon;
 pub mod docker_image;
