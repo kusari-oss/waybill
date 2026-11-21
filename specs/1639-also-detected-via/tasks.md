@@ -43,7 +43,7 @@
 
 ## Phase 2: Foundational (log-only helper, census, extractors)
 
-- [ ] T003 Create `AD` (research R4) and declare it in `waybill-cli/src/scan_fs/mod.rs`. It has three functions over `&mut BTreeMap<String, serde_json::Value>`:
+- [X] T003 Create `AD` (research R4) and declare it in `waybill-cli/src/scan_fs/mod.rs`. It has three functions over `&mut BTreeMap<String, serde_json::Value>`:
   - `observe(site: &'static str, subject: &str, survivor, absorbed)`, where `subject` is the survivor's PURL:
     - emits one `tracing::debug!(target: "waybill::also_detected", site, subject, kept = <survivor C55 or "-">, absorbed = <absorbed C55 or "-">)`;
     - at site `S1` it also logs `rank_winner`: the member `DD::precedence_rank` would have picked. Map each C55 string to `SourceMechanism` by comparing against `canonical_str()` for every variant; a string with no variant is `unranked`.
@@ -92,8 +92,8 @@
   - **Record** in `MS/census.md`: the run ID, the fixture commit, the scanned SHAs read from `refs.txt`, and the per-target, per-site and per-pair tables.
 
   No prediction is written before the run.
-- [ ] T006 Re-check research R3's list of sites that are not wired against today's C55 setters: `grep` for `"waybill:source-mechanism"` and for every `SOURCE_MECHANISM`/mechanism constant, without `head`. Record in `MS/census.md` either "no setter reaches a non-wired site", or the site that needs adding, and add it to T004 if one is found.
-- [ ] T007 Replace the C56 extractors in `PX` with `cdx_anno!(c56_cdx, "waybill:also-detected-via", component)`, `spdx23_anno!(…)` and `spdx3_anno!(…)` (research R8). Keep the `C56` registration in `mod.rs` `SymmetricEqual`. Confirm the lib-target parity gate passes.
+- [X] T006 Re-check research R3's list of sites that are not wired against today's C55 setters: `grep` for `"waybill:source-mechanism"` and for every `SOURCE_MECHANISM`/mechanism constant, without `head`. Record in `MS/census.md` either "no setter reaches a non-wired site", or the site that needs adding, and add it to T004 if one is found.
+- [X] T007 Replace the C56 extractors in `PX` with `cdx_anno!(c56_cdx, "waybill:also-detected-via", component)`, `spdx23_anno!(…)` and `spdx3_anno!(…)` (research R8). Keep the `C56` registration in `mod.rs` `SymmetricEqual`. Confirm the lib-target parity gate passes.
 
 **Checkpoint**: census recorded; output still byte-identical to `main`.
 
@@ -101,16 +101,16 @@
 
 **Goal**: FR-001–FR-004. **Independent test**: A-1..A-10 in `IT`.
 
-- [ ] T008 [P] [US1] Integration cases A-1, A-2, A-3, A-4, A-6, A-7, A-9 and A-10 in `IT`, as `contracts/wire.md` specifies them. Each calls `parity` and `assert_repeatable`. Every C56 assertion must fail on the log-only commit; record the failures in the commit message.
-- [ ] T009 [P] [US1] Unit test in `DU`'s test module: two same-PURL members with different C55 merge, giving C56 with the loser's mechanism. A survivor without C55 takes the first loser's C55 (the existing fold), and C56 holds only the second loser's mechanism.
-- [ ] T010 [US1] S1 and S2 in `DU`:
+- [X] T008 [P] [US1] Integration cases A-1, A-2, A-3, A-4, A-6, A-7, A-9 and A-10 in `IT`, as `contracts/wire.md` specifies them. Each calls `parity` and `assert_repeatable`. Every C56 assertion must fail on the log-only commit; record the failures in the commit message.
+- [X] T009 [P] [US1] Unit test in `DU`'s test module: two same-PURL members with different C55 merge, giving C56 with the loser's mechanism. A survivor without C55 takes the first loser's C55 (the existing fold), and C56 holds only the second loser's mechanism.
+- [X] T010 [US1] S1 and S2 in `DU`:
   - replace `observe` with `record`;
   - in S1, copy the loser's C55 and C56 before the fold loop, which moves the loser's map, and call `record` with the copy **after** the fold;
   - make the generic first-wins fold skip `ANN_ALSO_DETECTED_VIA`, beside the existing pants-key special cases, with a comment citing research R4.
-- [ ] T011 [P] [US1] S3 in `RC`: replace `observe` with `record`. A source-tier survivor without C55 records nothing, by `normalise`'s anchor rule (A-8, research R5).
-- [ ] T012 [P] [US1] S4–S7 in `FE` and `CM`: replace `observe` with `record`. In S6, keep the existing `superseded` call: C233 and C56 are both recorded (FR-004).
-- [ ] T013 [P] [US1] S8 and S9 in `SP`: replace `observe` with `record`. Package searches are included (FR-004).
-- [ ] T014 [US1] Run T008, T009, `AD`'s unit tests, A-ctl and the existing suites until they pass:
+- [X] T011 [P] [US1] S3 in `RC`: replace `observe` with `record`. A source-tier survivor without C55 records nothing, by `normalise`'s anchor rule (A-8, research R5).
+- [X] T012 [P] [US1] S4–S7 in `FE` and `CM`: replace `observe` with `record`. In S6, keep the existing `superseded` call: C233 and C56 are both recorded (FR-004).
+- [X] T013 [P] [US1] S8 and S9 in `SP`: replace `observe` with `record`. Package searches are included (FR-004).
+- [X] T014 [US1] Run T008, T009, `AD`'s unit tests, A-ctl and the existing suites until they pass:
   - `cross_reader_dedup_ecosystem_107`, `dedup_precedence_determinism`;
   - the CMake suites (`cmake_*`), `git_submodule_reader`;
   - the installed-library suites;

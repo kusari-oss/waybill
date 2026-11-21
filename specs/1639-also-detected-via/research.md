@@ -60,9 +60,9 @@ T001 re-checks this list against the setters at implementation time.
 **Decision.** A small module replaces `scan_fs/dedup.rs` (FR-008). It works on the annotation map that `PackageDbEntry` and `ResolvedComponent` share (`BTreeMap<String, serde_json::Value>`) and has three functions. `observe(site, subject, survivor, absorbed)` only emits the debug event below; the census uses it alone (R6).
 - `record(site, subject, survivor, absorbed)`, where `subject` is the survivor's PURL:
   - adds the absorbed member's C55, and any C56 the absorbed member already carries, to the survivor's C56 set;
-  - normalises;
+  - applies the rules below to the survivor's C56.
   - emits one `tracing::debug!` event (target `waybill::also_detected`) naming the site, the subject, the survivor's C55 and the absorbed C55. The census groups events by (site, subject) (R6).
-- `normalise(survivor)`:
+The rules (implemented once, inside `record`; there is no separate `normalise`, since every site calls `record`):
   - removes the survivor's own C55 from the set;
   - removes C56 entirely when the survivor has no C55, or when the set is empty;
   - otherwise writes the set as a sorted, deduplicated JSON array of strings.

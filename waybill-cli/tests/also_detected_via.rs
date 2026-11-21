@@ -8,7 +8,6 @@
 //! repeated `bom-ref`, and is scanned ten times to the same masked output.
 
 #![allow(clippy::unwrap_used)]
-#![allow(dead_code)] // the case helpers are used from T008 on; removed there
 
 mod common;
 #[path = "corpus_harness_195/mod.rs"]
@@ -85,7 +84,11 @@ fn assert_repeatable(scan_once: &dyn Fn() -> Docs, first: &Docs) {
 
 /// One checked scan of a fixture tree: parity, schema, refs, repeatability.
 fn check(fx: &GitFixture, path: &Path) -> Docs {
-    let once = || scan(fx, path, &[]);
+    check_with(fx, path, &[])
+}
+
+fn check_with(fx: &GitFixture, path: &Path, extra: &[&str]) -> Docs {
+    let once = || scan(fx, path, extra);
     let d = once();
     parity(&d);
     assert_repeatable(&once, &d);
@@ -191,4 +194,130 @@ fn a_ctl_nothing_to_record_is_byte_identical_to_main() {
         let got = masked(doc);
         assert!(got == want, "A-ctl {name} differs from main's golden; {}", masked_difference(&want, &got).unwrap_or_default());
     }
+}
+
+// ---------------------------------------------------------------------
+// US1 (T008): a merged component says which other readers found it
+// ---------------------------------------------------------------------
+
+const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const UNSET: &str = "${WAYBILL_FIXTURE_UNSET}";
+
+fn ep(name: &str, repo: &str, tag: &str) -> String {
+    format!("ExternalProject_Add({name} GIT_REPOSITORY {repo} GIT_TAG {tag})\n")
+}
+
+/// FR-001: C56 is every mechanism of the merge but the component's own C55,
+/// sorted. The survivor is whichever member today's rule keeps (FR-003), so
+/// the expectation is computed from the emitted C55.
+fn assert_c56_is_the_rest(c: &Value, mechanisms: &[&str]) {
+    let own = c55(c).unwrap_or_else(|| panic!("the survivor has a C55: {c}"));
+    assert!(mechanisms.contains(&own), "C55 {own} is one of the merge's mechanisms {mechanisms:?}");
+    let mut rest: Vec<&str> = mechanisms.iter().copied().filter(|m| *m != own).collect();
+    rest.sort_unstable();
+    assert_c56(c, &rest);
+}
+
+/// A-1 (S1): a submodule and a required fetch of one repository at one
+/// commit merge into one component that names both readers.
+#[test]
+fn a01_submodule_and_fetch_at_one_commit() {
+    let fx = submodule_app("waybill-fixture-dep", SHA, &fetch("waybill-fixture-dep", GH, SHA), &[]);
+    let d = check(&fx, &fx.path("app"));
+    let c = one(&d, GH_PURL);
+    assert_eq!(c["purl"], format!("{GH_PURL}@{SHA}"));
+    assert_c56_is_the_rest(c, &["cmake-fetchcontent-git", "git-submodule"]);
+}
+
+/// A-2 (S1): an opkg-installed database and a Yocto image manifest naming one
+/// package. `opkg-installed` wins today (`cross_reader_dedup_ecosystem_107`).
+#[test]
+fn a02_opkg_database_and_image_manifest() {
+    let fx = common::cmake_fetch::tree(&[
+        (
+            "var/lib/opkg/status",
+            "Package: waybill-fixture-shared\nVersion: 9.9.9\nArchitecture: waybill-fixture-arch\n\
+             Maintainer: Waybill Fixture <fixture@example.invalid>\nStatus: install user installed\n",
+        ),
+        (
+            "build/tmp/deploy/images/waybill-fixture-machine/waybill-fixture-image.manifest",
+            "waybill-fixture-shared waybill-fixture-arch 9.9.9\n",
+        ),
+    ]);
+    let d = check(&fx, &fx.path("t"));
+    let c = one(&d, "pkg:opkg/waybill-fixture-shared@9.9.9");
+    assert_eq!(c55(c), Some("opkg-installed"));
+    assert_c56(c, &["yocto-image-manifest"]);
+}
+
+/// A-3 (S1): a pkg-config file and a CMake config package of one library at
+/// one version (spec 1531 SC-003): one component, the `.pc` mechanism.
+#[test]
+fn a03_pkg_config_and_cmake_config_package() {
+    let fx = common::cmake_fetch::tree(&[
+        ("opt/sdk/lib/pkgconfig/waybill-fixture-m.pc", "Version: 7.0\n"),
+        ("opt/sdk/lib/cmake/waybill-fixture-m/waybill-fixture-m-config-version.cmake", "set(PACKAGE_VERSION \"7.0\")\n"),
+    ]);
+    let d = check(&fx, &fx.path("t"));
+    let c = one(&d, "pkg:generic/waybill-fixture-m@7.0");
+    assert_eq!(c55(c), Some("pkg-config"));
+    assert_c56(c, &["cmake-package-version"]);
+}
+
+/// A-4 (S5 then S1): a submodule, a fetch and an `ExternalProject_Add` of one
+/// repository at one commit: three mechanisms, two in C56.
+#[test]
+fn a04_three_mechanisms() {
+    let body = format!("{}{}", fetch("waybill-fixture-dep", GH, SHA), ep("waybill-fixture-dep", GH, SHA));
+    let fx = submodule_app("waybill-fixture-dep", SHA, &body, &[]);
+    let d = check(&fx, &fx.path("app"));
+    let c = one(&d, GH_PURL);
+    assert_c56_is_the_rest(c, &["cmake-externalproject", "cmake-fetchcontent-git", "git-submodule"]);
+}
+
+/// A-6 (S6, spec 1538 R9): a conditional fetch under a submodule of the same
+/// repository is recorded on the submodule: C233 as before, and C56.
+#[test]
+fn a06_conditional_fetch_under_its_submodule() {
+    let fx = submodule_app("waybill-fixture-dep", SHA, &guarded(&fetch("waybill-fixture-dep", GH, UNSET)), &[]);
+    let d = check(&fx, &fx.path("app"));
+    let c = one(&d, GH_PURL);
+    assert_eq!(c55(c), Some("git-submodule"));
+    assert!(prop(c, "waybill:superseded-declarations").is_some(), "C233 still records the fetch: {c}");
+    assert_c56(c, &["cmake-fetchcontent-git"]);
+}
+
+/// A-7 (S6 then S1): the R9 survivor merges again with a required
+/// `ExternalProject_Add` at the same commit: one C56, the union.
+#[test]
+fn a07_two_sites_give_one_union() {
+    let body = format!("{}{}", guarded(&fetch("waybill-fixture-dep", GH, UNSET)), ep("waybill-fixture-dep", GH, SHA));
+    let fx = submodule_app("waybill-fixture-dep", SHA, &body, &[]);
+    let d = check(&fx, &fx.path("app"));
+    let c = one(&d, GH_PURL);
+    assert_c56_is_the_rest(c, &["cmake-externalproject", "cmake-fetchcontent-git", "git-submodule"]);
+}
+
+/// A-9 (S7): with `--include-vendored`, a `third_party/<n>` directory that
+/// declares a project folds into that project.
+#[test]
+fn a09_vendored_directory_folds_into_its_project() {
+    let fx = common::cmake_fetch::tree(&[
+        ("CMakeLists.txt", "cmake_minimum_required(VERSION 3.25)\nproject(waybill_fixture_superbuild)\nadd_subdirectory(third_party/vlib)\n"),
+        ("third_party/vlib/CMakeLists.txt", "cmake_minimum_required(VERSION 3.25)\nproject(waybill-fixture-vlib VERSION 1.0.0)\n"),
+    ]);
+    let d = check_with(&fx, &fx.path("t"), &["--include-vendored"]);
+    let c = one(&d, "pkg:generic/waybill-fixture-vlib@1.0.0");
+    assert_eq!(c55(c), Some("cmake-project"));
+    assert_c56(c, &["cmake-vendored"]);
+}
+
+/// A-10 (S9): a package search named like a submodule is recorded on it.
+#[test]
+fn a10_package_search_paired_with_a_submodule() {
+    let fx = submodule_app("waybill-fixture-dep", SHA, "find_package(waybill-fixture-dep 1.0)\n", &[]);
+    let d = check(&fx, &fx.path("app"));
+    let c = one(&d, GH_PURL);
+    assert_eq!(c55(c), Some("git-submodule"));
+    assert_c56(c, &["cmake-find-package"]);
 }

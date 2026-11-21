@@ -202,7 +202,7 @@ pub(crate) fn pair(
     });
     for c in components.iter_mut() {
         for a in absorbed_projects.get(c.purl.as_str()).into_iter().flatten() {
-            super::also_detected::observe("S8", c.purl.as_str(), &c.extra_annotations, a);
+            super::also_detected::record("S8", c.purl.as_str(), &mut c.extra_annotations, a);
         }
         if let Some(files) = claimed.get(c.purl.as_str()) {
             for f in files {
@@ -275,7 +275,7 @@ pub(crate) fn pair(
     components.retain(|c| !(is_search(c) && gone.contains(c.purl.as_str())));
     for c in components.iter_mut() {
         for a in absorbed_searches.get(c.purl.as_str()).into_iter().flatten() {
-            super::also_detected::observe("S9", c.purl.as_str(), &c.extra_annotations, a);
+            super::also_detected::record("S9", c.purl.as_str(), &mut c.extra_annotations, a);
         }
         if let Some(files) = evidence.get(c.purl.as_str()) {
             for f in files {

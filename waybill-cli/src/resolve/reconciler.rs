@@ -63,6 +63,9 @@ struct ReconcilerAccumulator {
     /// npm alias names (E1 data-model). Deduped + sorted lex at finalize
     /// time — alias-count is not provenance.
     declared_as: BTreeSet<String>,
+    /// Spec 1639 S3: each matched design-tier member's C55 and C56, recorded
+    /// on the survivor at flush time.
+    absorbed: Vec<std::collections::BTreeMap<String, serde_json::Value>>,
 }
 
 fn finalize_accumulator(mut acc: ReconcilerAccumulator) -> ReconcilerAccumulator {
@@ -162,7 +165,6 @@ pub fn reconcile_design_source_tiers(
         // Reconcile: accumulate onto every matching source + record PURL rewrite.
         for &src_idx in matches {
             let src = &components[src_idx];
-            crate::scan_fs::also_detected::observe("S3", src.purl.as_str(), &src.extra_annotations, &design.extra_annotations);
             purl_rewrite.insert(
                 design.purl.as_str().to_string(),
                 src.purl.as_str().to_string(),
@@ -180,6 +182,7 @@ pub fn reconcile_design_source_tiers(
             for alias in &design_declared_as {
                 acc.declared_as.insert(alias.clone());
             }
+            acc.absorbed.push(crate::scan_fs::also_detected::marks(&design.extra_annotations));
             tracing::debug!(
                 design_purl = %design.purl.as_str(),
                 source_purl = %src.purl.as_str(),
@@ -229,6 +232,11 @@ pub fn reconcile_design_source_tiers(
         // the struct field). The extra_annotations bag is the m199
         // source-of-truth for reconciler survivors.
         components[src_idx].requirement_ranges.clear();
+        // Spec 1639 S3. A survivor with no C55 records nothing (research R5).
+        let subject = components[src_idx].purl.as_str().to_string();
+        for absorbed in &acc.absorbed {
+            crate::scan_fs::also_detected::record("S3", &subject, &mut components[src_idx].extra_annotations, absorbed);
+        }
     }
 
     // Rewrite edges pointing at removed design PURLs, then dedup.
@@ -693,5 +701,38 @@ mod tests {
             2,
             "cross-directory pairs must NOT reconcile in MVP scope"
         );
+    }
+
+    fn with_c55(mut c: ResolvedComponent, mechanism: &str) -> ResolvedComponent {
+        c.extra_annotations.insert("waybill:source-mechanism".to_string(), serde_json::json!(mechanism));
+        c
+    }
+
+    /// Spec 1639 A-8 (S3, research R5): a design-tier member with C55
+    /// reconciled into a source-tier survivor with none records no C56,
+    /// because there is nothing for it to be "also" to.
+    #[test]
+    fn s1639_a_survivor_without_c55_records_nothing() {
+        let components = vec![
+            with_c55(mk_component("waybill-fixture-x", "", "pkg:pypi/waybill-fixture-x", Some("design"), Some("requirements.txt"), Some(">=1")), "pip-requirements-txt"),
+            mk_component("waybill-fixture-x", "1.0", "pkg:pypi/waybill-fixture-x@1.0", Some("source"), Some("requirements.txt"), None),
+        ];
+        let out = reconcile_design_source_tiers(components, &mut Vec::new());
+        assert_eq!(out.len(), 1);
+        assert!(!out[0].extra_annotations.contains_key("waybill:also-detected-via"), "{:?}", out[0].extra_annotations);
+        assert!(!out[0].extra_annotations.contains_key("waybill:source-mechanism"), "C55 is not changed (FR-003)");
+    }
+
+    /// Spec 1639 S3: a survivor with a different C55 records the design-tier
+    /// member's.
+    #[test]
+    fn s1639_a_survivor_with_another_c55_records_the_design_members() {
+        let components = vec![
+            with_c55(mk_component("waybill-fixture-x", "", "pkg:pypi/waybill-fixture-x", Some("design"), Some("requirements.txt"), Some(">=1")), "pip-requirements-txt"),
+            with_c55(mk_component("waybill-fixture-x", "1.0", "pkg:pypi/waybill-fixture-x@1.0", Some("source"), Some("requirements.txt"), None), "waybill-fixture-lock"),
+        ];
+        let out = reconcile_design_source_tiers(components, &mut Vec::new());
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].extra_annotations["waybill:also-detected-via"], serde_json::json!(["pip-requirements-txt"]));
     }
 }

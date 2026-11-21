@@ -55,20 +55,23 @@ fn rank_winner(purl: &str, kept: &str, lost: &str) -> &'static str {
     }
 }
 
+/// The part of `absorbed` that [`record`] reads (its C55 and C56), for a site
+/// that consumes the absorbed member before it can call `record` (S1's fold
+/// moves the loser's map).
+pub(crate) fn marks(absorbed: &Annotations) -> Annotations {
+    absorbed
+        .iter()
+        .filter(|(k, _)| k.as_str() == ANN_SOURCE_MECHANISM || k.as_str() == ANN_ALSO_DETECTED_VIA)
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect()
+}
+
 /// Record `absorbed` on `survivor` at a merge site.
-#[allow(dead_code)] // called by the merge sites from T010–T013 on
 pub(crate) fn record(site: &'static str, subject: &str, survivor: &mut Annotations, absorbed: &Annotations) {
     observe(site, subject, survivor, absorbed);
     let mut set = recorded(survivor);
     set.extend(mechanism(absorbed).map(str::to_string));
     set.extend(recorded(absorbed));
-    write(survivor, set);
-}
-
-/// Re-apply the rules to `survivor`'s C56 against its current C55.
-#[allow(dead_code)] // called by the merge sites from T010–T013 on
-pub(crate) fn normalise(survivor: &mut Annotations) {
-    let set = recorded(survivor);
     write(survivor, set);
 }
 
@@ -151,16 +154,6 @@ mod tests {
         let absorbed = ann(Some("git-submodule"), &["cmake-fetchcontent-git"]);
         record("S1", "pkg:x", &mut s, &absorbed);
         assert_eq!(c56(&s), Some(json!(["cmake-fetchcontent-git", "git-submodule"])));
-    }
-
-    #[test]
-    fn normalise_applies_the_rules_to_the_current_mechanism() {
-        let mut s = ann(Some("a"), &["a", "b"]);
-        normalise(&mut s);
-        assert_eq!(c56(&s), Some(json!(["b"])));
-        let mut none = ann(None, &["b"]);
-        normalise(&mut none);
-        assert_eq!(c56(&none), None);
     }
 
     #[test]
