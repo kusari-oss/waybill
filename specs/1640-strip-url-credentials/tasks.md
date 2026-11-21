@@ -29,6 +29,7 @@
   - `assert_field(doc, …)`: reads a field from the CycloneDX document (a component property, a PURL qualifier or an external reference) and returns it.
   - `parity(dir)`, `assert_repeatable(dir)`, unique `bom-ref`s and CycloneDX validation. Copy these from `waybill-cli/tests/also_detected_via.rs`, using `common::cdx_schema::cdx_validation_errors`.
   - `assert_warned(log, manifest)`: at least one line containing `stripped credentials from URL`, and every such line contains `<userinfo redacted>` and the manifest's file name. It is not "exactly one", because a reader may read one declaration twice (analysis U2).
+  - **Done as:** `assert_field` is `assert_reaches` (the clean URL occurs in the CycloneDX document) plus `one`/`prop` lookups where a case asserts an exact value. `scan3` runs one invocation with three `--output`s, not three runs.
 - [X] T003 C-ctl (FR-006):
   - **Tree.** `FX/ctl/` holds one clean-URL fixture for each D-row that a directory scan reaches: CMake, Bazel, uv.lock, flake.lock, Pants, CocoaPods, Dart, Composer, Elixir, Erlang, requirements, Yocto, Helm.
   - **Golden.** Generate `FX/ctl-golden/{cdx,spdx-2.3,spdx-3}.json` with **`main`'s** binary, before any source change. Use the masking `waybill-cli/tests/cmake_unresolved_github_fetch.rs` uses. The regeneration env var is `WAYBILL_UPDATE_DECLARED_URL_GOLDENS`.
@@ -40,6 +41,7 @@
 
 This phase changes no D-row's output: no reader calls the new function yet. Only S1–S3, for URLs that carry userinfo, change in how the rest of the URL is normalised (research R3).
 
+  - **Done, with one note:** C-ctl's tree covers the rows known at T003. The addendum rows D20–D22 (npm, pyproject, Swift) were found later and are not in it. FR-006 for them rests on the public and quality corpora and TheRock, all byte-identical to `main` (corpus.md, therock.md).
 - [X] T004 Unit tests in `SZ`'s test module, with `#[cfg_attr(test, allow(clippy::unwrap_used))]` where needed. Each must fail before T005. Every result is compared with the input minus its userinfo span, byte for byte:
   - mixed-case `https` host;
   - default port `:443` kept;
@@ -121,13 +123,13 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
   - Use a `^error\[E…\]` guard so a compile failure is not counted as a kill.
   - Record every mutation and its killing test in `MS/mutations.md`.
 - [X] T023 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Read `target/gate/prepr.log` for `GATE_RESULT=` and every `test result:` line, and record the counts in `MS/gate-log.md`.
-- [ ] T024 Public corpus (SC-004): `public-corpus.yml`, `regen_goldens=true`, on the pushed branch. Enumerate every job's conclusion and confirm the scanned SHA in the log. Download `corpus-goldens-regen` and `cmp` every file against the committed goldens: all 67 identical is expected. Trace any difference to FR-003 or Clarification Q1. Record in `MS/corpus.md`.
-- [ ] T025 TheRock and quality corpus (SC-004):
+- [X] T024 Public corpus (SC-004): `public-corpus.yml`, `regen_goldens=true`, on the pushed branch. Enumerate every job's conclusion and confirm the scanned SHA in the log. Download `corpus-goldens-regen` and `cmp` every file against the committed goldens: all 67 identical is expected. Trace any difference to FR-003 or Clarification Q1. Record in `MS/corpus.md`.
+- [X] T025 TheRock and quality corpus (SC-004):
   - TheRock: `measure-source` in `kusari-sandbox/waybill-fixture-therock-sdk`, with `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`. Read the SHAs from `refs.txt`.
   - Compare all six documents, masking per-run fields as spec 1639's `therock.md` did. Count `ssh://git@` URLs on each side, and trace every changed field to a removed userinfo. Component counts must be equal.
   - Quality corpus: branch and `main` runs. Metrics must be identical, or every difference traced.
   - Record in `MS/therock.md` and `MS/corpus.md`.
-- [ ] T026 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (FR-010). Then open the PR with "Closes #1647" and "Refs #1652", ending with the attribution footer. Merging is the maintainer's.
+- [X] T026 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (FR-010). Then open the PR with "Closes #1647" and "Refs #1652", ending with the attribution footer. Merging is the maintainer's.
 
 ## Dependencies
 
