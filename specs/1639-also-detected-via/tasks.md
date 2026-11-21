@@ -163,8 +163,8 @@
   - Fixed: C56 is emitted for merges across readers (#1558), naming the merge sites and the anchor rule;
   - Changed: the symbol-fingerprint collision moves from `waybill:also-detected-via` to `waybill:fingerprint-also-matched` (C242), a wire change with no alias;
   - Fixed: the CycloneDX `methods[]` key milestone 105 specified is no longer produced (#1442).
-- [ ] T026 Mutations M1–M8 (plan Testing). Restore with `cp`, rebuild after the last one, and use a `^error\[E…\]` guard so a compile failure is not counted as a kill. Record each mutation and its killing test in `MS/mutations.md`.
-- [ ] T027 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Read `target/gate/prepr.log` for `GATE_RESULT=` and every `test result:` line, and record the counts in `MS/gate-log.md`.
+- [X] T026 Mutations M1–M8 (plan Testing). Restore with `cp`, rebuild after the last one, and use a `^error\[E…\]` guard so a compile failure is not counted as a kill. Record each mutation and its killing test in `MS/mutations.md`.
+- [X] T027 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Read `target/gate/prepr.log` for `GATE_RESULT=` and every `test result:` line, and record the counts in `MS/gate-log.md`.
 - [ ] T028 TheRock `measure-source` (SC-005, SC-006), with `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`. Read the scanned SHAs from `refs.txt`. Trace every changed component to an FR, and confirm component counts are equal and unexplained orphans do not increase. Record the median of 3 timed runs per side and the ratio in `MS/therock.md`.
 - [ ] T029 Corpora:
   - **Public corpus:** `public-corpus.yml` `regen_goldens=true` (SC-004). Trace every changed golden to an FR, and commit them through the workflow's artifact.
