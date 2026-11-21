@@ -28,7 +28,7 @@ Each sanitised occurrence emits the event in data-model ("Sanitisation event"). 
 Every D-case checks four things:
 - the credential strings occur 0 times in the CycloneDX, SPDX 2.3 and SPDX 3 bytes and in the captured log;
 - the field is present with the clean URL (the control on the branch);
-- one redacted warning names the fixture's manifest;
+- at least one redacted warning, with every warning naming the fixture's manifest (the log is captured at `trace`);
 - parity, CycloneDX schema validation and unique `bom-ref`s hold, and 10 scans are byte-identical.
 
 | Case | Row | Fixture |
@@ -49,9 +49,10 @@ Every D-case checks four things:
 | D-17 | D17 | `waybill-fixture-cred @ https://wbfxuser:wbfxtoken7c41@dl.example/waybill-fixture-cred-1.0.0.tar.gz` in a requirements file |
 | D-18 | D18 | cargo-auditable data with a `git+https://wbfxuser:wbfxtoken7c41@…` source (unit level, `binary/entry.rs`, if no binary fixture exists) |
 | D-19 | D19 | Yocto recipe `SRC_URI = "git://wbfxuser:wbfxtoken7c41@git.example/repo;protocol=https;branch=main"` |
-| D-20 | D20 | Helm `Chart.yaml` dependency `repository: https://wbfxuser:wbfxtoken7c41@charts.example/` |
 | I-1 | FR-004 | a git submodule with a clean URL, plus a conditional `FetchContent_Declare` of the same repository with a credentialled URL: one component, equal to the all-clean tree's |
 | I-2 | FR-004 | D-3's PURL equals the PURL of the same fetch without userinfo |
 | I-3 | FR-004, R3 | `https://wbfxtoken7c41@Git.Example/Org/Repo.git` and `https://Git.Example/Org/Repo.git` give equal C53 values |
 | G-1 … G-4 | N5 | Gemfile.lock `remote:`, Cargo.lock `registry+…`, requirements `--index-url`, package-lock `resolved`, each credentialled: absent on `main` and on the branch |
+| G-5 | N7 | Helm `Chart.yaml` dependency `repository: https://wbfxuser:wbfxtoken7c41@charts.example/`: absent on `main` and on the branch |
+| S-1 | FR-006, A1 | CMake `GIT_REPOSITORY ssh://git@git.example/org/waybill-fixture-ssh.git`: output byte-identical to the same tree declaring `ssh://git.example/org/waybill-fixture-ssh.git`, and no `stripped credentials` warning |
 | C-ctl | FR-006 | the D-fixtures with clean URLs: output byte-identical to a golden generated from `main`'s binary before any source change |

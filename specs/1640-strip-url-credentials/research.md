@@ -37,7 +37,6 @@ Each hit was then read to find where its value comes from.
 | D17 | pip requirements | `waybill:direct-url-source`'s `url` | `package_db/pip/requirements_txt.rs` (~553) |
 | D18 | cargo-auditable | `waybill:cargo-vcs-source-url`, then the `vcs` external reference | `binary/entry.rs` (~416), `scan_fs/mod.rs::external_refs_from_purl` |
 | D19 | Yocto | `waybill:src-uri` array | `package_db/yocto/recipe.rs` (~710) |
-| D20 | Helm | the PURL namespace is the repository URL's host, which carries no userinfo. The parse-failure branch uses the raw string as the namespace, and a `warn!` logs the raw URL | `package_db/helm.rs::build_helm_purl` |
 
 ### Already sanitised (unchanged, except through R3)
 
@@ -57,6 +56,7 @@ Each hit was then read to find where its value comes from.
 | N4 | `repository_url=https://repo.hex.pm` (Elixir, Erlang private org) | a constant |
 | N5 | Gemfile.lock `remote:`, Cargo.lock `registry+…`, pip `--index-url`, npm `resolved` | read for classification and never emitted. A credentialled guard fixture shows each stays absent (contracts, G-cases) |
 | N6 | `waybill:nix-original-ref` | a branch or tag name, not a URL |
+| N7 | Helm chart-dependency `repository` | `build_helm_purl` keeps only the host of a URL that parses, and `ChartDep.repo` is used nowhere else (helm.rs ~917–950, traced; analysis U1). A URL that fails to parse keeps its raw string as the namespace, but the helper could not strip it either. The no-host `warn!` logs the raw URL. T001 checks whether a credentialled URL can reach it, and G-5 guards the SBOM |
 
 ## R2. Where to sanitise: in the reader, at the point the URL is read
 
@@ -86,13 +86,15 @@ Each hit was then read to find where its value comes from.
 
 - **Decision:** a reader-facing function, `identifiers::sanitize::sanitize_declared_url(raw, manifest)`:
   - calls `sanitize_userinfo`;
-  - when it returns `Cow::Owned`, emits milestone 105 FR-016's event: `warn!(target: "waybill::identifiers::sanitize", manifest_file = <manifest>, url_redacted = <redact_userinfo_for_log(raw)>, "stripped credentials from URL")`.
+  - when it returns `Cow::Owned`, unless the only userinfo was the bare `git` user of an `ssh` URL (planning amendment A1), emits milestone 105 FR-016's event: `warn!(target: "waybill::identifiers::sanitize", manifest_file = <manifest>, url_redacted = <redact_userinfo_for_log(raw)>, "stripped credentials from URL")`.
 
   The existing `uv_lock` warning moves to this function, so one event shape covers every site.
 - **Log lines before sanitising:** Helm's no-host `warn!` logs `%url` raw. With R2 the URL is sanitised before it is logged. T001 also searches readers for `tracing::` calls that format a URL variable before the sanitise point.
 
 ## R5. Fixtures and the positive control (SC-001, SC-002)
 
+- **Log level:** the log is captured at `RUST_LOG=trace`, so FR-005's "no line at any level" is checked at every level (analysis C1). The warning assertion filters for its own event.
+- **Repeated reads:** a reader may read one declaration more than once. The warning assertion therefore requires at least one event, with every event naming the fixture's manifest, rather than exactly one (analysis U2).
 - **Strings:** every fixture uses the user `wbfxuser` and the token `wbfxtoken7c41`. Neither occurs anywhere in the repository (T001 checks this), so a byte search of the output and the log is unambiguous.
 - **Control on the branch:** each case also checks that its field is present with the clean URL. This proves the fixture reaches the field, so an absent token means stripped, not "never emitted".
 - **Control before the fix:** the D-cases land after the helper (which no D-row reader calls yet) and before any reader change (T006). That commit's D-row output equals `main`'s. Each case's credential assertion is run and must fail there, and the failures are recorded per case. A case that passes on `main` has a fixture that does not reach its field.

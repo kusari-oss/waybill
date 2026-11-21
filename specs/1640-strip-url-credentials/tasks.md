@@ -11,7 +11,7 @@
 - `FX` = `waybill-cli/tests/fixtures/declared_url_credentials/` (new)
 - `MS` = `specs/1640-strip-url-credentials/measurements/`
 - `CRED` = the two credential strings `wbfxuser` and `wbfxtoken7c41`
-- Rows D1–D20, S1–S3, N1–N6 are research R1's. Cases D-*, I-*, G-*, C-ctl are contracts/wire.md's.
+- Rows D1–D19, S1–S3, N1–N7 are research R1's. Cases D-*, I-*, G-*, S-1, C-ctl are contracts/wire.md's.
 
 ## Phase 1: Setup
 
@@ -24,11 +24,11 @@
 
   If T001 adds a row, add a D-case to `contracts/wire.md` and a task in Phase 3 before going on.
 - [ ] T002 Create `IT` with these helpers:
-  - `scan3(dir, extra_args) -> (cdx, spdx23, spdx3, log)`: runs the binary three times, once per format, with `RUST_LOG=warn`, a fake `HOME` (`common::normalize::apply_fake_home_env`) and `WAYBILL_FIXED_TIMESTAMP`. Returns the three documents as strings and the combined stderr.
+  - `scan3(dir, extra_args) -> (cdx, spdx23, spdx3, log)`: runs the binary three times, once per format, with `RUST_LOG=trace` (so FR-005's "any level" is checked, analysis C1), a fake `HOME` (`common::normalize::apply_fake_home_env`) and `WAYBILL_FIXED_TIMESTAMP`. Returns the three documents as strings and the combined stderr.
   - `assert_no_cred(outputs)`: `CRED` occurs 0 times in each of the four strings. On failure, name which one.
   - `assert_field(doc, …)`: reads a field from the CycloneDX document (a component property, a PURL qualifier or an external reference) and returns it.
   - `parity(dir)`, `assert_repeatable(dir)`, unique `bom-ref`s and CycloneDX validation. Copy these from `waybill-cli/tests/also_detected_via.rs`, using `common::cdx_schema::cdx_validation_errors`.
-  - `assert_warned(log, manifest)`: exactly one line containing `stripped credentials from URL`, `<userinfo redacted>` and the manifest's file name.
+  - `assert_warned(log, manifest)`: at least one line containing `stripped credentials from URL`, and every such line contains `<userinfo redacted>` and the manifest's file name. It is not "exactly one", because a reader may read one declaration twice (analysis U2).
 - [ ] T003 C-ctl (FR-006):
   - **Tree.** `FX/ctl/` holds one clean-URL fixture for each D-row that a directory scan reaches: CMake, Bazel, uv.lock, flake.lock, Pants, CocoaPods, Dart, Composer, Elixir, Erlang, requirements, Yocto, Helm.
   - **Golden.** Generate `FX/ctl-golden/{cdx,spdx-2.3,spdx-3}.json` with **`main`'s** binary, before any source change. Use the masking `waybill-cli/tests/cmake_unresolved_github_fetch.rs` uses. The regeneration env var is `WAYBILL_UPDATE_DECLARED_URL_GOLDENS`.
@@ -56,8 +56,8 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
   The existing cases keep passing.
 - [ ] T005 In `SZ`:
   - change `sanitize_userinfo` to research R3's splice: detect with the `url` crate, delete the authority's userinfo span from the original string, re-parse to confirm no username or password remains, and fall back to today's re-serialised form otherwise. Keep its `Cow` contract.
-  - Add `pub fn sanitize_declared_url<'a>(raw: &'a str, manifest: &str) -> Cow<'a, str>`. It calls `sanitize_userinfo` and, on `Cow::Owned`, emits `tracing::warn!(target: "waybill::identifiers::sanitize", manifest_file = manifest, url_redacted = %redact_userinfo_for_log(raw), "stripped credentials from URL")`.
-  - Unit test: it emits one event containing neither the username nor the password, and none for a clean URL.
+  - Add `pub fn sanitize_declared_url<'a>(raw: &'a str, manifest: &str) -> Cow<'a, str>`. It calls `sanitize_userinfo` and, on `Cow::Owned`, unless the only userinfo was the bare `git` user (no password) of an `ssh` URL (planning amendment A1), emits `tracing::warn!(target: "waybill::identifiers::sanitize", manifest_file = manifest, url_redacted = %redact_userinfo_for_log(raw), "stripped credentials from URL")`.
+  - Unit tests: it emits one event containing neither the username nor the password; none for a clean URL; none for `ssh://git@host/…`, though the user is still stripped; one for `ssh://alice@host/…`.
   - Move `PDB/pip/uv_lock.rs`'s artifact-URL warning onto `sanitize_declared_url` (S3), so one event shape covers every site.
 
   Run `cargo test -p waybill --lib identifiers::sanitize` and the uv.lock unit tests.
@@ -66,9 +66,9 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
 
 ## Phase 3: User Story 1: a shared SBOM carries no credential from a declared URL (P1) 🎯 MVP
 
-**Goal**: FR-001, FR-002, FR-003. **Independent test**: cases D-1 to D-20, each with its control.
+**Goal**: FR-001, FR-002, FR-003. **Independent test**: cases D-1 to D-19, each with its control.
 
-- [ ] T006 [US1] Write D-1 to D-20 and G-1 to G-4 in `IT`, with fixtures under `FX/`, as `contracts/wire.md` specifies. Each D-case:
+- [ ] T006 [US1] Write D-1 to D-19, G-1 to G-5 and S-1 in `IT`, with fixtures under `FX/`, as `contracts/wire.md` specifies. Each D-case:
   - calls `scan3` and `assert_field` (the field is present with the clean URL), then `assert_no_cred`;
   - calls `parity` and `assert_repeatable`.
 
@@ -88,7 +88,7 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
 - [ ] T013 [P] [US1] pip, D17, in `PDB/pip/requirements_txt.rs`: sanitise a direct URL before `DirectUrlRef.url` is stored.
 - [ ] T014 [P] [US1] cargo-auditable, D18, in `waybill-cli/src/scan_fs/binary/entry.rs`: sanitise the parsed git source before `waybill:cargo-vcs-source-url`. The manifest argument is the binary's path.
 - [ ] T015 [P] [US1] Yocto, D19, in `PDB/yocto/recipe.rs`: sanitise each `SRC_URI` entry before `waybill:src-uri`.
-- [ ] T016 [P] [US1] Helm, D20, in `PDB/helm.rs`: sanitise the dependency's repository URL where it is read, so `build_helm_purl`'s parse-failure namespace and its `warn!` both see the clean form. Fix any other log site T001 listed the same way.
+- [ ] T016 [P] [US1] Log sites (research N7 and T001's list). G-5 already guards the Helm SBOM. Change `PDB/helm.rs` only if T001 found that a credentialled repository URL can reach `build_helm_purl`'s no-host `warn!`; then sanitise the URL where it is read. Fix any other log site T001 listed the same way. If T001 listed none, record that in the commit message and change nothing.
 - [ ] T017 [US1] Run every D-case, G-case and C-ctl until they pass, plus the existing suites of every reader touched (`cargo test -p waybill --test <suite>`, one filter per invocation). An existing assertion that changes is recorded with its reason in the commit message. None may be loosened.
 
 ## Phase 4: User Story 2: removing a credential does not change what a component is (P1)
@@ -106,7 +106,7 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
 
 **Goal**: FR-005. **Independent test**: the warning assertions on every D-case.
 
-- [ ] T020 [US3] Add `assert_warned(log, <manifest>)` to every D-case. Each case must name its own fixture's manifest (CMakeLists.txt, uv.lock, Podfile.lock and so on), which checks every call site's `manifest` argument. Add a C-ctl assertion that the log has no `stripped credentials` line. Fix any site whose manifest argument is wrong.
+- [ ] T020 [US3] Add `assert_warned(log, <manifest>)` to every D-case. Each case must name its own fixture's manifest (CMakeLists.txt, uv.lock, Podfile.lock and so on), which checks every call site's `manifest` argument. Add a C-ctl assertion that the log has no `stripped credentials` line, and the same for S-1 (planning amendment A1). Fix any site whose manifest argument is wrong.
 
 ## Phase 6: Polish and cross-cutting
 
@@ -148,7 +148,7 @@ After T006 is committed with its control recorded:
 ```text
 T007 CMake        T008 Bazel        T009 uv.lock      T010 Nix
 T011 Pants        T012 git-source PURLs              T013 pip
-T014 cargo-auditable                T015 Yocto        T016 Helm
+T014 cargo-auditable                T015 Yocto        T016 log sites
 ```
 
 T024 and T025 dispatch together.

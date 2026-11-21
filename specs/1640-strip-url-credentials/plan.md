@@ -7,7 +7,7 @@
 waybill copies URLs that projects declare as fetch locations into the SBOM verbatim, credentials included. Only three sites sanitise them today.
 
 **The approach** (research R1–R6):
-- **An inventory** (R1) of every emitted field that can carry a declared URL. It has 20 rows to sanitise (D1–D20), 3 already sanitised (S1–S3) and 6 that are not declared URLs (N1–N6). It is re-run at implement time.
+- **An inventory** (R1) of every emitted field that can carry a declared URL. It has 19 rows to sanitise (D1–D19), 3 already sanitised (S1–S3) and 7 that are not declared URLs (N1–N7). It is re-run at implement time.
 - **One reader-facing helper** (R4), `sanitize_declared_url(raw, manifest)`. It removes userinfo and emits milestone 105 FR-016's warning. Each reader calls it where it first reads the URL from the manifest (R2), so PURLs, repository identity, annotations, external references and logs all see the clean form.
 - **The helper keeps every other byte** (R3, measured). Today's `sanitize_userinfo` re-serialises a credentialled URL, which lowercases an `https` host, drops a default port and resolves dot segments, so a credentialled and a clean spelling would differ. It now deletes the userinfo span from the original string, and falls back to re-serialising if the span cannot be found.
 - **Documentation:** the C53 row and the consumer guide say what is removed (userinfo, including a bare username) and what is not (the query string, #1652).
@@ -20,7 +20,7 @@ waybill copies URLs that projects declare as fetch locations into the SBOM verba
 - `url` 2.5.8, already a direct dependency used by the helper.
 - Code:
   - `identifiers/sanitize.rs` (the helper);
-  - the readers in research R1: `package_db/{cmake.rs, cmake/fetches.rs, bazel.rs, pip/uv_lock.rs, pip/requirements_txt.rs, nix/mod.rs, nix/identity.rs, nix/closure/emit.rs, nix/haskell_packages/closure_identity.rs, pants/lockfile.rs, pants_jvm/lockfile.rs, cocoapods.rs, dart.rs, composer.rs, elixir.rs, erlang.rs, yocto/recipe.rs, helm.rs}` and `binary/entry.rs`.
+  - the readers in research R1: `package_db/{cmake.rs, cmake/fetches.rs, bazel.rs, pip/uv_lock.rs, pip/requirements_txt.rs, nix/mod.rs, nix/identity.rs, nix/closure/emit.rs, nix/haskell_packages/closure_identity.rs, pants/lockfile.rs, pants_jvm/lockfile.rs, cocoapods.rs, dart.rs, composer.rs, elixir.rs, erlang.rs, yocto/recipe.rs}` and `binary/entry.rs`; `helm.rs` only if T001 finds a reachable log path (N7).
 
 **Zero new Cargo dependencies** (FR-010).
 
@@ -33,10 +33,10 @@ waybill copies URLs that projects declare as fetch locations into the SBOM verba
   - `sanitize_declared_url` emitting one event, which contains no credential.
 - **Integration:** `waybill-cli/tests/declared_url_credentials.rs`, one case per D-row (contracts/wire.md):
   - each scans in three formats and captures the log;
-  - it asserts that `wbfxuser` and `wbfxtoken7c41` occur 0 times in all four, that the field is present with the clean URL, and that the redacted warning appears;
+  - it asserts that `wbfxuser` and `wbfxtoken7c41` occur 0 times in all four, that the field is present with the clean URL, and that the redacted warning appears (the log is captured at `trace`, so every level is checked);
   - it runs parity, CycloneDX schema validation and the unique-`bom-ref` check, and 10 repeat scans.
 
-  Identity cases I-1 to I-3 cover User Story 2. Guard cases G-1 to G-4 cover N5. Reuses `common::{cmake_fetch, git_fixture, cdx_schema}`.
+  Identity cases I-1 to I-3 cover User Story 2. Guard cases G-1 to G-5 cover N5 and N7. S-1 covers the `ssh://git@` case (FR-006, planning amendment A1). Reuses `common::{cmake_fetch, git_fixture, cdx_schema}`.
 - **Control before the fix** (R5): the D-cases land before any reader change, when D-row output still equals `main`'s. Every D-case's credential assertion must fail there, and the failures are recorded.
 - **Mutations:** delete each `sanitize_declared_url` call, one at a time (SC-005). Restore with `cp`, rebuild after the last one, and use a `^error\[E…\]` guard so a compile failure is not counted as a kill.
 - **CI:**

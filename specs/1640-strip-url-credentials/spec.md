@@ -11,6 +11,7 @@
 
 - Q: Is the `git` user of an `ssh://` URL a credential? → A: Yes, for this spec. It is stripped like any other username, as the helper and the submodule reader already do. One rule applies everywhere, and the readers that sanitise today keep their output.
 - Q: Are credential-bearing query parameters removed too? → A: No. Only userinfo is removed. The C53 row and the consumer guide say so (FR-009). How often query-string tokens appear in declared URLs is to be measured before any rule is written (#1652).
+- Planning amendment (analysis A1): removing the bare `git` user of an `ssh://` URL emits no warning. Q1 still strips it, but it is not a credential the operator could rotate, and warning on every ssh remote would bury the signal User Story 3 exists for. FR-005 is amended.
 
 ## Background
 
@@ -90,7 +91,7 @@ A credential in a committed manifest is a problem in its own right. When waybill
 
 - **Unresolved variables:** a CMake URL that is unresolved (`${VAR}`) or does not parse as a URL passes through unchanged, as the helper does today. It cannot be shown to carry a credential.
 - **scp-form git remotes:** an scp-form remote (`git@host:org/repo.git`) does not parse as a URL and passes through. It can name a user but cannot carry a password.
-- **`ssh://git@host/…`:** this form parses, and its conventional `git` user is stripped like any other username (Clarifications). The emitted URL is then `ssh://host/…`, which no longer names the login user.
+- **`ssh://git@host/…`:** this form parses, and its conventional `git` user is stripped like any other username (Clarifications). The emitted URL is then `ssh://host/…`, which no longer names the login user. No warning is emitted for it (FR-005).
 - **Credentials in the query string:** a signed URL or token parameter (`?private_token=…`, `access_token=`, `X-Amz-Signature=`) is not userinfo and is **not** removed (Clarifications). FR-009 documents the limit.
 - **Encoded qualifiers:** a URL inside a PURL qualifier is percent-encoded. Removal happens before encoding, so an encoded `%40` from userinfo never reaches the qualifier. A `%40` that belongs to the URL itself, such as a `vcs_url` `@<commit>` suffix, is unaffected.
 - **Enrichment data:** a URL waybill fetched from an enrichment service rather than read from the scanned project is not a declared URL. The inventory records it, with that reason.
@@ -104,7 +105,7 @@ A credential in a committed manifest is a problem in its own right. When waybill
 - **FR-002**: Every inventory row marked sanitised MUST have its URL's credential removed (FR-003) in the reader, before the URL contributes to a PURL, a repository identity, an annotation or an external reference.
 - **FR-003**: Removing a credential means removing the URL's userinfo, both a user alone and a user with a password. A username with no password, including the `git` user of an `ssh://` URL, counts as userinfo. Everything else in the URL, including the query string, is kept.
 - **FR-004**: Two declarations of one URL that differ only in userinfo MUST yield the same PURL, and so the same component wherever they meet today. CMake's repository identity (spec 1538 R9) MUST compare the sanitised form.
-- **FR-005**: Each removal MUST emit milestone 105 FR-016's warning: the manifest path, and the URL as the log-redaction helper renders it. No log line, at any level, may contain the removed user or password.
+- **FR-005**: Each removal MUST emit milestone 105 FR-016's warning: the manifest path, and the URL as the log-redaction helper renders it. The exception is a removal whose only userinfo is the bare `git` user of an `ssh://` URL, which emits none (Clarifications). No log line, at any level, may contain the removed user or password.
 - **FR-006**: A scan in which no declared URL carries userinfo (FR-003) MUST produce output byte-identical to `main`. A scan whose only userinfo is the `git` user of an `ssh://` URL changes in that URL alone.
 - **FR-007**: The three formats MUST agree on every inventory field (`waybill sbom parity-check`). CycloneDX MUST validate against the vendored 1.6 schema, and no two components may share a `bom-ref`.
 - **FR-008**: Repeat scans MUST produce identical output.
@@ -120,7 +121,7 @@ A credential in a committed manifest is a problem in its own right. When waybill
 
 ### Measurable Outcomes
 
-- **SC-001**: Every inventory row marked sanitised has a fixture whose declared URL carries a distinctive user and token. On `main`, that fixture's output contains the token (the positive control). A row without a passing control is not counted as covered.
+- **SC-001**: Every inventory row marked sanitised has a fixture whose declared URL carries a distinctive user and token. Before any reader change, when the fixture's output still equals `main`'s, it contains the token (the positive control). A row without a passing control is not counted as covered.
 - **SC-002**: On the branch, the user and token of every SC-001 fixture occur 0 times in the bytes of the CycloneDX, SPDX 2.3 and SPDX 3 output and in the scan's log.
 - **SC-003**: User Story 2's trees each give one component per repository, identical to the clean tree's component.
 - **SC-004**: The public corpus regenerated on the branch (`regen_goldens`) is byte-identical to the committed goldens: no target declares a credentialled URL (measured, Background). TheRock's source tree and the quality corpus, scanned at the branch and at `main`, have equal component counts. Every changed field is a removed userinfo (FR-003), traced component by component.

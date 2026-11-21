@@ -31,4 +31,4 @@ The table is research R1. T001 re-derives it.
 | `url_redacted` | `redact_userinfo_for_log(raw)`: the URL with its userinfo replaced by `<userinfo redacted>` |
 | message | `stripped credentials from URL` |
 
-One event per sanitised occurrence. It never contains the username or password.
+One event per sanitised occurrence, except when the only userinfo was the bare `git` user of an `ssh` URL (planning amendment A1), which emits none. It never contains the username or password.
