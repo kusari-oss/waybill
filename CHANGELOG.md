@@ -80,6 +80,42 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Declared URLs no longer carry credentials into the SBOM (#1647).**
+  A URL a project declares as a place to fetch from is now recorded
+  without its userinfo (a user, or a user and password). These include a
+  CMake `GIT_REPOSITORY`, a lockfile's index or a git source with an
+  access token in it. Before, the token was copied into the document.
+  - **Readers:**
+    - CMake fetches and datasets;
+    - Bazel;
+    - uv.lock index and source URLs;
+    - flake.lock inputs;
+    - Pants pex and coursier lockfiles;
+    - the Nix closure's source references and Hackage `vcs_url`;
+    - CocoaPods, Dart, Composer, Elixir and Erlang git and self-hosted
+      sources;
+    - pip direct URLs;
+    - cargo-auditable git sources;
+    - Yocto `SRC_URI`;
+    - Swift `Package.resolved` locations.
+  - **Free text:** a URL inside a requirement string
+    (`waybill:requirement-ranges`, `waybill:version-constraint`) is
+    stripped too.
+  - **Identity:** a credentialled spelling of a repository is now the same
+    component as a clean one. Before, a credentialled GitHub URL fell back
+    to `pkg:generic`, a CMake fetch did not merge with its submodule, and a
+    Swift PURL embedded the credential.
+  - **Warning:** each removal logs `stripped credentials from URL` with
+    the manifest's path, so the token can be rotated. A bare `git` user of
+    an `ssh://` URL is removed without one.
+  - **Not removed:** the query string. A token carried there is still
+    emitted (#1652).
+- **An already-sanitised URL keeps the rest of its spelling (#1647).**
+  Git submodule URLs, source identifiers and uv.lock artifact URLs were
+  stripped by re-serialising the URL. That also lowercased an `https`
+  host, dropped a default port and resolved `..` segments. Only the
+  userinfo is removed now.
+
 - **A merged component records the other readers that found it (#1558).**
   When components found by different readers merge into one, the survivor
   now carries `waybill:also-detected-via` (C56): the other members' source

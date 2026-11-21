@@ -38,6 +38,8 @@ Each hit was then read to find where its value comes from.
 | D18 | cargo-auditable | `waybill:cargo-vcs-source-url`, then the `vcs` external reference | `binary/entry.rs` (~416), `scan_fs/mod.rs::external_refs_from_purl` |
 | D19 | Yocto | `waybill:src-uri` array | `package_db/yocto/recipe.rs` (~710) |
 
+**Added at implement time** (`measurements/inventory.md`, addendum): D18 (b) `waybill:cargo-auditable-source`; D20 `waybill:requirement-ranges`; D21 `waybill:version-constraint`; D22 the Swift PURL from `Package.resolved`; D19 (b) Yocto's host-typed PURL; N8 Composer `waybill:path`. The four searches keyed on URL-like names missed fields that carry a URL inside free text or derive a PURL from one. A sweep scan found them.
+
 ### Already sanitised (unchanged, except through R3)
 
 | # | Reader | Field |

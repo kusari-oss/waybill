@@ -90,7 +90,7 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
 - [X] T015 [P] [US1] Yocto, D19, in `PDB/yocto/recipe.rs`: sanitise each `SRC_URI` entry before `waybill:src-uri`.
 - [X] T016 [P] [US1] Log sites (research N7 and T001's list). G-5 already guards the Helm SBOM. Change `PDB/helm.rs` only if T001 found that a credentialled repository URL can reach `build_helm_purl`'s no-host `warn!`; then sanitise the URL where it is read. Fix any other log site T001 listed the same way. If T001 listed none, record that in the commit message and change nothing.
   - **Done, no file changed:** T001 found no reachable log site (inventory, log sites). Helm's no-host branch cannot see userinfo (measured).
-- [ ] T017 [US1] Run every D-case, G-case and C-ctl until they pass, plus the existing suites of every reader touched (`cargo test -p waybill --test <suite>`, one filter per invocation). An existing assertion that changes is recorded with its reason in the commit message. None may be loosened.
+- [X] T017 [US1] Run every D-case, G-case and C-ctl until they pass, plus the existing suites of every reader touched (`cargo test -p waybill --test <suite>`, one filter per invocation). An existing assertion that changes is recorded with its reason in the commit message. None may be loosened.
 
 ## Phase 4: User Story 2: removing a credential does not change what a component is (P1)
 
@@ -112,15 +112,15 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
 
 ## Phase 6: Polish and cross-cutting
 
-- [ ] T021 [P] FR-009 docs:
+- [X] T021 [P] FR-009 docs:
   - the C53 row of `docs/reference/sbom-format-mapping.md`, worded as in `contracts/wire.md`;
   - a paragraph in `docs/reference/reading-a-mikebom-sbom.md` naming the fields (research R1's D-rows by field) and what is not removed (the query string, #1652; scp-form remotes);
   - `CHANGELOG.md` `## [Unreleased]`, Fixed: declared URLs no longer carry userinfo (#1647), naming the readers. Add a second line: an already-sanitised URL (submodules, source identifiers, uv.lock artifacts) now keeps its host case, port and path when stripped.
-- [ ] T022 Mutations (SC-005). Write `MS/mutate.py`, modelled on spec 1639's `specs/1639-also-detected-via/measurements/mutate.py`, with one mutation per `sanitize_declared_url` call site. Each mutation replaces the call with its `raw` argument. Also mutate T005's splice back to re-serialising (I-3 must fail).
+- [X] T022 Mutations (SC-005). Write `MS/mutate.py`, modelled on spec 1639's `specs/1639-also-detected-via/measurements/mutate.py`, with one mutation per `sanitize_declared_url` call site. Each mutation replaces the call with its `raw` argument. Also mutate T005's splice back to re-serialising (I-3 must fail).
   - Restore with `cp` and rebuild after the last one.
   - Use a `^error\[E…\]` guard so a compile failure is not counted as a kill.
   - Record every mutation and its killing test in `MS/mutations.md`.
-- [ ] T023 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Read `target/gate/prepr.log` for `GATE_RESULT=` and every `test result:` line, and record the counts in `MS/gate-log.md`.
+- [X] T023 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Read `target/gate/prepr.log` for `GATE_RESULT=` and every `test result:` line, and record the counts in `MS/gate-log.md`.
 - [ ] T024 Public corpus (SC-004): `public-corpus.yml`, `regen_goldens=true`, on the pushed branch. Enumerate every job's conclusion and confirm the scanned SHA in the log. Download `corpus-goldens-regen` and `cmp` every file against the committed goldens: all 67 identical is expected. Trace any difference to FR-003 or Clarification Q1. Record in `MS/corpus.md`.
 - [ ] T025 TheRock and quality corpus (SC-004):
   - TheRock: `measure-source` in `kusari-sandbox/waybill-fixture-therock-sdk`, with `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`. Read the SHAs from `refs.txt`.

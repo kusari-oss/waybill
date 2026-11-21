@@ -49,6 +49,11 @@ Every D-case checks four things:
 | D-17 | D17 | `waybill-fixture-cred @ https://wbfxuser:wbfxtoken7c41@dl.example/waybill-fixture-cred-1.0.0.tar.gz` in a requirements file |
 | D-18 | D18 | cargo-auditable data with a `git+https://wbfxuser:wbfxtoken7c41@…` source (unit level, `binary/entry.rs`, if no binary fixture exists) |
 | D-19 | D19 | Yocto recipe `SRC_URI = "git://wbfxuser:wbfxtoken7c41@git.example/repo;protocol=https;branch=main"` |
+| D-4g | D4 | Bazel `git_repository` with a credentialled `remote` |
+| D-6u | D6 | uv.lock `url` source with userinfo |
+| D-20 | D20 | `package.json` dependency `git+https://wbfxuser:wbfxtoken7c41@…` (requirement range) |
+| D-21 | D21 | pyproject `dependencies` direct URL with userinfo (requirement range and version constraint) |
+| D-22 | D22 | `Package.resolved` pin whose `location` carries userinfo: the PURL is the clean location's |
 | I-1 | FR-004 | a git submodule with a clean URL, plus a conditional `FetchContent_Declare` of the same repository with a credentialled URL: one component, equal to the all-clean tree's |
 | I-2 | FR-004 | D-3's PURL equals the PURL of the same fetch without userinfo |
 | I-3 | FR-004, R3 | `https://wbfxtoken7c41@Git.Example/Org/Repo.git` and `https://Git.Example/Org/Repo.git` give equal C53 values |
