@@ -121,6 +121,9 @@ pub fn reconcile_design_source_tiers(
         if design.sbom_tier.as_deref() != Some("design") {
             continue;
         }
+        if is_versionless_github_fetch(design) {
+            continue;
+        }
         let Some(key) = match_key_for(design) else {
             continue;
         };
@@ -278,6 +281,19 @@ pub fn reconcile_design_source_tiers(
     filtered
 }
 
+/// Spec 1638 FR-014 (research R5): a CMake fetch named after its GitHub
+/// repository with its reference unresolved is never absorbed into a
+/// versioned sibling, which would claim it fetches that commit. Before spec
+/// 1638 no CMake design-tier fetch was `pkg:github`, so this changes nothing
+/// else.
+fn is_versionless_github_fetch(c: &ResolvedComponent) -> bool {
+    c.purl.ecosystem() == "github"
+        && c.extra_annotations
+            .get("waybill:source-mechanism")
+            .and_then(|v| v.as_str())
+            .is_some_and(|m| matches!(m, "cmake-fetchcontent-git" | "cmake-fetchcontent-url" | "cmake-externalproject"))
+}
+
 /// Composite match key: ecosystem + canonical name + source-manifest
 /// directory. Two components with the same key are considered a
 /// reconciliation candidate pair.
@@ -420,6 +436,35 @@ mod tests {
             extra_annotations: extra,
             binary_role: None,
         }
+    }
+
+    /// Spec 1638 FR-014: a versionless GitHub CMake fetch survives beside a
+    /// versioned one of the same name and directory; a generic CMake fetch
+    /// still reconciles as before.
+    #[test]
+    fn a_versionless_github_cmake_fetch_is_never_absorbed() {
+        let fetch = |purl: &str, version: &str, tier: &str| {
+            let mut c = mk_component("waybill-fixture-dep", version, purl, Some(tier), Some("CMakeLists.txt"), None);
+            c.extra_annotations.insert("waybill:source-mechanism".to_string(), serde_json::json!("cmake-fetchcontent-git"));
+            c
+        };
+        let mut rels = Vec::new();
+        let out = reconcile_design_source_tiers(
+            vec![
+                fetch("pkg:github/waybill-org/waybill-fixture-dep@v1", "v1", "source"),
+                fetch("pkg:github/waybill-org/waybill-fixture-dep", "", "design"),
+            ],
+            &mut rels,
+        );
+        assert_eq!(out.len(), 2, "both survive");
+        let out = reconcile_design_source_tiers(
+            vec![
+                fetch("pkg:generic/waybill-fixture-dep@v1", "v1", "source"),
+                fetch("pkg:generic/waybill-fixture-dep", "", "design"),
+            ],
+            &mut rels,
+        );
+        assert_eq!(out.len(), 1, "a generic design-tier fetch still reconciles");
     }
 
     #[test]

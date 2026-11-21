@@ -1139,6 +1139,16 @@ fn fetch_entry(
     let github_re = GITHUB.get_or_init(|| Regex::new(r"^https?://github\.com/([^/]+)/([^/\.\s]+)").ok()).as_ref();
     let body = expand_known_vars(body, vars);
     let body = body.as_str();
+    // `github.com/<owner>/<repo>` of a GitHub `GIT_REPOSITORY`. Spec 1530
+    // FR-015: purl-spec's `github` definition is case-insensitive and
+    // lowercased, so a CMake fetch and a git submodule of `ROCm/x` at one
+    // commit share a PURL.
+    let github_pair = |g: &str| -> Option<(String, String)> {
+        let m = github_re.as_ref()?.captures(g)?;
+        let fold = super::forge::lowercases_owner_and_name("github");
+        let case = |s: &str| if fold { s.to_lowercase() } else { s.to_string() };
+        Some((case(m.get(1)?.as_str()), case(m.get(2)?.as_str())))
+    };
     {
 
         let git_repo = extract_keyword(body, "GIT_REPOSITORY");
@@ -1148,11 +1158,26 @@ fn fetch_entry(
 
         // #1517: a `${VAR}` left after expansion has no literal same-file
         // value. Say so (C151) instead of guessing a version.
-        let unresolved = [&git_repo, &git_tag, &url]
-            .iter()
-            .any(|v| v.as_deref().is_some_and(|v| v.contains("${")));
+        let has_var = |v: &Option<String>| v.as_deref().is_some_and(|v| v.contains("${"));
+        let unresolved = [&git_repo, &git_tag, &url].iter().any(|v| has_var(v));
         if unresolved && (url.is_some() || (git_repo.is_some() && git_tag.is_some())) {
-            let Ok(purl) = Purl::new(&format!("pkg:generic/{}", encode_purl_segment(name))) else {
+            // Spec 1638 (#1595): when only the reference is unresolved, the
+            // literal repository still names the source. A GitHub one is the
+            // component (FR-001); any other is recorded so spec 1538 R9 can
+            // merge by repository (FR-004). The repository is checked for a
+            // variable before the GitHub match, which would otherwise take
+            // `${OWNER}` as an owner (FR-006).
+            let literal_repo = match (&git_repo, &git_tag) {
+                (Some(g), Some(_)) if !has_var(&git_repo) && has_var(&git_tag) && !has_var(&url) => Some(g.as_str()),
+                _ => None,
+            };
+            let purl = match literal_repo.and_then(github_pair) {
+                Some((owner, repo)) => {
+                    format!("pkg:github/{}/{}", encode_purl_segment(&owner), encode_purl_segment(&repo))
+                }
+                None => format!("pkg:generic/{}", encode_purl_segment(name)),
+            };
+            let Ok(purl) = Purl::new(&purl) else {
                 return None;
             };
             let source_mechanism = if rule_name == "ExternalProject_Add" {
@@ -1163,7 +1188,7 @@ fn fetch_entry(
                 "cmake-fetchcontent-url"
             };
             let mut entry =
-                build_cmake_entry(name, "", source_path, purl, None, url_hash, false, source_mechanism);
+                build_cmake_entry(name, "", source_path, purl, literal_repo, url_hash, false, source_mechanism);
             entry.sbom_tier = Some("design".to_string());
             entry.extra_annotations.insert(
                 "waybill:unresolved-reason".to_string(),
@@ -1177,20 +1202,7 @@ fn fetch_entry(
         {
             // GIT form — check for GitHub URL → pkg:github/<owner>/<repo>@<tag>;
             // otherwise pkg:generic/<name>@<tag>.
-            let github_pair = github_re
-                .as_ref()
-                .and_then(|r| r.captures(g))
-                .and_then(|m| {
-                    // Spec 1530 FR-015: purl-spec's `github` definition is
-                    // case-insensitive and lowercased, so a CMake fetch and a
-                    // git submodule of `ROCm/x` at one commit share a PURL.
-                    let fold = super::forge::lowercases_owner_and_name("github");
-                    let case = |s: &str| if fold { s.to_lowercase() } else { s.to_string() };
-                    let owner = m.get(1)?.as_str();
-                    let repo = m.get(2)?.as_str();
-                    Some((case(owner), case(repo)))
-                });
-            let purl = match github_pair {
+            let purl = match github_pair(g) {
                 Some((owner, repo)) => format!(
                     "pkg:github/{}/{}@{}",
                     encode_purl_segment(&owner),
@@ -2366,6 +2378,53 @@ add_subdirectory(tests)"#,
         let purls: Vec<&str> = out.iter().map(|e| e.purl.as_str()).collect();
         assert_eq!(purls, ["pkg:generic/waybill-fixture-branchy", "pkg:generic/waybill-fixture-same@3.0.0"]);
         assert_eq!(out[0].sbom_tier.as_deref(), Some("design"));
+    }
+
+    /// Spec 1638 (#1595): one entry per unresolved shape (data-model.md).
+    #[test]
+    fn s1638_unresolved_shapes() {
+        let entry = |rule: &str, body: &str| -> Option<PackageDbEntry> {
+            fetch_entry("waybill-fixture-x", body, "CMakeLists.txt", rule, &std::collections::HashMap::new())
+        };
+        let url = |e: &PackageDbEntry| e.extra_annotations.get("waybill:download-url").and_then(|v| v.as_str()).map(str::to_string);
+        let mech = |e: &PackageDbEntry| e.extra_annotations.get("waybill:source-mechanism").and_then(|v| v.as_str()).map(str::to_string);
+        let reason = |e: &PackageDbEntry| e.extra_annotations.get("waybill:unresolved-reason").and_then(|v| v.as_str()).map(str::to_string);
+
+        // FR-001: a literal GitHub repository, lowercased, on both mechanisms.
+        let gh = "https://github.com/Waybill-Org/Waybill-Fixture-Dep.git";
+        for (rule, m) in [("FetchContent_Declare", "cmake-fetchcontent-git"), ("ExternalProject_Add", "cmake-externalproject")] {
+            let e = entry(rule, &format!("GIT_REPOSITORY {gh} GIT_TAG ${{FX_UNSET}}")).unwrap();
+            assert_eq!(e.purl.as_str(), "pkg:github/waybill-org/waybill-fixture-dep", "{rule}");
+            assert_eq!((e.name.as_str(), e.version.as_str()), ("waybill-fixture-x", ""));
+            assert_eq!(e.sbom_tier.as_deref(), Some("design"));
+            assert_eq!(url(&e).as_deref(), Some(gh));
+            assert_eq!(mech(&e).as_deref(), Some(m));
+            assert_eq!(reason(&e).as_deref(), Some(CMAKE_UNRESOLVED_VARIABLE_REASON));
+        }
+        // The resolved branch's owner/repo rule: a URL that is not the root.
+        let e = entry("FetchContent_Declare", "GIT_REPOSITORY https://github.com/O/R/tree/main GIT_TAG ${FX_UNSET}").unwrap();
+        assert_eq!(e.purl.as_str(), "pkg:github/o/r");
+
+        // FR-006: an unresolved repository is never parsed for an owner.
+        let e = entry("FetchContent_Declare", "GIT_REPOSITORY https://github.com/${FX_OWNER}/r.git GIT_TAG ${FX_UNSET}").unwrap();
+        assert_eq!(e.purl.as_str(), "pkg:generic/waybill-fixture-x");
+        assert_eq!(url(&e), None);
+
+        // FR-004: another literal repository keeps its name and gains its URL.
+        let other = "https://example.invalid/waybill-fixture-other.git";
+        let e = entry("ExternalProject_Add", &format!("GIT_REPOSITORY {other} GIT_TAG ${{FX_UNSET}}")).unwrap();
+        assert_eq!(e.purl.as_str(), "pkg:generic/waybill-fixture-x");
+        assert_eq!(url(&e).as_deref(), Some(other));
+
+        // FR-005: a URL fetch is unchanged.
+        let e = entry("FetchContent_Declare", "URL https://example.invalid/waybill-fixture-x-${FX_V}.tar.gz").unwrap();
+        assert_eq!(e.purl.as_str(), "pkg:generic/waybill-fixture-x");
+        assert_eq!(url(&e), None);
+
+        // FR-010: a literal tag beside an unresolved URL is not this spec's shape.
+        let e = entry("FetchContent_Declare", &format!("GIT_REPOSITORY {gh} GIT_TAG v1 URL https://example.invalid/${{FX_V}}.tar.gz")).unwrap();
+        assert_eq!(e.purl.as_str(), "pkg:generic/waybill-fixture-x");
+        assert_eq!(url(&e), None);
     }
 
     /// #1520: the issue's repro, plus both CMake version-range forms.

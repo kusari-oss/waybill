@@ -129,6 +129,12 @@ read from the same files since spec 1614 (see [CMake package searches](#cmake-pa
 
 - **Identity** is unchanged: `pkg:github/<owner>/<repo>@<tag>` for GitHub,
   otherwise `pkg:generic/<name>@<version>`, with the URL and declared hash.
+  A literal GitHub `GIT_REPOSITORY` whose `GIT_TAG` is unresolved is the
+  versionless `pkg:github/<owner>/<repo>`, with `waybill:unresolved-reason`
+  (C151), never a guessed version; another literal repository keeps
+  `pkg:generic/<name>` and records its URL, so a fallback can merge into the
+  component that supplies that repository (spec 1638, #1595). A versionless
+  and a versioned required fetch of one repository stay two components.
 - **Conditional fetches are optional, with the reason.** A declaration that a
   build might not take is `LifecycleScope::Optional` — CycloneDX
   `scope: "excluded"`, SPDX 2.3 `OPTIONAL_DEPENDENCY_OF` — and
@@ -206,7 +212,8 @@ read from the same files since spec 1614 (see [CMake package searches](#cmake-pa
 - **Accounting.** `waybill:cmake-fetch-coverage` (C231) counts every
   declaration read: `read` = `emitted` + `merged.first-declaration-wins` +
   `merged.existing-component` + `unresolved.identity`. A name built from a
-  variable the file does not set literally, or a declaration with neither
+  variable the file does not set literally, unless a literal GitHub
+  `GIT_REPOSITORY` names the component, or a declaration with neither
   `URL` nor `GIT_REPOSITORY` + `GIT_TAG`, is `unresolved.identity`.
 
 `--cmake-third-party-recursive` still widens vendored-directory and

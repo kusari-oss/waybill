@@ -80,6 +80,21 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A CMake git fetch with an unresolved tag is named after its repository
+  (#1595).** `FetchContent_Declare`, `ExternalProject_Add`, a wrapper call or
+  `download_project()` with a literal GitHub `GIT_REPOSITORY` and a `GIT_TAG`
+  the reader cannot resolve was `pkg:generic/<declared name>`, often a build
+  target's name (python-pytorch's `aotriton_external`). It is now the
+  versionless `pkg:github/<owner>/<repo>` (`pkg:github/rocm/aotriton`, and
+  pytorch's `nccl` is `pkg:github/nvidia/nccl`), still with C151 and in the
+  design tier; no version is guessed. Another literal
+  repository keeps its generic name but records its URL. A conditional
+  fallback of such a repository now merges into the component that supplies
+  it, as a resolved fallback does, and is recorded in C233 with
+  `"version": ""`. A required versionless fetch and a required versioned
+  fetch of one repository stay two components. A URL fetch and an unresolved
+  repository are unchanged, and so is wrapper recognition.
+
 - **A CMake package searched from tests and under a product condition is
   Optional, not Test (#1624).** Spec 1614's rule gave every search of a name
   one scope, and made it Test as soon as any search was in a test context,
