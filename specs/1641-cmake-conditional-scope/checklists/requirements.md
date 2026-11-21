@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,5 +31,5 @@
 
 ## Notes
 
-- Two [NEEDS CLARIFICATION] markers: FR-004 (the unknown case) and FR-007 (whether package searches follow the rule).
+- Both markers resolved 2026-11-21: Q1 A (unknown stays in scope), Q2 A (searches follow the rule).
 - The spec cites CMake constructs, catalog rows and prior specs by ID. In this project that is the domain vocabulary, not implementation detail.

@@ -5,6 +5,13 @@
 **Status**: Draft
 **Input**: #1639. A CMake fetch inside any `if()` is marked optional and excluded, including conditions that are always true in the build being described. Refs #1591, #1605, #1516, #1519, #1623, #1624.
 
+## Clarifications
+
+### Session 2026-11-21
+
+- Q: What does a fetch whose conditions evaluate to unknown get (FR-004)? → A: It is kept in scope, with C232 as the record of what gates it. This is spec 1269's safe direction: over-reporting an optional feature is the safer error. SC-001's census reports how many components this affects.
+- Q: Do spec 1614's package searches follow the same rule (FR-007)? → A: Yes. They use the same evaluation, with C236 as the record. It is the same defect, and #1623 fixed its installed-tree form.
+
 ## Background
 
 Spec 1538 research R2 made a conditional CMake fetch `Optional`. This is carried as CycloneDX `scope: excluded` and SPDX 2.3 `OPTIONAL_DEPENDENCY_OF`, with C122 `waybill:optional-derivation` naming the shape. The shapes are tried in a precedence order, and the first match is the reason given:
@@ -88,7 +95,7 @@ Fallback detection, test scoping, merging and the coverage record behave as befo
 
 ### Edge Cases
 
-- **An option with no visible default:** no `option()`, `cmake_dependent_option()` or `set(… CACHE BOOL …)` is found for it. Its value is unknown (FR-004).
+- **An option with no visible default:** no `option()`, `cmake_dependent_option()` or `set(… CACHE BOOL …)` is found for it. Its value is unknown, so the fetch is in scope (FR-004).
 - **An option defined twice with different defaults:** both definitions are in reach (FR-002). Its value is unknown.
 - **`cmake_dependent_option(X "" ON "DEP" OFF)`:** X is ON by default only when DEP holds by default. Otherwise it takes the fallback value.
 - **A plain `set(X ON)`** in reach is a literal and evaluates like a default. A `set(X ${Y})` is unknown.
@@ -112,10 +119,10 @@ Fallback detection, test scoping, merging and the coverage record behave as befo
   - **Operators:** `NOT`, `AND`, `OR` and parentheses combine values with three-valued logic.
   - **Branches:** an `else()` holds when the matching `if` (and any `elseif`) does not, except that the else of a platform-only condition holds. An `elseif` holds when the earlier branches do not and its own condition does.
   - **The chain:** a fetch's scope is decided by the conjunction of every enclosing branch.
-- **FR-004**: A fetch whose conditions evaluate to unknown MUST be [NEEDS CLARIFICATION: kept in scope, with C232 as the record of what gates it (the issue's suggestion; spec 1269's safe direction), or kept Optional with C122 `cmake-conditional` as today?].
+- **FR-004**: A fetch whose conditions evaluate to unknown MUST be kept in scope. C232 is the record of what gates it (Clarifications). Only a chain that does not hold by default leaves a fetch Optional with C122 `cmake-conditional`.
 - **FR-005**: C232 MUST still record every enclosing condition of every fetch, in scope or not. A kept-in-scope fetch carries no C122. No new catalog row is added: C232 already says what gates the fetch, and the native scope says whether it ships.
 - **FR-006**: Spec 1538 R9 MUST keep merging a fetch on the presence of a condition, independent of its new scope. C231's `conditional` count keeps its definition, the number of Optional fetch components, so it falls by the number FR-001 brings into scope. C231 V2 (`conditional + test <= components`) still holds.
-- **FR-007**: Spec 1614's package searches MUST [NEEDS CLARIFICATION: follow the same evaluation (FR-002 to FR-004) for their catch-all conditional, with C236 as the record, or stay as they are in this spec?].
+- **FR-007**: Spec 1614's package searches MUST follow the same evaluation (FR-002 to FR-004) for their catch-all conditional (a search under any condition that is not a test directory or `BUILD_TESTING`). C236 remains the record of every condition. A library is Optional only when every search for it is in a chain that does not hold by default, and in scope when any search holds or is unknown.
 - **FR-008**: The three formats MUST agree (`waybill sbom parity-check`). CycloneDX MUST validate against the vendored 1.6 schema, and no two components may share a `bom-ref`.
 - **FR-009**: A scan with no catch-all conditional fetch or search MUST produce output byte-identical to `main`. Repeat scans MUST produce identical output.
 - **FR-010**: The C122 and C232 rows of `docs/reference/sbom-format-mapping.md` and the consumer guide MUST state when a conditional fetch is in scope.
