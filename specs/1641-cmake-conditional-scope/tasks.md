@@ -96,13 +96,13 @@ Scope does not change in this phase.
   - **One per evaluation rule:** platform, its negation, the guard, its reversed order, option default, missing value, `cmake_dependent_option`, `CACHE BOOL`, literal `set`, conflict, `NOT`, `AND`, `OR`, `else`, `elseif`, nesting, `scope_files`.
   - **Plus:** R9's predicate back to scope; C232 only with a scope; searches on the old rule.
   - Restore with `cp`, rebuild after the last one, and use a `^error\[E…\]` guard. Record in `MS/mutations.md`.
-- [ ] T019 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Record `GATE_RESULT` and every `test result:` count in `MS/gate-log.md`.
-- [ ] T020 Public corpus at the final commit (SC-004): `regen_goldens=true`. Enumerate the jobs and confirm the scanned SHA.
+- [X] T019 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Record `GATE_RESULT` and every `test result:` count in `MS/gate-log.md`.
+- [X] T020 Public corpus at the final commit (SC-004): `regen_goldens=true`. Enumerate the jobs and confirm the scanned SHA.
   - `cmp` every regenerated golden against the committed one.
   - Trace every changed component to FR-001 or FR-007 by its C232/C236 conditions.
-  - Commit the changed goldens from the artifact.
+  - Commit the changed goldens from the artifact (none changed: 67 of 67 identical, `MS/corpus.md`).
   - Record in `MS/corpus.md`.
-- [ ] T021 TheRock and quality corpus (SC-004, SC-005).
+- [X] T021 TheRock and quality corpus (SC-004, SC-005).
   - **TheRock:** `measure-source` with `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`.
     - Read the SHAs from `refs.txt`.
     - Compare all six documents with per-run fields masked.
@@ -111,7 +111,7 @@ Scope does not change in this phase.
     - Record the median of 3 and the ratio (at most 1.05).
   - **Quality corpus:** branch and `main` runs, every changed metric traced.
   - Record in `MS/therock.md` and `MS/corpus.md`.
-- [ ] T022 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (FR-011). Open the PR with "Closes #1639" and "Refs #1591, #1605, #1516, #1519, #1623, #1624", ending with the attribution footer. Merging is the maintainer's.
+- [X] T022 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (FR-011). Open the PR with "Closes #1639" and "Refs #1591, #1605, #1516, #1519, #1623, #1624", ending with the attribution footer. Merging is the maintainer's.
 
 ## Dependencies
 
