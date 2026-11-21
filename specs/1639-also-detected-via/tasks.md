@@ -122,14 +122,14 @@
 
 **Goal**: FR-005, FR-006, FR-011. **Independent test**: every A-case validates against the vendored 1.6 schema, and parity agrees on C56.
 
-- [ ] T015 [P] [US2] In `IT`, assert for every A-case that no `evidence.identity[].methods[]` object has a key other than `technique`, `confidence` and `value`. `parity` already validates the whole document.
-- [ ] T016 [US2] In `EV`:
+- [X] T015 [P] [US2] In `IT`, assert for every A-case that no `evidence.identity[].methods[]` object has a key other than `technique`, `confidence` and `value`. `parity` already validates the whole document.
+- [X] T016 [US2] In `EV`:
   - remove `build_evidence`'s `winning_source_mechanism` and `losing_source_mechanisms` parameters and the `waybill-source-mechanism` key they wrote;
   - update the calls in `builder.rs` and `metadata.rs`;
   - delete the unit tests that assert that key (the `Some("conan-recipe")`, `losers` and `["git-submodule"]` cases);
   - add one unit test: a method object has exactly the schema's keys.
-- [ ] T017 [US2] Rewrite `MAP`'s C56 row with the wording in `contracts/wire.md` (CDX property; the R1 audit in the justification column; the merge sites; the anchor rule; C242 is separate). Add the removal note to C207 and the C233 clause. Confirm the lib-target parity gate passes.
-- [ ] T018 [US2] Run T015, T016's test, all of `IT`, and `cdx_schema`-using suites (`grep -l cdx_validation_errors waybill-cli/tests`) until they pass.
+- [X] T017 [US2] Rewrite `MAP`'s C56 row with the wording in `contracts/wire.md` (CDX property; the R1 audit in the justification column; the merge sites; the anchor rule; C242 is separate). Add the removal note to C207 and the C233 clause. Confirm the lib-target parity gate passes.
+- [X] T018 [US2] Run T015, T016's test, all of `IT`, and `cdx_schema`-using suites (`grep -l cdx_validation_errors waybill-cli/tests`) until they pass.
 
 ## Phase 5: User Story 3: one key, one meaning (P2)
 

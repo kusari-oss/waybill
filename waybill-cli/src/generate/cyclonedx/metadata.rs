@@ -1816,8 +1816,6 @@ pub fn build_metadata(
                 &c.evidence,
                 &c.occurrences,
                 None,
-                &[],
-                None,
             );
             metadata["component"]["evidence"] = evidence_value;
         }
