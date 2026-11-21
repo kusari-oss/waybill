@@ -76,7 +76,8 @@ File references are to `waybill-cli/src/scan_fs/package_db/` at `main` `886792b7
 - **R9:** `conditional` becomes "a fetch carrying C232 that is not Test": Optional with a `cmake-*` C122, or in scope with C232. Today's set is unchanged, plus the fetches FR-001 brings into scope (FR-006).
 - **Merged declarations** (`one_per_purl`): today's rule stands. A component is Optional only if every declaration is. A kept-in-scope declaration ranks with the required ones.
 - **C231:** `conditional` keeps counting Optional components (FR-006).
-- **Searches** (`searches.rs`): each `PackageSearch` gains the evaluation of its chain. In `scopes`, a search whose chain holds or is unknown counts as `runtime`, and only a search whose chain does not hold counts as `optional` (FR-007). Test-directory and `BUILD_TESTING` searches are unchanged. C236 still records every condition.
+- **Searches** (`searches.rs`): each `PackageSearch` gains the evaluation of its chain. In `scopes`, a search whose chain holds or is unknown counts as `runtime`, and only a search whose chain does not hold counts as `optional` (FR-007). Test-directory and `BUILD_TESTING` searches are unchanged, and so is a search in a `function()` body: spec 1614 (W-17) gave it spec 1538's sixth shape, which this spec leaves Optional. C236 still records every condition.
+- **Merged declarations, survivor (added at T021):** `one_per_purl` ranks an unconditional declaration first, then a kept one, then Optional. Ranking a kept declaration with the unconditional ones let it win a tie on file order and move the survivor's C55 (TheRock: Catch2; case M-2).
 
 ## R6. The census, before the rule is wired (SC-001)
 

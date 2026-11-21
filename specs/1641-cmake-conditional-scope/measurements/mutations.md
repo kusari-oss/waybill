@@ -14,7 +14,9 @@ The script was run twice:
 
 **Final: 22 of 22 killed.** `git status` showed no source file modified after either run.
 
-**M23 and M24, added after T021.** TheRock's trace found Catch2's C55 moving: a kept-in-scope declaration had tied with the unconditional one and won on file order. The fix ranks an unconditional declaration first (case M-2). M23 removes that rank, M24 swaps the kept and Optional ranks. Both killed; `git status` again showed no source file modified. **24 of 24 killed.**
+**M23 and M24, added after T021.** TheRock's trace found Catch2's C55 moving: a kept-in-scope declaration had tied with the unconditional one and won on file order. The fix ranks an unconditional declaration first (case M-2). M23 removes that rank, M24 swaps the kept and Optional ranks. Both killed; `git status` again showed no source file modified.
+
+**M25, added after T019.** The gate found spec 1614's W-17 failing: a search in a `function()` body had come into scope, because function blocks are not `if` branches and so its chain read as holding. That is spec 1538's sixth shape, which this spec leaves unchanged (spec Background), so `scopes()` now leaves it Optional. M25 removes the guard; W-17 kills it. **25 of 25 killed.**
 
 | Mutation | Result |
 |---|---|
@@ -42,6 +44,7 @@ The script was run twice:
 | M22 kept record records C236 | KILLED by s3_an_installed_record_searched_under_a_platform_check |
 | M23 unconditional outranks kept | KILLED by m2_an_unconditional_declaration_still_survives_a_kept_one |
 | M24 kept outranks Optional | KILLED by m1_merged_declarations_keep_the_strongest_scope |
+| M25 a function body stays Optional | KILLED by w17_search_in_a_function_body |
 
 ## What only the census and unit tests can see
 

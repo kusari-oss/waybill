@@ -85,7 +85,7 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   - **The new rule:** the conditions are evaluated in the default configuration, by CMake's own grammar. `option()`, `cmake_dependent_option()` and `set()` defaults are read from the files in reach.
   - **Optional:** only when the conditions do not hold, for example a default-OFF option.
   - **In scope:** when they hold, or cannot be evaluated. `waybill:cmake-fetch-conditions` still records them.
-  - **Package searches** follow the same rule.
+  - **Package searches** follow the same rule, and `waybill:cmake-find-conditions` records their conditions. A search in a function body stays Optional, like a fetch in one.
   - **Unchanged:** the specific fallback shapes (`NOT TARGET`, `NOT <X>_FOUND`, `FIND_PACKAGE_ARGS`, try-find `ALWAYS`, a dependency provider, a function body) and `BUILD_TESTING`.
 
 - **Declared URLs no longer carry credentials into the SBOM (#1647).**

@@ -54,6 +54,9 @@ M = [
     ("M24 kept outranks Optional", "scan_fs/package_db/cmake/fetches.rs",
      "            None => 1,\n            Some(LifecycleScope::Optional) => 2,\n",
      "            None => 2,\n            Some(LifecycleScope::Optional) => 1,\n", IT + ["m1_"]),
+    ("M25 a function body stays Optional", "scan_fs/package_db/cmake/searches.rs",
+     "} else if s.eval.in_scope() && !s.conditions.iter().any(|c| c.starts_with(\"function: \")) {",
+     "} else if s.eval.in_scope() {", ["--test", "scan_cmake_tree_finds", "w17_"]),
 ]
 
 

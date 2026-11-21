@@ -328,7 +328,9 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
             a.test_cond = true;
         } else if s.conditions.is_empty() {
             a.runtime = true;
-        } else if s.eval.in_scope() {
+        } else if s.eval.in_scope() && !s.conditions.iter().any(|c| c.starts_with("function: ")) {
+            // A search in a function body is spec 1538's sixth shape, which
+            // spec 1641 leaves Optional (spec 1614 W-17), as it does a fetch.
             a.kept = true;
         } else {
             a.optional = true;
