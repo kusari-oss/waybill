@@ -36,23 +36,7 @@ fn recorded(a: &Annotations) -> BTreeSet<String> {
 pub(crate) fn observe(site: &'static str, subject: &str, survivor: &Annotations, absorbed: &Annotations) {
     let kept = mechanism(survivor).unwrap_or("-");
     let lost = mechanism(absorbed).unwrap_or("-");
-    if site == "S1" {
-        let rank_winner = rank_winner(subject, kept, lost);
-        tracing::debug!(target: "waybill::also_detected", site, subject, kept, absorbed = lost, rank_winner);
-    } else {
-        tracing::debug!(target: "waybill::also_detected", site, subject, kept, absorbed = lost);
-    }
-}
-
-/// Which member milestone 105's ranking would have kept, for the census
-/// only (research R2): `survivor`, `absorbed`, or `unranked` when either
-/// mechanism is not one of its variants.
-fn rank_winner(purl: &str, kept: &str, lost: &str) -> &'static str {
-    match (super::dedup::rank_key(kept, purl), super::dedup::rank_key(lost, purl)) {
-        (Some(k), Some(l)) if l < k => "absorbed",
-        (Some(_), Some(_)) => "survivor",
-        _ => "unranked",
-    }
+    tracing::debug!(target: "waybill::also_detected", site, subject, kept, absorbed = lost);
 }
 
 /// The part of `absorbed` that [`record`] reads (its C55 and C56), for a site
@@ -154,13 +138,5 @@ mod tests {
         let absorbed = ann(Some("git-submodule"), &["cmake-fetchcontent-git"]);
         record("S1", "pkg:x", &mut s, &absorbed);
         assert_eq!(c56(&s), Some(json!(["cmake-fetchcontent-git", "git-submodule"])));
-    }
-
-    #[test]
-    fn the_census_ranks_only_known_mechanisms() {
-        assert_eq!(rank_winner("pkg:github/o/r@1", "git-submodule", "cmake-fetchcontent-git"), "absorbed");
-        assert_eq!(rank_winner("pkg:github/o/r@1", "cmake-fetchcontent-git", "git-submodule"), "survivor");
-        assert_eq!(rank_winner("pkg:generic/x@1", "pkg-config", "cmake-package-version"), "unranked");
-        assert_eq!(rank_winner("pkg:generic/x@1", "-", "git-submodule"), "unranked");
     }
 }

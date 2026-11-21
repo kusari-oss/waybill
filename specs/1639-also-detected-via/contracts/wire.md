@@ -2,7 +2,7 @@
 
 ## C56 `waybill:also-detected-via`
 
-**CycloneDX 1.6.** A component `properties[]` entry:
+**CycloneDX 1.6.** A component `properties[]` entry, on `components[]` and on `metadata.component` alike:
 
 ```json
 {"name": "waybill:also-detected-via", "value": "[\"cmake-fetchcontent-git\"]"}
@@ -50,9 +50,11 @@ These are the integration cases in `waybill-cli/tests/also_detected_via.rs`.
 | A-5 | two members, same mechanism | no C56 |
 | A-6 | conditional fetch under a submodule of the same repository (S6) | C55 `git-submodule`; C233 as `main`; C56 `["cmake-fetchcontent-git"]` |
 | A-7 | S6 survivor that S1 merges again | one C56, the union |
-| A-8 | design-tier with C55 reconciled into a source-tier survivor with no C55 (S3) | no C56 (research R5) |
+| A-8 | design-tier with C55 reconciled into a source-tier survivor with no C55 (S3); a reconciler unit test | no C56 (research R5) |
 | A-9 | `cmake-vendored` folded into its project (S7) | C55 `cmake-project`; C56 `["cmake-vendored"]` |
 | A-10 | package search paired with a submodule (S9) | C55 `git-submodule`; C56 `["cmake-find-package"]` |
+| A-11 | a package search in a subdirectory named like the root project, scanned without `--root-name` (S9) | the project is the main component; CycloneDX `metadata.component` carries C56 `["cmake-find-package"]`; C55 and C56 agree across the formats |
+| A-split | A-1's merge under one of two projects, `--split` | C56 on the component in every split document that holds it |
 | A-ctl | a tree with no multi-mechanism merge | byte-identical to the golden generated from `main`'s binary before any source change |
 | A-rep | every case | 10 scans byte-identical; parity-check agrees on C55, C56, C242; CDX validates; unique bom-refs |
 | F-1 | entry mapping of a match with collisions (unit) | C242 written, no C56 |

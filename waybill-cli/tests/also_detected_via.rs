@@ -321,3 +321,84 @@ fn a10_package_search_paired_with_a_submodule() {
     assert_eq!(c55(c), Some("git-submodule"));
     assert_c56(c, &["cmake-find-package"]);
 }
+
+// ---------------------------------------------------------------------
+// US4 (T022): nothing else changes
+// ---------------------------------------------------------------------
+
+/// A-5: two members of one mechanism (two required fetches of one
+/// repository at one tag) record nothing. A guard: it passes at `main`.
+#[test]
+fn a05_one_mechanism_records_nothing() {
+    let fx = common::cmake_fetch::tree(&[
+        ("CMakeLists.txt", &format!("{ROOT}{}", fetch("waybill-fixture-dep", GH, "v1.0.0"))),
+        ("sub/CMakeLists.txt", &fetch("waybill-fixture-dep", GH, "v1.0.0")),
+    ]);
+    let d = check(&fx, &fx.path("t"));
+    let c = one(&d, GH_PURL);
+    assert_eq!(c55(c), Some("cmake-fetchcontent-git"));
+    assert_eq!(c56(c), None, "one mechanism: no C56: {c}");
+}
+
+/// Spec edge case: C56 travels with its component into every `--split`
+/// document that holds it. Two projects, so the split has documents to
+/// write; the merged fetch is under one of them.
+#[test]
+fn a01_split_keeps_c56_on_its_component() {
+    let fx = submodule_app(
+        "waybill-fixture-dep",
+        SHA,
+        "add_subdirectory(a)\nadd_subdirectory(b)\n",
+        &[
+            ("a/CMakeLists.txt", &format!("project(waybill-fixture-a VERSION 1.0)\n{}", fetch("waybill-fixture-dep", GH, SHA))),
+            ("b/CMakeLists.txt", "project(waybill-fixture-b VERSION 1.0)\n"),
+        ],
+    );
+    let out = tempfile::tempdir().unwrap();
+    let o = std::process::Command::new(common::bin())
+        .current_dir(out.path())
+        .env("HOME", fx.home())
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .args(["--offline", "sbom", "scan", "--path"])
+        .arg(fx.path("app"))
+        .args(["--no-deep-hash", "--split", "--format", "cyclonedx-json", "--output-dir"])
+        .arg(out.path())
+        .output()
+        .unwrap();
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    let mut seen = 0;
+    for entry in std::fs::read_dir(out.path()).unwrap() {
+        let p = entry.unwrap().path();
+        if p.extension().is_none_or(|e| e != "json") || p.file_name().is_some_and(|n| n == "split-manifest.json") {
+            continue;
+        }
+        let doc: Value = serde_json::from_str(&std::fs::read_to_string(&p).unwrap()).unwrap();
+        for c in cdx_components(&doc).into_iter().filter(|c| c["purl"].as_str().is_some_and(|s| s.starts_with(GH_PURL))) {
+            seen += 1;
+            assert!(c56(c).is_some_and(|v| !v.is_empty()), "{}: C56 lost in the split: {c}", p.display());
+        }
+    }
+    assert!(seen >= 2, "the merged component is in the superbuild's and project a's documents, saw {seen}");
+}
+
+/// Spec edge case: a main-component survivor keeps C56 in every format. A
+/// package search in a subdirectory, named like the root project, folds into
+/// it (S9); scanned without `--root-name`, that project is the main component.
+#[test]
+fn a11_a_main_component_survivor_keeps_c56() {
+    let t = tempfile::tempdir().unwrap();
+    common::installed_lib::write(t.path(), "CMakeLists.txt", "cmake_minimum_required(VERSION 3.25)\nproject(waybill-fixture-app VERSION 2.0)\nadd_subdirectory(tools)\n");
+    common::installed_lib::write(t.path(), "tools/CMakeLists.txt", "find_package(waybill-fixture-app 2.0)\n");
+    let d = common::installed_lib::scan(t.path());
+    let main = &d.cdx["metadata"]["component"];
+    assert_eq!(main["purl"], "pkg:generic/waybill-fixture-app@2.0", "the project is the main component");
+    assert_eq!(c56(main), Some(vec!["cmake-find-package".to_string()]), "CycloneDX main component: {main}");
+    for row in ["C55", "C56"] {
+        let e = waybill::parity::extractors::EXTRACTORS.iter().find(|e| e.row_id == row).unwrap();
+        let (a, b, c) = ((e.cdx)(&d.cdx), (e.spdx23)(&d.spdx23), (e.spdx3)(&d.spdx3));
+        assert!(!a.is_empty(), "{row}: nothing in CycloneDX");
+        assert_eq!(a, b, "{row}: CycloneDX and SPDX 2.3 disagree");
+        assert_eq!(a, c, "{row}: CycloneDX and SPDX 3 disagree");
+    }
+}

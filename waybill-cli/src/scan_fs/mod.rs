@@ -11,7 +11,6 @@
 
 pub mod binary;
 pub(crate) mod also_detected;
-pub mod dedup;
 pub mod docker_daemon;
 pub mod docker_image;
 // Milestone 206 (#440) — local podman image scanning via
