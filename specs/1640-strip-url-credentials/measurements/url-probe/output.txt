@@ -1,0 +1,17 @@
+url 2.5.8
+https://u:p@GitHub.com/Org/Repo.git
+  -> https://github.com/Org/Repo.git
+https://u:p@github.com:443/org/repo.git
+  -> https://github.com/org/repo.git
+https://u:p@github.com/a/../org/repo.git
+  -> https://github.com/org/repo.git
+https://u:p@host/path%7Erepo with space.git
+  -> https://host/path%7Erepo%20with%20space.git
+git+https://u:p@GitHub.com/Org/Repo.git
+  -> git+https://GitHub.com/Org/Repo.git
+git://u:p@Host.Example/repo;protocol=https;branch=main
+  -> git://Host.Example/repo;protocol=https;branch=main
+ssh://git@Host.Example:22/org/repo.git
+  -> ssh://Host.Example:22/org/repo.git
+https://u:p@host/x?b=2&a=1#frag
+  -> https://host/x?b=2&a=1#frag
