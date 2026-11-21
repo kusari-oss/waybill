@@ -173,7 +173,7 @@
   - **Quality corpus:** branch and `main` runs (SC-005), traced component by component with `census-merges` at both SHAs.
 
   Enumerate every job's conclusion. Record in `MS/corpus.md`.
-- [ ] T030 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (FR-014). Then open the PR with "Closes #1558" and "Refs #1515, #1442", ending with the attribution footer. Merging is the maintainer's.
+- [X] T030 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (FR-014). Then open the PR with "Closes #1558" and "Refs #1515, #1442", ending with the attribution footer. Merging is the maintainer's.
 
 ## Dependencies
 
