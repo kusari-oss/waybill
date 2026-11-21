@@ -39,6 +39,7 @@ Each case scans in three formats and runs parity (scope, C122, C232, C236). It v
 | F-1…F-6 | the six fallback shapes (`NOT TARGET`, `NOT X_FOUND`, `FIND_PACKAGE_ARGS`, try-find `ALWAYS`, provider, function body) | unchanged from `main` | no |
 | B-1 | `if(BUILD_TESTING)` | Test, unchanged | no |
 | M-1 | the same repository declared under `if(NOT TARGET x)` and under `if(UNIX)` (one PURL) | in scope; C232 the union of both declarations' conditions; no C122 | yes |
+| M-2 | an unconditional `ExternalProject_Add` and, in a file that sorts first, a `FetchContent_Declare` of the same URL under `if(UNIX)` | in scope; C55 `cmake-externalproject`, C56 `["cmake-fetchcontent-url"]`, as on `main` | no |
 | R-1 | conditional fetch under `if(UNIX)` of a repository an enclosing submodule supplies | merged into the submodule (R9), unchanged | no |
 | S-1 | `find_package(X)` under `if(UNIX)` only | the searched record in scope, C236 present | yes |
 | S-2 | `find_package(X)` under an OFF option only | Optional, as today | no |

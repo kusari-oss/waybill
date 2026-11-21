@@ -49,6 +49,11 @@ M = [
     ("M21 searches follow the rule", "scan_fs/package_db/cmake/searches.rs", "} else if s.eval.in_scope() {", "} else if false {", IT + ["s1_a_package"]),
     ("M22 kept record records C236", "scan_fs/cmake_search_pair.rs",
      "if ps.iter().all(|p| p.conditional || !p.conditions.is_empty()) {", "if false {", IT + ["s3_"]),
+    ("M23 unconditional outranks kept", "scan_fs/package_db/cmake/fetches.rs",
+     "            None if unconditional(e) => 0,\n            None => 1,\n", "            None => 0,\n", IT + ["m2_"]),
+    ("M24 kept outranks Optional", "scan_fs/package_db/cmake/fetches.rs",
+     "            None => 1,\n            Some(LifecycleScope::Optional) => 2,\n",
+     "            None => 2,\n            Some(LifecycleScope::Optional) => 1,\n", IT + ["m1_"]),
 ]
 
 

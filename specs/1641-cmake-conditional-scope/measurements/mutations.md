@@ -14,6 +14,8 @@ The script was run twice:
 
 **Final: 22 of 22 killed.** `git status` showed no source file modified after either run.
 
+**M23 and M24, added after T021.** TheRock's trace found Catch2's C55 moving: a kept-in-scope declaration had tied with the unconditional one and won on file order. The fix ranks an unconditional declaration first (case M-2). M23 removes that rank, M24 swaps the kept and Optional ranks. Both killed; `git status` again showed no source file modified. **24 of 24 killed.**
+
 | Mutation | Result |
 |---|---|
 | M01 platform atom | KILLED by census_one_event_per_category |
@@ -38,6 +40,8 @@ The script was run twice:
 | M20 R9 keys on C232 | KILLED by r1_a_kept_conditional_fetch_still_merges_into_its_submodule |
 | M21 searches follow the rule | KILLED by s1_a_package_search_under_a_platform_check_is_in_scope |
 | M22 kept record records C236 | KILLED by s3_an_installed_record_searched_under_a_platform_check |
+| M23 unconditional outranks kept | KILLED by m2_an_unconditional_declaration_still_survives_a_kept_one |
+| M24 kept outranks Optional | KILLED by m1_merged_declarations_keep_the_strongest_scope |
 
 ## What only the census and unit tests can see
 

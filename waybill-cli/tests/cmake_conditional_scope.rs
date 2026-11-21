@@ -507,3 +507,21 @@ fn s3_an_installed_record_searched_under_a_platform_check() {
     assert_eq!(scope(c), "required", "{c}");
     assert_eq!(prop(c, C236), Some("[\"UNIX\"]"), "{c}");
 }
+
+/// M-2: an unconditional declaration and a kept-in-scope one of the same
+/// PURL. The unconditional one survives, as on `main`, whichever file sorts
+/// first: C55 does not move because a sibling declaration came into scope.
+#[test]
+fn m2_an_unconditional_declaration_still_survives_a_kept_one() {
+    let fetch = "FetchContent_Declare(waybill-fixture-m2 URL \"https://example.invalid/waybill-fixture-m2-1.3.2.tar.gz\")\n";
+    let s = check(&[
+        ("CMakeLists.txt", &format!("{ROOT}add_subdirectory(a)\nadd_subdirectory(b)\n")),
+        ("a/CMakeLists.txt", &under("UNIX", fetch)),
+        ("b/CMakeLists.txt", &ep("m2")),
+    ]);
+    let c = one(&s, &purl("m2"));
+    assert_eq!(scope(c), "required", "{c}");
+    assert!(prop(c, C122).is_none(), "{c}");
+    assert_eq!(prop(c, "waybill:source-mechanism"), Some("cmake-externalproject"), "{c}");
+    assert_eq!(prop(c, "waybill:also-detected-via"), Some("[\"cmake-fetchcontent-url\"]"), "{c}");
+}

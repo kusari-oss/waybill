@@ -571,16 +571,19 @@ fn one_per_purl(entries: Vec<Counted>, cov: &mut FetchCoverage) -> Vec<PackageDb
     cov.emitted = cov.declarations.values().sum();
     let mut out = Vec::new();
     for (_, mut group) in groups {
-        let rank = |e: &PackageDbEntry| match e.lifecycle_scope {
-            None => 0,
-            Some(LifecycleScope::Optional) => 1,
-            _ => 2,
-        };
-        group.sort_by_key(|e| (rank(e), e.source_path.clone()));
         // Spec 1641: a declaration with no scope and no C232 is unconditional;
         // one with no scope and C232 is a catch-all conditional kept in scope.
-        let any_unconditional =
-            group.iter().any(|e| e.lifecycle_scope.is_none() && !e.extra_annotations.contains_key(ANN_CMAKE_FETCH_CONDITIONS));
+        // The unconditional one ranks first, so it stays the survivor (and its
+        // C55) as on `main`; a kept one still outranks an Optional one (R5).
+        let unconditional = |e: &PackageDbEntry| e.lifecycle_scope.is_none() && !e.extra_annotations.contains_key(ANN_CMAKE_FETCH_CONDITIONS);
+        let rank = |e: &PackageDbEntry| match e.lifecycle_scope {
+            None if unconditional(e) => 0,
+            None => 1,
+            Some(LifecycleScope::Optional) => 2,
+            _ => 3,
+        };
+        group.sort_by_key(|e| (rank(e), e.source_path.clone()));
+        let any_unconditional = group.iter().any(unconditional);
         let mut first = group.remove(0);
         let mut conds: BTreeSet<String> = conditions_of(&first).into_iter().collect();
         let mut chains = wrapper_chains(&first);
