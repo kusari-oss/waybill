@@ -17,7 +17,7 @@ The first tree with a `find_package` of the fetched name logged no S9 event. Tha
 
 **Output unchanged.**
 - A-ctl and every suite listed in T014 pass on this commit.
-- Public corpus: `public-corpus.yml` run 44916104278 (`branch=1639-also-detected-via`, `regen_goldens=true`). Result below.
+- Public corpus: `public-corpus.yml` run 44916104278 (`branch=1639-also-detected-via`, `regen_goldens=true`). Every job's conclusion: `Run public corpus` `success`, `Report corpus failure` `skipped`. The run summary's `SCANNED_SHA` is `244e8c3676249386ff83eca2c474f29da36bbf57`. The `corpus-goldens-regen` artifact holds 67 files; `cmp` against the committed `waybill-cli/tests/fixtures/public_corpus/` found **0 differing**.
 
 ## The census (T005)
 

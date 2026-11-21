@@ -61,7 +61,7 @@
   - sort and dedup;
   - transitivity (an absorbed C56 joins);
   - a member without C55 contributes nothing.
-- [ ] T004 Call `AD::observe` (**not** `record`) at each site, at the point where the site already removes the absorbed member, with the survivor and absorbed annotation maps:
+- [X] T004 Call `AD::observe` (**not** `record`) at each site, at the point where the site already removes the absorbed member, with the survivor and absorbed annotation maps:
   - S1 in `DU::deduplicate`'s loser loop;
   - S2 in `DU::fold_declared_not_cached`;
   - S3 in `RC::reconcile_design_source_tiers`, per design match;
@@ -77,7 +77,7 @@
   - `public-corpus.yml` with `regen_goldens=true` on the branch reports 0 differing files. Enumerate every job's conclusion.
 
   Record the run ID in `MS/census.md`.
-- [ ] T005 **Census at the log-only commit** (SC-001, research R6).
+- [X] T005 **Census at the log-only commit** (SC-001, research R6).
   - **Workflow.** Add `census/merges.py` (stdlib only, run as `python3 -I -B`) and `.github/workflows/census-merges.yml` to `kusari-sandbox/waybill-fixture-therock-sdk`, modelled on `census-unresolved.yml`. Its matrix is TheRock (top-level submodules, measure-source's depth) and the three quality-corpus targets at their `xtask/corpus/quality-corpus.toml` pins. Each job:
     - builds waybill at `waybill_ref`;
     - scans with `RUST_LOG=waybill::also_detected=debug`;
