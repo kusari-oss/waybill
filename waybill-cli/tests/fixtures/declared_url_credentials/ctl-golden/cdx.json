@@ -1,0 +1,1525 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:bazel/waybill_fixture_cred@1.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "WORKSPACE.bazel"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "abc1234567890abcdef1234567890abcdef1234567890abcdef1234567890abc"
+        }
+      ],
+      "name": "waybill_fixture_cred",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"WORKSPACE.bazel\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:bazel-archive-name",
+          "value": "waybill_fixture_cred"
+        },
+        {
+          "name": "waybill:download-url",
+          "value": "https://dl.example/waybill-fixture-cred/archive/1.0.0.tar.gz"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "foreign-build-system"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "bazel-http-archive"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:bazel/waybill_fixture_cred@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:cocoapods/WaybillFixtureFork@1.5.0?vcs_url=git+https://git.example/org/waybill-fixture-fork.git",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "ios/Podfile.lock"
+          }
+        ]
+      },
+      "name": "WaybillFixtureFork",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"ios/Podfile.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "cocoapods-git"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cocoapods-podfile-lock"
+        },
+        {
+          "name": "waybill:vcs-declared-ref",
+          "value": "main"
+        },
+        {
+          "name": "waybill:vcs-ref",
+          "value": "eb39649a76b87e8451baf75d10ce82ca3a3d5601"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"ios\"]"
+        }
+      ],
+      "purl": "pkg:cocoapods/WaybillFixtureFork@1.5.0?vcs_url=git+https://git.example/org/waybill-fixture-fork.git",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
+      "bom-ref": "pkg:cocoapods/ios",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "ios/Podfile.lock"
+          }
+        ]
+      },
+      "name": "ios",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"ios/Podfile.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "cocoapods-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cocoapods-podfile"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"ios\"]"
+        }
+      ],
+      "purl": "pkg:cocoapods/ios",
+      "type": "library",
+      "version": "0.0.0-unknown"
+    },
+    {
+      "bom-ref": "pkg:composer/waybill-fixture/app@1.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "php-dist/composer.json"
+          }
+        ]
+      },
+      "name": "waybill-fixture/app",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"php-dist/composer.json\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "composer-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "composer-json"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"php-dist\"]"
+        }
+      ],
+      "purl": "pkg:composer/waybill-fixture/app@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:composer/waybill-fixture/lib@2.0.0?repository_url=https://repo.example.com",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "php-dist/composer.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "name": "waybill-fixture/lib",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"php-dist/composer.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "composer-packagist"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "composer-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"php-dist\"]"
+        }
+      ],
+      "purl": "pkg:composer/waybill-fixture/lib@2.0.0?repository_url=https://repo.example.com",
+      "type": "library",
+      "version": "2.0.0"
+    },
+    {
+      "bom-ref": "pkg:composer/waybill-fixture/lib@dev-main?vcs_url=git+https://git.example/org/waybill-fixture-lib.git",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "php-vcs/composer.lock"
+          }
+        ]
+      },
+      "name": "waybill-fixture/lib",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"php-vcs/composer.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "composer-vcs"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "composer-lock"
+        },
+        {
+          "name": "waybill:vcs-ref",
+          "value": "eb39649a76b87e8451baf75d10ce82ca3a3d5601"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"php-vcs\"]"
+        }
+      ],
+      "purl": "pkg:composer/waybill-fixture/lib@dev-main?vcs_url=git+https://git.example/org/waybill-fixture-lib.git",
+      "type": "library",
+      "version": "dev-main"
+    },
+    {
+      "bom-ref": "pkg:generic/WaybillFixtureA/waybill-fixture-m1?checksum=md5:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&download_url=https://dl.example/MM/WaybillFixtureA/waybill-fixture-m1.tar.gz",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "cmake/m.cmake"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "MD5",
+          "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "name": "waybill-fixture-m1",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"cmake/m.cmake\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:component-kind",
+          "value": "dataset"
+        },
+        {
+          "name": "waybill:download-url",
+          "value": "https://dl.example/MM/WaybillFixtureA/waybill-fixture-m1.tar.gz"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-file-download"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"cmake\"]"
+        }
+      ],
+      "purl": "pkg:generic/WaybillFixtureA/waybill-fixture-m1?checksum=md5:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&download_url=https://dl.example/MM/WaybillFixtureA/waybill-fixture-m1.tar.gz",
+      "type": "data"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill-fixture-cred@v1.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-cred",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:download-url",
+          "value": "https://git.example/org/waybill-fixture-cred.git"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-fetchcontent-git"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill-fixture-cred@v1.0.0",
+      "type": "library",
+      "version": "v1.0.0"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill-fixture-git@0.5.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "py-git/uv.lock"
+          }
+        ]
+      },
+      "name": "waybill-fixture-git",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"py-git/uv.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "git"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:python-lockfile-format",
+          "value": "uv"
+        },
+        {
+          "name": "waybill:source-url",
+          "value": "https://git.example/org/waybill-fixture-git.git@abc123def456"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"py-git\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill-fixture-git@0.5.0",
+      "type": "library",
+      "version": "0.5.0"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill-fixture-input@a32edd7654519351e48e80372a928df336394670",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "nix/flake.lock"
+          }
+        ]
+      },
+      "name": "waybill-fixture-input",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"nix/flake.lock\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "build"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "nix-flake-input"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "nix-flake-lock"
+        },
+        {
+          "name": "waybill:nix-nar-hash",
+          "value": "sha256-j08lBbqaYwjsW0xAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "name": "waybill:nix-original-pin-state",
+          "value": "default-branch"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "unreferenced-lock-node"
+        },
+        {
+          "name": "waybill:source-url",
+          "value": "https://dl.example/waybill-fixture-input.tar.gz"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"nix\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill-fixture-input@a32edd7654519351e48e80372a928df336394670",
+      "scope": "excluded",
+      "type": "library",
+      "version": "a32edd7654519351e48e80372a928df336394670"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill-fixture-widget@1.0?layer=tree&openembedded=true",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "recipes-z/waybill-fixture-widget_1.0.bb"
+          }
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
+      "name": "waybill-fixture-widget",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"recipes-z/waybill-fixture-widget_1.0.bb\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"waybill-fixture-widget\"]"
+        },
+        {
+          "name": "waybill:layer-name",
+          "value": "tree"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "bitbake-recipe"
+        },
+        {
+          "name": "waybill:src-uri",
+          "value": "[\"git://git.example/org/waybill-fixture-widget.git;branch=main;protocol=https\"]"
+        },
+        {
+          "name": "waybill:srcrev",
+          "value": "abc123def456abc123def456abc123def456abcd"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "recipe .bb declaration; no PV/PR resolution"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"recipes-z\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill-fixture-widget@1.0?layer=tree&openembedded=true",
+      "type": "library",
+      "version": "1.0"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill_fixture_dep@v1.2.3?vcs_url=git+https://git.example/org/waybill-fixture-dep.git",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "waybill_fixture_dep",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "erlang-git"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "rebar-lock"
+        },
+        {
+          "name": "waybill:vcs-declared-ref",
+          "value": "tag"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_dep@v1.2.3?vcs_url=git+https://git.example/org/waybill-fixture-dep.git",
+      "type": "library",
+      "version": "v1.2.3"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill_fixture_fork@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://git.example/org/waybill-fixture-fork.git",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "ex/mix.lock"
+          }
+        ]
+      },
+      "name": "waybill_fixture_fork",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"ex/mix.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hex-git"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "mix-lock"
+        },
+        {
+          "name": "waybill:vcs-declared-ref",
+          "value": "ref: main"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"ex\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_fork@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://git.example/org/waybill-fixture-fork.git",
+      "type": "library",
+      "version": "eb39649a76b87e8451baf75d10ce82ca3a3d5601"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill_fixture_superbuild",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill_fixture_superbuild",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-project"
+        },
+        {
+          "name": "waybill:version-absence",
+          "value": "not-declared"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_superbuild",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hex/waybill_fixture@0.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "ex/mix.exs"
+          }
+        ]
+      },
+      "name": "waybill_fixture",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"ex/mix.exs\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hex-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "mix-exs"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "waybill_fixture_fork"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"ex\"]"
+        }
+      ],
+      "purl": "pkg:hex/waybill_fixture@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "bom-ref": "pkg:maven/dev.waybill.fixture/internal-source@1.0.0",
+      "cpe": "cpe:2.3:a:dev.waybill.fixture:internal-source:1.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "00000000000000000000000000000000000000000000000000000000000000a3"
+        }
+      ],
+      "name": "internal-source",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:dev.waybill.fixture:internal-source:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:fixture:internal-source:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:internal-source:internal-source:1.0.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:source-url",
+          "value": "https://internal-mirror.example.test/dev/waybill/fixture/internal-source/1.0.0/internal-source-1.0.0.jar"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/dev.waybill.fixture/internal-source@1.0.0",
+      "supplier": {
+        "name": "dev.waybill.fixture"
+      },
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:pub/waybill_fixture_app@0.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "dart-git/pubspec.yaml"
+          }
+        ]
+      },
+      "name": "waybill_fixture_app",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"dart-git/pubspec.yaml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "pub-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "pubspec-yaml"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"dart-git\"]"
+        }
+      ],
+      "purl": "pkg:pub/waybill_fixture_app@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "bom-ref": "pkg:pub/waybill_fixture_lib@2.0.0?repository_url=https://pub.example.com",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "dart-hosted/pubspec.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "name": "waybill_fixture_lib",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"dart-hosted/pubspec.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "pub-hosted"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "pubspec-lock"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"dart-hosted\"]"
+        }
+      ],
+      "purl": "pkg:pub/waybill_fixture_lib@2.0.0?repository_url=https://pub.example.com",
+      "type": "library",
+      "version": "2.0.0"
+    },
+    {
+      "bom-ref": "pkg:pub/waybill_fixture_lib@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://git.example/org/waybill-fixture-lib.git#plugins/waybill_fixture_lib",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "dart-git/pubspec.lock"
+          }
+        ]
+      },
+      "name": "waybill_fixture_lib",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"dart-git/pubspec.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "pub-git"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "pubspec-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
+        },
+        {
+          "name": "waybill:vcs-ref",
+          "value": "master"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"dart-git\"]"
+        }
+      ],
+      "purl": "pkg:pub/waybill_fixture_lib@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://git.example/org/waybill-fixture-lib.git#plugins/waybill_fixture_lib",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/waybill-fixture-cred",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-cred",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"waybill-fixture-cred @ https://dl.example/archive/waybill_fixture_cred-1.0.0.tar.gz\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "url"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:direct-url-source",
+          "value": "{\"kind\":\"url\",\"resolved_rev\":null,\"url\":\"https://dl.example/archive/waybill_fixture_cred-1.0.0.tar.gz\"}"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "PEP 508 direct-URL entry; no rev extractable from URL"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/waybill-fixture-cred",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/waybill-fixture-reg@1.0.0",
+      "cpe": "cpe:2.3:a:waybill-fixture-reg:waybill-fixture-reg:1.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "py-index/uv.lock"
+          }
+        ]
+      },
+      "name": "waybill-fixture-reg",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:waybill-fixture-reg:waybill-fixture-reg:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-reg:waybill-fixture-reg:1.0.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"py-index/uv.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pypi-source-url",
+          "value": "https://internal.pypi.example/simple"
+        },
+        {
+          "name": "waybill:python-lockfile-format",
+          "value": "uv"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"py-index\"]"
+        }
+      ],
+      "purl": "pkg:pypi/waybill-fixture-reg@1.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/waybill-fixture-url@1.0.0",
+      "cpe": "cpe:2.3:a:waybill-fixture-url:waybill-fixture-url:1.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      ],
+      "name": "waybill-fixture-url",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:waybill-fixture-url:waybill-fixture-url:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-url:waybill-fixture-url:1.0.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:source-url",
+          "value": "https://mirror.example.test/wheels/waybill_fixture_url-1.0.0-py3-none-any.whl"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/waybill-fixture-url@1.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0.0"
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:pypi/waybill-fixture-cred",
+        "pkg:pypi/waybill-fixture-reg@1.0.0",
+        "pkg:pypi/waybill-fixture-url@1.0.0"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:maven/dev.waybill.fixture/internal-source@1.0.0"
+      ]
+    },
+    {
+      "aggregate": "unknown",
+      "dependencies": [
+        "pkg:maven/dev.waybill.fixture/internal-source@1.0.0",
+        "pkg:pypi/waybill-fixture-cred",
+        "pkg:pypi/waybill-fixture-reg@1.0.0",
+        "pkg:pypi/waybill-fixture-url@1.0.0"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "waybill-fixture-root@1"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "waybill-fixture-root@1"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [],
+      "ref": "pkg:bazel/waybill_fixture_cred@1.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cocoapods/WaybillFixtureFork@1.5.0?vcs_url=git+https://git.example/org/waybill-fixture-fork.git"
+    },
+    {
+      "dependsOn": [
+        "pkg:cocoapods/WaybillFixtureFork@1.5.0?vcs_url=git+https://git.example/org/waybill-fixture-fork.git"
+      ],
+      "ref": "pkg:cocoapods/ios"
+    },
+    {
+      "dependsOn": [
+        "pkg:composer/waybill-fixture/lib@dev-main?vcs_url=git+https://git.example/org/waybill-fixture-lib.git"
+      ],
+      "ref": "pkg:composer/waybill-fixture/app@1.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:composer/waybill-fixture/lib@2.0.0?repository_url=https://repo.example.com"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:composer/waybill-fixture/lib@dev-main?vcs_url=git+https://git.example/org/waybill-fixture-lib.git"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/WaybillFixtureA/waybill-fixture-m1?checksum=md5:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&download_url=https://dl.example/MM/WaybillFixtureA/waybill-fixture-m1.tar.gz"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill-fixture-cred@v1.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill-fixture-git@0.5.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill-fixture-input@a32edd7654519351e48e80372a928df336394670"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill-fixture-widget@1.0?layer=tree&openembedded=true"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill_fixture_dep@v1.2.3?vcs_url=git+https://git.example/org/waybill-fixture-dep.git"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill_fixture_fork@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://git.example/org/waybill-fixture-fork.git"
+    },
+    {
+      "dependsOn": [
+        "pkg:generic/waybill-fixture-cred@v1.0.0",
+        "pkg:pypi/waybill-fixture-cred"
+      ],
+      "ref": "pkg:generic/waybill_fixture_superbuild"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hex/waybill_fixture@0.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/dev.waybill.fixture/internal-source@1.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pub/waybill_fixture_lib@2.0.0?repository_url=https://pub.example.com"
+      ],
+      "ref": "pkg:pub/waybill_fixture_app@0.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pub/waybill_fixture_lib@2.0.0?repository_url=https://pub.example.com"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pub/waybill_fixture_lib@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://git.example/org/waybill-fixture-lib.git#plugins/waybill_fixture_lib"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/waybill-fixture-cred"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/waybill-fixture-reg@1.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/waybill-fixture-url@1.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:cocoapods/ios",
+        "pkg:composer/waybill-fixture/app@1.0.0",
+        "pkg:generic/waybill_fixture_superbuild",
+        "pkg:hex/waybill_fixture@0.1.0",
+        "pkg:pub/waybill_fixture_app@0.1.0"
+      ],
+      "ref": "waybill-fixture-root@1"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "waybill-fixture-root@1",
+      "name": "waybill-fixture-root",
+      "purl": "pkg:generic/waybill-fixture-root@1",
+      "type": "application",
+      "version": "1"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "design"
+      },
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:cpe-coverage",
+        "value": "{\"addressable_without_cpe\":1,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":18,\"with_candidates\":3}"
+      },
+      {
+        "name": "waybill:declared-downloads",
+        "value": "{\"datasets\":1,\"digest-mismatches\":0,\"not-classified\":0,\"read\":1,\"unresolved\":0}"
+      },
+      {
+        "name": "waybill:cmake-fetch-coverage",
+        "value": "{\"components\":1,\"conditional\":0,\"emitted\":1,\"merged\":{\"existing-component\":0,\"first-declaration-wins\":0},\"read\":1,\"test\":0,\"unparseable-files\":0,\"unresolved\":{\"identity\":0}}"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "[\"ID\",\"VERSION_ID\"]"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "orphaned-components-detected: 12 component(s) not reachable from root; transitive-edges-unresolvable: generic, pypi"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\",\"3rdparty/jvm\",\"3rdparty/python\",\"cmake\",\"dart-git\",\"dart-hosted\",\"ex\",\"ios\",\"nix\",\"php-dist\",\"php-vcs\",\"py-git\",\"py-index\",\"recipes-z\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "1"
+      },
+      {
+        "name": "waybill:resolve-ownership",
+        "value": "{\"declared\":[],\"discovered\":[\"jvm:default\",\"python:default\"],\"unanchored_lockfiles\":2,\"weak_classification\":0}"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "<masked-tool-version>"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

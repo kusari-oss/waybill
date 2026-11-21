@@ -1491,6 +1491,21 @@ mod m1282_tests {
         assert!(vcs_source(&empty).is_none());
     }
 
+    /// Spec 1640 D-10 and D-11 (#1647): a derivation's source URL with
+    /// userinfo reaches neither the `vcs` reference, the `vcs_url` location
+    /// (`closure_identity`), nor the `distribution` reference.
+    #[test]
+    fn s1640_a_credentialled_derivation_source_is_stripped() {
+        let d = one_drv(&format!(
+            r#"{{"name":"src","structuredAttrs":{{"url":"https://wbfxuser:wbfxtoken7c41@git.example/waybill-fixture.git","rev":"{REV}"}}}}"#
+        ));
+        let v = vcs_source(&d).expect("structured url+rev is a VCS source");
+        assert_eq!(v.location(), format!("git+https://git.example/waybill-fixture.git@{REV}"));
+        assert_eq!(v.reference().url, v.location());
+        let dl = one_drv(r#"{"name":"src","env":{"urls":"https://wbfxtoken7c41@dl.example/a.tar.gz https://mirror.invalid/a.tar.gz"}}"#);
+        assert_eq!(source_url(&dl).as_deref(), Some("https://dl.example/a.tar.gz"));
+    }
+
     /// `source_url` reads `url` from structured attributes, and a structured
     /// `urls` list's first entry; the `env` forms are unchanged.
     #[test]

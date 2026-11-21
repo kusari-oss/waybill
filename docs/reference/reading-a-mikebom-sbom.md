@@ -531,6 +531,18 @@ Consumers verifying build-time provenance need to (a) distinguish components obs
 
 **Trust trio composition.** Three signals in this cluster compose to support threshold-based vulnerability-scanner policies: `waybill:source-type` (where the evidence came from), `waybill:evidence-kind` (how it was derived), and `waybill:confidence` (how strongly waybill backs the claim). Consumers building risk-weighting filters should consider all three together — `source-type` answers "where", `evidence-kind` answers "how", and `confidence` answers "how strongly". A worked composing jq recipe appears under [`waybill:source-type`](#waybill-source-type) below.
 
+**Declared URLs carry no userinfo (spec 1640, #1647).** When a project declares where to fetch something from, waybill removes the URL's userinfo before recording it: a user, or a user and password, including the `git` user of an `ssh://` URL. Every other byte of the URL is kept. This applies to:
+- `waybill:download-url` (CMake, Bazel);
+- `waybill:source-url` (uv.lock, flake.lock, Pants lockfiles);
+- `waybill:pypi-source-url`;
+- `waybill:direct-url-source`;
+- `waybill:src-uri`;
+- `waybill:cargo-vcs-source-url`;
+- the `vcs_url`, `download_url` and `repository_url` PURL qualifiers;
+- `vcs` and `distribution` external references.
+
+The query string is not altered, so a token carried there (`?private_token=…`, a signed URL) is still emitted (#1652). When waybill removes a credential, it logs `stripped credentials from URL` with the manifest's path, so the operator can rotate it. The bare `git` user of an ssh URL is removed without that warning.
+
 #### `waybill:source-type`
 
 > **What it is**: tags each component with its discovery provenance. Common values include `"trace-observed"` (eBPF-observed during a live build trace), `"declared-not-cached"` (declared in a lockfile but waybill couldn't verify its presence on disk), `"transitive"` (added via transitive lockfile resolution from an observed component), `"package-database"` (read from a system package DB like dpkg/rpm/apk). Strong-vs-weak provenance markers.
@@ -1293,7 +1305,7 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`waybill:deps-dev-match`** — deps.dev enrichment match record (system + name + version triple). ([C3](sbom-format-mapping.md))
 - **`waybill:detected-cargo-auditable`** — boolean signaling the binary embeds cargo-auditable JSON manifest data. ([C36](sbom-format-mapping.md))
 - **`waybill:detected-go`** — Go-binary detection metadata (Go module path + version extracted from `runtime/debug.BuildInfo`). ([C14](sbom-format-mapping.md))
-- **`waybill:download-url`** — recipe-declared download URL (Yocto / Bitbake `SRC_URI` variant). ([C53](sbom-format-mapping.md))
+- **`waybill:download-url`** — the archive or repository URL a CMake fetch or Bazel `http_archive` declares, without its userinfo (spec 1640). ([C53](sbom-format-mapping.md))
 - **`waybill:duplicate-purl-divergent`** — milestone-134: per-component flag for divergent same-PURL collisions. See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C99](sbom-format-mapping.md))
 - **`waybill:elf-build-id`** — ELF binary's GNU build-ID hex string (from `.note.gnu.build-id` section). ([C24](sbom-format-mapping.md))
 - **`waybill:elf-compiler-stamps`** — compiler-version strings extracted from ELF `.comment` / `.note.gnu` sections. ([C49](sbom-format-mapping.md))

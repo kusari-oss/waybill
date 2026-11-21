@@ -1779,6 +1779,33 @@ mod tests {
         );
     }
 
+    /// Spec 1640 D-18 (#1647): a cargo-auditable git source with userinfo
+    /// reaches neither the raw source annotation nor the VCS URL.
+    #[test]
+    fn s1640_a_credentialled_git_source_is_stripped() {
+        use super::cargo_auditable::{CargoAuditableManifest, CargoAuditablePackage};
+        let manifest = CargoAuditableManifest {
+            packages: vec![CargoAuditablePackage {
+                name: "waybill-fixture-crate".to_string(),
+                version: "0.1.0".to_string(),
+                source: "git+https://wbfxuser:wbfxtoken7c41@git.example/org/waybill-fixture-crate.git#abc123".to_string(),
+                kind: Some("runtime".to_string()),
+                dependencies: vec![],
+                root: false,
+            }],
+        };
+        let purl = waybill_common::types::purl::Purl::new("pkg:generic/binary?file-sha256=deadbeef").unwrap();
+        let entries = cargo_auditable_packages_to_entries(&manifest, &purl, &std::path::PathBuf::from("/bin/binary"));
+        let ann = |k: &str| entries[0].extra_annotations.get(k).and_then(|v| v.as_str()).map(str::to_string);
+        assert_eq!(ann("waybill:cargo-vcs-source-url").as_deref(), Some("https://git.example/org/waybill-fixture-crate"));
+        assert_eq!(
+            ann("waybill:cargo-auditable-source").as_deref(),
+            Some("git+https://git.example/org/waybill-fixture-crate.git#abc123")
+        );
+        let all = serde_json::to_string(&entries[0].extra_annotations).unwrap();
+        assert!(!all.contains("wbfxuser") && !all.contains("wbfxtoken7c41"), "{all}");
+    }
+
     /// Spec 1639 F-1 (FR-007): a symbol-fingerprint collision is C242,
     /// `waybill:fingerprint-also-matched`, sorted; never C56.
     #[test]

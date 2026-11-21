@@ -23,13 +23,13 @@
   - that `git grep 'wbfxuser\|wbfxtoken7c41'` outside this spec directory counts 0.
 
   If T001 adds a row, add a D-case to `contracts/wire.md` and a task in Phase 3 before going on.
-- [ ] T002 Create `IT` with these helpers:
+- [X] T002 Create `IT` with these helpers:
   - `scan3(dir, extra_args) -> (cdx, spdx23, spdx3, log)`: runs the binary three times, once per format, with `RUST_LOG=trace` (so FR-005's "any level" is checked, analysis C1), a fake `HOME` (`common::normalize::apply_fake_home_env`) and `WAYBILL_FIXED_TIMESTAMP`. Returns the three documents as strings and the combined stderr.
   - `assert_no_cred(outputs)`: `CRED` occurs 0 times in each of the four strings. On failure, name which one.
   - `assert_field(doc, …)`: reads a field from the CycloneDX document (a component property, a PURL qualifier or an external reference) and returns it.
   - `parity(dir)`, `assert_repeatable(dir)`, unique `bom-ref`s and CycloneDX validation. Copy these from `waybill-cli/tests/also_detected_via.rs`, using `common::cdx_schema::cdx_validation_errors`.
   - `assert_warned(log, manifest)`: at least one line containing `stripped credentials from URL`, and every such line contains `<userinfo redacted>` and the manifest's file name. It is not "exactly one", because a reader may read one declaration twice (analysis U2).
-- [ ] T003 C-ctl (FR-006):
+- [X] T003 C-ctl (FR-006):
   - **Tree.** `FX/ctl/` holds one clean-URL fixture for each D-row that a directory scan reaches: CMake, Bazel, uv.lock, flake.lock, Pants, CocoaPods, Dart, Composer, Elixir, Erlang, requirements, Yocto, Helm.
   - **Golden.** Generate `FX/ctl-golden/{cdx,spdx-2.3,spdx-3}.json` with **`main`'s** binary, before any source change. Use the masking `waybill-cli/tests/cmake_unresolved_github_fetch.rs` uses. The regeneration env var is `WAYBILL_UPDATE_DECLARED_URL_GOLDENS`.
   - **Assertion.** The test asserts byte identity, and that the log contains no `stripped credentials` line.
@@ -68,7 +68,7 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
 
 **Goal**: FR-001, FR-002, FR-003. **Independent test**: cases D-1 to D-19, each with its control.
 
-- [ ] T006 [US1] Write D-1 to D-19, G-1 to G-5 and S-1 in `IT`, with fixtures under `FX/`, as `contracts/wire.md` specifies. Each D-case:
+- [X] T006 [US1] Write D-1 to D-19, G-1 to G-5 and S-1 in `IT`, with fixtures under `FX/`, as `contracts/wire.md` specifies. Each D-case:
   - calls `scan3` and `assert_field` (the field is present with the clean URL), then `assert_no_cred`;
   - calls `parity` and `assert_repeatable`.
 
