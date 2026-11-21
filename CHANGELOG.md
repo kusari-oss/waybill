@@ -92,7 +92,8 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   keeps its `waybill:superseded-declarations` entry too), and the fold of a
   `find_package` / `pkg_check_modules` into the component it names. A
   component with no C55 records none. Which member survives is unchanged.
-  On TheRock 88 merges gain C56, 68 of them package searches. It is a
+  On TheRock 84 components gain C56, 74 of them listing a package search;
+  nothing else in its document changes. It is a
   component property in CycloneDX, on `metadata.component` too, and an
   annotation in SPDX 2.3 and SPDX 3.
 - **CycloneDX evidence no longer has a slot for a schema-invalid key
