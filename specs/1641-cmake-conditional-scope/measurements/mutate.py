@@ -17,11 +17,11 @@ BIN = ["--bin", "waybill"]
 
 M = [
     ("M01 platform atom", CD, "        if is_platform_var(name) {\n", "        if false && is_platform_var(name) {\n", IT + ["census_one_event"]),
-    ("M02 platform comparison", CD, "if is_platform_var(l) || is_platform_var(r) {", "if false {", IT + ["census_one_event"]),
+    ("M02 platform comparison", CD, "if is_platform_var(l) || is_platform_var(r) {", "if false {", BIN + ["platform_predicates_and_their_negations"]),
     ("M03 superbuild guard", CD,
      "(Some(\"root\"), Some(\"current\")) | (Some(\"current\"), Some(\"root\")) => return Val::Standalone,",
      "(Some(\"root\"), Some(\"current\")) => return Val::Standalone,", BIN + ["the_superbuild_guard_holds"]),
-    ("M04 option default", CD, "            Some((v, s)) => {", "            Some((_v, s)) if false => {\n                let v = &Eval::Unknown;", IT + ["t04_"]),
+    ("M04 option default", CD, "            Some((v, s)) => {", "            Some((_v, s)) => {\n                let v = &Eval::Unknown;", IT + ["t04_"]),
     ("M05 missing value is OFF", CD, "map_or(Eval::DoesNotHold, |v| constant(v)", "map_or(Eval::Unknown, |v| constant(v)", BIN + ["options_take_their_declared_default"]),
     ("M06 dependent option", CD, "let deps = d.depends.iter().fold(Eval::Holds, |acc, c| acc.and(plain.evaluate(c, &mut BTreeSet::new())));",
      "let deps = Eval::Holds;", BIN + ["a_dependent_option_follows"]),
@@ -78,7 +78,8 @@ def run(mid, rel, old, new, test):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    results = [run(*m) for m in M]
+    only = set(sys.argv[3].split(",")) if len(sys.argv) > 3 else None
+    results = [run(*m) for m in M if only is None or m[0].split()[0] in only]
     (OUT / "results.txt").write_text("\n".join(results) + "\n")
     print("\n".join(results))
 

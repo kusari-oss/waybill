@@ -92,7 +92,7 @@ Scope does not change in this phase.
   - a paragraph in `docs/reference/reading-a-mikebom-sbom.md`;
   - `CHANGELOG.md` `## [Unreleased]`, Fixed (#1639).
 - [X] T017 Spec record: add the census's figures to `research.md` R6 (no figure before T007).
-- [ ] T018 Mutations (SC-006): `MS/mutate.py`, modelled on `specs/1640-strip-url-credentials/measurements/mutate.py`.
+- [X] T018 Mutations (SC-006): `MS/mutate.py`, modelled on `specs/1640-strip-url-credentials/measurements/mutate.py`.
   - **One per evaluation rule:** platform, its negation, the guard, its reversed order, option default, missing value, `cmake_dependent_option`, `CACHE BOOL`, literal `set`, conflict, `NOT`, `AND`, `OR`, `else`, `elseif`, nesting, `scope_files`.
   - **Plus:** R9's predicate back to scope; C232 only with a scope; searches on the old rule.
   - Restore with `cp`, rebuild after the last one, and use a `^error\[E…\]` guard. Record in `MS/mutations.md`.
