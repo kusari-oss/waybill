@@ -12,12 +12,11 @@
 //! PURL ecosystem as the opkg-installed-DB reader — the milestone-105
 //! dedup pipeline collapses cross-source emissions on canonical PURL.
 //!
-//! Per FR-010 precedence: `OpkgInstalled` > `YoctoImageManifest`. When
-//! the same scan contains both an opkg-installed-DB stanza and a
-//! manifest line naming the same coord, the installed-DB component
-//! wins; the loser's source-mechanism (`"yocto-image-manifest"`)
-//! appears in the surviving component's `waybill:also-detected-via`
-//! annotation.
+//! When the same scan contains both an opkg-installed-DB stanza and a
+//! manifest line naming the same coord, the general deduplicator merges
+//! them and the installed-DB component survives; the manifest's
+//! mechanism (`"yocto-image-manifest"`) is recorded in the survivor's
+//! `waybill:also-detected-via` (C56, spec 1639).
 
 use std::path::{Path, PathBuf};
 

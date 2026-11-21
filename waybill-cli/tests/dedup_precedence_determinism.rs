@@ -1,18 +1,16 @@
 //! Dedup precedence determinism — SC-010 cornerstone integration test
 //! (milestone 105 T024+T025).
 //!
-//! Companion to the unit-level `dedup_is_input_order_invariant` test
-//! in `scan_fs::dedup::tests`. This file exercises the END-TO-END
-//! determinism guarantee: a real fixture, real `waybill sbom scan`
-//! invocations, real SBOM bytes compared across N runs.
+//! This file exercises the END-TO-END determinism guarantee: a real
+//! fixture, real `waybill sbom scan` invocations, real SBOM bytes
+//! compared across N runs. (Milestone 105's unit-level precedence
+//! module was never wired and was removed by spec 1639.)
 //!
 //! The fixture at `tests/fixtures/golden_inputs/dedup_collision/`
 //! contains both a `conanfile.txt` AND a `.gitmodules` declaring the
-//! same library (`abseil`). Once milestone 105's US6 git-submodule
-//! reader lands, this fixture produces a real cross-reader collision
-//! and the `waybill:also-detected-via` annotation MUST be emitted
-//! deterministically (lexicographic ordering of losing source-
-//! mechanism strings per FR-015).
+//! same library (`abseil`). Their PURLs differ (see test 2), so they do
+//! not merge and carry no `waybill:also-detected-via` (C56). C56 for
+//! merges that do happen is tested in `also_detected_via.rs` (spec 1639).
 //!
 //! Three test functions:
 //!
@@ -24,8 +22,8 @@
 //!    #1515, FR-009): the fixture made a real repository with a gitlink.
 //!    The Conan `abseil` and the `abseil-cpp` submodule have different
 //!    PURLs, so both are emitted. Milestone 105 expected a merge here, after
-//!    a "canonicalization" that was never specified. C56
-//!    (`waybill:also-detected-via`) is not emitted yet (#1558).
+//!    a "canonicalization" that was never specified. With no merge there
+//!    is no C56 (`waybill:also-detected-via`, spec 1639).
 //!
 //! 3. `dedup_collision_repository_scans_deterministically`: 10 scans of
 //!    that repository, byte-identical.
@@ -90,11 +88,9 @@ fn scan_fixture_cdx(out_path: &Path) -> Vec<u8> {
 /// byte-identical. Exercises the readers currently wired against
 /// this fixture (conan-recipe today; git-submodule post-US6).
 ///
-/// The number of components emitted will depend on which readers
-/// fire. Today: 1 (the conan recipe). After US6: 1 deduped
-/// component with `waybill:also-detected-via` annotation. The test
-/// makes NO assertion about component count — only that the bytes
-/// are stable across runs.
+/// The number of components emitted depends on which readers fire.
+/// The test makes NO assertion about component count — only that the
+/// bytes are stable across runs.
 #[test]
 fn dedup_collision_scans_deterministically_today() {
     let workdir = tempfile::tempdir().expect("workdir tempdir");
@@ -157,8 +153,8 @@ const ABSEIL_COMMIT: &str = "4447c7562e3bc702ade25105912dce503f0c4010";
 /// the `abseil-cpp` submodule to merge after an unspecified
 /// "canonicalization". There is none: a package-manager name and a
 /// repository are different identities, so both components are emitted,
-/// each with its own `waybill:source-mechanism`. C56 (also-detected-via) is
-/// not asserted; it is not yet emitted (#1558).
+/// each with its own `waybill:source-mechanism`. With no merge, neither
+/// carries C56 (also-detected-via, spec 1639).
 #[test]
 fn dedup_collision_conan_and_submodule_stay_two_components() {
     let fx = GitFixture::new();

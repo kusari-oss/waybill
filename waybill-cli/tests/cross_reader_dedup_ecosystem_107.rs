@@ -3,13 +3,14 @@
 //! When a single scan contains BOTH an opkg-installed-DB stanza AND a
 //! Yocto image manifest line for the SAME canonical PURL (the
 //! waybill-CI-container scenario where both the build directory and
-//! the device rootfs are mounted), the milestone-105 dedup pipeline
-//! MUST collapse them into a single component. Per FR-010 precedence,
-//! the higher-authority `OpkgInstalled` reader wins; the
-//! `YoctoImageManifest` source-mechanism appears in the surviving
-//! component's `waybill:also-detected-via` annotation.
+//! the device rootfs are mounted), the general deduplicator MUST
+//! collapse them into a single component. The `OpkgInstalled` entry
+//! survives (by confidence and reader order; milestone 105's precedence
+//! module was never wired, and spec 1639 removed it), and the
+//! `YoctoImageManifest` mechanism is recorded in the survivor's
+//! `waybill:also-detected-via` (C56, spec 1639).
 //!
-//! Locks the FR-010 precedence contract against regression.
+//! Locks that outcome against regression.
 
 use std::path::Path;
 use std::process::Command;
@@ -113,7 +114,18 @@ fn opkg_installed_outranks_yocto_image_manifest_on_canonical_purl_collision() {
         .unwrap_or("(none)");
     assert_eq!(
         source_mechanism, "opkg-installed",
-        "OpkgInstalled MUST outrank YoctoImageManifest per FR-010 precedence \
-         (declared order in SourceMechanism enum). Winner's source-mechanism was: {source_mechanism}",
+        "OpkgInstalled MUST survive the merge with YoctoImageManifest. \
+         Winner's source-mechanism was: {source_mechanism}",
     );
+
+    // Spec 1639: the manifest's mechanism is recorded on the survivor.
+    let c56 = winner["properties"]
+        .as_array()
+        .and_then(|props| {
+            props
+                .iter()
+                .find(|p| p["name"].as_str() == Some("waybill:also-detected-via"))
+                .and_then(|p| p["value"].as_str())
+        });
+    assert_eq!(c56, Some(r#"["yocto-image-manifest"]"#), "C56 on the survivor: {winner}");
 }

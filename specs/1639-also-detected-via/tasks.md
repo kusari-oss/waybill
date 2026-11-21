@@ -154,12 +154,12 @@
 
 ## Phase 7: Polish and cross-cutting
 
-- [ ] T023 [P] FR-009: correct the Yocto comments in `waybill-cli/src/scan_fs/package_db/mod.rs`. Correct the headers of `waybill-cli/tests/dedup_precedence_determinism.rs` and `waybill-cli/tests/cross_reader_dedup_ecosystem_107.rs`, and `waybill-cli/tests/fixtures/golden_inputs/dedup_collision/README.md`. Extend `cross_reader_dedup_ecosystem_107.rs` to assert C56 `["yocto-image-manifest"]`.
-- [ ] T024 [P] Docs:
+- [X] T023 [P] FR-009: correct the Yocto comments in `waybill-cli/src/scan_fs/package_db/mod.rs`. Correct the headers of `waybill-cli/tests/dedup_precedence_determinism.rs` and `waybill-cli/tests/cross_reader_dedup_ecosystem_107.rs`, and `waybill-cli/tests/fixtures/golden_inputs/dedup_collision/README.md`. Extend `cross_reader_dedup_ecosystem_107.rs` to assert C56 `["yocto-image-manifest"]`.
+- [X] T024 [P] Docs:
   - `docs/reference/identifiers.md` §11.5 renames the collision to C242, with its `jq` recipe updated;
   - `docs/reference/reading-a-mikebom-sbom.md`'s C56 row;
   - `docs/ecosystems.md`'s C56 sentence near the Yocto section.
-- [ ] T025 [P] `CHANGELOG.md` `## [Unreleased]`:
+- [X] T025 [P] `CHANGELOG.md` `## [Unreleased]`:
   - Fixed: C56 is emitted for merges across readers (#1558), naming the merge sites and the anchor rule;
   - Changed: the symbol-fingerprint collision moves from `waybill:also-detected-via` to `waybill:fingerprint-also-matched` (C242), a wire change with no alias;
   - Fixed: the CycloneDX `methods[]` key milestone 105 specified is no longer produced (#1442).
