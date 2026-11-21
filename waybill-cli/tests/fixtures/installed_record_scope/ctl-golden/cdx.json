@@ -90,6 +90,10 @@
           "value": "deployed"
         },
         {
+          "name": "waybill:also-detected-via",
+          "value": "[\"cmake-find-package\"]"
+        },
+        {
           "name": "waybill:source-mechanism",
           "value": "cmake-package-version"
         },
