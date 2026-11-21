@@ -31,6 +31,7 @@ Each case scans in three formats and runs parity (scope, C122, C232, C236). It v
 | T-7e | `elseif(Y)` after `if(X)`, X ON, Y ON | Optional (an earlier branch holds) | no |
 | T-8 | nested: `if(UNIX)` around `if(X)`, X ON | in scope | yes |
 | T-9 | option declared in the parent directory, fetch in a subdirectory added by `add_subdirectory` | as its default | yes (ON) |
+| T-9b | an OFF option declared in the parent directory | Optional (`scope_files` reaches the default) | no |
 | T-10 | `if(X)` with no default anywhere | in scope (unknown) | yes |
 | T-11 | `if(EXISTS ${CMAKE_SOURCE_DIR}/x)` | in scope (unknown) | yes |
 | T-12 | `cmake_dependent_option(X "" ON "UNIX" OFF)` + `if(X)` | in scope | yes |
@@ -41,4 +42,5 @@ Each case scans in three formats and runs parity (scope, C122, C232, C236). It v
 | R-1 | conditional fetch under `if(UNIX)` of a repository an enclosing submodule supplies | merged into the submodule (R9), unchanged | no |
 | S-1 | `find_package(X)` under `if(UNIX)` only | the searched record in scope, C236 present | yes |
 | S-2 | `find_package(X)` under an OFF option only | Optional, as today | no |
+| S-3 | an installed record (`…ConfigVersion.cmake`) searched only under `if(UNIX)` | the record in scope, C236 `["UNIX"]` | yes |
 | C-ctl | a tree with no catch-all conditional | byte-identical to `main`'s golden | no |

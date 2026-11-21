@@ -482,3 +482,28 @@ fn b1_build_testing_is_test() {
     let c = one(&s, &purl("b1"));
     assert_eq!(prop(c, "waybill:lifecycle-scope"), Some("test"), "{c}");
 }
+
+/// FR-002: an OFF option declared in the parent directory reaches the
+/// subdirectory's condition, so the fetch stays optional. Without the
+/// scope chain the option would be unknown and the fetch in scope.
+#[test]
+fn t09b_off_option_in_the_parent_directory() {
+    let s = check(&[
+        ("CMakeLists.txt", &format!("{ROOT}option(WF_PARENT_OFF \"\" OFF)\nadd_subdirectory(sub)\n")),
+        ("sub/CMakeLists.txt", &under("WF_PARENT_OFF", &ep("t9b"))),
+    ]);
+    assert_conditional(&s, "t9b");
+}
+
+/// FR-007: an installed record searched only under a platform check is in
+/// scope and records C236.
+#[test]
+fn s3_an_installed_record_searched_under_a_platform_check() {
+    let s = check(&[
+        ("lib/cmake/waybill-fixture-s3/waybill-fixture-s3ConfigVersion.cmake", "set(PACKAGE_VERSION \"1.0.0\")\n"),
+        ("CMakeLists.txt", &format!("{ROOT}{}", under("UNIX", "find_package(waybill-fixture-s3)\n"))),
+    ]);
+    let c = one(&s, "pkg:generic/waybill-fixture-s3@1.0.0");
+    assert_eq!(scope(c), "required", "{c}");
+    assert_eq!(prop(c, C236), Some("[\"UNIX\"]"), "{c}");
+}

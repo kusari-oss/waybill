@@ -87,7 +87,7 @@ Scope does not change in this phase.
 
 ## Phase 6: Polish and cross-cutting
 
-- [ ] T016 [P] FR-010 docs:
+- [X] T016 [P] FR-010 docs:
   - the C122 and C232 rows of `docs/reference/sbom-format-mapping.md`, worded as in `contracts/wire.md`;
   - a paragraph in `docs/reference/reading-a-mikebom-sbom.md`;
   - `CHANGELOG.md` `## [Unreleased]`, Fixed (#1639).
