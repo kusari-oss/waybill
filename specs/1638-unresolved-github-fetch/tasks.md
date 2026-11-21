@@ -134,7 +134,7 @@
   - CMake `waybill:download-url` is recorded verbatim, credentials included (spec Edge Cases).
 
   Link both in `MS/corpus.md`'s notes.
-- [ ] T021 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Read `target/gate/prepr.log` for `GATE_RESULT=` and every `test result:` line, and record the counts in `MS/gate-log.md`.
+- [X] T021 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Read `target/gate/prepr.log` for `GATE_RESULT=` and every `test result:` line, and record the counts in `MS/gate-log.md`.
 - [ ] T022 TheRock `measure-source` in `kusari-sandbox/waybill-fixture-therock-sdk`, `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`. Read the scanned SHAs from the logs.
   - Trace every changed component to an FR. Unexplained orphans must not increase (SC-003).
   - Record the scan-time median of 3 for each ref; it must be ≤ 1.05× (SC-006).
