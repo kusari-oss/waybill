@@ -1188,28 +1188,31 @@ rules live in `waybill-cli/src/scan_fs/binary/symbol_fingerprint.rs::FINGERPRINT
 at the same `waybill-cli` version that emitted the SBOM (visible in
 the SBOM's `creationInfo.creators` / `metadata.tools`).
 
-### 11.5 FR-013 collision: `waybill:also-detected-via`
+### 11.5 FR-013 collision: `waybill:fingerprint-also-matched`
 
 When a binary's symbol set satisfies ≥2 corpus records with
 OVERLAPPING matched-symbol sets (e.g., LibreSSL + OpenSSL both
 match via shared `SSL_*` symbols), waybill emits one component
-per record AND adds a `waybill:also-detected-via` annotation
-listing the OTHER matching records' library names. Independent
-co-resident libraries (disjoint matched sets — e.g., OpenSSL +
-zlib in one binary) do NOT trigger this annotation.
+per record AND adds a `waybill:fingerprint-also-matched` annotation
+(C242) listing the OTHER matching records' library names, sorted.
+Independent co-resident libraries (disjoint matched sets — e.g.,
+OpenSSL + zlib in one binary) do NOT trigger this annotation.
+
+Until spec 1639 this was written under `waybill:also-detected-via`,
+which is C56 and names source mechanisms. The rename has no alias.
 
 Decode recipe:
 
 ```bash
 jq '.components[]
-    | select((.properties // [])[] | (.name == "waybill:also-detected-via"))
+    | select((.properties // [])[] | (.name == "waybill:fingerprint-also-matched"))
     | {library: .name,
-       also_detected_via: (.properties[] | select(.name == "waybill:also-detected-via").value)}' \
+       also_matched: (.properties[] | select(.name == "waybill:fingerprint-also-matched").value)}' \
    sbom.cdx.json
 ```
 
 A consumer triaging a CVE against `openssl` should check whether
-the same component carries `waybill:also-detected-via:
+the same component carries `waybill:fingerprint-also-matched:
 ["libressl"]` — that's the signal to widen the triage to LibreSSL
 advisories too.
 

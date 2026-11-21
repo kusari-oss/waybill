@@ -1641,6 +1641,15 @@ pub fn build_metadata(
                 "value": serde_json::Value::Array(value.clone()).to_string(),
             }));
         }
+        // Spec 1639 (#1558) — C56 on whatever component becomes the root, as
+        // SPDX 2.3 and SPDX 3 keep it on the root package. Absent on every
+        // root that absorbed no other mechanism, so byte-identical there.
+        if let Some(value) = c.extra_annotations.get(crate::scan_fs::also_detected::ANN_ALSO_DETECTED_VIA) {
+            comp_props.push(json!({
+                "name": crate::scan_fs::also_detected::ANN_ALSO_DETECTED_VIA,
+                "value": serde_json::to_string(value).unwrap_or_default(),
+            }));
+        }
         // Spec 1618 (#1616) — a CMake project promoted to the root keeps
         // the annotations only CMake projects carry (C55, C197, C238–C241),
         // as SPDX 2.3 and SPDX 3 keep them on the root package. Byte-
@@ -1815,8 +1824,6 @@ pub fn build_metadata(
             let evidence_value = crate::generate::cyclonedx::evidence::build_evidence(
                 &c.evidence,
                 &c.occurrences,
-                None,
-                &[],
                 None,
             );
             metadata["component"]["evidence"] = evidence_value;

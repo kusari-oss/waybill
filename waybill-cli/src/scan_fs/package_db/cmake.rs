@@ -409,6 +409,7 @@ fn fold_vendored_into_projects(entries: &mut Vec<PackageDbEntry>, projects: &mut
         });
         match owner {
             Some(p) => {
+                crate::scan_fs::also_detected::record("S7", p.purl.as_str(), &mut p.extra_annotations, &e.extra_annotations);
                 if !p.extra_source_paths.contains(&e.source_path) && p.source_path != e.source_path {
                     p.extra_source_paths.push(e.source_path.clone());
                 }

@@ -33,6 +33,8 @@ use super::declared_attach::{relative, DeclaredAttachment, OwnerIndex};
 use super::package_db::cmake::searches::{FindCoverage, ANN_CMAKE_FIND_CONDITIONS};
 use super::package_db::git_submodule::SubmoduleDirs;
 
+type Annotations = BTreeMap<String, serde_json::Value>;
+
 const MECHANISM: &str = "waybill:source-mechanism";
 const ANN_BUILD_REFERENCE: &str = "waybill:build-reference";
 const ANN_OPTIONAL_DERIVATION: &str = "waybill:optional-derivation";
@@ -180,6 +182,8 @@ pub(crate) fn pair(
     // Before the early return: a tree with no package search still has
     // projects.
     let mut claimed: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    // Spec 1639 S8: the absorbed projects' annotations, by owner.
+    let mut absorbed_projects: BTreeMap<String, Vec<Annotations>> = BTreeMap::new();
     components.retain(|c| {
         if !is_cmake_project(c) {
             return true;
@@ -191,11 +195,15 @@ pub(crate) fn pair(
             (None, None) => return true,
         };
         for o in owners {
+            absorbed_projects.entry(o.clone()).or_default().push(c.extra_annotations.clone());
             claimed.entry(o).or_default().extend(c.evidence.source_file_paths.iter().cloned());
         }
         false
     });
     for c in components.iter_mut() {
+        for a in absorbed_projects.get(c.purl.as_str()).into_iter().flatten() {
+            super::also_detected::record("S8", c.purl.as_str(), &mut c.extra_annotations, a);
+        }
         if let Some(files) = claimed.get(c.purl.as_str()) {
             for f in files {
                 if !c.evidence.source_file_paths.contains(f) {
@@ -227,6 +235,8 @@ pub(crate) fn pair(
 
     let mut pairings = Vec::new();
     let mut evidence: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    // Spec 1639 S9: the paired searches' annotations, by target.
+    let mut absorbed_searches: BTreeMap<String, Vec<Annotations>> = BTreeMap::new();
     let mut gone: BTreeSet<String> = BTreeSet::new();
     let mut outcome: BTreeMap<String, &'static str> = BTreeMap::new();
     for c in components.iter().filter(|c| is_search(c)) {
@@ -247,6 +257,7 @@ pub(crate) fn pair(
         outcome.insert(name, if installed { "installed" } else if project { "project" } else { "submodule" });
         gone.insert(c.purl.as_str().to_string());
         for t in &targets {
+            absorbed_searches.entry(t.clone()).or_default().push(c.extra_annotations.clone());
             for f in &c.evidence.source_file_paths {
                 pairings.push(Pairing {
                     file: f.clone(),
@@ -263,6 +274,9 @@ pub(crate) fn pair(
     }
     components.retain(|c| !(is_search(c) && gone.contains(c.purl.as_str())));
     for c in components.iter_mut() {
+        for a in absorbed_searches.get(c.purl.as_str()).into_iter().flatten() {
+            super::also_detected::record("S9", c.purl.as_str(), &mut c.extra_annotations, a);
+        }
         if let Some(files) = evidence.get(c.purl.as_str()) {
             for f in files {
                 if !c.evidence.source_file_paths.contains(f) {

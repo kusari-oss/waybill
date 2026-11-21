@@ -1392,7 +1392,7 @@ impl CycloneDxBuilder {
                     "name": component.name,
                     "version": component.version,
                     "bom-ref": bom_ref,
-                    "evidence": build_evidence(&component.evidence, &component.occurrences, None, &[], None)
+                    "evidence": build_evidence(&component.evidence, &component.occurrences, None)
                 })
             } else {
                 // Milestone 105 phase 2E: extra (None, &[]) params are
@@ -1438,8 +1438,6 @@ impl CycloneDxBuilder {
                     build_evidence(
                         &component.evidence,
                         &component.occurrences,
-                        None,
-                        &[],
                         derived_identity,
                     ),
                 );

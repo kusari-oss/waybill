@@ -26,8 +26,9 @@
 //!   These would let the PURL version use Informational > File >
 //!   AssemblyVersion (the full FR-020 ladder). For now waybill emits
 //!   the AssemblyVersion 4-tuple, which is sufficient identity for
-//!   cross-reader dedup with `.deps.json` (`waybill:also-detected-via`
-//!   collapses both into one component).
+//!   cross-reader dedup with `.deps.json`: when the PURLs agree the
+//!   general deduplicator collapses both into one component and records
+//!   the other mechanism in `waybill:also-detected-via` (C56, spec 1639).
 //!
 //! ECMA-335 §II.22 metadata-table layout is the canonical reference.
 //! The reader hand-rolls the byte-level parsing on top of `object` 0.36's

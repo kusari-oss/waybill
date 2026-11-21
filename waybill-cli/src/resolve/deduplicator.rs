@@ -9,6 +9,8 @@ use std::collections::HashMap;
 
 use waybill_common::resolution::ResolvedComponent;
 
+use crate::scan_fs::also_detected;
+
 /// `(ecosystem, name, version, parent_purl, pants-namespace qualifier)`.
 type DedupKey = (String, String, String, Option<String>, Option<String>, Option<String>);
 
@@ -151,6 +153,9 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
 
         // Merge evidence from remaining entries.
         for other in group {
+            // Spec 1639 S1: what `record` needs from the loser, taken before
+            // the fold below moves its annotations.
+            let absorbed = also_detected::marks(&other.extra_annotations);
             for conn_id in other.evidence.source_connection_ids {
                 if !best.evidence.source_connection_ids.contains(&conn_id) {
                     best.evidence.source_connection_ids.push(conn_id);
@@ -359,6 +364,9 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
                 }
                 best.extra_annotations.entry(key).or_insert(value);
             }
+            // Spec 1639 S1: after the fold, which may have given a survivor
+            // with no C55 this loser's (research R4).
+            also_detected::record("S1", best.purl.as_str(), &mut best.extra_annotations, &absorbed);
         }
 
         // Spec 1542 (#1600): the merged path list, sorted like the merged
@@ -559,6 +567,8 @@ fn fold_declared_not_cached(components: &mut Vec<ResolvedComponent>) {
         to_remove.push(sec_idx);
         for dst_idx in on_disk_indices {
             let dst = &mut components[dst_idx];
+            let subject = dst.purl.as_str().to_string();
+            also_detected::record("S2", &subject, &mut dst.extra_annotations, &sec.extra_annotations);
             // Evidence-trail marker: declared-not-cached → "deps.dev",
             // transitive → "maven-cache-bfs". Avoids adding the same
             // marker twice.
@@ -1957,5 +1967,64 @@ mod tests {
             outputs.insert(serde_json::to_string(&deduplicate(input)).unwrap());
         });
         assert_eq!(outputs.len(), 1, "{} distinct outputs over 120 input orders", outputs.len());
+    }
+
+    fn with_mechanism(purl: &str, confidence: f64, mechanism: Option<&str>) -> ResolvedComponent {
+        let mut c = make_component(purl, ResolutionTechnique::FilePathPattern, confidence, vec![], vec![]);
+        if let Some(m) = mechanism {
+            c.extra_annotations.insert("waybill:source-mechanism".to_string(), serde_json::json!(m));
+        }
+        c
+    }
+
+    /// Spec 1639 S1 (FR-001, FR-003): the higher-confidence member keeps its
+    /// C55 and records the loser's in C56.
+    #[test]
+    fn s1639_a_merge_records_the_losers_mechanism() {
+        let out = deduplicate(vec![
+            with_mechanism("pkg:github/o/r@1", 0.9, Some("cmake-fetchcontent-git")),
+            with_mechanism("pkg:github/o/r@1", 0.8, Some("git-submodule")),
+        ]);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].extra_annotations["waybill:source-mechanism"], serde_json::json!("cmake-fetchcontent-git"));
+        assert_eq!(out[0].extra_annotations["waybill:also-detected-via"], serde_json::json!(["git-submodule"]));
+    }
+
+    /// Spec 1639 research R4: a survivor without C55 takes the first loser's
+    /// through the existing fold, and C56 holds only the second loser's.
+    #[test]
+    fn s1639_a_survivor_without_c55_takes_the_first_losers() {
+        let out = deduplicate(vec![
+            with_mechanism("pkg:generic/x@1", 0.9, None),
+            with_mechanism("pkg:generic/x@1", 0.8, Some("pkg-config")),
+            with_mechanism("pkg:generic/x@1", 0.7, Some("cmake-package-version")),
+        ]);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].extra_annotations["waybill:source-mechanism"], serde_json::json!("pkg-config"));
+        assert_eq!(out[0].extra_annotations["waybill:also-detected-via"], serde_json::json!(["cmake-package-version"]));
+    }
+
+    /// Spec 1639 S2: the Maven declared-not-cached fold records the folded
+    /// entry's mechanism when it differs from the on-disk sibling's.
+    #[test]
+    fn s1639_the_maven_fold_records_a_different_mechanism() {
+        let mut on_disk = with_mechanism("pkg:maven/aopalliance/aopalliance@1.0", 0.85, Some("maven-jar-nested"));
+        on_disk.parent_purl = Some("pkg:maven/org.springframework.boot/spring-boot@3.0.0".to_string());
+        let mut declared = make_declared_not_cached("pkg:maven/aopalliance/aopalliance@1.0");
+        declared.extra_annotations.insert("waybill:source-mechanism".to_string(), serde_json::json!("waybill-fixture-declared"));
+        let out = deduplicate(vec![on_disk, declared]);
+        assert_eq!(out.len(), 1, "pass 2 folds the declared entry: {out:?}");
+        assert_eq!(out[0].extra_annotations["waybill:source-mechanism"], serde_json::json!("maven-jar-nested"));
+        assert_eq!(out[0].extra_annotations["waybill:also-detected-via"], serde_json::json!(["waybill-fixture-declared"]));
+    }
+
+    /// Spec 1639: members of one mechanism record nothing.
+    #[test]
+    fn s1639_one_mechanism_records_nothing() {
+        let out = deduplicate(vec![
+            with_mechanism("pkg:generic/x@1", 0.9, Some("pkg-config")),
+            with_mechanism("pkg:generic/x@1", 0.8, Some("pkg-config")),
+        ]);
+        assert!(!out[0].extra_annotations.contains_key("waybill:also-detected-via"));
     }
 }

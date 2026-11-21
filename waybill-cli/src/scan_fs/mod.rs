@@ -10,7 +10,7 @@
 //!   the standalone `waybill sbom scan` subcommand.
 
 pub mod binary;
-pub mod dedup;
+pub(crate) mod also_detected;
 pub mod docker_daemon;
 pub mod docker_image;
 // Milestone 206 (#440) — local podman image scanning via

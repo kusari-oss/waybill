@@ -80,6 +80,27 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A merged component records the other readers that found it (#1558).**
+  When components found by different readers merge into one, the survivor
+  now carries `waybill:also-detected-via` (C56): the other members' source
+  mechanisms (C55), sorted. Milestone 105 designed this row and nothing ever
+  wrote it. It is recorded at every merge site: the general deduplicator
+  (opkg-installed plus a Yocto image manifest, a `.pc` file plus a CMake
+  config package, a submodule plus a fetch at one commit), the
+  design-source reconciler, the CMake reader's fetch and vendored-directory
+  folds, spec 1538's fold of a conditional fetch into its submodule (which
+  keeps its `waybill:superseded-declarations` entry too), and the fold of a
+  `find_package` / `pkg_check_modules` into the component it names. A
+  component with no C55 records none. Which member survives is unchanged.
+  On TheRock 84 components gain C56, 74 of them listing a package search;
+  nothing else in its document changes. It is a
+  component property in CycloneDX, on `metadata.component` too, and an
+  annotation in SPDX 2.3 and SPDX 3.
+- **CycloneDX evidence no longer has a slot for a schema-invalid key
+  (#1442).** Milestone 105 planned to put C56 in a `waybill-source-mechanism`
+  key on `evidence.identity[].methods[]`, which CycloneDX 1.6 closes to
+  `technique`, `confidence` and `value`. No release emitted it, and the
+  parameters that could have are removed.
 - **A CMake git fetch with an unresolved tag is named after its repository
   (#1595).** `FetchContent_Declare`, `ExternalProject_Add`, a wrapper call or
   `download_project()` with a literal GitHub `GIT_REPOSITORY` and a `GIT_TAG`
@@ -400,6 +421,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
     - The scan takes 1.08× as long as `main`.
     - Elsewhere, mongo gains wiredtiger's four cloud-SDK fetches, and
       pytorch qnnpack's seven.
+
+### Changed
+
+- **The symbol-fingerprint collision moves to
+  `waybill:fingerprint-also-matched` (C242) (#1558).** When one binary's
+  symbols match two fingerprint records (OpenSSL and LibreSSL), each
+  component listed the other library under `waybill:also-detected-via`.
+  That key is C56 and names source mechanisms, so the collision now has a
+  row of its own. This is a wire change with no alias: a consumer reading
+  the collision under the old key must read the new one.
 
 ## [0.17.0] - 2026-11-16
 

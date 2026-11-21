@@ -1269,7 +1269,8 @@ Snapshot at milestone-150 publication time (98 unique keys across the catalog). 
 
 Alphabetical order. Each entry links to the FIRST catalog row that mentions the key (some keys appear on multiple rows — e.g., per-component + document-scope variants — follow the linked row for cross-references to siblings).
 
-- **`waybill:also-detected-via`** — when the deduplicator merges entries from multiple readers, lists the alternative reader sources for the surviving component. ([C56](sbom-format-mapping.md))
+- **`waybill:also-detected-via`** — when components found by different readers merge into one, the other readers' source mechanisms (C55), sorted; absent when the component has no C55 of its own. ([C56](sbom-format-mapping.md))
+- **`waybill:fingerprint-also-matched`** — the other libraries whose symbol fingerprints matched the same binary. ([C242](sbom-format-mapping.md))
 - **`waybill:assembly-version-informational`** — for .NET assemblies, the raw `AssemblyInformationalVersion` value extracted from the binary. ([catalog](sbom-format-mapping.md))
 - **`waybill:assembly-version-informational-stripped`** — for .NET assemblies, the `AssemblyInformationalVersion` stripped of its build-metadata SemVer suffix (everything after `+`) for cross-tool comparison. ([C87](sbom-format-mapping.md))
 - **`waybill:assertion-conflict`** — milestone-119 supplement-CDX merge: structured records flagging where the operator's supplement-declared values contradicted scanner observations (closed `winner` enum `scanner`/`supplement`, closed `justification` enum). See [§3.4](#34-transparency--completeness-gaps) for depth coverage. ([C67](sbom-format-mapping.md))

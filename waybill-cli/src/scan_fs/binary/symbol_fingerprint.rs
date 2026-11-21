@@ -32,10 +32,11 @@
 ///   the `waybill:fingerprint-corpus-sha` annotation per FR-005.
 ///   `None` means "don't emit the annotation" — preserves SC-003
 ///   byte-identity for non-opt-in scans.
-/// - `also_detected_via`: FR-013 multi-record collision. When two
+/// - `also_matched`: FR-013 multi-record collision. When two
 ///   records match the same target binary (vendor-fork variant + the
 ///   upstream library), each match lists the OTHER's library name
-///   here, surfaced as `waybill:also-detected-via`.
+///   here, surfaced as `waybill:fingerprint-also-matched` (C242; spec
+///   1639 moved it off C56, which names source mechanisms).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SymbolFingerprintMatch {
     pub library: String,
@@ -43,7 +44,7 @@ pub struct SymbolFingerprintMatch {
     pub total_count: usize,
     pub target_purl: String,
     pub corpus_sha_annotation: Option<String>,
-    pub also_detected_via: Vec<String>,
+    pub also_matched: Vec<String>,
 }
 
 struct SymbolFingerprint {
@@ -264,7 +265,7 @@ pub fn scan(symbol_names: &[String]) -> Vec<SymbolFingerprintMatch> {
 ///
 /// FR-013 multi-record collision: when ≥2 records in `corpus.records`
 /// both clear their `min_symbols` threshold against `symbol_names`,
-/// each emitted match's `also_detected_via` lists the OTHER matching
+/// each emitted match's `also_matched` lists the OTHER matching
 /// records' library names (alphabetically sorted for byte-stable
 /// downstream emission).
 pub fn scan_with_corpus(
@@ -309,12 +310,12 @@ pub fn scan_with_corpus(
                 total_count: record.symbols.len(),
                 target_purl: record.target_purl.clone(),
                 corpus_sha_annotation: corpus_annotation.clone(),
-                also_detected_via: Vec::new(),
+                also_matched: Vec::new(),
             });
             matched_symbol_sets.push(matched_symbols);
         }
     }
-    // Second pass: FR-013 — populate `also_detected_via` ONLY for
+    // Second pass: FR-013 — populate `also_matched` ONLY for
     // hits whose matched-symbol sets overlap (variant collision).
     // Independent co-resident libraries have disjoint matched sets and
     // do NOT trigger this annotation — preserves SC-003 byte-identity
@@ -335,7 +336,7 @@ pub fn scan_with_corpus(
                 }
             }
             others.sort();
-            hits[i].also_detected_via = others;
+            hits[i].also_matched = others;
         }
     }
 
@@ -738,10 +739,10 @@ mod tests {
 
     /// T038a — FR-013 multi-record collision: two records that match
     /// the same target binary via overlapping symbol sets BOTH emit,
-    /// and each carries the OTHER's library name in `also_detected_via`.
+    /// and each carries the OTHER's library name in `also_matched`.
     /// Models the LibreSSL / OpenSSL variant-collision case.
     #[test]
-    fn multi_record_match_emits_both_components_with_also_detected_via() {
+    fn multi_record_match_emits_both_components_with_also_matched() {
         use super::super::fingerprints::{
             CorpusSha, CorpusSource, FingerprintCorpus, FingerprintRecord,
         };
@@ -772,23 +773,23 @@ mod tests {
         };
         let hits = scan_with_corpus(&shared_symbols, &corpus, true, None, None);
         assert_eq!(hits.len(), 2, "both records must emit (no silent dedup)");
-        // openssl → also_detected_via = ["libressl"]
+        // openssl → also_matched = ["libressl"]
         let openssl = hits.iter().find(|h| h.library == "openssl").unwrap();
-        assert_eq!(openssl.also_detected_via, vec!["libressl".to_string()]);
-        // libressl → also_detected_via = ["openssl"]
+        assert_eq!(openssl.also_matched, vec!["libressl".to_string()]);
+        // libressl → also_matched = ["openssl"]
         let libressl = hits.iter().find(|h| h.library == "libressl").unwrap();
-        assert_eq!(libressl.also_detected_via, vec!["openssl".to_string()]);
+        assert_eq!(libressl.also_matched, vec!["openssl".to_string()]);
         // Both also carry the corpus-sha stamp.
         assert!(openssl.corpus_sha_annotation.is_some());
         assert!(libressl.corpus_sha_annotation.is_some());
     }
 
     /// T038a — independent co-resident libraries (openssl + zlib with
-    /// disjoint symbol sets) do NOT trigger `also_detected_via`.
+    /// disjoint symbol sets) do NOT trigger `also_matched`.
     /// SC-003 byte-identity guard: this is the common case for the
     /// existing 33 byte-identity goldens (multi-library binaries).
     #[test]
-    fn independent_libraries_do_not_emit_also_detected_via() {
+    fn independent_libraries_do_not_emit_also_matched() {
         let s = syms(&[
             // OpenSSL — 8 symbols.
             "OPENSSL_init_ssl",
@@ -813,8 +814,8 @@ mod tests {
         assert_eq!(hits.len(), 2);
         for h in &hits {
             assert!(
-                h.also_detected_via.is_empty(),
-                "{} should have empty also_detected_via (disjoint matched sets)",
+                h.also_matched.is_empty(),
+                "{} should have empty also_matched (disjoint matched sets)",
                 h.library
             );
         }

@@ -907,7 +907,7 @@ pub fn read(
             // byte-identity goldens — a v2 record that happens to
             // share a library name with a v1 record does NOT override
             // the v1 emission. Cross-tier collision handling +
-            // waybill:also-detected-via cross-references ship in a
+            // waybill:fingerprint-also-matched (C242) cross-references ship in a
             // follow-on slice (Phase 6 / US4).
             // Milestone 110 Phase 5-Slim PR 3 — dispatch the matcher
             // per source so each `MatchResult` carries the correct

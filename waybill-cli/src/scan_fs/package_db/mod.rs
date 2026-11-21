@@ -1825,12 +1825,11 @@ pub fn read_all(
     // Milestone 107 US2: Yocto image-manifest reader. Walks
     // `build/tmp/deploy/images/<machine>/<image>.manifest` files and
     // emits one `pkg:opkg/<name>@<version>?arch=<arch>` per line —
-    // same PURL ecosystem as opkg-installed, so cross-source dedup
-    // collapses identical coords via the milestone-105 pipeline.
-    // Per FR-010 precedence: `OpkgInstalled` outranks
-    // `YoctoImageManifest`, so when a scan contains both an opkg DB
-    // AND a manifest for the same image, the installed-DB wins and
-    // the manifest's source-mechanism appears in `also-detected-via`.
+    // same PURL ecosystem as opkg-installed, so the general deduplicator
+    // merges identical coords. The opkg-installed entry survives (by
+    // confidence and reader order, not milestone 105's ranking, which
+    // was never wired) and the manifest's mechanism is recorded in C56,
+    // `waybill:also-detected-via` (spec 1639).
     out.extend(yocto::manifest::read(rootfs));
     // Milestone 107 US4 + milestone 128: BitBake recipe walker
     // with body-parser enrichment. Emits one
@@ -1839,11 +1838,10 @@ pub fn read_all(
     // Body-parsed for LICENSE, SRC_URI, SRCREV, HOMEPAGE, SUMMARY,
     // DESCRIPTION, DEPENDS, RDEPENDS, BBCLASSEXTEND per FR-001..FR-005.
     // Lowest tier in the FR-010 precedence ladder: declarations may
-    // never have been built. Cross-tier collisions (opkg-installed-DB
-    // + recipe-tier both naming the same coord) merge through the
-    // milestone-105 dedup pipeline via `waybill:also-detected-via`
-    // per FR-014a; the recipe-tier's license + provenance fields
-    // propagate onto the post-dedup winning component.
+    // never have been built. Recipe components are `pkg:generic` and
+    // opkg-installed ones `pkg:opkg`, so the two never share a PURL and
+    // the deduplicator does not merge them; nothing is recorded in C56
+    // for this pair (spec 1639 corrected an earlier claim that it was).
     // Milestone 664 US2 T059: yocto::recipe::read is now called
     // AFTER the shared-walker pilot binding below so it can consume
     // pilot-collected `.bbappend` + `layer.conf` paths. See the

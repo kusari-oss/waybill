@@ -18,7 +18,7 @@ Milestone 105 expected the two readers' components to merge after an unspecified
 
 The in-tree copy cannot carry a gitlink, because a gitlink is a tree entry of the repository holding it. So `tests/dedup_precedence_determinism.rs` copies these files into a temporary repository and adds the gitlink with `git update-index --cacheinfo 160000,…`. Scanned in place, inside waybill's own checkout, the fixture's `.gitmodules` has no enclosing repository at or below the scan root, and is counted under `no-repository-data` in `waybill:git-submodule-coverage` (C222).
 
-`waybill:also-detected-via` (C56) is not emitted yet (#1558).
+The two have different PURLs, so they do not merge and neither carries `waybill:also-detected-via` (C56). C56 is recorded only when components merge (spec 1639, #1558).
 
 ## Files
 

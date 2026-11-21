@@ -2515,11 +2515,10 @@ packages that ship inside an otherwise-runtime rootfs.
 (2015) and produced by every BitBake image build.
 
 **PURL:** `pkg:opkg/<name>@<version>?arch=<arch>` — same ecosystem
-as the installed-DB reader. Cross-source dedup collapses identical
-coords via the milestone-105 pipeline (FR-010 precedence:
-`OpkgInstalled` > `YoctoImageManifest`, so when both readers fire on
-the same scan, installed-DB wins and the manifest's source-mechanism
-appears in `waybill:also-detected-via`).
+as the installed-DB reader. The general deduplicator collapses
+identical coords: when both readers fire on the same scan, the
+installed-DB component survives and the manifest's mechanism is
+recorded in `waybill:also-detected-via` (C56, spec 1639).
 
 **Lifecycle scope:** runtime by default. Per-line FR-006 override
 applies the same nativesdk/host-arch checks as the opkg reader.

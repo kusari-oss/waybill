@@ -745,6 +745,36 @@ mod tests {
         }
     }
 
+    /// Spec 1639 F-2: C56 and C242 reach all three formats, and the parity
+    /// extractors read the same values from each.
+    #[test]
+    fn also_detected_via_and_fingerprint_collisions_reach_all_three_formats() {
+        let integ = empty_integrity();
+        let mut merged = mk_component("pkg:generic/waybill-fixture-m@7.0", vec![]);
+        merged.extra_annotations.insert("waybill:source-mechanism".to_string(), serde_json::json!("pkg-config"));
+        merged.extra_annotations.insert("waybill:also-detected-via".to_string(), serde_json::json!(["cmake-package-version"]));
+        let mut matched = mk_component("pkg:generic/waybill-fixture-ssl", vec![]);
+        matched.extra_annotations.insert("waybill:fingerprint-also-matched".to_string(), serde_json::json!(["waybill-fixture-tls"]));
+        let comps = [merged, matched];
+        let arts = mk_artifacts(&comps, &integ);
+        let cfg = mk_cfg();
+        let docs: Vec<serde_json::Value> = [
+            crate::generate::cyclonedx::CycloneDxJsonSerializer.serialize(&arts, &cfg),
+            Spdx2_3JsonSerializer.serialize(&arts, &cfg),
+            Spdx3JsonSerializer.serialize(&arts, &cfg),
+        ]
+        .into_iter()
+        .map(|r| serde_json::from_slice(&r.unwrap()[0].bytes).unwrap())
+        .collect();
+        for row in ["C56", "C242"] {
+            let e = waybill::parity::extractors::EXTRACTORS.iter().find(|e| e.row_id == row).unwrap();
+            let (a, b, c) = ((e.cdx)(&docs[0]), (e.spdx23)(&docs[1]), (e.spdx3)(&docs[2]));
+            assert!(!a.is_empty(), "{row}: CDX extractor found nothing");
+            assert_eq!(a, b, "{row}: CDX vs SPDX 2.3");
+            assert_eq!(a, c, "{row}: CDX vs SPDX 3");
+        }
+    }
+
     /// Milestone 1067 (T009, T017) — C191 per component and C192 at document
     /// scope, identical in all three formats, and C192's counts equal the
     /// C191 tallies (SC-005).

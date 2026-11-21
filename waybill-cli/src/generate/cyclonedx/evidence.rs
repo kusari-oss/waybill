@@ -23,13 +23,6 @@ pub struct DerivedIdentity<'a> {
     pub concluded_value: &'a str,
 }
 
-/// Confidence value used for the additional `methods[]` entries
-/// emitted on behalf of losing readers (milestone 105 hybrid
-/// emission). The winning reader's method uses `evidence.confidence`
-/// (typically 0.95 for manifest-mode); losers are slightly less
-/// confident since the dedup precedence ranked them below.
-const LOSING_READER_CONFIDENCE: f64 = 0.85;
-
 /// Map a `ResolutionEvidence` (plus optional per-file occurrences) to a
 /// CycloneDX 1.6 `evidence` object.
 ///
@@ -57,35 +50,13 @@ const LOSING_READER_CONFIDENCE: f64 = 0.85;
 ///   payload fits that — both are now emitted as component properties
 ///   via [`evidence_to_properties`] instead.
 ///
-/// ## Milestone 105 — hybrid emission for cross-reader dedup (FR-015)
-///
-/// `winning_source_mechanism` and `losing_source_mechanisms` carry
-/// the dedup-pipeline output for C/C++ readers. The hybrid emission
-/// per research R1 puts the `waybill:also-detected-via` signal in
-/// `evidence.identity[0].methods[*].waybill-source-mechanism`
-/// natively in CDX (SPDX 2.3/3 use a parallel annotation per C56).
-///
-/// - `winning_source_mechanism = Some(value)`: the FIRST method entry
-///   carries `waybill-source-mechanism = value`.
-/// - `losing_source_mechanisms` non-empty: additional method entries
-///   follow the winner — one per losing reader, each with
-///   `technique = "manifest-analysis"`, `confidence = 0.85`,
-///   `waybill-source-mechanism = <loser>`.
-/// - Both `None` / empty: byte-identical to pre-milestone-105 output.
-///
-/// **Important (T023)**: the C56 parity catalog row's CDX side reads
-/// the loser set EXCLUSIVELY from this `evidence.identity[].methods[]`
-/// native field. Callers MUST NOT also emit a `waybill:also-detected-via`
-/// component property — that would duplicate the signal on the CDX
-/// path and break SymmetricEqual byte-identity against the SPDX
-/// annotation-based emission. The SPDX 2.3 / SPDX 3.0.1 emission
-/// paths emit the `waybill:also-detected-via` annotation as their
-/// sole home (no native equivalent on the SPDX side).
+/// Spec 1639 (#1558, #1442): no reader's source mechanism is written into a
+/// method object. CycloneDX 1.6 closes `methods[]` items to `technique`,
+/// `confidence` and `value`; milestone 105's `waybill-source-mechanism` key
+/// was outside the schema. C55 and C56 are component properties.
 pub fn build_evidence(
     evidence: &ResolutionEvidence,
     occurrences: &[FileOccurrence],
-    winning_source_mechanism: Option<&str>,
-    losing_source_mechanisms: &[&str],
     derived_identity: Option<DerivedIdentity<'_>>,
 ) -> serde_json::Value {
     let technique = match evidence.technique {
@@ -97,31 +68,10 @@ pub fn build_evidence(
         ResolutionTechnique::HostnameHeuristic => "other",
     };
 
-    // Build the winning method entry. Adds `waybill-source-mechanism`
-    // sub-field iff the caller supplied a winner (C/C++ reader path).
-    let winning_method = if let Some(value) = winning_source_mechanism {
-        json!({
-            "technique": technique,
-            "confidence": evidence.confidence,
-            "waybill-source-mechanism": value,
-        })
-    } else {
-        json!({
-            "technique": technique,
-            "confidence": evidence.confidence,
-        })
-    };
-
-    // Append loser method entries (one per losing reader).
-    let mut methods: Vec<serde_json::Value> = Vec::with_capacity(1 + losing_source_mechanisms.len());
-    methods.push(winning_method);
-    for loser in losing_source_mechanisms {
-        methods.push(json!({
-            "technique": "manifest-analysis",
-            "confidence": LOSING_READER_CONFIDENCE,
-            "waybill-source-mechanism": loser,
-        }));
-    }
+    let mut methods: Vec<serde_json::Value> = vec![json!({
+        "technique": technique,
+        "confidence": evidence.confidence,
+    })];
 
     // Milestone 1366 (#1365) — the derived identifier, natively.
     //
@@ -321,7 +271,7 @@ mod tests {
     #[test]
     fn m1377_append_cpe_identity_only_when_a_source_is_recorded() {
         use crate::scan_fs::package_db::nix::closure::identifiers as ids;
-        let base = || build_evidence(&make_evidence(ResolutionTechnique::UrlPattern, 0.95), &[], None, &[], None);
+        let base = || build_evidence(&make_evidence(ResolutionTechnique::UrlPattern, 0.95), &[], None);
         let mut c = crate::generate::graph_completeness::test_support::mk_component("pkg:generic/zlib@1.3.2");
         c.cpes = vec![waybill_common::types::cpe::Cpe::parse("cpe:2.3:a:zlib:zlib:1.3.2:*:*:*:*:*:*:*").unwrap()];
 
@@ -342,7 +292,7 @@ mod tests {
     #[test]
     fn url_pattern_maps_to_instrumentation() {
         let ev = make_evidence(ResolutionTechnique::UrlPattern, 0.95);
-        let result = build_evidence(&ev, &[], None, &[], None);
+        let result = build_evidence(&ev, &[], None);
         assert_eq!(
             result["identity"][0]["methods"][0]["technique"],
             "instrumentation"
@@ -352,7 +302,7 @@ mod tests {
     #[test]
     fn hash_match_maps_to_hash_comparison() {
         let ev = make_evidence(ResolutionTechnique::HashMatch, 0.99);
-        let result = build_evidence(&ev, &[], None, &[], None);
+        let result = build_evidence(&ev, &[], None);
         assert_eq!(
             result["identity"][0]["methods"][0]["technique"],
             "hash-comparison"
@@ -362,7 +312,7 @@ mod tests {
     #[test]
     fn file_path_maps_to_filename() {
         let ev = make_evidence(ResolutionTechnique::FilePathPattern, 0.7);
-        let result = build_evidence(&ev, &[], None, &[], None);
+        let result = build_evidence(&ev, &[], None);
         assert_eq!(
             result["identity"][0]["methods"][0]["technique"],
             "filename"
@@ -372,14 +322,14 @@ mod tests {
     #[test]
     fn hostname_maps_to_other() {
         let ev = make_evidence(ResolutionTechnique::HostnameHeuristic, 0.5);
-        let result = build_evidence(&ev, &[], None, &[], None);
+        let result = build_evidence(&ev, &[], None);
         assert_eq!(result["identity"][0]["methods"][0]["technique"], "other");
     }
 
     #[test]
     fn package_database_maps_to_manifest_analysis() {
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.85);
-        let result = build_evidence(&ev, &[], None, &[], None);
+        let result = build_evidence(&ev, &[], None);
         assert_eq!(
             result["identity"][0]["methods"][0]["technique"],
             "manifest-analysis"
@@ -389,7 +339,7 @@ mod tests {
     #[test]
     fn confidence_is_preserved() {
         let ev = make_evidence(ResolutionTechnique::UrlPattern, 0.87);
-        let result = build_evidence(&ev, &[], None, &[], None);
+        let result = build_evidence(&ev, &[], None);
         assert_eq!(result["identity"][0]["confidence"], 0.87);
         assert_eq!(result["identity"][0]["methods"][0]["confidence"], 0.87);
     }
@@ -398,7 +348,7 @@ mod tests {
     fn identity_is_emitted_as_array_not_object() {
         // CDX 1.6 requires evidence.identity to be an array.
         let ev = make_evidence(ResolutionTechnique::UrlPattern, 0.9);
-        let result = build_evidence(&ev, &[], None, &[], None);
+        let result = build_evidence(&ev, &[], None);
         assert!(
             result["identity"].is_array(),
             "evidence.identity must be an array per CDX 1.6"
@@ -423,7 +373,7 @@ mod tests {
                 version: "4.19.2".to_string(),
             }),
         };
-        let result = build_evidence(&ev_with_everything, &[], None, &[], None);
+        let result = build_evidence(&ev_with_everything, &[], None);
         assert!(
             result["identity"][0].get("tools").is_none(),
             "evidence.identity[].tools must not be emitted: got {:?}",
@@ -510,7 +460,7 @@ mod tests {
                 rpm_file_digest: None,
             },
         ];
-        let result = build_evidence(&ev, &occs, None, &[], None);
+        let result = build_evidence(&ev, &occs, None);
         let out_occs = result["occurrences"]
             .as_array()
             .expect("occurrences array");
@@ -531,80 +481,19 @@ mod tests {
     #[test]
     fn occurrences_omitted_when_empty() {
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.85);
-        let result = build_evidence(&ev, &[], None, &[], None);
+        let result = build_evidence(&ev, &[], None);
         assert!(result.get("occurrences").is_none());
     }
 
-    // ----------------------------------------------------------------
-    // Milestone 105 phase 2E — hybrid emission for cross-reader dedup
-    // (FR-015). The winning + losing source-mechanisms ride
-    // `evidence.identity[0].methods[*].waybill-source-mechanism`
-    // natively on the CDX side; the C56 parity extractor reads from
-    // there exclusively.
-    // ----------------------------------------------------------------
-
+    /// Spec 1639 (#1442): a method object carries exactly the schema's keys.
     #[test]
-    fn winning_source_mechanism_attaches_to_first_method() {
+    fn a_method_object_has_only_the_schema_keys() {
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
-        let result = build_evidence(&ev, &[], Some("conan-recipe"), &[], None);
-        let method = &result["identity"][0]["methods"][0];
-        assert_eq!(method["technique"], "manifest-analysis");
-        assert_eq!(method["confidence"], 0.95);
-        assert_eq!(method["waybill-source-mechanism"], "conan-recipe");
+        let result = build_evidence(&ev, &[], None);
+        for m in result["identity"][0]["methods"].as_array().unwrap() {
+            let keys: Vec<&String> = m.as_object().unwrap().keys().collect();
+            assert!(keys.iter().all(|k| matches!(k.as_str(), "technique" | "confidence" | "value")), "{m}");
+        }
     }
 
-    #[test]
-    fn no_winning_source_mechanism_omits_subfield() {
-        // Byte-identity guard for the pre-milestone-105 path: when no
-        // winner is supplied, the first method entry MUST NOT carry
-        // a `waybill-source-mechanism` sub-field.
-        let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
-        let result = build_evidence(&ev, &[], None, &[], None);
-        let method = &result["identity"][0]["methods"][0];
-        assert!(
-            method.get("waybill-source-mechanism").is_none(),
-            "no winner supplied → no waybill-source-mechanism on first method; got {method:?}"
-        );
-    }
-
-    #[test]
-    fn losing_source_mechanisms_append_method_entries() {
-        // gRPC-like scenario: ConanRecipe wins; GitSubmodule and
-        // CmakeVendored are detected-via losers.
-        let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
-        let losers: [&str; 2] = ["git-submodule", "cmake-vendored"];
-        let result = build_evidence(&ev, &[], Some("conan-recipe"), &losers, None);
-        let methods = result["identity"][0]["methods"].as_array().unwrap();
-        assert_eq!(methods.len(), 3, "1 winner + 2 losers = 3 method entries");
-        // Winner first
-        assert_eq!(methods[0]["waybill-source-mechanism"], "conan-recipe");
-        assert_eq!(methods[0]["confidence"], 0.95);
-        // Losers follow, each at confidence 0.85
-        assert_eq!(methods[1]["waybill-source-mechanism"], "git-submodule");
-        assert_eq!(methods[1]["technique"], "manifest-analysis");
-        assert_eq!(methods[1]["confidence"], 0.85);
-        assert_eq!(methods[2]["waybill-source-mechanism"], "cmake-vendored");
-        assert_eq!(methods[2]["confidence"], 0.85);
-    }
-
-    #[test]
-    fn loser_only_input_is_unusual_but_handled() {
-        // Edge: empty winner + non-empty losers. Unusual (the dedup
-        // pipeline doesn't produce this shape), but the function MUST
-        // not panic. The first method is the C/C++-reader-neutral
-        // form (no waybill-source-mechanism); losers follow normally.
-        let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
-        let result = build_evidence(&ev, &[], None, &["git-submodule"], None);
-        let methods = result["identity"][0]["methods"].as_array().unwrap();
-        assert_eq!(methods.len(), 2);
-        assert!(methods[0].get("waybill-source-mechanism").is_none());
-        assert_eq!(methods[1]["waybill-source-mechanism"], "git-submodule");
-    }
-
-    // Note: cross-module integration between this emission shape and
-    // the C56 parity extractor (`parity::extractors::cdx::c56_cdx`)
-    // is covered by the holistic parity test suite under
-    // `waybill-cli/tests/holistic_parity.rs`. The extractor is
-    // `pub(super)` and not directly callable from this module — the
-    // round-trip check happens at the integration test layer.
 }

@@ -291,6 +291,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TQMOCBL23MBY2QHU",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:also-detected-via\",\"value\":[\"cmake-find-package\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G3JLTWTX72JDZP7W",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-UE22DBEP53TJU43T",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"sdk/lib/cmake/waybill_fixture_lib/waybill_fixture_libConfigVersion.cmake\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"sdk/lib/libwaybill_fixture_lib.so.1.2.3\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G3JLTWTX72JDZP7W",
