@@ -23,7 +23,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `IT` from the existing helpers:
+- [X] T001 Create `IT` from the existing helpers:
   - `common::cmake_fetch` (scan in three formats with `--root-name`/`--root-version`, `prop`);
   - `common::git_fixture::GitFixture` (`add_submodule`, `git`);
   - `common::installed_lib`;
@@ -35,7 +35,7 @@
   - `c56(doc, purl)`: reads C56 from the CDX property.
 
   Copy the opkg-DB-plus-image-manifest fixture builder from `waybill-cli/tests/cross_reader_dedup_ecosystem_107.rs` into a helper.
-- [ ] T002 A-ctl in `IT` (FR-012).
+- [X] T002 A-ctl in `IT` (FR-012).
   - **Tree.** `FX/ctl/` holds one merge of two members with the same mechanism, plus unrelated single-reader components: a resolved CMake fetch, a submodule, and a `.pc` file.
   - **Golden.** Generate `FX/ctl-golden/{cdx,spdx-2.3,spdx-3}.json` with **`main`'s** binary, before any source change, using the same masking as `cmake_unresolved_github_fetch.rs`'s U-ctl. Regeneration env var: `WAYBILL_UPDATE_ALSO_DETECTED_GOLDENS`.
 
