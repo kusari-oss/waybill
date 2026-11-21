@@ -48,7 +48,7 @@ Scope does not change in this phase.
   - `category` is R6's.
   - **Scope, C122, C232 and C236 are unchanged.** Confirm with the existing CMake suites (`cmake_*`, `git_submodule_reader`, the installed-library suites) and C-ctl.
 - [X] T006 Census positive control: an `IT` test that scans one fixture with one catch-all conditional fetch per category at `RUST_LOG=waybill::cmake_conditions=debug`, and asserts one event per category with the expected `eval`.
-- [ ] T007 **Census at the log-only commit** (SC-001, R6).
+- [X] T007 **Census at the log-only commit** (SC-001, R6).
   - **Fixture repository** (`kusari-sandbox/waybill-fixture-therock-sdk`): add `census/conditions.py` (stdlib, `python3 -I -B`, ANSI-stripped) and `.github/workflows/census-conditions.yml`, modelled on `census-merges.yml`.
     - **Matrix:** TheRock (submodules) and the quality corpus's CMake targets at their `xtask/corpus/quality-corpus.toml` pins.
     - **Tally:** by kind × category × eval; versioned counts; how many would change scope under FR-004/FR-007; options defined only after their use (planning amendment).
@@ -64,20 +64,20 @@ Scope does not change in this phase.
 **Goal**: FR-001, FR-004, FR-005, FR-006, FR-007. **Independent test**: T-1 to T-4, T-10, T-11, S-1, S-2, R-1.
 
 - [X] T008 [US1] Write T-1, T-2, T-2r, T-3, T-4, T-10, T-11, T-12, T-13, M-1, S-1, S-2 and R-1 in `IT`. **Run them at the log-only commit:** every "Changed" case must fail on its scope assertion and every other case must pass. Record the result per case in `MS/control.md`.
-- [ ] T009 [US1] In `FE`:
+- [X] T009 [US1] In `FE`:
   - a `Conditional` declaration whose chain evaluates `DoesNotHold` keeps `Optional` with `cmake-conditional`. Otherwise it gets no scope and no C122 (FR-001, FR-004).
   - `mark` writes C232 whenever the declaration has conditions, in scope or not (FR-005).
   - The six other shapes and Test are not re-evaluated.
-- [ ] T010 [US1] In `FE::merge_into_existing`, `conditional` becomes "a fetch carrying C232 that is not Test" (FR-006, R5). C231's `conditional` stays the count of Optional components. Keep C231 V2 holding.
-- [ ] T011 [US1] In `SE::scopes`, a conditional search whose chain is `DoesNotHold` counts as `optional`, and any other conditional search counts as `runtime` (FR-007). Test-directory and `BUILD_TESTING` searches are unchanged. C236 is unchanged.
-- [ ] T012 [US1] Run T008's cases, the unit tests, C-ctl and the existing CMake and installed-library suites until they pass. An existing assertion whose expectation changes is recorded with its reason in the commit message. None may be loosened otherwise.
+- [X] T010 [US1] In `FE::merge_into_existing`, `conditional` becomes "a fetch carrying C232 that is not Test" (FR-006, R5). C231's `conditional` stays the count of Optional components. Keep C231 V2 holding.
+- [X] T011 [US1] In `SE::scopes`, a conditional search whose chain is `DoesNotHold` counts as `optional`, and any other conditional search counts as `runtime` (FR-007). Test-directory and `BUILD_TESTING` searches are unchanged. C236 is unchanged.
+- [X] T012 [US1] Run T008's cases, the unit tests, C-ctl and the existing CMake and installed-library suites until they pass. An existing assertion whose expectation changes is recorded with its reason in the commit message. None may be loosened otherwise.
 
 ## Phase 4: User Story 2: combined and branching conditions (P1)
 
 **Goal**: FR-002, FR-003. **Independent test**: T-5 to T-9.
 
 - [X] T013 [US2] Write T-5, T-6, T-7, T-7e, T-8 and T-9 in `IT`. The "Changed" ones (T-6, T-8, T-9) must fail at the log-only commit; add them to `MS/control.md`. If they are written after T009, record that M-mutations stand in for the failing run (T018).
-- [ ] T014 [US2] Make T-5 to T-9 pass. Fix any `CD` rule they expose, adding the unit test that would have caught it.
+- [X] T014 [US2] Make T-5 to T-9 pass. Fix any `CD` rule they expose, adding the unit test that would have caught it.
 
 ## Phase 5: User Story 3: nothing else changes (P2)
 
@@ -91,7 +91,7 @@ Scope does not change in this phase.
   - the C122 and C232 rows of `docs/reference/sbom-format-mapping.md`, worded as in `contracts/wire.md`;
   - a paragraph in `docs/reference/reading-a-mikebom-sbom.md`;
   - `CHANGELOG.md` `## [Unreleased]`, Fixed (#1639).
-- [ ] T017 Spec record: add the census's figures to `research.md` R6 (no figure before T007).
+- [X] T017 Spec record: add the census's figures to `research.md` R6 (no figure before T007).
 - [ ] T018 Mutations (SC-006): `MS/mutate.py`, modelled on `specs/1640-strip-url-credentials/measurements/mutate.py`.
   - **One per evaluation rule:** platform, its negation, the guard, its reversed order, option default, missing value, `cmake_dependent_option`, `CACHE BOOL`, literal `set`, conflict, `NOT`, `AND`, `OR`, `else`, `elseif`, nesting, `scope_files`.
   - **Plus:** R9's predicate back to scope; C232 only with a scope; searches on the old rule.

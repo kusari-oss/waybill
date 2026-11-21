@@ -229,7 +229,7 @@ fn i10_link_half_still_applies_to_a_shipped_record() {
     write(
         r,
         "CMakeLists.txt",
-        "project(top)\nif(FLAG)\n  find_package(waybill-fixture-sdk)\n  target_link_directories(t PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/shared/sdk/lnx/lib)\n  target_link_libraries(t PRIVATE waybill-fixture-sdk)\nendif()\n",
+        "project(top)\noption(FLAG \"\" OFF)\nif(FLAG)\n  find_package(waybill-fixture-sdk)\n  target_link_directories(t PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/shared/sdk/lnx/lib)\n  target_link_libraries(t PRIVATE waybill-fixture-sdk)\nendif()\n",
     );
     let d = scan(r);
     let c = by_purl(&d, "pkg:generic/waybill-fixture-sdk@1.0.0");
@@ -279,7 +279,7 @@ fn i07_mixed_test_and_conditional_searches_follow_the_name_rule() {
     let t = tree();
     bare_record(t.path(), "sdk", "waybill_fixture_bare", "2.0.0");
     write(t.path(), "sdk/share/waybill_fixture/tests/a/CMakeLists.txt", "find_package(waybill_fixture_bare)\n");
-    write(t.path(), "sdk/share/waybill_fixture_consumer/consumer-config.cmake", "if(WITH_X)\n  find_package(waybill_fixture_bare)\nendif()\n");
+    write(t.path(), "sdk/share/waybill_fixture_consumer/consumer-config.cmake", "option(WITH_X \"\" OFF)\nif(WITH_X)\n  find_package(waybill_fixture_bare)\nendif()\n");
     let d = scan(t.path());
     let c = by_purl(&d, "pkg:generic/waybill_fixture_bare@2.0.0");
     assert_eq!(scope(c), "excluded", "{c}");
@@ -294,10 +294,12 @@ fn i07_mixed_test_and_conditional_searches_follow_the_name_rule() {
 
 /// I-6: a bare record searched under a condition: Optional, as on `main`.
 #[test]
+/// Spec 1641: each condition below has a visible default that does not
+/// hold, so the search stays conditional, as these cases intend.
 fn i06_bare_record_searched_conditionally_stays_optional() {
     let t = tree();
     bare_record(t.path(), "sdk", "waybill_fixture_bare", "2.0.0");
-    write(t.path(), "sdk/share/waybill_fixture_consumer/consumer-config.cmake", "if(NOT GPU_TARGETS)\n  find_package(waybill_fixture_bare)\nendif()\n");
+    write(t.path(), "sdk/share/waybill_fixture_consumer/consumer-config.cmake", "option(GPU_TARGETS \"\" ON)\nif(NOT GPU_TARGETS)\n  find_package(waybill_fixture_bare)\nendif()\n");
     let d = scan(t.path());
     let c = by_purl(&d, "pkg:generic/waybill_fixture_bare@2.0.0");
     assert_eq!(scope(c), "excluded", "{c}");
@@ -309,7 +311,7 @@ fn i06_bare_record_searched_conditionally_stays_optional() {
 #[test]
 fn i08_unpaired_conditional_search_stays_optional() {
     let t = tree();
-    write(t.path(), "CMakeLists.txt", "project(top)\nif(WITH_X)\n  find_package(waybill_fixture_absent)\nendif()\n");
+    write(t.path(), "CMakeLists.txt", "project(top)\noption(WITH_X \"\" OFF)\nif(WITH_X)\n  find_package(waybill_fixture_absent)\nendif()\n");
     let d = scan(t.path());
     let c = by_purl(&d, "pkg:generic/waybill_fixture_absent");
     assert_eq!(scope(c), "excluded", "{c}");

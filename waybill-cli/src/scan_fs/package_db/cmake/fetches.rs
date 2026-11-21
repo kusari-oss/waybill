@@ -336,12 +336,20 @@ pub(crate) fn read_declarations(
             let mut conditions = blocks.conditions();
             conditions.extend(body_conditions.iter().cloned());
             let ctx = Context { mode: mode_for(&dir, &modes), fetchcontent_provider: provider };
-            let shape = fallback::classify(kind, &decl_args, &if_conds, blocks.function().is_some(), ctx);
+            let mut shape = fallback::classify(kind, &decl_args, &if_conds, blocks.function().is_some(), ctx);
+            // Spec 1641 (FR-001, FR-004): the catch-all is re-evaluated; a
+            // chain that does not hold by default stays Optional, anything
+            // else is in scope with C232 as the record (FR-005).
+            let mut kept = false;
             if shape == Some(FallbackShape::Conditional) {
                 let mut atoms = reach_atoms.clone();
                 let eval = defaults.chain(reach_eval, &blocks.branches(), &body_conditions, &mut atoms);
                 let versioned = !entry.version.is_empty() && entry.version != "unknown";
                 census("fetch", entry.purl.as_str(), versioned, &atoms, eval, &conditions);
+                if eval.in_scope() {
+                    shape = None;
+                    kept = true;
+                }
             }
             let test = if in_test_dir {
                 Some("source-test-directory")
@@ -350,7 +358,7 @@ pub(crate) fn read_declarations(
             } else {
                 None
             };
-            mark(&mut entry, shape, test, &conditions);
+            mark(&mut entry, shape, test, &conditions, kept);
             decls.push(Declaration { kind, name: decl_name, rel: rel.clone(), entry: Some(entry) });
         }
     }
@@ -480,7 +488,7 @@ fn census(
 }
 
 /// Test outranks Optional: a component's scope is one value (R7).
-fn mark(entry: &mut PackageDbEntry, shape: Option<FallbackShape>, test: Option<&str>, conditions: &[String]) {
+fn mark(entry: &mut PackageDbEntry, shape: Option<FallbackShape>, test: Option<&str>, conditions: &[String], kept: bool) {
     if let Some(derivation) = test {
         entry.lifecycle_scope = Some(LifecycleScope::Test);
         entry.extra_annotations.insert(ANN_SCOPE_DERIVATION.to_string(), serde_json::json!(derivation));
@@ -488,7 +496,7 @@ fn mark(entry: &mut PackageDbEntry, shape: Option<FallbackShape>, test: Option<&
         entry.lifecycle_scope = Some(LifecycleScope::Optional);
         entry.extra_annotations.insert(ANN_OPTIONAL_DERIVATION.to_string(), serde_json::json!(shape.as_str()));
     }
-    if entry.lifecycle_scope.is_some() && !conditions.is_empty() {
+    if (entry.lifecycle_scope.is_some() || kept) && !conditions.is_empty() {
         entry.extra_annotations.insert(ANN_CMAKE_FETCH_CONDITIONS.to_string(), serde_json::json!(conditions));
     }
 }
@@ -569,6 +577,10 @@ fn one_per_purl(entries: Vec<Counted>, cov: &mut FetchCoverage) -> Vec<PackageDb
             _ => 2,
         };
         group.sort_by_key(|e| (rank(e), e.source_path.clone()));
+        // Spec 1641: a declaration with no scope and no C232 is unconditional;
+        // one with no scope and C232 is a catch-all conditional kept in scope.
+        let any_unconditional =
+            group.iter().any(|e| e.lifecycle_scope.is_none() && !e.extra_annotations.contains_key(ANN_CMAKE_FETCH_CONDITIONS));
         let mut first = group.remove(0);
         let mut conds: BTreeSet<String> = conditions_of(&first).into_iter().collect();
         let mut chains = wrapper_chains(&first);
@@ -586,7 +598,7 @@ fn one_per_purl(entries: Vec<Counted>, cov: &mut FetchCoverage) -> Vec<PackageDb
         }
         first.extra_source_paths.sort();
         first.extra_source_paths.dedup();
-        if first.lifecycle_scope.is_some() && !conds.is_empty() {
+        if (first.lifecycle_scope.is_some() || !any_unconditional) && !conds.is_empty() {
             first.extra_annotations.insert(ANN_CMAKE_FETCH_CONDITIONS.to_string(), serde_json::json!(conds));
         } else {
             first.extra_annotations.remove(ANN_CMAKE_FETCH_CONDITIONS);
@@ -670,10 +682,13 @@ pub(crate) fn merge_into_existing(entries: &mut Vec<PackageDbEntry>, cov: &mut F
             .and_then(|v| v.as_str())
             .is_some_and(|m| m.starts_with("cmake-fetchcontent") || m == "cmake-externalproject")
     };
+    // Spec 1641 (FR-006): conditional is the presence of a condition, not
+    // the scope. A fetch spec 1641 keeps in scope carries C232 and no scope.
     let conditional = |e: &PackageDbEntry| {
         is_fetch(e)
-            && e.lifecycle_scope == Some(LifecycleScope::Optional)
-            && e.extra_annotations.get(ANN_OPTIONAL_DERIVATION).and_then(|v| v.as_str()).is_some_and(|d| d.starts_with("cmake-"))
+            && ((e.lifecycle_scope == Some(LifecycleScope::Optional)
+                && e.extra_annotations.get(ANN_OPTIONAL_DERIVATION).and_then(|v| v.as_str()).is_some_and(|d| d.starts_with("cmake-")))
+                || (e.lifecycle_scope.is_none() && e.extra_annotations.contains_key(ANN_CMAKE_FETCH_CONDITIONS)))
     };
     let files_of = |e: &PackageDbEntry| -> Vec<String> {
         std::iter::once(e.source_path.clone()).chain(e.extra_source_paths.iter().cloned()).collect()

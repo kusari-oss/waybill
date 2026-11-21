@@ -302,6 +302,9 @@ pub(crate) struct NameScope {
     /// The sorted union of every search's conditions; C236 when
     /// non-runtime and non-empty.
     pub(crate) conditions: BTreeSet<String>,
+    /// Spec 1641 (FR-007): in scope only because a conditional search's
+    /// chain holds by default; C236 is written without a scope.
+    pub(crate) kept: bool,
 }
 
 /// [`NameScope`] for every package name (lowercased) the searches name.
@@ -309,6 +312,7 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
     #[derive(Default)]
     struct Acc {
         runtime: bool,
+        kept: bool,
         optional: bool,
         test_dir: bool,
         test_cond: bool,
@@ -324,13 +328,15 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
             a.test_cond = true;
         } else if s.conditions.is_empty() {
             a.runtime = true;
+        } else if s.eval.in_scope() {
+            a.kept = true;
         } else {
             a.optional = true;
         }
     }
     acc.into_iter()
         .map(|(name, a)| {
-            let (scope, test_derivation) = if a.runtime {
+            let (scope, test_derivation) = if a.runtime || a.kept {
                 (None, None)
             } else if a.optional {
                 // #1624: spec 1269's order, the strongest call site wins. A
@@ -341,7 +347,7 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
             } else {
                 (Some(LifecycleScope::Test), Some("cmake-build-testing"))
             };
-            (name, NameScope { scope, test_derivation, conditions: a.conditions })
+            (name, NameScope { scope, test_derivation, conditions: a.conditions, kept: a.kept && !a.runtime })
         })
         .collect()
 }
@@ -351,7 +357,12 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
 pub(crate) fn mark(entries: &mut [PackageDbEntry], scopes: &BTreeMap<String, NameScope>) -> (usize, usize) {
     for e in entries.iter_mut() {
         let Some(s) = scopes.get(&e.name) else { continue };
-        let Some(scope) = s.scope else { continue };
+        let Some(scope) = s.scope else {
+            if s.kept && !s.conditions.is_empty() {
+                e.extra_annotations.insert(ANN_CMAKE_FIND_CONDITIONS.to_string(), serde_json::json!(s.conditions));
+            }
+            continue;
+        };
         e.lifecycle_scope = Some(scope);
         match s.test_derivation {
             Some(d) => {
@@ -429,7 +440,9 @@ mod tests {
     /// other searches are in test contexts.
     #[test]
     fn i1624_the_strongest_call_site_decides_the_scope() {
-        let product = one("if(WITH_X)\n  find_package(waybill-fixture-x)\nendif()");
+        let mut product = one("if(WITH_X)\n  find_package(waybill-fixture-x)\nendif()");
+        // Spec 1641: a product search whose chain does not hold by default.
+        product.eval = crate::scan_fs::package_db::cmake::conditions::Eval::DoesNotHold;
         let mut from_tests = one("find_package(waybill-fixture-x)");
         from_tests.in_test_dir = true;
         let mut under_testing = one("if(BUILD_TESTING)\n  find_package(waybill-fixture-x)\nendif()");

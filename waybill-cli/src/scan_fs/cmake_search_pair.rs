@@ -379,6 +379,11 @@ pub(crate) fn record_scopes(
     for (purl, ps) in by_record {
         if ps.iter().any(|p| !p.conditional) {
             out.required.insert(purl.to_string());
+            // Spec 1641 (FR-007): a record whose non-conditional searches are
+            // all ones spec 1641 kept in scope still records their C236.
+            if ps.iter().all(|p| p.conditional || !p.conditions.is_empty()) {
+                out.conditions_only.insert(purl.to_string(), ps.iter().flat_map(|p| p.conditions.iter().cloned()).collect());
+            }
             continue;
         }
         let unconditionally_linked = linked.contains(purl) && !link_conditional.contains_key(purl);

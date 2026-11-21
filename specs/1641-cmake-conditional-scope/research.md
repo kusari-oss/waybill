@@ -89,6 +89,12 @@ File references are to `waybill-cli/src/scan_fs/package_db/` at `main` `886792b7
 - **The fixture repository** gains `census/conditions.py` (stdlib, `python3 -I -B`) and `.github/workflows/census-conditions.yml`, modelled on spec 1639's `census-merges`. The matrix is TheRock (submodules) plus the quality corpus's CMake targets. It tallies by kind × category × eval, with the versioned count and the would-change count under FR-004.
 - **The public corpus** runs at the log-only commit with `regen_goldens` (0 differing expected).
 - **Positive control:** a fixture with one fetch per category must produce one event each, before the census is trusted.
+- **Result** (`measurements/census.md`, run 44950692611 at 5ae18211):
+  - **TheRock:** 57 of 69 catch-all conditional fetches change scope, 41 of them versioned. 44 change through unknown; the most common are TheRock's bundled system libraries, under `THEROCK_BUNDLE_SYSDEPS`/`THEROCK_ENABLE_*` with no visible default.
+  - **Quality corpus:** cpp-mongo 3, python-pytorch 1, nlohmann-json 0.
+  - **Public corpus:** 0 by measurement.
+
+  The counts support FR-004 and FR-007 as clarified.
 
 ## R7. Fixtures and tests
 
