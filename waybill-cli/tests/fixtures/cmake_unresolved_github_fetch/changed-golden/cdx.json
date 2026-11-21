@@ -1,0 +1,421 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:generic/waybill-fixture-other",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-other",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:download-url",
+          "value": "https://example.invalid/waybill-fixture-other.git"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-fetchcontent-git"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "URL or GIT_TAG uses a CMake variable with no literal set() in the same file"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill-fixture-other",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/waybill_fixture_superbuild",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill_fixture_superbuild",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-project"
+        },
+        {
+          "name": "waybill:version-absence",
+          "value": "not-declared"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:generic/waybill_fixture_superbuild",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:github/waybill-org/waybill-fixture-dep",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-direct",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:download-url",
+          "value": "https://github.com/Waybill-Org/Waybill-Fixture-Dep.git"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-fetchcontent-git"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "URL or GIT_TAG uses a CMake variable with no literal set() in the same file"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:github/waybill-org/waybill-fixture-dep",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:github/waybill-org/waybill-fixture-two",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "x/CMakeLists.txt"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "y/CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-a",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"x/CMakeLists.txt\",\"y/CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:download-url",
+          "value": "https://github.com/waybill-org/waybill-fixture-two.git"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-fetchcontent-git"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "URL or GIT_TAG uses a CMake variable with no literal set() in the same file"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"x\",\"y\"]"
+        }
+      ],
+      "purl": "pkg:github/waybill-org/waybill-fixture-two",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:github/waybill-org/waybill-fixture-wrapped",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "CMakeLists.txt"
+          }
+        ]
+      },
+      "name": "waybill-fixture-target",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"CMakeLists.txt\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:cmake-fetch-wrapper",
+          "value": "[[\"wf_dep\"]]"
+        },
+        {
+          "name": "waybill:download-url",
+          "value": "https://github.com/waybill-org/waybill-fixture-wrapped.git"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "cmake-externalproject"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "URL or GIT_TAG uses a CMake variable with no literal set() in the same file"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:github/waybill-org/waybill-fixture-wrapped",
+      "type": "library"
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "waybill-fixture-root@1"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "waybill-fixture-root@1"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/waybill-fixture-other"
+    },
+    {
+      "dependsOn": [
+        "pkg:generic/waybill-fixture-other",
+        "pkg:github/waybill-org/waybill-fixture-dep",
+        "pkg:github/waybill-org/waybill-fixture-two",
+        "pkg:github/waybill-org/waybill-fixture-wrapped"
+      ],
+      "ref": "pkg:generic/waybill_fixture_superbuild"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:github/waybill-org/waybill-fixture-dep"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:github/waybill-org/waybill-fixture-two"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:github/waybill-org/waybill-fixture-wrapped"
+    },
+    {
+      "dependsOn": [
+        "pkg:generic/waybill_fixture_superbuild"
+      ],
+      "ref": "waybill-fixture-root@1"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "waybill-fixture-root@1",
+      "name": "waybill-fixture-root",
+      "purl": "pkg:generic/waybill-fixture-root@1",
+      "type": "application",
+      "version": "1"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "design"
+      },
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:cpe-coverage",
+        "value": "{\"addressable_without_cpe\":0,\"excluded_files\":0,\"excluded_members\":0,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":5,\"with_candidates\":0}"
+      },
+      {
+        "name": "waybill:cmake-fetch-coverage",
+        "value": "{\"components\":4,\"conditional\":0,\"emitted\":5,\"merged\":{\"existing-component\":0,\"first-declaration-wins\":0},\"read\":5,\"test\":0,\"unparseable-files\":0,\"unresolved\":{\"identity\":0},\"wrappers\":{\"ambiguous-calls\":0,\"calls\":1,\"definitions\":1}}"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "[\"ID\",\"VERSION_ID\"]"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "transitive-edges-unresolvable: generic, github"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\",\"x\",\"y\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "<masked-tool-version>"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

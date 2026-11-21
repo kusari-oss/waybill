@@ -33,7 +33,7 @@
 
     List and explain every unexplained declaration before using the counts. Do not compare totals: `main`'s output is post-merge.
   - **Record** the run ID, the fixture commit, the scanned SHAs read from the logs, and the per-tree table in `MS/census.md`.
-- [ ] T002 Create `IT` from the existing helpers:
+- [X] T002 Create `IT` from the existing helpers:
   - `common::cmake_fetch` (scan in three formats, `prop`, C231 accounting check);
   - `common::git_fixture::GitFixture` (`add_submodule`, `git`).
 
@@ -41,7 +41,7 @@
 
 ## Phase 2: Foundational
 
-- [ ] T003 U-ctl in `IT` (FR-010).
+- [X] T003 U-ctl in `IT` (FR-010).
   - **Tree.** `FX/ctl/` holds one of each unchanged shape:
     - a resolved GitHub fetch;
     - a resolved generic git fetch;
@@ -59,22 +59,22 @@
 
 **Independent Test**: U-1 to U-6 pass in three formats. U-ctl stays byte-identical.
 
-- [ ] T004 [P] [US1] Integration cases U-1, U-2, U-3, U-4, U-5 and U-6 in `IT`, as `contracts/wire.md` specifies them. U-1 uses a mixed-case owner/repo to check the lowercasing. U-3 is the aotriton shape: `wf_dep(noimage project)` with `V` set twice in the file. U-6's `wf_tag(a v1.2)` half is a guard and passes at `main`; every other assertion must fail at `main`, and the failure is recorded in the commit message.
-- [ ] T005 [P] [US1] Unit tests in `CM`'s test module for `fetch_entry`, one per row of `data-model.md`'s shape table:
+- [X] T004 [P] [US1] Integration cases U-1, U-2, U-3, U-4, U-5 and U-6 in `IT`, as `contracts/wire.md` specifies them. U-1 uses a mixed-case owner/repo to check the lowercasing. U-3 is the aotriton shape: `wf_dep(noimage project)` with `V` set twice in the file. U-6's `wf_tag(a v1.2)` half is a guard and passes at `main`; every other assertion must fail at `main`, and the failure is recorded in the commit message.
+- [X] T005 [P] [US1] Unit tests in `CM`'s test module for `fetch_entry`, one per row of `data-model.md`'s shape table:
   - **GitHub, unresolved reference:** versionless `pkg:github`, lowercased, `waybill:download-url` set, C151, design.
   - **`https://github.com/${OWNER}/r.git` with `GIT_TAG ${X}`:** `pkg:github` must not appear. This is the M2 target.
   - **Both mechanisms:** C55 `cmake-fetchcontent-git` and `cmake-externalproject`.
 
   Leave the existing `waybill-fixture-unset` and `branchy` unit tests as they are; if one changes, trace why.
-- [ ] T006 [US1] Implement R1 in `CM::fetch_entry`. Inside the unresolved branch, before building `pkg:generic`, apply this check: `git_repo` is `Some` with no `${`, `git_tag` is `Some` with a `${`, and `url` has no `${`. When `github_re` matches the repository, build `pkg:github/<owner>/<repo>`:
+- [X] T006 [US1] Implement R1 in `CM::fetch_entry`. Inside the unresolved branch, before building `pkg:generic`, apply this check: `git_repo` is `Some` with no `${`, `git_tag` is `Some` with a `${`, and `url` has no `${`. When `github_re` matches the repository, build `pkg:github/<owner>/<repo>`:
   - owner and repository folded by `super::forge::lowercases_owner_and_name("github")`, as on the resolved branch;
   - no version;
   - `download_url = Some(git_repo)`;
   - the same `source_mechanism`, design tier and C151 insertion as today.
 
   Factor the owner/repo fold into one closure or helper that both branches call, so the rule has one definition. Every other unresolved shape keeps today's code path byte for byte.
-- [ ] T007 [US1] Implement R2 in `FE::read_fetches`: the `Definitions::collect` predicate becomes `declared(kind, args, "", vars).is_some_and(|d| !(d.name.is_empty() && d.entry.extra_annotations.contains_key("waybill:unresolved-reason")))`. Add a comment citing spec 1539 R2 and this spec's research R2. Add a unit test in `FE`: a definition whose body is U-3's template is still a wrapper (`Definitions::is_wrapper`), and a body with a literal name and an unresolved tag is still not one, as on `main`.
-- [ ] T008 [US1] Run T004, T005, T007's unit test, U-ctl and the existing CMake suites until they pass:
+- [X] T007 [US1] Implement R2 in `FE::read_fetches`: the `Definitions::collect` predicate becomes `declared(kind, args, "", vars).is_some_and(|d| !(d.name.is_empty() && d.entry.extra_annotations.contains_key("waybill:unresolved-reason")))`. Add a comment citing spec 1539 R2 and this spec's research R2. Add a unit test in `FE`: a definition whose body is U-3's template is still a wrapper (`Definitions::is_wrapper`), and a body with a literal name and an unresolved tag is still not one, as on `main`.
+- [X] T008 [US1] Run T004, T005, T007's unit test, U-ctl and the existing CMake suites until they pass:
   - `cmake_nested_fetches`, `cmake_fetch_wrappers`, `cmake_project_components`, `scan_cmake`, `scan_cmake_tree_finds`, `binary_source_binding_cmake`;
   - `cargo test -p waybill --bins cmake`.
 
@@ -88,17 +88,17 @@
 
 **Independent Test**: U-7, U-8, U-11 to U-16 pass in three formats; U-ctl byte-identical.
 
-- [ ] T009 [P] [US2] Integration cases U-7, U-8, U-11, U-12, U-13a, U-14, U-15, U-16 and U-17 in `IT`.
+- [X] T009 [P] [US2] Integration cases U-7, U-8, U-11, U-12, U-13a, U-14, U-15, U-16 and U-17 in `IT`.
   - U-11's submodule uses `GitFixture::add_submodule` with the literal GitHub URL `https://github.com/waybill-org/waybill-fixture-dep.git`, the same shape as `cmake_nested_fetches.rs`'s line-411 case.
   - U-8, U-11 and U-14 assert C233 exactly, including `"version": ""` (FR-013), and C231's `merged.existing-component`.
   - U-17 covers FR-013's other path, R5 by name: C233 `"version": ""` and C231's `merged.first-declaration-wins`. Before T006 the unresolved declaration's PURL is `pkg:generic/waybill-fixture-dep`, so U-17 may already pass at `main`. If it does, record it as a guard rather than a failing-first case.
   - U-13a and U-16 are guards and pass at `main`; every other case must fail at `main`.
-- [ ] T010 [US2] Implement FR-004 in `CM::fetch_entry`. In the same literal-repository check as T006, when `github_re` does not match, keep `pkg:generic/<declared name>` and pass `download_url = Some(git_repo)`. A URL fetch and an unresolved repository still pass `None` (FR-005, FR-006).
-- [ ] T011 [US2] **R5 probe: decide before building.** Add U-13b to `IT`: two required `FetchContent_Declare(waybill-fixture-dep …)` of one GitHub URL in the root `CMakeLists.txt`, one with `GIT_TAG v1` and one with `GIT_TAG ${UNSET}`. Run it with T006 and T010 in place and no reconciler change, and record the result and the component list in `MS/reconciler-probe.md`. Apply R5's rule, which is fixed:
+- [X] T010 [US2] Implement FR-004 in `CM::fetch_entry`. In the same literal-repository check as T006, when `github_re` does not match, keep `pkg:generic/<declared name>` and pass `download_url = Some(git_repo)`. A URL fetch and an unresolved repository still pass `None` (FR-005, FR-006).
+- [X] T011 [US2] **R5 probe: decide before building.** Add U-13b to `IT`: two required `FetchContent_Declare(waybill-fixture-dep …)` of one GitHub URL in the root `CMakeLists.txt`, one with `GIT_TAG v1` and one with `GIT_TAG ${UNSET}`. Run it with T006 and T010 in place and no reconciler change, and record the result and the component list in `MS/reconciler-probe.md`. Apply R5's rule, which is fixed:
   - **one component** → do T012;
   - **two components** → mark T012 not needed in `MS/reconciler-probe.md`, keep U-13b as the regression test, and drop M5 from T016.
-- [ ] T012 [US2] (only if T011 collapses) In `RC::reconcile_design_source_tiers`, skip, as a design-tier candidate, any component whose `waybill:source-mechanism` is `cmake-fetchcontent-git`, `cmake-fetchcontent-url` or `cmake-externalproject` and whose PURL ecosystem is `github`. Add a comment citing FR-014 and research R5. Add a unit test in `RC`'s test module that a design-tier `pkg:github` CMake fetch and a source-tier `pkg:github@v1` of the same name and directory both survive, and that a design-tier `pkg:generic` CMake fetch reconciles as before.
-- [ ] T013 [US2] Run T009, U-13b, U-ctl and T008's suites until they pass.
+- [X] T012 [US2] (only if T011 collapses) In `RC::reconcile_design_source_tiers`, skip, as a design-tier candidate, any component whose `waybill:source-mechanism` is `cmake-fetchcontent-git`, `cmake-fetchcontent-url` or `cmake-externalproject` and whose PURL ecosystem is `github`. Add a comment citing FR-014 and research R5. Add a unit test in `RC`'s test module that a design-tier `pkg:github` CMake fetch and a source-tier `pkg:github@v1` of the same name and directory both survive, and that a design-tier `pkg:generic` CMake fetch reconciles as before.
+- [X] T013 [US2] Run T009, U-13b, U-ctl and T008's suites until they pass.
 
 **Checkpoint**: US1 and US2 complete.
 
@@ -108,11 +108,11 @@
 
 **Independent Test**: U-9, U-10, U-ctl and U-rep pass.
 
-- [ ] T014 [P] [US3] Integration cases in `IT`:
+- [X] T014 [P] [US3] Integration cases in `IT`:
   - **U-9 and U-10:** assert each tree's own component (PURL, no `waybill:download-url`, C151). Their byte-identity is U-ctl's job.
   - **U-rep:** every tree from U-1 to U-17 scanned twice, identical output.
   - **U-xhost** (SC-005): generate `FX/changed-golden/{cdx,spdx-2.3,spdx-3}.json` from the branch binary after T013. Mask together, in one pass: the serial number, timestamps, absolute paths, `HOME`, and content-addressed IDs. Then confirm in T022's CI run that the test passes on the Linux, macOS and Windows lanes, enumerating each lane's conclusion.
-- [ ] T015 [US3] Run T014 and the whole of `IT`.
+- [X] T015 [US3] Run T014 and the whole of `IT`.
 
 ## Phase 6: Polish and cross-cutting
 

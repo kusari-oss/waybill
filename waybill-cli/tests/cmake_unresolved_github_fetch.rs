@@ -464,7 +464,7 @@ fn u10_url_fetch_is_unchanged() {
 #[test]
 fn u_xhost_changed_shapes_match_the_golden_on_every_host() {
     let fx = GitFixture::new();
-    fx.write("waybill-fixture-tree/CMakeLists.txt", &root(&format!("{}{}{}", git("waybill-fixture-target", GH, UNSET), aotriton_shape("https://github.com/waybill-org/waybill-fixture-wrapped.git"), git("waybill-fixture-other", OTHER, UNSET))));
+    fx.write("waybill-fixture-tree/CMakeLists.txt", &root(&format!("{}{}{}", git("waybill-fixture-direct", GH, UNSET), aotriton_shape("https://github.com/waybill-org/waybill-fixture-wrapped.git"), git("waybill-fixture-other", OTHER, UNSET))));
     fx.write("waybill-fixture-tree/x/CMakeLists.txt", &git("waybill-fixture-a", "https://github.com/waybill-org/waybill-fixture-two.git", UNSET));
     fx.write("waybill-fixture-tree/y/CMakeLists.txt", &git("waybill-fixture-b", "https://github.com/waybill-org/waybill-fixture-two.git", UNSET));
     let d = check(&fx, &fx.path("waybill-fixture-tree"));

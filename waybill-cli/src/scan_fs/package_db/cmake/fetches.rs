@@ -220,8 +220,13 @@ pub(crate) fn read_declarations(
     let vars_of: HashMap<&Path, Vars> =
         parsed.iter().map(|(_, rel, content, _)| (rel.as_path(), super::collect_set_vars(content))).collect();
     let no_vars = Vars::new();
+    // Spec 1638 research R2: a GitHub repository with an unresolved reference
+    // names a declaration whose name is unexpanded (FR-008), but it is not an
+    // identity of its own for spec 1539 R2. On `main` no such declaration had
+    // an identity, so every wrapper stays one and keeps its call sites (C234).
     let defs = Definitions::collect(parsed.iter().map(|(_, rel, _, cmds)| (rel.as_path(), cmds.as_slice())), |file, kind, args| {
-        declared(kind, args, "", vars_of.get(file).unwrap_or(&no_vars)).is_some()
+        declared(kind, args, "", vars_of.get(file).unwrap_or(&no_vars))
+            .is_some_and(|d| !(d.name.is_empty() && d.entry.extra_annotations.contains_key("waybill:unresolved-reason")))
     });
     cov.wrapper_definitions = defs.wrapper_count();
 
@@ -772,6 +777,43 @@ mod tests {
         assert_eq!(entries[0].lifecycle_scope, None, "required: some build takes it");
         assert!(!entries[0].extra_annotations.contains_key(ANN_CMAKE_FETCH_CONDITIONS));
         assert_eq!((cov.emitted, cov.components, cov.conditional), (2, 1, 0));
+    }
+
+    /// Spec 1638 research R2: wrapper recognition is unchanged. A body whose
+    /// name is a parameter and whose GitHub tag is unresolved is still a
+    /// wrapper, and its call keeps C234. A body with a literal name and an
+    /// unresolved tag is still not one.
+    #[test]
+    fn wrapper_recognition_is_unchanged_by_unresolved_github_identity() {
+        let dir = tempfile::tempdir().unwrap();
+        let gh = "https://github.com/waybill-org/waybill-fixture-dep.git";
+        let fs = files(
+            dir.path(),
+            &[(
+                "CMakeLists.txt",
+                &format!(
+                    "function(wf_dep noimage project)\nExternalProject_Add(${{project}} GIT_REPOSITORY {gh} GIT_TAG ${{FX_UNSET}})\nendfunction()\n\
+                     wf_dep(OFF waybill-fixture-target)\n"
+                ),
+            )],
+        );
+        let (entries, cov) = read_fetches(dir.path(), &fs);
+        assert_eq!((cov.wrapper_definitions, cov.wrapper_calls), (1, 1), "still a wrapper");
+        assert_eq!(entries.len(), 1, "{entries:?}");
+        assert_eq!(entries[0].purl.as_str(), "pkg:github/waybill-org/waybill-fixture-dep");
+        assert_eq!(entries[0].name, "waybill-fixture-target");
+        assert!(entries[0].extra_annotations.contains_key(ANN_CMAKE_FETCH_WRAPPER));
+
+        let dir = tempfile::tempdir().unwrap();
+        let fs = files(
+            dir.path(),
+            &[(
+                "CMakeLists.txt",
+                &format!("function(lit tag)\nFetchContent_Declare(waybill-fixture-l GIT_REPOSITORY {gh} GIT_TAG ${{tag}})\nendfunction()\nlit(v1)\n"),
+            )],
+        );
+        let (_, cov) = read_fetches(dir.path(), &fs);
+        assert_eq!(cov.wrapper_definitions, 0, "an identity of its own (spec 1539 R2), as on main");
     }
 
     /// T021 / R3 P6: a duplicate ExternalProject_Add is a configure error,
