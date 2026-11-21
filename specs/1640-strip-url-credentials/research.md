@@ -95,7 +95,7 @@ Each hit was then read to find where its value comes from.
 
 - **Strings:** every fixture uses the user `wbfxuser` and the token `wbfxtoken7c41`. Neither occurs anywhere in the repository (T001 checks this), so a byte search of the output and the log is unambiguous.
 - **Control on the branch:** each case also checks that its field is present with the clean URL. This proves the fixture reaches the field, so an absent token means stripped, not "never emitted".
-- **Control on `main`:** the integration file lands before any sanitising change (T003). Each case's credential assertion is run and must fail there, and the failures are recorded per case. A case that passes on `main` has a fixture that does not reach its field.
+- **Control before the fix:** the D-cases land after the helper (which no D-row reader calls yet) and before any reader change (T006). That commit's D-row output equals `main`'s. Each case's credential assertion is run and must fail there, and the failures are recorded per case. A case that passes on `main` has a fixture that does not reach its field.
 - **Guards:** the N5 rows get G-cases that pass on `main` and on the branch.
 
 ## R6. `ssh://git@` (Clarification Q1)

@@ -37,7 +37,7 @@ waybill copies URLs that projects declare as fetch locations into the SBOM verba
   - it runs parity, CycloneDX schema validation and the unique-`bom-ref` check, and 10 repeat scans.
 
   Identity cases I-1 to I-3 cover User Story 2. Guard cases G-1 to G-4 cover N5. Reuses `common::{cmake_fetch, git_fixture, cdx_schema}`.
-- **Control on `main`** (R5): the integration file lands before any sanitising change. Every D-case's credential assertion must fail there, and the failures are recorded.
+- **Control before the fix** (R5): the D-cases land before any reader change, when D-row output still equals `main`'s. Every D-case's credential assertion must fail there, and the failures are recorded.
 - **Mutations:** delete each `sanitize_declared_url` call, one at a time (SC-005). Restore with `cp`, rebuild after the last one, and use a `^error\[E…\]` guard so a compile failure is not counted as a kill.
 - **CI:**
   - the public corpus (`regen_goldens`): 67 files byte-identical expected;
