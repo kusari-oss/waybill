@@ -745,16 +745,8 @@ pub(crate) fn parse_uv_lock_with_flags(
                 if let Some(raw) = extract_artifact_url(tbl) {
                     // A private index can embed credentials in the
                     // resolved URL, and an SBOM is a document that gets
-                    // shared. m075's helper strips userinfo; its
-                    // `Cow::Owned` return is the documented signal that
-                    // it fired, and FR-016 requires saying so.
-                    let cleaned = waybill::identifiers::sanitize::sanitize_userinfo(&raw);
-                    if matches!(cleaned, std::borrow::Cow::Owned(_)) {
-                        tracing::warn!(
-                            package = %name,
-                            "stripped userinfo from a uv.lock artifact URL before emission"
-                        );
-                    }
+                    // shared (spec 1640 S3).
+                    let cleaned = waybill::identifiers::sanitize::sanitize_declared_url(&raw, source_path);
                     extra.insert(
                         ARTIFACT_URL_KEY.to_string(),
                         serde_json::Value::String(cleaned.into_owned()),

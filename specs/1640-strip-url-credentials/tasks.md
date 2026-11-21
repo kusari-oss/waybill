@@ -40,7 +40,7 @@
 
 This phase changes no D-row's output: no reader calls the new function yet. Only S1–S3, for URLs that carry userinfo, change in how the rest of the URL is normalised (research R3).
 
-- [ ] T004 Unit tests in `SZ`'s test module, with `#[cfg_attr(test, allow(clippy::unwrap_used))]` where needed. Each must fail before T005. Every result is compared with the input minus its userinfo span, byte for byte:
+- [X] T004 Unit tests in `SZ`'s test module, with `#[cfg_attr(test, allow(clippy::unwrap_used))]` where needed. Each must fail before T005. Every result is compared with the input minus its userinfo span, byte for byte:
   - mixed-case `https` host;
   - default port `:443` kept;
   - dot segments kept;
@@ -54,7 +54,7 @@ This phase changes no D-row's output: no reader calls the new function yet. Only
   - an `@` in the path after the authority (not userinfo), unchanged.
 
   The existing cases keep passing.
-- [ ] T005 In `SZ`:
+- [X] T005 In `SZ`:
   - change `sanitize_userinfo` to research R3's splice: detect with the `url` crate, delete the authority's userinfo span from the original string, re-parse to confirm no username or password remains, and fall back to today's re-serialised form otherwise. Keep its `Cow` contract.
   - Add `pub fn sanitize_declared_url<'a>(raw: &'a str, manifest: &str) -> Cow<'a, str>`. It calls `sanitize_userinfo` and, on `Cow::Owned`, unless the only userinfo was the bare `git` user (no password) of an `ssh` URL (planning amendment A1), emits `tracing::warn!(target: "waybill::identifiers::sanitize", manifest_file = manifest, url_redacted = %redact_userinfo_for_log(raw), "stripped credentials from URL")`.
   - Unit tests: it emits one event containing neither the username nor the password; none for a clean URL; none for `ssh://git@host/…`, though the user is still stripped; one for `ssh://alice@host/…`.

@@ -41,9 +41,12 @@ use std::borrow::Cow;
 ///   (SSH-form, malformed), or hits a cannot-be-base parser-setter
 ///   rejection. The original input is passed through unchanged.
 /// - `Cow::Owned(sanitized)` when userinfo was successfully stripped.
-///   The returned string is the URL re-canonicalized through the
-///   `url` crate's serializer with the username cleared and password
-///   removed.
+///   The returned string is the input with its userinfo span and `@`
+///   deleted and every other byte kept (spec 1640 research R3). The
+///   `url` crate's serializer would also lowercase an `https` host, drop
+///   a default port and resolve dot segments, so a credentialled and a
+///   clean spelling of one URL would differ. It is used only as a
+///   fall-back when the span cannot be found.
 ///
 /// Behavior matches the milestone-075 `sanitize_userinfo` helper
 /// exactly (the original lived as a module-private fn in
@@ -75,6 +78,12 @@ pub fn sanitize_userinfo(url: &str) -> Cow<'_, str> {
     if !has_credentials {
         return Cow::Borrowed(url);
     }
+    if let Some(spliced) = without_userinfo_span(url) {
+        let clean = url::Url::parse(&spliced).is_ok_and(|p| p.username().is_empty() && p.password().is_none());
+        if clean {
+            return Cow::Owned(spliced);
+        }
+    }
     // `set_username("")` and `set_password(None)` reject cannot-be-
     // base URLs (e.g., `mailto:`). Vanishingly rare for the
     // git-remote input domain, but the safe fallback is passthrough.
@@ -85,6 +94,40 @@ pub fn sanitize_userinfo(url: &str) -> Cow<'_, str> {
         return Cow::Borrowed(url);
     }
     Cow::Owned(parsed.to_string())
+}
+
+/// `url` without the authority's userinfo and its `@`: the authority runs
+/// from after `://` to the first `/`, `?` or `#`, and the userinfo up to its
+/// last `@`. `None` when there is no such span.
+fn without_userinfo_span(url: &str) -> Option<String> {
+    let start = url.find("://")? + 3;
+    let rest = &url[start..];
+    let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    let at = rest[..end].rfind('@')?;
+    Some(format!("{}{}", &url[..start], &rest[at + 1..]))
+}
+
+/// A URL a scanned project declares as a place to fetch from, with its
+/// userinfo removed ([`sanitize_userinfo`]). Each removal emits the FR-016
+/// warning naming `manifest`, except a bare `git` user of an ssh URL, which
+/// carries no secret (spec 1640 planning amendment A1).
+pub fn sanitize_declared_url<'a>(raw: &'a str, manifest: &str) -> Cow<'a, str> {
+    let out = sanitize_userinfo(raw);
+    if matches!(out, Cow::Owned(_)) && !is_ssh_git_user(raw) {
+        tracing::warn!(
+            target: "waybill::identifiers::sanitize",
+            manifest_file = manifest,
+            url_redacted = %redact_userinfo_for_log(raw),
+            "stripped credentials from URL"
+        );
+    }
+    out
+}
+
+fn is_ssh_git_user(raw: &str) -> bool {
+    url::Url::parse(raw).is_ok_and(|p| {
+        matches!(p.scheme(), "ssh" | "git+ssh") && p.username() == "git" && p.password().is_none()
+    })
 }
 
 /// Build a redacted form of a URL for log output. Replaces userinfo
@@ -264,6 +307,122 @@ mod tests {
     fn redact_passes_through_parse_failure() {
         let r = redact_userinfo_for_log("git@github.com:foo/bar.git");
         assert_eq!(r, "git@github.com:foo/bar.git");
+    }
+
+    // ----------------------------------------------------------------
+    // Spec 1640 (#1647) research R3: stripping removes the userinfo span
+    // and keeps every other byte, so a credentialled and a clean spelling
+    // of one URL sanitise to the same string.
+    // ----------------------------------------------------------------
+
+    fn stripped(input: &str) -> String {
+        let s = sanitize_userinfo(input);
+        assert!(matches!(s, Cow::Owned(_)), "expected {input} to be stripped");
+        s.into_owned()
+    }
+
+    #[test]
+    fn s1640_stripping_keeps_every_other_byte() {
+        for (input, want) in [
+            ("https://u:p@GitHub.com/Org/Repo.git", "https://GitHub.com/Org/Repo.git"),
+            ("https://u:p@github.com:443/org/repo.git", "https://github.com:443/org/repo.git"),
+            ("https://u:p@github.com/a/../org/repo.git", "https://github.com/a/../org/repo.git"),
+            ("https://u:p@host/path%7Erepo with space.git", "https://host/path%7Erepo with space.git"),
+            ("git+https://u:p@GitHub.com/Org/Repo.git", "git+https://GitHub.com/Org/Repo.git"),
+            ("git://u:p@Host.Example/repo;protocol=https;branch=main", "git://Host.Example/repo;protocol=https;branch=main"),
+            ("ssh://git@Host.Example:22/org/repo.git", "ssh://Host.Example:22/org/repo.git"),
+            ("https://u:p@host/x?b=2&a=1#frag", "https://host/x?b=2&a=1#frag"),
+            ("https://ghp_x@host/o/r.git", "https://host/o/r.git"),
+            ("https://u:p%40ss@host/o/r.git", "https://host/o/r.git"),
+            ("https://u:p@host/o/r@v1.git", "https://host/o/r@v1.git"),
+        ] {
+            assert_eq!(stripped(input), want, "{input}");
+        }
+    }
+
+    #[test]
+    fn s1640_a_credentialled_and_a_clean_spelling_agree() {
+        let clean = "https://Git.Example:443/Org/a/../Repo.git";
+        assert_eq!(sanitize_userinfo(clean).as_ref(), clean);
+        assert_eq!(stripped("https://wbfxtoken7c41@Git.Example:443/Org/a/../Repo.git"), clean);
+    }
+
+    #[test]
+    fn s1640_an_at_sign_in_the_path_is_not_userinfo() {
+        let input = "https://host/o/r@v1.git";
+        assert!(matches!(sanitize_userinfo(input), Cow::Borrowed(_)));
+    }
+
+    #[derive(Clone, Default)]
+    struct Capture(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
+
+    impl std::io::Write for Capture {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            match self.0.lock() {
+                Ok(mut g) => g.extend_from_slice(buf),
+                Err(p) => p.into_inner().extend_from_slice(buf),
+            }
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for Capture {
+        type Writer = Capture;
+        fn make_writer(&'a self) -> Self::Writer {
+            self.clone()
+        }
+    }
+
+    /// Everything `f` logs, at every level.
+    fn logs_from<T>(f: impl FnOnce() -> T) -> (T, String) {
+        let cap = Capture::default();
+        let subscriber = tracing_subscriber::fmt()
+            .with_writer(cap.clone())
+            .with_max_level(tracing::Level::TRACE)
+            .with_ansi(false)
+            .finish();
+        let out = tracing::subscriber::with_default(subscriber, f);
+        let text = match cap.0.lock() {
+            Ok(g) => String::from_utf8_lossy(&g).into_owned(),
+            Err(p) => String::from_utf8_lossy(&p.into_inner()).into_owned(),
+        };
+        (out, text)
+    }
+
+    const WARNING: &str = "stripped credentials from URL";
+
+    #[test]
+    fn s1640_a_declared_url_warns_once_without_the_credential() {
+        let (out, logs) =
+            logs_from(|| sanitize_declared_url("https://wbfxuser:wbfxtoken7c41@git.example/o/r.git", "dir/CMakeLists.txt").into_owned());
+        assert_eq!(out, "https://git.example/o/r.git");
+        assert_eq!(logs.matches(WARNING).count(), 1, "{logs}");
+        assert!(logs.contains("dir/CMakeLists.txt"), "{logs}");
+        assert!(logs.contains("<userinfo redacted>"), "{logs}");
+        assert!(!logs.contains("wbfxuser") && !logs.contains("wbfxtoken7c41"), "{logs}");
+    }
+
+    #[test]
+    fn s1640_a_clean_declared_url_does_not_warn() {
+        let (out, logs) = logs_from(|| sanitize_declared_url("https://git.example/o/r.git", "m").into_owned());
+        assert_eq!(out, "https://git.example/o/r.git");
+        assert!(!logs.contains(WARNING), "{logs}");
+    }
+
+    /// Planning amendment A1: the bare `git` user of an ssh URL is stripped
+    /// (Clarification Q1) but is not a credential to warn about.
+    #[test]
+    fn s1640_the_ssh_git_user_is_stripped_without_a_warning() {
+        for raw in ["ssh://git@git.example/o/r.git", "git+ssh://git@git.example/o/r.git"] {
+            let (out, logs) = logs_from(|| sanitize_declared_url(raw, "m").into_owned());
+            assert!(!out.contains("git@"), "{out}");
+            assert!(!logs.contains(WARNING), "{raw}: {logs}");
+        }
+        let (_, logs) = logs_from(|| sanitize_declared_url("ssh://alice@git.example/o/r.git", "m").into_owned());
+        assert_eq!(logs.matches(WARNING).count(), 1, "{logs}");
     }
 
     #[test]
