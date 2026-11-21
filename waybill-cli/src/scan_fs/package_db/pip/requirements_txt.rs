@@ -550,7 +550,9 @@ impl RequirementsTxtEntry {
         // Catalog row C154 registered by T016.
         if let Some(direct) = &self.direct_url {
             let mut obj = serde_json::Map::new();
-            obj.insert("url".to_string(), serde_json::Value::String(direct.url.clone()));
+            // Spec 1640 (#1647, D17).
+            let url = waybill::identifiers::sanitize::sanitize_declared_url(&direct.url, source_path);
+            obj.insert("url".to_string(), serde_json::Value::String(url.into_owned()));
             obj.insert("kind".to_string(), serde_json::Value::String(direct.kind.to_string()));
             obj.insert(
                 "resolved_rev".to_string(),

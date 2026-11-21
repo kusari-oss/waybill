@@ -173,6 +173,10 @@ fn project_to_package_db_entry(
     source_path: &str,
     path: &Path,
 ) -> Option<PackageDbEntry> {
+    // Spec 1640 (#1647, D22): the pin's location, without userinfo, before
+    // it becomes the PURL or is logged.
+    let location = waybill::identifiers::sanitize::sanitize_declared_url(&entry.location, &path.display().to_string()).into_owned();
+    let entry = SwiftLockfileEntry { location, ..entry };
     if !REVISION_RE.is_match(&entry.revision) {
         tracing::warn!(
             path = %path.display(),

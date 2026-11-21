@@ -469,7 +469,15 @@ fn process_recipe(
     // emission (preserves Constitution Principle VIII completeness
     // for malformed recipes).
     let body_metadata =
-        super::recipe_body::parse_recipe_file(path, &name, &version);
+        super::recipe_body::parse_recipe_file(path, &name, &version).map(|mut meta| {
+            // Spec 1640 (#1647, D19): SRC_URI without userinfo, before the
+            // host-typed PURL is derived from it or it is recorded.
+            let manifest = path.display().to_string();
+            for uri in &mut meta.src_uris {
+                *uri = waybill::identifiers::sanitize::sanitize_declared_url(uri, &manifest).into_owned();
+            }
+            meta
+        });
 
     // Milestone 128 FR-018: when `PV` is literally "git" or contains
     // "AUTOINC", derive the emitted version segment from the SRCREV

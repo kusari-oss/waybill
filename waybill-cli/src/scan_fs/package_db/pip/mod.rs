@@ -1301,7 +1301,12 @@ pub(crate) fn pyproject_declared_deps(project_root: &Path) -> Vec<PackageDbEntry
             }
             let purl_str = build_pypi_purl_str(&name, "unresolved");
             let purl = waybill_common::types::purl::Purl::new(&purl_str).ok()?;
-            let constraint = take_constraint(raw_dep);
+            // Spec 1640 (#1647, D21): a direct-URL constraint loses its userinfo.
+            let constraint = waybill::identifiers::sanitize::sanitize_declared_text(
+                &take_constraint(raw_dep),
+                &manifest_path.display().to_string(),
+            )
+            .into_owned();
             let requirement_ranges = if constraint.is_empty() {
                 Vec::new()
             } else {

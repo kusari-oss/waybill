@@ -380,12 +380,15 @@ pub(super) fn cargo_auditable_packages_to_entries(
                     );
                 }
             }
+            // Spec 1640 (#1647, D18): the declared source, without userinfo, for
+            // both the raw source annotation and the VCS URL.
+            let source = waybill::identifiers::sanitize::sanitize_declared_url(&pkg.source, &path.display().to_string()).into_owned();
             // Source annotation only when not "registry" (the
             // crates.io default is implied by the bare PURL).
-            if pkg.source != "registry" {
+            if source != "registry" {
                 extra.insert(
                     "waybill:cargo-auditable-source".to_string(),
-                    serde_json::Value::String(pkg.source.clone()),
+                    serde_json::Value::String(source.clone()),
                 );
             }
             // Milestone 131 US2c (FR-014): for crates.io-sourced
@@ -395,10 +398,10 @@ pub(super) fn cargo_auditable_packages_to_entries(
             // milestone) where to look. For "local" / "git" / "unknown"
             // / other sources, no annotation is added (we don't know
             // where the license is).
-            if pkg.source == "registry"
-                || pkg.source.starts_with("registry+https://")
-                || pkg.source == "crates-io"
-                || pkg.source == "crates.io"
+            if source == "registry"
+                || source.starts_with("registry+https://")
+                || source == "crates-io"
+                || source == "crates.io"
             {
                 extra.insert(
                     "waybill:license-source".to_string(),
@@ -413,7 +416,7 @@ pub(super) fn cargo_auditable_packages_to_entries(
             // `external_refs_from_purl` helper at scan_fs/mod.rs reads
             // this annotation to emit a `vcs`-type ExternalReference
             // on the resolved component.
-            if let Some(vcs_url) = parse_cargo_auditable_git_source(&pkg.source) {
+            if let Some(vcs_url) = parse_cargo_auditable_git_source(&source) {
                 extra.insert(
                     "waybill:cargo-vcs-source-url".to_string(),
                     serde_json::Value::String(vcs_url),
@@ -1777,6 +1780,33 @@ mod tests {
                 .and_then(|v| v.as_str()),
             Some("https://github.com/example/mycrate"),
         );
+    }
+
+    /// Spec 1640 D-18 (#1647): a cargo-auditable git source with userinfo
+    /// reaches neither the raw source annotation nor the VCS URL.
+    #[test]
+    fn s1640_a_credentialled_git_source_is_stripped() {
+        use super::cargo_auditable::{CargoAuditableManifest, CargoAuditablePackage};
+        let manifest = CargoAuditableManifest {
+            packages: vec![CargoAuditablePackage {
+                name: "waybill-fixture-crate".to_string(),
+                version: "0.1.0".to_string(),
+                source: "git+https://wbfxuser:wbfxtoken7c41@git.example/org/waybill-fixture-crate.git#abc123".to_string(),
+                kind: Some("runtime".to_string()),
+                dependencies: vec![],
+                root: false,
+            }],
+        };
+        let purl = waybill_common::types::purl::Purl::new("pkg:generic/binary?file-sha256=deadbeef").unwrap();
+        let entries = cargo_auditable_packages_to_entries(&manifest, &purl, &std::path::PathBuf::from("/bin/binary"));
+        let ann = |k: &str| entries[0].extra_annotations.get(k).and_then(|v| v.as_str()).map(str::to_string);
+        assert_eq!(ann("waybill:cargo-vcs-source-url").as_deref(), Some("https://git.example/org/waybill-fixture-crate"));
+        assert_eq!(
+            ann("waybill:cargo-auditable-source").as_deref(),
+            Some("git+https://git.example/org/waybill-fixture-crate.git#abc123")
+        );
+        let all = serde_json::to_string(&entries[0].extra_annotations).unwrap();
+        assert!(!all.contains("wbfxuser") && !all.contains("wbfxtoken7c41"), "{all}");
     }
 
     /// Spec 1639 F-1 (FR-007): a symbol-fingerprint collision is C242,

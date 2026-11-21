@@ -473,9 +473,10 @@ pub(crate) fn finalize(
     }
 
     // Pass 1: emit lockfile-derived components.
-    for entries in lock_data.values() {
+    for (lock_dir, entries) in &lock_data {
+        let lockfile = lock_dir.join("rebar.lock").to_string_lossy().into_owned();
         for entry in entries {
-            let purl = match build_lock_entry_purl(entry) {
+            let purl = match build_lock_entry_purl(entry, &lockfile) {
                 Ok(p) => p,
                 Err(err) => {
                     tracing::warn!(
@@ -1533,7 +1534,7 @@ fn build_main_module_component(
 // Helpers — lockfile component emission (T011 + T016 + T024 annotation)
 // -----------------------------------------------------------------------
 
-fn build_lock_entry_purl(entry: &LockEntry) -> Result<Purl, String> {
+fn build_lock_entry_purl(entry: &LockEntry, manifest: &str) -> Result<Purl, String> {
     let purl_str = match entry {
         LockEntry::Hex {
             name,
@@ -1565,9 +1566,11 @@ fn build_lock_entry_purl(entry: &LockEntry) -> Result<Purl, String> {
             resolved_ref,
             ..
         } => {
+            // Spec 1640 (#1647, D16).
+            let url = waybill::identifiers::sanitize::sanitize_declared_url(url, manifest);
             format!(
                 "pkg:generic/{name}@{resolved_ref}?vcs_url=git+{}",
-                minimal_qualifier_encode(url)
+                minimal_qualifier_encode(&url)
             )
         }
     };
@@ -1746,10 +1749,13 @@ fn build_design_tier_component(decl: &DeclaredDep, config_dir: &Path) -> Option<
             )
         }
         DeclaredDepSource::Git { url, declared_ref } => {
+            // Spec 1640 (#1647, D16).
+            let manifest = config_dir.join("rebar.config").to_string_lossy().into_owned();
+            let url = waybill::identifiers::sanitize::sanitize_declared_url(url, &manifest);
             let purl_s = format!(
                 "pkg:generic/{}@unspecified?vcs_url=git+{}",
                 decl.name,
-                minimal_qualifier_encode(url),
+                minimal_qualifier_encode(&url),
             );
             let mut anns: BTreeMap<String, serde_json::Value> = BTreeMap::new();
             if let Some(r) = declared_ref {
@@ -2027,7 +2033,7 @@ mod tests {
             inner_sha256: None,
             repo: None,
         };
-        let purl = build_lock_entry_purl(&entry).unwrap();
+        let purl = build_lock_entry_purl(&entry, "rebar.lock").unwrap();
         assert_eq!(purl.as_str(), "pkg:hex/cowboy@2.10.0");
     }
 
@@ -2039,7 +2045,7 @@ mod tests {
             inner_sha256: None,
             repo: Some("hexpm:acme".to_string()),
         };
-        let purl = build_lock_entry_purl(&entry).unwrap();
+        let purl = build_lock_entry_purl(&entry, "rebar.lock").unwrap();
         assert_eq!(
             purl.as_str(),
             "pkg:hex/acme/internal_lib@2.0.0?repository_url=https://repo.hex.pm"
@@ -2054,7 +2060,7 @@ mod tests {
             resolved_ref: "eb39649a76b87e8451baf75d10ce82ca3a3d5601".to_string(),
             declared_ref_form: "ref".to_string(),
         };
-        let purl = build_lock_entry_purl(&entry).unwrap();
+        let purl = build_lock_entry_purl(&entry, "rebar.lock").unwrap();
         assert_eq!(
             purl.as_str(),
             "pkg:generic/my_fork@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://github.com/foo/my-fork.git"

@@ -940,7 +940,7 @@ fn extract_first_git_ref(opts: &str) -> Option<String> {
     None
 }
 
-fn build_purl_for_lock_entry(entry: &LockEntry) -> Result<Purl, String> {
+fn build_purl_for_lock_entry(entry: &LockEntry, manifest: &str) -> Result<Purl, String> {
     let purl_str = match entry {
         LockEntry::Hex {
             name,
@@ -964,9 +964,11 @@ fn build_purl_for_lock_entry(entry: &LockEntry) -> Result<Purl, String> {
             resolved_sha,
             ..
         } => {
+            // Spec 1640 (#1647, D15).
+            let url = waybill::identifiers::sanitize::sanitize_declared_url(url, manifest);
             format!(
                 "pkg:generic/{name}@{resolved_sha}?vcs_url=git+{url}",
-                url = minimal_qualifier_encode(url),
+                url = minimal_qualifier_encode(&url),
             )
         }
         LockEntry::Path { name, .. } => {
@@ -1128,7 +1130,7 @@ fn emit_lockfile_components(
     let mut out = Vec::new();
     let source_path = lockfile_path.to_string_lossy().into_owned();
     for entry in entries {
-        let purl = match build_purl_for_lock_entry(entry) {
+        let purl = match build_purl_for_lock_entry(entry, &source_path) {
             Ok(p) => p,
             Err(err) => {
                 tracing::warn!(
@@ -1250,10 +1252,12 @@ fn emit_design_tier_components(
                 (purl, "hex-hex", BTreeMap::<String, serde_json::Value>::new())
             }
             DeclaredDepSource::Git { url, declared_ref } => {
+                // Spec 1640 (#1647, D15).
+                let url = waybill::identifiers::sanitize::sanitize_declared_url(url, &source_path);
                 let purl = format!(
                     "pkg:generic/{}@unspecified?vcs_url=git+{}",
                     decl.name,
-                    minimal_qualifier_encode(url),
+                    minimal_qualifier_encode(&url),
                 );
                 let mut anns: BTreeMap<String, serde_json::Value> = BTreeMap::new();
                 if let Some(r) = declared_ref {
@@ -1531,7 +1535,7 @@ mod tests {
             repo: "hexpm".into(),
             outer_sha256: None,
         };
-        let p = build_purl_for_lock_entry(&e).unwrap();
+        let p = build_purl_for_lock_entry(&e, "mix.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:hex/phoenix@1.7.10");
     }
 
@@ -1544,7 +1548,7 @@ mod tests {
             repo: "hexpm:acme".into(),
             outer_sha256: None,
         };
-        let p = build_purl_for_lock_entry(&e).unwrap();
+        let p = build_purl_for_lock_entry(&e, "mix.lock").unwrap();
         assert_eq!(
             p.as_str(),
             "pkg:hex/acme/internal_lib@2.0.0?repository_url=https://repo.hex.pm"
@@ -1559,7 +1563,7 @@ mod tests {
             resolved_sha: "eb39649a76b87e8451baf75d10ce82ca3a3d5601".into(),
             declared_ref: Some("ref: main".into()),
         };
-        let p = build_purl_for_lock_entry(&e).unwrap();
+        let p = build_purl_for_lock_entry(&e, "mix.lock").unwrap();
         assert_eq!(
             p.as_str(),
             "pkg:generic/my_fork@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://github.com/foo/my-fork.git"
@@ -1573,7 +1577,7 @@ mod tests {
             path: "apps/shared_lib".into(),
             in_umbrella: false,
         };
-        let p = build_purl_for_lock_entry(&e).unwrap();
+        let p = build_purl_for_lock_entry(&e, "mix.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:generic/shared_lib@unspecified");
     }
 
@@ -1586,7 +1590,7 @@ mod tests {
             repo: "hexpm".into(),
             outer_sha256: None,
         };
-        let p = build_purl_for_lock_entry(&e).unwrap();
+        let p = build_purl_for_lock_entry(&e, "mix.lock").unwrap();
         assert_eq!(p.as_str(), "pkg:hex/phoenix@1.7.10");
     }
 

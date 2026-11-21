@@ -383,8 +383,8 @@ fn encode_hash_segment(hash: &str) -> String {
 /// `fetchgit` does exactly that, and an `env`-only read lost every git
 /// fetch's URL. Under structured attributes `urls` can be a JSON list, whose
 /// first string is taken for the same reason as the whitespace form's.
-pub(crate) fn source_url(drv: &RawDerivation) -> Option<&str> {
-    drv.attr_str("urls")
+pub(crate) fn source_url(drv: &RawDerivation) -> Option<String> {
+    let raw = drv.attr_str("urls")
         .and_then(|v| v.split_whitespace().next())
         .or_else(|| {
             drv.structured_attrs
@@ -394,7 +394,14 @@ pub(crate) fn source_url(drv: &RawDerivation) -> Option<&str> {
                 .and_then(|list| list.iter().find_map(serde_json::Value::as_str))
         })
         .or_else(|| drv.attr_str("url"))
-        .filter(|u| !u.is_empty())
+        .filter(|u| !u.is_empty())?;
+    // Spec 1640 (#1647, D10): a derivation's source URL, without userinfo.
+    Some(waybill::identifiers::sanitize::sanitize_declared_url(raw, drv_label(drv)).into_owned())
+}
+
+/// The derivation named in a spec 1640 warning, in place of a manifest path.
+fn drv_label(drv: &RawDerivation) -> &str {
+    drv.name.as_deref().unwrap_or("nix derivation")
 }
 
 /// The external references a closure component carries for where it came
@@ -421,7 +428,7 @@ fn source_references(
             .map(|url| {
                 vec![waybill_common::resolution::ExternalReference {
                     ref_type: "distribution".to_string(),
-                    url: url.to_string(),
+                    url,
                 }]
             })
             .unwrap_or_default();
@@ -464,8 +471,10 @@ impl VcsSource {
 pub(crate) fn vcs_source(drv: &RawDerivation) -> Option<VcsSource> {
     let url = drv.attr_str("url").filter(|u| !u.is_empty())?;
     let rev = drv.attr_str("rev").filter(|r| !r.is_empty())?;
+    // Spec 1640 (#1647, D10, D11): the checkout URL, without userinfo, for
+    // both the `vcs` reference and the Hackage `vcs_url` qualifier.
     Some(VcsSource {
-        url: url.to_string(),
+        url: waybill::identifiers::sanitize::sanitize_declared_url(url, drv_label(drv)).into_owned(),
         rev: rev.to_string(),
     })
 }
@@ -1491,24 +1500,39 @@ mod m1282_tests {
         assert!(vcs_source(&empty).is_none());
     }
 
+    /// Spec 1640 D-10 and D-11 (#1647): a derivation's source URL with
+    /// userinfo reaches neither the `vcs` reference, the `vcs_url` location
+    /// (`closure_identity`), nor the `distribution` reference.
+    #[test]
+    fn s1640_a_credentialled_derivation_source_is_stripped() {
+        let d = one_drv(&format!(
+            r#"{{"name":"src","structuredAttrs":{{"url":"https://wbfxuser:wbfxtoken7c41@git.example/waybill-fixture.git","rev":"{REV}"}}}}"#
+        ));
+        let v = vcs_source(&d).expect("structured url+rev is a VCS source");
+        assert_eq!(v.location(), format!("git+https://git.example/waybill-fixture.git@{REV}"));
+        assert_eq!(v.reference().url, v.location());
+        let dl = one_drv(r#"{"name":"src","env":{"urls":"https://wbfxtoken7c41@dl.example/a.tar.gz https://mirror.invalid/a.tar.gz"}}"#);
+        assert_eq!(source_url(&dl).as_deref(), Some("https://dl.example/a.tar.gz"));
+    }
+
     /// `source_url` reads `url` from structured attributes, and a structured
     /// `urls` list's first entry; the `env` forms are unchanged.
     #[test]
     fn m1046_source_url_reads_both_carriers() {
         let structured_url =
             one_drv(r#"{"structuredAttrs":{"url":"https://example.invalid/a.tar.gz"}}"#);
-        assert_eq!(source_url(&structured_url), Some("https://example.invalid/a.tar.gz"));
+        assert_eq!(source_url(&structured_url).as_deref(), Some("https://example.invalid/a.tar.gz"));
         let structured_list = one_drv(
             r#"{"structuredAttrs":{"urls":["https://example.invalid/b.tar.gz","https://mirror.invalid/b.tar.gz"]}}"#,
         );
-        assert_eq!(source_url(&structured_list), Some("https://example.invalid/b.tar.gz"));
+        assert_eq!(source_url(&structured_list).as_deref(), Some("https://example.invalid/b.tar.gz"));
         // CONTROL: the env forms, as before.
         let env_urls = one_drv(
             r#"{"env":{"urls":"https://example.invalid/c.tar.gz https://mirror.invalid/c.tar.gz"}}"#,
         );
-        assert_eq!(source_url(&env_urls), Some("https://example.invalid/c.tar.gz"));
+        assert_eq!(source_url(&env_urls).as_deref(), Some("https://example.invalid/c.tar.gz"));
         let env_url = one_drv(r#"{"env":{"url":"https://example.invalid/d.tar.gz"}}"#);
-        assert_eq!(source_url(&env_url), Some("https://example.invalid/d.tar.gz"));
+        assert_eq!(source_url(&env_url).as_deref(), Some("https://example.invalid/d.tar.gz"));
         assert_eq!(source_url(&one_drv(r#"{"env":{"url":""}}"#)), None);
     }
 }

@@ -147,6 +147,8 @@ fn emit_for_lockfile(path: &Path, doc: &FlakeLockDocument) -> Vec<PackageDbEntry
         }
 
         if let Some(url) = id.source_url.as_deref() {
+            // Spec 1640 (#1647, D7).
+            let url = waybill::identifiers::sanitize::sanitize_declared_url(url, &source_path);
             extra.insert("waybill:source-url".to_string(), json!(url));
         }
 

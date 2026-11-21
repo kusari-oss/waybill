@@ -432,16 +432,18 @@ fn dataset_entry(d: &super::cmake_download::DatasetDecl) -> Option<PackageDbEntr
         Some(ns) => format!("{}/{}", encode_purl_segment(ns), encode_purl_segment(name)),
         None => encode_purl_segment(name),
     };
+    let mut files = d.files.iter();
+    let first = files.next()?.clone();
+    // Spec 1640 (#1647, D2).
+    let url = waybill::identifiers::sanitize::sanitize_declared_url(&d.url, &first);
     let mut qualifiers = Vec::new();
     if let Some((alg, hex)) = &d.digest {
         qualifiers.push(format!("checksum={}:{hex}", alg_name(*alg)));
     }
-    qualifiers.push(format!("download_url={}", d.url));
+    qualifiers.push(format!("download_url={url}"));
     let purl = Purl::new(&format!("pkg:generic/{path}?{}", qualifiers.join("&"))).ok()?;
     let hash = d.digest.as_ref().and_then(|(alg, hex)| ContentHash::with_algorithm(*alg, hex).ok());
-    let mut files = d.files.iter();
-    let first = files.next()?.clone();
-    let mut e = build_cmake_entry(name, "", &first, purl, Some(&d.url), hash, false, "cmake-file-download");
+    let mut e = build_cmake_entry(name, "", &first, purl, Some(&url), hash, false, "cmake-file-download");
     e.extra_source_paths = files.cloned().collect();
     e.sbom_tier = Some(if d.digest.is_some() { "source" } else { "design" }.to_string());
     e.extra_annotations.insert("waybill:component-kind".to_string(), serde_json::json!("dataset"));
@@ -1152,9 +1154,14 @@ fn fetch_entry(
     };
     {
 
-        let git_repo = extract_keyword(body, "GIT_REPOSITORY");
+        // Spec 1640 (#1647): userinfo leaves a declared URL before it is
+        // matched as GitHub, named, or recorded (D1, D3).
+        let declared = |v: Option<String>| {
+            v.map(|u| waybill::identifiers::sanitize::sanitize_declared_url(&u, source_path).into_owned())
+        };
+        let git_repo = declared(extract_keyword(body, "GIT_REPOSITORY"));
         let git_tag = extract_keyword(body, "GIT_TAG");
-        let url = extract_keyword(body, "URL");
+        let url = declared(extract_keyword(body, "URL"));
         let url_hash = extract_url_hash(body);
 
         // #1517: a `${VAR}` left after expansion has no literal same-file
