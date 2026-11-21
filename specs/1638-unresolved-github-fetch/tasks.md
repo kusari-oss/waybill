@@ -15,7 +15,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 **Census, before any source change** (SC-001, research R7).
+- [X] T001 **Census, before any source change** (SC-001, research R7).
   - **Script.** Add `census/unresolved_fetches.py` to `kusari-sandbox/waybill-fixture-therock-sdk`, beside `census/fetches.py`, and run it from `.github/workflows/census-fetches.yml`.
   - **Trees.** TheRock's sparse trees, as already checked out there, plus a step that clones the three quality-corpus targets at their pins from `xtask/corpus/quality-corpus.toml`, as `census-projects.yml` does: `cmake-nlohmann-json` `65ee6845`, `python-pytorch` `2b3ec348`, `cpp-mongo` `41a57524`.
   - **What it counts.** Every `FetchContent_Declare` / `ExternalProject_Add` whose `URL`, `GIT_REPOSITORY` or `GIT_TAG` still holds `${` after same-file single-literal `set()` expansion. Split them into:
@@ -116,7 +116,7 @@
 
 ## Phase 6: Polish and cross-cutting
 
-- [ ] T016 Mutations, recorded in `MS/mutations.md` with the killing test for each.
+- [X] T016 Mutations, recorded in `MS/mutations.md` with the killing test for each.
   - **Method.** Save each file with `cp` first, apply one mutation, run `IT` and the `CM`/`FE`/`RC` unit tests, then restore with `cp`. Reject a "kill" whose log matches `^error\[E`, because a compile failure kills nothing. Rebuild after the last restore.
   - **M1:** the unresolved GitHub branch emits `pkg:generic` again.
   - **M2:** drop the `git_repo` has-no-`${` check.
@@ -126,10 +126,10 @@
   - **M6:** pass `download_url` for an unresolved URL fetch.
 
   Every mutation must be killed by at least one test.
-- [ ] T017 [P] Update `MAP`, the C231, C233 and C234 rows, with the wording in `contracts/wire.md` "Rows touched". No new row; confirm each row's extractor is unchanged and the parity gate in the lib target passes.
-- [ ] T018 [P] Update `docs/ecosystems.md` § CMake fetch declarations. The "Identity is unchanged" bullet gains: a GitHub `GIT_REPOSITORY` with an unresolved `GIT_TAG` is versionless `pkg:github/<owner>/<repo>` with C151. Add the `unresolved.identity` exception from FR-008 to the C231 paragraph.
-- [ ] T019 [P] `CHANGELOG.md` `## [Unreleased]`: one entry naming #1595, the before and after PURL, FR-004's merge and FR-014.
-- [ ] T020 File the follow-up issues, each with the attribution footer:
+- [X] T017 [P] Update `MAP`, the C231, C233 and C234 rows, with the wording in `contracts/wire.md` "Rows touched". No new row; confirm each row's extractor is unchanged and the parity gate in the lib target passes.
+- [X] T018 [P] Update `docs/ecosystems.md` § CMake fetch declarations. The "Identity is unchanged" bullet gains: a GitHub `GIT_REPOSITORY` with an unresolved `GIT_TAG` is versionless `pkg:github/<owner>/<repo>` with C151. Add the `unresolved.identity` exception from FR-008 to the C231 paragraph.
+- [X] T019 [P] `CHANGELOG.md` `## [Unreleased]`: one entry naming #1595, the before and after PURL, FR-004's merge and FR-014.
+- [X] T020 File the follow-up issues, each with the attribution footer:
   - a non-GitHub `ExternalProject_Add` git fetch has no repository identity even when resolved (research R3);
   - CMake `waybill:download-url` is recorded verbatim, credentials included (spec Edge Cases).
 
