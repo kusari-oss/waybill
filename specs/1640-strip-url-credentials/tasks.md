@@ -15,7 +15,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Re-derive research R1's inventory at the branch HEAD. Run its four searches over `waybill-cli/src` and `waybill-common/src`, counting with `wc -l` or writing to files, never `head`. Diff the result against R1's table and write `MS/inventory.md`, recording:
+- [X] T001 Re-derive research R1's inventory at the branch HEAD. Run its four searches over `waybill-cli/src` and `waybill-common/src`, counting with `wc -l` or writing to files, never `head`. Diff the result against R1's table and write `MS/inventory.md`, recording:
   - the search commands and their hit counts;
   - the final table: rows added, rows removed, and every disposition with its reason;
   - the exact function and line for D3, where CMake turns a `GIT_REPOSITORY` URL into `pkg:github`;
