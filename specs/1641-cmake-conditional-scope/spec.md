@@ -98,12 +98,13 @@ Fallback detection, test scoping, merging and the coverage record behave as befo
 
 - **An option with no visible default:** no `option()`, `cmake_dependent_option()` or `set(… CACHE BOOL …)` is found for it. Its value is unknown, so the fetch is in scope (FR-004).
 - **An option defined twice with different defaults:** both definitions are in reach (FR-002). Its value is unknown.
-- **`cmake_dependent_option(X "" ON "DEP" OFF)`:** X is ON by default only when DEP holds by default. Otherwise it takes the fallback value.
+- **`cmake_dependent_option(X "" ON "DEP" OFF)`:** X takes its default (ON) when DEP holds by default, and its fallback (OFF) when DEP does not hold. When DEP is unknown, X is unknown.
 - **A plain `set(X ON)`** in reach is a literal and evaluates like a default. A `set(X ${Y})` is unknown.
 - **A platform predicate combined with an option:** `if(WIN32 AND X)` is decided by `X`, because a platform predicate holds on some supported platform.
 - **`elseif`:** its branch holds when every earlier branch does not, and its own condition holds.
+- **Merged declarations:** a component declared more than once with one PURL keeps spec 1538's strongest-scope rule. It is Optional only if every declaration is. So a declaration under `if(NOT TARGET x)` and another under `if(UNIX)` give an in-scope component, whose C232 is the union of both declarations' conditions.
 - **Interaction with `BUILD_TESTING`:** a fetch under `BUILD_TESTING` is Test (spec 1538 R7) whatever else encloses it. Test outranks the new rule, as it outranks Optional today.
-- **Expressions the rule cannot read:** a generator expression, `DEFINED`, `EXISTS`, `VERSION_GREATER`, `MATCHES` and similar are unknown (FR-004). The one exception is the super-build guard's string comparison.
+- **Expressions the rule cannot read:** a generator expression, `DEFINED`, `EXISTS`, `TARGET`, `IN_LIST`, and a comparison (`STREQUAL`, `MATCHES`, `VERSION_GREATER` and the like) of anything but a platform variable are unknown (FR-004). Two kinds of comparison are read: a platform variable compared with a literal by any operator (FR-003), and the super-build guard.
 
 ## Requirements *(mandatory)*
 

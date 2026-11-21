@@ -54,6 +54,7 @@ Scope does not change in this phase.
     - **Tally:** by kind × category × eval; versioned counts; how many would change scope under FR-004/FR-007; options defined only after their use (planning amendment).
   - **Dispatch** with `--ref main -f waybill_ref=<full sha>`, and read the scanned SHAs from `refs.txt`.
   - **Public corpus** at the same commit, `regen_goldens=true`: 0 differing files expected. Enumerate every job.
+  - **Public corpus census (SC-001):** count `waybill:cmake-fetch-conditions`, `waybill:cmake-find-conditions` and `cmake-conditional` occurrences in the regenerated goldens. If they are 0, the corpus has no catch-all conditional, so its census count is 0 by construction. Record that rather than assume it. Otherwise add the targets that have them to the census matrix.
   - **Record** in `MS/census.md`. No prediction is written before the runs.
 
 **Checkpoint**: census recorded. If the counts contradict the spec's choices (FR-004 unknown stays in scope, FR-007 searches follow the rule), stop and raise it before Phase 3.
@@ -62,7 +63,7 @@ Scope does not change in this phase.
 
 **Goal**: FR-001, FR-004, FR-005, FR-006, FR-007. **Independent test**: T-1 to T-4, T-10, T-11, S-1, S-2, R-1.
 
-- [ ] T008 [US1] Write T-1, T-2, T-2r, T-3, T-4, T-10, T-11, T-12, T-13, S-1, S-2 and R-1 in `IT`. **Run them at the log-only commit:** every "Changed" case must fail on its scope assertion and every other case must pass. Record the result per case in `MS/control.md`.
+- [ ] T008 [US1] Write T-1, T-2, T-2r, T-3, T-4, T-10, T-11, T-12, T-13, M-1, S-1, S-2 and R-1 in `IT`. **Run them at the log-only commit:** every "Changed" case must fail on its scope assertion and every other case must pass. Record the result per case in `MS/control.md`.
 - [ ] T009 [US1] In `FE`:
   - a `Conditional` declaration whose chain evaluates `DoesNotHold` keeps `Optional` with `cmake-conditional`. Otherwise it gets no scope and no C122 (FR-001, FR-004).
   - `mark` writes C232 whenever the declaration has conditions, in scope or not (FR-005).
