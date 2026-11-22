@@ -67,7 +67,7 @@ Output does not change in this phase.
 
   Record the red/green table in `MS/control.md`, run with both this commit's binary and T001's. B-1 reuses spec 1643's golden (`waybill-cli/tests/fixtures/version_string_boundary/b1-golden/`), compared byte for byte with per-run fields masked.
 - [X] T009 First run `IT` with the red cases unignored. Record in `MS/control.md` that exactly the planned cases fail (A-1 to A-5, P-1 and P-2), each by name. Then mark them `#[ignore = "spec 1644: red until T011"]` (P-1 and P-2: `"…until T016"`). Then run the gate, `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, which must pass completely. Commit the log-only change.
-- [ ] T010 Census (FR-001, R7). In `FR`:
+- [X] T010 Census (FR-001, R7). In `FR`:
   - Extend `census/versions.py` to parse `anchored` events, and to read each target's main-control CycloneDX document for components named `bzip2`, `gmp`, `liblzma` or `xz`, with their versions, evidence kinds and source files.
   - Add a committed synthetic positive-control tree (A-1, A-2, A-3) to `census-versions.yml`.
 
@@ -85,22 +85,22 @@ Output does not change in this phase.
 **Goal**: anchored binaries with one candidate emit `pkg:generic/<slug>@<version>`.
 **Independent test**: A-1 to A-5 pass; the N cases still pass.
 
-- [ ] T011 [US1] In `BM`, append to `p.version_matches` one `EmbeddedVersionMatch` per `Versioned` verdict from `anchored_verdicts(&scan.string_region, &scan.anchor_symbols)`. Compute the verdicts once and use them for both the matches and the census. Remove T009's `#[ignore]` from A-1 to A-5. A-1 to A-5 pass, and all N cases still pass.
-- [ ] T012 [P] [US1] In `CT`, add two rows. The enforcement tests in `waybill-cli/src/generate/cpe.rs` decide the evidence's form; analysis findings I1 and I2.
+- [X] T011 [US1] In `BM`, append to `p.version_matches` one `EmbeddedVersionMatch` per `Versioned` verdict from `anchored_verdicts(&scan.string_region, &scan.anchor_symbols)`. Compute the verdicts once and use them for both the matches and the census. Remove T009's `#[ignore]` from A-1 to A-5. A-1 to A-5 pass, and all N cases still pass.
+- [X] T012 [P] [US1] In `CT`, add two rows. The enforcement tests in `waybill-cli/src/generate/cpe.rs` decide the evidence's form; analysis findings I1 and I2.
   - **New evidence file (I1).** `m1491_every_count_matches_its_evidence` parses `dictionary_evidence` as a TSV with the header `# product\tvendor\tdictionary-entries\tcves`. Its control requires at least 95 rows, including `gnu:bash`. So run spec 1375's `measurements/nvd-vendor-cves.py` over every pair in `CT` plus `gmplib:gmp`, into `MS/nvd-vendor-cves-<date>.tsv`. Commit it unedited, and leave spec 1375's file and the existing rows untouched.
   - **`pkg:generic/gmp`:** `gmplib:gmp`, with `dictionary_entries` from the new file (the probe's 35 is the cross-check; a difference is recorded, not smoothed), `observed = "<date>"`, `dictionary_evidence = "specs/1644-bare-version-anchors/measurements/nvd-vendor-cves-<date>.tsv"` and `title_evidence = "specs/1644-bare-version-anchors/measurements/nvd-titles-2026-11-22.txt"` (it holds `=== gmp (`).
   - **`pkg:generic/liblzma` (I2):** `tukaani:xz` and `xz_project:xz`. These pairs are already in the `xz` row, and `m1491_shared_pairs_agree` requires a shared pair to carry identical `dictionary_entries`, `observed` and `dictionary_evidence`. So copy the `xz` row's two pair lines verbatim (62 and 32, `2026-11-13`, spec 1375's evidence and titles). Comment the row the way the `bzip2` row is commented: NVD has no `liblzma` product, and liblzma's advisories are filed under `xz`.
   - **Intended test change:** in `m1491_shared_pairs_agree`, raise the control from `shared == 1` to `shared == 3`. Its comment names `python:python`, `tukaani:xz` and `xz_project:xz`.
 
   Confirm every test in `cpe.rs` passes, including `m1375_every_product_has_a_committed_title_query`. In `IT`, assert the CPE candidates of A-1, A-2 and A-3 (`contracts/wire.md`).
-- [ ] T013 [US1] `parity(dir)` for A-1 to A-5 (SC-005).
+- [X] T013 [US1] `parity(dir)` for A-1 to A-5 (SC-005).
 
 ## Phase 4: User Story 2 — a bare version is never a component by itself (P1)
 
 **Goal**: no unanchored, ambiguous, shared, imported or partial-string case emits anything.
 **Independent test**: the N cases pass, and every mutation is killed.
 
-- [ ] T014 [US2] In `IT`, assert the census verdicts for:
+- [X] T014 [US2] In `IT`, assert the census verdicts for:
   - N-4: `ambiguous`, with both candidates;
   - N-5: `ambiguous-shared`, for both gmp and liblzma;
   - N-7: `no-candidate`.
@@ -113,7 +113,7 @@ Output does not change in this phase.
 **Goal**: an embedded version and an agreeing `.pc` file give one component.
 **Independent test**: P-1 has exactly one `pkg:generic/liblzma@5.8.1`; P-2 has both versions.
 
-- [ ] T016 [US3] Remove P-1's and P-2's `#[ignore]`. For P-1, also assert that the single component's evidence carries both the embedded match and the `.pc` source file, with the same `waybill:source-files` shape as spec 1643's merged `zlib@1.3.2`. If the merge does not happen, stop and trace it: that is a finding, not a test to loosen.
+- [X] T016 [US3] Remove P-1's and P-2's `#[ignore]`. For P-1, also assert that the single component's evidence carries both the embedded match and the `.pc` source file, with the same `waybill:source-files` shape as spec 1643's merged `zlib@1.3.2`. If the merge does not happen, stop and trace it: that is a finding, not a test to loosen.
 
 ## Phase 6: User Story 4 — nothing else changes (P2)
 

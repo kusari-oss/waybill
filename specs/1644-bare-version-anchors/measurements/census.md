@@ -67,4 +67,35 @@ The one `6.3.0` is in `.rodata`, at a 16-byte-aligned offset, NUL-terminated, an
 
 ## Census 2, with FR-004 amended
 
-Pending: dispatched at the commit that carries the amended rule.
+- **Run**: 45038513416 at fixture commit `75ef06d`. Dispatched `--ref main -f waybill_ref=8173c45f430eafdd8856a215219c1e63d7cca1ae`.
+- **Jobs**: 20 of 20 succeeded.
+- **Commit check**: every `refs.txt` names `8173c45f`, and the SDK tarball is the same (`efeb6b07…`).
+- **Controls**: unchanged. The synthetic tree gave its 3 `versioned` events, all `nul`-preceded, and `pants-backend-ai` reported its 4 pattern events.
+
+| Binary | Library | Candidate (`preceding` @ region offset) | Verdict |
+|---|---|---|---|
+| `libbz2.so`, `librocm_sysdeps_bz2.so` | bzip2 | `1.0.8, 13-Jul-2019` (nul @ `0x5f2`) | versioned 1.0.8 |
+| `libgmp.so`, `librocm_sysdeps_gmp.so.10` | gmp | `6.3.0` (**binary** @ `0x300`) | **versioned 6.3.0** (was no-candidate) |
+| `liblzma.so`, `librocm_sysdeps_liblzma.so.5`, `librocm_sysdeps_liblzma.so.5.8.1` | liblzma | `5.8.1` (nul @ `0x20`) | versioned 5.8.1 |
+
+- **GMP's candidate is the inspected one.** Region offset `0x300` is `.rodata` offset `0x60300 - 0x60000`, the first section in the region.
+- **The wider start added no other candidate in any anchored binary.** bzip2 and liblzma keep one `nul`-preceded candidate each.
+- Ambiguous: 0. Ambiguous-shared: 0. Unanchored bzip2 date form: 0. The 18 quality-corpus targets have no anchored binary.
+
+## What the census settles
+
+| Requirement | Outcome |
+|---|---|
+| FR-002 (bzip2 and GMP text anchors) | unchanged; every anchored library is the library its anchor names |
+| FR-003 (xz symbol anchor) | unchanged; both symbols defined in every liblzma counted; no text anchor added |
+| FR-004 (candidates) | **amended**: a byte that is not printable text may precede a candidate |
+| FR-005, FR-005a | unchanged; no binary is ambiguous or shared |
+| FR-006 (bzip2 needs its anchor) | unchanged; no bzip2 date form without the anchor |
+| FR-007 (slugs) | unchanged; `gmp` and `liblzma` match TheRock's `.pc` components, and bzip2 has no `.pc` |
+
+T011 can therefore be expected to change TheRock in exactly these ways:
+- `bzip2@1.0.8` gained, from the 2 libraries;
+- `gmp@6.3.0` and `liblzma@5.8.1` gaining the embedded evidence and files;
+- CPE candidates on `gmp` and `liblzma` (T012).
+
+That is a prediction for T018 to check, not a result.

@@ -1105,6 +1105,10 @@ fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSe
     drop(bytes);
     let t = std::time::Instant::now();
     p.version_matches = version_strings::scan(&scan.string_region);
+    // Spec 1644: a whole-string library is versioned only when its anchor is
+    // in this binary and exactly one candidate is left (FR-005, FR-005a).
+    let anchored = version_strings::anchored_verdicts(&scan.string_region, &scan.anchor_symbols);
+    p.version_matches.extend(anchored.iter().filter_map(|v| v.version_match()));
     // Spec 1643 census: every curated pattern occurrence with the byte
     // before it. Off unless `waybill::version_census=debug` is enabled.
     if tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
@@ -1112,7 +1116,7 @@ fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSe
             tracing::debug!(target: "waybill::version_census", path = %path.display(), hit = %hit.to_json());
         }
         // Spec 1644 FR-010: each anchored library's evidence and verdict.
-        for v in version_strings::anchored_verdicts(&scan.string_region, &scan.anchor_symbols) {
+        for v in &anchored {
             tracing::debug!(target: "waybill::version_census", path = %path.display(), anchored = %v.to_json());
         }
         let bare = version_strings::bzip2_form_without_anchor(&scan.string_region);

@@ -251,10 +251,11 @@ mod tests {
     #[test]
     fn the_built_in_table_parses() {
         let table = parse(BUILT_IN, Origin::BuiltIn).unwrap();
-        assert_eq!(table.row.len(), 82);
-        assert_eq!(table.row.iter().map(|r| r.pair.len()).sum::<usize>(), 96);
+        // Spec 1644 added `gmp` (one pair) and `liblzma` (two pairs).
+        assert_eq!(table.row.len(), 84);
+        assert_eq!(table.row.iter().map(|r| r.pair.len()).sum::<usize>(), 99);
         // The lookup holds every row, so none was dropped by a key shape.
-        assert_eq!(built_in().by_slug.len(), 82);
+        assert_eq!(built_in().by_slug.len(), 84);
         assert_eq!(
             built_in().pairs("curl").unwrap(),
             &[("haxx".to_string(), "curl".to_string()), ("curl".to_string(), "curl".to_string())]

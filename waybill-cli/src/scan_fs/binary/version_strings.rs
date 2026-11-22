@@ -637,6 +637,14 @@ pub struct AnchoredVerdict {
 }
 
 impl AnchoredVerdict {
+    /// The match to emit, for `Versioned` only.
+    pub fn version_match(&self) -> Option<EmbeddedVersionMatch> {
+        match &self.verdict {
+            Verdict::Versioned(v) => Some(EmbeddedVersionMatch { library: self.library, version: v.clone() }),
+            _ => None,
+        }
+    }
+
     /// The `waybill::version_census` `anchored` event (contracts/wire.md).
     pub fn to_json(&self) -> String {
         let cand = |c: &Candidate| serde_json::json!({"value": c.string, "offset": c.offset, "preceding": c.preceding});

@@ -301,21 +301,18 @@ fn c2_no_anchor_no_census_event() {
 // ---------------------------------------------------------------------
 
 #[test]
-#[ignore = "spec 1644: red until T011"]
 fn a1_bzip2() {
     let s = scan3(tree(&[("libwaybill-fixture-bz2.so.1", elf(&region(&[BZIP2_ANCHOR, BZIP2_VERSION]), &[], &[]))]));
     assert_eq!(curated(&s, "bzip2"), ["pkg:generic/bzip2@1.0.8"]);
 }
 
 #[test]
-#[ignore = "spec 1644: red until T011"]
 fn a2_gmp() {
     let s = scan3(tree(&[("libwaybill-fixture-gmp.so.10", elf(&region(&[GMP_ANCHOR, b"6.3.0\0"]), &[], &[]))]));
     assert_eq!(curated(&s, "gmp"), ["pkg:generic/gmp@6.3.0"]);
 }
 
 #[test]
-#[ignore = "spec 1644: red until T011"]
 fn a3_liblzma() {
     let s = scan3(tree(&[(
         "libwaybill-fixture-lzma.so.5",
@@ -325,7 +322,6 @@ fn a3_liblzma() {
 }
 
 #[test]
-#[ignore = "spec 1644: red until T011"]
 fn a4_liblzma_prerelease() {
     let s = scan3(tree(&[(
         "libwaybill-fixture-lzma.so.5",
@@ -335,7 +331,6 @@ fn a4_liblzma_prerelease() {
 }
 
 #[test]
-#[ignore = "spec 1644: red until T011"]
 fn a5_liblzma_macho() {
     let s = scan3(tree(&[(
         "libwaybill-fixture-lzma.5.dylib",
@@ -347,7 +342,6 @@ fn a5_liblzma_macho() {
 /// T012: each versioned library carries the curated table's CPEs
 /// (contracts/wire.md).
 #[test]
-#[ignore = "spec 1644: red until T012"]
 fn a_cpe_candidates() {
     let s = scan3(tree(&[
         ("libwaybill-fixture-bz2.so.1", elf(&region(&[BZIP2_ANCHOR, BZIP2_VERSION]), &[], &[])),
@@ -368,7 +362,6 @@ fn a_cpe_candidates() {
 
 /// G-1: the same layout gives the versioned component.
 #[test]
-#[ignore = "spec 1644: red until T011"]
 fn g1_gmp_after_binary_data() {
     let s = scan3(tree(&[(
         "libwaybill-fixture-gmp.so.10",
@@ -488,7 +481,6 @@ fn lzma_with_pc(pc_version: &str) -> Scan {
 }
 
 #[test]
-#[ignore = "spec 1644: red until T016"]
 fn p1_agreeing_pc_file_gives_one_component() {
     let s = lzma_with_pc("5.8.1");
     assert_eq!(curated(&s, "liblzma"), ["pkg:generic/liblzma@5.8.1"]);
@@ -505,7 +497,6 @@ fn p1_agreeing_pc_file_gives_one_component() {
 }
 
 #[test]
-#[ignore = "spec 1644: red until T016"]
 fn p2_disagreeing_pc_file_keeps_both_versions() {
     let s = lzma_with_pc("5.8.0");
     assert_eq!(curated(&s, "liblzma"), ["pkg:generic/liblzma@5.8.0", "pkg:generic/liblzma@5.8.1"]);
