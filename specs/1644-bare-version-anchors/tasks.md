@@ -106,7 +106,7 @@ Output does not change in this phase.
   - N-7: `no-candidate`.
 
   This uses `scan_with_log`, so the absence of a component is tied to the stated reason (FR-011).
-- [ ] T015 [US2] Copy spec 1643's mutation runner to `MS/mutate.py`, with its full-path test filter, its "no test result line → HARNESS ERROR" guard and its `cp` restore. Write M1–M7 (R9) as exact-string replacements in `VS`/`SC`, run each, and record the killing tests in `MS/mutations.md`. Every mutation must be killed (SC-003). A survivor means a missing test: add the test and re-run. Then confirm the source is restored (`git diff --stat` shows only intended changes) and rebuild.
+- [X] T015 [US2] Copy spec 1643's mutation runner to `MS/mutate.py`, with its full-path test filter, its "no test result line → HARNESS ERROR" guard and its `cp` restore. Write M1–M7 (R9) as exact-string replacements in `VS`/`SC`, run each, and record the killing tests in `MS/mutations.md`. Every mutation must be killed (SC-003). A survivor means a missing test: add the test and re-run. Then confirm the source is restored (`git diff --stat` shows only intended changes) and rebuild.
 
 ## Phase 5: User Story 3 — one library, one component (P2)
 
