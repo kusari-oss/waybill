@@ -9,6 +9,27 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Added
 
+- **bzip2, GMP and liblzma (xz) are versioned from the version string they
+  embed (#1641).** Their version is a bare string with no name beside it, so
+  each is read only when the same binary also holds the library's anchor:
+  - bzip2's `bzip2/libbzip2` error text;
+  - GMP's `GNU MP:` messages;
+  - a liblzma that defines `lzma_version_string` or `lzma_version_number`.
+  A program that only imports those symbols does not count.
+
+  The version string must be a whole string, ended by NUL and preceded by
+  NUL or by binary data, never by text. A binary with two such strings
+  gets no version, and so does one where GMP and liblzma would accept the
+  same string. The components are `pkg:generic/bzip2`, `gmp` and `liblzma`,
+  named after the upstream pkg-config files, so that they merge with
+  `gmp.pc` and `liblzma.pc` components at the same version. New CPE rows
+  map `gmp` to `gmplib:gmp` and `liblzma` to `xz`'s pairs, which also
+  applies to `gmp` and `liblzma` components found any other way. On the
+  ROCm SDK, the two bzip2 libraries become a new `bzip2@1.0.8` component.
+  The existing `gmp@6.3.0` and `liblzma@5.8.1` components each gain a
+  library file they did not list before, and both gain CPEs. On the Nix
+  closure corpus targets, the existing `gmp@6.3.0` component gains its CPE.
+
 - **A component for each CMake project the scanned tree builds (#1616).**
   A literal `project(<name> …)` in a `CMakeLists.txt` is now a
   `pkg:generic/<name>@<version>` main module, versioned from `VERSION` or a

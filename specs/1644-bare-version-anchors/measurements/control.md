@@ -30,7 +30,7 @@
 | imported_or_unlisted_symbol_anchors_nothing | ok | ok | guard; teeth from mutation M3 |
 | n1, n2, n3, n8, n9 | ok | ok | guards: no component on `main` because no pattern exists; teeth from mutations M1–M7 |
 
-## Two cases that were wrong as first written
+## Three cases that were wrong as first written, and one added
 
 - **P-1 passed on the branch before the change.** The `.pc` file alone gives exactly one `pkg:generic/liblzma@5.8.1`, so "exactly one component" held without any embedded match. P-1 now also asserts that this component carries the library file, `libwaybill-fixture-lzma.so.5`. It fails on both binaries until T016.
 - **N-6 passed against `main` vacuously.** It asserted that *every* `gmp` census event said `no-candidate`, and `main` logs none. It now asserts exactly one event, so it fails against `main` and passes on the branch.
