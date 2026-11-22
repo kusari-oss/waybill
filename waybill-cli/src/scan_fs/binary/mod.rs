@@ -1119,7 +1119,7 @@ fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSe
         if !bare.is_empty() {
             let j = serde_json::json!({
                 "library": "bzip2",
-                "candidates": bare.iter().map(|c| serde_json::json!({"value": c.string, "offset": c.offset})).collect::<Vec<_>>(),
+                "candidates": bare.iter().map(|c| serde_json::json!({"value": c.string, "offset": c.offset, "preceding": c.preceding})).collect::<Vec<_>>(),
             });
             tracing::debug!(target: "waybill::version_census", path = %path.display(), unanchored = %j);
         }

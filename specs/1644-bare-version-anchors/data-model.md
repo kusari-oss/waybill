@@ -2,6 +2,10 @@
 
 All in-process, per binary. Nothing persists beyond the emitted document.
 
+## Whole string (FR-004, amended by the census)
+
+The printable tail of a NUL-terminated segment: preceded by NUL, by the region's start, or by a byte that is not printable text (`0x20`–`0x7E`, tab, LF, CR). The census records which, as `preceding` (`nul`, `start` or `binary`).
+
 ## CuratedLibrary (extended)
 
 Three new variants. Their slugs are the PURL names (FR-007, research R5).

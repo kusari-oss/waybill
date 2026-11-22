@@ -275,6 +275,21 @@ fn c3_census_reports_bzip2_form_without_anchor() {
     none(&s, "bzip2");
 }
 
+/// G-1 (census): GMP's TheRock layout, `6.3.0\0` straight after a binary
+/// table in `.rodata` (`measurements/census.md`), is a candidate.
+#[test]
+fn g1_census_gmp_after_binary_data() {
+    let s = census(tree(&[(
+        "libwaybill-fixture-gmp.so.10",
+        elf(&region(&[GMP_ANCHOR, b"\x9d\x07\x89\xff", b"6.3.0\0"]), &[], &[]),
+    )]));
+    let ev = anchored(&s, "gmp");
+    assert_eq!(ev.len(), 1, "{}", s.stderr);
+    for needle in [r#""verdict":"versioned""#, r#""preceding":"binary""#] {
+        assert!(ev[0].contains(needle), "{needle} missing from {}", ev[0]);
+    }
+}
+
 #[test]
 fn c2_no_anchor_no_census_event() {
     let s = census(tree(&[("libwaybill-fixture-plain.so.1", elf(&region(&[b"6.3.0\0", BZIP2_VERSION]), &[], &[]))]));
@@ -349,6 +364,17 @@ fn a_cpe_candidates() {
             assert!(text.contains(cpe), "{purl} lacks {cpe}: {text}");
         }
     }
+}
+
+/// G-1: the same layout gives the versioned component.
+#[test]
+#[ignore = "spec 1644: red until T011"]
+fn g1_gmp_after_binary_data() {
+    let s = scan3(tree(&[(
+        "libwaybill-fixture-gmp.so.10",
+        elf(&region(&[GMP_ANCHOR, b"\x9d\x07\x89\xff", b"6.3.0\0"]), &[], &[]),
+    )]));
+    assert_eq!(curated(&s, "gmp"), ["pkg:generic/gmp@6.3.0"]);
 }
 
 // ---------------------------------------------------------------------

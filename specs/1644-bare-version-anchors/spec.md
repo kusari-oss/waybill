@@ -125,12 +125,14 @@ Binaries that hold none of the three anchors produce the same documents as on `m
 
 - **FR-003 (xz anchor)**: xz's anchor is a **defined** (not imported) dynamic or exported symbol named `lzma_version_string` or `lzma_version_number`. Both are in liblzma's `XZ_5.0` symbol node, so every liblzma since 5.0 exports them (research R3, read from upstream `v5.8.1`). FR-001's census confirms they are present in the builds counted. An imported symbol MUST NOT count. If the census finds a string-region text present in every liblzma build counted, that text MAY replace or supplement the symbol anchor, by amendment. Without either, xz gets no version, and the formats where the anchor is unavailable are stated in the documentation.
 
-- **FR-004 (candidates)**: A version candidate is a whole string in the read-only region, preceded by NUL or the region's start and followed by NUL:
+- **FR-004 (candidates)**: A version candidate is a whole string in the read-only region, followed by NUL and preceded by NUL, by the region's start, or by a byte that is not printable text. Printable text is `0x20`–`0x7E`, tab, LF and CR. In other words, the candidate is the printable tail of a NUL-terminated segment. It has these shapes:
   - bzip2: `X.Y.Z, DD-Mon-YYYY` (digits for X, Y, Z and DD; a three-letter English month abbreviation; four digits for YYYY). The version is `X.Y.Z`.
   - GMP: `X.Y.Z` (digits only). GMP's manual says `gmp_version` has been `i.j.k` since 4.3.0, and that `i.j` was used only before that, when k was zero (research R2).
   - xz: `X.Y.Z`, optionally followed directly by `alpha` or `beta` (upstream's `LZMA_VERSION_STRING`, research R2). A snapshot's commit suffix (`-21-g1d92`) is not accepted.
 
-  Under spec 1643's classes, every candidate is NUL-only at both ends. That is stricter than any existing pattern, because a bare version has no name to anchor it.
+  The end must be NUL and the start must not continue text, so a version inside text (`requires 6.3.0 or later`, `x6.3.0`) is never a candidate.
+
+  **Amended by the census** (`measurements/census.md`). As first written, the start had to be NUL or the region's start. On TheRock, both GMP libraries carry the anchor, but their one `6.3.0` (`.rodata`, offset `0x60300`, NUL-terminated) is preceded by `0xff`, the last byte of a constant table. That is the layout #1641 found for ncurses. The NUL-only rule therefore missed every GMP library counted. A byte that is not printable text cannot be part of a sentence the version sits in, which is the case the boundary exists to reject. Whether the wider start adds candidates elsewhere in the anchored binaries, and turns a verdict ambiguous, is counted by a second census before wiring.
 
 - **FR-005 (one version or none)**: When the library's anchor is present and exactly one distinct candidate exists, the library is emitted at that version. When two or more distinct candidates exist, no component for that library is emitted from this evidence, and the census records the binary as ambiguous with every candidate. No candidate is ever chosen by position, order or frequency.
 

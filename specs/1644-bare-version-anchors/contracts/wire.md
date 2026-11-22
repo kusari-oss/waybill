@@ -11,6 +11,7 @@ All fixtures are synthetic shared libraries under `waybill-fixture-*` directory 
 | A-3 | `\05.8.1\0` | defines `lzma_version_string` | `pkg:generic/liblzma@5.8.1` |
 | A-4 | `\05.7.1alpha\0` | defines `lzma_version_number` | `pkg:generic/liblzma@5.7.1alpha` |
 | A-5 | Mach-O dylib (`macho_dylib_with_symbols`), `__cstring` `\05.8.1\0` | defines `_lzma_version_string` | `pkg:generic/liblzma@5.8.1` |
+| G-1 | `\0GNU MP: …\0`, then binary bytes ending `\xff`, then `6.3.0\0` (TheRock's layout) | none | `pkg:generic/gmp@6.3.0`; census candidate `"preceding":"binary"` |
 | N-1 | A-1 without `bzip2/libbzip2` | none | no bzip2 component |
 | N-2 | A-2 without `GNU MP:` | none | no gmp component |
 | N-3 | A-3's region | **imports** `lzma_version_string` | no liblzma component |
@@ -50,5 +51,6 @@ anchored = {"library":"gmp",
 | `verdict` | `versioned`, `ambiguous`, `ambiguous-shared` or `no-candidate` |
 | `version` | present only for `versioned` |
 | `shared` | the candidates removed by FR-005a, each with the other library that accepts it |
+| `preceding` (each candidate) | `start`, `nul` or `binary` (FR-004 as amended) |
 
 The census never changes the document, and is computed only when the target is enabled.

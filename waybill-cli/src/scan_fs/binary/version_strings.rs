@@ -566,6 +566,41 @@ pub struct Candidate {
     pub string: String,
     pub version: String,
     pub offset: usize,
+    /// What precedes it: `start`, `nul` or `binary` (a byte that is not
+    /// printable text; spec 1644 FR-004 as amended by the census).
+    pub preceding: &'static str,
+}
+
+/// Printable text: `0x20`-`0x7E`, tab, LF and CR.
+fn is_text(b: u8) -> bool {
+    (0x20..=0x7e).contains(&b) || matches!(b, b'\t' | b'\n' | b'\r')
+}
+
+/// Every whole string a candidate may be (FR-004, amended): the printable
+/// tail of each NUL-terminated segment, with its offset and what precedes
+/// it. The tail is the whole segment when NUL (or the region's start)
+/// precedes it; otherwise it starts just after the segment's last byte that
+/// is not text. GMP's `gmp_version` sits after a binary table in `.rodata`
+/// (`0xff`, then `6.3.0\0`; `measurements/census.md`), so NUL alone is too
+/// strict. A version inside text (`requires 6.3.0 or later`) is still never
+/// a whole string: its tail is the sentence. An unterminated tail at the
+/// region's end is not a string.
+fn whole_strings(region: &[u8]) -> impl Iterator<Item = (usize, &[u8], &'static str)> {
+    let mut start = 0;
+    memchr::memchr_iter(0, region).filter_map(move |nul| {
+        let seg_start = start;
+        start = nul + 1;
+        let seg = &region[seg_start..nul];
+        let k = seg.iter().rposition(|b| !is_text(*b)).map_or(0, |i| i + 1);
+        let preceding = if k > 0 {
+            "binary"
+        } else if seg_start == 0 {
+            "start"
+        } else {
+            "nul"
+        };
+        (k < seg.len()).then(|| (seg_start + k, &seg[k..], preceding))
+    })
 }
 
 /// Spec 1644's verdict for one anchored library in one binary (data-model).
@@ -604,7 +639,7 @@ pub struct AnchoredVerdict {
 impl AnchoredVerdict {
     /// The `waybill::version_census` `anchored` event (contracts/wire.md).
     pub fn to_json(&self) -> String {
-        let cand = |c: &Candidate| serde_json::json!({"value": c.string, "offset": c.offset});
+        let cand = |c: &Candidate| serde_json::json!({"value": c.string, "offset": c.offset, "preceding": c.preceding});
         let mut j = serde_json::json!({
             "library": self.library.slug(),
             "anchors": self.anchors.iter().map(|a| match a {
@@ -661,18 +696,15 @@ pub fn anchored_verdicts(region: &[u8], anchor_symbols: &[String]) -> Vec<Anchor
 
     // Every candidate of every anchored library, deduplicated by string.
     let mut cands: Vec<Vec<Candidate>> = vec![Vec::new(); found.len()];
-    let mut start = 0;
-    for nul in memchr::memchr_iter(0, region) {
-        let s = &region[start..nul];
+    for (offset, s, preceding) in whole_strings(region) {
         for (i, (lib, _)) in found.iter().enumerate() {
             if let Some(version) = lib.candidate_version(s) {
                 let string = String::from_utf8_lossy(s).into_owned();
                 if !cands[i].iter().any(|c| c.string == string) {
-                    cands[i].push(Candidate { string, version, offset: start });
+                    cands[i].push(Candidate { string, version, offset, preceding });
                 }
             }
         }
-        start = nul + 1;
     }
 
     let mut out = Vec::new();
@@ -715,16 +747,13 @@ pub fn bzip2_form_without_anchor(region: &[u8]) -> Vec<Candidate> {
         return Vec::new();
     }
     let mut out: Vec<Candidate> = Vec::new();
-    let mut start = 0;
-    for nul in memchr::memchr_iter(0, region) {
-        let s = &region[start..nul];
+    for (offset, s, preceding) in whole_strings(region) {
         if let Some(version) = CuratedLibrary::Bzip2.candidate_version(s) {
             let string = String::from_utf8_lossy(s).into_owned();
             if !out.iter().any(|c| c.string == string) {
-                out.push(Candidate { string, version, offset: start });
+                out.push(Candidate { string, version, offset, preceding });
             }
         }
-        start = nul + 1;
     }
     out
 }
@@ -1820,6 +1849,29 @@ mod tests {
         assert_eq!(verdict_of(b"GNU MP:\x006.3.0x\0", &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate));
         assert_eq!(verdict_of(b"GNU MP:\x006.3\0", &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate));
         assert_eq!(verdict_of(b"GNU MP:\x0012345.3.0\0", &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate));
+    }
+
+    /// FR-004 as amended: a binary byte may precede a candidate (GMP's
+    /// `gmp_version` follows a constant table in `.rodata`); printable text
+    /// may not.
+    #[test]
+    fn s1644_candidate_after_binary_data() {
+        for prev in [0xffu8, 0x01, 0x80, 0x7f] {
+            let mut r = b"GNU MP:\0".to_vec();
+            r.extend_from_slice(&[0x9d, 0x07, prev]);
+            r.extend_from_slice(b"6.3.0\0");
+            let v = verdicts(&r, &[]);
+            assert_eq!(v[0].verdict, Verdict::Versioned("6.3.0".into()), "behind {prev:#04x}");
+            assert_eq!(v[0].candidates[0].preceding, "binary");
+        }
+        for &prev in b" \t\n-v_" {
+            let mut r = b"GNU MP:\0\xff".to_vec();
+            r.push(prev);
+            r.extend_from_slice(b"6.3.0\0");
+            assert_eq!(verdict_of(&r, &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate), "behind {:?}", prev as char);
+        }
+        assert_eq!(verdicts(b"GNU MP:\x006.3.0\0", &[])[0].candidates[0].preceding, "nul");
+        assert_eq!(verdicts(b"6.3.0\0GNU MP:\0", &[])[0].candidates[0].preceding, "start");
     }
 
     #[test]
