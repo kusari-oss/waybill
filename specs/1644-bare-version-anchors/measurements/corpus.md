@@ -38,3 +38,9 @@ No component is added or removed, and no other field changes. In every target th
 - **Commit**: `Scanned commit: 4112ca3a…`. The only change since `b94a5a19` is the module's doc comment, so no code differs.
 - **Result**: 166 passed. The run lists exactly 15 changed goldens: the five Nix closure targets, three formats each.
 - **Copied into the tree**: all 67 files from `corpus-goldens-regen`. `git status` shows exactly those 15 files modified. Each is byte-identical (`cmp`) to the `.actual` document traced above, so what is committed is what was judged.
+
+## Confirmation, run 45062056691 at `2f990c0c`
+
+- **Dispatch**: `-f branch=1644-bare-version-anchors`, without regeneration, against the committed goldens.
+- **Commit**: `Scanned commit: 2f990c0c…`. That is the commit with the regenerated goldens; the workflow definition comes from the same commit.
+- **Result**: `test result: ok. 166 passed; 0 failed`.

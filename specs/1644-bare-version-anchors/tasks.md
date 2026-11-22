@@ -120,8 +120,8 @@ Output does not change in this phase.
 **Goal**: byte-identity off the anchored path; every corpus difference traced.
 **Independent test**: B-1, the public corpus, and per-component traces against the `main` control.
 
-- [ ] T017 [US4] Run the public corpus at the final commit with `-f branch=1644-bare-version-anchors`, and confirm the summary's scanned commit. Record the result in `MS/corpus.md`: either 66 of 66 byte-identical, or every changed component traced to one binary, one library and one anchor, and judged as T010 judges.
-- [ ] T018 [US4] Run the quality corpus and TheRock at the final commit against T001's `main` control, through `FR`'s `census-versions.yml` (documents) and `measure-full` (timing), verifying `refs.txt`. Record in `MS/therock.md`:
+- [X] T017 [US4] Run the public corpus at the final commit with `-f branch=1644-bare-version-anchors`, and confirm the summary's scanned commit. Record the result in `MS/corpus.md`: either 66 of 66 byte-identical, or every changed component traced to one binary, one library and one anchor, and judged as T010 judges.
+- [X] T018 [US4] Run the quality corpus and TheRock at the final commit against T001's `main` control, through `FR`'s `census-versions.yml` (documents) and `measure-full` (timing), verifying `refs.txt`. Record in `MS/therock.md`:
   - every component added, removed or changed, traced component by component;
   - any second component for one library (FR-007), with a follow-up issue filed if one appears;
   - `waybill sbom parity-check` on the base and branch documents;
@@ -132,9 +132,9 @@ Output does not change in this phase.
 ## Phase 7: Polish
 
 - [X] T019 [P] In `docs/reference/binary-identity.md`, add the three libraries and the anchored rule (anchor, whole-string candidate, one candidate or none, a shared candidate versions neither, defined symbols only). Update `VS`'s module doc table with a row per library and the `WholeString` class.
-- [ ] T020 [P] `CHANGELOG.md`: an Added entry for bzip2, GMP and xz (liblzma) versions from embedded strings, citing #1641.
-- [ ] T021 Run the full gate on the final commit and record the per-target `test result: ok. N passed; 0 failed` totals and the `>>> all pre-PR checks passed.` line in `MS/gate-log.md`. Enumerate every failing test by name if any fail; never call a failure a flake without the 30× isolation loop.
-- [ ] T022 Close-out. For every task above, check that its claim is true of the committed tree and measurements, not merely that its box is ticked. Then tick it.
+- [X] T020 [P] `CHANGELOG.md`: an Added entry for bzip2, GMP and xz (liblzma) versions from embedded strings, citing #1641.
+- [X] T021 Run the full gate on the final commit and record the per-target `test result: ok. N passed; 0 failed` totals and the `>>> all pre-PR checks passed.` line in `MS/gate-log.md`. Enumerate every failing test by name if any fail; never call a failure a flake without the 30× isolation loop.
+- [X] T022 Close-out. For every task above, check that its claim is true of the committed tree and measurements, not merely that its box is ticked. Then tick it.
 
 ## Dependencies
 
