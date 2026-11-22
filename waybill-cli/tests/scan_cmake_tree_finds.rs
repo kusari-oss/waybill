@@ -271,7 +271,7 @@ fn assert_optional(c: &Value) {
 #[test]
 fn w05_in_file_condition() {
     let t = tree();
-    write(t.path(), "projects/a/CMakeLists.txt", "if(WAYBILL_OPT)\n  find_package(waybill_fixture_opt)\nendif()\n");
+    write(t.path(), "projects/a/CMakeLists.txt", "option(WAYBILL_OPT \"\" OFF)\nif(WAYBILL_OPT)\n  find_package(waybill_fixture_opt)\nendif()\n");
     let d = scan(t.path());
     let c = by_purl(&d, "pkg:generic/waybill_fixture_opt");
     assert_optional(c);
@@ -283,7 +283,7 @@ fn w05_in_file_condition() {
 #[test]
 fn w06_fetch_in_conditionally_included_file() {
     let t = tree();
-    write(t.path(), "CMakeLists.txt", "project(waybill_fixture_root)\nif(WIN_SDK)\n  include(cmake/win.cmake)\nendif()\n");
+    write(t.path(), "CMakeLists.txt", "project(waybill_fixture_root)\noption(WIN_SDK \"\" OFF)\nif(WIN_SDK)\n  include(cmake/win.cmake)\nendif()\n");
     write(
         t.path(),
         "cmake/win.cmake",
@@ -315,7 +315,7 @@ fn w07_build_testing_through_add_subdirectory() {
 #[test]
 fn w08_conditions_union_along_a_chain() {
     let t = tree();
-    write(t.path(), "CMakeLists.txt", "project(waybill_fixture_root)\nif(A)\n  add_subdirectory(x)\nendif()\n");
+    write(t.path(), "CMakeLists.txt", "project(waybill_fixture_root)\noption(A \"\" OFF)\nif(A)\n  add_subdirectory(x)\nendif()\n");
     write(t.path(), "x/CMakeLists.txt", "include(y.cmake)\n");
     write(t.path(), "x/y.cmake", "if(B)\n  find_package(waybill_fixture_ab)\nendif()\n");
     let d = scan(t.path());
@@ -431,7 +431,7 @@ fn w14b_search_paired_with_an_installed_record() {
 fn w14b_a_record_searched_for_only_under_a_condition_is_optional() {
     let t = tree();
     installed_record(t.path());
-    write(t.path(), "projects/app/CMakeLists.txt", "if(A)\n  find_package(waybill_fixture_inst)\nendif()\n");
+    write(t.path(), "projects/app/CMakeLists.txt", "option(A \"\" OFF)\nif(A)\n  find_package(waybill_fixture_inst)\nendif()\n");
     let d = scan(t.path());
     let c = by_purl(&d, "pkg:generic/waybill_fixture_inst@4.5.6");
     assert_optional(c);
@@ -549,7 +549,7 @@ fn w11_a_file_reached_only_by_include_is_read() {
     write(
         t.path(),
         "CMakeLists.txt",
-        "project(waybill_fixture_root)\nif(WIN_SDK)\n  include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_wsl.txt)\nendif()\n",
+        "project(waybill_fixture_root)\noption(WIN_SDK \"\" OFF)\nif(WIN_SDK)\n  include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_wsl.txt)\nendif()\n",
     );
     write(t.path(), "CMakeLists_wsl.txt", "find_package(waybill_fixture_wsl)\n");
     let d = scan(t.path());
@@ -632,14 +632,14 @@ fn w18_include_by_module_name_through_cmake_module_path() {
     write(
         t.path(),
         "CMakeLists.txt",
-        "project(waybill_fixture_root)\nlist(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)\nif(ENABLE_VFIO)\n  include(waybill_fixture_vfio)\nendif()\nadd_subdirectory(child)\n",
+        "project(waybill_fixture_root)\nlist(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)\noption(ENABLE_VFIO \"\" OFF)\nif(ENABLE_VFIO)\n  include(waybill_fixture_vfio)\nendif()\nadd_subdirectory(child)\n",
     );
     write(
         t.path(),
         "cmake/waybill_fixture_vfio.cmake",
         "include(FetchContent)\nFetchContent_Declare(waybill_fixture_vfio GIT_REPOSITORY https://github.com/waybill-fixture/vfio.git GIT_TAG v0.8)\nfind_package(waybill_fixture_vfio_dep)\n",
     );
-    write(t.path(), "child/CMakeLists.txt", "if(CHILD_OPT)\n  include(waybill_fixture_inherited)\nendif()\n");
+    write(t.path(), "child/CMakeLists.txt", "option(CHILD_OPT \"\" OFF)\nif(CHILD_OPT)\n  include(waybill_fixture_inherited)\nendif()\n");
     write(t.path(), "cmake/waybill_fixture_inherited.cmake", "find_package(waybill_fixture_inh)\n");
     let d = scan(t.path());
     let fetch = by_purl(&d, "pkg:github/waybill-fixture/vfio@v0.8");

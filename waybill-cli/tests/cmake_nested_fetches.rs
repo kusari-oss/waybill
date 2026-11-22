@@ -136,11 +136,13 @@ fn c7_dependency_provider_methods() {
 /// C-8: any `if()`, root file included (clarification 2).
 #[test]
 fn c8_any_condition_in_the_root_file() {
-    let fx = tree(&[("CMakeLists.txt", &format!("{ROOT}if(WIN32)\n{}endif()\n", url_fetch("waybill-fixture-win", "1.0.0", "")))]);
+    // Spec 1641: a platform check holds by default, so the condition here is
+    // a default-OFF option, which still makes the fetch optional.
+    let fx = tree(&[("CMakeLists.txt", &format!("{ROOT}option(WF_WIN \"\" OFF)\nif(WF_WIN)\n{}endif()\n", url_fetch("waybill-fixture-win", "1.0.0", "")))]);
     let docs = scan(&fx, &fx.path("t"), &[]);
     let c = the(&docs, "pkg:generic/waybill-fixture-win@");
     assert_optional(c, "cmake-conditional");
-    assert_eq!(conditions(c), Some(vec!["WIN32".to_string()]));
+    assert_eq!(conditions(c), Some(vec!["WF_WIN".to_string()]));
 }
 
 /// C-9: test directories and `BUILD_TESTING` give test scope; `OR` does not.
@@ -148,7 +150,9 @@ fn c8_any_condition_in_the_root_file() {
 fn c9_test_scope() {
     let fx = tree(&[
         ("CMakeLists.txt", &format!(
-            "{ROOT}if(BUILD_TESTING AND WF_X)\n{}endif()\nif(BUILD_TESTING OR WF_X)\n{}endif()\n",
+            // Spec 1641: both options default OFF, so the `OR` fetch's
+            // condition does not hold and it stays optional, not test.
+            "{ROOT}option(BUILD_TESTING \"\" OFF)\noption(WF_X \"\" OFF)\nif(BUILD_TESTING AND WF_X)\n{}endif()\nif(BUILD_TESTING OR WF_X)\n{}endif()\n",
             url_fetch("waybill-fixture-bt", "1.0.0", ""),
             url_fetch("waybill-fixture-or", "1.0.0", "")
         )),

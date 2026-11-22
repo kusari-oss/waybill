@@ -166,6 +166,7 @@ fn p_ctl_is_byte_identical_to_main() {
          include(FetchContent)\n\
          FetchContent_Declare(waybill-fixture-fetch GIT_REPOSITORY https://github.com/example/waybill-fixture-fetch GIT_TAG v1.0.0)\n\
          find_package(waybill-fixture-found REQUIRED)\n\
+         option(WAYBILL_FIXTURE_OPT \"\" OFF)\n\
          if(WAYBILL_FIXTURE_OPT)\n  find_package(waybill-fixture-optional)\nendif()\n",
     );
     write(&root, "sub/waybill-fixture-subConfig.cmake.in", "# config template\n");

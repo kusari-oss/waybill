@@ -121,6 +121,11 @@ pub(crate) struct PackageSearch {
     /// The `if` conditions alone, as `fallback::build_testing` reads them.
     pub(crate) if_conditions: Vec<String>,
     pub(crate) in_test_dir: bool,
+    /// Spec 1641 research R3: the file's own enclosing `if` blocks.
+    pub(crate) branches: Vec<super::conditions::Branch>,
+    /// Spec 1641 (FR-007): whether the search's chain holds by default. Set
+    /// by the caller once defaults and reach are known; `Unknown` until then.
+    pub(crate) eval: super::conditions::Eval,
 }
 
 /// What one file's commands hold.
@@ -257,6 +262,8 @@ pub(crate) fn collect(
         conditions: conditions.clone(),
         if_conditions: if_conditions.clone(),
         in_test_dir,
+        branches: blocks.branches(),
+        eval: super::conditions::Eval::Unknown,
     }));
 }
 
@@ -295,6 +302,9 @@ pub(crate) struct NameScope {
     /// The sorted union of every search's conditions; C236 when
     /// non-runtime and non-empty.
     pub(crate) conditions: BTreeSet<String>,
+    /// Spec 1641 (FR-007): in scope only because a conditional search's
+    /// chain holds by default; C236 is written without a scope.
+    pub(crate) kept: bool,
 }
 
 /// [`NameScope`] for every package name (lowercased) the searches name.
@@ -302,6 +312,7 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
     #[derive(Default)]
     struct Acc {
         runtime: bool,
+        kept: bool,
         optional: bool,
         test_dir: bool,
         test_cond: bool,
@@ -317,13 +328,17 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
             a.test_cond = true;
         } else if s.conditions.is_empty() {
             a.runtime = true;
+        } else if s.eval.in_scope() && !s.conditions.iter().any(|c| c.starts_with("function: ")) {
+            // A search in a function body is spec 1538's sixth shape, which
+            // spec 1641 leaves Optional (spec 1614 W-17), as it does a fetch.
+            a.kept = true;
         } else {
             a.optional = true;
         }
     }
     acc.into_iter()
         .map(|(name, a)| {
-            let (scope, test_derivation) = if a.runtime {
+            let (scope, test_derivation) = if a.runtime || a.kept {
                 (None, None)
             } else if a.optional {
                 // #1624: spec 1269's order, the strongest call site wins. A
@@ -334,7 +349,7 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
             } else {
                 (Some(LifecycleScope::Test), Some("cmake-build-testing"))
             };
-            (name, NameScope { scope, test_derivation, conditions: a.conditions })
+            (name, NameScope { scope, test_derivation, conditions: a.conditions, kept: a.kept && !a.runtime })
         })
         .collect()
 }
@@ -344,7 +359,12 @@ pub(crate) fn scopes(searches: &[PackageSearch]) -> BTreeMap<String, NameScope> 
 pub(crate) fn mark(entries: &mut [PackageDbEntry], scopes: &BTreeMap<String, NameScope>) -> (usize, usize) {
     for e in entries.iter_mut() {
         let Some(s) = scopes.get(&e.name) else { continue };
-        let Some(scope) = s.scope else { continue };
+        let Some(scope) = s.scope else {
+            if s.kept && !s.conditions.is_empty() {
+                e.extra_annotations.insert(ANN_CMAKE_FIND_CONDITIONS.to_string(), serde_json::json!(s.conditions));
+            }
+            continue;
+        };
         e.lifecycle_scope = Some(scope);
         match s.test_derivation {
             Some(d) => {
@@ -371,12 +391,22 @@ pub(crate) fn read_file(path: &std::path::Path, seed: Vec<String>, in_test_dir: 
     let mut out = FileSearches::default();
     let Ok(content) = std::fs::read_to_string(path) else { return out };
     let source_path = path.to_string_lossy();
+    // Spec 1641: no tree-wide defaults or reach here, so the seed reads in
+    // C232's string form and options are unknown.
+    let d = super::conditions::Defaults::default();
+    let mut atoms = std::collections::BTreeSet::new();
+    let reach = seed.iter().fold(super::conditions::Eval::Holds, |acc, s| acc.and(d.condition_string(s, &mut atoms)));
     let mut blocks = BlockStack::seeded(seed);
     for (name, args) in commands_checked(&strip_comments(&content)).0 {
         let name = name.to_ascii_lowercase();
-        let args: Vec<String> = args.into_iter().map(|a| a.text).collect();
+        let args: Vec<String> =
+            if name == "if" || name == "elseif" { super::conditions::with_parens(args) } else { args.into_iter().map(|a| a.text).collect() };
         if !blocks.observe(&name, &args) {
+            let before = out.searches.len();
             collect(&blocks, &name, &args, &source_path, in_test_dir, &mut out);
+            for s in &mut out.searches[before..] {
+                s.eval = d.chain(reach, &s.branches, &[], &mut atoms);
+            }
         }
     }
     out
@@ -412,7 +442,9 @@ mod tests {
     /// other searches are in test contexts.
     #[test]
     fn i1624_the_strongest_call_site_decides_the_scope() {
-        let product = one("if(WITH_X)\n  find_package(waybill-fixture-x)\nendif()");
+        let mut product = one("if(WITH_X)\n  find_package(waybill-fixture-x)\nendif()");
+        // Spec 1641: a product search whose chain does not hold by default.
+        product.eval = crate::scan_fs::package_db::cmake::conditions::Eval::DoesNotHold;
         let mut from_tests = one("find_package(waybill-fixture-x)");
         from_tests.in_test_dir = true;
         let mut under_testing = one("if(BUILD_TESTING)\n  find_package(waybill-fixture-x)\nendif()");

@@ -152,7 +152,10 @@ pub fn assert_invariants(docs: &Docs) {
         }
         if conditions(f).is_some() {
             let test = prop(f, "waybill:lifecycle-scope") == Some("test");
-            assert!(optional || test, "I-3: conditions only on a conditional or test fetch: {f}");
+            // Spec 1641 (FR-005): a catch-all conditional whose conditions
+            // hold by default is in scope and keeps C232, with no C122.
+            let kept = f["scope"] != "excluded" && prop(f, "waybill:optional-derivation").is_none();
+            assert!(optional || test || kept, "I-3: conditions only on a conditional, test or kept fetch: {f}");
         }
     }
 }

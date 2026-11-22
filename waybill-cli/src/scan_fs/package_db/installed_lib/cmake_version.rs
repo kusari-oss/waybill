@@ -34,6 +34,9 @@ pub(crate) fn parse(content: &str) -> Result<String, SkipReason> {
 
 pub(crate) struct Arg {
     pub(crate) text: String,
+    /// Spec 1641: how many unquoted `(` enclose the argument inside the
+    /// command's own parentheses, so an `if()` keeps its grouping.
+    pub(crate) depth: usize,
 }
 
 /// Remove `#` line comments and `#[[ … ]]` / `#[=[ … ]=]` bracket comments,
@@ -171,18 +174,18 @@ fn arguments(chars: &[char], mut i: usize) -> (Vec<Arg>, usize, bool) {
                 i += 1;
             }
             i += 1;
-            args.push(Arg { text });
+            args.push(Arg { text, depth });
         } else if let Some((text, end)) = bracket_argument(chars, i) {
             // `[=[ … ]=]`: CMake's generated CTest files name tests this way,
             // and the content may hold spaces (spec 1533 research R1).
-            args.push(Arg { text });
+            args.push(Arg { text, depth });
             i = end;
         } else {
             let start = i;
             while i < chars.len() && !chars[i].is_whitespace() && chars[i] != ')' && chars[i] != '(' {
                 i += 1;
             }
-            args.push(Arg { text: chars[start..i].iter().collect() });
+            args.push(Arg { text: chars[start..i].iter().collect(), depth });
         }
     }
     (args, i, false)
