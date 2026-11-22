@@ -1338,7 +1338,7 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`waybill:layer-digest`** — milestone-133 OCI layer-digest attribution. See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C88](sbom-format-mapping.md))
 - **`waybill:license-concluded-source`** — milestone-132 provenance marker for license conclusions. See [§3.2](#32-compliance-auditing) for depth coverage. ([C98](sbom-format-mapping.md))
 - **`waybill:lifecycle-scope`** — milestone-052 finer-grained dev/build/test/runtime scope distinction. See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C42](sbom-format-mapping.md))
-- **`waybill:lifecycle-scope-derivation`** — milestone-062 reason-class for why a particular lifecycle-scope was chosen for a component. ([C62](sbom-format-mapping.md))
+- **`waybill:lifecycle-scope-derivation`** — milestone-062 reason-class for why a particular lifecycle-scope was chosen for a component. A `transitive` scope is never given to a package the root or a runtime project depends on directly, including one a runtime requirements file at the scan root declares (spec 1642). ([C62](sbom-format-mapping.md))
 - **`waybill:linkage-kind`** — binary linkage classification (closed enum: `dynamic` / `static` / `mixed`). See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C12](sbom-format-mapping.md))
 - **`waybill:macho-build-tools`** — Mach-O `LC_BUILD_VERSION` build-tools entries (clang/swift version + similar). ([C51](sbom-format-mapping.md))
 - **`waybill:macho-build-version`** — Mach-O `LC_BUILD_VERSION` SDK + min-OS values. ([C50](sbom-format-mapping.md))
