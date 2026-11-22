@@ -40,7 +40,7 @@ File references are to `waybill-cli/src/` at `main` `79b3350b`. "Traced" means r
 
   So no main-module candidate is left whose first path is a lockfile, and a key for step 1 would be unreachable. The census (R6) verifies this, counting candidates whose first path is a lockfile file name (expected 0 after R2). The lockfile names live in the census script, not in a second Rust list (the readers hard-code `uv.lock`, `poetry.lock` and `Pipfile.lock` at their own call sites).
 - **Decision:** `OwnerIndex`'s candidate key goes from `(rank, purl)` to `(rank, non_runtime, purl)`:
-  - `non_runtime`: the candidate's `lifecycle_scope` is non-runtime (step 2);
+  - `non_runtime`: the candidate's `lifecycle_scope` is non-runtime (step 2). No scanned tree is known to produce two same-rank pip candidates after R2, so this step is tested at unit level (T008).
   - `purl`: as on `main` (step 3).
 - **The log.** When two candidates tie on `(rank, non_runtime)` and the PURL decides, emit one `debug` event on target `waybill::owner_index` with the directory and every candidate.
 - **The census counts how often each step decides.** After R2, the measured #1640 tie no longer exists. Step 2 is a defence for trees the census may find, so it gets a unit test and a mutation even if the census finds 0.
@@ -88,7 +88,7 @@ File references are to `waybill-cli/src/` at `main` `79b3350b`. "Traced" means r
   - `dev_only_main_module`: per main module that a dependency group alone lists, and what keys on it (root selection, workspace-member, owner candidacy, `added_seeds`), for FR-002;
   - `anchor_immunity`: per component that R5's anchor seeds would make immune and that is non-runtime today, with its ecosystem and the kind of direct dependent.
 
-  Every event records a fact available on `main`. `anchor_immunity` reruns the immunity search with the anchors added, on a copy, and assigns nothing.
+  `dev_only_main_module` is detected from the graph: a main module whose only inbound edges are `DevDependsOn`/`OptionalDependsOn` and whose C122 names a PEP 735 group. It does not read the lockfile's group tables. Every event records a fact available on `main`. `anchor_immunity` reruns the immunity search with the anchors added, on a copy, and assigns nothing.
 
   **Owner changes are not simulated.** Which requirements packages, CMake fetches and searches change owner is counted from the wired commit's per-component diff against `main` (SC-004). Recomputing ownership in the census script would be a second model of `OwnerIndex`, one that could drift from the binary.
 - **Where it runs:**

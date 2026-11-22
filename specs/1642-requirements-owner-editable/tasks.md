@@ -55,21 +55,21 @@ Output does not change in this phase.
 
 ## Phase 3: User Story 1: a requirements file attaches to the project that declares it (P1) 🎯 MVP
 
-**Goal**: FR-001, FR-002, FR-003. **Independent test**: O-1 to O-9.
+**Goal**: FR-001, FR-002, FR-003. **Independent test**: O-1 to O-8, O-10 to O-12, and T008's unit test.
 
-- [ ] T006 [US1] Write O-1 to O-9 in `IT`.
+- [ ] T006 [US1] Write O-1 to O-8 and O-10 to O-12 in `IT`. O-4 uses the `zdevtool` order (`contracts/wire.md`).
   - **O-7:** a poetry project, a `poetry.lock` with a same-PURL entry, and a requirements file.
   - **O-8:** an editable install, `.venv/lib/python3.12/site-packages/waybill_fixture_app-1.0.0.dist-info/` plus the project's `pyproject.toml`. Follow the existing dist-info fixtures in `waybill-cli/src/scan_fs/package_db/pip/dist_info.rs` tests.
-  - **O-9:** two pip main modules in one directory, one non-runtime.
+  - **O-10:** O-1 with the tool's lock entry as `virtual = "."`. **O-11, O-12:** guards (an editable path outside the scan root; an editable entry with no manifest).
 
-  **Run them at the log-only commit:** O-1, O-3, O-4, O-7 and O-9 must fail on their stated assertion, and O-2, O-5, O-6 and O-8 must pass. Record per case in `MS/control.md`.
+  **Run them at the log-only commit:** O-1, O-3, O-4, O-7 and O-10 must fail on their stated assertion, and O-2, O-5, O-6, O-8, O-11 and O-12 must pass. Record per case in `MS/control.md`. A case expected to fail that passes stops the phase: its control is wrong, and the case is rebuilt before T007.
 - [ ] T007 [US1] R2 in `PM`'s augment-existing branch. When the existing entry's `sbom_tier` is not `deployed`:
   - set `source_path` to the synthesized main module's;
   - insert the old `source_path` at the front of `extra_source_paths`, unless it is already there.
 
-  When the entry carries a uv.lock editable path, compare it, resolved against the lock's directory, with the manifest directory, and `debug!` on disagreement. Unit tests in `PM`: a lockfile merge reorders, an installed merge does not, and the editable cross-check logs on a mismatch (use `tracing-test` only if already a dev-dependency; otherwise assert through a returned flag).
-- [ ] T008 [US1] R3 in `DA`: the candidate key becomes `(rank, non_runtime, purl)`, where `non_runtime` is `lifecycle_scope.is_some_and(|s| s.is_non_runtime())`, and `all_by_dir` sorts by the same key. Emit `debug!(target: "waybill::owner_index", …)` when the PURL decides. Unit tests: rank still dominates, a runtime candidate beats a non-runtime one of the same rank, and the PURL decides last.
-- [ ] T009 [US1] Run O-1 to O-9, the unit tests, B-1, `declared_requirements`, `git_submodule_reader` and the CMake suites that use `OwnerIndex` (spec 1538 fetch attach, spec 1614/1618 search pairing) until they pass. An existing assertion whose expectation changes is recorded with its reason in the commit message. None may be loosened otherwise.
+  When the entry carries a uv.lock editable path, compare it, resolved against the lock's directory, with the manifest directory, and `debug!(target: "waybill::owner_index", …)` on disagreement. Unit tests in `PM`: a lockfile merge reorders, an installed merge does not, and the editable cross-check logs on a mismatch (use `tracing-test` only if already a dev-dependency; otherwise assert through a returned flag).
+- [ ] T008 [US1] R3 in `DA`: the candidate key becomes `(rank, non_runtime, purl)`, where `non_runtime` is `lifecycle_scope.is_some_and(|s| s.is_non_runtime())`, and `all_by_dir` sorts by the same key. Emit `debug!(target: "waybill::owner_index", …)` when the PURL decides. Unit tests: rank still dominates, a runtime candidate beats a non-runtime one of the same rank, and the PURL decides last. This unit test is FR-003's runtime-step test and kills M4 (no integration case produces the tie; `contracts/wire.md`).
+- [ ] T009 [US1] Run O-1 to O-8 and O-10 to O-12, the unit tests, B-1, `declared_requirements`, `git_submodule_reader` and the CMake suites that use `OwnerIndex` (spec 1538 fetch attach, spec 1614/1618 search pairing) until they pass. An existing assertion whose expectation changes is recorded with its reason in the commit message. None may be loosened otherwise.
 
 ## Phase 4: User Story 2: a package the root requires directly is never reported as not shipping (P1)
 
@@ -78,6 +78,8 @@ Output does not change in this phase.
 - [ ] T010 [US2] Write A-1 to A-6 in `IT`.
   - **A-4:** a top-level git submodule built as `waybill-cli/tests/git_submodule_reader.rs` builds one (`.gitmodules` plus a gitlink), holding a non-pip project, for example an npm `package.json` and lockfile. A dev-scoped component outside it depends on the submodule project's dependency.
   - **A-6:** a runtime npm main module whose direct dependency a dev-scoped component also reaches.
+
+  **A-4 guard:** before asserting scope, A-4 asserts that the CycloneDX `dependencies` contain a path of runtime edges from the submodule component to the dependency, and that the dev-scoped component has an edge to it. If no such path exists, the case tests nothing: rebuild it (for example, a submodule whose own requirements file declares the dependency, which spec 1537 attaches to the submodule) before going on.
 
   **Run them at the log-only commit:** A-1 and A-4 must fail, and A-2, A-3, A-5 and A-6 must pass. Add the results to `MS/control.md`.
 - [ ] T011 [US2] R5:
@@ -103,7 +105,7 @@ Output does not change in this phase.
   - **M1:** drop R2's `source_path` swap (killed by O-1/O-3).
   - **M2:** apply R2 to installed entries too (killed by O-8).
   - **M3:** drop the old path's move into `extra_source_paths` (killed by O-3).
-  - **M4:** remove the `non_runtime` key (killed by O-9).
+  - **M4:** remove the `non_runtime` key (killed by T008's unit test).
   - **M5:** drop the anchor seeds (killed by A-1, A-4).
   - **M6:** drop the `is_runtime_seed_candidate` filter on anchors (killed by A-3).
 

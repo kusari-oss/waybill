@@ -14,6 +14,7 @@
 - Planning amendment (research R2): FR-001 applies to a main module merged with a **lockfile** entry. An **installed** entry (venv or `dist-info`) keeps its own path first. `waybill:layer-digest` is stamped from the first source path, so moving it would drop the layer digest on image scans. The census counts installed merges.
 - Planning amendment (research R3): FR-003's step 1 holds by construction once FR-001 is in place. Every pip main module's first source path is then its manifest's directory, so the key is `(rank, non-runtime, PURL)`. The census verifies that no candidate's first path is a lockfile.
 - Planning amendment (research R6): the public corpus's harness keeps no scan logs. Its SC-001 census is the regenerated diff at the wired commit, traced component by component. At the log-only commit it must show 0 differing files.
+- Planning amendment (research R6): the census records only facts true on `main`. Owner changes are counted from the wired commit's per-component diff against `main` (SC-004), so the census script holds no second model of the owner rule.
 - FR-004 resolved by measurement (research R4, `measurements/probe.md`): a package that a scan-root requirements file declares reaches the root through a reader root anchor. The propagation's immunity search does not start from anchors, so a non-runtime path into the package wins. Measured: `excluded`, C62 `transitive`, in 3 of 3 runs. The control, with the file owned by the project so that the edge is a relationship, is `required` in 3 of 3.
 
 ## Background
@@ -47,7 +48,7 @@ The edge's source should be `waybill-fixture-tool`. Which project owns `tool/` i
 
 Without a lockfile, the main module of `tool/devtool/pyproject.toml` carries its own directory. With one, the pip reader's main-module pass finds the lockfile entry of the same PURL and augments it (`pip/mod.rs`, the FR-011 "augment-existing" branch). It copies the main-module role and annotations onto that entry, but keeps the entry's source path, `tool/uv.lock`. The project's own directory is lost, and both editable packages now claim the lockfile's directory. #954 is the same class of defect: that branch copies only the fields it names, and it once dropped the manifest's license the same way.
 
-**The propagation half, not reproduced.** #1640 also reports, in a large multi-project tree with this layout, five packages that the top-level `requirements.txt` declares directly. They were emitted `scope: excluded` with C62 `transitive`, although the root has a direct edge to each, so runtime requirements were reported as not shipping. Nine more were excluded although an in-scope component depends on them. On the minimal tree, spec 1269's pass logs "assigned nothing" (`immune=3`, `rooted_ecosystems=["pypi"]`), and `waybill-fixture-shared` stays `required`.
+**The propagation half.** #1640 also reports, in a large multi-project tree with this layout, five packages that the top-level `requirements.txt` declares directly. They were emitted `scope: excluded` with C62 `transitive`, although the root has a direct edge to each, so runtime requirements were reported as not shipping. Nine more were excluded although an in-scope component depends on them. #1640's minimal tree does not show it: spec 1269's pass logs "assigned nothing" (`immune=3`, `rooted_ecosystems=["pypi"]`), and `waybill-fixture-shared` stays `required`. Research R4 reproduces it on a second fixture.
 
 *Inference when the spec was written; since reproduced (research R4):* the propagation's immunity search starts from main modules (`component_root_seeds`, plus spec 1616's added seeds). Packages a scan-root requirements file declares reach the root through reader root anchors (`declared_root_anchors`, installed through `supplement::install_reader_root_anchors`). Those are not relationships the pass sees, and they are not seeds, so a root-declared package reached through a non-runtime path has no runtime path that protects it.
 
@@ -101,7 +102,7 @@ A tree in which each directory has one owner produces the same document as `main
 - **An editable entry with no manifest in the tree:** the lockfile names `source = { editable = "x" }`, but `x/pyproject.toml` is absent or unreadable. No pip main module is built for it, so it owns no directory, as on `main` for a lockfile entry without the main-module role.
 - **A virtual source** (`source = { virtual = "." }`): treated like an editable source with the same path.
 - **An editable path outside the scan root** (`editable = "../shared"`): it owns nothing inside the scan.
-- **Two pip main modules in one directory** (for example a `pyproject.toml` and a `setup.py` naming different projects): the remaining tie (FR-003).
+- **Two main modules of the same rank in one directory:** the remaining tie (FR-003). After FR-001 no scanned tree is known to produce one for pip (the pip reader builds main modules from `pyproject.toml` only), so FR-003's runtime step is tested at unit level. The census counts any it finds.
 - **A dev-group editable package that is also a runtime dependency** of another project: it keeps the runtime scope the readers give it. FR-002 concerns only what owns a directory.
 - **A requirements file in a directory no project owns:** unchanged. It goes to the nearest enclosing owner, or to the document's subject (spec 1537 R4).
 - **CMake fetches and searches** use the same owner index (spec 1538 R6, spec 1614). They follow the corrected ownership too. Any change in their edges is traced (SC-004).
@@ -110,7 +111,7 @@ A tree in which each directory has one owner produces the same document as `main
 
 ### Functional Requirements
 
-- **FR-001**: A pip main module's project directory MUST be the directory of the manifest that declares it, whichever reader's entry survives the merge of that main module with a same-PURL lockfile entry. An installed entry keeps its own path first (Clarifications, planning amendment). The merged entry MUST list that directory as its first source path, keep the lockfile's path after it, and derive `waybill:workspace-member` from the first (Clarifications). On #1640's tree, `waybill-fixture-devtool` has `source-files` `["tool/devtool", "tool/uv.lock"]` and workspace-member `["tool/devtool"]`, and owns `tool/devtool`. `waybill-fixture-tool` owns `tool`. This settles decision (a): the directory comes from the manifest, and a lockfile's `source.editable` path MUST agree with it. Where they disagree, the manifest wins and the disagreement is logged at debug level.
+- **FR-001**: A pip main module's project directory MUST be the directory of the manifest that declares it, whichever reader's entry survives the merge of that main module with a same-PURL lockfile entry. An installed entry keeps its own path first (Clarifications, planning amendment). The merged entry MUST list that directory as its first source path, keep the lockfile's path after it, and derive `waybill:workspace-member` from the first (Clarifications). On #1640's tree, `waybill-fixture-devtool` has `source-files` `["tool/devtool", "tool/uv.lock"]` and workspace-member `["tool/devtool"]`, and owns `tool/devtool`. `waybill-fixture-tool` owns `tool`. This settles decision (a): the directory comes from the manifest, and a lockfile's `source.editable` path MUST agree with it. Where they disagree, the manifest wins and the disagreement is logged at debug level on target `waybill::owner_index`.
 - **FR-002**: A main module MUST NOT own a directory other than its own (FR-001). A package that a dependency group alone lists keeps its main-module role, its scope and its ownership of its own directory. Decision (b), whether such a package is a main module at all, is settled by SC-001's census. The default is to keep the role, because removing it changes root selection, `waybill:workspace-member` and every C-row keyed on `component-role`, and FR-001 already removes the false ownership. If the census finds a case FR-001 does not fix, the plan revisits this.
 - **FR-003**: When two or more owner candidates of the same rank remain for one directory, the owner MUST be chosen in this order:
   1. a candidate whose declaring manifest is in that directory (true of every candidate once FR-001 holds; Clarifications, planning amendment);
@@ -139,7 +140,7 @@ A tree in which each directory has one owner produces the same document as `main
 - **SC-001**: Before any design choice is fixed, a census at a log-only commit runs on the public corpus (`regen_goldens`), the quality corpus and TheRock. It counts:
   - the directories with more than one owner candidate at the same rank;
   - how many of those candidates are lockfile-merged main modules whose source path is not their manifest's directory, and how many are editable entries whose path is not `.`;
-  - how many requirements packages, CMake fetches and searches change owner under FR-001 and FR-003;
+  - how many requirements packages, CMake fetches and searches change owner under FR-001 and FR-003, counted from the wired commit's per-component diff against `main`, not simulated (Clarifications, planning amendment);
   - how many main modules' `source-files` and `workspace-member` change under FR-001;
   - the main modules a dependency group alone lists, and what removing their role would change (FR-002);
   - the components that FR-005 would keep runtime, by ecosystem and by kind of direct dependent (root relationship, root anchor, runtime main module).
@@ -149,7 +150,7 @@ A tree in which each directory has one owner produces the same document as `main
 - **SC-003**: A dev-group-only editable package owns no requirements file outside its own directory, in every fixture.
 - **SC-004**: The public corpus regenerated on the branch differs from the committed goldens only in components traced to an FR. TheRock and the quality corpus, against a `main` control, have equal component counts, and every changed component or edge is traced to an FR.
 - **SC-005**: Scan time on TheRock is at most 1.05× `main`'s, median of at least 3 runs.
-- **SC-006**: Removing FR-001's directory rule, any step of FR-003's order, or the FR-005 invariant makes at least one test fail.
+- **SC-006**: Removing FR-001's directory rule, FR-003's runtime step, or the FR-005 invariant makes at least one test fail. FR-003's step 1 has no code to remove (Clarifications, planning amendment).
 - **SC-007**: Every fixture scanned 10 times gives byte-identical output, parity-check agrees, and the CycloneDX output validates.
 
 ## Assumptions
@@ -158,4 +159,4 @@ A tree in which each directory has one owner produces the same document as `main
 - **A census before design** follows spec 1641's pattern: a log-only commit, a CI workflow in the TheRock fixture repository, and quality-corpus targets at their pins.
 - **The large tree in #1640** is TheRock's source tree. Its five root-declared packages are expected in SC-001's census. If they do not appear there, FR-004 records that.
 - **Synthetic fixtures only**, named `waybill-fixture-*`.
-- **Out of scope:** what makes a package a uv workspace member (`[tool.uv.workspace]`, milestone 106), poetry and Pipfile lockfiles (unless the census finds the same merge there), and #1642's unexplained orphans.
+- **Out of scope:** what makes a package a uv workspace member (`[tool.uv.workspace]`, milestone 106), and #1642's unexplained orphans. Poetry and Pipfile lockfiles are in scope: their entries go through the same merge (research R2, case O-7).

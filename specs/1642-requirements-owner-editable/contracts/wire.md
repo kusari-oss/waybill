@@ -16,12 +16,16 @@ Every case builds a synthetic `waybill-fixture-*` tree in a temp directory and s
 | O-1 | #1640's tree (`devtool`) | `tool/requirements.txt`'s package has an edge from `waybill-fixture-tool@1.0.0`, none from the dev package | edge from the dev package |
 | O-2 | O-1 with the dev package named `waybill-fixture-zdevtool` | same as O-1, up to the name | same as O-1 (passes on `main`; the pair proves order independence) |
 | O-3 | O-1 | dev package C18 `["tool/devtool", "tool/uv.lock"]`, C120 `["tool/devtool"]`; tool C18 `["tool", "tool/uv.lock"]` | C18 `["tool/uv.lock"]`, C120 `["tool"]` |
-| O-4 | O-1 plus `tool/devtool/requirements.txt` | its package attaches to the dev package | attaches to the dev package or the tool, by name order |
+| O-4 | the `zdevtool` order of O-1, plus `tool/devtool/requirements.txt` | its package attaches to `waybill-fixture-zdevtool` | attaches to `waybill-fixture-tool`: on `main` no candidate owns `tool/devtool`, and `tool/` goes to the tool by name order. The `devtool` order cannot be the control, because there the dev package already owns `tool/` on `main`. |
 | O-5 | O-1 without `uv.lock` | unchanged from `main` | — |
 | O-6 | a uv workspace (`[tool.uv.workspace]` with two members) | each member owns its own directory and keeps C40 `main-module` | — (unchanged expected) |
 | O-7 | a poetry project with a same-PURL `poetry.lock` entry and a requirements file | owner is the project; C18 manifest directory first | C18 `["poetry.lock"]` first |
 | O-8 | an installed `dist-info` plus the project's `pyproject.toml` (editable install) | C18 order unchanged from `main` | — |
-| O-9 | two pip main modules in one directory, one non-runtime | the runtime one owns it | the lower PURL owns it |
+| O-10 | O-1 with the tool's lock entry as `source = { virtual = "." }` | same as O-1 | edge from the dev package (as O-1) |
+| O-11 | a uv.lock editable entry `editable = "../outside"` pointing outside the scan root, with no manifest in the tree | owns nothing; output unchanged from `main` | — (guard) |
+| O-12 | a uv.lock editable entry whose `x/pyproject.toml` is absent | no main module for it, owns nothing; output unchanged from `main` | — (guard) |
+
+FR-003's runtime step has no integration case: no scanned tree is known to produce two same-rank pip candidates after FR-001 (spec Edge Cases). It is tested at unit level in `declared_attach.rs` (T008), and that unit test kills mutation M4.
 
 ## Anchor immunity (User Story 2)
 
