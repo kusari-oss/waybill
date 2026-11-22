@@ -150,6 +150,11 @@ pub struct ScanResult {
     /// scan root, or with no owning project below it. `scan_cmd` installs
     /// them as reader root anchors.
     pub declared_root_anchors: Vec<String>,
+    /// Spec 1642 (research R5): the `declared_root_anchors` that only
+    /// non-runtime requirements files declare (`requirements-dev.txt` and
+    /// the like). They anchor to the root but protect nothing from
+    /// transitive non-runtime scope.
+    pub non_runtime_declared_anchors: Vec<String>,
     /// Spec 1535 (C229): declared CMake downloads, as their wire value.
     pub declared_downloads: Option<String>,
     /// Spec 1538 (C231): CMake fetch-declaration counts, as their wire value.
@@ -1708,20 +1713,24 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // with no owning project below it, are direct dependencies of whatever
     // root each format chooses. Computed from the final components so a
     // PURL the reconciler rewrote is not anchored under its old name.
-    let declared_root_anchors: Vec<String> = {
+    let (declared_root_anchors, non_runtime_declared_anchors): (Vec<String>, Vec<String>) = {
         let index = declared_attach::OwnerIndex::build(&components, &git_submodule_dirs, root, scan_mode);
-        let mut anchors = declared_attach::attach(&components, &relationships, &index, root).root_anchors;
+        let declared = declared_attach::attach(&components, &relationships, &index, root);
+        let non_runtime: Vec<String> =
+            declared.root_anchors.difference(&declared.runtime_root_anchors).cloned().collect();
+        let mut anchors = declared.root_anchors;
         anchors.extend(cmake_fetch_attach::attach(&components, &relationships, &index, root).root_anchors);
         anchors.extend(cmake_link_attach::attach(&components, &relationships, &cmake_links, &index, root).attached.root_anchors);
         let searched = cmake_search_pair::attach(&relationships, &search_pairings, &index, root).root_anchors;
         anchors.extend(cmake_search_pair::enclose_projects(&components, &relationships, &searched, &index, root).root_anchors);
         anchors.extend(searched);
         anchors.extend(workspace_root_anchors(&components, &relationships));
-        anchors.into_iter().collect()
+        (anchors.into_iter().collect(), non_runtime)
     };
     Ok(ScanResult {
         unresolved_declared_dep_count,
         declared_root_anchors,
+        non_runtime_declared_anchors,
         components,
         relationships,
         complete_ecosystems,

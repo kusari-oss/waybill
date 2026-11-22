@@ -311,6 +311,9 @@ pub(crate) fn finalize(
     //   `services/worker/Pipfile.lock`, etc. — each becomes its own
     //   root, so per-service declarations surface.
     let mut had_project_marker = false;
+    // Spec 1642 (research R2): every uv.lock editable or virtual source, by
+    // normalized name, for the main-module merge's cross-check.
+    let mut editables: Vec<(String, PathBuf)> = Vec::new();
     for project_root in &project_roots {
         // A project is anything holding a lockfile / requirements /
         // pyproject; track this for the "pyproject.toml only" skip log
@@ -331,6 +334,7 @@ pub(crate) fn finalize(
         // pyproject.toml declares [tool.uv.workspace].
         if let Some(lockfile_entries) = uv_lock::read_uv_lock(project_root, include_dev) {
             merge_without_override(&mut entries, lockfile_entries);
+            editables.extend(uv_lock::editable_sources(project_root));
         }
         if let Some(req_entries) = requirements_txt::read_requirements_files(project_root, rootfs) {
             merge_without_override(&mut entries, req_entries);
@@ -421,6 +425,19 @@ pub(crate) fn finalize(
         };
         let purl_key = synthesized.purl.as_str().to_string();
         if let Some(existing) = entries.iter_mut().find(|e| e.purl.as_str() == purl_key) {
+            census_merge_source(existing, &synthesized, project_root, &editables);
+            // Spec 1642 (research R2): a lockfile entry merged with its main
+            // module keeps the manifest's directory first, so the owner index
+            // and `waybill:workspace-member` see the project's own directory.
+            keep_manifest_dir_first(existing, &synthesized);
+            if editable_agrees(&existing.name, project_root, &editables) == Some(false) {
+                tracing::debug!(
+                    target: "waybill::owner_index",
+                    purl = existing.purl.as_str(),
+                    manifest = %project_root.display(),
+                    "uv.lock editable path disagrees with the manifest's directory; the manifest wins",
+                );
+            }
             // FR-011: augment-existing — when a same-PURL Tier-1 venv or
             // lockfile-derived entry exists, layer C40 + parent_purl
             // None on top while preserving the existing entry's
@@ -1551,6 +1568,69 @@ fn poetry_dep_to_pep508(name: &str, spec: &toml::Value) -> String {
         }
         _ => name.to_string(),
     }
+}
+
+/// Spec 1642 (research R2): put the synthesized main module's source path
+/// (its manifest's directory) first on the entry it merges into, and keep the
+/// entry's own path after it. An installed entry (`deployed`) is left alone:
+/// `waybill:layer-digest` is stamped from the first source path. Returns
+/// whether the entry was reordered.
+fn keep_manifest_dir_first(existing: &mut PackageDbEntry, synthesized: &PackageDbEntry) -> bool {
+    if existing.sbom_tier.as_deref() == Some("deployed") || existing.source_path == synthesized.source_path {
+        return false;
+    }
+    let old = std::mem::replace(&mut existing.source_path, synthesized.source_path.clone());
+    existing.extra_source_paths.retain(|p| *p != existing.source_path);
+    if !existing.extra_source_paths.contains(&old) {
+        existing.extra_source_paths.insert(0, old);
+    }
+    true
+}
+
+/// Spec 1642 (research R2): whether a uv.lock editable or virtual source
+/// named `name` resolves to `project_root`. `None` when no lock lists it.
+fn editable_agrees(name: &str, project_root: &Path, editables: &[(String, PathBuf)]) -> Option<bool> {
+    let name = normalize_pypi_name_for_purl(name);
+    let manifest_dir = std::fs::canonicalize(project_root).unwrap_or_else(|_| project_root.to_path_buf());
+    let mut listed = editables.iter().filter(|(n, _)| *n == name).peekable();
+    listed.peek()?;
+    Some(listed.any(|(_, p)| std::fs::canonicalize(p).is_ok_and(|c| c == manifest_dir)))
+}
+
+/// Spec 1642 census (research R6): one `merge_source` event per main module
+/// merged into an existing entry of its PURL.
+fn census_merge_source(
+    existing: &PackageDbEntry,
+    synthesized: &PackageDbEntry,
+    project_root: &Path,
+    editables: &[(String, PathBuf)],
+) {
+    let name = normalize_pypi_name_for_purl(&existing.name);
+    let editable: Vec<String> = editables
+        .iter()
+        .filter(|(n, _)| *n == name)
+        .map(|(_, p)| p.to_string_lossy().into_owned())
+        .collect();
+    let agrees = editable_agrees(&existing.name, project_root, editables).unwrap_or(false);
+    tracing::debug!(
+        target: "waybill::owner_census",
+        event = "merge_source",
+        payload = %serde_json::json!({
+            "purl": existing.purl.as_str(),
+            "tier": existing.sbom_tier,
+            "source_path": existing.source_path,
+            "manifest_source_path": synthesized.source_path,
+            "editable": editable,
+            "agrees": agrees,
+        }),
+    );
+}
+
+/// Spec 1642 (research R5): whether the pip reader gives the packages of
+/// requirements file `path` a runtime scope (no Optional scope by name or
+/// directory, spec 1537 FR-010, spec 1615).
+pub(crate) fn requirements_file_is_runtime(path: &Path, root: &Path) -> bool {
+    requirements_txt::classify_requirements_scope_under(path, root).as_optional_name().is_none()
 }
 
 pub(crate) fn dedup_pip_main_modules_by_purl(
@@ -2961,5 +3041,55 @@ dependencies = ["requests"]
             "source_path should point at the project-root directory: {}",
             entries[0].source_path
         );
+    }
+
+    // -----------------------------------------------------------------
+    // Spec 1642 (#1640), research R2
+    // -----------------------------------------------------------------
+
+    fn s1642_project(dir: &Path) -> PackageDbEntry {
+        std::fs::create_dir_all(dir).unwrap();
+        std::fs::write(dir.join("pyproject.toml"), "[project]\nname = \"waybill-fixture-devtool\"\nversion = \"0.1.0\"\n").unwrap();
+        build_pip_main_module_entry(dir).0.unwrap()
+    }
+
+    #[test]
+    fn s1642_a_lockfile_entry_takes_the_manifest_directory() {
+        let tmp = tempfile::tempdir().unwrap();
+        let synthesized = s1642_project(&tmp.path().join("tool/devtool"));
+        let mut existing = synthesized.clone();
+        existing.source_path = tmp.path().join("tool/uv.lock").to_string_lossy().into_owned();
+        existing.sbom_tier = Some("source".to_string());
+        assert!(keep_manifest_dir_first(&mut existing, &synthesized));
+        assert_eq!(existing.source_path, synthesized.source_path);
+        assert_eq!(existing.extra_source_paths, vec![tmp.path().join("tool/uv.lock").to_string_lossy().into_owned()]);
+        assert!(!keep_manifest_dir_first(&mut existing, &synthesized), "idempotent");
+    }
+
+    #[test]
+    fn s1642_an_installed_entry_is_left_alone() {
+        let tmp = tempfile::tempdir().unwrap();
+        let synthesized = s1642_project(&tmp.path().join("app"));
+        let mut existing = synthesized.clone();
+        existing.source_path = ".venv/lib/python3.12/site-packages/x.dist-info/METADATA".to_string();
+        existing.sbom_tier = Some("deployed".to_string());
+        let before = existing.source_path.clone();
+        assert!(!keep_manifest_dir_first(&mut existing, &synthesized));
+        assert_eq!(existing.source_path, before);
+        assert!(existing.extra_source_paths.is_empty());
+    }
+
+    #[test]
+    fn s1642_the_editable_cross_check() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("tool/devtool")).unwrap();
+        std::fs::create_dir_all(tmp.path().join("tool/elsewhere")).unwrap();
+        let root = tmp.path().join("tool/devtool");
+        let agrees = vec![("waybill-fixture-devtool".to_string(), tmp.path().join("tool/devtool"))];
+        let disagrees = vec![("waybill-fixture-devtool".to_string(), tmp.path().join("tool/elsewhere"))];
+        assert_eq!(editable_agrees("waybill-fixture-devtool", &root, &agrees), Some(true));
+        assert_eq!(editable_agrees("Waybill_Fixture-Devtool", &root, &agrees), Some(true), "names are normalized");
+        assert_eq!(editable_agrees("waybill-fixture-devtool", &root, &disagrees), Some(false));
+        assert_eq!(editable_agrees("waybill-fixture-other", &root, &agrees), None);
     }
 }

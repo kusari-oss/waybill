@@ -3933,6 +3933,7 @@ pub async fn execute(
         go_mod_why,
         git_submodule_coverage,
         declared_root_anchors,
+        non_runtime_declared_anchors,
         declared_downloads,
         cmake_fetch_coverage,
         cmake_find_coverage,
@@ -4478,7 +4479,7 @@ pub async fn execute(
     // (`waybill:build-reference`), which only the git-submodule reader
     // emits. C56 would say so directly, but is not yet emitted (#1515
     // clarification; follow-up issue).
-    let _reader_anchor_guard = {
+    let (_reader_anchor_guard, anchor_seed_candidates, submodule_anchors) = {
         let is_submodule = |c: &waybill_common::resolution::ResolvedComponent| {
             c.extra_annotations.get("waybill:source-mechanism").and_then(|v| v.as_str())
                 == Some(crate::scan_fs::package_db::git_submodule::SOURCE_MECHANISM)
@@ -4499,10 +4500,22 @@ pub async fn execute(
         // Spec 1537 (#1566), research R4: requirements declared at the scan
         // root, or with no owning project below it, are direct dependencies
         // of the root each format chooses, like a top-level submodule.
+        let submodule_anchors: std::collections::BTreeSet<String> = anchors.iter().cloned().collect();
         anchors.extend(declared_root_anchors.iter().cloned());
         anchors.sort();
         anchors.dedup();
-        (!anchors.is_empty()).then(|| crate::supplement::install_reader_root_anchors(anchors))
+        // Spec 1642 (research R5): an anchor may protect what it anchors from
+        // transitive non-runtime scope, unless only non-runtime requirements
+        // files declare it.
+        let non_runtime: std::collections::BTreeSet<&str> =
+            non_runtime_declared_anchors.iter().map(String::as_str).collect();
+        let seed_candidates: Vec<String> =
+            anchors.iter().filter(|a| !non_runtime.contains(a.as_str())).cloned().collect();
+        (
+            (!anchors.is_empty()).then(|| crate::supplement::install_reader_root_anchors(anchors)),
+            seed_candidates,
+            submodule_anchors,
+        )
     };
 
     // Milestone 133 US2.2 (FR-013): stamp `waybill:layer-digest` on every
@@ -5396,12 +5409,49 @@ pub async fn execute(
             let roots = if canonical == root_path { vec![canonical] } else { vec![canonical, root_path.clone()] };
             crate::resolve::scope_propagation::added_seeds(&components, &seeds, &roots)
         };
+        // Spec 1642 (#1640) FR-005, research R5: a runtime root anchor
+        // protects what it anchors, as a runtime main module does.
+        let anchor_seeds = {
+            let canonical = std::fs::canonicalize(&root_path).unwrap_or_else(|_| root_path.clone());
+            let roots = if canonical == root_path { vec![canonical] } else { vec![canonical, root_path.clone()] };
+            crate::resolve::scope_propagation::anchor_seeds(&components, &anchor_seed_candidates, &roots)
+        };
+        for a in &anchor_seeds {
+            let kind = if submodule_anchors.contains(a) { "submodule" } else { "declared" };
+            tracing::debug!(target: "waybill::owner_census", event = "anchor_seed", payload = %serde_json::json!({"purl": a, "kind": kind}));
+        }
+        // Spec 1642 census (research R6): the non-runtime main modules.
+        {
+            let root_purl = match &selection.subject {
+                crate::generate::root_selector::ResolvedRootSubject::MainModule(i) => {
+                    components.get(*i).map(|c| c.purl.as_str().to_string())
+                }
+                _ => None,
+            };
+            for c in components.iter().filter(|c| {
+                c.extra_annotations.get("waybill:component-role").and_then(|v| v.as_str()) == Some("main-module")
+                    && c.lifecycle_scope.is_some_and(|s| s.is_non_runtime())
+            }) {
+                tracing::debug!(
+                    target: "waybill::owner_census",
+                    event = "dev_only_main_module",
+                    payload = %serde_json::json!({
+                        "purl": c.purl.as_str(),
+                        "derivation": c.extra_annotations.get("waybill:optional-derivation"),
+                        "first_path": c.evidence.source_file_paths.first(),
+                        "is_root": root_purl.as_deref() == Some(c.purl.as_str()),
+                        "added_seed": added_seeds.contains(c.purl.as_str()),
+                    }),
+                );
+            }
+        }
         let scope_propagation_summary =
             crate::resolve::scope_propagation::propagate_non_runtime_scope_seeded(
                 &mut components,
                 &relationships,
                 &seeds,
                 &added_seeds,
+                &anchor_seeds,
                 &ecosystems_with_root,
                 &boot_libraries,
             );

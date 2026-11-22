@@ -367,7 +367,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6OKCMXFC47QTEUT7",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".\",\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TJLFOBBWDUBVZ5JB",
       "type": "Annotation"
     },

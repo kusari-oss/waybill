@@ -153,6 +153,9 @@ pub(crate) struct PropagationSummary {
     /// not compiler-supplied, that only the added seeds (runtime main
     /// modules other than the per-ecosystem root) made immune.
     pub immune_by_added_seeds: usize,
+    /// Spec 1642 (#1640) FR-005: components that only the runtime root
+    /// anchors (research R5) made immune.
+    pub immune_by_root_anchors: usize,
 }
 
 impl PropagationSummary {
@@ -329,6 +332,7 @@ pub(crate) fn propagate_non_runtime_scope(
         relationships,
         seeds,
         &HashSet::new(),
+        &HashSet::new(),
         ecosystems_with_root,
         boot_libraries,
     )
@@ -363,6 +367,23 @@ pub(crate) fn added_seeds(
         .collect()
 }
 
+/// Spec 1642 (research R5): the root anchors that may protect what they
+/// anchor: `candidates` (already without anchors only non-runtime
+/// requirements files declare) whose component is a runtime seed candidate.
+pub(crate) fn anchor_seeds(
+    components: &[ResolvedComponent],
+    candidates: &[String],
+    roots: &[std::path::PathBuf],
+) -> HashSet<String> {
+    let wanted: HashSet<&str> = candidates.iter().map(String::as_str).collect();
+    components
+        .iter()
+        .filter(|c| wanted.contains(c.purl.as_str()))
+        .filter(|c| is_runtime_seed_candidate(c, roots))
+        .map(|c| c.purl.as_str().to_string())
+        .collect()
+}
+
 /// [`propagate_non_runtime_scope`], with Phase A also starting from
 /// `added_seeds` (spec 1616, #1618). `ecosystems_with_root` and the FR-012
 /// gate still come from `seeds` alone.
@@ -371,6 +392,9 @@ pub(crate) fn propagate_non_runtime_scope_seeded(
     relationships: &[Relationship],
     seeds: &HashSet<String>,
     added_seeds: &HashSet<String>,
+    // Spec 1642 (#1640) FR-005: the runtime root anchors ([`anchor_seeds`]).
+    // Like `added_seeds`, they widen only the immunity search.
+    anchor_seeds: &HashSet<String>,
     ecosystems_with_root: &HashSet<String>,
     // Milestone 1276 — the packages the pinned revision's compiler supplies.
     // Empty when unknown, which exempts nothing (FR-005).
@@ -393,9 +417,10 @@ pub(crate) fn propagate_non_runtime_scope_seeded(
     let exempt = compiler_supplied(components, boot_libraries);
     let immune_compiler_supplied = exempt.len();
 
-    let (immune, assigned, skipped_unrooted, immune_by_added_seeds): (
+    let (immune, assigned, skipped_unrooted, immune_by_added_seeds, immune_by_root_anchors): (
         usize,
         HashMap<String, LifecycleScope>,
+        usize,
         usize,
         usize,
     ) = {
@@ -412,6 +437,18 @@ pub(crate) fn propagate_non_runtime_scope_seeded(
                 .collect()
         };
         immune.extend(added_only.iter().copied());
+        // Spec 1642 (#1640) FR-005: what only the root anchors protect, kept
+        // apart for the summary like the added seeds' share.
+        let anchor_only: HashSet<&str> = if anchor_seeds.is_empty() {
+            HashSet::new()
+        } else {
+            let all: HashSet<String> = seeds.union(added_seeds).chain(anchor_seeds).cloned().collect();
+            runtime_reachable(components, &adj, &all)
+                .into_iter()
+                .filter(|p| !immune.contains(p) && !exempt.contains(p))
+                .collect()
+        };
+        immune.extend(anchor_only.iter().copied());
         immune.extend(exempt.iter().copied());
 
         let scope_by_purl: HashMap<&str, LifecycleScope> = components
@@ -438,6 +475,7 @@ pub(crate) fn propagate_non_runtime_scope_seeded(
         let mut assigned: HashMap<String, LifecycleScope> = HashMap::new();
         let mut skipped_unrooted: HashSet<&str> = HashSet::new();
         let mut protected_by_added: HashSet<&str> = HashSet::new();
+        let mut protected_by_anchors: HashSet<&str> = HashSet::new();
         for scope in BY_DESCENDING_STRENGTH {
             let mut seen: HashSet<&str> = HashSet::new();
             let mut queue: VecDeque<&str> = VecDeque::new();
@@ -464,6 +502,9 @@ pub(crate) fn propagate_non_runtime_scope_seeded(
                     if added_only.contains(purl) && !scope_by_purl.contains_key(purl) {
                         protected_by_added.insert(purl);
                     }
+                    if anchor_only.contains(purl) && !scope_by_purl.contains_key(purl) {
+                        protected_by_anchors.insert(purl);
+                    }
                     continue; // FR-002
                 }
                 if scope_by_purl.contains_key(purl) {
@@ -481,7 +522,7 @@ pub(crate) fn propagate_non_runtime_scope_seeded(
                     .or_insert_with(|| *scope); // FR-004, by iteration order
             }
         }
-        (immune.len(), assigned, skipped_unrooted.len(), protected_by_added.len())
+        (immune.len(), assigned, skipped_unrooted.len(), protected_by_added.len(), protected_by_anchors.len())
     };
 
     let mut rooted: Vec<String> = ecosystems_with_root.iter().cloned().collect();
@@ -496,6 +537,7 @@ pub(crate) fn propagate_non_runtime_scope_seeded(
         skipped_unrooted_ecosystem: skipped_unrooted,
         rooted_ecosystems: rooted,
         immune_by_added_seeds,
+        immune_by_root_anchors,
         ..Default::default()
     };
     if assigned.is_empty() {
@@ -509,6 +551,7 @@ pub(crate) fn propagate_non_runtime_scope_seeded(
         tracing::info!(
             immune = summary.immune,
             immune_by_added_seeds = summary.immune_by_added_seeds,
+            immune_by_root_anchors = summary.immune_by_root_anchors,
             seeded_from = summary.seeded_from,
             skipped_unrooted_ecosystem = summary.skipped_unrooted_ecosystem,
             rooted_ecosystems = ?summary.rooted_ecosystems,
@@ -550,6 +593,7 @@ pub(crate) fn propagate_non_runtime_scope_seeded(
     tracing::info!(
         immune = summary.immune,
         immune_by_added_seeds = summary.immune_by_added_seeds,
+        immune_by_root_anchors = summary.immune_by_root_anchors,
         seeded_from = summary.seeded_from,
         assigned = summary.assigned_total(),
         by_scope = ?summary.assigned_by_scope,
@@ -1596,6 +1640,7 @@ mod tests {
             rels,
             &seeds(&[ROOT_A]),
             &seeds(added),
+            &HashSet::new(),
             &ecosystems(&["pypi"]),
             &HashSet::new(),
         )
@@ -1700,9 +1745,57 @@ mod tests {
         let rels = vec![mk_rel(ROOT_A, S1616_DEVTOOL), mk_rel(S1616_DEVTOOL, SHARED), mk_rel(NPM_N, SHARED)];
         let base = seeds(&[ROOT_A, NPM_TOP]);
         let mut before = comps.clone();
-        propagate_non_runtime_scope_seeded(&mut before, &rels, &base, &HashSet::new(), &ecosystems(&["pypi", "npm"]), &HashSet::new());
+        propagate_non_runtime_scope_seeded(&mut before, &rels, &base, &HashSet::new(), &HashSet::new(), &ecosystems(&["pypi", "npm"]), &HashSet::new());
         assert_eq!(scope_of(&before, SHARED), Some(LifecycleScope::Development), "the defect, across ecosystems");
-        propagate_non_runtime_scope_seeded(&mut comps, &rels, &base, &seeds(&[NPM_N]), &ecosystems(&["pypi", "npm"]), &HashSet::new());
+        propagate_non_runtime_scope_seeded(&mut comps, &rels, &base, &seeds(&[NPM_N]), &HashSet::new(), &ecosystems(&["pypi", "npm"]), &HashSet::new());
         assert_eq!(scope_of(&comps, SHARED), None);
+    }
+
+    // -----------------------------------------------------------------
+    // Spec 1642 (#1640) FR-005, research R5
+    // -----------------------------------------------------------------
+
+    const S1642_ANCHORED: &str = "pkg:pypi/waybill-fixture-shared@2.0";
+    const S1642_BELOW: &str = "pkg:pypi/waybill-fixture-below@1.0";
+    const S1642_DEV: &str = "pkg:pypi/waybill-fixture-devlib@1.0";
+
+    fn s1642_graph() -> (Vec<ResolvedComponent>, Vec<Relationship>) {
+        let comps = vec![
+            mk_component(ROOT_A),
+            mk_component(S1642_ANCHORED),
+            mk_component(S1642_BELOW),
+            scoped(S1642_DEV, LifecycleScope::Optional),
+        ];
+        let rels = vec![mk_rel(ROOT_A, S1642_DEV), mk_rel(S1642_DEV, S1642_ANCHORED), mk_rel(S1642_ANCHORED, S1642_BELOW)];
+        (comps, rels)
+    }
+
+    #[test]
+    fn s1642_a_runtime_anchor_protects_what_it_anchors() {
+        let (mut before, rels) = s1642_graph();
+        propagate_non_runtime_scope_seeded(&mut before, &rels, &seeds(&[ROOT_A]), &HashSet::new(), &HashSet::new(), &ecosystems(&["pypi"]), &HashSet::new());
+        assert_eq!(scope_of(&before, S1642_ANCHORED), Some(LifecycleScope::Optional), "the defect: an anchor is not a seed");
+        let (mut comps, rels) = s1642_graph();
+        let summary = propagate_non_runtime_scope_seeded(
+            &mut comps,
+            &rels,
+            &seeds(&[ROOT_A]),
+            &HashSet::new(),
+            &seeds(&[S1642_ANCHORED]),
+            &ecosystems(&["pypi"]),
+            &HashSet::new(),
+        );
+        assert_eq!(scope_of(&comps, S1642_ANCHORED), None);
+        assert_eq!(scope_of(&comps, S1642_BELOW), None, "the anchor's runtime descendants are protected too");
+        assert_eq!(summary.immune_by_root_anchors, 2, "summary={summary:?}");
+    }
+
+    /// Mutation M7: an anchor whose own scope is non-runtime (a root
+    /// `requirements-dev.txt` alone gives Optional) is not a seed.
+    #[test]
+    fn s1642_a_non_runtime_anchor_is_not_a_seed() {
+        let comps = vec![mk_component(S1642_ANCHORED), scoped(S1642_DEV, LifecycleScope::Optional)];
+        let got = anchor_seeds(&comps, &[S1642_ANCHORED.to_string(), S1642_DEV.to_string()], &[]);
+        assert_eq!(got, seeds(&[S1642_ANCHORED]));
     }
 }

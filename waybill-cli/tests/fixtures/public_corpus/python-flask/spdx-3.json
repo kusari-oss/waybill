@@ -9240,7 +9240,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AICQK7I74P5WJBEV",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".\",\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ICVLYQ3O4E2BDTHQ",
       "type": "Annotation"
     },

@@ -65,6 +65,21 @@ pub(crate) fn relative(p: &str, scan_root: &Path, canonical_root: &Path) -> Opti
     Some(out)
 }
 
+/// Spec 1642 (research R2): the source path a main module's project
+/// directory comes from. A manifest-reading main module records its
+/// project's directory (`path+file://<dir>`); when a lockfile entry of the
+/// same PURL was merged into it, the lockfile's path is recorded too, and
+/// spec 1542 sorts the merged list, so the first path may be the lockfile.
+/// The first path that names a directory in the tree wins; otherwise the
+/// first path, as before (CMake and Go record a manifest file).
+fn project_path<'a>(c: &'a ResolvedComponent, scan_root: &Path, canonical_root: &Path) -> Option<&'a String> {
+    let paths = &c.evidence.source_file_paths;
+    paths
+        .iter()
+        .find(|p| relative(p, scan_root, canonical_root).is_some_and(|rel| canonical_root.join(rel).is_dir()))
+        .or_else(|| paths.first())
+}
+
 fn is_main_module(c: &ResolvedComponent) -> bool {
     c.extra_annotations
         .get("waybill:component-role")
@@ -79,12 +94,74 @@ fn is_requirements_file(path: &Path) -> bool {
         .is_some_and(|n| n.starts_with("requirements") && n.ends_with(".txt"))
 }
 
+/// Spec 1642 (FR-003): a directory whose owner the PURL decides, because the
+/// best candidates tie on rank.
+fn log_purl_ties(all_by_dir: &BTreeMap<PathBuf, Vec<Candidate>>) {
+    for (dir, cands) in all_by_dir {
+        let mut sorted = cands.clone();
+        sorted.sort();
+        let tied: Vec<&str> = match sorted.first() {
+            Some((r, _)) => sorted.iter().filter(|(r2, _)| r2 == r).map(|(_, p)| p.as_str()).collect(),
+            None => continue,
+        };
+        if tied.len() > 1 {
+            tracing::debug!(target: "waybill::owner_index", dir = %dir.display(), candidates = ?tied, "owner decided by PURL");
+        }
+    }
+}
+
+/// Spec 1642 census (research R6): one `owner_candidates` event per
+/// directory where more than one candidate shares the best rank, with each
+/// candidate's scope and first source path.
+fn census_owner_candidates(
+    components: &[ResolvedComponent],
+    all_by_dir: &BTreeMap<PathBuf, Vec<Candidate>>,
+    by_dir: &BTreeMap<PathBuf, String>,
+) {
+    let facts: BTreeMap<&str, (bool, Option<&str>)> = components
+        .iter()
+        .map(|c| {
+            let non_runtime = c.lifecycle_scope.is_some_and(|s| s.is_non_runtime());
+            (c.purl.as_str(), (non_runtime, c.evidence.source_file_paths.first().map(String::as_str)))
+        })
+        .collect();
+    for (dir, cands) in all_by_dir {
+        let Some(best) = cands.first().map(|(r, _)| *r) else { continue };
+        let top: Vec<&String> = cands.iter().filter(|(r, _)| *r == best).map(|(_, p)| p).collect();
+        if top.len() < 2 {
+            continue;
+        }
+        let rows: Vec<serde_json::Value> = top
+            .iter()
+            .map(|p| {
+                let (non_runtime, first) = facts.get(p.as_str()).copied().unwrap_or((false, None));
+                serde_json::json!({"purl": p, "rank": best, "non_runtime": non_runtime, "first_path": first})
+            })
+            .collect();
+        tracing::debug!(
+            target: "waybill::owner_census",
+            event = "owner_candidates",
+            payload = %serde_json::json!({
+                "dir": dir.to_string_lossy(),
+                "candidates": rows,
+                "owner": by_dir.get(dir),
+            }),
+        );
+    }
+}
+
+/// An owner candidate's key, best first: rank, then the PURL. Spec 1642's
+/// census (research R6) dropped a runtime-before-non-runtime step: after R2
+/// it decided no pip directory and moved a CMake sample's directory to a
+/// sibling project.
+type Candidate = (u8, String);
+
 /// Directory (relative to the scan root) → the project that owns it.
 #[derive(Debug, Default)]
 pub(crate) struct OwnerIndex {
     by_dir: BTreeMap<PathBuf, String>,
     /// Every candidate per directory, best first (spec 1618 `enclosing`).
-    all_by_dir: BTreeMap<PathBuf, Vec<(u8, String)>>,
+    all_by_dir: BTreeMap<PathBuf, Vec<Candidate>>,
 }
 
 impl OwnerIndex {
@@ -97,8 +174,8 @@ impl OwnerIndex {
         mode: crate::scan_fs::ScanMode,
     ) -> Self {
         let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
-        let mut best: BTreeMap<PathBuf, (u8, String)> = BTreeMap::new();
-        let mut all_by_dir: BTreeMap<PathBuf, Vec<(u8, String)>> = BTreeMap::new();
+        let mut best: BTreeMap<PathBuf, Candidate> = BTreeMap::new();
+        let mut all_by_dir: BTreeMap<PathBuf, Vec<Candidate>> = BTreeMap::new();
         let mut offer = |dir: PathBuf, rank: u8, purl: &str| {
             let cand = (rank, purl.to_string());
             all_by_dir.entry(dir.clone()).or_default().push(cand.clone());
@@ -114,7 +191,7 @@ impl OwnerIndex {
             // `waybill:workspace-member` annotation reports, from the same
             // function: `path+file://<abs dir>` (pip, npm, cargo) or a
             // manifest path's directory. `.` is the scan root.
-            let Some(first) = c.evidence.source_file_paths.first() else { continue };
+            let Some(first) = project_path(c, scan_root, &canonical_root) else { continue };
             let Some(ws) = crate::scan_fs::workspace_root::derive_workspace_root(first, &canonical_root, mode) else { continue };
             let dir = if ws == "." { PathBuf::new() } else { PathBuf::from(ws) };
             let rank = if c.purl.ecosystem() == "pypi" {
@@ -132,11 +209,13 @@ impl OwnerIndex {
             offer(rel, RANK_SUBMODULE, purl);
         }
         let by_dir: BTreeMap<PathBuf, String> = best.into_iter().map(|(d, (_, p))| (d, p)).collect();
+        log_purl_ties(&all_by_dir);
         for v in all_by_dir.values_mut() {
             v.sort();
             v.dedup();
         }
         tracing::debug!(owners = ?by_dir, "declared requirements: owner index");
+        census_owner_candidates(components, &all_by_dir, &by_dir);
         Self { by_dir, all_by_dir }
     }
 
@@ -174,6 +253,11 @@ pub(crate) struct DeclaredAttachment {
     pub edges: Vec<Relationship>,
     /// Packages declared at the scan root, or with no owner below it.
     pub root_anchors: BTreeSet<String>,
+    /// Spec 1642 (research R5): the `root_anchors` that at least one runtime
+    /// requirements file declares (`classify_requirements_scope_under`
+    /// gives no Optional scope). Only these may protect what they anchor
+    /// from transitive non-runtime scope.
+    pub runtime_root_anchors: BTreeSet<String>,
 }
 
 /// The packages a requirements file declares (pip, non-main-module), by
@@ -279,6 +363,10 @@ pub(crate) fn attach(
                 }
                 None => {
                     out.root_anchors.insert(c.purl.as_str().to_string());
+                    let file = canonical_root.join(&rel);
+                    if crate::scan_fs::package_db::pip::requirements_file_is_runtime(&file, &canonical_root) {
+                        out.runtime_root_anchors.insert(c.purl.as_str().to_string());
+                    }
                 }
             }
         }
@@ -592,5 +680,71 @@ mod tests {
             got,
             vec![(tools.to_string(), B.to_string()), (APP.to_string(), A.to_string())],
         );
+    }
+
+    // -----------------------------------------------------------------
+    // Spec 1642 (#1640)
+    // -----------------------------------------------------------------
+
+    fn scoped_main_module(purl: &str, manifest: &str, scope: Option<waybill_common::resolution::LifecycleScope>) -> ResolvedComponent {
+        let mut c = main_module(purl, manifest);
+        c.lifecycle_scope = scope;
+        c
+    }
+
+    fn owner(comps: &[ResolvedComponent], file: &str) -> Option<String> {
+        let index = OwnerIndex::build(comps, &BTreeMap::new(), Path::new(ROOT), crate::scan_fs::ScanMode::Path);
+        index.owner_of(Path::new(file)).map(str::to_string)
+    }
+
+    /// FR-003 (as amended): rank comes first, and the PURL decides a tie,
+    /// whatever the candidates' scopes.
+    #[test]
+    fn s1642_rank_first_then_purl() {
+        use waybill_common::resolution::LifecycleScope;
+        let py_dev = "pkg:pypi/waybill-fixture-pydev@1.0.0";
+        let npm = "pkg:npm/waybill-fixture-web@1.0.0";
+        let comps = [
+            scoped_main_module(py_dev, "x/pyproject.toml", Some(LifecycleScope::Development)),
+            scoped_main_module(npm, "x/package.json", None),
+        ];
+        assert_eq!(owner(&comps, "x/requirements.txt").as_deref(), Some(py_dev), "a pip main module outranks any other, runtime or not");
+        let (b, c) = ("pkg:pypi/waybill-fixture-b@1.0.0", "pkg:pypi/waybill-fixture-c@1.0.0");
+        let comps = [
+            scoped_main_module(c, "y/pyproject.toml", None),
+            scoped_main_module(b, "y/pyproject.toml", Some(LifecycleScope::Optional)),
+        ];
+        assert_eq!(owner(&comps, "y/requirements.txt").as_deref(), Some(b), "scope does not break the tie");
+    }
+
+    /// Research R2: a main module whose source paths include its project's
+    /// directory owns that directory, even when a lockfile path sorts first.
+    #[test]
+    fn s1642_a_main_module_owns_the_directory_its_paths_name() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = std::fs::canonicalize(tmp.path()).unwrap();
+        std::fs::create_dir_all(root.join("tool/devtool")).unwrap();
+        std::fs::write(root.join("tool/uv.lock"), "").unwrap();
+        // As the readers record them: the lockfile's path, and the
+        // project's directory in `path+file://` form (sorted after it).
+        let dir_form = |rel: &str| format!("path+file://{}", root.join(rel).display());
+        let mut dev = main_module("pkg:pypi/waybill-fixture-devtool@0.1.0", "tool/uv.lock");
+        dev.evidence.source_file_paths.push(dir_form("tool/devtool"));
+        let tool = main_module(TOOL_1642, &dir_form("tool"));
+        let comps = [dev, tool];
+        let index = OwnerIndex::build(&comps, &BTreeMap::new(), &root, crate::scan_fs::ScanMode::Path);
+        assert_eq!(index.owner_of(Path::new("tool/requirements.txt")), Some(TOOL_1642));
+        assert_eq!(index.owner_of(Path::new("tool/devtool/requirements.txt")), Some("pkg:pypi/waybill-fixture-devtool@0.1.0"));
+    }
+
+    const TOOL_1642: &str = "pkg:pypi/waybill-fixture-tool@1.0.0";
+
+    /// Research R5: only a runtime requirements file's anchors may protect.
+    #[test]
+    fn s1642_runtime_root_anchors_exclude_dev_files() {
+        let comps = [declared(A, &["requirements.txt"]), declared(B, &["requirements-dev.txt"])];
+        let got = run(&comps, &[]);
+        assert_eq!(got.root_anchors, [A, B].iter().map(|s| s.to_string()).collect());
+        assert_eq!(got.runtime_root_anchors, [A].iter().map(|s| s.to_string()).collect());
     }
 }

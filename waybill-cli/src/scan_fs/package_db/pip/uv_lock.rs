@@ -209,6 +209,33 @@ fn extract_artifact_url(pkg_tbl: &toml::value::Table) -> Option<String> {
     Some(first.to_string())
 }
 
+/// Spec 1642 (research R2): each editable or virtual entry of
+/// `<rootfs>/uv.lock`, as (normalized name, the entry's path resolved
+/// against the lock's directory). The pip main-module pass cross-checks a
+/// merged entry's directory against it. Empty when the lock is absent or
+/// unparseable (`read_uv_lock` already warned).
+pub(super) fn editable_sources(rootfs: &Path) -> Vec<(String, std::path::PathBuf)> {
+    let Ok(text) = std::fs::read_to_string(rootfs.join("uv.lock")) else {
+        return Vec::new();
+    };
+    let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
+        return Vec::new();
+    };
+    parsed
+        .get("package")
+        .and_then(|v| v.as_array())
+        .into_iter()
+        .flatten()
+        .filter_map(|p| {
+            let t = p.as_table()?;
+            let name = t.get("name")?.as_str()?;
+            let source = t.get("source")?.as_table()?;
+            let rel = source.get("editable").or_else(|| source.get("virtual"))?.as_str()?;
+            Some((normalize_pypi_name_for_purl(name), rootfs.join(rel)))
+        })
+        .collect()
+}
+
 /// Read `<rootfs>/uv.lock` if present. Returns None when absent or
 /// unparseable. Mirrors `read_poetry_lock` and `read_pipfile_lock` in
 /// shape so the dispatcher can call all three uniformly.
