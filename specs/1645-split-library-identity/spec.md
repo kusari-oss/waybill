@@ -18,7 +18,7 @@ Across all of them, exactly **two libraries split, both on TheRock, sharing 3 fi
 
 | Library | Curated component | Installed-library component | Shared files | Cause |
 |---|---|---|---|---|
-| ncurses | `pkg:generic/ncurses@6.6`, from the banner `ncurses 6.6.20251230`; the release is kept and the patch date dropped (#1526). Files: `libncursesw.so`, `librocm_sysdeps_ncursesw.so.6`. CPE candidates `invisible-island`, `ncurses_project` and `gnu` `:ncurses:6.6` | `pkg:generic/ncursesw@6.6.20251230`, from `ncursesw.pc`. Files: `libncursesw.so`, `ncursesw.pc`. No CPE: the table has no `ncursesw` row | `lib/rocm_sysdeps/lib/libncursesw.so` | the name differs (`ncurses` and the wide-character build `ncursesw`), and the version form differs |
+| ncurses | `pkg:generic/ncurses@6.6`, from the banner `ncurses 6.6.20251230`. On `main` the release is kept and the patch date dropped (#1526); FR-013 keeps it. Files: `libncursesw.so`, `librocm_sysdeps_ncursesw.so.6`. CPE candidates `invisible-island`, `ncurses_project` and `gnu` `:ncurses:6.6` | `pkg:generic/ncursesw@6.6.20251230`, from `ncursesw.pc`. Files: `libncursesw.so`, `ncursesw.pc`. No CPE: the table has no `ncursesw` row | `lib/rocm_sysdeps/lib/libncursesw.so` | the name differs (`ncurses` and the wide-character build `ncursesw`), and the version form differs |
 | llvm | `pkg:generic/llvm@23.0.0`. Files: `libLLVM-23git.so`, `libLLVM.so`, `libLLVM.so.23.0git`. CPE `llvm:llvm:23.0.0` | `pkg:generic/llvm@23.0.0git`, from `LLVMConfigVersion.cmake` (`cmake-package-version`, also detected via `cmake-find-package`). Files: the LLVM executables and the two `libLLVM` files. CPE `llvm:llvm:23.0.0git` | `lib/llvm/lib/libLLVM.so`, `libLLVM.so.23.0git` | the version form only. The binary's banner is literally `LLVM version 23.0.0git\0` (TheRock census run 45039489189), and the curated scanner's `X.Y.Z` parser drops the `git` |
 
 Also measured:
@@ -29,6 +29,13 @@ Also measured:
   - ncurses: 28 CVEs with 110 `cpeMatch` entries. 102 put `X.Y` in the CPE version field, and 81 of those carry the patch date in the **update** field (for example `6.5:20251206`). The other 8 are ranges bounded by `X.Y` or `X.Y.Z`. None puts the patch date in the version field.
   - `llvm:llvm`: 8 CVEs, all versioned by dates such as `2023-01-12`. Neither `23.0.0` nor `23.0.0git` matches them.
 - **One more component carries a patch-date version.** The public corpus has `pkg:generic/ncurses@6.4.20221231` (`nix-closure-openai`, from the closure tier), whose CPE today is `invisible-island:ncurses:6.4.20221231`. Its version field holds the patch date, which no NVD ncurses entry does.
+
+## Clarifications
+
+### Session 2026-11-22
+
+- Q: A banner-only ncurses (no `.pc` file) would keep `ncurses@6.6`, while a merged one becomes `ncurses@6.6.20251230`, so the PURL version depends on whether a `.pc` file is present. Which version does the curated scanner report? → A: The full version the banner states, `X.Y.YYYYMMDD`, with or without a record (FR-013). FR-008 carries the patch date into the CPE's update field. Spec 1643's B-1 golden changes in its ncurses component only, as an intended and counted change.
+- Q: Does FR-008's CPE split apply to every `pkg:generic/ncurses` component, or only to those with a curated match? → A: Every one, whichever reader produced it, the same reach CPE rows already have. Today this changes one component outside the merge cases: the closure tier's `ncurses@6.4.20221231` in `nix-closure-openai`.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -52,7 +59,7 @@ Each must give exactly one component, carrying both readers' files and evidence.
    - its CPE candidates are the ncurses row's three vendors, at version `6.6` with update `20251230`;
    - no `ncursesw` component remains.
 2. **Given** a library whose banner is `LLVM version 23.0.0git` and a CMake package-version file saying `23.0.0git` whose exported targets include that file, **When** scanned, **Then** there is exactly one `pkg:generic/llvm@23.0.0git` component, listing the files of both.
-3. **Given** the same name-variant tree but with an `ncursesw.pc` whose version disagrees (`6.5.20240427` against the banner's `6.6`), **When** scanned, **Then** both components remain, each with its own version, as in spec 1644's P-2.
+3. **Given** the same name-variant tree but with an `ncursesw.pc` whose version disagrees (`6.5.20240427` against the banner's `6.6.20251230`), **When** scanned, **Then** both components remain, each with its own version, as in spec 1644's P-2.
 4. **Given** either tree, **When** the three formats are emitted, **Then** `waybill sbom parity-check` reports no gap the same tree without the second record does not.
 
 ---
@@ -83,7 +90,7 @@ An operator scanning anything where no file is claimed both by a curated match a
 
 **Acceptance Scenarios**:
 
-1. **Given** spec 1643's B-1 tree (no installed-library record), **When** scanned, **Then** the output is byte-identical to `main`.
+1. **Given** spec 1643's B-1 tree (no installed-library record), **When** scanned, **Then** the output equals `main`'s except for its ncurses component. That component becomes `pkg:generic/ncurses@6.6.20251230`, with CPE version `6.6` and update `20251230` (FR-013, FR-008). The golden is regenerated, and the diff shows nothing else.
 2. **Given** TheRock, **When** scanned, **Then** the only changes are:
    - ncurses becomes one component and llvm becomes one component;
    - the `ncursesw` and `llvm@23.0.0` components disappear into them;
@@ -99,7 +106,7 @@ An operator scanning anything where no file is claimed both by a curated match a
 - **The record is a different library that links the curated one statically.** For example `foo.pc` claims `libfoo.so`, which bundles zlib's banner. The record's name is not one of zlib's names (FR-004), so nothing merges, even if the versions happen to agree.
 - **The curated version is a prefix of the record's only by string**, not at a component boundary: `6.6` against `6.60`. That does not agree (FR-005).
 - **The record's version is the shorter one**: the curated `23.0.0git` against a record's `23.0.0`. That does not agree, because the curated version must be the less exact or equal one (FR-005). Both remain, and the census records it.
-- **A curated match with no record**, as in B-1. It stays exactly as on `main`, including `ncurses@X.Y`.
+- **A curated match with no record**, as in B-1. It stays as on `main`, except that a curated ncurses now reports the full `X.Y.YYYYMMDD` (FR-013).
 - **An ncurses component with a patch-date version but no curated match**, such as the closure tier's `ncurses@6.4.20221231`. Its CPE takes NVD's form (FR-008). This is counted, and it is the only change of its kind in the corpora.
 
 ## Requirements *(mandatory)*
@@ -122,22 +129,25 @@ An operator scanning anything where no file is claimed both by a curated match a
 - **FR-004 (a library's names: a closed list)**: Each curated library SHALL have a fixed set of names, written out for every library, with a source for each entry. The set holds the curated slug, plus any name that upstream's own build gives the same library. For ncurses, that is the build-variant names its `configure` produces: `ncursesw` (wide characters), `ncursest` (threads) and `ncursestw`. Every other curated library has its slug only. No other name ever matches, and there is no pattern-based or free-form alias.
   - *Why a list and not a rule*: the shared file alone cannot tell "the same library" from "a library that bundles it statically" (Edge Cases). A name rule such as "slug plus one letter" would accept unrelated names, and has no source.
 - **FR-005 (versions agree)**: The curated version agrees with the record's version when the two are equal, or when the curated version followed by a `.` begins the record's version: `6.6` agrees with `6.6.20251230`, but not with `6.60`. A suffix attached without a `.` does not agree: `23.0.0` with `23.0.0git` does not, which is why FR-002 is needed.
+  - With FR-002 and FR-013, both of TheRock's cases agree by equality. The prefix case remains for a record that is more exact than the banner it sits beside.
 - **FR-006 (ambiguity)**: When two or more records satisfy FR-003's first three conditions for one file, nothing SHALL be merged for that file. The census records `ambiguous`.
 - **FR-007 (what survives a merge)**:
   - The merged component's **name** is the curated slug, because it is the name the CPE table has rows for. `ncurses` has three pairs, and `ncursesw` has no row.
-  - Its **version** is the record's, the more exact of the two.
+  - Its **version** is the record's. Under FR-005 that is equal to, or more exact than, the curated one.
   - Its **files and evidence** are the union of both, in the same shape as an existing PURL merge such as spec 1644's `liblzma@5.8.1`.
   - The record's original name (`ncursesw`) is recorded on the component, so that it is not lost. The plan chooses the field, and prefers a native CycloneDX or SPDX construct over a new `waybill:*` annotation (Principle V).
-- **FR-008 (ncurses CPE form)**: For every `pkg:generic/ncurses` component whose version is `X.Y.YYYYMMDD`, the CPE candidates SHALL put `X.Y` in the version field and `YYYYMMDD` in the update field. This is NVD's form, measured: 81 of 110 entries put the patch date in the update field, and none puts it in the version field. A version `X.Y` keeps `*` in update, as on `main`. This applies whichever reader produced the component. The census SHALL count the components it changes; the public corpus has exactly one today.
+- **FR-008 (ncurses CPE form)**: For every `pkg:generic/ncurses` component whose version is `X.Y.YYYYMMDD`, the CPE candidates SHALL put `X.Y` in the version field and `YYYYMMDD` in the update field. This is NVD's form, measured: 81 of 110 entries put the patch date in the update field, and none puts it in the version field. A version `X.Y` keeps `*` in update, as on `main`. This applies whichever reader produced the component, the same reach CPE rows already have. The census SHALL count the components it changes. Outside the merge cases, the public corpus has exactly one today: the closure tier's `ncurses@6.4.20221231` in `nix-closure-openai`, whose CPE becomes `invisible-island:ncurses:6.4:20221231`, and likewise for the other two vendors.
 - **FR-009 (disagreement keeps both)**: When FR-003 does not hold, both components SHALL remain exactly as on `main`.
 - **FR-010 (formats agree)**: The merged component SHALL be represented equally in CycloneDX, SPDX 2.3 and SPDX 3. `waybill sbom parity-check` SHALL report no gap that `main` does not.
 - **FR-011 (scope of change)**: Output SHALL be byte-identical to `main` except for:
   - components merged under FR-003;
   - the LLVM versions FR-002 changes;
+  - the curated ncurses versions FR-013 changes;
   - the ncurses CPEs FR-008 changes.
 
   Each of these is counted by the census.
 - **FR-012 (no new dependencies)**: Zero new Cargo dependencies.
+- **FR-013 (ncurses keeps its patch date)**: The curated ncurses pattern SHALL report the version exactly as the banner writes it: `ncurses 6.6.20251230` gives `6.6.20251230`, not `6.6`. The PURL version therefore does not depend on whether an installed-library record is present. FR-008 places the date in the CPE's update field, so CPE matching keeps NVD's `X.Y` version field. The census SHALL count every curated ncurses match on the three corpora, with its old and new version. Measured today, only TheRock has curated ncurses components, and B-1's golden has one.
 
 ### Key Entities
 
@@ -158,9 +168,10 @@ An operator scanning anything where no file is claimed both by a curated match a
   - the dotted-prefix agreement (FR-005);
   - the single-record condition (FR-006);
   - the LLVM suffix (FR-002);
+  - the ncurses patch date (FR-013);
   - the ncurses CPE split (FR-008).
 - **SC-005**: `waybill sbom parity-check` shows no new gap on any acceptance tree or on TheRock.
-- **SC-006**: B-1 is byte-identical to `main`. The public corpus differs from its goldens only in components FR-011 names, each traced.
+- **SC-006**: B-1 differs from `main` only in its ncurses component's version and CPE. The public corpus differs from its goldens only in components FR-011 names, each traced.
 - **SC-007**: TheRock's scan time is within 1.05× `main`, measured as the median of at least 3 interleaved runs per arm with one warm-up each, and reported with min, median and max.
 
 ## Assumptions
