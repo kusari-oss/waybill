@@ -573,3 +573,42 @@ fn b1_one_project_per_directory_is_byte_identical_to_main() {
         assert!(got == want, "B-1 {name} differs from main's golden; {}", masked_difference(&want, &got).unwrap_or_default());
     }
 }
+
+// ---------------------------------------------------------------------
+// T004: the census events fire (positive control for the log-only census)
+// ---------------------------------------------------------------------
+
+/// The scan's log at `waybill::owner_census=debug`, one line per event.
+fn census_events(fx: &GitFixture) -> Vec<String> {
+    let out_dir = tempfile::tempdir().unwrap();
+    let out = Command::new(binary())
+        .env("HOME", fx.home())
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_CONFIG_GLOBAL", fx.home().join(".gitconfig"))
+        .env("RUST_LOG", "waybill::owner_census=debug")
+        .env("NO_COLOR", "1")
+        .args(["--offline", "sbom", "scan", "--path"])
+        .arg(fx.path("tree"))
+        .args(["--no-deep-hash", "--format", "cyclonedx-json", "--output"])
+        .arg(out_dir.path().join("o.json"))
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    String::from_utf8_lossy(&out.stderr).lines().filter(|l| l.contains("owner_census")).map(str::to_string).collect()
+}
+
+fn has_event(events: &[String], event: &str, needles: &[&str]) -> bool {
+    events.iter().any(|l| l.contains(&format!("event=\"{event}\"")) && needles.iter().all(|n| l.contains(n)))
+}
+
+#[test]
+fn t004_census_events_fire() {
+    let e = census_events(&build(&files_1640("waybill-fixture-devtool")));
+    assert!(has_event(&e, "merge_source", &["waybill-fixture-devtool", r#""agrees":true"#]), "no agreeing merge_source: {e:#?}");
+    assert!(has_event(&e, "owner_candidates", &[r#""dir":"tool""#, "waybill-fixture-devtool", "waybill-fixture-tool"]), "no owner_candidates for tool: {e:#?}");
+    assert!(has_event(&e, "dev_only_main_module", &["waybill-fixture-devtool"]), "no dev_only_main_module: {e:#?}");
+    let e = census_events(&build(&files_r4(Some("requirements.txt"))));
+    assert!(has_event(&e, "anchor_immunity", &["waybill-fixture-shared"]), "no anchor_immunity: {e:#?}");
+    let e = census_events(&build(&files_r4(Some("requirements-dev.txt"))));
+    assert!(!has_event(&e, "anchor_immunity", &["waybill-fixture-shared"]), "a dev file's anchor must not protect: {e:#?}");
+}

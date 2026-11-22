@@ -311,6 +311,9 @@ pub(crate) fn finalize(
     //   `services/worker/Pipfile.lock`, etc. — each becomes its own
     //   root, so per-service declarations surface.
     let mut had_project_marker = false;
+    // Spec 1642 (research R2): every uv.lock editable or virtual source, by
+    // normalized name, for the main-module merge's cross-check.
+    let mut editables: Vec<(String, PathBuf)> = Vec::new();
     for project_root in &project_roots {
         // A project is anything holding a lockfile / requirements /
         // pyproject; track this for the "pyproject.toml only" skip log
@@ -331,6 +334,7 @@ pub(crate) fn finalize(
         // pyproject.toml declares [tool.uv.workspace].
         if let Some(lockfile_entries) = uv_lock::read_uv_lock(project_root, include_dev) {
             merge_without_override(&mut entries, lockfile_entries);
+            editables.extend(uv_lock::editable_sources(project_root));
         }
         if let Some(req_entries) = requirements_txt::read_requirements_files(project_root, rootfs) {
             merge_without_override(&mut entries, req_entries);
@@ -421,6 +425,7 @@ pub(crate) fn finalize(
         };
         let purl_key = synthesized.purl.as_str().to_string();
         if let Some(existing) = entries.iter_mut().find(|e| e.purl.as_str() == purl_key) {
+            census_merge_source(existing, &synthesized, project_root, &editables);
             // FR-011: augment-existing — when a same-PURL Tier-1 venv or
             // lockfile-derived entry exists, layer C40 + parent_purl
             // None on top while preserving the existing entry's
@@ -1551,6 +1556,46 @@ fn poetry_dep_to_pep508(name: &str, spec: &toml::Value) -> String {
         }
         _ => name.to_string(),
     }
+}
+
+/// Spec 1642 census (research R6, log-only): one `merge_source` event per
+/// main module merged into an existing entry of its PURL.
+fn census_merge_source(
+    existing: &PackageDbEntry,
+    synthesized: &PackageDbEntry,
+    project_root: &Path,
+    editables: &[(String, PathBuf)],
+) {
+    let name = normalize_pypi_name_for_purl(&existing.name);
+    let manifest_dir = std::fs::canonicalize(project_root).unwrap_or_else(|_| project_root.to_path_buf());
+    let editable: Vec<String> = editables
+        .iter()
+        .filter(|(n, _)| *n == name)
+        .map(|(_, p)| p.to_string_lossy().into_owned())
+        .collect();
+    let agrees = editables
+        .iter()
+        .filter(|(n, _)| *n == name)
+        .any(|(_, p)| std::fs::canonicalize(p).is_ok_and(|c| c == manifest_dir));
+    tracing::debug!(
+        target: "waybill::owner_census",
+        event = "merge_source",
+        payload = %serde_json::json!({
+            "purl": existing.purl.as_str(),
+            "tier": existing.sbom_tier,
+            "source_path": existing.source_path,
+            "manifest_source_path": synthesized.source_path,
+            "editable": editable,
+            "agrees": agrees,
+        }),
+    );
+}
+
+/// Spec 1642 (research R5): whether the pip reader gives the packages of
+/// requirements file `path` a runtime scope (no Optional scope by name or
+/// directory, spec 1537 FR-010, spec 1615).
+pub(crate) fn requirements_file_is_runtime(path: &Path, root: &Path) -> bool {
+    requirements_txt::classify_requirements_scope_under(path, root).as_optional_name().is_none()
 }
 
 pub(crate) fn dedup_pip_main_modules_by_purl(

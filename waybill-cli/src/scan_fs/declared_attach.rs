@@ -79,6 +79,49 @@ fn is_requirements_file(path: &Path) -> bool {
         .is_some_and(|n| n.starts_with("requirements") && n.ends_with(".txt"))
 }
 
+/// Spec 1642 census (research R6, log-only): one `owner_candidates` event per
+/// directory where more than one candidate shares the best rank, with each
+/// candidate's scope and first source path and the step R3 would decide by.
+fn census_owner_candidates(
+    components: &[ResolvedComponent],
+    all_by_dir: &BTreeMap<PathBuf, Vec<(u8, String)>>,
+    by_dir: &BTreeMap<PathBuf, String>,
+) {
+    let facts: BTreeMap<&str, (bool, Option<&str>)> = components
+        .iter()
+        .map(|c| {
+            let non_runtime = c.lifecycle_scope.is_some_and(|s| s.is_non_runtime());
+            (c.purl.as_str(), (non_runtime, c.evidence.source_file_paths.first().map(String::as_str)))
+        })
+        .collect();
+    for (dir, cands) in all_by_dir {
+        let Some(best) = cands.first().map(|(r, _)| *r) else { continue };
+        let top: Vec<&String> = cands.iter().filter(|(r, _)| *r == best).map(|(_, p)| p).collect();
+        if top.len() < 2 {
+            continue;
+        }
+        let rows: Vec<serde_json::Value> = top
+            .iter()
+            .map(|p| {
+                let (non_runtime, first) = facts.get(p.as_str()).copied().unwrap_or((false, None));
+                serde_json::json!({"purl": p, "rank": best, "non_runtime": non_runtime, "first_path": first})
+            })
+            .collect();
+        let scopes: BTreeSet<bool> = top.iter().map(|p| facts.get(p.as_str()).is_some_and(|f| f.0)).collect();
+        let step = if scopes.len() > 1 { "runtime" } else { "purl" };
+        tracing::debug!(
+            target: "waybill::owner_census",
+            event = "owner_candidates",
+            payload = %serde_json::json!({
+                "dir": dir.to_string_lossy(),
+                "candidates": rows,
+                "step": step,
+                "owner": by_dir.get(dir),
+            }),
+        );
+    }
+}
+
 /// Directory (relative to the scan root) → the project that owns it.
 #[derive(Debug, Default)]
 pub(crate) struct OwnerIndex {
@@ -137,6 +180,7 @@ impl OwnerIndex {
             v.dedup();
         }
         tracing::debug!(owners = ?by_dir, "declared requirements: owner index");
+        census_owner_candidates(components, &all_by_dir, &by_dir);
         Self { by_dir, all_by_dir }
     }
 
@@ -174,6 +218,11 @@ pub(crate) struct DeclaredAttachment {
     pub edges: Vec<Relationship>,
     /// Packages declared at the scan root, or with no owner below it.
     pub root_anchors: BTreeSet<String>,
+    /// Spec 1642 (research R5): the `root_anchors` that at least one runtime
+    /// requirements file declares (`classify_requirements_scope_under`
+    /// gives no Optional scope). Only these may protect what they anchor
+    /// from transitive non-runtime scope.
+    pub runtime_root_anchors: BTreeSet<String>,
 }
 
 /// The packages a requirements file declares (pip, non-main-module), by
@@ -279,6 +328,10 @@ pub(crate) fn attach(
                 }
                 None => {
                     out.root_anchors.insert(c.purl.as_str().to_string());
+                    let file = canonical_root.join(&rel);
+                    if crate::scan_fs::package_db::pip::requirements_file_is_runtime(&file, &canonical_root) {
+                        out.runtime_root_anchors.insert(c.purl.as_str().to_string());
+                    }
                 }
             }
         }

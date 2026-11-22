@@ -363,6 +363,62 @@ pub(crate) fn added_seeds(
         .collect()
 }
 
+/// Spec 1642 (research R5): the root anchors that may protect what they
+/// anchor: `candidates` (already without anchors only non-runtime
+/// requirements files declare) whose component is a runtime seed candidate.
+pub(crate) fn anchor_seeds(
+    components: &[ResolvedComponent],
+    candidates: &[String],
+    roots: &[std::path::PathBuf],
+) -> HashSet<String> {
+    let wanted: HashSet<&str> = candidates.iter().map(String::as_str).collect();
+    components
+        .iter()
+        .filter(|c| wanted.contains(c.purl.as_str()))
+        .filter(|c| is_runtime_seed_candidate(c, roots))
+        .map(|c| c.purl.as_str().to_string())
+        .collect()
+}
+
+/// Spec 1642 census (research R6, log-only): run the propagation on two
+/// copies, without and with the anchor seeds, and log each component only
+/// the anchors keep runtime. Assigns nothing to `components`.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn census_anchor_immunity(
+    components: &[ResolvedComponent],
+    relationships: &[Relationship],
+    seeds: &HashSet<String>,
+    added_seeds: &HashSet<String>,
+    anchor_seeds: &HashSet<String>,
+    submodule_anchors: &std::collections::BTreeSet<String>,
+    ecosystems_with_root: &HashSet<String>,
+    boot_libraries: &HashSet<String>,
+) {
+    for a in anchor_seeds {
+        let kind = if submodule_anchors.contains(a) { "submodule" } else { "declared" };
+        tracing::debug!(target: "waybill::owner_census", event = "anchor_seed", payload = %serde_json::json!({"purl": a, "kind": kind}));
+    }
+    let mut without = components.to_vec();
+    propagate_non_runtime_scope_seeded(&mut without, relationships, seeds, added_seeds, ecosystems_with_root, boot_libraries);
+    let mut with = components.to_vec();
+    let widened: HashSet<String> = added_seeds.union(anchor_seeds).cloned().collect();
+    propagate_non_runtime_scope_seeded(&mut with, relationships, seeds, &widened, ecosystems_with_root, boot_libraries);
+    for (a, b) in without.iter().zip(&with) {
+        let derived = |c: &ResolvedComponent| c.extra_annotations.get(ANN_SCOPE_DERIVATION).and_then(|v| v.as_str()) == Some("transitive");
+        if derived(a) && !derived(b) {
+            tracing::debug!(
+                target: "waybill::owner_census",
+                event = "anchor_immunity",
+                payload = %serde_json::json!({
+                    "purl": a.purl.as_str(),
+                    "ecosystem": a.purl.ecosystem(),
+                    "scope_without": a.lifecycle_scope.map(|s| format!("{s:?}")),
+                }),
+            );
+        }
+    }
+}
+
 /// [`propagate_non_runtime_scope`], with Phase A also starting from
 /// `added_seeds` (spec 1616, #1618). `ecosystems_with_root` and the FR-012
 /// gate still come from `seeds` alone.
