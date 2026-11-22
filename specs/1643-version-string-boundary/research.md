@@ -55,8 +55,8 @@ NUL is not an identifier character, so every case `main` accepts is still accept
 
 **Decision:** a log-only commit adds `version_strings::census(region) -> Vec<CensusHit>`, which applies every pattern's prefix and version parser at every position **without** a boundary test. Each hit records:
 - `library` and `version`;
-- `preceding`: `start`, `nul`, `non_identifier` or `identifier`;
-- `accepted_main`: would `main`'s rule accept it;
+- `preceding`: `start`, `nul`, `whitespace` (space, tab, CR, LF), `other_non_identifier` or `identifier`. Whitespace is split out because a mention inside another program's sentence is space-preceded; binary data before a literal (`0xff`, `-`) is not (analysis U1);
+- `accepted_main`: would `main`'s rule accept it. This is a frozen copy of `main`'s rule in its own function (`main_rule_accepts`), not a call into `match_prefix`, so it keeps meaning `main` after the wiring (analysis I1);
 - `accepted_new`: would FR-002/FR-003 accept it;
 - 24 bytes before and after the literal, hex-encoded, so each new match can be judged.
 
@@ -64,7 +64,9 @@ NUL is not an identifier character, so every case `main` accepts is still accept
 
 The census reads waybill's own events, not a re-implementation of the patterns in Python (the project rule: never model the reader). A fixture-repository script summarises the events.
 
-**Positive control:** an integration test scans a synthetic library holding `-ncurses 6.6.20251230\0` with the census target enabled and asserts that one `identifier=false, accepted_main=false, accepted_new=true` event fires. A zero count can then not mean the census never ran.
+**Positive control:** an integration test scans a synthetic library holding `-ncurses 6.6.20251230\0` with the census target enabled and asserts that one `preceding=other_non_identifier, accepted_main=false, accepted_new=true` event fires. A zero count can then not mean the census never ran.
+
+**Census agrees with the scanner.** `census` decides acceptance outside `match_prefix`, so the two could drift. A unit test added with the wiring asserts that, for every fixture banner and preceding byte, the census hits with `accepted_new` are exactly `scan()`'s matches (analysis I1).
 
 **Kept after the census.** It is small, costs nothing when disabled, and lets the census be re-run when a pattern is added (as `waybill::owner_census` was kept by spec 1642).
 

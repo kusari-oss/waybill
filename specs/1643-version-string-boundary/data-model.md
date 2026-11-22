@@ -29,8 +29,8 @@ One per pattern occurrence found without any boundary test (R5).
 |---|---|
 | `library` | slug |
 | `version` | parsed version |
-| `preceding` | `start` \| `nul` \| `non_identifier` \| `identifier` |
-| `accepted_main` | `main`'s rule would accept it |
+| `preceding` | `start` \| `nul` \| `whitespace` \| `other_non_identifier` \| `identifier` |
+| `accepted_main` | `main`'s rule would accept it (a frozen copy, `main_rule_accepts`, independent of `match_prefix`) |
 | `accepted_new` | FR-002/FR-003 would accept it |
 | `context_before`, `context_after` | 24 bytes each side, hex |
 

@@ -50,4 +50,5 @@ The other eleven NUL-only patterns are covered at unit level by the R3 iteration
 
 | case | input | expected |
 |---|---|---|
-| C-1 | `-ncurses 6.6.20251230\0`, scanned with `RUST_LOG=waybill::version_census=debug` | exactly one event: `library=ncurses`, `preceding=non_identifier`, `accepted_main=false`, `accepted_new=true` |
+| C-1 | `-ncurses 6.6.20251230\0`, scanned with `RUST_LOG=waybill::version_census=debug` | exactly one event: `library=ncurses`, `preceding=other_non_identifier`, `accepted_main=false`, `accepted_new=true` |
+| C-2 | ` ncurses 6.6.20251230\0` (a space before it), same scan | exactly one event with `preceding=whitespace`, `accepted_new=true` |

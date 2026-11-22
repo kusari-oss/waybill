@@ -18,6 +18,7 @@
 - [ ] T001 `main`'s binary is already built at `83657af2` and saved as the scratchpad's `waybill-main` (R1). Rename it `waybill-main-83657af2` and record the full SHA in `MS/control.md`. Create `IT` with `mod common;` and helpers built on `IL`:
   - `lib_dir(bytes, file_name) -> TempDir`: writes `elf_shared_lib(bytes)` as the named file in a fresh temp directory;
   - `scan3(dir)`: all three formats in one invocation, honouring `WAYBILL_VERSION_BOUNDARY_BIN` so a case can run against the saved `main` binary;
+  - `scan_with_log(dir, filter) -> (docs, stderr)`: `scan3` with `RUST_LOG=<filter>` set and stderr captured, for C-1 and C-2;
   - `curated(doc, slug) -> Vec<String>`: sorted PURLs of components named `slug`, searched recursively (CycloneDX components nest);
   - `parity(dir)`: runs `waybill sbom parity-check` on the three documents and asserts agreement;
   - `unique_bom_refs(doc)`.
@@ -32,8 +33,8 @@ Output does not change in this phase.
   - **`CuratedLibrary::boundary`**, an exhaustive `match` with no wildcard arm (R3). Its table is FR-001's.
   - **`is_identifier(b: u8) -> bool`** for `[A-Za-z0-9_]`.
   - **`census(region) -> Vec<CensusHit>`** (R5). Apply every pattern's prefix and its existing version parser at every position, with no boundary test. Record:
-    - `preceding` (`start`, `nul`, `non_identifier` or `identifier`). For zlib's leading-space form, this is the byte before the space.
-    - `accepted_main`, by `main`'s rule exactly as `match_prefix` applies it today;
+    - `preceding` (`start`, `nul`, `whitespace`, `other_non_identifier` or `identifier`). For zlib's leading-space form, this is the byte before the space.
+    - `accepted_main`, from `main_rule_accepts`: a frozen copy of `main`'s rule as `match_prefix` applies it today, in its own function, so it still means `main` after T007;
     - `accepted_new`, by FR-002/FR-003;
     - 24 bytes of context each side, hex-encoded.
 
@@ -43,19 +44,20 @@ Output does not change in this phase.
 
   **Unit tests in `VS`:** `census` reports
   - `nul` and `accepted_main=true` for a NUL-preceded ncurses banner;
-  - `non_identifier`, `accepted_main=false` and `accepted_new=true` behind `-`;
+  - `other_non_identifier`, `accepted_main=false` and `accepted_new=true` behind `-`;
+  - `whitespace` and `accepted_new=true` behind a space;
   - `identifier` and `accepted_new=false` behind `x`;
   - for OpenSSL behind `-`: `accepted_new=false`.
 
   Every existing suite passes unchanged: `cargo test -p waybill version_strings`, `--test installed_lib_us3`, `--test python_owned_binaries` and `--test orphan_explanations`. B-1 passes too.
-- [ ] T004 C-1, the census positive control, in `IT`. Scan a library holding `-ncurses 6.6.20251230\0` with `RUST_LOG=waybill::version_census=debug`. Assert exactly one event with `library=ncurses`, `preceding=non_identifier`, `accepted_main=false` and `accepted_new=true`. Match on the raw field text, written so that Debug-escaped quotes cannot make it pass vacuously; spec 1642's T004 needle failed that way.
+- [ ] T004 C-1, the census positive control, in `IT`. Scan a library holding `-ncurses 6.6.20251230\0` with `RUST_LOG=waybill::version_census=debug`. Assert exactly one event with `library=ncurses`, `preceding=other_non_identifier`, `accepted_main=false` and `accepted_new=true`. C-2: the same with a space before the banner gives exactly one event with `preceding=whitespace`. Match on the raw field text, written so that Debug-escaped quotes cannot make it pass vacuously; spec 1642's T004 needle failed that way.
 - [ ] T005 **Census at the log-only commit** (SC-001, R5, R6).
   - **Write the census tooling in `FR`.** Add `census/versions.py` (stdlib, run as `python3 -I -B`, ANSI-stripped) and `.github/workflows/census-versions.yml`.
     - The script reads only the events; it never re-scans bytes.
     - **Matrix:** the full SDK tarball, downloaded and size-checked exactly as `measure-full.yml` does, plus the 18 quality-corpus targets at the pins in `census-owners.yml`.
     - **Tally per target:**
       - hits per library, by `preceding`;
-      - every hit where `accepted_new != accepted_main`, with path, library, version and both contexts;
+      - every hit where `accepted_new != accepted_main`, with path, library, version and both contexts, whitespace-preceded hits listed separately;
       - every binary that would gain or change a curated version;
       - any binary that would newly carry two versions of one library.
     - **Each job uploads** its documents, its log and `refs.txt`.
@@ -64,7 +66,7 @@ Output does not change in this phase.
   - **Judge each new match** from its contexts: is it the library's own banner (the literal followed by its version and terminator in a string table) or a mention inside other text?
   - **Record** everything in `MS/census.md`. No prediction is written before the runs.
 
-**Checkpoint**: census recorded. Any false positive on an anchored pattern moves that pattern to `NulOnly` (FR-005); amend spec.md FR-001, `contracts/wire.md` and this file before Phase 3. A binary that newly carries two versions of one library is traced before Phase 3.
+**Checkpoint**: census recorded. Every whitespace-preceded new match is judged individually (a sentence mention is the likeliest false positive). Any false positive on an anchored pattern moves that pattern to `NulOnly` (FR-005); amend spec.md FR-001, `contracts/wire.md` and this file before Phase 3. A binary that newly carries two versions of one library is traced before Phase 3.
 
 ## Phase 3: User Story 1: a bundled zlib or ncurses is versioned whatever byte precedes its banner (P1) 🎯 MVP
 
@@ -83,6 +85,7 @@ Output does not change in this phase.
   - each anchored pattern behind `\0`, `-`, `\xff`, ` ` and `/` matches;
   - behind `x`, `9` and `_` it does not;
   - at region offset 0 it matches;
+  - **census agrees with the scanner (I1):** for every fixture banner and every preceding byte above, the census hits with `accepted_new=true` are exactly `scan()`'s matches;
   - **the R3 iteration test:** a test-only `fn sample(lib: CuratedLibrary) -> &'static [u8]` (exhaustive `match`) gives each variant's canonical banner. For every `CuratedLibrary::iter()` variant, the banner behind NUL matches, and behind `-` it matches exactly when `boundary()` is `Anchored`.
 - [ ] T008 [US1] Run the US1 cases and T007's unit tests until they pass. Also run the existing #1525/#1526 tests in `VS`, `installed_lib_us3`, `python_owned_binaries`, `orphan_explanations`, `generate::cpe`'s `mappings_cover_all_curated_libraries` and B-1. An existing assertion whose expectation changes is recorded with its reason in the commit message. None may be loosened otherwise.
 
@@ -111,14 +114,14 @@ Output does not change in this phase.
   - Record in `MS/mutations.md`.
 - [ ] T015 Re-run `MS/probe.sh` at the wired commit on the same Nix-built libraries (R1). Expect `00`, `2d` and `ff` to be versioned for both libraries, and `78` unchanged. Run 3 times each, and append to `MS/probe.md`.
 - [ ] T016 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Record `GATE_RESULT` and every `test result:` count in `MS/gate-log.md`. (`target/` was cleaned after spec 1642, so the first run rebuilds everything.)
-- [ ] T017 Public corpus at the final commit (SC-005): `regen_goldens=true`. Enumerate the jobs and confirm the scanned SHA.
+- [ ] T017 Public corpus at the final commit (SC-005): `regen_goldens=true`. Enumerate the jobs and confirm the scanned SHA. This diff is the public corpus's census (it has no T005 prediction): judge each changed component as T005 judges a new match.
   - `cmp` every regenerated golden against the committed one.
   - Trace every changed component to one binary and one anchored pattern, and check it against T005's census.
   - Commit any changed goldens from the artifact.
   - Record in `MS/corpus.md`.
 - [ ] T018 TheRock and the quality corpus (SC-005, SC-006).
   - **TheRock:** `measure-full.yml` with `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`.
-    - Confirm both SHAs from the run's log.
+    - Confirm both SHAs from the `base <sha>` and `branch <sha>` lines of the "Build both" step.
     - Compare the documents with per-run fields masked, and trace every changed component to one binary and one anchored pattern, against T005's census.
     - Component counts must be equal, apart from new versioned curated components that the census predicts.
     - Record the median of at least 3 runs per arm, and the ratio, which must be at most 1.05.

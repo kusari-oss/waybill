@@ -77,7 +77,8 @@ Binaries whose curated matches are already NUL-preceded produce the same documen
 - **Two different versions of one library in one binary.** The relaxed rule could find a second banner that the NUL rule hid. Each distinct version is already emitted as its own match, so the census counts any binary where this newly happens; each case is traced, not assumed.
 - **The literal at offset 0 of a region.** It has no preceding byte. It is accepted, as on `main`.
 - **A non-ASCII byte before the literal** (`0x80`–`0xFF`). It is not an identifier character, so it is accepted. #1641's ncurses case is exactly this.
-- **Whitespace or punctuation before the literal** (` `, `/`, `.`, `-`, `:`). Accepted. For zlib this is the byte before its leading space.
+- **Whitespace or punctuation before the literal** (` `, `/`, `.`, `-`, `:`). Accepted. For zlib this is the byte before its leading space. A space is where a mention inside another program's sentence would come from ("built with ncurses 6.6.20251230"), so the census counts whitespace-preceded matches separately and judges each one (SC-001, FR-005).
+- **A literal at the start of a later section.** The scanned region joins the read-only sections end to end, so a literal that starts a section is preceded by the last byte of the section before it. It is judged like any other preceding byte; the census records it with the rest.
 - **NUL-only patterns behind a non-NUL byte.** Unchanged. The census counts such occurrences per pattern as information for later work. No behaviour depends on the count.
 
 ## Requirements *(mandatory)*
@@ -121,13 +122,13 @@ Binaries whose curated matches are already NUL-preceded produce the same documen
 ### Measurable Outcomes
 
 - **SC-001 (census before design)**: Before the rule changes, a log-only build counts, on TheRock's SDK fixture (CI only, through kusari-sandbox/waybill-fixture-therock-sdk, dispatched `--ref main` with full SHAs and `refs.txt` verified) and on the quality corpus:
-  - per pattern, the occurrences preceded by NUL, by a non-identifier byte and by an identifier character;
+  - per pattern, the occurrences preceded by NUL, by whitespace, by another non-identifier byte and by an identifier character;
   - the binaries that would gain or change a version under FR-002, each listed with its library and version;
   - for each new match, whether it is the library's own banner or a false positive, judged from the surrounding bytes.
 - **SC-002**: Synthetic `waybill-fixture-*` libraries, one per preceding byte (NUL, `-`, `0xFF`, and an identifier character), for zlib and ncurses. The first three give the versioned component and the identifier-character case gives none.
 - **SC-003**: Restoring `main`'s NUL-only rule for anchored patterns fails at least one test, and classing an anchored pattern as NUL-only fails at least one test.
 - **SC-004**: `waybill sbom parity-check` agrees for every fixture.
-- **SC-005**: The public corpus goldens are unchanged unless SC-001 predicts a change for that target. Every quality-corpus and TheRock difference against a `main` control is traced, component by component, to one binary and one anchored pattern.
+- **SC-005**: The public corpus has no census of its own: at the log-only commit its goldens must be byte-identical, and its diff at the final commit is its census. Each changed public-corpus component is judged as SC-001 judges a new match, and traced to one binary and one anchored pattern. Every quality-corpus and TheRock difference against a `main` control is traced, component by component, to one binary and one anchored pattern.
 - **SC-006**: Scan time on TheRock's SDK fixture is within 1.05× `main`'s, median of at least 3 runs per arm.
 
 ## Assumptions
