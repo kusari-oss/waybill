@@ -95,7 +95,7 @@ A tree in which each directory has one owner produces the same document as `main
 **Acceptance Scenarios**:
 
 1. **Given** a tree with one project per directory, **When** scanned, **Then** the output is byte-identical to `main`.
-2. **Given** a uv workspace whose members are declared in `[tool.uv.workspace]`, **When** scanned, **Then** each member keeps its main-module role, and owns the directory its `pyproject.toml` is in.
+2. **Given** a uv workspace whose members are declared in `[tool.uv.workspace]`, **When** scanned, **Then** each member keeps its main-module role, and owns the directory its `pyproject.toml` is in. (On `main` every member claims the workspace root, `.`, from the root `uv.lock`: the same defect in its most common layout. This scenario changes output by design; it is not a byte-identity case.)
 
 ### Edge Cases
 

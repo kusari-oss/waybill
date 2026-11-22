@@ -62,7 +62,7 @@ Output does not change in this phase.
   - **O-8:** an editable install, `.venv/lib/python3.12/site-packages/waybill_fixture_app-1.0.0.dist-info/` plus the project's `pyproject.toml`. Follow the existing dist-info fixtures in `waybill-cli/src/scan_fs/package_db/pip/dist_info.rs` tests.
   - **O-10:** O-1 with the tool's lock entry as `virtual = "."`. **O-11, O-12:** guards (an editable path outside the scan root; an editable entry with no manifest).
 
-  **Run them at the log-only commit:** O-1, O-3, O-4, O-7 and O-10 must fail on their stated assertion, and O-2, O-5, O-6, O-8, O-11 and O-12 must pass. Record per case in `MS/control.md`. A case expected to fail that passes stops the phase: its control is wrong, and the case is rebuilt before T007.
+  **Run them at the log-only commit:** O-1, O-3, O-4, O-6, O-7 and O-10 must fail on their stated assertion, and O-2, O-5, O-8, O-11 and O-12 must pass. Record per case in `MS/control.md`. A case expected to fail that passes stops the phase: its control is wrong, and the case is rebuilt before T007.
 - [ ] T007 [US1] R2 in `PM`'s augment-existing branch. When the existing entry's `sbom_tier` is not `deployed`:
   - set `source_path` to the synthesized main module's;
   - insert the old `source_path` at the front of `extra_source_paths`, unless it is already there.
@@ -81,9 +81,10 @@ Output does not change in this phase.
 
   **A-4 guard:** before asserting scope, A-4 asserts that the CycloneDX `dependencies` contain a path of runtime edges from the submodule component to the dependency, and that the dev-scoped component has an edge to it. If no such path exists, the case tests nothing: rebuild it (for example, a submodule whose own requirements file declares the dependency, which spec 1537 attaches to the submodule) before going on.
 
-  **Run them at the log-only commit:** A-1 and A-4 must fail, and A-2, A-3, A-5 and A-6 must pass. Add the results to `MS/control.md`.
+  **Run them at the log-only commit:** A-1 and A-4 must fail, and A-2, A-3, A-5 and A-6 must pass. (A-3 and A-4 were measured on main's binary before writing; `contracts/wire.md`.) Add the results to `MS/control.md`.
 - [ ] T011 [US2] R5:
-  - **In `SC`:** keep the owned anchor list (T003), filter it with `scope_propagation::is_runtime_seed_candidate`, and add it to the `added_seeds` passed to `propagate_non_runtime_scope_seeded`. Graph completeness and the FR-012 gate keep `seeds`.
+  - **In `DA`:** `DeclaredAttachment` gains `runtime_root_anchors`: an anchor goes there when a requirements file declaring it is classified runtime by `requirements_txt::classify_requirements_scope_under` (research R5).
+  - **In `SC`:** keep an owned list of `runtime_root_anchors` plus the top-level submodule anchors (T003), filter it with `scope_propagation::is_runtime_seed_candidate`, and add it to the `added_seeds` passed to `propagate_non_runtime_scope_seeded`. Graph completeness and the FR-012 gate keep `seeds`.
   - **In `SP`:** `PropagationSummary` gains `immune_by_root_anchors`, computed like `immune_by_added_seeds` and logged with it. This needs a separate `anchor_seeds` parameter, or a split of `added_seeds` into its two sources; choose the one that keeps the existing call sites' meaning.
   - **Unit tests in `SP`:** a runtime anchor makes its target and runtime descendants immune; a non-runtime anchor does not; and graph completeness is unchanged.
 - [ ] T012 [US2] Run A-1 to A-6, `scope_propagation_ecosystems`, the `SP` unit tests and B-1 until they pass. The invariant test (FR-005) is A-1 plus A-4 plus A-6. Confirm that A-1 and A-4 failed at the log-only commit (T010).
@@ -92,7 +93,7 @@ Output does not change in this phase.
 
 **Goal**: FR-007. **Independent test**: B-1, B-2.
 
-- [ ] T013 [US3] B-2: run `declared_requirements` and every spec 1618 test unchanged after T007–T011. Add an `IT` case that checks O-6 (uv workspace) is byte-identical to `main`'s output from the saved binary.
+- [ ] T013 [US3] B-2: run `declared_requirements` and every spec 1618 test unchanged after T007–T011. Spec 1537's uv-workspace expectations are re-read against O-6, which changes by design: the members now own their own directories.
 
 ## Phase 6: Polish and cross-cutting
 
@@ -107,7 +108,8 @@ Output does not change in this phase.
   - **M3:** drop the old path's move into `extra_source_paths` (killed by O-3).
   - **M4:** remove the `non_runtime` key (killed by T008's unit test).
   - **M5:** drop the anchor seeds (killed by A-1, A-4).
-  - **M6:** drop the `is_runtime_seed_candidate` filter on anchors (killed by A-3).
+  - **M6:** drop the declaring-file filter (`runtime_root_anchors` → `root_anchors`) (killed by A-3).
+  - **M7:** drop the `is_runtime_seed_candidate` filter on anchors (killed by a unit test in `SP`: an anchor whose target is reader-scoped Optional, as a root `requirements-dev.txt` alone gives, protects nothing).
 
   Restore with `cp`, rebuild after the last one, and use a `^error\[E` guard. Record in `MS/mutations.md`.
 - [ ] T017 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Record `GATE_RESULT` and every `test result:` count in `MS/gate-log.md`.

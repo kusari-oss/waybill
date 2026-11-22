@@ -31,7 +31,7 @@ The entry the pip main-module pass leaves for a PURL that a lockfile reader also
 ## Anchor seed (R5)
 
 - **Source:** the reader root anchors `scan_cmd` installs, which are the declared root anchors (spec 1537 R4) and the top-level git submodules.
-- **Filter:** `is_runtime_seed_candidate`, so the anchor's own scope is runtime, and it is not under a listed CI or docs dot-directory.
+- **Filters:** (1) a declared root anchor counts only if a runtime requirements file declares it (`classify_requirements_scope_under`; `DeclaredAttachment.runtime_root_anchors`), and submodule anchors always pass; (2) `is_runtime_seed_candidate`, so the target's own scope is runtime, and it is not under a listed CI or docs dot-directory.
 - **Use:** added to spec 1616's `added_seeds` for the immunity search only. `seeds` (graph completeness, FR-012) is unchanged.
 - **Summary:** `PropagationSummary` gains `immune_by_root_anchors`, counted apart from `immune_by_added_seeds`.
 

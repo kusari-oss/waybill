@@ -66,7 +66,11 @@ File references are to `waybill-cli/src/` at `main` `79b3350b`. "Traced" means r
 
 ## R5. FR-005: anchors protect what they anchor
 
-- **Decision:** the reader root anchors (declared root anchors plus top-level submodules, the list `scan_cmd` already builds before the propagation) join spec 1616's `added_seeds`, filtered by `is_runtime_seed_candidate`. A requirements file's anchors that the reader itself scoped non-runtime (`requirements-dev.txt`, spec 1537 FR-010) are therefore not seeds.
+- **Decision:** the reader root anchors (declared root anchors plus top-level submodules, the list `scan_cmd` already builds before the propagation) join spec 1616's `added_seeds`, under two filters:
+  - **The declaring file.** A declared root anchor is a seed only if at least one *runtime* requirements file declares it: `classify_requirements_scope_under` returns no Optional scope for that file. `declared_attach::attach` records these as `runtime_root_anchors` beside `root_anchors`. **Measured** on main's binary: with `requirements-dev.txt` at the scan root and the same package reached through a dev-group lockfile entry, the merged component carries **no** reader scope. The lockfile entry's absent scope wins the merge, and the scope it has comes from the propagation (`optional`, C62 `transitive`). A filter on the component's scope alone would make that dev anchor a seed, and report a dev-only package as runtime (case A-3).
+  - **The component.** `is_runtime_seed_candidate`: the anchor target's own scope is runtime, and it is not under a listed CI or docs dot-directory.
+
+  Top-level submodule anchors pass the first filter: a submodule declares nothing by file.
   - **Only the immunity search widens.** Graph completeness and the FR-012 rooted-ecosystem gate keep `seeds`, exactly as spec 1616 set it up.
   - **Every ecosystem** (Clarifications Q2). The anchor list is ecosystem-neutral.
   - **The summary** gains `immune_by_root_anchors`, counted apart from `immune_by_added_seeds`, as spec 1616 FR-006 did for main modules.
