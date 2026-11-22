@@ -101,6 +101,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **One component per library when its banner and its pkg-config or CMake file name or version it differently (#1662).**
+  On the ROCm 7.14 SDK, ncurses was reported as `ncurses@6.6` (from its banner) and `ncursesw@6.6.20251230` (from `ncursesw.pc`), and LLVM as `llvm@23.0.0` and `llvm@23.0.0git`. Each is now one component, `ncurses@6.6.20251230` and `llvm@23.0.0git`, listing both readers' files. Nothing else in that scan changed, nor in 18 open-source projects scanned before and after.
+  - **Versions as stated:** LLVM keeps the suffix its banner states (`23.0.0git`, `18.1.0rc1`), and ncurses its patch date (`6.6.20251230`).
+  - **ncurses CPEs** put the release in the version field and the patch date in the update field (`cpe:2.3:a:invisible-island:ncurses:6.6:20251230:…`), which is the form NVD's ncurses records use. This applies whichever reader found the component.
+  - **The merge rule:** a banner match and a pkg-config or CMake record become one component when the record's own library files include the banner's file, the record's name is one of the library's names, and the versions agree (equal, or the banner's version followed by `.` begins the record's). Only ncurses has names beyond its own: `ncursesw`, `ncursest` and `ncursestw`, from ncurses' `INSTALL`. If two records qualify, nothing is merged. The merged component takes the library's name and the record's version; edges that named the record follow it.
+
 - **Bundled zlib, expat and ncurses are versioned whatever byte precedes their banner (#1568, #1641).**
   The embedded-version scanner accepted a banner only right after a NUL byte. Read-only sections mix strings with other constant data, so in vendor-built libraries the banner can follow any byte, and zlib then came out unversioned and ncurses not at all. On the ROCm 7.14 SDK this affected 8 libraries: 6 copies of zlib behind `-` and 2 of ncurses behind `0xff`.
   - **Now:** the three patterns whose banner is fixed at both ends (zlib's ends in ` Copyright`; expat's and ncurses' in a NUL) accept any preceding byte except a letter, digit or `_`. For zlib the test applies to the byte before its leading space.
