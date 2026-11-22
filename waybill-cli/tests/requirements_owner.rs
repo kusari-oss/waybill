@@ -331,6 +331,53 @@ fn o4_a_project_owns_its_own_directory() {
     assert_eq!(edge_sources(&s, "pkg:pypi/waybill-fixture-other@"), BTreeSet::from(["pkg:pypi/waybill-fixture-zdevtool@0.1.0".to_string()]));
 }
 
+/// O-13: O-4 under `app/`, with the dev package also pinned in
+/// `app/requirements.txt`. A second entry merges into the dev package, and
+/// spec 1542 sorts its paths on their raw form: `app/uv.lock` sorts before
+/// the project's `path+file://` directory (under `tool/` it would sort
+/// after). The requirements file sits in `app/devtool/extra/`, which has no
+/// manifest, so its owner comes from the owner index walking up; in
+/// `app/devtool/` itself the pip reader links it to the directory's own main
+/// module, which is why O-4 does not exercise the index (found at T016,
+/// mutation M8). It still owns its own directory (research R2,
+/// implementation amendment).
+#[test]
+fn o13_a_project_owns_its_directory_after_a_merge_sorts_its_paths() {
+    let mut f: Vec<(String, String)> = files_1640("waybill-fixture-zdevtool")
+        .into_iter()
+        .map(|(p, t)| (p.strip_prefix("tool/").map_or(p.clone(), |r| format!("app/{r}")), t))
+        .collect();
+    for (p, t) in f.iter_mut() {
+        if p == "app/requirements.txt" {
+            *t = "waybill-fixture-shared>=1.0\nwaybill-fixture-zdevtool==0.1.0\n".into();
+        }
+    }
+    f.push(("app/devtool/extra/requirements.txt".into(), "waybill-fixture-other==1.0\n".into()));
+    let s = check(&build(&f));
+    assert_eq!(edge_sources(&s, "pkg:pypi/waybill-fixture-other@"), set(&["pkg:pypi/waybill-fixture-zdevtool@0.1.0"]));
+}
+
+/// O-14: a directory with a `uv.lock` and a `requirements.txt` but no project
+/// of its own. On `main` the dev package listed in the lock claimed the
+/// directory and became the source of its requirements; now the directory
+/// has no owner, so its packages are anchored to the root (spec 1537 R4).
+#[test]
+fn o14_a_lockfile_only_directory_is_not_owned_by_its_editable_entry() {
+    let f: Vec<(String, String)> = [
+        ("app/devtool/pyproject.toml", "[project]\nname = \"waybill-fixture-zdevtool\"\nversion = \"0.1.0\"\n"),
+        ("app/uv.lock", "version = 1\nrequires-python = \">=3.10\"\n\n[[package]]\nname = \"waybill-fixture-zdevtool\"\nversion = \"0.1.0\"\nsource = { editable = \"devtool\" }\n"),
+        ("app/requirements.txt", "waybill-fixture-shared==1.0\nwaybill-fixture-zdevtool==0.1.0\n"),
+        ("svc/pyproject.toml", "[project]\nname = \"waybill-fixture-svc\"\nversion = \"2.0.0\"\n"),
+    ]
+    .iter()
+    .map(|(a, b)| (a.to_string(), b.to_string()))
+    .collect();
+    let s = check(&build(&f));
+    let m = &s.cdx["metadata"]["component"];
+    let root = m["purl"].as_str().map(strip).unwrap_or_else(|| m["bom-ref"].as_str().unwrap().to_string());
+    assert_eq!(edge_sources(&s, SHARED), BTreeSet::from([root]));
+}
+
 /// O-5: without the lockfile nothing changes (a guard).
 #[test]
 fn o5_without_a_lockfile_the_tool_owns_its_directory() {
