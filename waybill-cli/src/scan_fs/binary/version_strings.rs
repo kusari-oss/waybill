@@ -1,22 +1,32 @@
 //! Curated embedded-version-string scanner. Per research R6 / FR-025.
 //! Patterns for well-known self-identifying libraries:
 //!
-//! | Library   | Signature                                                    |
-//! |-----------|--------------------------------------------------------------|
-//! | OpenSSL   | `OpenSSL X.Y.Z[letter] [DD MMM YYYY]`                        |
-//! | BoringSSL | `BoringSSL <40-char-sha>`                                    |
-//! | zlib      | ` deflate X.Y.Z[letter] Copyright ...` (one leading space)  |
-//! | SQLite    | `SQLite version X.Y.Z[.W]`                                   |
-//! | curl      | `libcurl/X.Y.Z`                                              |
-//! | PCRE      | `PCRE X.Y YYYY-MM-DD`                                        |
-//! | PCRE2     | `PCRE2 X.Y YYYY-MM-DD`                                       |
-//! | GnuTLS    | `GnuTLS X.Y.Z`                                               |
-//! | LibreSSL  | `LibreSSL X.Y.Z`                                             |
-//! | LLVM      | `LLVM version X.Y.Z`                                         |
-//! | OpenJDK   | `OpenJDK X.Y.Z[+B]` (modern) or `OpenJDK 8uX[-bY]` (legacy)  |
-//! | Node.js   | `node.js/vX.Y.Z` (the compiled-in default User-Agent)        |
-//! | expat     | `expat_X.Y.Z` (#1526)                                        |
-//! | ncurses   | `ncurses X.Y.YYYYMMDD`, emitted as `X.Y` (#1526)             |
+//! | Library   | Signature                                                    | Boundary |
+//! |-----------|--------------------------------------------------------------|----------|
+//! | OpenSSL   | `OpenSSL X.Y.Z[letter] [DD MMM YYYY]`                        | NUL-only |
+//! | BoringSSL | `BoringSSL <40-char-sha>`                                    | NUL-only |
+//! | zlib      | ` deflate X.Y.Z[letter] Copyright ...` (one leading space)  | anchored |
+//! | SQLite    | `SQLite version X.Y.Z[.W]`                                   | NUL-only |
+//! | curl      | `libcurl/X.Y.Z`                                              | NUL-only |
+//! | PCRE      | `PCRE X.Y YYYY-MM-DD`                                        | NUL-only |
+//! | PCRE2     | `PCRE2 X.Y YYYY-MM-DD`                                       | NUL-only |
+//! | GnuTLS    | `GnuTLS X.Y.Z`                                               | NUL-only |
+//! | LibreSSL  | `LibreSSL X.Y.Z`                                             | NUL-only |
+//! | LLVM      | `LLVM version X.Y.Z`                                         | NUL-only |
+//! | OpenJDK   | `OpenJDK X.Y.Z[+B]` (modern) or `OpenJDK 8uX[-bY]` (legacy)  | NUL-only |
+//! | PHP       | `X-Powered-By: PHP/X.Y.Z` (#1258)                            | NUL-only |
+//! | Node.js   | `node.js/vX.Y.Z` (the compiled-in default User-Agent)        | NUL-only |
+//! | expat     | `expat_X.Y.Z` (#1526)                                        | anchored |
+//! | ncurses   | `ncurses X.Y.YYYYMMDD`, emitted as `X.Y` (#1526)             | anchored |
+//!
+//! **Boundary** (spec 1643, #1568, #1641). A NUL-only pattern must start a
+//! string: the byte before it is NUL, or it starts the region. An anchored
+//! pattern is fixed at both ends (its name starts it; a fixed suffix or a
+//! required NUL ends it), so any preceding byte but `[A-Za-z0-9_]` is
+//! accepted. The read-only sections mix strings with other constant data,
+//! so a real banner can follow any byte. For zlib the test applies to the
+//! byte before its leading space; its form without the space keeps the NUL
+//! rule. See [`CuratedLibrary::boundary`].
 //!
 //! Scanning runs ONLY against format-appropriate read-only string sections (ELF `.rodata` + `.data.rel.ro`, Mach-O `__TEXT,__cstring` + `__TEXT,__const`, PE `.rdata`) — never against the full binary image (Q4 resolution / FR-025). This bounds the false-positive surface. Control-set validation per SC-005.
 //
@@ -123,10 +133,10 @@ pub fn scan(region: &[u8]) -> Vec<EmbeddedVersionMatch> {
     out
 }
 
-/// The curated match at `pos`, if the boundary rule in force accepts it.
+/// The curated match at `pos`, if the boundary rule accepts it.
 fn match_prefix(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
     let m = pattern_at(region, pos)?;
-    main_rule_accepts(m.library, region, pos).then_some(m)
+    new_rule_accepts(m.library, region, pos).then_some(m)
 }
 
 /// Which bytes may precede a curated pattern's first character (spec 1643
@@ -829,13 +839,17 @@ mod tests {
         }
     }
 
-    /// #1525: only a single leading space at the start of a string is
-    /// accepted; `deflate` in the middle of other text still is not.
+    /// #1525: `deflate` in the middle of other text is not zlib's banner.
+    /// Spec 1643 (FR-002): the byte before zlib's leading space may be any
+    /// non-identifier byte, so a second space is accepted; an identifier
+    /// before the space (`see deflate`) is still rejected. The census found
+    /// no whitespace-preceded zlib banner on any target
+    /// (`specs/1643-version-string-boundary/measurements/census.md`).
     #[test]
     fn s1525_zlib_mid_string_still_rejected() {
         let two_spaces = b"\0  deflate 1.3.2 Copyright 1995-2026 \0";
         let mid_text = b"\0see deflate 1.3.2 Copyright 1995-2026 \0";
-        assert!(scan(two_spaces).is_empty());
+        assert_eq!(scan(two_spaces).len(), 1);
         assert!(scan(mid_text).is_empty());
     }
 
@@ -1257,6 +1271,104 @@ mod tests {
         let j = one_hit(b"lead-ncurses 6.6.20251230\0").to_json();
         for needle in [r#""library":"ncurses""#, r#""preceding":"other_non_identifier""#, r#""accepted_new":true"#] {
             assert!(j.contains(needle), "{needle} not in {j}");
+        }
+    }
+
+    /// Spec 1643: one canonical banner per variant. Exhaustive with no
+    /// wildcard arm, so a new variant needs a sample before this compiles.
+    fn sample(lib: CuratedLibrary) -> &'static [u8] {
+        match lib {
+            CuratedLibrary::OpenSsl => b"OpenSSL 3.0.11\0",
+            CuratedLibrary::BoringSsl => b"BoringSSL 0123456789abcdef0123456789abcdef01234567\0",
+            CuratedLibrary::Zlib => b" deflate 1.3.2 Copyright 1995-2026 Jean-loup Gailly and Mark Adler \0",
+            CuratedLibrary::Sqlite => b"SQLite version 3.44.2\0",
+            CuratedLibrary::Curl => b"libcurl/8.5.0\0",
+            CuratedLibrary::Pcre => b"PCRE 8.45 2021-06-15\0",
+            CuratedLibrary::Pcre2 => b"PCRE2 10.42 2022-12-11\0",
+            CuratedLibrary::GnuTls => b"GnuTLS 3.8.3\0",
+            CuratedLibrary::LibreSsl => b"LibreSSL 3.8.2\0",
+            CuratedLibrary::Llvm => b"LLVM version 17.0.6\0",
+            CuratedLibrary::OpenJdk => b"OpenJDK 21.0.1+12\0",
+            CuratedLibrary::Php => b"X-Powered-By: PHP/8.3.35\0",
+            CuratedLibrary::Node => b"node.js/v24.14.1\0",
+            CuratedLibrary::Expat => b"expat_2.7.5\0",
+            CuratedLibrary::Ncurses => b"ncurses 6.6.20251230\0",
+        }
+    }
+
+    fn behind(prev: Option<u8>, literal: &[u8]) -> Vec<u8> {
+        let mut r = b"lead".to_vec();
+        r.extend(prev);
+        r.extend_from_slice(literal);
+        r
+    }
+
+    fn finds(region: &[u8], lib: CuratedLibrary) -> bool {
+        scan(region).iter().any(|m| m.library == lib)
+    }
+
+    const ANCHORED: [CuratedLibrary; 3] = [CuratedLibrary::Zlib, CuratedLibrary::Expat, CuratedLibrary::Ncurses];
+
+    /// Spec 1643 FR-001/FR-004 (R3): every variant behind NUL matches, and
+    /// behind `-` matches exactly when it is classed anchored.
+    #[test]
+    fn s1643_every_variant_follows_its_class() {
+        use strum::IntoEnumIterator;
+        for lib in CuratedLibrary::iter() {
+            assert!(finds(&behind(Some(0), sample(lib)), lib), "{lib:?} behind NUL");
+            let dash = finds(&behind(Some(b'-'), sample(lib)), lib);
+            assert_eq!(dash, lib.boundary() == Boundary::Anchored, "{lib:?} behind '-'");
+        }
+    }
+
+    /// Spec 1643 FR-002: an anchored pattern behind any non-identifier byte.
+    #[test]
+    fn s1643_anchored_patterns_accept_a_non_identifier_byte() {
+        for lib in ANCHORED {
+            for prev in [0u8, b'-', 0xff, b' ', b'/', b'.', b':', 0x80] {
+                assert!(finds(&behind(Some(prev), sample(lib)), lib), "{lib:?} behind {prev:#04x}");
+            }
+            assert!(finds(sample(lib), lib), "{lib:?} at the region's start");
+        }
+    }
+
+    /// Spec 1643 FR-002: an identifier character still rejects.
+    #[test]
+    fn s1643_anchored_patterns_reject_an_identifier_byte() {
+        for lib in ANCHORED {
+            for &prev in b"xL9_" {
+                assert!(!finds(&behind(Some(prev), sample(lib)), lib), "{lib:?} behind {:?}", prev as char);
+            }
+        }
+    }
+
+    /// Spec 1643 FR-002: zlib's form without the leading space keeps the
+    /// NUL rule.
+    #[test]
+    fn s1643_zlib_without_its_space_keeps_the_nul_rule() {
+        let bare = &sample(CuratedLibrary::Zlib)[1..];
+        assert!(finds(&behind(Some(0), bare), CuratedLibrary::Zlib));
+        assert!(!finds(&behind(Some(b'-'), bare), CuratedLibrary::Zlib));
+    }
+
+    /// Spec 1643 (analysis I1): the census's `accepted_new` hits are exactly
+    /// what `scan` returns, for every fixture banner and preceding byte.
+    #[test]
+    fn s1643_census_agrees_with_the_scanner() {
+        use std::collections::HashSet;
+        let libs = ANCHORED.into_iter().chain([CuratedLibrary::OpenSsl, CuratedLibrary::Node]);
+        for lib in libs {
+            for prev in [None, Some(0u8), Some(b'-'), Some(0xff), Some(b' '), Some(b'/'), Some(b'x'), Some(b'9'), Some(b'_')] {
+                let r = if prev.is_none() { sample(lib).to_vec() } else { behind(prev, sample(lib)) };
+                let from_scan: HashSet<(CuratedLibrary, String)> =
+                    scan(&r).into_iter().map(|m| (m.library, m.version)).collect();
+                let from_census: HashSet<(CuratedLibrary, String)> = census(&r)
+                    .into_iter()
+                    .filter(|h| h.accepted_new)
+                    .map(|h| (h.library, h.version))
+                    .collect();
+                assert_eq!(from_scan, from_census, "{lib:?} behind {prev:?}");
+            }
         }
     }
 }
