@@ -1307,17 +1307,24 @@ mod tests {
         scan(region).iter().any(|m| m.library == lib)
     }
 
+    /// FR-001's anchored libraries, written out from the spec's table.
     const ANCHORED: [CuratedLibrary; 3] = [CuratedLibrary::Zlib, CuratedLibrary::Expat, CuratedLibrary::Ncurses];
 
     /// Spec 1643 FR-001/FR-004 (R3): every variant behind NUL matches, and
-    /// behind `-` matches exactly when it is classed anchored.
+    /// behind `-` matches exactly when FR-001's table classes it anchored.
+    /// The expectation is the spec's table (`ANCHORED`), not
+    /// `CuratedLibrary::boundary`, which the scanner itself reads: comparing
+    /// the scanner with `boundary()` would pass whatever `boundary()` said
+    /// (mutations M2-M5, `measurements/mutations.md`).
     #[test]
     fn s1643_every_variant_follows_its_class() {
         use strum::IntoEnumIterator;
         for lib in CuratedLibrary::iter() {
+            let anchored = ANCHORED.contains(&lib);
+            assert_eq!(lib.boundary() == Boundary::Anchored, anchored, "{lib:?}: class differs from FR-001");
             assert!(finds(&behind(Some(0), sample(lib)), lib), "{lib:?} behind NUL");
             let dash = finds(&behind(Some(b'-'), sample(lib)), lib);
-            assert_eq!(dash, lib.boundary() == Boundary::Anchored, "{lib:?} behind '-'");
+            assert_eq!(dash, anchored, "{lib:?} behind '-'");
         }
     }
 

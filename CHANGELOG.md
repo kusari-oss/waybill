@@ -80,6 +80,11 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Bundled zlib, expat and ncurses are versioned whatever byte precedes their banner (#1568, #1641).**
+  The embedded-version scanner accepted a banner only right after a NUL byte. Read-only sections mix strings with other constant data, so in vendor-built libraries the banner can follow any byte, and zlib then came out unversioned and ncurses not at all. On the ROCm 7.14 SDK this affected 8 libraries: 6 copies of zlib behind `-` and 2 of ncurses behind `0xff`.
+  - **Now:** the three patterns whose banner is fixed at both ends (zlib's ends in ` Copyright`; expat's and ncurses' in a NUL) accept any preceding byte except a letter, digit or `_`. For zlib the test applies to the byte before its leading space.
+  - **Unchanged:** the other twelve patterns still need a NUL, since their banners can appear inside other text. A `waybill::version_census` debug log reports every occurrence with the byte before it.
+
 - **A requirements file belongs to the project in its directory (#1640).**
   When a `pyproject.toml` project's `uv.lock` (or `poetry.lock`) also listed an editable package from a subdirectory, such as a development tool, both claimed the lockfile's directory, and the one whose name sorted first owned the `requirements.txt` beside it. So a dev-only tool could become the source of a project's runtime requirements. The same happened in every uv workspace: each member claimed the workspace root.
   - **Now:** a merged main module records its `pyproject.toml`'s directory in `waybill:source-files` and `waybill:workspace-member`, beside the lockfile's, and owns that directory. Two candidates of the same rank that remain are still decided by PURL.

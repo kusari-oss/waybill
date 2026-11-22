@@ -21,3 +21,20 @@
 All PURLs are `pkg:generic/…`. The unversioned `pkg:generic/zlib` is the symbol fingerprint; the embedded version is what is lost. Both issues reproduce as reported. The `x` rows are what FR-002 must keep: under the new rule they stay as they are.
 
 **At the wired commit (T-later)**, the expected result is `-` and `0xff` versioned like `0x00`, and `x` unchanged.
+
+## T015: at the wired commit
+
+**Binary:** waybill built at `22959e70` (release). The same two Nix-built libraries and the same command.
+
+| library | byte before the literal | run 1 | run 2 | run 3 | `main` (`83657af2`) |
+|---|---|---|---|---|---|
+| zlib | `0x00` | `zlib@1.3.2` | `zlib@1.3.2` | `zlib@1.3.2` | `zlib@1.3.2` |
+| zlib | `0x2d` `-` | `zlib@1.3.2` | `zlib@1.3.2` | `zlib@1.3.2` | `zlib` |
+| zlib | `0xff` | `zlib@1.3.2` | `zlib@1.3.2` | `zlib@1.3.2` | `zlib` |
+| zlib | `0x78` `x` | `zlib` | `zlib` | `zlib` | `zlib` |
+| ncurses | `0x00` | `ncurses@6.6` | `ncurses@6.6` | `ncurses@6.6` | `ncurses@6.6` |
+| ncurses | `0x2d` `-` | `ncurses@6.6` | `ncurses@6.6` | `ncurses@6.6` | none |
+| ncurses | `0xff` | `ncurses@6.6` | `ncurses@6.6` | `ncurses@6.6` | none |
+| ncurses | `0x78` `x` | none | none | none | none |
+
+As expected: `-` and `0xff` are versioned like NUL, and an identifier character is unchanged.

@@ -80,6 +80,14 @@ The census reads waybill's own events, not a re-implementation of the patterns i
 
 `fixture/sdk` in the fixture repository holds only metadata files, so the full tarball is required.
 
+**Census result (T005, `measurements/census.md`).**
+- **Run:** 44990809831 at `d3dcd676`; 19 of 19 jobs succeeded.
+- **TheRock SDK:** 16 events in 13 binaries.
+  - **8 verdicts change:** 6 zlib behind `-` and 2 ncurses behind `0xff`. All are the libraries' own banners.
+  - **No identifier-preceded match.** The only whitespace-preceded hits are 3 LLVM ones, inside `AMD LLVM version …`; LLVM is NUL-only, so they stay rejected.
+- **Quality corpus:** one target has events (pants-backend-ai: 2 OpenSSL, 2 zlib, all NUL-preceded), and none changes verdict.
+- **FR-005 is resolved with no reclassification:** no anchored pattern produced a false positive, and no binary gains a second version or loses one.
+
 ## R7: Fixtures
 
 **Decision:** a new integration test file, `waybill-cli/tests/version_string_boundary.rs`, built on `tests/common/installed_lib.rs::elf_shared_lib(rodata)`. It writes `libwaybill-fixture-z.so.1` and `libwaybill-fixture-ncurses.so.6` into a temp directory, one directory per preceding byte. Each case scans in all three formats, asserts the curated component and runs `waybill sbom parity-check`.

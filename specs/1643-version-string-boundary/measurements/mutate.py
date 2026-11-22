@@ -12,7 +12,7 @@ import sys
 REPO = pathlib.Path(sys.argv[1])
 OUT = pathlib.Path(sys.argv[2])
 VS = REPO / "waybill-cli/src/scan_fs/binary/version_strings.rs"
-UNIT = ["--bin", "waybill", "version_strings"]
+UNIT = ["--bin", "waybill"]
 IT = ["--test", "version_string_boundary"]
 
 ANCH = "            CuratedLibrary::Zlib | CuratedLibrary::Expat | CuratedLibrary::Ncurses => Boundary::Anchored,\n"
@@ -31,21 +31,21 @@ def reclass(to_nul):
 M = [
     ("M1 anchored accepts only NUL",
      [("            Boundary::Anchored => !is_identifier(prev),\n", "            Boundary::Anchored => prev == 0,\n")],
-     [UNIT + ["s1643_anchored_patterns_accept"], IT + ["n2_"]]),
-    ("M2 zlib classed NUL-only", reclass("Zlib"), [UNIT + ["s1643_every_variant"]]),
-    ("M3 expat classed NUL-only", reclass("Expat"), [UNIT + ["s1643_every_variant"]]),
-    ("M4 ncurses classed NUL-only", reclass("Ncurses"), [UNIT + ["s1643_every_variant"]]),
+     [UNIT + ["version_strings::tests::s1643_anchored_patterns_accept"], IT + ["n2_"]]),
+    ("M2 zlib classed NUL-only", reclass("Zlib"), [UNIT + ["version_strings::tests::s1643_every_variant"]]),
+    ("M3 expat classed NUL-only", reclass("Expat"), [UNIT + ["version_strings::tests::s1643_every_variant"]]),
+    ("M4 ncurses classed NUL-only", reclass("Ncurses"), [UNIT + ["version_strings::tests::s1643_every_variant"]]),
     ("M5 OpenSSL classed anchored",
      [(ANCH, "            CuratedLibrary::Zlib | CuratedLibrary::Expat | CuratedLibrary::Ncurses | CuratedLibrary::OpenSsl => Boundary::Anchored,\n"),
       (NUL_HEAD, "            CuratedLibrary::BoringSsl\n")],
-     [UNIT + ["s1643_every_variant"], IT + ["u1_"]]),
+     [UNIT + ["version_strings::tests::s1643_every_variant"], IT + ["u1_"]]),
     ("M6 identifier test removed",
      [("            Boundary::Anchored => !is_identifier(prev),\n", "            Boundary::Anchored => { let _ = prev; true }\n")],
-     [UNIT + ["s1643_anchored_patterns_reject"], IT + ["z4_"]]),
+     [UNIT + ["version_strings::tests::s1643_anchored_patterns_reject"], IT + ["z4_"]]),
     ("M7 zlib tests the byte before deflate, not before its space",
      [("                || (pos >= 1 && region[pos - 1] == b' ' && class.accepts(region, pos - 1))\n",
        "                || (pos >= 1 && region[pos - 1] == b' ' && class.accepts(region, pos))\n")],
-     [UNIT + ["s1643_anchored_patterns_reject"], IT + ["z4_"]]),
+     [UNIT + ["version_strings::tests::s1643_anchored_patterns_reject"], IT + ["z4_"]]),
 ]
 
 
@@ -71,6 +71,9 @@ def run(mid, edits, tests):
         for t in tests:
             code, log = cargo(t)
             logs.append(log)
+            if not any(l.startswith("test result:") for l in log.splitlines()):
+                (OUT / (key + ".log")).write_text("\n".join(logs))
+                return f"{mid}: HARNESS ERROR, a test command ran no tests ({t})"
             if any(line.startswith("error[E") for line in log.splitlines()):
                 (OUT / (key + ".log")).write_text("\n".join(logs))
                 return f"{mid}: COMPILE ERROR (not a kill)"
