@@ -82,7 +82,7 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 - **A requirements file belongs to the project in its directory (#1640).**
   When a `pyproject.toml` project's `uv.lock` (or `poetry.lock`) also listed an editable package from a subdirectory, such as a development tool, both claimed the lockfile's directory, and the one whose name sorted first owned the `requirements.txt` beside it. So a dev-only tool could become the source of a project's runtime requirements. The same happened in every uv workspace: each member claimed the workspace root.
-  - **Now:** a merged main module records its `pyproject.toml`'s directory in `waybill:source-files` and `waybill:workspace-member`, beside the lockfile's, and owns that directory. Between two candidates of the same rank, a runtime project wins over a non-runtime one before the name decides.
+  - **Now:** a merged main module records its `pyproject.toml`'s directory in `waybill:source-files` and `waybill:workspace-member`, beside the lockfile's, and owns that directory. Two candidates of the same rank that remain are still decided by PURL.
   - **Root-declared packages stay runtime.** A package that a runtime `requirements.txt` at the scan root declares, a top-level git submodule, or another root anchor now protects what it reaches from a transitive non-runtime scope, like a runtime project does. Before, a development path into such a package could report it as not shipping.
 
 - **A CMake fetch under a condition that holds by default is no longer excluded (#1639).**
