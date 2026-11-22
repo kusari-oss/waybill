@@ -2,7 +2,7 @@
 
 ## Fixtures and expected components
 
-All fixtures are synthetic ELF shared libraries under `waybill-fixture-*` directory names, built by `elf_shared_lib` (string region only) or `elf_shared_lib_with_dynsym` (string region plus `.dynsym`). `\0` is NUL. "Defines S" and "imports S" refer to `.dynsym` entries.
+All fixtures are synthetic shared libraries under `waybill-fixture-*` directory names. ELF ones are built by `elf_shared_lib` (string region only) or `elf_shared_lib_with_dynsym` (string region plus `.dynsym`); Mach-O ones (A-5, N-9) by `macho_dylib_with_symbols`. `\0` is NUL. "Defines S" and "imports S" refer to `.dynsym` entries.
 
 | ID | String region | Symbols | Expected for the library under test |
 |---|---|---|---|
@@ -10,9 +10,11 @@ All fixtures are synthetic ELF shared libraries under `waybill-fixture-*` direct
 | A-2 | `\0GNU MP: Cannot allocate memory\0` … `\06.3.0\0` | none | `pkg:generic/gmp@6.3.0` |
 | A-3 | `\05.8.1\0` | defines `lzma_version_string` | `pkg:generic/liblzma@5.8.1` |
 | A-4 | `\05.7.1alpha\0` | defines `lzma_version_number` | `pkg:generic/liblzma@5.7.1alpha` |
+| A-5 | Mach-O dylib (`macho_dylib_with_symbols`), `__cstring` `\05.8.1\0` | defines `_lzma_version_string` | `pkg:generic/liblzma@5.8.1` |
 | N-1 | A-1 without `bzip2/libbzip2` | none | no bzip2 component |
 | N-2 | A-2 without `GNU MP:` | none | no gmp component |
 | N-3 | A-3's region | **imports** `lzma_version_string` | no liblzma component |
+| N-9 | A-5's `__cstring` | **imports** `_lzma_version_string` | no liblzma component |
 | N-4 | A-2 plus `\06.2.1\0` | none | no gmp component; census `ambiguous` with `6.2.1`, `6.3.0` |
 | N-5 | `\0GNU MP:\0`, `\05.8.1\0` | defines `lzma_version_string` | neither gmp nor liblzma; census `ambiguous-shared` for both |
 | N-6 | `\0GNU MP:\0`, `\0requires 6.3.0 or later\0` | none | no gmp component (not a whole string) |

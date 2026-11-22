@@ -43,6 +43,8 @@ The sources are kept in the session scratchpad, not committed (they are third-pa
 
 The list has two entries, so the field costs a few bytes per binary.
 
+**Test coverage by format**: ELF and Mach-O are tested with synthetic fixtures (`contracts/wire.md` A-3, A-5, N-3, N-9). PE is **not** fixture-tested. The export directory is defined by construction, and `pe::extract_pe_export_names` is reused unchanged, but no test in this spec exercises a PE liblzma. That is a statement of what was not checked, not a claim that it works.
+
 **Alternatives considered**:
 - Filtering `symbol_names` itself: rejected, because it changes fingerprint output.
 - Storing every defined symbol: rejected, because the memory scales with the symbol table and nothing else needs it.
@@ -61,7 +63,7 @@ The list has two entries, so the field costs a few bytes per binary.
 
 **Decisions**:
 - **`pkg:generic/gmp` → `gmplib:gmp`.** The evidence files are committed under this spec's `measurements/`.
-- **`pkg:generic/liblzma` → `tukaani:xz` (62) and `xz_project:xz` (32, spec 1375's 2026-11-13 evidence).** NVD files liblzma's advisories under the `xz` product, and no `liblzma` product exists. A row whose product differs from its name is already allowed: `node`'s product is `node.js`, and `cpe.rs::m1375_every_product_has_a_committed_title_query` keys on the product.
+- **`pkg:generic/liblzma` → `tukaani:xz` (62) and `xz_project:xz` (32), copied verbatim from the `xz` row, with spec 1375's 2026-11-13 evidence.** `cpe.rs::m1491_shared_pairs_agree` requires a pair shared by two rows to carry identical counts, dates and evidence, so its control count rises from 1 to 3 (analysis I2). gmp's evidence must be a full-table TSV in spec 1375's format, because `m1491_every_count_matches_its_evidence` requires at least 95 parsed rows including `gnu:bash` (analysis I1). The 6-line probe in `measurements/` is a cross-check, not the cited evidence. NVD files liblzma's advisories under the `xz` product, and no `liblzma` product exists. A row whose product differs from its name is already allowed: `node`'s product is `node.js`, and `cpe.rs::m1375_every_product_has_a_committed_title_query` keys on the product.
 - **`pkg:generic/xz` stays.** It is keyed for any reader that names the project `xz`, and nothing here touches it.
 - **`pkg:generic/bzip2` is unchanged.** Its row exists.
 

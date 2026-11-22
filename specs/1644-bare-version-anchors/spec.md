@@ -104,7 +104,7 @@ Binaries that hold none of the three anchors produce the same documents as on `m
 - **Two anchored libraries with the same version shape in one binary** (GMP and xz). A candidate is attributed to a library only when no other library anchored in the same binary also accepts it (FR-005a).
 - **The same version string twice.** Two occurrences of one string are one candidate, not two.
 - **bzip2's version without its date** (a build that defines `BZ_VERSION` differently). It is not a candidate. Only the `X.Y.Z, DD-Mon-YYYY` form is (FR-004).
-- **A stripped or symbol-less build.** An xz library with no exported symbols has no xz anchor and gets no version. A Mach-O or PE build gets no xz version unless research finds an anchor that format carries (FR-003).
+- **A stripped or symbol-less build.** An xz library with no exported symbols has no xz anchor and gets no version. On Mach-O the anchor is a defined external symbol (`_lzma_version_string`), and on PE an export (research R3). A Mach-O build is fixture-tested; PE is not, and the docs say so.
 - **The anchor text inside another program's message.** `GNU MP:` or `bzip2/libbzip2` quoted by a program that does not bundle the library. That binary would need a whole-string candidate as well to produce anything, and the census lists every match with its context so such a case is seen.
 - **A library already identified by another signal** (pkg-config, a CMake config, a fingerprint, a package database). The embedded match is emitted as for any curated library, and merges when the PURL is equal (User Story 3).
 - **The 16 MiB region cap.** An anchor or candidate beyond the cap is not seen, as with every curated pattern today.

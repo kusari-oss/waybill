@@ -3,7 +3,7 @@
 **Input**: `specs/1644-bare-version-anchors/` (spec.md, plan.md, research.md, data-model.md, contracts/wire.md, quickstart.md)
 
 **Tests**: requested by the spec (SC-002 to SC-006).
-- **Written red.** Every case in `contracts/wire.md` that expects a component (A-1 to A-4, P-1, P-2) is written before the change that produces it, and must fail on the log-only commit.
+- **Written red.** Every case in `contracts/wire.md` that expects a component (A-1 to A-5, P-1, P-2) is written before the change that produces it, and must fail on the log-only commit.
 - **Guards.** The N cases expect nothing. They pass on `main` trivially, because no pattern exists yet. Their teeth come from the mutations (T015), not from a red run.
 
 **Paths**:
@@ -23,7 +23,8 @@
 - [ ] T001 Build `main`'s binary at `110d1a58` into the scratchpad as `waybill-main-110d1a58`, and record the full SHA in `MS/control.md`. It is the control for every "byte-identical to `main`" claim.
 - [ ] T002 Add `elf_shared_lib_with_dynsym(rodata, defined: &[&str], undefined: &[&str]) -> Vec<u8>` to `IL`, test-only (R8).
   - Sections: `.rodata`, `.dynsym` (`SHT_DYNSYM`, `sh_link` to `.dynstr`, a null entry first; defined entries `STB_GLOBAL`/`STT_FUNC` with `st_shndx` = the `.rodata` index; undefined entries `SHN_UNDEF`), `.dynstr` and `.shstrtab`.
-  - **Control in the same task:** a test in `IL`'s users (or `IT`) reads the output with `object` and asserts that the defined names report `!is_undefined()` and the undefined ones report `is_undefined()`. Without it, a helper that writes every symbol as undefined would make N-3 pass for the wrong reason.
+  - Also add `macho_dylib_with_symbols(cstring, defined: &[&str], undefined: &[&str]) -> Vec<u8>` beside the existing `macho_dylib`. It writes `LC_SYMTAB` entries with `N_EXT`: defined entries in `__TEXT,__text` (`N_SECT`), undefined entries `N_UNDF`. Names carry Mach-O's leading `_`.
+  - **Control in the same task:** a test in `IT` reads each helper's output with `object` and asserts, for both helpers, that the defined names report `!is_undefined()` and the undefined ones report `is_undefined()`. Without it, a helper that writes every symbol as undefined would make N-3 and N-9 pass for the wrong reason.
 - [ ] T003 Create `IT` with `mod common;` and helpers on `IL`:
   - `lib_dir(bytes, file_name) -> TempDir`;
   - `scan3(dir)`, which honours `WAYBILL_VERSION_ANCHORED_BIN` so a case can run against T001's binary;
@@ -44,7 +45,7 @@ Output does not change in this phase.
 - [ ] T005 [P] Add `pub const ANCHOR_SYMBOLS: &[&str] = &["lzma_version_string", "lzma_version_number"]` in `VS` (R3). Add `pub anchor_symbols: Vec<String>` to `BinaryScan` in `EN`, initialised empty in every constructor, including the test default at ~line 1387.
   - In `SC`, fill it with the defined names in `ANCHOR_SYMBOLS`: ELF `dynamic_symbols()` where `!is_undefined()`; Mach-O `symbols()` where `is_global() && !is_undefined()`, after the existing underscore strip; PE export names.
   - Leave `symbol_names` byte-for-byte unchanged.
-  - Unit test on T002's helper: defines `lzma_version_string` → collected; imports it → not collected; defines `lzma_code` → not collected (not in the list).
+  - Test (in `IT`, because `IL`'s helpers cannot be imported by unit tests inside the library; finding U1): on T002's helpers, run with `scan_with_log` and read the `anchored` event's `symbol` anchors. Defines `lzma_version_string` → anchored; imports it → no event; defines only `lzma_code` → no event (not in the list). Run each case on ELF and on Mach-O. PE exports are defined by construction and reuse the unchanged `pe::extract_pe_export_names`. They get no fixture, and research R3 records that as untested.
 - [ ] T006 In `VS`, add the pure function `anchored_verdicts(region: &[u8], anchor_symbols: &[String]) -> Vec<AnchoredVerdict>` (data-model).
   1. Find the text anchors with `memchr::memmem`, and the symbol anchor in `anchor_symbols`.
   2. Return early, with nothing, when no anchor is found.
@@ -61,11 +62,11 @@ Output does not change in this phase.
   - In `IT`, the positive control **C-1**: fixture A-2 run with `scan_with_log` logs exactly one `anchored` event, with `"library":"gmp"` and `"verdict":"versioned"`. Its documents still have **no** gmp component (log-only).
   - **C-2**: a library with no anchor logs no `anchored` event.
 - [ ] T008 Write the cases of `contracts/wire.md` in `IT`, with their expected results:
-  - A-1 to A-4, P-1 and P-2 are red on this commit;
+  - A-1 to A-5, P-1 and P-2 are red on this commit;
   - the N cases and B-1 pass.
 
   Record the red/green table in `MS/control.md`, run with both this commit's binary and T001's. B-1 reuses spec 1643's golden (`waybill-cli/tests/fixtures/version_string_boundary/b1-golden/`), compared byte for byte with per-run fields masked.
-- [ ] T009 Run the gate, `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, expecting only the planned red cases to fail. Mark the red cases `#[ignore = "spec 1644: red until T011"]` for this commit, and list them in `MS/control.md`. Commit the log-only change.
+- [ ] T009 First run `IT` with the red cases unignored. Record in `MS/control.md` that exactly the planned cases fail (A-1 to A-5, P-1 and P-2), each by name. Then mark them `#[ignore = "spec 1644: red until T011"]` (P-1 and P-2: `"…until T016"`). Then run the gate, `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, which must pass completely. Commit the log-only change.
 - [ ] T010 Census (FR-001, R7). In `FR`:
   - Extend `census/versions.py` to parse `anchored` events, and to read each target's main-control CycloneDX document for components named `bzip2`, `gmp`, `liblzma` or `xz`, with their versions, evidence kinds and source files.
   - Add a committed synthetic positive-control tree (A-1, A-2, A-3) to `census-versions.yml`.
@@ -82,15 +83,17 @@ Output does not change in this phase.
 ## Phase 3: User Story 1 — a bundled bzip2, GMP or xz gets its version (P1) 🎯 MVP
 
 **Goal**: anchored binaries with one candidate emit `pkg:generic/<slug>@<version>`.
-**Independent test**: A-1 to A-4 pass; the N cases still pass.
+**Independent test**: A-1 to A-5 pass; the N cases still pass.
 
-- [ ] T011 [US1] In `BM`, append to `p.version_matches` one `EmbeddedVersionMatch` per `Versioned` verdict from `anchored_verdicts(&scan.string_region, &scan.anchor_symbols)`. Compute the verdicts once and use them for both the matches and the census. Remove T009's `#[ignore]` from A-1 to A-4. A-1 to A-4 pass, and all N cases still pass.
-- [ ] T012 [P] [US1] In `CT`, add the rows:
-  - `pkg:generic/gmp`: `gmplib:gmp`, with `dictionary_entries = 35`, `observed = "2026-11-22"`, `dictionary_evidence = "specs/1644-bare-version-anchors/measurements/cpe-probe-2026-11-22.txt"` and `title_evidence = "specs/1644-bare-version-anchors/measurements/nvd-titles-2026-11-22.txt"`.
-  - `pkg:generic/liblzma`: `tukaani:xz` (62, `MS/cpe-probe-2026-11-22.txt`) and `xz_project:xz` (32, spec 1375's 2026-11-13 evidence), each with `title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt"`, which holds `=== xz (`. Comment the row the way the existing `bzip2` row is commented: NVD has no `liblzma` product.
+- [ ] T011 [US1] In `BM`, append to `p.version_matches` one `EmbeddedVersionMatch` per `Versioned` verdict from `anchored_verdicts(&scan.string_region, &scan.anchor_symbols)`. Compute the verdicts once and use them for both the matches and the census. Remove T009's `#[ignore]` from A-1 to A-5. A-1 to A-5 pass, and all N cases still pass.
+- [ ] T012 [P] [US1] In `CT`, add two rows. The enforcement tests in `waybill-cli/src/generate/cpe.rs` decide the evidence's form; analysis findings I1 and I2.
+  - **New evidence file (I1).** `m1491_every_count_matches_its_evidence` parses `dictionary_evidence` as a TSV with the header `# product\tvendor\tdictionary-entries\tcves`. Its control requires at least 95 rows, including `gnu:bash`. So run spec 1375's `measurements/nvd-vendor-cves.py` over every pair in `CT` plus `gmplib:gmp`, into `MS/nvd-vendor-cves-<date>.tsv`. Commit it unedited, and leave spec 1375's file and the existing rows untouched.
+  - **`pkg:generic/gmp`:** `gmplib:gmp`, with `dictionary_entries` from the new file (the probe's 35 is the cross-check; a difference is recorded, not smoothed), `observed = "<date>"`, `dictionary_evidence = "specs/1644-bare-version-anchors/measurements/nvd-vendor-cves-<date>.tsv"` and `title_evidence = "specs/1644-bare-version-anchors/measurements/nvd-titles-2026-11-22.txt"` (it holds `=== gmp (`).
+  - **`pkg:generic/liblzma` (I2):** `tukaani:xz` and `xz_project:xz`. These pairs are already in the `xz` row, and `m1491_shared_pairs_agree` requires a shared pair to carry identical `dictionary_entries`, `observed` and `dictionary_evidence`. So copy the `xz` row's two pair lines verbatim (62 and 32, `2026-11-13`, spec 1375's evidence and titles). Comment the row the way the `bzip2` row is commented: NVD has no `liblzma` product, and liblzma's advisories are filed under `xz`.
+  - **Intended test change:** in `m1491_shared_pairs_agree`, raise the control from `shared == 1` to `shared == 3`. Its comment names `python:python`, `tukaani:xz` and `xz_project:xz`.
 
-  Confirm `cpe.rs`'s table tests pass, including `m1375_every_product_has_a_committed_title_query`. If any evidence file is not in the format the test reads, re-run the probe into the right format; never edit evidence by hand. In `IT`, assert the CPE candidates of A-1, A-2 and A-3 (`contracts/wire.md`).
-- [ ] T013 [US1] `parity(dir)` for A-1 to A-4 (SC-005).
+  Confirm every test in `cpe.rs` passes, including `m1375_every_product_has_a_committed_title_query`. In `IT`, assert the CPE candidates of A-1, A-2 and A-3 (`contracts/wire.md`).
+- [ ] T013 [US1] `parity(dir)` for A-1 to A-5 (SC-005).
 
 ## Phase 4: User Story 2 — a bare version is never a component by itself (P1)
 
