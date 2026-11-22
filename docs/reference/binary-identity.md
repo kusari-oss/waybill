@@ -70,7 +70,7 @@ closure without source access. Cross-format: ELF / Mach-O / PE.
 
 ## Embedded-version-string detection
 
-Curated detection for **15 native libraries and runtimes** that are
+Curated detection for **18 native libraries and runtimes** that are
 commonly linked into or bundled with compiled binaries — the
 heuristic-tier counterpart to source-tree manifest parsing. Waybill
 walks the binary's read-only string region (ELF `.rodata` and
@@ -79,7 +79,8 @@ the full image, to bound the false-positive surface) and recognises
 each library's canonical version banner:
 
 - **Crypto / TLS:** OpenSSL, BoringSSL, LibreSSL, GnuTLS
-- **Compression / data:** zlib, SQLite, expat
+- **Compression / data:** zlib, SQLite, expat, bzip2, liblzma (xz)
+- **Arithmetic:** GMP
 - **Terminal:** ncurses
 - **Networking:** curl
 - **Regex:** PCRE, PCRE2
@@ -99,6 +100,39 @@ What may precede a banner depends on how much of it is fixed (spec
   is NUL. Their banners end at any byte that is not part of a version,
   so without the NUL rule a mention inside another program's text
   (`requires OpenSSL 1.1.1 or later`) would match.
+
+**bzip2, GMP and liblzma** state their version with no name beside it
+(spec 1644, #1641): bzip2 as `1.0.8, 13-Jul-2019`, GMP and liblzma as a
+bare `6.3.0` or `5.8.1`. A bare version names nothing, so each is read
+only when the same binary also holds the library's **anchor**:
+
+| Library | Anchor | Version string |
+|---|---|---|
+| bzip2 | the text `bzip2/libbzip2` (from its internal-error message) | `X.Y.Z, DD-Mon-YYYY`; the version is `X.Y.Z` |
+| GMP | the text `GNU MP:` (from its allocation-failure messages) | `X.Y.Z` |
+| liblzma | a **defined** `lzma_version_string` or `lzma_version_number` symbol: an ELF dynamic symbol or Mach-O external that is not undefined, or a PE export | `X.Y.Z`, optionally followed by `alpha` or `beta` |
+
+The rules for the version string:
+
+- It must be a whole string. It ends in NUL, and it is preceded by NUL,
+  by the start of the region, or by a byte that is not printable text,
+  because a constant table can end right before it, as GMP's does.
+  A version inside text (`requires 6.3.0 or later`) is never read.
+- With exactly one such string, the library is versioned. With two or
+  more, it gets no version; one is never chosen.
+- GMP and liblzma share the `X.Y.Z` form. A string that both of them,
+  anchored in the same binary, would accept versions neither.
+- A program that only *imports* liblzma's symbols does not anchor it.
+  A statically linked liblzma whose symbols are hidden, and a fat
+  Mach-O, get no liblzma version. The PE path is not covered by a test
+  fixture.
+
+The component names, `bzip2`, `gmp` and `liblzma`, are the names of the
+libraries' upstream pkg-config files. So when a tree also ships
+`gmp.pc` or `liblzma.pc` at the same version, both pieces of evidence
+land on one component. The reason a binary got no version (no
+candidate, ambiguous, or shared) is reported by the
+`waybill::version_census` debug log, not in the document.
 
 Each detection emits a `pkg:generic/<library>@<version>` component
 with `waybill:evidence-kind = "embedded-version-string"` and

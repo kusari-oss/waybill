@@ -250,6 +250,86 @@ pub fn elf_shared_lib(rodata: &[u8]) -> Vec<u8> {
     f
 }
 
+/// Spec 1644: [`elf_shared_lib`] plus a `.dynsym` (with `.dynstr`) holding
+/// `defined` as global functions in `.rodata` and `undefined` as
+/// `SHN_UNDEF` imports. Section 1 is `.rodata`, as in `elf_shared_lib`.
+pub fn elf_shared_lib_with_dynsym(rodata: &[u8], defined: &[&str], undefined: &[&str]) -> Vec<u8> {
+    let mut shstrtab = vec![0u8];
+    let mut name = |n: &str| {
+        let off = shstrtab.len() as u32;
+        shstrtab.extend_from_slice(n.as_bytes());
+        shstrtab.push(0);
+        off
+    };
+    let (n_rodata, n_dynsym, n_dynstr, n_shstr) = (name(".rodata"), name(".dynsym"), name(".dynstr"), name(".shstrtab"));
+
+    let mut dynstr = vec![0u8];
+    let mut dynsym = vec![0u8; 24]; // the null symbol
+    for (names, shndx) in [(defined, 1u16), (undefined, 0u16)] {
+        for n in names {
+            let st_name = dynstr.len() as u32;
+            dynstr.extend_from_slice(n.as_bytes());
+            dynstr.push(0);
+            dynsym.extend_from_slice(&st_name.to_le_bytes());
+            dynsym.push(0x12); // STB_GLOBAL << 4 | STT_FUNC
+            dynsym.push(0);
+            dynsym.extend_from_slice(&shndx.to_le_bytes());
+            dynsym.extend_from_slice(&0u64.to_le_bytes());
+            dynsym.extend_from_slice(&0u64.to_le_bytes());
+        }
+    }
+
+    let align8 = |v: usize| (v + 7) & !7;
+    let rodata_off = 64usize;
+    let dynsym_off = align8(rodata_off + rodata.len().max(1024));
+    let dynstr_off = dynsym_off + dynsym.len();
+    let shstr_off = dynstr_off + dynstr.len();
+    let shoff = align8(shstr_off + shstrtab.len());
+
+    let mut f = Vec::new();
+    f.extend_from_slice(b"\x7fELF");
+    f.extend_from_slice(&[2, 1, 1, 0]);
+    f.extend_from_slice(&[0u8; 8]);
+    f.extend_from_slice(&3u16.to_le_bytes()); // ET_DYN
+    f.extend_from_slice(&62u16.to_le_bytes()); // x86_64
+    f.extend_from_slice(&1u32.to_le_bytes());
+    f.extend_from_slice(&0u64.to_le_bytes());
+    f.extend_from_slice(&0u64.to_le_bytes());
+    f.extend_from_slice(&(shoff as u64).to_le_bytes());
+    f.extend_from_slice(&0u32.to_le_bytes());
+    f.extend_from_slice(&64u16.to_le_bytes());
+    f.extend_from_slice(&0u16.to_le_bytes());
+    f.extend_from_slice(&0u16.to_le_bytes());
+    f.extend_from_slice(&64u16.to_le_bytes());
+    f.extend_from_slice(&5u16.to_le_bytes()); // e_shnum
+    f.extend_from_slice(&4u16.to_le_bytes()); // e_shstrndx
+    f.extend_from_slice(rodata);
+    f.resize(dynsym_off, 0);
+    f.extend_from_slice(&dynsym);
+    f.extend_from_slice(&dynstr);
+    f.extend_from_slice(&shstrtab);
+    f.resize(shoff, 0);
+    #[allow(clippy::too_many_arguments)]
+    let mut sh = |name: u32, ty: u32, flags: u64, off: usize, size: usize, link: u32, info: u32, entsize: u64| {
+        f.extend_from_slice(&name.to_le_bytes());
+        f.extend_from_slice(&ty.to_le_bytes());
+        f.extend_from_slice(&flags.to_le_bytes());
+        f.extend_from_slice(&0u64.to_le_bytes());
+        f.extend_from_slice(&(off as u64).to_le_bytes());
+        f.extend_from_slice(&(size as u64).to_le_bytes());
+        f.extend_from_slice(&link.to_le_bytes());
+        f.extend_from_slice(&info.to_le_bytes());
+        f.extend_from_slice(&8u64.to_le_bytes());
+        f.extend_from_slice(&entsize.to_le_bytes());
+    };
+    sh(0, 0, 0, 0, 0, 0, 0, 0);
+    sh(n_rodata, 1, 2, rodata_off, rodata.len(), 0, 0, 0); // PROGBITS, SHF_ALLOC
+    sh(n_dynsym, 11, 2, dynsym_off, dynsym.len(), 3, 1, 24); // SHT_DYNSYM, link .dynstr
+    sh(n_dynstr, 3, 2, dynstr_off, dynstr.len(), 0, 0, 0);
+    sh(n_shstr, 3, 0, shstr_off, shstrtab.len(), 0, 0, 0);
+    f
+}
+
 /// A 64-bit little-endian Mach-O dylib (`MH_DYLIB`) that loads each of
 /// `loads` and whose `__TEXT,__cstring` section holds `cstring`.
 ///
@@ -260,6 +340,18 @@ pub fn elf_shared_lib(rodata: &[u8]) -> Vec<u8> {
 /// reads embedded version strings on Mach-O. Spec 1536 uses this rather than
 /// an ELF: an ELF import names its library only through symbol versioning.
 pub fn macho_dylib(loads: &[&str], cstring: &[u8]) -> Vec<u8> {
+    macho_dylib_impl(loads, cstring, &[], &[])
+}
+
+/// Spec 1644: a [`macho_dylib`] with no loads whose symbol table also holds
+/// `defined` as external symbols in `__cstring` (`N_SECT | N_EXT`) and
+/// `undefined` as `N_UNDF | N_EXT`. Names are given without Mach-O's
+/// leading `_`, which is added here.
+pub fn macho_dylib_with_symbols(cstring: &[u8], defined: &[&str], undefined: &[&str]) -> Vec<u8> {
+    macho_dylib_impl(&[], cstring, defined, undefined)
+}
+
+fn macho_dylib_impl(loads: &[&str], cstring: &[u8], defined: &[&str], undefined: &[&str]) -> Vec<u8> {
     let le = |v: u32| v.to_le_bytes();
     let mut cmds: Vec<u8> = Vec::new();
     let mut ncmds = 0u32;
@@ -308,9 +400,20 @@ pub fn macho_dylib(loads: &[&str], cstring: &[u8]) -> Vec<u8> {
         ncmds += 1;
     }
 
-    // One undefined symbol per load, bound to its ordinal.
+    // Defined externals first (spec 1644), then one undefined symbol per
+    // load, bound to its ordinal, then any further undefined symbols. With
+    // no `defined` or `undefined` this is `macho_dylib`'s table as before.
     let mut strtab = vec![0u8];
     let mut nlist = Vec::new();
+    for n in defined {
+        let strx = strtab.len() as u32;
+        strtab.extend_from_slice(format!("_{n}\0").as_bytes());
+        nlist.extend_from_slice(&le(strx));
+        nlist.push(0x0f); // N_SECT | N_EXT
+        nlist.push(1); // __cstring
+        nlist.extend_from_slice(&0u16.to_le_bytes());
+        nlist.extend_from_slice(&u64::from(CSTRING_OFF).to_le_bytes());
+    }
     for (i, _) in loads.iter().enumerate() {
         let strx = strtab.len() as u32;
         strtab.extend_from_slice(format!("_waybill_fixture_sym{i}\0").as_bytes());
@@ -320,15 +423,28 @@ pub fn macho_dylib(loads: &[&str], cstring: &[u8]) -> Vec<u8> {
         nlist.extend_from_slice(&(((i as u16) + 1) << 8).to_le_bytes());
         nlist.extend_from_slice(&0u64.to_le_bytes());
     }
+    for n in undefined {
+        let strx = strtab.len() as u32;
+        strtab.extend_from_slice(format!("_{n}\0").as_bytes());
+        nlist.extend_from_slice(&le(strx));
+        nlist.push(0x01); // N_UNDF | N_EXT
+        nlist.push(0);
+        nlist.extend_from_slice(&0u16.to_le_bytes());
+        nlist.extend_from_slice(&0u64.to_le_bytes());
+    }
+    let nsyms = (defined.len() + loads.len() + undefined.len()) as u32;
     let stroff = SYM_OFF + nlist.len() as u32;
-    for v in [0x2, 24, SYM_OFF, loads.len() as u32, stroff, strtab.len() as u32] {
+    for v in [0x2, 24, SYM_OFF, nsyms, stroff, strtab.len() as u32] {
         cmds.extend_from_slice(&le(v));
     }
     ncmds += 1;
     let mut dysymtab = [0u32; 20];
     dysymtab[0] = 0x0b;
     dysymtab[1] = 80;
-    dysymtab[7] = loads.len() as u32; // nundefsym
+    dysymtab[4] = 0; // iextdefsym
+    dysymtab[5] = defined.len() as u32; // nextdefsym
+    dysymtab[6] = defined.len() as u32; // iundefsym
+    dysymtab[7] = (loads.len() + undefined.len()) as u32; // nundefsym
     for v in dysymtab {
         cmds.extend_from_slice(&le(v));
     }

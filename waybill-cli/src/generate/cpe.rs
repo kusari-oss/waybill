@@ -1006,8 +1006,8 @@ mod tests {
                 }
             }
         }
-        // CONTROL: two paths for each of the 96 pair occurrences.
-        assert_eq!(checked, 2 * 96);
+        // CONTROL: two paths for each of the 99 pair occurrences.
+        assert_eq!(checked, 2 * 99);
     }
 
     /// Spec 1491 FR-013, research R1 — every recorded count is the count its
@@ -1070,8 +1070,9 @@ mod tests {
                 }
             }
         }
-        // CONTROL: python:python is shared by python3 and python3-minimal.
-        assert_eq!(shared, 1, "expected exactly one shared pair (python:python)");
+        // CONTROL: python:python is shared by python3 and python3-minimal;
+        // tukaani:xz and xz_project:xz by xz and liblzma (spec 1644).
+        assert_eq!(shared, 3, "expected three shared pairs (python:python, tukaani:xz, xz_project:xz)");
     }
 
     /// Spec 1491 FR-011, research R10 — the table holds identifiers and

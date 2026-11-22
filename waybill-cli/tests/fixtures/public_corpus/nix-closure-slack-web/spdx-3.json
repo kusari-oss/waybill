@@ -8376,6 +8376,12 @@
       "creationInfo": "<masked>",
       "externalIdentifier": [
         {
+          "comment": "CPE from waybill's curated CPE table",
+          "externalIdentifierType": "cpe23",
+          "identifier": "cpe:2.3:a:gmplib:gmp:6.3.0:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:generic/gmp@6.3.0",
           "type": "ExternalIdentifier"
@@ -66197,7 +66203,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5P4RIHJ63RQNJ3BZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":315,\\\"excluded_files\\\":3,\\\"excluded_members\\\":697,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":180,\\\"with_candidates\\\":55}\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":315,\\\"excluded_files\\\":3,\\\"excluded_members\\\":697,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":179,\\\"with_candidates\\\":56}\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },

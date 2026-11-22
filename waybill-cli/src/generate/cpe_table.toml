@@ -256,6 +256,14 @@ pair = [
   { vendor = "gnu", product = "glibc", dictionary_entries = 196, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1283-nix-allow-ifd/measurements/cpe/nvd-titles.txt" },
 ]
 
+# GMP — `gmplib:gmp`; NVD has no `gnu:gmp` (0 entries, spec 1644
+# `measurements/cpe-probe-2026-11-22.txt`).
+[[row]]
+key = "pkg:generic/gmp"
+pair = [
+  { vendor = "gmplib", product = "gmp", dictionary_entries = 35, observed = "2026-11-22", dictionary_evidence = "specs/1644-bare-version-anchors/measurements/nvd-vendor-cves-2026-11-22.tsv", title_evidence = "specs/1644-bare-version-anchors/measurements/nvd-titles-2026-11-22.txt" },
+]
+
 # GnuTLS — NVD canonical.
 [[row]]
 key = "pkg:generic/gnutls"
@@ -334,6 +342,18 @@ pair = [
 key = "pkg:generic/libidn2"
 pair = [
   { vendor = "gnu", product = "libidn2", dictionary_entries = 23, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+]
+
+# liblzma — xz's library, named after upstream's `liblzma.pc` (spec 1644
+# FR-007). NVD has no `liblzma` product (0 entries for any vendor, spec 1644
+# `measurements/nvd-titles-2026-11-22.txt`); liblzma's advisories are filed
+# under `xz`. The two pairs are the `xz` row's, verbatim, because a pair two
+# rows share must carry the same evidence (`m1491_shared_pairs_agree`).
+[[row]]
+key = "pkg:generic/liblzma"
+pair = [
+  { vendor = "tukaani", product = "xz", dictionary_entries = 62, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
+  { vendor = "xz_project", product = "xz", dictionary_entries = 32, observed = "2026-11-13", dictionary_evidence = "specs/1375-generic-cpe-table/measurements/nvd-vendor-cves-2026-11-13.tsv", title_evidence = "specs/1375-generic-cpe-table/measurements/nvd-titles.txt" },
 ]
 
 [[row]]

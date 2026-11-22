@@ -591,6 +591,10 @@ pub(crate) struct BinaryScan {
     /// non-ELF binaries, ELF binaries with no `.dynsym`, and ELF
     /// binaries whose dynamic-symbol set is fully stripped.
     pub symbol_names: Vec<String>,
+    /// Spec 1644 FR-003: the names from `version_strings::ANCHOR_SYMBOLS`
+    /// this binary defines (ELF `.dynsym` and Mach-O globals that are not
+    /// undefined; PE exports). Never emitted.
+    pub anchor_symbols: Vec<String>,
     /// ELF `.comment` section's NUL-delimited compiler stamps per
     /// milestone-098 FR-001. Within-binary deduped; per-entry length
     /// capped at 4 KiB; total length capped at 64 KiB with a final
@@ -1387,6 +1391,7 @@ mod tests {
             string_region: Vec::new(),
             packer: None,
             symbol_names: Vec::new(),
+            anchor_symbols: Vec::new(),
             comment_stamps: Vec::new(),
             macho_build_version: None,
             pe_linker_version: None,

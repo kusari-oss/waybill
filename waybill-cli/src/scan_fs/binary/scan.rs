@@ -333,6 +333,40 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         Vec::new()
     };
 
+    // Spec 1644 FR-003 (research R3): the anchor symbols this binary
+    // DEFINES. `symbol_names` above keeps imports too (an ELF `.dynsym`
+    // lists both), and it feeds the fingerprint, so it is left as it is; a
+    // program that merely links liblzma must not anchor it.
+    let anchor_symbols: Vec<String> = {
+        use super::version_strings::ANCHOR_SYMBOLS;
+        use object::Object;
+        use object::ObjectSymbol;
+        let mut v: Vec<String> = if class == "elf" {
+            file.dynamic_symbols()
+                .filter(|s| !s.is_undefined())
+                .filter_map(|s| s.name().ok())
+                .filter(|n| ANCHOR_SYMBOLS.contains(n))
+                .map(str::to_string)
+                .collect()
+        } else if class == "macho" {
+            file.symbols()
+                .filter(|s| s.is_global() && !s.is_undefined())
+                .filter_map(|s| s.name().ok())
+                .map(strip_macho_underscore_prefix)
+                .filter(|n| ANCHOR_SYMBOLS.contains(n))
+                .map(str::to_string)
+                .collect()
+        } else if class == "pe" {
+            // Export names are defined by construction.
+            symbol_names.iter().filter(|n| ANCHOR_SYMBOLS.contains(&n.as_str())).cloned().collect()
+        } else {
+            Vec::new()
+        };
+        v.sort();
+        v.dedup();
+        v
+    };
+
     // Milestone 098 FR-001 — ELF `.comment` compiler stamps.
     // Empty for non-ELF or ELF binaries lacking the section
     // (`cc -fno-ident` or `objcopy --remove-section=.comment`).
@@ -378,6 +412,7 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         string_region,
         packer: packer_kind,
         symbol_names,
+        anchor_symbols,
         comment_stamps,
         macho_build_version,
         pe_linker_version,
@@ -559,6 +594,9 @@ fn scan_fat_macho(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         packer: packer::detect(bytes),
         // Fat Mach-O has no `.dynsym`; symbol fingerprinting is ELF-only in v1.
         symbol_names: Vec::new(),
+        // Spec 1644: fat Mach-O symbols are not read (as `symbol_names`), so
+        // liblzma in a fat binary has no anchor and gets no version.
+        anchor_symbols: Vec::new(),
         // Milestone 098: `.comment` is ELF-only.
         comment_stamps: Vec::new(),
         // Milestone 098 FR-002: extract LC_BUILD_VERSION from the FIRST
