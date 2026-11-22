@@ -67,3 +67,16 @@ The fixture repository's `census/anchored_control.py OUT IDENTITY` tree was scan
 - `GATE_EXIT=0`, `GATE_RESULT=pass`, and the expected line present;
 - 428 `test result: ok.` lines, 0 `FAILED`, and no failure block;
 - 11,028 passed, 0 failed, 51 ignored. The 51 are spec 1644's final 47 plus this spec's 4 planned red cases (M-1, M-2, M-3, E-1).
+
+## After the wiring (T011–T015)
+
+- **T011, LLVM suffix**: M-2 passes. The census-only test was updated: LLVM no longer changes, and `LLVM version 23.0.0-rc1` is no longer a match.
+- **T012 and T013, ncurses date and CPE**: `version_changes`, `census_cpe_form` and their events are removed, because nothing is left for them to report. `version_string_boundary.rs::NCURSES_V` is now `pkg:generic/ncurses@6.6.20251230`. Spec 1526's and 1643's two unit tests that pinned `6.6` now expect the stated version.
+- **B-1, regenerated with both applied** (`WAYBILL_UPDATE_VERSION_BOUNDARY_GOLDENS=1`): masking the content-addressed IDs (`anno-`, `pkg-`, `rel-`, `SPDXRef-Package-`) and diffing the sorted lines leaves only the ncurses component's version and CPEs, in all three formats:
+  - `pkg:generic/ncurses@6.6` → `@6.6.20251230`, as purl, bom-ref, dependency ref, SPDX 2.3 locator and SPDX 3 identifier;
+  - `version` → `6.6.20251230`;
+  - each of the three CPEs, `…:ncurses:6.6:*:…` → `…:ncurses:6.6:20251230:…`.
+
+  The raw SPDX 3 diff is larger only because its annotations sort by IDs derived from the PURL.
+- **T014, merge on**: `library_identity.rs` passes 10 of 10. That covers M-1, M-2, M-3, E-1, the N cases and C-1/C-2, with parity checked inside every scan (T015). `version_string_boundary.rs` passes 154 of 154.
+- **Clippy** on the whole workspace with `--all-targets`: exit 0, no warnings.

@@ -233,7 +233,6 @@ fn expat_tree(pc_version: &str) -> tempfile::TempDir {
 /// M-1: the name variant. One component, named and versioned as the
 /// library, carrying both readers' files and NVD's CPE form.
 #[test]
-#[ignore = "spec 1645: red until T014"]
 fn m1_name_variant_is_one_component() {
     let s = scan3(ncurses_tree("6.6.20251230", &[]));
     assert_eq!(named(&s, "ncurses"), ["pkg:generic/ncurses@6.6.20251230"]);
@@ -254,7 +253,6 @@ fn m1_name_variant_is_one_component() {
 /// M-2: the version suffix. The curated `23.0.0git` equals the CMake
 /// record's, so the existing PURL merge gives one component.
 #[test]
-#[ignore = "spec 1645: red until T011"]
 fn m2_version_suffix_is_one_component() {
     let s = scan3(llvm_tree());
     assert_eq!(named(&s, "llvm"), ["pkg:generic/llvm@23.0.0git"]);
@@ -265,7 +263,6 @@ fn m2_version_suffix_is_one_component() {
 /// M-3: a record more exact than its banner. The curated `2.7.5` is a dotted
 /// prefix of the record's `2.7.5.1`.
 #[test]
-#[ignore = "spec 1645: red until T014"]
 fn m3_dotted_prefix_takes_the_record_version() {
     let s = scan3(expat_tree("2.7.5.1"));
     assert_eq!(named(&s, "expat"), ["pkg:generic/expat@2.7.5.1"]);
@@ -275,7 +272,6 @@ fn m3_dotted_prefix_takes_the_record_version() {
 
 /// E-1: an edge to the renamed record follows it.
 #[test]
-#[ignore = "spec 1645: red until T014"]
 fn e1_requires_follows_the_merge() {
     let s = scan3(ncurses_tree(
         "6.6.20251230",

@@ -355,10 +355,11 @@ fn pattern_at(
             });
         }
     }
-    // ncurses — "ncurses X.Y.YYYYMMDD", a whole string (#1526). The
-    // version is the release, X.Y; the patch date is dropped.
+    // ncurses — "ncurses X.Y.YYYYMMDD", a whole string (#1526). Spec 1645
+    // FR-013: the version as stated, patch date included; the CPE puts the
+    // date in its update field (FR-008).
     if let Some(tail) = window.strip_prefix(b"ncurses ").filter(|_| want(CuratedLibrary::Ncurses)) {
-        if let Some(v) = parse_ncurses_version(tail) {
+        if let Some(v) = parse_ncurses_full(tail) {
             return Some(EmbeddedVersionMatch {
                 library: CuratedLibrary::Ncurses,
                 version: v,
@@ -448,9 +449,10 @@ fn pattern_at(
     }
     // LLVM — "LLVM version " (milestone 026). Strict prefix; bare
     // "LLVM " is too noisy (matches "LLVM ERROR:", "LLVM IR ...").
+    // Spec 1645 FR-002: the version as stated, suffix included (`23.0.0git`).
     if want(CuratedLibrary::Llvm) && window.starts_with(b"LLVM version ") {
         let tail = &region[pos + 13..];
-        if let Some(v) = parse_semver_triple(tail) {
+        if let Some(v) = parse_llvm_version(tail) {
             return Some(EmbeddedVersionMatch {
                 library: CuratedLibrary::Llvm,
                 version: v,
@@ -1050,41 +1052,6 @@ fn parse_llvm_version(tail: &[u8]) -> Option<String> {
     }
 }
 
-/// Spec 1645 census (research R8): a curated LLVM or ncurses match whose
-/// version FR-002 or FR-013 would change. `new` is `None` when the new
-/// parser would not match at all.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct VersionChange {
-    pub library: CuratedLibrary,
-    pub old: String,
-    pub new: Option<String>,
-}
-
-impl VersionChange {
-    pub fn to_json(&self) -> String {
-        serde_json::json!({ "library": self.library.slug(), "new": self.new, "old": self.old }).to_string()
-    }
-}
-
-/// Every match [`scan`] emits for LLVM or ncurses whose tail the stated-version
-/// parsers read differently. Census only; nothing is emitted from it.
-pub fn version_changes(region: &[u8]) -> Vec<VersionChange> {
-    let mut out: Vec<VersionChange> = Vec::new();
-    for i in 0..region.len() {
-        let Some(m) = match_prefix(region, i) else { continue };
-        let new = match m.library {
-            CuratedLibrary::Llvm => parse_llvm_version(&region[i + b"LLVM version ".len()..]),
-            CuratedLibrary::Ncurses => parse_ncurses_full(&region[i + b"ncurses ".len()..]),
-            _ => continue,
-        };
-        let change = VersionChange { library: m.library, old: m.version, new };
-        if change.new.as_deref() != Some(change.old.as_str()) && !out.contains(&change) {
-            out.push(change);
-        }
-    }
-    out
-}
-
 /// PCRE version: `X.Y YYYY-MM-DD`.
 fn parse_pcre_version(tail: &[u8]) -> Option<String> {
     let mut end = 0;
@@ -1351,9 +1318,9 @@ mod tests {
         let cases: [(&[u8], CuratedLibrary, &str); 3] = [
             (b"\0expat_2.9.0\0", CuratedLibrary::Expat, "2.9.0"),
             (b"\0expat_2.7.5\0", CuratedLibrary::Expat, "2.7.5"),
-            // The release version; the patch date is dropped (NVD CPEs and
-            // nixpkgs both call this build 6.6).
-            (b"\0ncurses 6.6.20251230\0", CuratedLibrary::Ncurses, "6.6"),
+            // Spec 1645 FR-013: as stated, patch date included. NVD's CPEs
+            // carry the date in the update field (FR-008).
+            (b"\0ncurses 6.6.20251230\0", CuratedLibrary::Ncurses, "6.6.20251230"),
         ];
         for (bytes, lib, want) in cases {
             let hits = scan(bytes);
@@ -1705,7 +1672,7 @@ mod tests {
     #[test]
     fn s1643_census_nul_preceded_ncurses() {
         let h = one_hit(b"lead\0ncurses 6.6.20251230\0");
-        assert_eq!((h.library, h.version.as_str(), h.preceding), (CuratedLibrary::Ncurses, "6.6", "nul"));
+        assert_eq!((h.library, h.version.as_str(), h.preceding), (CuratedLibrary::Ncurses, "6.6.20251230", "nul"));
         assert!(h.accepted_main && h.accepted_new);
         assert_eq!(h.offset, 5);
         assert_eq!(h.context_before, b"lead\0");
@@ -2079,32 +2046,14 @@ mod tests {
     fn s1645_ncurses_keeps_its_patch_date() {
         assert_eq!(parse_ncurses_full(b"6.6.20251230\0").as_deref(), Some("6.6.20251230"));
         assert_eq!(parse_ncurses_full(b"6.6\0").as_deref(), Some("6.6"));
+        let v: Vec<String> = scan(b"\0ncurses 6.6.20251230\0LLVM version 23.0.0git\0ncurses 6.5\0").into_iter().map(|m| m.version).collect();
+        for want in ["6.6.20251230", "23.0.0git", "6.5"] {
+            assert!(v.contains(&want.to_string()), "{want} not in {v:?}");
+        }
         for bad in [&b"6.6.2025123\0"[..], b"6.6.202512301\0", b"6.6.20251230", b"6\0", b"6.6.x2025123\0", b"6.6.20251230.1\0"] {
             assert_eq!(parse_ncurses_full(bad), None, "{bad:?}");
             assert_eq!(parse_ncurses_version(bad), None, "{bad:?}: the old parser's rejections are kept");
         }
     }
 
-    #[test]
-    fn s1645_version_changes_are_census_only() {
-        let r = b"\0LLVM version 23.0.0git\0ncurses 6.6.20251230\0LLVM version 17.0.6\0ncurses 6.5\0";
-        let mut got: Vec<(CuratedLibrary, String, Option<String>)> =
-            version_changes(r).into_iter().map(|c| (c.library, c.old, c.new)).collect();
-        got.sort_by(|a, b| a.1.cmp(&b.1));
-        assert_eq!(
-            got,
-            [
-                (CuratedLibrary::Llvm, "23.0.0".into(), Some("23.0.0git".into())),
-                (CuratedLibrary::Ncurses, "6.6".into(), Some("6.6.20251230".into())),
-            ]
-        );
-        // The scanner still emits the old versions on this commit.
-        let v: Vec<String> = scan(r).into_iter().map(|m| m.version).collect();
-        assert!(v.contains(&"23.0.0".to_string()) && v.contains(&"6.6".to_string()), "{v:?}");
-        // A tail the new parser rejects is reported as no longer matching.
-        let gone = version_changes(b"\0LLVM version 23.0.0-rc1\0");
-        assert_eq!(gone.len(), 1);
-        assert_eq!(gone[0].new, None);
-        assert!(gone[0].to_json().contains(r#""new":null"#), "{}", gone[0].to_json());
-    }
 }

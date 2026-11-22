@@ -699,8 +699,8 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             installed_library_coverage = resolved.coverage.map(|c| c.wire());
             db_entries.splice(binary_start..binary_start, resolved.entries);
             // Spec 1645 (#1662): a curated match and a record naming one
-            // library differently. Log-only until the census is read.
-            library_identity::reconcile(&mut db_entries, true);
+            // library differently become one component.
+            library_identity::reconcile(&mut db_entries, false);
             // Spec 1536 (#1567): each binary only a `RECORD` claims goes under
             // its package, with its identifications and edges (C230).
             python_owned_binaries =

@@ -33,7 +33,7 @@ const EXPAT: &[u8] = b"expat_2.7.5\0";
 const OPENSSL: &[u8] = b"OpenSSL 3.0.11\0";
 
 const ZLIB_V: &str = "pkg:generic/zlib@1.3.2";
-const NCURSES_V: &str = "pkg:generic/ncurses@6.6";
+const NCURSES_V: &str = "pkg:generic/ncurses@6.6.20251230";
 const EXPAT_V: &str = "pkg:generic/expat@2.7.5";
 const OPENSSL_V: &str = "pkg:generic/openssl@3.0.11";
 

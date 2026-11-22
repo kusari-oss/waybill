@@ -261,6 +261,11 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<Cpe> {
             // no CPE (FR-003 silent-skip) so non-tracked generic PURLs
             // (e.g. `pkg:generic/weird@1.0.0`) continue to produce an
             // empty Vec just as they did before milestone 097.
+            // Spec 1645 FR-008: ncurses `X.Y.YYYYMMDD` in NVD's form, the
+            // release in version and the patch date in update.
+            if let Some(split) = ncurses_split_cpes(component) {
+                return split;
+            }
             let Some(pairs) = crate::generate::cpe_table::built_in().pairs(name) else {
                 return Vec::new();
             };
@@ -398,26 +403,6 @@ fn ncurses_split_cpes(component: &ResolvedComponent) -> Option<Vec<Cpe>> {
             .filter_map(|(vendor, product)| format_cpe_with_update(vendor, product, release, date))
             .collect(),
     )
-}
-
-/// Spec 1645 census (research R8): every component whose CPEs FR-008 would
-/// change. Log-only; nothing is emitted from it.
-pub(crate) fn census_cpe_form(components: &[ResolvedComponent]) {
-    if !tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
-        return;
-    }
-    for c in components {
-        let Some(new) = ncurses_split_cpes(c) else { continue };
-        if new == c.cpes {
-            continue;
-        }
-        let j = serde_json::json!({
-            "new": new.first().map(|x| x.as_str()),
-            "old": c.cpes.first().map(|x| x.as_str()),
-            "purl": c.purl.as_str(),
-        });
-        tracing::debug!(target: "waybill::version_census", cpe_form_change = %j);
-    }
 }
 
 /// Escape the formatted-string special characters per CPE 2.3 §6.2.

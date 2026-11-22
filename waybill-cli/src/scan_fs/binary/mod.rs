@@ -1127,11 +1127,6 @@ fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSe
             });
             tracing::debug!(target: "waybill::version_census", path = %path.display(), unanchored = %j);
         }
-        // Spec 1645 (research R8): LLVM and ncurses versions FR-002 and
-        // FR-013 would change. Census only; the old versions are emitted.
-        for c in version_strings::version_changes(&scan.string_region) {
-            tracing::debug!(target: "waybill::version_census", path = %path.display(), curated_version_change = %c.to_json());
-        }
     }
     p.embedded = names.map(|n| embedded_paths::extract(&scan.string_region, n));
     p.strings = t.elapsed();
