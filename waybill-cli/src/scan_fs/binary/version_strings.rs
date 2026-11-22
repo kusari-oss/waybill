@@ -114,7 +114,7 @@ pub fn scan(region: &[u8]) -> Vec<EmbeddedVersionMatch> {
     // length requirements. Using `windows` would drop positions near
     // the end of the region where fewer than 16 bytes remain.
     for i in 0..region.len() {
-        if let Some(m) = match_prefix(region, i, &region[i..]) {
+        if let Some(m) = match_prefix(region, i) {
             if seen.insert((m.library, m.version.clone())) {
                 out.push(m);
             }
@@ -123,22 +123,103 @@ pub fn scan(region: &[u8]) -> Vec<EmbeddedVersionMatch> {
     out
 }
 
-fn match_prefix(
-    region: &[u8],
-    pos: usize,
-    window: &[u8],
-) -> Option<EmbeddedVersionMatch> {
-    // Only accept matches starting at a string boundary: the byte
-    // before `pos` must be NUL (C-string terminator) or pos==0. This
-    // prevents mid-string false positives that happen to contain a
-    // library name substring.
-    let at_boundary = pos == 0 || region[pos - 1] == 0;
+/// The curated match at `pos`, if the boundary rule in force accepts it.
+fn match_prefix(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
+    let m = pattern_at(region, pos)?;
+    main_rule_accepts(m.library, region, pos).then_some(m)
+}
 
-    // zlib — "deflate ". Its literal is " deflate X.Y.Z Copyright ...",
-    // so one leading space at the start of a string is accepted (#1525).
-    let after_one_space =
-        pos >= 1 && region[pos - 1] == b' ' && (pos == 1 || region[pos - 2] == 0);
-    if (at_boundary || after_one_space) && window.starts_with(b"deflate ") {
+/// Which bytes may precede a curated pattern's first character (spec 1643
+/// FR-001). The byte test exists to keep a library name inside unrelated
+/// text from matching.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Boundary {
+    /// Both ends of the match are fixed: the library's name starts it and
+    /// a fixed suffix or a required NUL ends it. Any preceding byte but an
+    /// identifier character is accepted (FR-002).
+    Anchored,
+    /// The end of the match is not fixed, so only a NUL (or the start of
+    /// the region) may precede it (FR-003).
+    NulOnly,
+}
+
+impl Boundary {
+    /// Whether a match starting at `pos` may be preceded by what precedes it.
+    pub fn accepts(self, region: &[u8], pos: usize) -> bool {
+        let Some(&prev) = pos.checked_sub(1).and_then(|i| region.get(i)) else {
+            return true;
+        };
+        match self {
+            Boundary::Anchored => !is_identifier(prev),
+            Boundary::NulOnly => prev == 0,
+        }
+    }
+}
+
+/// `[A-Za-z0-9_]`: a byte that would make the match part of a longer name.
+fn is_identifier(b: u8) -> bool {
+    b.is_ascii_alphanumeric() || b == b'_'
+}
+
+impl CuratedLibrary {
+    /// The pattern's boundary class (spec 1643 FR-001). Exhaustive with no
+    /// wildcard arm, so a new variant cannot compile until it is classified
+    /// (FR-004).
+    pub fn boundary(self) -> Boundary {
+        match self {
+            CuratedLibrary::Zlib | CuratedLibrary::Expat | CuratedLibrary::Ncurses => Boundary::Anchored,
+            CuratedLibrary::OpenSsl
+            | CuratedLibrary::BoringSsl
+            | CuratedLibrary::Sqlite
+            | CuratedLibrary::Curl
+            | CuratedLibrary::Pcre
+            | CuratedLibrary::Pcre2
+            | CuratedLibrary::GnuTls
+            | CuratedLibrary::LibreSsl
+            | CuratedLibrary::Llvm
+            | CuratedLibrary::OpenJdk
+            | CuratedLibrary::Php
+            | CuratedLibrary::Node => Boundary::NulOnly,
+        }
+    }
+}
+
+/// The rule before spec 1643, kept frozen for the census (research R5):
+/// every pattern needs a NUL (or the region's start) before it; zlib may
+/// instead have one leading space with a NUL before that (#1525).
+fn main_rule_accepts(library: CuratedLibrary, region: &[u8], pos: usize) -> bool {
+    let at_boundary = Boundary::NulOnly.accepts(region, pos);
+    match library {
+        CuratedLibrary::Zlib => {
+            at_boundary || (pos >= 1 && region[pos - 1] == b' ' && Boundary::NulOnly.accepts(region, pos - 1))
+        }
+        _ => at_boundary,
+    }
+}
+
+/// Spec 1643's rule (FR-002, FR-003). zlib's literal is `" deflate …"`, so
+/// for it the class applies to the byte before the leading space; its form
+/// without the space keeps the NUL rule.
+fn new_rule_accepts(library: CuratedLibrary, region: &[u8], pos: usize) -> bool {
+    let class = library.boundary();
+    match library {
+        CuratedLibrary::Zlib => {
+            Boundary::NulOnly.accepts(region, pos)
+                || (pos >= 1 && region[pos - 1] == b' ' && class.accepts(region, pos - 1))
+        }
+        _ => class.accepts(region, pos),
+    }
+}
+
+/// The curated pattern whose prefix starts at `pos`, with its parsed
+/// version, whatever precedes it. For zlib, `pos` is at `deflate `. No two
+/// prefixes can both match at one position (`PCRE2 ` is tried before
+/// `PCRE `, which it does not start with).
+fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
+    let window = &region[pos..];
+
+    // zlib — "deflate ". Its literal is " deflate X.Y.Z Copyright ..." (#1525).
+    if window.starts_with(b"deflate ") {
         let tail = &region[pos + 8..];
         if let Some(v) = parse_zlib_version(tail) {
             return Some(EmbeddedVersionMatch {
@@ -146,10 +227,6 @@ fn match_prefix(
                 version: v,
             });
         }
-    }
-
-    if !at_boundary {
-        return None;
     }
 
     // expat — "expat_X.Y.Z", a whole string (#1526).
@@ -297,7 +374,7 @@ fn match_prefix(
     //
     // Measured in node 24.14.1 (official linux-x64 ELF, `.rodata`) and
     // node 22.23.1 (Mach-O arm64): exactly one distinct `node.js/v<ver>`
-    // per binary, every occurrence NUL-preceded, so `at_boundary` holds.
+    // per binary, every occurrence NUL-preceded, so the NUL rule holds.
     // One of the two occurrences is NOT NUL-terminated (it abuts the
     // next literal), which `parse_semver_triple` handles by stopping at
     // the first byte that is neither a digit nor a dot.
@@ -316,6 +393,73 @@ fn match_prefix(
     }
 
     None
+}
+
+/// One occurrence of a curated pattern, found with no boundary test
+/// (spec 1643 research R5). Emitted as a `waybill::version_census` debug
+/// event; it never reaches the document.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CensusHit {
+    pub library: CuratedLibrary,
+    pub version: String,
+    /// Offset of the literal's first byte in the region (zlib's leading
+    /// space, when it has one).
+    pub offset: usize,
+    /// `start`, `nul`, `whitespace`, `other_non_identifier` or `identifier`.
+    pub preceding: &'static str,
+    pub accepted_main: bool,
+    pub accepted_new: bool,
+    /// Up to 24 bytes before the literal, and up to 64 from its start.
+    pub context_before: Vec<u8>,
+    pub context_after: Vec<u8>,
+}
+
+impl CensusHit {
+    pub fn to_json(&self) -> String {
+        serde_json::json!({
+            "library": self.library.slug(),
+            "version": self.version,
+            "offset": self.offset,
+            "preceding": self.preceding,
+            "accepted_main": self.accepted_main,
+            "accepted_new": self.accepted_new,
+            "context_before": data_encoding::HEXLOWER.encode(&self.context_before),
+            "context_after": data_encoding::HEXLOWER.encode(&self.context_after),
+        })
+        .to_string()
+    }
+}
+
+/// Every curated pattern occurrence in `region`, whatever precedes it, with
+/// the preceding byte's class and both rules' verdicts.
+pub fn census(region: &[u8]) -> Vec<CensusHit> {
+    let mut out = Vec::new();
+    for pos in 0..region.len() {
+        let Some(m) = pattern_at(region, pos) else { continue };
+        let start = if m.library == CuratedLibrary::Zlib && pos >= 1 && region[pos - 1] == b' ' {
+            pos - 1
+        } else {
+            pos
+        };
+        let preceding = match start.checked_sub(1).map(|i| region[i]) {
+            None => "start",
+            Some(0) => "nul",
+            Some(b' ' | b'\t' | b'\r' | b'\n') => "whitespace",
+            Some(b) if is_identifier(b) => "identifier",
+            Some(_) => "other_non_identifier",
+        };
+        out.push(CensusHit {
+            accepted_main: main_rule_accepts(m.library, region, pos),
+            accepted_new: new_rule_accepts(m.library, region, pos),
+            library: m.library,
+            version: m.version,
+            offset: start,
+            preceding,
+            context_before: region[start.saturating_sub(24)..start].to_vec(),
+            context_after: region[start..(start + 64).min(region.len())].to_vec(),
+        });
+    }
+    out
 }
 
 /// OpenSSL version: N.N.N with optional lowercase letter suffix
@@ -1044,5 +1188,75 @@ mod tests {
         v.push(0);
         let hits = scan(&v);
         assert_eq!(hits.len(), 1);
+    }
+
+    /// Spec 1643 T003: the census classifies the byte before each literal
+    /// and gives both rules' verdicts.
+    fn one_hit(bytes: &[u8]) -> CensusHit {
+        let hits = census(bytes);
+        assert_eq!(hits.len(), 1, "{:?}: {hits:?}", String::from_utf8_lossy(bytes));
+        hits.into_iter().next().unwrap()
+    }
+
+    #[test]
+    fn s1643_census_nul_preceded_ncurses() {
+        let h = one_hit(b"lead\0ncurses 6.6.20251230\0");
+        assert_eq!((h.library, h.version.as_str(), h.preceding), (CuratedLibrary::Ncurses, "6.6", "nul"));
+        assert!(h.accepted_main && h.accepted_new);
+        assert_eq!(h.offset, 5);
+        assert_eq!(h.context_before, b"lead\0");
+    }
+
+    #[test]
+    fn s1643_census_dash_preceded_ncurses() {
+        let h = one_hit(b"lead-ncurses 6.6.20251230\0");
+        assert_eq!(h.preceding, "other_non_identifier");
+        assert!(!h.accepted_main && h.accepted_new);
+    }
+
+    #[test]
+    fn s1643_census_space_preceded_ncurses() {
+        let h = one_hit(b"lead ncurses 6.6.20251230\0");
+        assert_eq!(h.preceding, "whitespace");
+        assert!(!h.accepted_main && h.accepted_new);
+    }
+
+    #[test]
+    fn s1643_census_identifier_preceded_ncurses() {
+        let h = one_hit(b"leadxncurses 6.6.20251230\0");
+        assert_eq!(h.preceding, "identifier");
+        assert!(!h.accepted_main && !h.accepted_new);
+    }
+
+    #[test]
+    fn s1643_census_zlib_classifies_the_byte_before_its_space() {
+        let dash = one_hit(b"lead- deflate 1.3.2 Copyright 1995-2026 \0");
+        assert_eq!((dash.library, dash.preceding, dash.offset), (CuratedLibrary::Zlib, "other_non_identifier", 5));
+        assert!(!dash.accepted_main && dash.accepted_new);
+        let nul = one_hit(b"lead\0 deflate 1.3.2 Copyright 1995-2026 \0");
+        assert_eq!(nul.preceding, "nul");
+        assert!(nul.accepted_main && nul.accepted_new);
+    }
+
+    #[test]
+    fn s1643_census_openssl_keeps_the_nul_rule() {
+        let h = one_hit(b"lead-OpenSSL 3.0.11\0");
+        assert_eq!((h.library, h.preceding), (CuratedLibrary::OpenSsl, "other_non_identifier"));
+        assert!(!h.accepted_main && !h.accepted_new);
+    }
+
+    #[test]
+    fn s1643_census_at_region_start() {
+        let h = one_hit(b"ncurses 6.6.20251230\0");
+        assert_eq!(h.preceding, "start");
+        assert!(h.accepted_main && h.accepted_new);
+    }
+
+    #[test]
+    fn s1643_census_json_is_raw() {
+        let j = one_hit(b"lead-ncurses 6.6.20251230\0").to_json();
+        for needle in [r#""library":"ncurses""#, r#""preceding":"other_non_identifier""#, r#""accepted_new":true"#] {
+            assert!(j.contains(needle), "{needle} not in {j}");
+        }
     }
 }
