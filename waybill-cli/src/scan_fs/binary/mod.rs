@@ -1111,6 +1111,18 @@ fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSe
         for hit in version_strings::census(&scan.string_region) {
             tracing::debug!(target: "waybill::version_census", path = %path.display(), hit = %hit.to_json());
         }
+        // Spec 1644 FR-010: each anchored library's evidence and verdict.
+        for v in version_strings::anchored_verdicts(&scan.string_region, &scan.anchor_symbols) {
+            tracing::debug!(target: "waybill::version_census", path = %path.display(), anchored = %v.to_json());
+        }
+        let bare = version_strings::bzip2_form_without_anchor(&scan.string_region);
+        if !bare.is_empty() {
+            let j = serde_json::json!({
+                "library": "bzip2",
+                "candidates": bare.iter().map(|c| serde_json::json!({"value": c.string, "offset": c.offset})).collect::<Vec<_>>(),
+            });
+            tracing::debug!(target: "waybill::version_census", path = %path.display(), unanchored = %j);
+        }
     }
     p.embedded = names.map(|n| embedded_paths::extract(&scan.string_region, n));
     p.strings = t.elapsed();

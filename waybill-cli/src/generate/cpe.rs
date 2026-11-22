@@ -775,7 +775,11 @@ mod tests {
         // which `boringssl_has_no_release_version` asserts — not
         // because a namespace could not be found, which was this
         // allowlist's stated reason until #1268 and was false.
-        const OMITTED: &[&str] = &["boringssl"];
+        // `gmp` and `liblzma`: spec 1644's log-only commit only. Their rows
+        // change the CPEs of components other readers already emit under
+        // those names, so they land with the change that versions them
+        // (T012), not with the census.
+        const OMITTED: &[&str] = &["boringssl", "gmp", "liblzma"];
 
         // `CuratedLibrary::iter()`, never a list of variants. This test
         // kept its own hand-written list until #1246, and by then `Php`

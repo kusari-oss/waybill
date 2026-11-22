@@ -89,6 +89,12 @@ pub enum CuratedLibrary {
     // #1526 — libraries commonly bundled as private copies.
     Expat,
     Ncurses,
+    // Spec 1644 (#1641) — libraries whose version is a bare string with no
+    // name beside it. Each is versioned only through a second anchor in the
+    // same binary ([`Boundary::WholeString`], [`anchored_verdicts`]).
+    Bzip2,
+    Gmp,
+    Liblzma,
 }
 
 impl CuratedLibrary {
@@ -109,6 +115,9 @@ impl CuratedLibrary {
             CuratedLibrary::Node => "node",
             CuratedLibrary::Expat => "expat",
             CuratedLibrary::Ncurses => "ncurses",
+            CuratedLibrary::Bzip2 => "bzip2",
+            CuratedLibrary::Gmp => "gmp",
+            CuratedLibrary::Liblzma => "liblzma",
         }
     }
 }
@@ -166,6 +175,11 @@ pub enum Boundary {
     /// The end of the match is not fixed, so only a NUL (or the start of
     /// the region) may precede it (FR-003).
     NulOnly,
+    /// Spec 1644: the version is a whole NUL-bounded string with no name in
+    /// it, so it identifies nothing alone. Such a library never matches
+    /// through the prefix scan; [`anchored_verdicts`] versions it only when
+    /// the binary also holds the library's anchor.
+    WholeString,
 }
 
 impl Boundary {
@@ -176,7 +190,7 @@ impl Boundary {
         };
         match self {
             Boundary::Anchored => !is_identifier(prev),
-            Boundary::NulOnly => prev == 0,
+            Boundary::NulOnly | Boundary::WholeString => prev == 0,
         }
     }
 }
@@ -205,6 +219,7 @@ impl CuratedLibrary {
             | CuratedLibrary::OpenJdk
             | CuratedLibrary::Php
             | CuratedLibrary::Node => Boundary::NulOnly,
+            CuratedLibrary::Bzip2 | CuratedLibrary::Gmp | CuratedLibrary::Liblzma => Boundary::WholeString,
         }
     }
 }
@@ -422,6 +437,296 @@ fn pattern_at(
     }
 
     None
+}
+
+/// Spec 1644 FR-003 (research R3): the symbols that anchor liblzma. Both
+/// are in liblzma's `XZ_5.0` node, and both return its version, so a binary
+/// that *defines* one is liblzma. A binary that imports one only links it.
+pub const ANCHOR_SYMBOLS: &[&str] = &["lzma_version_string", "lzma_version_number"];
+
+/// Evidence naming a [`Boundary::WholeString`] library without its version.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AnchorKind {
+    /// Text anywhere in the read-only region, as a substring (FR-002).
+    Text(&'static str),
+    /// A defined symbol from [`ANCHOR_SYMBOLS`] (FR-003).
+    Symbol,
+}
+
+impl CuratedLibrary {
+    /// The library's anchor; `None` for every self-naming pattern.
+    /// Exhaustive with no wildcard arm (FR-009).
+    fn anchor(self) -> Option<AnchorKind> {
+        match self {
+            CuratedLibrary::Bzip2 => Some(AnchorKind::Text("bzip2/libbzip2")),
+            CuratedLibrary::Gmp => Some(AnchorKind::Text("GNU MP:")),
+            CuratedLibrary::Liblzma => Some(AnchorKind::Symbol),
+            CuratedLibrary::OpenSsl
+            | CuratedLibrary::BoringSsl
+            | CuratedLibrary::Zlib
+            | CuratedLibrary::Sqlite
+            | CuratedLibrary::Curl
+            | CuratedLibrary::Pcre
+            | CuratedLibrary::Pcre2
+            | CuratedLibrary::GnuTls
+            | CuratedLibrary::LibreSsl
+            | CuratedLibrary::Llvm
+            | CuratedLibrary::OpenJdk
+            | CuratedLibrary::Php
+            | CuratedLibrary::Node
+            | CuratedLibrary::Expat
+            | CuratedLibrary::Ncurses => None,
+        }
+    }
+
+    /// The version `s` states, when `s` is a whole string of this library's
+    /// candidate shape (FR-004); `None` for every self-naming pattern.
+    fn candidate_version(self, s: &[u8]) -> Option<String> {
+        match self {
+            CuratedLibrary::Bzip2 => parse_bzip2_candidate(s),
+            CuratedLibrary::Gmp => parse_dotted_triple(s).filter(|t| t.len() == s.len()).map(str::to_string),
+            CuratedLibrary::Liblzma => {
+                let t = parse_dotted_triple(s)?;
+                matches!(&s[t.len()..], b"" | b"alpha" | b"beta").then(|| String::from_utf8_lossy(s).into_owned())
+            }
+            CuratedLibrary::OpenSsl
+            | CuratedLibrary::BoringSsl
+            | CuratedLibrary::Zlib
+            | CuratedLibrary::Sqlite
+            | CuratedLibrary::Curl
+            | CuratedLibrary::Pcre
+            | CuratedLibrary::Pcre2
+            | CuratedLibrary::GnuTls
+            | CuratedLibrary::LibreSsl
+            | CuratedLibrary::Llvm
+            | CuratedLibrary::OpenJdk
+            | CuratedLibrary::Php
+            | CuratedLibrary::Node
+            | CuratedLibrary::Expat
+            | CuratedLibrary::Ncurses => None,
+        }
+    }
+}
+
+/// The libraries [`CuratedLibrary::anchor`] names. A test checks this list
+/// against every variant whose class is [`Boundary::WholeString`].
+const WHOLE_STRING_LIBRARIES: [CuratedLibrary; 3] =
+    [CuratedLibrary::Bzip2, CuratedLibrary::Gmp, CuratedLibrary::Liblzma];
+
+/// `X.Y.Z` at the start of `s`, each part 1-4 ASCII digits, returned as the
+/// matched prefix. What follows it is the caller's to judge.
+fn parse_dotted_triple(s: &[u8]) -> Option<&str> {
+    let mut end = 0;
+    for part in 0..3 {
+        if part > 0 {
+            if s.get(end) != Some(&b'.') {
+                return None;
+            }
+            end += 1;
+        }
+        let digits = s[end..].iter().take_while(|b| b.is_ascii_digit()).count();
+        if !(1..=4).contains(&digits) {
+            return None;
+        }
+        end += digits;
+    }
+    std::str::from_utf8(&s[..end]).ok()
+}
+
+/// bzip2's `BZ_VERSION`, `X.Y.Z, DD-Mon-YYYY` (research R2), as the whole
+/// string; the version is `X.Y.Z`.
+fn parse_bzip2_candidate(s: &[u8]) -> Option<String> {
+    const MONTHS: [&[u8]; 12] =
+        [b"Jan", b"Feb", b"Mar", b"Apr", b"May", b"Jun", b"Jul", b"Aug", b"Sep", b"Oct", b"Nov", b"Dec"];
+    let version = parse_dotted_triple(s)?;
+    let rest = s[version.len()..].strip_prefix(b", ")?;
+    let day = rest.iter().take_while(|b| b.is_ascii_digit()).count();
+    if !(1..=2).contains(&day) {
+        return None;
+    }
+    let rest = rest[day..].strip_prefix(b"-")?;
+    let (month, rest) = (rest.get(..3)?, rest.get(3..)?);
+    if !MONTHS.contains(&month) {
+        return None;
+    }
+    let year = rest.strip_prefix(b"-")?;
+    (year.len() == 4 && year.iter().all(u8::is_ascii_digit)).then(|| version.to_string())
+}
+
+/// What anchored a library in one binary.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Anchor {
+    Text { value: &'static str, offset: usize },
+    Symbol { value: String },
+}
+
+/// A whole string of a library's candidate shape.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Candidate {
+    pub string: String,
+    pub version: String,
+    pub offset: usize,
+}
+
+/// Spec 1644's verdict for one anchored library in one binary (data-model).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Verdict {
+    Versioned(String),
+    Ambiguous,
+    AmbiguousShared,
+    NoCandidate,
+}
+
+impl Verdict {
+    fn label(&self) -> &'static str {
+        match self {
+            Verdict::Versioned(_) => "versioned",
+            Verdict::Ambiguous => "ambiguous",
+            Verdict::AmbiguousShared => "ambiguous-shared",
+            Verdict::NoCandidate => "no-candidate",
+        }
+    }
+}
+
+/// One anchored library's evidence and verdict in one binary.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AnchoredVerdict {
+    pub library: CuratedLibrary,
+    pub anchors: Vec<Anchor>,
+    /// Candidates left after FR-005a's removal.
+    pub candidates: Vec<Candidate>,
+    /// Candidates removed because another library anchored in the same
+    /// binary also accepts them (FR-005a), with that library.
+    pub shared: Vec<(Candidate, CuratedLibrary)>,
+    pub verdict: Verdict,
+}
+
+impl AnchoredVerdict {
+    /// The `waybill::version_census` `anchored` event (contracts/wire.md).
+    pub fn to_json(&self) -> String {
+        let cand = |c: &Candidate| serde_json::json!({"value": c.string, "offset": c.offset});
+        let mut j = serde_json::json!({
+            "library": self.library.slug(),
+            "anchors": self.anchors.iter().map(|a| match a {
+                Anchor::Text { value, offset } => serde_json::json!({"kind": "text", "value": value, "offset": offset}),
+                Anchor::Symbol { value } => serde_json::json!({"kind": "symbol", "value": value}),
+            }).collect::<Vec<_>>(),
+            "candidates": self.candidates.iter().map(cand).collect::<Vec<_>>(),
+            "shared": self.shared.iter().map(|(c, with)| {
+                let mut v = cand(c);
+                v["with"] = serde_json::json!(with.slug());
+                v
+            }).collect::<Vec<_>>(),
+            "verdict": self.verdict.label(),
+        });
+        if let Verdict::Versioned(v) = &self.verdict {
+            j["version"] = serde_json::json!(v);
+        }
+        j.to_string()
+    }
+}
+
+/// Spec 1644: every [`Boundary::WholeString`] library whose anchor is in
+/// this binary, with its candidates and verdict. `anchor_symbols` holds the
+/// binary's *defined* names from [`ANCHOR_SYMBOLS`].
+///
+/// A binary with no anchor costs one substring search per text anchor and
+/// returns nothing. Only an anchored binary has its region split into
+/// whole strings. A candidate is a NUL-terminated string that starts the
+/// region or follows a NUL (FR-004); one another anchored library also
+/// accepts versions neither (FR-005a); a library left with two or more
+/// versions gets none (FR-005).
+pub fn anchored_verdicts(region: &[u8], anchor_symbols: &[String]) -> Vec<AnchoredVerdict> {
+    let mut found: Vec<(CuratedLibrary, Vec<Anchor>)> = Vec::new();
+    for lib in WHOLE_STRING_LIBRARIES {
+        let anchors: Vec<Anchor> = match lib.anchor() {
+            Some(AnchorKind::Text(needle)) => memchr::memmem::find(region, needle.as_bytes())
+                .map(|offset| Anchor::Text { value: needle, offset })
+                .into_iter()
+                .collect(),
+            Some(AnchorKind::Symbol) => ANCHOR_SYMBOLS
+                .iter()
+                .filter(|s| anchor_symbols.iter().any(|d| d == *s))
+                .map(|s| Anchor::Symbol { value: (*s).to_string() })
+                .collect(),
+            None => Vec::new(),
+        };
+        if !anchors.is_empty() {
+            found.push((lib, anchors));
+        }
+    }
+    if found.is_empty() {
+        return Vec::new();
+    }
+
+    // Every candidate of every anchored library, deduplicated by string.
+    let mut cands: Vec<Vec<Candidate>> = vec![Vec::new(); found.len()];
+    let mut start = 0;
+    for nul in memchr::memchr_iter(0, region) {
+        let s = &region[start..nul];
+        for (i, (lib, _)) in found.iter().enumerate() {
+            if let Some(version) = lib.candidate_version(s) {
+                let string = String::from_utf8_lossy(s).into_owned();
+                if !cands[i].iter().any(|c| c.string == string) {
+                    cands[i].push(Candidate { string, version, offset: start });
+                }
+            }
+        }
+        start = nul + 1;
+    }
+
+    let mut out = Vec::new();
+    for (i, (lib, anchors)) in found.iter().enumerate() {
+        let mut candidates = Vec::new();
+        let mut shared = Vec::new();
+        for c in &cands[i] {
+            let other = found
+                .iter()
+                .enumerate()
+                .find(|(j, _)| *j != i && cands[*j].iter().any(|o| o.string == c.string))
+                .map(|(_, (l, _))| *l);
+            match other {
+                Some(with) => shared.push((c.clone(), with)),
+                None => candidates.push(c.clone()),
+            }
+        }
+        let mut versions: Vec<&str> = candidates.iter().map(|c| c.version.as_str()).collect();
+        versions.sort_unstable();
+        versions.dedup();
+        let verdict = match versions.as_slice() {
+            [v] => Verdict::Versioned((*v).to_string()),
+            [] if !shared.is_empty() => Verdict::AmbiguousShared,
+            [] => Verdict::NoCandidate,
+            _ => Verdict::Ambiguous,
+        };
+        out.push(AnchoredVerdict { library: *lib, anchors: anchors.clone(), candidates, shared, verdict });
+    }
+    out
+}
+
+/// Spec 1644 census only (FR-001, FR-006): bzip2 date-form strings in a
+/// binary that lacks bzip2's anchor. They are never emitted; the census
+/// counts them to test whether the form could stand alone. GMP's and xz's
+/// bare `X.Y.Z` is not reported this way: it occurs in unrelated binaries
+/// too often to say anything.
+pub fn bzip2_form_without_anchor(region: &[u8]) -> Vec<Candidate> {
+    let Some(AnchorKind::Text(anchor)) = CuratedLibrary::Bzip2.anchor() else { return Vec::new() };
+    if memchr::memmem::find(region, anchor.as_bytes()).is_some() {
+        return Vec::new();
+    }
+    let mut out: Vec<Candidate> = Vec::new();
+    let mut start = 0;
+    for nul in memchr::memchr_iter(0, region) {
+        let s = &region[start..nul];
+        if let Some(version) = CuratedLibrary::Bzip2.candidate_version(s) {
+            let string = String::from_utf8_lossy(s).into_owned();
+            if !out.iter().any(|c| c.string == string) {
+                out.push(Candidate { string, version, offset: start });
+            }
+        }
+        start = nul + 1;
+    }
+    out
 }
 
 /// One occurrence of a curated pattern, found with no boundary test
@@ -1312,6 +1617,11 @@ mod tests {
             CuratedLibrary::Node => b"node.js/v24.14.1\0",
             CuratedLibrary::Expat => b"expat_2.7.5\0",
             CuratedLibrary::Ncurses => b"ncurses 6.6.20251230\0",
+            // Anchor and candidate together: the prefix scan must still
+            // find nothing (spec 1644).
+            CuratedLibrary::Bzip2 => b"bzip2/libbzip2: internal error\x001.0.8, 13-Jul-2019\0",
+            CuratedLibrary::Gmp => b"GNU MP: Cannot allocate memory\x006.3.0\0",
+            CuratedLibrary::Liblzma => b"5.8.1\0",
         }
     }
 
@@ -1329,6 +1639,9 @@ mod tests {
     /// FR-001's anchored libraries, written out from the spec's table.
     const ANCHORED: [CuratedLibrary; 3] = [CuratedLibrary::Zlib, CuratedLibrary::Expat, CuratedLibrary::Ncurses];
 
+    /// Spec 1644's whole-string libraries, written out from its data model.
+    const WHOLE_STRING: [CuratedLibrary; 3] = [CuratedLibrary::Bzip2, CuratedLibrary::Gmp, CuratedLibrary::Liblzma];
+
     /// Spec 1643 FR-001/FR-004 (R3): every variant behind NUL matches, and
     /// behind `-` matches exactly when FR-001's table classes it anchored.
     /// The expectation is the spec's table (`ANCHORED`), not
@@ -1341,6 +1654,17 @@ mod tests {
         for lib in CuratedLibrary::iter() {
             let anchored = ANCHORED.contains(&lib);
             assert_eq!(lib.boundary() == Boundary::Anchored, anchored, "{lib:?}: class differs from FR-001");
+            // Spec 1644: a whole-string library never matches through the
+            // prefix scan, whatever precedes its sample.
+            let whole = WHOLE_STRING.contains(&lib);
+            assert_eq!(lib.boundary() == Boundary::WholeString, whole, "{lib:?}: class differs from spec 1644");
+            if whole {
+                for prev in [None, Some(0), Some(b'-')] {
+                    let r = if prev.is_none() { sample(lib).to_vec() } else { behind(prev, sample(lib)) };
+                    assert!(!finds(&r, lib), "{lib:?} found by the prefix scan behind {prev:?}");
+                }
+                continue;
+            }
             assert!(finds(&behind(Some(0), sample(lib)), lib), "{lib:?} behind NUL");
             let dash = finds(&behind(Some(b'-'), sample(lib)), lib);
             assert_eq!(dash, anchored, "{lib:?} behind '-'");
@@ -1401,5 +1725,137 @@ mod tests {
                 assert_eq!(from_scan, from_census, "{lib:?} behind {prev:?}");
             }
         }
+    }
+
+    // ---- Spec 1644: anchored whole-string libraries -------------------
+
+    fn verdicts(region: &[u8], syms: &[&str]) -> Vec<AnchoredVerdict> {
+        let syms: Vec<String> = syms.iter().map(|s| s.to_string()).collect();
+        anchored_verdicts(region, &syms)
+    }
+
+    fn verdict_of(region: &[u8], syms: &[&str], lib: CuratedLibrary) -> Option<Verdict> {
+        verdicts(region, syms).into_iter().find(|v| v.library == lib).map(|v| v.verdict)
+    }
+
+    /// FR-009: the production list is exactly the whole-string class, and
+    /// each member has an anchor; no other variant has one.
+    #[test]
+    fn s1644_whole_string_list_matches_the_class() {
+        use strum::IntoEnumIterator;
+        for lib in CuratedLibrary::iter() {
+            let whole = lib.boundary() == Boundary::WholeString;
+            assert_eq!(WHOLE_STRING_LIBRARIES.contains(&lib), whole, "{lib:?}");
+            assert_eq!(lib.anchor().is_some(), whole, "{lib:?} anchor");
+        }
+    }
+
+    #[test]
+    fn s1644_each_library_versioned_with_anchor_and_one_candidate() {
+        let v = Verdict::Versioned;
+        assert_eq!(
+            verdict_of(b"\0\n\nbzip2/libbzip2: internal error number %d.\n\x001.0.8, 13-Jul-2019\0", &[], CuratedLibrary::Bzip2),
+            Some(v("1.0.8".into()))
+        );
+        assert_eq!(verdict_of(b"GNU MP: Cannot allocate memory\x006.3.0\0", &[], CuratedLibrary::Gmp), Some(v("6.3.0".into())));
+        assert_eq!(verdict_of(b"5.8.1\0", &["lzma_version_string"], CuratedLibrary::Liblzma), Some(v("5.8.1".into())));
+        assert_eq!(verdict_of(b"5.7.1alpha\0", &["lzma_version_number"], CuratedLibrary::Liblzma), Some(v("5.7.1alpha".into())));
+        assert_eq!(verdict_of(b"5.7.2beta\0", &["lzma_version_number"], CuratedLibrary::Liblzma), Some(v("5.7.2beta".into())));
+    }
+
+    #[test]
+    fn s1644_no_anchor_no_verdict() {
+        assert!(verdicts(b"\x001.0.8, 13-Jul-2019\x006.3.0\x005.8.1\0", &[]).is_empty());
+        // A symbol outside the list anchors nothing.
+        assert!(verdicts(b"5.8.1\0", &["lzma_code"]).is_empty());
+    }
+
+    #[test]
+    fn s1644_two_candidates_are_ambiguous() {
+        let v = verdicts(b"GNU MP:\x006.3.0\x006.2.1\0", &[]);
+        assert_eq!(v.len(), 1);
+        assert_eq!(v[0].verdict, Verdict::Ambiguous);
+        assert_eq!(v[0].candidates.len(), 2);
+    }
+
+    #[test]
+    fn s1644_a_repeated_candidate_counts_once() {
+        assert_eq!(verdict_of(b"GNU MP:\x006.3.0\x006.3.0\0", &[], CuratedLibrary::Gmp), Some(Verdict::Versioned("6.3.0".into())));
+    }
+
+    /// FR-005a: a string both anchored libraries accept versions neither.
+    #[test]
+    fn s1644_a_shared_candidate_versions_neither() {
+        let v = verdicts(b"GNU MP:\x005.8.1\0", &["lzma_version_string"]);
+        assert_eq!(v.len(), 2);
+        for x in &v {
+            assert_eq!(x.verdict, Verdict::AmbiguousShared, "{:?}", x.library);
+            assert_eq!(x.shared.len(), 1);
+        }
+        // A candidate only one of them accepts is unaffected.
+        assert_eq!(
+            verdict_of(b"GNU MP:\x005.8.1\x005.7.1alpha\0", &["lzma_version_string"], CuratedLibrary::Liblzma),
+            Some(Verdict::Versioned("5.7.1alpha".into()))
+        );
+        assert_eq!(
+            verdict_of(b"GNU MP:\x005.8.1\x005.7.1alpha\0", &["lzma_version_string"], CuratedLibrary::Gmp),
+            Some(Verdict::AmbiguousShared)
+        );
+    }
+
+    #[test]
+    fn s1644_anchor_with_no_candidate() {
+        assert_eq!(verdict_of(b"GNU MP:\0requires 6.3.0 or later\0", &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate));
+        assert_eq!(verdict_of(b"4.999.8beta-21-g1d92\0", &["lzma_version_string"], CuratedLibrary::Liblzma), Some(Verdict::NoCandidate));
+        assert_eq!(verdict_of(b"bzip2/libbzip2\x001.0.8\0", &[], CuratedLibrary::Bzip2), Some(Verdict::NoCandidate));
+    }
+
+    /// FR-004: whole strings only. The region's start counts as a boundary;
+    /// an unterminated tail does not.
+    #[test]
+    fn s1644_candidate_boundaries() {
+        assert_eq!(verdict_of(b"6.3.0\0GNU MP:\0", &[], CuratedLibrary::Gmp), Some(Verdict::Versioned("6.3.0".into())));
+        assert_eq!(verdict_of(b"GNU MP:\x006.3.0", &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate));
+        assert_eq!(verdict_of(b"GNU MP:\0x6.3.0\0", &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate));
+        assert_eq!(verdict_of(b"GNU MP:\x006.3.0x\0", &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate));
+        assert_eq!(verdict_of(b"GNU MP:\x006.3\0", &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate));
+        assert_eq!(verdict_of(b"GNU MP:\x0012345.3.0\0", &[], CuratedLibrary::Gmp), Some(Verdict::NoCandidate));
+    }
+
+    #[test]
+    fn s1644_bzip2_date_form_is_exact() {
+        let anchor = b"bzip2/libbzip2\0".to_vec();
+        for bad in [&b"1.0.8, 13-Foo-2019"[..], b"1.0.8, 13-Jul-219", b"1.0.8, 123-Jul-2019", b"1.0.8 13-Jul-2019", b"1.0.8, 13-Jul-2019x"] {
+            let mut r = anchor.clone();
+            r.extend_from_slice(bad);
+            r.push(0);
+            assert_eq!(verdict_of(&r, &[], CuratedLibrary::Bzip2), Some(Verdict::NoCandidate), "{}", String::from_utf8_lossy(bad));
+        }
+        assert_eq!(
+            verdict_of(b"bzip2/libbzip2\x001.0.6, 6-Sept-2010\x001.0.6, 6-Sep-2010\0", &[], CuratedLibrary::Bzip2),
+            Some(Verdict::Versioned("1.0.6".into()))
+        );
+    }
+
+    #[test]
+    fn s1644_census_json() {
+        let v = verdicts(b"GNU MP:\x006.3.0\0", &[]);
+        let j = v[0].to_json();
+        for needle in [r#""library":"gmp""#, r#""kind":"text""#, r#""value":"GNU MP:""#, r#""verdict":"versioned""#, r#""version":"6.3.0""#] {
+            assert!(j.contains(needle), "{needle} not in {j}");
+        }
+        let s = verdicts(b"GNU MP:\x005.8.1\0", &["lzma_version_string"]);
+        let j = s[0].to_json();
+        assert!(j.contains(r#""verdict":"ambiguous-shared""#) && j.contains(r#""with":"liblzma""#), "{j}");
+        assert!(!j.contains(r#""version""#), "{j}");
+    }
+
+    #[test]
+    fn s1644_bzip2_form_without_anchor_is_census_only() {
+        let c = bzip2_form_without_anchor(b"x\x001.0.8, 13-Jul-2019\0");
+        assert_eq!(c.len(), 1);
+        assert_eq!(c[0].version, "1.0.8");
+        assert!(bzip2_form_without_anchor(b"bzip2/libbzip2\x001.0.8, 13-Jul-2019\0").is_empty());
+        assert!(scan(b"x\x001.0.8, 13-Jul-2019\0").is_empty());
     }
 }

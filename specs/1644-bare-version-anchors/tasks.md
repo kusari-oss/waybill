@@ -20,12 +20,12 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Build `main`'s binary at `110d1a58` into the scratchpad as `waybill-main-110d1a58`, and record the full SHA in `MS/control.md`. It is the control for every "byte-identical to `main`" claim.
-- [ ] T002 Add `elf_shared_lib_with_dynsym(rodata, defined: &[&str], undefined: &[&str]) -> Vec<u8>` to `IL`, test-only (R8).
+- [X] T001 Build `main`'s binary at `110d1a58` into the scratchpad as `waybill-main-110d1a58`, and record the full SHA in `MS/control.md`. It is the control for every "byte-identical to `main`" claim.
+- [X] T002 Add `elf_shared_lib_with_dynsym(rodata, defined: &[&str], undefined: &[&str]) -> Vec<u8>` to `IL`, test-only (R8).
   - Sections: `.rodata`, `.dynsym` (`SHT_DYNSYM`, `sh_link` to `.dynstr`, a null entry first; defined entries `STB_GLOBAL`/`STT_FUNC` with `st_shndx` = the `.rodata` index; undefined entries `SHN_UNDEF`), `.dynstr` and `.shstrtab`.
   - Also add `macho_dylib_with_symbols(cstring, defined: &[&str], undefined: &[&str]) -> Vec<u8>` beside the existing `macho_dylib`. It writes `LC_SYMTAB` entries with `N_EXT`: defined entries in `__TEXT,__text` (`N_SECT`), undefined entries `N_UNDF`. Names carry Mach-O's leading `_`.
   - **Control in the same task:** a test in `IT` reads each helper's output with `object` and asserts, for both helpers, that the defined names report `!is_undefined()` and the undefined ones report `is_undefined()`. Without it, a helper that writes every symbol as undefined would make N-3 and N-9 pass for the wrong reason.
-- [ ] T003 Create `IT` with `mod common;` and helpers on `IL`:
+- [X] T003 Create `IT` with `mod common;` and helpers on `IL`:
   - `lib_dir(bytes, file_name) -> TempDir`;
   - `scan3(dir)`, which honours `WAYBILL_VERSION_ANCHORED_BIN` so a case can run against T001's binary;
   - `scan_with_log(dir, "waybill::version_census=debug") -> (docs, stderr)`;
@@ -38,15 +38,15 @@
 
 Output does not change in this phase.
 
-- [ ] T004 In `VS`, add `CuratedLibrary::{Bzip2, Gmp, Liblzma}` with slugs `bzip2`, `gmp`, `liblzma`, and `Boundary::WholeString` (data-model).
+- [X] T004 In `VS`, add `CuratedLibrary::{Bzip2, Gmp, Liblzma}` with slugs `bzip2`, `gmp`, `liblzma`, and `Boundary::WholeString` (data-model).
   - Extend every exhaustive match: `boundary()`, `slug()`, the CPE and emission paths that match on the variant, the test-only `sample()` and spec 1643's `ANCHORED` set (unchanged: the new variants are not anchored).
   - `pattern_at` must never yield a `WholeString` library. Add a unit test that iterates every variant (`strum::EnumIter`), asserting that `scan()` over each new library's own candidate and anchor bytes returns no match for it.
   - Adjust spec 1643's `s1643_every_variant_follows_its_class` and `s1643_census_agrees_with_the_scanner` so the new class is handled explicitly, not skipped by a wildcard.
-- [ ] T005 [P] Add `pub const ANCHOR_SYMBOLS: &[&str] = &["lzma_version_string", "lzma_version_number"]` in `VS` (R3). Add `pub anchor_symbols: Vec<String>` to `BinaryScan` in `EN`, initialised empty in every constructor, including the test default at ~line 1387.
+- [X] T005 [P] Add `pub const ANCHOR_SYMBOLS: &[&str] = &["lzma_version_string", "lzma_version_number"]` in `VS` (R3). Add `pub anchor_symbols: Vec<String>` to `BinaryScan` in `EN`, initialised empty in every constructor, including the test default at ~line 1387.
   - In `SC`, fill it with the defined names in `ANCHOR_SYMBOLS`: ELF `dynamic_symbols()` where `!is_undefined()`; Mach-O `symbols()` where `is_global() && !is_undefined()`, after the existing underscore strip; PE export names.
   - Leave `symbol_names` byte-for-byte unchanged.
   - Test (in `IT`, because `IL`'s helpers cannot be imported by unit tests inside the library; finding U1): on T002's helpers, run with `scan_with_log` and read the `anchored` event's `symbol` anchors. Defines `lzma_version_string` → anchored; imports it → no event; defines only `lzma_code` → no event (not in the list). Run each case on ELF and on Mach-O. PE exports are defined by construction and reuse the unchanged `pe::extract_pe_export_names`. They get no fixture, and research R3 records that as untested.
-- [ ] T006 In `VS`, add the pure function `anchored_verdicts(region: &[u8], anchor_symbols: &[String]) -> Vec<AnchoredVerdict>` (data-model).
+- [X] T006 In `VS`, add the pure function `anchored_verdicts(region: &[u8], anchor_symbols: &[String]) -> Vec<AnchoredVerdict>` (data-model).
   1. Find the text anchors with `memchr::memmem`, and the symbol anchor in `anchor_symbols`.
   2. Return early, with nothing, when no anchor is found.
   3. Otherwise split the region on NUL once and classify each whole string against each anchored library's shape (FR-004).
@@ -58,15 +58,15 @@ Output does not change in this phase.
   - a candidate at the region's end without a trailing NUL, which is not a whole string and is rejected;
   - the bzip2 date form with each malformed part (month `Foo`, a 3-digit year);
   - xz's `alpha`/`beta` suffixes, and a rejected commit suffix.
-- [ ] T007 In `BM`'s `prepare_held`, inside the existing `tracing::enabled!(target: "waybill::version_census", DEBUG)` block, emit one `anchored` event per verdict with the JSON shape in `contracts/wire.md`. No matches are appended yet.
+- [X] T007 In `BM`'s `prepare_held`, inside the existing `tracing::enabled!(target: "waybill::version_census", DEBUG)` block, emit one `anchored` event per verdict with the JSON shape in `contracts/wire.md`. No matches are appended yet.
   - In `IT`, the positive control **C-1**: fixture A-2 run with `scan_with_log` logs exactly one `anchored` event, with `"library":"gmp"` and `"verdict":"versioned"`. Its documents still have **no** gmp component (log-only).
   - **C-2**: a library with no anchor logs no `anchored` event.
-- [ ] T008 Write the cases of `contracts/wire.md` in `IT`, with their expected results:
+- [X] T008 Write the cases of `contracts/wire.md` in `IT`, with their expected results:
   - A-1 to A-5, P-1 and P-2 are red on this commit;
   - the N cases and B-1 pass.
 
   Record the red/green table in `MS/control.md`, run with both this commit's binary and T001's. B-1 reuses spec 1643's golden (`waybill-cli/tests/fixtures/version_string_boundary/b1-golden/`), compared byte for byte with per-run fields masked.
-- [ ] T009 First run `IT` with the red cases unignored. Record in `MS/control.md` that exactly the planned cases fail (A-1 to A-5, P-1 and P-2), each by name. Then mark them `#[ignore = "spec 1644: red until T011"]` (P-1 and P-2: `"…until T016"`). Then run the gate, `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, which must pass completely. Commit the log-only change.
+- [X] T009 First run `IT` with the red cases unignored. Record in `MS/control.md` that exactly the planned cases fail (A-1 to A-5, P-1 and P-2), each by name. Then mark them `#[ignore = "spec 1644: red until T011"]` (P-1 and P-2: `"…until T016"`). Then run the gate, `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, which must pass completely. Commit the log-only change.
 - [ ] T010 Census (FR-001, R7). In `FR`:
   - Extend `census/versions.py` to parse `anchored` events, and to read each target's main-control CycloneDX document for components named `bzip2`, `gmp`, `liblzma` or `xz`, with their versions, evidence kinds and source files.
   - Add a committed synthetic positive-control tree (A-1, A-2, A-3) to `census-versions.yml`.

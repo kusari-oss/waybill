@@ -149,6 +149,7 @@ Binaries that hold none of the three anchors produce the same documents as on `m
   - GMP and `liblzma` rows MUST be added in the form specs 1375 and #1556 use: the vendor and product as found in the CPE dictionary, the dictionary entry count, the observation date and the evidence file.
   - If the dictionary has no entry for a library, it gets no row, and the spec says so.
   - Whether `pkg:generic/xz`'s existing row stays, and why, is recorded.
+  - **Consequence beyond anchored binaries** (found at implementation, `measurements/control.md`): a curated row applies to every `pkg:generic/<slug>` component, whatever reader emitted it. A `gmp` or `liblzma` component from a `.pc` file or the closure tier therefore gains these CPEs too, with or without an anchored binary. This is intended, since it is the same library under the same name, and FR-012's byte identity is about binaries without anchors, not trees with these libraries. T018 traces every such change. For the same reason the rows land with the change that versions the libraries (T012), not on the log-only commit.
 
 - **FR-009 (totality)**: Every new `CuratedLibrary` variant MUST appear in each existing exhaustive match (the boundary class, the census, the test sample). Adding a variant without its anchor MUST fail to compile or fail a test that iterates every variant (the #1246 convention).
 
