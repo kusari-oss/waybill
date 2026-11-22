@@ -5282,6 +5282,8 @@ pub async fn execute(
     // Milestone 1377 US3 — record where each closure component's CPE came
     // from, now that both sources have run and identities are final.
     record_closure_cpe_sources(&mut components);
+    // Spec 1645 (research R8): ncurses CPEs FR-008 would change. Census only.
+    crate::generate::cpe::census_cpe_form(&components);
     // The counts are NOT taken here (milestone 1374, #1380). File-tier
     // components join `components` at the file-inventory step below, and
     // they belong in `excluded_files`; counting now would miss them, which

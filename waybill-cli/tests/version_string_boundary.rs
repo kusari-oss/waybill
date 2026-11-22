@@ -230,11 +230,13 @@ fn b1_nul_preceded_banners_are_byte_identical_to_main() {
 // T004: census positive controls (C-1, C-2)
 // ---------------------------------------------------------------------
 
-/// The `waybill::version_census` events of a scan. The needles are raw
+/// The `waybill::version_census` `hit` events of a scan. The needles are raw
 /// JSON (`"library":"ncurses"`), so a Debug-escaped field (`\"library\"`)
-/// cannot satisfy them.
+/// cannot satisfy them. The field is matched with its leading space: the
+/// same target also carries specs 1644 and 1645's events, and spec 1645's
+/// `curated_version_change` names its library too.
 fn census_events(s: &Scan) -> Vec<&str> {
-    s.stderr.lines().filter(|l| l.contains("waybill::version_census")).collect()
+    s.stderr.lines().filter(|l| l.contains("waybill::version_census") && l.contains(" hit=")).collect()
 }
 
 #[test]

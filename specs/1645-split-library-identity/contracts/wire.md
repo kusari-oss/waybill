@@ -22,8 +22,10 @@ One event per file claimed by a curated entry and by at least one record entry w
 Log-only commit only (R8). One event per curated LLVM or ncurses match whose version FR-002 or FR-013 would change:
 
 ```json
-{"file":"…","library":"llvm","new":"23.0.0git","old":"23.0.0"}
+{"library":"llvm","new":"23.0.0git","old":"23.0.0"}
 ```
+
+The binary is the event's `path` field, as for every other census event. `new` is `null` when the new parser would not match at all.
 
 ### `cpe_form_change`
 
@@ -45,7 +47,7 @@ All fixtures are synthetic: a minimal ELF shared library (`elf_shared_lib`) with
 | Case | Tree | Expected |
 |---|---|---|
 | M-1 name variant | `lib/libncursesw.so.6` with `ncurses 6.6.20251230\0`, and `lib/pkgconfig/ncursesw.pc` (`Version: 6.6.20251230`, `Libs: -lncursesw`) | exactly one `pkg:generic/ncurses@6.6.20251230`, with C18 containing the library and `ncursesw.pc`, `waybill:source-mechanism` = `pkg-config`, CPE candidates `invisible-island`, `ncurses_project` and `gnu` `:ncurses:6.6:20251230`, and no `ncursesw` component |
-| M-2 version suffix | `lib/libLLVM.so.23.0git` with `LLVM version 23.0.0git\0`, and `lib/cmake/llvm/LLVMConfigVersion.cmake` (`23.0.0git`) with exported targets naming the library | exactly one `pkg:generic/llvm@23.0.0git` listing both |
+| M-2 version suffix | `lib/libLLVM.so` with `LLVM version 23.0.0git\0`, and `lib/cmake/llvm/LLVMConfigVersion.cmake` (`set(PACKAGE_VERSION "23.0.0git")`). The record attaches `libLLVM.so` by name, as it does for TheRock's `libLLVM.so` | exactly one `pkg:generic/llvm@23.0.0git` listing both |
 | M-3 prefix | `lib/libexpat.so.1` with `expat_2.7.5\0`, and `lib/pkgconfig/expat.pc` (`Version: 2.7.5.1`). The record attaches the file by its name (`match_binaries`). The curated version is a dotted prefix of the record's | one `pkg:generic/expat@2.7.5.1` listing both; no `expat@2.7.5` |
 | N-1 disagreement | M-1 with `Version: 6.5.20240427` | two components, `ncurses@6.6.20251230` and `ncursesw@6.5.20240427`; census `version-disagrees` |
 | N-2 bundled | `libwaybill-fixture-foo.so` with `deflate 1.3.1 Copyright…`, and `waybill-fixture-foo.pc` `Version: 1.3.1` | two components; census `name-unrelated` |

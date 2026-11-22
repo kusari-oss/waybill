@@ -359,6 +359,67 @@ pub(crate) fn format_cpe(vendor: &str, product: &str, version: &str) -> Option<C
     .ok()
 }
 
+/// [`format_cpe`] with the update field set, for a product whose NVD records
+/// carry part of the version there (spec 1645 FR-008).
+pub(crate) fn format_cpe_with_update(vendor: &str, product: &str, version: &str, update: &str) -> Option<Cpe> {
+    Cpe::parse(&format!(
+        "cpe:2.3:a:{}:{}:{}:{}:*:*:*:*:*:*",
+        cpe_escape(vendor),
+        cpe_escape(product),
+        cpe_escape(version),
+        cpe_escape(update),
+    ))
+    .ok()
+}
+
+/// Spec 1645 FR-008: an ncurses `X.Y.YYYYMMDD` as `(X.Y, YYYYMMDD)`, the
+/// form NVD's ncurses records use (102 of 110 entries put `X.Y` in version,
+/// 81 the patch date in update, none the date in version;
+/// `specs/1645-split-library-identity/measurements/nvd-version-forms-2026-11-22.txt`).
+pub(crate) fn ncurses_release_and_date(version: &str) -> Option<(&str, &str)> {
+    let (release, date) = version.rsplit_once('.')?;
+    let numeric = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    let mut parts = release.split('.');
+    let release_ok = matches!((parts.next(), parts.next(), parts.next()), (Some(x), Some(y), None) if numeric(x) && numeric(y));
+    (release_ok && date.len() == 8 && numeric(date)).then_some((release, date))
+}
+
+/// The curated table's ncurses CPEs in NVD's split form, or `None` when the
+/// component is not a `pkg:generic/ncurses` at an `X.Y.YYYYMMDD` version.
+fn ncurses_split_cpes(component: &ResolvedComponent) -> Option<Vec<Cpe>> {
+    if component.purl.ecosystem() != "generic" || component.name != "ncurses" {
+        return None;
+    }
+    let (release, date) = ncurses_release_and_date(&component.version)?;
+    let pairs = crate::generate::cpe_table::built_in().pairs("ncurses")?;
+    Some(
+        pairs
+            .iter()
+            .filter_map(|(vendor, product)| format_cpe_with_update(vendor, product, release, date))
+            .collect(),
+    )
+}
+
+/// Spec 1645 census (research R8): every component whose CPEs FR-008 would
+/// change. Log-only; nothing is emitted from it.
+pub(crate) fn census_cpe_form(components: &[ResolvedComponent]) {
+    if !tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
+        return;
+    }
+    for c in components {
+        let Some(new) = ncurses_split_cpes(c) else { continue };
+        if new == c.cpes {
+            continue;
+        }
+        let j = serde_json::json!({
+            "new": new.first().map(|x| x.as_str()),
+            "old": c.cpes.first().map(|x| x.as_str()),
+            "purl": c.purl.as_str(),
+        });
+        tracing::debug!(target: "waybill::version_census", cpe_form_change = %j);
+    }
+}
+
 /// Escape the formatted-string special characters per CPE 2.3 §6.2.
 /// The characters that require escaping inside a formatted-string
 /// attribute are: `\`, `*`, `?`, `!`, `"`, `#`, `$`, `%`, `&`, `'`,
@@ -1309,5 +1370,31 @@ mod tests {
                 "a `hackage` arm was added without revisiting #1375: {purl}"
             );
         }
+    }
+
+    #[test]
+    fn s1645_ncurses_release_and_date() {
+        assert_eq!(ncurses_release_and_date("6.4.20221231"), Some(("6.4", "20221231")));
+        assert_eq!(ncurses_release_and_date("6.6"), None);
+        assert_eq!(ncurses_release_and_date("6.6.2025123"), None);
+        assert_eq!(ncurses_release_and_date("6.6.1.20251230"), None);
+        assert_eq!(ncurses_release_and_date("6.x.20251230"), None);
+    }
+
+    #[test]
+    fn s1645_ncurses_split_cpes() {
+        let c = make_component("pkg:generic/ncurses@6.4.20221231");
+        let got: Vec<String> = ncurses_split_cpes(&c).unwrap().iter().map(|x| x.as_str().to_string()).collect();
+        assert_eq!(
+            got,
+            [
+                "cpe:2.3:a:invisible-island:ncurses:6.4:20221231:*:*:*:*:*:*",
+                "cpe:2.3:a:ncurses_project:ncurses:6.4:20221231:*:*:*:*:*:*",
+                "cpe:2.3:a:gnu:ncurses:6.4:20221231:*:*:*:*:*:*",
+            ]
+        );
+        assert!(ncurses_split_cpes(&make_component("pkg:generic/ncurses@6.6")).is_none());
+        assert!(ncurses_split_cpes(&make_component("pkg:generic/zlib@1.3.2")).is_none());
+        assert!(ncurses_split_cpes(&make_component("pkg:generic/ncursesw@6.6.20251230")).is_none());
     }
 }

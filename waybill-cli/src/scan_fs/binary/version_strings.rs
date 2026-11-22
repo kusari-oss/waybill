@@ -128,6 +128,71 @@ impl CuratedLibrary {
             CuratedLibrary::Liblzma => "liblzma",
         }
     }
+
+    /// Spec 1645 FR-004: every name upstream's own build gives this library,
+    /// slug first. An installed-library record (pkg-config, CMake) claiming
+    /// the file a banner was read from is the same library only under one of
+    /// these names; the shared file alone cannot tell the library from one
+    /// that bundles it statically. A closed list with a source per entry,
+    /// never a pattern.
+    pub fn names(self) -> &'static [&'static str] {
+        match self {
+            CuratedLibrary::OpenSsl => &["openssl"],
+            CuratedLibrary::BoringSsl => &["boringssl"],
+            CuratedLibrary::Zlib => &["zlib"],
+            CuratedLibrary::Sqlite => &["sqlite"],
+            CuratedLibrary::Curl => &["curl"],
+            CuratedLibrary::Pcre => &["pcre"],
+            CuratedLibrary::Pcre2 => &["pcre2"],
+            CuratedLibrary::GnuTls => &["gnutls"],
+            CuratedLibrary::LibreSsl => &["libressl"],
+            CuratedLibrary::Llvm => &["llvm"],
+            CuratedLibrary::OpenJdk => &["openjdk"],
+            CuratedLibrary::Php => &["php"],
+            CuratedLibrary::Node => &["node"],
+            CuratedLibrary::Expat => &["expat"],
+            // ncurses `INSTALL` ($Id: INSTALL,v 1.267 2026/05/30), at
+            // https://invisible-island.net/ncurses/INSTALL.html:
+            // "If you configure using the --enable-widec option, a "w" is
+            // appended to the library names (e.g., libncursesw.a)" (the
+            // default since 6.5); "If you configure using the --with-pthread
+            // option, a "t" is appended to the library names (e.g.,
+            // libncursest.a, libncursestw.a)"; `--disable-lib-suffixes`
+            // suppresses 'the "w", "t" or "tw" suffixes'. Operator-chosen
+            // suffixes (`--with-extra-suffix`, `--with-pc-suffix`) are not
+            // listed: such a record stays unmerged.
+            CuratedLibrary::Ncurses => &["ncurses", "ncursesw", "ncursest", "ncursestw"],
+            CuratedLibrary::Bzip2 => &["bzip2"],
+            CuratedLibrary::Gmp => &["gmp"],
+            CuratedLibrary::Liblzma => &["liblzma"],
+        }
+    }
+
+    /// The library whose [`slug`](Self::slug) is `slug`. Names other than the
+    /// slug are not slugs: `from_slug("ncursesw")` is `None`.
+    pub fn from_slug(slug: &str) -> Option<Self> {
+        Some(match slug {
+            "openssl" => CuratedLibrary::OpenSsl,
+            "boringssl" => CuratedLibrary::BoringSsl,
+            "zlib" => CuratedLibrary::Zlib,
+            "sqlite" => CuratedLibrary::Sqlite,
+            "curl" => CuratedLibrary::Curl,
+            "pcre" => CuratedLibrary::Pcre,
+            "pcre2" => CuratedLibrary::Pcre2,
+            "gnutls" => CuratedLibrary::GnuTls,
+            "libressl" => CuratedLibrary::LibreSsl,
+            "llvm" => CuratedLibrary::Llvm,
+            "openjdk" => CuratedLibrary::OpenJdk,
+            "php" => CuratedLibrary::Php,
+            "node" => CuratedLibrary::Node,
+            "expat" => CuratedLibrary::Expat,
+            "ncurses" => CuratedLibrary::Ncurses,
+            "bzip2" => CuratedLibrary::Bzip2,
+            "gmp" => CuratedLibrary::Gmp,
+            "liblzma" => CuratedLibrary::Liblzma,
+            _ => return None,
+        })
+    }
 }
 
 /// Scan a read-only string region for curated version signatures.
@@ -962,6 +1027,62 @@ fn parse_ncurses_version(tail: &[u8]) -> Option<String> {
         return None;
     }
     Some(format!("{major}.{minor}"))
+}
+
+/// Spec 1645 FR-013: ncurses as the banner states it, `X.Y` or
+/// `X.Y.YYYYMMDD`, with the same validation as [`parse_ncurses_version`].
+fn parse_ncurses_full(tail: &[u8]) -> Option<String> {
+    parse_ncurses_version(tail)?;
+    let end = tail.iter().position(|&b| b == 0)?;
+    std::str::from_utf8(&tail[..end]).ok().map(str::to_string)
+}
+
+/// Spec 1645 FR-002: LLVM as the banner states it. `X.Y.Z`, then any suffix
+/// of lowercase ASCII letters and digits attached to it (`git`, `rc1`),
+/// ended by a NUL, a space or the region's end.
+fn parse_llvm_version(tail: &[u8]) -> Option<String> {
+    let triple = parse_semver_triple(tail)?;
+    let rest = &tail[triple.len()..];
+    let n = rest.iter().take_while(|b| b.is_ascii_lowercase() || b.is_ascii_digit()).count();
+    match rest.get(n) {
+        None | Some(0) | Some(b' ') => std::str::from_utf8(&tail[..triple.len() + n]).ok().map(str::to_string),
+        _ => None,
+    }
+}
+
+/// Spec 1645 census (research R8): a curated LLVM or ncurses match whose
+/// version FR-002 or FR-013 would change. `new` is `None` when the new
+/// parser would not match at all.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VersionChange {
+    pub library: CuratedLibrary,
+    pub old: String,
+    pub new: Option<String>,
+}
+
+impl VersionChange {
+    pub fn to_json(&self) -> String {
+        serde_json::json!({ "library": self.library.slug(), "new": self.new, "old": self.old }).to_string()
+    }
+}
+
+/// Every match [`scan`] emits for LLVM or ncurses whose tail the stated-version
+/// parsers read differently. Census only; nothing is emitted from it.
+pub fn version_changes(region: &[u8]) -> Vec<VersionChange> {
+    let mut out: Vec<VersionChange> = Vec::new();
+    for i in 0..region.len() {
+        let Some(m) = match_prefix(region, i) else { continue };
+        let new = match m.library {
+            CuratedLibrary::Llvm => parse_llvm_version(&region[i + b"LLVM version ".len()..]),
+            CuratedLibrary::Ncurses => parse_ncurses_full(&region[i + b"ncurses ".len()..]),
+            _ => continue,
+        };
+        let change = VersionChange { library: m.library, old: m.version, new };
+        if change.new.as_deref() != Some(change.old.as_str()) && !out.contains(&change) {
+            out.push(change);
+        }
+    }
+    out
 }
 
 /// PCRE version: `X.Y YYYY-MM-DD`.
@@ -1925,5 +2046,65 @@ mod tests {
         assert_eq!(c[0].version, "1.0.8");
         assert!(bzip2_form_without_anchor(b"bzip2/libbzip2\x001.0.8, 13-Jul-2019\0").is_empty());
         assert!(scan(b"x\x001.0.8, 13-Jul-2019\0").is_empty());
+    }
+
+    #[test]
+    fn s1645_names_and_slugs_round_trip() {
+        use strum::IntoEnumIterator;
+        for lib in CuratedLibrary::iter() {
+            assert_eq!(CuratedLibrary::from_slug(lib.slug()), Some(lib), "{lib:?}");
+            assert_eq!(lib.names().first(), Some(&lib.slug()), "{lib:?}: the slug is not first");
+            for n in lib.names() {
+                assert_eq!(*n, n.to_lowercase(), "{lib:?}: {n} is not lowercase");
+            }
+        }
+        assert_eq!(CuratedLibrary::Ncurses.names(), ["ncurses", "ncursesw", "ncursest", "ncursestw"]);
+        assert_eq!(CuratedLibrary::from_slug("ncursesw"), None);
+        assert_eq!(CuratedLibrary::from_slug("waybill-fixture-x"), None);
+    }
+
+    #[test]
+    fn s1645_llvm_version_keeps_its_suffix() {
+        assert_eq!(parse_llvm_version(b"17.0.6\0").as_deref(), Some("17.0.6"));
+        assert_eq!(parse_llvm_version(b"23.0.0git\0").as_deref(), Some("23.0.0git"));
+        assert_eq!(parse_llvm_version(b"18.1.0rc1 (abc)").as_deref(), Some("18.1.0rc1"));
+        assert_eq!(parse_llvm_version(b"23.0.0").as_deref(), Some("23.0.0"), "the region's end");
+        assert_eq!(parse_llvm_version(b"23.0.0git").as_deref(), Some("23.0.0git"), "the region's end");
+        assert_eq!(parse_llvm_version(b"23.0.0-rc1\0"), None);
+        assert_eq!(parse_llvm_version(b"23.0.0Git\0"), None, "uppercase is not a suffix");
+        assert_eq!(parse_llvm_version(b"23.0\0"), None);
+    }
+
+    #[test]
+    fn s1645_ncurses_keeps_its_patch_date() {
+        assert_eq!(parse_ncurses_full(b"6.6.20251230\0").as_deref(), Some("6.6.20251230"));
+        assert_eq!(parse_ncurses_full(b"6.6\0").as_deref(), Some("6.6"));
+        for bad in [&b"6.6.2025123\0"[..], b"6.6.202512301\0", b"6.6.20251230", b"6\0", b"6.6.x2025123\0", b"6.6.20251230.1\0"] {
+            assert_eq!(parse_ncurses_full(bad), None, "{bad:?}");
+            assert_eq!(parse_ncurses_version(bad), None, "{bad:?}: the old parser's rejections are kept");
+        }
+    }
+
+    #[test]
+    fn s1645_version_changes_are_census_only() {
+        let r = b"\0LLVM version 23.0.0git\0ncurses 6.6.20251230\0LLVM version 17.0.6\0ncurses 6.5\0";
+        let mut got: Vec<(CuratedLibrary, String, Option<String>)> =
+            version_changes(r).into_iter().map(|c| (c.library, c.old, c.new)).collect();
+        got.sort_by(|a, b| a.1.cmp(&b.1));
+        assert_eq!(
+            got,
+            [
+                (CuratedLibrary::Llvm, "23.0.0".into(), Some("23.0.0git".into())),
+                (CuratedLibrary::Ncurses, "6.6".into(), Some("6.6.20251230".into())),
+            ]
+        );
+        // The scanner still emits the old versions on this commit.
+        let v: Vec<String> = scan(r).into_iter().map(|m| m.version).collect();
+        assert!(v.contains(&"23.0.0".to_string()) && v.contains(&"6.6".to_string()), "{v:?}");
+        // A tail the new parser rejects is reported as no longer matching.
+        let gone = version_changes(b"\0LLVM version 23.0.0-rc1\0");
+        assert_eq!(gone.len(), 1);
+        assert_eq!(gone[0].new, None);
+        assert!(gone[0].to_json().contains(r#""new":null"#), "{}", gone[0].to_json());
     }
 }
