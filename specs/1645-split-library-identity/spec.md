@@ -36,6 +36,7 @@ Also measured:
 
 - Q: A banner-only ncurses (no `.pc` file) would keep `ncurses@6.6`, while a merged one becomes `ncurses@6.6.20251230`, so the PURL version depends on whether a `.pc` file is present. Which version does the curated scanner report? → A: The full version the banner states, `X.Y.YYYYMMDD`, with or without a record (FR-013). FR-008 carries the patch date into the CPE's update field. Spec 1643's B-1 golden changes in its ncurses component only, as an intended and counted change.
 - Q: Does FR-008's CPE split apply to every `pkg:generic/ncurses` component, or only to those with a curated match? → A: Every one, whichever reader produced it, the same reach CPE rows already have. Today this changes one component outside the merge cases: the closure tier's `ncurses@6.4.20221231` in `nix-closure-openai`.
+- Q (from `/speckit-analyze`, F1): a curated-plus-record merge on `main` keeps only the record's mechanism and tier, and the curated evidence kind is lost (`gmp@6.3.0`, `zlib@1.3.2` on TheRock). Does this spec keep that shape or record the curated detection? → A: Keep the existing shape. The merged component lists both readers' files; recording the curated detection is #1665, which would change every existing such merge.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -49,13 +50,13 @@ An operator scans an SDK whose ncurses and LLVM are found both from the library'
 - the name variant: a library whose banner reads `ncurses X.Y.YYYYMMDD`, with an `ncursesw.pc` claiming it;
 - the version suffix: `LLVM version X.Y.Zgit`, with a CMake package-version file saying `X.Y.Zgit`.
 
-Each must give exactly one component, carrying both readers' files and evidence.
+Each must give exactly one component, listing both readers' files.
 
 **Acceptance Scenarios**:
 
 1. **Given** a library whose banner is `ncurses 6.6.20251230` and an `ncursesw.pc` with `Version: 6.6.20251230` whose library is that file, **When** scanned, **Then** there is exactly one component, `pkg:generic/ncurses@6.6.20251230`:
    - it lists every file either reader named: the library under both of its file names, and `ncursesw.pc`;
-   - it records that it was also detected through pkg-config, in the same form as spec 1644's merged `liblzma@5.8.1`;
+   - it keeps the record's `waybill:source-mechanism` (`pkg-config`) and tier. That is the shape every curated-plus-record merge has on `main` (TheRock's `gmp@6.3.0`), and the library file in its source files is the trace of the banner match. A merge loses the curated evidence kind; #1665 covers that, outside this spec;
    - its CPE candidates are the ncurses row's three vendors, at version `6.6` with update `20251230`;
    - no `ncursesw` component remains.
 2. **Given** a library whose banner is `LLVM version 23.0.0git` and a CMake package-version file saying `23.0.0git` whose exported targets include that file, **When** scanned, **Then** there is exactly one `pkg:generic/llvm@23.0.0git` component, listing the files of both.
@@ -102,7 +103,8 @@ An operator scanning anything where no file is claimed both by a curated match a
 
 ### Edge Cases
 
-- **Two records claim the shared file**, both with a qualifying name and an agreeing version (for example `ncurses.pc` and `ncursesw.pc` naming one file). Nothing is merged, and the census records the file as `ambiguous`. One file cannot pick between two records by order.
+- **Two records claim the shared file**, both with a qualifying name and an agreeing version. Nothing is merged, and the census records the file as `ambiguous`; one file cannot pick between two records by order.
+  - A record attaches a file by name only when the file is `lib<name>` exactly, so `ncurses.pc` and `ncursesw.pc` can never both claim `libncursesw.so` that way. Two qualifying names reach one file only through CMake exported targets or embedded source paths, for example an `ncursestw` package whose `IMPORTED_LOCATION` is that file. The census records whether real trees reach this state.
 - **The record is a different library that links the curated one statically.** For example `foo.pc` claims `libfoo.so`, which bundles zlib's banner. The record's name is not one of zlib's names (FR-004), so nothing merges, even if the versions happen to agree.
 - **The curated version is a prefix of the record's only by string**, not at a component boundary: `6.6` against `6.60`. That does not agree (FR-005).
 - **The record's version is the shorter one**: the curated `23.0.0git` against a record's `23.0.0`. That does not agree, because the curated version must be the less exact or equal one (FR-005). Both remain, and the census records it.
@@ -134,7 +136,7 @@ An operator scanning anything where no file is claimed both by a curated match a
 - **FR-007 (what survives a merge)**:
   - The merged component's **name** is the curated slug, because it is the name the CPE table has rows for. `ncurses` has three pairs, and `ncursesw` has no row.
   - Its **version** is the record's. Under FR-005 that is equal to, or more exact than, the curated one.
-  - Its **files and evidence** are the union of both, in the same shape as an existing PURL merge such as spec 1644's `liblzma@5.8.1`.
+  - Its **files** are the union of both, in the same shape as an existing curated-plus-record merge (TheRock's `gmp@6.3.0`): the record's mechanism and tier are kept. The curated entry's `waybill:evidence-kind` and `waybill:confidence` do not survive, as on `main` for every such merge (measured; #1665).
   - The record's original name (`ncursesw`) is recorded on the component, so that it is not lost. The plan chooses the field, and prefers a native CycloneDX or SPDX construct over a new `waybill:*` annotation (Principle V).
 - **FR-008 (ncurses CPE form)**: For every `pkg:generic/ncurses` component whose version is `X.Y.YYYYMMDD`, the CPE candidates SHALL put `X.Y` in the version field and `YYYYMMDD` in the update field. This is NVD's form, measured: 81 of 110 entries put the patch date in the update field, and none puts it in the version field. A version `X.Y` keeps `*` in update, as on `main`. This applies whichever reader produced the component, the same reach CPE rows already have. The census SHALL count the components it changes. Outside the merge cases, the public corpus has exactly one today: the closure tier's `ncurses@6.4.20221231` in `nix-closure-openai`, whose CPE becomes `invisible-island:ncurses:6.4:20221231`, and likewise for the other two vendors.
 - **FR-009 (disagreement keeps both)**: When FR-003 does not hold, both components SHALL remain exactly as on `main`.

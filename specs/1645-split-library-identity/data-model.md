@@ -40,7 +40,7 @@ If both `version-disagrees` and `name-unrelated` apply to a file, the census rec
 - **Curated entry C**: `purl` and `version` become the surviving PURL and `vr`. When `vc == vr`, nothing changes.
 - **Every entry's `depends`**: each string equal to R's old PURL is replaced by the surviving PURL (R2).
 
-The deduplicator then merges R and C, which are now equal PURLs, in the usual way: R comes first, so R's tier and mechanism are kept, and C56 records the other mechanism.
+The deduplicator then merges R and C, which are now equal PURLs, in the usual way. R comes first, so R's tier and mechanism are kept, and the files are the union. C's evidence kind and confidence are not kept, and C adds no C56 entry, as in every curated-plus-record merge on `main` (research R1, #1665).
 
 A curated entry on a file that no record claims is not rewritten. With FR-002 and FR-013 its PURL already equals the surviving one on TheRock (`librocm_sysdeps_ncursesw.so.6`), so it merges by PURL.
 

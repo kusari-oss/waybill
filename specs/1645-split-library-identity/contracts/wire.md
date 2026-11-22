@@ -35,7 +35,7 @@ Log-only commit only (R8). One event per `pkg:generic/ncurses` component whose C
 
 ## Document changes
 
-- **No new annotation, catalog row or field.** The merged component is an ordinary component, with the union of C18 `waybill:source-files` and C56 `waybill:also-detected-via` (R7).
+- **No new annotation, catalog row or field.** The merged component is an ordinary component: the record's mechanism and tier, and the union of C18 `waybill:source-files` (R7). The curated evidence kind is not kept (#1665).
 - **The CPE value form changes for ncurses only** (FR-008). The field is unchanged.
 
 ## Cases (`tests/library_identity.rs`)
@@ -44,7 +44,7 @@ All fixtures are synthetic: a minimal ELF shared library (`elf_shared_lib`) with
 
 | Case | Tree | Expected |
 |---|---|---|
-| M-1 name variant | `lib/libncursesw.so.6` with `ncurses 6.6.20251230\0`, and `lib/pkgconfig/ncursesw.pc` (`Version: 6.6.20251230`, `Libs: -lncursesw`) | exactly one `pkg:generic/ncurses@6.6.20251230`, with C18 containing the library and `ncursesw.pc`, C56 containing `pkg-config`, CPE candidates `invisible-island`, `ncurses_project` and `gnu` `:ncurses:6.6:20251230`, and no `ncursesw` component |
+| M-1 name variant | `lib/libncursesw.so.6` with `ncurses 6.6.20251230\0`, and `lib/pkgconfig/ncursesw.pc` (`Version: 6.6.20251230`, `Libs: -lncursesw`) | exactly one `pkg:generic/ncurses@6.6.20251230`, with C18 containing the library and `ncursesw.pc`, `waybill:source-mechanism` = `pkg-config`, CPE candidates `invisible-island`, `ncurses_project` and `gnu` `:ncurses:6.6:20251230`, and no `ncursesw` component |
 | M-2 version suffix | `lib/libLLVM.so.23.0git` with `LLVM version 23.0.0git\0`, and `lib/cmake/llvm/LLVMConfigVersion.cmake` (`23.0.0git`) with exported targets naming the library | exactly one `pkg:generic/llvm@23.0.0git` listing both |
 | M-3 prefix | `lib/libexpat.so.1` with `expat_2.7.5\0`, and `lib/pkgconfig/expat.pc` (`Version: 2.7.5.1`). The record attaches the file by its name (`match_binaries`). The curated version is a dotted prefix of the record's | one `pkg:generic/expat@2.7.5.1` listing both; no `expat@2.7.5` |
 | N-1 disagreement | M-1 with `Version: 6.5.20240427` | two components, `ncurses@6.6.20251230` and `ncursesw@6.5.20240427`; census `version-disagrees` |

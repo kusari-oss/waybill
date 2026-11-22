@@ -72,11 +72,10 @@ Output does not change in this phase.
   - every `curated_version_change`, old and new;
   - every `cpe_form_change`.
 
-  **Checkpoint**: if any count contradicts FR-002 to FR-013, amend the spec with the evidence before Phase 3. The expected counts are:
-  - `merge` for TheRock's ncurses only;
-  - LLVM changes on TheRock only;
-  - ncurses version changes on TheRock only;
-  - `cpe_form_change` on `nix-closure-openai` and on TheRock's ncurses.
+  **Checkpoint**: if any count contradicts FR-002 to FR-013, amend the spec with the evidence before Phase 3. The expected counts at the log-only commit are:
+  - `shared_file`: TheRock's `libncursesw.so` is `merge` (`6.6` is a dotted prefix of `6.6.20251230`, FR-005); TheRock's two `libLLVM` files are `version-disagrees` (`23.0.0` against `23.0.0git` is not at a `.`) until FR-002;
+  - `curated_version_change`: TheRock only, for 2 ncurses files and 3 LLVM files;
+  - `cpe_form_change`: `nix-closure-openai`'s `ncurses@6.4.20221231` only. TheRock's curated ncurses is still `6.6`, and `ncursesw` has no CPE row, so no TheRock CPE changes until FR-013.
 
 ## Phase 3: User Story 2 — the curated LLVM version is the version the binary states (P1)
 
@@ -91,9 +90,9 @@ Output does not change in this phase.
 **Independent test**: M-1, M-3 and E-1 pass; every N case still passes.
 
 - [ ] T012 [US1] In `VS`, switch the ncurses site to keep the patch date (FR-013), and remove its `curated_version_change` emission. Update `VB`'s `NCURSES_V` to `pkg:generic/ncurses@6.6.20251230`, and the unit tests that pinned `6.6`.
-- [ ] T013 [P] [US1] In `CP`, switch the ncurses CPEs to the split form (FR-008), and remove `cpe_form_change`. Then regenerate B-1's golden with `WAYBILL_UPDATE_VERSION_BOUNDARY_GOLDENS=1`. Diff it against the old golden: the only changes are the ncurses component's version and CPE strings. Record the diff in `MS/control.md`.
+- [ ] T013 [US1] After T012, in `CP`, switch the ncurses CPEs to the split form (FR-008), and remove `cpe_form_change`. Only now, with both T012 and T013 applied, regenerate B-1's golden with `WAYBILL_UPDATE_VERSION_BOUNDARY_GOLDENS=1`. Diff it against the old golden: the only changes are the ncurses component's version and CPE strings. Record the diff in `MS/control.md`.
 - [ ] T014 [US1] In `LI`, set `log_only = false`: on `merge`, rewrite the PURL, name and `depends` (data-model "Rewrite"). Remove the `#[ignore]` from M-1, M-3 and E-1.
-  - M-1 asserts C18 contains the library and `ncursesw.pc`, C56 contains `pkg-config` (R7), and the CPE candidates are `…:ncurses:6.6:20251230` for all three vendors.
+  - M-1 asserts C18 contains the library and `ncursesw.pc`, `waybill:source-mechanism` is `pkg-config` (R7), and the CPE candidates are `…:ncurses:6.6:20251230` for all three vendors. C56 and the curated evidence kind are not asserted: a curated-plus-record merge keeps neither on `main` (R1, #1665).
   - All N cases still pass.
 - [ ] T015 [US1] `parity(dir)` for M-1, M-2, M-3 and N-1 (FR-010).
 - [ ] T016 [US1] Mutations M1–M8 (R9). Copy spec 1644's `measurements/mutate.py` to `MS/mutate.py`, keeping its full-path test filter, its "no test result line → HARNESS ERROR" guard and its `cp` restore.
@@ -129,7 +128,7 @@ Output does not change in this phase.
 
   Update `VS`'s module doc table rows for LLVM and ncurses.
 - [ ] T020 [P] `CHANGELOG.md`: a Fixed entry citing #1662. Its TheRock and corpus sentences are written from T017 and T018's measurements, not predicted.
-- [ ] T021 Run the full gate on the final commit, and record in `MS/gate-log.md` the per-target `test result: ok. N passed; 0 failed` totals and the `>>> all pre-PR checks passed.` line. Name every failing test if any fail.
+- [ ] T021 Run the full gate on the final commit, and record in `MS/gate-log.md` the per-target `test result: ok. N passed; 0 failed` totals and the `>>> all pre-PR checks passed.` line. Name every failing test if any fail. Also record that `git diff bb9d6cc4 -- Cargo.lock '*Cargo.toml'` is empty (FR-012).
 - [ ] T022 Close-out. For every task above, check that its claim is true of the committed tree and measurements, not merely that its box is ticked. Then tick it.
 
 ## Dependencies
@@ -137,14 +136,14 @@ Output does not change in this phase.
 - **Setup**: T001 → T008. T002 → T008.
 - **Foundational**: T003 → T005 (`reconcile` uses `names`/`from_slug`). T004 → T007. T005, T006 and T007 → T008 → T009 → T010. T004 and T006 can run beside T003.
 - **US2** (T011) needs T010's checkpoint.
-- **US1**: T012 needs T010. T013 can run beside T012. T014 needs T011 (for M-2's agreement), T012 and T013. T015 needs T014. T016 needs T011–T015.
+- **US1**: T012 needs T010. T013 needs T012, because B-1 is regenerated only once both are applied. T014 needs T011 (for M-2's agreement), T012 and T013. T015 needs T014. T016 needs T011–T015.
 - **US3** (T017, T018) needs every code change.
 - **Polish**: T019 and T020 any time after T014. T021 and T022 last.
 
 ## Parallel opportunities
 
 - T003, T004 and T006 touch different code: `VS`'s enum, `VS`'s parsers and `CP`.
-- T012 (`VS`, `VB`) with T013 (`CP`, the B-1 golden). Both touch B-1's expectations, so run `VB` once after both.
+- T013's CPE code in `CP` can be written while T012 is in progress. B-1's regeneration waits for both.
 - T019 with T020.
 - The census (T010) and the final runs (T017, T018) are CI dispatches. Local work continues while they run.
 

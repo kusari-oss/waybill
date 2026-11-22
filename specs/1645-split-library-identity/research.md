@@ -12,7 +12,9 @@ All paths are relative to `waybill-cli/src/`. Code facts were read at `bb9d6cc4`
 
 **Decision**: add one pass, `library_identity::reconcile(&mut db_entries)`, immediately after the splice in `scan_fs/mod.rs`. It sees both kinds of entry, and the record's own declared files.
 - It does not merge anything itself. It rewrites the PURL, and the name where needed, of the qualifying record and curated entries to the surviving identity, then leaves the merge to the deduplicator.
-- That reuses the one merge path every existing case (expat, gmp, liblzma, zlib) already goes through. Evidence, files and C56 `waybill:also-detected-via` therefore come out in the same shape (FR-007).
+- That reuses the one merge path every existing case (expat, gmp, liblzma, zlib) already goes through, so the merged component comes out in the same shape (FR-007).
+  - Measured on TheRock (`gmp@6.3.0`, `zlib@1.3.2`): the record's mechanism and tier are kept, and the files are the union.
+  - The curated entry's `evidence-kind` and `confidence` do not survive, and C56 gains no entry for it. A curated entry has no source mechanism; C56 on `liblzma@5.8.1` names its second *record*. That loss predates this spec, and #1665 covers it.
 
 **Alternatives rejected**:
 - *Merge in the deduplicator by shared file.* The deduplicator has no notion of "a record's own library files" against "a curated match's file", and a file-keyed merge there would reach every reader.
@@ -67,7 +69,9 @@ Known consumers that pin `6.6`, and change as intended:
 - In the `generic` arm, when `name == "ncurses"` and the version is `X.Y.YYYYMMDD` (8 digits), emit `version = X.Y` and `update = YYYYMMDD`.
 - Every other library, and ncurses `X.Y`, is unchanged.
 
-This reaches every `pkg:generic/ncurses` component whichever reader produced it (clarification 2), because every reader's components go through `synthesize_cpes`. That includes the closure tier's `ncurses@6.4.20221231`, which spec 1367 routes through `synthesize_cpes`; the T-census confirms it on the public corpus.
+This reaches every `pkg:generic/ncurses` component whichever reader produced it (clarification 2), because every reader's components go through `synthesize_cpes`.
+- **Inference, not traced in code**: the closure tier's `ncurses@6.4.20221231` also reaches it, through spec 1367's call to `synthesize_cpes`. The basis is its current CPE, which has exactly the table's form (`invisible-island:ncurses:6.4.20221231`).
+- T010's `cpe_form_change` event on `nix-closure-openai` is the measurement that confirms or refutes this.
 
 **Operator CPE map** (`cli/scan_cmd.rs` ~line 7545) is **not** changed. An operator's row is applied as written, and the operator owns its form.
 
@@ -77,11 +81,13 @@ This reaches every `pkg:generic/ncurses` component whichever reader produced it 
 
 There is no native construct for an alternative name: CycloneDX 1.6 `component` has no alias field, and `evidence.identity` records how a field was concluded, not another name.
 
-**Decision**: no new annotation. The merged component already records the original name in two native or existing places:
-- its evidence occurrences (C18 `waybill:source-files`) include `ncursesw.pc`, and a pkg-config package's name *is* its `.pc` basename (pkg-config's definition);
-- C56 `waybill:also-detected-via` records `pkg-config`.
+**Decision**: no new annotation. The merged component keeps the original name in its evidence:
+- its occurrences (C18 `waybill:source-files`) include `ncursesw.pc`, and a pkg-config package's name *is* its `.pc` basename (pkg-config's definition);
+- it keeps the record's `waybill:source-mechanism` (`pkg-config`), because the record is first in the merge (R1).
 
-For a CMake record, the config file is listed the same way, and C103 already carries a declared name that differs only by case. That satisfies FR-007 and Principle V without a new `waybill:*` row. **Test**: the merged component's C18 contains the `.pc` path, and C56 contains `pkg-config`.
+For a CMake record, the config file is listed the same way, and C103 already carries a declared name that differs only by case. That satisfies FR-007 and Principle V without a new `waybill:*` row.
+
+**Test**: the merged component's C18 contains the `.pc` path, and its source mechanism is `pkg-config`. C56 is **not** asserted: a curated entry adds nothing to it (R1, #1665).
 
 ## R8. Census (FR-001)
 
