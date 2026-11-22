@@ -33860,6 +33860,7 @@
     },
     {
       "bom-ref": "pkg:generic/gmp@6.3.0",
+      "cpe": "cpe:2.3:a:gmplib:gmp:6.3.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -33869,6 +33870,18 @@
               {
                 "confidence": 0.95,
                 "technique": "instrumentation"
+              }
+            ]
+          },
+          {
+            "concludedValue": "cpe:2.3:a:gmplib:gmp:6.3.0:*:*:*:*:*:*:*",
+            "confidence": 0.7,
+            "field": "cpe",
+            "methods": [
+              {
+                "confidence": 0.7,
+                "technique": "other",
+                "value": "waybill curated CPE table"
               }
             ]
           }
@@ -105554,7 +105567,7 @@
       },
       {
         "name": "waybill:cpe-coverage",
-        "value": "{\"addressable_without_cpe\":176,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":294,\"with_candidates\":71}"
+        "value": "{\"addressable_without_cpe\":176,\"excluded_files\":0,\"excluded_members\":1087,\"schema\":\"waybill-cpe-coverage/v3\",\"unaddressable\":293,\"with_candidates\":72}"
       },
       {
         "name": "waybill:closure-graph-admission",

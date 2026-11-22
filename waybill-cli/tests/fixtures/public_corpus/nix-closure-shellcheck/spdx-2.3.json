@@ -41,7 +41,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":372,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1346,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":295,\\\"with_candidates\\\":72}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-coverage\",\"value\":\"{\\\"addressable_without_cpe\\\":372,\\\"excluded_files\\\":0,\\\"excluded_members\\\":1346,\\\"schema\\\":\\\"waybill-cpe-coverage/v3\\\",\\\"unaddressable\\\":294,\\\"with_candidates\\\":73}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -46264,6 +46264,12 @@
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:generic/gmp@6.3.0",
           "referenceType": "purl"
+        },
+        {
+          "comment": "CPE from waybill's curated CPE table",
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gmplib:gmp:6.3.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
