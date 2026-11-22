@@ -15,20 +15,20 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 `main`'s binary is already built at `83657af2` and saved as the scratchpad's `waybill-main` (R1). Rename it `waybill-main-83657af2` and record the full SHA in `MS/control.md`. Create `IT` with `mod common;` and helpers built on `IL`:
+- [X] T001 `main`'s binary is already built at `83657af2` and saved as the scratchpad's `waybill-main` (R1). Rename it `waybill-main-83657af2` and record the full SHA in `MS/control.md`. Create `IT` with `mod common;` and helpers built on `IL`:
   - `lib_dir(bytes, file_name) -> TempDir`: writes `elf_shared_lib(bytes)` as the named file in a fresh temp directory;
   - `scan3(dir)`: all three formats in one invocation, honouring `WAYBILL_VERSION_BOUNDARY_BIN` so a case can run against the saved `main` binary;
   - `scan_with_log(dir, filter) -> (docs, stderr)`: `scan3` with `RUST_LOG=<filter>` set and stderr captured, for C-1 and C-2;
   - `curated(doc, slug) -> Vec<String>`: sorted PURLs of components named `slug`, searched recursively (CycloneDX components nest);
   - `parity(dir)`: runs `waybill sbom parity-check` on the three documents and asserts agreement;
   - `unique_bom_refs(doc)`.
-- [ ] T002 B-1 (FR-006): one library holding NUL-preceded zlib, expat and ncurses banners together. Generate goldens `waybill-cli/tests/fixtures/version_string_boundary/b1-golden/{cdx,spdx-2.3,spdx-3}.json` with the saved `main` binary (`WAYBILL_UPDATE_VERSION_BOUNDARY_GOLDENS`). Assert byte-identity with per-run fields masked as `waybill-cli/tests/requirements_owner.rs` masks them. It passes at `main`.
+- [X] T002 B-1 (FR-006): one library holding NUL-preceded zlib, expat and ncurses banners together. Generate goldens `waybill-cli/tests/fixtures/version_string_boundary/b1-golden/{cdx,spdx-2.3,spdx-3}.json` with the saved `main` binary (`WAYBILL_UPDATE_VERSION_BOUNDARY_GOLDENS`). Assert byte-identity with per-run fields masked as `waybill-cli/tests/requirements_owner.rs` masks them. It passes at `main`.
 
 ## Phase 2: Foundational (log-only census)
 
 Output does not change in this phase.
 
-- [ ] T003 In `VS`, add the following. `match_prefix` does not call any of them yet.
+- [X] T003 In `VS`, add the following. `match_prefix` does not call any of them yet.
   - **`Boundary`** (`Anchored`, `NulOnly`) with `accepts(self, region, pos)` (data-model).
   - **`CuratedLibrary::boundary`**, an exhaustive `match` with no wildcard arm (R3). Its table is FR-001's.
   - **`is_identifier(b: u8) -> bool`** for `[A-Za-z0-9_]`.
@@ -50,8 +50,8 @@ Output does not change in this phase.
   - for OpenSSL behind `-`: `accepted_new=false`.
 
   Every existing suite passes unchanged: `cargo test -p waybill version_strings`, `--test installed_lib_us3`, `--test python_owned_binaries` and `--test orphan_explanations`. B-1 passes too.
-- [ ] T004 C-1, the census positive control, in `IT`. Scan a library holding `-ncurses 6.6.20251230\0` with `RUST_LOG=waybill::version_census=debug`. Assert exactly one event with `library=ncurses`, `preceding=other_non_identifier`, `accepted_main=false` and `accepted_new=true`. C-2: the same with a space before the banner gives exactly one event with `preceding=whitespace`. Match on the raw field text, written so that Debug-escaped quotes cannot make it pass vacuously; spec 1642's T004 needle failed that way.
-- [ ] T005 **Census at the log-only commit** (SC-001, R5, R6).
+- [X] T004 C-1, the census positive control, in `IT`. Scan a library holding `-ncurses 6.6.20251230\0` with `RUST_LOG=waybill::version_census=debug`. Assert exactly one event with `library=ncurses`, `preceding=other_non_identifier`, `accepted_main=false` and `accepted_new=true`. C-2: the same with a space before the banner gives exactly one event with `preceding=whitespace`. Match on the raw field text, written so that Debug-escaped quotes cannot make it pass vacuously; spec 1642's T004 needle failed that way.
+- [X] T005 **Census at the log-only commit** (SC-001, R5, R6).
   - **Write the census tooling in `FR`.** Add `census/versions.py` (stdlib, run as `python3 -I -B`, ANSI-stripped) and `.github/workflows/census-versions.yml`.
     - The script reads only the events; it never re-scans bytes.
     - **Matrix:** the full SDK tarball, downloaded and size-checked exactly as `measure-full.yml` does, plus the 18 quality-corpus targets at the pins in `census-owners.yml`.
@@ -72,10 +72,10 @@ Output does not change in this phase.
 
 **Goal**: FR-001, FR-002, FR-004. **Independent test**: Z-1 to Z-3, Z-6, N-1 to N-3, E-1, E-2, and T007's unit tests.
 
-- [ ] T006 [US1] Write Z-1, Z-2, Z-3, Z-6, N-1, N-2, N-3, E-1 and E-2 in `IT`, each asserting the curated PURL, `parity` and `unique_bom_refs`. File names are `libwaybill-fixture-z.so.1`, `libwaybill-fixture-ncurses.so.6` and `libwaybill-fixture-expat.so.1`.
+- [X] T006 [US1] Write Z-1, Z-2, Z-3, Z-6, N-1, N-2, N-3, E-1 and E-2 in `IT`, each asserting the curated PURL, `parity` and `unique_bom_refs`. File names are `libwaybill-fixture-z.so.1`, `libwaybill-fixture-ncurses.so.6` and `libwaybill-fixture-expat.so.1`.
 
   **Run them at the log-only commit.** Z-2, Z-3, N-2, N-3 and E-2 must fail on their stated assertion; Z-1, Z-6, N-1 and E-1 must pass. Record each case's result in `MS/control.md`. If a case expected to fail passes, its control is wrong: stop and rebuild the case before T007.
-- [ ] T007 [US1] Wire the rule in `VS::match_prefix` (R3, R4):
+- [X] T007 [US1] Wire the rule in `VS::match_prefix` (R3, R4):
   - **expat and ncurses** move above the `if !at_boundary { return None; }` early return, each gated by `CuratedLibrary::X.boundary().accepts(region, pos)`.
   - **zlib**'s `after_one_space` changes `region[pos - 2] == 0` to `!is_identifier(region[pos - 2])`. The no-space form keeps `at_boundary`.
   - **The twelve `NulOnly` patterns** stay below the early return, unchanged.
@@ -87,20 +87,20 @@ Output does not change in this phase.
   - at region offset 0 it matches;
   - **census agrees with the scanner (I1):** for every fixture banner and every preceding byte above, the census hits with `accepted_new=true` are exactly `scan()`'s matches;
   - **the R3 iteration test:** a test-only `fn sample(lib: CuratedLibrary) -> &'static [u8]` (exhaustive `match`) gives each variant's canonical banner. For every `CuratedLibrary::iter()` variant, the banner behind NUL matches, and behind `-` it matches exactly when `boundary()` is `Anchored`.
-- [ ] T008 [US1] Run the US1 cases and T007's unit tests until they pass. Also run the existing #1525/#1526 tests in `VS`, `installed_lib_us3`, `python_owned_binaries`, `orphan_explanations`, `generate::cpe`'s `mappings_cover_all_curated_libraries` and B-1. An existing assertion whose expectation changes is recorded with its reason in the commit message. None may be loosened otherwise.
+- [X] T008 [US1] Run the US1 cases and T007's unit tests until they pass. Also run the existing #1525/#1526 tests in `VS`, `installed_lib_us3`, `python_owned_binaries`, `orphan_explanations`, `generate::cpe`'s `mappings_cover_all_curated_libraries` and B-1. An existing assertion whose expectation changes is recorded with its reason in the commit message. None may be loosened otherwise.
 
 ## Phase 4: User Story 2: a library name inside other text is still not a match (P1)
 
 **Goal**: FR-002 (identifier rejection), FR-003. **Independent test**: Z-4, Z-5, Z-7, N-4, E-3, U-1, U-2.
 
-- [ ] T009 [US2] Write Z-4, Z-5, Z-7, N-4, E-3, U-1 and U-2 in `IT`. These are guards: they pass at the log-only commit, and are run there and recorded in `MS/control.md`. Each asserts the absence of the versioned PURL, not of every component with that name: the symbol fingerprint may still report an unversioned `zlib` (`contracts/wire.md`).
-- [ ] T010 [US2] Run T009's cases after T007 until they pass, with T007's unit tests for the other eleven `NulOnly` patterns.
+- [X] T009 [US2] Write Z-4, Z-5, Z-7, N-4, E-3, U-1 and U-2 in `IT`. These are guards: they pass at the log-only commit, and are run there and recorded in `MS/control.md`. Each asserts the absence of the versioned PURL, not of every component with that name: the symbol fingerprint may still report an unversioned `zlib` (`contracts/wire.md`).
+- [X] T010 [US2] Run T009's cases after T007 until they pass, with T007's unit tests for the other eleven `NulOnly` patterns.
 
 ## Phase 5: User Story 3: nothing else changes (P2)
 
 **Goal**: FR-006, FR-007. **Independent test**: B-1, B-2.
 
-- [ ] T011 [US3] Run B-1 and B-2 (`installed_lib_us3`, `python_owned_binaries`, `orphan_explanations`, the #1525/#1526 unit tests) unchanged after T007. Confirm with `git diff origin/main -- docs/reference/sbom-format-mapping.md waybill-cli/src/parity` that no catalog row or extractor changed (FR-007).
+- [X] T011 [US3] Run B-1 and B-2 (`installed_lib_us3`, `python_owned_binaries`, `orphan_explanations`, the #1525/#1526 unit tests) unchanged after T007. Confirm with `git diff origin/main -- docs/reference/sbom-format-mapping.md waybill-cli/src/parity` that no catalog row or extractor changed (FR-007).
 
 ## Phase 6: Polish and cross-cutting
 
