@@ -27,3 +27,7 @@ Result: `test result: FAILED. 144 passed; 8 failed` (the 135 other passes are th
 Harness corrections made while establishing the controls, before any product change:
 - `waybill-fixture-shared>=1.0` gives an unversioned PURL, so lookups match a bare `pkg:type/name` with or without a version.
 - A main module chosen as root is listed as `metadata.component` and again in `components` (#1633, on `main`). Lookups dedupe by `bom-ref`; the duplicate-`bom-ref` check covers `components` only.
+
+## Re-run after the implementation amendments
+
+O-3 and O-6 now compare C18 and C120 as sets, O-7 checks that C18 contains the manifest directory, and B-1's tree has no lockfile merge (its golden regenerated from `main`'s binary). Re-run against `main`'s binary: `test result: FAILED. 144 passed; 9 failed`. The same eight cases fail, each on its stated assertion, plus T004 (`main` emits no census events). The same nine pass. On the branch at `589c3ba5`: `153 passed; 0 failed`.
