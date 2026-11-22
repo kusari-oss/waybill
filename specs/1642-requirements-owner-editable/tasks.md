@@ -29,7 +29,7 @@
 
 Output does not change in this phase.
 
-- [X] T003 Census events on target `waybill::owner_census` (research R6, data-model "Census events"), each one `tracing::debug!` with a JSON string field:
+- [X] T003 (At T011 the `anchor_immunity` event, which ran the propagation on copies, was replaced by the real anchor seeds, an `anchor_seed` event and `PropagationSummary::immune_by_root_anchors`; at T015 `owner_candidates` lost its `step` field with the dropped runtime key.) Census events on target `waybill::owner_census` (research R6, data-model "Census events"), each one `tracing::debug!` with a JSON string field:
   - **In `PM`,** the augment-existing branch: `merge_source` for every merge, with the existing entry's `sbom_tier` and `source_path`, the synthesized main module's `source_path`, and the editable path. Carry the editable path from `UV` on the parse result for this. It is not emitted, and is used by R2 later. Also `agrees`.
   - **In `DA`,** `OwnerIndex::build`: `owner_candidates` for every directory with more than one candidate at the same rank, with each candidate's PURL, rank, `non_runtime` and first source path, the step that decides it under R3's key, and today's owner.
   - **In `DA` or `SC`:** `dev_only_main_module` for every main module whose only inbound edges are `DevDependsOn` or `OptionalDependsOn` from a dependency group (C122 `pep-735-dependency-groups:*`). Record its directory, and whether it is an owner candidate, a root candidate (`root_selector` input) or an `added_seeds` member.
@@ -127,7 +127,7 @@ Output does not change in this phase.
     - Record the median of 3 and the ratio (at most 1.05).
   - **Quality corpus:** branch and `main` runs, with every changed metric traced component by component, through `census-conditions`-style document runs where the quality report keeps no documents.
   - Record in `MS/therock.md` and `MS/corpus.md`.
-- [ ] T020 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (FR-009). Open the PR with "Closes #1640" and "Refs #1566, #1587, #1618", ending with the attribution footer. Merging is the maintainer's.
+- [X] T020 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (FR-009). Open the PR with "Closes #1640" and "Refs #1566, #1587, #1618", ending with the attribution footer. Merging is the maintainer's.
 
 ## Dependencies
 
