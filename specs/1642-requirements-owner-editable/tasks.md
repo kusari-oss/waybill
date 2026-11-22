@@ -113,12 +113,12 @@ Output does not change in this phase.
 
   Restore with `cp`, rebuild after the last one, and use a `^error\[E` guard. Record in `MS/mutations.md`.
 - [X] T017 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Record `GATE_RESULT` and every `test result:` count in `MS/gate-log.md`.
-- [ ] T018 Public corpus at the final commit (SC-004): `regen_goldens=true`. Enumerate the jobs and confirm the scanned SHA.
+- [X] T018 Public corpus at the final commit (SC-004): `regen_goldens=true`. Enumerate the jobs and confirm the scanned SHA.
   - `cmp` every regenerated golden against the committed one.
   - Trace every changed component and edge to FR-001, FR-003 or FR-005.
   - Commit the changed goldens from the artifact.
   - Record in `MS/corpus.md`. This is also the public corpus's census (planning amendment).
-- [ ] T019 TheRock and quality corpus (SC-004, SC-005).
+- [X] T019 TheRock and quality corpus (SC-004, SC-005).
   - **TheRock:** `measure-source` with `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`.
     - Read the SHAs from `refs.txt`.
     - Compare all six documents with per-run fields masked.
