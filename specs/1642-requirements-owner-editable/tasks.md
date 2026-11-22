@@ -93,7 +93,7 @@ Output does not change in this phase.
 
 **Goal**: FR-007. **Independent test**: B-1, B-2.
 
-- [ ] T013 [US3] B-2: run `declared_requirements` and every spec 1618 test unchanged after T007–T011. Spec 1537's uv-workspace expectations are re-read against O-6, which changes by design: the members now own their own directories.
+- [X] T013 [US3] B-2: run `declared_requirements` and every spec 1618 test unchanged after T007–T011. Spec 1537's uv-workspace expectations are re-read against O-6, which changes by design: the members now own their own directories.
 
 ## Phase 6: Polish and cross-cutting
 
@@ -112,7 +112,7 @@ Output does not change in this phase.
   - **M7:** drop the `is_runtime_seed_candidate` filter on anchors (killed by a unit test in `SP`: an anchor whose target is reader-scoped Optional, as a root `requirements-dev.txt` alone gives, protects nothing).
 
   Restore with `cp`, rebuild after the last one, and use a `^error\[E` guard. Record in `MS/mutations.md`.
-- [ ] T017 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Record `GATE_RESULT` and every `test result:` count in `MS/gate-log.md`.
+- [X] T017 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Record `GATE_RESULT` and every `test result:` count in `MS/gate-log.md`.
 - [ ] T018 Public corpus at the final commit (SC-004): `regen_goldens=true`. Enumerate the jobs and confirm the scanned SHA.
   - `cmp` every regenerated golden against the committed one.
   - Trace every changed component and edge to FR-001, FR-003 or FR-005.
