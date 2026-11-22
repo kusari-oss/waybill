@@ -84,12 +84,13 @@ File references are to `waybill-cli/src/` at `main` `79b3350b`. "Traced" means r
 
 - **A log-only commit** emits `debug` events on target `waybill::owner_census`, with output unchanged:
   - `owner_candidates`: per directory with more than one candidate at the same rank, the candidates with `(rank, non_runtime, purl)`, each candidate's first source path (for R3's lockfile check), and which step decided;
-  - `owner_change`: per requirements package, CMake fetch and search, the owner chosen today and the owner after R2 and R3;
   - `merge_source`: per augment-branch merge, the existing entry's tier, its source path, the manifest directory, and the editable path if any. This covers R2's lockfile and installed counts, and the editable cross-check;
   - `dev_only_main_module`: per main module that a dependency group alone lists, and what keys on it (root selection, workspace-member, owner candidacy, `added_seeds`), for FR-002;
   - `anchor_immunity`: per component that R5's anchor seeds would make immune and that is non-runtime today, with its ecosystem and the kind of direct dependent.
 
-  Computing the "after" values at a log-only commit means running R2 to R5 on copies, which keeps output unchanged.
+  Every event records a fact available on `main`. `anchor_immunity` reruns the immunity search with the anchors added, on a copy, and assigns nothing.
+
+  **Owner changes are not simulated.** Which requirements packages, CMake fetches and searches change owner is counted from the wired commit's per-component diff against `main` (SC-004). Recomputing ownership in the census script would be a second model of `OwnerIndex`, one that could drift from the binary.
 - **Where it runs:**
   - **TheRock and the 18 quality-corpus targets:** a new workflow, `census-owners.yml`, in the TheRock fixture repository, modelled on `census-conditions.yml`. It takes the waybill commit as a full SHA and clones TheRock with top-level submodules. Quality targets are cloned at their pins, from `xtask/corpus/quality-corpus.toml`. `census/owners.py` reads the log. TheRock in CI only.
   - **The public corpus** (planning amendment to SC-001): its harness does not keep scan logs. At the log-only commit, `regen_goldens` must give 0 differing files, which confirms the commit is log-only. Its census is then the regenerated diff at the wired commit, traced component by component (SC-004). This is how spec 1641 measured the public corpus.

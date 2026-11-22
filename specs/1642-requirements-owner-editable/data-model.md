@@ -41,8 +41,7 @@ On target `waybill::owner_census`, one JSON object per event:
 
 | event | fields |
 |---|---|
-| `owner_candidates` | directory, candidates `[{purl, rank, non_runtime, first_path}]`, deciding step, owner today, owner after R2 and R3 |
-| `owner_change` | kind (`requirements` / `cmake-fetch` / `cmake-search`), component PURL, file, owner today, owner after |
+| `owner_candidates` | directory, candidates `[{purl, rank, non_runtime, first_path}]`, deciding step, owner today |
 | `merge_source` | PURL, existing tier, existing source path, manifest directory, editable path (or null), agrees (bool) |
 | `dev_only_main_module` | PURL, directory today and after R2, is root candidate, is owner candidate, is added seed |
 | `anchor_immunity` | PURL, ecosystem, scope today, anchor kind (`declared` / `submodule`), would be immune |
