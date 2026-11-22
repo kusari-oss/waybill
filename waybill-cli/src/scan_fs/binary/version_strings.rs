@@ -18,6 +18,14 @@
 //! | Node.js   | `node.js/vX.Y.Z` (the compiled-in default User-Agent)        | NUL-only |
 //! | expat     | `expat_X.Y.Z` (#1526)                                        | anchored |
 //! | ncurses   | `ncurses X.Y.YYYYMMDD`, emitted as `X.Y` (#1526)             | anchored |
+//! | bzip2     | `X.Y.Z, DD-Mon-YYYY` + anchor `bzip2/libbzip2` (#1641)      | whole string |
+//! | GMP       | `X.Y.Z` + anchor `GNU MP:` (#1641)                          | whole string |
+//! | liblzma   | `X.Y.Z[alpha|beta]` + a defined `lzma_version_*` (#1641)    | whole string |
+//!
+//! **Whole string** (spec 1644). A bare version names no library, so these
+//! three never match through the prefix scan. [`anchored_verdicts`]
+//! versions one only when its anchor is in the same binary and exactly one
+//! whole-string candidate is left (see [`Boundary::WholeString`]).
 //!
 //! **Boundary** (spec 1643, #1568, #1641). A NUL-only pattern must start a
 //! string: the byte before it is NUL, or it starts the region. An anchored

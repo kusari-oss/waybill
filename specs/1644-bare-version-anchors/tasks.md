@@ -131,7 +131,7 @@ Output does not change in this phase.
 
 ## Phase 7: Polish
 
-- [ ] T019 [P] In `docs/reference/binary-identity.md`, add the three libraries and the anchored rule (anchor, whole-string candidate, one candidate or none, a shared candidate versions neither, defined symbols only). Update `VS`'s module doc table with a row per library and the `WholeString` class.
+- [X] T019 [P] In `docs/reference/binary-identity.md`, add the three libraries and the anchored rule (anchor, whole-string candidate, one candidate or none, a shared candidate versions neither, defined symbols only). Update `VS`'s module doc table with a row per library and the `WholeString` class.
 - [ ] T020 [P] `CHANGELOG.md`: an Added entry for bzip2, GMP and xz (liblzma) versions from embedded strings, citing #1641.
 - [ ] T021 Run the full gate on the final commit and record the per-target `test result: ok. N passed; 0 failed` totals and the `>>> all pre-PR checks passed.` line in `MS/gate-log.md`. Enumerate every failing test by name if any fail; never call a failure a flake without the 30× isolation loop.
 - [ ] T022 Close-out. For every task above, check that its claim is true of the committed tree and measurements, not merely that its box is ticked. Then tick it.
