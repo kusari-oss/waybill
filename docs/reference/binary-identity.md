@@ -70,20 +70,35 @@ closure without source access. Cross-format: ELF / Mach-O / PE.
 
 ## Embedded-version-string detection
 
-Curated detection for **11 high-CVE-volume native libraries**
-statically-linked into compiled binaries — the heuristic-tier
-counterpart to source-tree manifest parsing. Waybill walks the
-binary's read-only string region (`.rodata` / `__TEXT,__cstring` /
-`.rdata` — never the full image, to bound the false-positive
-surface) and recognises each library's canonical version banner
-anchored at a NUL boundary:
+Curated detection for **15 native libraries and runtimes** that are
+commonly linked into or bundled with compiled binaries — the
+heuristic-tier counterpart to source-tree manifest parsing. Waybill
+walks the binary's read-only string region (ELF `.rodata` and
+`.data.rel.ro`, Mach-O `__cstring` and `__const`, PE `.rdata` — never
+the full image, to bound the false-positive surface) and recognises
+each library's canonical version banner:
 
 - **Crypto / TLS:** OpenSSL, BoringSSL, LibreSSL, GnuTLS
-- **Compression / data:** zlib, SQLite
+- **Compression / data:** zlib, SQLite, expat
+- **Terminal:** ncurses
 - **Networking:** curl
 - **Regex:** PCRE, PCRE2
 - **Compiler / runtime:** LLVM, OpenJDK (handles both modern JEP-322
-  `21.0.1+12` and legacy Java-8 `8u362-b09`)
+  `21.0.1+12` and legacy Java-8 `8u362-b09`), PHP, Node.js
+
+What may precede a banner depends on how much of it is fixed (spec
+1643, #1568, #1641):
+
+- **zlib, expat and ncurses** are fixed at both ends: the library's
+  name starts the banner, and a fixed suffix (zlib's ` Copyright`) or a
+  required NUL ends it. Any preceding byte except a letter, digit or
+  `_` is accepted, because those sections mix strings with other
+  constant data and a real banner can follow any byte. For zlib the
+  test applies to the byte before its leading space.
+- **The other twelve** must start a string: the byte before the banner
+  is NUL. Their banners end at any byte that is not part of a version,
+  so without the NUL rule a mention inside another program's text
+  (`requires OpenSSL 1.1.1 or later`) would match.
 
 Each detection emits a `pkg:generic/<library>@<version>` component
 with `waybill:evidence-kind = "embedded-version-string"` and

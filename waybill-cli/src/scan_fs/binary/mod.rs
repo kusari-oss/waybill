@@ -1105,6 +1105,13 @@ fn prepare_held(path: &std::path::Path, names: Option<&std::collections::BTreeSe
     drop(bytes);
     let t = std::time::Instant::now();
     p.version_matches = version_strings::scan(&scan.string_region);
+    // Spec 1643 census: every curated pattern occurrence with the byte
+    // before it. Off unless `waybill::version_census=debug` is enabled.
+    if tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
+        for hit in version_strings::census(&scan.string_region) {
+            tracing::debug!(target: "waybill::version_census", path = %path.display(), hit = %hit.to_json());
+        }
+    }
     p.embedded = names.map(|n| embedded_paths::extract(&scan.string_region, n));
     p.strings = t.elapsed();
     p.scan = Some(scan);
