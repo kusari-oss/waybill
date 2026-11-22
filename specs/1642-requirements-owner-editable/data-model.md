@@ -24,10 +24,9 @@ The entry the pip main-module pass leaves for a PURL that a lockfile reader also
 |---|---|
 | directory | relative to the scan root, from `derive_workspace_root(first source path)` |
 | rank | `RANK_PYPI_MAIN_MODULE` < other main module < CMake project < submodule (unchanged) |
-| non_runtime | the candidate's `lifecycle_scope` is non-runtime |
 | purl | the tie-break of last resort |
 
-**Order:** `(rank, non_runtime, purl)`. A tie on `(rank, non_runtime)` decided by the PURL emits a `debug` event on `waybill::owner_index`.
+**Order:** `(rank, purl)`, as on `main` (the planned `non_runtime` key was dropped by the census). A tie decided by the PURL emits a `debug` event on `waybill::owner_index`.
 
 ## Anchor seed (R5)
 

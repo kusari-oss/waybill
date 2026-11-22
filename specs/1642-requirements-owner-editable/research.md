@@ -41,10 +41,9 @@ File references are to `waybill-cli/src/` at `main` `79b3350b`. "Traced" means r
   - A pip main module exists only where the main-module pass read a manifest: `build_pip_main_module_entry`, or `uv_lock.rs` for workspace members whose `pyproject.toml` `detect_workspace` read.
 
   So no main-module candidate is left whose first path is a lockfile, and a key for step 1 would be unreachable. The census (R6) verifies this, counting candidates whose first path is a lockfile file name (expected 0 after R2). The lockfile names live in the census script, not in a second Rust list (the readers hard-code `uv.lock`, `poetry.lock` and `Pipfile.lock` at their own call sites).
-- **Decision:** `OwnerIndex`'s candidate key goes from `(rank, purl)` to `(rank, non_runtime, purl)`:
-  - `non_runtime`: the candidate's `lifecycle_scope` is non-runtime (step 2). No scanned tree is known to produce two same-rank pip candidates after R2, so this step is tested at unit level (T008).
-  - `purl`: as on `main` (step 3).
-- **The log.** When two candidates tie on `(rank, non_runtime)` and the PURL decides, emit one `debug` event on target `waybill::owner_index` with the directory and every candidate.
+- **Decision as planned:** `OwnerIndex`'s candidate key goes from `(rank, purl)` to `(rank, non_runtime, purl)`.
+- **Census amendment (T005, `measurements/census.md`):** the `non_runtime` key is dropped, and the key stays `(rank, purl)`. On TheRock it decided 3 directories: one that R2 already resolves, one with no change of owner, and one where it moved a CMake sample's directory to a sibling `project()`. It decided none in the quality corpus.
+- **The log.** When two candidates tie on rank and the PURL decides, emit one `debug` event on target `waybill::owner_index` with the directory and every candidate.
 - **The census counts how often each step decides.** After R2, the measured #1640 tie no longer exists. Step 2 is a defence for trees the census may find, so it gets a unit test and a mutation even if the census finds 0.
 - **Alternative rejected: rank by the editable path being `.`.** It is uv-only, and it is unavailable once the entry is merged.
 

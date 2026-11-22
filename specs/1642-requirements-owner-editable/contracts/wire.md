@@ -27,7 +27,7 @@ Every case builds a synthetic `waybill-fixture-*` tree in a temp directory and s
 | O-11 | a uv.lock editable entry `editable = "../outside"` pointing outside the scan root, with no manifest in the tree | owns nothing; output unchanged from `main` | — (guard) |
 | O-12 | a uv.lock editable entry whose `x/pyproject.toml` is absent | no main module for it, owns nothing; output unchanged from `main` | — (guard) |
 
-FR-003's runtime step has no integration case: no scanned tree is known to produce two same-rank pip candidates after FR-001 (spec Edge Cases). It is tested at unit level in `declared_attach.rs` (T008), and that unit test kills mutation M4.
+FR-003's planned runtime step was dropped by the census (`measurements/census.md`). The remaining order, rank and then PURL, is tested at unit level in `declared_attach.rs` (`s1642_rank_first_then_purl`).
 
 ## Anchor immunity (User Story 2)
 

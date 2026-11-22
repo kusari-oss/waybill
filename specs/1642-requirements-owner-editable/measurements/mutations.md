@@ -2,14 +2,14 @@
 
 `measurements/mutate.py` applies each mutation as one exact replacement, runs its killing test, and restores the file with `cp`. The binary was rebuilt after the last one. A `^error[E` line would count as a compile error, not a kill; none occurred.
 
-**Result: 8 of 8 killed.**
+**Result: 8 of 8 killed.** M4 was later retired with the code it mutated (census amendment), leaving 7 of 7.
 
 | id | mutation | killed by |
 |---|---|---|
 | M1 | drop R2's source-path swap | `o3_a_merged_main_module_keeps_its_own_directory` |
 | M2 | apply R2 to installed entries too | `o8_an_installed_entry_keeps_its_path_first` |
 | M3 | drop the lockfile path from the merged entry | `o3_a_merged_main_module_keeps_its_own_directory` |
-| M4 | drop FR-003's non-runtime key | unit `s1642_a_runtime_candidate_beats_a_non_runtime_one` |
+| M4 | (removed: the key it mutated was dropped by the census, `census.md`) | — |
 | M5 | drop the anchor seeds | `a1_a_root_declared_package_is_runtime` |
 | M6 | drop the declaring-file filter (every requirements anchor a seed) | `a3_a_dev_requirements_anchor_is_not_a_seed` |
 | M7 | drop the anchor's own-scope filter | unit `s1642_a_non_runtime_anchor_is_not_a_seed` |

@@ -95,13 +95,13 @@ fn is_requirements_file(path: &Path) -> bool {
 }
 
 /// Spec 1642 (FR-003): a directory whose owner the PURL decides, because the
-/// best candidates tie on rank and scope.
+/// best candidates tie on rank.
 fn log_purl_ties(all_by_dir: &BTreeMap<PathBuf, Vec<Candidate>>) {
     for (dir, cands) in all_by_dir {
         let mut sorted = cands.clone();
         sorted.sort();
         let tied: Vec<&str> = match sorted.first() {
-            Some((r, n, _)) => sorted.iter().filter(|(r2, n2, _)| r2 == r && n2 == n).map(|(_, _, p)| p.as_str()).collect(),
+            Some((r, _)) => sorted.iter().filter(|(r2, _)| r2 == r).map(|(_, p)| p.as_str()).collect(),
             None => continue,
         };
         if tied.len() > 1 {
@@ -112,7 +112,7 @@ fn log_purl_ties(all_by_dir: &BTreeMap<PathBuf, Vec<Candidate>>) {
 
 /// Spec 1642 census (research R6): one `owner_candidates` event per
 /// directory where more than one candidate shares the best rank, with each
-/// candidate's scope and first source path and the step R3 would decide by.
+/// candidate's scope and first source path.
 fn census_owner_candidates(
     components: &[ResolvedComponent],
     all_by_dir: &BTreeMap<PathBuf, Vec<Candidate>>,
@@ -126,8 +126,8 @@ fn census_owner_candidates(
         })
         .collect();
     for (dir, cands) in all_by_dir {
-        let Some(best) = cands.first().map(|(r, _, _)| *r) else { continue };
-        let top: Vec<&String> = cands.iter().filter(|(r, _, _)| *r == best).map(|(_, _, p)| p).collect();
+        let Some(best) = cands.first().map(|(r, _)| *r) else { continue };
+        let top: Vec<&String> = cands.iter().filter(|(r, _)| *r == best).map(|(_, p)| p).collect();
         if top.len() < 2 {
             continue;
         }
@@ -138,24 +138,23 @@ fn census_owner_candidates(
                 serde_json::json!({"purl": p, "rank": best, "non_runtime": non_runtime, "first_path": first})
             })
             .collect();
-        let scopes: BTreeSet<bool> = top.iter().map(|p| facts.get(p.as_str()).is_some_and(|f| f.0)).collect();
-        let step = if scopes.len() > 1 { "runtime" } else { "purl" };
         tracing::debug!(
             target: "waybill::owner_census",
             event = "owner_candidates",
             payload = %serde_json::json!({
                 "dir": dir.to_string_lossy(),
                 "candidates": rows,
-                "step": step,
                 "owner": by_dir.get(dir),
             }),
         );
     }
 }
 
-/// Spec 1642 (research R3): an owner candidate's key, best first: rank, then
-/// a runtime candidate before a non-runtime one, then the PURL.
-type Candidate = (u8, bool, String);
+/// An owner candidate's key, best first: rank, then the PURL. Spec 1642's
+/// census (research R6) dropped a runtime-before-non-runtime step: after R2
+/// it decided no pip directory and moved a CMake sample's directory to a
+/// sibling project.
+type Candidate = (u8, String);
 
 /// Directory (relative to the scan root) → the project that owns it.
 #[derive(Debug, Default)]
@@ -177,8 +176,8 @@ impl OwnerIndex {
         let canonical_root = std::fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
         let mut best: BTreeMap<PathBuf, Candidate> = BTreeMap::new();
         let mut all_by_dir: BTreeMap<PathBuf, Vec<Candidate>> = BTreeMap::new();
-        let mut offer = |dir: PathBuf, rank: u8, non_runtime: bool, purl: &str| {
-            let cand = (rank, non_runtime, purl.to_string());
+        let mut offer = |dir: PathBuf, rank: u8, purl: &str| {
+            let cand = (rank, purl.to_string());
             all_by_dir.entry(dir.clone()).or_default().push(cand.clone());
             match best.get(&dir) {
                 Some(cur) if *cur <= cand => {}
@@ -202,14 +201,14 @@ impl OwnerIndex {
             } else {
                 RANK_OTHER_MAIN_MODULE
             };
-            offer(dir, rank, c.lifecycle_scope.is_some_and(|s| s.is_non_runtime()), c.purl.as_str());
+            offer(dir, rank, c.purl.as_str());
         }
         for (dir, purl) in submodule_dirs {
             let Some(s) = dir.to_str() else { continue };
             let Some(rel) = relative(s, scan_root, &canonical_root) else { continue };
-            offer(rel, RANK_SUBMODULE, false, purl);
+            offer(rel, RANK_SUBMODULE, purl);
         }
-        let by_dir: BTreeMap<PathBuf, String> = best.into_iter().map(|(d, (_, _, p))| (d, p)).collect();
+        let by_dir: BTreeMap<PathBuf, String> = best.into_iter().map(|(d, (_, p))| (d, p)).collect();
         log_purl_ties(&all_by_dir);
         for v in all_by_dir.values_mut() {
             v.sort();
@@ -231,9 +230,9 @@ impl OwnerIndex {
         if let Some(other) = self
             .all_by_dir
             .get(dir)
-            .and_then(|v| v.iter().find(|(rank, _, p)| p != own && *rank != RANK_CMAKE_PROJECT))
+            .and_then(|v| v.iter().find(|(rank, p)| p != own && *rank != RANK_CMAKE_PROJECT))
         {
-            return Some(other.2.as_str());
+            return Some(other.1.as_str());
         }
         dir.ancestors()
             .skip(1)
@@ -698,25 +697,10 @@ mod tests {
         index.owner_of(Path::new(file)).map(str::to_string)
     }
 
-    /// FR-003 step 2 (research R3): a runtime candidate beats a non-runtime
-    /// one of the same rank, whatever their PURLs. The tie the step decides
-    /// is not produced by any scanned tree after R2, so this is its test
-    /// (mutation M4).
+    /// FR-003 (as amended): rank comes first, and the PURL decides a tie,
+    /// whatever the candidates' scopes.
     #[test]
-    fn s1642_a_runtime_candidate_beats_a_non_runtime_one() {
-        use waybill_common::resolution::LifecycleScope;
-        let dev = "pkg:pypi/waybill-fixture-a-dev@0.1.0";
-        let tool = "pkg:pypi/waybill-fixture-z-tool@1.0.0";
-        let comps = [
-            scoped_main_module(dev, "tool/pyproject.toml", Some(LifecycleScope::Optional)),
-            scoped_main_module(tool, "tool/pyproject.toml", None),
-        ];
-        assert_eq!(owner(&comps, "tool/requirements.txt").as_deref(), Some(tool));
-    }
-
-    /// FR-003: rank still comes first, and the PURL decides last.
-    #[test]
-    fn s1642_rank_first_then_scope_then_purl() {
+    fn s1642_rank_first_then_purl() {
         use waybill_common::resolution::LifecycleScope;
         let py_dev = "pkg:pypi/waybill-fixture-pydev@1.0.0";
         let npm = "pkg:npm/waybill-fixture-web@1.0.0";
@@ -726,8 +710,11 @@ mod tests {
         ];
         assert_eq!(owner(&comps, "x/requirements.txt").as_deref(), Some(py_dev), "a pip main module outranks any other, runtime or not");
         let (b, c) = ("pkg:pypi/waybill-fixture-b@1.0.0", "pkg:pypi/waybill-fixture-c@1.0.0");
-        let comps = [scoped_main_module(c, "y/pyproject.toml", None), scoped_main_module(b, "y/pyproject.toml", None)];
-        assert_eq!(owner(&comps, "y/requirements.txt").as_deref(), Some(b));
+        let comps = [
+            scoped_main_module(c, "y/pyproject.toml", None),
+            scoped_main_module(b, "y/pyproject.toml", Some(LifecycleScope::Optional)),
+        ];
+        assert_eq!(owner(&comps, "y/requirements.txt").as_deref(), Some(b), "scope does not break the tie");
     }
 
     /// Research R2: a main module whose source paths include its project's
