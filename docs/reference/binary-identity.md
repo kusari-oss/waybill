@@ -134,6 +134,41 @@ land on one component. The reason a binary got no version (no
 candidate, ambiguous, or shared) is reported by the
 `waybill::version_census` debug log, not in the document.
 
+**LLVM and ncurses report the version their banner states** (spec 1645,
+#1662). That includes LLVM's suffix (`LLVM version 23.0.0git` gives
+`23.0.0git`, and `18.1.0rc1` stays `18.1.0rc1`) and ncurses' patch date
+(`ncurses 6.6.20251230` gives `6.6.20251230`). The suffix is lowercase
+letters and digits attached to `X.Y.Z` and ended by a NUL or a space.
+For ncurses, the CPE follows NVD's form, whichever reader found the
+component: the release goes in the version field and the patch date in
+the update field (`cpe:2.3:a:invisible-island:ncurses:6.6:20251230:…`).
+
+**When a pkg-config or CMake record names the same library
+differently** (spec 1645, #1662), the two become one component when all
+of these hold:
+
+- the record's own library files include the file the banner was read
+  from;
+- the record's name is one of the library's names. For ncurses that is
+  `ncurses`, `ncursesw`, `ncursest` or `ncursestw`, the names ncurses'
+  own build gives it (its `INSTALL`: `--enable-widec` appends `w`,
+  `--with-pthread` appends `t`). Every other library has only its own
+  name, so a record for a library that bundles zlib is never merged
+  into zlib;
+- the versions agree: equal, or the banner's version followed by a `.`
+  begins the record's (`2.7.5` agrees with `2.7.5.1`, not with
+  `2.7.50`);
+- exactly one record qualifies. When two do, neither is chosen.
+
+The merged component takes the library's name, which is the name the
+CPE table knows, and the record's version. It lists both readers'
+files, and it keeps the record's source mechanism and tier. Edges that
+named the record follow it. Like every merge of a banner match into a
+record, the merged component does not carry the banner match's
+`waybill:evidence-kind` (#1665). Each such file and its verdict
+(`merge`, `version-disagrees`, `name-unrelated` or `ambiguous`) is
+reported by the `waybill::version_census` debug log as `shared_file`.
+
 Each detection emits a `pkg:generic/<library>@<version>` component
 with `waybill:evidence-kind = "embedded-version-string"` and
 `waybill:confidence = "heuristic"`, so downstream CVE matchers

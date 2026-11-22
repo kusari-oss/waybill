@@ -12,12 +12,12 @@
 //! | PCRE2     | `PCRE2 X.Y YYYY-MM-DD`                                       | NUL-only |
 //! | GnuTLS    | `GnuTLS X.Y.Z`                                               | NUL-only |
 //! | LibreSSL  | `LibreSSL X.Y.Z`                                             | NUL-only |
-//! | LLVM      | `LLVM version X.Y.Z`                                         | NUL-only |
+//! | LLVM      | `LLVM version X.Y.Z[suffix]`, as stated (#1662)             | NUL-only |
 //! | OpenJDK   | `OpenJDK X.Y.Z[+B]` (modern) or `OpenJDK 8uX[-bY]` (legacy)  | NUL-only |
 //! | PHP       | `X-Powered-By: PHP/X.Y.Z` (#1258)                            | NUL-only |
 //! | Node.js   | `node.js/vX.Y.Z` (the compiled-in default User-Agent)        | NUL-only |
 //! | expat     | `expat_X.Y.Z` (#1526)                                        | anchored |
-//! | ncurses   | `ncurses X.Y.YYYYMMDD`, emitted as `X.Y` (#1526)             | anchored |
+//! | ncurses   | `ncurses X.Y[.YYYYMMDD]`, as stated (#1526, #1662)          | anchored |
 //! | bzip2     | `X.Y.Z, DD-Mon-YYYY` + anchor `bzip2/libbzip2` (#1641)      | whole string |
 //! | GMP       | `X.Y.Z` + anchor `GNU MP:` (#1641)                          | whole string |
 //! | liblzma   | `X.Y.Z[alpha|beta]` + a defined `lzma_version_*` (#1641)    | whole string |
