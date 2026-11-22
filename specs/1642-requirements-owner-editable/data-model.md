@@ -10,9 +10,10 @@ The entry the pip main-module pass leaves for a PURL that a lockfile reader also
 |---|---|---|
 | `source_path` | the lockfile (`tool/uv.lock`) | the manifest's directory, from the synthesized main module |
 | `extra_source_paths` | the lockfile entry's extras | the lockfile path first, then the existing extras |
-| `evidence.source_file_paths` (derived) | `[lockfile, …]` | `[manifest dir, lockfile, …]` |
-| C18 `waybill:source-files` | `["tool/uv.lock"]` | `["tool/devtool", "tool/uv.lock"]` |
-| C120 `waybill:workspace-member` | `["tool"]` | `["tool/devtool"]` |
+| `evidence.source_file_paths` (derived) | `[lockfile, …]` | the manifest dir and the lockfile, sorted by spec 1542 when merged |
+| C18 `waybill:source-files` | `["tool/uv.lock"]` | `{"tool/devtool", "tool/uv.lock"}` (order not meaningful) |
+| C120 `waybill:workspace-member` | `["tool"]` | `{"tool", "tool/devtool"}` (the root of every path) |
+| owner directory (`OwnerIndex`) | `tool` (first path) | `tool/devtool` (the path naming a directory, `project_path`) |
 
 - **Applies when** the existing entry's `sbom_tier` is not `deployed`. An installed entry is unchanged.
 - **Editable cross-check:** a uv.lock entry carries its `source.editable` path, relative to the lock, on the parse result. The merge compares it, resolved against the lock's directory, with the manifest's directory. On disagreement, it logs at debug level and the manifest wins. The path is not emitted.

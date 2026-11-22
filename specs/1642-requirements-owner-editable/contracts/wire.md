@@ -15,10 +15,10 @@ Every case builds a synthetic `waybill-fixture-*` tree in a temp directory and s
 |---|---|---|---|
 | O-1 | #1640's tree (`devtool`) | `tool/requirements.txt`'s package has an edge from `waybill-fixture-tool@1.0.0`, none from the dev package | edge from the dev package |
 | O-2 | O-1 with the dev package named `waybill-fixture-zdevtool` | same as O-1, up to the name | same as O-1 (passes on `main`; the pair proves order independence) |
-| O-3 | O-1 | dev package C18 `["tool/devtool", "tool/uv.lock"]`, C120 `["tool/devtool"]`; tool C18 `["tool", "tool/uv.lock"]` | C18 `["tool/uv.lock"]`, C120 `["tool"]` |
+| O-3 | O-1 | dev package C18 `{"tool/devtool", "tool/uv.lock"}`, C120 `{"tool", "tool/devtool"}`; tool C18 `{"tool", "tool/uv.lock"}`, C120 `{"tool"}` (sets: research R2, implementation amendment) | C18 `["tool/uv.lock"]`, C120 `["tool"]` |
 | O-4 | the `zdevtool` order of O-1, plus `tool/devtool/requirements.txt` | its package attaches to `waybill-fixture-zdevtool` | attaches to `waybill-fixture-tool`: on `main` no candidate owns `tool/devtool`, and `tool/` goes to the tool by name order. The `devtool` order cannot be the control, because there the dev package already owns `tool/` on `main`. |
 | O-5 | O-1 without `uv.lock` | unchanged from `main` | — |
-| O-6 | a uv workspace: root `pyproject.toml` with `[tool.uv.workspace]` members `packages/a`, `packages/b`; root `uv.lock`; `packages/b/requirements.txt` declaring `waybill-fixture-r` | each member keeps C40 `main-module` and owns its own directory (C120 `["packages/a"]`, `["packages/b"]`); `waybill-fixture-r` attaches to `waybill-fixture-b` | measured at `79b3350b`: all three members have C18 `["uv.lock"]` and C120 `["."]`, and `waybill-fixture-r` attaches to `waybill-fixture-a` (lowest PURL among the `.` claimants) |
+| O-6 | a uv workspace: root `pyproject.toml` with `[tool.uv.workspace]` members `packages/a`, `packages/b`; root `uv.lock`; `packages/b/requirements.txt` declaring `waybill-fixture-r` | each member keeps C40 `main-module` and owns its own directory (C120 `{".", "packages/a"}`, `{".", "packages/b"}`: its own and the lock's); `waybill-fixture-r` attaches to `waybill-fixture-b` | measured at `79b3350b`: all three members have C18 `["uv.lock"]` and C120 `["."]`, and `waybill-fixture-r` attaches to `waybill-fixture-a` (lowest PURL among the `.` claimants) |
 | O-7 | the poetry form of O-1: `tool/pyproject.toml` (`[tool.poetry]`, dev group path dependency `devtool`, `develop = true`), `tool/poetry.lock` with the directory-source entry, `tool/devtool/pyproject.toml`, `tool/requirements.txt` | `tool/requirements.txt`'s package attaches to `waybill-fixture-tool`; the dev package's C18 starts `tool/devtool` | measured at `79b3350b`: attaches to the dev package; its C18 `["tool/poetry.lock"]`, C120 `["tool"]` |
 | O-8 | an installed `dist-info` plus the project's `pyproject.toml` (editable install) | C18 order unchanged from `main` | — |
 | O-10 | O-1 with the tool's lock entry as `source = { virtual = "." }` | same as O-1 | edge from the dev package (as O-1) |
@@ -42,5 +42,5 @@ FR-003's runtime step has no integration case: no scanned tree is known to produ
 
 | case | tree | expected |
 |---|---|---|
-| B-1 | one project per directory, no anchors | byte-identical to `main` |
+| B-1 | one project per directory, no anchors, no lockfile-merged main module (FR-007 as amended) | byte-identical to `main` |
 | B-2 | spec 1537's and spec 1618's existing fixtures | unchanged |

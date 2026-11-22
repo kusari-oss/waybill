@@ -31,6 +31,8 @@ File references are to `waybill-cli/src/` at `main` `79b3350b`. "Traced" means r
   - **Use the editable path as the directory.** This only fixes uv. Poetry would still lose the directory, and the manifest is the authority (spec Assumptions).
   - **Fix only `OwnerIndex`** (spec Clarifications option A). Rejected in clarification: the annotations would keep reporting `tool`.
 
+**Found at T007 (implementation amendment).** Spec 1542 sorts a merged component's `source_file_paths` in the deduplicator (`best.evidence.source_file_paths.sort()`), and `canonicalize_source_files_by_purl` sorts the union. So "first" is the lexicographically first raw path, and a lockfile's absolute path (`/…/uv.lock`) sorts before a main module's `path+file://…` directory. The reorder alone therefore does not decide ownership. `OwnerIndex` instead takes a main module's directory from **the first source path that names a directory in the tree** (`project_path`), falling back to the first path (CMake and Go record a manifest file). The pip reader's swap still matters: without it the manifest's directory is not among the paths at all. C120 already lists the workspace root of every path, so it gains the manifest's directory beside the lock's.
+
 ## R3. FR-003: the tie-break in one directory
 
 - **Step 1 holds by construction after R2 (planning amendment).**
