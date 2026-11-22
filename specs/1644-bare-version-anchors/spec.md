@@ -25,6 +25,12 @@ A bare `X.Y.Z` names no library. #1526 and #1641 both conclude that it needs a s
 - The binary scan already collects the read-only string region (capped at 16 MiB) and the dynamic-symbol names (`BinaryScan.symbol_names`). On ELF that list is every named `.dynsym` entry, **imported (undefined) as well as defined**. A program that merely calls `lzma_code` from a shared liblzma therefore lists `lzma_code`, exactly as liblzma itself does.
 - The pkg-config reader (spec 1531) names a component after its `.pc` file (`pkg:generic/<name>@<Version>`). An upstream xz install ships `liblzma.pc`, bzip2 ships `bzip2.pc` where its build installs one, and GMP ships `gmp.pc`. A curated match and a `.pc` record merge only when their PURLs are equal. #1662 is what happens when they differ: `ncurses@6.6` and `ncursesw@6.6.20251230` for one library.
 
+## Clarifications
+
+### Session 2026-11-22
+
+- Q: GMP and xz share the bare `X.Y.Z` form. When one candidate string would version two libraries in the same binary, what happens? → A: Neither library gets that version. The census records the binary as `ambiguous-shared`, because one string cannot be the version of two libraries (FR-005a).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A bundled bzip2, GMP or xz gets its version (Priority: P1)
@@ -56,7 +62,8 @@ The new rule must not turn version-shaped strings into components. A version wit
 1. **Given** a library holding `6.3.0` with no `GNU MP:` text (and likewise `5.8.1` with no xz anchor, and `1.0.8, 13-Jul-2019` with no `bzip2/libbzip2`), **When** it is scanned, **Then** no component for that library is produced.
 2. **Given** a library holding `GNU MP:` and the two whole strings `6.3.0` and `6.2.1`, **When** it is scanned, **Then** no GMP component is produced, and the census records the binary as ambiguous with both candidates.
 3. **Given** an executable that imports xz's anchor symbols from a shared liblzma and holds the whole string `5.8.1` for some other reason, **When** it is scanned, **Then** no xz component is produced.
-4. **Given** the text `GNU MP:` and the string `6.3.0` inside a longer string (`requires 6.3.0 or later`), **When** it is scanned, **Then** no GMP component is produced, because the version must be a whole string (FR-004).
+4. **Given** a binary holding `GNU MP:`, defining xz's anchor symbol, and containing the single whole string `5.8.1`, **When** it is scanned, **Then** neither a GMP nor an xz component is produced, and the census records the binary as `ambiguous-shared`.
+5. **Given** the text `GNU MP:` and the string `6.3.0` inside a longer string (`requires 6.3.0 or later`), **When** it is scanned, **Then** no GMP component is produced, because the version must be a whole string (FR-004).
 
 ---
 
@@ -94,6 +101,7 @@ Binaries that hold none of the three anchors produce the same documents as on `m
 
 - **The anchor and the version in different binaries.** Each binary is judged alone. A version in `libfoo.so` and an anchor in `libbar.so` give nothing.
 - **A binary that bundles several libraries** (a static `libLLVM`, a Python extension, a compiler). It may hold an anchor and many version-shaped strings from other code. With two or more candidates it is ambiguous and gets no version (FR-005). The census counts how often this happens, so the cost of the rule is measured rather than assumed.
+- **Two anchored libraries with the same version shape in one binary** (GMP and xz). A candidate is attributed to a library only when no other library anchored in the same binary also accepts it (FR-005a).
 - **The same version string twice.** Two occurrences of one string are one candidate, not two.
 - **bzip2's version without its date** (a build that defines `BZ_VERSION` differently). It is not a candidate. Only the `X.Y.Z, DD-Mon-YYYY` form is (FR-004).
 - **A stripped or symbol-less build.** An xz library with no exported symbols has no xz anchor and gets no version. A Mach-O or PE build gets no xz version unless research finds an anchor that format carries (FR-003).
@@ -126,6 +134,8 @@ Binaries that hold none of the three anchors produce the same documents as on `m
 
 - **FR-005 (one version or none)**: When the library's anchor is present and exactly one distinct candidate exists, the library is emitted at that version. When two or more distinct candidates exist, no component for that library is emitted from this evidence, and the census records the binary as ambiguous with every candidate. No candidate is ever chosen by position, order or frequency.
 
+- **FR-005a (a candidate serves one library)**: Candidates are counted per library only after removing every candidate that another library, anchored in the same binary, also accepts under FR-004. Such a shared candidate versions neither library. When removing it leaves a library with no candidate, that library's verdict is `ambiguous-shared`, and the census records the shared candidate and both libraries. A candidate accepted by only one anchored library is unaffected. For example, in a binary anchoring GMP and xz, the whole strings `6.3.0` and `5.8.1` both still have the shape of both libraries, so both libraries are `ambiguous-shared`.
+
 - **FR-006 (bzip2's date form)**: bzip2's candidate still requires the `bzip2/libbzip2` anchor. The `X.Y.Z, DD-Mon-YYYY` form is bzip2's convention, but it is not exclusive to bzip2, and requiring the anchor costs a version only on a build that holds the version string without the error message. FR-001 counts such builds. If the census finds bzip2 libraries carrying the date form without the anchor, and no other binary carrying the form, this requirement MAY be amended to let the form stand alone.
 
 - **FR-007 (names)**: Each library's PURL name MUST equal the name the pkg-config reader gives the same library's upstream `.pc` file, so that the two pieces of evidence merge (User Story 3):
@@ -142,7 +152,7 @@ Binaries that hold none of the three anchors produce the same documents as on `m
 
 - **FR-009 (totality)**: Every new `CuratedLibrary` variant MUST appear in each existing exhaustive match (the boundary class, the census, the test sample). Adding a variant without its anchor MUST fail to compile or fail a test that iterates every variant (the #1246 convention).
 
-- **FR-010 (census reporting)**: `waybill::version_census` MUST report, for each binary carrying any of the three anchors: the library, the anchor or anchors found and where, every candidate with its offset, and the verdict (versioned, ambiguous, or no candidate). The existing per-pattern hits keep their current shape.
+- **FR-010 (census reporting)**: `waybill::version_census` MUST report, for each binary carrying any of the three anchors: the library, the anchor or anchors found and where, every candidate with its offset, and the verdict (versioned, ambiguous, ambiguous-shared, or no candidate). The existing per-pattern hits keep their current shape.
 
 - **FR-011 (no new output field)**: A version gained this way MUST be emitted exactly as any curated embedded-version match: same evidence kind, same annotations. No new annotation, catalog row or output field, so the three formats agree without parity changes. The reason a binary gets no version (no anchor, no candidate, ambiguous) is recorded in the census event (FR-010), not in the document. An SBOM field would need a catalog row and extractors in all three formats, and the document already shows the absence.
 
@@ -152,15 +162,20 @@ Binaries that hold none of the three anchors produce the same documents as on `m
 
 - **Anchor**: evidence in a binary that names one of the three libraries without stating its version: a string-region text, or a defined exported symbol.
 - **Candidate**: a whole NUL-delimited string in the read-only region with the library's version shape.
-- **Verdict**: per binary and library, one of versioned (anchor present, one candidate), ambiguous (anchor present, two or more candidates), no candidate (anchor present, none), or not considered (no anchor).
+- **Verdict**: per binary and library, one of:
+  - versioned: anchor present, one candidate;
+  - ambiguous: anchor present, two or more candidates;
+  - ambiguous-shared: anchor present, but every candidate is also accepted by another library anchored in the same binary (FR-005a);
+  - no candidate: anchor present, none found;
+  - not considered: no anchor.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
 - **SC-001**: FR-001's census is recorded in the spec's measurements, with every anchored binary in TheRock and the quality corpus listed by library, anchor location, candidate count and verdict. A positive control (a target known to hold an anchor and one candidate) shows the census firing, so its zeros elsewhere mean absence, not a broken probe.
-- **SC-002**: Synthetic `waybill-fixture-*` libraries for each of the three libraries give the versioned component with the anchor and one candidate. They give none with the anchor removed, with a second candidate, or (for xz) with the anchor symbol imported instead of defined.
-- **SC-003**: Each new rule has a mutation record: dropping the anchor requirement, accepting an imported symbol, taking the first of two candidates, and accepting a candidate that is not a whole string each fail at least one test.
+- **SC-002**: Synthetic `waybill-fixture-*` libraries for each of the three libraries give the versioned component with the anchor and one candidate. They give none with the anchor removed, with a second candidate, with a candidate shared with another anchored library, or (for xz) with the anchor symbol imported instead of defined.
+- **SC-003**: Each new rule has a mutation record: dropping the anchor requirement, accepting an imported symbol, taking the first of two candidates, giving a shared candidate to both libraries, and accepting a candidate that is not a whole string each fail at least one test.
 - **SC-004**: The User Story 3 fixture gives exactly one component per library when the `.pc` version agrees.
 - **SC-005**: `waybill sbom parity-check` agrees for every fixture.
 - **SC-006**: Every public-corpus, quality-corpus and TheRock difference against a `main` control is traced, component by component, to one binary, one library and one anchor. Any second component for one library is listed under FR-007.
