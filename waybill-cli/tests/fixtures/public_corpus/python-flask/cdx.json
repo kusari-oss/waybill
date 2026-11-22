@@ -2813,7 +2813,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"uv.lock\"]"
+          "value": "[\".\",\"uv.lock\"]"
         },
         {
           "name": "waybill:sbom-tier",
