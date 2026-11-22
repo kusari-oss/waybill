@@ -5,6 +5,13 @@
 **Status**: Draft
 **Input**: #1640. A requirements file's packages attach to a dev-group editable package from the `uv.lock` beside it, not to the project. Refs #1566, #1587, #1618.
 
+## Clarifications
+
+### Session 2026-11-21
+
+- Q: Does FR-001 change the emitted source paths, or only the owner lookup? → A: The emitted ones. A merged pip main module lists its manifest's directory first and keeps the lockfile path after it, and `waybill:workspace-member` follows. The owner lookup and the annotations read the same value, so they cannot disagree.
+- Q: Does FR-005's invariant cover every ecosystem, or only pip? → A: Every ecosystem. Any component that the root (by relationship or reader root anchor, which includes top-level git submodules) or any runtime main module depends on directly is protected. The census counts and traces the effect by ecosystem.
+
 ## Background
 
 Spec 1537 (#1566, via #1587) gives each package a pip requirements file declares an edge from the project that declares the file. The project is found by location (`scan_fs/declared_attach.rs`, `OwnerIndex`): the nearest enclosing directory that some main module or git submodule owns. Within one directory, a `pkg:pypi` main module outranks any other, and ties go to the lowest PURL.
@@ -54,7 +61,7 @@ A team scans a source tree in which a project directory holds a `pyproject.toml`
 
 1. **Given** #1640's tree, **When** scanned, **Then** `tool/requirements.txt`'s packages have an edge from `pkg:pypi/waybill-fixture-tool@1.0.0`, in every format.
 2. **Given** the same tree with the dev package renamed so that its name sorts after the project's, **When** scanned, **Then** the output is the same, up to the renamed package.
-3. **Given** the same tree, **When** scanned, **Then** `waybill-fixture-devtool`'s main module reports its own directory, `tool/devtool`, as it does with no `uv.lock`.
+3. **Given** the same tree, **When** scanned, **Then** `waybill-fixture-devtool`'s main module reports its own directory, `tool/devtool`, first in `source-files` and as its workspace-member, as it does with no `uv.lock`. The lockfile path follows it in `source-files`.
 4. **Given** a requirements file in `tool/devtool/`, **When** scanned, **Then** its packages attach to `waybill-fixture-devtool`. A project owns its own directory, whatever its scope.
 
 ### User Story 2 - A package the root requires directly is never reported as not shipping (Priority: P1)
@@ -69,7 +76,8 @@ A team gives the SBOM to a consumer that drops excluded components. A package th
 
 1. **Given** a package that the scan root's requirements file declares, and a development-scoped component that depends on it, **When** scanned, **Then** the package has no non-runtime scope from transitive derivation.
 2. **Given** a package that a runtime main module depends on directly, and that a non-runtime component also depends on, **When** scanned, **Then** the package has no non-runtime scope from transitive derivation.
-3. **Given** a package reached *only* through non-runtime components, **When** scanned, **Then** spec 1269's propagation still assigns it a non-runtime scope, as on `main`.
+3. **Given** a non-pip component that a top-level git submodule or a runtime main module of another ecosystem depends on directly, and that a non-runtime component also depends on, **When** scanned, **Then** it has no non-runtime scope from transitive derivation.
+4. **Given** a package reached *only* through non-runtime components, **When** scanned, **Then** spec 1269's propagation still assigns it a non-runtime scope, as on `main`.
 
 ### User Story 3 - Nothing else changes (Priority: P2)
 
@@ -98,7 +106,7 @@ A tree in which each directory has one owner produces the same document as `main
 
 ### Functional Requirements
 
-- **FR-001**: A pip main module's project directory MUST be the directory of the manifest that declares it, whichever reader's entry survives the merge of that main module with a same-PURL lockfile or installed entry. On #1640's tree, `waybill-fixture-devtool` owns `tool/devtool` and `waybill-fixture-tool` owns `tool`, as without the lockfile. This settles decision (a): the directory comes from the manifest, and a lockfile's `source.editable` path MUST agree with it. Where they disagree, the manifest wins and the disagreement is logged at debug level.
+- **FR-001**: A pip main module's project directory MUST be the directory of the manifest that declares it, whichever reader's entry survives the merge of that main module with a same-PURL lockfile or installed entry. The merged entry MUST list that directory as its first source path, keep the lockfile's path after it, and derive `waybill:workspace-member` from the first (Clarifications). On #1640's tree, `waybill-fixture-devtool` has `source-files` `["tool/devtool", "tool/uv.lock"]` and workspace-member `["tool/devtool"]`, and owns `tool/devtool`. `waybill-fixture-tool` owns `tool`. This settles decision (a): the directory comes from the manifest, and a lockfile's `source.editable` path MUST agree with it. Where they disagree, the manifest wins and the disagreement is logged at debug level.
 - **FR-002**: A main module MUST NOT own a directory other than its own (FR-001). A package that a dependency group alone lists keeps its main-module role, its scope and its ownership of its own directory. Decision (b), whether such a package is a main module at all, is settled by SC-001's census. The default is to keep the role, because removing it changes root selection, `waybill:workspace-member` and every C-row keyed on `component-role`, and FR-001 already removes the false ownership. If the census finds a case FR-001 does not fix, the plan revisits this.
 - **FR-003**: When two or more owner candidates of the same rank remain for one directory, the owner MUST be chosen in this order:
   1. a candidate whose declaring manifest is in that directory;
@@ -107,7 +115,7 @@ A tree in which each directory has one owner produces the same document as `main
 
   A tie that reaches step 3 is logged with the candidates and the directory. This settles decision (c).
 - **FR-004**: Decision (d): the condition that lets spec 1269's transitive pass give a non-runtime scope to a package that the root or a runtime main module depends on directly MUST be identified. Each candidate condition is either reproduced on a synthetic fixture (measured) or labelled as inference, with what would test it. The inference in the Background is the first candidate.
-- **FR-005**: Decision (e): transitive derivation MUST NOT give a non-runtime scope to a component that the document root (through a reader root anchor or a relationship) or a runtime main module depends on directly. A reader's own declared scope is unaffected: a requirements file named `requirements-dev.txt` still gives Optional (spec 1537 FR-010). A test of this invariant MUST fail on `main` if FR-004 reproduces the condition.
+- **FR-005**: Decision (e): transitive derivation MUST NOT give a non-runtime scope to a component that the document root (through a reader root anchor or a relationship) or a runtime main module depends on directly, in every ecosystem (Clarifications). Root anchors include top-level git submodules as well as root-declared requirements packages. A reader's own declared scope is unaffected: a requirements file named `requirements-dev.txt` still gives Optional (spec 1537 FR-010). A test of this invariant MUST fail on `main` if FR-004 reproduces the condition.
 - **FR-006**: The three formats MUST agree (`waybill sbom parity-check`). CycloneDX MUST validate against the vendored 1.6 schema, and no two components may share a `bom-ref`.
 - **FR-007**: A scan in which every directory has one owner candidate, and in which FR-005 removes no scope, MUST produce output byte-identical to `main`. Repeat scans MUST produce identical output.
 - **FR-008**: The documentation of requirements ownership (spec 1537's consumer-guide entry and the C62 row of `docs/reference/sbom-format-mapping.md`) MUST state the ownership rule and the FR-005 invariant.
@@ -128,8 +136,9 @@ A tree in which each directory has one owner produces the same document as `main
   - the directories with more than one owner candidate at the same rank;
   - how many of those candidates are lockfile-merged main modules whose source path is not their manifest's directory, and how many are editable entries whose path is not `.`;
   - how many requirements packages, CMake fetches and searches change owner under FR-001 and FR-003;
+  - how many main modules' `source-files` and `workspace-member` change under FR-001;
   - the main modules a dependency group alone lists, and what removing their role would change (FR-002);
-  - the components that FR-005 would keep runtime.
+  - the components that FR-005 would keep runtime, by ecosystem and by kind of direct dependent (root relationship, root anchor, runtime main module).
 
   No figure is predicted before the census runs. TheRock runs in CI only, dispatched `--ref main` with full SHAs, and `refs.txt` is verified.
 - **SC-002**: #1640's tree, in both name orders, attaches `waybill-fixture-shared` to `waybill-fixture-tool@1.0.0` and not to the dev package, in all three formats. On `main`, the `devtool` order attaches it to the dev package (the control).
