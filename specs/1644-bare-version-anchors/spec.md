@@ -123,12 +123,12 @@ Binaries that hold none of the three anchors produce the same documents as on `m
 
 - **FR-002 (bzip2 and GMP anchors)**: bzip2's anchor is the text `bzip2/libbzip2`, and GMP's is the text `GNU MP:`. Each may appear anywhere in the binary's read-only string region, as a substring of a longer string. An anchor is evidence that the library is present, not a match, so no boundary class applies to it.
 
-- **FR-003 (xz anchor)**: xz's anchor is a **defined** (not imported) dynamic or exported symbol from a fixed list of liblzma's public symbols. The list is fixed by FR-001's census and written into this spec. An imported symbol MUST NOT count. If the census finds a string-region text present in every liblzma build counted, that text MAY replace or supplement the symbol anchor, by amendment. Without either, xz gets no version, and the formats where the anchor is unavailable are stated in the documentation.
+- **FR-003 (xz anchor)**: xz's anchor is a **defined** (not imported) dynamic or exported symbol named `lzma_version_string` or `lzma_version_number`. Both are in liblzma's `XZ_5.0` symbol node, so every liblzma since 5.0 exports them (research R3, read from upstream `v5.8.1`). FR-001's census confirms they are present in the builds counted. An imported symbol MUST NOT count. If the census finds a string-region text present in every liblzma build counted, that text MAY replace or supplement the symbol anchor, by amendment. Without either, xz gets no version, and the formats where the anchor is unavailable are stated in the documentation.
 
 - **FR-004 (candidates)**: A version candidate is a whole string in the read-only region, preceded by NUL or the region's start and followed by NUL:
   - bzip2: `X.Y.Z, DD-Mon-YYYY` (digits for X, Y, Z and DD; a three-letter English month abbreviation; four digits for YYYY). The version is `X.Y.Z`.
-  - GMP: `X.Y.Z` (digits only), and `X.Y` only if upstream's `gmp_version` omits a zero patch level. Research verifies this from GMP's source.
-  - xz: `X.Y.Z`, optionally followed by one of xz's pre-release suffixes (`alpha`, `beta`). The exact suffix grammar is fixed from upstream's version header at research.
+  - GMP: `X.Y.Z` (digits only). GMP's manual says `gmp_version` has been `i.j.k` since 4.3.0, and that `i.j` was used only before that, when k was zero (research R2).
+  - xz: `X.Y.Z`, optionally followed directly by `alpha` or `beta` (upstream's `LZMA_VERSION_STRING`, research R2). A snapshot's commit suffix (`-21-g1d92`) is not accepted.
 
   Under spec 1643's classes, every candidate is NUL-only at both ends. That is stricter than any existing pattern, because a bare version has no name to anchor it.
 

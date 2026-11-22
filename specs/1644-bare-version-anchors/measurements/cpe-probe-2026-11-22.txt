@@ -1,0 +1,6 @@
+gmplib:gmp	35
+gnu:gmp	0
+tukaani:xz	62
+tukaani:liblzma	0
+openssl:openssl	387
+waybill-fixture-vendor:waybill-fixture-product	0
