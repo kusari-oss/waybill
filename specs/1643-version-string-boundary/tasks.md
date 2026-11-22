@@ -75,7 +75,7 @@ Output does not change in this phase.
 - [X] T006 [US1] Write Z-1, Z-2, Z-3, Z-6, N-1, N-2, N-3, E-1 and E-2 in `IT`, each asserting the curated PURL, `parity` and `unique_bom_refs`. File names are `libwaybill-fixture-z.so.1`, `libwaybill-fixture-ncurses.so.6` and `libwaybill-fixture-expat.so.1`.
 
   **Run them at the log-only commit.** Z-2, Z-3, N-2, N-3 and E-2 must fail on their stated assertion; Z-1, Z-6, N-1 and E-1 must pass. Record each case's result in `MS/control.md`. If a case expected to fail passes, its control is wrong: stop and rebuild the case before T007.
-- [X] T007 [US1] Wire the rule in `VS::match_prefix` (R3, R4):
+- [X] T007 [US1] (Implementation amendment: at T003, `match_prefix` became `pattern_at`, which finds the pattern starting at a position, followed by the boundary rule, so that the census reuses the parsers. T007 swapped `main_rule_accepts` for `new_rule_accepts`. After SC-006 failed, `match_prefix` narrows the patterns by the preceding byte first (`measurements/therock.md`). There is no `at_boundary` early return any more; the outcome is the one described below.) Wire the rule in `VS::match_prefix` (R3, R4):
   - **expat and ncurses** move above the `if !at_boundary { return None; }` early return, each gated by `CuratedLibrary::X.boundary().accepts(region, pos)`.
   - **zlib**'s `after_one_space` changes `region[pos - 2] == 0` to `!is_identifier(region[pos - 2])`. The no-space form keeps `at_boundary`.
   - **The twelve `NulOnly` patterns** stay below the early return, unchanged.
@@ -104,22 +104,22 @@ Output does not change in this phase.
 
 ## Phase 6: Polish and cross-cutting
 
-- [ ] T012 [P] Docs:
+- [X] T012 [P] Docs:
   - **`docs/reference/binary-identity.md` § Embedded-version-string detection.** Its sentence "anchored at a NUL boundary" becomes false with this change, so replace it with the two rules and the three anchored libraries. The paragraph's library list ("11 … libraries") omits PHP, Node.js, expat and ncurses; bring it to the 15 variants `CuratedLibrary` has, since the paragraph is being rewritten.
   - **`CHANGELOG.md` `## [Unreleased]`:** a Fixed entry (#1568, #1641).
-- [ ] T013 Spec record: add the census figures to `research.md` R5/R6 and resolve FR-005 against them. No figure is written before T005.
-- [ ] T014 Mutations (SC-003, R8): `MS/mutate.py`, modelled on `specs/1642-requirements-owner-editable/measurements/mutate.py`.
+- [X] T013 Spec record: add the census figures to `research.md` R5/R6 and resolve FR-005 against them. No figure is written before T005.
+- [X] T014 Mutations (SC-003, R8): `MS/mutate.py`, modelled on `specs/1642-requirements-owner-editable/measurements/mutate.py`.
   - Run M1–M7, each against the test named in R8's table.
   - Back up and restore with `cp`, rebuild after the last restore, and use a `^error\[E` guard so that a mutation that fails to compile is reported as such, not as killed.
   - Record in `MS/mutations.md`.
-- [ ] T015 Re-run `MS/probe.sh` at the wired commit on the same Nix-built libraries (R1). Expect `00`, `2d` and `ff` to be versioned for both libraries, and `78` unchanged. Run 3 times each, and append to `MS/probe.md`.
-- [ ] T016 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Record `GATE_RESULT` and every `test result:` count in `MS/gate-log.md`. (`target/` was cleaned after spec 1642, so the first run rebuilds everything.)
-- [ ] T017 Public corpus at the final commit (SC-005): `regen_goldens=true`. Enumerate the jobs and confirm the scanned SHA. This diff is the public corpus's census (it has no T005 prediction): judge each changed component as T005 judges a new match.
+- [X] T015 Re-run `MS/probe.sh` at the wired commit on the same Nix-built libraries (R1). Expect `00`, `2d` and `ff` to be versioned for both libraries, and `78` unchanged. Run 3 times each, and append to `MS/probe.md`.
+- [X] T016 Gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with no `+toolchain`. Record `GATE_RESULT` and every `test result:` count in `MS/gate-log.md`. (`target/` was cleaned after spec 1642, so the first run rebuilds everything.)
+- [X] T017 Public corpus at the final commit (SC-005): `regen_goldens=true`. Enumerate the jobs and confirm the scanned SHA. This diff is the public corpus's census (it has no T005 prediction): judge each changed component as T005 judges a new match.
   - `cmp` every regenerated golden against the committed one.
   - Trace every changed component to one binary and one anchored pattern, and check it against T005's census.
   - Commit any changed goldens from the artifact.
   - Record in `MS/corpus.md`.
-- [ ] T018 TheRock and the quality corpus (SC-005, SC-006).
+- [X] T018 TheRock and the quality corpus (SC-005, SC-006).
   - **TheRock:** `measure-full.yml` with `--ref main -f waybill_ref=<branch full sha> -f base_ref=<main full sha>`.
     - Confirm both SHAs from the `base <sha>` and `branch <sha>` lines of the "Build both" step.
     - Compare the documents with per-run fields masked, and trace every changed component to one binary and one anchored pattern, against T005's census.
@@ -127,7 +127,7 @@ Output does not change in this phase.
     - Record the median of at least 3 runs per arm, and the ratio, which must be at most 1.05.
   - **Quality corpus:** dispatch `census-versions.yml` at the wired commit and compare its documents with T005's, which are the log-only control. Trace every difference.
   - Record in `MS/therock.md` and `MS/corpus.md`.
-- [ ] T019 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (zero new dependencies). Open the PR with "Closes #1568" and "Refs #1641, #1525, #1526, #1543", ending with the attribution footer. Merging is the maintainer's.
+- [X] T019 Verify each task's claim against the code and measurements before ticking it. Confirm `git diff --quiet origin/main -- Cargo.lock '*/Cargo.toml' Cargo.toml` (zero new dependencies). Open the PR with "Closes #1568" and "Refs #1641, #1525, #1526, #1543", ending with the attribution footer. Merging is the maintainer's.
 
 ## Dependencies
 

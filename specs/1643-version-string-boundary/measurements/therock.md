@@ -51,3 +51,23 @@ Every change comes from the 8 matches the census predicted. Nothing else moved.
 - after any other byte: only the anchored patterns, plus zlib after a space.
 
 That is equivalent to trying every pattern and then applying the rule. `s1643_census_agrees_with_the_scanner` checks this for every variant behind all 256 preceding bytes and at the region's start, since the census does try every pattern. The remaining 1.33× is in the string scan alone, against the 18× that cost 2.36 s. Whether the whole scan is within 1.05 is measured below, not inferred.
+
+### Second measurement, after the fix: passes
+
+`measure-full` run 45000670082: base `83657af2`, branch `1586d74b` (the "Build both" lines). One warm-up per arm, then 3 interleaved runs per arm.
+
+| arm | runs (s) | median |
+|---|---|---|
+| base `83657af2` | 25.774, 25.793, 25.922 | 25.793 |
+| branch `1586d74b` | 25.647, 25.692, 25.823 | 25.692 |
+
+**Ratio 0.996: passes SC-006.** The branch's range sits inside the base's.
+
+**The fix changes no output.** The branch documents at `1586d74b` were compared with those at `4caee6a1` (run 44995037088):
+- **CycloneDX:** identical components and dependencies; only `metadata.timestamp` and `serialNumber` differ.
+- **SPDX 2.3:** 25,260 differing values, all timestamps (25,259 `annotationDate`, 1 `created`).
+- **SPDX 3:** identical with timestamps masked.
+
+**Base against branch (CycloneDX)** shows exactly the change traced above: `-zlib`, `+ncurses@6.6`, `~zlib@1.3.2`, and the root edge.
+
+**Format parity.** `waybill sbom parity-check` gives the same summary for the base and branch documents: 258 of 260 universal rows passing, 2 gaps, with A5 (package author absent in CycloneDX and SPDX 2.3, `restricted` in SPDX 3) the one marked non-universal. The change adds no parity gap.

@@ -41,6 +41,15 @@ Only the first three fix the end of the match. A pattern ended by "any non-versi
 
 `match_prefix` keeps its structure. The expat and ncurses checks move above the `if !at_boundary { return None; }` early return and use `CuratedLibrary::X.boundary().accepts(region, pos)`. The twelve NUL-only patterns stay below it, unchanged.
 
+**Implementation amendment.**
+- **The split.** So that the census could reuse the version parsers, `match_prefix` was split into `pattern_at`, which finds the pattern whose prefix starts at a position, and a rule check: `main_rule_accepts` at the log-only commit, `new_rule_accepts` once wired.
+- **SC-006 failed with that structure:** every byte compared all 15 prefixes. So `match_prefix` now first narrows the patterns by the preceding byte:
+  - after NUL or at the region's start: all of them;
+  - after an identifier byte: none;
+  - otherwise: the anchored ones, plus zlib after a space.
+
+  It then applies `new_rule_accepts`. The outcome is the classification above; `measurements/therock.md` has the measurements.
+
 **Test of the class (SC-003):** a unit test iterates `CuratedLibrary::iter()` (the existing `strum::EnumIter` derive, #1246). For each variant it takes a canonical banner from a test-only `fn sample(lib) -> &[u8]`, which is also an exhaustive `match`. It asserts that the banner behind `-` matches exactly when `boundary()` is `Anchored`, and behind NUL always matches. Re-classing any variant fails this test, and so does adding a variant without a sample.
 
 **Alternative considered:** a list of anchored libraries. Rejected for the reason #1246 was filed: a list can miss a variant added later.

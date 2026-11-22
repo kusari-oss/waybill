@@ -38,3 +38,5 @@ All PURLs are `pkg:generic/…`. The unversioned `pkg:generic/zlib` is the symbo
 | ncurses | `0x78` `x` | none | none | none | none |
 
 As expected: `-` and `0xff` are versioned like NUL, and an identifier character is unchanged.
+
+**After the SC-006 fix (`1586d74b`).** The probe was not re-run. The fix only narrows which patterns are tried, and changes no output: `s1643_census_agrees_with_the_scanner` checks every variant behind all 256 preceding bytes, and the TheRock documents at `1586d74b` equal those at `4caee6a1` in all three formats (`therock.md`). The integration cases Z-2, Z-3, N-2 and N-3, which are this probe's layouts on synthetic libraries, pass at `1586d74b`.
