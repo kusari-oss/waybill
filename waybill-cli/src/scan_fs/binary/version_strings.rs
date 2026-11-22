@@ -134,8 +134,23 @@ pub fn scan(region: &[u8]) -> Vec<EmbeddedVersionMatch> {
 }
 
 /// The curated match at `pos`, if the boundary rule accepts it.
+///
+/// The byte before `pos` alone decides which patterns could be accepted, so
+/// most positions are rejected before any prefix is compared: after NUL (or
+/// at the region's start) every pattern is tried; after an identifier byte
+/// none can be; after any other byte only the anchored ones, plus zlib when
+/// the byte is the space its literal begins with. Trying every prefix at
+/// every byte made `scan` 18 times slower (spec 1643 SC-006,
+/// `measurements/therock.md`). The result equals `pattern_at` followed by
+/// `new_rule_accepts`, which the census uses and a test compares.
 fn match_prefix(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
-    let m = pattern_at(region, pos)?;
+    let m = match pos.checked_sub(1).map(|i| region[i]) {
+        None | Some(0) => pattern_at(region, pos, |_| true)?,
+        Some(prev) if is_identifier(prev) => return None,
+        Some(prev) => pattern_at(region, pos, |lib| {
+            lib.boundary() == Boundary::Anchored || (prev == b' ' && lib == CuratedLibrary::Zlib)
+        })?,
+    };
     new_rule_accepts(m.library, region, pos).then_some(m)
 }
 
@@ -221,15 +236,19 @@ fn new_rule_accepts(library: CuratedLibrary, region: &[u8], pos: usize) -> bool 
     }
 }
 
-/// The curated pattern whose prefix starts at `pos`, with its parsed
-/// version, whatever precedes it. For zlib, `pos` is at `deflate `. No two
-/// prefixes can both match at one position (`PCRE2 ` is tried before
-/// `PCRE `, which it does not start with).
-fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
+/// The curated pattern among those `want` admits whose prefix starts at
+/// `pos`, with its parsed version, whatever precedes it. For zlib, `pos` is
+/// at `deflate `. No two prefixes can both match at one position (`PCRE2 `
+/// is tried before `PCRE `, which it does not start with).
+fn pattern_at(
+    region: &[u8],
+    pos: usize,
+    want: impl Fn(CuratedLibrary) -> bool,
+) -> Option<EmbeddedVersionMatch> {
     let window = &region[pos..];
 
     // zlib — "deflate ". Its literal is " deflate X.Y.Z Copyright ..." (#1525).
-    if window.starts_with(b"deflate ") {
+    if want(CuratedLibrary::Zlib) && window.starts_with(b"deflate ") {
         let tail = &region[pos + 8..];
         if let Some(v) = parse_zlib_version(tail) {
             return Some(EmbeddedVersionMatch {
@@ -240,7 +259,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
     }
 
     // expat — "expat_X.Y.Z", a whole string (#1526).
-    if let Some(tail) = window.strip_prefix(b"expat_") {
+    if let Some(tail) = window.strip_prefix(b"expat_").filter(|_| want(CuratedLibrary::Expat)) {
         if let Some(v) = parse_semver_triple(tail).filter(|v| tail.get(v.len()) == Some(&0)) {
             return Some(EmbeddedVersionMatch {
                 library: CuratedLibrary::Expat,
@@ -250,7 +269,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
     }
     // ncurses — "ncurses X.Y.YYYYMMDD", a whole string (#1526). The
     // version is the release, X.Y; the patch date is dropped.
-    if let Some(tail) = window.strip_prefix(b"ncurses ") {
+    if let Some(tail) = window.strip_prefix(b"ncurses ").filter(|_| want(CuratedLibrary::Ncurses)) {
         if let Some(v) = parse_ncurses_version(tail) {
             return Some(EmbeddedVersionMatch {
                 library: CuratedLibrary::Ncurses,
@@ -260,7 +279,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
     }
 
     // OpenSSL — "OpenSSL "
-    if window.starts_with(b"OpenSSL ") {
+    if want(CuratedLibrary::OpenSsl) && window.starts_with(b"OpenSSL ") {
         let tail = &region[pos + 8..];
         if let Some(v) = parse_openssl_version(tail) {
             return Some(EmbeddedVersionMatch {
@@ -270,7 +289,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
         }
     }
     // BoringSSL — "BoringSSL "
-    if window.starts_with(b"BoringSSL ") {
+    if want(CuratedLibrary::BoringSsl) && window.starts_with(b"BoringSSL ") {
         let tail = &region[pos + 10..];
         if let Some(sha) = parse_git_sha(tail) {
             return Some(EmbeddedVersionMatch {
@@ -280,7 +299,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
         }
     }
     // SQLite — "SQLite version "
-    if region.len() >= pos + 15 && &region[pos..pos + 15] == b"SQLite version " {
+    if want(CuratedLibrary::Sqlite) && region.len() >= pos + 15 && &region[pos..pos + 15] == b"SQLite version " {
         let tail = &region[pos + 15..];
         if let Some(v) = parse_sqlite_version(tail) {
             return Some(EmbeddedVersionMatch {
@@ -290,7 +309,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
         }
     }
     // curl — "libcurl/"
-    if window.starts_with(b"libcurl/") {
+    if want(CuratedLibrary::Curl) && window.starts_with(b"libcurl/") {
         let tail = &region[pos + 8..];
         if let Some(v) = parse_semver_triple(tail) {
             return Some(EmbeddedVersionMatch {
@@ -300,7 +319,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
         }
     }
     // PCRE2 (check first — PCRE prefix is a subset)
-    if window.starts_with(b"PCRE2 ") {
+    if want(CuratedLibrary::Pcre2) && window.starts_with(b"PCRE2 ") {
         let tail = &region[pos + 6..];
         if let Some(v) = parse_pcre_version(tail) {
             return Some(EmbeddedVersionMatch {
@@ -310,7 +329,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
         }
     }
     // PCRE
-    if window.starts_with(b"PCRE ") {
+    if want(CuratedLibrary::Pcre) && window.starts_with(b"PCRE ") {
         let tail = &region[pos + 5..];
         if let Some(v) = parse_pcre_version(tail) {
             return Some(EmbeddedVersionMatch {
@@ -320,7 +339,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
         }
     }
     // GnuTLS — "GnuTLS " (milestone 026).
-    if window.starts_with(b"GnuTLS ") {
+    if want(CuratedLibrary::GnuTls) && window.starts_with(b"GnuTLS ") {
         let tail = &region[pos + 7..];
         if let Some(v) = parse_semver_triple(tail) {
             return Some(EmbeddedVersionMatch {
@@ -330,7 +349,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
         }
     }
     // LibreSSL — "LibreSSL " (milestone 026).
-    if window.starts_with(b"LibreSSL ") {
+    if want(CuratedLibrary::LibreSsl) && window.starts_with(b"LibreSSL ") {
         let tail = &region[pos + 9..];
         if let Some(v) = parse_semver_triple(tail) {
             return Some(EmbeddedVersionMatch {
@@ -341,7 +360,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
     }
     // LLVM — "LLVM version " (milestone 026). Strict prefix; bare
     // "LLVM " is too noisy (matches "LLVM ERROR:", "LLVM IR ...").
-    if window.starts_with(b"LLVM version ") {
+    if want(CuratedLibrary::Llvm) && window.starts_with(b"LLVM version ") {
         let tail = &region[pos + 13..];
         if let Some(v) = parse_semver_triple(tail) {
             return Some(EmbeddedVersionMatch {
@@ -352,7 +371,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
     }
     // OpenJDK — "OpenJDK " (milestone 026). Two-scheme parser handles
     // both modern JEP 322 (X.Y.Z+B) and legacy Java-8 (8uXXX-bXX).
-    if window.starts_with(b"OpenJDK ") {
+    if want(CuratedLibrary::OpenJdk) && window.starts_with(b"OpenJDK ") {
         let tail = &region[pos + 8..];
         if let Some(v) = parse_openjdk_version(tail) {
             return Some(EmbeddedVersionMatch {
@@ -368,7 +387,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
     // `php:8.3.35-fpm` and `php:8.3.35-fpm-alpine`, glibc and musl alike,
     // this exact string occurs once per binary in `/usr/local/bin/php`
     // and `/usr/local/sbin/php-fpm`, NUL-delimited in `.rodata`.
-    if window.starts_with(b"X-Powered-By: PHP/") {
+    if want(CuratedLibrary::Php) && window.starts_with(b"X-Powered-By: PHP/") {
         let tail = &region[pos + 18..];
         if let Some(v) = parse_semver_triple(tail) {
             return Some(EmbeddedVersionMatch {
@@ -392,7 +411,7 @@ fn pattern_at(region: &[u8], pos: usize) -> Option<EmbeddedVersionMatch> {
     // A nightly build's `node.js/v25.0.0-nightly…` yields the triple
     // `25.0.0` and drops the prerelease tag — the same lossy-but-correct
     // behaviour the other semver-triple patterns have.
-    if window.starts_with(b"node.js/v") {
+    if want(CuratedLibrary::Node) && window.starts_with(b"node.js/v") {
         let tail = &region[pos + 9..];
         if let Some(v) = parse_semver_triple(tail) {
             return Some(EmbeddedVersionMatch {
@@ -445,7 +464,7 @@ impl CensusHit {
 pub fn census(region: &[u8]) -> Vec<CensusHit> {
     let mut out = Vec::new();
     for pos in 0..region.len() {
-        let Some(m) = pattern_at(region, pos) else { continue };
+        let Some(m) = pattern_at(region, pos, |_| true) else { continue };
         let start = if m.library == CuratedLibrary::Zlib && pos >= 1 && region[pos - 1] == b' ' {
             pos - 1
         } else {
@@ -1358,14 +1377,19 @@ mod tests {
         assert!(!finds(&behind(Some(b'-'), bare), CuratedLibrary::Zlib));
     }
 
-    /// Spec 1643 (analysis I1): the census's `accepted_new` hits are exactly
-    /// what `scan` returns, for every fixture banner and preceding byte.
+    /// Spec 1643 (analysis I1, SC-006): the census's `accepted_new` hits are
+    /// exactly what `scan` returns, for every variant behind every possible
+    /// preceding byte and at the region's start. The census tries every
+    /// pattern and then applies the rule; `scan` first narrows the patterns
+    /// by the preceding byte, so this is also the check that the narrowing
+    /// drops nothing the rule would accept.
     #[test]
     fn s1643_census_agrees_with_the_scanner() {
         use std::collections::HashSet;
-        let libs = ANCHORED.into_iter().chain([CuratedLibrary::OpenSsl, CuratedLibrary::Node]);
-        for lib in libs {
-            for prev in [None, Some(0u8), Some(b'-'), Some(0xff), Some(b' '), Some(b'/'), Some(b'x'), Some(b'9'), Some(b'_')] {
+        use strum::IntoEnumIterator;
+        for lib in CuratedLibrary::iter() {
+            let prevs = std::iter::once(None).chain((0..=255u8).map(Some));
+            for prev in prevs {
                 let r = if prev.is_none() { sample(lib).to_vec() } else { behind(prev, sample(lib)) };
                 let from_scan: HashSet<(CuratedLibrary, String)> =
                     scan(&r).into_iter().map(|m| (m.library, m.version)).collect();

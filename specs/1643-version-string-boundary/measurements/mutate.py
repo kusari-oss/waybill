@@ -41,11 +41,16 @@ M = [
      [UNIT + ["version_strings::tests::s1643_every_variant"], IT + ["u1_"]]),
     ("M6 identifier test removed",
      [("            Boundary::Anchored => !is_identifier(prev),\n", "            Boundary::Anchored => { let _ = prev; true }\n")],
-     [UNIT + ["version_strings::tests::s1643_anchored_patterns_reject"], IT + ["z4_"]]),
+     [UNIT + ["version_strings::tests::s1643_anchored_patterns_reject"],
+      UNIT + ["version_strings::tests::s1643_census_agrees"], IT + ["z4_"]]),
     ("M7 zlib tests the byte before deflate, not before its space",
      [("                || (pos >= 1 && region[pos - 1] == b' ' && class.accepts(region, pos - 1))\n",
        "                || (pos >= 1 && region[pos - 1] == b' ' && class.accepts(region, pos))\n")],
      [UNIT + ["version_strings::tests::s1643_anchored_patterns_reject"], IT + ["z4_"]]),
+    ("M8 the preceding-byte shortcut skips the anchored patterns",
+     [("            lib.boundary() == Boundary::Anchored || (prev == b' ' && lib == CuratedLibrary::Zlib)\n",
+       "            lib.boundary() == Boundary::NulOnly || (prev == b' ' && lib == CuratedLibrary::Zlib)\n")],
+     [UNIT + ["version_strings::tests::s1643_census_agrees"], IT + ["n2_"]]),
 ]
 
 
