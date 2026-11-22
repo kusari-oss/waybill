@@ -5409,23 +5409,19 @@ pub async fn execute(
             let roots = if canonical == root_path { vec![canonical] } else { vec![canonical, root_path.clone()] };
             crate::resolve::scope_propagation::added_seeds(&components, &seeds, &roots)
         };
-        // Spec 1642 census (research R6, log-only): what the anchor seeds
-        // would protect, and the non-runtime main modules.
-        {
+        // Spec 1642 (#1640) FR-005, research R5: a runtime root anchor
+        // protects what it anchors, as a runtime main module does.
+        let anchor_seeds = {
             let canonical = std::fs::canonicalize(&root_path).unwrap_or_else(|_| root_path.clone());
             let roots = if canonical == root_path { vec![canonical] } else { vec![canonical, root_path.clone()] };
-            let anchor_seeds =
-                crate::resolve::scope_propagation::anchor_seeds(&components, &anchor_seed_candidates, &roots);
-            crate::resolve::scope_propagation::census_anchor_immunity(
-                &components,
-                &relationships,
-                &seeds,
-                &added_seeds,
-                &anchor_seeds,
-                &submodule_anchors,
-                &ecosystems_with_root,
-                &boot_libraries,
-            );
+            crate::resolve::scope_propagation::anchor_seeds(&components, &anchor_seed_candidates, &roots)
+        };
+        for a in &anchor_seeds {
+            let kind = if submodule_anchors.contains(a) { "submodule" } else { "declared" };
+            tracing::debug!(target: "waybill::owner_census", event = "anchor_seed", payload = %serde_json::json!({"purl": a, "kind": kind}));
+        }
+        // Spec 1642 census (research R6): the non-runtime main modules.
+        {
             let root_purl = match &selection.subject {
                 crate::generate::root_selector::ResolvedRootSubject::MainModule(i) => {
                     components.get(*i).map(|c| c.purl.as_str().to_string())
@@ -5455,6 +5451,7 @@ pub async fn execute(
                 &relationships,
                 &seeds,
                 &added_seeds,
+                &anchor_seeds,
                 &ecosystems_with_root,
                 &boot_libraries,
             );

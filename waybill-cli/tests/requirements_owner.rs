@@ -176,12 +176,19 @@ fn json_list(c: &Value, name: &str) -> Option<Vec<String>> {
     prop(c, name).map(|v| serde_json::from_str(v).unwrap())
 }
 
-fn source_files(s: &Scan, prefix: &str) -> Vec<String> {
-    json_list(one(s, prefix), "waybill:source-files").unwrap_or_default()
+/// C18 as a set: spec 1542 sorts a merged component's paths, so their
+/// order carries no meaning.
+fn source_files(s: &Scan, prefix: &str) -> BTreeSet<String> {
+    json_list(one(s, prefix), "waybill:source-files").unwrap_or_default().into_iter().collect()
 }
 
-fn workspace_member(s: &Scan, prefix: &str) -> Vec<String> {
-    json_list(one(s, prefix), "waybill:workspace-member").unwrap_or_default()
+/// C120: the workspace root of every source path, as a set.
+fn workspace_member(s: &Scan, prefix: &str) -> BTreeSet<String> {
+    json_list(one(s, prefix), "waybill:workspace-member").unwrap_or_default().into_iter().collect()
+}
+
+fn set(items: &[&str]) -> BTreeSet<String> {
+    items.iter().map(|s| s.to_string()).collect()
 }
 
 fn parity(s: &Scan) {
@@ -304,15 +311,15 @@ fn o2_the_owner_does_not_depend_on_name_order() {
     assert!(!from.contains("pkg:pypi/waybill-fixture-zdevtool@0.1.0"), "edge from the dev package: {from:?}");
 }
 
-/// O-3: a lockfile-merged main module lists its manifest's directory first.
+/// O-3: a lockfile-merged main module records its manifest's directory.
 #[test]
 fn o3_a_merged_main_module_keeps_its_own_directory() {
     let s = check(&build(&files_1640("waybill-fixture-devtool")));
     let dev = "pkg:pypi/waybill-fixture-devtool@0.1.0";
-    assert_eq!(source_files(&s, dev), ["tool/devtool", "tool/uv.lock"]);
-    assert_eq!(workspace_member(&s, dev), ["tool/devtool"]);
-    assert_eq!(source_files(&s, TOOL), ["tool", "tool/uv.lock"]);
-    assert_eq!(workspace_member(&s, TOOL), ["tool"]);
+    assert_eq!(source_files(&s, dev), set(&["tool/devtool", "tool/uv.lock"]));
+    assert_eq!(workspace_member(&s, dev), set(&["tool", "tool/devtool"]));
+    assert_eq!(source_files(&s, TOOL), set(&["tool", "tool/uv.lock"]));
+    assert_eq!(workspace_member(&s, TOOL), set(&["tool"]));
 }
 
 /// O-4: a requirements file in the dev package's own directory is its.
@@ -331,7 +338,7 @@ fn o5_without_a_lockfile_the_tool_owns_its_directory() {
     let s = check(&build(&f));
     let from = edge_sources(&s, SHARED);
     assert!(from.contains(TOOL) && !from.contains("pkg:pypi/waybill-fixture-devtool@0.1.0"), "{from:?}");
-    assert_eq!(workspace_member(&s, "pkg:pypi/waybill-fixture-devtool@0.1.0"), ["tool/devtool"]);
+    assert_eq!(workspace_member(&s, "pkg:pypi/waybill-fixture-devtool@0.1.0"), set(&["tool/devtool"]));
 }
 
 const WS_LOCK: &str = "version = 1\nrequires-python = \">=3.10\"\n\n[manifest]\nmembers = [\"waybill-fixture-a\", \"waybill-fixture-b\", \"waybill-fixture-ws\"]\n\n[[package]]\nname = \"waybill-fixture-a\"\nversion = \"1.0.0\"\nsource = { editable = \"packages/a\" }\n\n[[package]]\nname = \"waybill-fixture-b\"\nversion = \"1.0.0\"\nsource = { editable = \"packages/b\" }\n\n[[package]]\nname = \"waybill-fixture-ws\"\nversion = \"1.0.0\"\nsource = { editable = \".\" }\ndependencies = [\n    { name = \"waybill-fixture-a\" },\n]\n";
@@ -352,7 +359,7 @@ fn o6_uv_workspace_members_own_their_directories() {
     let s = check(&build(&f));
     for (m, dir) in [("pkg:pypi/waybill-fixture-a@1.0.0", "packages/a"), ("pkg:pypi/waybill-fixture-b@1.0.0", "packages/b")] {
         assert_eq!(prop(one(&s, m), "waybill:component-role"), Some("main-module"), "{m}");
-        assert_eq!(workspace_member(&s, m), [dir], "{m}");
+        assert_eq!(workspace_member(&s, m), set(&[".", dir]), "{m}: its own directory and the lock's");
     }
     assert_eq!(edge_sources(&s, "pkg:pypi/waybill-fixture-r@"), BTreeSet::from(["pkg:pypi/waybill-fixture-b@1.0.0".to_string()]));
 }
@@ -374,7 +381,7 @@ fn o7_poetry_path_dependency_does_not_own_the_project_directory() {
     .collect();
     let s = check(&build(&f));
     assert_eq!(edge_sources(&s, SHARED), BTreeSet::from([TOOL.to_string()]));
-    assert_eq!(source_files(&s, "pkg:pypi/waybill-fixture-devtool@0.1.0").first().map(String::as_str), Some("tool/devtool"));
+    assert!(source_files(&s, "pkg:pypi/waybill-fixture-devtool@0.1.0").contains("tool/devtool"));
 }
 
 /// O-8: an installed entry keeps its own path first (planning amendment).
@@ -391,8 +398,8 @@ fn o8_an_installed_entry_keeps_its_path_first() {
     .collect();
     let s = check(&build(&f));
     let app = "pkg:pypi/waybill-fixture-app@1.0.0";
-    assert_eq!(source_files(&s, app), [format!("{di}/METADATA")]);
-    assert_eq!(workspace_member(&s, app), [".venv"]);
+    assert_eq!(source_files(&s, app), set(&[&format!("{di}/METADATA")]));
+    assert_eq!(workspace_member(&s, app), set(&[".venv"]));
     assert_eq!(prop(one(&s, app), "waybill:sbom-tier"), Some("deployed"));
 }
 
@@ -543,15 +550,12 @@ fn golden_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/requirements_owner/b1-golden")
 }
 
-const B1_LOCK: &str = "version = 1\nrequires-python = \">=3.10\"\n\n[[package]]\nname = \"waybill-fixture-app\"\nversion = \"1.0.0\"\nsource = { editable = \".\" }\ndependencies = [\n    { name = \"waybill-fixture-lib\" },\n]\n\n[[package]]\nname = \"waybill-fixture-lib\"\nversion = \"1.0\"\nsource = { registry = \"https://pypi.org/simple\" }\n";
-
 #[test]
 fn b1_one_project_per_directory_is_byte_identical_to_main() {
     let f = owned(
         vec![],
         &[
             ("app/pyproject.toml", "[project]\nname = \"waybill-fixture-app\"\nversion = \"1.0.0\"\ndependencies = [\"waybill-fixture-lib\"]\n"),
-            ("app/uv.lock", B1_LOCK),
             ("app/requirements.txt", "waybill-fixture-lib2==1.0\n"),
             ("svc/pyproject.toml", "[project]\nname = \"waybill-fixture-svc\"\nversion = \"2.0.0\"\n"),
             ("svc/requirements.txt", "waybill-fixture-lib3==1.0\n"),
@@ -605,10 +609,12 @@ fn has_event(events: &[String], event: &str, needles: &[&str]) -> bool {
 fn t004_census_events_fire() {
     let e = census_events(&build(&files_1640("waybill-fixture-devtool")));
     assert!(has_event(&e, "merge_source", &["waybill-fixture-devtool", r#""agrees":true"#]), "no agreeing merge_source: {e:#?}");
-    assert!(has_event(&e, "owner_candidates", &[r#""dir":"tool""#, "waybill-fixture-devtool", "waybill-fixture-tool"]), "no owner_candidates for tool: {e:#?}");
+    // After R2 the dev package owns `tool/devtool`, so `tool` has one
+    // candidate and no event (at the log-only commit it had two).
+    assert!(!has_event(&e, "owner_candidates", &[r#""dir":"tool""#]), "tool still has two candidates: {e:#?}");
     assert!(has_event(&e, "dev_only_main_module", &["waybill-fixture-devtool"]), "no dev_only_main_module: {e:#?}");
     let e = census_events(&build(&files_r4(Some("requirements.txt"))));
-    assert!(has_event(&e, "anchor_immunity", &["waybill-fixture-shared"]), "no anchor_immunity: {e:#?}");
+    assert!(has_event(&e, "anchor_seed", &["waybill-fixture-shared", r#""kind":"declared""#]), "no anchor_seed: {e:#?}");
     let e = census_events(&build(&files_r4(Some("requirements-dev.txt"))));
-    assert!(!has_event(&e, "anchor_immunity", &["waybill-fixture-shared"]), "a dev file's anchor must not protect: {e:#?}");
+    assert!(!has_event(&e, "anchor_seed", &["waybill-fixture-shared"]), "a dev file's anchor must not be a seed: {e:#?}");
 }

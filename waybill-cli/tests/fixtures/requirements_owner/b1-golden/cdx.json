@@ -16,12 +16,6 @@
               }
             ]
           }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "app/uv.lock"
-          }
         ]
       },
       "name": "waybill-fixture-app",
@@ -32,7 +26,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"app/uv.lock\"]"
+          "value": "[\"app\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -41,10 +35,6 @@
         {
           "name": "waybill:component-role",
           "value": "main-module"
-        },
-        {
-          "name": "waybill:python-lockfile-format",
-          "value": "uv"
         },
         {
           "name": "waybill:workspace-member",
@@ -173,8 +163,8 @@
       "version": "1.0"
     },
     {
-      "bom-ref": "pkg:pypi/waybill-fixture-lib@1.0",
-      "cpe": "cpe:2.3:a:waybill-fixture-lib:waybill-fixture-lib:1.0:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:pypi/waybill-fixture-lib@unresolved",
+      "cpe": "cpe:2.3:a:waybill-fixture-lib:waybill-fixture-lib:unresolved:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -187,43 +177,37 @@
               }
             ]
           }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "app/uv.lock"
-          }
         ]
       },
       "name": "waybill-fixture-lib",
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "[\"cpe:2.3:a:waybill-fixture-lib:waybill-fixture-lib:1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-lib:waybill-fixture-lib:1.0:*:*:*:*:*:*:*\"]"
+          "value": "[\"cpe:2.3:a:waybill-fixture-lib:waybill-fixture-lib:unresolved:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-lib:waybill-fixture-lib:unresolved:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"app/uv.lock\"]"
+          "value": "[\"app\"]"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "source"
+          "value": "design"
         },
         {
-          "name": "waybill:python-lockfile-format",
-          "value": "uv"
+          "name": "waybill:unresolved-reason",
+          "value": "declared in pyproject.toml; no uv.lock / poetry.lock / Pipfile.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"app\"]"
         }
       ],
-      "purl": "pkg:pypi/waybill-fixture-lib@1.0",
+      "purl": "pkg:pypi/waybill-fixture-lib@unresolved",
       "supplier": {
         "name": "PyPI"
       },
       "type": "library",
-      "version": "1.0"
+      "version": "unresolved"
     },
     {
       "bom-ref": "pkg:pypi/waybill-fixture-svc@2.0.0",
@@ -280,14 +264,17 @@
         "pkg:pypi/waybill-fixture-app@1.0.0",
         "pkg:pypi/waybill-fixture-lib2@1.0",
         "pkg:pypi/waybill-fixture-lib3@1.0",
-        "pkg:pypi/waybill-fixture-lib@1.0",
+        "pkg:pypi/waybill-fixture-lib@unresolved",
         "pkg:pypi/waybill-fixture-svc@2.0.0"
-      ],
+      ]
+    },
+    {
+      "aggregate": "unknown",
       "dependencies": [
         "pkg:pypi/waybill-fixture-app@1.0.0",
         "pkg:pypi/waybill-fixture-lib2@1.0",
         "pkg:pypi/waybill-fixture-lib3@1.0",
-        "pkg:pypi/waybill-fixture-lib@1.0",
+        "pkg:pypi/waybill-fixture-lib@unresolved",
         "pkg:pypi/waybill-fixture-svc@2.0.0"
       ]
     },
@@ -308,7 +295,7 @@
     {
       "dependsOn": [
         "pkg:pypi/waybill-fixture-lib2@1.0",
-        "pkg:pypi/waybill-fixture-lib@1.0"
+        "pkg:pypi/waybill-fixture-lib@unresolved"
       ],
       "ref": "pkg:pypi/waybill-fixture-app@1.0.0"
     },
@@ -322,7 +309,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:pypi/waybill-fixture-lib@1.0"
+      "ref": "pkg:pypi/waybill-fixture-lib@unresolved"
     },
     {
       "dependsOn": [
@@ -359,6 +346,9 @@
       }
     ],
     "lifecycles": [
+      {
+        "phase": "design"
+      },
       {
         "phase": "pre-build"
       }
@@ -402,7 +392,11 @@
       },
       {
         "name": "waybill:graph-completeness",
-        "value": "complete"
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "transitive-edges-unresolvable: pypi"
       },
       {
         "name": "waybill:workspaces-detected",

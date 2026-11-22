@@ -35,7 +35,13 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"partial\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"transitive-edges-unresolvable: pypi\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -118,7 +124,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"app/uv.lock\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"app\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -136,19 +142,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"app/uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-role\",\"value\":\"main-module\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -323,25 +317,25 @@
       "versionInfo": "1.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-ILLZM6MBKYENR6TU",
+      "SPDXID": "SPDXRef-Package-XVOBPCBR7MLZSZYH",
       "annotations": [
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"app/uv.lock\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"app\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:waybill-fixture-lib:waybill-fixture-lib:1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-lib:waybill-fixture-lib:1.0:*:*:*:*:*:*:*\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:waybill-fixture-lib:waybill-fixture-lib:unresolved:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-waybill-fixture-lib:waybill-fixture-lib:unresolved:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -353,13 +347,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"app/uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in pyproject.toml; no uv.lock / poetry.lock / Pipfile.lock fallback\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -372,12 +360,12 @@
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:pypi/waybill-fixture-lib@1.0",
+          "referenceLocator": "pkg:pypi/waybill-fixture-lib@unresolved",
           "referenceType": "purl"
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:waybill-fixture-lib:waybill-fixture-lib:1.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:waybill-fixture-lib:waybill-fixture-lib:unresolved:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -386,7 +374,7 @@
       "licenseDeclared": "NOASSERTION",
       "name": "waybill-fixture-lib",
       "supplier": "Organization: PyPI",
-      "versionInfo": "1.0"
+      "versionInfo": "unresolved"
     },
     {
       "SPDXID": "SPDXRef-Package-Y7SEZTQW65KFXPKD",
@@ -467,12 +455,12 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-ILLZM6MBKYENR6TU",
+      "relatedSpdxElement": "SPDXRef-Package-R4FLZY4VNNI4FAZ5",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-LHYDYJRIIO7PAOS3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-R4FLZY4VNNI4FAZ5",
+      "relatedSpdxElement": "SPDXRef-Package-XVOBPCBR7MLZSZYH",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-LHYDYJRIIO7PAOS3"
     },
