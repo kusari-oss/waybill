@@ -98,33 +98,38 @@ Output does not change in this phase.
 **Goal**: `dynamic-linkage` and `embedded-source-path` report `binary-analysis`.
 **Independent test**: K1 and K2 pass; K7 is unchanged.
 
-- [ ] T012 [US1] Wire:
+- [X] T012 [US1] Wire:
   - `SM::entry_technique` and `NC` use `binary_kind_technique(kind).unwrap_or(PackageDatabase)`;
   - `DD::effective_technique` and `is_binary_side` use `binary_kind_technique(kind) == Some(BinaryAnalysis)`;
   - remove `DD::BINARY_KINDS`, the `kind_technique_change` event and the `kind_merge` event (data-model).
 
   Then remove the `#[ignore]` from K1, K2 and K6, update their census assertions to the wired state, and update unit tests that referred to `BINARY_KINDS`.
+  - *As built*: `entry_technique` reads the decision, so `NC`, which calls it, follows without an edit. The log-only test `log_only_census_reports_what_will_change` became `wired_census_has_no_log_only_events`, which also checks that `binary_derived_kind` reports `binary-analysis` for K1, K2 and K6b. The related suites (specs 1643–1647) pass unchanged.
 
 ## Phase 4: User Story 2 — embedded manifests keep manifest analysis (P1)
 
 **Goal**: cargo-auditable, ELF package notes and Go BuildInfo are unchanged.
 **Independent test**: K3, K4 and K5 are byte-identical to `main` at the wired commit.
 
-- [ ] T013 [US2] Run `control_byte_identical_to_main` at the wired commit with `WAYBILL_BINARY_KIND_IDENTICAL=K3,K4,K5,K7`. It must pass. Also run it for K1 and confirm that it fails, which shows the control can detect a difference. Record both runs in `MS/control.md`.
+- [X] T013 [US2] Run `control_byte_identical_to_main` at the wired commit with `WAYBILL_BINARY_KIND_IDENTICAL=K3,K4,K5,K7`. It must pass. Also run it for K1 and confirm that it fails, which shows the control can detect a difference. Record both runs in `MS/control.md`.
+  - *As built*: the control passes for K3, K4, K5 and K7 against `main`'s binary, and fails for K1 (`K1: cdx differs`), so it can detect a difference.
 
 ## Phase 5: User Story 3 — a merge keeps the binary method visible (P2)
 
 **Goal**: a merge with a newly binary-analysis kind lists both methods.
 **Independent test**: K6 passes, as an integration case or as the unit test T008 decided on.
 
-- [ ] T014 [US3] K6 asserts CycloneDX methods `manifest-analysis` then `binary-analysis`, and the SPDX D1 `methods` array in both formats. If K6 is a unit test (T008), it asserts `absorb_methods` returns one `BinaryAnalysis` method for a record merged with a `dynamic-linkage` component.
+- [X] T014 [US3] K6 asserts CycloneDX methods `manifest-analysis` then `binary-analysis`, and the SPDX D1 `methods` array in both formats. If K6 is a unit test (T008), it asserts `absorb_methods` returns one `BinaryAnalysis` method for a record merged with a `dynamic-linkage` component.
+  - *As built*: `s1648_a_record_absorbs_the_newly_binary_kinds` in `DD`. It covers both kinds as loser and as winner, and the four unchanged kinds absorbing nothing. K6b is the integration half: a joined import lists one method.
 
 ## Phase 6: User Story 4 — nothing else changes (P2)
 
 **Goal**: every difference is traced.
 **Independent test**: the public corpus, the quality corpus and TheRock, each against a `main` control.
 
-- [ ] T015 [US4] Mutations M1–M5 (R7). Copy spec 1647's `measurements/mutate.py` to `MS/mutate.py` and replace its table. Record the killing tests in `MS/mutations.md`. Every mutation must be killed. Afterwards, `diff -r` the source against a copy taken before the run, and rebuild.
+- [X] T015 [US4] Mutations M1–M5 (R7). Copy spec 1647's `measurements/mutate.py` to `MS/mutate.py` and replace its table. Record the killing tests in `MS/mutations.md`. Every mutation must be killed. Afterwards, `diff -r` the source against a copy taken before the run, and rebuild.
+  - *As built*: 5 of 5 killed (`MS/mutations.md`). M4 is killed by the unit test only, because no tree reaches the merge.
+
 - [ ] T016 [US4] Public corpus at the final code commit (`-f branch=1648-binary-kind-technique`), with the scanned commit confirmed. Expected: no drift (spec Background). If there is drift, trace each line to a component of a changed kind, regenerate with `regen_goldens=true`, `cmp` the regenerated files with the traced output, commit them, and confirm 166 of 166. Record in `MS/corpus.md`.
 - [ ] T017 [US4] Quality corpus (`census-versions.yml`) and TheRock (`measure-full`, base `33c445f6` against the final code commit), at full SHAs, with every `refs.txt` verified. Record in `MS/therock.md`:
   - every component that changed, traced to its kind;

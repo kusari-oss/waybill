@@ -403,7 +403,6 @@ fn assert_technique(s: &Scan, c: &Value, purl: &str, technique: &str, spdx: &str
 
 /// K1: a library named by another binary's imports reports binary analysis.
 #[test]
-#[ignore = "spec 1648: red until T012"]
 fn k1_dynamic_linkage_is_binary_analysis() {
     let s = scan(case("K1"));
     let (c, purl) = the_one(&s, "dynamic-linkage");
@@ -412,7 +411,6 @@ fn k1_dynamic_linkage_is_binary_analysis() {
 
 /// K2: a package named by embedded source paths reports binary analysis.
 #[test]
-#[ignore = "spec 1648: red until T012"]
 fn k2_embedded_source_path_is_binary_analysis() {
     let s = scan(case("K2"));
     let (c, purl) = the_one(&s, "embedded-source-path");
@@ -483,7 +481,6 @@ fn k5_go_buildinfo_keeps_manifest_analysis() {
 /// is not a deduplicator merge (`log_only_census_reports_what_will_change`);
 /// the merge rule itself is a deduplicator unit test (T014).
 #[test]
-#[ignore = "spec 1648: red until T012"]
 fn k6_deduped_dynamic_linkage_lists_one_method() {
     let s = scan(case("K6b"));
     let (c, purl) = the_one(&s, "dynamic-linkage");
@@ -498,27 +495,17 @@ fn k7_banner_match_unchanged() {
     assert_technique(&s, c, &purl, "binary-analysis", "binary-analysis");
 }
 
-/// The log-only census (T005, T007): K1 and K2 each get one
-/// `kind_technique_change`; K6b's combined import gets one and no
-/// `kind_merge`. Removed at T012 with the events.
+/// The census at the wired commit (T012): the log-only events are gone, and
+/// the decided kinds carry their technique in the census as in the document.
 #[test]
-fn log_only_census_reports_what_will_change() {
-    for (id, kind) in [("K1", "dynamic-linkage"), ("K2", "embedded-source-path")] {
+fn wired_census_has_no_log_only_events() {
+    for id in ["K1", "K2", "K6b"] {
         let s = scan(case(id));
-        let (_, purl) = the_one(&s, kind);
-        let ev = census(&s, "kind_technique_change");
-        assert_eq!(ev.len(), 1, "{id}: {}", s.stderr);
-        assert_eq!(
-            ev[0],
-            serde_json::json!({"evidence_kind": kind, "new": "binary-analysis", "old": "package-database", "purl": purl}),
-            "{id}"
-        );
+        assert!(census(&s, "kind_technique_change").is_empty(), "{id}: {}", s.stderr);
+        assert!(census(&s, "kind_merge").is_empty(), "{id}: {}", s.stderr);
+        let ev = census(&s, "binary_derived_kind");
+        assert!(!ev.is_empty() && ev.iter().all(|e| e["technique"] == "binary-analysis"), "{id}: {ev:#?}");
     }
-    // K6b: two binaries importing one library. The linkage aggregator joins
-    // them before deduplication, so no merge reaches S1 or S2.
-    let s = scan(case("K6b"));
-    assert!(census(&s, "kind_merge").is_empty(), "{}", s.stderr);
-    assert_eq!(census(&s, "kind_technique_change").len(), 1, "{}", s.stderr);
 }
 
 /// Control (T008, T013): this binary and another

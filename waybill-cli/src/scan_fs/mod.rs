@@ -264,15 +264,16 @@ pub struct ScanResult {
 /// matching an emitted component resolves to that component exactly.
 /// Anything else (a bare name, or a `pkg:` string matching nothing) returns
 /// `None` and goes through the name lookup as before.
-/// Spec 1646 (#1665, FR-003): the technique of a component converted from a
-/// scanned entry. A banner or symbol match was read from the binary's own
-/// bytes, so it is `BinaryAnalysis`; everything else keeps `PackageDatabase`.
+/// The technique of a component converted from a scanned entry: its binary
+/// evidence kind's decision (spec 1646, spec 1648:
+/// `binary::binary_kind_technique`), and `PackageDatabase` for every other
+/// entry.
 pub(crate) fn entry_technique(entry: &package_db::PackageDbEntry) -> ResolutionTechnique {
-    if entry.evidence_kind.as_deref().is_some_and(|k| crate::resolve::deduplicator::BINARY_KINDS.contains(&k)) {
-        ResolutionTechnique::BinaryAnalysis
-    } else {
-        ResolutionTechnique::PackageDatabase
-    }
+    entry
+        .evidence_kind
+        .as_deref()
+        .and_then(crate::scan_fs::binary::binary_kind_technique)
+        .unwrap_or(ResolutionTechnique::PackageDatabase)
 }
 
 /// Spec 1646 census (research R6): `binary_derived_kind` for the other
@@ -296,19 +297,6 @@ pub(crate) fn census_entry_technique(entry: &package_db::PackageDbEntry) {
     if let Some(k) = other {
         let j = serde_json::json!({ "evidence_kind": k, "purl": entry.purl.as_str(), "technique": now.kebab_name() });
         tracing::debug!(target: "waybill::version_census", binary_derived_kind = %j);
-    }
-    // Spec 1648 census (R4): the technique this entry will get once its
-    // kind's decision is wired, when that differs from today's.
-    if let Some(new) = kind.and_then(crate::scan_fs::binary::binary_kind_technique) {
-        if new != now {
-            let j = serde_json::json!({
-                "evidence_kind": kind,
-                "new": new.kebab_name(),
-                "old": now.kebab_name(),
-                "purl": entry.purl.as_str(),
-            });
-            tracing::debug!(target: "waybill::version_census", kind_technique_change = %j);
-        }
     }
 }
 

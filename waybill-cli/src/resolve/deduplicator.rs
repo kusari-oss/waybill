@@ -12,15 +12,14 @@ use waybill_common::resolution::ResolvedComponent;
 use crate::scan_fs::also_detected;
 use waybill_common::resolution::{IdentityMethod, ResolutionTechnique};
 
-/// Spec 1646 (#1665): the evidence kinds whose identity was read from a
-/// binary's own bytes (research R1, clarification 2).
-pub(crate) const BINARY_KINDS: [&str; 2] = ["embedded-version-string", "symbol-fingerprint"];
-
-/// A component's effective technique: `BinaryAnalysis` for a binary match,
-/// whatever its stored technique, and the stored technique otherwise
-/// (data-model "Absorb rule").
+/// A component's effective technique: `BinaryAnalysis` when its evidence
+/// kind is decided binary analysis (`binary::binary_kind_technique`, specs
+/// 1646 and 1648), whatever its stored technique, and the stored technique
+/// otherwise (spec 1646 data-model "Absorb rule").
 pub(crate) fn effective_technique(c: &ResolvedComponent) -> ResolutionTechnique {
-    if c.evidence_kind.as_deref().is_some_and(|k| BINARY_KINDS.contains(&k)) {
+    if c.evidence_kind.as_deref().and_then(crate::scan_fs::binary::binary_kind_technique)
+        == Some(ResolutionTechnique::BinaryAnalysis)
+    {
         ResolutionTechnique::BinaryAnalysis
     } else {
         c.evidence.technique.clone()
@@ -74,27 +73,6 @@ fn apply_absorbed(best: &mut ResolvedComponent, methods: Vec<IdentityMethod>) {
     }
     best.evidence.also.extend(methods);
     best.evidence.also.sort_by_key(|m| technique_rank(&m.technique));
-}
-
-/// Spec 1648 census (R4): a merge where either side is a kind spec 1648
-/// makes binary analysis, so its methods may change once wired. Removed
-/// with the wiring (T012).
-fn census_kind_merge(site: &str, best: &ResolvedComponent, other: &ResolvedComponent) {
-    if !tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
-        return;
-    }
-    let newly = |c: &ResolvedComponent| matches!(c.evidence_kind.as_deref(), Some("dynamic-linkage" | "embedded-source-path"));
-    if !newly(best) && !newly(other) {
-        return;
-    }
-    let side = |c: &ResolvedComponent| {
-        serde_json::json!({
-            "evidence_kind": c.evidence_kind,
-            "mechanism": c.extra_annotations.get("waybill:source-mechanism"),
-        })
-    };
-    let j = serde_json::json!({"loser": side(other), "purl": best.purl.as_str(), "site": site, "winner": side(best)});
-    tracing::debug!(target: "waybill::version_census", kind_merge = %j);
 }
 
 /// The `binary_merge` census event (contracts/wire.md), when one side is a
@@ -270,7 +248,6 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             // are moved below.
             let methods = absorb_methods(&best, &other);
             census_binary_merge("S1", &best, &other, &methods);
-            census_kind_merge("S1", &best, &other);
             apply_absorbed(&mut best, methods);
             // Spec 1639 S1: what `record` needs from the loser, taken before
             // the fold below moves its annotations.
@@ -688,7 +665,6 @@ fn fold_declared_not_cached(components: &mut Vec<ResolvedComponent>) {
             let dst = &mut components[dst_idx];
             let methods = absorb_methods(dst, &sec);
             census_binary_merge("S2", dst, &sec, &methods);
-            census_kind_merge("S2", dst, &sec);
             apply_absorbed(dst, methods);
             let subject = dst.purl.as_str().to_string();
             also_detected::record("S2", &subject, &mut dst.extra_annotations, &sec.extra_annotations);
@@ -2184,6 +2160,23 @@ mod tests {
         // A fingerprint is a binary side too.
         let fp = binary("pkg:generic/zlib@1.3.2", "symbol-fingerprint");
         assert_eq!(techniques(&absorb_methods(&record("pkg:generic/zlib@1.3.2", "pkg-config"), &fp)), [ResolutionTechnique::BinaryAnalysis]);
+    }
+
+    /// Spec 1648 FR-004 (K6): a record absorbs `binary-analysis` from the two
+    /// kinds spec 1648 decides binary, and nothing from an embedded manifest.
+    #[test]
+    fn s1648_a_record_absorbs_the_newly_binary_kinds() {
+        for kind in ["dynamic-linkage", "embedded-source-path"] {
+            let rec = record("pkg:generic/waybill-fixture-x@1.0", "pkg-config");
+            let b = binary("pkg:generic/waybill-fixture-x@1.0", kind);
+            assert_eq!(techniques(&absorb_methods(&rec, &b)), [ResolutionTechnique::BinaryAnalysis], "{kind}");
+            assert_eq!(techniques(&absorb_methods(&b, &rec)), [ResolutionTechnique::PackageDatabase], "{kind} winning");
+        }
+        for kind in ["cargo-auditable", "elf-note-package", "jdk-runtime-collapsed", "python-stdlib-collapsed"] {
+            let rec = record("pkg:generic/waybill-fixture-x@1.0", "pkg-config");
+            let b = binary("pkg:generic/waybill-fixture-x@1.0", kind);
+            assert!(absorb_methods(&rec, &b).is_empty(), "{kind}");
+        }
     }
 
     #[test]
