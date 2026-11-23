@@ -448,6 +448,58 @@ fn corpus_haskell_security_advisories() {
     run_target("haskell-security-advisories");
 }
 
+// #1677 — hpack monorepos for #1673–#1676. See the comment above
+// `hpack-hs-opentelemetry` in `corpus_harness_195/manifest.rs`.
+
+// #1673: anchors from an `!include`d file, as committed.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_hpack_hs_opentelemetry() {
+    run_target("hpack-hs-opentelemetry");
+}
+
+// #1673 with the hpack-generated `.cabal` removed (`Prepare::RemoveHpackGeneratedCabal`).
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_hpack_hs_opentelemetry_no_generated_cabal() {
+    run_target("hpack-hs-opentelemetry-no-generated-cabal");
+}
+
+// #1674: YAML merge keys, including a duplicate `<<`, as committed.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_hpack_lootbox() {
+    run_target("hpack-lootbox");
+}
+
+// #1674 with the hpack-generated `.cabal` removed.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_hpack_lootbox_no_generated_cabal() {
+    run_target("hpack-lootbox-no-generated-cabal");
+}
+
+// #1673's partial arm: `!include` that reads partially.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_hpack_hs_temporal_sdk() {
+    run_target("hpack-hs-temporal-sdk");
+}
+
+// #1675: every `package.yaml` unread, as committed.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_hpack_ogmios() {
+    run_target("hpack-ogmios");
+}
+
+// #1675 with the hpack-generated `.cabal` removed: no Haskell component survives.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_hpack_ogmios_no_generated_cabal() {
+    run_target("hpack-ogmios-no-generated-cabal");
+}
+
 // -----------------------------------------------------------------------
 // US4 — byte-identity across two consecutive runs (opt-in-within-opt-in)
 // -----------------------------------------------------------------------

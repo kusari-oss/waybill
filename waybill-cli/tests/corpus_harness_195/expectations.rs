@@ -2843,3 +2843,139 @@ mod recall_proxy_tests {
         );
     }
 }
+
+// -----------------------------------------------------------------------
+// #1677 — hpack monorepos
+// -----------------------------------------------------------------------
+
+/// What an hpack target's documents must show however #1673–#1676 change
+/// them. Those fixes change how many `package.yaml` are read and what is
+/// recovered, never how many are seen, so `seen` is a stable count.
+struct HpackExpect {
+    /// `manifests-seen` in C200 (`waybill:hpack-read-outcome`).
+    seen: usize,
+    /// `false` for a `Prepare::RemoveHpackGeneratedCabal` target.
+    generated_cabal_present: bool,
+}
+
+/// Every CycloneDX component, nested ones included.
+fn all_cdx_components(cdx: &serde_json::Value) -> Vec<&serde_json::Value> {
+    let mut out = Vec::new();
+    let mut stack: Vec<&serde_json::Value> = cdx["components"].as_array().into_iter().flatten().collect();
+    while let Some(c) = stack.pop() {
+        out.push(c);
+        stack.extend(c["components"].as_array().into_iter().flatten());
+    }
+    out
+}
+
+fn hpack_expectations(sboms: &EmittedSboms, e: HpackExpect) -> Result<(), AssertionFailure> {
+    let c200 = sboms.cdx["metadata"]["properties"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|p| p["name"] == "waybill:hpack-read-outcome")
+        .and_then(|p| p["value"].as_str())
+        .and_then(|v| serde_json::from_str::<serde_json::Value>(v).ok());
+    let Some(c200) = c200 else {
+        return Err(AssertionFailure {
+            check_name: "hpack-read-outcome-present",
+            format: FailureFormat::Cdx,
+            observed: "no parseable waybill:hpack-read-outcome (C200) in metadata.properties".to_string(),
+            expected: format!("C200 listing {} package.yaml as seen", e.seen),
+            suggested_action: "investigate the hpack reader's document-scope outcome record (C200)",
+        });
+    };
+    let seen: Vec<&str> = c200["manifests-seen"].as_array().into_iter().flatten().filter_map(|v| v.as_str()).collect();
+    if seen.len() != e.seen {
+        return Err(AssertionFailure {
+            check_name: "hpack-manifests-seen",
+            format: FailureFormat::Cdx,
+            observed: format!("{} package.yaml seen", seen.len()),
+            expected: format!("{} package.yaml seen (counted at the pinned commit, #1677)", e.seen),
+            suggested_action: "the walker no longer finds every package.yaml, or the pin moved",
+        });
+    }
+    let hackage = all_cdx_components(&sboms.cdx)
+        .into_iter()
+        .filter(|c| c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:hackage/")))
+        .count();
+    if e.generated_cabal_present && hackage == 0 {
+        return Err(AssertionFailure {
+            check_name: "hackage-components-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:hackage/* components".to_string(),
+            expected: "pkg:hackage/* components from the committed .cabal and package.yaml".to_string(),
+            suggested_action: "investigate the Haskell readers: the committed tree no longer yields any Hackage component",
+        });
+    }
+    if !e.generated_cabal_present {
+        // The control for `Prepare::RemoveHpackGeneratedCabal`: no component
+        // may cite a `.cabal` from a directory that holds a seen
+        // `package.yaml`. If one does, the generated file was not removed and
+        // this target is scanning the committed tree under another name.
+        //
+        // C200 lists absolute paths and `waybill:source-files` relative ones,
+        // so a cited `.cabal` in relative directory `d` matches a seen
+        // `package.yaml` whose absolute directory ends in `/d`, on a whole
+        // segment. A `.cabal` at the scan root has no directory to match;
+        // none of the #1677 targets has a `package.yaml` there.
+        let dirs: Vec<&str> = seen.iter().filter_map(|p| p.rsplit_once('/').map(|(d, _)| d)).collect();
+        let cited: Vec<String> = all_cdx_components(&sboms.cdx)
+            .into_iter()
+            .filter_map(|c| {
+                let files = c["properties"]
+                    .as_array()?
+                    .iter()
+                    .find(|p| p["name"] == "waybill:source-files")?["value"]
+                    .as_str()?;
+                serde_json::from_str::<Vec<String>>(files).ok()
+            })
+            .flatten()
+            .filter(|f| f.ends_with(".cabal"))
+            .filter(|f| {
+                let Some((dir, _)) = f.rsplit_once('/') else { return false };
+                let suffix = format!("/{dir}");
+                dirs.iter().any(|d| d.ends_with(&suffix))
+            })
+            .collect();
+        if !cited.is_empty() {
+            return Err(AssertionFailure {
+                check_name: "hpack-generated-cabal-removed",
+                format: FailureFormat::Cdx,
+                observed: format!("components cite a .cabal beside a package.yaml: {cited:?}"),
+                expected: "no .cabal beside any package.yaml: Prepare::RemoveHpackGeneratedCabal removed them".to_string(),
+                suggested_action: "check harness::prepared_dir ran and scanned the prepared worktree",
+            });
+        }
+    }
+    Ok(())
+}
+
+pub fn hpack_hs_opentelemetry_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    hpack_expectations(sboms, HpackExpect { seen: 24, generated_cabal_present: true })
+}
+
+pub fn hpack_hs_opentelemetry_no_generated_cabal_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    hpack_expectations(sboms, HpackExpect { seen: 24, generated_cabal_present: false })
+}
+
+pub fn hpack_lootbox_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: true })
+}
+
+pub fn hpack_lootbox_no_generated_cabal_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: false })
+}
+
+pub fn hpack_hs_temporal_sdk_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    hpack_expectations(sboms, HpackExpect { seen: 7, generated_cabal_present: true })
+}
+
+pub fn hpack_ogmios_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    hpack_expectations(sboms, HpackExpect { seen: 8, generated_cabal_present: true })
+}
+
+pub fn hpack_ogmios_no_generated_cabal_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    hpack_expectations(sboms, HpackExpect { seen: 8, generated_cabal_present: false })
+}
