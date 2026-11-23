@@ -20,31 +20,38 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Build `main`'s binary at `33c445f6` into the scratchpad as `waybill-main-33c445f6`. Before building, confirm `git diff 33c445f6 -- waybill-cli waybill-common Cargo.toml Cargo.lock` is empty. Record the full SHA in `MS/control.md`.
-- [ ] T002 [P] In `IL`, add the test-only `elf_with_needed(needed: &[&str], rodata: &[u8]) -> Vec<u8>` (R6): an ELF64 `ET_DYN` file with `.rodata`, a `.dynamic` section holding one `DT_NEEDED` per name, and a `.dynstr`.
+- [X] T001 Build `main`'s binary at `33c445f6` into the scratchpad as `waybill-main-33c445f6`. Before building, confirm `git diff 33c445f6 -- waybill-cli waybill-common Cargo.toml Cargo.lock` is empty. Record the full SHA in `MS/control.md`.
+  - *As built*: `MS/control.md`.
+- [X] T002 [P] In `IL`, add the test-only `elf_with_needed(needed: &[&str], rodata: &[u8]) -> Vec<u8>` (R6): an ELF64 `ET_DYN` file with `.rodata`, a `.dynamic` section holding one `DT_NEEDED` per name, and a `.dynstr`.
   - Before writing it, check how `scan_fs/binary/linkage.rs` reads `DT_NEEDED` (through `object`'s dynamic-section accessors, or through program headers), and build exactly what that reader needs.
   - A sanity test in `IT` scans one such file and finds the `dynamic-linkage` component for each name. That test is the helper's positive control.
-- [ ] T003 [P] Create `IT` with the harness from `waybill-cli/tests/version_string_static.rs`: `tree`, `scan_with(bin, dir)` returning the three documents' bytes, CycloneDX and the log, `cdx_components`, parity and unique `bom-ref`s.
+  - *As built*: **no ELF builder.** waybill reads ELF imports through `object`'s `imports()`, which names a library only through symbol versioning, not `DT_NEEDED` (`MS/control.md`). K1 uses the existing `macho_dylib` helper, whose `LC_LOAD_DYLIB` gives a real `dynamic-linkage` component; `IL` is unchanged.
+- [X] T003 [P] Create `IT` with the harness from `waybill-cli/tests/version_string_static.rs`: `tree`, `scan_with(bin, dir)` returning the three documents' bytes, CycloneDX and the log, `cdx_components`, parity and unique `bom-ref`s.
   - Add `technique(cdx, purl) -> Vec<String>` (the CycloneDX methods' techniques) and `d1(doc, purl)` for SPDX 2.3 and SPDX 3.
   - Add `census(stderr, event) -> Vec<Value>`.
   - Add the control `control_byte_identical_to_main`. It is ignored unless `WAYBILL_BINARY_KIND_MAIN_BIN` is set, and masks version-4 UUIDs. `WAYBILL_FIXED_TIMESTAMP` already fixes timestamps. The case list comes from `WAYBILL_BINARY_KIND_IDENTICAL`.
   - Bring in the fixture builders R6 names: `elf_with_package_note`, the `.dep-v0` cargo-auditable fixture, the embedded-source-path tree, and a synthetic Go BuildInfo binary. Move a builder into `tests/common` only where `IT` needs it from another test file, and keep a comment naming where it came from.
+  - *As built*: the builders were copied, with comments naming their sources: `elf_with_section`, `elf_with_package_note`, `cargo_auditable_elf` and `go_binary`. The SPDX D1 readers were copied from `tests/merged_binary_evidence.rs`. A temporary probe test listed each case's output on `main`, and it was removed once the expectations were written.
 
 ## Phase 2: Foundational (log-only census)
 
 Output does not change in this phase.
 
-- [ ] T004 In `BM`, add `pub(crate) fn binary_kind_technique(kind: &str) -> Option<ResolutionTechnique>` (data-model).
+- [X] T004 In `BM`, add `pub(crate) fn binary_kind_technique(kind: &str) -> Option<ResolutionTechnique>` (data-model).
   - It returns `BinaryAnalysis` for `embedded-version-string`, `symbol-fingerprint`, `dynamic-linkage` and `embedded-source-path`.
   - It returns `PackageDatabase` for `cargo-auditable`, `elf-note-package`, `jdk-runtime-collapsed` and `python-stdlib-collapsed`.
   - It returns `None` for anything else.
   - Unit tests `s1648_*`: every entry of `BINARY_EVIDENCE_KINDS` maps to `Some` (totality, FR-006); each kind maps to its decided technique; a non-binary kind (`requirements-txt`) maps to `None`.
   - Nothing calls it on this commit except the census (T005).
-- [ ] T005 In `SM` and `NC`, at the conversion sites, emit the census `kind_technique_change` event (spec 1646's `technique_change` shape, `evidence_kind`, `purl`, `old`, `new`, under its own name so spec 1646's live control is not affected) for each entry whose `binary_kind_technique` differs from the technique it is converted with. The technique given is unchanged.
+  - *As built*: plus `s1648_each_kind_has_its_decided_technique`. The doc comment quotes the CycloneDX definitions.
+- [X] T005 In `SM` and `NC`, at the conversion sites, emit the census `kind_technique_change` event (spec 1646's `technique_change` shape, `evidence_kind`, `purl`, `old`, `new`, under its own name so spec 1646's live control is not affected) for each entry whose `binary_kind_technique` differs from the technique it is converted with. The technique given is unchanged.
   - In `census_entry_technique`, rename the `detected_go` label to `detected-go` (R3).
-- [ ] T006 [P] In `GB::emit_entries_from_info`, emit a `binary_derived_kind` census event with `evidence_kind: "go-buildinfo"`, the entry's PURL, the binary's path and `technique: "package-database"`, for each entry it creates (R3, FR-005). Off unless `waybill::version_census=debug` is enabled.
-- [ ] T007 In `DD`, at S1 and S2, emit `kind_merge` (data-model) when either side's evidence kind is `dynamic-linkage` or `embedded-source-path`. Do not change `best`.
-- [ ] T008 Write K1–K7 in `IT` with their expected results (wire.md):
+  - *As built*: both in `SM::census_entry_technique`, which both conversion sites already call, so `NC` needed no edit.
+- [X] T006 [P] In `GB::emit_entries_from_info`, emit a `binary_derived_kind` census event with `evidence_kind: "go-buildinfo"`, the entry's PURL, the binary's path and `technique: "package-database"`, for each entry it creates (R3, FR-005). Off unless `waybill::version_census=debug` is enabled.
+  - *As built*: `emit_entries_from_info` is now a wrapper around `emit_entries_from_info_inner`, so every caller is counted. The count includes the binary's `(devel)` main module, which the document later leaves out.
+- [X] T007 In `DD`, at S1 and S2, emit `kind_merge` (data-model) when either side's evidence kind is `dynamic-linkage` or `embedded-source-path`. Do not change `best`.
+  - *As built*: `census_kind_merge` beside `census_binary_merge` at S1 and S2.
+- [X] T008 Write K1–K7 in `IT` with their expected results (wire.md):
   - K1, K2 and K6 are red on this commit; K3, K4, K5 and K7 pass.
   - Each case also asserts its census:
     - K1 and K2: one `kind_technique_change` with `new: binary-analysis`;
@@ -53,7 +60,9 @@ Output does not change in this phase.
     - K6: one `kind_merge`.
   - **K6 feasibility**: first establish which pair can merge at all. A `dynamic-linkage` PURL carries no version, while a pkg-config record's does. Use the first pair that gives equal PURLs. If none does, record that in `MS/control.md` and make K6 a unit test in `DD` on constructed components (wire.md, K6 note).
   - Run the cases with this commit's binary and with T001's. Record the red/green table in `MS/control.md`, and confirm that the documents are identical to `main`'s for every case (UUIDs masked).
-- [ ] T009 Mark K1, K2 and K6 `#[ignore = "spec 1648: red until T012"]`. Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, then check `GATE_RESULT=pass`, the expected line and the per-target totals. Commit the log-only change and push.
+  - *As built*: **K6 has no record merge.** These kinds' PURLs carry no version, and a record's always does. Two imports of one library are joined by the linkage aggregator before deduplication (K6b, no `kind_merge`). So K6 is an integration check that the joined component lists one method (K6b), plus T014's unit test. Red: K1, K2, K6. The control matches `main` on all 7 cases (`MS/control.md`).
+- [X] T009 Mark K1, K2 and K6 `#[ignore = "spec 1648: red until T012"]`. Run the gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, then check `GATE_RESULT=pass`, the expected line and the per-target totals. Commit the log-only change and push.
+  - *As built*: the gate passed: 431 suites, 11,068 passed, 0 failed, 52 ignored (48 before, plus K1, K2, K6 and the control).
 - [ ] T010 Census (FR-001, R5).
 
   In `FR`:

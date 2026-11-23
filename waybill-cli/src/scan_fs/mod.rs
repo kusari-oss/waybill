@@ -284,14 +284,31 @@ pub(crate) fn census_entry_technique(entry: &package_db::PackageDbEntry) {
     }
     let kind = entry.evidence_kind.as_deref();
     let now = entry_technique(entry);
+    // Spec 1648 (research R3): `detected_go` is set on a Go binary's
+    // file-level component and on a Go source-tree main module, not on the
+    // components read from BuildInfo, so it is reported as what it is,
+    // `detected-go`. BuildInfo is counted where `go_binary.rs` emits it.
     let other = match kind {
         Some(k @ ("dynamic-linkage" | "embedded-source-path" | "cargo-auditable" | "elf-note-package")) => Some(k),
-        _ if entry.detected_go == Some(true) => Some("go-buildinfo"),
+        _ if entry.detected_go == Some(true) => Some("detected-go"),
         _ => None,
     };
     if let Some(k) = other {
         let j = serde_json::json!({ "evidence_kind": k, "purl": entry.purl.as_str(), "technique": now.kebab_name() });
         tracing::debug!(target: "waybill::version_census", binary_derived_kind = %j);
+    }
+    // Spec 1648 census (R4): the technique this entry will get once its
+    // kind's decision is wired, when that differs from today's.
+    if let Some(new) = kind.and_then(crate::scan_fs::binary::binary_kind_technique) {
+        if new != now {
+            let j = serde_json::json!({
+                "evidence_kind": kind,
+                "new": new.kebab_name(),
+                "old": now.kebab_name(),
+                "purl": entry.purl.as_str(),
+            });
+            tracing::debug!(target: "waybill::version_census", kind_technique_change = %j);
+        }
     }
 }
 

@@ -76,6 +76,27 @@ fn apply_absorbed(best: &mut ResolvedComponent, methods: Vec<IdentityMethod>) {
     best.evidence.also.sort_by_key(|m| technique_rank(&m.technique));
 }
 
+/// Spec 1648 census (R4): a merge where either side is a kind spec 1648
+/// makes binary analysis, so its methods may change once wired. Removed
+/// with the wiring (T012).
+fn census_kind_merge(site: &str, best: &ResolvedComponent, other: &ResolvedComponent) {
+    if !tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
+        return;
+    }
+    let newly = |c: &ResolvedComponent| matches!(c.evidence_kind.as_deref(), Some("dynamic-linkage" | "embedded-source-path"));
+    if !newly(best) && !newly(other) {
+        return;
+    }
+    let side = |c: &ResolvedComponent| {
+        serde_json::json!({
+            "evidence_kind": c.evidence_kind,
+            "mechanism": c.extra_annotations.get("waybill:source-mechanism"),
+        })
+    };
+    let j = serde_json::json!({"loser": side(other), "purl": best.purl.as_str(), "site": site, "winner": side(best)});
+    tracing::debug!(target: "waybill::version_census", kind_merge = %j);
+}
+
 /// The `binary_merge` census event (contracts/wire.md), when one side is a
 /// binary match.
 fn census_binary_merge(site: &str, best: &ResolvedComponent, other: &ResolvedComponent, absorbed: &[IdentityMethod]) {
@@ -249,6 +270,7 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             // are moved below.
             let methods = absorb_methods(&best, &other);
             census_binary_merge("S1", &best, &other, &methods);
+            census_kind_merge("S1", &best, &other);
             apply_absorbed(&mut best, methods);
             // Spec 1639 S1: what `record` needs from the loser, taken before
             // the fold below moves its annotations.
@@ -666,6 +688,7 @@ fn fold_declared_not_cached(components: &mut Vec<ResolvedComponent>) {
             let dst = &mut components[dst_idx];
             let methods = absorb_methods(dst, &sec);
             census_binary_merge("S2", dst, &sec, &methods);
+            census_kind_merge("S2", dst, &sec);
             apply_absorbed(dst, methods);
             let subject = dst.purl.as_str().to_string();
             also_detected::record("S2", &subject, &mut dst.extra_annotations, &sec.extra_annotations);

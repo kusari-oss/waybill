@@ -931,7 +931,33 @@ pub(crate) fn dependency_entries(info: &GoBinaryInfo) -> Vec<PackageDbEntry> {
     out
 }
 
+/// The components read from a Go binary's BuildInfo, appended to `out`.
+///
+/// Spec 1648 census (FR-005, research R3): each one is reported as
+/// `binary_derived_kind` `go-buildinfo`, here where it is created, because
+/// none of them carries an evidence kind or `detected_go` to count it by
+/// later.
 fn emit_entries_from_info(
+    info: &GoBinaryInfo,
+    out: &mut Vec<PackageDbEntry>,
+    seen_purls: &mut std::collections::HashSet<String>,
+) {
+    let start = out.len();
+    emit_entries_from_info_inner(info, out, seen_purls);
+    if tracing::enabled!(target: "waybill::version_census", tracing::Level::DEBUG) {
+        for e in &out[start..] {
+            let j = serde_json::json!({
+                "evidence_kind": "go-buildinfo",
+                "path": e.source_path,
+                "purl": e.purl.as_str(),
+                "technique": "package-database",
+            });
+            tracing::debug!(target: "waybill::version_census", binary_derived_kind = %j);
+        }
+    }
+}
+
+fn emit_entries_from_info_inner(
     info: &GoBinaryInfo,
     out: &mut Vec<PackageDbEntry>,
     seen_purls: &mut std::collections::HashSet<String>,
