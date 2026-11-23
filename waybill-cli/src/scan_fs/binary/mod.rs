@@ -85,6 +85,35 @@ pub(crate) const BINARY_EVIDENCE_KINDS: &[&str] = &[
 /// this list, so it must track what the readers produce (#1399).
 pub(crate) const BINARY_CONFIDENCE_VALUES: &[&str] = &["heuristic", "high"];
 
+/// Spec 1648 (#1668, FR-006): the identity technique of each kind in
+/// [`BINARY_EVIDENCE_KINDS`], decided by CycloneDX 1.6's definitions
+/// (`bom-1.6.xsd`, `evidenceTechnique`):
+///
+/// - `binary-analysis`, "examines a compiled binary through reverse
+///   engineering": a banner, exported symbols, a library the binary imports,
+///   source paths compiled into it.
+/// - `manifest-analysis` (`PackageDatabase`), "examines a package management
+///   system": the manifests a toolchain writes into the binary
+///   (cargo-auditable, an ELF package note). The two collapse kinds identify
+///   a runtime by its files' paths and keep this technique too; whether
+///   CycloneDX's `filename` fits them better is a follow-up.
+///
+/// `None` for a kind no binary reader emits. Every listed kind has a
+/// decision (`s1648_every_binary_kind_has_a_technique`), and the drift test
+/// below keeps the list complete, so a new kind cannot be added without one.
+pub(crate) fn binary_kind_technique(kind: &str) -> Option<waybill_common::resolution::ResolutionTechnique> {
+    use waybill_common::resolution::ResolutionTechnique::{BinaryAnalysis, PackageDatabase};
+    match kind {
+        "embedded-version-string" | "symbol-fingerprint" | "dynamic-linkage" | "embedded-source-path" => {
+            Some(BinaryAnalysis)
+        }
+        "cargo-auditable" | "elf-note-package" | "jdk-runtime-collapsed" | "python-stdlib-collapsed" => {
+            Some(PackageDatabase)
+        }
+        _ => None,
+    }
+}
+
 /// Whether a component was produced by reading a binary found by walking.
 pub(crate) fn is_binary_derived(evidence_kind: Option<&str>) -> bool {
     evidence_kind.is_some_and(|k| BINARY_EVIDENCE_KINDS.contains(&k))
@@ -149,6 +178,28 @@ mod binary_evidence_kind_drift {
              BINARY_CONFIDENCE_VALUES, so CycloneDX emission rejects them: \
              {missing:?}"
         );
+    }
+
+    /// Spec 1648 FR-006: every listed kind has a technique decision.
+    #[test]
+    fn s1648_every_binary_kind_has_a_technique() {
+        let missing: Vec<&str> =
+            BINARY_EVIDENCE_KINDS.iter().copied().filter(|k| super::binary_kind_technique(k).is_none()).collect();
+        assert!(missing.is_empty(), "binary evidence kinds with no technique decision: {missing:?}");
+    }
+
+    /// Spec 1648 FR-002, FR-003: each kind's decision.
+    #[test]
+    fn s1648_each_kind_has_its_decided_technique() {
+        use waybill_common::resolution::ResolutionTechnique::{BinaryAnalysis, PackageDatabase};
+        for k in ["embedded-version-string", "symbol-fingerprint", "dynamic-linkage", "embedded-source-path"] {
+            assert_eq!(super::binary_kind_technique(k), Some(BinaryAnalysis), "{k}");
+        }
+        for k in ["cargo-auditable", "elf-note-package", "jdk-runtime-collapsed", "python-stdlib-collapsed"] {
+            assert_eq!(super::binary_kind_technique(k), Some(PackageDatabase), "{k}");
+        }
+        assert_eq!(super::binary_kind_technique("requirements-txt"), None);
+        assert_eq!(super::binary_kind_technique(""), None);
     }
 
     /// The control: the scan really does find literals, so an empty result

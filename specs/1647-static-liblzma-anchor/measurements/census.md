@@ -37,7 +37,7 @@ The job's other controls still pass in their wired states: spec 1644's `control 
 
 ## Quality corpus
 
-17 targets: **0 `liblzma_static` events.** No file defines a `.symtab`-only anchor, and no file holds the xz header magic without one.
+18 targets: **0 `liblzma_static` events.** No file defines a `.symtab`-only anchor, and no file holds the xz header magic without one.
 
 ## The Ubuntu false-positive population (local, not TheRock)
 

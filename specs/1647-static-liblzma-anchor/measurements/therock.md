@@ -33,9 +33,9 @@ The two arms' documents are identical apart from when each scan ran. That is the
 
 ## Quality corpus
 
-Each census document at the log-only commit (run 45201916920, whose output equals `main`'s, `control.md`) was compared with the same document at the wired commit, with UUIDs and timestamps masked. That covers 22 documents: 17 quality-corpus targets, TheRock's census scan, and the control job's 3 trees (`control`, `identity`, `static`).
+Each census document at the log-only commit (run 45201916920, whose output equals `main`'s, `control.md`) was compared with the same document at the wired commit, with UUIDs and timestamps masked. That covers 22 documents: 18 quality-corpus targets, TheRock's census scan, and the control job's 3 trees (`control`, `identity`, `static`).
 
-- **21 identical**, including all 17 quality-corpus targets and TheRock's.
+- **21 identical**, including all 18 quality-corpus targets and TheRock's.
 - **1 changed, as intended**: the control's `static` tree, the runner's real static build of `census/static_lzma/a.c`. It gained `pkg:generic/liblzma@5.4.5` and nothing else (PURLs at the log-only commit: `static-tree`, `waybill-fixture-xzstatic`, `waybill-fixture-xzstripped`; after: the same plus `liblzma@5.4.5`).
 
 ## SC-007: timing

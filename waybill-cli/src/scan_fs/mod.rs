@@ -264,15 +264,16 @@ pub struct ScanResult {
 /// matching an emitted component resolves to that component exactly.
 /// Anything else (a bare name, or a `pkg:` string matching nothing) returns
 /// `None` and goes through the name lookup as before.
-/// Spec 1646 (#1665, FR-003): the technique of a component converted from a
-/// scanned entry. A banner or symbol match was read from the binary's own
-/// bytes, so it is `BinaryAnalysis`; everything else keeps `PackageDatabase`.
+/// The technique of a component converted from a scanned entry: its binary
+/// evidence kind's decision (spec 1646, spec 1648:
+/// `binary::binary_kind_technique`), and `PackageDatabase` for every other
+/// entry.
 pub(crate) fn entry_technique(entry: &package_db::PackageDbEntry) -> ResolutionTechnique {
-    if entry.evidence_kind.as_deref().is_some_and(|k| crate::resolve::deduplicator::BINARY_KINDS.contains(&k)) {
-        ResolutionTechnique::BinaryAnalysis
-    } else {
-        ResolutionTechnique::PackageDatabase
-    }
+    entry
+        .evidence_kind
+        .as_deref()
+        .and_then(crate::scan_fs::binary::binary_kind_technique)
+        .unwrap_or(ResolutionTechnique::PackageDatabase)
 }
 
 /// Spec 1646 census (research R6): `binary_derived_kind` for the other
@@ -284,9 +285,13 @@ pub(crate) fn census_entry_technique(entry: &package_db::PackageDbEntry) {
     }
     let kind = entry.evidence_kind.as_deref();
     let now = entry_technique(entry);
+    // Spec 1648 (research R3): `detected_go` is set on a Go binary's
+    // file-level component and on a Go source-tree main module, not on the
+    // components read from BuildInfo, so it is reported as what it is,
+    // `detected-go`. BuildInfo is counted where `go_binary.rs` emits it.
     let other = match kind {
         Some(k @ ("dynamic-linkage" | "embedded-source-path" | "cargo-auditable" | "elf-note-package")) => Some(k),
-        _ if entry.detected_go == Some(true) => Some("go-buildinfo"),
+        _ if entry.detected_go == Some(true) => Some("detected-go"),
         _ => None,
     };
     if let Some(k) = other {

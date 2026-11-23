@@ -187,6 +187,22 @@ annotation. The merged component's `waybill:evidence-kind` and
 `waybill::version_census` debug log reports each such merge as
 `binary_merge`.
 
+**Which binary evidence is `binary-analysis`** (spec 1648, #1668). The
+technique follows CycloneDX 1.6's definitions: `binary-analysis`
+"examines a compiled binary", and `manifest-analysis` "examines a
+package management system".
+
+| Evidence kind | Technique | Why |
+|---|---|---|
+| `embedded-version-string`, `symbol-fingerprint` | `binary-analysis` | read from the binary's bytes or exported symbols |
+| `dynamic-linkage` | `binary-analysis` | a library another binary imports, read from its import list |
+| `embedded-source-path` | `binary-analysis` | source paths compiled into the binary, attributed to a package |
+| `cargo-auditable`, `elf-note-package`, Go BuildInfo | `manifest-analysis` | a manifest the build toolchain wrote into the binary |
+| `jdk-runtime-collapsed`, `python-stdlib-collapsed` | `manifest-analysis` | identified by the files' install paths; whether `filename` fits better is open |
+
+Every evidence kind a binary reader emits has one decision, and a test
+fails if a new kind is added without one.
+
 Each detection emits a `pkg:generic/<library>@<version>` component
 with `waybill:evidence-kind = "embedded-version-string"` and
 `waybill:confidence = "heuristic"`, so downstream CVE matchers

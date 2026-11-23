@@ -12,15 +12,14 @@ use waybill_common::resolution::ResolvedComponent;
 use crate::scan_fs::also_detected;
 use waybill_common::resolution::{IdentityMethod, ResolutionTechnique};
 
-/// Spec 1646 (#1665): the evidence kinds whose identity was read from a
-/// binary's own bytes (research R1, clarification 2).
-pub(crate) const BINARY_KINDS: [&str; 2] = ["embedded-version-string", "symbol-fingerprint"];
-
-/// A component's effective technique: `BinaryAnalysis` for a binary match,
-/// whatever its stored technique, and the stored technique otherwise
-/// (data-model "Absorb rule").
+/// A component's effective technique: `BinaryAnalysis` when its evidence
+/// kind is decided binary analysis (`binary::binary_kind_technique`, specs
+/// 1646 and 1648), whatever its stored technique, and the stored technique
+/// otherwise (spec 1646 data-model "Absorb rule").
 pub(crate) fn effective_technique(c: &ResolvedComponent) -> ResolutionTechnique {
-    if c.evidence_kind.as_deref().is_some_and(|k| BINARY_KINDS.contains(&k)) {
+    if c.evidence_kind.as_deref().and_then(crate::scan_fs::binary::binary_kind_technique)
+        == Some(ResolutionTechnique::BinaryAnalysis)
+    {
         ResolutionTechnique::BinaryAnalysis
     } else {
         c.evidence.technique.clone()
@@ -2161,6 +2160,23 @@ mod tests {
         // A fingerprint is a binary side too.
         let fp = binary("pkg:generic/zlib@1.3.2", "symbol-fingerprint");
         assert_eq!(techniques(&absorb_methods(&record("pkg:generic/zlib@1.3.2", "pkg-config"), &fp)), [ResolutionTechnique::BinaryAnalysis]);
+    }
+
+    /// Spec 1648 FR-004 (K6): a record absorbs `binary-analysis` from the two
+    /// kinds spec 1648 decides binary, and nothing from an embedded manifest.
+    #[test]
+    fn s1648_a_record_absorbs_the_newly_binary_kinds() {
+        for kind in ["dynamic-linkage", "embedded-source-path"] {
+            let rec = record("pkg:generic/waybill-fixture-x@1.0", "pkg-config");
+            let b = binary("pkg:generic/waybill-fixture-x@1.0", kind);
+            assert_eq!(techniques(&absorb_methods(&rec, &b)), [ResolutionTechnique::BinaryAnalysis], "{kind}");
+            assert_eq!(techniques(&absorb_methods(&b, &rec)), [ResolutionTechnique::PackageDatabase], "{kind} winning");
+        }
+        for kind in ["cargo-auditable", "elf-note-package", "jdk-runtime-collapsed", "python-stdlib-collapsed"] {
+            let rec = record("pkg:generic/waybill-fixture-x@1.0", "pkg-config");
+            let b = binary("pkg:generic/waybill-fixture-x@1.0", kind);
+            assert!(absorb_methods(&rec, &b).is_empty(), "{kind}");
+        }
     }
 
     #[test]
