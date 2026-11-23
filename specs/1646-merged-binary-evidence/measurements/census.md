@@ -46,7 +46,7 @@ Only targets with an event are listed. The other 14 quality-corpus targets have 
 | FR-002, merges with a record on TheRock | exactly 6 PURLs (expat, gmp, liblzma, llvm, ncurses, zlib) | as expected |
 | FR-003, technique changes on TheRock | 7 libraries | **8 PURLs**. The 8th is `pkg:generic/sqlite`, a symbol-fingerprint match. FR-003 names `symbol-fingerprint`, but the expectation counted only curated banner matches. **The expectation was incomplete; the spec is not contradicted.** |
 | FR-008, scope outside TheRock | — | `pants-backend-ai`: 2 components change technique (openssl, zlib); the public corpus is unchanged at the log-only commit |
-| FR-006, merge sites | S1 and S2 observed | S1 only. S2 never received a binary match in these corpora; its call is covered by the same helper and unit-tested |
+| FR-006, merge sites | S1 and S2 observed | S1 only. S2 never received a binary match in these corpora. Its call site runs the same `absorb_methods` and `apply_absorbed` as S1, and those helpers are unit-tested; the S2 call site itself is not exercised by any test |
 
 No count contradicts FR-002 to FR-008, so the spec is not amended.
 
