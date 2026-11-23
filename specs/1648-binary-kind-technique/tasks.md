@@ -151,9 +151,12 @@ Output does not change in this phase.
 - [X] T019 [P] `CHANGELOG.md`: a Fixed entry citing #1668, built from T010, T016 and T017.
   - *As built*: a Fixed entry above #1664's, from T010, T016 and T017.
 
-- [ ] T020 Run the full gate on the final commit, and record in `MS/gate-log.md` the per-target totals, `GATE_RESULT`, the expected line, and that `git diff 33c445f6 -- Cargo.lock '*Cargo.toml'` is empty.
-- [ ] T021 Close-out. Check each task's claim against the committed tree and the measurements. Note every as-built difference inline, then tick the task.
+- [X] T020 Run the full gate on the final commit, and record in `MS/gate-log.md` the per-target totals, `GATE_RESULT`, the expected line, and that `git diff 33c445f6 -- Cargo.lock '*Cargo.toml'` is empty.
+  - *As built*: passed at `e160526f`, with 431 suites, 11,072 passed, 0 failed, 49 ignored, and no Cargo change (`MS/gate-log.md`).
+
+- [X] T021 Close-out. Check each task's claim against the committed tree and the measurements. Note every as-built difference inline, then tick the task.
   - File a follow-up issue for the two path-identified collapse kinds (`jdk-runtime-collapsed`, `python-stdlib-collapsed`), with T010's counts if any, and the question of CycloneDX's `filename` technique. `ResolutionTechnique::FilePathPattern` already emits `filename` (`generate/cyclonedx/evidence.rs:64`), so no new variant would be needed.
+  - *As built*: every task's claim checked against the tree and `MS/`. The as-built differences (T002's Mach-O import, K6's unit test, T005 covering `NC`) are noted inline. The follow-up is filed as #1671. Close-out also found the quality-corpus size misstated as 17 instead of 18 (18 targets in `xtask/corpus/quality-corpus.toml`, and 18 census jobs besides TheRock and the control). It is corrected in this spec's `census.md` and `therock.md`, in spec 1647's `census.md` and `therock.md`, and in spec 1647's CHANGELOG line.
 
 ## Dependencies
 

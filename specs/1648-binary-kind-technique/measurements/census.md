@@ -37,7 +37,7 @@ Per target: `kind_technique_change` events / distinct PURLs, by kind; `kind_merg
 | cpp-mongo | 3 / 3 | 0 | 0 | 0 | 0 |
 | go-kubernetes | 0 | 0 | 0 | 38 / 38 | **0** |
 | go-cobra | 0 | 0 | 0 | 1 / 1 | **0** |
-| the other 12 quality-corpus targets | 0 | 0 | 0 | 0 | 0 |
+| the other 14 quality-corpus targets | 0 | 0 | 0 | 0 | 0 |
 
 - **The technique changes match spec 1646's census exactly**: TheRock 49 and 645 / 15, pants-backend-ai 8, cpp-mongo 3 (SC-005's prediction).
 - **TheRock's 645 `embedded-source-path` entries are 15 PURLs**, and no `kind_merge` fired. Each entry is a versionless component nested under the binary that carries the paths (spec 1534), so equal PURLs under different binaries are not merged. T017 counts the document's components.

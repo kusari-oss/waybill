@@ -42,7 +42,7 @@ Whole documents, after `jq -S`:
 
 ## Quality corpus
 
-Each census CycloneDX document at the log-only commit (run 45240732755, whose output equals `main`'s, `control.md`) was compared with the same document at the wired commit, by `bom-ref`, with technique values masked. That covers 23 documents: 17 quality-corpus targets, TheRock's census scan, and the control job's 5 trees.
+Each census CycloneDX document at the log-only commit (run 45240732755, whose output equals `main`'s, `control.md`) was compared with the same document at the wired commit, by `bom-ref`, with technique values masked. That covers 23 documents: 18 quality-corpus targets, TheRock's census scan, and the control job's 4 trees (`control`, `identity`, `static`, `kind`).
 
 | Document | Technique changes (`manifest-analysis` → `binary-analysis`) | Other differences |
 |---|---|---|
@@ -50,7 +50,7 @@ Each census CycloneDX document at the log-only commit (run 45240732755, whose ou
 | `cpp-mongo` | 3 `dynamic-linkage` | 0 |
 | TheRock's census scan | 49 `dynamic-linkage`, 645 `embedded-source-path` | 0 |
 | control `kind` tree | 1 `dynamic-linkage` (`libc.so.6`) | 0 |
-| the other 15 quality-corpus targets and 4 control trees | 0 | 0 |
+| the other 16 quality-corpus targets and 3 control trees | 0 | 0 |
 
 In TheRock's census document, 547 further components differ only because a component nested inside them changed. A check over every changed component found that all 547 are ancestors of a changed `embedded-source-path` or `dynamic-linkage` component, and none differs in its own fields.
 
