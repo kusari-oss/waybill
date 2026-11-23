@@ -132,6 +132,7 @@ Manifests that use neither construct produce the same documents as on `main`.
 - **A tag other than `!include`** stays as today: removed and announced.
 - **A generated `.cabal` beside the `package.yaml`.** The existing suppression rule is unchanged. A manifest that becomes readable suppresses its generated `.cabal`, as a manifest read today does.
 - **Symlinks.** An include path is resolved to its real location before the scanned-root check (FR-004).
+- **An anchor that only an unresolved include defines.** If the content after an unresolved include uses such an anchor, the document cannot be parsed, and the manifest stays `unread` with the parser's message, as today. Nothing in a missing file can be recovered (research R5).
 
 ## Requirements *(mandatory)*
 
